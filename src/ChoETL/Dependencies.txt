@@ -1,0 +1,5 @@
+﻿1. PresentationFramework.dll
+2. System.Configuration.dll
+3. System.Web.dll
+4. System.ComponentModel.DataAnnotation.dll
+5. System.Runtime.Serialization.dll
