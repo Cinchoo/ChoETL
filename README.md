@@ -1,4 +1,6 @@
-# Cinchoo ETL - An ETL framework for .NET 
+# Cinchoo ETL
+
+An ETL framework for .NET 
 
 Simple, intutive  Extract, transform and load (ETL) library for .NET. Extremely fast, flexible, and easy to use. 
 
