@@ -13,12 +13,12 @@ using System.Threading.Tasks;
 namespace ChoCSVReaderTest
 {
     //[ChoCSVFileHeader()]
-    [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.ThrowAndStop, IgnoreFieldValueMode = ChoIgnoreFieldValueMode.All)]
+    [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.IgnoreAndContinue, IgnoreFieldValueMode = ChoIgnoreFieldValueMode.All)]
     public class EmployeeRec : IChoRecord
     {
         [ChoCSVRecordField(1, FieldName = "id")]
-        [Range(1, int.MaxValue, ErrorMessage = "Id must be > 0.")]
-        [ChoFallbackValue(1)]
+        //[Range(1, int.MaxValue, ErrorMessage = "Id must be > 0.")]
+        //[ChoFallbackValue(1)]
         public int Id { get; set; }
         [ChoCSVRecordField(2, FieldName ="Name", QuoteField = true)]
         [Required]
