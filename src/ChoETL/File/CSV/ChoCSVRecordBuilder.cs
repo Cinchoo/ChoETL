@@ -130,7 +130,7 @@ namespace ChoETL
                     }
 
                     //LoadHeader if any
-                    if (Configuration.FileHeaderConfiguration.HasHeaderRecord
+                    if (Configuration.CSVFileHeaderConfiguration.HasHeaderRecord
                         && !_headerFound)
                     {
                         ChoETLFramework.WriteLog("Loading header line at [{0}]...".FormatString(pair.Item1));
@@ -214,8 +214,8 @@ namespace ChoETL
         private Dictionary<string, string> ToFieldNameValues(string[] fieldValues)
         {
             int index = 1;
-            Dictionary<string, string> fnv = new Dictionary<string, string>(Configuration.FileHeaderConfiguration.StringComparer);
-            if (Configuration.FileHeaderConfiguration.HasHeaderRecord)
+            Dictionary<string, string> fnv = new Dictionary<string, string>(Configuration.CSVFileHeaderConfiguration.StringComparer);
+            if (Configuration.CSVFileHeaderConfiguration.HasHeaderRecord)
             {
                 foreach (var name in _fieldNames)
                 {
@@ -257,7 +257,7 @@ namespace ChoETL
             {
                 fieldConfig = kvp.Value;
 
-                if (Configuration.FileHeaderConfiguration.HasHeaderRecord)
+                if (Configuration.CSVFileHeaderConfiguration.HasHeaderRecord)
                 {
                     if (_fieldNameValues.ContainsKey(fieldConfig.FieldName))
                         fieldValue = _fieldNameValues[fieldConfig.FieldName];
@@ -301,6 +301,9 @@ namespace ChoETL
                 catch (Exception ex)
                 {
                     ChoETLFramework.HandleException(ex);
+
+                    if (fieldConfig.ErrorMode == ChoErrorMode.ThrowAndStop)
+                        throw;
                     try
                     {
                         ChoFallbackValueAttribute fbAttr = ChoTypeDescriptor.GetPropetyAttribute<ChoFallbackValueAttribute>(rec.GetType(), kvp.Key);
@@ -434,9 +437,9 @@ namespace ChoETL
                 if (_fieldNames.Length != Configuration.RecordFieldConfigurations.Count)
                     throw new ChoParserException("Incorrect number of field headers found. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.RecordFieldConfigurations.Count, _fieldNames.Length));
 
-                string[] foundList = Configuration.RecordFieldConfigurations.Select(i => i.FieldName).Except(_fieldNames, Configuration.FileHeaderConfiguration.StringComparer).ToArray();
+                string[] foundList = Configuration.RecordFieldConfigurations.Select(i => i.FieldName).Except(_fieldNames, Configuration.CSVFileHeaderConfiguration.StringComparer).ToArray();
                 if (foundList.Any())
-                    throw new ChoParserException("Mismatched header names [{0}] found.".FormatString(String.Join(",", foundList)));
+                    throw new ChoParserException("Header names [{0}] specified in configuration/entity are not found in file header.".FormatString(String.Join(",", foundList)));
             }
         }
 
@@ -444,7 +447,7 @@ namespace ChoETL
         {
             if (fieldValue.IsNull()) return fieldValue;
 
-            ChoFileHeaderConfiguration config = Configuration.FileHeaderConfiguration;
+            ChoFileHeaderConfiguration config = Configuration.CSVFileHeaderConfiguration;
             if (fieldValue != null)
             {
                 switch (config.TrimOption)

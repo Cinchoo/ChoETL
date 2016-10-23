@@ -12,6 +12,12 @@ namespace ChoETL
     {
         public static readonly ChoCSVRecordConfiguration Default = new ChoCSVRecordConfiguration();
 
+        public ChoCSVFileHeaderConfiguration CSVFileHeaderConfiguration
+        {
+            get;
+            set;
+        }
+
         public List<ChoCSVRecordFieldConfiguration> RecordFieldConfigurations
         {
             get;
@@ -46,7 +52,7 @@ namespace ChoETL
             {
                 Init(recordType);
             }
-            FileHeaderConfiguration = new ChoFileHeaderConfiguration(recordType, Culture);
+            CSVFileHeaderConfiguration = new ChoCSVFileHeaderConfiguration(recordType, Culture);
         }
 
         protected override void Init(Type recordType)
@@ -101,14 +107,14 @@ namespace ChoETL
                 throw new ChoRecordConfigurationException("One of the Comments contains Delimiter. Not allowed.");
 
             //Validate Header
-            if (FileHeaderConfiguration != null)
-                FileHeaderConfiguration.Validate(this);
+            if (CSVFileHeaderConfiguration != null)
+                CSVFileHeaderConfiguration.Validate(this);
 
             //Validate each record field
             foreach (var fieldConfig in RecordFieldConfigurations)
                 fieldConfig.Validate(this);
 
-            if (!FileHeaderConfiguration.HasHeaderRecord)
+            if (!CSVFileHeaderConfiguration.HasHeaderRecord)
             {
                 //Check if any field has 0 
                 if (RecordFieldConfigurations.Where(i => i.FieldPosition <= 0).Count() > 0)
@@ -129,7 +135,7 @@ namespace ChoETL
                     throw new ChoRecordConfigurationException("Some fields has empty field name specified.");
 
                 //Check field names for duplicate
-                string[] dupFields = RecordFieldConfigurations.GroupBy(i => i.FieldName, FileHeaderConfiguration.StringComparer)
+                string[] dupFields = RecordFieldConfigurations.GroupBy(i => i.FieldName, CSVFileHeaderConfiguration.StringComparer)
                     .Where(g => g.Count() > 1)
                     .Select(g => g.Key).ToArray();
 

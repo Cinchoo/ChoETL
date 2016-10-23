@@ -168,6 +168,8 @@
     <Compile Include="File\ChoFileRecordObjectAttribute.cs" />
     <Compile Include="File\ChoFileRecordFieldAttribute.cs" />
     <Compile Include="File\CSV\ChoCSVRecordFieldAttribute.cs" />
+    <Compile Include="File\CSV\ChoCSVFileHeaderConfiguration.cs" />
+    <Compile Include="File\CSV\ChoCSVFileHeaderAttribute.cs" />
     <Compile Include="IChoRecord.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

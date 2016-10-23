@@ -10,11 +10,6 @@ namespace ChoETL
 {
     public abstract class ChoFileRecordConfiguration : ChoRecordConfiguration
     {
-        public ChoFileHeaderConfiguration FileHeaderConfiguration
-        {
-            get;
-            set;
-        }
         public int BufferSize
         {
             get;

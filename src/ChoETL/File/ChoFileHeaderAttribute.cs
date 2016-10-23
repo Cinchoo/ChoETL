@@ -7,10 +7,8 @@ using System.Threading.Tasks;
 namespace ChoETL
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    public class ChoFileHeaderAttribute : Attribute
+    public abstract class ChoFileHeaderAttribute : Attribute
     {
-        public static readonly ChoFileHeaderAttribute Default = new ChoFileHeaderAttribute();
-
         public bool IgnoreCase => true;
 
         public char FillChar

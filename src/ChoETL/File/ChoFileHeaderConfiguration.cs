@@ -7,10 +7,8 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public class ChoFileHeaderConfiguration
+    public abstract class ChoFileHeaderConfiguration
     {
-        public static readonly ChoFileHeaderConfiguration Default = new ChoFileHeaderConfiguration();
-
         public bool HasHeaderRecord
         {
             get;

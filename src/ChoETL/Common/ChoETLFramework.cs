@@ -302,7 +302,10 @@ namespace ChoETL
             else
                 message += "Unknown exception occurred.";
 
-            WriteLog(ChoETLFramework.Switch.TraceError, message);
+            if (ChoETLFramework.Switch.TraceError)
+                WriteLog(ChoETLFramework.Switch.TraceError, message);
+            else
+                Console.WriteLine(message);
             //System.Diagnostics.Trace.WriteLine(message);
             Environment.Exit(-1);
         }

@@ -12,11 +12,13 @@ using System.Threading.Tasks;
 
 namespace ChoCSVReaderTest
 {
-    //[ChoFileHeader()]
-    [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.IgnoreAndContinue, IgnoreFieldValueMode = ChoIgnoreFieldValueMode.All)]
+    //[ChoCSVFileHeader()]
+    [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.ThrowAndStop, IgnoreFieldValueMode = ChoIgnoreFieldValueMode.All)]
     public class EmployeeRec : IChoRecord
     {
         [ChoCSVRecordField(1, FieldName = "id")]
+        [Range(1, int.MaxValue, ErrorMessage = "Id must be > 0.")]
+        [ChoFallbackValue(1)]
         public int Id { get; set; }
         [ChoCSVRecordField(2, FieldName ="Name", QuoteField = true)]
         [Required]
@@ -79,18 +81,26 @@ namespace ChoCSVReaderTest
             //foreach (var e in new ChoCSVReader<EmployeeRec>("Emp.csv"))
             //    Console.WriteLine(e.ToStringEx());
 
+            //var reader = new ChoCSVReader<EmployeeRec>("Emp.csv");
+            //var rec = (object)null;
+
+            //while ((rec = reader.Read()) != null)
+            //    Console.WriteLine(rec.ToStringEx());
+
             //var config = new ChoCSVRecordConfiguration(typeof(EmployeeRec));
             //var e = new ChoCSVReader("Emp.csv", config);
             //dynamic i;
             //while ((i = e.Read()) != null)
             //    Console.WriteLine(i.Id);
 
+            ChoETLFramework.Initialize();
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
             using (var parser = new ChoCSVReader<EmployeeRec>(reader))
             {
-                writer.WriteLine("1,Raj");
+                //writer.WriteLine("Id,Name");
+                writer.WriteLine("0,Raj");
                 writer.WriteLine("2,Gomz");
                 writer.Flush();
                 stream.Position = 0;
