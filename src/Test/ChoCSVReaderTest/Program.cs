@@ -148,7 +148,7 @@ namespace ChoCSVReaderTest
                     Console.WriteLine(dr[0]);
                 }
                 //object row = null;
-
+                 
                 //parser.Configuration.ColumnCountStrict = true;
                 //while ((row = parser.Read()) != null)
                 //{
