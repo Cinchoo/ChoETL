@@ -86,7 +86,7 @@ namespace ChoETL
                 MaxFieldPosition = RecordFieldConfigurations.Max(r => r.FieldPosition);
             else
                 throw new ChoRecordConfigurationException("No record fields specified.");
-            RecordFieldConfigurationsDict = RecordFieldConfigurations.ToDictionary(i => i.Name);
+            RecordFieldConfigurationsDict = RecordFieldConfigurations.Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
 
             if (Delimiter.IsNullOrWhiteSpace())
             {

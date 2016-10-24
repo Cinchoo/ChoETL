@@ -20,6 +20,11 @@ namespace ChoETL
             set;
         }
 
+        public ChoCSVRecordFieldConfiguration(string name, int position, ChoCSVRecordFieldAttribute attr = null) : this(name, attr)
+        {
+            FieldPosition = position;
+        }
+
         public ChoCSVRecordFieldConfiguration(string name, ChoCSVRecordFieldAttribute attr = null) : base(name, attr)
         {
             if (attr != null)

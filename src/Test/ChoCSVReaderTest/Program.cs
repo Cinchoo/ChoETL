@@ -29,7 +29,7 @@ namespace ChoCSVReaderTest
 
     //[ChoCSVFileHeader()]
     [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.IgnoreAndContinue, IgnoreFieldValueMode = ChoIgnoreFieldValueMode.All)]
-    public class EmployeeRec : IChoRecord, IValidatableObject
+    public class EmployeeRec : IChoRecord
     {
         [ChoCSVRecordField(1, FieldName = "id")]
         [ChoTypeConverter(typeof(IntConverter))]
@@ -84,17 +84,34 @@ namespace ChoCSVReaderTest
         {
             throw new NotImplementedException();
         }
-
-        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-        {
-            throw new NotImplementedException();
-        }
     }
 
     class Program
     {
         static void Main(string[] args)
         {
+            ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1));
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
+
+            dynamic row;
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVReader(reader, config))
+            {
+                writer.WriteLine("1,Raj");
+                writer.WriteLine("2,Gomz");
+                writer.Flush();
+                stream.Position = 0;
+
+                while ((row = parser.Read()) != null)
+                {
+                    Console.WriteLine(row.Name);
+                }
+            }
+            return;
+
             //DataTable dt = new ChoCSVReader<EmployeeRec>("Emp.csv").AsDataTable();
             //var z = dt.Rows.Count;
             //return;
@@ -125,11 +142,18 @@ namespace ChoCSVReaderTest
                 writer.WriteLine("2,Gomz");
                 writer.Flush();
                 stream.Position = 0;
+                var dr = parser.AsDataReader();
+                while (dr.Read())
+                {
+                    Console.WriteLine(dr[0]);
+                }
+                //object row = null;
 
-                object row = null;
-
-                while ((row = parser.Read()) != null)
-                    Console.WriteLine(row.ToStringEx());
+                //parser.Configuration.ColumnCountStrict = true;
+                //while ((row = parser.Read()) != null)
+                //{
+                //    Console.WriteLine(row.ToStringEx());
+                //}
             }
         }
     }

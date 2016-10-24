@@ -41,6 +41,12 @@ namespace ChoETL
 
         public ChoFileRecordFieldConfiguration(string name, ChoFileRecordFieldAttribute attr = null) : base(name, attr)
         {
+            FillChar = ' ';
+            FieldValueJustification = ChoFieldValueJustification.Left;
+            FieldValueTrimOption = ChoFieldValueTrimOption.Trim;
+            Truncate = true;
+            IgnoreFieldValueMode = ChoIgnoreFieldValueMode.All;
+
             if (attr != null)
             {
                 FillChar = attr.FillChar;
