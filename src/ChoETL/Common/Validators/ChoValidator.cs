@@ -51,7 +51,7 @@ namespace ChoETL
 
             if (@this is IChoValidatable)
             {
-                ((IChoValidatable)@this).TryValidate(results);
+                ((IChoValidatable)@this).TryValidateFor(mi.Name, results);
             }
             else
             {

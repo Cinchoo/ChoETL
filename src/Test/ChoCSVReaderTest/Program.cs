@@ -9,14 +9,30 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Data;
+using System.Globalization;
 
 namespace ChoCSVReaderTest
 {
+    public class IntConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value;
+        }
+    }
+
     //[ChoCSVFileHeader()]
     [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.IgnoreAndContinue, IgnoreFieldValueMode = ChoIgnoreFieldValueMode.All)]
-    public class EmployeeRec : IChoRecord
+    public class EmployeeRec : IChoRecord, IValidatableObject
     {
         [ChoCSVRecordField(1, FieldName = "id")]
+        [ChoTypeConverter(typeof(IntConverter))]
         //[Range(1, int.MaxValue, ErrorMessage = "Id must be > 0.")]
         //[ChoFallbackValue(1)]
         public int Id { get; set; }
@@ -68,6 +84,11 @@ namespace ChoCSVReaderTest
         {
             throw new NotImplementedException();
         }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     class Program
@@ -100,7 +121,7 @@ namespace ChoCSVReaderTest
             using (var parser = new ChoCSVReader<EmployeeRec>(reader))
             {
                 //writer.WriteLine("Id,Name");
-                writer.WriteLine("0,Raj");
+                writer.WriteLine("1,Raj");
                 writer.WriteLine("2,Gomz");
                 writer.Flush();
                 stream.Position = 0;
