@@ -100,8 +100,8 @@ namespace ChoCSVReaderTest
             using (var writer = new StreamWriter(stream))
             using (var parser = new ChoCSVReader(reader, config))
             {
-                writer.WriteLine("1,Raj");
-                writer.WriteLine("2,Gomz");
+                writer.WriteLine("1,Carl");
+                writer.WriteLine("2,Mark");
                 writer.Flush();
                 stream.Position = 0;
 
@@ -138,8 +138,8 @@ namespace ChoCSVReaderTest
             using (var parser = new ChoCSVReader<EmployeeRec>(reader))
             {
                 //writer.WriteLine("Id,Name");
-                writer.WriteLine("1,Raj");
-                writer.WriteLine("2,Gomz");
+                writer.WriteLine("1,Carl");
+                writer.WriteLine("2,Mark");
                 writer.Flush();
                 stream.Position = 0;
                 var dr = parser.AsDataReader();
