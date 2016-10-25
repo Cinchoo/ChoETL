@@ -29,7 +29,7 @@ namespace ChoCSVReaderTest
 
     //[ChoCSVFileHeader()]
     [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.IgnoreAndContinue, IgnoreFieldValueMode = ChoIgnoreFieldValueMode.All)]
-    public class EmployeeRec : IChoRecord
+    public class EmployeeRec : IChoReaderRecord
     {
         [ChoCSVRecordField(1, FieldName = "id")]
         [ChoTypeConverter(typeof(IntConverter))]

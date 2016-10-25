@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public abstract class ChoRecordBuilder
+    public abstract class ChoRecordReader
     {
         public readonly Type RecordType;
 
-        public ChoRecordBuilder(Type recordType)
+        public ChoRecordReader(Type recordType)
         {
             ChoGuard.ArgumentNotNull(recordType, "RecordType");
 

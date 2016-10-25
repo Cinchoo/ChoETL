@@ -49,7 +49,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChoEnums.cs" />
-    <Compile Include="ChoRecordBuilder.cs" />
+    <Compile Include="ChoRecordWriter.cs" />
+    <Compile Include="ChoRecordReader.cs" />
     <Compile Include="ChoRecordFieldConfiguration.cs" />
     <Compile Include="ChoRecordConfiguration.cs" />
     <Compile Include="ChoObjectAttribute.cs" />
@@ -173,7 +174,9 @@
     <Compile Include="File\CSV\ChoCSVRecordFieldAttribute.cs" />
     <Compile Include="File\CSV\ChoCSVFileHeaderConfiguration.cs" />
     <Compile Include="File\CSV\ChoCSVFileHeaderAttribute.cs" />
-    <Compile Include="IChoRecord.cs" />
+    <Compile Include="File\CSV\ChoCSVRecordWriter.cs" />
+    <Compile Include="IChoWriterRecord.cs" />
+    <Compile Include="IChoReaderRecord.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

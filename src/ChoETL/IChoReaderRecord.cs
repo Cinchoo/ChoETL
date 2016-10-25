@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public interface IChoRecord
+    public interface IChoReaderRecord
     {
         bool BeginLoad(object source);
         bool EndLoad(object source);
