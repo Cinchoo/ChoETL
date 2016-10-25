@@ -87,7 +87,7 @@ namespace ChoETL
 
         public IEnumerator<T> GetEnumerator()
         {
-            ChoCSVRecordBuilder builder = new ChoCSVRecordBuilder(typeof(T), Configuration);
+            ChoCSVRecordReader builder = new ChoCSVRecordReader(typeof(T), Configuration);
             var e = builder.AsEnumerable(_txtReader).GetEnumerator();
             return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
         }

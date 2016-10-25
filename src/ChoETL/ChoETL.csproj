@@ -162,7 +162,7 @@
     <Compile Include="File\ChoFileHeaderAttribute.cs" />
     <Compile Include="File\ChoFileRecordFieldConfiguration.cs" />
     <Compile Include="File\CSV\ChoCSVReader.cs" />
-    <Compile Include="File\CSV\ChoCSVRecordBuilder.cs" />
+    <Compile Include="File\CSV\ChoCSVRecordReader.cs" />
     <Compile Include="File\ChoFileHeaderConfiguration.cs" />
     <Compile Include="File\CSV\ChoCSVRecordConfiguration.cs" />
     <Compile Include="File\CSV\ChoCSVRecordFieldConfiguration.cs" />

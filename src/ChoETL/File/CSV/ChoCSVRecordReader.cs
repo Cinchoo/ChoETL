@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    internal class ChoCSVRecordBuilder : ChoRecordBuilder
+    internal class ChoCSVRecordReader : ChoRecordBuilder
     {
         private IChoRecord _record;
         private bool _headerFound = false;
@@ -21,7 +21,7 @@ namespace ChoETL
             set;
         }
 
-        public ChoCSVRecordBuilder(Type recordType, ChoCSVRecordConfiguration configuration = null) : base(recordType)
+        public ChoCSVRecordReader(Type recordType, ChoCSVRecordConfiguration configuration = null) : base(recordType)
         {
             Configuration = configuration;
             if (Configuration == null)
@@ -470,19 +470,19 @@ namespace ChoETL
                 return fieldValue;
         }
 
-        internal bool RaiseBeginLoad(object state)
+        private bool RaiseBeginLoad(object state)
         {
             if (_record == null) return true;
             return ChoFuncEx.RunWithIgnoreError(() => _record.BeginLoad(state), true);
         }
 
-        internal void RaiseEndLoad(object state)
+        private void RaiseEndLoad(object state)
         {
             if (_record == null) return;
             ChoActionEx.RunWithIgnoreError(() => _record.EndLoad(state));
         }
 
-        internal bool BeforeRecordLoad(ref Tuple<int, string> pair)
+        private bool BeforeRecordLoad(ref Tuple<int, string> pair)
         {
             if (_record == null) return true;
             int index = pair.Item1;
@@ -495,19 +495,19 @@ namespace ChoETL
             return retValue;
         }
 
-        internal bool AfterRecordLoad(Tuple<int, string> pair)
+        private bool AfterRecordLoad(Tuple<int, string> pair)
         {
             if (_record == null) return true;
             return ChoFuncEx.RunWithIgnoreError(() => _record.AfterRecordLoad(pair.Item1, pair.Item2), true);
         }
 
-        internal bool RecordLoadError(Tuple<int, string> pair, Exception ex)
+        private bool RecordLoadError(Tuple<int, string> pair, Exception ex)
         {
             if (_record == null) return true;
             return ChoFuncEx.RunWithIgnoreError(() => _record.RecordLoadError(pair.Item1, pair.Item2, ex), false);
         }
 
-        internal bool BeforeRecordFieldLoad(int index, string propName, ref object value)
+        private bool BeforeRecordFieldLoad(int index, string propName, ref object value)
         {
             if (_record == null) return true;
             object state = value;
@@ -519,13 +519,13 @@ namespace ChoETL
             return retValue;
         }
 
-        internal bool AfterRecordFieldLoad(int index, string propName, object value)
+        private bool AfterRecordFieldLoad(int index, string propName, object value)
         {
             if (_record == null) return true;
             return ChoFuncEx.RunWithIgnoreError(() => _record.AfterRecordFieldLoad(index, propName, value), true);
         }
 
-        internal bool RecordFieldLoadError(int index, string propName, object value, Exception ex)
+        private bool RecordFieldLoadError(int index, string propName, object value, Exception ex)
         {
             if (_record == null) return true;
             return ChoFuncEx.RunWithIgnoreError(() => _record.RecordFieldLoadError(index, propName, value, ex), false);
