@@ -10,7 +10,7 @@ Cinchoo ETL is a code-based ETL framework for extracting data from multiple sour
 Here are the items will be targetted on phase 1. 
 
   1. CSV Reader / Writer
-    + CSV Reader
+    + [CSV Reader](http://www.codeproject.com/Articles/1145337/ChoETL-CSVReader)
     + CSV Writer
   2. Fixed Length Reader / Writer
   3. Database Reader / Writer
