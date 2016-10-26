@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Dynamic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -79,12 +80,16 @@ namespace ChoETL
 
         private void DiscoverRecordFields(Type recordType)
         {
-            RecordFieldConfigurations.Clear();
-            foreach (PropertyDescriptor pd in TypeDescriptor.GetProperties(recordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().Any()))
+            if (recordType != typeof(ExpandoObject))
             {
-                var obj = new ChoCSVRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().First());
-                obj.FieldType = pd.PropertyType;
-                RecordFieldConfigurations.Add(obj);
+                RecordFieldConfigurations.Clear();
+
+                foreach (PropertyDescriptor pd in TypeDescriptor.GetProperties(recordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().Any()))
+                {
+                    var obj = new ChoCSVRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().First());
+                    obj.FieldType = pd.PropertyType;
+                    RecordFieldConfigurations.Add(obj);
+                }
             }
         }
 
@@ -104,6 +109,26 @@ namespace ChoETL
             //Validate Header
             if (CSVFileHeaderConfiguration != null)
                 CSVFileHeaderConfiguration.Validate(this);
+
+            string[] headers = state as string[];
+            if (AutoDiscoverColumns
+                && RecordFieldConfigurations.Count == 0)
+            {
+                int index = 0;
+                if (!CSVFileHeaderConfiguration.HasHeaderRecord)
+                    RecordFieldConfigurations = (from header in headers
+                                                 select new ChoCSVRecordFieldConfiguration("Column{0}".FormatString(++index), index)).ToList();
+                else
+                    RecordFieldConfigurations = (from header in headers
+                                                 select new ChoCSVRecordFieldConfiguration(header, ++index)).ToList();
+            }
+
+            if (RecordFieldConfigurations.Count > 0)
+                MaxFieldPosition = RecordFieldConfigurations.Max(r => r.FieldPosition);
+            else
+                throw new ChoRecordConfigurationException("No record fields specified.");
+
+            RecordFieldConfigurationsDict = RecordFieldConfigurations.Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
 
             //Validate each record field
             foreach (var fieldConfig in RecordFieldConfigurations)
@@ -137,26 +162,6 @@ namespace ChoETL
                 if (dupFields.Length > 0)
                     throw new ChoRecordConfigurationException("Duplicate field names [Name: {0}] specified to record fields.".FormatString(String.Join(",", dupFields)));
             }
-
-            string[] headers = state as string[];
-            if (AutoDiscoverColumns
-                && RecordFieldConfigurations.Count == 0)
-            {
-                int index = 0;
-                if (!CSVFileHeaderConfiguration.HasHeaderRecord)
-                    RecordFieldConfigurations = (from header in headers
-                                                select new ChoCSVRecordFieldConfiguration("Column{0}".FormatString(++index), index)).ToList();
-                else
-                    RecordFieldConfigurations = (from header in headers
-                                                 select new ChoCSVRecordFieldConfiguration(header, ++index)).ToList();
-            }
-
-            if (RecordFieldConfigurations.Count > 0)
-                MaxFieldPosition = RecordFieldConfigurations.Max(r => r.FieldPosition);
-            else
-                throw new ChoRecordConfigurationException("No record fields specified.");
-
-            RecordFieldConfigurationsDict = RecordFieldConfigurations.Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
         }
     }
 }

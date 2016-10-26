@@ -24,9 +24,10 @@ namespace ChoETL
 
         public ChoCSVRecordReader(Type recordType, ChoCSVRecordConfiguration configuration = null) : base(recordType)
         {
+            ChoGuard.ArgumentNotNull(configuration, "Configuration");
             Configuration = configuration;
-            if (Configuration == null)
-                Configuration = new ChoCSVRecordConfiguration(recordType);
+            //if (Configuration == null)
+            //    Configuration = new ChoCSVRecordConfiguration(recordType);
 
             if (typeof(IChoReaderRecord).IsAssignableFrom(recordType))
                 _record = Activator.CreateInstance(recordType) as IChoReaderRecord;

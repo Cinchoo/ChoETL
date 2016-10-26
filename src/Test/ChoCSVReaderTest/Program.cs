@@ -91,7 +91,7 @@ namespace ChoCSVReaderTest
         static void Main(string[] args)
         {
             //ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
-            ////config.CSVFileHeaderConfiguration.HasHeaderRecord = true;
+            //config.CSVFileHeaderConfiguration.HasHeaderRecord = true;
             ////config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1));
             ////config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
 
@@ -109,7 +109,7 @@ namespace ChoCSVReaderTest
 
             //    while ((row = parser.Read()) != null)
             //    {
-            //        Console.WriteLine(row.Column1);
+            //        Console.WriteLine(row.Id);
             //    }
             //}
             //return;
