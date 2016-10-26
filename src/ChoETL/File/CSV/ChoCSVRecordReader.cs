@@ -14,6 +14,7 @@ namespace ChoETL
         private bool _headerFound = false;
         private bool _excelSeparatorFound = false;
         private string[] _fieldNames = new string[] { };
+        private bool _configCheckDone = false;
 
         public ChoCSVRecordConfiguration Configuration
         {
@@ -127,6 +128,12 @@ namespace ChoETL
                             ChoETLFramework.WriteLog("Comment line found at [{0}]...".FormatString(pair.Item1));
                             return true;
                         }
+                    }
+
+                    if (!_configCheckDone)
+                    {
+                        Configuration.Validate(GetHeaders(pair.Item2));
+                        _configCheckDone = true;
                     }
 
                     //LoadHeader if any
@@ -369,7 +376,7 @@ namespace ChoETL
                 }
             }
 
-            if (config.QuoteField.Value && fieldValue.StartsWith(@"""") && fieldValue.EndsWith(@""""))
+            if (config.QuoteField != null && config.QuoteField.Value && fieldValue.StartsWith(@"""") && fieldValue.EndsWith(@""""))
                 return fieldValue.Substring(1, fieldValue.Length - 2);
             else if ((fieldValue.Contains(Configuration.Delimiter)
                 || fieldValue.Contains(Configuration.EOLDelimiter)) && fieldValue.StartsWith(@"""") && fieldValue.EndsWith(@""""))
@@ -417,13 +424,18 @@ namespace ChoETL
             return false;
         }
 
+        private string[] GetHeaders(string line)
+        {
+            return (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions)
+                           select CleanHeaderValue(x)).ToArray();
+        }
+
         private void LoadHeaderLine(Tuple<int, string> pair)
         {
             string line = pair.Item2;
 
             //Validate header
-            _fieldNames = (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions)
-                                    select CleanHeaderValue(x)).ToArray();
+            _fieldNames = GetHeaders(line);
             
             if (_fieldNames.Length == 0)
                 throw new ChoParserException("No headers found.");

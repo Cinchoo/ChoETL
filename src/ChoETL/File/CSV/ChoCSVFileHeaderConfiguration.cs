@@ -9,8 +9,6 @@ namespace ChoETL
 {
     public class ChoCSVFileHeaderConfiguration : ChoFileHeaderConfiguration
     {
-        public readonly static ChoCSVFileHeaderConfiguration Default = new ChoCSVFileHeaderConfiguration();
-
         public ChoCSVFileHeaderConfiguration(Type recordType = null, CultureInfo culture = null) : base(recordType, culture)
         { }
     }

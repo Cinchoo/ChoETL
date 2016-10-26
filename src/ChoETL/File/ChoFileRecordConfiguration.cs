@@ -99,7 +99,7 @@ namespace ChoETL
             }
         }
 
-        public virtual void Validate()
+        public virtual void Validate(object state)
         {
             if (EOLDelimiter.IsNullOrEmpty())
                 throw new ChoRecordConfigurationException("EOLDelimiter can't be null or empty.");

@@ -9,7 +9,6 @@ namespace ChoETL
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
     public class ChoCSVFileHeaderAttribute : ChoFileHeaderAttribute
     {
-        public static readonly ChoCSVFileHeaderAttribute Default = new ChoCSVFileHeaderAttribute();
     }
 
 }

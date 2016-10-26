@@ -18,10 +18,16 @@ namespace ChoETL
             get;
             set;
         }
+        public bool AutoDiscoverColumns
+        {
+            get;
+            set;
+        }
 
         public ChoRecordConfiguration(Type recordType = null)
         {
             ErrorMode = ChoErrorMode.ThrowAndStop;
+            AutoDiscoverColumns = true;
         }
     }
 }

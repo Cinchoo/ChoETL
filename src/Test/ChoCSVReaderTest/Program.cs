@@ -90,34 +90,37 @@ namespace ChoCSVReaderTest
     {
         static void Main(string[] args)
         {
-            ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1));
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
+            //ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
+            ////config.CSVFileHeaderConfiguration.HasHeaderRecord = true;
+            ////config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1));
+            ////config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
 
-            dynamic row;
-            using (var stream = new MemoryStream())
-            using (var reader = new StreamReader(stream))
-            using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoCSVReader(reader, config))
-            {
-                writer.WriteLine("1,Carl");
-                writer.WriteLine("2,Mark");
-                writer.Flush();
-                stream.Position = 0;
+            //dynamic row;
+            //using (var stream = new MemoryStream())
+            //using (var reader = new StreamReader(stream))
+            //using (var writer = new StreamWriter(stream))
+            //using (var parser = new ChoCSVReader(reader, config))
+            //{
+            //    writer.WriteLine("Id,Name");
+            //    writer.WriteLine("1,Carl");
+            //    writer.WriteLine("2,Mark");
+            //    writer.Flush();
+            //    stream.Position = 0;
 
-                while ((row = parser.Read()) != null)
-                {
-                    Console.WriteLine(row.Name);
-                }
-            }
-            return;
+            //    while ((row = parser.Read()) != null)
+            //    {
+            //        Console.WriteLine(row.Column1);
+            //    }
+            //}
+            //return;
 
             //DataTable dt = new ChoCSVReader<EmployeeRec>("Emp.csv").AsDataTable();
             //var z = dt.Rows.Count;
             //return;
 
-            //foreach (var e in new ChoCSVReader<EmployeeRec>("Emp.csv"))
-            //    Console.WriteLine(e.ToStringEx());
+            foreach (var e in new ChoCSVReader<EmployeeRec>("Emp.csv"))
+                Console.WriteLine(e.ToStringEx());
+            return;
 
             //var reader = new ChoCSVReader<EmployeeRec>("Emp.csv");
             //var rec = (object)null;

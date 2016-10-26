@@ -10,8 +10,6 @@ namespace ChoETL
 {
     public class ChoCSVRecordConfiguration : ChoFileRecordConfiguration
     {
-        public static readonly ChoCSVRecordConfiguration Default = new ChoCSVRecordConfiguration();
-
         public ChoCSVFileHeaderConfiguration CSVFileHeaderConfiguration
         {
             get;
@@ -52,6 +50,16 @@ namespace ChoETL
             {
                 Init(recordType);
             }
+
+            if (Delimiter.IsNullOrEmpty())
+            {
+                if (Culture != null)
+                    Delimiter = Culture.TextInfo.ListSeparator;
+
+                if (Delimiter.IsNullOrWhiteSpace())
+                    Delimiter = ",";
+            }
+
             CSVFileHeaderConfiguration = new ChoCSVFileHeaderConfiguration(recordType, Culture);
         }
 
@@ -80,22 +88,9 @@ namespace ChoETL
             }
         }
 
-        public override void Validate()
+        public override void Validate(object state)
         {
-            if (RecordFieldConfigurations.Count > 0)
-                MaxFieldPosition = RecordFieldConfigurations.Max(r => r.FieldPosition);
-            else
-                throw new ChoRecordConfigurationException("No record fields specified.");
-            RecordFieldConfigurationsDict = RecordFieldConfigurations.Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
-
-            if (Delimiter.IsNullOrWhiteSpace())
-            {
-                Delimiter = Culture.TextInfo.ListSeparator;
-                if (Delimiter.IsNullOrWhiteSpace())
-                    Delimiter = ",";
-            }
-
-            base.Validate();
+            base.Validate(state);
 
             if (Delimiter.IsNullOrWhiteSpace())
                 throw new ChoRecordConfigurationException("Delimiter can't be null or whitespace.");
@@ -142,6 +137,26 @@ namespace ChoETL
                 if (dupFields.Length > 0)
                     throw new ChoRecordConfigurationException("Duplicate field names [Name: {0}] specified to record fields.".FormatString(String.Join(",", dupFields)));
             }
+
+            string[] headers = state as string[];
+            if (AutoDiscoverColumns
+                && RecordFieldConfigurations.Count == 0)
+            {
+                int index = 0;
+                if (!CSVFileHeaderConfiguration.HasHeaderRecord)
+                    RecordFieldConfigurations = (from header in headers
+                                                select new ChoCSVRecordFieldConfiguration("Column{0}".FormatString(++index), index)).ToList();
+                else
+                    RecordFieldConfigurations = (from header in headers
+                                                 select new ChoCSVRecordFieldConfiguration(header, ++index)).ToList();
+            }
+
+            if (RecordFieldConfigurations.Count > 0)
+                MaxFieldPosition = RecordFieldConfigurations.Max(r => r.FieldPosition);
+            else
+                throw new ChoRecordConfigurationException("No record fields specified.");
+
+            RecordFieldConfigurationsDict = RecordFieldConfigurations.Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
         }
     }
 }
