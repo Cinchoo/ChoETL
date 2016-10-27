@@ -198,6 +198,10 @@ namespace ChoETL
             {
                 throw;
             }
+            catch (ChoMissingRecordFieldException)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 ChoETLFramework.HandleException(ex);
@@ -248,7 +252,7 @@ namespace ChoETL
 
             object fieldValue = null;
 
-            string[] fieldValues = (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions)
+            string[] fieldValues = (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)
                                select x).ToArray();
             if (Configuration.ColumnCountStrict)
             {
@@ -299,15 +303,25 @@ namespace ChoETL
                         }
                         else
                         {
-                            ChoType.ConvertNSetMemberValue(rec, kvp.Key, fieldValue);
-                            fieldValue = ChoType.GetMemberValue(rec, kvp.Key);
+                            if (ChoType.HasProperty(rec.GetType(), kvp.Key))
+                            {
+                                ChoType.ConvertNSetMemberValue(rec, kvp.Key, fieldValue);
+                                fieldValue = ChoType.GetMemberValue(rec, kvp.Key);
 
-                            ChoValidator.ValididateFor(rec, kvp.Key);
+                                ChoValidator.ValididateFor(rec, kvp.Key);
+                            }
+                            else
+                                throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(kvp.Key, ChoType.GetTypeName(rec)));
                         }
                     }
 
                     if (!RaiseAfterRecordFieldLoad(pair.Item1, kvp.Key, fieldValue))
                         return false;
+                }
+                catch (ChoMissingRecordFieldException)
+                {
+                    if (Configuration.ThrowAndStopOnMissingField)
+                        throw;
                 }
                 catch (Exception ex)
                 {
@@ -427,7 +441,7 @@ namespace ChoETL
 
         private string[] GetHeaders(string line)
         {
-            return (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions)
+            return (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)
                            select CleanHeaderValue(x)).ToArray();
         }
 

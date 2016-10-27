@@ -78,6 +78,16 @@ namespace ChoETL
             DiscoverRecordFields(recordType);
         }
 
+        public void MapRecordFields<T>()
+        {
+            DiscoverRecordFields(typeof(T));
+        }
+
+        public void MapRecordFields(Type recordType)
+        {
+            DiscoverRecordFields(recordType);
+        }
+
         private void DiscoverRecordFields(Type recordType)
         {
             if (recordType != typeof(ExpandoObject))

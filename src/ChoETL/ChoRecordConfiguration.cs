@@ -23,11 +23,28 @@ namespace ChoETL
             get;
             set;
         }
+        public bool ThrowAndStopOnMissingField
+        {
+            get;
+            set;
+        }
 
         public ChoRecordConfiguration(Type recordType = null)
         {
             ErrorMode = ChoErrorMode.ThrowAndStop;
             AutoDiscoverColumns = true;
+            ThrowAndStopOnMissingField = true;
+        }
+
+        protected virtual void Init(Type recordType)
+        {
+            ChoRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoRecordObjectAttribute>(recordType);
+            if (recObjAttr != null)
+            {
+                ErrorMode = recObjAttr.ErrorMode;
+                IgnoreFieldValueMode = recObjAttr.IgnoreFieldValueMode;
+                ThrowAndStopOnMissingField = recObjAttr.ThrowAndStopOnMissingField;
+            }
         }
     }
 }

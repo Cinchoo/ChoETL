@@ -18,10 +18,16 @@ namespace ChoETL
             get;
             set;
         }
+        public bool ThrowAndStopOnMissingField
+        {
+            get;
+            set;
+        }
 
         public ChoRecordObjectAttribute()
         {
             ErrorMode = ChoErrorMode.ThrowAndStop;
+            ThrowAndStopOnMissingField = true;
         }
     }
 }

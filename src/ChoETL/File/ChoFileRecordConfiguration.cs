@@ -71,17 +71,17 @@ namespace ChoETL
             ColumnCountStrict = true;
             QuoteChar = '"';
             QuoteAllFields = false;
-            StringSplitOptions = ChoStringSplitOptions.All;
+            StringSplitOptions = ChoStringSplitOptions.None;
             Encoding = Encoding.UTF8;
         }
 
-        protected virtual void Init(Type recordType)
+        protected override void Init(Type recordType)
         {
+            base.Init(recordType);
+
             ChoFileRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoFileRecordObjectAttribute>(recordType);
             if (recObjAttr != null)
             {
-                ErrorMode = recObjAttr.ErrorMode;
-                IgnoreFieldValueMode = recObjAttr.IgnoreFieldValueMode;
                 if (recObjAttr.BufferSize > 0)
                     BufferSize = recObjAttr.BufferSize;
                 if (recObjAttr.Comments.IsNullOrWhiteSpace())

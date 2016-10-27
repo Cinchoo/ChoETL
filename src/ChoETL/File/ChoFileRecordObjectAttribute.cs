@@ -77,7 +77,7 @@ namespace ChoETL
             ColumnCountStrict = true;
             QuoteChar = '"';
             QuoteAllFields = false;
-            StringSplitOptions = ChoStringSplitOptions.AllowSingleQuoteEntry | ChoStringSplitOptions.RemoveEmptyEntries;
+            StringSplitOptions = ChoStringSplitOptions.None;
             Encoding = "UTF8";
         }
     }

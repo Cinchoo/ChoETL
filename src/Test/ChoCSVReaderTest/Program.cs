@@ -27,18 +27,19 @@ namespace ChoCSVReaderTest
         }
     }
 
-    //[ChoCSVFileHeader()]
-    [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.IgnoreAndContinue, IgnoreFieldValueMode = ChoIgnoreFieldValueMode.All)]
+    [ChoCSVFileHeader()]
+    [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.IgnoreAndContinue, 
+        IgnoreFieldValueMode = ChoIgnoreFieldValueMode.All, ThrowAndStopOnMissingField = false)]
     public class EmployeeRec : IChoReaderRecord
     {
-        [ChoCSVRecordField(1, FieldName = "id")]
-        [ChoTypeConverter(typeof(IntConverter))]
+        //[ChoCSVRecordField(1, FieldName = "id")]
+        //[ChoTypeConverter(typeof(IntConverter))]
         //[Range(1, int.MaxValue, ErrorMessage = "Id must be > 0.")]
         //[ChoFallbackValue(1)]
         public int Id { get; set; }
-        [ChoCSVRecordField(2, FieldName ="Name", QuoteField = true)]
-        [Required]
-        [DefaultValue("ZZZ")]
+        //[ChoCSVRecordField(2, FieldName ="Name", QuoteField = true)]
+        //[Required]
+        //[DefaultValue("ZZZ")]
         //[ChoFallbackValue("XXX")]
         public string Name { get; set; }
 
@@ -90,10 +91,23 @@ namespace ChoCSVReaderTest
     {
         static void Main(string[] args)
         {
-            //ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
-            //config.CSVFileHeaderConfiguration.HasHeaderRecord = true;
-            ////config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1));
-            ////config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
+            //string v = @"4,'123\r\n4,abc'";
+            //foreach (var ss in v.SplitNTrim(",", ChoStringSplitOptions.None, '\''))
+            //    Console.WriteLine(ss + "-");
+            //return;
+            //using (var wr = new ChoCSVWriter<EmployeeRec>("EmpOut.csv"))
+            //{
+            //    wr.Write(new EmployeeRec[] { new EmployeeRec() { Id = 1, Name = "Carl" } });
+            //}
+            //return;
+
+            ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
+            //config.AutoDiscoverColumns = false;
+            config.CSVFileHeaderConfiguration.HasHeaderRecord = true;
+            config.ThrowAndStopOnMissingField = true;
+            //config.MapRecordFields<EmployeeRec>();
+            //config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1));
+            //config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
 
             //dynamic row;
             //using (var stream = new MemoryStream())
@@ -118,9 +132,9 @@ namespace ChoCSVReaderTest
             //var z = dt.Rows.Count;
             //return;
 
-            foreach (var e in new ChoCSVReader<EmployeeRec>("Emp.csv"))
-                Console.WriteLine(e.ToStringEx());
-            return;
+            //foreach (var e in new ChoCSVReader<EmployeeRec>("Emp.csv"))
+            //    Console.WriteLine(e.ToStringEx());
+            //return;
 
             //var reader = new ChoCSVReader<EmployeeRec>("Emp.csv");
             //var rec = (object)null;
@@ -140,7 +154,7 @@ namespace ChoCSVReaderTest
             using (var writer = new StreamWriter(stream))
             using (var parser = new ChoCSVReader<EmployeeRec>(reader))
             {
-                //writer.WriteLine("Id,Name");
+                writer.WriteLine("Id,Name");
                 writer.WriteLine("1,Carl");
                 writer.WriteLine("2,Mark");
                 writer.Flush();
@@ -151,8 +165,8 @@ namespace ChoCSVReaderTest
                     Console.WriteLine(dr[0]);
                 }
                 //object row = null;
-                 
-                //parser.Configuration.ColumnCountStrict = true;
+
+                ////parser.Configuration.ColumnCountStrict = true;
                 //while ((row = parser.Read()) != null)
                 //{
                 //    Console.WriteLine(row.ToStringEx());

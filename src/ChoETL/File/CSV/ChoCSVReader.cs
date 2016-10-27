@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -99,6 +100,10 @@ namespace ChoETL
 
         public IDataReader AsDataReader()
         {
+            using (var mo = new ChoMomentoObject<TraceLevel>(TraceLevel.Off, () => ChoETLFramework.Switch.Level, (o) => ChoETLFramework.Switch.Level = o))
+            {
+                GetEnumerator().MoveNext();
+            }
             var dr = new ChoEnumerableDataReader(GetEnumerator().ToEnumerable(), Configuration.RecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType)).ToArray());
             return dr;
         }

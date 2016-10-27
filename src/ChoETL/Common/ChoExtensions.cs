@@ -15,10 +15,8 @@ namespace ChoETL
     {
         None = 0,
         RemoveEmptyEntries = 1,
-        AllowSingleQuoteEntry = 2,
-        AllowDoubleQuoteEntry = 4,
-        AllowSingleOrDoubleQuoteEntry = AllowSingleQuoteEntry | AllowDoubleQuoteEntry,
-        All = RemoveEmptyEntries | AllowSingleQuoteEntry | AllowDoubleQuoteEntry
+        AllowQuotes = 2,
+        All = RemoveEmptyEntries | AllowQuotes
     }
 
     public static class ChoExtensions
@@ -62,13 +60,13 @@ namespace ChoETL
             return SplitNTrim(text, value, ChoStringSplitOptions.All);
         }
 
-        public static string[] SplitNTrim(this string text, string value, ChoStringSplitOptions stringSplitOptions)
+        public static string[] SplitNTrim(this string text, string value, ChoStringSplitOptions stringSplitOptions, char quoteChar = '"')
         {
             if (text == null || text.Trim().Length == 0) return new string[] { };
 
             string word;
             List<string> tokenList = new List<string>();
-            foreach (string token in Split(text, value, stringSplitOptions))
+            foreach (string token in Split(text, value, stringSplitOptions, quoteChar))
             {
                 word = token != null ? token.Trim() : token;
                 if (String.IsNullOrEmpty(word))
@@ -83,13 +81,13 @@ namespace ChoETL
             return tokenList.ToArray();
         }
 
-        public static string[] SplitNTrim(this string text, char[] Separators, ChoStringSplitOptions stringSplitOptions)
+        public static string[] SplitNTrim(this string text, char[] Separators, ChoStringSplitOptions stringSplitOptions, char quoteChar = '"')
         {
             if (text == null || text.Trim().Length == 0) return new string[] { };
 
             string word;
             List<string> tokenList = new List<string>();
-            foreach (string token in Split(text, Separators, stringSplitOptions))
+            foreach (string token in Split(text, Separators, stringSplitOptions, quoteChar))
             {
                 word = token != null ? token.Trim() : token;
                 if (String.IsNullOrEmpty(word))
@@ -152,21 +150,33 @@ namespace ChoETL
         /// <param name="Separators">List of Separators used to split the string.</param>
         /// <param name="ignoreEmptyWord">true, to ignore the empry words in the output list</param>
         /// <returns>A string array contains splitted values, if the input text is null/empty, an empty array will be returned.</returns>
-        public static string[] Split(this string text, char[] Separators, ChoStringSplitOptions stringSplitOptions)
+        public static string[] Split(this string text, char[] Separators, ChoStringSplitOptions stringSplitOptions, char quoteChar = '"')
         {
-            return Split(text, (object)Separators, stringSplitOptions);
+            return Split(text, (object)Separators, stringSplitOptions, quoteChar);
         }
 
-        public static string[] Split(this string text, string value, ChoStringSplitOptions stringSplitOptions)
+        public static string[] Split(this string text, string value, ChoStringSplitOptions stringSplitOptions, char quoteChar = '"')
         {
-            return Split(text, (object)value, stringSplitOptions);
+            return Split(text, (object)value, stringSplitOptions, quoteChar);
         }
 
-        private static string[] Split(this string text, object Separators, ChoStringSplitOptions stringSplitOptions)
+        private static string[] Split(this string text, object Separators, ChoStringSplitOptions stringSplitOptions, char quoteChar = '"')
         {
             if (String.IsNullOrEmpty(text)) return new string[0];
 
             List<string> splitStrings = new List<string>();
+
+            if (quoteChar == '\0')
+                quoteChar = '"';
+
+            if (Separators is char[] && Array.IndexOf(((char[])Separators), quoteChar) >= 0)
+            {
+                throw new ApplicationException("Invalid quote character passed.");
+            }
+            else if (Separators is string && ((string)Separators).Contains(quoteChar))
+            {
+                throw new ApplicationException("Invalid quote character passed.");
+            }
 
             int len = Separators is char[] ? 0 : ((string)Separators).Length - 1;
             int i = 0;
@@ -177,8 +187,8 @@ namespace ChoETL
             string word = null;
             while (i < text.Length)
             {
-                if ((stringSplitOptions & ChoStringSplitOptions.AllowDoubleQuoteEntry) != ChoStringSplitOptions.AllowDoubleQuoteEntry && text[i] == '\"') { quotes++; }
-                else if ((stringSplitOptions & ChoStringSplitOptions.AllowSingleQuoteEntry) != ChoStringSplitOptions.AllowSingleQuoteEntry && text[i] == '\'') { singleQuotes++; }
+                if ((stringSplitOptions & ChoStringSplitOptions.AllowQuotes) != ChoStringSplitOptions.AllowQuotes && text[i] == quoteChar) { quotes++; }
+                //else if ((stringSplitOptions & ChoStringSplitOptions.AllowSingleQuoteEntry) != ChoStringSplitOptions.AllowSingleQuoteEntry && text[i] == '\'') { singleQuotes++; }
                 else if (text[i] == '\\'
                     && i + 1 < text.Length && Contains(text, ++i, Separators))
                     hasChar = true;
@@ -188,7 +198,7 @@ namespace ChoETL
                 {
                     if (hasChar)
                     {
-                        word = NormalizeString(text.Substring(offset, i - len - offset).Replace("\\", String.Empty));
+                        word = NormalizeString(text.Substring(offset, i - len - offset).Replace("\\", String.Empty), quoteChar);
                         if (String.IsNullOrEmpty(word))
                         {
                             if (stringSplitOptions != ChoStringSplitOptions.RemoveEmptyEntries)
@@ -206,7 +216,7 @@ namespace ChoETL
                             splitStrings.Add(subString);
                         else
                         {
-                            word = NormalizeString(subString);
+                            word = NormalizeString(subString, quoteChar);
                             if (String.IsNullOrEmpty(word))
                             {
                                 if (stringSplitOptions != ChoStringSplitOptions.RemoveEmptyEntries)
@@ -222,7 +232,8 @@ namespace ChoETL
                 i++;
             }
 
-            splitStrings.Add(hasChar ? NormalizeString(text.Substring(offset).Replace("\\", String.Empty)) : NormalizeString(text.Substring(offset)));
+            splitStrings.Add(hasChar ? NormalizeString(text.Substring(offset).Replace("\\", String.Empty), quoteChar) : 
+                NormalizeString(text.Substring(offset), quoteChar));
 
             return splitStrings.ToArray();
         }
@@ -270,11 +281,13 @@ namespace ChoETL
                 return false;
         }
 
-        private static string NormalizeString(string inString)
+        private static string NormalizeString(string inString, char quoteChar)
         {
-            if (inString == null || inString.Length == 0) return inString;
-            if (inString.Contains("\"\""))
-                return inString.Replace("\"\"", "\"");
+            if (inString == null || inString.Length < 2) return inString;
+            if (inString[0] == quoteChar && inString[inString.Length - 1] == quoteChar)
+                return inString.Substring(1, inString.Length - 2);
+            //if (inString.Contains("\"\""))
+            //    return inString.Replace("\"\"", "\"");
             //else if (inString.Contains("''"))
             //    return inString.Replace("''", "'");
             else

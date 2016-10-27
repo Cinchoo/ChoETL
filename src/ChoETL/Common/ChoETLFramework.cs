@@ -90,7 +90,7 @@ namespace ChoETL
 
     public static class ChoETLFramework
     {
-        private static TraceSwitch _switch = new TraceSwitch("ChoSwitch", "Cho Trace Switch", "Info");
+        private static TraceSwitch _switch = new TraceSwitch("ChoETLSwitch", "ChoETL Trace Switch", "Info");
         public static TraceSwitch Switch
         {
             get { return _switch; }
