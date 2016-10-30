@@ -72,19 +72,19 @@ namespace ChoETL
 
                     //if (!(sr.BaseStream is MemoryStream))
                     //{
-                        ChoETLFramework.WriteLog(Environment.NewLine);
+                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, Environment.NewLine);
 
                         if (!skip.Value)
-                            ChoETLFramework.WriteLog("Loading line [{0}]...".FormatString(pair.Item1));
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Loading line [{0}]...".FormatString(pair.Item1));
                         else
-                            ChoETLFramework.WriteLog("Skipping line [{0}]...".FormatString(pair.Item1));
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Skipping line [{0}]...".FormatString(pair.Item1));
                     //}
 
                     if (skip.Value)
                         return skip;
 
                     //if (!(sr.BaseStream is MemoryStream))
-                    //    ChoETLFramework.WriteLog(ChoETLFramework.Switch.TraceVerbose, "Loading line [{0}]...".FormatString(item.Item1));
+                    //    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, ChoETLFramework.Switch.TraceVerbose, "Loading line [{0}]...".FormatString(item.Item1));
 
                     //if (Task != null)
                     //    return !IsStateNOTExistsOrNOTMatch(item);
@@ -95,7 +95,7 @@ namespace ChoETL
                             throw new ChoParserException("Empty line found at {0} location.".FormatString(e.Peek.Item1));
                         else
                         {
-                            ChoETLFramework.WriteLog("Empty line found at [{0}]...".FormatString(pair.Item1));
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Empty line found at [{0}]...".FormatString(pair.Item1));
                             return true;
                         }
                     }
@@ -104,7 +104,7 @@ namespace ChoETL
                     if (pair.Item1 == 1
                         && !_excelSeparatorFound)
                     {
-                        ChoETLFramework.WriteLog("Inspecting for excel separator at [{0}]...".FormatString(pair.Item1));
+                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Inspecting for excel separator at [{0}]...".FormatString(pair.Item1));
                         bool retVal = LoadExcelSeperatorIfAny(pair);
                         _excelSeparatorFound = true;
 
@@ -126,7 +126,7 @@ namespace ChoETL
                                  select comment).FirstOrDefault();
                         if (x != null)
                         {
-                            ChoETLFramework.WriteLog("Comment line found at [{0}]...".FormatString(pair.Item1));
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Comment line found at [{0}]...".FormatString(pair.Item1));
                             return true;
                         }
                     }
@@ -141,7 +141,7 @@ namespace ChoETL
                     if (Configuration.CSVFileHeaderConfiguration.HasHeaderRecord
                         && !_headerFound)
                     {
-                        ChoETLFramework.WriteLog("Loading header line at [{0}]...".FormatString(pair.Item1));
+                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Loading header line at [{0}]...".FormatString(pair.Item1));
                         LoadHeaderLine(pair);
                         _headerFound = true;
                         return true;
@@ -424,18 +424,18 @@ namespace ChoETL
             string line = pair.Item2.NTrim();
             if (!line.IsNullOrWhiteSpace() && line.StartsWith("sep=", true, Configuration.Culture))
             {
-                ChoETLFramework.WriteLog("Excel separator specified at [{0}]...".FormatString(pair.Item1));
+                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Excel separator specified at [{0}]...".FormatString(pair.Item1));
                 string delimiter = line.Substring(4);
                 if (!delimiter.IsNullOrWhiteSpace())
                 {
-                    ChoETLFramework.WriteLog("Excel separator [{0}] found.".FormatString(delimiter));
+                    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Excel separator [{0}] found.".FormatString(delimiter));
                     Configuration.Delimiter = delimiter;
                 }
 
                 return true;
             }
 
-            ChoETLFramework.WriteLog("Excel separator NOT found. Default separator [{0}] used.".FormatString(Configuration.Delimiter));
+            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Excel separator NOT found. Default separator [{0}] used.".FormatString(Configuration.Delimiter));
             return false;
         }
 

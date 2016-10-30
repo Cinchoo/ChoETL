@@ -91,7 +91,7 @@ namespace ChoETL
     public static class ChoETLFramework
     {
         private static TraceSwitch _switch = new TraceSwitch("ChoETLSwitch", "ChoETL Trace Switch", "Info");
-        public static TraceSwitch Switch
+        public static TraceSwitch TraceSwitch
         {
             get { return _switch; }
         }
@@ -197,7 +197,7 @@ namespace ChoETL
                 }
                 catch (Exception ex)
                 {
-                    WriteLog(ChoETLFramework.Switch.TraceError, ex.ToString());
+                    WriteLog(ChoETLFramework.TraceSwitch.TraceError, ex.ToString());
                 }
 
                 if (_traceLevel == null)
@@ -225,8 +225,9 @@ namespace ChoETL
                     _frxTextWriterTraceListener = frxTextWriterTraceListener;
                     System.Diagnostics.Trace.Listeners.Add(_frxTextWriterTraceListener);
                 }
-                GlobalProfile = new ChoProfile(ChoETLFramework.Switch.TraceVerbose, "Time taken to run the application...");
+                GlobalProfile = new ChoProfile(ChoETLFramework.TraceSwitch.TraceVerbose, "Time taken to run the application...");
 
+                ChoETLLog.Info("Configuration File Path: " + ChoAppSettings.Configuation.FilePath);
             }
             catch (Exception ex)
             {
@@ -250,7 +251,7 @@ namespace ChoETL
             {
                 if (type == EventLogEntryType.Error ||
                     type == EventLogEntryType.FailureAudit)
-                    WriteLog(ChoETLFramework.Switch.TraceError, message);
+                    WriteLog(ChoETLFramework.TraceSwitch.TraceError, message);
                 else
                     WriteLog(message);
 
@@ -264,7 +265,7 @@ namespace ChoETL
                 }
                 catch (SecurityException sEx)
                 {
-                    WriteLog(ChoETLFramework.Switch.TraceError, sEx.ToString());
+                    WriteLog(ChoETLFramework.TraceSwitch.TraceError, sEx.ToString());
                 }
             }
             catch { } //If the event log is full or any other errors while writing to event log, we dont need to let the service to stop working or die
@@ -273,7 +274,7 @@ namespace ChoETL
         public static void WriteLog(string msg)
         {
             if (Log == null) return;
-            WriteLog(ChoETLFramework.Switch.TraceVerbose, msg);
+            WriteLog(ChoETLFramework.TraceSwitch.TraceVerbose, msg);
         }
 
         public static void WriteLog(bool condition, string msg)
@@ -302,8 +303,8 @@ namespace ChoETL
             else
                 message += "Unknown exception occurred.";
 
-            if (ChoETLFramework.Switch.TraceError)
-                WriteLog(ChoETLFramework.Switch.TraceError, message);
+            if (ChoETLFramework.TraceSwitch.TraceError)
+                WriteLog(ChoETLFramework.TraceSwitch.TraceError, message);
             else
                 Console.WriteLine(message);
             //System.Diagnostics.Trace.WriteLine(message);
@@ -345,7 +346,7 @@ namespace ChoETL
         {
             if (ex is ChoFatalApplicationException)
             {
-                WriteLog(ChoETLFramework.Switch.TraceError, ex.ToString());
+                WriteLog(ChoETLFramework.TraceSwitch.TraceError, ex.ToString());
                 Environment.Exit(-100);
                 return false;
             }

@@ -450,7 +450,7 @@ namespace ChoETL
 				}
 				catch (Exception ex)
 				{
-					ChoETLFramework.WriteLog(ChoETLFramework.Switch.TraceError, ex.ToString());
+					ChoETLFramework.WriteLog(ChoETLFramework.TraceSwitch.TraceError, ex.ToString());
 				}
 			}
 		}

@@ -403,7 +403,7 @@ namespace ChoETL
                 }
                 catch (Exception ex)
                 {
-                    ChoETLFramework.WriteLog(ChoETLFramework.Switch.TraceError, "Error while assigning default value '{0}' to '{1}' member. {2}".FormatString(defaultValue, ChoType.GetMemberName(pd), ex.Message));
+                    ChoETLFramework.WriteLog(ChoETLFramework.TraceSwitch.TraceError, "Error while assigning default value '{0}' to '{1}' member. {2}".FormatString(defaultValue, ChoType.GetMemberName(pd), ex.Message));
                 }
             }
 

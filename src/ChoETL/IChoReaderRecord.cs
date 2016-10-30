@@ -9,7 +9,7 @@ namespace ChoETL
     public interface IChoReaderRecord
     {
         bool BeginLoad(object source);
-        bool EndLoad(object source);
+        void EndLoad(object source);
 
         bool BeforeRecordLoad(int index, ref object source);
         bool AfterRecordLoad(int index, object source);

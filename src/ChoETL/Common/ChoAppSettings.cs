@@ -11,22 +11,20 @@ namespace ChoETL
 {
     public static class ChoAppSettings
     {
-        private static Configuration _appConfig = null;
+        public readonly static Configuration Configuation = null;
 
         static ChoAppSettings()
         {
             if (HttpContext.Current == null)
-                _appConfig = ConfigurationManager.OpenExeConfiguration(null);
+                Configuation = ConfigurationManager.OpenExeConfiguration(null);
             else
-                _appConfig = System.Web.Configuration.WebConfigurationManager.OpenWebConfiguration(null);
-
-            Trace.WriteLine("Config File Path: " + _appConfig.FilePath);
+                Configuation = System.Web.Configuration.WebConfigurationManager.OpenWebConfiguration("~/");
         }
 
         public static bool Contains(string key)
         {
             ChoGuard.ArgumentNotNullOrEmpty(key, "Key");
-            return _appConfig.AppSettings.Settings.AllKeys.Contains(key);
+            return Configuation.AppSettings.Settings.AllKeys.Contains(key);
         }
 
         public static T GetValue<T>(string key, T defaultValue = default(T), bool saveDefaultValue = false)
@@ -38,10 +36,10 @@ namespace ChoETL
         {
             ChoGuard.ArgumentNotNullOrEmpty(key, "Key");
 
-            if (_appConfig.AppSettings.Settings[key] == null)
+            if (Configuation.AppSettings.Settings[key] == null)
             {
                 //_appConfig.AppSettings.Settings.Add(key, defaultValue == null ? String.Empty : defaultValue);
-                _appConfig.AppSettings.Settings.Add(key, saveDefaultValue ? defaultValue : String.Empty);
+                Configuation.AppSettings.Settings.Add(key, saveDefaultValue ? defaultValue : String.Empty);
                 if (saveDefaultValue)
                     Save();
             }
@@ -51,7 +49,7 @@ namespace ChoETL
             //    Save();
             //}
 
-            return _appConfig.AppSettings.Settings[key].Value.IsNullOrWhiteSpace() ? defaultValue : _appConfig.AppSettings.Settings[key].Value;
+            return Configuation.AppSettings.Settings[key].Value.IsNullOrWhiteSpace() ? defaultValue : Configuation.AppSettings.Settings[key].Value;
         }
 
         public static void SetValue(string key, string value)
@@ -60,14 +58,14 @@ namespace ChoETL
             if (value == null)
                 value = String.Empty;
 
-            if (_appConfig.AppSettings.Settings[key] == null)
+            if (Configuation.AppSettings.Settings[key] == null)
             {
-                _appConfig.AppSettings.Settings.Add(key, value);
+                Configuation.AppSettings.Settings.Add(key, value);
                 Save();
             }
             else
             {
-                _appConfig.AppSettings.Settings[key].Value = value;
+                Configuation.AppSettings.Settings[key].Value = value;
                 Save();
             }
         }
@@ -76,12 +74,12 @@ namespace ChoETL
         {
             try
             {
-                _appConfig.Save(ConfigurationSaveMode.Modified);
+                Configuation.Save(ConfigurationSaveMode.Modified);
                 ConfigurationManager.RefreshSection("appSettings");
             }
             catch (Exception ex)
             {
-                Trace.WriteLine(ChoETLFramework.Switch.TraceError, ex.ToString());
+                Trace.WriteLine(ChoETLFramework.TraceSwitch.TraceError, ex.ToString());
             }
         }
     }

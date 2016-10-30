@@ -93,7 +93,7 @@ namespace ChoETL
                 }
                 catch (Exception ex)
                 {
-                    ChoETLFramework.WriteLog(ChoETLFramework.Switch.TraceError, "ToDynamicObject: Error assinging value for '{0}' member. {1}".FormatString(ChoType.GetMemberName(pd), ex.Message));
+                    ChoETLFramework.WriteLog(ChoETLFramework.TraceSwitch.TraceError, "ToDynamicObject: Error assinging value for '{0}' member. {1}".FormatString(ChoType.GetMemberName(pd), ex.Message));
                 }
             }
 
@@ -129,7 +129,7 @@ namespace ChoETL
                     }
                     catch (Exception ex)
                     {
-                        ChoETLFramework.WriteLog(ChoETLFramework.Switch.TraceError, "Clone: Error assinging value for '{0}' member. {1}".FormatString(ChoType.GetMemberName(pd), ex.Message));
+                        ChoETLFramework.WriteLog(ChoETLFramework.TraceSwitch.TraceError, "Clone: Error assinging value for '{0}' member. {1}".FormatString(ChoType.GetMemberName(pd), ex.Message));
                     }
                 }
             }
@@ -145,7 +145,7 @@ namespace ChoETL
                     }
                     catch (Exception ex)
                     {
-                        ChoETLFramework.WriteLog(ChoETLFramework.Switch.TraceError, "Clone: Error assinging value for '{0}' member. {1}".FormatString(ChoType.GetMemberName(destMembers[pd.Name]), ex.Message));
+                        ChoETLFramework.WriteLog(ChoETLFramework.TraceSwitch.TraceError, "Clone: Error assinging value for '{0}' member. {1}".FormatString(ChoType.GetMemberName(destMembers[pd.Name]), ex.Message));
                     }
                 }
             }
@@ -203,7 +203,7 @@ namespace ChoETL
                     }
                     catch (Exception ex)
                     {
-                        ChoETLFramework.WriteLog(ChoETLFramework.Switch.TraceError, "Clone: Error assigning value for '{0}' member. {1}".FormatString(ChoType.GetMemberName(memberInfo), ex.Message));
+                        ChoETLFramework.WriteLog(ChoETLFramework.TraceSwitch.TraceError, "Clone: Error assigning value for '{0}' member. {1}".FormatString(ChoType.GetMemberName(memberInfo), ex.Message));
                     }
                 }
             }
@@ -326,7 +326,7 @@ namespace ChoETL
                     }
                     catch (Exception ex)
                     {
-                        ChoETLFramework.WriteLog(ChoETLFramework.Switch.TraceError, "Clone: Error assigning value for '{0}' member. {1}".FormatString(ChoType.GetMemberName(memberInfo), ex.Message));
+                        ChoETLFramework.WriteLog(ChoETLFramework.TraceSwitch.TraceError, "Clone: Error assigning value for '{0}' member. {1}".FormatString(ChoType.GetMemberName(memberInfo), ex.Message));
                     }
                 }
             }

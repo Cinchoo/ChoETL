@@ -71,7 +71,7 @@ namespace ChoCSVReaderTest
             throw new NotImplementedException();
         }
 
-        public bool EndLoad(object source)
+        public void EndLoad(object source)
         {
             throw new NotImplementedException();
         }

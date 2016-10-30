@@ -16,7 +16,7 @@
 		private readonly int _indent = 0;
 		private readonly string _msg = "Elapsed time taken by the profile:";
         private readonly ChoBaseProfile _outerProfile = null;
-        private readonly bool _condition = ChoETLFramework.Switch.TraceVerbose;
+        private readonly bool _condition = ChoETLFramework.TraceSwitch.TraceVerbose;
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		private readonly object _padLock = new object();
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -32,7 +32,7 @@
 		#region Constrctors
 
         public ChoBaseProfile(string msg, ChoBaseProfile outerProfile = null)
-            : this(ChoETLFramework.Switch.TraceVerbose, msg, outerProfile)
+            : this(ChoETLFramework.TraceSwitch.TraceVerbose, msg, outerProfile)
 		{
 		}
 
@@ -155,7 +155,7 @@
 			}
 			catch (Exception ex)
 			{
-                ChoETLFramework.WriteLog(ChoETLFramework.Switch.TraceError, ex.ToString());
+                ChoETLFramework.WriteLog(ChoETLFramework.TraceSwitch.TraceError, ex.ToString());
 			}
 			finally
 			{
@@ -213,12 +213,12 @@
 		public void Debug(object message)
 		{
 			if (message != null)
-				AppendLineIf(ChoETLFramework.Switch.TraceVerbose, message.ToString());
+				AppendLineIf(ChoETLFramework.TraceSwitch.TraceVerbose, message.ToString());
 		}
 
 		public void Debug(Exception exception)
 		{
-			AppendIf(ChoETLFramework.Switch.TraceVerbose, exception);
+			AppendIf(ChoETLFramework.TraceSwitch.TraceVerbose, exception);
 		}
 
 		public void Debug(object message, Exception exception)
@@ -229,23 +229,23 @@
 
 		public void DebugFormat(string format, params object[] args)
 		{
-			AppendLineIf(ChoETLFramework.Switch.TraceVerbose, String.Format(format, args));
+			AppendLineIf(ChoETLFramework.TraceSwitch.TraceVerbose, String.Format(format, args));
 		}
 
 		public void DebugFormat(IFormatProvider provider, string format, params object[] args)
 		{
-			AppendLineIf(ChoETLFramework.Switch.TraceVerbose, String.Format(provider, format, args));
+			AppendLineIf(ChoETLFramework.TraceSwitch.TraceVerbose, String.Format(provider, format, args));
 		}
 
 		public void Error(object message)
 		{
 			if (message != null)
-				AppendLineIf(ChoETLFramework.Switch.TraceError, message.ToString());
+				AppendLineIf(ChoETLFramework.TraceSwitch.TraceError, message.ToString());
 		}
 
 		public void Error(Exception exception)
 		{
-			AppendIf(ChoETLFramework.Switch.TraceError, exception);
+			AppendIf(ChoETLFramework.TraceSwitch.TraceError, exception);
 		}
 
 		public void Error(object message, Exception exception)
@@ -256,23 +256,23 @@
 
 		public void ErrorFormat(string format, params object[] args)
 		{
-			AppendLineIf(ChoETLFramework.Switch.TraceError, String.Format(format, args));
+			AppendLineIf(ChoETLFramework.TraceSwitch.TraceError, String.Format(format, args));
 		}
 
 		public void ErrorFormat(IFormatProvider provider, string format, params object[] args)
 		{
-			AppendLineIf(ChoETLFramework.Switch.TraceError, String.Format(provider, format, args));
+			AppendLineIf(ChoETLFramework.TraceSwitch.TraceError, String.Format(provider, format, args));
 		}
 
 		public void Info(object message)
 		{
 			if (message != null)
-				AppendLineIf(ChoETLFramework.Switch.TraceInfo, message.ToString());
+				AppendLineIf(ChoETLFramework.TraceSwitch.TraceInfo, message.ToString());
 		}
 
 		public void Info(Exception exception)
 		{
-			AppendIf(ChoETLFramework.Switch.TraceInfo, exception);
+			AppendIf(ChoETLFramework.TraceSwitch.TraceInfo, exception);
 		}
 
 		public void Info(object message, Exception exception)
@@ -283,23 +283,23 @@
 
 		public void InfoFormat(string format, params object[] args)
 		{
-			AppendLineIf(ChoETLFramework.Switch.TraceInfo, String.Format(format, args));
+			AppendLineIf(ChoETLFramework.TraceSwitch.TraceInfo, String.Format(format, args));
 		}
 
 		public void InfoFormat(IFormatProvider provider, string format, params object[] args)
 		{
-			AppendLineIf(ChoETLFramework.Switch.TraceInfo, String.Format(provider, format, args));
+			AppendLineIf(ChoETLFramework.TraceSwitch.TraceInfo, String.Format(provider, format, args));
 		}
 
 		public void Warn(object message)
 		{
 			if (message != null)
-				AppendLineIf(ChoETLFramework.Switch.TraceWarning, message.ToString());
+				AppendLineIf(ChoETLFramework.TraceSwitch.TraceWarning, message.ToString());
 		}
 
 		public void Warn(Exception exception)
 		{
-			AppendIf(ChoETLFramework.Switch.TraceWarning, exception);
+			AppendIf(ChoETLFramework.TraceSwitch.TraceWarning, exception);
 		}
 
 		public void Warn(object message, Exception exception)
@@ -310,12 +310,12 @@
 
 		public void WarnFormat(string format, params object[] args)
 		{
-			AppendLineIf(ChoETLFramework.Switch.TraceWarning, String.Format(format, args));
+			AppendLineIf(ChoETLFramework.TraceSwitch.TraceWarning, String.Format(format, args));
 		}
 
 		public void WarnFormat(IFormatProvider provider, string format, params object[] args)
 		{
-			AppendLineIf(ChoETLFramework.Switch.TraceWarning, String.Format(provider, format, args));
+			AppendLineIf(ChoETLFramework.TraceSwitch.TraceWarning, String.Format(provider, format, args));
 		}
 
 		#endregion

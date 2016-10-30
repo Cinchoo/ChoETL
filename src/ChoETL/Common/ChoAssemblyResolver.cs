@@ -282,7 +282,7 @@ namespace ChoETL
                 }
                 catch (Exception ex)
                 {
-                    Trace.WriteLine(ChoETLFramework.Switch.TraceError, ex.ToString());
+                    Trace.WriteLine(ChoETLFramework.TraceSwitch.TraceError, ex.ToString());
                 }
             }
             return null;

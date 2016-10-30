@@ -10,22 +10,22 @@ namespace ChoETL
     {
         public static void Verbose(string msg)
         {
-            ChoETLFramework.WriteLog(ChoETLFramework.Switch.TraceVerbose, msg);
+            ChoETLFramework.WriteLog(ChoETLFramework.TraceSwitch.TraceVerbose, msg);
         }
 
         public static void Info(string msg)
         {
-            ChoETLFramework.WriteLog(ChoETLFramework.Switch.TraceInfo, msg);
+            ChoETLFramework.WriteLog(ChoETLFramework.TraceSwitch.TraceInfo, msg);
         }
 
         public static void Warning(string msg)
         {
-            ChoETLFramework.WriteLog(ChoETLFramework.Switch.TraceWarning, msg);
+            ChoETLFramework.WriteLog(ChoETLFramework.TraceSwitch.TraceWarning, msg);
         }
 
         public static void Error(string msg)
         {
-            ChoETLFramework.WriteLog(ChoETLFramework.Switch.TraceError, msg);
+            ChoETLFramework.WriteLog(ChoETLFramework.TraceSwitch.TraceError, msg);
         }
 
         public static void Write(string msg)

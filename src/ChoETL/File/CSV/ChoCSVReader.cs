@@ -88,9 +88,20 @@ namespace ChoETL
 
         public IEnumerator<T> GetEnumerator()
         {
+            return BuildAndGetEnumerator();
+        }
+
+        private IEnumerator<T> BuildAndGetEnumerator(TraceSwitch traceSwitch = null)
+        {
+            if (traceSwitch == null)
+                traceSwitch = ChoETLFramework.TraceSwitch;
+
             ChoCSVRecordReader builder = new ChoCSVRecordReader(typeof(T), Configuration);
+            builder.TraceSwitch = traceSwitch;
+
             var e = builder.AsEnumerable(_txtReader).GetEnumerator();
             return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
+
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -100,10 +111,7 @@ namespace ChoETL
 
         public IDataReader AsDataReader()
         {
-            using (var mo = new ChoMomentoObject<TraceLevel>(TraceLevel.Off, () => ChoETLFramework.Switch.Level, (o) => ChoETLFramework.Switch.Level = o))
-            {
-                GetEnumerator().MoveNext();
-            }
+            BuildAndGetEnumerator(new TraceSwitch("ChoETLSwitch", "ChoETL Trace Switch", "Off")).MoveNext();
             var dr = new ChoEnumerableDataReader(GetEnumerator().ToEnumerable(), Configuration.RecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType)).ToArray());
             return dr;
         }
