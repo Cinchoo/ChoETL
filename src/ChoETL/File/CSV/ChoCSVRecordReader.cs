@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -35,8 +36,21 @@ namespace ChoETL
             Configuration.Validate();
         }
 
+        public override void LoadSchema(object source)
+        {
+            var e = AsEnumerable(source, new TraceSwitch("ChoETLSwitch", "ChoETL Trace Switch", "Off")).GetEnumerator();
+            e.MoveNext();
+        }
+
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
         {
+            return AsEnumerable(source, ChoETLFramework.TraceSwitch, filterFunc);
+        }
+
+        private IEnumerable<object> AsEnumerable(object source, TraceSwitch traceSwitch, Func<object, bool?> filterFunc = null)
+        {
+            TraceSwitch = traceSwitch;
+
             StreamReader sr = source as StreamReader;
             ChoGuard.ArgumentNotNull(sr, "StreamReader");
 

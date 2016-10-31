@@ -159,18 +159,18 @@ namespace ChoCSVReaderTest
                 writer.WriteLine("2,Mark");
                 writer.Flush();
                 stream.Position = 0;
-                var dr = parser.AsDataReader();
-                while (dr.Read())
-                {
-                    Console.WriteLine(dr[0]);
-                }
-                //object row = null;
-
-                ////parser.Configuration.ColumnCountStrict = true;
-                //while ((row = parser.Read()) != null)
+                //var dr = parser.AsDataReader();
+                //while (dr.Read())
                 //{
-                //    Console.WriteLine(row.ToStringEx());
+                //    Console.WriteLine(dr[0]);
                 //}
+                object row = null;
+
+                //parser.Configuration.ColumnCountStrict = true;
+                while ((row = parser.Read()) != null)
+                {
+                    Console.WriteLine(row.ToStringEx());
+                }
             }
         }
     }

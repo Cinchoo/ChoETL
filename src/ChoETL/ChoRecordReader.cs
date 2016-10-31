@@ -17,8 +17,10 @@ namespace ChoETL
             ChoGuard.ArgumentNotNull(recordType, "RecordType");
 
             RecordType = recordType;
+            TraceSwitch = ChoETLFramework.TraceSwitch;
         }
 
         public abstract IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null);
+        public abstract void LoadSchema(object source);
     }
 }
