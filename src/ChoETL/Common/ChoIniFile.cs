@@ -75,7 +75,6 @@ namespace ChoETL
             if (!_iniFilePath.EndsWith(".ini", StringComparison.InvariantCultureIgnoreCase))
                 _iniFilePath = _iniFilePath + ".ini";
 
-            Directory.CreateDirectory(Path.GetDirectoryName(_iniFilePath));
             _padLock = GetIniFileLockObject(_iniFilePath);
             _sectionName = sectionName;
 
@@ -317,6 +316,8 @@ namespace ChoETL
                 {
                     if (ChoIniFile.New(this.IniFilePath).GetValue<bool>("IsLocked", false))
                         return;
+
+                    Directory.CreateDirectory(Path.GetDirectoryName(_iniFilePath));
 
                     string iniContents = String.Empty;
                     if (File.Exists(_iniFilePath))
