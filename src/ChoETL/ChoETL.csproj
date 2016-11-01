@@ -156,7 +156,6 @@
     <Compile Include="Common\Validators\ChoValidateObjectAttribute.cs" />
     <Compile Include="Common\Validators\ChoValidator.cs" />
     <Compile Include="Common\Validators\IChoValidatable.cs" />
-    <Compile Include="ChoRecordMap.cs" />
     <Compile Include="ChoRecordObjectAttribute.cs" />
     <Compile Include="ChoRecordFieldAttribute.cs" />
     <Compile Include="Exception\ChoMissingRecordFieldException.cs" />
@@ -172,7 +171,6 @@
     <Compile Include="File\ChoFileHeaderConfiguration.cs" />
     <Compile Include="File\CSV\ChoCSVRecordConfiguration.cs" />
     <Compile Include="File\CSV\ChoCSVRecordFieldConfiguration.cs" />
-    <Compile Include="File\CSV\ChoCSVRecordMap.cs" />
     <Compile Include="File\CSV\ChoCSVRecordObjectAttribute.cs" />
     <Compile Include="File\ChoFileRecordObjectAttribute.cs" />
     <Compile Include="File\ChoFileRecordFieldAttribute.cs" />
