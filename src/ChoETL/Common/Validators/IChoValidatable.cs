@@ -9,9 +9,9 @@ namespace ChoETL
 {
     public interface IChoValidatable
     {
-        void Validate();
-        bool TryValidate(ICollection<ValidationResult> validationResults);
-        void ValidateFor(string memberName);
-        bool TryValidateFor(string memberName, ICollection<ValidationResult> validationResults);
+        void Validate(object target);
+        bool TryValidate(object target, ICollection<ValidationResult> validationResults);
+        void ValidateFor(object target, string memberName);
+        bool TryValidateFor(object target, string memberName, ICollection<ValidationResult> validationResults);
     }
 }

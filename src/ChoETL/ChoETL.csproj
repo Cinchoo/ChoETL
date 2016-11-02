@@ -106,6 +106,7 @@
     <Compile Include="Common\ChoPropertyReplacer.cs" />
     <Compile Include="Common\ChoQueuedTaskScheduler.cs" />
     <Compile Include="Common\ChoStringMsgBuilder.cs" />
+    <Compile Include="Common\ChoSurrogateObjectCache.cs" />
     <Compile Include="Common\ChoTextWriterTraceListener.cs" />
     <Compile Include="Common\ChoTraceSwitch.cs" />
     <Compile Include="Common\ChoType.cs" />

@@ -203,6 +203,10 @@ namespace ChoETL
                 {
                     if (!FillRecord(rec, pair))
                         return false;
+
+                    if (!(rec is ExpandoObject) 
+                        && (Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
+                        ChoValidator.Validate(rec);
                 }
 
                 if (!RaiseAfterRecordLoad(rec, pair))
@@ -322,7 +326,8 @@ namespace ChoETL
                                 ChoType.ConvertNSetMemberValue(rec, kvp.Key, fieldValue);
                                 fieldValue = ChoType.GetMemberValue(rec, kvp.Key);
 
-                                ChoValidator.ValididateFor(rec, kvp.Key);
+                                if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
+                                    ChoValidator.ValididateFor(rec, kvp.Key);
                             }
                             else
                                 throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(kvp.Key, ChoType.GetTypeName(rec)));

@@ -48,10 +48,11 @@ namespace ChoETL
                 return true;
 
             var results = new List<ValidationResult>();
+            object surrObj = ChoSurrogateObjectCache.Default.GetSurrogateObject(@this);
 
-            if (@this is IChoValidatable)
+            if (surrObj is IChoValidatable)
             {
-                ((IChoValidatable)@this).TryValidateFor(mi.Name, results);
+                ((IChoValidatable)surrObj).TryValidateFor(@this, mi.Name, results);
             }
             else
             {
@@ -91,9 +92,11 @@ namespace ChoETL
                 return true;
 
             var results = new List<ValidationResult>();
-            if (@this is IChoValidatable)
+            object surrObj = ChoSurrogateObjectCache.Default.GetSurrogateObject(@this);
+
+            if (surrObj is IChoValidatable)
             {
-                ((IChoValidatable)@this).TryValidate(results);
+                ((IChoValidatable)surrObj).TryValidate(@this, results);
             }
             else
             {

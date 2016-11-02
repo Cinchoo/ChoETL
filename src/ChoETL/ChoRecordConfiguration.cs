@@ -28,12 +28,18 @@ namespace ChoETL
             get;
             set;
         }
+        public ChoObjectValidationMode ObjectValidationMode
+        {
+            get;
+            set;
+        }
 
         public ChoRecordConfiguration(Type recordType = null)
         {
             ErrorMode = ChoErrorMode.ThrowAndStop;
             AutoDiscoverColumns = true;
             ThrowAndStopOnMissingField = true;
+            ObjectValidationMode = ChoObjectValidationMode.MemberLevel;
         }
 
         protected virtual void Init(Type recordType)
@@ -44,6 +50,7 @@ namespace ChoETL
                 ErrorMode = recObjAttr.ErrorMode;
                 IgnoreFieldValueMode = recObjAttr.IgnoreFieldValueMode;
                 ThrowAndStopOnMissingField = recObjAttr.ThrowAndStopOnMissingField;
+                ObjectValidationMode = recObjAttr.ObjectValidationMode;
             }
         }
     }

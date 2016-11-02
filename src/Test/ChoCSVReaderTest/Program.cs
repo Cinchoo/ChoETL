@@ -30,7 +30,7 @@ namespace ChoCSVReaderTest
     [ChoCSVFileHeader()]
     [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.IgnoreAndContinue,
     IgnoreFieldValueMode = ChoIgnoreFieldValueMode.All, ThrowAndStopOnMissingField = false)]
-    public class EmployeeRecMeta 
+    public class EmployeeRecMeta : IChoReaderRecord, IChoValidatable
     {
         [ChoCSVRecordField(1, FieldName = "id")]
         [ChoTypeConverter(typeof(IntConverter))]
@@ -42,6 +42,64 @@ namespace ChoCSVReaderTest
         [DefaultValue("ZZZ")]
         [ChoFallbackValue("XXX")]
         public string Name { get; set; }
+
+        public bool AfterRecordFieldLoad(object target, int index, string propName, object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool AfterRecordLoad(object target, int index, object source)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool BeforeRecordFieldLoad(object target, int index, string propName, ref object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool BeforeRecordLoad(object target, int index, ref object source)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool BeginLoad(object source)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void EndLoad(object source)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool RecordFieldLoadError(object target, int index, string propName, object value, Exception ex)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool RecordLoadError(object target, int index, object source, Exception ex)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool TryValidate(object target, ICollection<ValidationResult> validationResults)
+        {
+            return true;
+        }
+
+        public bool TryValidateFor(object target, string memberName, ICollection<ValidationResult> validationResults)
+        {
+            return true;
+        }
+
+        public void Validate(object target)
+        {
+        }
+
+        public void ValidateFor(object target, string memberName)
+        {
+        }
     }
 
     [MetadataType(typeof(EmployeeRecMeta))]

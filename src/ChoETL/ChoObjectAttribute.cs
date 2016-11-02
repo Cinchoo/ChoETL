@@ -14,5 +14,10 @@ namespace ChoETL
             get;
             set;
         }
+
+        public ChoObjectAttribute()
+        {
+            ObjectValidationMode = ChoObjectValidationMode.MemberLevel;
+        }
     }
 }

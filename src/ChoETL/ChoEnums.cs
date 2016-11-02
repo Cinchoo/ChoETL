@@ -9,7 +9,13 @@ namespace ChoETL
     public enum ChoFieldValueJustification { None, Left, Right }
     public enum ChoFieldValueTrimOption { None, TrimStart, TrimEnd, Trim }
     public enum ChoErrorMode { IgnoreAndContinue, ReportAndContinue, ThrowAndStop };
-    public enum ChoObjectValidationMode { MemberLevel, ObjectLevel, Off };
+    [Flags]
+    public enum ChoObjectValidationMode
+    {
+        Off = 0,
+        MemberLevel,
+        ObjectLevel,
+    };
     [Flags]
     public enum ChoIgnoreFieldValueMode
     {
