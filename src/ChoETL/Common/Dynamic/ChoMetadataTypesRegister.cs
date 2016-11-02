@@ -15,9 +15,12 @@ namespace ChoETL
         {
             foreach (Type type in ChoType.GetTypes(typeof(MetadataTypeAttribute)))
             {
-                MetadataTypeAttribute attrib = ChoType.GetAttribute<MetadataTypeAttribute>(type);
-                    TypeDescriptor.AddProviderTransparent(
-                        new AssociatedMetadataTypeTypeDescriptionProvider(type, attrib.MetadataClassType), type);
+                MetadataTypeAttribute attrib = type.GetCustomAttribute<MetadataTypeAttribute>();
+                if (attrib == null)
+                    continue;
+
+                TypeDescriptor.AddProviderTransparent(
+                    new AssociatedMetadataTypeTypeDescriptionProvider(type, attrib.MetadataClassType), type);
             }
         }
 

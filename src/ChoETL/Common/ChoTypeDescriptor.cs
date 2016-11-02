@@ -60,6 +60,15 @@
                 return pd.Attributes.OfType<T>().First();
         }
 
+        public static IEnumerable<T> GetPropetyAttributes<T>(PropertyDescriptor pd)
+                   where T : Attribute
+        {
+            if (pd == null)
+                return new T[] { };
+            else
+                return pd.Attributes.OfType<T>();
+        }
+
         public static T GetPropetyAttribute<T>(Type type, string propName)
                    where T : Attribute
         {

@@ -28,16 +28,34 @@ namespace ChoCSVReaderTest
     }
 
     [ChoCSVFileHeader()]
-    [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.IgnoreAndContinue, 
-        IgnoreFieldValueMode = ChoIgnoreFieldValueMode.All, ThrowAndStopOnMissingField = false)]
-    public class EmployeeRec : IChoReaderRecord
+    [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.IgnoreAndContinue,
+    IgnoreFieldValueMode = ChoIgnoreFieldValueMode.All, ThrowAndStopOnMissingField = false)]
+    public class EmployeeRecMeta 
+    {
+        [ChoCSVRecordField(1, FieldName = "id")]
+        [ChoTypeConverter(typeof(IntConverter))]
+        [Range(1, int.MaxValue, ErrorMessage = "Id must be > 0.")]
+        [ChoFallbackValue(1)]
+        public int Id { get; set; }
+        [ChoCSVRecordField(2, FieldName = "Name", QuoteField = true)]
+        [Required]
+        [DefaultValue("ZZZ")]
+        [ChoFallbackValue("XXX")]
+        public string Name { get; set; }
+    }
+
+    [MetadataType(typeof(EmployeeRecMeta))]
+    //[ChoCSVFileHeader()]
+    //[ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.IgnoreAndContinue,
+    //IgnoreFieldValueMode = ChoIgnoreFieldValueMode.All, ThrowAndStopOnMissingField = false)]
+    public partial class EmployeeRec : IChoReaderRecord
     {
         //[ChoCSVRecordField(1, FieldName = "id")]
         //[ChoTypeConverter(typeof(IntConverter))]
         //[Range(1, int.MaxValue, ErrorMessage = "Id must be > 0.")]
         //[ChoFallbackValue(1)]
         public int Id { get; set; }
-        //[ChoCSVRecordField(2, FieldName ="Name", QuoteField = true)]
+        //[ChoCSVRecordField(2, FieldName = "Name", QuoteField = true)]
         //[Required]
         //[DefaultValue("ZZZ")]
         //[ChoFallbackValue("XXX")]
@@ -46,22 +64,22 @@ namespace ChoCSVReaderTest
         //[ChoCSVRecordField(3, FieldName = "Address")]
         //public string Address { get; set; }
 
-        public bool AfterRecordFieldLoad(int index, string propName, object value)
+        public bool AfterRecordFieldLoad(object target, int index, string propName, object value)
         {
             throw new NotImplementedException();
         }
 
-        public bool AfterRecordLoad(int index, object source)
+        public bool AfterRecordLoad(object target, int index, object source)
         {
             throw new NotImplementedException();
         }
 
-        public bool BeforeRecordFieldLoad(int index, string propName, ref object value)
+        public bool BeforeRecordFieldLoad(object target, int index, string propName, ref object value)
         {
             throw new NotImplementedException();
         }
 
-        public bool BeforeRecordLoad(int index, ref object source)
+        public bool BeforeRecordLoad(object target, int index, ref object source)
         {
             throw new NotImplementedException();
         }
@@ -76,12 +94,12 @@ namespace ChoCSVReaderTest
             throw new NotImplementedException();
         }
 
-        public bool RecordFieldLoadError(int index, string propName, object value, Exception ex)
+        public bool RecordFieldLoadError(object target, int index, string propName, object value, Exception ex)
         {
             throw new NotImplementedException();
         }
 
-        public bool RecordLoadError(int index, object source, Exception ex)
+        public bool RecordLoadError(object target, int index, object source, Exception ex)
         {
             throw new NotImplementedException();
         }

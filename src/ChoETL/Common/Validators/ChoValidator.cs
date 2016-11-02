@@ -61,7 +61,7 @@ namespace ChoETL
                 var context = new ValidationContext(@this, null, null);
                 context.MemberName = mi.Name;
 
-                Validator.TryValidateValue(ChoType.GetMemberValue(@this, mi), context, results, ChoType.GetAttributes<ValidationAttribute>(mi));
+                Validator.TryValidateValue(ChoType.GetMemberValue(@this, mi), context, results, ChoTypeDescriptor.GetPropetyAttributes<ValidationAttribute>(ChoTypeDescriptor.GetProperty<ValidationAttribute>(@this.GetType(), mi.Name)));
             }
 
             if (results.Count > 0)
