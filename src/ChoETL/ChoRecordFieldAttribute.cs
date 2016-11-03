@@ -9,15 +9,17 @@ namespace ChoETL
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
     public abstract class ChoRecordFieldAttribute : Attribute
     {
-        public ChoErrorMode? ErrorMode
+        internal ChoErrorMode? ErrorModeInternal;
+        public ChoErrorMode ErrorMode
         {
-            get;
-            set;
+            get { return ErrorModeInternal.CastTo<ChoErrorMode>(0); }
+            set { ErrorModeInternal = value; }
         }
-        public ChoIgnoreFieldValueMode? IgnoreFieldValueMode
+        internal ChoIgnoreFieldValueMode? IgnoreFieldValueModeInternal;
+        public ChoIgnoreFieldValueMode IgnoreFieldValueMode
         {
-            get;
-            set;
+            get { return IgnoreFieldValueModeInternal.CastTo<ChoIgnoreFieldValueMode>(); }
+            set { IgnoreFieldValueModeInternal = value; }
         }
         public Type FieldType => typeof(string);
 

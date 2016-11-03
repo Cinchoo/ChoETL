@@ -48,7 +48,8 @@
             ChoGuard.ArgumentNotNull(type, "Type");
             ChoGuard.ArgumentNotNullOrEmpty(propName, "PropName");
 
-            return TypeDescriptor.GetProperties(type).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<T>().Any()).FirstOrDefault();
+            return TypeDescriptor.GetProperties(type).AsTypedEnumerable<PropertyDescriptor>().Where(pd =>
+                pd.Name == propName && pd.Attributes.OfType<T>().Any()).FirstOrDefault();
         }
 
         public static T GetPropetyAttribute<T>(PropertyDescriptor pd)
@@ -75,7 +76,8 @@
             ChoGuard.ArgumentNotNull(type, "Type");
             ChoGuard.ArgumentNotNullOrEmpty(propName, "PropName");
 
-            PropertyDescriptor pd = TypeDescriptor.GetProperties(type).AsTypedEnumerable<PropertyDescriptor>().Where(pd1 => pd1.Attributes.OfType<T>().Any()).FirstOrDefault();
+            PropertyDescriptor pd = TypeDescriptor.GetProperties(type).AsTypedEnumerable<PropertyDescriptor>().Where(pd1 => 
+                pd1.Name == propName && pd1.Attributes.OfType<T>().Any()).FirstOrDefault();
             if (pd == null)
                 return null;
             else

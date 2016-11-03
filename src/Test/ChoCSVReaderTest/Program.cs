@@ -28,17 +28,18 @@ namespace ChoCSVReaderTest
     }
 
     [ChoCSVFileHeader()]
-    [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.IgnoreAndContinue,
-    IgnoreFieldValueMode = ChoIgnoreFieldValueMode.All, ThrowAndStopOnMissingField = false)]
-    public class EmployeeRecMeta : IChoReaderRecord, IChoValidatable
+    [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.ThrowAndStop,
+    IgnoreFieldValueMode = ChoIgnoreFieldValueMode.All, ThrowAndStopOnMissingField = false, 
+        ObjectValidationMode = ChoObjectValidationMode.MemberLevel)]
+    public class EmployeeRecMeta : IChoReaderRecord //, IChoValidatable
     {
-        [ChoCSVRecordField(1, FieldName = "id")]
+        [ChoCSVRecordField(1, FieldName = "id", ErrorMode = ChoErrorMode.ReportAndContinue )]
         [ChoTypeConverter(typeof(IntConverter))]
-        [Range(1, int.MaxValue, ErrorMessage = "Id must be > 0.")]
-        [ChoFallbackValue(1)]
+        [Range(1, 1, ErrorMessage = "Id must be > 0.")]
+        //[ChoFallbackValue(1)]
         public int Id { get; set; }
         [ChoCSVRecordField(2, FieldName = "Name", QuoteField = true)]
-        [Required]
+        [StringLength(1)]
         [DefaultValue("ZZZ")]
         [ChoFallbackValue("XXX")]
         public string Name { get; set; }
@@ -103,20 +104,21 @@ namespace ChoCSVReaderTest
     }
 
     [MetadataType(typeof(EmployeeRecMeta))]
-    //[ChoCSVFileHeader()]
-    //[ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.IgnoreAndContinue,
-    //IgnoreFieldValueMode = ChoIgnoreFieldValueMode.All, ThrowAndStopOnMissingField = false)]
-    public partial class EmployeeRec : IChoReaderRecord
+    [ChoCSVFileHeader()]
+    [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.IgnoreAndContinue,
+    IgnoreFieldValueMode = ChoIgnoreFieldValueMode.All, ThrowAndStopOnMissingField = false)]
+    public partial class EmployeeRec : IChoReaderRecord, IChoValidatable
     {
-        //[ChoCSVRecordField(1, FieldName = "id")]
-        //[ChoTypeConverter(typeof(IntConverter))]
-        //[Range(1, int.MaxValue, ErrorMessage = "Id must be > 0.")]
-        //[ChoFallbackValue(1)]
+        [ChoCSVRecordField(1, FieldName = "id")]
+        [ChoTypeConverter(typeof(IntConverter))]
+        [Range(1, int.MaxValue, ErrorMessage = "Id must be > 0.")]
+        [ChoFallbackValue(1)]
         public int Id { get; set; }
-        //[ChoCSVRecordField(2, FieldName = "Name", QuoteField = true)]
-        //[Required]
-        //[DefaultValue("ZZZ")]
-        //[ChoFallbackValue("XXX")]
+
+        [ChoCSVRecordField(2, FieldName = "Name")]
+        [Required]
+        [DefaultValue("ZZZ")]
+        [ChoFallbackValue("XXX")]
         public string Name { get; set; }
 
         //[ChoCSVRecordField(3, FieldName = "Address")]
@@ -158,6 +160,26 @@ namespace ChoCSVReaderTest
         }
 
         public bool RecordLoadError(object target, int index, object source, Exception ex)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool TryValidate(object target, ICollection<ValidationResult> validationResults)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool TryValidateFor(object target, string memberName, ICollection<ValidationResult> validationResults)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Validate(object target)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ValidateFor(object target, string memberName)
         {
             throw new NotImplementedException();
         }
