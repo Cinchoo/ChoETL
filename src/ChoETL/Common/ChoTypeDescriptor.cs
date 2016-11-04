@@ -34,6 +34,13 @@
 
         #region GetTypeConverters Overloads (Public)
 
+        public static IEnumerable<PropertyDescriptor> GetAllProperties(Type type)
+        {
+            ChoGuard.ArgumentNotNull(type, "Type");
+
+            return TypeDescriptor.GetProperties(type).AsTypedEnumerable<PropertyDescriptor>();
+        }
+
         public static IEnumerable<PropertyDescriptor> GetProperties<T>(Type type)
             where T : Attribute
         {

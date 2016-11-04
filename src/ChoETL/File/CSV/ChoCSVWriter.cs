@@ -49,7 +49,6 @@ namespace ChoETL
             ChoGuard.ArgumentNotNull(inStream, "Stream");
 
             Configuration = configuration;
-            Init();
             _txtWriter = new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize);
         }
 
@@ -65,13 +64,10 @@ namespace ChoETL
                 Configuration = new ChoCSVRecordConfiguration(typeof(T));
         }
 
-        public IEnumerable<T> Write(IEnumerable<T> records)
+        public void Write(IEnumerable<T> records)
         {
-            yield break;
-        }
-
-        public void Write(T record)
-        {
+            ChoCSVRecordWriter writer = new ChoCSVRecordWriter(typeof(T), Configuration);
+            writer.WriteTo(_txtWriter, records).Loop();
         }
     }
 

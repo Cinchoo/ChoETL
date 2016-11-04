@@ -88,8 +88,8 @@ namespace ChoETL
 
         public IEnumerator<T> GetEnumerator()
         {
-            ChoCSVRecordReader builder = new ChoCSVRecordReader(typeof(T), Configuration);
-            var e = builder.AsEnumerable(_txtReader).GetEnumerator();
+            ChoCSVRecordReader reader = new ChoCSVRecordReader(typeof(T), Configuration);
+            var e = reader.AsEnumerable(_txtReader).GetEnumerator();
             return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
         }
 
@@ -100,8 +100,8 @@ namespace ChoETL
 
         public IDataReader AsDataReader()
         {
-            ChoCSVRecordReader builder = new ChoCSVRecordReader(typeof(T), Configuration);
-            builder.LoadSchema(_txtReader);
+            ChoCSVRecordReader reader = new ChoCSVRecordReader(typeof(T), Configuration);
+            reader.LoadSchema(_txtReader);
 
             var dr = new ChoEnumerableDataReader(GetEnumerator().ToEnumerable(), Configuration.RecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType)).ToArray());
             return dr;

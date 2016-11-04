@@ -122,15 +122,11 @@ namespace ChoETL
 
             string[] headers = state as string[];
             if (AutoDiscoverColumns
-                && RecordFieldConfigurations.Count == 0)
+                && RecordFieldConfigurations.Count == 0 && headers != null)
             {
                 int index = 0;
-                if (!CSVFileHeaderConfiguration.HasHeaderRecord)
-                    RecordFieldConfigurations = (from header in headers
-                                                 select new ChoCSVRecordFieldConfiguration("Column{0}".FormatString(++index), index)).ToList();
-                else
-                    RecordFieldConfigurations = (from header in headers
-                                                 select new ChoCSVRecordFieldConfiguration(header, ++index)).ToList();
+                RecordFieldConfigurations = (from header in headers
+                                             select new ChoCSVRecordFieldConfiguration(header, ++index)).ToList();
             }
 
             if (RecordFieldConfigurations.Count > 0)

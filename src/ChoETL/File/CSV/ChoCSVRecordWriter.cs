@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,7 +11,8 @@ namespace ChoETL
 {
     internal class ChoCSVRecordWriter : ChoRecordWriter
     {
-        private IChoWriterRecord _record;
+        private IChoWriterRecord _callbackRecord;
+        private bool _configCheckDone = false;
 
         public ChoCSVRecordConfiguration Configuration
         {
@@ -19,12 +22,10 @@ namespace ChoETL
 
         public ChoCSVRecordWriter(Type recordType, ChoCSVRecordConfiguration configuration = null) : base(recordType)
         {
+            ChoGuard.ArgumentNotNull(configuration, "Configuration");
             Configuration = configuration;
-            if (Configuration == null)
-                Configuration = new ChoCSVRecordConfiguration(recordType);
 
-            if (typeof(IChoWriterRecord).IsAssignableFrom(recordType))
-                _record = Activator.CreateInstance(recordType) as IChoWriterRecord;
+            _callbackRecord = ChoSurrogateObjectCache.CreateSurrogateObject<IChoWriterRecord>(recordType);
 
             Configuration.Validate();
         }
@@ -47,16 +48,38 @@ namespace ChoETL
                 {
                     if (predicate == null || predicate(record))
                     {
+                        //Discover and load CSV columns from first record
+                        if (!_configCheckDone)
+                        {
+                            string[] fieldNames = null;
+
+                            if (record is ExpandoObject)
+                            {
+                                var x = record as IDictionary<string, Object>;
+                                fieldNames = x.Keys.ToArray();
+                            }
+                            else
+                            {
+                                fieldNames = ChoTypeDescriptor.GetProperties<ChoCSVRecordFieldAttribute>(record.GetType()).Select(pd => pd.Name).ToArray();
+                            }
+
+                            Configuration.Validate(fieldNames);
+                            _configCheckDone = true;
+                        }
+
                         if (!RaiseBeforeRecordWrite(record))
                             yield break;
 
                         try
                         {
-                            if (!Write(sw))
-                                yield break;
+                            sw.Write("{1}{0}", ToText(record), Configuration.EOLDelimiter);
 
                             if (!RaiseAfterRecordWrite(record))
                                 yield break;
+                        }
+                        catch (ChoParserException)
+                        {
+                            throw;
                         }
                         catch (Exception ex)
                         {
@@ -82,20 +105,54 @@ namespace ChoETL
             RaiseEndWrite(sw);
         }
 
-        private bool Write(StreamWriter sw)
-        {
-            sw.Write("{1}{0}", ToText(), sw.BaseStream.Position == 0 ? "" : Configuration.EOLDelimiter);
-            return true;
-        }
-
-        private string ToText()
+        private string ToText(object rec)
         {
             StringBuilder msg = new StringBuilder();
             string fieldValue = null;
-            bool firstColumn = true;
-            foreach (var member in Configuration.RecordFieldConfigurations)
+            ChoCSVRecordFieldConfiguration fieldConfig = null;
+
+            //if (Configuration.ColumnCountStrict)
+            //    CheckColumnsStrict(rec);
+
+            foreach (KeyValuePair<string, ChoCSVRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
-                //fieldValue = null;
+                fieldConfig = kvp.Value;
+                fieldValue = null;
+
+                if (Configuration.ThrowAndStopOnMissingField)
+                {
+                    if (rec is ExpandoObject)
+                    {
+                        var x = rec as IDictionary<string, Object>;
+                        if (!x.Keys.Contains(fieldConfig.FieldName, Configuration.CSVFileHeaderConfiguration.StringComparer))
+                            throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' CSV column.".FormatString(fieldConfig.FieldName));
+                    }
+                    else
+                    {
+                        if (!ChoType.HasProperty(rec.GetType(), kvp.Key))
+                            throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' CSV column.".FormatString(fieldConfig.FieldName));
+                    }
+                }
+
+                //if (rec is ExpandoObject)
+                //{
+                //    var x = rec as IDictionary<string, Object>;
+                //    string key = x.Keys.Where(k => Configuration.CSVFileHeaderConfiguration.StringComparer.Compare(fieldConfig.FieldName, k) == 0).FirstOrDefault();
+
+                //    if (!x.Keys.Select(.Contains(fieldConfig.FieldName, Configuration.CSVFileHeaderConfiguration.StringComparer))
+                //        throw new ChoParserException("No matching property found in the object for '{0}' CSV column.".FormatString(fieldConfig.FieldName));
+                //}
+                //else
+                //{
+                //    if (!ChoType.HasProperty(rec.GetType(), kvp.Key))
+                //        throw new ChoParserException("No matching property found in the object for '{0}' CSV column.".FormatString(fieldConfig.FieldName));
+                //}
+
+                //fieldValue = CleanFieldValue(fieldConfig, fieldValue as string);
+
+                //if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
+                //    continue;
+
                 //object value = ERPSType.GetMemberValue(RecordObject, member.Item1);
 
                 //if (value != null)
@@ -118,15 +175,42 @@ namespace ChoETL
             return msg.ToString();
         }
 
+        private void CheckColumnsStrict(object rec)
+        {
+            if (rec is ExpandoObject)
+            {
+                var eoDict = rec as IDictionary<string, Object>;
+
+                if (eoDict.Count != Configuration.RecordFieldConfigurations.Count)
+                    throw new ChoParserException("Incorrect number of fields found in record object. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.RecordFieldConfigurations.Count, eoDict.Count));
+
+                string[] missingColumns = Configuration.RecordFieldConfigurations.Select(v => v.FieldName).Except(eoDict.Keys, Configuration.CSVFileHeaderConfiguration.StringComparer).ToArray();
+                if (missingColumns.Length > 0)
+                    throw new ChoParserException("[{0}] fields are not found in record object.".FormatString(String.Join(",", missingColumns)));
+            }
+            else
+            {
+                PropertyDescriptor[] pds = ChoTypeDescriptor.GetProperties<ChoCSVRecordFieldAttribute>(rec.GetType()).ToArray();
+
+                if (pds.Length != Configuration.RecordFieldConfigurations.Count)
+                    throw new ChoParserException("Incorrect number of fields found in record object. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.RecordFieldConfigurations.Count, pds.Length));
+
+                string[] missingColumns = Configuration.RecordFieldConfigurations.Select(v => v.FieldName).Except(pds.Select(pd => pd.Name), Configuration.CSVFileHeaderConfiguration.StringComparer).ToArray();
+                if (missingColumns.Length > 0)
+                    throw new ChoParserException("[{0}] fields are not found in record object.".FormatString(String.Join(",", missingColumns)));
+            }
+        }
+
         private void WriteHeaderLine(StreamWriter sw)
         {
-            if (Configuration.CSVFileHeaderConfiguration.HasHeaderRecord && sw.BaseStream.Position == 0)
+            if (Configuration.CSVFileHeaderConfiguration.HasHeaderRecord /* && sw.BaseStream.Position == 0*/)
             {
                 string header = ToHeaderText();
                 if (header.IsNullOrWhiteSpace())
                     return;
 
-                sw.Write("{1}{0}", header, sw.BaseStream.Position == 0 ? "" : Configuration.EOLDelimiter);
+                sw.Write("{1}{0}", header, Configuration.EOLDelimiter);
+                //sw.Write("{1}{0}", header, sw.BaseStream.Position == 0 ? "" : Configuration.EOLDelimiter);
             }
         }
 
@@ -234,45 +318,45 @@ namespace ChoETL
 
         private bool RaiseFormattedHeaderValue(string fieldName, ref string fieldValue)
         {
-            if (_record == null) return true;
-            return ChoFuncEx.RunWithIgnoreError(() => _record.BeginLoad(null), true);
+            if (_callbackRecord == null) return true;
+            return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeginLoad(null), true);
         }
 
         private bool RaiseFormattedFieldValue(string fieldName, ref string fieldValue)
         {
-            if (_record == null) return true;
-            return ChoFuncEx.RunWithIgnoreError(() => _record.BeginLoad(null), true);
+            if (_callbackRecord == null) return true;
+            return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeginLoad(null), true);
         }
 
         private bool RaiseBeginWrite(object state)
         {
-            if (_record == null) return true;
-            return ChoFuncEx.RunWithIgnoreError(() => _record.BeginLoad(state), true);
+            if (_callbackRecord == null) return true;
+            return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeginLoad(state), true);
         }
 
         private void RaiseEndWrite(object state)
         {
-            if (_record == null) return;
-            ChoActionEx.RunWithIgnoreError(() => _record.EndLoad(state));
+            if (_callbackRecord == null) return;
+            ChoActionEx.RunWithIgnoreError(() => _callbackRecord.EndLoad(state));
         }
 
-        private bool RaiseBeforeRecordWrite(object record)
+        private bool RaiseBeforeRecordWrite(object target)
         {
-            if (_record == null) return true;
+            if (_callbackRecord == null) return true;
             bool retValue = false; // ChoFuncEx.RunWithIgnoreError(() => _record.BeforeRecordWrite(index, ref state), true);
 
             return retValue;
         }
 
-        private bool RaiseAfterRecordWrite(object record)
+        private bool RaiseAfterRecordWrite(object target)
         {
-            if (_record == null) return true;
+            if (_callbackRecord == null) return true;
             return false; // ChoFuncEx.RunWithIgnoreError(() => _record.AfterRecordWrite(pair.Item1, pair.Item2), true);
         }
 
-        private bool RaiseRecordWriteError(object record, Exception ex)
+        private bool RaiseRecordWriteError(object target, Exception ex)
         {
-            if (_record == null) return true;
+            if (_callbackRecord == null) return true;
             return false; // ChoFuncEx.RunWithIgnoreError(() => _record.RecordWriteError(pair.Item1, pair.Item2, ex), false);
         }
 

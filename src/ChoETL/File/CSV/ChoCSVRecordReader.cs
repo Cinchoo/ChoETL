@@ -28,10 +28,8 @@ namespace ChoETL
         {
             ChoGuard.ArgumentNotNull(configuration, "Configuration");
             Configuration = configuration;
-            //if (Configuration == null)
-            //    Configuration = new ChoCSVRecordConfiguration(recordType);
 
-            _callbackRecord = CreateCallbackRecordObject<IChoReaderRecord>(recordType);
+            _callbackRecord = ChoSurrogateObjectCache.CreateSurrogateObject<IChoReaderRecord>(recordType);
 
             Configuration.Validate();
         }
@@ -337,6 +335,10 @@ namespace ChoETL
                     if (!RaiseAfterRecordFieldLoad(rec, pair.Item1, kvp.Key, fieldValue))
                         return false;
                 }
+                catch (ChoParserException)
+                {
+                    throw;
+                }
                 catch (ChoMissingRecordFieldException)
                 {
                     if (Configuration.ThrowAndStopOnMissingField)
@@ -460,8 +462,15 @@ namespace ChoETL
 
         private string[] GetHeaders(string line)
         {
-            return (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)
-                           select CleanHeaderValue(x)).ToArray();
+            if (Configuration.CSVFileHeaderConfiguration.HasHeaderRecord)
+                return (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)
+                        select CleanHeaderValue(x)).ToArray();
+            else
+            {
+                int index = 0;
+                return (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)
+                        select "Column{0}".FormatString(++index)).ToArray();
+            }
         }
 
         private void LoadHeaderLine(Tuple<int, string> pair)

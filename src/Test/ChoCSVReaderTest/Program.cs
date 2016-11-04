@@ -193,11 +193,15 @@ namespace ChoCSVReaderTest
             //foreach (var ss in v.SplitNTrim(",", ChoStringSplitOptions.None, '\''))
             //    Console.WriteLine(ss + "-");
             //return;
-            //using (var wr = new ChoCSVWriter<EmployeeRec>("EmpOut.csv"))
-            //{
-            //    wr.Write(new EmployeeRec[] { new EmployeeRec() { Id = 1, Name = "Carl" } });
-            //}
-            //return;
+            dynamic rec = new ExpandoObject();
+            rec.Id = 1;
+            rec.Name = "Raj";
+
+            using (var wr = new ChoCSVWriter("EmpOut.csv"))
+            {
+                wr.Write(new List<ExpandoObject>() { rec });
+            }
+            return;
 
             ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
             //config.AutoDiscoverColumns = false;

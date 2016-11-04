@@ -23,32 +23,5 @@ namespace ChoETL
 
         public abstract IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null);
         public abstract void LoadSchema(object source);
-
-        protected T CreateCallbackRecordObject<T>(Type recordType)
-            where T : class
-        {
-            T callbackRecord = default(T);
-
-            try
-            {
-                MetadataTypeAttribute attr = recordType.GetCustomAttribute<MetadataTypeAttribute>();
-                if (attr == null)
-                {
-                    if (typeof(T).IsAssignableFrom(recordType))
-                        callbackRecord = Activator.CreateInstance(recordType) as T;
-                }
-                else
-                {
-                    if (attr.MetadataClassType != null && typeof(T).IsAssignableFrom(attr.MetadataClassType))
-                        callbackRecord = Activator.CreateInstance(attr.MetadataClassType) as T;
-                }
-            }
-            catch
-            {
-
-            }
-
-            return callbackRecord;
-        }
     }
 }
