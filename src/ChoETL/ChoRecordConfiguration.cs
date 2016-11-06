@@ -53,5 +53,8 @@ namespace ChoETL
                 ObjectValidationMode = recObjAttr.ObjectValidationMode;
             }
         }
+
+        public abstract void MapRecordFields<T>();
+        public abstract void MapRecordFields(Type recordType);
     }
 }

@@ -78,12 +78,12 @@ namespace ChoETL
             DiscoverRecordFields(recordType);
         }
 
-        public void MapRecordFields<T>()
+        public override void MapRecordFields<T>()
         {
             DiscoverRecordFields(typeof(T));
         }
 
-        public void MapRecordFields(Type recordType)
+        public override void MapRecordFields(Type recordType)
         {
             DiscoverRecordFields(recordType);
         }

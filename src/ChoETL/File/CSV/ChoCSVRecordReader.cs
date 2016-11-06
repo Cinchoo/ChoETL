@@ -195,7 +195,10 @@ namespace ChoETL
                     return false;
 
                 if (pair == null || pair.Item2 == null)
-                    return false;
+                {
+                    rec = null;
+                    return true;
+                }
 
                 if (!pair.Item2.IsNullOrWhiteSpace())
                 {
@@ -303,7 +306,7 @@ namespace ChoETL
                 fieldValue = CleanFieldValue(fieldConfig, fieldValue as string);
 
                 if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
-                    continue;
+                    return false;
 
                 try
                 {
