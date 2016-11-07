@@ -25,7 +25,7 @@ namespace ChoETL
             ChoGuard.ArgumentNotNull(configuration, "Configuration");
             Configuration = configuration;
 
-            _callbackRecord = ChoSurrogateObjectCache.CreateSurrogateObject<IChoWriterRecord>(recordType);
+            _callbackRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoWriterRecord>(recordType);
 
             Configuration.Validate();
         }

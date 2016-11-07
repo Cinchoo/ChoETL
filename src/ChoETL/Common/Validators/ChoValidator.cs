@@ -48,7 +48,7 @@ namespace ChoETL
                 return true;
 
             var results = new List<ValidationResult>();
-            object surrObj = ChoSurrogateObjectCache.Default.GetSurrogateObject(@this);
+            object surrObj = ChoMetadataObjectCache.Default.GetMetadataObject(@this);
 
             if (surrObj is IChoValidatable)
             {
@@ -92,7 +92,7 @@ namespace ChoETL
                 return true;
 
             var results = new List<ValidationResult>();
-            object surrObj = ChoSurrogateObjectCache.Default.GetSurrogateObject(@this);
+            object surrObj = ChoMetadataObjectCache.Default.GetMetadataObject(@this);
 
             if (surrObj is IChoValidatable)
             {

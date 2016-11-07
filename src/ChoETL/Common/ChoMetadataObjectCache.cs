@@ -7,28 +7,27 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    internal class ChoSurrogateObjectCache
+    public class ChoMetadataObjectCache
     {
-        public static readonly ChoSurrogateObjectCache Default = new ChoSurrogateObjectCache();
+        public static readonly ChoMetadataObjectCache Default = new ChoMetadataObjectCache();
 
         private readonly object _padLock = new object();
         private readonly Dictionary<Type, object> _objectCache = new Dictionary<Type, object>();
 
-        public object GetSurrogateObject(object @this)
+        public object GetMetadataObject(object @this)
         {
             if (@this == null)
                 return @this;
 
             Type type = @this.GetType();
+            if (_objectCache.ContainsKey(type))
+                return _objectCache[type] != null ? _objectCache[type] : @this;
 
             MetadataTypeAttribute attr = type.GetCustomAttribute<MetadataTypeAttribute>();
             if (attr == null || attr.MetadataClassType == null)
                 return @this;
             else
             {
-                if (_objectCache.ContainsKey(type))
-                    return _objectCache[type] != null ? _objectCache[type] : @this;
-
                 lock (_padLock)
                 {
                     if (!_objectCache.ContainsKey(type))
@@ -49,7 +48,33 @@ namespace ChoETL
             }
         }
 
-        public static T CreateSurrogateObject<T>(Type recordType)
+        public void Add(Type type, object metadataObj)
+        {
+            if (type == null)
+                return;
+
+            lock (_padLock)
+            {
+                if (_objectCache.ContainsKey(type))
+                    _objectCache[type] = metadataObj;
+                else
+                    _objectCache.Add(type, metadataObj);
+            }
+        }
+
+        public void Remove(Type type)
+        {
+            if (type == null)
+                return;
+
+            lock (_padLock)
+            {
+                if (_objectCache.ContainsKey(type))
+                    _objectCache.Remove(type);
+            }
+        }
+
+        public static T CreateMetadataObject<T>(Type recordType)
             where T : class
         {
             T callbackRecord = default(T);
