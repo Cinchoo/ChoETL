@@ -91,6 +91,20 @@
                 return GetPropetyAttribute<T>(pd);
         }
 
+        public static IEnumerable<T> GetPropetyAttributes<T>(Type type, string propName)
+                   where T : Attribute
+        {
+            ChoGuard.ArgumentNotNull(type, "Type");
+            ChoGuard.ArgumentNotNullOrEmpty(propName, "PropName");
+
+            PropertyDescriptor pd = TypeDescriptor.GetProperties(type).AsTypedEnumerable<PropertyDescriptor>().Where(pd1 =>
+                pd1.Name == propName && pd1.Attributes.OfType<T>().Any()).FirstOrDefault();
+            if (pd == null)
+                return Enumerable.Empty<T>();
+            else
+                return GetPropetyAttributes<T>(pd);
+        }
+
         public static void RegisterConverters(MemberInfo memberInfo, TypeConverter[] typeConverters)
         {
             ChoGuard.ArgumentNotNull(memberInfo, "MemberInfo");
@@ -220,7 +234,7 @@
 
                         SortedList<int, object> queue = new SortedList<int, object>();
                         SortedList<int, object[]> paramsQueue = new SortedList<int, object[]>();
-                        foreach (Attribute attribute in ChoType.GetMemberAttributesByBaseType(memberInfo, typeof(ChoTypeConverterAttribute)))
+                        foreach (Attribute attribute in GetPropetyAttributes<ChoTypeConverterAttribute>(memberInfo.ReflectedType, memberInfo.Name))  //ChoType.GetMemberAttributesByBaseType(memberInfo, typeof(ChoTypeConverterAttribute)))
                         {
                             ChoTypeConverterAttribute converterAttribute = (ChoTypeConverterAttribute)attribute;
                             if (converterAttribute != null)

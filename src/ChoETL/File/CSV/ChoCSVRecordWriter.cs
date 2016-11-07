@@ -42,8 +42,10 @@ namespace ChoETL
 
             WriteHeaderLine(sw);
 
+            int index = 0;
             foreach (object record in records)
             {
+                index++;
                 if (record != null)
                 {
                     if (predicate == null || predicate(record))
@@ -72,7 +74,7 @@ namespace ChoETL
 
                         try
                         {
-                            sw.Write("{1}{0}", ToText(record), Configuration.EOLDelimiter);
+                            sw.Write("{1}{0}", ToText(index, record), Configuration.EOLDelimiter);
 
                             if (!RaiseAfterRecordWrite(record))
                                 yield break;
@@ -105,14 +107,14 @@ namespace ChoETL
             RaiseEndWrite(sw);
         }
 
-        private string ToText(object rec)
+        private string ToText(int index, object rec)
         {
             StringBuilder msg = new StringBuilder();
-            string fieldValue = null;
+            object fieldValue = null;
             ChoCSVRecordFieldConfiguration fieldConfig = null;
 
-            //if (Configuration.ColumnCountStrict)
-            //    CheckColumnsStrict(rec);
+            if (Configuration.ColumnCountStrict)
+                CheckColumnsStrict(rec);
 
             foreach (KeyValuePair<string, ChoCSVRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
@@ -134,27 +136,68 @@ namespace ChoETL
                     }
                 }
 
-                //if (rec is ExpandoObject)
-                //{
-                //    var x = rec as IDictionary<string, Object>;
-                //    string key = x.Keys.Where(k => Configuration.CSVFileHeaderConfiguration.StringComparer.Compare(fieldConfig.FieldName, k) == 0).FirstOrDefault();
+                if (rec is ExpandoObject)
+                {
+                    var x = rec as IDictionary<string, Object>;
+                    fieldValue = x[kvp.Key];
+                }
+                else
+                {
+                    fieldValue = ChoType.GetPropertyValue(rec, kvp.Key);
+                }
 
-                //    if (!x.Keys.Select(.Contains(fieldConfig.FieldName, Configuration.CSVFileHeaderConfiguration.StringComparer))
-                //        throw new ChoParserException("No matching property found in the object for '{0}' CSV column.".FormatString(fieldConfig.FieldName));
-                //}
-                //else
-                //{
-                //    if (!ChoType.HasProperty(rec.GetType(), kvp.Key))
-                //        throw new ChoParserException("No matching property found in the object for '{0}' CSV column.".FormatString(fieldConfig.FieldName));
-                //}
+                if (!RaiseBeforeRecordFieldWrite(rec, index, kvp.Key, ref fieldValue))
+                    continue;
+                try
+                {
 
-                //fieldValue = CleanFieldValue(fieldConfig, fieldValue as string);
+                    //if (fieldValue != null)
+                    //    fieldValue = ChoConvert.ConvertTo(fieldValue, typeof(string), Configuration.Culture);
+                    //else
+                    //    fieldValue = ChoType.GetRawDefaultValue()
+                    //fieldValue = CleanFieldValue(fieldConfig, fieldValue as string);
+                }
+                catch (ChoParserException)
+                {
+                    throw;
+                }
+                catch (ChoMissingRecordFieldException)
+                {
+                    if (Configuration.ThrowAndStopOnMissingField)
+                        throw;
+                }
+                catch (Exception ex)
+                {
+                    ChoETLFramework.HandleException(ex);
 
-                //if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
-                //    continue;
-
-                //object value = ERPSType.GetMemberValue(RecordObject, member.Item1);
-
+                    if (fieldConfig.ErrorMode == ChoErrorMode.ThrowAndStop)
+                        throw;
+                    try
+                    {
+                        ChoFallbackValueAttribute fbAttr = ChoTypeDescriptor.GetPropetyAttribute<ChoFallbackValueAttribute>(rec.GetType(), kvp.Key);
+                        if (fbAttr != null)
+                        {
+                            if (!fbAttr.Value.IsNullOrDbNull())
+                                ChoType.ConvertNSetMemberValue(rec, kvp.Key, fbAttr.Value);
+                        }
+                        else
+                            throw;
+                    }
+                    catch
+                    {
+                        if (fieldConfig.ErrorMode == ChoErrorMode.IgnoreAndContinue)
+                        {
+                            continue;
+                        }
+                        else if (fieldConfig.ErrorMode == ChoErrorMode.ReportAndContinue)
+                        {
+                            //if (!RaiseRecordFieldLoadError(rec, pair.Item1, kvp.Key, fieldValue, ex))
+                            //    throw;
+                        }
+                        else
+                            throw;
+                    }
+                }
                 //if (value != null)
                 //    value = ERPSConvert.ConvertTo(value, member.Item1, typeof(string), null);
 
@@ -173,6 +216,49 @@ namespace ChoETL
             }
 
             return msg.ToString();
+        }
+
+        private string NormalizeFieldValue(ChoCSVRecordFieldConfiguration config, string fieldValue)
+        {
+            if (fieldValue.IsNull())
+                fieldValue = String.Empty;
+
+            //int padLength = fieldValue.StartsWith("\"") && fieldValue.EndsWith("\"") ? 2 : 0;
+            //if (!delimiter.IsNullOrEmpty() && fieldValue.Contains(delimiter) && !fieldValue.StartsWith("\"") && !fieldValue.EndsWith("\""))
+            //{
+            //    fieldValue = "\"{0}\"".FormatString(fieldValue);
+            //    padLength = 2;
+            //}
+
+            //if (attr != null)
+            //{
+            //    if (attr.Size != Int32.MinValue)
+            //    {
+            //        if (fieldValue.Length < attr.Size + padLength)
+            //        {
+            //            if (isHeader)
+            //            {
+            //                fieldValue = fieldValue.PadRight(attr.Size, attr.FillChar);
+            //            }
+            //            else
+            //            {
+            //                if (attr.FieldValueJustification == ERPSFieldValueJustification.Right)
+            //                    fieldValue = fieldValue.PadLeft(attr.Size, attr.FillChar);
+            //                else if (attr.FieldValueJustification == ERPSFieldValueJustification.Left)
+            //                    fieldValue = fieldValue.PadRight(attr.Size, attr.FillChar);
+            //            }
+            //        }
+            //        else if (attr.Truncate && fieldValue.Length > attr.Size + padLength)
+            //            fieldValue = fieldValue.Substring(0, attr.Size + padLength);
+
+            //        if (!attr.Truncate && fieldValue.Length > attr.Size + padLength)
+            //            throw new ApplicationException("Incorrect field value length found for '{0}' member [Expected: {1}, Actual: {2}].".FormatString(fieldName, attr.Size + padLength, fieldValue.Length));
+            //    }
+            //}
+            //if (fieldValue.Contains(Environment.NewLine))
+            //    fieldValue = fieldValue.Replace(Environment.NewLine, "");
+
+            return fieldValue;
         }
 
         private void CheckColumnsStrict(object rec)
@@ -360,5 +446,28 @@ namespace ChoETL
             return false; // ChoFuncEx.RunWithIgnoreError(() => _record.RecordWriteError(pair.Item1, pair.Item2, ex), false);
         }
 
+        private bool RaiseBeforeRecordFieldWrite(object target, int index, string propName, ref object value)
+        {
+            if (_callbackRecord == null) return true;
+            object state = value;
+            bool retValue = true; // ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeforeRecordFieldWrite(target, index, propName, ref state), true);
+
+            if (retValue)
+                value = state;
+
+            return retValue;
+        }
+
+        private bool RaiseAfterRecordFieldWrite(object target, int index, string propName, object value)
+        {
+            if (_callbackRecord == null) return true;
+            return true; // ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordFieldWrite(target, index, propName, value), true);
+        }
+
+        private bool RaiseRecordFieldWriteError(object target, int index, string propName, object value, Exception ex)
+        {
+            if (_callbackRecord == null) return true;
+            return true; // ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordFieldWriteError(target, index, propName, value, ex), false);
+        }
     }
 }
