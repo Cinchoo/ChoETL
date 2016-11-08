@@ -29,7 +29,6 @@ namespace ChoETL
             get;
             set;
         }
-
         public ChoFieldValueTrimOption TrimOption
         {
             get;
@@ -46,7 +45,7 @@ namespace ChoETL
         {
             HasHeaderRecord = false;
             IgnoreCase = true;
-            FillChar = ' ';
+            //FillChar = ' ';
             Justification = ChoFieldValueJustification.Left;
             TrimOption = ChoFieldValueTrimOption.Trim;
             _culture = culture;
@@ -64,7 +63,7 @@ namespace ChoETL
             {
                 HasHeaderRecord = true;
                 IgnoreCase = recObjAttr.IgnoreCase;
-                FillChar = recObjAttr.FillChar == '\0' ? ' ' : recObjAttr.FillChar;
+                //FillChar = recObjAttr.FillChar == '\0' ? ' ' : recObjAttr.FillChar;
                 Justification = recObjAttr.Justification;
                 TrimOption = recObjAttr.TrimOption;
             }
@@ -74,8 +73,8 @@ namespace ChoETL
         {
             StringComparer = StringComparer.Create(_culture == null ? CultureInfo.CurrentCulture : _culture, IgnoreCase);
 
-            if (FillChar == ChoCharEx.NUL)
-                throw new ChoRecordConfigurationException("Invalid '{0}' FillChar specified.".FormatString(FillChar));
+            //if (FillChar == ChoCharEx.NUL)
+            //    throw new ChoRecordConfigurationException("Invalid '{0}' FillChar specified.".FormatString(FillChar));
 
             if (config is ChoCSVRecordConfiguration)
             {

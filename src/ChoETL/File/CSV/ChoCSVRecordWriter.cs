@@ -318,10 +318,6 @@ namespace ChoETL
         {
             string lFieldValue = fieldValue;
             bool retValue = false;
-            //if (isHeader)
-            //    retValue = RaiseFormattedHeaderValue(fieldName, ref lFieldValue);
-            //else
-            //    retValue = RaiseFormattedFieldValue(fieldName, ref lFieldValue);
 
             if (retValue)
                 return lFieldValue;
@@ -370,10 +366,13 @@ namespace ChoETL
             {
                 if (fieldValue.Length < size.Value)
                 {
-                    if (fieldValueJustification == ChoFieldValueJustification.Right)
-                        fieldValue = fieldValue.PadLeft(size.Value, fillChar);
-                    else if (fieldValueJustification == ChoFieldValueJustification.Left)
-                        fieldValue = fieldValue.PadRight(size.Value, fillChar);
+                    if (fillChar != ChoCharEx.NUL)
+                    {
+                        if (fieldValueJustification == ChoFieldValueJustification.Right)
+                            fieldValue = fieldValue.PadLeft(size.Value, fillChar);
+                        else if (fieldValueJustification == ChoFieldValueJustification.Left)
+                            fieldValue = fieldValue.PadRight(size.Value, fillChar);
+                    }
                 }
                 else if (fieldValue.Length > size.Value)
                 {

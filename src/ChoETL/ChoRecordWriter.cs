@@ -10,6 +10,11 @@ namespace ChoETL
     {
         public readonly Type RecordType;
 
+        static ChoRecordWriter()
+        {
+            ChoETLFramework.Initialize();
+        }
+
         public ChoRecordWriter(Type recordType)
         {
             ChoGuard.ArgumentNotNull(recordType, "RecordType");

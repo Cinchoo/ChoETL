@@ -198,22 +198,37 @@ namespace ChoCSVReaderTest
             ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
             //config.AutoDiscoverColumns = false;
             config.CSVFileHeaderConfiguration.HasHeaderRecord = true;
-            config.ThrowAndStopOnMissingField = true;
-            //config.HasExcelSeparator = true;
+            //config.CSVFileHeaderConfiguration.FillChar = '$';
+            config.ThrowAndStopOnMissingField = false;
+            config.HasExcelSeparator = true;
+            config.ColumnCountStrict = false;
             //config.MapRecordFields<EmployeeRec>();
-            //config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1));
-            //config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1));
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2) { FillChar = '$', Size = 10 });
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name1", 2));
 
             dynamic rec = new ExpandoObject();
             rec.Id = 1;
             rec.Name = "Raj";
 
-            using (var wr = new ChoCSVWriter("EmpOut.csv", config))
+            //using (var wr = new ChoCSVWriter("EmpOut.csv", config))
+            //{
+            //    wr.Write(new List<ExpandoObject>() { rec });
+            //}
+
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVWriter(writer, config))
             {
-                wr.Write(new List<ExpandoObject>() { rec });
+                parser.Write(new List<ExpandoObject>() { rec });
+                writer.Flush();
+                stream.Position = 0;
+
+                Console.WriteLine(reader.ReadToEnd());
             }
             return;
-
+            return;
 
             //dynamic row;
             //using (var stream = new MemoryStream())
