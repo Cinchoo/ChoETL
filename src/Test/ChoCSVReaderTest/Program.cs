@@ -28,7 +28,7 @@ namespace ChoCSVReaderTest
     }
 
     [ChoCSVFileHeader()]
-    [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.ThrowAndStop,
+    [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.ReportAndContinue,
     IgnoreFieldValueMode = ChoIgnoreFieldValueMode.All, ThrowAndStopOnMissingField = false, 
         ObjectValidationMode = ChoObjectValidationMode.MemberLevel)]
     public class EmployeeRecMeta : IChoReaderRecord //, IChoValidatable
@@ -76,7 +76,7 @@ namespace ChoCSVReaderTest
 
         public bool RecordFieldLoadError(object target, int index, string propName, object value, Exception ex)
         {
-            throw new NotImplementedException();
+            return true;
         }
 
         public bool RecordLoadError(object target, int index, object source, Exception ex)
@@ -109,16 +109,16 @@ namespace ChoCSVReaderTest
     IgnoreFieldValueMode = ChoIgnoreFieldValueMode.All, ThrowAndStopOnMissingField = false)]
     public partial class EmployeeRec : IChoReaderRecord, IChoValidatable
     {
-        [ChoCSVRecordField(1, FieldName = "id")]
-        [ChoTypeConverter(typeof(IntConverter))]
-        [Range(1, int.MaxValue, ErrorMessage = "Id must be > 0.")]
-        [ChoFallbackValue(1)]
+        //[ChoCSVRecordField(1, FieldName = "id")]
+        //[ChoTypeConverter(typeof(IntConverter))]
+        //[Range(1, int.MaxValue, ErrorMessage = "Id must be > 0.")]
+        //[ChoFallbackValue(1)]
         public int Id { get; set; }
 
-        [ChoCSVRecordField(2, FieldName = "Name")]
-        [Required]
-        [DefaultValue("ZZZ")]
-        [ChoFallbackValue("XXX")]
+        //[ChoCSVRecordField(2, FieldName = "Name")]
+        //[Required]
+        //[DefaultValue("ZZZ")]
+        //[ChoFallbackValue("XXX")]
         public string Name { get; set; }
 
         //[ChoCSVRecordField(3, FieldName = "Address")]
@@ -189,6 +189,7 @@ namespace ChoCSVReaderTest
     {
         static void Main(string[] args)
         {
+            ChoMetadataObjectCache.Default.Add(typeof(EmployeeRec), new EmployeeRecMeta());
             //string v = @"4,'123\r\n4,abc'";
             //foreach (var ss in v.SplitNTrim(",", ChoStringSplitOptions.None, '\''))
             //    Console.WriteLine(ss + "-");

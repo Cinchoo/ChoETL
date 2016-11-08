@@ -48,9 +48,15 @@ namespace ChoETL
             }
         }
 
+        public void Add<T>(object metadataObj)
+            where T : class
+        {
+            Add(typeof(T), metadataObj);
+        }
+
         public void Add(Type type, object metadataObj)
         {
-            if (type == null)
+            if (type == null || metadataObj == null)
                 return;
 
             lock (_padLock)
@@ -60,6 +66,12 @@ namespace ChoETL
                 else
                     _objectCache.Add(type, metadataObj);
             }
+        }
+
+        public void Remove<T>()
+            where T : class
+        {
+            Remove(typeof(T));
         }
 
         public void Remove(Type type)
