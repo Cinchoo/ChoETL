@@ -194,23 +194,26 @@ namespace ChoCSVReaderTest
             //foreach (var ss in v.SplitNTrim(",", ChoStringSplitOptions.None, '\''))
             //    Console.WriteLine(ss + "-");
             //return;
-            //dynamic rec = new ExpandoObject();
-            //rec.Id = 1;
-            //rec.Name = "Raj";
-
-            //using (var wr = new ChoCSVWriter("EmpOut.csv"))
-            //{
-            //    wr.Write(new List<ExpandoObject>() { rec });
-            //}
-            //return;
 
             ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
             //config.AutoDiscoverColumns = false;
             config.CSVFileHeaderConfiguration.HasHeaderRecord = true;
             config.ThrowAndStopOnMissingField = true;
+            //config.HasExcelSeparator = true;
             //config.MapRecordFields<EmployeeRec>();
             //config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1));
             //config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
+
+            dynamic rec = new ExpandoObject();
+            rec.Id = 1;
+            rec.Name = "Raj";
+
+            using (var wr = new ChoCSVWriter("EmpOut.csv", config))
+            {
+                wr.Write(new List<ExpandoObject>() { rec });
+            }
+            return;
+
 
             //dynamic row;
             //using (var stream = new MemoryStream())

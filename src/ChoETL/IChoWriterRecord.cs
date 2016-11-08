@@ -8,15 +8,15 @@ namespace ChoETL
 {
     public interface IChoWriterRecord
     {
-        bool BeginLoad(object source);
-        void EndLoad(object source);
+        bool BeginWrite(object source);
+        void EndWrite(object source);
 
-        bool BeforeRecordLoad(int index, ref object source);
-        bool AfterRecordLoad(int index, object source);
-        bool RecordLoadError(int index, object source, Exception ex);
+        bool BeforeRecordWrite(object target, int index, ref object source);
+        bool AfterRecordWrite(object target, int index, object source);
+        bool RecordWriteError(object target, int index, object source, Exception ex);
 
-        bool BeforeRecordFieldLoad(int index, string propName, ref object value);
-        bool AfterRecordFieldLoad(int index, string propName, object value);
-        bool RecordFieldLoadError(int index, string propName, object value, Exception ex);
+        bool BeforeRecordFieldWrite(object target, int index, string propName, ref object value);
+        bool AfterRecordFieldWrite(object target, int index, string propName, object value);
+        bool RecordFieldWriteError(object target, int index, string propName, object value, Exception ex);
     }
 }

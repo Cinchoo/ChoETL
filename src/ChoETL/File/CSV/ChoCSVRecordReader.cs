@@ -194,11 +194,13 @@ namespace ChoETL
                 if (!RaiseBeforeRecordLoad(rec, ref pair))
                     return false;
 
-                if (pair == null || pair.Item2 == null)
+                if (pair.Item2 == null)
                 {
                     rec = null;
                     return true;
                 }
+                else if (pair.Item2 == String.Empty)
+                    return true;
 
                 if (!pair.Item2.IsNullOrWhiteSpace())
                 {
