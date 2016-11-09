@@ -34,6 +34,11 @@ namespace ChoETL
             get;
             set;
         }
+        public bool Truncate
+        {
+            get;
+            set;
+        }
         internal StringComparer StringComparer
         {
             get;
@@ -48,6 +53,7 @@ namespace ChoETL
             //FillChar = ' ';
             Justification = ChoFieldValueJustification.Left;
             TrimOption = ChoFieldValueTrimOption.Trim;
+            Truncate = false;
             _culture = culture;
 
             if (recordType != null)
@@ -66,6 +72,7 @@ namespace ChoETL
                 //FillChar = recObjAttr.FillChar == '\0' ? ' ' : recObjAttr.FillChar;
                 Justification = recObjAttr.Justification;
                 TrimOption = recObjAttr.TrimOption;
+                Truncate = recObjAttr.Truncate;
             }
         }
 

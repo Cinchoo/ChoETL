@@ -27,6 +27,32 @@ namespace ChoCSVReaderTest
         }
     }
 
+    public class NameFormatter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return String.Format("{0}zzzz".FormatString(value));
+        }
+    }
+
+    public class Name1Formatter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return String.Format("{0}@@@@".FormatString(value));
+        }
+    }
+
     [ChoCSVFileHeader()]
     [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.ReportAndContinue,
     IgnoreFieldValueMode = ChoIgnoreFieldValueMode.All, ThrowAndStopOnMissingField = false, 
@@ -38,10 +64,12 @@ namespace ChoCSVReaderTest
         [Range(1, 1, ErrorMessage = "Id must be > 0.")]
         //[ChoFallbackValue(1)]
         public int Id { get; set; }
-        [ChoCSVRecordField(2, FieldName = "Name", QuoteField = true)]
+        [ChoCSVRecordField(2, FieldName = "Name")]
         [StringLength(1)]
         [DefaultValue("ZZZ")]
         [ChoFallbackValue("XXX")]
+        [ChoTypeConverter(typeof(NameFormatter))]
+        [ChoTypeConverter(typeof(Name1Formatter))]
         public string Name { get; set; }
 
         public bool AfterRecordFieldLoad(object target, int index, string propName, object value)
@@ -189,6 +217,9 @@ namespace ChoCSVReaderTest
     {
         static void Main(string[] args)
         {
+            //var t = ChoTypeDescriptor.GetPropetyAttributes<ChoTypeConverterAttribute>(ChoTypeDescriptor.GetProperty<ChoTypeConverterAttribute>(typeof(EmployeeRecMeta), "Name")).ToArray();
+            //return;
+
             ChoMetadataObjectCache.Default.Add(typeof(EmployeeRec), new EmployeeRecMeta());
             //string v = @"4,'123\r\n4,abc'";
             //foreach (var ss in v.SplitNTrim(",", ChoStringSplitOptions.None, '\''))
@@ -204,7 +235,7 @@ namespace ChoCSVReaderTest
             config.ColumnCountStrict = false;
             //config.MapRecordFields<EmployeeRec>();
             config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1));
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2) { FillChar = '$', Size = 10 });
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
             config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name1", 2));
 
             dynamic rec = new ExpandoObject();
@@ -216,18 +247,21 @@ namespace ChoCSVReaderTest
             //    wr.Write(new List<ExpandoObject>() { rec });
             //}
 
+            List<EmployeeRec> recs = new List<EmployeeRec>();
+            recs.Add(new EmployeeRec() { Id = 1, Name = "Raj" });
+            recs.Add(new EmployeeRec() { Id = 2, Name = "Mark" });
+
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoCSVWriter(writer, config))
+            using (var parser = new ChoCSVWriter<EmployeeRec>(writer, config))
             {
-                parser.Write(new List<ExpandoObject>() { rec });
+                parser.Write(recs);
                 writer.Flush();
                 stream.Position = 0;
 
                 Console.WriteLine(reader.ReadToEnd());
             }
-            return;
             return;
 
             //dynamic row;

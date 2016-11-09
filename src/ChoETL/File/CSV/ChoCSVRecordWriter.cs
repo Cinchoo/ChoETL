@@ -44,6 +44,7 @@ namespace ChoETL
             string recText = String.Empty;
             foreach (object record in records)
             {
+                recText = String.Empty;
                 index++;
                 if (record != null)
                 {
@@ -173,7 +174,7 @@ namespace ChoETL
 
                     if (rec is ExpandoObject)
                         fieldValue = ChoConvert.ConvertTo(fieldValue, typeof(string), Configuration.Culture);
-                    else
+                    else if (ChoType.HasProperty(rec.GetType(), kvp.Key))
                         fieldValue = ChoConvert.ConvertTo(fieldValue, ChoType.GetMemberInfo(rec.GetType(), kvp.Key), typeof(string), rec, Configuration.Culture);
 
                     if (fieldValue == null)
@@ -300,7 +301,7 @@ namespace ChoETL
             string value;
             foreach (var member in Configuration.RecordFieldConfigurations)
             {
-                value = NormalizeFieldValue(member.Name, member.FieldName, member.Size, member.Truncate,
+                value = NormalizeFieldValue(member.Name, member.FieldName, member.Size, Configuration.CSVFileHeaderConfiguration.Truncate,
                         member.QuoteField, Configuration.CSVFileHeaderConfiguration.Justification,
                         Configuration.CSVFileHeaderConfiguration.FillChar, true);
 

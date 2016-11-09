@@ -235,8 +235,6 @@ namespace ChoETL
             if (culture == null)
                 culture = ChoConvert.DefaultCulture;
             Type type = value == null ? typeof(object) : value.GetType();
-            if (type == origType)
-                return value;
 
             try
             {
@@ -262,6 +260,8 @@ namespace ChoETL
                 }
                 if (value == null)
                     return targetType.Default();
+                if (type == origType)
+                    return value;
                 targetType = targetType.IsNullableType() ? targetType.GetUnderlyingType() : targetType;
                 if (targetType.IsAssignableFrom(value.GetType()) || targetType == value.GetType())
                     return value;

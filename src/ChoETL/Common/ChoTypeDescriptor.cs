@@ -232,6 +232,7 @@
                         _typeMemberTypeConverterCache[memberInfo] = EmptyTypeConverters;
                         _typeMemberTypeConverterParamsCache[memberInfo] = EmptyParams;
 
+                        int index = 0;
                         SortedList<int, object> queue = new SortedList<int, object>();
                         SortedList<int, object[]> paramsQueue = new SortedList<int, object[]>();
                         foreach (Attribute attribute in GetPropetyAttributes<ChoTypeConverterAttribute>(memberInfo.ReflectedType, memberInfo.Name))  //ChoType.GetMemberAttributesByBaseType(memberInfo, typeof(ChoTypeConverterAttribute)))
@@ -239,17 +240,26 @@
                             ChoTypeConverterAttribute converterAttribute = (ChoTypeConverterAttribute)attribute;
                             if (converterAttribute != null)
                             {
-                                queue.Add(converterAttribute.Priority, converterAttribute.CreateInstance());
-                                paramsQueue.Add(converterAttribute.Priority, converterAttribute.Parameters);
+                                if (converterAttribute.PriorityInternal == null)
+                                {
+                                    queue.Add(index, converterAttribute.CreateInstance());
+                                    paramsQueue.Add(index, converterAttribute.Parameters);
+                                    index++;
+                                }
+                                else
+                                {
+                                    queue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.CreateInstance());
+                                    paramsQueue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.Parameters);
+                                }
                             }
+                        }
 
-                            if (queue.Count > 0)
-                            {
-                                _typeMemberTypeConverterCache[memberInfo] = queue.Values.ToArray();
-                                _typeMemberTypeConverterParamsCache[memberInfo] = paramsQueue.Values.ToArray();
+                        if (queue.Count > 0)
+                        {
+                            _typeMemberTypeConverterCache[memberInfo] = queue.Values.ToArray();
+                            _typeMemberTypeConverterParamsCache[memberInfo] = paramsQueue.Values.ToArray();
 
-                                return _typeMemberTypeConverterCache[memberInfo];
-                            }
+                            return _typeMemberTypeConverterCache[memberInfo];
                         }
 
                         if (queue.Count == 0 && !memberType.IsSimple())

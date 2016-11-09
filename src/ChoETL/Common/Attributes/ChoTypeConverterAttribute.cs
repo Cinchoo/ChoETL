@@ -15,11 +15,11 @@
     {
         #region Instance Properties
 
-        private int _priority;
+        internal int? PriorityInternal;
         public int Priority
         {
-            get { return _priority; }
-            set { _priority = value; }
+            get { throw new NotSupportedException(); }
+            set { PriorityInternal = value; }
         }
 
         private Type _converterType;
@@ -84,5 +84,13 @@
         }
 
         #endregion Instance Members (Internal)
+
+        public override object TypeId
+        {
+            get
+            {
+                return ChoIntRandom.Next(1, Int32.MaxValue);
+            }
+        }
     }
 }
