@@ -15,6 +15,7 @@ namespace ChoETL
     {
         private TextWriter _txtWriter;
         private bool _closeStreamOnDispose = false;
+        private ChoCSVRecordWriter _writer = null;
 
         public ChoCSVRecordConfiguration Configuration
         {
@@ -62,12 +63,18 @@ namespace ChoETL
         {
             if (Configuration == null)
                 Configuration = new ChoCSVRecordConfiguration(typeof(T));
+
+            _writer = new ChoCSVRecordWriter(typeof(T), Configuration);
         }
 
         public void Write(IEnumerable<T> records)
         {
-            ChoCSVRecordWriter writer = new ChoCSVRecordWriter(typeof(T), Configuration);
-            writer.WriteTo(_txtWriter, records).Loop();
+            _writer.WriteTo(_txtWriter, records).Loop();
+        }
+
+        public void Write(T record)
+        {
+            _writer.WriteTo(_txtWriter, new T[] { record } ).Loop();
         }
     }
 

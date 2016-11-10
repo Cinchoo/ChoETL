@@ -131,7 +131,7 @@ namespace ChoCSVReaderTest
         }
     }
 
-    [MetadataType(typeof(EmployeeRecMeta))]
+    //[MetadataType(typeof(EmployeeRecMeta))]
     [ChoCSVFileHeader()]
     [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.IgnoreAndContinue,
     IgnoreFieldValueMode = ChoIgnoreFieldValueMode.All, ThrowAndStopOnMissingField = false)]
@@ -220,7 +220,7 @@ namespace ChoCSVReaderTest
             //var t = ChoTypeDescriptor.GetPropetyAttributes<ChoTypeConverterAttribute>(ChoTypeDescriptor.GetProperty<ChoTypeConverterAttribute>(typeof(EmployeeRecMeta), "Name")).ToArray();
             //return;
 
-            ChoMetadataObjectCache.Default.Attach(typeof(EmployeeRec), new EmployeeRecMeta());
+            //ChoMetadataObjectCache.Default.Attach(typeof(EmployeeRec), new EmployeeRecMeta());
             //string v = @"4,'123\r\n4,abc'";
             //foreach (var ss in v.SplitNTrim(",", ChoStringSplitOptions.None, '\''))
             //    Console.WriteLine(ss + "-");
@@ -231,7 +231,7 @@ namespace ChoCSVReaderTest
             config.CSVFileHeaderConfiguration.HasHeaderRecord = true;
             //config.CSVFileHeaderConfiguration.FillChar = '$';
             config.ThrowAndStopOnMissingField = false;
-            config.HasExcelSeparator = true;
+            //config.HasExcelSeparator = true;
             config.ColumnCountStrict = false;
             //config.MapRecordFields<EmployeeRec>();
             config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1));
@@ -247,41 +247,45 @@ namespace ChoCSVReaderTest
             //    wr.Write(new List<ExpandoObject>() { rec });
             //}
 
-            List<EmployeeRec> recs = new List<EmployeeRec>();
-            recs.Add(new EmployeeRec() { Id = 1, Name = "Raj" });
-            recs.Add(new EmployeeRec() { Id = 2, Name = "Mark" });
+            //List<EmployeeRec> recs = new List<EmployeeRec>();
+            //recs.Add(new EmployeeRec() { Id = 1, Name = "Raj" });
+            //recs.Add(new EmployeeRec() { Id = 2, Name = "Mark" });
 
-            using (var stream = new MemoryStream())
-            using (var reader = new StreamReader(stream))
-            using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoCSVWriter<EmployeeRec>(writer, config))
-            {
-                parser.Write(recs);
-                writer.Flush();
-                stream.Position = 0;
-
-                Console.WriteLine(reader.ReadToEnd());
-            }
-            return;
-
-            //dynamic row;
             //using (var stream = new MemoryStream())
             //using (var reader = new StreamReader(stream))
             //using (var writer = new StreamWriter(stream))
-            //using (var parser = new ChoCSVReader(reader, config))
+            //using (var parser = new ChoCSVWriter<EmployeeRec>(writer, config))
             //{
-            //    writer.WriteLine("Id,Name");
-            //    writer.WriteLine("1,Carl");
-            //    writer.WriteLine("2,Mark");
+            //    parser.Write(recs);
             //    writer.Flush();
             //    stream.Position = 0;
 
-            //    while ((row = parser.Read()) != null)
-            //    {
-            //        Console.WriteLine(row.Id);
-            //    }
+            //    Console.WriteLine(reader.ReadToEnd());
             //}
             //return;
+
+            //string txt = "Id, Name\r\n1, Mark";
+            //foreach (var e in ChoCSVReader.LoadText(txt))
+            //    Console.WriteLine(e.ToStringEx());
+            //return;
+            dynamic row;
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVReader(reader, config))
+            {
+                writer.WriteLine("Id,Name");
+                writer.WriteLine("1,Carl");
+                writer.WriteLine("2,Mark");
+                writer.Flush();
+                stream.Position = 0;
+
+                while ((row = parser.Read()) != null)
+                {
+                    Console.WriteLine(row.Id);
+                }
+            }
+            return;
 
             //DataTable dt = new ChoCSVReader<EmployeeRec>("Emp.csv").AsDataTable();
             //var z = dt.Rows.Count;
@@ -319,12 +323,12 @@ namespace ChoCSVReaderTest
                 //{
                 //    Console.WriteLine(dr[0]);
                 //}
-                object row = null;
+                object row1 = null;
 
                 //parser.Configuration.ColumnCountStrict = true;
-                while ((row = parser.Read()) != null)
+                while ((row1 = parser.Read()) != null)
                 {
-                    Console.WriteLine(row.ToStringEx());
+                    Console.WriteLine(row1.ToStringEx());
                 }
             }
         }

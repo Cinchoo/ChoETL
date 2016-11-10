@@ -1,4 +1,4 @@
-﻿using System;
+﻿    using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -14,7 +14,7 @@ namespace ChoETL
     public class ChoCSVReader<T> : IDisposable, IEnumerable<T>
         where T : class
     {
-        private TextReader _txtReader;
+        private StreamReader _streamReader;
         private bool _closeStreamOnDispose = false;
         private Lazy<IEnumerator<T>> _enumerator = null;
 
@@ -32,19 +32,18 @@ namespace ChoETL
 
             Init();
 
-            //_txtReader = File.OpenText(ChoPath.GetFullPath(filePath));
-            _txtReader = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.Encoding, false, Configuration.BufferSize);
+            _streamReader = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.Encoding, false, Configuration.BufferSize);
             _closeStreamOnDispose = true;
         }
 
-        public ChoCSVReader(TextReader txtReader, ChoCSVRecordConfiguration configuration = null)
+        public ChoCSVReader(StreamReader streamReader, ChoCSVRecordConfiguration configuration = null)
         {
-            ChoGuard.ArgumentNotNull(txtReader, "TextReader");
+            ChoGuard.ArgumentNotNull(streamReader, "StreamReader");
 
             Configuration = configuration;
             Init();
 
-            _txtReader = txtReader;
+            _streamReader = streamReader;
         }
 
         public ChoCSVReader(Stream inStream, ChoCSVRecordConfiguration configuration = null)
@@ -53,7 +52,7 @@ namespace ChoETL
 
             Configuration = configuration;
             Init();
-            _txtReader = new StreamReader(inStream, Configuration.Encoding, false, Configuration.BufferSize);
+            _streamReader = new StreamReader(inStream, Configuration.Encoding, false, Configuration.BufferSize);
         }
 
         public T Read()
@@ -67,7 +66,7 @@ namespace ChoETL
         public void Dispose()
         {
             if (_closeStreamOnDispose)
-                _txtReader.Dispose();
+                _streamReader.Dispose();
         }
 
         private void Init()
@@ -77,10 +76,9 @@ namespace ChoETL
                 Configuration = new ChoCSVRecordConfiguration(typeof(T));
         }
 
-        public static ChoCSVReader<TRec> LoadText<TRec>(string inputText)
-            where TRec : class
+        public static ChoCSVReader<T> LoadText(string inputText)
         {
-            var r = new ChoCSVReader<TRec>(new StringReader(inputText));
+            var r = new ChoCSVReader<T>(inputText.ToStream());
             r._closeStreamOnDispose = true;
 
             return r;
@@ -89,7 +87,7 @@ namespace ChoETL
         public IEnumerator<T> GetEnumerator()
         {
             ChoCSVRecordReader reader = new ChoCSVRecordReader(typeof(T), Configuration);
-            var e = reader.AsEnumerable(_txtReader).GetEnumerator();
+            var e = reader.AsEnumerable(_streamReader).GetEnumerator();
             return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
         }
 
@@ -101,7 +99,7 @@ namespace ChoETL
         public IDataReader AsDataReader()
         {
             ChoCSVRecordReader reader = new ChoCSVRecordReader(typeof(T), Configuration);
-            reader.LoadSchema(_txtReader);
+            reader.LoadSchema(_streamReader);
 
             var dr = new ChoEnumerableDataReader(GetEnumerator().ToEnumerable(), Configuration.RecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType)).ToArray());
             return dr;
@@ -122,11 +120,10 @@ namespace ChoETL
         {
 
         }
-        public ChoCSVReader(TextReader txtReader, ChoCSVRecordConfiguration configuration = null)
-            : base(txtReader, configuration)
+        public ChoCSVReader(StreamReader streamReader, ChoCSVRecordConfiguration configuration = null)
+            : base(streamReader, configuration)
         {
         }
-
         public ChoCSVReader(Stream inStream, ChoCSVRecordConfiguration configuration = null)
             : base(inStream, configuration)
         {

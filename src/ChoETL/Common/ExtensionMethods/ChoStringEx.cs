@@ -1381,5 +1381,22 @@ namespace ChoETL
         }
 
         #endregion ToMaskedConnectionString Methods
+
+        #region ToStream Method
+
+        public static Stream ToStream(this string txt)
+        {
+            MemoryStream stream = new MemoryStream();
+            StreamWriter writer = new StreamWriter(stream);
+            if (txt != null)
+                writer.Write(txt);
+
+            writer.Flush();
+            stream.Position = 0;
+
+            return stream;
+        }
+
+        #endregion ToStream Method
     }
 }
