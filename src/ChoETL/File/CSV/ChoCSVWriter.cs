@@ -13,7 +13,7 @@ namespace ChoETL
     public class ChoCSVWriter<T> : IDisposable
         where T : class
     {
-        private TextWriter _txtWriter;
+        private StreamWriter _streamWriter;
         private bool _closeStreamOnDispose = false;
         private ChoCSVRecordWriter _writer = null;
 
@@ -31,18 +31,18 @@ namespace ChoETL
 
             Init();
 
-            _txtWriter = new StreamWriter(ChoPath.GetFullPath(filePath), false, Configuration.Encoding, Configuration.BufferSize);
+            _streamWriter = new StreamWriter(ChoPath.GetFullPath(filePath), false, Configuration.Encoding, Configuration.BufferSize);
             _closeStreamOnDispose = true;
         }
 
-        public ChoCSVWriter(TextWriter txtWriter, ChoCSVRecordConfiguration configuration = null)
+        public ChoCSVWriter(StreamWriter streamWriter, ChoCSVRecordConfiguration configuration = null)
         {
-            ChoGuard.ArgumentNotNull(txtWriter, "TextWriter");
+            ChoGuard.ArgumentNotNull(streamWriter, "StreamWriter");
 
             Configuration = configuration;
             Init();
 
-            _txtWriter = txtWriter;
+            _streamWriter = streamWriter;
         }
 
         public ChoCSVWriter(Stream inStream, ChoCSVRecordConfiguration configuration = null)
@@ -50,13 +50,13 @@ namespace ChoETL
             ChoGuard.ArgumentNotNull(inStream, "Stream");
 
             Configuration = configuration;
-            _txtWriter = new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize);
+            _streamWriter = new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize);
         }
 
         public void Dispose()
         {
             if (_closeStreamOnDispose)
-                _txtWriter.Dispose();
+                _streamWriter.Dispose();
         }
 
         private void Init()
@@ -69,12 +69,12 @@ namespace ChoETL
 
         public void Write(IEnumerable<T> records)
         {
-            _writer.WriteTo(_txtWriter, records).Loop();
+            _writer.WriteTo(_streamWriter, records).Loop();
         }
 
         public void Write(T record)
         {
-            _writer.WriteTo(_txtWriter, new T[] { record } ).Loop();
+            _writer.WriteTo(_streamWriter, new T[] { record } ).Loop();
         }
     }
 
@@ -85,8 +85,8 @@ namespace ChoETL
         {
 
         }
-        public ChoCSVWriter(TextWriter txtWriter, ChoCSVRecordConfiguration configuration = null)
-            : base(txtWriter, configuration)
+        public ChoCSVWriter(StreamWriter streamWriter, ChoCSVRecordConfiguration configuration = null)
+            : base(streamWriter, configuration)
         {
         }
 
