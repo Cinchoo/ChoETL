@@ -48,13 +48,13 @@ namespace ChoETL
             }
         }
 
-        public void Add<T>(object metadataObj)
+        public void Attach<T>(object metadataObj)
             where T : class
         {
-            Add(typeof(T), metadataObj);
+            Attach(typeof(T), metadataObj);
         }
 
-        public void Add(Type type, object metadataObj)
+        public void Attach(Type type, object metadataObj)
         {
             if (type == null || metadataObj == null)
                 return;
@@ -68,13 +68,13 @@ namespace ChoETL
             }
         }
 
-        public void Remove<T>()
+        public void Detach<T>()
             where T : class
         {
-            Remove(typeof(T));
+            Detach(typeof(T));
         }
 
-        public void Remove(Type type)
+        public void Detach(Type type)
         {
             if (type == null)
                 return;

@@ -220,7 +220,7 @@ namespace ChoCSVReaderTest
             //var t = ChoTypeDescriptor.GetPropetyAttributes<ChoTypeConverterAttribute>(ChoTypeDescriptor.GetProperty<ChoTypeConverterAttribute>(typeof(EmployeeRecMeta), "Name")).ToArray();
             //return;
 
-            ChoMetadataObjectCache.Default.Add(typeof(EmployeeRec), new EmployeeRecMeta());
+            ChoMetadataObjectCache.Default.Attach(typeof(EmployeeRec), new EmployeeRecMeta());
             //string v = @"4,'123\r\n4,abc'";
             //foreach (var ss in v.SplitNTrim(",", ChoStringSplitOptions.None, '\''))
             //    Console.WriteLine(ss + "-");
