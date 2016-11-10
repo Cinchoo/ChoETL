@@ -288,6 +288,7 @@ namespace ChoETL
             ChoCSVRecordFieldConfiguration fieldConfig = null;
             foreach (KeyValuePair<string, ChoCSVRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
+                fieldValue = null;
                 fieldConfig = kvp.Value;
 
                 if (Configuration.CSVFileHeaderConfiguration.HasHeaderRecord)
@@ -313,16 +314,19 @@ namespace ChoETL
                 try
                 {
                     bool ignoreFieldValue = fieldConfig.IgnoreFieldValue(fieldValue);
-                    if (!ignoreFieldValue)
+                    if (rec is ExpandoObject)
                     {
-                        if (rec is ExpandoObject)
-                        {
-                            if (fieldConfig.FieldType != typeof(string))
-                                fieldValue = ChoConvert.ConvertTo(fieldValue, fieldConfig.FieldType, Configuration.Culture);
-                            var x = rec as IDictionary<string, Object>;
+                        if (fieldConfig.FieldType != typeof(string))
+                            fieldValue = ChoConvert.ConvertTo(fieldValue, fieldConfig.FieldType, Configuration.Culture);
+                        var x = rec as IDictionary<string, Object>;
+                        if (!ignoreFieldValue)
                             x.Add(kvp.Key, fieldValue);
-                        }
                         else
+                            x.Add(kvp.Key, null);
+                    }
+                    else
+                    {
+                        if (!ignoreFieldValue)
                         {
                             if (ChoType.HasProperty(rec.GetType(), kvp.Key))
                             {
