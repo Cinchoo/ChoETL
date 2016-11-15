@@ -289,8 +289,8 @@ namespace ChoCSVReaderTest
             //var z = dt.Rows.Count;
             //return;
 
-            foreach (var e in new ChoCSVReader("Emp.csv", config))
-                Console.WriteLine(e.ToStringEx());
+            foreach (var item in new ChoCSVReader<EmployeeRec>("Emp.csv"))
+                Console.WriteLine(item.ToStringEx());
             return;
 
             //var reader = new ChoCSVReader<EmployeeRec>("Emp.csv");

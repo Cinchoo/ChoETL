@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoETL", "ChoETL.csproj", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoCSVReaderTest", "..\Test\ChoCSVReaderTest\ChoCSVReaderTest.csproj", "{D732199D-680F-4571-96ED-8E00E34580AA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoCSVWriterTest", "..\Test\ChoCSVWriterTest\ChoCSVWriterTest.csproj", "{DFA30C9A-4CAD-4163-8E8D-B088869AFC01}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{D732199D-680F-4571-96ED-8E00E34580AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D732199D-680F-4571-96ED-8E00E34580AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D732199D-680F-4571-96ED-8E00E34580AA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DFA30C9A-4CAD-4163-8E8D-B088869AFC01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DFA30C9A-4CAD-4163-8E8D-B088869AFC01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DFA30C9A-4CAD-4163-8E8D-B088869AFC01}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DFA30C9A-4CAD-4163-8E8D-B088869AFC01}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

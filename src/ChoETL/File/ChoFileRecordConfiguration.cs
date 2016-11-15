@@ -68,7 +68,7 @@ namespace ChoETL
             Culture = CultureInfo.CurrentCulture;
             EOLDelimiter = Environment.NewLine;
             IgnoreEmptyLine = false;
-            ColumnCountStrict = true;
+            ColumnCountStrict = false;
             QuoteChar = '"';
             QuoteAllFields = false;
             StringSplitOptions = ChoStringSplitOptions.None;

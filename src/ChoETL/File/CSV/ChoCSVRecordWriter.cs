@@ -13,6 +13,7 @@ namespace ChoETL
     {
         private IChoWriterRecord _callbackRecord;
         private bool _configCheckDone = false;
+        private int _index = 0;
 
         public ChoCSVRecordConfiguration Configuration
         {
@@ -40,12 +41,11 @@ namespace ChoETL
             if (!RaiseBeginWrite(sw))
                 yield break;
 
-            int index = 0;
             string recText = String.Empty;
             foreach (object record in records)
             {
                 recText = String.Empty;
-                index++;
+                _index++;
                 if (record != null)
                 {
                     if (predicate == null || predicate(record))
@@ -63,6 +63,10 @@ namespace ChoETL
                             else
                             {
                                 fieldNames = ChoTypeDescriptor.GetProperties<ChoCSVRecordFieldAttribute>(record.GetType()).Select(pd => pd.Name).ToArray();
+                                if (fieldNames.Length == 0)
+                                {
+                                    fieldNames = ChoType.GetProperties(record.GetType()).Select(p => p.Name).ToArray();
+                                }
                             }
 
                             Configuration.Validate(fieldNames);
@@ -72,7 +76,7 @@ namespace ChoETL
                             _configCheckDone = true;
                         }
 
-                        if (!RaiseBeforeRecordWrite(record, index, ref recText))
+                        if (!RaiseBeforeRecordWrite(record, _index, ref recText))
                             yield break;
 
                         if (recText == null)
@@ -85,11 +89,14 @@ namespace ChoETL
 
                         try
                         {
-                            if (ToText(index, record, out recText))
+                            if (ToText(_index, record, out recText))
                             {
-                                sw.Write("{1}{0}", recText, Configuration.CSVFileHeaderConfiguration.HasHeaderRecord || HasExcelSeparator ? Configuration.EOLDelimiter : "");
+                                if (_index == 1)
+                                    sw.Write("{1}{0}", recText, Configuration.CSVFileHeaderConfiguration.HasHeaderRecord || HasExcelSeparator ? Configuration.EOLDelimiter : "");
+                                else
+                                    sw.Write("{1}{0}", recText, Configuration.EOLDelimiter);
 
-                                if (!RaiseAfterRecordWrite(record, index, recText))
+                                if (!RaiseAfterRecordWrite(record, _index, recText))
                                     yield break;
                             }
                         }
@@ -106,7 +113,7 @@ namespace ChoETL
                             }
                             else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
                             {
-                                if (!RaiseRecordWriteError(record, index, recText, ex))
+                                if (!RaiseRecordWriteError(record, _index, recText, ex))
                                     throw;
                             }
                             else
