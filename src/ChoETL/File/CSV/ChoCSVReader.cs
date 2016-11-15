@@ -53,6 +53,7 @@ namespace ChoETL
             Configuration = configuration;
             Init();
             _streamReader = new StreamReader(inStream, Configuration.Encoding, false, Configuration.BufferSize);
+            _closeStreamOnDispose = true;
         }
 
         public T Read()

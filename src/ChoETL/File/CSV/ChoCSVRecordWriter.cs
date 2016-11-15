@@ -89,6 +89,10 @@ namespace ChoETL
 
                         try
                         {
+                            if (!(record is ExpandoObject)
+                                && (Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
+                                ChoValidator.Validate(record);
+
                             if (ToText(_index, record, out recText))
                             {
                                 if (_index == 1)
@@ -144,7 +148,7 @@ namespace ChoETL
             {
                 fieldConfig = kvp.Value;
                 fieldValue = null;
-
+                fieldText = String.Empty;
                 if (Configuration.ThrowAndStopOnMissingField)
                 {
                     if (rec is ExpandoObject)
@@ -160,42 +164,53 @@ namespace ChoETL
                     }
                 }
 
-                if (rec is ExpandoObject)
-                {
-                    var x = rec as IDictionary<string, Object>;
-                    string getCultureSpecificKeyName = x.Keys.Where(i => String.Compare(i, kvp.Key, Configuration.CSVFileHeaderConfiguration.IgnoreCase, Configuration.Culture) == 0).FirstOrDefault();
-                    if (!getCultureSpecificKeyName.IsNullOrWhiteSpace())
-                        fieldValue = x[getCultureSpecificKeyName];
-                }
-                else
-                {
-                    if (ChoType.HasProperty(rec.GetType(), kvp.Key))
-                        fieldValue = ChoType.GetPropertyValue(rec, kvp.Key);
-                }
-
-                if (!RaiseBeforeRecordFieldWrite(rec, index, kvp.Key, ref fieldValue))
-                    return false;
-
                 try
                 {
+                    if (rec is ExpandoObject)
+                    {
+                        var x = rec as IDictionary<string, Object>;
+                        string getCultureSpecificKeyName = x.Keys.Where(i => String.Compare(i, kvp.Key, Configuration.CSVFileHeaderConfiguration.IgnoreCase, Configuration.Culture) == 0).FirstOrDefault();
+                        if (!getCultureSpecificKeyName.IsNullOrWhiteSpace())
+                            fieldValue = x[getCultureSpecificKeyName];
+                    }
+                    else
+                    {
+                        if (ChoType.HasProperty(rec.GetType(), kvp.Key))
+                        {
+                            if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
+                                ChoValidator.ValididateFor(rec, kvp.Key);
+
+                            fieldValue = ChoType.GetPropertyValue(rec, kvp.Key);
+                        }
+                    }
+
+                    if (!RaiseBeforeRecordFieldWrite(rec, index, kvp.Key, ref fieldValue))
+                        return false;
 
                     if (rec is ExpandoObject)
                         fieldValue = ChoConvert.ConvertTo(fieldValue, typeof(string), Configuration.Culture);
                     else if (ChoType.HasProperty(rec.GetType(), kvp.Key))
+                    {
+                        if (fieldValue == null)
+                        {
+                            DefaultValueAttribute da = ChoTypeDescriptor.GetPropetyAttribute<DefaultValueAttribute>(rec.GetType(), kvp.Key);
+                            if (da != null)
+                            {
+                                try
+                                {
+                                    fieldValue = ChoConvert.ConvertTo(da.Value, ChoType.GetMemberInfo(rec.GetType(), kvp.Key), typeof(string), rec, Configuration.Culture);
+                                }
+                                catch { }
+                            }
+                        }
+
                         fieldValue = ChoConvert.ConvertTo(fieldValue, ChoType.GetMemberInfo(rec.GetType(), kvp.Key), typeof(string), rec, Configuration.Culture);
+                    }
 
                     if (fieldValue == null)
                         fieldText = String.Empty;
                     else
                         fieldText = fieldValue.ToString();
-
-                    if (firstColumn)
-                    {
-                        msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, kvp.Value.FieldValueJustification, kvp.Value.FillChar, false));
-                        firstColumn = false;
-                    }
-                    else
-                        msg.AppendFormat("{0}{1}", Configuration.Delimiter, NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, kvp.Value.FieldValueJustification, kvp.Value.FillChar, false));
 
                     if (!RaiseAfterRecordFieldWrite(rec, index, kvp.Key, fieldValue))
                         return false;
@@ -227,6 +242,8 @@ namespace ChoETL
 
                             if (fieldValue == null)
                                 fieldText = String.Empty;
+                            else
+                                fieldText = fieldValue.ToString();
                         }
                         else
                             throw;
@@ -246,6 +263,14 @@ namespace ChoETL
                             throw;
                     }
                 }
+
+                if (firstColumn)
+                {
+                    msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, kvp.Value.FieldValueJustification, kvp.Value.FillChar, false));
+                    firstColumn = false;
+                }
+                else
+                    msg.AppendFormat("{0}{1}", Configuration.Delimiter, NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, kvp.Value.FieldValueJustification, kvp.Value.FillChar, false));
             }
 
             recText = msg.ToString();

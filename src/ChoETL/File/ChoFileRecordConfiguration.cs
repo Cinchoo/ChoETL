@@ -40,6 +40,11 @@ namespace ChoETL
             get;
             set;
         }
+        public bool ColumnOrderStrict
+        {
+            get;
+            set;
+        }
         public char QuoteChar
         {
             get;
@@ -69,6 +74,7 @@ namespace ChoETL
             EOLDelimiter = Environment.NewLine;
             IgnoreEmptyLine = false;
             ColumnCountStrict = false;
+            ColumnOrderStrict = false;
             QuoteChar = '"';
             QuoteAllFields = false;
             StringSplitOptions = ChoStringSplitOptions.None;
@@ -92,6 +98,7 @@ namespace ChoETL
                 EOLDelimiter = recObjAttr.EOLDelimiter;
                 IgnoreEmptyLine = recObjAttr.IgnoreEmptyLine;
                 ColumnCountStrict = recObjAttr.ColumnCountStrict;
+                ColumnOrderStrict = recObjAttr.ColumnOrderStrict;
                 QuoteChar = recObjAttr.QuoteChar;
                 QuoteAllFields = recObjAttr.QuoteAllFields;
                 StringSplitOptions = recObjAttr.StringSplitOptions;

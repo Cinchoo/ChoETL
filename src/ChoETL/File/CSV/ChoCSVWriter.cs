@@ -50,7 +50,9 @@ namespace ChoETL
             ChoGuard.ArgumentNotNull(inStream, "Stream");
 
             Configuration = configuration;
+            Init();
             _streamWriter = new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize);
+            _closeStreamOnDispose = true;
         }
 
         public void Dispose()

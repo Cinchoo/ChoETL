@@ -504,6 +504,19 @@ namespace ChoETL
                 string[] foundList = Configuration.RecordFieldConfigurations.Select(i => i.FieldName).Except(_fieldNames, Configuration.CSVFileHeaderConfiguration.StringComparer).ToArray();
                 if (foundList.Any())
                     throw new ChoParserException("Header names [{0}] specified in configuration/entity are not found in file header.".FormatString(String.Join(",", foundList)));
+
+                if (Configuration.ColumnOrderStrict)
+                {
+                    int colIndex = 0;
+                    foreach (string fieldName in Configuration.RecordFieldConfigurations.OrderBy(i => i.FieldPosition).Select(i => i.Name))
+                    {
+                        if (String.Compare(_fieldNames[colIndex], fieldName, Configuration.CSVFileHeaderConfiguration.IgnoreCase, Configuration.Culture) != 0)
+                            throw new ChoParserException("Incorrect CSV column order found. Expected [{0}] CSV column at '{1}' location.".FormatString(fieldName, colIndex + 1));
+
+                        colIndex++;
+
+                    }
+                }
             }
         }
 

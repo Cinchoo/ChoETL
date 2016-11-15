@@ -134,7 +134,7 @@ namespace ChoETL
             else
                 throw new ChoRecordConfigurationException("No record fields specified.");
 
-            RecordFieldConfigurationsDict = RecordFieldConfigurations.Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
+            RecordFieldConfigurationsDict = RecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
 
             //Validate each record field
             foreach (var fieldConfig in RecordFieldConfigurations)

@@ -1,6 +1,8 @@
 ﻿using ChoETL;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -13,7 +15,53 @@ namespace ChoCSVWriterTest
     {
         static void Main(string[] args)
         {
-            ConfigFirstApproachWriteRecordsToFile();
+            
+            CodeFirstWithDeclarativeApproachWriteRecordsToFile();
+        }
+
+        static void CodeFirstWithDeclarativeApproachWriteRecordsToFile()
+        {
+            List<EmployeeRec> objs = new List<EmployeeRec>();
+            EmployeeRec rec1 = new EmployeeRec();
+            rec1.Id = 10;
+            rec1.Name = "Mark";
+            objs.Add(rec1);
+
+            EmployeeRec rec2 = new EmployeeRec();
+            rec2.Id = 200;
+            rec2.Name = "Lou";
+            objs.Add(rec2);
+
+            using (var tx = File.OpenWrite("Emp.csv"))
+            {
+                using (var parser = new ChoCSVWriter<EmployeeRec>(tx))
+                {
+                    parser.Write(objs);
+                }
+            }
+        }
+
+        static void ConfigFirstApproachWriteDynamicRecordsToFile()
+        {
+            ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
+            config.CSVFileHeaderConfiguration.HasHeaderRecord = true;
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1));
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
+
+            List<ExpandoObject> objs = new List<ExpandoObject>();
+            dynamic rec1 = new ExpandoObject();
+            rec1.Name = "Mark";
+            objs.Add(rec1);
+
+            dynamic rec2 = new ExpandoObject();
+            rec2.Id = 2;
+            rec2.Name = "Tom";
+            objs.Add(rec2);
+
+            using (var parser = new ChoCSVWriter("Emp.csv", config))
+            {
+                parser.Write(objs);
+            }
         }
 
         static void ConfigFirstApproachWriteRecordsToFile()
@@ -156,5 +204,31 @@ namespace ChoCSVWriterTest
     {
         public int Id { get; set; }
         public string Name { get; set; }
+    }
+
+    [ChoCSVFileHeader]
+    public class EmployeeRec
+    {
+        [ChoCSVRecordField(1)]
+        [Required]
+        [ChoFallbackValue(100)]
+        [Range(100, 10000)]
+        public int? Id
+        {
+            get;
+            set;
+        }
+        [ChoCSVRecordField(2)]
+        [DefaultValue("XXXX")]
+        public string Name
+        {
+            get;
+            set;
+        }
+
+        public override string ToString()
+        {
+            return "{0}. {1}.".FormatString(Id, Name);
+        }
     }
 }

@@ -60,6 +60,11 @@ namespace ChoETL
             get;
             set;
         }
+        public bool ColumnOrderStrict
+        {
+            get;
+            set;
+        }
         public int BufferSize
         {
             get;
@@ -75,6 +80,7 @@ namespace ChoETL
             EOLDelimiter = Environment.NewLine;
             IgnoreEmptyLine = false;
             ColumnCountStrict = false;
+            ColumnOrderStrict = false;
             QuoteChar = '"';
             QuoteAllFields = false;
             StringSplitOptions = ChoStringSplitOptions.None;
