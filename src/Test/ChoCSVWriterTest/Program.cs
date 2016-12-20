@@ -15,7 +15,6 @@ namespace ChoCSVWriterTest
     {
         static void Main(string[] args)
         {
-            
             CodeFirstWithDeclarativeApproachWriteRecordsToFile();
         }
 
@@ -207,9 +206,10 @@ namespace ChoCSVWriterTest
     }
 
     [ChoCSVFileHeader]
+    [ChoCSVRecordObject(HasExcelSeparator = true)]
     public class EmployeeRec
     {
-        [ChoCSVRecordField(1)]
+        [ChoCSVRecordField(1, FieldName = "NewId")]
         [Required]
         [ChoFallbackValue(100)]
         [Range(100, 10000)]

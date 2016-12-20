@@ -184,14 +184,15 @@ namespace ChoETL
                         }
                     }
 
+                    object origFieldValue = fieldValue;
                     if (!RaiseBeforeRecordFieldWrite(rec, index, kvp.Key, ref fieldValue))
                         return false;
 
-                    if (rec is ExpandoObject)
+                    if (rec is ExpandoObject || !ChoType.HasProperty(rec.GetType(), kvp.Key))
                         fieldValue = ChoConvert.ConvertTo(fieldValue, typeof(string), Configuration.Culture);
-                    else if (ChoType.HasProperty(rec.GetType(), kvp.Key))
+                    else
                     {
-                        if (fieldValue == null)
+                        if (origFieldValue == null)
                         {
                             DefaultValueAttribute da = ChoTypeDescriptor.GetPropetyAttribute<DefaultValueAttribute>(rec.GetType(), kvp.Key);
                             if (da != null)
@@ -235,7 +236,7 @@ namespace ChoETL
                         ChoFallbackValueAttribute fbAttr = ChoTypeDescriptor.GetPropetyAttribute<ChoFallbackValueAttribute>(rec.GetType(), kvp.Key);
                         if (fbAttr != null)
                         {
-                            if (rec is ExpandoObject)
+                            if (rec is ExpandoObject || !ChoType.HasProperty(rec.GetType(), kvp.Key))
                                 fieldValue = ChoConvert.ConvertTo(fbAttr.Value, typeof(string), Configuration.Culture);
                             else
                                 fieldValue = ChoConvert.ConvertTo(fbAttr.Value, ChoType.GetMemberInfo(rec.GetType(), kvp.Key), typeof(string), rec, Configuration.Culture);
