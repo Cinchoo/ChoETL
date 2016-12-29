@@ -8,6 +8,12 @@ namespace ChoETL
 {
     public abstract class ChoRecordConfiguration
     {
+        public Type RecordType
+        {
+            get;
+            internal set;
+        }
+
         public ChoErrorMode ErrorMode
         {
             get;
@@ -36,6 +42,7 @@ namespace ChoETL
 
         public ChoRecordConfiguration(Type recordType = null)
         {
+            RecordType = recordType;
             ErrorMode = ChoErrorMode.ThrowAndStop;
             AutoDiscoverColumns = true;
             ThrowAndStopOnMissingField = true;

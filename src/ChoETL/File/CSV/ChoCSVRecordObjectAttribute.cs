@@ -14,6 +14,12 @@ namespace ChoETL
             get;
             private set;
         }
+        internal bool? HasExcelSeparatorInternal;
+        public bool HasExcelSeparator
+        {
+            get { throw new NotSupportedException(); }
+            set { HasExcelSeparatorInternal = value; }
+        }
 
         public ChoCSVRecordObjectAttribute(string delimiter = null)
         {

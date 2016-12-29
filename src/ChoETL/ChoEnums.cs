@@ -24,6 +24,6 @@ namespace ChoETL
         DBNull = 2,
         Empty = 4,
         WhiteSpace = 8,
-        All = Null | DBNull | Empty | WhiteSpace
+        Any = Null | DBNull | Empty | WhiteSpace
     }
 }

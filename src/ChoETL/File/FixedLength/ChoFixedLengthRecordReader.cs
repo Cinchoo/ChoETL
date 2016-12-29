@@ -10,21 +10,20 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    internal class ChoCSVRecordReader : ChoRecordReader
+    internal class ChoFixedLengthRecordReader : ChoRecordReader
     {
         private IChoNotifyRecordRead _callbackRecord;
         private bool _headerFound = false;
-        private bool _excelSeparatorFound = false;
         private string[] _fieldNames = new string[] { };
         private bool _configCheckDone = false;
 
-        public ChoCSVRecordConfiguration Configuration
+        public ChoFixedLengthRecordConfiguration Configuration
         {
             get;
             private set;
         }
 
-        public ChoCSVRecordReader(Type recordType, ChoCSVRecordConfiguration configuration = null) : base(recordType)
+        public ChoFixedLengthRecordReader(Type recordType, ChoFixedLengthRecordConfiguration configuration = null) : base(recordType)
         {
             ChoGuard.ArgumentNotNull(configuration, "Configuration");
             Configuration = configuration;
@@ -110,23 +109,6 @@ namespace ChoETL
                             ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Empty line found at [{0}]...".FormatString(pair.Item1));
                             return true;
                         }
-                    }
-
-                    //LoadExcelSeparator if any
-                    if (pair.Item1 == 1
-                        && !_excelSeparatorFound)
-                    {
-                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Inspecting for excel separator at [{0}]...".FormatString(pair.Item1));
-                        bool retVal = LoadExcelSeperatorIfAny(pair);
-                        _excelSeparatorFound = true;
-
-                        if (Configuration.HasExcelSeparator.HasValue
-                            && Configuration.HasExcelSeparator.Value
-                            && !retVal)
-                            throw new ChoParserException("Missing excel separator header line in the file.");
-
-                        if (retVal)
-                            return true;
                     }
 
                     if (commentTokens == null)
@@ -271,41 +253,23 @@ namespace ChoETL
             lineNo = pair.Item1;
             line = pair.Item2;
 
+            if (line.Length != Configuration.RecordLength)
+                throw new ChoParserException("Incorrect record length [Length: {0}] found. Expected record length: {1}".FormatString(line.Length, Configuration.RecordLength));
+
             object fieldValue = null;
 
-            string[] fieldValues = (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)
-                               select x).ToArray();
-            if (Configuration.ColumnCountStrict)
+            ChoFixedLengthRecordFieldConfiguration fieldConfig = null;
+            foreach (KeyValuePair<string, ChoFixedLengthRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
-                if (fieldValues.Length != Configuration.RecordFieldConfigurations.Count)
-                    throw new ChoParserException("Incorrect number of field values found at line [{2}]. Expected [{0}] field values. Found [{1}] field values.".FormatString(Configuration.RecordFieldConfigurations.Count, fieldValues.Length, pair.Item1));
-            }
-
-            Dictionary<string, string> fieldNameValues = ToFieldNameValues(fieldValues);
-
-            ValidateLine(pair.Item1, fieldValues);
-
-            ChoCSVRecordFieldConfiguration fieldConfig = null;
-            foreach (KeyValuePair<string, ChoCSVRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
-            {
-                fieldValue = null;
                 fieldConfig = kvp.Value;
 
-                if (Configuration.FileHeaderConfiguration.HasHeaderRecord)
+                if (fieldConfig.StartIndex + fieldConfig.Size > line.Length)
                 {
-                    if (fieldNameValues.ContainsKey(fieldConfig.FieldName))
-                        fieldValue = fieldNameValues[fieldConfig.FieldName];
-                    else if (Configuration.ColumnCountStrict)
-                        throw new ChoParserException("No matching '{0}' field header found.".FormatString(fieldConfig.FieldName));
+                    if (Configuration.ColumnCountStrict)
+                        throw new ChoParserException("Missing '{0}' field value.".FormatString(kvp.Key));
                 }
                 else
-                {
-                    if (fieldConfig.FieldPosition - 1 < fieldValues.Length)
-                        fieldValue = fieldValues[fieldConfig.FieldPosition - 1];
-                    else if (Configuration.ColumnCountStrict)
-                        throw new ChoParserException("Missing field value for {0} [Position: {1}] field.".FormatString(fieldConfig.FieldName, fieldConfig.FieldPosition));
-                }
-
+                    fieldValue = line.Substring(fieldConfig.StartIndex, fieldConfig.Size.Value);
                 fieldValue = CleanFieldValue(fieldConfig, fieldValue as string);
 
                 if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
@@ -390,7 +354,7 @@ namespace ChoETL
             return true;
         }
 
-        private string CleanFieldValue(ChoCSVRecordFieldConfiguration config, string fieldValue)
+        private string CleanFieldValue(ChoFixedLengthRecordFieldConfiguration config, string fieldValue)
         {
             if (fieldValue.IsNull()) return fieldValue;
 
@@ -423,63 +387,25 @@ namespace ChoETL
 
             if (config.QuoteField != null && config.QuoteField.Value && fieldValue.StartsWith(@"""") && fieldValue.EndsWith(@""""))
                 return fieldValue.Substring(1, fieldValue.Length - 2);
-            else if ((fieldValue.Contains(Configuration.Delimiter)
-                || fieldValue.Contains(Configuration.EOLDelimiter)) && fieldValue.StartsWith(@"""") && fieldValue.EndsWith(@""""))
-                return fieldValue.Substring(1, fieldValue.Length - 2);
+            //else if ((fieldValue.Contains(Configuration.Delimiter)
+            //    || fieldValue.Contains(Configuration.EOLDelimiter)) && fieldValue.StartsWith(@"""") && fieldValue.EndsWith(@""""))
+            //    return fieldValue.Substring(1, fieldValue.Length - 2);
             else
                 return fieldValue;
         }
 
-        private void ValidateLine(int lineNo, string[] fieldValues)
-        {
-            int maxPos = Configuration.MaxFieldPosition;
-
-            if (Configuration.ColumnCountStrict)
-            {
-                if (fieldValues.Length != maxPos)
-                    throw new ApplicationException("Mismatched number of fields found at {0} line. [Expected: {1}, Found: {2}].".FormatString(
-                        lineNo, maxPos, fieldValues.Length));
-            }
-
-            //ChoCSVRecordFieldAttribute attr = null;
-            //foreach (Tuple<MemberInfo, ChoOrderedAttribute> member in _members)
-            //{
-            //    if (attr.Position > fields.Length)
-            //        throw new ApplicationException("Record Member '{0}' has incorrect Position specified.".FormatString(ChoType.GetMemberName(member.Item1)));
-            //}
-        }
-
-        private bool LoadExcelSeperatorIfAny(Tuple<int, string> pair)
-        {
-            string line = pair.Item2.NTrim();
-            if (!line.IsNullOrWhiteSpace() && line.StartsWith("sep=", true, Configuration.Culture))
-            {
-                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Excel separator specified at [{0}]...".FormatString(pair.Item1));
-                string delimiter = line.Substring(4);
-                if (!delimiter.IsNullOrWhiteSpace())
-                {
-                    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Excel separator [{0}] found.".FormatString(delimiter));
-                    Configuration.Delimiter = delimiter;
-                }
-
-                return true;
-            }
-
-            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Excel separator NOT found. Default separator [{0}] used.".FormatString(Configuration.Delimiter));
-            return false;
-        }
-
         private string[] GetHeaders(string line)
         {
-            if (Configuration.FileHeaderConfiguration.HasHeaderRecord)
-                return (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)
-                        select CleanHeaderValue(x)).ToArray();
-            else
-            {
-                int index = 0;
-                return (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)
-                        select "Column{0}".FormatString(++index)).ToArray();
-            }
+            return null;
+            //if (Configuration.FileHeaderConfiguration.HasHeaderRecord)
+            //    return (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)
+            //            select CleanHeaderValue(x)).ToArray();
+            //else
+            //{
+            //    int index = 0;
+            //    return (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)
+            //            select "Column{0}".FormatString(++index)).ToArray();
+            //}
         }
 
         private void LoadHeaderLine(Tuple<int, string> pair)
@@ -507,15 +433,15 @@ namespace ChoETL
 
                 if (Configuration.ColumnOrderStrict)
                 {
-                    int colIndex = 0;
-                    foreach (string fieldName in Configuration.RecordFieldConfigurations.OrderBy(i => i.FieldPosition).Select(i => i.Name))
-                    {
-                        if (String.Compare(_fieldNames[colIndex], fieldName, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture) != 0)
-                            throw new ChoParserException("Incorrect CSV column order found. Expected [{0}] CSV column at '{1}' location.".FormatString(fieldName, colIndex + 1));
+                    //int colIndex = 0;
+                    //foreach (string fieldName in Configuration.RecordFieldConfigurations.OrderBy(i => i.FieldPosition).Select(i => i.Name))
+                    //{
+                    //    if (String.Compare(_fieldNames[colIndex], fieldName, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture) != 0)
+                    //        throw new ChoParserException("Incorrect CSV column order found. Expected [{0}] CSV column at '{1}' location.".FormatString(fieldName, colIndex + 1));
 
-                        colIndex++;
+                    //    colIndex++;
 
-                    }
+                    //}
                 }
             }
         }

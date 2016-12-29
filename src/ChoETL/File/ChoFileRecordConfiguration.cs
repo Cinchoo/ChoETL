@@ -66,7 +66,7 @@ namespace ChoETL
             set;
         }
 
-        public ChoFileRecordConfiguration(Type recordType = null)
+        public ChoFileRecordConfiguration(Type recordType = null) : base(recordType)
         {
             BufferSize = 2048;
             Comments = new string[] { "#", "//" };

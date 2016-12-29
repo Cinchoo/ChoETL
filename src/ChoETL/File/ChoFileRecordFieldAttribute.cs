@@ -48,7 +48,7 @@ namespace ChoETL
             FieldValueJustification = ChoFieldValueJustification.Left;
             FieldValueTrimOption = ChoFieldValueTrimOption.Trim;
             Truncate = true;
-            IgnoreFieldValueMode = ChoIgnoreFieldValueMode.All;
+            IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any;
         }
     }
 }

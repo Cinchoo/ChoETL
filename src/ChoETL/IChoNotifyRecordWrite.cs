@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public interface IChoWriterRecord
+    public interface IChoNotifyRecordWrite
     {
         bool BeginWrite(object source);
         void EndWrite(object source);

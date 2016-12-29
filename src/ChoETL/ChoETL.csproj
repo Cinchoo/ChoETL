@@ -38,6 +38,7 @@
     <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
@@ -49,11 +50,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChoEnums.cs" />
+    <Compile Include="ChoETLDataTypeSize.cs" />
+    <Compile Include="ChoETLDataTypeFormat.cs" />
     <Compile Include="ChoRecordWriter.cs" />
     <Compile Include="ChoRecordReader.cs" />
     <Compile Include="ChoRecordFieldConfiguration.cs" />
     <Compile Include="ChoRecordConfiguration.cs" />
     <Compile Include="ChoObjectAttribute.cs" />
+    <Compile Include="ChoTypeConverter.cs" />
     <Compile Include="Common\Attributes\ChoFallbackValue.cs" />
     <Compile Include="Common\Attributes\ChoHiddenMemberAttribute.cs" />
     <Compile Include="Common\Attributes\ChoMemberAttribute.cs" />
@@ -62,6 +66,7 @@
     <Compile Include="Common\Attributes\ChoSequenceGeneratorAttribute.cs" />
     <Compile Include="Common\Attributes\ChoTypeConverterAttribute.cs" />
     <Compile Include="Common\Attributes\ChoValidatorAttribute.cs" />
+    <Compile Include="Common\ChoCurrency.cs" />
     <Compile Include="Common\ChoFuncEx.cs" />
     <Compile Include="Common\ChoActionEx.cs" />
     <Compile Include="Common\ChoActivator.cs" />
@@ -114,6 +119,7 @@
     <Compile Include="Common\ChoUtility.cs" />
     <Compile Include="Common\ChoWin32Exception.cs" />
     <Compile Include="Common\Converters\ChoCurrencyConverter.cs" />
+    <Compile Include="Common\Converters\ChoBooleanConverter.cs" />
     <Compile Include="Common\Converters\ChoDateTimeConverter.cs" />
     <Compile Include="Common\Converters\ChoNumericValidator.cs" />
     <Compile Include="Common\Converters\ChoSeqNoGeneratorConvertor.cs" />
@@ -179,8 +185,15 @@
     <Compile Include="File\CSV\ChoCSVFileHeaderConfiguration.cs" />
     <Compile Include="File\CSV\ChoCSVFileHeaderAttribute.cs" />
     <Compile Include="File\CSV\ChoCSVRecordWriter.cs" />
-    <Compile Include="IChoWriterRecord.cs" />
-    <Compile Include="IChoReaderRecord.cs" />
+    <Compile Include="File\FixedLength\ChoFixedLengthRecordReader.cs" />
+    <Compile Include="File\FixedLength\ChoFixedLengthFileHeaderConfiguration.cs" />
+    <Compile Include="File\FixedLength\ChoFixedLengthRecordObjectAttribute.cs" />
+    <Compile Include="File\FixedLength\ChoFixedLengthRecordFieldAttribute.cs" />
+    <Compile Include="File\FixedLength\ChoFixedLengthRecordFieldConfiguration.cs" />
+    <Compile Include="File\FixedLength\ChoFixedLengthRecordConfiguration.cs" />
+    <Compile Include="File\FixedLength\ChoFixedLengthReader.cs" />
+    <Compile Include="IChoNotifyRecordWrite.cs" />
+    <Compile Include="IChoNotifyRecordRead.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -190,6 +203,10 @@
     <Folder Include="Common\Cryptography\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

@@ -55,9 +55,9 @@ namespace ChoCSVReaderTest
 
     [ChoCSVFileHeader()]
     [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.ReportAndContinue,
-    IgnoreFieldValueMode = ChoIgnoreFieldValueMode.All, ThrowAndStopOnMissingField = false, 
+    IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any, ThrowAndStopOnMissingField = false, 
         ObjectValidationMode = ChoObjectValidationMode.MemberLevel)]
-    public class EmployeeRecMeta : IChoReaderRecord //, IChoValidatable
+    public class EmployeeRecMeta : IChoNotifyRecordRead //, IChoValidatable
     {
         [ChoCSVRecordField(1, FieldName = "id", ErrorMode = ChoErrorMode.ReportAndContinue )]
         [ChoTypeConverter(typeof(IntConverter))]
@@ -134,8 +134,8 @@ namespace ChoCSVReaderTest
     //[MetadataType(typeof(EmployeeRecMeta))]
     [ChoCSVFileHeader()]
     [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.IgnoreAndContinue,
-    IgnoreFieldValueMode = ChoIgnoreFieldValueMode.All, ThrowAndStopOnMissingField = false)]
-    public partial class EmployeeRec : IChoReaderRecord, IChoValidatable
+    IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any, ThrowAndStopOnMissingField = false)]
+    public partial class EmployeeRec : IChoNotifyRecordRead, IChoValidatable
     {
         //[ChoCSVRecordField(1, FieldName = "id")]
         //[ChoTypeConverter(typeof(IntConverter))]
@@ -226,7 +226,7 @@ namespace ChoCSVReaderTest
 
             ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
             //config.AutoDiscoverColumns = false;
-            config.CSVFileHeaderConfiguration.HasHeaderRecord = true;
+            config.FileHeaderConfiguration.HasHeaderRecord = true;
             //config.CSVFileHeaderConfiguration.FillChar = '$';
             config.ThrowAndStopOnMissingField = false;
             //config.HasExcelSeparator = true;

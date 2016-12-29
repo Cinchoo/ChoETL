@@ -11,7 +11,7 @@ namespace ChoETL
 {
     public class ChoCSVRecordConfiguration : ChoFileRecordConfiguration
     {
-        public ChoCSVFileHeaderConfiguration CSVFileHeaderConfiguration
+        public ChoCSVFileHeaderConfiguration FileHeaderConfiguration
         {
             get;
             set;
@@ -61,7 +61,7 @@ namespace ChoETL
                     Delimiter = ",";
             }
 
-            CSVFileHeaderConfiguration = new ChoCSVFileHeaderConfiguration(recordType, Culture);
+            FileHeaderConfiguration = new ChoCSVFileHeaderConfiguration(recordType, Culture);
         }
 
         protected override void Init(Type recordType)
@@ -72,7 +72,7 @@ namespace ChoETL
             if (recObjAttr != null)
             {
                 Delimiter = recObjAttr.Delimiter;
-                HasExcelSeparator = recObjAttr._hasExcelSeparator;
+                HasExcelSeparator = recObjAttr.HasExcelSeparatorInternal;
             }
 
             DiscoverRecordFields(recordType);
@@ -96,6 +96,9 @@ namespace ChoETL
 
                 foreach (PropertyDescriptor pd in TypeDescriptor.GetProperties(recordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().Any()))
                 {
+                    if (!pd.PropertyType.IsSimple())
+                        throw new ChoRecordConfigurationException("Property '{0}' is not a simple type.".FormatString(pd.Name));
+
                     var obj = new ChoCSVRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().First());
                     obj.FieldType = pd.PropertyType;
                     RecordFieldConfigurations.Add(obj);
@@ -117,8 +120,22 @@ namespace ChoETL
                 throw new ChoRecordConfigurationException("One of the Comments contains Delimiter. Not allowed.");
 
             //Validate Header
-            if (CSVFileHeaderConfiguration != null)
-                CSVFileHeaderConfiguration.Validate(this);
+            if (FileHeaderConfiguration != null)
+            {
+                if (FileHeaderConfiguration.FillChar != null)
+                {
+                    if (FileHeaderConfiguration.FillChar.Value == ChoCharEx.NUL)
+                        throw new ChoRecordConfigurationException("Invalid '{0}' FillChar specified.".FormatString(FileHeaderConfiguration.FillChar));
+                    if (Delimiter.Contains(FileHeaderConfiguration.FillChar.Value))
+                        throw new ChoRecordConfigurationException("FillChar [{0}] can't be one of Delimiter characters [{1}]".FormatString(FileHeaderConfiguration.FillChar, Delimiter));
+                    if (EOLDelimiter.Contains(FileHeaderConfiguration.FillChar.Value))
+                        throw new ChoRecordConfigurationException("FillChar [{0}] can't be one of EOLDelimiter characters [{1}]".FormatString(FileHeaderConfiguration.FillChar.Value, EOLDelimiter));
+                    if ((from comm in Comments
+                         where comm.Contains(FileHeaderConfiguration.FillChar.Value.ToString())
+                         select comm).Any())
+                        throw new ChoRecordConfigurationException("One of the Comments contains FillChar. Not allowed.");
+                }
+            }
 
             string[] headers = state as string[];
             if (AutoDiscoverColumns
@@ -140,7 +157,7 @@ namespace ChoETL
             foreach (var fieldConfig in RecordFieldConfigurations)
                 fieldConfig.Validate(this);
 
-            if (!CSVFileHeaderConfiguration.HasHeaderRecord)
+            if (!FileHeaderConfiguration.HasHeaderRecord)
             {
                 //Check if any field has 0 
                 if (RecordFieldConfigurations.Where(i => i.FieldPosition <= 0).Count() > 0)
@@ -161,7 +178,7 @@ namespace ChoETL
                     throw new ChoRecordConfigurationException("Some fields has empty field name specified.");
 
                 //Check field names for duplicate
-                string[] dupFields = RecordFieldConfigurations.GroupBy(i => i.FieldName, CSVFileHeaderConfiguration.StringComparer)
+                string[] dupFields = RecordFieldConfigurations.GroupBy(i => i.FieldName, FileHeaderConfiguration.StringComparer)
                     .Where(g => g.Count() > 1)
                     .Select(g => g.Key).ToArray();
 

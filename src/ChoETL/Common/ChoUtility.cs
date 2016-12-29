@@ -1161,7 +1161,7 @@ namespace ChoETL
                         {
                             object kvpKey = valueType.GetProperty("Key").GetValue(item, null);
                             object kvpValue = valueType.GetProperty("Value").GetValue(item, null);
-                            arrMsg.AppendFormat("Key: {0}{1}", ToStringEx(kvpKey), Environment.NewLine);
+                            arrMsg.AppendFormat("Key: {0} [Type: {2}]{1}", ToStringEx(kvpKey), Environment.NewLine, kvpValue == null ? "UNKNOWN" : kvpValue.GetType().Name);
                             arrMsg.AppendFormat("Value: {0}{1}", ToStringEx(kvpValue), Environment.NewLine);
                             count++;
                             continue;

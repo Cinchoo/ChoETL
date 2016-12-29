@@ -19,12 +19,12 @@ namespace ChoETL
             get;
             set;
         }
-        public char FillChar
+        public char? FillChar
         {
             get;
             set;
         }
-        public ChoFieldValueJustification Justification
+        public ChoFieldValueJustification? Justification
         {
             get;
             set;
@@ -34,7 +34,7 @@ namespace ChoETL
             get;
             set;
         }
-        public bool Truncate
+        public bool? Truncate
         {
             get;
             set;
@@ -51,10 +51,11 @@ namespace ChoETL
             HasHeaderRecord = false;
             IgnoreCase = true;
             //FillChar = ' ';
-            Justification = ChoFieldValueJustification.Left;
+            //Justification = ChoFieldValueJustification.Left;
             TrimOption = ChoFieldValueTrimOption.Trim;
-            Truncate = false;
+            //Truncate = false;
             _culture = culture;
+            StringComparer = StringComparer.Create(_culture == null ? CultureInfo.CurrentCulture : _culture, IgnoreCase);
 
             if (recordType != null)
             {
@@ -69,32 +70,10 @@ namespace ChoETL
             {
                 HasHeaderRecord = true;
                 IgnoreCase = recObjAttr.IgnoreCase;
-                //FillChar = recObjAttr.FillChar == '\0' ? ' ' : recObjAttr.FillChar;
-                Justification = recObjAttr.Justification;
-                TrimOption = recObjAttr.TrimOption;
-                Truncate = recObjAttr.Truncate;
-            }
-        }
-
-        internal void Validate(ChoRecordConfiguration config)
-        {
-            StringComparer = StringComparer.Create(_culture == null ? CultureInfo.CurrentCulture : _culture, IgnoreCase);
-
-            //if (FillChar == ChoCharEx.NUL)
-            //    throw new ChoRecordConfigurationException("Invalid '{0}' FillChar specified.".FormatString(FillChar));
-
-            if (config is ChoCSVRecordConfiguration)
-            {
-                ChoCSVRecordConfiguration csvConfig = config as ChoCSVRecordConfiguration;
-
-                if (csvConfig.Delimiter.Contains(FillChar))
-                    throw new ChoRecordConfigurationException("FillChar [{0}] can't be one of Delimiter characters [{1}]".FormatString(FillChar, csvConfig.Delimiter));
-                if (csvConfig.EOLDelimiter.Contains(FillChar))
-                    throw new ChoRecordConfigurationException("FillChar [{0}] can't be one EOLDelimiter characters [{1}]".FormatString(FillChar, csvConfig.EOLDelimiter));
-                if ((from comm in csvConfig.Comments
-                     where comm.Contains(FillChar.ToString())
-                     select comm).Any())
-                    throw new ChoRecordConfigurationException("One of the Comments contains FillChar. Not allowed.");
+                FillChar = recObjAttr.FillCharInternal;
+                Justification = recObjAttr.JustificationInternal;
+                if (recObjAttr.TrimOptionInternal != null) TrimOption = recObjAttr.TrimOptionInternal.Value;
+                Truncate = recObjAttr.TruncateInternal;
             }
         }
     }

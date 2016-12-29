@@ -11,36 +11,36 @@ namespace ChoETL
     {
         public bool IgnoreCase => true;
 
+        internal char? FillCharInternal;
         public char FillChar
         {
-            get;
-            set;
+            get { throw new NotSupportedException(); }
+            set { FillCharInternal = value; }
         }
 
+        internal ChoFieldValueJustification? JustificationInternal;
         public ChoFieldValueJustification Justification
         {
-            get;
-            set;
+            get { throw new NotSupportedException(); }
+            set { JustificationInternal = value; }
         }
 
+        internal ChoFieldValueTrimOption? TrimOptionInternal;
         public ChoFieldValueTrimOption TrimOption
         {
-            get;
-            set;
+            get { throw new NotSupportedException(); }
+            set { TrimOptionInternal = value; }
         }
 
+        internal bool? TruncateInternal;
         public bool Truncate
         {
-            get;
-            set;
+            get { throw new NotSupportedException(); }
+            set { TruncateInternal = value; }
         }
 
         public ChoFileHeaderAttribute()
         {
-            FillChar = ' ';
-            Justification = ChoFieldValueJustification.None;
-            TrimOption = ChoFieldValueTrimOption.Trim;
-            Truncate = false;
         }
     }
 

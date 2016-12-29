@@ -7,6 +7,7 @@
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Reflection;
+    using System.Windows.Data;
 
     #endregion NameSpaces
 
@@ -254,6 +255,17 @@
                             }
                         }
 
+                        if (queue.Count == 0)
+                        {
+                            Type type = ChoType.GetMemberType(memberInfo);
+                            if (ChoTypeConverter.Global.Contains(type))
+                            {
+                                _typeMemberTypeConverterCache[memberInfo] = (from a1 in ChoTypeConverter.Global.GetAll()
+                                                                             where a1.Key == type
+                                                                             select a1.Value).ToArray();
+                            }
+                        }
+
                         if (queue.Count > 0)
                         {
                             _typeMemberTypeConverterCache[memberInfo] = queue.Values.ToArray();
@@ -266,15 +278,22 @@
                         {
                             if (!_typeTypeConverterCache.ContainsKey(memberType))
                             {
-                                ChoTypeConverterAttribute converterAttribute = memberType.GetCustomAttribute<ChoTypeConverterAttribute>();
-                                if (converterAttribute != null /*&& converterAttribute.ConverterType == memberType*/)
-                                {
-                                    _typeTypeConverterCache.Add(memberType, new object[] { converterAttribute.CreateInstance() });
-                                    _typeTypeConverterParamsCache.Add(memberType, new object[] { converterAttribute.Parameters });
+                                Type[] types = ChoType.GetTypes(typeof(ChoTypeConverterAttribute)).Where(t => t.GetCustomAttribute<ChoTypeConverterAttribute>().ConverterType == memberType).ToArray();
 
+                                if (types != null)
+                                {
+                                    int index1 = 0;
+                                    SortedList<int, object> queue1 = new SortedList<int, object>();
+                                    SortedList<int, object[]> paramsQueue1 = new SortedList<int, object[]>();
+
+                                    foreach (Type t in types)
+                                    {
+                                        queue.Add(index1, Activator.CreateInstance(t));
+                                        index1++;
+                                    }
+                                    _typeTypeConverterCache.Add(memberType, queue.Values.ToArray());
                                     return _typeTypeConverterCache[memberType];
                                 }
-                                //}
 
                                 TypeConverter converter = TypeDescriptor.GetConverter(memberType);
                                 if (converter != null)
@@ -290,6 +309,59 @@
                     }
 
                     return _typeMemberTypeConverterCache.ContainsKey(memberInfo) ? _typeMemberTypeConverterCache[memberInfo] : EmptyTypeConverters;
+                }
+            }
+        }
+
+        public static object[] GetTypeConvertersForType(Type memberType)
+        {
+            if (memberType == null)
+                return null;
+
+            if (_typeTypeConverterCache.ContainsKey(memberType))
+                return _typeTypeConverterCache[memberType];
+            else
+            {
+                lock (_typeMemberTypeConverterCacheLockObject)
+                {
+                    if (!_typeTypeConverterCache.ContainsKey(memberType))
+                    {
+                        Type type = memberType;
+                        if (ChoTypeConverter.Global.Contains(type))
+                        {
+                            _typeTypeConverterCache[type] = (from a1 in ChoTypeConverter.Global.GetAll()
+                                                                         where a1.Key == type
+                                                                         select a1.Value).ToArray();
+                            return _typeTypeConverterCache[type];
+                        }
+
+                        Type[] types = ChoType.GetTypes(typeof(ChoTypeConverterAttribute)).Where(t => t.GetCustomAttribute<ChoTypeConverterAttribute>().ConverterType == memberType).ToArray();
+
+                        if (types != null)
+                        {
+                            int index1 = 0;
+                            SortedList<int, object> queue1 = new SortedList<int, object>();
+                            SortedList<int, object[]> paramsQueue1 = new SortedList<int, object[]>();
+
+                            foreach (Type t in types)
+                            {
+                                queue1.Add(index1, Activator.CreateInstance(t));
+                                index1++;
+                            }
+                            _typeTypeConverterCache.Add(memberType, queue1.Values.ToArray());
+                            return _typeTypeConverterCache[memberType];
+                        }
+
+                        TypeConverter converter = TypeDescriptor.GetConverter(memberType);
+                        if (converter != null)
+                            _typeTypeConverterCache.Add(memberType, new object[] { converter });
+                        else
+                            _typeTypeConverterCache.Add(memberType, EmptyTypeConverters);
+
+                        _typeTypeConverterParamsCache.Add(memberType, EmptyParams);
+                    }
+
+                    return _typeTypeConverterCache[memberType];
                 }
             }
         }

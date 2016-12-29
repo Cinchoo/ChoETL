@@ -49,12 +49,6 @@ namespace ChoETL
             get;
             set;
         }
-        internal bool? _hasExcelSeparator;
-        public bool HasExcelSeparator
-        {
-            get { throw new NotSupportedException(); }
-            set { _hasExcelSeparator = value; }
-        }
         public bool ColumnCountStrict
         {
             get;

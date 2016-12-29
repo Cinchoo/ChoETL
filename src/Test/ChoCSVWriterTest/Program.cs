@@ -43,7 +43,7 @@ namespace ChoCSVWriterTest
         static void ConfigFirstApproachWriteDynamicRecordsToFile()
         {
             ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
-            config.CSVFileHeaderConfiguration.HasHeaderRecord = true;
+            config.FileHeaderConfiguration.HasHeaderRecord = true;
             config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1));
             config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
 
@@ -107,21 +107,17 @@ namespace ChoCSVWriterTest
 
         static void DataFirstApproachWriteSingleRecordToFile()
         {
-            List<ExpandoObject> objs = new List<ExpandoObject>();
-            dynamic rec1 = new ExpandoObject();
-            rec1.Id = 1;
-            rec1.Name = "Mark";
-            objs.Add(rec1);
-
-            dynamic rec2 = new ExpandoObject();
-            rec2.Id = 2;
-            rec2.Name = "Jason";
-            objs.Add(rec2);
-
             using (var parser = new ChoCSVWriter("Emp.csv"))
             {
-                foreach (var item in objs)
-                    parser.Write(item);
+                dynamic rec1 = new ExpandoObject();
+                rec1.Id = 1;
+                rec1.Name = "Mark";
+                parser.Write(rec1);
+
+                dynamic rec2 = new ExpandoObject();
+                rec2.Id = 2;
+                rec2.Name = "Jason";
+                parser.Write(rec2);
             }
         }
 

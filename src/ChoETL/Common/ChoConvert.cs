@@ -38,7 +38,7 @@ namespace ChoETL
             if (type == origType)
                 return value;
 
-            return ChoConvert.ConvertTo(value, targetType, value, ChoTypeDescriptor.GetTypeConverters(value.GetType()), ChoTypeDescriptor.GetTypeConverterParams(value.GetType()), culture);
+            return ChoConvert.ConvertTo(value, targetType, value, ChoTypeDescriptor.GetTypeConvertersForType(targetType), null, culture);
         }
 
         public static bool TryConvertFrom(object value, MemberInfo memberInfo, object sourceObject, CultureInfo culture, out object output)
@@ -253,7 +253,7 @@ namespace ChoETL
                                 value = typeConverter.ConvertTo((ITypeDescriptorContext)null, culture, value, targetType);
                         }
                         else if (obj2 is IValueConverter)
-                            value = ((IValueConverter)obj2).ConvertBack(value, targetType, (object)objArray, culture);
+                            value = ((IValueConverter)obj2).Convert(value, targetType, (object)objArray, culture);
                     }
                     if (obj1 != value)
                         return value;

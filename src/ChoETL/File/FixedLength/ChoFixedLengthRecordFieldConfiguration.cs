@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public class ChoCSVRecordFieldConfiguration : ChoFileRecordFieldConfiguration
+    public class ChoFixedLengthRecordFieldConfiguration : ChoFileRecordFieldConfiguration
     {
-        public int FieldPosition
+        public int StartIndex
         {
             get;
             set;
@@ -20,41 +20,39 @@ namespace ChoETL
             set;
         }
 
-        public ChoCSVRecordFieldConfiguration(string name, int position) : this(name, null)
+        public ChoFixedLengthRecordFieldConfiguration(string name, int startIndex, int size) : this(name, null)
         {
-            FieldPosition = position;
+            StartIndex = startIndex;
+            Size = size;
         }
 
-        internal ChoCSVRecordFieldConfiguration(string name, ChoCSVRecordFieldAttribute attr = null) : base(name, attr)
+        internal ChoFixedLengthRecordFieldConfiguration(string name, ChoFixedLengthRecordFieldAttribute attr = null) : base(name, attr)
         {
             FieldName = name;
             if (attr != null)
             {
-                FieldPosition = attr.FieldPosition;
+                StartIndex = attr.StartIndex;
+                Size = attr.Size;
                 FieldName = attr.FieldName.IsNullOrWhiteSpace() ? Name : attr.FieldName;
             }
         }
 
-        internal void Validate(ChoCSVRecordConfiguration config)
+        internal void Validate(ChoFixedLengthRecordConfiguration config)
         {
             try
             {
-                if (FieldPosition < 0)
-                    throw new ChoRecordConfigurationException("Invalid '{0}' field position specified. Must be > 0.".FormatString(FieldPosition));
+                if (StartIndex < 0)
+                    throw new ChoRecordConfigurationException("StartIndex must be > 0.");
+                if (Size == null || Size.Value < 0)
+                    throw new ChoRecordConfigurationException("Size must be > 0.");
                 if (FillChar == ChoCharEx.NUL)
                     throw new ChoRecordConfigurationException("Invalid '{0}' FillChar specified.".FormatString(FillChar));
-                if (config.Delimiter.Contains(FillChar))
-                    throw new ChoRecordConfigurationException("FillChar [{0}] can't be one of Delimiter characters [{1}]".FormatString(FillChar, config.Delimiter));
                 if (config.EOLDelimiter.Contains(FillChar))
-                    throw new ChoRecordConfigurationException("FillChar [{0}] can't be one of EOLDelimiter characters [{1}]".FormatString(FillChar, config.EOLDelimiter));
+                    throw new ChoRecordConfigurationException("FillChar [{0}] can't be one EOLDelimiter characters [{1}]".FormatString(FillChar, config.EOLDelimiter));
                 if ((from comm in config.Comments
                      where comm.Contains(FillChar.ToString())
                      select comm).Any())
                     throw new ChoRecordConfigurationException("One of the Comments contains FillChar. Not allowed.");
-                if ((from comm in config.Comments
-                     where comm.Contains(config.Delimiter)
-                     select comm).Any())
-                    throw new ChoRecordConfigurationException("One of the Comments contains Delimiter. Not allowed.");
                 if ((from comm in config.Comments
                      where comm.Contains(config.EOLDelimiter)
                      select comm).Any())

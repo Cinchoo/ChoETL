@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -399,7 +400,7 @@ namespace ChoETL
                 {
                     defaultValue = ChoTypeDescriptor.GetPropetyAttribute<DefaultValueAttribute>(pd).Value;
                     if (defaultValue != null)
-                        ChoType.SetMemberValue(target, pd.Name, defaultValue);
+                        ChoType.ConvertNSetMemberValue(target, pd.Name, defaultValue);
                 }
                 catch (Exception ex)
                 {
@@ -660,7 +661,13 @@ namespace ChoETL
         public static bool IsSimple(this Type type)
         {
             CheckTypeIsNotNull(type);
-            return type.IsPrimitive || typeof(string) == type || (type.IsEnum || typeof(DateTime) == type);
+            return type.IsPrimitive 
+                || typeof(string) == type 
+                || (type.IsEnum 
+                || typeof(DateTime) == type 
+                || typeof(BigInteger) == type 
+                || typeof(ChoCurrency) == type
+                );
         }
 
         public static bool IsSubclassOfRawGeneric(this Type generic, Type toCheck)
