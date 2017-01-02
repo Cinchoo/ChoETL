@@ -232,7 +232,9 @@ namespace ChoCSVReaderTest
             //config.HasExcelSeparator = true;
             config.ColumnCountStrict = false;
             //config.MapRecordFields<EmployeeRec>();
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1));
+            ChoCSVRecordFieldConfiguration idConfig = new ChoCSVRecordFieldConfiguration("Id", 1);
+            idConfig.AddConverter(new IntConverter());
+            config.RecordFieldConfigurations.Add(idConfig);
             config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
             config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name1", 2));
 

@@ -10,6 +10,7 @@
     using System.ComponentModel;
     using System.ComponentModel.DataAnnotations;
     using System.Diagnostics;
+    using System.Globalization;
     using System.IO;
     using System.Linq;
     using System.Reflection;
@@ -489,17 +490,17 @@
             }
         }
 
-        public static void ConvertNSetFieldValue(object target, string name, object val)
+        public static void ConvertNSetFieldValue(object target, string name, object val, CultureInfo culture = null)
         {
             ChoGuard.ArgumentNotNull(target, "Target");
             ChoGuard.ArgumentNotNullOrEmpty(name, "Name");
             FieldInfo field = target.GetType().GetField(name, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
             if (field == (FieldInfo)null)
                 throw new ApplicationException(string.Format("Can't find {0} field in {1} object.", (object)name, (object)target.GetType().FullName));
-            ConvertNSetFieldValue(target, field, val);
+            ConvertNSetFieldValue(target, field, val, culture);
         }
 
-        public static void ConvertNSetFieldValue(object target, FieldInfo fieldInfo, object val)
+        public static void ConvertNSetFieldValue(object target, FieldInfo fieldInfo, object val, CultureInfo culture = null)
         {
             ChoGuard.ArgumentNotNull(target, "Target");
             ChoGuard.ArgumentNotNullOrEmpty((object)fieldInfo, "FieldInfo");
@@ -513,13 +514,13 @@
 
             if (target is Type)
             {
-                ConvertNSetStaticFieldValue(target as Type, fieldInfo, val);
+                ConvertNSetStaticFieldValue(target as Type, fieldInfo, val, culture);
             }
             else
             {
                 try
                 {
-                    val = ChoUtility.ConvertValueToObjectMemberType(target, (MemberInfo)fieldInfo, val);
+                    val = ChoUtility.ConvertValueToObjectMemberType(target, (MemberInfo)fieldInfo, val, culture);
 
 #if _DYNAMIC_
                 Action<object, object> setter;
@@ -694,17 +695,17 @@
 
         #region Get & Set Property Value methods
 
-        public static void ConvertNSetPropertyValue(object target, string name, object val)
+        public static void ConvertNSetPropertyValue(object target, string name, object val, CultureInfo culture = null)
         {
             ChoGuard.ArgumentNotNull(target, "Target");
             ChoGuard.ArgumentNotNullOrEmpty(name, "Name");
             PropertyInfo property = target.GetType().GetProperty(name, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
             if (property == (PropertyInfo)null)
                 throw new ApplicationException(string.Format("Can't find {0} property in {1} object.", (object)name, (object)target.GetType().FullName));
-            ConvertNSetPropertyValue(target, property, val);
+            ConvertNSetPropertyValue(target, property, val, culture);
         }
 
-        public static void ConvertNSetPropertyValue(object target, PropertyInfo propertyInfo, object val)
+        public static void ConvertNSetPropertyValue(object target, PropertyInfo propertyInfo, object val, CultureInfo culture = null)
         {
             ChoGuard.ArgumentNotNull(target, "Target");
             ChoGuard.ArgumentNotNull((object)propertyInfo, "PropertyInfo");
@@ -718,13 +719,13 @@
 
             if (target is Type)
             {
-                ConvertNSetStaticPropertyValue(target as Type, propertyInfo, val);
+                ConvertNSetStaticPropertyValue(target as Type, propertyInfo, val, culture);
             }
             else
             {
                 try
                 {
-                    val = ChoUtility.ConvertValueToObjectMemberType(target, (MemberInfo)propertyInfo, val);
+                    val = ChoUtility.ConvertValueToObjectMemberType(target, (MemberInfo)propertyInfo, val, culture);
 #if _DYNAMIC_
                 Action<object, object> setter;
                 var key = propertyInfo.GetSetMethod().MethodHandle.Value;
@@ -1083,35 +1084,35 @@
                 SetFieldValue(target, name, val);
         }
 
-        public static void ConvertNSetMemberValue(object target, MemberInfo memberInfo, object value)
+        public static void ConvertNSetMemberValue(object target, MemberInfo memberInfo, object value, CultureInfo culture = null)
         {
             if (target == null || memberInfo == (MemberInfo)null)
                 return;
             if (target is Type)
             {
-                ConvertNSetStaticMemberValue(target as Type, memberInfo, value);
+                ConvertNSetStaticMemberValue(target as Type, memberInfo, value, culture);
             }
             else
             {
                 switch (memberInfo.MemberType)
                 {
                     case MemberTypes.Property:
-                        ConvertNSetPropertyValue(target, (PropertyInfo)memberInfo, value);
+                        ConvertNSetPropertyValue(target, (PropertyInfo)memberInfo, value, culture);
                         break;
                     case MemberTypes.Field:
-                        ConvertNSetFieldValue(target, (FieldInfo)memberInfo, value);
+                        ConvertNSetFieldValue(target, (FieldInfo)memberInfo, value, culture);
                         break;
                 }
             }
         }
 
-        public static void ConvertNSetMemberValue(object target, string name, object val)
+        public static void ConvertNSetMemberValue(object target, string name, object val, CultureInfo culture = null)
         {
             if (target == null || name == null)
                 return;
             if (target is Type)
             {
-                ConvertNSetStaticMemberValue(target as Type, name, val);
+                ConvertNSetStaticMemberValue(target as Type, name, val, culture);
             }
             else
             {
@@ -1121,10 +1122,10 @@
                 switch (member[0].MemberType)
                 {
                     case MemberTypes.Property:
-                        ConvertNSetPropertyValue(target, name, val);
+                        ConvertNSetPropertyValue(target, name, val, culture);
                         break;
                     case MemberTypes.Field:
-                        ConvertNSetFieldValue(target, name, val);
+                        ConvertNSetFieldValue(target, name, val, culture);
                         break;
                 }
             }
@@ -1134,23 +1135,23 @@
 
         #region Get & Set Static Member Value methods
 
-        public static void ConvertNSetStaticFieldValue(Type type, string name, object val)
+        public static void ConvertNSetStaticFieldValue(Type type, string name, object val, CultureInfo culture = null)
         {
             ChoGuard.ArgumentNotNull((object)type, "Type");
             ChoGuard.ArgumentNotNullOrEmpty(name, "Name");
             FieldInfo field = type.GetField(name, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
             if (field == (FieldInfo)null)
                 throw new ApplicationException(string.Format("Can't find {0} field in {1} object.", (object)name, (object)type.FullName));
-            ConvertNSetStaticFieldValue((Type)null, field, val);
+            ConvertNSetStaticFieldValue((Type)null, field, val, culture);
         }
 
-        public static void ConvertNSetStaticFieldValue(Type type, FieldInfo fieldInfo, object val)
+        public static void ConvertNSetStaticFieldValue(Type type, FieldInfo fieldInfo, object val, CultureInfo culture = null)
         {
             ChoGuard.ArgumentNotNull((object)type, "Type");
             ChoGuard.ArgumentNotNull((object)fieldInfo, "FieldInfo");
             try
             {
-                val = ChoUtility.ConvertValueToObjectMemberType((object)type, (MemberInfo)fieldInfo, val);
+                val = ChoUtility.ConvertValueToObjectMemberType((object)type, (MemberInfo)fieldInfo, val, culture);
 
 #if _DYNAMIC_
                 Action<object, object> setter;
@@ -1174,22 +1175,22 @@
             }
         }
 
-        public static void ConvertNSetStaticMemberValue(Type type, MemberInfo memberInfo, object val)
+        public static void ConvertNSetStaticMemberValue(Type type, MemberInfo memberInfo, object val, CultureInfo culture = null)
         {
             if (type == (Type)null || memberInfo == (MemberInfo)null)
                 return;
             switch (memberInfo.MemberType)
             {
                 case MemberTypes.Property:
-                    ConvertNSetStaticPropertyValue(type, (PropertyInfo)memberInfo, val);
+                    ConvertNSetStaticPropertyValue(type, (PropertyInfo)memberInfo, val, culture);
                     break;
                 case MemberTypes.Field:
-                    ConvertNSetStaticFieldValue(type, (FieldInfo)memberInfo, val);
+                    ConvertNSetStaticFieldValue(type, (FieldInfo)memberInfo, val, culture);
                     break;
             }
         }
 
-        public static void ConvertNSetStaticMemberValue(Type type, string name, object val)
+        public static void ConvertNSetStaticMemberValue(Type type, string name, object val, CultureInfo culture = null)
         {
             if (type == (Type)null || name == null)
                 return;
@@ -1199,31 +1200,31 @@
             switch (member[0].MemberType)
             {
                 case MemberTypes.Property:
-                    ConvertNSetStaticPropertyValue(type, name, val);
+                    ConvertNSetStaticPropertyValue(type, name, val, culture);
                     break;
                 case MemberTypes.Field:
-                    ConvertNSetStaticFieldValue(type, name, val);
+                    ConvertNSetStaticFieldValue(type, name, val, culture);
                     break;
             }
         }
 
-        public static void ConvertNSetStaticPropertyValue(Type type, string name, object val)
+        public static void ConvertNSetStaticPropertyValue(Type type, string name, object val, CultureInfo culture = null)
         {
             ChoGuard.ArgumentNotNull((object)type, "Type");
             ChoGuard.ArgumentNotNullOrEmpty(name, "Name");
             PropertyInfo property = type.GetProperty(name, BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
             if (property == (PropertyInfo)null)
                 throw new ApplicationException(string.Format("Can't find {0} property in {1} object.", (object)name, (object)type.FullName));
-            ConvertNSetStaticPropertyValue(type, property, val);
+            ConvertNSetStaticPropertyValue(type, property, val, culture);
         }
 
-        public static void ConvertNSetStaticPropertyValue(Type type, PropertyInfo propertyInfo, object val)
+        public static void ConvertNSetStaticPropertyValue(Type type, PropertyInfo propertyInfo, object val, CultureInfo culture = null)
         {
             ChoGuard.ArgumentNotNull((object)type, "Type");
             ChoGuard.ArgumentNotNullOrEmpty((object)propertyInfo, "PropertyInfo");
             try
             {
-                val = ChoUtility.ConvertValueToObjectMemberType((object)type, (MemberInfo)propertyInfo, val);
+                val = ChoUtility.ConvertValueToObjectMemberType((object)type, (MemberInfo)propertyInfo, val, culture);
 
 #if _DYNAMIC_
                 Action<object, object> setter;

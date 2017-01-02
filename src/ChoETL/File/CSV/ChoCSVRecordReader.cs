@@ -317,7 +317,14 @@ namespace ChoETL
                     if (rec is ExpandoObject)
                     {
                         if (fieldConfig.FieldType != typeof(string))
-                            fieldValue = ChoConvert.ConvertTo(fieldValue, fieldConfig.FieldType, Configuration.Culture);
+                        {
+                            if (fieldConfig.Converters.IsNullOrEmpty())
+                                fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, Configuration.Culture);
+                            else
+                            {
+                                fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), null, Configuration.Culture);
+                            }
+                        }
                         var x = rec as IDictionary<string, Object>;
                         if (!ignoreFieldValue)
                             x.Add(kvp.Key, fieldValue);
@@ -330,8 +337,16 @@ namespace ChoETL
                         {
                             if (ChoType.HasProperty(rec.GetType(), kvp.Key))
                             {
-                                ChoType.ConvertNSetMemberValue(rec, kvp.Key, fieldValue);
-                                fieldValue = ChoType.GetMemberValue(rec, kvp.Key);
+                                if (fieldConfig.Converters.IsNullOrEmpty())
+                                {
+                                    ChoType.ConvertNSetMemberValue(rec, kvp.Key, fieldValue, Configuration.Culture);
+                                    fieldValue = ChoType.GetMemberValue(rec, kvp.Key);
+                                }
+                                else
+                                {
+                                    fieldValue = ChoConvert.ConvertFrom(fieldValue, ChoType.GetMemberType(rec.GetType(), kvp.Key), null, fieldConfig.Converters.ToArray(), null, Configuration.Culture);
+                                    ChoType.SetMemberValue(rec, kvp.Key, fieldValue);
+                                }
 
                                 if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
                                     ChoValidator.ValididateFor(rec, kvp.Key);
@@ -359,30 +374,45 @@ namespace ChoETL
 
                     if (fieldConfig.ErrorMode == ChoErrorMode.ThrowAndStop)
                         throw;
-                    try
+
+                    if (!(rec is ExpandoObject) && ChoType.HasProperty(rec.GetType(), kvp.Key))
                     {
-                        ChoFallbackValueAttribute fbAttr = ChoTypeDescriptor.GetPropetyAttribute<ChoFallbackValueAttribute>(rec.GetType(), kvp.Key);
-                        if (fbAttr != null)
+                        try
                         {
-                            if (!fbAttr.Value.IsNullOrDbNull())
-                                ChoType.ConvertNSetMemberValue(rec, kvp.Key, fbAttr.Value);
-                        }
-                        else
-                            throw;
-                    }
-                    catch
-                    {
-                        if (fieldConfig.ErrorMode == ChoErrorMode.IgnoreAndContinue)
-                        {
-                            continue;
-                        }
-                        else if (fieldConfig.ErrorMode == ChoErrorMode.ReportAndContinue)
-                        {
-                            if (!RaiseRecordFieldLoadError(rec, pair.Item1, kvp.Key, fieldValue, ex))
+                            ChoFallbackValueAttribute fbAttr = ChoTypeDescriptor.GetPropetyAttribute<ChoFallbackValueAttribute>(rec.GetType(), kvp.Key);
+                            if (fbAttr != null)
+                            {
+                                fieldValue = fbAttr.Value;
+                                if (!fieldValue.IsNullOrDbNull())
+                                {
+                                    if (fieldConfig.Converters.IsNullOrEmpty())
+                                    {
+                                        ChoType.ConvertNSetMemberValue(rec, kvp.Key, fieldValue, Configuration.Culture);
+                                    }
+                                    else
+                                    {
+                                        fieldValue = ChoConvert.ConvertFrom(fieldValue, ChoType.GetMemberType(rec.GetType(), kvp.Key), null, fieldConfig.Converters.ToArray(), null, Configuration.Culture);
+                                        ChoType.SetMemberValue(rec, kvp.Key, fieldValue);
+                                    }
+                                }
+                            }
+                            else
                                 throw;
                         }
-                        else
-                            throw;
+                        catch
+                        {
+                            if (fieldConfig.ErrorMode == ChoErrorMode.IgnoreAndContinue)
+                            {
+                                continue;
+                            }
+                            else if (fieldConfig.ErrorMode == ChoErrorMode.ReportAndContinue)
+                            {
+                                if (!RaiseRecordFieldLoadError(rec, pair.Item1, kvp.Key, fieldValue, ex))
+                                    throw;
+                            }
+                            else
+                                throw;
+                        }
                     }
                 }
             }

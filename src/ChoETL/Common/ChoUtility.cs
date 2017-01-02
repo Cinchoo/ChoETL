@@ -1241,13 +1241,13 @@ namespace ChoETL
                 yield return enumerator.Current;
             }
         }
-        public static object ConvertValueToObjectMemberType(object target, MemberInfo memberInfo, object value)
+        public static object ConvertValueToObjectMemberType(object target, MemberInfo memberInfo, object value, CultureInfo culture = null)
         {
             ChoGuard.ArgumentNotNull(target, "Target");
             ChoGuard.ArgumentNotNull((object)memberInfo, "MemberInfo");
             if (target is Type)
-                return ChoConvert.ConvertFrom(value, memberInfo, (object)null, (CultureInfo)null);
-            return ChoConvert.ConvertFrom(value, memberInfo, target, (CultureInfo)null);
+                return ChoConvert.ConvertFrom(value, memberInfo, (object)null, culture);
+            return ChoConvert.ConvertFrom(value, memberInfo, target, culture);
         }
 
         public static void TryCatch(Action action)

@@ -196,28 +196,41 @@ namespace ChoETL
                         }
                     }
 
-                    object origFieldValue = fieldValue;
+                    //Discover default value, use it if null
+                    if (fieldValue == null)
+                    {
+                        if (rec is ExpandoObject || !ChoType.HasProperty(rec.GetType(), kvp.Key))
+                        {
+
+                        }
+                        else
+                        {
+                            DefaultValueAttribute da = ChoTypeDescriptor.GetPropetyAttribute<DefaultValueAttribute>(rec.GetType(), kvp.Key);
+                            if (da != null)
+                                fieldValue = da.Value;
+                        }
+                    }
+
                     if (!RaiseBeforeRecordFieldWrite(rec, index, kvp.Key, ref fieldValue))
                         return false;
 
                     if (rec is ExpandoObject || !ChoType.HasProperty(rec.GetType(), kvp.Key))
-                        fieldValue = ChoConvert.ConvertTo(fieldValue, typeof(string), Configuration.Culture);
+                    {
+                        if (fieldConfig.Converters.IsNullOrEmpty())
+                            fieldValue = ChoConvert.ConvertTo(fieldValue, typeof(string), Configuration.Culture);
+                        else
+                        {
+                            fieldValue = ChoConvert.ConvertTo(fieldValue, typeof(string), null, fieldConfig.Converters.ToArray(), null, Configuration.Culture);
+                        }
+                    }
                     else
                     {
-                        if (origFieldValue == null)
+                        if (fieldConfig.Converters.IsNullOrEmpty())
+                            fieldValue = ChoConvert.ConvertTo(fieldValue, ChoType.GetMemberInfo(rec.GetType(), kvp.Key), typeof(string), null, Configuration.Culture);
+                        else
                         {
-                            DefaultValueAttribute da = ChoTypeDescriptor.GetPropetyAttribute<DefaultValueAttribute>(rec.GetType(), kvp.Key);
-                            if (da != null)
-                            {
-                                try
-                                {
-                                    fieldValue = ChoConvert.ConvertTo(da.Value, ChoType.GetMemberInfo(rec.GetType(), kvp.Key), typeof(string), rec, Configuration.Culture);
-                                }
-                                catch { }
-                            }
+                            fieldValue = ChoConvert.ConvertTo(fieldValue, typeof(string), null, fieldConfig.Converters.ToArray(), null, Configuration.Culture);
                         }
-
-                        fieldValue = ChoConvert.ConvertTo(fieldValue, ChoType.GetMemberInfo(rec.GetType(), kvp.Key), typeof(string), rec, Configuration.Culture);
                     }
 
                     if (fieldValue == null)
@@ -248,10 +261,17 @@ namespace ChoETL
                         ChoFallbackValueAttribute fbAttr = ChoTypeDescriptor.GetPropetyAttribute<ChoFallbackValueAttribute>(rec.GetType(), kvp.Key);
                         if (fbAttr != null)
                         {
-                            if (rec is ExpandoObject || !ChoType.HasProperty(rec.GetType(), kvp.Key))
-                                fieldValue = ChoConvert.ConvertTo(fbAttr.Value, typeof(string), Configuration.Culture);
+                            if (fieldConfig.Converters.IsNullOrEmpty())
+                            {
+                                if (rec is ExpandoObject || !ChoType.HasProperty(rec.GetType(), kvp.Key))
+                                    fieldValue = ChoConvert.ConvertTo(fbAttr.Value, typeof(string), Configuration.Culture);
+                                else
+                                    fieldValue = ChoConvert.ConvertTo(fbAttr.Value, ChoType.GetMemberInfo(rec.GetType(), kvp.Key), typeof(string), rec, Configuration.Culture);
+                            }
                             else
-                                fieldValue = ChoConvert.ConvertTo(fbAttr.Value, ChoType.GetMemberInfo(rec.GetType(), kvp.Key), typeof(string), rec, Configuration.Culture);
+                            {
+                                fieldValue = ChoConvert.ConvertTo(fbAttr.Value, typeof(string), null, fieldConfig.Converters.ToArray(), null, Configuration.Culture);
+                            }
 
                             if (fieldValue == null)
                                 fieldText = String.Empty;

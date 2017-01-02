@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -9,6 +10,11 @@ namespace ChoETL
 {
     public static class ChoObjectEx
     {
+        public static bool IsNullOrEmpty(this ICollection @this)
+        {
+            return @this == null || @this.Count == 0;
+        }
+
         public static bool IsNull(this object target)
         {
             return target == null;
