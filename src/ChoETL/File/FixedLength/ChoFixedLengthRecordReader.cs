@@ -355,6 +355,9 @@ namespace ChoETL
                                     fieldValue = ChoConvert.ConvertFrom(fieldValue, ChoType.GetMemberType(rec.GetType(), kvp.Key), null, fieldConfig.Converters.ToArray(), null, Configuration.Culture);
                                     ChoType.SetMemberValue(rec, kvp.Key, fieldValue);
                                 }
+
+                                if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
+                                    ChoValidator.ValididateFor(rec, kvp.Key);
                             }
                         }
                         else
