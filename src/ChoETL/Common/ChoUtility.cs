@@ -443,12 +443,12 @@ namespace ChoETL
             return (T)Enum.Parse(typeof(T), value);
         }
 
-        public static T GetValueAt<T>(this object array, int index)
+        public static T GetValueAt<T>(this object array, int index, T defaultValue = default(T))
         {
             if (array is IList && index < ((IList)array).Count)
                 return (T)Convert.ChangeType(((IList)array)[index], typeof(T));
             else
-                return default(T);
+                return defaultValue;
         }
 
         public static Type GetTypeFromXmlSectionNode(this XmlNode sectionNode)
