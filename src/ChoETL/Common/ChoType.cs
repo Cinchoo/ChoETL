@@ -1027,7 +1027,7 @@
                 )
                 return false;
 
-            return memberInfo.GetCustomAttributeEx<ChoHiddenMemberAttribute>() == null;
+            return memberInfo.GetCustomAttributeEx<ChoIgnoreMemberAttribute>() == null;
         }
 
         public static object GetMemberValue(object target, MemberInfo memberInfo)
@@ -1316,7 +1316,7 @@
                 OrderedDictionary myMemberInfos = new OrderedDictionary();
                 foreach (MemberInfo memberInfo in type.GetProperties(BindingFlags.Instance | BindingFlags.Public /*| BindingFlags.NonPublic*/ | BindingFlags.Static))
                 {
-                    if (ChoType.GetAttribute<ChoHiddenMemberAttribute>(memberInfo) != null)
+                    if (ChoType.GetAttribute<ChoIgnoreMemberAttribute>(memberInfo) != null)
                         continue;
 
                     if (myMemberInfos.Contains(memberInfo.Name))
@@ -1331,7 +1331,7 @@
                 }
                 foreach (MemberInfo memberInfo in type.GetFields(BindingFlags.Instance | BindingFlags.Public /*| BindingFlags.NonPublic */| BindingFlags.Static))
                 {
-                    if (ChoType.GetAttribute<ChoHiddenMemberAttribute>(memberInfo) != null)
+                    if (ChoType.GetAttribute<ChoIgnoreMemberAttribute>(memberInfo) != null)
                         continue;
 
                     if (myMemberInfos.Contains(memberInfo.Name))
@@ -2298,6 +2298,14 @@
                 return ((string)defaultValue).ExpandProperties();
             else
                 return defaultValue;
+        }
+
+        public static bool HasDefaultValue(PropertyDescriptor mi)
+        {
+            ChoGuard.ArgumentNotNull(mi, "PropertyDescriptor");
+            return (from a in mi.Attributes.AsTypedEnumerable<Attribute>()
+                                                           where typeof(DefaultValueAttribute).IsAssignableFrom(a.GetType())
+                                                           select a).Any();
         }
 
         public static object GetRawDefaultValue(PropertyDescriptor mi)

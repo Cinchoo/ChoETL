@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -10,6 +11,20 @@ namespace ChoETL
 {
     public static class ChoObjectEx
     {
+        public static Dictionary<string, object> ToDictionary(this object target)
+        {
+            ChoGuard.ArgumentNotNull(target, "Target");
+
+            Dictionary<string, object> dict = new Dictionary<string, object>();
+               
+            foreach (PropertyDescriptor pd in TypeDescriptor.GetProperties(target).AsTypedEnumerable<PropertyDescriptor>().Where(pd => !pd.Attributes.OfType<ChoIgnoreMemberAttribute>().Any()))
+            {
+                dict.Add(pd.Name, ChoType.GetPropertyValue(target, pd.Name));
+            }
+
+            return dict;
+        }
+
         public static bool IsNullOrEmpty(this ICollection @this)
         {
             return @this == null || @this.Count == 0;

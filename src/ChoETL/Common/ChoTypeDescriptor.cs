@@ -50,6 +50,13 @@
             return TypeDescriptor.GetProperties(type).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<T>().Any());
         }
 
+        public static IEnumerable<PropertyDescriptor> GetProperties(Type type)
+        {
+            ChoGuard.ArgumentNotNull(type, "Type");
+
+            return TypeDescriptor.GetProperties(type).AsTypedEnumerable<PropertyDescriptor>();
+        }
+
         public static PropertyDescriptor GetProperty<T>(Type type, string propName)
             where T : Attribute
         {
@@ -58,6 +65,15 @@
 
             return TypeDescriptor.GetProperties(type).AsTypedEnumerable<PropertyDescriptor>().Where(pd =>
                 pd.Name == propName && pd.Attributes.OfType<T>().Any()).FirstOrDefault();
+        }
+
+        public static PropertyDescriptor GetProperty(Type type, string propName)
+        {
+            ChoGuard.ArgumentNotNull(type, "Type");
+            ChoGuard.ArgumentNotNullOrEmpty(propName, "PropName");
+
+            return TypeDescriptor.GetProperties(type).AsTypedEnumerable<PropertyDescriptor>().Where(pd =>
+                pd.Name == propName).FirstOrDefault();
         }
 
         public static T GetPropetyAttribute<T>(PropertyDescriptor pd)

@@ -40,8 +40,6 @@ namespace ChoETL
             get;
             set;
         }
-
-        internal readonly List<object> Converters = new List<object>();
         
         public ChoFileRecordFieldConfiguration(string name, ChoFileRecordFieldAttribute attr = null) : base(name, attr)
         {
@@ -60,32 +58,6 @@ namespace ChoETL
                 Size = attr.SizeInternal;
                 QuoteField = attr.QuoteFieldInternal;
             }
-        }
-
-        public void AddConverter(IValueConverter converter)
-        {
-            if (converter == null) return;
-            Converters.Add(converter);
-        }
-
-        public void AddConverter(TypeConverter converter)
-        {
-            if (converter == null) return;
-            Converters.Add(converter);
-        }
-
-        public void RemoveConverter(IValueConverter converter)
-        {
-            if (converter == null) return;
-            if (Converters.Contains(converter))
-                Converters.Remove(converter);
-        }
-
-        public void RemoveConverter(TypeConverter converter)
-        {
-            if (converter == null) return;
-            if (Converters.Contains(converter))
-                Converters.Remove(converter);
         }
     }
 }

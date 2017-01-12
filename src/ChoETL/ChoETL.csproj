@@ -59,7 +59,6 @@
     <Compile Include="ChoObjectAttribute.cs" />
     <Compile Include="ChoTypeConverter.cs" />
     <Compile Include="Common\Attributes\ChoFallbackValue.cs" />
-    <Compile Include="Common\Attributes\ChoHiddenMemberAttribute.cs" />
     <Compile Include="Common\Attributes\ChoMemberAttribute.cs" />
     <Compile Include="Common\Attributes\ChoMemberValueSourceAttribute.cs" />
     <Compile Include="Common\Attributes\ChoOrderedAttribute.cs" />
@@ -88,8 +87,8 @@
     <Compile Include="Common\ChoEnumeratorWrapper.cs" />
     <Compile Include="Common\ChoEnvironment.cs" />
     <Compile Include="Common\ChoEnvironmentVariablePropertyReplacer.cs" />
-    <Compile Include="Common\ChoETLFramework.cs" />
-    <Compile Include="Common\ChoETLLog.cs" />
+    <Compile Include="ETLCommon\ChoETLFramework.cs" />
+    <Compile Include="ETLCommon\ChoETLLog.cs" />
     <Compile Include="Common\ChoEventArgs.cs" />
     <Compile Include="Common\ChoException.cs" />
     <Compile Include="Common\ChoExtensions.cs" />
@@ -134,6 +133,7 @@
     <Compile Include="Common\Dynamic\ChoDynamicQueryable.cs" />
     <Compile Include="Common\Exceptions\ChoConsoleCtrlException.cs" />
     <Compile Include="Common\Exceptions\ChoFatalApplicationException.cs" />
+    <Compile Include="Common\ExtensionMethods\ChoDictionaryEx.cs" />
     <Compile Include="Common\ExtensionMethods\ChoIniFileEx.cs" />
     <Compile Include="Common\ExtensionMethods\ChoObjectEx.cs" />
     <Compile Include="Common\ExtensionMethods\ChoStringEx.cs" />
@@ -165,6 +165,7 @@
     <Compile Include="Common\Validators\IChoValidatable.cs" />
     <Compile Include="ChoRecordObjectAttribute.cs" />
     <Compile Include="ChoRecordFieldAttribute.cs" />
+    <Compile Include="ETLCommon\Class1.cs" />
     <Compile Include="Exception\ChoMissingRecordFieldException.cs" />
     <Compile Include="Exception\ChoParserException.cs" />
     <Compile Include="Exception\ChoReaderException.cs" />

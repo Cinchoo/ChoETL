@@ -53,16 +53,6 @@ namespace ChoETL
                 return value.CastTo<T>(defaultValue);
         }
 
-        public static void AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key, TValue value)
-        {
-            ChoGuard.ArgumentNotNull(dict, "Dictionary");
-
-            if (dict.ContainsKey(key))
-                dict[key] = value;
-            else
-                dict.Add(key, value);
-        }
-
         public static void Write(this FileStream sr, string value, Encoding encoding = null)
         {
             ChoGuard.ArgumentNotNull(sr, "FileStream");

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -14,7 +15,7 @@ namespace ChoFixedLengthReaderTest
     {
         static void Main(string[] args)
         {
-            ConfigFirstApproachReadAsTypedRecords();
+            CodeFirstApproachReadRecords();
         }
 
         static void CodeFirstWithDeclarativeApproachReadRecords()
