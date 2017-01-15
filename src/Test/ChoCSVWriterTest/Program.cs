@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Data;
+using System.Data.SqlClient;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -15,7 +17,87 @@ namespace ChoCSVWriterTest
     {
         static void Main(string[] args)
         {
-            CodeFirstWithDeclarativeApproachWriteRecords();
+            WriteDataTableTest();
+        }
+
+        static void WriteDataTableTest()
+        {
+            ChoTypeConverterFormatSpec.Instance.Value.DateTimeFormat = "G";
+            ChoTypeConverterFormatSpec.Instance.Value.BooleanFormat = ChoBooleanFormatSpec.YesOrNo;
+            //ChoTypeConverterFormatSpec.Instance.Value.EnumFormat = ChoEnumFormatSpec.Name;
+            string connString = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+
+            ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
+            config.FileHeaderConfiguration.HasHeaderRecord = true;
+
+            SqlConnection conn = new SqlConnection(connString);
+            conn.Open();
+            SqlCommand cmd = new SqlCommand("SELECT * FROM Members", conn);
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            DataTable dt = new DataTable();
+            da.Fill(dt);
+
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVWriter(writer, config))
+            {
+                parser.Write(dt);
+
+                writer.Flush();
+                stream.Position = 0;
+
+                Console.WriteLine(reader.ReadToEnd());
+            }
+        }
+
+        static void WriteDataReaderTest()
+        {
+            ChoTypeConverterFormatSpec.Instance.Value.DateTimeFormat = "G";
+            ChoTypeConverterFormatSpec.Instance.Value.BooleanFormat = ChoBooleanFormatSpec.YesOrNo;
+            //ChoTypeConverterFormatSpec.Instance.Value.EnumFormat = ChoEnumFormatSpec.Name;
+            string connString = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+
+            ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
+            config.FileHeaderConfiguration.HasHeaderRecord = true;
+
+            SqlConnection conn = new SqlConnection(connString);
+            conn.Open();
+            SqlCommand cmd = new SqlCommand("SELECT * FROM Members", conn);
+            IDataReader dr = cmd.ExecuteReader();
+
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVWriter(writer, config))
+            {
+                parser.Write(dr);
+
+                writer.Flush();
+                stream.Position = 0;
+
+                Console.WriteLine(reader.ReadToEnd());
+            }
+        }
+
+        static void ToTextTest()
+        {
+            ChoTypeConverterFormatSpec.Instance.Value.DateTimeFormat = "G";
+            ChoTypeConverterFormatSpec.Instance.Value.BooleanFormat = ChoBooleanFormatSpec.YesOrNo;
+            //ChoTypeConverterFormatSpec.Instance.Value.EnumFormat = ChoEnumFormatSpec.Name;
+
+            List<EmployeeRec> objs = new List<EmployeeRec>();
+            EmployeeRec rec1 = new EmployeeRec();
+            //rec1.Id = 10;
+            rec1.Name = "Mark";
+            objs.Add(rec1);
+
+            EmployeeRec rec2 = new EmployeeRec();
+            rec2.Id = 200;
+            rec2.Name = "Lou";
+            objs.Add(rec2);
+
+            Console.WriteLine(ChoCSVWriter.ToText(objs));
         }
 
         static void CodeFirstWithDeclarativeApproachWriteRecords()

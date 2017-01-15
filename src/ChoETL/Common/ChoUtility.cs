@@ -680,7 +680,15 @@ namespace ChoETL
                         else
                             return (T)Enum.ToObject(targetType, @this);
                     }
-                    return (T)Convert.ChangeType(@this, typeof(T));
+                    else if (targetType == typeof(Type))
+                    {
+                        if (@this is string)
+                            return (T)Convert.ChangeType(Type.GetType(@this as string), typeof(T));
+                        else
+                            return (T)Convert.ChangeType(@this, typeof(T));
+                    }
+                    else
+                        return (T)Convert.ChangeType(@this, typeof(T));
                 }
                 catch
                 {

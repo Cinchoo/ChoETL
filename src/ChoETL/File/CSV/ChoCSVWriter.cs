@@ -78,6 +78,23 @@ namespace ChoETL
         {
             _writer.WriteTo(_streamWriter, new T[] { record } ).Loop();
         }
+
+        public static string ToText<TRec>(IEnumerable<TRec> records)
+            where TRec : class
+        {
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVWriter<TRec>(writer))
+            {
+                parser.Write(records);
+
+                writer.Flush();
+                stream.Position = 0;
+
+                return reader.ReadToEnd();
+            }
+        }
     }
 
     public class ChoCSVWriter : ChoCSVWriter<ExpandoObject>
@@ -95,6 +112,78 @@ namespace ChoETL
         public ChoCSVWriter(Stream inStream, ChoCSVRecordConfiguration configuration = null)
             : base(inStream, configuration)
         {
+        }
+
+        public void Write(IDataReader dr)
+        {
+            ChoGuard.ArgumentNotNull(dr, "DataReader");
+
+            DataTable schemaTable = dr.GetSchemaTable();
+            var expando = new ExpandoObject();
+            var expandoDic = (IDictionary<string, object>)expando;
+
+            int ordinal = 0;
+            if (Configuration.RecordFieldConfigurations.IsNullOrEmpty())
+            {
+                string colName = null;
+                Type colType = null;
+                foreach (DataRow row in schemaTable.Rows)
+                {
+                    colName = row["ColumnName"].CastTo<string>();
+                    colType = row["DataType"] as Type;
+                    if (!colType.IsSimple()) continue;
+
+                    Configuration.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(colName, ++ordinal) { FieldType = colType });
+                }
+            }
+
+            while (dr.Read())
+            {
+                expandoDic.Clear();
+
+                foreach (var fc in Configuration.RecordFieldConfigurations)
+                {
+                    expandoDic.Add(fc.Name, dr[fc.Name]);
+                }
+
+                Write(expando);
+            }
+        }
+
+        public void Write(DataTable dt)
+        {
+            ChoGuard.ArgumentNotNull(dt, "DataTable");
+
+            DataTable schemaTable = dt;
+            var expando = new ExpandoObject();
+            var expandoDic = (IDictionary<string, object>)expando;
+
+            int ordinal = 0;
+            if (Configuration.RecordFieldConfigurations.IsNullOrEmpty())
+            {
+                string colName = null;
+                Type colType = null;
+                foreach (DataColumn col in schemaTable.Columns)
+                {
+                    colName = col.ColumnName;
+                    colType = col.DataType;
+                    if (!colType.IsSimple()) continue;
+
+                    Configuration.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(colName, ++ordinal) { FieldType = colType });
+                }
+            }
+
+            foreach (DataRow row in dt.Rows)
+            {
+                expandoDic.Clear();
+
+                foreach (var fc in Configuration.RecordFieldConfigurations)
+                {
+                    expandoDic.Add(fc.Name, row[fc.Name]);
+                }
+
+                Write(expando);
+            }
         }
     }
 }
