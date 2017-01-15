@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public class ChoETLDataTypeSize
+    public class ChoFixedLengthFieldDefaultSizeConfiguation
     {
-        public static readonly ChoETLDataTypeSize Global = new ChoETLDataTypeSize();
+        public static readonly ChoFixedLengthFieldDefaultSizeConfiguation Global = new ChoFixedLengthFieldDefaultSizeConfiguation();
 
         private Dictionary<Type, int> _dataTypeSize = new Dictionary<Type, int>();
 
-        public ChoETLDataTypeSize()
+        public ChoFixedLengthFieldDefaultSizeConfiguation()
         {
             _dataTypeSize.Add(typeof(bool), 1);
             _dataTypeSize.Add(typeof(char), 1);

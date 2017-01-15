@@ -50,8 +50,24 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChoEnums.cs" />
-    <Compile Include="ChoETLDataTypeSize.cs" />
-    <Compile Include="ChoETLDataTypeFormat.cs" />
+    <Compile Include="Common\ChoEnum.cs" />
+    <Compile Include="Common\ChoEnumTypeCache.cs" />
+    <Compile Include="Common\Converters\ChoUShortConverter.cs" />
+    <Compile Include="Common\Converters\ChoShortConverter.cs" />
+    <Compile Include="Common\Converters\ChoULongConverter.cs" />
+    <Compile Include="Common\Converters\ChoLongConverter.cs" />
+    <Compile Include="Common\Converters\ChoUIntConverter.cs" />
+    <Compile Include="Common\Converters\ChoIntConverter.cs" />
+    <Compile Include="Common\Converters\ChoFloatConverter.cs" />
+    <Compile Include="Common\Converters\ChoDoubleConverter.cs" />
+    <Compile Include="Common\Converters\ChoDecimalConverter.cs" />
+    <Compile Include="Common\Converters\ChoSByteConverter.cs" />
+    <Compile Include="Common\Converters\ChoByteConverter.cs" />
+    <Compile Include="Common\Converters\ChoBooleanConverter.cs" />
+    <Compile Include="Common\Converters\ChoBigIntegerConverter.cs" />
+    <Compile Include="Common\Converters\ChoEnumConverter.cs" />
+    <Compile Include="File\FixedLength\ChoFixedLengthFieldDefaultSizeConfiguation.cs" />
+    <Compile Include="Common\Converters\ChoTypeConverterFormatSpec.cs" />
     <Compile Include="ChoRecordWriter.cs" />
     <Compile Include="ChoRecordReader.cs" />
     <Compile Include="ChoRecordFieldConfiguration.cs" />
@@ -118,7 +134,6 @@
     <Compile Include="Common\ChoUtility.cs" />
     <Compile Include="Common\ChoWin32Exception.cs" />
     <Compile Include="Common\Converters\ChoCurrencyConverter.cs" />
-    <Compile Include="Common\Converters\ChoBooleanConverter.cs" />
     <Compile Include="Common\Converters\ChoDateTimeConverter.cs" />
     <Compile Include="Common\Converters\ChoNumericValidator.cs" />
     <Compile Include="Common\Converters\ChoSeqNoGeneratorConvertor.cs" />
@@ -165,7 +180,7 @@
     <Compile Include="Common\Validators\IChoValidatable.cs" />
     <Compile Include="ChoRecordObjectAttribute.cs" />
     <Compile Include="ChoRecordFieldAttribute.cs" />
-    <Compile Include="ETLCommon\Class1.cs" />
+    <Compile Include="ETLCommon\ChoETLRecordHelper.cs" />
     <Compile Include="Exception\ChoMissingRecordFieldException.cs" />
     <Compile Include="Exception\ChoParserException.cs" />
     <Compile Include="Exception\ChoReaderException.cs" />

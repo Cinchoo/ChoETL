@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
 
 namespace ChoETL
 {
-    [ChoTypeConverter(typeof(DateTime))]
-    public class ChoDateTimeConverter : IValueConverter
+    [ChoTypeConverter(typeof(Byte))]
+    public class ChoByteConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
@@ -17,8 +19,8 @@ namespace ChoETL
                 string text = value as string;
                 if (!text.IsNullOrWhiteSpace())
                 {
-                    string format = parameter.GetValueAt<string>(0, ChoTypeConverterFormatSpec.Instance.Value.DateTimeFormat);
-                    return !format.IsNullOrWhiteSpace() ? DateTime.ParseExact(text, format, culture) : value;
+                    NumberStyles format = parameter.GetValueAt<NumberStyles>(0, ChoTypeConverterFormatSpec.Instance.Value.ByteNumberStyle);
+                    return Byte.Parse(text, format, culture);
                 }
             }
             
@@ -27,10 +29,10 @@ namespace ChoETL
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            if (value is DateTime)
+            if (value is Byte)
             {
-                string format = parameter.GetValueAt<string>(0, ChoTypeConverterFormatSpec.Instance.Value.DateTimeFormat);
-                return !format.IsNullOrWhiteSpace() ? ((DateTime)value).ToString(format, culture) : value;
+                string format = parameter.GetValueAt<string>(0, ChoTypeConverterFormatSpec.Instance.Value.ByteFormat);
+                return !format.IsNullOrWhiteSpace() ? ((Byte)value).ToString(format, culture) : value;
             }
             else
                 return value;

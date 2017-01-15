@@ -1398,5 +1398,24 @@ namespace ChoETL
         }
 
         #endregion ToStream Method
+        #region ToEnum Overloads
+
+        /// <summary>
+        /// Convert a description value to enum value
+        /// </summary>
+        /// <typeparam name="T">The type of enum to considered for the conversion</typeparam>
+        /// <param name="description">Description value to look into the enum values decorated with DescriptionAttribute.</param>
+        /// <returns>Returns enum value correponding to the description if there is a match, otherwise returns Enum.Nothing</returns>
+        public static T ToEnum<T>(this string description) where T : struct
+        {
+            return ChoEnumTypeDescCache.GetEnumValue<T>(description);
+        }
+
+        public static Enum ToEnum(this string description, Type enumType)
+        {
+            return ChoEnumTypeDescCache.GetEnumValue(enumType, description);
+        }
+
+        #endregion ToEnum Overloads
     }
 }

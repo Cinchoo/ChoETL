@@ -292,8 +292,7 @@ namespace ChoETL
                         else
                             dict.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
 
-                        if (!fieldConfig.Validators.IsNullOrEmpty() && (Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
-                            ChoValidator.ValidateFor(dict[kvp.Key], kvp.Key, fieldConfig.Validators);
+                        dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
                     }
                     else
                     {
@@ -307,13 +306,7 @@ namespace ChoETL
                         else
                             throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(kvp.Key, ChoType.GetTypeName(rec)));
 
-                        if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
-                        {
-                            if (fieldConfig.Validators.IsNullOrEmpty())
-                                ChoValidator.ValidateFor(rec, kvp.Key);
-                            else
-                                ChoValidator.ValidateFor(fieldValue, kvp.Key, fieldConfig.Validators);
-                        }
+                        rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
                     }
 
                     if (!RaiseAfterRecordFieldLoad(rec, pair.Item1, kvp.Key, fieldValue))
@@ -335,51 +328,43 @@ namespace ChoETL
                     if (fieldConfig.ErrorMode == ChoErrorMode.ThrowAndStop)
                         throw;
 
-                    if (!(rec is ExpandoObject) && ChoType.HasProperty(rec.GetType(), kvp.Key))
+                    try
                     {
-                        try
+                        if (rec is ExpandoObject)
                         {
-                            ChoFallbackValueAttribute fbAttr = ChoTypeDescriptor.GetPropetyAttribute<ChoFallbackValueAttribute>(rec.GetType(), kvp.Key);
-                            if (fbAttr != null)
-                            {
-                                fieldValue = fbAttr.Value;
-                                if (!fieldValue.IsNullOrDbNull())
-                                {
-                                    if (fieldConfig.Converters.IsNullOrEmpty())
-                                    {
-                                        ChoType.ConvertNSetMemberValue(rec, kvp.Key, fieldValue, Configuration.Culture);
-                                    }
-                                    else
-                                    {
-                                        fieldValue = ChoConvert.ConvertFrom(fieldValue, ChoType.GetMemberType(rec.GetType(), kvp.Key), null, fieldConfig.Converters.ToArray(), null, Configuration.Culture);
-                                        ChoType.SetMemberValue(rec, kvp.Key, fieldValue);
-                                    }
+                            var dict = rec as IDictionary<string, Object>;
 
-                                    if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
-                                    {
-                                        if (fieldConfig.Validators.IsNullOrEmpty())
-                                            ChoValidator.ValidateFor(rec, kvp.Key);
-                                        else
-                                            ChoValidator.ValidateFor(fieldValue, kvp.Key, fieldConfig.Validators);
-                                    }
-                                }
+                            if (dict.SetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture))
+                            {
+                                dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
                             }
                             else
                                 throw;
                         }
-                        catch (Exception innerEx)
+                        else if (ChoType.HasProperty(rec.GetType(), kvp.Key) && rec.SetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture))
+                        {
+                            rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
+                        }
+                        else
+                            throw;
+                    }
+                    catch (Exception innerEx)
+                    {
+                        if (ex == innerEx)
                         {
                             if (fieldConfig.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                             {
                                 continue;
                             }
-                            else if (fieldConfig.ErrorMode == ChoErrorMode.ReportAndContinue)
+                            else
                             {
                                 if (!RaiseRecordFieldLoadError(rec, pair.Item1, kvp.Key, fieldValue, ex))
                                     throw;
                             }
-                            else
-                                throw new ChoParserException("Failed to assign '{0}' fallback value to '{1}' field.".FormatString(fieldValue, fieldConfig.FieldName), innerEx);
+                        }
+                        else
+                        {
+                            throw new ChoParserException("Failed to assign '{0}' fallback value to '{1}' field.".FormatString(fieldValue, fieldConfig.FieldName), innerEx);
                         }
                     }
                 }

@@ -75,6 +75,9 @@ namespace ChoETL
             Type type = value == null ? typeof(object) : value.GetType();
             try
             {
+                if (converters.IsNullOrEmpty())
+                    converters = ChoTypeDescriptor.GetTypeConvertersForType(targetType);
+
                 if (converters != null && converters.Length > 0)
                 {
                     object[] objArray = (object[])null;
@@ -95,6 +98,7 @@ namespace ChoETL
                     //if (value != obj1)
                     //    return value;
                 }
+
                 if (value == null)
                     return targetType.Default();
                 targetType = targetType.IsNullableType() ? targetType.GetUnderlyingType() : targetType;
@@ -239,6 +243,9 @@ namespace ChoETL
             try
             {
                 object[] objArray = (object[])null;
+                if (converters.IsNullOrEmpty())
+                    converters = ChoTypeDescriptor.GetTypeConvertersForType(type);
+
                 if (converters != null && converters.Length > 0)
                 {
                     for (int index = 0; index < converters.Length; ++index)
@@ -253,7 +260,7 @@ namespace ChoETL
                                 value = typeConverter.ConvertTo((ITypeDescriptorContext)null, culture, value, targetType);
                         }
                         else if (obj2 is IValueConverter)
-                            value = ((IValueConverter)obj2).Convert(value, targetType, (object)objArray, culture);
+                            value = ((IValueConverter)obj2).ConvertBack(value, targetType, (object)objArray, culture);
                     }
                     if (obj1 != value)
                         return value;

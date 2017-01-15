@@ -2300,12 +2300,48 @@
                 return defaultValue;
         }
 
+        public static bool HasFallbackValue(PropertyDescriptor mi)
+        {
+            ChoGuard.ArgumentNotNull(mi, "PropertyDescriptor");
+            return (from a in mi.Attributes.AsTypedEnumerable<Attribute>()
+                    where typeof(ChoFallbackValueAttribute).IsAssignableFrom(a.GetType())
+                    select a).Any();
+        }
+
+        public static object GetRawFallbackValue(PropertyDescriptor mi)
+        {
+            ChoGuard.ArgumentNotNull(mi, "PropertyDescriptor");
+            ChoFallbackValueAttribute FallbackValueAttribute = (from a in mi.Attributes.AsTypedEnumerable<Attribute>()
+                                                           where typeof(ChoFallbackValueAttribute).IsAssignableFrom(a.GetType())
+                                                           select a).FirstOrDefault() as ChoFallbackValueAttribute;
+            if (FallbackValueAttribute == null)
+                return null;
+
+            return FallbackValueAttribute.Value;
+        }
+
+        public static object GetFallbackValue(PropertyDescriptor mi)
+        {
+            ChoGuard.ArgumentNotNull(mi, "PropertyDescriptor");
+            ChoFallbackValueAttribute FallbackValueAttribute = (from a in mi.Attributes.AsTypedEnumerable<Attribute>()
+                                                           where typeof(ChoFallbackValueAttribute).IsAssignableFrom(a.GetType())
+                                                           select a).FirstOrDefault() as ChoFallbackValueAttribute;
+            if (FallbackValueAttribute == null)
+                return null;
+
+            object FallbackValue = FallbackValueAttribute.Value;
+            if (FallbackValue is string)
+                return ((string)FallbackValue).ExpandProperties();
+            else
+                return FallbackValue;
+        }
+
         public static bool HasDefaultValue(PropertyDescriptor mi)
         {
             ChoGuard.ArgumentNotNull(mi, "PropertyDescriptor");
             return (from a in mi.Attributes.AsTypedEnumerable<Attribute>()
-                                                           where typeof(DefaultValueAttribute).IsAssignableFrom(a.GetType())
-                                                           select a).Any();
+                    where typeof(DefaultValueAttribute).IsAssignableFrom(a.GetType())
+                    select a).Any();
         }
 
         public static object GetRawDefaultValue(PropertyDescriptor mi)

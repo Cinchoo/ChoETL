@@ -8,18 +8,22 @@ using System.Windows.Data;
 
 namespace ChoETL
 {
+    [ChoTypeConverter(typeof(ChoCurrency))]
     public class ChoCurrencyConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             if (value is string)
             {
+                if (culture == null)
+                    culture = System.Threading.Thread.CurrentThread.CurrentCulture;
+
                 string text = value as string;
-                if (!text.IsNullOrWhiteSpace())
-                {
-                    string format = parameter.GetValueAt<string>(0);
-                    return !format.IsNullOrWhiteSpace() ? Double.Parse((string)value, format.ParseEnum<NumberStyles>()) : Double.Parse((string)value, NumberStyles.Currency);
-                }
+                if (text.IsNullOrWhiteSpace())
+                    text = "0";
+
+                NumberStyles ns = parameter.GetValueAt<NumberStyles>(0, ChoTypeConverterFormatSpec.Instance.Value.CurrencyNumberStyle);
+                return Double.Parse(text, ns, culture);
             }
 
             return value;
@@ -29,11 +33,17 @@ namespace ChoETL
         {
             if (value is double)
             {
-                string format = parameter.GetValueAt<string>(1);
-                return !format.IsNullOrWhiteSpace() ? String.Format("{0:" + format + "}", value) : "{0:0.00}".FormatString(value);
+                if (culture == null)
+                    culture = System.Threading.Thread.CurrentThread.CurrentCulture;
+
+                string format = parameter.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.Value.CurrencyFormat);
+                if (format.IsNullOrWhiteSpace())
+                    format = "C";
+
+                return String.Format(culture, "{0:" + format + "}", value);
             }
-            else
-                return value;
+
+            return value;
         }
     }
 }

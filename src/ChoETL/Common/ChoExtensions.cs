@@ -661,13 +661,14 @@ namespace ChoETL
         public static bool IsSimple(this Type type)
         {
             CheckTypeIsNotNull(type);
+            type = type.GetUnderlyingType();
             return type.IsPrimitive 
                 || typeof(string) == type 
-                || (type.IsEnum 
+                || type.IsEnum 
                 || typeof(DateTime) == type 
                 || typeof(BigInteger) == type 
                 || typeof(ChoCurrency) == type
-                );
+                ;
         }
 
         public static bool IsSubclassOfRawGeneric(this Type generic, Type toCheck)

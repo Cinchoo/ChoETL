@@ -28,6 +28,12 @@ namespace ChoETL
             get;
             set;
         }
+        public ChoFixedLengthFieldDefaultSizeConfiguation FixedLengthFieldDefaultSizeConfiguation
+        {
+            get;
+            set;
+        }
+
         internal Dictionary<string, ChoFixedLengthRecordFieldConfiguration> RecordFieldConfigurationsDict
         {
             get;
@@ -119,7 +125,11 @@ namespace ChoETL
                         if (!pd.PropertyType.IsSimple())
                             throw new ChoRecordConfigurationException("Property '{0}' is not a simple type.".FormatString(pd.Name));
 
-                        size = ChoETLDataTypeSize.Global.GetSize(pd.PropertyType);
+                        if (FixedLengthFieldDefaultSizeConfiguation == null)
+                            size = ChoFixedLengthFieldDefaultSizeConfiguation.Global.GetSize(pd.PropertyType);
+                        else
+                            size = FixedLengthFieldDefaultSizeConfiguation.GetSize(pd.PropertyType);
+
                         var obj = new ChoFixedLengthRecordFieldConfiguration(pd.Name, startIndex, size);
                         obj.FieldType = pd.PropertyType;
                         RecordFieldConfigurations.Add(obj);

@@ -138,22 +138,6 @@
             }
         }
 
-        public static void RegisterConverters(Type type, TypeConverter[] typeConverters)
-        {
-            ChoGuard.ArgumentNotNull(type, "Type");
-
-            lock (_typeMemberTypeConverterCacheLockObject)
-            {
-                if (typeConverters == null)
-                    typeConverters = EmptyTypeConverters;
-
-                if (_typeTypeConverterCache.ContainsKey(type))
-                    _typeTypeConverterCache[type] = typeConverters;
-                else
-                    _typeTypeConverterCache.Add(type, typeConverters);
-            }
-        }
-
         public static void ClearConverters(MemberInfo memberInfo)
         {
             ChoGuard.ArgumentNotNull(memberInfo, "MemberInfo");
@@ -162,17 +146,6 @@
             {
                 if (_typeMemberTypeConverterCache.ContainsKey(memberInfo))
                     _typeMemberTypeConverterCache.Remove(memberInfo);
-            }
-        }
-
-        public static void ClearConverters(Type type)
-        {
-            ChoGuard.ArgumentNotNull(type, "Type");
-
-            lock (_typeMemberTypeConverterCacheLockObject)
-            {
-                if (_typeTypeConverterCache.ContainsKey(type))
-                    _typeTypeConverterCache.Remove(type);
             }
         }
 
@@ -290,38 +263,38 @@
                             return _typeMemberTypeConverterCache[memberInfo];
                         }
 
-                        if (queue.Count == 0 && !memberType.IsSimple())
-                        {
-                            if (!_typeTypeConverterCache.ContainsKey(memberType))
-                            {
-                                Type[] types = ChoType.GetTypes(typeof(ChoTypeConverterAttribute)).Where(t => t.GetCustomAttribute<ChoTypeConverterAttribute>().ConverterType == memberType).ToArray();
+                        //if (queue.Count == 0 && !memberType.IsSimple())
+                        //{
+                        //    if (!_typeTypeConverterCache.ContainsKey(memberType))
+                        //    {
+                        //        Type[] types = ChoType.GetTypes(typeof(ChoTypeConverterAttribute)).Where(t => t.GetCustomAttribute<ChoTypeConverterAttribute>().ConverterType == memberType).ToArray();
 
-                                if (types != null)
-                                {
-                                    int index1 = 0;
-                                    SortedList<int, object> queue1 = new SortedList<int, object>();
-                                    SortedList<int, object[]> paramsQueue1 = new SortedList<int, object[]>();
+                        //        if (types != null)
+                        //        {
+                        //            int index1 = 0;
+                        //            SortedList<int, object> queue1 = new SortedList<int, object>();
+                        //            SortedList<int, object[]> paramsQueue1 = new SortedList<int, object[]>();
 
-                                    foreach (Type t in types)
-                                    {
-                                        queue.Add(index1, Activator.CreateInstance(t));
-                                        index1++;
-                                    }
-                                    _typeTypeConverterCache.Add(memberType, queue.Values.ToArray());
-                                    return _typeTypeConverterCache[memberType];
-                                }
+                        //            foreach (Type t in types)
+                        //            {
+                        //                queue.Add(index1, Activator.CreateInstance(t));
+                        //                index1++;
+                        //            }
+                        //            _typeTypeConverterCache.Add(memberType, queue.Values.ToArray());
+                        //            return _typeTypeConverterCache[memberType];
+                        //        }
 
-                                TypeConverter converter = TypeDescriptor.GetConverter(memberType);
-                                if (converter != null)
-                                    _typeTypeConverterCache.Add(memberType, new object[] { converter });
-                                else
-                                    _typeTypeConverterCache.Add(memberType, EmptyTypeConverters);
+                        //        TypeConverter converter = TypeDescriptor.GetConverter(memberType);
+                        //        if (converter != null)
+                        //            _typeTypeConverterCache.Add(memberType, new object[] { converter });
+                        //        else
+                        //            _typeTypeConverterCache.Add(memberType, EmptyTypeConverters);
 
-                                _typeTypeConverterParamsCache.Add(memberType, EmptyParams);
-                            }
+                        //        _typeTypeConverterParamsCache.Add(memberType, EmptyParams);
+                        //    }
 
-                            return _typeTypeConverterCache[memberType];
-                        }
+                        //    return _typeTypeConverterCache[memberType];
+                        //}
                     }
 
                     return _typeMemberTypeConverterCache.ContainsKey(memberInfo) ? _typeMemberTypeConverterCache[memberInfo] : EmptyTypeConverters;
@@ -329,20 +302,20 @@
             }
         }
 
-        public static object[] GetTypeConvertersForType(Type memberType)
+        public static object[] GetTypeConvertersForType(Type objType)
         {
-            if (memberType == null)
+            if (objType == null)
                 return null;
 
-            if (_typeTypeConverterCache.ContainsKey(memberType))
-                return _typeTypeConverterCache[memberType];
+            if (_typeTypeConverterCache.ContainsKey(objType))
+                return _typeTypeConverterCache[objType];
             else
             {
                 lock (_typeMemberTypeConverterCacheLockObject)
                 {
-                    if (!_typeTypeConverterCache.ContainsKey(memberType))
+                    if (!_typeTypeConverterCache.ContainsKey(objType))
                     {
-                        Type type = memberType;
+                        Type type = objType;
                         if (ChoTypeConverter.Global.Contains(type))
                         {
                             _typeTypeConverterCache[type] = (from a1 in ChoTypeConverter.Global.GetAll()
@@ -351,7 +324,7 @@
                             return _typeTypeConverterCache[type];
                         }
 
-                        Type[] types = ChoType.GetTypes(typeof(ChoTypeConverterAttribute)).Where(t => t.GetCustomAttribute<ChoTypeConverterAttribute>().ConverterType == memberType).ToArray();
+                        Type[] types = ChoType.GetTypes(typeof(ChoTypeConverterAttribute)).Where(t => t.GetCustomAttribute<ChoTypeConverterAttribute>().ConverterType.IsAssignableFrom(objType)).ToArray();
 
                         if (types != null)
                         {
@@ -364,21 +337,53 @@
                                 queue1.Add(index1, Activator.CreateInstance(t));
                                 index1++;
                             }
-                            _typeTypeConverterCache.Add(memberType, queue1.Values.ToArray());
-                            return _typeTypeConverterCache[memberType];
+                            _typeTypeConverterCache.Add(objType, queue1.Values.ToArray());
+                            return _typeTypeConverterCache[objType];
                         }
 
-                        TypeConverter converter = TypeDescriptor.GetConverter(memberType);
+                        TypeConverter converter = TypeDescriptor.GetConverter(objType);
                         if (converter != null)
-                            _typeTypeConverterCache.Add(memberType, new object[] { converter });
+                            _typeTypeConverterCache.Add(objType, new object[] { converter });
                         else
-                            _typeTypeConverterCache.Add(memberType, EmptyTypeConverters);
+                            _typeTypeConverterCache.Add(objType, EmptyTypeConverters);
 
-                        _typeTypeConverterParamsCache.Add(memberType, EmptyParams);
+                        _typeTypeConverterParamsCache.Add(objType, EmptyParams);
                     }
 
-                    return _typeTypeConverterCache[memberType];
+                    return _typeTypeConverterCache[objType];
                 }
+            }
+        }
+
+        public static void ClearTypeConvertersForType(Type objType)
+        {
+            if (objType == null)
+                return;
+            if (!_typeTypeConverterCache.ContainsKey(objType))
+                return;
+
+            lock (_typeMemberTypeConverterCacheLockObject)
+            {
+                if (!_typeTypeConverterCache.ContainsKey(objType))
+                    return;
+
+                _typeTypeConverterCache.Remove(objType);
+            }
+        }
+
+        public static void RegisterTypeConvertersForType(Type objType, object[] converters)
+        {
+            if (objType == null)
+                return;
+            if (converters == null)
+                converters = new object[] { };
+
+            lock (_typeMemberTypeConverterCacheLockObject)
+            {
+                if (!_typeTypeConverterCache.ContainsKey(objType))
+                    _typeTypeConverterCache.Add(objType, converters);
+                else
+                    _typeTypeConverterCache[objType] = converters;
             }
         }
 

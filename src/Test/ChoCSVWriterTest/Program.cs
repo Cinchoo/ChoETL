@@ -15,7 +15,38 @@ namespace ChoCSVWriterTest
     {
         static void Main(string[] args)
         {
-            CodeFirstWithDeclarativeApproachWriteRecordsToFile();
+            CodeFirstWithDeclarativeApproachWriteRecords();
+        }
+
+        static void CodeFirstWithDeclarativeApproachWriteRecords()
+        {
+            ChoTypeConverterFormatSpec.Instance.Value.DateTimeFormat = "G";
+            ChoTypeConverterFormatSpec.Instance.Value.BooleanFormat = ChoBooleanFormatSpec.YesOrNo;
+            //ChoTypeConverterFormatSpec.Instance.Value.EnumFormat = ChoEnumFormatSpec.Name;
+
+            List<EmployeeRec> objs = new List<EmployeeRec>();
+            EmployeeRec rec1 = new EmployeeRec();
+            //rec1.Id = 10;
+            rec1.Name = "Mark";
+            objs.Add(rec1);
+
+            EmployeeRec rec2 = new EmployeeRec();
+            rec2.Id = 200;
+            rec2.Name = "Lou";
+            objs.Add(rec2);
+
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVWriter<EmployeeRec>(writer))
+            {
+                parser.Write(objs);
+
+                writer.Flush();
+                stream.Position = 0;
+
+                Console.WriteLine(reader.ReadToEnd());
+            }
         }
 
         static void CodeFirstWithDeclarativeApproachWriteRecordsToFile()
@@ -201,30 +232,43 @@ namespace ChoCSVWriterTest
         public string Name { get; set; }
     }
 
+    public enum Shape
+    {
+        [Description("Circle Shape")]
+        Circle,
+        [Description("Rectangle Shape")]
+        Rectangle,
+        [Description("Square Shape")]
+        Square
+    }
+
     [ChoCSVFileHeader]
     [ChoCSVRecordObject(HasExcelSeparator = true)]
     public class EmployeeRec
     {
-        [ChoCSVRecordField(1, FieldName = "NewId")]
-        [Required]
-        [ChoFallbackValue(100)]
-        [Range(100, 10000)]
+        public Shape Shape { get; set; }
+
+        //[ChoCSVRecordField(1, FieldName = "NewId")]
+        //[Required]
+        //[ChoFallbackValue(100)]
+        //[Range(100, 10000)]
         public int? Id
         {
             get;
             set;
         }
-        [ChoCSVRecordField(2)]
-        [DefaultValue("XXXX")]
+        //[ChoCSVRecordField(2)]
+        //[DefaultValue("XXXX")]
         public string Name
         {
             get;
             set;
         }
-
-        public override string ToString()
-        {
-            return "{0}. {1}.".FormatString(Id, Name);
-        }
+        [DefaultValue("1/1/2001")]
+        public DateTime JoinedDate { get; set; }
+        [DefaultValue("50000")]
+        public ChoCurrency Salary { get; set; }
+        public bool IsActive { get; set; }
+        public char Status { get; set; }
     }
 }

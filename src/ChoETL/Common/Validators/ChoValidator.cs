@@ -44,7 +44,7 @@ namespace ChoETL
             if (validationAttrs.IsNullOrEmpty()) return true;
 
             var results = new List<ValidationResult>();
-            var context = new ValidationContext(@this, null, null);
+            var context = new ValidationContext(@this == null ? new object() : @this, null, null);
             context.MemberName = mn;
 
             Validator.TryValidateValue(@this, context, results, validationAttrs);

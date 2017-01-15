@@ -15,10 +15,14 @@ namespace ChoFixedLengthReaderTest
     {
         static void Main(string[] args)
         {
-            CodeFirstApproachReadRecords();
+            //Override the width of necessary simple types
+            ChoFixedLengthFieldDefaultSizeConfiguation.Global.SetSize(typeof(int), 3);
+            ChoFixedLengthFieldDefaultSizeConfiguation.Global.SetSize(typeof(string), 5);
+
+            DefaultValueUsedViaCodeFirstApproach();
         }
 
-        static void CodeFirstWithDeclarativeApproachReadRecords()
+        static void CodeFirstWithDeclarativeApproach()
         {
             EmployeeRec row = null;
             using (var stream = new MemoryStream())
@@ -38,12 +42,8 @@ namespace ChoFixedLengthReaderTest
             }
         }
 
-        static void CodeFirstApproachReadRecords()
+        static void CodeFirstApproach()
         {
-            //Override the width of necessary simple types
-            ChoETLDataTypeSize.Global.SetSize(typeof(int), 3);
-            ChoETLDataTypeSize.Global.SetSize(typeof(string), 5);
-
             EmployeeRecSimple row = null;
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
@@ -52,6 +52,104 @@ namespace ChoFixedLengthReaderTest
             {
                 writer.WriteLine("001Carl 08/12/2016$100,000                      0F");
                 writer.WriteLine("002MarkS01/01/2010$500,000                      1C");
+                writer.Flush();
+                stream.Position = 0;
+
+                while ((row = parser.Read()) != null)
+                {
+                    Console.WriteLine(row.ToStringEx());
+                }
+            }
+        }
+
+        static void FallbackValueUsedViaCodeFirstApproach()
+        {
+            EmployeeRecSimpleFallback row = null;
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoFixedLengthReader<EmployeeRecSimpleFallback>(reader))
+            {
+                writer.WriteLine("001Carl 08/12/2016$100,000                      0F");
+                writer.WriteLine("002MarkS13/01/2010$500,000                      1C");
+                writer.Flush();
+                stream.Position = 0;
+
+                while ((row = parser.Read()) != null)
+                {
+                    Console.WriteLine(row.ToStringEx());
+                }
+            }
+        }
+
+        static void FallbackValueUsedViaConfigFirstApproach()
+        {
+            ChoFixedLengthRecordConfiguration config = new ChoFixedLengthRecordConfiguration();
+            config.RecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration("Id", 0, 3) { FieldType = typeof(int) });
+            config.RecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration("Name", 3, 5) { FieldType = typeof(string) });
+            config.RecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration("JoinedDate", 8, 10) { FieldType = typeof(DateTime), FallbackValue = "1/1/2010" });
+            config.RecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration("Salary", 18, 10) { FieldType = typeof(ChoCurrency) });
+            config.RecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration("IsActive", 28, 1) { FieldType = typeof(bool) });
+            config.RecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration("Status", 29, 1) { FieldType = typeof(char) });
+            config.ErrorMode = ChoErrorMode.ReportAndContinue;
+
+            ExpandoObject row = null;
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoFixedLengthReader(reader, config))
+            {
+                writer.WriteLine("001Carl 08/12/2016100,000   0F");
+                writer.WriteLine("002MarkS13/01/2010500,000   1C");
+                writer.Flush();
+                stream.Position = 0;
+
+                while ((row = parser.Read()) != null)
+                {
+                    Console.WriteLine(row.ToStringEx());
+                }
+            }
+        }
+
+        static void DefaultValueUsedViaCodeFirstApproach()
+        {
+            EmployeeRecSimple row = null;
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoFixedLengthReader<EmployeeRecSimple>(reader))
+            {
+                writer.WriteLine("001Carl 08/12/2016$100,000                      0F");
+                writer.WriteLine("002MarkS01/01/2010$500,000                      1C");
+                writer.Flush();
+                stream.Position = 0;
+
+                while ((row = parser.Read()) != null)
+                {
+                    Console.WriteLine(row.ToStringEx());
+                }
+            }
+        }
+
+        static void DefaultValueUsedViaConfigFirstApproach()
+        {
+            ChoFixedLengthRecordConfiguration config = new ChoFixedLengthRecordConfiguration();
+            config.RecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration("Id", 0, 3) { FieldType = typeof(int) });
+            config.RecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration("Name", 3, 5) { FieldType = typeof(string) });
+            config.RecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration("JoinedDate", 8, 10) { FieldType = typeof(DateTime), DefaultValue = "10/10/2010" });
+            config.RecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration("Salary", 18, 10) { FieldType = typeof(ChoCurrency) });
+            config.RecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration("IsActive", 28, 1) { FieldType = typeof(bool) });
+            config.RecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration("Status", 29, 1) { FieldType = typeof(char) });
+            config.ErrorMode = ChoErrorMode.IgnoreAndContinue;
+
+            ExpandoObject row = null;
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoFixedLengthReader(reader, config))
+            {
+                writer.WriteLine("001Carl 08/12/2016100,000   0F");
+                writer.WriteLine("002MarkS13/01/2010500,000   1C");
                 writer.Flush();
                 stream.Position = 0;
 
@@ -125,6 +223,20 @@ namespace ChoFixedLengthReaderTest
         public int Id { get; set; }
         public string Name { get; set; }
         [DefaultValue("1/1/2001")]
+        public DateTime JoinedDate { get; set; }
+        [DefaultValue("50000")]
+        public ChoCurrency Salary { get; set; }
+        public bool IsActive { get; set; }
+        public char Status { get; set; }
+    }
+
+    [ChoFixedLengthRecordObject(50, ErrorMode = ChoErrorMode.ReportAndContinue)]
+    public partial class EmployeeRecSimpleFallback
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        [DefaultValue("1/1/2001")]
+        [ChoFallbackValue("13/1/2011")]
         public DateTime JoinedDate { get; set; }
         [DefaultValue("50000")]
         public ChoCurrency Salary { get; set; }
