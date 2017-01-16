@@ -83,8 +83,8 @@ namespace ChoETL
 
                 foreach (PropertyDescriptor pd in TypeDescriptor.GetProperties(recordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().Any()))
                 {
-                    if (!pd.PropertyType.IsSimple())
-                        throw new ChoRecordConfigurationException("Property '{0}' is not a simple type.".FormatString(pd.Name));
+                    //if (!pd.PropertyType.IsSimple())
+                    //    throw new ChoRecordConfigurationException("Property '{0}' is not a simple type.".FormatString(pd.Name));
                     var obj = new ChoFixedLengthRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().First());
                     obj.FieldType = pd.PropertyType;
                     RecordFieldConfigurations.Add(obj);
@@ -122,8 +122,8 @@ namespace ChoETL
                     int size = 0;
                     foreach (PropertyDescriptor pd in TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>())
                     {
-                        if (!pd.PropertyType.IsSimple())
-                            throw new ChoRecordConfigurationException("Property '{0}' is not a simple type.".FormatString(pd.Name));
+                        //if (!pd.PropertyType.IsSimple())
+                        //    throw new ChoRecordConfigurationException("Property '{0}' is not a simple type.".FormatString(pd.Name));
 
                         if (FixedLengthFieldDefaultSizeConfiguation == null)
                             size = ChoFixedLengthFieldDefaultSizeConfiguation.Global.GetSize(pd.PropertyType);

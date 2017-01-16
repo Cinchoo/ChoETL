@@ -37,20 +37,19 @@ namespace ChoETL
 
         public int GetSize(Type type)
         {
-            if (!type.IsSimple())
-                throw new ArgumentException("Invalid type passed. Expected simple type only.");
+            ChoGuard.ArgumentNotNull(type, "Type");
+
+            if (!_dataTypeSize.ContainsKey(type))
+                throw new ArgumentException("Can't find size for '{0}' type.".FormatString(type.Name));
 
             return _dataTypeSize[type];
         }
 
-        public int SetSize(Type type, int size)
+        public void SetSize(Type type, int size)
         {
-            if (!type.IsSimple())
-                throw new ArgumentException("Invalid type passed. Expected simple type only.");
-            if (size <= 0)
-                throw new ArgumentException("Size must be > 0.");
+            ChoGuard.ArgumentNotNull(type, "Type");
 
-            return _dataTypeSize[type] = size;
+            _dataTypeSize.AddOrUpdate(type, size);
         }
     }
 }

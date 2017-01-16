@@ -17,7 +17,7 @@ namespace ChoCSVWriterTest
     {
         static void Main(string[] args)
         {
-            WriteDataTableTest();
+            ToTextTest();
         }
 
         static void WriteDataTableTest()

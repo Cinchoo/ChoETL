@@ -395,17 +395,17 @@ namespace ChoETL
                     if (fieldValue.Contains(Configuration.Delimiter))
                     {
                         if (isHeader)
-                            throw new ChoParserException("Field header {0} value contains delimiter character.".FormatString(fieldName));
+                            throw new ChoParserException("Field header '{0}' value contains delimiter character.".FormatString(fieldName));
                         else
-                            throw new ChoParserException("Field {0} value contains delimiter character.".FormatString(fieldName));
+                            throw new ChoParserException("Field '{0}' value contains delimiter character.".FormatString(fieldName));
                     }
 
                     if (fieldValue.Contains(Configuration.EOLDelimiter))
                     {
                         if (isHeader)
-                            throw new ChoParserException("Field header {0} value contains EOL delimiter character.".FormatString(fieldName));
+                            throw new ChoParserException("Field header '{0}' value contains EOL delimiter character.".FormatString(fieldName));
                         else
-                            throw new ChoParserException("Field {0} value contains EOL delimiter character.".FormatString(fieldName));
+                            throw new ChoParserException("Field '{0}' value contains EOL delimiter character.".FormatString(fieldName));
                     }
                 }
             }

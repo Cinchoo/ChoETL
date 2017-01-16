@@ -131,7 +131,7 @@ namespace ChoETL
                 {
                     colName = row["ColumnName"].CastTo<string>();
                     colType = row["DataType"] as Type;
-                    if (!colType.IsSimple()) continue;
+                    //if (!colType.IsSimple()) continue;
 
                     Configuration.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(colName, ++ordinal) { FieldType = colType });
                 }
@@ -167,7 +167,7 @@ namespace ChoETL
                 {
                     colName = col.ColumnName;
                     colType = col.DataType;
-                    if (!colType.IsSimple()) continue;
+                    //if (!colType.IsSimple()) continue;
 
                     Configuration.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(colName, ++ordinal) { FieldType = colType });
                 }
