@@ -18,7 +18,29 @@ namespace ChoCSVReaderTest
     {
         static void Main(string[] args)
         {
-            AsDataReaderTest();
+            QuickTest();
+        }
+
+        static void QuickTest()
+        {
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVReader(reader))
+            {
+                writer.WriteLine("1,Carl");
+                writer.WriteLine("2,Mark");
+                writer.WriteLine("3,Tom");
+
+                writer.Flush();
+                stream.Position = 0;
+
+                object rec;
+                while ((rec = parser.Read()) != null)
+                {
+                    Console.WriteLine(rec.ToStringEx());
+                }
+            }
         }
 
         static void AsDataReaderTest()
@@ -30,19 +52,35 @@ namespace ChoCSVReaderTest
             {
                 writer.WriteLine("1,Carl");
                 writer.WriteLine("2,Mark");
-                writer.WriteLine("3,11");
+                writer.WriteLine("3,Tom");
 
                 writer.Flush();
                 stream.Position = 0;
 
-                //EmployeeRec row1;
-                //while ((row1 = parser.Read()) != null)
-                //{
-                //    Console.WriteLine(row1.ToStringEx());
-                //}
                 IDataReader dr = parser.AsDataReader();
-
                 while (dr.Read())
+                {
+                    Console.WriteLine("Id: {0}, Name: {1}", dr[0], dr[1]);
+                }
+            }
+        }
+
+        static void AsDataTableTest()
+        {
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVReader<EmployeeRec>(reader))
+            {
+                writer.WriteLine("1,Carl");
+                writer.WriteLine("2,Mark");
+                writer.WriteLine("3,Tom");
+
+                writer.Flush();
+                stream.Position = 0;
+
+                DataTable dt = parser.AsDataTable();
+                foreach (DataRow dr in dt.Rows)
                 {
                     Console.WriteLine("Id: {0}, Name: {1}", dr[0], dr[1]);
                 }
