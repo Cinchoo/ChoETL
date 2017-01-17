@@ -14,206 +14,43 @@ using System.Globalization;
 
 namespace ChoCSVReaderTest
 {
-    public class IntConverter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return value;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return value;
-        }
-    }
-
-    public class NameFormatter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return value;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return String.Format("{0}zzzz".FormatString(value));
-        }
-    }
-
-    public class Name1Formatter : IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return value;
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return String.Format("{0}@@@@".FormatString(value));
-        }
-    }
-
-    [ChoCSVFileHeader()]
-    [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.ReportAndContinue,
-    IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any, ThrowAndStopOnMissingField = false, 
-        ObjectValidationMode = ChoObjectValidationMode.MemberLevel)]
-    public class EmployeeRecMeta : IChoNotifyRecordRead //, IChoValidatable
-    {
-        [ChoCSVRecordField(1, FieldName = "id", ErrorMode = ChoErrorMode.ReportAndContinue )]
-        [ChoTypeConverter(typeof(IntConverter))]
-        [Range(1, 1, ErrorMessage = "Id must be > 0.")]
-        //[ChoFallbackValue(1)]
-        public int Id { get; set; }
-        [ChoCSVRecordField(2, FieldName = "Name")]
-        [StringLength(1)]
-        [DefaultValue("ZZZ")]
-        [ChoFallbackValue("XXX")]
-        [ChoTypeConverter(typeof(NameFormatter))]
-        [ChoTypeConverter(typeof(Name1Formatter))]
-        public string Name { get; set; }
-
-        public bool AfterRecordFieldLoad(object target, int index, string propName, object value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool AfterRecordLoad(object target, int index, object source)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool BeforeRecordFieldLoad(object target, int index, string propName, ref object value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool BeforeRecordLoad(object target, int index, ref object source)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool BeginLoad(object source)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void EndLoad(object source)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool RecordFieldLoadError(object target, int index, string propName, object value, Exception ex)
-        {
-            return true;
-        }
-
-        public bool RecordLoadError(object target, int index, object source, Exception ex)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool TryValidate(object target, ICollection<ValidationResult> validationResults)
-        {
-            return true;
-        }
-
-        public bool TryValidateFor(object target, string memberName, ICollection<ValidationResult> validationResults)
-        {
-            return true;
-        }
-
-        public void Validate(object target)
-        {
-        }
-
-        public void ValidateFor(object target, string memberName)
-        {
-        }
-    }
-
-    //[MetadataType(typeof(EmployeeRecMeta))]
-    [ChoCSVFileHeader()]
-    [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.IgnoreAndContinue,
-    IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any, ThrowAndStopOnMissingField = false)]
-    public partial class EmployeeRec : IChoNotifyRecordRead, IChoValidatable
-    {
-        //[ChoCSVRecordField(1, FieldName = "id")]
-        //[ChoTypeConverter(typeof(IntConverter))]
-        //[Range(1, int.MaxValue, ErrorMessage = "Id must be > 0.")]
-        //[ChoFallbackValue(1)]
-        public int Id { get; set; }
-
-        //[ChoCSVRecordField(2, FieldName = "Name")]
-        //[Required]
-        //[DefaultValue("ZZZ")]
-        //[ChoFallbackValue("XXX")]
-        public string Name { get; set; }
-
-        //[ChoCSVRecordField(3, FieldName = "Address")]
-        //public string Address { get; set; }
-
-        public bool AfterRecordFieldLoad(object target, int index, string propName, object value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool AfterRecordLoad(object target, int index, object source)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool BeforeRecordFieldLoad(object target, int index, string propName, ref object value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool BeforeRecordLoad(object target, int index, ref object source)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool BeginLoad(object source)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void EndLoad(object source)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool RecordFieldLoadError(object target, int index, string propName, object value, Exception ex)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool RecordLoadError(object target, int index, object source, Exception ex)
-        {
-            throw new NotImplementedException();
-        }
-
-        public bool TryValidate(object target, ICollection<ValidationResult> validationResults)
-        {
-            return true;
-        }
-
-        public bool TryValidateFor(object target, string memberName, ICollection<ValidationResult> validationResults)
-        {
-            return true;
-        }
-
-        public void Validate(object target)
-        {
-        }
-
-        public void ValidateFor(object target, string memberName)
-        {
-        }
-    }
-
     class Program
     {
         static void Main(string[] args)
+        {
+            AsDataReaderTest();
+        }
+
+        static void AsDataReaderTest()
+        {
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVReader<EmployeeRec>(reader))
+            {
+                writer.WriteLine("1,Carl");
+                writer.WriteLine("2,Mark");
+                writer.WriteLine("3,11");
+
+                writer.Flush();
+                stream.Position = 0;
+
+                //EmployeeRec row1;
+                //while ((row1 = parser.Read()) != null)
+                //{
+                //    Console.WriteLine(row1.ToStringEx());
+                //}
+                IDataReader dr = parser.AsDataReader();
+
+                while (dr.Read())
+                {
+                    Console.WriteLine("Id: {0}, Name: {1}", dr[0], dr[1]);
+                }
+            }
+        }
+
+
+        private static void OldTest()
         {
             //var t = ChoTypeDescriptor.GetPropetyAttributes<ChoTypeConverterAttribute>(ChoTypeDescriptor.GetProperty<ChoTypeConverterAttribute>(typeof(EmployeeRecMeta), "Name")).ToArray();
             //return;
@@ -333,4 +170,201 @@ namespace ChoCSVReaderTest
             }
         }
     }
+    public class IntConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value;
+        }
+    }
+
+    public class NameFormatter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return String.Format("{0}zzzz".FormatString(value));
+        }
+    }
+
+    public class Name1Formatter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return String.Format("{0}@@@@".FormatString(value));
+        }
+    }
+
+    [ChoCSVFileHeader()]
+    [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.ReportAndContinue,
+    IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any, ThrowAndStopOnMissingField = false,
+        ObjectValidationMode = ChoObjectValidationMode.MemberLevel)]
+    public class EmployeeRecMeta : IChoNotifyRecordRead //, IChoValidatable
+    {
+        [ChoCSVRecordField(1, FieldName = "id", ErrorMode = ChoErrorMode.ReportAndContinue)]
+        [ChoTypeConverter(typeof(IntConverter))]
+        [Range(1, 1, ErrorMessage = "Id must be > 0.")]
+        //[ChoFallbackValue(1)]
+        public int Id { get; set; }
+        [ChoCSVRecordField(2, FieldName = "Name")]
+        [StringLength(1)]
+        [DefaultValue("ZZZ")]
+        [ChoFallbackValue("XXX")]
+        [ChoTypeConverter(typeof(NameFormatter))]
+        [ChoTypeConverter(typeof(Name1Formatter))]
+        public string Name { get; set; }
+
+        public bool AfterRecordFieldLoad(object target, int index, string propName, object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool AfterRecordLoad(object target, int index, object source)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool BeforeRecordFieldLoad(object target, int index, string propName, ref object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool BeforeRecordLoad(object target, int index, ref object source)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool BeginLoad(object source)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void EndLoad(object source)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool RecordFieldLoadError(object target, int index, string propName, object value, Exception ex)
+        {
+            return true;
+        }
+
+        public bool RecordLoadError(object target, int index, object source, Exception ex)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool TryValidate(object target, ICollection<ValidationResult> validationResults)
+        {
+            return true;
+        }
+
+        public bool TryValidateFor(object target, string memberName, ICollection<ValidationResult> validationResults)
+        {
+            return true;
+        }
+
+        public void Validate(object target)
+        {
+        }
+
+        public void ValidateFor(object target, string memberName)
+        {
+        }
+    }
+
+    //[MetadataType(typeof(EmployeeRecMeta))]
+    //[ChoCSVFileHeader()]
+    [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.IgnoreAndContinue,
+    IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any, ThrowAndStopOnMissingField = false)]
+    public partial class EmployeeRec //: IChoNotifyRecordRead, IChoValidatable
+    {
+        //[ChoCSVRecordField(1, FieldName = "id")]
+        //[ChoTypeConverter(typeof(IntConverter))]
+        //[Range(1, int.MaxValue, ErrorMessage = "Id must be > 0.")]
+        //[ChoFallbackValue(1)]
+        public int Id { get; set; }
+
+        //[ChoCSVRecordField(2, FieldName = "Name")]
+        //[Required]
+        //[DefaultValue("ZZZ")]
+        //[ChoFallbackValue("XXX")]
+        public string Name { get; set; }
+
+        //[ChoCSVRecordField(3, FieldName = "Address")]
+        //public string Address { get; set; }
+
+        public bool AfterRecordFieldLoad(object target, int index, string propName, object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool AfterRecordLoad(object target, int index, object source)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool BeforeRecordFieldLoad(object target, int index, string propName, ref object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool BeforeRecordLoad(object target, int index, ref object source)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool BeginLoad(object source)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void EndLoad(object source)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool RecordFieldLoadError(object target, int index, string propName, object value, Exception ex)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool RecordLoadError(object target, int index, object source, Exception ex)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool TryValidate(object target, ICollection<ValidationResult> validationResults)
+        {
+            return true;
+        }
+
+        public bool TryValidateFor(object target, string memberName, ICollection<ValidationResult> validationResults)
+        {
+            return true;
+        }
+
+        public void Validate(object target)
+        {
+        }
+
+        public void ValidateFor(object target, string memberName)
+        {
+        }
+    }
+
 }

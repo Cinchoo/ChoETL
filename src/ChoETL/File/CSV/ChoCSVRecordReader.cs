@@ -494,9 +494,16 @@ namespace ChoETL
                         select CleanHeaderValue(x)).ToArray();
             else
             {
-                int index = 0;
-                return (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)
-                        select "Column{0}".FormatString(++index)).ToArray();
+                if (RecordType == typeof(ExpandoObject))
+                {
+                    int index = 0;
+                    return (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)
+                            select "Column{0}".FormatString(++index)).ToArray();
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 

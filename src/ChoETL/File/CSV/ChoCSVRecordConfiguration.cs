@@ -94,14 +94,30 @@ namespace ChoETL
             {
                 RecordFieldConfigurations.Clear();
 
-                foreach (PropertyDescriptor pd in TypeDescriptor.GetProperties(recordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().Any()))
+                if (TypeDescriptor.GetProperties(recordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().Any()).Any())
                 {
-                    if (!pd.PropertyType.IsSimple())
-                        throw new ChoRecordConfigurationException("Property '{0}' is not a simple type.".FormatString(pd.Name));
+                    foreach (PropertyDescriptor pd in TypeDescriptor.GetProperties(recordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().Any()))
+                    {
+                        //if (!pd.PropertyType.IsSimple())
+                        //    throw new ChoRecordConfigurationException("Property '{0}' is not a simple type.".FormatString(pd.Name));
 
-                    var obj = new ChoCSVRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().First());
-                    obj.FieldType = pd.PropertyType;
-                    RecordFieldConfigurations.Add(obj);
+                        var obj = new ChoCSVRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().First());
+                        obj.FieldType = pd.PropertyType;
+                        RecordFieldConfigurations.Add(obj);
+                    }
+                }
+                else
+                {
+                    int position = 0;
+                    foreach (PropertyDescriptor pd in TypeDescriptor.GetProperties(recordType).AsTypedEnumerable<PropertyDescriptor>())
+                    {
+                        //if (!pd.PropertyType.IsSimple())
+                        //    throw new ChoRecordConfigurationException("Property '{0}' is not a simple type.".FormatString(pd.Name));
+
+                        var obj = new ChoCSVRecordFieldConfiguration(pd.Name, ++position);
+                        obj.FieldType = pd.PropertyType;
+                        RecordFieldConfigurations.Add(obj);
+                    }
                 }
             }
         }
@@ -139,11 +155,18 @@ namespace ChoETL
 
             string[] headers = state as string[];
             if (AutoDiscoverColumns
-                && RecordFieldConfigurations.Count == 0 && headers != null)
+                && RecordFieldConfigurations.Count == 0)
             {
-                int index = 0;
-                RecordFieldConfigurations = (from header in headers
-                                             select new ChoCSVRecordFieldConfiguration(header, ++index)).ToList();
+                if (headers != null)
+                {
+                    int index = 0;
+                    RecordFieldConfigurations = (from header in headers
+                                                 select new ChoCSVRecordFieldConfiguration(header, ++index)).ToList();
+                }
+                else
+                {
+                    MapRecordFields(RecordType);
+                }
             }
 
             if (RecordFieldConfigurations.Count > 0)
