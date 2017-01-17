@@ -69,9 +69,11 @@ namespace ChoETL
             var context = new ValidationContext(@this, null, null);
             foreach (var kvp in @this)
             {
-                if (!validationAttrDict.ContainsKey(kvp.Key))
+                if (!validationAttrDict.ContainsKey(kvp.Key)
+                    || validationAttrDict[kvp.Key].IsNullOrEmpty())
                     continue;
 
+                context.MemberName = kvp.Key;
                 Validator.TryValidateValue(kvp.Value, context, results, validationAttrDict[kvp.Key]);
             }
 

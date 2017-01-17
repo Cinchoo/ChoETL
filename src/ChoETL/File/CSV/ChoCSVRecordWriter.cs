@@ -98,29 +98,7 @@ namespace ChoETL
                             try
                             {
                                 if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
-                                {
-                                    bool hasConfigValidators = (from fc in Configuration.RecordFieldConfigurations
-                                                                where !fc.Validators.IsNullOrEmpty()
-                                                                select fc).Any();
-
-                                    if (hasConfigValidators)
-                                    {
-                                        Dictionary<string, ValidationAttribute[]> valDict = (from fc in Configuration.RecordFieldConfigurations
-                                                                                             select new KeyValuePair<string, ValidationAttribute[]>(fc.Name, fc.Validators)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-                                        IDictionary<string, Object> dict = null;
-                                        if (record is ExpandoObject)
-                                            dict = record as IDictionary<string, Object>;
-                                        else
-                                            dict = record.ToDictionary();
-
-                                        ChoValidator.Validate(dict, valDict);
-                                    }
-                                    else
-                                    {
-                                        if (!(record is ExpandoObject))
-                                            ChoValidator.Validate(record);
-                                    }
-                                }
+                                    record.DoObjectLevelValidatation(Configuration.RecordFieldConfigurations.Cast< ChoRecordFieldConfiguration>().ToArray());
 
                                 if (ToText(_index, record, out recText))
                                 {

@@ -17,7 +17,7 @@ namespace ChoCSVWriterTest
     {
         static void Main(string[] args)
         {
-            ToTextTest();
+            ConfigFirstApproachWriteDynamicRecordsToFile();
         }
 
         static void WriteDataTableTest()
@@ -157,11 +157,13 @@ namespace ChoCSVWriterTest
         {
             ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
             config.FileHeaderConfiguration.HasHeaderRecord = true;
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1));
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1) { Validators = new ValidationAttribute[] { new RangeAttribute(3, 100) } });
             config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
+            config.ObjectValidationMode = ChoObjectValidationMode.ObjectLevel;
 
             List<ExpandoObject> objs = new List<ExpandoObject>();
             dynamic rec1 = new ExpandoObject();
+            rec1.Id = 1;
             rec1.Name = "Mark";
             objs.Add(rec1);
 
