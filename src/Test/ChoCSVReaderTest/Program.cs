@@ -18,7 +18,92 @@ namespace ChoCSVReaderTest
     {
         static void Main(string[] args)
         {
-            QuickTest();
+            ValidationOverridePOCOTest();
+        }
+
+        static void ValidationOverridePOCOTest()
+        {
+            ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
+            var idConfig = new ChoCSVRecordFieldConfiguration("Id", 1);
+            idConfig.Validators = new ValidationAttribute[] { new RequiredAttribute() };
+            config.RecordFieldConfigurations.Add(idConfig);
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Salary", 3) { FieldType = typeof(ChoCurrency) });
+
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVReader<EmployeeRecWithCurrency>(reader, config))
+            {
+                writer.WriteLine(",Carl,$100000");
+                writer.WriteLine("2,Mark,$50000");
+                writer.WriteLine("3,Tom,1000");
+
+                writer.Flush();
+                stream.Position = 0;
+
+                object rec;
+                while ((rec = parser.Read()) != null)
+                {
+                    Console.WriteLine(rec.ToStringEx());
+                }
+            }
+        }
+
+        public class EmployeeRecWithCurrency
+        {
+            public int? Id { get; set; }
+            public string Name { get; set; }
+            public ChoCurrency Salary { get; set; }
+        }
+
+        static void CurrencyTest()
+        {
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVReader<EmployeeRecWithCurrency>(reader))
+            {
+                writer.WriteLine("1,Carl,$100000");
+                writer.WriteLine("2,Mark,$50000");
+                writer.WriteLine("3,Tom,1000");
+
+                writer.Flush();
+                stream.Position = 0;
+
+                object rec;
+                while ((rec = parser.Read()) != null)
+                {
+                    Console.WriteLine(rec.ToStringEx());
+                }
+            }
+        }
+
+        static void CurrencyDynamicTest()
+        {
+            ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1));
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Salary", 3) { FieldType = typeof(ChoCurrency) });
+
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVReader(reader, config))
+            {
+                writer.WriteLine("1,Carl,$100000");
+                writer.WriteLine("2,Mark,$50000");
+                writer.WriteLine("3,Tom,1000");
+
+                writer.Flush();
+                stream.Position = 0;
+
+                object rec;
+                while ((rec = parser.Read()) != null)
+                {
+                    Console.WriteLine(rec.ToStringEx());
+                }
+            }
         }
 
         static void QuickTest()

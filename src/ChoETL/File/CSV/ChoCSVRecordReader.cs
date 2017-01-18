@@ -259,6 +259,18 @@ namespace ChoETL
                     index++;
                 }
             }
+            else
+            {
+                foreach (var fn in Configuration.RecordFieldConfigurationsDict.Keys)
+                {
+                    if (index - 1 < fieldValues.Length)
+                        fnv.Add(fn, fieldValues[index - 1]);
+                    else
+                        fnv.Add(fn, String.Empty);
+
+                    index++;
+                }
+            }
             return fnv;
         }
 
