@@ -14,10 +14,20 @@ namespace ChoETL
             get;
             set;
         }
-        public CultureInfo Culture
+        private string _cultureName;
+        public string CultureName
+        {
+            get { return _cultureName; }
+            set
+            {
+                _cultureName = value;
+                Culture = _cultureName.IsNullOrEmpty() ? CultureInfo.CurrentCulture : new CultureInfo(_cultureName);
+            }
+        }
+        internal CultureInfo Culture
         {
             get;
-            set;
+            private set;
         }
         public bool IgnoreEmptyLine
         {

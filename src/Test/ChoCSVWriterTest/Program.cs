@@ -17,7 +17,7 @@ namespace ChoCSVWriterTest
     {
         static void Main(string[] args)
         {
-            ConfigFirstApproachWriteDynamicRecordsToFile();
+            CodeFirstWithDeclarativeApproachWriteRecords();
         }
 
         static void WriteDataTableTest()
@@ -103,12 +103,12 @@ namespace ChoCSVWriterTest
         static void CodeFirstWithDeclarativeApproachWriteRecords()
         {
             ChoTypeConverterFormatSpec.Instance.Value.DateTimeFormat = "G";
-            ChoTypeConverterFormatSpec.Instance.Value.BooleanFormat = ChoBooleanFormatSpec.YesOrNo;
+            //ChoTypeConverterFormatSpec.Instance.Value.BooleanFormat = ChoBooleanFormatSpec.YesOrNo;
             //ChoTypeConverterFormatSpec.Instance.Value.EnumFormat = ChoEnumFormatSpec.Name;
 
             List<EmployeeRec> objs = new List<EmployeeRec>();
             EmployeeRec rec1 = new EmployeeRec();
-            //rec1.Id = 10;
+            rec1.Id = 10;
             rec1.Name = "Mark";
             objs.Add(rec1);
 
@@ -327,7 +327,7 @@ namespace ChoCSVWriterTest
     }
 
     [ChoCSVFileHeader]
-    [ChoCSVRecordObject(HasExcelSeparator = true)]
+    [ChoCSVRecordObject(HasExcelSeparator = true, CultureName = "se-SE" )]
     public class EmployeeRec
     {
         public Shape Shape { get; set; }

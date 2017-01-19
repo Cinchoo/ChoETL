@@ -18,7 +18,35 @@ namespace ChoCSVReaderTest
     {
         static void Main(string[] args)
         {
-            ValidationOverridePOCOTest();
+            UsingFormatSpecs();
+        }
+
+        static void UsingFormatSpecs()
+        {
+            ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
+            config.Culture = new System.Globalization.CultureInfo("se-SE");
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1) { FieldType = typeof(int) });
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Salary", 3) { FieldType = typeof(ChoCurrency) });
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("JoinedDate", 4) { FieldType = typeof(DateTime) });
+
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVReader(reader, config))
+            {
+                writer.WriteLine(@"1,Carl,12.345679 kr,2017-10-10");
+                writer.WriteLine("2,Markl,50000 kr,2001-10-01");
+                writer.WriteLine("3,Toml,150000 kr,1996-01-25");
+
+                writer.Flush();
+                stream.Position = 0;
+
+                object row = null;
+
+                while ((row = parser.Read()) != null)
+                    Console.WriteLine(row.ToStringEx());
+            }
         }
 
         static void ValidationOverridePOCOTest()
