@@ -17,13 +17,13 @@ namespace ChoETL
             if (value is string)
             {
                 string text = value as string;
-                if (!text.IsNullOrWhiteSpace())
-                {
-                    NumberStyles format = parameter.GetValueAt<NumberStyles>(0, ChoTypeConverterFormatSpec.Instance.Value.LongNumberStyle);
-                    return long.Parse(text, format, culture);
-                }
+                if (text.IsNullOrWhiteSpace())
+                    text = "0";
+
+                NumberStyles? format = parameter.GetValueAt<NumberStyles?>(0, ChoTypeConverterFormatSpec.Instance.Value.LongNumberStyle);
+                return format == null ? long.Parse(text, culture) : long.Parse(text, format.Value, culture);
             }
-            
+
             return value;
         }
 
@@ -31,8 +31,9 @@ namespace ChoETL
         {
             if (value is long)
             {
+                long convValue = (long)value;
                 string format = parameter.GetValueAt<string>(0, ChoTypeConverterFormatSpec.Instance.Value.LongFormat);
-                return !format.IsNullOrWhiteSpace() ? ((long)value).ToString(format, culture) : value;
+                return !format.IsNullOrWhiteSpace() ? convValue.ToString(format, culture) : convValue.ToString(culture);
             }
             else
                 return value;

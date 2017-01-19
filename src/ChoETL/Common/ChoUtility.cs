@@ -435,8 +435,14 @@ namespace ChoETL
 
         public static T GetValueAt<T>(this object array, int index, T defaultValue = default(T))
         {
+            Type type = typeof(T).GetUnderlyingType();
             if (array is IList && index < ((IList)array).Count)
-                return (T)Convert.ChangeType(((IList)array)[index], typeof(T));
+            {
+                if (type.IsEnum)
+                    return (T)Enum.Parse(type, ((IList)array)[index].ToNString());
+
+                return (T)Convert.ChangeType(((IList)array)[index], type);
+            }
             else
                 return defaultValue;
         }

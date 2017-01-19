@@ -15,15 +15,12 @@ namespace ChoETL
         {
             if (value is string)
             {
-                if (culture == null)
-                    culture = System.Threading.Thread.CurrentThread.CurrentCulture;
-
                 string text = value as string;
                 if (text.IsNullOrWhiteSpace())
                     text = "0";
 
-                NumberStyles ns = parameter.GetValueAt<NumberStyles>(0, ChoTypeConverterFormatSpec.Instance.Value.CurrencyNumberStyle);
-                return Double.Parse(text, ns, culture);
+                NumberStyles? format = parameter.GetValueAt<NumberStyles?>(0, ChoTypeConverterFormatSpec.Instance.Value.CurrencyNumberStyle);
+                return format == null ? Double.Parse(text, culture) : Double.Parse(text, format.Value, culture);
             }
 
             return value;
@@ -33,14 +30,12 @@ namespace ChoETL
         {
             if (value is double)
             {
-                if (culture == null)
-                    culture = System.Threading.Thread.CurrentThread.CurrentCulture;
-
+                double convValue = (double)value;
                 string format = parameter.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.Value.CurrencyFormat);
                 if (format.IsNullOrWhiteSpace())
                     format = "C";
 
-                return String.Format(culture, "{0:" + format + "}", value);
+                return convValue.ToString(format, culture); // String.Format(culture, "{0:" + format + "}", value);
             }
 
             return value;

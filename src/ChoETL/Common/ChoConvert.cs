@@ -65,6 +65,7 @@ namespace ChoETL
         public static object ConvertFrom(object value, Type targetType, object sourceObject = null, object[] converters = null, object[] parameters = null, CultureInfo culture = null)
         {
             Type origType = targetType;
+            targetType = targetType.IsNullableType() ? targetType.GetUnderlyingType() : targetType;
             object obj1 = value;
             if (targetType == (Type)null)
                 return value;
@@ -100,8 +101,7 @@ namespace ChoETL
                 }
 
                 if (value == null)
-                    return targetType.Default();
-                targetType = targetType.IsNullableType() ? targetType.GetUnderlyingType() : targetType;
+                    return origType.Default();
                 if (targetType.IsAssignableFrom(value.GetType()) || targetType == value.GetType())
                     return value;
                 if (value is IConvertible)
@@ -231,6 +231,7 @@ namespace ChoETL
         public static object ConvertTo(object value, Type targetType, object sourceObject, object[] converters, object[] parameters, CultureInfo culture)
         {
             Type origType = targetType;
+            targetType = targetType.IsNullableType() ? targetType.GetUnderlyingType() : targetType;
             object obj1 = value;
             if (targetType == (Type)null)
                 return value;
@@ -238,7 +239,7 @@ namespace ChoETL
                 return value;
             if (culture == null)
                 culture = ChoConvert.DefaultCulture;
-            Type type = value == null ? typeof(object) : value.GetType();
+            Type type = value == null ? typeof(object) : value.GetType().GetUnderlyingType();
 
             try
             {
@@ -266,10 +267,9 @@ namespace ChoETL
                         return value;
                 }
                 if (value == null)
-                    return targetType.Default();
+                    return origType.Default();
                 if (type == origType)
                     return value;
-                targetType = targetType.IsNullableType() ? targetType.GetUnderlyingType() : targetType;
                 if (targetType.IsAssignableFrom(value.GetType()) || targetType == value.GetType())
                     return value;
                 if (value is IConvertible)

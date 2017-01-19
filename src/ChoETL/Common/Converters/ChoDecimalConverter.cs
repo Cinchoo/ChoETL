@@ -17,11 +17,11 @@ namespace ChoETL
             if (value is string)
             {
                 string text = value as string;
-                if (!text.IsNullOrWhiteSpace())
-                {
-                    NumberStyles format = parameter.GetValueAt<NumberStyles>(0, ChoTypeConverterFormatSpec.Instance.Value.DecimalNumberStyle);
-                    return Decimal.Parse(text, format, culture);
-                }
+                if (text.IsNullOrWhiteSpace())
+                    text = "0";
+
+                NumberStyles? format = parameter.GetValueAt<NumberStyles?>(0, ChoTypeConverterFormatSpec.Instance.Value.DecimalNumberStyle);
+                return format == null ? Decimal.Parse(text, culture) : Decimal.Parse(text, format.Value, culture);
             }
             
             return value;
@@ -31,8 +31,9 @@ namespace ChoETL
         {
             if (value is Decimal)
             {
+                Decimal convValue = (Decimal)value;
                 string format = parameter.GetValueAt<string>(0, ChoTypeConverterFormatSpec.Instance.Value.DecimalFormat);
-                return !format.IsNullOrWhiteSpace() ? ((Decimal)value).ToString(format, culture) : value;
+                return !format.IsNullOrWhiteSpace() ? convValue.ToString(format, culture) : convValue.ToString(culture);
             }
             else
                 return value;

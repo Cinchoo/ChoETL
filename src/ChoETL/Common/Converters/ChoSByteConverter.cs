@@ -9,7 +9,7 @@ using System.Windows.Data;
 
 namespace ChoETL
 {
-    [ChoTypeConverter(typeof(SByte))]
+    [ChoTypeConverter(typeof(sbyte))]
     public class ChoSByteConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
@@ -17,22 +17,23 @@ namespace ChoETL
             if (value is string)
             {
                 string text = value as string;
-                if (!text.IsNullOrWhiteSpace())
-                {
-                    NumberStyles format = parameter.GetValueAt<NumberStyles>(0, ChoTypeConverterFormatSpec.Instance.Value.SByteNumberStyle);
-                    return SByte.Parse(text, format, culture);
-                }
+                if (text.IsNullOrWhiteSpace())
+                    text = "0";
+
+                NumberStyles? format = parameter.GetValueAt<NumberStyles?>(0, ChoTypeConverterFormatSpec.Instance.Value.SByteNumberStyle);
+                return format == null ? sbyte.Parse(text, culture) : sbyte.Parse(text, format.Value, culture);
             }
-            
+
             return value;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            if (value is SByte)
+            if (value is sbyte)
             {
+                sbyte convValue = (sbyte)value;
                 string format = parameter.GetValueAt<string>(0, ChoTypeConverterFormatSpec.Instance.Value.SByteFormat);
-                return !format.IsNullOrWhiteSpace() ? ((SByte)value).ToString(format, culture) : value;
+                return !format.IsNullOrWhiteSpace() ? convValue.ToString(format, culture) : convValue.ToString(culture);
             }
             else
                 return value;
