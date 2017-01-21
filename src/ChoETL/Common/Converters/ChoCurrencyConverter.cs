@@ -19,7 +19,7 @@ namespace ChoETL
                 if (text.IsNullOrWhiteSpace())
                     text = "0";
 
-                NumberStyles? format = parameter.GetValueAt<NumberStyles?>(0, ChoTypeConverterFormatSpec.Instance.Value.CurrencyNumberStyle);
+                NumberStyles? format = parameter.GetValueAt<NumberStyles?>(0, ChoTypeConverterFormatSpec.Instance.CurrencyNumberStyle);
                 return format == null ? Double.Parse(text, culture) : Double.Parse(text, format.Value, culture);
             }
 
@@ -31,7 +31,7 @@ namespace ChoETL
             if (value is double)
             {
                 double convValue = (double)value;
-                string format = parameter.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.Value.CurrencyFormat);
+                string format = parameter.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.CurrencyFormat);
                 if (format.IsNullOrWhiteSpace())
                     format = "C";
 

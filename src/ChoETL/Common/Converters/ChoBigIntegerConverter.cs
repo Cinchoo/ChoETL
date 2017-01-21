@@ -20,7 +20,7 @@ namespace ChoETL
                 if (text.IsNullOrWhiteSpace())
                     text = "0";
 
-                NumberStyles? format = parameter.GetValueAt<NumberStyles?>(0, ChoTypeConverterFormatSpec.Instance.Value.BigIntegerNumberStyle);
+                NumberStyles? format = parameter.GetValueAt<NumberStyles?>(0, ChoTypeConverterFormatSpec.Instance.BigIntegerNumberStyle);
                 return format == null ? BigInteger.Parse(text, culture) : BigInteger.Parse(text, format.Value, culture);
             }
             
@@ -32,7 +32,7 @@ namespace ChoETL
             if (value is BigInteger)
             {
                 BigInteger convValue = (BigInteger)value;
-                string format = parameter.GetValueAt<string>(0, ChoTypeConverterFormatSpec.Instance.Value.BigIntegerFormat);
+                string format = parameter.GetValueAt<string>(0, ChoTypeConverterFormatSpec.Instance.BigIntegerFormat);
                 return !format.IsNullOrWhiteSpace() ? convValue.ToString(format, culture) : convValue.ToString(culture);
             }
             else

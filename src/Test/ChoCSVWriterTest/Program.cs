@@ -22,9 +22,9 @@ namespace ChoCSVWriterTest
 
         static void WriteDataTableTest()
         {
-            ChoTypeConverterFormatSpec.Instance.Value.DateTimeFormat = "G";
-            ChoTypeConverterFormatSpec.Instance.Value.BooleanFormat = ChoBooleanFormatSpec.YesOrNo;
-            //ChoTypeConverterFormatSpec.Instance.Value.EnumFormat = ChoEnumFormatSpec.Name;
+            ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "G";
+            ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.YesOrNo;
+            //ChoTypeConverterFormatSpec.Instance.EnumFormat = ChoEnumFormatSpec.Name;
             string connString = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
 
             ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
@@ -53,9 +53,9 @@ namespace ChoCSVWriterTest
 
         static void WriteDataReaderTest()
         {
-            ChoTypeConverterFormatSpec.Instance.Value.DateTimeFormat = "G";
-            ChoTypeConverterFormatSpec.Instance.Value.BooleanFormat = ChoBooleanFormatSpec.YesOrNo;
-            //ChoTypeConverterFormatSpec.Instance.Value.EnumFormat = ChoEnumFormatSpec.Name;
+            ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "G";
+            ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.YesOrNo;
+            //ChoTypeConverterFormatSpec.Instance.EnumFormat = ChoEnumFormatSpec.Name;
             string connString = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
 
             ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
@@ -82,9 +82,9 @@ namespace ChoCSVWriterTest
 
         static void ToTextTest()
         {
-            ChoTypeConverterFormatSpec.Instance.Value.DateTimeFormat = "G";
-            ChoTypeConverterFormatSpec.Instance.Value.BooleanFormat = ChoBooleanFormatSpec.YesOrNo;
-            //ChoTypeConverterFormatSpec.Instance.Value.EnumFormat = ChoEnumFormatSpec.Name;
+            ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "G";
+            ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.YesOrNo;
+            //ChoTypeConverterFormatSpec.Instance.EnumFormat = ChoEnumFormatSpec.Name;
 
             List<EmployeeRec> objs = new List<EmployeeRec>();
             EmployeeRec rec1 = new EmployeeRec();
@@ -102,9 +102,9 @@ namespace ChoCSVWriterTest
 
         static void CodeFirstWithDeclarativeApproachWriteRecords()
         {
-            ChoTypeConverterFormatSpec.Instance.Value.DateTimeFormat = "G";
-            //ChoTypeConverterFormatSpec.Instance.Value.BooleanFormat = ChoBooleanFormatSpec.YesOrNo;
-            //ChoTypeConverterFormatSpec.Instance.Value.EnumFormat = ChoEnumFormatSpec.Name;
+            ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "G";
+            //ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.YesOrNo;
+            //ChoTypeConverterFormatSpec.Instance.EnumFormat = ChoEnumFormatSpec.Name;
 
             List<EmployeeRec> objs = new List<EmployeeRec>();
             EmployeeRec rec1 = new EmployeeRec();

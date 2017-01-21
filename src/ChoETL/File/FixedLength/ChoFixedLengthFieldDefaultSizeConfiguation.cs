@@ -3,13 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ChoETL
 {
     public class ChoFixedLengthFieldDefaultSizeConfiguation
     {
-        public static readonly ChoFixedLengthFieldDefaultSizeConfiguation Global = new ChoFixedLengthFieldDefaultSizeConfiguation();
+        private static readonly ThreadLocal<ChoFixedLengthFieldDefaultSizeConfiguation> _instance = new ThreadLocal<ChoFixedLengthFieldDefaultSizeConfiguation>(() => new ChoFixedLengthFieldDefaultSizeConfiguation());
+        public static ChoFixedLengthFieldDefaultSizeConfiguation Instance
+        {
+            get { return _instance.Value; }
+        }
 
         private Dictionary<Type, int> _dataTypeSize = new Dictionary<Type, int>();
 

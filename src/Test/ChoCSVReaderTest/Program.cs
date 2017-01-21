@@ -18,9 +18,103 @@ namespace ChoCSVReaderTest
     {
         static void Main(string[] args)
         {
-            EnumTest();
+            QuickTest();
         }
 
+        static void DateTimeTest()
+        {
+            ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "MMM dd, yyyy";
+
+            ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1) { FieldType = typeof(int) });
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Salary", 3) { FieldType = typeof(ChoCurrency) });
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("JoinedDate", 4) { FieldType = typeof(DateTime) });
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Active", 5) { FieldType = typeof(bool) });
+
+            ChoTypeConverterFormatSpec.Instance.IntNumberStyle = NumberStyles.AllowParentheses;
+
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVReader(reader, config))
+            {
+                writer.WriteLine(@"1,Carl,12345679,""Jan 01, 2011"",0");
+                writer.WriteLine(@"2,Mark,50000,""Sep 23, 1995"",1");
+                writer.WriteLine(@"3,Tom,150000,""Apr 10, 1999"",1");
+
+                writer.Flush();
+                stream.Position = 0;
+
+                object row = null;
+
+                while ((row = parser.Read()) != null)
+                    Console.WriteLine(row.ToStringEx());
+            }
+        }
+
+        static void UsingLinqTest()
+        {
+            ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
+            config.Culture = new System.Globalization.CultureInfo("se-SE");
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1) { FieldType = typeof(int) });
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Salary", 3) { FieldType = typeof(ChoCurrency) });
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("JoinedDate", 4) { FieldType = typeof(DateTime) });
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("EmployeeNo", 5) { FieldType = typeof(int) });
+
+            ChoTypeConverterFormatSpec.Instance.IntNumberStyle = NumberStyles.AllowParentheses;
+
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVReader(reader, config))
+            {
+                writer.WriteLine(@"1,Carl,12.345679 kr,2017-10-10,  (5)    ");
+                writer.WriteLine("2,Markl,50000 kr,2001-10-01,  6    ");
+                writer.WriteLine("3,Toml,150000 kr,1996-01-25,  9    ");
+
+                writer.Flush();
+                stream.Position = 0;
+
+                object row = null;
+
+                while ((row = parser.Read()) != null)
+                    Console.WriteLine(row.ToStringEx());
+            }
+        }
+
+        static void BoolTest()
+        {
+            ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.ZeroOrOne;
+
+            ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1) { FieldType = typeof(int) });
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Salary", 3) { FieldType = typeof(ChoCurrency) });
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("JoinedDate", 4) { FieldType = typeof(DateTime) });
+            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Active", 5) { FieldType = typeof(bool) });
+
+            ChoTypeConverterFormatSpec.Instance.IntNumberStyle = NumberStyles.AllowParentheses;
+
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVReader(reader, config))
+            {
+                writer.WriteLine(@"1,Carl,12345679,01/10/2016,0");
+                writer.WriteLine("2,Mark,50000,10/01/1995,1");
+                writer.WriteLine("3,Tom,150000,01/01/1940,1");
+
+                writer.Flush();
+                stream.Position = 0;
+
+                object row = null;
+
+                while ((row = parser.Read()) != null)
+                    Console.WriteLine(row.ToStringEx());
+            }
+        }
 
         public enum EmployeeType
         {
@@ -33,7 +127,7 @@ namespace ChoCSVReaderTest
         }
         static void EnumTest()
         {
-            ChoTypeConverterFormatSpec.Instance.Value.EnumFormat = ChoEnumFormatSpec.Description;
+            ChoTypeConverterFormatSpec.Instance.EnumFormat = ChoEnumFormatSpec.Description;
 
             ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
             config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1) { FieldType = typeof(int) });
@@ -42,7 +136,7 @@ namespace ChoCSVReaderTest
             config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("JoinedDate", 4) { FieldType = typeof(DateTime) });
             config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("EmployeeType", 5) { FieldType = typeof(EmployeeType) });
 
-            ChoTypeConverterFormatSpec.Instance.Value.IntNumberStyle = NumberStyles.AllowParentheses;
+            ChoTypeConverterFormatSpec.Instance.IntNumberStyle = NumberStyles.AllowParentheses;
 
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
@@ -73,7 +167,7 @@ namespace ChoCSVReaderTest
             config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("JoinedDate", 4) { FieldType = typeof(DateTime) });
             config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("EmployeeNo", 5) { FieldType = typeof(int) });
 
-            ChoTypeConverterFormatSpec.Instance.Value.IntNumberStyle = NumberStyles.AllowParentheses;
+            ChoTypeConverterFormatSpec.Instance.IntNumberStyle = NumberStyles.AllowParentheses;
 
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
@@ -179,12 +273,34 @@ namespace ChoCSVReaderTest
             }
         }
 
-        static void QuickTest()
+        static void QuickDynamicTest()
         {
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
             using (var parser = new ChoCSVReader(reader))
+            {
+                writer.WriteLine("1,Carl");
+                writer.WriteLine("2,Mark");
+                writer.WriteLine("3,Tom");
+
+                writer.Flush();
+                stream.Position = 0;
+
+                object rec;
+                while ((rec = parser.Read()) != null)
+                {
+                    Console.WriteLine(rec.ToStringEx());
+                }
+            }
+        }
+
+        static void QuickTest()
+        {
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVReader<EmployeeRec>(reader))
             {
                 writer.WriteLine("1,Carl");
                 writer.WriteLine("2,Mark");

@@ -20,7 +20,7 @@ namespace ChoETL
                 if (text.IsNullOrWhiteSpace())
                     text = "0";
 
-                NumberStyles? format = parameter.GetValueAt<NumberStyles?>(0, ChoTypeConverterFormatSpec.Instance.Value.ByteNumberStyle);
+                NumberStyles? format = parameter.GetValueAt<NumberStyles?>(0, ChoTypeConverterFormatSpec.Instance.ByteNumberStyle);
                 return format == null ? byte.Parse(text, culture) : byte.Parse(text, format.Value, culture);
             }
 
@@ -32,7 +32,7 @@ namespace ChoETL
             if (value is byte)
             {
                 byte convValue = (byte)value;
-                string format = parameter.GetValueAt<string>(0, ChoTypeConverterFormatSpec.Instance.Value.ByteFormat);
+                string format = parameter.GetValueAt<string>(0, ChoTypeConverterFormatSpec.Instance.ByteFormat);
                 return !format.IsNullOrWhiteSpace() ? convValue.ToString(format, culture) : convValue.ToString(culture);
             }
             else

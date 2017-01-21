@@ -20,7 +20,7 @@ namespace ChoETL
                 if (text.IsNullOrWhiteSpace())
                     text = "0";
 
-                NumberStyles? format = parameter.GetValueAt<NumberStyles?>(0, ChoTypeConverterFormatSpec.Instance.Value.FloatNumberStyle);
+                NumberStyles? format = parameter.GetValueAt<NumberStyles?>(0, ChoTypeConverterFormatSpec.Instance.FloatNumberStyle);
                 return format == null ? float.Parse(text, culture) : float.Parse(text, format.Value, culture);
             }
 
@@ -32,7 +32,7 @@ namespace ChoETL
             if (value is float)
             {
                 float convValue = (float)value;
-                string format = parameter.GetValueAt<string>(0, ChoTypeConverterFormatSpec.Instance.Value.FloatFormat);
+                string format = parameter.GetValueAt<string>(0, ChoTypeConverterFormatSpec.Instance.FloatFormat);
                 return !format.IsNullOrWhiteSpace() ? convValue.ToString(format, culture) : convValue.ToString(culture);
             }
             else

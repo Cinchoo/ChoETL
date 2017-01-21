@@ -126,7 +126,7 @@ namespace ChoETL
                         //    throw new ChoRecordConfigurationException("Property '{0}' is not a simple type.".FormatString(pd.Name));
 
                         if (FixedLengthFieldDefaultSizeConfiguation == null)
-                            size = ChoFixedLengthFieldDefaultSizeConfiguation.Global.GetSize(pd.PropertyType);
+                            size = ChoFixedLengthFieldDefaultSizeConfiguation.Instance.GetSize(pd.PropertyType);
                         else
                             size = FixedLengthFieldDefaultSizeConfiguation.GetSize(pd.PropertyType);
 

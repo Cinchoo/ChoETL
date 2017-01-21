@@ -16,8 +16,8 @@ namespace ChoFixedLengthReaderTest
         static void Main(string[] args)
         {
             //Override the width of necessary simple types
-            ChoFixedLengthFieldDefaultSizeConfiguation.Global.SetSize(typeof(int), 3);
-            ChoFixedLengthFieldDefaultSizeConfiguation.Global.SetSize(typeof(string), 5);
+            ChoFixedLengthFieldDefaultSizeConfiguation.Instance.SetSize(typeof(int), 3);
+            ChoFixedLengthFieldDefaultSizeConfiguation.Instance.SetSize(typeof(string), 5);
 
             DefaultValueUsedViaCodeFirstApproach();
         }

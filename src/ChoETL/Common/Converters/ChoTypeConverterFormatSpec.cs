@@ -13,7 +13,11 @@ namespace ChoETL
 
     public class ChoTypeConverterFormatSpec
     {
-        public static readonly ThreadLocal<ChoTypeConverterFormatSpec> Instance = new ThreadLocal<ChoTypeConverterFormatSpec>(() => new ChoTypeConverterFormatSpec());
+        private static readonly ThreadLocal<ChoTypeConverterFormatSpec> _instance = new ThreadLocal<ChoTypeConverterFormatSpec>(() => new ChoTypeConverterFormatSpec());
+        public static ChoTypeConverterFormatSpec Instance
+        {
+            get { return _instance.Value; }
+        }
 
         public string DateTimeFormat { get; set; }
         public ChoBooleanFormatSpec BooleanFormat { get; set; }

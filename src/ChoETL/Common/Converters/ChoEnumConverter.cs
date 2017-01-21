@@ -20,7 +20,7 @@ namespace ChoETL
                 if (txt.IsNull())
                     return Activator.CreateInstance(targetType);
 
-                ChoEnumFormatSpec EnumFormat = parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.Value.EnumFormat);
+                ChoEnumFormatSpec EnumFormat = parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.EnumFormat);
                 switch (EnumFormat)
                 {
                     case ChoEnumFormatSpec.Name:
@@ -39,7 +39,7 @@ namespace ChoETL
         {
             if ((value != null && value.GetType().IsEnum) && targetType == typeof(string))
             {
-                ChoEnumFormatSpec EnumFormat = parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.Value.EnumFormat);
+                ChoEnumFormatSpec EnumFormat = parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.EnumFormat);
                 switch (EnumFormat)
                 {
                     case ChoEnumFormatSpec.Name:

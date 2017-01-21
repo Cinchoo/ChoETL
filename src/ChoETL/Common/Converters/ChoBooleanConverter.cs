@@ -20,7 +20,7 @@ namespace ChoETL
                 if (txt.IsNull())
                     return false;
 
-                ChoBooleanFormatSpec booleanFormat = parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.Value.BooleanFormat);
+                ChoBooleanFormatSpec booleanFormat = parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.BooleanFormat);
                 switch (booleanFormat)
                 {
                     case ChoBooleanFormatSpec.YOrN:
@@ -54,7 +54,7 @@ namespace ChoETL
                 {
                     bool boolValue = (bool)value;
 
-                    ChoBooleanFormatSpec booleanFormat = parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.Value.BooleanFormat);
+                    ChoBooleanFormatSpec booleanFormat = parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.BooleanFormat);
                     switch (booleanFormat)
                     {
                         case ChoBooleanFormatSpec.YOrN:
