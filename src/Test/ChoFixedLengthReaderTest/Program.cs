@@ -16,10 +16,10 @@ namespace ChoFixedLengthReaderTest
         static void Main(string[] args)
         {
             //Override the width of necessary simple types
-            ChoFixedLengthFieldDefaultSizeConfiguation.Instance.SetSize(typeof(int), 3);
-            ChoFixedLengthFieldDefaultSizeConfiguation.Instance.SetSize(typeof(string), 5);
+            //ChoFixedLengthFieldDefaultSizeConfiguation.Instance.SetSize(typeof(int), 3);
+            //ChoFixedLengthFieldDefaultSizeConfiguation.Instance.SetSize(typeof(string), 5);
 
-            DefaultValueUsedViaCodeFirstApproach();
+            CodeFirstWithDeclarativeApproach();
         }
 
         static void CodeFirstWithDeclarativeApproach()
@@ -230,7 +230,7 @@ namespace ChoFixedLengthReaderTest
         public char Status { get; set; }
     }
 
-    [ChoFixedLengthRecordObject(50, ErrorMode = ChoErrorMode.ReportAndContinue)]
+    [ChoFixedLengthRecordObject(ErrorMode = ChoErrorMode.ReportAndContinue)]
     public partial class EmployeeRecSimpleFallback
     {
         public int Id { get; set; }
@@ -244,7 +244,7 @@ namespace ChoFixedLengthReaderTest
         public char Status { get; set; }
     }
 
-    [ChoFixedLengthRecordObject(30)]
+    //[ChoFixedLengthRecordObject()]
     public partial class EmployeeRec
     {
         [ChoFixedLengthRecordField(0, 3)]

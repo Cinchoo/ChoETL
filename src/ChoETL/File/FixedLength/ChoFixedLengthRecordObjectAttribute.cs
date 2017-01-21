@@ -15,7 +15,7 @@ namespace ChoETL
             private set;
         }
 
-        public ChoFixedLengthRecordObjectAttribute(int recordLength)
+        public ChoFixedLengthRecordObjectAttribute(int recordLength = 0)
         {
             RecordLength = recordLength;
         }

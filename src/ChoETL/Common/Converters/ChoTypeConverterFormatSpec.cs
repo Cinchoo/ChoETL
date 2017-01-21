@@ -11,7 +11,7 @@ namespace ChoETL
     public enum ChoBooleanFormatSpec { ZeroOrOne, YOrN, TrueOrFalse, YesOrNo };
     public enum ChoEnumFormatSpec { Value, Name, Description };
 
-    public class ChoTypeConverterFormatSpec
+    public sealed class ChoTypeConverterFormatSpec
     {
         private static readonly ThreadLocal<ChoTypeConverterFormatSpec> _instance = new ThreadLocal<ChoTypeConverterFormatSpec>(() => new ChoTypeConverterFormatSpec());
         public static ChoTypeConverterFormatSpec Instance

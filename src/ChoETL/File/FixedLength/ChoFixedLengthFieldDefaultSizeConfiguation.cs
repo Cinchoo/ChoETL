@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public class ChoFixedLengthFieldDefaultSizeConfiguation
+    public sealed class ChoFixedLengthFieldDefaultSizeConfiguation
     {
         private static readonly ThreadLocal<ChoFixedLengthFieldDefaultSizeConfiguation> _instance = new ThreadLocal<ChoFixedLengthFieldDefaultSizeConfiguation>(() => new ChoFixedLengthFieldDefaultSizeConfiguation());
         public static ChoFixedLengthFieldDefaultSizeConfiguation Instance
@@ -16,7 +16,7 @@ namespace ChoETL
             get { return _instance.Value; }
         }
 
-        private Dictionary<Type, int> _dataTypeSize = new Dictionary<Type, int>();
+        private readonly Dictionary<Type, int> _dataTypeSize = new Dictionary<Type, int>();
 
         public ChoFixedLengthFieldDefaultSizeConfiguation()
         {
