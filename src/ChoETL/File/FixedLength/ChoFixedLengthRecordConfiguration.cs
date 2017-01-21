@@ -147,9 +147,12 @@ namespace ChoETL
             //Derive record length from fields
             if (RecordLength <= 0)
             {
-                foreach (var fc in RecordFieldConfigurations)
+                int maxStartIndex = RecordFieldConfigurations.Max(f => f.StartIndex);
+                int maxSize = RecordFieldConfigurations.Where(f => f.StartIndex == maxStartIndex).Max(f1 => f1.Size.Value);
+                var fc = RecordFieldConfigurations.Where(f => f.StartIndex == maxStartIndex && f.Size.Value == maxSize).FirstOrDefault();
+                if (fc != null)
                 {
-                    RecordLength += fc.Size.Value;
+                    RecordLength = fc.StartIndex + fc.Size.Value;
                 }
             }
 

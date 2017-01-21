@@ -540,7 +540,7 @@ namespace ChoETL
 
                 string[] foundList = Configuration.RecordFieldConfigurations.Select(i => i.FieldName).Except(_fieldNames, Configuration.FileHeaderConfiguration.StringComparer).ToArray();
                 if (foundList.Any())
-                    throw new ChoParserException("Header names [{0}] specified in configuration/entity are not found in file header.".FormatString(String.Join(",", foundList)));
+                    throw new ChoParserException("Header name(s) [{0}] are not found in file header.".FormatString(String.Join(",", foundList)));
 
                 if (Configuration.ColumnOrderStrict)
                 {

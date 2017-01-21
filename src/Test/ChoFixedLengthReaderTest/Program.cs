@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 namespace ChoFixedLengthReaderTest
 {
     [ChoFixedLengthFileHeader]
+    //[ChoFixedLengthRecordObject(ColumnCountStrict = true)]
     public class CreditBalanceRecord
     {
         [ChoFixedLengthRecordField(0, 8)]
