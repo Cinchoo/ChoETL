@@ -73,8 +73,8 @@ namespace ChoETL
 
             if (attr != null)
             {
-                ErrorMode = attr.ErrorMode;
-                IgnoreFieldValueMode = attr.IgnoreFieldValueMode;
+                ErrorMode = attr.ErrorModeInternal;
+                IgnoreFieldValueMode = attr.IgnoreFieldValueModeInternal;
                 FieldType = attr.FieldType;
             }
         }

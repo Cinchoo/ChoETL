@@ -127,7 +127,7 @@ namespace ChoETL
 
                     if (!_configCheckDone)
                     {
-                        Configuration.Validate(GetHeaders(pair.Item2));
+                        Configuration.Validate(null); // GetHeaders(pair.Item2));
                         _configCheckDone = true;
                     }
 
@@ -415,16 +415,33 @@ namespace ChoETL
 
         private string[] GetHeaders(string line)
         {
-            return null;
-            //if (Configuration.FileHeaderConfiguration.HasHeaderRecord)
-            //    return (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)
-            //            select CleanHeaderValue(x)).ToArray();
-            //else
-            //{
-            //    int index = 0;
-            //    return (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)
-            //            select "Column{0}".FormatString(++index)).ToArray();
-            //}
+            List<string> headers = new List<string>();
+            if (Configuration.FileHeaderConfiguration.HasHeaderRecord)
+            {
+                string fieldValue = null;
+                ChoFixedLengthRecordFieldConfiguration fieldConfig = null;
+                foreach (KeyValuePair<string, ChoFixedLengthRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
+                {
+                    fieldValue = null;
+                    fieldConfig = kvp.Value;
+
+                    if (fieldConfig.StartIndex + fieldConfig.Size > line.Length)
+                    {
+                        if (Configuration.ColumnCountStrict)
+                            throw new ChoParserException("Missing '{0}' field.".FormatString(kvp.Key));
+                    }
+                    else
+                        fieldValue = line.Substring(fieldConfig.StartIndex, fieldConfig.Size.Value);
+
+                    fieldValue = CleanFieldValue(fieldConfig, fieldValue as string);
+                    headers.Add(fieldValue);
+                }
+            }
+            else
+            {
+            }
+
+            return headers.ToArray();
         }
 
         private void LoadHeaderLine(Tuple<int, string> pair)
@@ -449,19 +466,6 @@ namespace ChoETL
                 string[] foundList = Configuration.RecordFieldConfigurations.Select(i => i.FieldName).Except(_fieldNames, Configuration.FileHeaderConfiguration.StringComparer).ToArray();
                 if (foundList.Any())
                     throw new ChoParserException("Header names [{0}] specified in configuration/entity are not found in file header.".FormatString(String.Join(",", foundList)));
-
-                if (Configuration.ColumnOrderStrict)
-                {
-                    //int colIndex = 0;
-                    //foreach (string fieldName in Configuration.RecordFieldConfigurations.OrderBy(i => i.FieldPosition).Select(i => i.Name))
-                    //{
-                    //    if (String.Compare(_fieldNames[colIndex], fieldName, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture) != 0)
-                    //        throw new ChoParserException("Incorrect CSV column order found. Expected [{0}] CSV column at '{1}' location.".FormatString(fieldName, colIndex + 1));
-
-                    //    colIndex++;
-
-                    //}
-                }
             }
         }
 
@@ -549,7 +553,7 @@ namespace ChoETL
 
         private bool RaiseRecordFieldLoadError(object target, int index, string propName, object value, Exception ex)
         {
-            if (_callbackRecord == null) return true;
+            if (_callbackRecord == null) return false;
             return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordFieldLoadError(target, index, propName, value, ex), false);
         }
     }

@@ -112,7 +112,7 @@ namespace ChoETL
                 }
             }
 
-            string[] headers = state as string[];
+            //string[] headers = state as string[];
             if (AutoDiscoverColumns
                 && RecordFieldConfigurations.Count == 0 /*&& headers != null*/)
             {

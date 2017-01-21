@@ -11,6 +11,25 @@ using System.Threading.Tasks;
 
 namespace ChoFixedLengthReaderTest
 {
+    [ChoFixedLengthFileHeader]
+    public class CreditBalanceRecord
+    {
+        [ChoFixedLengthRecordField(0, 8)]
+        public int Account { get; set; }
+        [ChoFixedLengthRecordField(8, 16)]
+        public string LastName { get; set; }
+        [ChoFixedLengthRecordField(24, 16)]
+        public string FirstName { get; set; }
+        [ChoFixedLengthRecordField(40, 12)]
+        public double Balance { get; set; }
+        [ChoFixedLengthRecordField(52, 14)]
+        public double CreditLimit { get; set; }
+        [ChoFixedLengthRecordField(66, 16)]
+        public DateTime AccountCreated { get; set; }
+        [ChoFixedLengthRecordField(82, 7)]
+        public string Rating { get; set; }
+    }
+
     class Program
     {
         static void Main(string[] args)
@@ -24,14 +43,14 @@ namespace ChoFixedLengthReaderTest
 
         static void CodeFirstWithDeclarativeApproach()
         {
-            EmployeeRec row = null;
+            object row = null;
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoFixedLengthReader<EmployeeRec>(reader))
+            using (var parser = new ChoFixedLengthReader<CreditBalanceRecord>(reader))
             {
-                writer.WriteLine("001Carl 08/12/2016$100,000  0F");
-                writer.WriteLine("002MarkS01/01/2010$500,000  1C");
+                writer.WriteLine("Account LastName        FirstName       Balance     CreditLimit   AccountCreated  Rating ");
+                writer.WriteLine("101     Reeves          Keanu           9315.45     10000.00      1/17/1998       A      ");
                 writer.Flush();
                 stream.Position = 0;
 
@@ -40,6 +59,21 @@ namespace ChoFixedLengthReaderTest
                     Console.WriteLine(row.ToStringEx());
                 }
             }
+
+            //using (var stream = new MemoryStream())
+            //using (var reader = new StreamReader(stream))
+            //using (var writer = new StreamWriter(stream))
+            //{
+            //    writer.WriteLine("Account LastName        FirstName       Balance     CreditLimit   AccountCreated  Rating ");
+            //    writer.WriteLine("101     Reeves          Keanu           9315.45     10000.00      1/17/1998       A      ");
+            //    writer.Flush();
+            //    stream.Position = 0;
+
+            //    foreach (var item in new ChoFixedLengthReader<CreditBalanceRecord>(reader))
+            //    {
+            //        Console.WriteLine(item.ToStringEx());
+            //    }
+            //}
         }
 
         static void CodeFirstApproach()
