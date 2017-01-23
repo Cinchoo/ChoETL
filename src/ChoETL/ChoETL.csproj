@@ -66,6 +66,7 @@
     <Compile Include="Common\Converters\ChoBooleanConverter.cs" />
     <Compile Include="Common\Converters\ChoBigIntegerConverter.cs" />
     <Compile Include="Common\Converters\ChoEnumConverter.cs" />
+    <Compile Include="File\CSV\ChoCSVFluentPlugIn.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthFileHeaderAttribute.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthFieldDefaultSizeConfiguation.cs" />
     <Compile Include="Common\Converters\ChoTypeConverterFormatSpec.cs" />

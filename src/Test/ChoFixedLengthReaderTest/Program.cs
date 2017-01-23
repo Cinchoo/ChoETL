@@ -31,6 +31,17 @@ namespace ChoFixedLengthReaderTest
         public string Rating { get; set; }
     }
 
+    public class CreditBalanceRecordEx
+    {
+        public int Account { get; set; }
+        public string LastName { get; set; }
+        public string FirstName { get; set; }
+        public double Balance { get; set; }
+        public double CreditLimit { get; set; }
+        public DateTime AccountCreated { get; set; }
+        public string Rating { get; set; }
+    }
+
     class Program
     {
         static void Main(string[] args)
@@ -39,7 +50,49 @@ namespace ChoFixedLengthReaderTest
             //ChoFixedLengthFieldDefaultSizeConfiguation.Instance.SetSize(typeof(int), 3);
             //ChoFixedLengthFieldDefaultSizeConfiguation.Instance.SetSize(typeof(string), 5);
 
-            CodeFirstWithDeclarativeApproach();
+            QuickTest();
+        }
+
+        static void QuickTest()
+        {
+            object row = null;
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoFixedLengthReader<CreditBalanceRecordEx>(reader).WithFirstLineHeader())
+            {
+                writer.WriteLine("Account LastName1       FirstName       Balance     CreditLimit   AccountCreated  Rating ");
+                writer.WriteLine("101     Reeves          Keanu           9315.45     10000.00      1/17/1998       A      ");
+                writer.WriteLine("102     Reeves          Keanu           9315.45     10000.00      1/17/1998       A      ");
+                writer.Flush();
+                stream.Position = 0;
+
+                while ((row = parser.Read()) != null)
+                {
+                    Console.WriteLine(row.ToStringEx());
+                }
+            }
+        }
+
+        static void QuickDynamicLoadTest()
+        {
+            object row = null;
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoFixedLengthReader(reader).WithFirstLineHeader())
+            {
+                writer.WriteLine("Account LastName        FirstName       Balance     CreditLimit   AccountCreated  Rating ");
+                writer.WriteLine("101     Reeves          Keanu           9315.45     10000.00      1/17/1998       A      ");
+                writer.WriteLine("10111111Reeves          Keanu           9315.45     10000.00      1/17/1998sasasasA      ");
+                writer.Flush();
+                stream.Position = 0;
+
+                while ((row = parser.Read()) != null)
+                {
+                    Console.WriteLine(row.ToStringEx());
+                }
+            }
         }
 
         static void CodeFirstWithDeclarativeApproach()

@@ -16,6 +16,7 @@ namespace ChoETL
         private StreamWriter _streamWriter;
         private bool _closeStreamOnDispose = false;
         private ChoCSVRecordWriter _writer = null;
+        private bool _clearFields = false;
 
         public ChoCSVRecordConfiguration Configuration
         {
@@ -95,6 +96,65 @@ namespace ChoETL
                 return reader.ReadToEnd();
             }
         }
+
+        #region Fluent API
+
+        public ChoCSVWriter<T> WithDelimiter(string delimiter)
+        {
+            Configuration.Delimiter = delimiter;
+            return this;
+        }
+
+        public ChoCSVWriter<T> WithFirstLineHeader(bool flag = true)
+        {
+            Configuration.FileHeaderConfiguration.HasHeaderRecord = flag;
+            return this;
+        }
+
+        public ChoCSVWriter<T> WithFields(params string[] fieldsNames)
+        {
+            if (!fieldsNames.IsNullOrEmpty())
+            {
+                int maxFieldPos = Configuration.RecordFieldConfigurations.Count > 0 ? Configuration.RecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
+                foreach (string fn in fieldsNames)
+                {
+                    if (fn.IsNullOrEmpty())
+                        continue;
+                    if (!_clearFields)
+                    {
+                        Configuration.RecordFieldConfigurations.Clear();
+                        _clearFields = true;
+                    }
+
+                    Configuration.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fn.Trim(), ++maxFieldPos));
+                }
+
+            }
+
+            return this;
+        }
+
+        public ChoCSVWriter<T> WithField(string fieldsName, Type fieldType = null)
+        {
+            if (!fieldsName.IsNullOrEmpty())
+            {
+                if (fieldType == null)
+                    fieldType = typeof(string);
+
+                if (!_clearFields)
+                {
+                    Configuration.RecordFieldConfigurations.Clear();
+                    _clearFields = true;
+                }
+
+                int maxFieldPos = Configuration.RecordFieldConfigurations.Count > 0 ? Configuration.RecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
+                Configuration.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fieldsName.Trim(), ++maxFieldPos) { FieldType = fieldType });
+            }
+
+            return this;
+        }
+
+        #endregion Fluent API
     }
 
     public class ChoCSVWriter : ChoCSVWriter<ExpandoObject>

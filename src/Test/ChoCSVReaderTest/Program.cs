@@ -21,6 +21,52 @@ namespace ChoCSVReaderTest
             QuickTest();
         }
 
+        static void QuickTest()
+        {
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVReader<EmployeeRec>(reader).WithDelimiter(",").WithFirstLineHeader().WithFields().WithField("Salary", typeof(int)).WithField("Name", typeof(string)))
+            {
+                writer.WriteLine("Id,Name,Salary");
+                writer.WriteLine("1,Carl,1000");
+                writer.WriteLine("2,Mark,2000");
+                writer.WriteLine("3,Tom,3000");
+
+                writer.Flush();
+                stream.Position = 0;
+
+                object rec;
+                while ((rec = parser.Read()) != null)
+                {
+                    Console.WriteLine(rec.ToStringEx());
+                }
+            }
+        }
+
+        static void QuickDynamicTest()
+        {
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVReader(reader).WithDelimiter(",").WithFirstLineHeader().WithField("Id", typeof(int)).WithField("Name", typeof(string)))
+            {
+                writer.WriteLine("Id,Name,Salary");
+                writer.WriteLine("1,Carl,1000");
+                writer.WriteLine("2,Mark,2000");
+                writer.WriteLine("3,Tom,3000");
+
+                writer.Flush();
+                stream.Position = 0;
+
+                object rec;
+                while ((rec = parser.Read()) != null)
+                {
+                    Console.WriteLine(rec.ToStringEx());
+                }
+            }
+        }
+
         static void DateTimeTest()
         {
             ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "MMM dd, yyyy";
@@ -261,50 +307,6 @@ namespace ChoCSVReaderTest
                 writer.WriteLine("1,Carl,$100000");
                 writer.WriteLine("2,Mark,$50000");
                 writer.WriteLine("3,Tom,1000");
-
-                writer.Flush();
-                stream.Position = 0;
-
-                object rec;
-                while ((rec = parser.Read()) != null)
-                {
-                    Console.WriteLine(rec.ToStringEx());
-                }
-            }
-        }
-
-        static void QuickDynamicTest()
-        {
-            using (var stream = new MemoryStream())
-            using (var reader = new StreamReader(stream))
-            using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoCSVReader(reader))
-            {
-                writer.WriteLine("1,Carl");
-                writer.WriteLine("2,Mark");
-                writer.WriteLine("3,Tom");
-
-                writer.Flush();
-                stream.Position = 0;
-
-                object rec;
-                while ((rec = parser.Read()) != null)
-                {
-                    Console.WriteLine(rec.ToStringEx());
-                }
-            }
-        }
-
-        static void QuickTest()
-        {
-            using (var stream = new MemoryStream())
-            using (var reader = new StreamReader(stream))
-            using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoCSVReader<EmployeeRec>(reader))
-            {
-                writer.WriteLine("1,Carl");
-                writer.WriteLine("2,Mark");
-                writer.WriteLine("3,Tom");
 
                 writer.Flush();
                 stream.Position = 0;
@@ -617,6 +619,7 @@ namespace ChoCSVReaderTest
         //[ChoFallbackValue("XXX")]
         public string Name { get; set; }
 
+        public int Salary { get; set; }
         //[ChoCSVRecordField(3, FieldName = "Address")]
         //public string Address { get; set; }
 

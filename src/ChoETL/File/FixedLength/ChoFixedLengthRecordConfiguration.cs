@@ -96,6 +96,8 @@ namespace ChoETL
         {
             base.Validate(state);
 
+            string line = ((Tuple<int, string>)state).Item2;
+
             //Validate Header
             if (FileHeaderConfiguration != null)
             {
@@ -116,11 +118,12 @@ namespace ChoETL
             if (AutoDiscoverColumns
                 && RecordFieldConfigurations.Count == 0 /*&& headers != null*/)
             {
-                if (RecordType != null && RecordType != typeof(ExpandoObject))
+                if (RecordType != null && RecordType != typeof(ExpandoObject)
+                    && TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().Any()).Any())
                 {
                     int startIndex = 0;
                     int size = 0;
-                    foreach (PropertyDescriptor pd in TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>())
+                    foreach (PropertyDescriptor pd in TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().Any()))
                     {
                         //if (!pd.PropertyType.IsSimple())
                         //    throw new ChoRecordConfigurationException("Property '{0}' is not a simple type.".FormatString(pd.Name));
@@ -138,6 +141,33 @@ namespace ChoETL
                     }
 
                     RecordLength = startIndex;
+                }
+                else if (!line.IsNullOrEmpty())
+                {
+                    if (RecordType == typeof(ExpandoObject))
+                    {
+                        foreach (var item in DiscoverColumns(line))
+                        {
+                            var obj = new ChoFixedLengthRecordFieldConfiguration(item.Item1.NTrim(), item.Item2, item.Item3);
+                            RecordFieldConfigurations.Add(obj);
+                        }
+                    }
+                    else
+                    {
+                        Tuple<string, int, int>[] tuples = DiscoverColumns(line);
+                        int index = 0;
+                        foreach (PropertyDescriptor pd in TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>())
+                        {
+                            if (index < tuples.Length)
+                            {
+                                var obj = new ChoFixedLengthRecordFieldConfiguration(FileHeaderConfiguration.HasHeaderRecord ? tuples[index].Item1.NTrim() : pd.Name, tuples[index].Item2, tuples[index].Item3);
+                                RecordFieldConfigurations.Add(obj);
+                                index++;
+                            }
+                            else
+                                break;
+                        }
+                    }
                 }
             }
 
@@ -195,6 +225,57 @@ namespace ChoETL
             else
             {
             }
+        }
+
+        private Tuple<string, int, int>[] DiscoverColumns(string line)
+        {
+            List<Tuple<string, int, int>> words = new List<Tuple<string, int, int>>();
+            if (!line.IsNullOrEmpty())
+            {
+                //const string text = "   Test42  a       yxx ";
+                var result = new StringBuilder(line.Length);
+                int i = 0;
+                while (i < line.Length - 1)
+                {
+                    result.Append(line[i]);
+                    if ((line[i] != '-'
+                        && line[i] != '.'
+                        && line[i] != '/'
+                        && line[i] != '\\') && (Char.IsWhiteSpace(line[i]) && !Char.IsWhiteSpace(line[i + 1])
+                        //|| char.IsUpper(line[i + 1])
+                        //|| !char.IsDigit(line[i]) && char.IsDigit(line[i + 1])
+                        ))
+                    {
+                        if (Char.IsWhiteSpace(line[i]) && Char.IsWhiteSpace(line[i + 1]))
+                        {
+
+                        }
+                        else
+                        {
+                            if (!result.ToString().IsNullOrWhiteSpace())
+                            {
+                                words.Add(new Tuple<string, int, int>(result.ToString(), i - (result.Length - 1), result.Length));
+                                result.Clear();
+                            }
+                        }
+                    }
+
+                    i++;
+                }
+                result.Append(line[line.Length - 1]);
+                string word = result.ToString();
+                if (!word.IsNullOrWhiteSpace() || words.Count == 0)
+                    words.Add(new Tuple<string, int, int>(result.ToString(), i - (result.Length - 1), result.Length));
+                else
+                {
+                    Tuple<string, int, int> tuple = words[words.Count - 1];
+                    words.RemoveAt(words.Count - 1);
+                    words.Add(new Tuple<string, int, int>(tuple.Item1 + result.ToString(), tuple.Item2, tuple.Item3 + result.Length));
+                }
+            }
+            //foreach (var item in words)
+            //    Console.WriteLine(item.Item1 + " " + item.Item2 + " " + item.Item3);
+            return words.ToArray();
         }
     }
 }

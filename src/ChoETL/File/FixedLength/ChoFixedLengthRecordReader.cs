@@ -127,7 +127,7 @@ namespace ChoETL
 
                     if (!_configCheckDone)
                     {
-                        Configuration.Validate(null); // GetHeaders(pair.Item2));
+                        Configuration.Validate(pair); // GetHeaders(pair.Item2));
                         _configCheckDone = true;
                     }
 
@@ -415,29 +415,35 @@ namespace ChoETL
 
         private string[] GetHeaders(string line)
         {
-            if (line.Length != Configuration.RecordLength)
-                throw new ChoParserException("Incorrect header length [Length: {0}] found. Expected header length: {1}".FormatString(line.Length, Configuration.RecordLength));
-
             List<string> headers = new List<string>();
             if (Configuration.FileHeaderConfiguration.HasHeaderRecord)
             {
-                string fieldValue = null;
-                ChoFixedLengthRecordFieldConfiguration fieldConfig = null;
-                foreach (KeyValuePair<string, ChoFixedLengthRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
+                //Fields are specified, load them
+                if (Configuration.RecordFieldConfigurationsDict.Count > 0)
                 {
-                    fieldValue = null;
-                    fieldConfig = kvp.Value;
-
-                    if (fieldConfig.StartIndex + fieldConfig.Size > line.Length)
+                    string fieldValue = null;
+                    ChoFixedLengthRecordFieldConfiguration fieldConfig = null;
+                    foreach (KeyValuePair<string, ChoFixedLengthRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
                     {
-                        if (Configuration.ColumnCountStrict)
-                            throw new ChoParserException("Missing '{0}' field.".FormatString(kvp.Key));
-                    }
-                    else
-                        fieldValue = line.Substring(fieldConfig.StartIndex, fieldConfig.Size.Value);
+                        fieldValue = null;
+                        fieldConfig = kvp.Value;
 
-                    fieldValue = CleanFieldValue(fieldConfig, fieldValue as string);
-                    headers.Add(fieldValue);
+                        if (fieldConfig.StartIndex + fieldConfig.Size > line.Length)
+                        {
+                            if (Configuration.ColumnCountStrict)
+                                throw new ChoParserException("Missing '{0}' field.".FormatString(kvp.Key));
+                        }
+                        else
+                            fieldValue = line.Substring(fieldConfig.StartIndex, fieldConfig.Size.Value);
+
+                        fieldValue = CleanFieldValue(fieldConfig, fieldValue as string);
+                        headers.Add(fieldValue);
+                    }
+                }
+                else
+                {
+                    if (line.Length != Configuration.RecordLength)
+                        throw new ChoParserException("Incorrect header length [Length: {0}] found. Expected header length: {1}".FormatString(line.Length, Configuration.RecordLength));
                 }
             }
             else

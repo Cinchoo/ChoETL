@@ -19,6 +19,7 @@ namespace ChoETL
         private bool _closeStreamOnDispose = false;
         private Lazy<IEnumerator<T>> _enumerator = null;
         private CultureInfo _prevCultureInfo = null;
+        private bool _clearFields = false;
 
         public ChoFixedLengthRecordConfiguration Configuration
         {
@@ -121,6 +122,41 @@ namespace ChoETL
 
             return r;
         }
+
+        #region Fluent API
+
+        public ChoFixedLengthReader<T> WithRecordLength(int length)
+        {
+            Configuration.RecordLength = length;
+            return this;
+        }
+
+
+        public ChoFixedLengthReader<T> WithFirstLineHeader(bool flag = true)
+        {
+            Configuration.FileHeaderConfiguration.HasHeaderRecord = flag;
+            return this;
+        }
+
+        public ChoFixedLengthReader<T> WithField(string fieldsName, int startIndex, int size, Type fieldType = null)
+        {
+            if (!fieldsName.IsNullOrEmpty())
+            {
+                if (!_clearFields)
+                {
+                    Configuration.RecordFieldConfigurations.Clear();
+                    _clearFields = true;
+                }
+                if (fieldType == null)
+                    fieldType = typeof(string);
+
+                Configuration.RecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(fieldsName.Trim(), startIndex, size) { FieldType = fieldType });
+            }
+
+            return this;
+        }
+
+        #endregion Fluent API
     }
 
     public class ChoFixedLengthReader : ChoFixedLengthReader<ExpandoObject>
