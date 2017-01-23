@@ -61,9 +61,9 @@ namespace ChoFixedLengthReaderTest
             using (var writer = new StreamWriter(stream))
             using (var parser = new ChoFixedLengthReader<CreditBalanceRecordEx>(reader).WithFirstLineHeader())
             {
-                writer.WriteLine("Account LastName1       FirstName       Balance     CreditLimit   AccountCreated  Rating ");
-                writer.WriteLine("101     Reeves          Keanu           9315.45     10000.00      1/17/1998       A      ");
-                writer.WriteLine("102     Reeves          Keanu           9315.45     10000.00      1/17/1998       A      ");
+                writer.WriteLine("  Account LastName        FirstName       Balance     CreditLimit   AccountCreated  Rating ");
+                writer.WriteLine("101       Reeves          Keanu           9315.45     10000.00      1/17/1998       A      ");
+                writer.WriteLine("  102     Reeves          Keanu           9315.45     10000.00      1/17/1998       A      ");
                 writer.Flush();
                 stream.Position = 0;
 

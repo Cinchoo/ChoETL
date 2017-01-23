@@ -138,9 +138,16 @@ namespace ChoETL
             return this;
         }
 
-        public ChoFixedLengthReader<T> WithField(string fieldsName, int startIndex, int size, Type fieldType = null)
+        public ChoFixedLengthReader<T> QuoteAllFields(bool flag = true, char quoteChar = '"')
         {
-            if (!fieldsName.IsNullOrEmpty())
+            Configuration.QuoteAllFields = flag;
+            Configuration.QuoteChar = quoteChar;
+            return this;
+        }
+
+        public ChoFixedLengthReader<T> WithField(string fieldName, int startIndex, int size, Type fieldType, bool? quoteField = null)
+        {
+            if (!fieldName.IsNullOrEmpty())
             {
                 if (!_clearFields)
                 {
@@ -150,10 +157,15 @@ namespace ChoETL
                 if (fieldType == null)
                     fieldType = typeof(string);
 
-                Configuration.RecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(fieldsName.Trim(), startIndex, size) { FieldType = fieldType });
+                Configuration.RecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(fieldName.Trim(), startIndex, size) { FieldType = fieldType, QuoteField = quoteField });
             }
 
             return this;
+        }
+
+        public ChoFixedLengthReader<T> WithField(string fieldName, int startIndex, int size, bool? quoteField = null)
+        {
+            return WithField(fieldName, startIndex, size, typeof(string), quoteField);
         }
 
         #endregion Fluent API

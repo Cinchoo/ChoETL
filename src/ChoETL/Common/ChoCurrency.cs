@@ -21,6 +21,18 @@ namespace ChoETL
             this.Amount = (Decimal)amount;
         }
 
+        public ChoCurrency(int amount)
+        {
+            this.Currency = System.Threading.Thread.CurrentThread.CurrentCulture.NumberFormat.CurrencySymbol;
+            this.Amount = (Decimal)amount;
+        }
+
+        public ChoCurrency(long amount)
+        {
+            this.Currency = System.Threading.Thread.CurrentThread.CurrentCulture.NumberFormat.CurrencySymbol;
+            this.Amount = (Decimal)amount;
+        }
+
         public string Currency { get; private set; }
         public decimal Amount { get; private set; }
 

@@ -17,7 +17,300 @@ namespace ChoCSVWriterTest
     {
         static void Main(string[] args)
         {
-            CodeFirstWithDeclarativeApproachWriteRecords();
+            QuickDynamicTest();
+        }
+
+        static void QuickDynamicTest()
+        {
+            List<ExpandoObject> objs = new List<ExpandoObject>();
+            dynamic rec1 = new ExpandoObject();
+            rec1.Id = 10;
+            rec1.Name = "Mark";
+            rec1.JoinedDate = new DateTime(2001, 2, 2);
+            rec1.IsActive = true;
+            rec1.Salary = new ChoCurrency(100000);
+            objs.Add(rec1);
+
+            dynamic rec2 = new ExpandoObject();
+            rec2.Id = 200;
+            rec2.Name = "Lou";
+            rec2.JoinedDate = new DateTime(1990, 10, 23);
+            rec2.IsActive = false;
+            rec2.Salary = new ChoCurrency(150000);
+            objs.Add(rec2);
+
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVWriter(writer).WithDelimiter("|").WithFirstLineHeader().WithField("Id", typeof(int)).WithField("Name"))
+            {
+                parser.Write(objs);
+
+                writer.Flush();
+                stream.Position = 0;
+
+                Console.WriteLine(reader.ReadToEnd());
+            }
+        }
+
+        static void DateTimeDynamicTest()
+        {
+            ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "MMM dd, yyyy";
+
+            List<ExpandoObject> objs = new List<ExpandoObject>();
+            dynamic rec1 = new ExpandoObject();
+            rec1.Id = 10;
+            rec1.Name = "Mark";
+            rec1.JoinedDate = new DateTime(2001, 2, 2);
+            rec1.IsActive = true;
+            rec1.Salary = new ChoCurrency(100000);
+            objs.Add(rec1);
+
+            dynamic rec2 = new ExpandoObject();
+            rec2.Id = 200;
+            rec2.Name = "Lou";
+            rec2.JoinedDate = new DateTime(1990, 10, 23);
+            rec2.IsActive = false;
+            rec2.Salary = new ChoCurrency(150000);
+            objs.Add(rec2);
+
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVWriter(writer).WithFirstLineHeader().QuoteAllFields())
+            {
+                parser.Write(objs);
+
+                writer.Flush();
+                stream.Position = 0;
+
+                Console.WriteLine(reader.ReadToEnd());
+            }
+        }
+
+        static void BoolTest()
+        {
+            ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.YOrN;
+
+            List<ExpandoObject> objs = new List<ExpandoObject>();
+            dynamic rec1 = new ExpandoObject();
+            rec1.Id = 10;
+            rec1.Name = "Mark";
+            rec1.JoinedDate = new DateTime(2001, 2, 2);
+            rec1.IsActive = true;
+            rec1.Salary = new ChoCurrency(100000);
+            rec1.Status = EmployeeType.Permanent;
+            objs.Add(rec1);
+
+            dynamic rec2 = new ExpandoObject();
+            rec2.Id = 200;
+            rec2.Name = "Lou";
+            rec2.JoinedDate = new DateTime(1990, 10, 23);
+            rec2.IsActive = false;
+            rec2.Salary = new ChoCurrency(150000);
+            rec2.Status = EmployeeType.Contract;
+            objs.Add(rec2);
+
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVWriter(writer).WithFirstLineHeader().QuoteAllFields())
+            {
+                parser.Write(objs);
+
+                writer.Flush();
+                stream.Position = 0;
+
+                Console.WriteLine(reader.ReadToEnd());
+            }
+        }
+
+        public enum EmployeeType
+        {
+            [Description("Full Time Employee")]
+            Permanent = 0,
+            [Description("Temporary Employee")]
+            Temporary = 1,
+            [Description("Contract Employee")]
+            Contract = 2
+        }
+
+        static void EnumTest()
+        {
+            ChoTypeConverterFormatSpec.Instance.EnumFormat = ChoEnumFormatSpec.Description;
+
+            List<ExpandoObject> objs = new List<ExpandoObject>();
+            dynamic rec1 = new ExpandoObject();
+            rec1.Id = 10;
+            rec1.Name = "Mark";
+            rec1.JoinedDate = new DateTime(2001, 2, 2);
+            rec1.IsActive = true;
+            rec1.Salary = new ChoCurrency(100000);
+            rec1.Status = EmployeeType.Permanent;
+            objs.Add(rec1);
+
+            dynamic rec2 = new ExpandoObject();
+            rec2.Id = 200;
+            rec2.Name = "Lou";
+            rec2.JoinedDate = new DateTime(1990, 10, 23);
+            rec2.IsActive = false;
+            rec2.Salary = new ChoCurrency(150000);
+            rec2.Status = EmployeeType.Contract;
+            objs.Add(rec2);
+
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVWriter(writer).WithFirstLineHeader().QuoteAllFields())
+            {
+                parser.Write(objs);
+
+                writer.Flush();
+                stream.Position = 0;
+
+                Console.WriteLine(reader.ReadToEnd());
+            }
+        }
+
+        public class EmployeeRecWithCurrency
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+            public ChoCurrency Salary { get; set; }
+        }
+
+        static void CurrencyPOCOTest()
+        {
+            List<EmployeeRecWithCurrency> objs = new List<EmployeeRecWithCurrency>();
+            EmployeeRecWithCurrency rec1 = new EmployeeRecWithCurrency();
+            rec1.Id = 10;
+            rec1.Name = "Mark";
+            rec1.Salary = new ChoCurrency(100000);
+            objs.Add(rec1);
+
+            EmployeeRecWithCurrency rec2 = new EmployeeRecWithCurrency();
+            rec2.Id = 200;
+            rec2.Name = "Lou";
+            rec2.Salary = new ChoCurrency(150000);
+            objs.Add(rec2);
+
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVWriter<EmployeeRecWithCurrency>(writer).WithFirstLineHeader().QuoteAllFields())
+            {
+                parser.Write(objs);
+
+                writer.Flush();
+                stream.Position = 0;
+
+                Console.WriteLine(reader.ReadToEnd());
+            }
+        }
+
+        static void CurrencyDynamicTest()
+        {
+            ChoTypeConverterFormatSpec.Instance.CurrencyFormat = "C2";
+
+            List<ExpandoObject> objs = new List<ExpandoObject>();
+            dynamic rec1 = new ExpandoObject();
+            rec1.Id = 10;
+            rec1.Name = "Mark";
+            rec1.JoinedDate = new DateTime(2001, 2, 2);
+            rec1.IsActive = true;
+            rec1.Salary = new ChoCurrency(100000);
+            objs.Add(rec1);
+
+            dynamic rec2 = new ExpandoObject();
+            rec2.Id = 200;
+            rec2.Name = "Lou";
+            rec2.JoinedDate = new DateTime(1990, 10, 23);
+            rec2.IsActive = false;
+            rec2.Salary = new ChoCurrency(150000);
+            objs.Add(rec2);
+
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVWriter(writer).WithFirstLineHeader().QuoteAllFields())
+            {
+                parser.Write(objs);
+
+                writer.Flush();
+                stream.Position = 0;
+
+                Console.WriteLine(reader.ReadToEnd());
+            }
+        }
+
+        static void FormatSpecDynamicTest()
+        {
+            ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "d";
+            ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.YOrN;
+
+            List<ExpandoObject> objs = new List<ExpandoObject>();
+            dynamic rec1 = new ExpandoObject();
+            rec1.Id = 10;
+            rec1.Name = "Mark";
+            rec1.JoinedDate = new DateTime(2001, 2, 2);
+            rec1.IsActive = true;
+            rec1.Salary = 100000;
+            objs.Add(rec1);
+
+            dynamic rec2 = new ExpandoObject();
+            rec2.Id = 200;
+            rec2.Name = "Lou";
+            rec2.JoinedDate = new DateTime(1990, 10, 23);
+            rec2.IsActive = false;
+            rec2.Salary = 150000;
+            objs.Add(rec2);
+
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVWriter(writer).WithFirstLineHeader())
+            {
+                parser.Write(objs);
+
+                writer.Flush();
+                stream.Position = 0;
+
+                Console.WriteLine(reader.ReadToEnd());
+            }
+        }
+
+        static void FormatSpecTest()
+        {
+            ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "d";
+            ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.YOrN;
+
+            List<EmployeeRec> objs = new List<EmployeeRec>();
+            EmployeeRec rec1 = new EmployeeRec();
+            rec1.Id = 10;
+            rec1.Name = "Mark";
+            rec1.JoinedDate = new DateTime(2001, 2, 2);
+            rec1.IsActive = true;
+            objs.Add(rec1);
+
+            EmployeeRec rec2 = new EmployeeRec();
+            rec2.Id = 200;
+            rec2.Name = "Lou";
+            rec2.JoinedDate = new DateTime(1990, 10, 23);
+            rec2.IsActive = false;
+            objs.Add(rec2);
+
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVWriter<EmployeeRec>(writer))
+            {
+                parser.Write(objs);
+
+                writer.Flush();
+                stream.Position = 0;
+
+                Console.WriteLine(reader.ReadToEnd());
+            }
         }
 
         static void WriteDataTableTest()
@@ -327,7 +620,7 @@ namespace ChoCSVWriterTest
     }
 
     [ChoCSVFileHeader]
-    [ChoCSVRecordObject(HasExcelSeparator = true, CultureName = "se-SE" )]
+    [ChoCSVRecordObject(HasExcelSeparator = true )]
     public class EmployeeRec
     {
         public Shape Shape { get; set; }

@@ -111,6 +111,13 @@ namespace ChoETL
             return this;
         }
 
+        public ChoCSVWriter<T> QuoteAllFields(bool flag = true, char quoteChar = '"')
+        {
+            Configuration.QuoteAllFields = flag;
+            Configuration.QuoteChar = quoteChar;
+            return this;
+        }
+
         public ChoCSVWriter<T> WithFields(params string[] fieldsNames)
         {
             if (!fieldsNames.IsNullOrEmpty())
@@ -134,9 +141,9 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVWriter<T> WithField(string fieldsName, Type fieldType = null)
+        public ChoCSVWriter<T> WithField(string fieldName, Type fieldType, bool? quoteField = null)
         {
-            if (!fieldsName.IsNullOrEmpty())
+            if (!fieldName.IsNullOrEmpty())
             {
                 if (fieldType == null)
                     fieldType = typeof(string);
@@ -148,10 +155,15 @@ namespace ChoETL
                 }
 
                 int maxFieldPos = Configuration.RecordFieldConfigurations.Count > 0 ? Configuration.RecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-                Configuration.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fieldsName.Trim(), ++maxFieldPos) { FieldType = fieldType });
+                Configuration.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fieldName.Trim(), ++maxFieldPos) { FieldType = fieldType, QuoteField = quoteField });
             }
 
             return this;
+        }
+
+        public ChoCSVWriter<T> WithField(string fieldName, bool? quoteField = null)
+        {
+            return WithField(fieldName, typeof(string), quoteField);
         }
 
         #endregion Fluent API
