@@ -13,4 +13,5 @@ Here are the items will be targetted on phase 1.
     + [CSV Reader](http://www.codeproject.com/Articles/1145337/ChoETL-CSVReader)
     + [CSV Writer](http://www.codeproject.com/Articles/1155891/Cinchoo-ETL-CSVWriter)
   2. Fixed Length Reader / Writer
-  3. Database Reader / Writer
+    + [Fixed Length Reader](https://www.codeproject.com/Articles/1166802/Cinchoo-ETL-FixedLengthReader)
+  3. Xml Reader / Writer
