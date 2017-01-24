@@ -115,9 +115,9 @@ namespace ChoETL
             return dt;
         }
 
-        public static ChoFixedLengthReader<T> LoadText(string inputText)
+        public static ChoFixedLengthReader<T> LoadText(string inputText, ChoFixedLengthRecordConfiguration configuration = null)
         {
-            var r = new ChoFixedLengthReader<T>(inputText.ToStream());
+            var r = new ChoFixedLengthReader<T>(inputText.ToStream(), configuration);
             r._closeStreamOnDispose = true;
 
             return r;

@@ -144,18 +144,18 @@ namespace ChoETL
                 }
                 else if (!line.IsNullOrEmpty())
                 {
+                    int index = 0;
                     if (RecordType == typeof(ExpandoObject))
                     {
                         foreach (var item in DiscoverColumns(line))
                         {
-                            var obj = new ChoFixedLengthRecordFieldConfiguration(item.Item1.NTrim(), item.Item2, item.Item3);
+                            var obj = new ChoFixedLengthRecordFieldConfiguration(FileHeaderConfiguration.HasHeaderRecord ? item.Item1.NTrim() : "Column{0}".FormatString(++index), item.Item2, item.Item3);
                             RecordFieldConfigurations.Add(obj);
                         }
                     }
                     else
                     {
                         Tuple<string, int, int>[] tuples = DiscoverColumns(line);
-                        int index = 0;
                         foreach (PropertyDescriptor pd in TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>())
                         {
                             if (index < tuples.Length)

@@ -80,13 +80,13 @@ namespace ChoETL
             _writer.WriteTo(_streamWriter, new T[] { record } ).Loop();
         }
 
-        public static string ToText<TRec>(IEnumerable<TRec> records)
+        public static string ToText<TRec>(IEnumerable<TRec> records, ChoCSVRecordConfiguration configuration = null)
             where TRec : class
         {
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoCSVWriter<TRec>(writer))
+            using (var parser = new ChoCSVWriter<TRec>(writer, configuration))
             {
                 parser.Write(records);
 

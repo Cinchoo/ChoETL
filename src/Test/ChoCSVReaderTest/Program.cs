@@ -18,7 +18,14 @@ namespace ChoCSVReaderTest
     {
         static void Main(string[] args)
         {
-            QuickTest();
+            LoadTextTest();
+        }
+
+        static void LoadTextTest()
+        {
+            string txt = "Id, Name\r\n1, Mark";
+            foreach (var e in ChoCSVReader.LoadText(txt).WithFirstLineHeader())
+                Console.WriteLine(e.ToStringEx());
         }
 
         static void QuickTest()
