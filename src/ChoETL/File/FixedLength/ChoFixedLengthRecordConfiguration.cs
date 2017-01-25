@@ -98,6 +98,9 @@ namespace ChoETL
 
             string line = ((Tuple<int, string>)state).Item2;
 
+            if (RecordLength <= 0)
+                RecordLength = line.Length;
+
             //Validate Header
             if (FileHeaderConfiguration != null)
             {
@@ -140,7 +143,7 @@ namespace ChoETL
                         startIndex += size;
                     }
 
-                    RecordLength = startIndex;
+                    //RecordLength = startIndex;
                 }
                 else if (!line.IsNullOrEmpty())
                 {

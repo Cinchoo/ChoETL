@@ -60,7 +60,7 @@ namespace ChoFixedLengthReaderTest
             //ChoFixedLengthFieldDefaultSizeConfiguation.Instance.SetSize(typeof(int), 3);
             //ChoFixedLengthFieldDefaultSizeConfiguation.Instance.SetSize(typeof(string), 5);
 
-            LoadTextTest();
+            QuickDynamicLoadTest();
         }
 
         static void LoadTextTest()

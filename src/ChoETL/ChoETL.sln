@@ -13,6 +13,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{C17EFEDF-1
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoFixedLengthReaderTest", "..\Test\ChoFixedLengthReaderTest\ChoFixedLengthReaderTest.csproj", "{142A837A-319D-4013-B9F3-5E42B6C93C86}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoFixedLengthWriterTest", "..\Test\ChoFixedLengthWriterTest\ChoFixedLengthWriterTest.csproj", "{E86FF0EF-E238-4196-9C05-1A2562CF9BC8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,10 @@ Global
 		{142A837A-319D-4013-B9F3-5E42B6C93C86}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{142A837A-319D-4013-B9F3-5E42B6C93C86}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{142A837A-319D-4013-B9F3-5E42B6C93C86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E86FF0EF-E238-4196-9C05-1A2562CF9BC8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E86FF0EF-E238-4196-9C05-1A2562CF9BC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E86FF0EF-E238-4196-9C05-1A2562CF9BC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E86FF0EF-E238-4196-9C05-1A2562CF9BC8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -43,5 +49,6 @@ Global
 		{D732199D-680F-4571-96ED-8E00E34580AA} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 		{DFA30C9A-4CAD-4163-8E8D-B088869AFC01} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 		{142A837A-319D-4013-B9F3-5E42B6C93C86} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
+		{E86FF0EF-E238-4196-9C05-1A2562CF9BC8} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 	EndGlobalSection
 EndGlobal
