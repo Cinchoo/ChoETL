@@ -50,8 +50,14 @@ namespace ChoETL
 
             try
             {
+                int index = 0;
                 foreach (object record in records)
                 {
+                    if (record is IChoETLNameableObject)
+                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(((IChoETLNameableObject)record).Name));
+                    else
+                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(++index));
+
                     recText = String.Empty;
                     _index++;
                     if (record != null)
@@ -91,7 +97,7 @@ namespace ChoETL
                                 continue;
                             else if (recText.Length > 0)
                             {
-                                //sw.Write("{1}{0}", recText, Configuration.FileHeaderConfiguration.HasHeaderRecord || HasExcelSeparator ? Configuration.EOLDelimiter : "");
+                                sw.Write("{1}{0}", recText, Configuration.FileHeaderConfiguration.HasHeaderRecord ? Configuration.EOLDelimiter : "");
                                 continue;
                             }
 
@@ -104,7 +110,7 @@ namespace ChoETL
                                 {
                                     if (_index == 1)
                                     {
-                                        //sw.Write("{1}{0}", recText, Configuration.FileHeaderConfiguration.HasHeaderRecord || HasExcelSeparator ? Configuration.EOLDelimiter : "");
+                                        sw.Write("{1}{0}", recText, Configuration.FileHeaderConfiguration.HasHeaderRecord ? Configuration.EOLDelimiter : "");
                                     }
                                     else
                                         sw.Write("{1}{0}", recText, Configuration.EOLDelimiter);
@@ -157,7 +163,7 @@ namespace ChoETL
             if (Configuration.ColumnCountStrict)
                 CheckColumnsStrict(rec);
 
-            bool firstColumn = true;
+            //bool firstColumn = true;
             foreach (KeyValuePair<string, ChoFixedLengthRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
                 fieldConfig = kvp.Value;
@@ -267,13 +273,7 @@ namespace ChoETL
                 else
                     fieldText = fieldValue.ToString();
 
-                //if (firstColumn)
-                //{
-                //    msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, kvp.Value.FieldValueJustification, kvp.Value.FillChar, false));
-                //    firstColumn = false;
-                //}
-                //else
-                //    msg.AppendFormat("{0}{1}", Configuration.Delimiter, NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, kvp.Value.FieldValueJustification, kvp.Value.FillChar, false));
+                msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, kvp.Value.FieldValueJustification, kvp.Value.FillChar, false));
             }
 
             recText = msg.ToString();
@@ -314,30 +314,25 @@ namespace ChoETL
                 if (header.IsNullOrWhiteSpace())
                     return;
 
-                //sw.Write("{1}{0}", header, HasExcelSeparator ? Configuration.EOLDelimiter : "");
+                sw.Write(header);
             }
         }
 
         private string ToHeaderText()
         {
-            //string delimiter = Configuration.Delimiter;
             StringBuilder msg = new StringBuilder();
-            //string value;
-            //foreach (var member in Configuration.RecordFieldConfigurations)
-            //{
-            //    value = NormalizeFieldValue(member.Name, member.FieldName, member.Size, 
-            //        Configuration.FileHeaderConfiguration.Truncate == null ? member.Truncate : Configuration.FileHeaderConfiguration.Truncate.Value,
-            //            member.QuoteField, 
-            //            Configuration.FileHeaderConfiguration.Justification == null ? member.FieldValueJustification : Configuration.FileHeaderConfiguration.Justification.Value,
-            //            Configuration.FileHeaderConfiguration.FillChar == null ? member.FillChar : Configuration.FileHeaderConfiguration.FillChar.Value, 
-            //            true);
+            string value;
+            foreach (var member in Configuration.RecordFieldConfigurations)
+            {
+                value = NormalizeFieldValue(member.Name, member.FieldName, member.Size,
+                    Configuration.FileHeaderConfiguration.Truncate == null ? true : Configuration.FileHeaderConfiguration.Truncate.Value,
+                        false,
+                        Configuration.FileHeaderConfiguration.Justification == null ? ChoFieldValueJustification.Left : Configuration.FileHeaderConfiguration.Justification.Value,
+                        Configuration.FileHeaderConfiguration.FillChar == null ? ' ' : Configuration.FileHeaderConfiguration.FillChar.Value,
+                        true);
 
-            //    if (msg.Length == 0)
-            //        msg.Append(value);
-            //    else
-            //        msg.AppendFormat("{0}{1}", delimiter, value);
-            //}
-
+                msg.Append(value);
+            }
             return msg.ToString();
         }
 
@@ -361,14 +356,6 @@ namespace ChoETL
                 }
                 else
                 {
-                    //if (fieldValue.Contains(Configuration.Delimiter))
-                    //{
-                    //    if (isHeader)
-                    //        throw new ChoParserException("Field header '{0}' value contains delimiter character.".FormatString(fieldName));
-                    //    else
-                    //        throw new ChoParserException("Field '{0}' value contains delimiter character.".FormatString(fieldName));
-                    //}
-
                     if (fieldValue.Contains(Configuration.EOLDelimiter))
                     {
                         if (isHeader)

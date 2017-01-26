@@ -96,9 +96,14 @@ namespace ChoETL
         {
             base.Validate(state);
 
-            string line = ((Tuple<int, string>)state).Item2;
+            string line = null;
+            string[] fieldNames = null;
+            if (state is Tuple<int, string>)
+                line = ((Tuple<int, string>)state).Item2;
+            else
+                fieldNames = state as string[];
 
-            if (RecordLength <= 0)
+            if (RecordLength <= 0 && line != null)
                 RecordLength = line.Length;
 
             //Validate Header
@@ -170,6 +175,17 @@ namespace ChoETL
                             else
                                 break;
                         }
+                    }
+                }
+                else if (!fieldNames.IsNullOrEmpty())
+                {
+                    int startIndex = 0;
+                    int fieldLength = ChoFixedLengthFieldDefaultSizeConfiguation.Instance.GetSize(typeof(string));
+                    foreach (string fn in fieldNames)
+                    {
+                        var obj = new ChoFixedLengthRecordFieldConfiguration(fn, startIndex, fieldLength);
+                        RecordFieldConfigurations.Add(obj);
+                        startIndex += fieldLength;
                     }
                 }
             }

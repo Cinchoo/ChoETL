@@ -50,8 +50,14 @@ namespace ChoETL
 
             try
             {
+                int index = 0;
                 foreach (object record in records)
                 {
+                    if (record is IChoETLNameableObject)
+                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(((IChoETLNameableObject)record).Name));
+                    else
+                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(++index));
+
                     recText = String.Empty;
                     _index++;
                     if (record != null)
@@ -335,10 +341,10 @@ namespace ChoETL
             foreach (var member in Configuration.RecordFieldConfigurations)
             {
                 value = NormalizeFieldValue(member.Name, member.FieldName, member.Size, 
-                    Configuration.FileHeaderConfiguration.Truncate == null ? member.Truncate : Configuration.FileHeaderConfiguration.Truncate.Value,
-                        member.QuoteField, 
-                        Configuration.FileHeaderConfiguration.Justification == null ? member.FieldValueJustification : Configuration.FileHeaderConfiguration.Justification.Value,
-                        Configuration.FileHeaderConfiguration.FillChar == null ? member.FillChar : Configuration.FileHeaderConfiguration.FillChar.Value, 
+                    Configuration.FileHeaderConfiguration.Truncate == null ? true : Configuration.FileHeaderConfiguration.Truncate.Value,
+                        false, 
+                        Configuration.FileHeaderConfiguration.Justification == null ? ChoFieldValueJustification.Left : Configuration.FileHeaderConfiguration.Justification.Value,
+                        Configuration.FileHeaderConfiguration.FillChar == null ? ' ' : Configuration.FileHeaderConfiguration.FillChar.Value, 
                         true);
 
                 if (msg.Length == 0)

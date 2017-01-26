@@ -118,7 +118,8 @@ namespace ChoETL
             return this;
         }
 
-        public ChoFixedLengthWriter<T> WithField(string fieldName, int startIndex, int size, Type fieldType, bool? quoteField = null)
+        public ChoFixedLengthWriter<T> WithField(string fieldName, int startIndex, int size, Type fieldType, bool? quoteField = null, char fillChar = ' ', ChoFieldValueJustification fieldValueJustification = ChoFieldValueJustification.Left,
+            bool truncate = true)
         {
             if (!fieldName.IsNullOrEmpty())
             {
@@ -130,15 +131,20 @@ namespace ChoETL
                 if (fieldType == null)
                     fieldType = typeof(string);
 
-                Configuration.RecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(fieldName.Trim(), startIndex, size) { FieldType = fieldType, QuoteField = quoteField });
+                Configuration.RecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(fieldName.Trim(), startIndex, size) { FieldType = fieldType, QuoteField = quoteField,
+                    FillChar = fillChar,
+                    FieldValueJustification = fieldValueJustification,
+                    Truncate = truncate
+                });
             }
 
             return this;
         }
 
-        public ChoFixedLengthWriter<T> WithField(string fieldName, int startIndex, int size, bool? quoteField = null)
+        public ChoFixedLengthWriter<T> WithField(string fieldName, int startIndex, int size, bool? quoteField = null, char fillChar = ' ', ChoFieldValueJustification fieldValueJustification = ChoFieldValueJustification.Left,
+            bool truncate = true)
         {
-            return WithField(fieldName, startIndex, size, typeof(string), quoteField);
+            return WithField(fieldName, startIndex, size, typeof(string), quoteField, fillChar, fieldValueJustification, truncate);
         }
 
         #endregion Fluent API
@@ -174,13 +180,18 @@ namespace ChoETL
             {
                 string colName = null;
                 Type colType = null;
+                int startIndex = 0;
+                int fieldLength = 0;
                 foreach (DataRow row in schemaTable.Rows)
                 {
                     colName = row["ColumnName"].CastTo<string>();
                     colType = row["DataType"] as Type;
                     //if (!colType.IsSimple()) continue;
 
-                    //Configuration.RecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(colName, ++ordinal) { FieldType = colType });
+                    fieldLength = ChoFixedLengthFieldDefaultSizeConfiguation.Instance.GetSize(colType);
+                    var obj = new ChoFixedLengthRecordFieldConfiguration(colName, startIndex, fieldLength);
+                    Configuration.RecordFieldConfigurations.Add(obj);
+                    startIndex += fieldLength;
                 }
             }
 
@@ -205,19 +216,23 @@ namespace ChoETL
             var expando = new ExpandoObject();
             var expandoDic = (IDictionary<string, object>)expando;
 
-            int ordinal = 0;
             if (Configuration.RecordFieldConfigurations.IsNullOrEmpty())
             {
                 string colName = null;
                 Type colType = null;
-                //foreach (DataColumn col in schemaTable.Columns)
-                //{
-                //    colName = col.ColumnName;
-                //    colType = col.DataType;
-                //    //if (!colType.IsSimple()) continue;
+                int startIndex = 0;
+                int fieldLength = 0;
+                foreach (DataColumn col in schemaTable.Columns)
+                {
+                    colName = col.ColumnName;
+                    colType = col.DataType;
+                    //if (!colType.IsSimple()) continue;
 
-                //    Configuration.RecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(colName, ++ordinal) { FieldType = colType });
-                //}
+                    fieldLength = ChoFixedLengthFieldDefaultSizeConfiguation.Instance.GetSize(colType);
+                    var obj = new ChoFixedLengthRecordFieldConfiguration(colName, startIndex, fieldLength);
+                    Configuration.RecordFieldConfigurations.Add(obj);
+                    startIndex += fieldLength;
+                }
             }
 
             foreach (DataRow row in dt.Rows)

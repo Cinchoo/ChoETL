@@ -33,9 +33,9 @@ namespace ChoETL
             _dataTypeSize.Add(typeof(Single), 7);
             _dataTypeSize.Add(typeof(Double), 15);
             _dataTypeSize.Add(typeof(Decimal), 29);
-            _dataTypeSize.Add(typeof(BigInteger), 100);
+            _dataTypeSize.Add(typeof(BigInteger), 50);
             _dataTypeSize.Add(typeof(Enum), 25);
-            _dataTypeSize.Add(typeof(String), 255);
+            _dataTypeSize.Add(typeof(String), 25);
             _dataTypeSize.Add(typeof(DateTime), 10);
             _dataTypeSize.Add(typeof(ChoCurrency), 30);
         }
