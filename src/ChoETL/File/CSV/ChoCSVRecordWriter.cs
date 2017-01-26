@@ -172,7 +172,7 @@ namespace ChoETL
                     if (rec is ExpandoObject)
                     {
                         var dict = rec as IDictionary<string, Object>;
-                        if (!dict.Keys.Contains(fieldConfig.FieldName, Configuration.FileHeaderConfiguration.StringComparer))
+                        if (!dict.Keys.Contains(kvp.Key, Configuration.FileHeaderConfiguration.StringComparer))
                             throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' CSV column.".FormatString(fieldConfig.FieldName));
                     }
                     else
@@ -293,7 +293,7 @@ namespace ChoETL
                 if (eoDict.Count != Configuration.RecordFieldConfigurations.Count)
                     throw new ChoParserException("Incorrect number of fields found in record object. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.RecordFieldConfigurations.Count, eoDict.Count));
 
-                string[] missingColumns = Configuration.RecordFieldConfigurations.Select(v => v.FieldName).Except(eoDict.Keys, Configuration.FileHeaderConfiguration.StringComparer).ToArray();
+                string[] missingColumns = Configuration.RecordFieldConfigurations.Select(v => v.Name).Except(eoDict.Keys, Configuration.FileHeaderConfiguration.StringComparer).ToArray();
                 if (missingColumns.Length > 0)
                     throw new ChoParserException("[{0}] fields are not found in record object.".FormatString(String.Join(",", missingColumns)));
             }
@@ -304,7 +304,7 @@ namespace ChoETL
                 if (pds.Length != Configuration.RecordFieldConfigurations.Count)
                     throw new ChoParserException("Incorrect number of fields found in record object. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.RecordFieldConfigurations.Count, pds.Length));
 
-                string[] missingColumns = Configuration.RecordFieldConfigurations.Select(v => v.FieldName).Except(pds.Select(pd => pd.Name), Configuration.FileHeaderConfiguration.StringComparer).ToArray();
+                string[] missingColumns = Configuration.RecordFieldConfigurations.Select(v => v.Name).Except(pds.Select(pd => pd.Name), Configuration.FileHeaderConfiguration.StringComparer).ToArray();
                 if (missingColumns.Length > 0)
                     throw new ChoParserException("[{0}] fields are not found in record object.".FormatString(String.Join(",", missingColumns)));
             }

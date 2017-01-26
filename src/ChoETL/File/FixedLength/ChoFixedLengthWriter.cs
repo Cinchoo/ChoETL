@@ -118,10 +118,10 @@ namespace ChoETL
             return this;
         }
 
-        public ChoFixedLengthWriter<T> WithField(string fieldName, int startIndex, int size, Type fieldType, bool? quoteField = null, char fillChar = ' ', ChoFieldValueJustification fieldValueJustification = ChoFieldValueJustification.Left,
-            bool truncate = true)
+        public ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, Type fieldType, bool? quoteField = null, char fillChar = ' ', ChoFieldValueJustification fieldValueJustification = ChoFieldValueJustification.Left,
+            bool truncate = true, string fieldName = null)
         {
-            if (!fieldName.IsNullOrEmpty())
+            if (!name.IsNullOrEmpty())
             {
                 if (!_clearFields)
                 {
@@ -131,20 +131,21 @@ namespace ChoETL
                 if (fieldType == null)
                     fieldType = typeof(string);
 
-                Configuration.RecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(fieldName.Trim(), startIndex, size) { FieldType = fieldType, QuoteField = quoteField,
+                Configuration.RecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(name.Trim(), startIndex, size) { FieldType = fieldType, QuoteField = quoteField,
                     FillChar = fillChar,
                     FieldValueJustification = fieldValueJustification,
-                    Truncate = truncate
+                    Truncate = truncate,
+                    FieldName = fieldName.IsNullOrWhiteSpace() ? name : fieldName
                 });
             }
 
             return this;
         }
 
-        public ChoFixedLengthWriter<T> WithField(string fieldName, int startIndex, int size, bool? quoteField = null, char fillChar = ' ', ChoFieldValueJustification fieldValueJustification = ChoFieldValueJustification.Left,
-            bool truncate = true)
+        public ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, bool? quoteField = null, char fillChar = ' ', ChoFieldValueJustification fieldValueJustification = ChoFieldValueJustification.Left,
+            bool truncate = true, string fieldName = null)
         {
-            return WithField(fieldName, startIndex, size, typeof(string), quoteField, fillChar, fieldValueJustification, truncate);
+            return WithField(name, startIndex, size, typeof(string), quoteField, fillChar, fieldValueJustification, truncate, fieldName);
         }
 
         #endregion Fluent API
