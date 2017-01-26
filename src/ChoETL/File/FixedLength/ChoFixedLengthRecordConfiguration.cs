@@ -40,6 +40,14 @@ namespace ChoETL
             private set;
         }
 
+        public ChoFixedLengthRecordFieldConfiguration this[string name]
+        {
+            get
+            {
+                return RecordFieldConfigurations.Where(i => i.Name == name).FirstOrDefault();
+            }
+        }
+
         public ChoFixedLengthRecordConfiguration(Type recordType = null) : base(recordType)
         {
             RecordFieldConfigurations = new List<ChoFixedLengthRecordFieldConfiguration>();

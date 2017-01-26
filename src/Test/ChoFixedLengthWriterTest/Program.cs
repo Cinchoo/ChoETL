@@ -19,6 +19,7 @@ namespace ChoFixedLengthWriterTest
         static void QuickDynamicTest()
         {
             ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "MM/dd/yyyy";
+            ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.YOrN;
 
             List<ExpandoObject> objs = new List<ExpandoObject>();
             dynamic rec1 = new ExpandoObject();
@@ -43,7 +44,7 @@ namespace ChoFixedLengthWriterTest
             using (var parser = new ChoFixedLengthWriter(writer).WithFirstLineHeader().WithField("Id", 0, 3, null, '0', ChoFieldValueJustification.Right, true).WithField("Name", 3, 10).
                 WithField("JoinedDate", 13, 10).WithField("IsActive", 23, 1, fieldName: "A"))
             {
-                //parser.Configuration.FileHeaderConfiguration.FillChar = '$';
+                parser.Configuration["Name"].AddConverter(new ChoUpperCaseConverter());
                 parser.Write(objs);
 
                 writer.Flush();

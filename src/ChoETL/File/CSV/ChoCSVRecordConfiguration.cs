@@ -43,6 +43,14 @@ namespace ChoETL
             private set;
         }
 
+        public ChoCSVRecordFieldConfiguration this[string name]
+        {
+            get
+            {
+                return RecordFieldConfigurations.Where(i => i.Name == name).FirstOrDefault();
+            }
+        }
+
         public ChoCSVRecordConfiguration(Type recordType = null) : base(recordType)
         {
             RecordFieldConfigurations = new List<ChoCSVRecordFieldConfiguration>();
