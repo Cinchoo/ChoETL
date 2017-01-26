@@ -106,7 +106,7 @@ namespace ChoETL
                             throw new ChoParserException("Empty line found at {0} location.".FormatString(pair.Item1));
                         else
                         {
-                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Empty line found at [{0}]...".FormatString(pair.Item1));
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring empty line found at [{0}].".FormatString(pair.Item1));
                             return true;
                         }
                     }
