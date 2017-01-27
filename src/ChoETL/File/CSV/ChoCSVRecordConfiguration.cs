@@ -17,7 +17,7 @@ namespace ChoETL
             set;
         }
 
-        public List<ChoCSVRecordFieldConfiguration> RecordFieldConfigurations
+        public List<ChoCSVRecordFieldConfiguration> CSVRecordFieldConfigurations
         {
             get;
             private set;
@@ -43,17 +43,26 @@ namespace ChoETL
             private set;
         }
 
+        public override IEnumerable<ChoRecordFieldConfiguration> RecordFieldConfigurations
+        {
+            get
+            {
+                foreach (var item in CSVRecordFieldConfigurations)
+                    yield return item;
+            }
+        }
+
         public ChoCSVRecordFieldConfiguration this[string name]
         {
             get
             {
-                return RecordFieldConfigurations.Where(i => i.Name == name).FirstOrDefault();
+                return CSVRecordFieldConfigurations.Where(i => i.Name == name).FirstOrDefault();
             }
         }
 
         public ChoCSVRecordConfiguration(Type recordType = null) : base(recordType)
         {
-            RecordFieldConfigurations = new List<ChoCSVRecordFieldConfiguration>();
+            CSVRecordFieldConfigurations = new List<ChoCSVRecordFieldConfiguration>();
 
             if (recordType != null)
             {
@@ -100,7 +109,7 @@ namespace ChoETL
         {
             if (recordType != typeof(ExpandoObject))
             {
-                RecordFieldConfigurations.Clear();
+                CSVRecordFieldConfigurations.Clear();
 
                 if (TypeDescriptor.GetProperties(recordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().Any()).Any())
                 {
@@ -111,7 +120,7 @@ namespace ChoETL
 
                         var obj = new ChoCSVRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().First());
                         obj.FieldType = pd.PropertyType;
-                        RecordFieldConfigurations.Add(obj);
+                        CSVRecordFieldConfigurations.Add(obj);
                     }
                 }
                 else
@@ -124,7 +133,7 @@ namespace ChoETL
 
                         var obj = new ChoCSVRecordFieldConfiguration(pd.Name, ++position);
                         obj.FieldType = pd.PropertyType;
-                        RecordFieldConfigurations.Add(obj);
+                        CSVRecordFieldConfigurations.Add(obj);
                     }
                 }
             }
@@ -134,7 +143,7 @@ namespace ChoETL
         {
             base.Validate(state);
 
-            if (Delimiter.IsNullOrWhiteSpace())
+            if (Delimiter.IsNull())
                 throw new ChoRecordConfigurationException("Delimiter can't be null or whitespace.");
             if (Delimiter == EOLDelimiter)
                 throw new ChoRecordConfigurationException("Delimiter [{0}] can't be same as EODDelimiter [{1}]".FormatString(Delimiter, EOLDelimiter));
@@ -163,12 +172,12 @@ namespace ChoETL
 
             string[] headers = state as string[];
             if (AutoDiscoverColumns
-                && RecordFieldConfigurations.Count == 0)
+                && CSVRecordFieldConfigurations.Count == 0)
             {
                 if (headers != null)
                 {
                     int index = 0;
-                    RecordFieldConfigurations = (from header in headers
+                    CSVRecordFieldConfigurations = (from header in headers
                                                  select new ChoCSVRecordFieldConfiguration(header, ++index)).ToList();
                 }
                 else
@@ -177,23 +186,23 @@ namespace ChoETL
                 }
             }
 
-            if (RecordFieldConfigurations.Count > 0)
-                MaxFieldPosition = RecordFieldConfigurations.Max(r => r.FieldPosition);
+            if (CSVRecordFieldConfigurations.Count > 0)
+                MaxFieldPosition = CSVRecordFieldConfigurations.Max(r => r.FieldPosition);
             else
                 throw new ChoRecordConfigurationException("No record fields specified.");
 
             //Validate each record field
-            foreach (var fieldConfig in RecordFieldConfigurations)
+            foreach (var fieldConfig in CSVRecordFieldConfigurations)
                 fieldConfig.Validate(this);
 
             if (!FileHeaderConfiguration.HasHeaderRecord)
             {
                 //Check if any field has 0 
-                if (RecordFieldConfigurations.Where(i => i.FieldPosition <= 0).Count() > 0)
+                if (CSVRecordFieldConfigurations.Where(i => i.FieldPosition <= 0).Count() > 0)
                     throw new ChoRecordConfigurationException("Some fields contain invalid field position. All field positions must be > 0.");
 
                 //Check field position for duplicate
-                int[] dupPositions = RecordFieldConfigurations.GroupBy(i => i.FieldPosition)
+                int[] dupPositions = CSVRecordFieldConfigurations.GroupBy(i => i.FieldPosition)
                     .Where(g => g.Count() > 1)
                     .Select(g => g.Key).ToArray();
 
@@ -203,11 +212,11 @@ namespace ChoETL
             else
             {
                 //Check if any field has empty names 
-                if (RecordFieldConfigurations.Where(i => i.FieldName.IsNullOrWhiteSpace()).Count() > 0)
+                if (CSVRecordFieldConfigurations.Where(i => i.FieldName.IsNullOrWhiteSpace()).Count() > 0)
                     throw new ChoRecordConfigurationException("Some fields has empty field name specified.");
 
                 //Check field names for duplicate
-                string[] dupFields = RecordFieldConfigurations.GroupBy(i => i.FieldName, FileHeaderConfiguration.StringComparer)
+                string[] dupFields = CSVRecordFieldConfigurations.GroupBy(i => i.FieldName, FileHeaderConfiguration.StringComparer)
                     .Where(g => g.Count() > 1)
                     .Select(g => g.Key).ToArray();
 
@@ -215,7 +224,7 @@ namespace ChoETL
                     throw new ChoRecordConfigurationException("Duplicate field name(s) [Name: {0}] specified to record fields.".FormatString(String.Join(",", dupFields)));
             }
 
-            RecordFieldConfigurationsDict = RecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
+            RecordFieldConfigurationsDict = CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
         }
     }
 }

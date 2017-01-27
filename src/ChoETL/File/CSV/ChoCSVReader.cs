@@ -112,7 +112,7 @@ namespace ChoETL
             ChoCSVRecordReader reader = new ChoCSVRecordReader(typeof(T), Configuration);
             reader.LoadSchema(_streamReader);
 
-            var dr = new ChoEnumerableDataReader(GetEnumerator().ToEnumerable(), Configuration.RecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType)).ToArray());
+            var dr = new ChoEnumerableDataReader(GetEnumerator().ToEnumerable(), Configuration.CSVRecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType)).ToArray());
             return dr;
         }
 
@@ -148,18 +148,18 @@ namespace ChoETL
         {
             if (!fieldsNames.IsNullOrEmpty())
             {
-                int maxFieldPos = Configuration.RecordFieldConfigurations.Count > 0 ? Configuration.RecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
+                int maxFieldPos = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
                 foreach (string fn in fieldsNames)
                 {
                     if (fn.IsNullOrEmpty())
                         continue;
                     if (!_clearFields)
                     {
-                        Configuration.RecordFieldConfigurations.Clear();
+                        Configuration.CSVRecordFieldConfigurations.Clear();
                         _clearFields = true;
                     }
 
-                    Configuration.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fn.Trim(), ++maxFieldPos));
+                    Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fn.Trim(), ++maxFieldPos));
                 }
 
             }
@@ -176,12 +176,12 @@ namespace ChoETL
 
                 if (!_clearFields)
                 {
-                    Configuration.RecordFieldConfigurations.Clear();
+                    Configuration.CSVRecordFieldConfigurations.Clear();
                     _clearFields = true;
                 }
 
-                int maxFieldPos = Configuration.RecordFieldConfigurations.Count > 0 ? Configuration.RecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-                Configuration.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fieldName.Trim(), ++maxFieldPos) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption });
+                int maxFieldPos = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
+                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fieldName.Trim(), ++maxFieldPos) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption });
             }
 
             return this;

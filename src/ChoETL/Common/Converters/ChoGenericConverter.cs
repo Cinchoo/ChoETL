@@ -11,9 +11,9 @@ namespace ChoETL
     public class ChoGenericConverter : IValueConverter
     {
         public Delegate ConvertOperation { get; private set; }
-        public string ConvertCode { get; private set; }
+        public string ConvertCode { get; set; }
         public Delegate ConvertBackOperation { get; private set; }
-        public string ConvertBackCode { get; private set; }
+        public string ConvertBackCode { get; set; }
 
         public ChoGenericConverter()
         {
@@ -22,7 +22,8 @@ namespace ChoETL
         public object Convert(object value, Type targetType,
             object parameter, System.Globalization.CultureInfo culture)
         {
-            ConvertCode = parameter.GetValueAt<string>(0);
+            string convertCode = parameter.GetValueAt<string>(0);
+            ConvertCode = convertCode.IsNullOrWhiteSpace() ? ConvertCode : convertCode;
             if (ConvertCode.IsNullOrWhiteSpace())
                 return value;
 
@@ -36,7 +37,8 @@ namespace ChoETL
         public object ConvertBack(object value, Type targetType,
             object parameter, System.Globalization.CultureInfo culture)
         {
-            ConvertBackCode = parameter.GetValueAt<string>(1);
+            string convertBackCode = parameter.GetValueAt<string>(1);
+            ConvertBackCode = convertBackCode.IsNullOrWhiteSpace() ? ConvertBackCode : convertBackCode;
             if (ConvertBackCode.IsNullOrWhiteSpace())
                 return value;
 

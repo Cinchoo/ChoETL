@@ -52,6 +52,7 @@
     <Compile Include="ChoEnums.cs" />
     <Compile Include="Common\ChoEnum.cs" />
     <Compile Include="Common\ChoEnumTypeCache.cs" />
+    <Compile Include="Common\Converters\ChoLowerCaseConverter.cs" />
     <Compile Include="Common\Converters\ChoUShortConverter.cs" />
     <Compile Include="Common\Converters\ChoShortConverter.cs" />
     <Compile Include="Common\Converters\ChoULongConverter.cs" />

@@ -189,7 +189,7 @@ namespace ChoETL
                     if (!FillRecord(rec, pair))
                         return false;
 
-                    rec.DoObjectLevelValidation(Configuration, Configuration.RecordFieldConfigurations.ToArray());
+                    rec.DoObjectLevelValidation(Configuration, Configuration.FixedLengthRecordFieldConfigurations.ToArray());
                 }
 
                 if (!RaiseAfterRecordLoad(rec, pair))
@@ -469,10 +469,10 @@ namespace ChoETL
 
             if (Configuration.ColumnCountStrict)
             {
-                if (_fieldNames.Length != Configuration.RecordFieldConfigurations.Count)
-                    throw new ChoParserException("Incorrect number of field headers found. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.RecordFieldConfigurations.Count, _fieldNames.Length));
+                if (_fieldNames.Length != Configuration.FixedLengthRecordFieldConfigurations.Count)
+                    throw new ChoParserException("Incorrect number of field headers found. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.FixedLengthRecordFieldConfigurations.Count, _fieldNames.Length));
 
-                string[] foundList = Configuration.RecordFieldConfigurations.Select(i => i.FieldName).Except(_fieldNames, Configuration.FileHeaderConfiguration.StringComparer).ToArray();
+                string[] foundList = Configuration.FixedLengthRecordFieldConfigurations.Select(i => i.FieldName).Except(_fieldNames, Configuration.FileHeaderConfiguration.StringComparer).ToArray();
                 if (foundList.Any())
                     throw new ChoParserException("Header name(s) [{0}] are not found in file header.".FormatString(String.Join(",", foundList)));
 

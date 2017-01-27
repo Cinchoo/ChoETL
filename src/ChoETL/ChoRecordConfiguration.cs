@@ -39,6 +39,10 @@ namespace ChoETL
             get;
             set;
         }
+        public abstract IEnumerable<ChoRecordFieldConfiguration> RecordFieldConfigurations
+        {
+            get;
+        }
 
         public ChoRecordConfiguration(Type recordType = null)
         {

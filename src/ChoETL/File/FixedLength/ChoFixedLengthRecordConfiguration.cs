@@ -18,7 +18,7 @@ namespace ChoETL
             set;
         }
 
-        public List<ChoFixedLengthRecordFieldConfiguration> RecordFieldConfigurations
+        public List<ChoFixedLengthRecordFieldConfiguration> FixedLengthRecordFieldConfigurations
         {
             get;
             private set;
@@ -40,17 +40,26 @@ namespace ChoETL
             private set;
         }
 
+        public override IEnumerable<ChoRecordFieldConfiguration> RecordFieldConfigurations
+        {
+            get
+            {
+                foreach (var item in FixedLengthRecordFieldConfigurations)
+                    yield return item;
+            }
+        }
+
         public ChoFixedLengthRecordFieldConfiguration this[string name]
         {
             get
             {
-                return RecordFieldConfigurations.Where(i => i.Name == name).FirstOrDefault();
+                return FixedLengthRecordFieldConfigurations.Where(i => i.Name == name).FirstOrDefault();
             }
         }
 
         public ChoFixedLengthRecordConfiguration(Type recordType = null) : base(recordType)
         {
-            RecordFieldConfigurations = new List<ChoFixedLengthRecordFieldConfiguration>();
+            FixedLengthRecordFieldConfigurations = new List<ChoFixedLengthRecordFieldConfiguration>();
 
             if (recordType != null)
             {
@@ -87,7 +96,7 @@ namespace ChoETL
         {
             if (recordType != typeof(ExpandoObject))
             {
-                RecordFieldConfigurations.Clear();
+                FixedLengthRecordFieldConfigurations.Clear();
 
                 foreach (PropertyDescriptor pd in TypeDescriptor.GetProperties(recordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().Any()))
                 {
@@ -95,7 +104,7 @@ namespace ChoETL
                     //    throw new ChoRecordConfigurationException("Property '{0}' is not a simple type.".FormatString(pd.Name));
                     var obj = new ChoFixedLengthRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().First());
                     obj.FieldType = pd.PropertyType;
-                    RecordFieldConfigurations.Add(obj);
+                    FixedLengthRecordFieldConfigurations.Add(obj);
                 }
             }
         }
@@ -132,7 +141,7 @@ namespace ChoETL
 
             //string[] headers = state as string[];
             if (AutoDiscoverColumns
-                && RecordFieldConfigurations.Count == 0 /*&& headers != null*/)
+                && FixedLengthRecordFieldConfigurations.Count == 0 /*&& headers != null*/)
             {
                 if (RecordType != null && RecordType != typeof(ExpandoObject)
                     && TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().Any()).Any())
@@ -151,7 +160,7 @@ namespace ChoETL
 
                         var obj = new ChoFixedLengthRecordFieldConfiguration(pd.Name, startIndex, size);
                         obj.FieldType = pd.PropertyType;
-                        RecordFieldConfigurations.Add(obj);
+                        FixedLengthRecordFieldConfigurations.Add(obj);
 
                         startIndex += size;
                     }
@@ -166,7 +175,7 @@ namespace ChoETL
                         foreach (var item in DiscoverColumns(line))
                         {
                             var obj = new ChoFixedLengthRecordFieldConfiguration(FileHeaderConfiguration.HasHeaderRecord ? item.Item1.NTrim() : "Column{0}".FormatString(++index), item.Item2, item.Item3);
-                            RecordFieldConfigurations.Add(obj);
+                            FixedLengthRecordFieldConfigurations.Add(obj);
                         }
                     }
                     else
@@ -177,7 +186,7 @@ namespace ChoETL
                             if (index < tuples.Length)
                             {
                                 var obj = new ChoFixedLengthRecordFieldConfiguration(FileHeaderConfiguration.HasHeaderRecord ? tuples[index].Item1.NTrim() : pd.Name, tuples[index].Item2, tuples[index].Item3);
-                                RecordFieldConfigurations.Add(obj);
+                                FixedLengthRecordFieldConfigurations.Add(obj);
                                 index++;
                             }
                             else
@@ -192,21 +201,21 @@ namespace ChoETL
                     foreach (string fn in fieldNames)
                     {
                         var obj = new ChoFixedLengthRecordFieldConfiguration(fn, startIndex, fieldLength);
-                        RecordFieldConfigurations.Add(obj);
+                        FixedLengthRecordFieldConfigurations.Add(obj);
                         startIndex += fieldLength;
                     }
                 }
             }
 
-            if (RecordFieldConfigurations.Count == 0)
+            if (FixedLengthRecordFieldConfigurations.Count == 0)
                 throw new ChoRecordConfigurationException("No record fields specified.");
 
             //Derive record length from fields
             if (RecordLength <= 0)
             {
-                int maxStartIndex = RecordFieldConfigurations.Max(f => f.StartIndex);
-                int maxSize = RecordFieldConfigurations.Where(f => f.StartIndex == maxStartIndex).Max(f1 => f1.Size.Value);
-                var fc = RecordFieldConfigurations.Where(f => f.StartIndex == maxStartIndex && f.Size.Value == maxSize).FirstOrDefault();
+                int maxStartIndex = FixedLengthRecordFieldConfigurations.Max(f => f.StartIndex);
+                int maxSize = FixedLengthRecordFieldConfigurations.Where(f => f.StartIndex == maxStartIndex).Max(f1 => f1.Size.Value);
+                var fc = FixedLengthRecordFieldConfigurations.Where(f => f.StartIndex == maxStartIndex && f.Size.Value == maxSize).FirstOrDefault();
                 if (fc != null)
                 {
                     RecordLength = fc.StartIndex + fc.Size.Value;
@@ -217,11 +226,11 @@ namespace ChoETL
                 throw new ChoRecordConfigurationException("RecordLength must be > 0");
 
             //Check if any field has empty names
-            if (RecordFieldConfigurations.Where(i => i.FieldName.IsNullOrWhiteSpace()).Count() > 0)
+            if (FixedLengthRecordFieldConfigurations.Where(i => i.FieldName.IsNullOrWhiteSpace()).Count() > 0)
                 throw new ChoRecordConfigurationException("Some fields has empty field name specified.");
 
             //Check field names for duplicate
-            string[] dupFields = RecordFieldConfigurations.GroupBy(i => i.FieldName, FileHeaderConfiguration.StringComparer)
+            string[] dupFields = FixedLengthRecordFieldConfigurations.GroupBy(i => i.FieldName, FileHeaderConfiguration.StringComparer)
                 .Where(g => g.Count() > 1)
                 .Select(g => g.Key).ToArray();
 
@@ -229,21 +238,21 @@ namespace ChoETL
                 throw new ChoRecordConfigurationException("Duplicate field names [Name: {0}] specified to record fields.".FormatString(String.Join(",", dupFields)));
 
             //Find duplicate fields with start index
-            ChoFixedLengthRecordFieldConfiguration dupRecConfig = RecordFieldConfigurations.GroupBy(i => i.StartIndex).Where(g => g.Count() > 1).Select(g => g.FirstOrDefault()).FirstOrDefault();
+            ChoFixedLengthRecordFieldConfiguration dupRecConfig = FixedLengthRecordFieldConfigurations.GroupBy(i => i.StartIndex).Where(g => g.Count() > 1).Select(g => g.FirstOrDefault()).FirstOrDefault();
             if (dupRecConfig != null)
                 throw new ChoRecordConfigurationException("Found '{0}' duplicate record field with same start index.".FormatString(dupRecConfig.FieldName));
 
             //Check any overlapping fields specified
-            foreach (var f in RecordFieldConfigurations)
+            foreach (var f in FixedLengthRecordFieldConfigurations)
             {
                 if (f.StartIndex + f.Size.Value > RecordLength)
                     throw new ChoRecordConfigurationException("Found '{0}' record field out of bounds of record length.".FormatString(f.FieldName));
             }
 
-            RecordFieldConfigurationsDict = RecordFieldConfigurations.OrderBy(i => i.StartIndex).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
+            RecordFieldConfigurationsDict = FixedLengthRecordFieldConfigurations.OrderBy(i => i.StartIndex).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
 
             //Validate each record field
-            foreach (var fieldConfig in RecordFieldConfigurations)
+            foreach (var fieldConfig in FixedLengthRecordFieldConfigurations)
                 fieldConfig.Validate(this);
 
             if (!FileHeaderConfiguration.HasHeaderRecord)

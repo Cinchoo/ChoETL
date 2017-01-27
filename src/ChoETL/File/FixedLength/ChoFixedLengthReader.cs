@@ -104,7 +104,7 @@ namespace ChoETL
             ChoFixedLengthRecordReader reader = new ChoFixedLengthRecordReader(typeof(T), Configuration);
             reader.LoadSchema(_streamReader);
 
-            var dr = new ChoEnumerableDataReader(GetEnumerator().ToEnumerable(), Configuration.RecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType)).ToArray());
+            var dr = new ChoEnumerableDataReader(GetEnumerator().ToEnumerable(), Configuration.FixedLengthRecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType)).ToArray());
             return dr;
         }
 
@@ -151,13 +151,13 @@ namespace ChoETL
             {
                 if (!_clearFields)
                 {
-                    Configuration.RecordFieldConfigurations.Clear();
+                    Configuration.FixedLengthRecordFieldConfigurations.Clear();
                     _clearFields = true;
                 }
                 if (fieldType == null)
                     fieldType = typeof(string);
 
-                Configuration.RecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(fieldName.Trim(), startIndex, size) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption });
+                Configuration.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(fieldName.Trim(), startIndex, size) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption });
             }
 
             return this;

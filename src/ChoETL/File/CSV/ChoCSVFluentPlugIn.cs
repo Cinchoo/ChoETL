@@ -38,16 +38,16 @@ namespace ChoETL
 
         public static IChoCSVFluentPlugIn WithFields(this IChoCSVFluentPlugIn plugIn, params string[] fieldsNames)
         {
-            plugIn.Configuration.RecordFieldConfigurations.Clear();
+            plugIn.Configuration.CSVRecordFieldConfigurations.Clear();
             if (!fieldsNames.IsNullOrEmpty())
             {
-                int maxFieldPos = plugIn.Configuration.RecordFieldConfigurations.Count > 0 ? plugIn.Configuration.RecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
+                int maxFieldPos = plugIn.Configuration.CSVRecordFieldConfigurations.Count > 0 ? plugIn.Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
                 foreach (string fn in fieldsNames)
                 {
                     if (fn.IsNullOrEmpty())
                         continue;
 
-                    plugIn.Configuration.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fn.Trim(), ++maxFieldPos));
+                    plugIn.Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fn.Trim(), ++maxFieldPos));
                 }
 
             }
@@ -62,8 +62,8 @@ namespace ChoETL
                 if (fieldType == null)
                     fieldType = typeof(string);
 
-                int maxFieldPos = plugIn.Configuration.RecordFieldConfigurations.Count > 0 ? plugIn.Configuration.RecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-                plugIn.Configuration.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fieldsName.Trim(), ++maxFieldPos) { FieldType = fieldType });
+                int maxFieldPos = plugIn.Configuration.CSVRecordFieldConfigurations.Count > 0 ? plugIn.Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
+                plugIn.Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fieldsName.Trim(), ++maxFieldPos) { FieldType = fieldType });
             }
 
             return plugIn;

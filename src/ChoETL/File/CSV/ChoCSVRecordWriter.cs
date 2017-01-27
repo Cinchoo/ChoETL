@@ -104,7 +104,7 @@ namespace ChoETL
                             try
                             {
                                 if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
-                                    record.DoObjectLevelValidatation(Configuration.RecordFieldConfigurations.Cast< ChoRecordFieldConfiguration>().ToArray());
+                                    record.DoObjectLevelValidatation(Configuration.CSVRecordFieldConfigurations.Cast< ChoRecordFieldConfiguration>().ToArray());
 
                                 if (ToText(_index, record, out recText))
                                 {
@@ -290,10 +290,10 @@ namespace ChoETL
             {
                 var eoDict = rec as IDictionary<string, Object>;
 
-                if (eoDict.Count != Configuration.RecordFieldConfigurations.Count)
-                    throw new ChoParserException("Incorrect number of fields found in record object. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.RecordFieldConfigurations.Count, eoDict.Count));
+                if (eoDict.Count != Configuration.CSVRecordFieldConfigurations.Count)
+                    throw new ChoParserException("Incorrect number of fields found in record object. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.CSVRecordFieldConfigurations.Count, eoDict.Count));
 
-                string[] missingColumns = Configuration.RecordFieldConfigurations.Select(v => v.Name).Except(eoDict.Keys, Configuration.FileHeaderConfiguration.StringComparer).ToArray();
+                string[] missingColumns = Configuration.CSVRecordFieldConfigurations.Select(v => v.Name).Except(eoDict.Keys, Configuration.FileHeaderConfiguration.StringComparer).ToArray();
                 if (missingColumns.Length > 0)
                     throw new ChoParserException("[{0}] fields are not found in record object.".FormatString(String.Join(",", missingColumns)));
             }
@@ -301,10 +301,10 @@ namespace ChoETL
             {
                 PropertyDescriptor[] pds = ChoTypeDescriptor.GetProperties<ChoCSVRecordFieldAttribute>(rec.GetType()).ToArray();
 
-                if (pds.Length != Configuration.RecordFieldConfigurations.Count)
-                    throw new ChoParserException("Incorrect number of fields found in record object. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.RecordFieldConfigurations.Count, pds.Length));
+                if (pds.Length != Configuration.CSVRecordFieldConfigurations.Count)
+                    throw new ChoParserException("Incorrect number of fields found in record object. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.CSVRecordFieldConfigurations.Count, pds.Length));
 
-                string[] missingColumns = Configuration.RecordFieldConfigurations.Select(v => v.Name).Except(pds.Select(pd => pd.Name), Configuration.FileHeaderConfiguration.StringComparer).ToArray();
+                string[] missingColumns = Configuration.CSVRecordFieldConfigurations.Select(v => v.Name).Except(pds.Select(pd => pd.Name), Configuration.FileHeaderConfiguration.StringComparer).ToArray();
                 if (missingColumns.Length > 0)
                     throw new ChoParserException("[{0}] fields are not found in record object.".FormatString(String.Join(",", missingColumns)));
             }
@@ -338,7 +338,7 @@ namespace ChoETL
             string delimiter = Configuration.Delimiter;
             StringBuilder msg = new StringBuilder();
             string value;
-            foreach (var member in Configuration.RecordFieldConfigurations)
+            foreach (var member in Configuration.CSVRecordFieldConfigurations)
             {
                 value = NormalizeFieldValue(member.Name, member.FieldName, member.Size, 
                     Configuration.FileHeaderConfiguration.Truncate == null ? true : Configuration.FileHeaderConfiguration.Truncate.Value,

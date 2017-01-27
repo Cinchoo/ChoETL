@@ -125,13 +125,13 @@ namespace ChoETL
             {
                 if (!_clearFields)
                 {
-                    Configuration.RecordFieldConfigurations.Clear();
+                    Configuration.FixedLengthRecordFieldConfigurations.Clear();
                     _clearFields = true;
                 }
                 if (fieldType == null)
                     fieldType = typeof(string);
 
-                Configuration.RecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(name.Trim(), startIndex, size) { FieldType = fieldType, QuoteField = quoteField,
+                Configuration.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(name.Trim(), startIndex, size) { FieldType = fieldType, QuoteField = quoteField,
                     FillChar = fillChar,
                     FieldValueJustification = fieldValueJustification,
                     Truncate = truncate,
@@ -177,7 +177,7 @@ namespace ChoETL
             var expandoDic = (IDictionary<string, object>)expando;
 
             //int ordinal = 0;
-            if (Configuration.RecordFieldConfigurations.IsNullOrEmpty())
+            if (Configuration.FixedLengthRecordFieldConfigurations.IsNullOrEmpty())
             {
                 string colName = null;
                 Type colType = null;
@@ -191,7 +191,7 @@ namespace ChoETL
 
                     fieldLength = ChoFixedLengthFieldDefaultSizeConfiguation.Instance.GetSize(colType);
                     var obj = new ChoFixedLengthRecordFieldConfiguration(colName, startIndex, fieldLength);
-                    Configuration.RecordFieldConfigurations.Add(obj);
+                    Configuration.FixedLengthRecordFieldConfigurations.Add(obj);
                     startIndex += fieldLength;
                 }
             }
@@ -200,7 +200,7 @@ namespace ChoETL
             {
                 expandoDic.Clear();
 
-                foreach (var fc in Configuration.RecordFieldConfigurations)
+                foreach (var fc in Configuration.FixedLengthRecordFieldConfigurations)
                 {
                     expandoDic.Add(fc.Name, dr[fc.Name]);
                 }
@@ -217,7 +217,7 @@ namespace ChoETL
             var expando = new ExpandoObject();
             var expandoDic = (IDictionary<string, object>)expando;
 
-            if (Configuration.RecordFieldConfigurations.IsNullOrEmpty())
+            if (Configuration.FixedLengthRecordFieldConfigurations.IsNullOrEmpty())
             {
                 string colName = null;
                 Type colType = null;
@@ -231,7 +231,7 @@ namespace ChoETL
 
                     fieldLength = ChoFixedLengthFieldDefaultSizeConfiguation.Instance.GetSize(colType);
                     var obj = new ChoFixedLengthRecordFieldConfiguration(colName, startIndex, fieldLength);
-                    Configuration.RecordFieldConfigurations.Add(obj);
+                    Configuration.FixedLengthRecordFieldConfigurations.Add(obj);
                     startIndex += fieldLength;
                 }
             }
@@ -240,7 +240,7 @@ namespace ChoETL
             {
                 expandoDic.Clear();
 
-                foreach (var fc in Configuration.RecordFieldConfigurations)
+                foreach (var fc in Configuration.FixedLengthRecordFieldConfigurations)
                 {
                     expandoDic.Add(fc.Name, row[fc.Name]);
                 }

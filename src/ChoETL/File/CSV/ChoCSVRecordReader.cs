@@ -208,7 +208,7 @@ namespace ChoETL
                     if (!FillRecord(rec, pair))
                         return false;
 
-                    rec.DoObjectLevelValidation(Configuration, Configuration.RecordFieldConfigurations.ToArray());
+                    rec.DoObjectLevelValidation(Configuration, Configuration.CSVRecordFieldConfigurations.ToArray());
                 }
 
                 if (!RaiseAfterRecordLoad(rec, pair))
@@ -288,8 +288,8 @@ namespace ChoETL
                                select x).ToArray();
             if (Configuration.ColumnCountStrict)
             {
-                if (fieldValues.Length != Configuration.RecordFieldConfigurations.Count)
-                    throw new ChoParserException("Incorrect number of field values found at line [{2}]. Expected [{0}] field values. Found [{1}] field values.".FormatString(Configuration.RecordFieldConfigurations.Count, fieldValues.Length, pair.Item1));
+                if (fieldValues.Length != Configuration.CSVRecordFieldConfigurations.Count)
+                    throw new ChoParserException("Incorrect number of field values found at line [{2}]. Expected [{0}] field values. Found [{1}] field values.".FormatString(Configuration.CSVRecordFieldConfigurations.Count, fieldValues.Length, pair.Item1));
             }
 
             Dictionary<string, string> fieldNameValues = ToFieldNameValues(fieldValues);
@@ -535,17 +535,17 @@ namespace ChoETL
 
             if (Configuration.ColumnCountStrict)
             {
-                if (_fieldNames.Length != Configuration.RecordFieldConfigurations.Count)
-                    throw new ChoParserException("Incorrect number of field headers found. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.RecordFieldConfigurations.Count, _fieldNames.Length));
+                if (_fieldNames.Length != Configuration.CSVRecordFieldConfigurations.Count)
+                    throw new ChoParserException("Incorrect number of field headers found. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.CSVRecordFieldConfigurations.Count, _fieldNames.Length));
 
-                string[] foundList = Configuration.RecordFieldConfigurations.Select(i => i.FieldName).Except(_fieldNames, Configuration.FileHeaderConfiguration.StringComparer).ToArray();
+                string[] foundList = Configuration.CSVRecordFieldConfigurations.Select(i => i.FieldName).Except(_fieldNames, Configuration.FileHeaderConfiguration.StringComparer).ToArray();
                 if (foundList.Any())
                     throw new ChoParserException("Header name(s) [{0}] are not found in file header.".FormatString(String.Join(",", foundList)));
 
                 if (Configuration.ColumnOrderStrict)
                 {
                     int colIndex = 0;
-                    foreach (string fieldName in Configuration.RecordFieldConfigurations.OrderBy(i => i.FieldPosition).Select(i => i.Name))
+                    foreach (string fieldName in Configuration.CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Select(i => i.Name))
                     {
                         if (String.Compare(_fieldNames[colIndex], fieldName, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture) != 0)
                             throw new ChoParserException("Incorrect CSV column order found. Expected [{0}] CSV column at '{1}' location.".FormatString(fieldName, colIndex + 1));

@@ -122,18 +122,18 @@ namespace ChoETL
         {
             if (!fieldsNames.IsNullOrEmpty())
             {
-                int maxFieldPos = Configuration.RecordFieldConfigurations.Count > 0 ? Configuration.RecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
+                int maxFieldPos = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
                 foreach (string fn in fieldsNames)
                 {
                     if (fn.IsNullOrEmpty())
                         continue;
                     if (!_clearFields)
                     {
-                        Configuration.RecordFieldConfigurations.Clear();
+                        Configuration.CSVRecordFieldConfigurations.Clear();
                         _clearFields = true;
                     }
 
-                    Configuration.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fn.Trim(), ++maxFieldPos));
+                    Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fn.Trim(), ++maxFieldPos));
                 }
 
             }
@@ -151,12 +151,12 @@ namespace ChoETL
 
                 if (!_clearFields)
                 {
-                    Configuration.RecordFieldConfigurations.Clear();
+                    Configuration.CSVRecordFieldConfigurations.Clear();
                     _clearFields = true;
                 }
 
-                int maxFieldPos = Configuration.RecordFieldConfigurations.Count > 0 ? Configuration.RecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-                Configuration.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fieldName.Trim(), ++maxFieldPos) { FieldType = fieldType, QuoteField = quoteField,
+                int maxFieldPos = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
+                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fieldName.Trim(), ++maxFieldPos) { FieldType = fieldType, QuoteField = quoteField,
                     FillChar = fillChar,
                     FieldValueJustification = fieldValueJustification,
                     Truncate = truncate
@@ -201,7 +201,7 @@ namespace ChoETL
             var expandoDic = (IDictionary<string, object>)expando;
 
             int ordinal = 0;
-            if (Configuration.RecordFieldConfigurations.IsNullOrEmpty())
+            if (Configuration.CSVRecordFieldConfigurations.IsNullOrEmpty())
             {
                 string colName = null;
                 Type colType = null;
@@ -211,7 +211,7 @@ namespace ChoETL
                     colType = row["DataType"] as Type;
                     //if (!colType.IsSimple()) continue;
 
-                    Configuration.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(colName, ++ordinal) { FieldType = colType });
+                    Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(colName, ++ordinal) { FieldType = colType });
                 }
             }
 
@@ -219,7 +219,7 @@ namespace ChoETL
             {
                 expandoDic.Clear();
 
-                foreach (var fc in Configuration.RecordFieldConfigurations)
+                foreach (var fc in Configuration.CSVRecordFieldConfigurations)
                 {
                     expandoDic.Add(fc.Name, dr[fc.Name]);
                 }
@@ -237,7 +237,7 @@ namespace ChoETL
             var expandoDic = (IDictionary<string, object>)expando;
 
             int ordinal = 0;
-            if (Configuration.RecordFieldConfigurations.IsNullOrEmpty())
+            if (Configuration.CSVRecordFieldConfigurations.IsNullOrEmpty())
             {
                 string colName = null;
                 Type colType = null;
@@ -247,7 +247,7 @@ namespace ChoETL
                     colType = col.DataType;
                     //if (!colType.IsSimple()) continue;
 
-                    Configuration.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(colName, ++ordinal) { FieldType = colType });
+                    Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(colName, ++ordinal) { FieldType = colType });
                 }
             }
 
@@ -255,7 +255,7 @@ namespace ChoETL
             {
                 expandoDic.Clear();
 
-                foreach (var fc in Configuration.RecordFieldConfigurations)
+                foreach (var fc in Configuration.CSVRecordFieldConfigurations)
                 {
                     expandoDic.Add(fc.Name, row[fc.Name]);
                 }
