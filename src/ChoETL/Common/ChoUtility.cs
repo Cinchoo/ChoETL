@@ -676,6 +676,8 @@ namespace ChoETL
             else
             {
                 Type targetType = typeof(T);
+                if (targetType == typeof(object))
+                    return (T)@this;
 
                 try
                 {

@@ -40,15 +40,6 @@ namespace ChoETL
             private set;
         }
 
-        public override IEnumerable<ChoRecordFieldConfiguration> RecordFieldConfigurations
-        {
-            get
-            {
-                foreach (var item in FixedLengthRecordFieldConfigurations)
-                    yield return item;
-            }
-        }
-
         public ChoFixedLengthRecordFieldConfiguration this[string name]
         {
             get

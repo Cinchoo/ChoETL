@@ -25,7 +25,7 @@ namespace ChoETL
             private set;
         }
 
-        public ChoCSVRecordReader(Type recordType, ChoCSVRecordConfiguration configuration = null) : base(recordType)
+        public ChoCSVRecordReader(Type recordType, ChoCSVRecordConfiguration configuration) : base(recordType)
         {
             ChoGuard.ArgumentNotNull(configuration, "Configuration");
             Configuration = configuration;
@@ -37,13 +37,13 @@ namespace ChoETL
 
         public override void LoadSchema(object source)
         {
-            var e = AsEnumerable(source, new TraceSwitch("ChoETLSwitch", "ChoETL Trace Switch", "Off")).GetEnumerator();
+            var e = AsEnumerable(source, ChoETLFramework.TraceSwitchOff).GetEnumerator();
             e.MoveNext();
         }
 
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
         {
-            return AsEnumerable(source, ChoETLFramework.TraceSwitch, filterFunc);
+            return AsEnumerable(source, TraceSwitch, filterFunc);
         }
 
         private IEnumerable<object> AsEnumerable(object source, TraceSwitch traceSwitch, Func<object, bool?> filterFunc = null)

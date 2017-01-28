@@ -20,6 +20,7 @@ namespace ChoETL
         private Lazy<IEnumerator<T>> _enumerator = null;
         private CultureInfo _prevCultureInfo = null;
         private bool _clearFields = false;
+        internal TraceSwitch TraceSwitch;
 
         public ChoCSVRecordConfiguration Configuration
         {
@@ -31,6 +32,7 @@ namespace ChoETL
         {
             ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
 
+            TraceSwitch = ChoETLFramework.TraceSwitch;
             Configuration = configuration;
 
             Init();
@@ -95,9 +97,17 @@ namespace ChoETL
             return r;
         }
 
+        internal static IEnumerator<object> LoadText(Type recType, string inputText, ChoCSVRecordConfiguration configuration, Encoding encoding, int bufferSize)
+        {
+            ChoCSVRecordReader reader = new ChoCSVRecordReader(recType, configuration);
+            reader.TraceSwitch = ChoETLFramework.TraceSwitchOff;
+            return reader.AsEnumerable(new StreamReader(inputText.ToStream(), encoding, false, bufferSize)).GetEnumerator();
+        }
+
         public IEnumerator<T> GetEnumerator()
         {
             ChoCSVRecordReader reader = new ChoCSVRecordReader(typeof(T), Configuration);
+            reader.TraceSwitch = TraceSwitch;
             var e = reader.AsEnumerable(_streamReader).GetEnumerator();
             return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
         }
@@ -110,6 +120,7 @@ namespace ChoETL
         public IDataReader AsDataReader()
         {
             ChoCSVRecordReader reader = new ChoCSVRecordReader(typeof(T), Configuration);
+            reader.TraceSwitch = TraceSwitch;
             reader.LoadSchema(_streamReader);
 
             var dr = new ChoEnumerableDataReader(GetEnumerator().ToEnumerable(), Configuration.CSVRecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType)).ToArray());

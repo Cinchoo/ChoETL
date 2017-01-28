@@ -23,7 +23,7 @@ namespace ChoETL
             private set;
         }
 
-        public ChoCSVRecordWriter(Type recordType, ChoCSVRecordConfiguration configuration = null) : base(recordType)
+        public ChoCSVRecordWriter(Type recordType, ChoCSVRecordConfiguration configuration) : base(recordType)
         {
             ChoGuard.ArgumentNotNull(configuration, "Configuration");
             Configuration = configuration;

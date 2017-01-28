@@ -123,6 +123,13 @@ namespace ChoETL
             return r;
         }
 
+        internal static IEnumerator<object> LoadText(Type recType, string inputText, ChoFixedLengthRecordConfiguration configuration, Encoding encoding, int bufferSize)
+        {
+            ChoFixedLengthRecordReader reader = new ChoFixedLengthRecordReader(recType, configuration);
+            reader.TraceSwitch = ChoETLFramework.TraceSwitchOff;
+            return reader.AsEnumerable(new StreamReader(inputText.ToStream(), encoding, false, bufferSize)).GetEnumerator();
+        }
+
         #region Fluent API
 
         public ChoFixedLengthReader<T> WithRecordLength(int length)

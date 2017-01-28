@@ -43,15 +43,6 @@ namespace ChoETL
             private set;
         }
 
-        public override IEnumerable<ChoRecordFieldConfiguration> RecordFieldConfigurations
-        {
-            get
-            {
-                foreach (var item in CSVRecordFieldConfigurations)
-                    yield return item;
-            }
-        }
-
         public ChoCSVRecordFieldConfiguration this[string name]
         {
             get

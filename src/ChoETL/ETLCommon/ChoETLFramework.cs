@@ -90,6 +90,7 @@ namespace ChoETL
 
     public static class ChoETLFramework
     {
+        public static readonly TraceSwitch TraceSwitchOff = new TraceSwitch("_ChoETLSwitchOff_", "ChoETL Trace Switch", "Off");
         private static TraceSwitch _switch = new TraceSwitch("ChoETLSwitch", "ChoETL Trace Switch", "Info");
         public static TraceSwitch TraceSwitch
         {

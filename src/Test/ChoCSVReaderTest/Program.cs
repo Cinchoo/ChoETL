@@ -79,11 +79,11 @@ namespace ChoCSVReaderTest
             ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "MMM dd, yyyy";
 
             ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1) { FieldType = typeof(int) });
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Salary", 3) { FieldType = typeof(ChoCurrency) });
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("JoinedDate", 4) { FieldType = typeof(DateTime) });
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Active", 5) { FieldType = typeof(bool) });
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1) { FieldType = typeof(int) });
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Salary", 3) { FieldType = typeof(ChoCurrency) });
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("JoinedDate", 4) { FieldType = typeof(DateTime) });
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Active", 5) { FieldType = typeof(bool) });
 
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
@@ -108,11 +108,11 @@ namespace ChoCSVReaderTest
         {
             ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
             config.Culture = new System.Globalization.CultureInfo("se-SE");
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1) { FieldType = typeof(int) });
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Salary", 3) { FieldType = typeof(ChoCurrency) });
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("JoinedDate", 4) { FieldType = typeof(DateTime) });
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("EmployeeNo", 5) { FieldType = typeof(int) });
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1) { FieldType = typeof(int) });
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Salary", 3) { FieldType = typeof(ChoCurrency) });
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("JoinedDate", 4) { FieldType = typeof(DateTime) });
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("EmployeeNo", 5) { FieldType = typeof(int) });
 
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
@@ -138,11 +138,11 @@ namespace ChoCSVReaderTest
             ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.ZeroOrOne;
 
             ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1) { FieldType = typeof(int) });
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Salary", 3) { FieldType = typeof(ChoCurrency) });
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("JoinedDate", 4) { FieldType = typeof(DateTime) });
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Active", 5) { FieldType = typeof(bool) });
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1) { FieldType = typeof(int) });
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Salary", 3) { FieldType = typeof(ChoCurrency) });
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("JoinedDate", 4) { FieldType = typeof(DateTime) });
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Active", 5) { FieldType = typeof(bool) });
 
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
@@ -177,11 +177,11 @@ namespace ChoCSVReaderTest
             ChoTypeConverterFormatSpec.Instance.EnumFormat = ChoEnumFormatSpec.Description;
 
             ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1) { FieldType = typeof(int) });
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Salary", 3) { FieldType = typeof(ChoCurrency) });
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("JoinedDate", 4) { FieldType = typeof(DateTime) });
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("EmployeeType", 5) { FieldType = typeof(EmployeeType) });
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1) { FieldType = typeof(int) });
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Salary", 3) { FieldType = typeof(ChoCurrency) });
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("JoinedDate", 4) { FieldType = typeof(DateTime) });
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("EmployeeType", 5) { FieldType = typeof(EmployeeType) });
 
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
@@ -206,11 +206,11 @@ namespace ChoCSVReaderTest
         {
             ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
             config.Culture = new System.Globalization.CultureInfo("se-SE");
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1) { FieldType = typeof(int) });
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Salary", 3) { FieldType = typeof(ChoCurrency) });
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("JoinedDate", 4) { FieldType = typeof(DateTime) });
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("EmployeeNo", 5) { FieldType = typeof(int) });
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1) { FieldType = typeof(int) });
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Salary", 3) { FieldType = typeof(ChoCurrency) });
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("JoinedDate", 4) { FieldType = typeof(DateTime) });
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("EmployeeNo", 5) { FieldType = typeof(int) });
 
             ChoTypeConverterFormatSpec.Instance.IntNumberStyle = NumberStyles.AllowParentheses;
 
@@ -238,9 +238,9 @@ namespace ChoCSVReaderTest
             ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
             var idConfig = new ChoCSVRecordFieldConfiguration("Id", 1);
             idConfig.Validators = new ValidationAttribute[] { new RequiredAttribute() };
-            config.RecordFieldConfigurations.Add(idConfig);
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Salary", 3) { FieldType = typeof(ChoCurrency) });
+            config.CSVRecordFieldConfigurations.Add(idConfig);
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Salary", 3) { FieldType = typeof(ChoCurrency) });
 
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
@@ -294,9 +294,9 @@ namespace ChoCSVReaderTest
         static void CurrencyDynamicTest()
         {
             ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1));
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Salary", 3) { FieldType = typeof(ChoCurrency) });
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1));
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Salary", 3) { FieldType = typeof(ChoCurrency) });
 
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
@@ -384,9 +384,9 @@ namespace ChoCSVReaderTest
             //config.MapRecordFields<EmployeeRec>();
             ChoCSVRecordFieldConfiguration idConfig = new ChoCSVRecordFieldConfiguration("Id", 1);
             idConfig.AddConverter(new IntConverter());
-            config.RecordFieldConfigurations.Add(idConfig);
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name1", 2));
+            config.CSVRecordFieldConfigurations.Add(idConfig);
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name1", 2));
 
             dynamic rec = new ExpandoObject();
             rec.Id = 1;

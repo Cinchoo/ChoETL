@@ -450,8 +450,8 @@ namespace ChoCSVWriterTest
         {
             ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
             config.FileHeaderConfiguration.HasHeaderRecord = true;
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1) { Validators = new ValidationAttribute[] { new RangeAttribute(3, 100) } });
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1) { Validators = new ValidationAttribute[] { new RangeAttribute(3, 100) } });
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
             config.ObjectValidationMode = ChoObjectValidationMode.ObjectLevel;
 
             List<ExpandoObject> objs = new List<ExpandoObject>();
@@ -474,8 +474,8 @@ namespace ChoCSVWriterTest
         static void ConfigFirstApproachWriteRecordsToFile()
         {
             ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1));
-            config.RecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1));
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
 
             List<EmployeeRecSimple> objs = new List<EmployeeRecSimple>();
             EmployeeRecSimple rec1 = new EmployeeRecSimple();

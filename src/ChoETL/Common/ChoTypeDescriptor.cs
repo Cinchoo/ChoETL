@@ -158,22 +158,13 @@
             if (memberInfo == null)
                 return EmptyParams;
 
-            Type memberType;
-            if (ChoType.TryGetMemberType(memberInfo, out memberType) && (memberType == null /*|| memberType.IsSimple() */))
-                return EmptyParams;
-
             if (_typeMemberTypeConverterCache.ContainsKey(memberInfo))
             {
-                if (_typeMemberTypeConverterCache[memberInfo] == EmptyTypeConverters)
+                if (_typeMemberTypeConverterCache[memberInfo] != EmptyTypeConverters)
                 {
-                    if (_typeTypeConverterParamsCache.ContainsKey(memberType))
-                        return _typeTypeConverterParamsCache[memberType];
+                    if (_typeMemberTypeConverterParamsCache.ContainsKey(memberInfo))
+                        return _typeMemberTypeConverterParamsCache[memberInfo];
                 }
-
-                //if (ChoObjectMemberMetaDataCache.Default.GetConverterParams(memberInfo) == null)
-                //    return _typeMemberTypeConverterParamsCache[memberInfo];
-                //else
-                //    return ChoObjectMemberMetaDataCache.Default.GetConverterParams(memberInfo);
             }
 
             return EmptyParams;
@@ -224,7 +215,7 @@
 
                         int index = 0;
                         SortedList<int, object> queue = new SortedList<int, object>();
-                        SortedList<int, object[]> paramsQueue = new SortedList<int, object[]>();
+                        SortedList<int, object> paramsQueue = new SortedList<int, object>();
                         foreach (Attribute attribute in GetPropetyAttributes<ChoTypeConverterAttribute>(memberInfo.ReflectedType, memberInfo.Name))  //ChoType.GetMemberAttributesByBaseType(memberInfo, typeof(ChoTypeConverterAttribute)))
                         {
                             ChoTypeConverterAttribute converterAttribute = (ChoTypeConverterAttribute)attribute;
@@ -233,13 +224,13 @@
                                 if (converterAttribute.PriorityInternal == null)
                                 {
                                     queue.Add(index, converterAttribute.CreateInstance());
-                                    paramsQueue.Add(index, converterAttribute.Parameters);
+                                    paramsQueue.Add(index, converterAttribute.ParametersArray);
                                     index++;
                                 }
                                 else
                                 {
                                     queue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.CreateInstance());
-                                    paramsQueue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.Parameters);
+                                    paramsQueue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.ParametersArray);
                                 }
                             }
                         }
@@ -330,7 +321,7 @@
                         {
                             int index1 = 0;
                             SortedList<int, object> queue1 = new SortedList<int, object>();
-                            SortedList<int, object[]> paramsQueue1 = new SortedList<int, object[]>();
+                            SortedList<int, object> paramsQueue1 = new SortedList<int, object>();
 
                             foreach (Type t in types)
                             {

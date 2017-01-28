@@ -7,6 +7,7 @@
     using System.ComponentModel;
     using System.Collections.Generic;
     using System.Windows.Data;
+    using System.Linq;
 
     #endregion
 
@@ -28,17 +29,23 @@
             get { return _converterType; }
         }
 
-        private object[] _parameters;
-        public object[] Parameters
-        {
-            get { return _parameters == null ? new object[] { } : _parameters; }
-            set { _parameters = value; }
-        }
+        internal object[] ParametersArray { get; set; }
 
-        public object Parameter
+        private string _parameters;
+        public string Parameters
         {
-            get { throw new NotSupportedException(); }
-            set { _parameters = new object[] { value }; }
+            get { return _parameters; }
+            set
+            {
+                if (_parameters != value)
+                {
+                    _parameters = value;
+                    if (value != null)
+                        ParametersArray = value.SplitNTrim(",", ChoStringSplitOptions.None, '\'').AsTypedEnumerable<object>().ToArray();
+                    else
+                        ParametersArray = null;
+                }
+            }
         }
 
         #endregion Instance Properties
@@ -75,11 +82,11 @@
             if (ConverterType == null)
                 return null;
 
-            if (ChoGuard.IsArgumentNotNullOrEmpty(Parameters) && ChoType.HasConstructor(ConverterType, Parameters))
-                return ChoType.CreateInstance(ConverterType, Parameters);
-            else if (ChoType.HasConstructor(ConverterType, new object[] { String.Empty }))
-                return ChoType.CreateInstance(ConverterType, new object[] { Parameters != null && Parameters.Length > 0 ? Parameters[0] : String.Empty });
-            else
+            //if (ChoGuard.IsArgumentNotNullOrEmpty(Parameters) && ChoType.HasConstructor(ConverterType, ParametersArray))
+            //    return ChoType.CreateInstance(ConverterType, ParametersArray);
+            //else if (ChoType.HasConstructor(ConverterType, new object[] { String.Empty }))
+            //    return ChoType.CreateInstance(ConverterType, new object[] { ParametersArray != null && ParametersArray.Length > 0 ? ParametersArray[0] : String.Empty });
+            //else
                 return Activator.CreateInstance(ConverterType);
         }
 

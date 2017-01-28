@@ -23,7 +23,7 @@ namespace ChoETL
             private set;
         }
 
-        public ChoFixedLengthRecordWriter(Type recordType, ChoFixedLengthRecordConfiguration configuration = null) : base(recordType)
+        public ChoFixedLengthRecordWriter(Type recordType, ChoFixedLengthRecordConfiguration configuration) : base(recordType)
         {
             ChoGuard.ArgumentNotNull(configuration, "Configuration");
             Configuration = configuration;

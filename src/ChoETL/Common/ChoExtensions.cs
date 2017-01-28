@@ -40,34 +40,34 @@ namespace ChoETL
         /// <param name="text">A string value to be splited and trim.</param>
         /// <param name="Separators">List of Separators used to split the string.</param>
         /// <returns>A string array contains splitted and trimmed string values, if the input text is null/empty, an empty array will be returned.</returns>
-        public static string[] SplitNTrim(this string text, char Separator)
+        public static string[] SplitNTrim(this string text, char separator)
         {
-            return SplitNTrim(text, new char[] { Separator });
+            return SplitNTrim(text, new char[] { separator });
         }
 
         /// <summary>
         /// Split the string into multiple strings by the Separators and trim the each one.
         /// </summary>
         /// <param name="text">A string value to be splited and trim.</param>
-        /// <param name="Separators">List of Separators used to split the string.</param>
+        /// <param name="separators">List of Separators used to split the string.</param>
         /// <returns>A string array contains splitted and trimmed string values, if the input text is null/empty, an empty array will be returned.</returns>
-        public static string[] SplitNTrim(this string text, char[] Separators)
+        public static string[] SplitNTrim(this string text, char[] separators)
         {
-            return SplitNTrim(text, Separators, ChoStringSplitOptions.All);
+            return SplitNTrim(text, separators, ChoStringSplitOptions.All);
         }
 
-        public static string[] SplitNTrim(this string text, string value)
+        public static string[] SplitNTrim(this string text, string separator)
         {
-            return SplitNTrim(text, value, ChoStringSplitOptions.All);
+            return SplitNTrim(text, separator, ChoStringSplitOptions.All);
         }
 
-        public static string[] SplitNTrim(this string text, string value, ChoStringSplitOptions stringSplitOptions, char quoteChar = '"')
+        public static string[] SplitNTrim(this string text, string separator, ChoStringSplitOptions stringSplitOptions, char quoteChar = '"')
         {
             if (text == null || text.Trim().Length == 0) return new string[] { };
 
             string word;
             List<string> tokenList = new List<string>();
-            foreach (string token in Split(text, value, stringSplitOptions, quoteChar))
+            foreach (string token in Split(text, separator, stringSplitOptions, quoteChar))
             {
                 word = token != null ? token.Trim() : token;
                 if (String.IsNullOrEmpty(word))

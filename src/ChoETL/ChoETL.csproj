@@ -69,6 +69,7 @@
     <Compile Include="Common\Converters\ChoEnumConverter.cs" />
     <Compile Include="ETLCommon\IChoETLNameableObject.cs" />
     <Compile Include="File\CSV\ChoCSVFluentPlugIn.cs" />
+    <Compile Include="File\FixedLength\ChoFixedLengthFileHeaderConfiguration.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthRecordWriter.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthWriter.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthFileHeaderAttribute.cs" />
@@ -208,12 +209,16 @@
     <Compile Include="File\CSV\ChoCSVFileHeaderAttribute.cs" />
     <Compile Include="File\CSV\ChoCSVRecordWriter.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthRecordReader.cs" />
-    <Compile Include="File\FixedLength\ChoFixedLengthFileHeaderConfiguration.cs" />
+    <Compile Include="File\Manifold\ChoManifoldFileHeaderAttribute.cs" />
+    <Compile Include="File\Manifold\ChoManifoldFileHeaderConfiguration.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthRecordObjectAttribute.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthRecordFieldAttribute.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthRecordFieldConfiguration.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthRecordConfiguration.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthReader.cs" />
+    <Compile Include="File\Manifold\ChoManifoldRecordReader.cs" />
+    <Compile Include="File\Manifold\ChoManifoldRecordConfiguration.cs" />
+    <Compile Include="File\Manifold\ChoManifoldReader.cs" />
     <Compile Include="IChoNotifyRecordWrite.cs" />
     <Compile Include="IChoNotifyRecordRead.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
