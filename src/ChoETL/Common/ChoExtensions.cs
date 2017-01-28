@@ -213,10 +213,10 @@ namespace ChoETL
                     else
                     {
                         string subString = text.Substring(offset, i - len - offset);
-                        if (subString.Length == 2)
-                            splitStrings.Add(subString);
-                        else
-                        {
+                        //if (subString.Length == 2)
+                        //    splitStrings.Add(subString);
+                        //else
+                        //{
                             word = NormalizeString(subString, quoteChar);
                             if (String.IsNullOrEmpty(word))
                             {
@@ -225,7 +225,7 @@ namespace ChoETL
                             }
                             else
                                 splitStrings.Add(word);
-                        }
+                        //}
                     }
 
                     offset = i + 1;

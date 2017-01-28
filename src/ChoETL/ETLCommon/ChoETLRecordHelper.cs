@@ -159,11 +159,6 @@ namespace ChoETL
 
         public static object GetDefaultValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig)
         {
-            if (rec is ExpandoObject)
-            {
-                return ((IDictionary<string, object>)rec).GetDefaultValue(fn, fieldConfig);
-            }
-
             if (fieldConfig.IsDefaultValueSpecified)
             {
                 return fieldConfig.DefaultValue;
