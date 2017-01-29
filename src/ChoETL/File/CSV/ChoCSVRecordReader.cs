@@ -32,7 +32,7 @@ namespace ChoETL
 
             _callbackRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordRead>(recordType);
 
-            Configuration.Validate();
+            //Configuration.Validate();
         }
 
         public override void LoadSchema(object source)

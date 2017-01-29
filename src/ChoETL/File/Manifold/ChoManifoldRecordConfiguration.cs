@@ -19,7 +19,12 @@ namespace ChoETL
             get;
             set;
         }
-
+        internal IChoNotifyRecordRead CallbackRecord;
+        public Type NotifyRecordType
+        {
+            get;
+            set;
+        }
         private readonly Dictionary<Type, ChoFileRecordConfiguration> SubRecordConfigurations = new Dictionary<Type, ChoFileRecordConfiguration>();
         public ChoFileRecordConfiguration this[Type recordType]
         {
@@ -61,6 +66,9 @@ namespace ChoETL
         public override void Validate(object state)
         {
             base.Validate(state);
+
+            if (NotifyRecordType != null)
+                CallbackRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordRead>(NotifyRecordType);
 
             if (RecordSelector == null)
                 throw new ChoRecordConfigurationException("Missing record selector.");
