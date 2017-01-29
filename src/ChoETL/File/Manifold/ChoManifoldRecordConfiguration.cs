@@ -19,8 +19,14 @@ namespace ChoETL
             get;
             set;
         }
-        internal IChoNotifyRecordRead CallbackRecord;
-        public Type NotifyRecordType
+        internal IChoNotifyRecordRead NotifyRecordReadObject;
+        public Type NotifyRecordReadType
+        {
+            get;
+            set;
+        }
+        internal IChoNotifyRecordWrite NotifyRecordWriteObject;
+        public Type NotifyRecordWriteType
         {
             get;
             set;
@@ -67,11 +73,10 @@ namespace ChoETL
         {
             base.Validate(state);
 
-            if (NotifyRecordType != null)
-                CallbackRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordRead>(NotifyRecordType);
-
-            if (RecordSelector == null)
-                throw new ChoRecordConfigurationException("Missing record selector.");
+            if (NotifyRecordReadType != null)
+                NotifyRecordReadObject = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordRead>(NotifyRecordReadType);
+            if (NotifyRecordWriteType != null)
+                NotifyRecordWriteObject = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordWrite>(NotifyRecordWriteType);
 
             //if (SubRecordConfigurations.Count == 0)
             //    throw new ChoRecordConfigurationException("Atleast one record type must be registered.");

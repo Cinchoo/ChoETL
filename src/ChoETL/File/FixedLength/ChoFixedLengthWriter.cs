@@ -97,6 +97,23 @@ namespace ChoETL
             }
         }
 
+        internal static string ToText(object rec, ChoFixedLengthRecordConfiguration configuration, Encoding encoding, int bufferSize)
+        {
+            ChoFixedLengthRecordWriter writer = new ChoFixedLengthRecordWriter(rec.GetType(), configuration);
+            writer.TraceSwitch = ChoETLFramework.TraceSwitchOff;
+
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var sw = new StreamWriter(stream, configuration.Encoding, configuration.BufferSize))
+            {
+                writer.WriteTo(sw, new object[] { rec }).Loop();
+                sw.Flush();
+                stream.Position = 0;
+
+                return reader.ReadToEnd();
+            }
+        }
+
         #region Fluent API
 
         public ChoFixedLengthWriter<T> WithRecordLength(int length)

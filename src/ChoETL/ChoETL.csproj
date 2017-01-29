@@ -256,6 +256,8 @@
     <Compile Include="File\CSV\ChoCSVFileHeaderAttribute.cs" />
     <Compile Include="File\CSV\ChoCSVRecordWriter.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthRecordReader.cs" />
+    <Compile Include="File\Manifold\ChoManifoldRecordWriter.cs" />
+    <Compile Include="File\Manifold\ChoManifoldWriter.cs" />
     <Compile Include="File\Manifold\ChoManifoldFileHeaderAttribute.cs" />
     <Compile Include="File\Manifold\ChoManifoldFileHeaderConfiguration.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthRecordObjectAttribute.cs" />
