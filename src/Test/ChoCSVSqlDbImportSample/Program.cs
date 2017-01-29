@@ -15,9 +15,23 @@ namespace ChoCSVSqlDbImportSample
         static void Main(string[] args)
         {
             ChoETLFramework.Initialize();
-            LoadTabFile();
+            SortByCity();
         }
 
+        static void SortByCity()
+        {
+            foreach (var e in new ChoCSVReader<Address>("Test.txt").WithDelimiter("\t").ExternalSort(new AddressCityComparer(), 10, 10))
+                Console.WriteLine(e.ToStringEx());
+        }
+
+        public class AddressCityComparer : IComparer<Address>
+        {
+            public int Compare(Address x, Address y)
+            {
+                return String.Compare(x.City, y.City);
+            }
+        }
+        [Serializable]
         public class Address
         {
             [ChoCSVRecordField(1)]
