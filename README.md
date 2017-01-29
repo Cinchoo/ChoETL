@@ -6,6 +6,12 @@ Simple, intutive  Extract, transform and load (ETL) library for .NET. Extremely 
 
 Cinchoo ETL is a code-based ETL framework for extracting data from multiple sources, transforming, and loading into your very own data warehouse in .NET environment. You can have data in your data warehouse in no time.
 
+## Install
+
+To install Cinchoo ETL, run the following command in the Package Manager Console
+
+    PM> Install-Package ChoETL
+
 # Phase 1:
 Here are the items will be targetted on phase 1. 
 
