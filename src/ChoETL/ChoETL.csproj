@@ -95,6 +95,7 @@
   <ItemGroup>
     <Compile Include="ChoEnums.cs" />
     <Compile Include="ChoTextFileExternalSorter.cs" />
+    <Compile Include="Common\Attributes\ChoDefaultValueAttribute.cs" />
     <Compile Include="Common\ChoDisposable.cs" />
     <Compile Include="Common\ChoEnum.cs" />
     <Compile Include="Common\ChoEnumTypeCache.cs" />
@@ -256,6 +257,7 @@
     <Compile Include="File\CSV\ChoCSVFileHeaderAttribute.cs" />
     <Compile Include="File\CSV\ChoCSVRecordWriter.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthRecordReader.cs" />
+    <Compile Include="File\Manifold\ChoManifoldRecordTypeConfiguration.cs" />
     <Compile Include="File\Manifold\ChoManifoldRecordWriter.cs" />
     <Compile Include="File\Manifold\ChoManifoldWriter.cs" />
     <Compile Include="File\Manifold\ChoManifoldFileHeaderAttribute.cs" />

@@ -12,9 +12,19 @@ namespace ChoETL
 {
     public class ChoManifoldRecordConfiguration : ChoFileRecordConfiguration
     {
-        public Func<string, Type> RecordSelector { get; set; }
+        private Func<string, Type> _recordSelecter = null;
+        public Func<string, Type> RecordSelector
+        {
+            get { return _recordSelecter; }
+            set { _recordSelecter = value; }
+        }
         public bool IgnoreIfNoRecordParserExists { get; set; }
         public ChoManifoldFileHeaderConfiguration FileHeaderConfiguration
+        {
+            get;
+            set;
+        }
+        public ChoManifoldRecordTypeConfiguration RecordTypeConfiguration
         {
             get;
             set;
@@ -57,6 +67,17 @@ namespace ChoETL
         public ChoManifoldRecordConfiguration() : base(typeof(object))
         {
             FileHeaderConfiguration = new ChoManifoldFileHeaderConfiguration(Culture);
+            RecordTypeConfiguration = new ChoManifoldRecordTypeConfiguration();
+            _recordSelecter = new Func<string, Type>((line) =>
+            {
+                if (line.IsNullOrEmpty()) return null;
+                if (RecordTypeConfiguration.StartIndex >= 0 && RecordTypeConfiguration.Size == 0)
+                    return null;
+                if (RecordTypeConfiguration.StartIndex + RecordTypeConfiguration.Size > line.Length)
+                    return null;
+
+                return RecordTypeConfiguration[line.Substring(RecordTypeConfiguration.StartIndex, RecordTypeConfiguration.Size)];
+            });
         }
 
         public override void MapRecordFields<T>()
@@ -87,6 +108,16 @@ namespace ChoETL
                     throw new ChoRecordConfigurationException($"Missing record configuration for '{t.Name}' type.");
             }
 
+            if (RecordTypeConfiguration != null)
+            {
+                if (RecordTypeConfiguration.StartIndex < 0)
+                    throw new ChoRecordConfigurationException("RecordTypeConfiguration start index must be >= 0.");
+                else
+                {
+                    if (RecordTypeConfiguration.Size <= 0)
+                        throw new ChoRecordConfigurationException("RecordTypeConfiguration size must be > 0.");
+                }
+            }
         }
     }
 }

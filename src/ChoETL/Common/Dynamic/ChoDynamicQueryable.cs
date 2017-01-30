@@ -191,6 +191,12 @@ namespace ChoETL
             return parser.Parse(resultType);
         }
 
+        public static LambdaExpression ParseLambda(Type resultType, string expression, params object[] values)
+        {
+            ExpressionParser parser = new ExpressionParser(null, expression, values);
+            return Expression.Lambda(parser.Parse(resultType));
+        }
+
         public static LambdaExpression ParseLambda(Type itType, Type resultType, string expression, params object[] values)
         {
             return ParseLambda(new ParameterExpression[] { Expression.Parameter(itType, "") }, resultType, expression, values);

@@ -53,6 +53,7 @@ namespace ChoManifoldWriterTest
     public class SampleType
     {
         [ChoFixedLengthRecordField(0, 8)]
+        [ChoDefaultValue("() => DateTime.Now")]
         public string Field1 { get; set; }
 
         [ChoFixedLengthRecordField(8, 3)]

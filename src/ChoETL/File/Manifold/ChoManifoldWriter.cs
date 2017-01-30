@@ -102,6 +102,21 @@ namespace ChoETL
             return this;
         }
 
+        public ChoManifoldWriter WithRecordTypeCodePositionAt(int startIndex, int size)
+        {
+            Configuration.RecordTypeConfiguration.StartIndex = startIndex;
+            Configuration.RecordTypeConfiguration.Size = size;
+
+            return this;
+        }
+
+        public ChoManifoldWriter RecordTypeFor(string recordTypeCode, Type type)
+        {
+            Configuration.RecordTypeConfiguration[recordTypeCode] = type;
+
+            return this;
+        }
+
         #endregion Fluent API
     }
 }
