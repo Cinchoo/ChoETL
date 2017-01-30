@@ -80,7 +80,7 @@ namespace ChoETL
             _writer.WriteTo(_streamWriter, new T[] { record } ).Loop();
         }
 
-        public static string ToText<TRec>(IEnumerable<TRec> records)
+        public static string ToText<TRec>(IEnumerable<TRec> records, ChoFixedLengthRecordConfiguration configuration = null)
             where TRec : class
         {
             using (var stream = new MemoryStream())
@@ -95,6 +95,12 @@ namespace ChoETL
 
                 return reader.ReadToEnd();
             }
+        }
+
+        public static string ToText<TRec>(TRec record, ChoFixedLengthRecordConfiguration configuration = null)
+            where TRec : class
+        {
+            return ToText(ChoEnumerable.AsEnumerable(record), configuration);
         }
 
         internal static string ToText(object rec, ChoFixedLengthRecordConfiguration configuration, Encoding encoding, int bufferSize)
