@@ -10,12 +10,12 @@ namespace ChoETL
 {
     public abstract class ChoFileRecordFieldConfiguration : ChoRecordFieldConfiguration
     {
-        public char FillChar
+        public char? FillChar
         {
             get;
             set;
         }
-        public ChoFieldValueJustification FieldValueJustification
+        public ChoFieldValueJustification? FieldValueJustification
         {
             get;
             set;
@@ -43,16 +43,14 @@ namespace ChoETL
         
         public ChoFileRecordFieldConfiguration(string name, ChoFileRecordFieldAttribute attr = null) : base(name, attr)
         {
-            FillChar = ' ';
-            FieldValueJustification = ChoFieldValueJustification.Left;
             FieldValueTrimOption = ChoFieldValueTrimOption.Trim;
             Truncate = true;
             IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any;
 
             if (attr != null)
             {
-                FillChar = attr.FillChar;
-                FieldValueJustification = attr.FieldValueJustification;
+                FillChar = attr.FillCharInternal;
+                FieldValueJustification = attr.FieldValueJustificationInternal;
                 FieldValueTrimOption = attr.FieldValueTrimOption;
                 Truncate = attr.Truncate;
                 Size = attr.SizeInternal;

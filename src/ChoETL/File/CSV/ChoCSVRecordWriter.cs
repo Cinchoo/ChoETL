@@ -273,15 +273,26 @@ namespace ChoETL
 
                 if (firstColumn)
                 {
-                    msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, kvp.Value.FieldValueJustification, kvp.Value.FillChar, false));
+                    msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification), GetFillChar(kvp.Value.FillChar), false));
                     firstColumn = false;
                 }
                 else
-                    msg.AppendFormat("{0}{1}", Configuration.Delimiter, NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, kvp.Value.FieldValueJustification, kvp.Value.FillChar, false));
+                    msg.AppendFormat("{0}{1}", Configuration.Delimiter, NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification),
+                        GetFillChar(kvp.Value.FillChar), false));
             }
 
             recText = msg.ToString();
             return true;
+        }
+
+        private ChoFieldValueJustification GetFieldValueJustification(ChoFieldValueJustification? fieldValueJustification)
+        {
+            return fieldValueJustification == null ? ChoFieldValueJustification.Left : fieldValueJustification.Value;
+        }
+
+        private char GetFillChar(char? fillChar)
+        {
+            return fillChar == null ? ' ' : fillChar.Value;
         }
 
         private void CheckColumnsStrict(object rec)

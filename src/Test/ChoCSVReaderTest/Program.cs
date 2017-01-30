@@ -600,7 +600,7 @@ namespace ChoCSVReaderTest
         }
     }
 
-    //[MetadataType(typeof(EmployeeRecMeta))]
+    [MetadataType(typeof(EmployeeRecMeta))]
     //[ChoCSVFileHeader()]
     [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.IgnoreAndContinue,
     IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any, ThrowAndStopOnMissingField = false)]

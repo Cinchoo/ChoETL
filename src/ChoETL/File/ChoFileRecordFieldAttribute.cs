@@ -9,15 +9,17 @@ namespace ChoETL
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true )]
     public abstract class ChoFileRecordFieldAttribute : ChoRecordFieldAttribute
     {
+        internal char? FillCharInternal;
         public char FillChar
         {
-            get;
-            set;
+            get { return FillCharInternal.CastTo<char>(); }
+            set { FillCharInternal = value; }
         }
+        internal ChoFieldValueJustification? FieldValueJustificationInternal;
         public ChoFieldValueJustification FieldValueJustification
         {
-            get;
-            set;
+            get { return FieldValueJustificationInternal.CastTo<ChoFieldValueJustification>(); }
+            set { FieldValueJustificationInternal = value; }
         }
         public ChoFieldValueTrimOption FieldValueTrimOption
         {
@@ -44,8 +46,6 @@ namespace ChoETL
 
         public ChoFileRecordFieldAttribute()
         {
-            FillChar = ' ';
-            FieldValueJustification = ChoFieldValueJustification.Left;
             FieldValueTrimOption = ChoFieldValueTrimOption.Trim;
             Truncate = true;
             IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any;

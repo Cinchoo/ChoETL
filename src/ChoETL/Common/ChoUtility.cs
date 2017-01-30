@@ -570,9 +570,9 @@ namespace ChoETL
             }
         }
 
-        public static string ToNString(this object target)
+        public static string ToNString<T>(this T target, T defaultValue = default(T))
         {
-            return target == null ? String.Empty : target.ToString();
+            return target == null ? defaultValue == null ? String.Empty : defaultValue.ToString() : target.ToString();
         }
 
         public static string Serialize<T>(this T obj)

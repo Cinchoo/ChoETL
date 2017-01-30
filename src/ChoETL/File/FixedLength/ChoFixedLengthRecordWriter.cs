@@ -158,6 +158,7 @@ namespace ChoETL
             StringBuilder msg = new StringBuilder();
             object fieldValue = null;
             string fieldText = null;
+            Type fieldType = null;
             ChoFixedLengthRecordFieldConfiguration fieldConfig = null;
 
             if (Configuration.ColumnCountStrict)
@@ -166,6 +167,7 @@ namespace ChoETL
             //bool firstColumn = true;
             foreach (KeyValuePair<string, ChoFixedLengthRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
+                fieldType = null;
                 fieldConfig = kvp.Value;
                 fieldValue = null;
                 fieldText = String.Empty;
@@ -190,11 +192,15 @@ namespace ChoETL
                     {
                         IDictionary<string, Object> dict = rec as IDictionary<string, Object>;
                         fieldValue = dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
+                        fieldType = kvp.Value.FieldType;
                     }
                     else
                     {
                         if (ChoType.HasProperty(rec.GetType(), kvp.Key))
+                        {
                             fieldValue = ChoType.GetPropertyValue(rec, kvp.Key);
+                            fieldType = ChoType.GetMemberType(rec.GetType(), kvp.Key);
+                        }
                     }
 
                     //Discover default value, use it if null
@@ -273,11 +279,59 @@ namespace ChoETL
                 else
                     fieldText = fieldValue.ToString();
 
-                msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, kvp.Value.FieldValueJustification, kvp.Value.FillChar, false));
+                msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification, fieldType), GetFillChar(kvp.Value.FillChar, fieldType), false));
             }
 
             recText = msg.ToString();
             return true;
+        }
+
+        private ChoFieldValueJustification GetFieldValueJustification(ChoFieldValueJustification? fieldValueJustification, Type fieldType)
+        {
+            if (fieldValueJustification != null)
+                return fieldValueJustification.Value;
+
+            if (fieldType == typeof(int)
+              || fieldType == typeof(uint)
+              || fieldType == typeof(long)
+              || fieldType == typeof(ulong)
+              || fieldType == typeof(short)
+              || fieldType == typeof(ushort)
+              || fieldType == typeof(byte)
+              || fieldType == typeof(sbyte)
+              || fieldType == typeof(float)
+              || fieldType == typeof(double)
+              || fieldType == typeof(decimal)
+              )
+            {
+                return ChoFieldValueJustification.Right;
+            }
+            else
+                return ChoFieldValueJustification.Left;
+        }
+
+        private char GetFillChar(char? fillChar, Type fieldType)
+        {
+            if (fillChar != null)
+                return fillChar.Value;
+
+            if (fieldType == typeof(int)
+                || fieldType == typeof(uint)
+                || fieldType == typeof(long)
+                || fieldType == typeof(ulong)
+                || fieldType == typeof(short)
+                || fieldType == typeof(ushort)
+                || fieldType == typeof(byte)
+                || fieldType == typeof(sbyte)
+                || fieldType == typeof(float)
+                || fieldType == typeof(double)
+                || fieldType == typeof(decimal)
+                )
+            {
+                return '0';
+            }
+            else
+                return ' ';
         }
 
         private void CheckColumnsStrict(object rec)
