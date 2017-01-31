@@ -32,7 +32,7 @@ namespace ChoETL
             if (value is sbyte)
             {
                 sbyte convValue = (sbyte)value;
-                string format = parameter.GetValueAt<string>(0, ChoTypeConverterFormatSpec.Instance.SByteFormat);
+                string format = parameter.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.SByteFormat);
                 return !format.IsNullOrWhiteSpace() ? convValue.ToString(format, culture) : convValue.ToString(culture);
             }
             else

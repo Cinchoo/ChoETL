@@ -32,7 +32,7 @@ namespace ChoETL
             if (value is BigInteger)
             {
                 BigInteger convValue = (BigInteger)value;
-                string format = parameter.GetValueAt<string>(0, ChoTypeConverterFormatSpec.Instance.BigIntegerFormat);
+                string format = parameter.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.BigIntegerFormat);
                 return !format.IsNullOrWhiteSpace() ? convValue.ToString(format, culture) : convValue.ToString(culture);
             }
             else

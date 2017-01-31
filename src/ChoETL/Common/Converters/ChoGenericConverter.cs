@@ -29,7 +29,7 @@ namespace ChoETL
 
             if (this.ConvertOperation == null)
             {
-                this.ConvertOperation = ConstructOperation(value, targetType);
+                this.ConvertOperation = ConstructOperation(ConvertCode, value, targetType);
             }
             return this.ConvertOperation.DynamicInvoke(value);
         }
@@ -44,17 +44,17 @@ namespace ChoETL
 
             if (this.ConvertOperation == null)
             {
-                this.ConvertBackOperation = ConstructOperation(value, targetType);
+                this.ConvertBackOperation = ConstructOperation(ConvertBackCode, value, targetType);
             }
             return this.ConvertBackOperation.DynamicInvoke(value);
         }
 
-        private Delegate ConstructOperation(object value, Type targetType)
+        private Delegate ConstructOperation(string codeSnippet, object value, Type targetType)
         {
-            int opi = this.ConvertCode.IndexOf("=>");
+            int opi = codeSnippet.IndexOf("=>");
             if (opi < 0) throw new Exception("No lambda operator =>");
-            string param = this.ConvertCode.Substring(0, opi).NTrim();
-            string body = this.ConvertCode.Substring(opi + 2).NTrim();
+            string param = codeSnippet.Substring(0, opi).NTrim();
+            string body = codeSnippet.Substring(opi + 2).NTrim();
             ParameterExpression p = Expression.Parameter(
                 value.GetType(), param);
             LambdaExpression lambda = DynamicExpression.ParseLambda(

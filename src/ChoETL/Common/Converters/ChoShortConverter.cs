@@ -32,7 +32,7 @@ namespace ChoETL
             if (value is short)
             {
                 short convValue = (short)value;
-                string format = parameter.GetValueAt<string>(0, ChoTypeConverterFormatSpec.Instance.ShortFormat);
+                string format = parameter.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.ShortFormat);
                 return !format.IsNullOrWhiteSpace() ? convValue.ToString(format, culture) : convValue.ToString(culture);
             }
             else

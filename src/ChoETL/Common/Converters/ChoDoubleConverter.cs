@@ -32,7 +32,7 @@ namespace ChoETL
             if (value is Double)
             {
                 Double convValue = (Double)value;
-                string format = parameter.GetValueAt<string>(0, ChoTypeConverterFormatSpec.Instance.DoubleFormat);
+                string format = parameter.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.DoubleFormat);
                 return !format.IsNullOrWhiteSpace() ? convValue.ToString(format, culture) : convValue.ToString(culture);
             }
             else

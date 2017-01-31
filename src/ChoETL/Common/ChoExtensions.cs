@@ -69,7 +69,7 @@ namespace ChoETL
             List<string> tokenList = new List<string>();
             foreach (string token in Split(text, separator, stringSplitOptions, quoteChar))
             {
-                word = token != null ? token.Trim() : token;
+                word = token != null ? NormalizeString(token.Trim(), quoteChar) : token;
                 if (String.IsNullOrEmpty(word))
                 {
                     if (stringSplitOptions != ChoStringSplitOptions.RemoveEmptyEntries)

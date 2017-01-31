@@ -13,6 +13,12 @@ namespace ChoManifoldWriterTest
     {
         static void Main(string[] args)
         {
+            string v = @", 'v => string.Join("""", v.Where(Char.IsDigit)')";
+            foreach (var z in v.SplitNTrim(",", ChoStringSplitOptions.None, '\''))
+                Console.WriteLine(z);
+
+            return;
+
             QuickTest();
         }
 
