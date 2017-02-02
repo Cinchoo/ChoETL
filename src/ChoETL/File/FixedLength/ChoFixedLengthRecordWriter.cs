@@ -244,32 +244,32 @@ namespace ChoETL
                                 dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
                             }
                             else
-                                throw;
+                                throw new ChoParserException($"Failed to write '{fieldValue}' value of '{kvp.Key}' member.", ex);
                         }
                         else if (ChoType.HasProperty(rec.GetType(), kvp.Key) && rec.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
                         {
                             rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
                         }
                         else
-                            throw;
+                            throw new ChoParserException($"Failed to write '{fieldValue}' value of '{kvp.Key}' member.", ex);
                     }
                     catch (Exception innerEx)
                     {
-                        if (fieldConfig.ErrorMode == ChoErrorMode.IgnoreAndContinue)
+                        if (ex == innerEx.InnerException)
                         {
-                            continue;
-                        }
-                        else if (fieldConfig.ErrorMode == ChoErrorMode.ReportAndContinue)
-                        {
-                            if (!RaiseRecordFieldWriteError(rec, index, kvp.Key, fieldText, ex))
-                                throw;
+                            if (fieldConfig.ErrorMode == ChoErrorMode.IgnoreAndContinue)
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                if (!RaiseRecordFieldWriteError(rec, index, kvp.Key, fieldText, ex))
+                                    throw new ChoParserException($"Failed to write '{fieldValue}' value of '{kvp.Key}' member.", ex);
+                            }
                         }
                         else
                         {
-                            if (ex != innerEx)
-                                throw new ChoParserException("Failed to use '{0}' fallback value for '{1}' field.".FormatString(fieldValue, fieldConfig.FieldName), innerEx);
-                            else
-                                throw;
+                            throw new ChoParserException("Failed to use '{0}' fallback value for '{1}' member.".FormatString(fieldValue, kvp.Key), innerEx);
                         }
                     }
                 }

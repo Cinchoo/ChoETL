@@ -26,8 +26,6 @@ namespace ChoETL
             get
             {
                 ChoGuard.ArgumentNotNullOrEmpty(recordTypeCode, "RecordTypeCode");
-                if (recordTypeCode.Length != Size)
-                    throw new ArgumentException($"Invalid record type code [{recordTypeCode}] passed. Expected of '{Size}' length.");
 
                 if (_recordTypeCodes.ContainsKey(recordTypeCode))
                     return _recordTypeCodes[recordTypeCode];
@@ -45,6 +43,21 @@ namespace ChoETL
                 else
                     _recordTypeCodes.Add(recordTypeCode, value);
             }
+        }
+
+        public void RegisterType(Type recordType)
+        {
+            if (recordType == null)
+                return;
+
+            ChoRecordTypeCodeAttribute attr = ChoType.GetAttribute<ChoRecordTypeCodeAttribute>(recordType);
+            if (attr == null)
+                return;
+
+            if (_recordTypeCodes.ContainsKey(attr.Code))
+                throw new ChoRecordConfigurationException($"Duplicate record type '{attr.Code}' code defined in '{recordType.Name}'.");
+
+            this[attr.Code] = recordType;
         }
     }
 }

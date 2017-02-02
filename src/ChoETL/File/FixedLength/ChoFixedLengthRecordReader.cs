@@ -334,23 +334,23 @@ namespace ChoETL
                         {
                             var dict = rec as IDictionary<string, Object>;
 
-                            if (dict.SetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture))
+                            if (dict.SetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
                             {
                                 dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
                             }
                             else
-                                throw;
+                                throw new ChoParserException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                         }
                         else if (ChoType.HasProperty(rec.GetType(), kvp.Key) && rec.SetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture))
                         {
                             rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
                         }
                         else
-                            throw;
+                            throw new ChoParserException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                     }
                     catch (Exception innerEx)
                     {
-                        if (ex == innerEx)
+                        if (ex == innerEx.InnerException)
                         {
                             if (fieldConfig.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                             {
@@ -359,7 +359,7 @@ namespace ChoETL
                             else
                             {
                                 if (!RaiseRecordFieldLoadError(rec, pair.Item1, kvp.Key, fieldValue, ex))
-                                    throw;
+                                    throw new ChoParserException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                             }
                         }
                         else

@@ -42,12 +42,14 @@ namespace ChoETL
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
 
             string recText = String.Empty;
+            Type recType;
 
             try
             {
                 int index = 0;
                 foreach (object record in records)
                 {
+                    recType = record.GetType();
                     if (record is IChoETLNameableObject)
                         ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(((IChoETLNameableObject)record).Name));
                     else
@@ -126,9 +128,9 @@ namespace ChoETL
                                         yield break;
                                 }
                             }
-                            catch (ChoParserException)
+                            catch (ChoParserException pEx)
                             {
-                                throw;
+                                throw new ChoParserException($"Failed to write line for '{recType}' object.", pEx);
                             }
                             catch (Exception ex)
                             {
@@ -140,10 +142,10 @@ namespace ChoETL
                                 else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
                                 {
                                     if (!RaiseRecordWriteError(record, _index, recText, ex))
-                                        throw;
+                                        throw new ChoParserException($"Failed to write line for '{recType}' object.", ex);
                                 }
                                 else
-                                    throw;
+                                    throw new ChoParserException($"Failed to write line for '{recType}' object.", ex);
                             }
                         }
                     }

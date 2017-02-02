@@ -192,6 +192,7 @@ namespace ChoETL
 
         private bool LoadLine(Tuple<int, string> pair, ref object rec)
         {
+            Type recType = rec.GetType();
             try
             {
                 if (!RaiseBeforeRecordLoad(rec, ref pair))
@@ -228,13 +229,13 @@ namespace ChoETL
                 if (!RaiseAfterRecordLoad(rec, pair))
                     return false;
             }
-            catch (ChoParserException)
+            catch (ChoParserException pEx)
             {
-                throw;
+                throw new ChoParserException($"Failed to parse line to '{recType}' object.", pEx);
             }
-            catch (ChoMissingRecordFieldException)
+            catch (ChoMissingRecordFieldException mEx)
             {
-                throw;
+                throw new ChoParserException($"Failed to parse line to '{recType}' object.", mEx);
             }
             catch (Exception ex)
             {
@@ -246,10 +247,10 @@ namespace ChoETL
                 else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
                 {
                     if (!RaiseRecordLoadError(rec, pair, ex))
-                        throw;
+                        throw new ChoParserException($"Failed to parse line to '{recType}' object.", ex);
                 }
                 else
-                    throw;
+                    throw new ChoParserException($"Failed to parse line to '{recType}' object.", ex);
 
                 return true;
             }

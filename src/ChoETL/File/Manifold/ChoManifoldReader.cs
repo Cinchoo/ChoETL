@@ -118,6 +118,19 @@ namespace ChoETL
             return this;
         }
 
+        public ChoManifoldReader WithRecordSelector(int startIndex, int size, params Type[] recordTypes)
+        {
+            Configuration.RecordTypeConfiguration.StartIndex = startIndex;
+            Configuration.RecordTypeConfiguration.Size = size;
+
+            if (recordTypes != null)
+            {
+                foreach (var t in recordTypes)
+                    Configuration.RecordTypeConfiguration.RegisterType(t);
+            }
+            return this;
+        }
+
         #endregion Fluent API
     }
 }

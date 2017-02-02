@@ -209,18 +209,17 @@ namespace ChoETL
             return FallbackValueExists;
         }
 
-        public static bool SetFallbackValue(this IDictionary<string, object> dict, string fn, ChoRecordFieldConfiguration fieldConfig, CultureInfo culture)
+        public static bool SetFallbackValue(this IDictionary<string, object> dict, string fn, ChoRecordFieldConfiguration fieldConfig, CultureInfo culture, ref object fallbackValue)
         {
-            object fieldValue = null;
             //Set Fallback value to member
             if (fieldConfig.IsFallbackValueSpecified)
             {
                 if (fieldConfig.Converters.IsNullOrEmpty())
-                    fieldValue = ChoConvert.ConvertFrom(fieldConfig.FallbackValue, fieldConfig.FieldType, null, ChoTypeDescriptor.GetTypeConvertersForType(fieldConfig.FieldType), null, culture);
+                    fallbackValue = ChoConvert.ConvertFrom(fieldConfig.FallbackValue, fieldConfig.FieldType, null, ChoTypeDescriptor.GetTypeConvertersForType(fieldConfig.FieldType), null, culture);
                 else
-                    fieldValue = ChoConvert.ConvertFrom(fieldConfig.FallbackValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), null, culture);
+                    fallbackValue = ChoConvert.ConvertFrom(fieldConfig.FallbackValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), null, culture);
 
-                dict.AddOrUpdate(fn, fieldValue);
+                dict.AddOrUpdate(fn, fallbackValue);
             }
 
             return fieldConfig.IsFallbackValueSpecified;
