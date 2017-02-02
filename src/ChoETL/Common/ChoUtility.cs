@@ -13,6 +13,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
@@ -1144,6 +1145,27 @@ namespace ChoETL
                     _membersCache.Add(type, q.ToArray());
                 }
                 return _membersCache[type];
+            }
+        }
+
+        public static readonly DataContractJsonSerializerSettings jsonSettings = new DataContractJsonSerializerSettings { UseSimpleDictionaryFormat = true };
+
+
+        public static string DumpAsJson(this object target, Encoding encoding = null)
+        {
+            encoding = encoding == null ? Encoding.UTF8 : encoding;
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                using (var writer = JsonReaderWriterFactory.CreateJsonWriter(
+                   ms, encoding, true, true, "  "))
+                {
+                    DataContractJsonSerializer serializer = new DataContractJsonSerializer(target.GetType(), jsonSettings);
+                    serializer.WriteObject(writer, target);
+                    writer.Flush();
+                    byte[] json = ms.ToArray();
+                    return encoding.GetString(json, 0, json.Length);
+                }
             }
         }
 

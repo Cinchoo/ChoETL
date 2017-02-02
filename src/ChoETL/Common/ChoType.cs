@@ -2039,7 +2039,29 @@
                     if (!_toStringMemberCache.TryGetValue(type.TypeHandle.Value, out properties))
                     {
                         properties = type.GetProperties(flags | BindingFlags.FlattenHierarchy)
-                        .Where(p => p.GetGetMethod() != null && p.GetSetMethod() != null && p.GetGetMethod().GetParameters().Length == 0)
+                        .Where(p => p.GetGetMethod() != null && p.GetGetMethod().GetParameters().Length == 0)
+                        .Cast<MemberInfo>()
+                        .Union(type.GetFields(flags | BindingFlags.FlattenHierarchy).Cast<MemberInfo>()).ToArray();
+
+                        _toStringMemberCache.Add(type.TypeHandle.Value, properties);
+                    }
+                }
+            }
+
+            return properties;
+        }
+
+        public static IEnumerable<MemberInfo> GetSetFieldsNProperties(this Type type, BindingFlags flags)
+        {
+            MemberInfo[] properties;
+            if (!_toStringMemberCache.TryGetValue(type.TypeHandle.Value, out properties))
+            {
+                lock (_toStringMemberCacheSyncRoot)
+                {
+                    if (!_toStringMemberCache.TryGetValue(type.TypeHandle.Value, out properties))
+                    {
+                        properties = type.GetProperties(flags | BindingFlags.FlattenHierarchy)
+                        .Where(p => p.GetSetMethod() != null)
                         .Cast<MemberInfo>()
                         .Union(type.GetFields(flags | BindingFlags.FlattenHierarchy).Cast<MemberInfo>()).ToArray();
 
