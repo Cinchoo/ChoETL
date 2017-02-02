@@ -102,18 +102,22 @@ namespace ChoETL
             return this;
         }
 
-        public ChoManifoldWriter WithRecordTypeCodePositionAt(int startIndex, int size)
+        public ChoManifoldWriter WithRecordSelector(Func<string, Type> recordSelector)
+        {
+            Configuration.RecordSelector = recordSelector;
+            return this;
+        }
+
+        public ChoManifoldWriter WithRecordSelector(int startIndex, int size, params Type[] recordTypes)
         {
             Configuration.RecordTypeConfiguration.StartIndex = startIndex;
             Configuration.RecordTypeConfiguration.Size = size;
 
-            return this;
-        }
-
-        public ChoManifoldWriter RecordTypeFor(string recordTypeCode, Type type)
-        {
-            Configuration.RecordTypeConfiguration[recordTypeCode] = type;
-
+            if (recordTypes != null)
+            {
+                foreach (var t in recordTypes)
+                    Configuration.RecordTypeConfiguration.RegisterType(t);
+            }
             return this;
         }
 
