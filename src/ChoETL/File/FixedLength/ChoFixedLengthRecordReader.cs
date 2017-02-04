@@ -255,10 +255,12 @@ namespace ChoETL
                 throw new ChoParserException("Incorrect record length [Length: {0}] found. Expected record length: {1}".FormatString(line.Length, Configuration.RecordLength));
 
             object fieldValue = null;
+            Type fieldType = null;
 
             ChoFixedLengthRecordFieldConfiguration fieldConfig = null;
             foreach (KeyValuePair<string, ChoFixedLengthRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
+                fieldType = null;
                 fieldValue = null;
                 fieldConfig = kvp.Value;
 
@@ -270,7 +272,21 @@ namespace ChoETL
                 else
                     fieldValue = line.Substring(fieldConfig.StartIndex, fieldConfig.Size.Value);
 
-                fieldValue = CleanFieldValue(fieldConfig, fieldValue as string);
+                if (rec is ExpandoObject)
+                {
+                    fieldType = kvp.Value.FieldType;
+                }
+                else
+                {
+                    if (ChoType.HasProperty(rec.GetType(), kvp.Key))
+                    {
+                        fieldType = ChoType.GetMemberType(rec.GetType(), kvp.Key);
+                    }
+                    else
+                        fieldType = typeof(object);
+                }
+
+                fieldValue = CleanFieldValue(fieldConfig, fieldType, fieldValue as string);
 
                 if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
                     return false;
@@ -373,13 +389,23 @@ namespace ChoETL
             return true;
         }
 
-        private string CleanFieldValue(ChoFixedLengthRecordFieldConfiguration config, string fieldValue)
+        private string CleanFieldValue(ChoFixedLengthRecordFieldConfiguration config, Type fieldType, string fieldValue)
         {
             if (fieldValue.IsNull()) return fieldValue;
 
             if (fieldValue != null)
             {
-                switch (config.FieldValueTrimOption)
+                ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim;
+
+                if (config.FieldValueTrimOption == null)
+                {
+                    //if (fieldType == typeof(string))
+                    //    fieldValueTrimOption = ChoFieldValueTrimOption.None;
+                }
+                else
+                    fieldValueTrimOption = config.FieldValueTrimOption.Value;
+
+                switch (fieldValueTrimOption)
                 {
                     case ChoFieldValueTrimOption.Trim:
                         fieldValue = fieldValue.Trim();
@@ -436,7 +462,7 @@ namespace ChoETL
                         else
                             fieldValue = line.Substring(fieldConfig.StartIndex, fieldConfig.Size.Value);
 
-                        fieldValue = CleanFieldValue(fieldConfig, fieldValue as string);
+                        fieldValue = CleanFieldValue(fieldConfig, typeof(object), fieldValue as string);
                         headers.Add(fieldValue);
                     }
                 }

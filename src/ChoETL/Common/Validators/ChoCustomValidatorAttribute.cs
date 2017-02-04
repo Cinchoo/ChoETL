@@ -9,10 +9,10 @@ using System.Threading.Tasks;
 namespace ChoETL
 {
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
-    public class ChoGenericValidatorAttribute : ValidationAttribute
+    public class ChoCustomValidatorAttribute : ValidationAttribute
     {
         private string _defaultValueCodeSnippet { get; set; }
-        public ChoGenericValidatorAttribute(string validationCodeSnippet)
+        public ChoCustomValidatorAttribute(string validationCodeSnippet)
         {
             _defaultValueCodeSnippet = validationCodeSnippet;
         }

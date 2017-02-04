@@ -21,10 +21,11 @@ namespace ChoETL
             get { return FieldValueJustificationInternal.CastTo<ChoFieldValueJustification>(); }
             set { FieldValueJustificationInternal = value; }
         }
+        internal ChoFieldValueTrimOption? FieldValueTrimOptionInternal;
         public ChoFieldValueTrimOption FieldValueTrimOption
         {
-            get;
-            set;
+            get { return FieldValueTrimOptionInternal.CastTo<ChoFieldValueTrimOption>(); }
+            set { FieldValueTrimOptionInternal = value; }
         }
         public bool Truncate
         {
@@ -46,7 +47,6 @@ namespace ChoETL
 
         public ChoFileRecordFieldAttribute()
         {
-            FieldValueTrimOption = ChoFieldValueTrimOption.Trim;
             Truncate = true;
             IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any;
         }

@@ -20,7 +20,7 @@ namespace ChoETL
             get;
             set;
         }
-        public ChoFieldValueTrimOption FieldValueTrimOption
+        public ChoFieldValueTrimOption? FieldValueTrimOption
         {
             get;
             set;
@@ -43,7 +43,6 @@ namespace ChoETL
         
         public ChoFileRecordFieldConfiguration(string name, ChoFileRecordFieldAttribute attr = null) : base(name, attr)
         {
-            FieldValueTrimOption = ChoFieldValueTrimOption.Trim;
             Truncate = true;
             IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any;
 
@@ -51,7 +50,7 @@ namespace ChoETL
             {
                 FillChar = attr.FillCharInternal;
                 FieldValueJustification = attr.FieldValueJustificationInternal;
-                FieldValueTrimOption = attr.FieldValueTrimOption;
+                FieldValueTrimOption = attr.FieldValueTrimOptionInternal;
                 Truncate = attr.Truncate;
                 Size = attr.SizeInternal;
                 QuoteField = attr.QuoteFieldInternal;

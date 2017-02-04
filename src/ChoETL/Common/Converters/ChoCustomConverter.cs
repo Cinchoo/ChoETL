@@ -8,14 +8,14 @@ using System.Windows.Data;
 
 namespace ChoETL
 {
-    public class ChoGenericConverter : IValueConverter
+    public class ChoCustomConverter : IValueConverter
     {
         public Delegate ConvertOperation { get; private set; }
         public string ConvertCode { get; set; }
         public Delegate ConvertBackOperation { get; private set; }
         public string ConvertBackCode { get; set; }
 
-        public ChoGenericConverter()
+        public ChoCustomConverter()
         {
         }
 

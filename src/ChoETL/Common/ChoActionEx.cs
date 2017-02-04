@@ -20,7 +20,7 @@ namespace ChoETL
             {
                 action();
             }
-            catch
+            catch (NotImplementedException)
             {
             }
         }

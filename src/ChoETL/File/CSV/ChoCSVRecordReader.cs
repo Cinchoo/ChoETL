@@ -297,8 +297,10 @@ namespace ChoETL
             ValidateLine(pair.Item1, fieldValues);
 
             ChoCSVRecordFieldConfiguration fieldConfig = null;
+            Type fieldType = null;
             foreach (KeyValuePair<string, ChoCSVRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
+                fieldType = null;
                 fieldValue = null;
                 fieldConfig = kvp.Value;
 
@@ -317,7 +319,21 @@ namespace ChoETL
                         throw new ChoParserException("Missing field value for {0} [Position: {1}] field.".FormatString(fieldConfig.FieldName, fieldConfig.FieldPosition));
                 }
 
-                fieldValue = CleanFieldValue(fieldConfig, fieldValue as string);
+                if (rec is ExpandoObject)
+                {
+                    fieldType = kvp.Value.FieldType;
+                }
+                else
+                {
+                    if (ChoType.HasProperty(rec.GetType(), kvp.Key))
+                    {
+                        fieldType = ChoType.GetMemberType(rec.GetType(), kvp.Key);
+                    }
+                    else
+                        fieldType = typeof(object);
+                }
+
+                fieldValue = CleanFieldValue(fieldConfig, fieldType, fieldValue as string);
 
                 if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
                     return false;
@@ -420,13 +436,23 @@ namespace ChoETL
             return true;
         }
 
-        private string CleanFieldValue(ChoCSVRecordFieldConfiguration config, string fieldValue)
+        private string CleanFieldValue(ChoCSVRecordFieldConfiguration config, Type fieldType, string fieldValue)
         {
             if (fieldValue.IsNull()) return fieldValue;
 
             if (fieldValue != null)
             {
-                switch (config.FieldValueTrimOption)
+                ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim;
+
+                if (config.FieldValueTrimOption == null)
+                {
+                    //if (fieldType == typeof(string))
+                    //    fieldValueTrimOption = ChoFieldValueTrimOption.None;
+                }
+                else
+                    fieldValueTrimOption = config.FieldValueTrimOption.Value;
+
+                switch (fieldValueTrimOption)
                 {
                     case ChoFieldValueTrimOption.Trim:
                         fieldValue = fieldValue.Trim();

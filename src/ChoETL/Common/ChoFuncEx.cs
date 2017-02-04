@@ -20,7 +20,7 @@ namespace ChoETL
             {
                 return func();
             }
-            catch
+            catch (NotImplementedException)
             {
                 return defaultValue;
             }

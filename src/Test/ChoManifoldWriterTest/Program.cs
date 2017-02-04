@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,9 +14,13 @@ namespace ChoManifoldWriterTest
     {
         static void Main(string[] args)
         {
-            string v = @", 'v => string.Join("""", v.Where(Char.IsDigit)')";
-            foreach (var z in v.SplitNTrim(",", ChoStringSplitOptions.None, '\''))
-                Console.WriteLine(z);
+            //string v = @", 'v => string.Join("""", v.Where(Char.IsDigit)')";
+            //foreach (var z in v.SplitNTrim(",", ChoStringSplitOptions.None, '\''))
+            //    Console.WriteLine(z);
+
+            ParameterExpression p = Expression.Parameter(typeof(int), "v");
+            LambdaExpression lambda = ChoETL.DynamicExpression.ParseLambda(
+                new ParameterExpression[] { p }, typeof(bool), "!v.Where(c => !Char.IsDigit(c)).Any())", 1);
 
             return;
 
