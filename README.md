@@ -15,7 +15,7 @@ To install Cinchoo ETL, run the following command in the Package Manager Console
 Add namespace to the program
 
 ``` csharp
-    using Cinchoo.PGP
+    using Cinchoo.ETL
 ```
 
 # Phase 1:
