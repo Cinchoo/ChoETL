@@ -100,6 +100,7 @@
     <Compile Include="Common\ChoEnum.cs" />
     <Compile Include="Common\ChoEnumTypeCache.cs" />
     <Compile Include="Common\ChoExternalSorter.cs" />
+    <Compile Include="Common\Compiler\ChoCodeDomProvider.cs" />
     <Compile Include="Common\Converters\ChoLowerCaseConverter.cs" />
     <Compile Include="Common\Converters\ChoUShortConverter.cs" />
     <Compile Include="Common\Converters\ChoShortConverter.cs" />
@@ -115,7 +116,8 @@
     <Compile Include="Common\Converters\ChoBooleanConverter.cs" />
     <Compile Include="Common\Converters\ChoBigIntegerConverter.cs" />
     <Compile Include="Common\Converters\ChoEnumConverter.cs" />
-    <Compile Include="Common\Validators\ChoCustomValidatorAttribute.cs" />
+    <Compile Include="Common\Validators\ChoCustomCodeValidatorAttribute.cs" />
+    <Compile Include="Common\Validators\ChoCustomExprValidatorAttribute.cs" />
     <Compile Include="ETLCommon\IChoETLNameableObject.cs" />
     <Compile Include="File\CSV\ChoCSVFluentPlugIn.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthFileHeaderConfiguration.cs" />

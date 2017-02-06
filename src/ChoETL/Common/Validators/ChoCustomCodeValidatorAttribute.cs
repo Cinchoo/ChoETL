@@ -9,36 +9,39 @@ using System.Threading.Tasks;
 namespace ChoETL
 {
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
-    public class ChoCustomValidatorAttribute : ValidationAttribute
+    public class ChoCustomCodeValidatorAttribute : ValidationAttribute
     {
+        public Type ParamType
+        {
+            get;
+            set;
+        }
+
         private string _defaultValueCodeSnippet { get; set; }
-        public ChoCustomValidatorAttribute(string validationCodeSnippet)
+        public ChoCustomCodeValidatorAttribute(string validationCodeSnippet)
         {
             _defaultValueCodeSnippet = validationCodeSnippet;
         }
 
         public override bool IsValid(object value)
         {
-            Delegate _ops = ConstructOperation(value, typeof(bool));
-            if (_ops != null)
-                return (bool)_ops.DynamicInvoke(value);
-            else
-                return base.IsValid(value);
+            return (bool)ConstructOperation(value, typeof(bool));
         }
 
-        private Delegate ConstructOperation(object value, Type targetType)
+        private object ConstructOperation(object value, Type targetType)
         {
             if (_defaultValueCodeSnippet.IsNullOrEmpty()) return null;
 
             int opi = this._defaultValueCodeSnippet.IndexOf("=>");
             if (opi < 0) return null; // throw new Exception("No lambda operator =>");
             string param = this._defaultValueCodeSnippet.Substring(0, opi).NTrim();
-            string body = this._defaultValueCodeSnippet.Substring(opi + 2).NTrim();
-            ParameterExpression p = Expression.Parameter(
-                value.GetType(), param);
-            LambdaExpression lambda = DynamicExpression.ParseLambda(
-                new ParameterExpression[] { p }, targetType, body, value);
-            return lambda.Compile();
+            string codeBlock = this._defaultValueCodeSnippet.Substring(opi + 2).NTrim();
+
+            if (!codeBlock.Contains(";") && !codeBlock.StartsWith("return"))
+                codeBlock = "return {0};".FormatString(codeBlock);
+
+            using (ChoCodeDomProvider cs = new ChoCodeDomProvider(new string[] { codeBlock }))
+                return Convert.ChangeType(cs.ExecuteFunc(param, ParamType == null ? value.GetType() : ParamType, value), targetType);
         }
     }
 }

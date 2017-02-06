@@ -13,7 +13,7 @@ namespace ChoFixedLengthWriterTest
     {
         static void Main(string[] args)
         {
-            QuickWriteTest();
+            POCOTest();
         }
 
         static void POCOTest()
@@ -125,6 +125,7 @@ namespace ChoFixedLengthWriterTest
     public partial class EmployeeRecSimple
     {
         public int Id { get; set; }
+        [ChoCustomCodeValidator(@"v => v[0] != '0' && Regex.IsMatch(v, ""^[0-9]+$"", RegexOptions.Compiled)", ErrorMessage = "OriginatorStatusCode must be 1-9.", ParamType = typeof(string))]
         public string Name { get; set; }
     }
 }

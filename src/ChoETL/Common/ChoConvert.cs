@@ -235,8 +235,8 @@ namespace ChoETL
             object obj1 = value;
             if (targetType == (Type)null)
                 return value;
-            if (targetType == typeof(object))
-                return value;
+            //if (targetType == typeof(object))
+            //    return value;
             if (culture == null)
                 culture = ChoConvert.DefaultCulture;
             Type type = value == null ? typeof(object) : value.GetType().GetUnderlyingType();

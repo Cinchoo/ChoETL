@@ -513,7 +513,7 @@ namespace ChoETL
 
         private bool RaiseRecordFieldWriteError(object target, int index, string propName, object value, Exception ex)
         {
-            if (_callbackRecord == null) return true;
+            if (_callbackRecord == null) return false;
             return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordFieldWriteError(target, index, propName, value, ex), false);
         }
     }

@@ -231,7 +231,7 @@ namespace ChoETL
 
         private bool RaiseRecordFieldWriteError(object target, int index, string propName, object value, Exception ex)
         {
-            if (Configuration.NotifyRecordWriteObject == null) return true;
+            if (Configuration.NotifyRecordWriteObject == null) return false;
             return ChoFuncEx.RunWithIgnoreError(() => Configuration.NotifyRecordWriteObject.RecordFieldWriteError(target, index, propName, value, ex), false);
         }
     }
