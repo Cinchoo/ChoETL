@@ -152,7 +152,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoFixedLengthReader<T> WithField(string fieldName, int startIndex, int size, Type fieldType, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim)
+        public ChoFixedLengthReader<T> WithField(string fieldName, int startIndex, int size, Type fieldType, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null)
         {
             if (!fieldName.IsNullOrEmpty())
             {
@@ -161,8 +161,6 @@ namespace ChoETL
                     Configuration.FixedLengthRecordFieldConfigurations.Clear();
                     _clearFields = true;
                 }
-                if (fieldType == null)
-                    fieldType = typeof(string);
 
                 Configuration.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(fieldName.Trim(), startIndex, size) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption });
             }
@@ -170,9 +168,9 @@ namespace ChoETL
             return this;
         }
 
-        public ChoFixedLengthReader<T> WithField(string fieldName, int startIndex, int size, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim)
+        public ChoFixedLengthReader<T> WithField(string fieldName, int startIndex, int size, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null)
         {
-            return WithField(fieldName, startIndex, size, typeof(string), quoteField, fieldValueTrimOption);
+            return WithField(fieldName, startIndex, size, null, quoteField, fieldValueTrimOption);
         }
 
         #endregion Fluent API

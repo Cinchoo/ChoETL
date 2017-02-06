@@ -188,11 +188,24 @@ namespace ChoETL
                     {
                         IDictionary<string, Object> dict = rec as IDictionary<string, Object>;
                         fieldValue = dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
+                        if (kvp.Value.FieldType == null)
+                        {
+                            if (fieldValue == null)
+                                kvp.Value.FieldType = typeof(string);
+                            else
+                                kvp.Value.FieldType = fieldValue.GetType();
+                        }
                     }
                     else
                     {
                         if (ChoType.HasProperty(rec.GetType(), kvp.Key))
+                        {
                             fieldValue = ChoType.GetPropertyValue(rec, kvp.Key);
+                            if (kvp.Value.FieldType == null)
+                                kvp.Value.FieldType = ChoType.GetMemberType(rec.GetType(), kvp.Key);
+                        }
+                        else
+                            kvp.Value.FieldType = typeof(string);
                     }
 
                     //Discover default value, use it if null

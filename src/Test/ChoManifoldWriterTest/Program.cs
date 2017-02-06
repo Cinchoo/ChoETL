@@ -14,16 +14,6 @@ namespace ChoManifoldWriterTest
     {
         static void Main(string[] args)
         {
-            //string v = @", 'v => string.Join("""", v.Where(Char.IsDigit)')";
-            //foreach (var z in v.SplitNTrim(",", ChoStringSplitOptions.None, '\''))
-            //    Console.WriteLine(z);
-
-            ParameterExpression p = Expression.Parameter(typeof(int), "v");
-            LambdaExpression lambda = ChoETL.DynamicExpression.ParseLambda(
-                new ParameterExpression[] { p }, typeof(bool), "!v.Where(c => !Char.IsDigit(c)).Any())", 1);
-
-            return;
-
             QuickTest();
         }
 

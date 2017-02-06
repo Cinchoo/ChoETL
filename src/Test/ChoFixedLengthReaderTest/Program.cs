@@ -60,7 +60,36 @@ namespace ChoFixedLengthReaderTest
             //ChoFixedLengthFieldDefaultSizeConfiguation.Instance.SetSize(typeof(int), 3);
             //ChoFixedLengthFieldDefaultSizeConfiguation.Instance.SetSize(typeof(string), 5);
 
-            QuickDynamicLoadTest();
+            DynamicApproach();
+        }
+
+        static void DynamicApproach()
+        {
+            object row = null;
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoFixedLengthReader(reader)
+                .WithFirstLineHeader()
+                .WithField("Account", 0, 8, fieldType: typeof(int))
+                .WithField("LastName", 8, 16)
+                .WithField("FirstName", 24, 16)
+                .WithField("Balance", 40, 12, fieldType: typeof(double))
+                .WithField("CreditLimit", 52, 14, fieldType: typeof(double))
+                .WithField("AccountCreated", 66, 16, fieldType: typeof(DateTime))
+                .WithField("Rating", 82, 7))
+            {
+                writer.WriteLine("Account LastName        FirstName       Balance     CreditLimit   AccountCreated  Rating ");
+                writer.WriteLine("101     Reeves          Keanu           9315.45     10000.00      1/17/1998       A      ");
+                writer.WriteLine("102     Tom             Mark            9315.45     15000.00      12/17/2000      A      ");
+                writer.Flush();
+                stream.Position = 0;
+
+                while ((row = parser.Read()) != null)
+                {
+                    Console.WriteLine(row.ToStringEx());
+                }
+            }
         }
 
         static void LoadTextTest()

@@ -141,7 +141,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, Type fieldType, bool? quoteField = null, char fillChar = ' ', ChoFieldValueJustification fieldValueJustification = ChoFieldValueJustification.Left,
+        public ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, Type fieldType, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
             bool truncate = true, string fieldName = null)
         {
             if (!name.IsNullOrEmpty())
@@ -151,8 +151,6 @@ namespace ChoETL
                     Configuration.FixedLengthRecordFieldConfigurations.Clear();
                     _clearFields = true;
                 }
-                if (fieldType == null)
-                    fieldType = typeof(string);
 
                 Configuration.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(name.Trim(), startIndex, size) { FieldType = fieldType, QuoteField = quoteField,
                     FillChar = fillChar,
@@ -165,10 +163,10 @@ namespace ChoETL
             return this;
         }
 
-        public ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, bool? quoteField = null, char fillChar = ' ', ChoFieldValueJustification fieldValueJustification = ChoFieldValueJustification.Left,
+        public ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
             bool truncate = true, string fieldName = null)
         {
-            return WithField(name, startIndex, size, typeof(string), quoteField, fillChar, fieldValueJustification, truncate, fieldName);
+            return WithField(name, startIndex, size, null, quoteField, fillChar, fieldValueJustification, truncate, fieldName);
         }
 
         #endregion Fluent API

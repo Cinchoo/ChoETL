@@ -59,9 +59,6 @@ namespace ChoETL
         {
             if (!fieldsName.IsNullOrEmpty())
             {
-                if (fieldType == null)
-                    fieldType = typeof(string);
-
                 int maxFieldPos = plugIn.Configuration.CSVRecordFieldConfigurations.Count > 0 ? plugIn.Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
                 plugIn.Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fieldsName.Trim(), ++maxFieldPos) { FieldType = fieldType });
             }

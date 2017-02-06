@@ -74,7 +74,7 @@ namespace ChoManifoldReaderTest
             using (var writer = new StreamWriter(stream))
             using (var parser = new ChoManifoldReader(reader).WithFirstLineHeader())
             {
-                parser.WithRecordSelector((recordLine) =>
+                parser.WithCustomRecordSelector((recordLine) =>
                 {
                     if (recordLine.Length == 0)
                         return null;

@@ -69,7 +69,7 @@ namespace ChoETL
         {
             ChoGuard.ArgumentNotNullOrEmpty(name, "Name");
             Name = name;
-            FieldType = typeof(string);
+            //FieldType = typeof(string);
 
             if (attr != null)
             {

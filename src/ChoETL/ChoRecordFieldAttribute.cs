@@ -21,7 +21,11 @@ namespace ChoETL
             get { return IgnoreFieldValueModeInternal.CastTo<ChoIgnoreFieldValueMode>(); }
             set { IgnoreFieldValueModeInternal = value; }
         }
-        public Type FieldType => typeof(string);
+        public Type FieldType
+        {
+            get;
+            set;
+        }
 
         public ChoRecordFieldAttribute()
         {

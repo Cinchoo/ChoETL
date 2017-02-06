@@ -182,8 +182,6 @@ namespace ChoETL
         {
             int maxFieldPos = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
             return WithField(fieldName, ++maxFieldPos, fieldType, quoteField, fieldValueTrimOption);
-
-            return this;
         }
 
         public ChoCSVReader<T> WithField(string fieldName, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim)
@@ -195,9 +193,6 @@ namespace ChoETL
         {
             if (!fieldName.IsNullOrEmpty())
             {
-                if (fieldType == null)
-                    fieldType = typeof(string);
-
                 if (!_clearFields)
                 {
                     Configuration.CSVRecordFieldConfigurations.Clear();
@@ -212,7 +207,7 @@ namespace ChoETL
 
         public ChoCSVReader<T> WithField(string fieldName, int position, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim)
         {
-            return WithField(fieldName, position, typeof(string), quoteField, fieldValueTrimOption);
+            return WithField(fieldName, position, null, quoteField, fieldValueTrimOption);
         }
 
         #endregion Fluent API

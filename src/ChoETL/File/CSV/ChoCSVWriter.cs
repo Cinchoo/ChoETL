@@ -164,14 +164,11 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVWriter<T> WithField(string fieldName, Type fieldType, bool? quoteField = null, char fillChar = ' ', ChoFieldValueJustification fieldValueJustification = ChoFieldValueJustification.Left,
+        public ChoCSVWriter<T> WithField(string fieldName, Type fieldType, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
             bool truncate = true)
         {
             if (!fieldName.IsNullOrEmpty())
             {
-                if (fieldType == null)
-                    fieldType = typeof(string);
-
                 if (!_clearFields)
                 {
                     Configuration.CSVRecordFieldConfigurations.Clear();
@@ -189,10 +186,10 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVWriter<T> WithField(string fieldName, bool? quoteField = null, char fillChar = ' ', ChoFieldValueJustification fieldValueJustification = ChoFieldValueJustification.Left,
+        public ChoCSVWriter<T> WithField(string fieldName, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
             bool truncate = true)
         {
-            return WithField(fieldName, typeof(string), quoteField, fillChar, fieldValueJustification, truncate);
+            return WithField(fieldName, null, quoteField, fillChar, fieldValueJustification, truncate);
         }
 
         #endregion Fluent API

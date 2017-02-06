@@ -282,7 +282,6 @@ namespace ChoETL
             lineNo = pair.Item1;
             line = pair.Item2;
 
-            object fieldValue = null;
 
             string[] fieldValues = (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)
                                select x).ToArray();
@@ -296,11 +295,10 @@ namespace ChoETL
 
             ValidateLine(pair.Item1, fieldValues);
 
+            object fieldValue = null;
             ChoCSVRecordFieldConfiguration fieldConfig = null;
-            Type fieldType = null;
             foreach (KeyValuePair<string, ChoCSVRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
-                fieldType = null;
                 fieldValue = null;
                 fieldConfig = kvp.Value;
 
@@ -321,19 +319,20 @@ namespace ChoETL
 
                 if (rec is ExpandoObject)
                 {
-                    fieldType = kvp.Value.FieldType;
+                    if (kvp.Value.FieldType == null)
+                        kvp.Value.FieldType = typeof(string);
                 }
                 else
                 {
                     if (ChoType.HasProperty(rec.GetType(), kvp.Key))
                     {
-                        fieldType = ChoType.GetMemberType(rec.GetType(), kvp.Key);
+                        kvp.Value.FieldType = ChoType.GetMemberType(rec.GetType(), kvp.Key);
                     }
                     else
-                        fieldType = typeof(object);
+                        kvp.Value.FieldType = typeof(string);
                 }
 
-                fieldValue = CleanFieldValue(fieldConfig, fieldType, fieldValue as string);
+                fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue as string);
 
                 if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
                     return false;

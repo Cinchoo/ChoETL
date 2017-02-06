@@ -13,7 +13,73 @@ namespace ChoFixedLengthWriterTest
     {
         static void Main(string[] args)
         {
-            QuickDynamicTest();
+            QuickWriteTest();
+        }
+
+        static void POCOTest()
+        {
+            List<EmployeeRecSimple> objs = new List<EmployeeRecSimple>();
+
+            EmployeeRecSimple rec1 = new EmployeeRecSimple();
+            rec1.Id = 1;
+            rec1.Name = "Mark";
+            objs.Add(rec1);
+
+            EmployeeRecSimple rec2 = new EmployeeRecSimple();
+            rec2.Id = 2;
+            rec2.Name = "Jason";
+            objs.Add(rec2);
+
+            using (var parser = new ChoFixedLengthWriter<EmployeeRecSimple>("Emp.txt").
+                WithFirstLineHeader().
+                WithField("Id", 0, 8).
+                WithField("Name", 5, 10))
+            {
+                parser.Write(objs);
+            }
+        }
+
+        static void QuickWriteTest2()
+        {
+            using (var parser = new ChoFixedLengthWriter("Emp.txt").
+                WithFirstLineHeader().
+                WithField("Id", 0, 8).
+                WithField("Name", 5, 10))
+            {
+                dynamic rec1 = new ExpandoObject();
+                rec1.Id = 1;
+                rec1.Name = "Mark";
+
+                parser.Write(rec1);
+
+                dynamic rec2 = new ExpandoObject();
+                rec2.Id = 2;
+                rec2.Name = "Jason";
+
+                parser.Write(rec2);
+            }
+        }
+
+        static void QuickWriteTest()
+        {
+            List<ExpandoObject> objs = new List<ExpandoObject>();
+            dynamic rec1 = new ExpandoObject();
+            rec1.Id = 1;
+            rec1.Name = "Mark";
+            objs.Add(rec1);
+
+            dynamic rec2 = new ExpandoObject();
+            rec2.Id = 2;
+            rec2.Name = "Jason";
+            objs.Add(rec2);
+
+            using (var parser = new ChoFixedLengthWriter("Emp.txt").
+                WithFirstLineHeader().
+                WithField("Id", 0, 8).
+                WithField("Name", 5, 10))
+            {
+                parser.Write(objs);
+            }
         }
 
         static void QuickDynamicTest()
@@ -54,5 +120,11 @@ namespace ChoFixedLengthWriterTest
                 Console.WriteLine(reader.ReadToEnd());
             }
         }
+    }
+
+    public partial class EmployeeRecSimple
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
     }
 }

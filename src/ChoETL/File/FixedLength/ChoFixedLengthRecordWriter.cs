@@ -158,7 +158,6 @@ namespace ChoETL
             StringBuilder msg = new StringBuilder();
             object fieldValue = null;
             string fieldText = null;
-            Type fieldType = null;
             ChoFixedLengthRecordFieldConfiguration fieldConfig = null;
 
             if (Configuration.ColumnCountStrict)
@@ -167,7 +166,6 @@ namespace ChoETL
             //bool firstColumn = true;
             foreach (KeyValuePair<string, ChoFixedLengthRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
-                fieldType = null;
                 fieldConfig = kvp.Value;
                 fieldValue = null;
                 fieldText = String.Empty;
@@ -192,15 +190,24 @@ namespace ChoETL
                     {
                         IDictionary<string, Object> dict = rec as IDictionary<string, Object>;
                         fieldValue = dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
-                        fieldType = kvp.Value.FieldType;
+                        if (kvp.Value.FieldType == null)
+                        {
+                            if (fieldValue == null)
+                                kvp.Value.FieldType = typeof(string);
+                            else
+                                kvp.Value.FieldType = fieldValue.GetType();
+                        }
                     }
                     else
                     {
                         if (ChoType.HasProperty(rec.GetType(), kvp.Key))
                         {
                             fieldValue = ChoType.GetPropertyValue(rec, kvp.Key);
-                            fieldType = ChoType.GetMemberType(rec.GetType(), kvp.Key);
+                            if (kvp.Value.FieldType == null)
+                                kvp.Value.FieldType = ChoType.GetMemberType(rec.GetType(), kvp.Key);
                         }
+                        else
+                            kvp.Value.FieldType = typeof(string);
                     }
 
                     //Discover default value, use it if null
@@ -279,7 +286,7 @@ namespace ChoETL
                 else
                     fieldText = fieldValue.ToString();
 
-                msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification, fieldType), GetFillChar(kvp.Value.FillChar, fieldType), false));
+                msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false));
             }
 
             recText = msg.ToString();
