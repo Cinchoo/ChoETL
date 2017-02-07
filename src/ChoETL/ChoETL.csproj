@@ -101,6 +101,7 @@
     <Compile Include="Common\ChoEnumTypeCache.cs" />
     <Compile Include="Common\ChoExternalSorter.cs" />
     <Compile Include="Common\Compiler\ChoCodeDomProvider.cs" />
+    <Compile Include="Common\Converters\ChoCustomCodeConverter.cs" />
     <Compile Include="Common\Converters\ChoLowerCaseConverter.cs" />
     <Compile Include="Common\Converters\ChoUShortConverter.cs" />
     <Compile Include="Common\Converters\ChoShortConverter.cs" />
@@ -196,7 +197,7 @@
     <Compile Include="Common\Converters\ChoNumericValidator.cs" />
     <Compile Include="Common\Converters\ChoSeqNoGeneratorConvertor.cs" />
     <Compile Include="Common\Converters\ChoUpperCaseConverter.cs" />
-    <Compile Include="Common\Converters\ChoCustomConverter.cs" />
+    <Compile Include="Common\Converters\ChoCustomExprConverter.cs" />
     <Compile Include="Common\Data\ChoEnumerableDataReader.cs" />
     <Compile Include="Common\Data\ChoObjectDataReader.cs" />
     <Compile Include="Common\Data\ChoSqlHelper.cs" />

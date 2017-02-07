@@ -18,6 +18,8 @@ namespace ChoETL
         }
 
         private string _defaultValueCodeSnippet { get; set; }
+        private Delegate _ops;
+
         public ChoCustomExprValidatorAttribute(string validationCodeSnippet)
         {
             _defaultValueCodeSnippet = validationCodeSnippet;
@@ -25,7 +27,9 @@ namespace ChoETL
 
         public override bool IsValid(object value)
         {
-            Delegate _ops = ConstructOperation(value, typeof(bool));
+            if (_ops == null)
+                _ops = ConstructOperation(value, typeof(bool));
+
             if (_ops != null)
                 return (bool)_ops.DynamicInvoke(value);
             else

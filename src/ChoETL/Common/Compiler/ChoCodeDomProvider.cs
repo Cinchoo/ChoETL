@@ -27,6 +27,7 @@ namespace ChoETL
 
         private dynamic _targetFunc = null;
         private dynamic _targetAction = null;
+        private object _targetFuncObj = null;
 
         #endregion Instance Data Members (Private)
 
@@ -64,27 +65,32 @@ namespace ChoETL
 
         #region Instance Members (Public)
 
-        public TOut ExecuteFunc<T, TOut>(string paramName, T paramValue)
+        public object ExecuteFunc(object paramValue)
         {
-            return (TOut)ExecuteFunc(paramName, typeof(T), paramValue);
+            if (_targetFuncObj != null)
+                return ChoType.InvokeMethod(_targetFuncObj, "Execute", new object[] { paramValue });
+            else
+                throw new ApplicationException("Object Missing. Call BuldFunc to construct expression object.");
         }
 
-        public object ExecuteFunc(string paramName, Type paramType, object paramValue)
+        public void BuildFunc(string paramName, Type paramType)
         {
-            string className = "ChoClass_{0}".FormatString(ChoIntRandom.Next(1, int.MaxValue));
-            string codeFragment = String.Join(" ", _statements);
-            string statement = null;
-            switch (_language)
+            if (_targetFuncObj == null)
             {
-                case ChoCodeProviderLanguage.VB:
-                    statement = String.Format("Public Class {1} {0} Public Function Execute({3} As {4}) as Object {0} {2} {0} End Function {0} End Class", Environment.NewLine, className, codeFragment, paramName, paramType);
-                    break;
-                default:
-                    statement = String.Format("public class {0} {{ public object Execute({3} {2}) {{ {1}; }} }}", className, codeFragment, paramName, paramType);
-                    break;
+                string className = "ChoClass_{0}".FormatString(ChoIntRandom.Next(1, int.MaxValue));
+                string codeFragment = String.Join(" ", _statements);
+                string statement = null;
+                switch (_language)
+                {
+                    case ChoCodeProviderLanguage.VB:
+                        statement = String.Format("Public Class {1} {0} Public Function Execute({3} As {4}) as Object {0} {2} {0} End Function {0} End Class", Environment.NewLine, className, codeFragment, paramName, paramType);
+                        break;
+                    default:
+                        statement = String.Format("public class {0} {{ public object Execute({3} {2}) {{ {1}; }} }}", className, codeFragment, paramName, paramType);
+                        break;
+                }
+                _targetFuncObj = Activator.CreateInstance(CreateType(className, codeFragment, statement));
             }
-            object targetFunc = Activator.CreateInstance(CreateType(className, codeFragment, statement));
-            return ChoType.InvokeMethod(targetFunc, "Execute", new object[] { paramValue });
         }
 
         public object ExecuteFunc(params object[] args)

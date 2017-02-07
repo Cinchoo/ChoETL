@@ -17,20 +17,44 @@ namespace ChoETL
             set;
         }
 
+        public ChoCodeProviderLanguage Language
+        {
+            get;
+            set;
+        }
+
+        public string NameSpaces
+        {
+            get;
+            set;
+        }
+
         private string _defaultValueCodeSnippet { get; set; }
+        private ChoCodeDomProvider cs = null;
+
         public ChoCustomCodeValidatorAttribute(string validationCodeSnippet)
         {
+            ChoGuard.ArgumentNotNullOrEmpty(validationCodeSnippet, "CodeSnippet");
+
             _defaultValueCodeSnippet = validationCodeSnippet;
         }
 
         public override bool IsValid(object value)
         {
-            return (bool)ConstructOperation(value, typeof(bool));
+            if (cs == null)
+                cs = ConstructOperation(value);
+
+            if (cs != null)
+                return (bool)Convert.ChangeType(cs.ExecuteFunc(ParamType == null ? value : Convert.ChangeType(value, ParamType)), typeof(bool));
+            else
+                return base.IsValid(value);
         }
 
-        private object ConstructOperation(object value, Type targetType)
+        private ChoCodeDomProvider ConstructOperation(object value)
         {
             if (_defaultValueCodeSnippet.IsNullOrEmpty()) return null;
+
+            string[] namespaces = NameSpaces.IsNullOrWhiteSpace() ? null : NameSpaces.SplitNTrim(';');
 
             int opi = this._defaultValueCodeSnippet.IndexOf("=>");
             if (opi < 0) return null; // throw new Exception("No lambda operator =>");
@@ -40,8 +64,10 @@ namespace ChoETL
             if (!codeBlock.Contains(";") && !codeBlock.StartsWith("return"))
                 codeBlock = "return {0};".FormatString(codeBlock);
 
-            using (ChoCodeDomProvider cs = new ChoCodeDomProvider(new string[] { codeBlock }))
-                return Convert.ChangeType(cs.ExecuteFunc(param, ParamType == null ? value.GetType() : ParamType, value), targetType);
+            var cd = new ChoCodeDomProvider(new string[] { codeBlock }, namespaces, Language);
+            cd.BuildFunc(param, ParamType == null ? value.GetType() : ParamType);
+
+            return cd;
         }
     }
 }
