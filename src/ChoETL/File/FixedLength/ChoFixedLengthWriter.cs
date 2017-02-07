@@ -97,11 +97,11 @@ namespace ChoETL
             }
         }
 
-        public static string ToText<TRec>(TRec record, ChoFixedLengthRecordConfiguration configuration = null)
-            where TRec : class
-        {
-            return ToText(ChoEnumerable.AsEnumerable(record), configuration);
-        }
+        //public static string ToText<TRec>(TRec record, ChoFixedLengthRecordConfiguration configuration = null)
+        //    where TRec : class
+        //{
+        //    return ToText(ChoEnumerable.AsEnumerable(record), configuration);
+        //}
 
         internal static string ToText(object rec, ChoFixedLengthRecordConfiguration configuration, Encoding encoding, int bufferSize)
         {

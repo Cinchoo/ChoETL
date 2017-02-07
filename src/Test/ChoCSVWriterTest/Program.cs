@@ -17,7 +17,7 @@ namespace ChoCSVWriterTest
     {
         static void Main(string[] args)
         {
-            QuickDynamicTest();
+            ToTextTest();
         }
 
         static void QuickDynamicTest()
@@ -381,7 +381,7 @@ namespace ChoCSVWriterTest
 
             List<EmployeeRec> objs = new List<EmployeeRec>();
             EmployeeRec rec1 = new EmployeeRec();
-            //rec1.Id = 10;
+            rec1.Id = 10;
             rec1.Name = "Mark";
             objs.Add(rec1);
 

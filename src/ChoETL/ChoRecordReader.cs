@@ -11,14 +11,13 @@ namespace ChoETL
     public abstract class ChoRecordReader
     {
         public readonly Type RecordType;
-        internal TraceSwitch TraceSwitch;
+        internal TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
 
         public ChoRecordReader(Type recordType)
         {
             ChoGuard.ArgumentNotNull(recordType, "RecordType");
 
             RecordType = recordType;
-            TraceSwitch = ChoETLFramework.TraceSwitch;
         }
 
         public abstract IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null);

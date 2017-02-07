@@ -13,7 +13,27 @@ namespace ChoFixedLengthWriterTest
     {
         static void Main(string[] args)
         {
-            POCOTest();
+            ToTextTest();
+        }
+
+        static void ToTextTest()
+        {
+            ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "G";
+            ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.YesOrNo;
+            //ChoTypeConverterFormatSpec.Instance.EnumFormat = ChoEnumFormatSpec.Name;
+
+            List<EmployeeRecSimple> objs = new List<EmployeeRecSimple>();
+            EmployeeRecSimple rec1 = new EmployeeRecSimple();
+            rec1.Id = 10;
+            rec1.Name = "Mark";
+            objs.Add(rec1);
+
+            EmployeeRecSimple rec2 = new EmployeeRecSimple();
+            rec2.Id = 200;
+            rec2.Name = "Lou";
+            objs.Add(rec2);
+
+            Console.WriteLine(ChoFixedLengthWriter.ToText< EmployeeRecSimple>(objs));
         }
 
         static void POCOTest()

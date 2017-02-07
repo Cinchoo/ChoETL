@@ -20,7 +20,7 @@ namespace ChoETL
         private Lazy<IEnumerator<T>> _enumerator = null;
         private CultureInfo _prevCultureInfo = null;
         private bool _clearFields = false;
-        internal TraceSwitch TraceSwitch;
+        internal TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
 
         public ChoCSVRecordConfiguration Configuration
         {
@@ -32,7 +32,6 @@ namespace ChoETL
         {
             ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
 
-            TraceSwitch = ChoETLFramework.TraceSwitch;
             Configuration = configuration;
 
             Init();

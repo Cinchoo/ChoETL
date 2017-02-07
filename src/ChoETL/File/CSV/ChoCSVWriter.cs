@@ -97,11 +97,14 @@ namespace ChoETL
             }
         }
 
-        public static string ToText<TRec>(TRec record, ChoCSVRecordConfiguration configuration = null)
-            where TRec : class
-        {
-            return ToText(ChoEnumerable.AsEnumerable(record), configuration);
-        }
+        //public static string ToText<TRec>(TRec record, ChoCSVRecordConfiguration configuration = null)
+        //    where TRec : class
+        //{
+        //    if (record is IEnumerable<TRec>)
+        //        return ToText(record as IEnumerable<TRec>, configuration);
+        //    else
+        //        return ToText(ChoEnumerable.AsEnumerable(record), configuration);
+        //}
 
         internal static string ToText(object rec, ChoCSVRecordConfiguration configuration, Encoding encoding, int bufferSize)
         {
