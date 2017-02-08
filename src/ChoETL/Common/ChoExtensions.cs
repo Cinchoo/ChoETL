@@ -383,6 +383,20 @@ namespace ChoETL
             return inString.IndexOf(Environment.NewLine) != inString.LastIndexOf(Environment.NewLine);
         }
 
+        public static string First(this string source, int len)
+        {
+            if (len >= source.Length)
+                return source;
+            return source.Substring(0, len);
+        }
+
+        public static string Last(this string source, int len)
+        {
+            if (len >= source.Length)
+                return source;
+            return source.Substring(source.Length - len);
+        }
+
         public static void Reset(this object target)
         {
             Initialize(target);
@@ -668,6 +682,7 @@ namespace ChoETL
                 || typeof(DateTime) == type 
                 || typeof(BigInteger) == type 
                 || typeof(ChoCurrency) == type
+                || typeof(Decimal) == type
                 ;
         }
 

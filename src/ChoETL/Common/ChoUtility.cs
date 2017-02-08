@@ -1218,10 +1218,18 @@ namespace ChoETL
                         if (!ChoType.IsValidObjectMember(memberInfo))
                             continue;
 
+                        Type type = ChoType.GetMemberType(memberInfo);
                         object value = ChoType.GetMemberValue(target, memberInfo);
-                        string memberText = value != null ? ChoUtility.ToStringEx(value) : "[NULL]";
-                        if (memberText.ContainsMultiLines())
-                            memberText = Environment.NewLine + memberText.Indent();
+                        string memberText = null;
+
+                        if (!type.IsSimple())
+                        {
+                            memberText = value != null ? ChoUtility.ToStringEx(value) : "[NULL]";
+                            if (memberText.ContainsMultiLines())
+                                memberText = Environment.NewLine + memberText.Indent();
+                        }
+                        else
+                            memberText = value.ToNString();
 
                         msg.AppendFormatLine("{0}: {1}", memberInfo.Name, memberText);
                     }
