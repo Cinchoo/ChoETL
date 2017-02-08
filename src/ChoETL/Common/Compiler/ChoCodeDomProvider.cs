@@ -5,6 +5,8 @@ using System.Text;
 using System.CodeDom.Compiler;
 using System.IO;
 using System.CodeDom;
+using Microsoft.CSharp;
+using Microsoft.VisualBasic;
 
 namespace ChoETL
 {
@@ -12,6 +14,9 @@ namespace ChoETL
 
     public class ChoCodeDomProvider : IDisposable
     {
+        private static readonly CSharpCodeProvider _cSharpCodeProvider = new CSharpCodeProvider();
+        private static readonly VBCodeProvider _VBCodeProvider = new VBCodeProvider();
+
         #region Shared Data Members (Private)
 
         private static IEnumerable<string> _refAssemblies;
@@ -64,6 +69,16 @@ namespace ChoETL
         #endregion Constructors
 
         #region Instance Members (Public)
+
+        public static bool IsValidCSharpIdentifier(string identifier)
+        {
+            return _cSharpCodeProvider.IsValidIdentifier(identifier);
+        }
+
+        public static bool IsValidVBIdentifier(string identifier)
+        {
+            return _VBCodeProvider.IsValidIdentifier(identifier);
+        }
 
         public object ExecuteFunc(object paramValue)
         {

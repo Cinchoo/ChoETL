@@ -22,7 +22,7 @@ namespace ChoETL
             private set;
         }
 
-        public ChoManifoldRecordWriter(Type recordType, ChoManifoldRecordConfiguration configuration) : base(recordType)
+        public ChoManifoldRecordWriter(ChoManifoldRecordConfiguration configuration) : base(typeof(object))
         {
             ChoGuard.ArgumentNotNull(configuration, "Configuration");
             Configuration = configuration;
@@ -46,17 +46,16 @@ namespace ChoETL
 
             try
             {
-                int index = 0;
                 foreach (object record in records)
                 {
+                    _index++;
                     recType = record.GetType();
                     if (record is IChoETLNameableObject)
                         ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(((IChoETLNameableObject)record).Name));
                     else
-                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(++index));
+                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(_index));
 
                     recText = String.Empty;
-                    _index++;
                     if (record != null)
                     {
                         if (predicate == null || predicate(record))

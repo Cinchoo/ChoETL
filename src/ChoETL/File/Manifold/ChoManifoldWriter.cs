@@ -65,17 +65,18 @@ namespace ChoETL
             if (Configuration == null)
                 Configuration = new ChoManifoldRecordConfiguration();
 
-            _writer = new ChoManifoldRecordWriter(typeof(object), Configuration);
+            _writer = new ChoManifoldRecordWriter(Configuration);
         }
 
-        public void Write(IEnumerable<object> records)
+        public void Write(IEnumerable records)
         {
-            _writer.WriteTo(_streamWriter, records).Loop();
+            foreach (object rec in records)
+                _writer.WriteTo(_streamWriter, new object[] { rec }).Loop();
         }
 
         public void Write(object record)
         {
-            _writer.WriteTo(_streamWriter, new object[] { record } ).Loop();
+            _writer.WriteTo(_streamWriter, new object[] { record }).Loop();
         }
 
         public static string ToText(IEnumerable records)

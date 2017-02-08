@@ -68,6 +68,18 @@ namespace ChoETL
             int opi = codeSnippet.IndexOf("=>");
             if (opi < 0) return null; // throw new Exception("No lambda operator =>");
             string param = codeSnippet.Substring(0, opi).NTrim();
+
+            if (Language == ChoCodeProviderLanguage.VB)
+            {
+                if (!ChoCodeDomProvider.IsValidVBIdentifier(param))
+                    throw new ApplicationException("Invalid VB identifier found.");
+            }
+            else
+            {
+                if (!ChoCodeDomProvider.IsValidCSharpIdentifier(param))
+                    throw new ApplicationException("Invalid C# identifier found.");
+            }
+
             string codeBlock = codeSnippet.Substring(opi + 2).NTrim();
 
             if (!codeBlock.Contains(";") && !codeBlock.StartsWith("return"))

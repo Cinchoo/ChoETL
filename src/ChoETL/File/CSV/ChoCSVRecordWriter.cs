@@ -50,16 +50,15 @@ namespace ChoETL
 
             try
             {
-                int index = 0;
                 foreach (object record in records)
                 {
+                    _index++;
                     if (record is IChoETLNameableObject)
                         ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(((IChoETLNameableObject)record).Name));
                     else
-                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(++index));
+                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(_index));
 
                     recText = String.Empty;
-                    _index++;
                     if (record != null)
                     {
                         if (predicate == null || predicate(record))

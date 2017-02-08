@@ -14,7 +14,27 @@ namespace ChoManifoldWriterTest
     {
         static void Main(string[] args)
         {
-            QuickTest();
+            ToTextTest();
+        }
+
+        public static void ToTextTest()
+        {
+            List<object> objs = new List<object>();
+            SampleType s = new SampleType() { Field1 = "Raj", Field2 = "Mark", Field3 = 1212 };
+            objs.Add(s);
+
+            var o = new Orders { CustomerID = "123124", OrderID = 1, EmployeeID = 65657657, OrderDate = DateTime.Today, RequiredDate = "DateText" };
+            objs.Add(o);
+
+            dynamic rec1 = new ExpandoObject();
+            rec1.Id = 10;
+            rec1.Name = "Mark";
+            rec1.JoinedDate = new DateTime(2001, 2, 2);
+            rec1.IsActive = true;
+            rec1.Salary = new ChoCurrency(100);
+            objs.Add(rec1);
+
+            Console.WriteLine(ChoManifoldWriter.ToText(objs));
         }
 
         public static void QuickTest()
