@@ -91,6 +91,10 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+    <Reference Include="XPathReader, Version=1.0.6252.31852, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Libs\XPathReader.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChoEnums.cs" />
@@ -275,12 +279,16 @@
     <Compile Include="File\Manifold\ChoManifoldRecordReader.cs" />
     <Compile Include="File\Manifold\ChoManifoldRecordConfiguration.cs" />
     <Compile Include="File\Manifold\ChoManifoldReader.cs" />
+    <Compile Include="File\Xml\ChoXmlRecordConfiguration.cs" />
+    <Compile Include="File\Xml\ChoXmlRecordReader.cs" />
+    <Compile Include="File\Xml\ChoXmlReader.cs" />
     <Compile Include="IChoNotifyRecordWrite.cs" />
     <Compile Include="IChoNotifyRecordRead.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Dependencies.txt" />
+    <None Include="Libs\XPathReader.dll" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Common\Cryptography\" />

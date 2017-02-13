@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoManifoldReaderTest", "..
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoManifoldWriterTest", "..\Test\ChoManifoldWriterTest\ChoManifoldWriterTest.csproj", "{AD56E92F-E83B-4813-BEFE-7BB8AFCC51DE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoXmlReaderTest", "..\Test\ChoXmlReaderTest\ChoXmlReaderTest.csproj", "{4213D2FA-323B-4287-BF6C-5906193163C8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,6 +61,10 @@ Global
 		{AD56E92F-E83B-4813-BEFE-7BB8AFCC51DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD56E92F-E83B-4813-BEFE-7BB8AFCC51DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AD56E92F-E83B-4813-BEFE-7BB8AFCC51DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4213D2FA-323B-4287-BF6C-5906193163C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4213D2FA-323B-4287-BF6C-5906193163C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4213D2FA-323B-4287-BF6C-5906193163C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4213D2FA-323B-4287-BF6C-5906193163C8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -71,5 +77,6 @@ Global
 		{D9CAB4AA-7A98-4E54-AAC0-88E977AB534C} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 		{A6BF95FC-340E-45E2-B198-6006B30F21D1} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 		{AD56E92F-E83B-4813-BEFE-7BB8AFCC51DE} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
+		{4213D2FA-323B-4287-BF6C-5906193163C8} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 	EndGlobalSection
 EndGlobal

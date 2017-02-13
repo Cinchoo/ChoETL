@@ -14,8 +14,7 @@ namespace ChoCSVSqlDbImportSample
     {
         static void Main(string[] args)
         {
-            ChoETLFramework.Initialize();
-            SortByCity();
+            LoadDataFile();
         }
 
         static void SortByCity()
@@ -53,7 +52,7 @@ namespace ChoCSVSqlDbImportSample
 
             public DbSet<Address> Addresses { get; set; }
         }
-        static void LoadTabFile()
+        static void LoadDataFile()
         {
             string connectionstring = @"Data Source=(localdb)\v11.0;Initial Catalog=NerdDinnersDb;Integrated Security=True";
 
