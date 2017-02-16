@@ -209,6 +209,18 @@ namespace ChoETL
             return WithField(fieldName, position, null, quoteField, fieldValueTrimOption);
         }
 
+        public ChoCSVReader<T> ColumnCountStrict()
+        {
+            Configuration.ColumnCountStrict = true;
+            return this;
+        }
+
+        public ChoCSVReader<T> ColumnOrderStrict()
+        {
+            Configuration.ColumnOrderStrict = true;
+            return this;
+        }
+
         #endregion Fluent API
     }
 

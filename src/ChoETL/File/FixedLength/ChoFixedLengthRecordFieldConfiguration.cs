@@ -33,7 +33,7 @@ namespace ChoETL
             {
                 StartIndex = attr.StartIndex;
                 Size = attr.Size;
-                FieldName = attr.FieldName.IsNullOrWhiteSpace() ? Name : attr.FieldName;
+                FieldName = attr.FieldName.IsNullOrWhiteSpace() ? Name.NTrim() : attr.FieldName.NTrim();
             }
         }
 

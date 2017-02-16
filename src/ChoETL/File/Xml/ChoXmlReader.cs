@@ -39,7 +39,6 @@ namespace ChoETL
             Init();
 
             _streamReader = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.Encoding, false, Configuration.BufferSize);
-            _xmlReader = XmlReader.Create(_streamReader);
             _closeStreamOnDispose = true;
         }
 
@@ -71,7 +70,6 @@ namespace ChoETL
             Init();
 
             _streamReader = streamReader;
-            _xmlReader = XmlReader.Create(_streamReader);
         }
 
         public ChoXmlReader(Stream inStream, ChoXmlRecordConfiguration configuration = null)
@@ -81,7 +79,6 @@ namespace ChoETL
             Configuration = configuration;
             Init();
             _streamReader = new StreamReader(inStream, Configuration.Encoding, false, Configuration.BufferSize);
-            _xmlReader = XmlReader.Create(_streamReader);
             _closeStreamOnDispose = true;
         }
 
@@ -130,6 +127,9 @@ namespace ChoETL
 
         public IEnumerator<T> GetEnumerator()
         {
+            if (_xmlReader == null)
+                _xmlReader = XmlReader.Create(_streamReader);
+
             ChoXmlRecordReader reader = new ChoXmlRecordReader(typeof(T), Configuration);
             reader.TraceSwitch = TraceSwitch;
             var e = reader.AsEnumerable(_xmlReader).GetEnumerator();
@@ -141,22 +141,95 @@ namespace ChoETL
             return GetEnumerator();
         }
 
-        //public IDataReader AsDataReader()
-        //{
-        //    ChoXmlRecordReader reader = new ChoXmlRecordReader(typeof(T), Configuration);
-        //    reader.TraceSwitch = TraceSwitch;
-        //    reader.LoadSchema(_streamReader);
+        public IDataReader AsDataReader()
+        {
+            ChoXmlRecordReader reader = new ChoXmlRecordReader(typeof(T), Configuration);
+            reader.TraceSwitch = TraceSwitch;
+            reader.LoadSchema(_streamReader);
 
-        //    var dr = new ChoEnumerableDataReader(GetEnumerator().ToEnumerable(), Configuration.CSVRecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType)).ToArray());
-        //    return dr;
-        //}
+            var dr = new ChoEnumerableDataReader(GetEnumerator().ToEnumerable(), Configuration.XmlRecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType)).ToArray());
+            return dr;
+        }
 
-        //public DataTable AsDataTable(string tableName = null)
-        //{
-        //    DataTable dt = tableName.IsNullOrWhiteSpace() ? new DataTable() : new DataTable(tableName);
-        //    dt.Load(AsDataReader());
-        //    return dt;
-        //}
+        public DataTable AsDataTable(string tableName = null)
+        {
+            DataTable dt = tableName.IsNullOrWhiteSpace() ? new DataTable() : new DataTable(tableName);
+            dt.Load(AsDataReader());
+            return dt;
+        }
+
+        #region Fluent API
+
+        public ChoXmlReader<T> WithXPath(string xPath)
+        {
+            Configuration.XPath = xPath;
+            return this;
+        }
+
+        public ChoXmlReader<T> WithFields(params string[] fieldsNames)
+        {
+            string fnTrim = null;
+            if (!fieldsNames.IsNullOrEmpty())
+            {
+                foreach (string fn in fieldsNames)
+                {
+                    if (fn.IsNullOrEmpty())
+                        continue;
+                    if (!_clearFields)
+                    {
+                        Configuration.XmlRecordFieldConfigurations.Clear();
+                        _clearFields = true;
+                    }
+                    fnTrim = fn.NTrim();
+                    Configuration.XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(fnTrim, $"//{fnTrim}"));
+                }
+
+            }
+
+            return this;
+        }
+
+        public ChoXmlReader<T> WithXmlElementField(string fieldName, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim)
+        {
+            string fnTrim = fieldName.NTrim();
+            string xPath = $"//{fnTrim}";
+            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption);
+        }
+
+        public ChoXmlReader<T> WithXmlAttributeField(string fieldName, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim)
+        {
+            string fnTrim = fieldName.NTrim();
+            string xPath = $"//@{fnTrim}";
+            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption);
+        }
+
+        public ChoXmlReader<T> WithField(string fieldName, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim)
+        {
+            if (!fieldName.IsNullOrEmpty())
+            {
+                if (!_clearFields)
+                {
+                    Configuration.XmlRecordFieldConfigurations.Clear();
+                    _clearFields = true;
+                }
+
+                string fnTrim = fieldName.NTrim();
+                fieldType = fieldType == null ? typeof(string) : fieldType;
+                xPath = xPath.IsNullOrWhiteSpace() ? $"//{fnTrim}" : xPath;
+
+                Configuration.XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(fnTrim, xPath) { FieldType = fieldType, FieldValueTrimOption = fieldValueTrimOption });
+            }
+
+            return this;
+        }
+
+        public ChoXmlReader<T> ColumnCountStrict()
+        {
+            Configuration.ColumnCountStrict = true;
+            return this;
+        }
+
+        #endregion Fluent API
     }
 
     public class ChoXmlReader : ChoXmlReader<ExpandoObject>

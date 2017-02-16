@@ -8,6 +8,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.Linq;
 
 namespace ChoETL
@@ -20,6 +21,11 @@ namespace ChoETL
             private set;
         }
         public string XPath
+        {
+            get;
+            set;
+        }
+        public XmlNamespaceManager NamespaceManager
         {
             get;
             set;
@@ -115,7 +121,7 @@ namespace ChoETL
             if (XPath.IsNull())
                 throw new ChoRecordConfigurationException("XPath can't be null or whitespace.");
 
-            XPathReader xpr = state is Tuple<int, XPathReader> ? ((Tuple<int, XPathReader>)state).Item2 : null;
+            XElement xpr = state is Tuple<int, XElement> ? ((Tuple<int, XElement>)state).Item2 : null;
             if (AutoDiscoverColumns
                 && XmlRecordFieldConfigurations.Count == 0)
             {
@@ -140,8 +146,8 @@ namespace ChoETL
                 }
                 else if (xpr != null)
                 {
-                    var x = XDocument.Parse(xpr.ReadOuterXml());
-                    IDictionary dict = x.Root
+                    var x = xpr;
+                    IDictionary dict = x
                           .Elements()
                           .ToDictionary(
                             d => d.Name.LocalName, // avoids getting an IDictionary<XName,string>
@@ -150,6 +156,18 @@ namespace ChoETL
                     foreach (string name in dict.Keys)
                     {
                         var obj = new ChoXmlRecordFieldConfiguration(name, $"//{name}");
+                        XmlRecordFieldConfigurations.Add(obj);
+                    }
+
+                    dict = x
+           .Attributes()
+           .ToDictionary(
+             d => d.Name.LocalName, // avoids getting an IDictionary<XName,string>
+             l => l.Name.LocalName);
+
+                    foreach (string name in dict.Keys)
+                    {
+                        var obj = new ChoXmlRecordFieldConfiguration(name, $"//@{name}");
                         XmlRecordFieldConfigurations.Add(obj);
                     }
                 }

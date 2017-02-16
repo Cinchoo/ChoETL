@@ -173,6 +173,18 @@ namespace ChoETL
             return WithField(fieldName, startIndex, size, null, quoteField, fieldValueTrimOption);
         }
 
+        public ChoFixedLengthReader<T> ColumnCountStrict()
+        {
+            Configuration.ColumnCountStrict = true;
+            return this;
+        }
+
+        public ChoFixedLengthReader<T> ColumnOrderStrict()
+        {
+            Configuration.ColumnOrderStrict = true;
+            return this;
+        }
+
         #endregion Fluent API
     }
 

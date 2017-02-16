@@ -20,9 +20,9 @@ namespace ChoXmlReaderTest
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoXmlReader(new StringReader("<books><book><name>C++</name><author>Mark</author></book><book><name>VB</name><author>Tom</author></book></books>")))
+            using (var parser = new ChoXmlReader(reader)) //.WithFields("name", "author", "title").ColumnCountStrict()) // new StringReader("<books><book><name>C++</name><author>Mark</author></book><book><name>VB</name><author>Tom</author></book><book><name>Java</name><author>Tom</author></book></books>")))
             {
-                writer.WriteLine(@"<books><book name=""xxx""></book><book name=""yyyy""></book></books>");
+                writer.WriteLine(@"<books><book name=""xxx"" author=""Tom""><title>C++</title></book><book name=""yyyy""></book></books>");
 
                 writer.Flush();
                 stream.Position = 0;

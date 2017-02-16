@@ -32,7 +32,7 @@ namespace ChoETL
             if (attr != null)
             {
                 XPath = attr.XPath;
-                FieldName = attr.FieldName.IsNullOrWhiteSpace() ? Name : attr.FieldName;
+                FieldName = attr.FieldName.IsNullOrWhiteSpace() ? Name.NTrim() : attr.FieldName.NTrim();
             }
         }
 

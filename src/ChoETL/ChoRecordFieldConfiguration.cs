@@ -68,7 +68,7 @@ namespace ChoETL
         public ChoRecordFieldConfiguration(string name, ChoRecordFieldAttribute attr = null)
         {
             ChoGuard.ArgumentNotNullOrEmpty(name, "Name");
-            Name = name;
+            Name = name.NTrim();
             //FieldType = typeof(string);
 
             if (attr != null)

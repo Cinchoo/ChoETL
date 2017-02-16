@@ -314,7 +314,7 @@ namespace ChoETL
                     if (fieldConfig.FieldPosition - 1 < fieldValues.Length)
                         fieldValue = fieldValues[fieldConfig.FieldPosition - 1];
                     else if (Configuration.ColumnCountStrict)
-                        throw new ChoParserException("Missing field value for {0} [Position: {1}] field.".FormatString(fieldConfig.FieldName, fieldConfig.FieldPosition));
+                        throw new ChoParserException("Missing field value for '{0}' [Position: {1}] field.".FormatString(fieldConfig.FieldName, fieldConfig.FieldPosition));
                 }
 
                 if (rec is ExpandoObject)
