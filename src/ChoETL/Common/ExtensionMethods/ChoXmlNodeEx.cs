@@ -60,10 +60,12 @@ namespace ChoETL
             }
             else
             {
+                string rootName = null;
                 string[] matchNames = xPath.SplitNTrim("/").Where(i => !i.IsNullOrWhiteSpace() && i.NTrim() != ".").ToArray();
                 if (matchNames.Length == 0) yield break;
 
-                Queue<string> q = new Queue<string>(matchNames);
+                rootName = matchNames[0];
+                Queue<string> q = new Queue<string>(matchNames.Skip(1));
                 xPath = q.Dequeue();
 
                 bool isEmpty;
@@ -71,6 +73,10 @@ namespace ChoETL
                 isEmpty = xmlReader.IsEmptyElement;
 
                 // Read the root start element
+                xmlReader.ReadToFollowing(rootName);
+                if (xmlReader.Name != rootName)
+                    yield break;
+
                 xmlReader.ReadStartElement();
 
                 // Decode elements
@@ -78,6 +84,7 @@ namespace ChoETL
                 {
                     do
                     {
+
                         // Read document till next element
                         xmlReader.MoveToContent();
 
@@ -98,7 +105,7 @@ namespace ChoETL
                                     if (el != null)
                                         yield return el;
 
-                                    foreach (var i in matchNames)
+                                    foreach (var i in matchNames.Skip(1))
                                         q.Enqueue(i);
 
                                     xPath = q.Dequeue();

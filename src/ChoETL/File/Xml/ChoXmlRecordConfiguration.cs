@@ -24,6 +24,11 @@ namespace ChoETL
             get;
             set;
         }
+        public string DefaultNamespace
+        {
+            get;
+            set;
+        }
         public XmlNamespaceManager NamespaceManager
         {
             get;
@@ -56,6 +61,7 @@ namespace ChoETL
             {
                 XPath = "//*";
             }
+            NamespaceManager = new XmlNamespaceManager(new NameTable());
         }
 
         protected override void Init(Type recordType)
@@ -147,24 +153,31 @@ namespace ChoETL
                 {
                     Dictionary<string, ChoXmlRecordFieldConfiguration> dict = new Dictionary<string, ChoXmlRecordFieldConfiguration>(StringComparer.CurrentCultureIgnoreCase);
                     string name = null;
-                    foreach (var ele in xpr.Elements())
-                    {
-                        name = ele.Name.LocalName;
-
-                        if (!dict.ContainsKey(name))
-                            dict.Add(name, new ChoXmlRecordFieldConfiguration(name, $"//{name}"));
-                        else
-                            throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
-                    }
-
                     foreach (var ele in xpr.Attributes())
                     {
                         name = ele.Name.LocalName;
 
                         if (!dict.ContainsKey(name))
-                            dict.Add(name, new ChoXmlRecordFieldConfiguration(name, $"//@{name}"));
+                            dict.Add(name, new ChoXmlRecordFieldConfiguration(name, DefaultNamespace.IsNullOrWhiteSpace() ? $"//@{name}" : $"//@{DefaultNamespace}" + ":" + $"{name}"));
                         else
                             throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
+                    }
+
+                    bool hasElements = false;
+                    foreach (var ele in xpr.Elements())
+                    {
+                        name = ele.Name.LocalName;
+                        hasElements = true;
+                        if (!dict.ContainsKey(name))
+                            dict.Add(name, new ChoXmlRecordFieldConfiguration(name, DefaultNamespace.IsNullOrWhiteSpace() ? $"//{name}" : $"//{DefaultNamespace}" + ":" + $"{name}"));
+                        else
+                            throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
+                    }
+
+                    if (!hasElements)
+                    {
+                        name = xpr.Name.LocalName;
+                        dict.Add(name, new ChoXmlRecordFieldConfiguration(name, "text()"));
                     }
 
                     foreach (ChoXmlRecordFieldConfiguration obj in dict.Values)

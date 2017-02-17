@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
+using System.Xml.Linq;
 
 namespace ChoETL
 {
@@ -38,6 +39,25 @@ namespace ChoETL
                 return convValue.ToString(format, culture); // String.Format(culture, "{0:" + format + "}", value);
             }
 
+            return value;
+        }
+    }
+
+    [ChoTypeConverter(typeof(XElement))]
+    public class ChoXElementConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            if (value is XElement)
+            {
+                return ((XElement)value).Value;
+            }
+
+            return value;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
             return value;
         }
     }

@@ -30,9 +30,46 @@ namespace ChoXmlReaderTest
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoXmlReader(reader).WithXPath("//*")) //.WithFields("name", "author", "title").ColumnCountStrict()) // new StringReader("<books><book><name>C++</name><author>Mark</author></book><book><name>VB</name><author>Tom</author></book><book><name>Java</name><author>Tom</author></book></books>")))
+            using (var parser = new ChoXmlReader(reader))
             {
-                writer.WriteLine(@"<books><book name=""xxx"" author=""Tom""><title><abc>C++</abc></title></book> <book name=""yyyy""><title><abc>Java</abc></title></book></books>");
+                writer.WriteLine(@"<employee id='1'><name>Tom</name><addr>123 street</addr></employee>");
+
+                writer.Flush();
+                stream.Position = 0;
+
+                object rec;
+                while ((rec = parser.Read()) != null)
+                {
+                    Console.WriteLine(rec.ToStringEx());
+                }
+            }
+        }
+
+        static void QuickTestWithXmlNS()
+        {
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoXmlReader(reader).WithXmlNamespace("cont", "www.tutorialspoint.com/profile", true).WithField("name", "//cont:name"))
+            {
+                writer.WriteLine(@"<cont:contacts xmlns:cont=""www.tutorialspoint.com/profile"">
+                <cont:contact >
+                    <cont:contact >
+                       <cont:name>Tanmay Patilx</cont:name>
+                       <cont:company>TutorialsPoint</cont:company>
+                       <cont:phone> (011) 123 - 4567 </cont:phone>
+                    </cont:contact> 
+                   <cont:name>Tanmay Patil</cont:name>
+                   <cont:company>TutorialsPoint</cont:company>
+                   <cont:phone> (011) 123 - 4567 </cont:phone>
+                </cont:contact> 
+                <cont:contact >
+                   <cont:name>Tanmay Patil1</cont:name>
+                   <cont:company>TutorialsPoint1</cont:company>
+                   <cont:phone> (011) 123 - 45671 </cont:phone>
+                </cont:contact> 
+                </cont:contacts>
+                ");
 
                 writer.Flush();
                 stream.Position = 0;

@@ -128,7 +128,7 @@ namespace ChoETL
         public IEnumerator<T> GetEnumerator()
         {
             if (_xmlReader == null)
-                _xmlReader = XmlReader.Create(_streamReader);
+                _xmlReader = XmlReader.Create(_streamReader, new XmlReaderSettings(), new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
 
             ChoXmlRecordReader reader = new ChoXmlRecordReader(typeof(T), Configuration);
             reader.TraceSwitch = TraceSwitch;
@@ -159,6 +159,29 @@ namespace ChoETL
         }
 
         #region Fluent API
+
+        public ChoXmlReader<T> WithXmlNamespaceManager(XmlNamespaceManager nsMgr)
+        {
+            ChoGuard.ArgumentNotNull(nsMgr, "XmlNamespaceManager");
+
+            Configuration.NamespaceManager = nsMgr;
+            return this;
+        }
+
+        public ChoXmlReader<T> WithXmlNamespace(string prefix, string uri, bool isDefault = false)
+        {
+            Configuration.NamespaceManager.AddNamespace(prefix, uri);
+            if (isDefault)
+                Configuration.DefaultNamespace = prefix;
+
+            return this;
+        }
+
+        public ChoXmlReader<T> DefaultXmlNamespace(string prefix)
+        {
+            Configuration.DefaultNamespace = prefix;
+            return this;
+        }
 
         public ChoXmlReader<T> WithXPath(string xPath)
         {

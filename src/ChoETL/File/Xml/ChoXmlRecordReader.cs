@@ -164,16 +164,26 @@ namespace ChoETL
                 fieldValue = null;
                 fieldConfig = kvp.Value;
 
-                XElement fXElement = ((IEnumerable)node.XPathEvaluate(fieldConfig.XPath)).OfType<XElement>().FirstOrDefault();
-                if (fXElement != null)
-                    fieldValue = fXElement.Value;
-                else
+                if (fieldConfig.XPath == "text()")
                 {
-                    XAttribute fXAttribute = ((IEnumerable)node.XPathEvaluate(fieldConfig.XPath)).OfType<XAttribute>().FirstOrDefault();
-                    if (fXAttribute != null)
-                        fieldValue = fXAttribute.Value;
+                    if (node.Name.LocalName == fieldConfig.FieldName)
+                        fieldValue = node.Value;
                     else if (Configuration.ColumnCountStrict)
                         throw new ChoParserException("Missing '{0}' xml node.".FormatString(fieldConfig.FieldName));
+                }
+                else
+                {
+                    XElement fXElement = ((IEnumerable)node.XPathEvaluate(fieldConfig.XPath, Configuration.NamespaceManager)).OfType<XElement>().FirstOrDefault();
+                    if (fXElement != null)
+                        fieldValue = fXElement.Value;
+                    else
+                    {
+                        XAttribute fXAttribute = ((IEnumerable)node.XPathEvaluate(fieldConfig.XPath, Configuration.NamespaceManager)).OfType<XAttribute>().FirstOrDefault();
+                        if (fXAttribute != null)
+                            fieldValue = fXAttribute.Value;
+                        else if (Configuration.ColumnCountStrict)
+                            throw new ChoParserException("Missing '{0}' xml node.".FormatString(fieldConfig.FieldName));
+                    }
                 }
 
                 if (rec is ExpandoObject)
