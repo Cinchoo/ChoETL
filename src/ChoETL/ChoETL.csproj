@@ -91,10 +91,6 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
-    <Reference Include="XPathReader, Version=1.0.6252.31852, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Libs\XPathReader.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChoEnums.cs" />
@@ -279,8 +275,10 @@
     <Compile Include="File\Manifold\ChoManifoldRecordReader.cs" />
     <Compile Include="File\Manifold\ChoManifoldRecordConfiguration.cs" />
     <Compile Include="File\Manifold\ChoManifoldReader.cs" />
+    <Compile Include="File\Xml\ChoXmlElementRecordFieldAttribute.cs" />
+    <Compile Include="File\Xml\ChoXmlAttributeRecordFieldAttribute.cs" />
     <Compile Include="File\Xml\ChoXmlRecordObjectAttribute.cs" />
-    <Compile Include="File\Xml\ChoXmlRecordFieldAttribute.cs" />
+    <Compile Include="File\Xml\ChoXmlNodeRecordFieldAttribute.cs" />
     <Compile Include="File\Xml\ChoXmlRecordFieldConfiguration.cs" />
     <Compile Include="File\Xml\ChoXmlRecordConfiguration.cs" />
     <Compile Include="File\Xml\ChoXmlRecordReader.cs" />
@@ -291,10 +289,11 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Dependencies.txt" />
-    <None Include="Libs\XPathReader.dll" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Common\Cryptography\" />
+    <Folder Include="Common\Xml\" />
+    <Folder Include="Libs\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

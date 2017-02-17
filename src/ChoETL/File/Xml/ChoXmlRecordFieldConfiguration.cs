@@ -21,12 +21,12 @@ namespace ChoETL
             set;
         }
 
-        public ChoXmlRecordFieldConfiguration(string name, string xPath) : this(name, (ChoXmlRecordFieldAttribute)null)
+        public ChoXmlRecordFieldConfiguration(string name, string xPath) : this(name, (ChoXmlNodeRecordFieldAttribute)null)
         {
             XPath = xPath;
         }
 
-        internal ChoXmlRecordFieldConfiguration(string name, ChoXmlRecordFieldAttribute attr = null) : base(name, attr)
+        internal ChoXmlRecordFieldConfiguration(string name, ChoXmlNodeRecordFieldAttribute attr = null) : base(name, attr)
         {
             FieldName = name;
             if (attr != null)

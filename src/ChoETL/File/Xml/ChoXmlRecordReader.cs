@@ -1,5 +1,4 @@
-﻿using GotDotNet.XPath;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -60,36 +59,29 @@ namespace ChoETL
             if (!RaiseBeginLoad(sr))
                 yield break;
 
-            XPathCollection xc = Configuration.NamespaceManager == null ? new XPathCollection() : new XPathCollection(Configuration.NamespaceManager);
-            int childQuery = xc.Add(Configuration.XPath);
-            XPathReader xpr = new XPathReader(sr, xc);
+            XmlReader xpr = sr;
             int counter = 0;
             Tuple<int, XElement> pair = null;
 
-            while (xpr.ReadUntilMatch())
+            foreach (XElement el in xpr.GetXmlElements(Configuration.XPath))
             {
-                if (xpr.Match(childQuery))
+                pair = new Tuple<int, XElement>(++counter, el);
+
+                if (!_configCheckDone)
                 {
-                    XElement el = XDocument.Load(xpr.ReadSubtree()).Root as XElement;
-
-                    pair = new Tuple<int, XElement>(++counter, el);
-
-                    if (!_configCheckDone)
-                    {
-                        Configuration.Validate(pair);
-                        _configCheckDone = true;
-                    }
-
-                    object rec = ChoActivator.CreateInstance(RecordType);
-                    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Loading node [{0}]...".FormatString(pair.Item1));
-                    if (!LoadNode(pair, ref rec))
-                        yield break;
-                    
-                    if (rec == null)
-                        continue;
-
-                    yield return rec;
+                    Configuration.Validate(pair);
+                    _configCheckDone = true;
                 }
+
+                object rec = ChoActivator.CreateInstance(RecordType);
+                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Loading node [{0}]...".FormatString(pair.Item1));
+                if (!LoadNode(pair, ref rec))
+                    yield break;
+
+                if (rec == null)
+                    continue;
+
+                yield return rec;
             }
 
             RaiseEndLoad(sr);

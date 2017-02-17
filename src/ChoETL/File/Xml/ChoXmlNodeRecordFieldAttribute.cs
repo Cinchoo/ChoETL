@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
+    internal enum ChoXmlNodeRecordFieldType { Element, Attribute };
+
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true )]
-    public class ChoXmlRecordFieldAttribute : ChoFileRecordFieldAttribute
+    public class ChoXmlNodeRecordFieldAttribute : ChoFileRecordFieldAttribute
     {
         public string XPath
         {
@@ -21,7 +23,18 @@ namespace ChoETL
             set;
         }
 
-        public ChoXmlRecordFieldAttribute(string xPath)
+        internal ChoXmlNodeRecordFieldType XmlNodeRecordFieldType
+        {
+            get;
+            set;
+        }
+
+        protected ChoXmlNodeRecordFieldAttribute()
+        {
+
+        }
+
+        public ChoXmlNodeRecordFieldAttribute(string xPath)
         {
             XPath = xPath;
         }

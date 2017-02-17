@@ -1,5 +1,4 @@
-﻿using GotDotNet.XPath;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -87,14 +86,14 @@ namespace ChoETL
             {
                 XmlRecordFieldConfigurations.Clear();
 
-                if (TypeDescriptor.GetProperties(recordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<ChoXmlRecordFieldAttribute>().Any()).Any())
+                if (TypeDescriptor.GetProperties(recordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any()).Any())
                 {
-                    foreach (PropertyDescriptor pd in TypeDescriptor.GetProperties(recordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<ChoXmlRecordFieldAttribute>().Any()))
+                    foreach (PropertyDescriptor pd in TypeDescriptor.GetProperties(recordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any()))
                     {
                         //if (!pd.PropertyType.IsSimple())
                         //    throw new ChoRecordConfigurationException("Property '{0}' is not a simple type.".FormatString(pd.Name));
 
-                        var obj = new ChoXmlRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoXmlRecordFieldAttribute>().First());
+                        var obj = new ChoXmlRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().First());
                         obj.FieldType = pd.PropertyType;
                         XmlRecordFieldConfigurations.Add(obj);
                     }
@@ -126,11 +125,11 @@ namespace ChoETL
                 && XmlRecordFieldConfigurations.Count == 0)
             {
                 if (RecordType != null && RecordType != typeof(ExpandoObject)
-                    && TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<ChoXmlRecordFieldAttribute>().Any()).Any())
+                    && TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any()).Any())
                 {
                     int startIndex = 0;
                     int size = 0;
-                    foreach (PropertyDescriptor pd in TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<ChoXmlRecordFieldAttribute>().Any()))
+                    foreach (PropertyDescriptor pd in TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any()))
                     {
                         //if (!pd.PropertyType.IsSimple())
                         //    throw new ChoRecordConfigurationException("Property '{0}' is not a simple type.".FormatString(pd.Name));
@@ -146,30 +145,30 @@ namespace ChoETL
                 }
                 else if (xpr != null)
                 {
-                    var x = xpr;
-                    IDictionary dict = x
-                          .Elements()
-                          .ToDictionary(
-                            d => d.Name.LocalName, // avoids getting an IDictionary<XName,string>
-                            l => l.Name.LocalName);
-
-                    foreach (string name in dict.Keys)
+                    Dictionary<string, ChoXmlRecordFieldConfiguration> dict = new Dictionary<string, ChoXmlRecordFieldConfiguration>(StringComparer.CurrentCultureIgnoreCase);
+                    string name = null;
+                    foreach (var ele in xpr.Elements())
                     {
-                        var obj = new ChoXmlRecordFieldConfiguration(name, $"//{name}");
-                        XmlRecordFieldConfigurations.Add(obj);
+                        name = ele.Name.LocalName;
+
+                        if (!dict.ContainsKey(name))
+                            dict.Add(name, new ChoXmlRecordFieldConfiguration(name, $"//{name}"));
+                        else
+                            throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
                     }
 
-                    dict = x
-           .Attributes()
-           .ToDictionary(
-             d => d.Name.LocalName, // avoids getting an IDictionary<XName,string>
-             l => l.Name.LocalName);
-
-                    foreach (string name in dict.Keys)
+                    foreach (var ele in xpr.Attributes())
                     {
-                        var obj = new ChoXmlRecordFieldConfiguration(name, $"//@{name}");
-                        XmlRecordFieldConfigurations.Add(obj);
+                        name = ele.Name.LocalName;
+
+                        if (!dict.ContainsKey(name))
+                            dict.Add(name, new ChoXmlRecordFieldConfiguration(name, $"//@{name}"));
+                        else
+                            throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
                     }
+
+                    foreach (ChoXmlRecordFieldConfiguration obj in dict.Values)
+                        XmlRecordFieldConfigurations.Add(obj);
                 }
             }
 
@@ -186,7 +185,7 @@ namespace ChoETL
                 .Select(g => g.Key).ToArray();
 
             if (dupFields.Length > 0)
-                throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] specified found.".FormatString(String.Join(",", dupFields)));
+                throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(String.Join(",", dupFields)));
 
             RecordFieldConfigurationsDict = XmlRecordFieldConfigurations.Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
         }
