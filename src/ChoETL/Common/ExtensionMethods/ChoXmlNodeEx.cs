@@ -50,20 +50,6 @@ namespace ChoETL
                             if (el != null)
                                 yield return el;
                             xmlReader.MoveToContent();
-
-                            // Read the child end element (not empty)
-                            if (isEmpty == false)
-                            {
-                                //// Delegate check: it has to reach and end element
-                                //if (xmlReader.NodeType != XmlNodeType.EndElement)
-                                //    throw new InvalidOperationException(String.Format("not reached the end element"));
-                                //// Delegate check: the end element shall correspond to the start element before delegate
-                                //if (xmlReader.LocalName != elementName)
-                                //    throw new InvalidOperationException(String.Format("not reached the relative end element of {0}", elementName));
-
-                                //// Child end element
-                                //xmlReader.ReadEndElement();
-                            }
                         }
                         else if (xmlReader.NodeType == XmlNodeType.Text)
                         {
@@ -71,26 +57,10 @@ namespace ChoETL
                         }
                     } while (xmlReader.NodeType != XmlNodeType.EndElement);
                 }
-
-
-                //reader.MoveToContent();
-                ////reader.Read();
-                //while (reader.Read())
-                //{
-                //    switch (reader.NodeType)
-                //    {
-                //        case XmlNodeType.Element:
-                //            XElement el = XElement.ReadFrom(reader)
-                //                                  as XElement;
-                //            if (el != null)
-                //                yield return el;
-                //            break;
-                //    }
-                //}
             }
             else
             {
-                string[] matchNames = xPath.SplitNTrim("/").Where(i => !i.IsNullOrWhiteSpace()).ToArray();
+                string[] matchNames = xPath.SplitNTrim("/").Where(i => !i.IsNullOrWhiteSpace() && i.NTrim() != ".").ToArray();
                 if (matchNames.Length == 0) yield break;
 
                 Queue<string> q = new Queue<string>(matchNames);
@@ -146,20 +116,6 @@ namespace ChoETL
 
                             if (xmlReader.NodeType == XmlNodeType.EndElement)
                                 xmlReader.ReadEndElement();
-
-                            // Read the child end element (not empty)
-                            if (isEmpty == false)
-                            {
-                                //// Delegate check: it has to reach and end element
-                                //if (xmlReader.NodeType != XmlNodeType.EndElement)
-                                //    throw new InvalidOperationException(String.Format("not reached the end element"));
-                                //// Delegate check: the end element shall correspond to the start element before delegate
-                                //if (xmlReader.LocalName != elementName)
-                                //    throw new InvalidOperationException(String.Format("not reached the relative end element of {0}", elementName));
-
-                                //// Child end element
-                                //xmlReader.ReadEndElement();
-                            }
                         }
                         else if (xmlReader.NodeType == XmlNodeType.Text)
                         {
@@ -167,33 +123,6 @@ namespace ChoETL
                         }
                     } while (xmlReader.NodeType != XmlNodeType.EndElement && xmlReader.NodeType != XmlNodeType.None);
                 }
-
-
-                //xmlReader.MoveToContent();
-                //xPath = q.Dequeue();
-                //while (xmlReader.Read())
-                //{
-                //    switch (xmlReader.NodeType)
-                //    {
-                //        case XmlNodeType.Element:
-                //            if (xmlReader.Name == xPath)
-                //            {
-                //                if (q.Count == 0)
-                //                {
-                //                    XElement el = XElement.ReadFrom(xmlReader)
-                //                                          as XElement;
-                //                    if (el != null)
-                //                        yield return el;
-
-                //                    foreach (var i in matchNames)
-                //                        q.Enqueue(i);
-                //                }
-
-                //                xPath = q.Dequeue();
-                //            }
-                //            break;
-                //    }
-                //}
             }
         }
 

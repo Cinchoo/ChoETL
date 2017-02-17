@@ -14,7 +14,7 @@ namespace ChoXmlReaderTest
     {
         static void Main(string[] args)
         {
-            LoadTextTest();
+            QuickTest();
         }
 
         static void LoadTextTest()
@@ -30,7 +30,7 @@ namespace ChoXmlReaderTest
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoXmlReader(reader)) //.WithFields("name", "author", "title").ColumnCountStrict()) // new StringReader("<books><book><name>C++</name><author>Mark</author></book><book><name>VB</name><author>Tom</author></book><book><name>Java</name><author>Tom</author></book></books>")))
+            using (var parser = new ChoXmlReader(reader).WithXPath("//*")) //.WithFields("name", "author", "title").ColumnCountStrict()) // new StringReader("<books><book><name>C++</name><author>Mark</author></book><book><name>VB</name><author>Tom</author></book><book><name>Java</name><author>Tom</author></book></books>")))
             {
                 writer.WriteLine(@"<books><book name=""xxx"" author=""Tom""><title><abc>C++</abc></title></book> <book name=""yyyy""><title><abc>Java</abc></title></book></books>");
 
