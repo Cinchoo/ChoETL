@@ -28,3 +28,9 @@ Here are the items will be targetted on phase 1.
     + [Fixed Length Reader](https://www.codeproject.com/Articles/1166802/Cinchoo-ETL-FixedLengthReader)
     + [Fixed Length Writer](https://www.codeproject.com/Articles/1167944/Cinchoo-ETL-FixedLengthWriter)
   3. Xml Reader / Writer
+    + [Xml Reader](https://www.codeproject.com/Articles/1171289/Cinchoo-ETL-XmlReader)
+    + Xml Writer
+  4. Manifold Reader / Writer
+    + Manifold Reader
+    + Manifold Writer
+
