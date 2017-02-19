@@ -7,14 +7,27 @@ using ChoETL;
 using System.IO;
 using System.Xml.Linq;
 using System.Xml;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel;
 
 namespace ChoXmlReaderTest
 {
     class Program
     {
+        private static string EmpXml = @"
+            <Employees>
+                <Employee Id='1'>
+                    <Name>Tom</Name>
+                </Employee>
+                <Employee Id='2'>
+                    <Name>Mark</Name>
+                </Employee>
+            </Employees>
+        ";
+         
         static void Main(string[] args)
         {
-            QuickTest();
+            POCOTest();
         }
 
         static void LoadTextTest()
@@ -25,6 +38,50 @@ namespace ChoXmlReaderTest
             }
         }
 
+        static void POCOTest()
+        {
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoXmlReader<EmployeeRec>(reader))
+            {
+                writer.WriteLine(EmpXml);
+
+                writer.Flush();
+                stream.Position = 0;
+
+                object rec;
+                while ((rec = parser.Read()) != null)
+                {
+                    Console.WriteLine(rec.ToStringEx());
+                }
+            }
+        }
+
+        static void ConfigFirstDynamicTest()
+        {
+            ChoXmlRecordConfiguration config = new ChoXmlRecordConfiguration();
+            config.XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration("Id"));
+            config.XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration("Name"));
+
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoXmlReader(reader, config))
+            {
+                writer.WriteLine(EmpXml);
+
+                writer.Flush();
+                stream.Position = 0;
+
+                object rec;
+                while ((rec = parser.Read()) != null)
+                {
+                    Console.WriteLine(rec.ToStringEx());
+                }
+            }
+        }
+
         static void QuickTest()
         {
             using (var stream = new MemoryStream())
@@ -32,7 +89,27 @@ namespace ChoXmlReaderTest
             using (var writer = new StreamWriter(stream))
             using (var parser = new ChoXmlReader(reader))
             {
-                writer.WriteLine(@"<employee id='1'><name>Tom</name><addr>123 street</addr></employee>");
+                writer.WriteLine(EmpXml);
+
+                writer.Flush();
+                stream.Position = 0;
+
+                object rec;
+                while ((rec = parser.Read()) != null)
+                {
+                    Console.WriteLine(rec.ToStringEx());
+                }
+            }
+        }
+
+        static void CodeFirstTest()
+        {
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoXmlReader<EmployeeRecSimple>(reader))
+            {
+                writer.WriteLine(EmpXml);
 
                 writer.Flush();
                 stream.Position = 0;
@@ -79,6 +156,35 @@ namespace ChoXmlReaderTest
                 {
                     Console.WriteLine(rec.ToStringEx());
                 }
+            }
+        }
+
+        public partial class EmployeeRecSimple
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+        }
+
+        public class EmployeeRec
+        {
+            [ChoXmlNodeRecordField(XPath = "//@Id")]
+            [Required]
+            public int Id
+            {
+                get;
+                set;
+            }
+            [ChoXmlNodeRecordField(XPath = "//Name")]
+            [DefaultValue("XXXX")]
+            public string Name
+            {
+                get;
+                set;
+            }
+
+            public override string ToString()
+            {
+                return "{0}. {1}.".FormatString(Id, Name);
             }
         }
     }

@@ -100,6 +100,9 @@ namespace ChoETL
                         //    throw new ChoRecordConfigurationException("Property '{0}' is not a simple type.".FormatString(pd.Name));
 
                         var obj = new ChoXmlRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().First());
+                        if (obj.XPath.IsNullOrWhiteSpace())
+                            obj.XPath = $"//{obj.FieldName}|//@{obj.FieldName}";
+
                         obj.FieldType = pd.PropertyType;
                         XmlRecordFieldConfigurations.Add(obj);
                     }
@@ -111,7 +114,7 @@ namespace ChoETL
                         //if (!pd.PropertyType.IsSimple())
                         //    throw new ChoRecordConfigurationException("Property '{0}' is not a simple type.".FormatString(pd.Name));
 
-                        var obj = new ChoXmlRecordFieldConfiguration(pd.Name, $"//{pd.Name}");
+                        var obj = new ChoXmlRecordFieldConfiguration(pd.Name, $"//{pd.Name}|//@{pd.Name}");
                         obj.FieldType = pd.PropertyType;
                         XmlRecordFieldConfigurations.Add(obj);
                     }
@@ -140,7 +143,7 @@ namespace ChoETL
                         //if (!pd.PropertyType.IsSimple())
                         //    throw new ChoRecordConfigurationException("Property '{0}' is not a simple type.".FormatString(pd.Name));
 
-                        var obj = new ChoXmlRecordFieldConfiguration(pd.Name, $"//{pd.Name}");
+                        var obj = new ChoXmlRecordFieldConfiguration(pd.Name, $"//{pd.Name}|//@{pd.Name}");
                         obj.FieldType = pd.PropertyType;
                         XmlRecordFieldConfigurations.Add(obj);
 
@@ -182,6 +185,14 @@ namespace ChoETL
 
                     foreach (ChoXmlRecordFieldConfiguration obj in dict.Values)
                         XmlRecordFieldConfigurations.Add(obj);
+                }
+            }
+            else
+            {
+                foreach (var fc in XmlRecordFieldConfigurations)
+                {
+                    if (fc.XPath.IsNullOrWhiteSpace())
+                        fc.XPath = $"//{fc.FieldName}|//@{fc.FieldName}";
                 }
             }
 

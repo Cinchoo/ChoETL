@@ -14,7 +14,7 @@ namespace ChoETL
         public string XPath
         {
             get;
-            private set;
+            set;
         }
 
         public string FieldName
@@ -29,14 +29,9 @@ namespace ChoETL
             set;
         }
 
-        protected ChoXmlNodeRecordFieldAttribute()
+        public ChoXmlNodeRecordFieldAttribute()
         {
 
-        }
-
-        public ChoXmlNodeRecordFieldAttribute(string xPath)
-        {
-            XPath = xPath;
         }
     }
 }

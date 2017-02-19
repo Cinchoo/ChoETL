@@ -21,7 +21,7 @@ namespace ChoETL
             set;
         }
 
-        public ChoXmlRecordFieldConfiguration(string name, string xPath) : this(name, (ChoXmlNodeRecordFieldAttribute)null)
+        public ChoXmlRecordFieldConfiguration(string name, string xPath = null) : this(name, (ChoXmlNodeRecordFieldAttribute)null)
         {
             XPath = xPath;
         }
