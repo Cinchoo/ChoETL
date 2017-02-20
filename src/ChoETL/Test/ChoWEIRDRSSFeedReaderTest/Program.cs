@@ -19,7 +19,7 @@ namespace ChoWEIRDRSSFeedReaderTest
 
             using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
             using (Stream responseStream = response.GetResponseStream())
-            foreach (var item in new ChoXmlReader(responseStream).WithXPath("//rss/channel/item"))
+            foreach (var item in new ChoXmlReader(responseStream))
             {
                 Console.WriteLine(item.ToStringEx());
             }

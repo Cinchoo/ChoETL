@@ -154,13 +154,15 @@ namespace ChoETL
                 }
                 else if (xpr != null)
                 {
+                    ChoXmlNamespaceManager nsMgr = new ChoXmlNamespaceManager(NamespaceManager);
+
                     Dictionary<string, ChoXmlRecordFieldConfiguration> dict = new Dictionary<string, ChoXmlRecordFieldConfiguration>(StringComparer.CurrentCultureIgnoreCase);
                     string name = null;
                     foreach (var attr in xpr.Attributes())
                     {
-                        if (!attr.Name.NamespaceName.IsNullOrWhiteSpace()) continue;
+                        //if (!attr.Name.NamespaceName.IsNullOrWhiteSpace()) continue;
 
-                        name = attr.Name.LocalName;
+                        name = GetNameWithNamespace(attr.Name);
 
                         if (!dict.ContainsKey(name))
                             dict.Add(name, new ChoXmlRecordFieldConfiguration(name, DefaultNamespace.IsNullOrWhiteSpace() ? $"//@{name}" : $"//@{DefaultNamespace}" + ":" + $"{name}") { IsXmlAttribute = true });
@@ -173,9 +175,8 @@ namespace ChoETL
                     bool hasElements = false;
                     foreach (var ele in xpr.Elements())
                     {
-                        if (!ele.Name.NamespaceName.IsNullOrWhiteSpace()) continue;
+                        name = GetNameWithNamespace(ele.Name);
 
-                        name = ele.Name.LocalName;
                         hasElements = true;
                         if (!dict.ContainsKey(name))
                             dict.Add(name, new ChoXmlRecordFieldConfiguration(name, DefaultNamespace.IsNullOrWhiteSpace() ? $"//{name}" : $"//{DefaultNamespace}" + ":" + $"{name}"));
@@ -223,6 +224,44 @@ namespace ChoETL
                 throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(String.Join(",", dupFields)));
 
             RecordFieldConfigurationsDict = XmlRecordFieldConfigurations.Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
+        }
+
+        internal string GetNameWithNamespace(XName name)
+        {
+            ChoXmlNamespaceManager nsMgr = new ChoXmlNamespaceManager(NamespaceManager);
+
+            if (!name.NamespaceName.IsNullOrWhiteSpace())
+            {
+                string prefix = nsMgr.GetPrefixOfNamespace(name.NamespaceName);
+                if (prefix.IsNullOrWhiteSpace()) return name.LocalName;
+
+                return prefix + ":" + name.LocalName;
+            }
+            else
+                return name.LocalName;
+        }
+    }
+
+    public class ChoXmlNamespaceManager
+    {
+        public readonly IDictionary<string, string> NSDict;
+
+        public ChoXmlNamespaceManager(XmlNamespaceManager nsMgr)
+        {
+            NSDict = nsMgr.GetNamespacesInScope(XmlNamespaceScope.All);
+        }
+
+        public string GetPrefixOfNamespace(string ns)
+        {
+            return NSDict.Where(kvp => kvp.Value == ns).Select(kvp => kvp.Key).FirstOrDefault();
+        }
+
+        public string GetNamespaceForPrefix(string prefix)
+        {
+            if (NSDict.ContainsKey(prefix))
+                return NSDict[prefix];
+            else
+                return null;
         }
     }
 }

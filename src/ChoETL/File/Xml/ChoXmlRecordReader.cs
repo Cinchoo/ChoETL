@@ -167,7 +167,7 @@ namespace ChoETL
 
                 if (fieldConfig.XPath == "text()")
                 {
-                    if (node.Name.LocalName == fieldConfig.FieldName)
+                    if (Configuration.GetNameWithNamespace(node.Name) == fieldConfig.FieldName)
                         fieldValue = node.Value;
                     else if (Configuration.ColumnCountStrict)
                         throw new ChoParserException("Missing '{0}' xml node.".FormatString(fieldConfig.FieldName));
