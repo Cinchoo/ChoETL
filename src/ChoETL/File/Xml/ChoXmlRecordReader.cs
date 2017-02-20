@@ -157,6 +157,7 @@ namespace ChoETL
 
             //ValidateLine(pair.Item1, fieldValues);
 
+            XElement[] fXElements = null;
             object fieldValue = null;
             ChoXmlRecordFieldConfiguration fieldConfig = null;
             foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
@@ -173,9 +174,23 @@ namespace ChoETL
                 }
                 else
                 {
-                    XElement fXElement = ((IEnumerable)node.XPathEvaluate(fieldConfig.XPath, Configuration.NamespaceManager)).OfType<XElement>().FirstOrDefault();
-                    if (fXElement != null)
-                        fieldValue = fXElement.Value;
+                    fXElements = ((IEnumerable)node.XPathEvaluate(fieldConfig.XPath, Configuration.NamespaceManager)).OfType<XElement>().ToArray();
+                    if (fXElements != null)
+                    {
+                        if (fieldConfig.IsCollection)
+                        {
+                            List<string> list = new List<string>();
+                            foreach (var ele in fXElements)
+                                list.Add(ele.Value);
+                            fieldValue = list.ToArray();
+                        }
+                        else
+                        {
+                            XElement fXElement = fXElements.FirstOrDefault();
+                            if (fXElement != null)
+                                fieldValue = fXElement.Value;
+                        }
+                    }
                     else
                     {
                         XAttribute fXAttribute = ((IEnumerable)node.XPathEvaluate(fieldConfig.XPath, Configuration.NamespaceManager)).OfType<XAttribute>().FirstOrDefault();
@@ -189,7 +204,7 @@ namespace ChoETL
                 if (rec is ExpandoObject)
                 {
                     if (kvp.Value.FieldType == null)
-                        kvp.Value.FieldType = typeof(string);
+                        kvp.Value.FieldType = fieldValue is ICollection ? typeof(string[]) : typeof(string);
                 }
                 else
                 {
@@ -201,7 +216,8 @@ namespace ChoETL
                         kvp.Value.FieldType = typeof(string);
                 }
 
-                fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue as string);
+                if (!(fieldValue is ICollection))
+                    fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue as string);
 
                 if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
                     return false;

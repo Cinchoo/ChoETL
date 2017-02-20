@@ -156,25 +156,36 @@ namespace ChoETL
                 {
                     Dictionary<string, ChoXmlRecordFieldConfiguration> dict = new Dictionary<string, ChoXmlRecordFieldConfiguration>(StringComparer.CurrentCultureIgnoreCase);
                     string name = null;
-                    foreach (var ele in xpr.Attributes())
+                    foreach (var attr in xpr.Attributes())
                     {
-                        name = ele.Name.LocalName;
+                        if (!attr.Name.NamespaceName.IsNullOrWhiteSpace()) continue;
+
+                        name = attr.Name.LocalName;
 
                         if (!dict.ContainsKey(name))
-                            dict.Add(name, new ChoXmlRecordFieldConfiguration(name, DefaultNamespace.IsNullOrWhiteSpace() ? $"//@{name}" : $"//@{DefaultNamespace}" + ":" + $"{name}"));
+                            dict.Add(name, new ChoXmlRecordFieldConfiguration(name, DefaultNamespace.IsNullOrWhiteSpace() ? $"//@{name}" : $"//@{DefaultNamespace}" + ":" + $"{name}") { IsXmlAttribute = true });
                         else
+                        {
                             throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
+                        }
                     }
 
                     bool hasElements = false;
                     foreach (var ele in xpr.Elements())
                     {
+                        if (!ele.Name.NamespaceName.IsNullOrWhiteSpace()) continue;
+
                         name = ele.Name.LocalName;
                         hasElements = true;
                         if (!dict.ContainsKey(name))
                             dict.Add(name, new ChoXmlRecordFieldConfiguration(name, DefaultNamespace.IsNullOrWhiteSpace() ? $"//{name}" : $"//{DefaultNamespace}" + ":" + $"{name}"));
                         else
-                            throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
+                        {
+                            if (dict[name].IsXmlAttribute)
+                                throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
+
+                            dict[name].IsCollection = true;
+                        }
                     }
 
                     if (!hasElements)

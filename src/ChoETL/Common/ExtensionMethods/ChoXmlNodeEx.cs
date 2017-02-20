@@ -60,75 +60,114 @@ namespace ChoETL
             }
             else
             {
-                string rootName = null;
+                //string rootName = null;
                 string[] matchNames = xPath.SplitNTrim("/").Where(i => !i.IsNullOrWhiteSpace() && i.NTrim() != ".").ToArray();
                 if (matchNames.Length == 0) yield break;
+                foreach (var ele in StreamElements(xmlReader, matchNames))
+                    yield return ele;
 
-                rootName = matchNames[0];
-                Queue<string> q = new Queue<string>(matchNames.Skip(1));
-                xPath = q.Dequeue();
+                //rootName = matchNames[0];
+                //bool isEmpty;
+                //// Empty element?
+                //isEmpty = xmlReader.IsEmptyElement;
 
-                bool isEmpty;
-                // Empty element?
-                isEmpty = xmlReader.IsEmptyElement;
+                //// Read the root start element
+                //xmlReader.ReadToFollowing(rootName);
+                //if (xmlReader.Name != rootName)
+                //    yield break;
 
-                // Read the root start element
-                xmlReader.ReadToFollowing(rootName);
-                if (xmlReader.Name != rootName)
-                    yield break;
+                //Queue<string> q = new Queue<string>(matchNames.Skip(1));
+                //if (q.Count == 0)
+                //{
+                //    XElement el = XElement.ReadFrom(xmlReader)
+                //      as XElement;
+                //    if (el != null)
+                //        yield return el;
 
-                xmlReader.ReadStartElement();
+                //    yield break;
 
-                // Decode elements
-                if (isEmpty == false)
+                //}
+                //xPath = q.Dequeue();
+
+                //xmlReader.ReadStartElement();
+
+                //// Decode elements
+                //if (isEmpty == false)
+                //{
+                //    do
+                //    {
+                //        // Read document till next element
+                //        xmlReader.MoveToContent();
+
+                //        if (xmlReader.NodeType == XmlNodeType.Element)
+                //        {
+                //            string elementName = xmlReader.LocalName;
+
+                //            // Empty element?
+                //            isEmpty = xmlReader.IsEmptyElement;
+                //            if (xmlReader.Name == xPath)
+                //            {
+                //                if (q.Count == 0)
+                //                {
+                //                    while (xmlReader.Name == xPath)
+                //                    {
+                //                        // Decode child element
+                //                        XElement el = XElement.ReadFrom(xmlReader)
+                //                                  as XElement;
+                //                        if (el != null)
+                //                            yield return el;
+
+                //                        xmlReader.MoveToContent();
+                //                    }
+
+                //                    foreach (var i in matchNames.Skip(1).Reverse())
+                //                        xmlReader.ReadToNextSibling(i);
+
+                //                    foreach (var i in matchNames.Skip(1))
+                //                        q.Enqueue(i);
+
+                //                    xPath = q.Dequeue();
+                //                    xmlReader.ReadToNextSibling(xPath);
+                //                }
+                //                else
+                //                {
+                //                    xPath = q.Dequeue();
+                //                    xmlReader.ReadToDescendant(xPath);
+                //                    //xmlReader.ReadStartElement();
+                //                }
+                //            }
+                //            else
+                //                yield break;
+
+                //            xmlReader.MoveToContent();
+
+                //            if (xmlReader.NodeType == XmlNodeType.EndElement)
+                //                xmlReader.ReadEndElement();
+                //        }
+                //        else if (xmlReader.NodeType == XmlNodeType.Text)
+                //        {
+                //            xmlReader.Skip();   // Skip text
+                //        }
+                //    } while (xmlReader.NodeType != XmlNodeType.EndElement && xmlReader.NodeType != XmlNodeType.None);
+                //}
+            }
+        }
+
+        public static IEnumerable<XElement> StreamElements(XmlReader reader, string[] elementNames)
+        {
+            if (elementNames.Length == 1)
+            {
+                string elementName = elementNames[0];
+                while (reader.ReadToFollowing(elementName))
+                    yield return (XElement)XNode.ReadFrom(reader);
+            }
+            else
+            {
+                string elementName = elementNames[0];
+                while (reader.ReadToDescendant(elementName))
                 {
-                    do
-                    {
-
-                        // Read document till next element
-                        xmlReader.MoveToContent();
-
-                        if (xmlReader.NodeType == XmlNodeType.Element)
-                        {
-                            string elementName = xmlReader.LocalName;
-
-                            // Empty element?
-                            isEmpty = xmlReader.IsEmptyElement;
-                            if (xmlReader.Name == xPath)
-                            {
-                                if (q.Count == 0)
-                                {
-
-                                    // Decode child element
-                                    XElement el = XElement.ReadFrom(xmlReader)
-                                                  as XElement;
-                                    if (el != null)
-                                        yield return el;
-
-                                    foreach (var i in matchNames.Skip(1))
-                                        q.Enqueue(i);
-
-                                    xPath = q.Dequeue();
-                                }
-                                else
-                                {
-                                    xPath = q.Dequeue();
-                                    xmlReader.ReadStartElement();
-                                }
-                            }
-                            else
-                                yield break;
-
-                            xmlReader.MoveToContent();
-
-                            if (xmlReader.NodeType == XmlNodeType.EndElement)
-                                xmlReader.ReadEndElement();
-                        }
-                        else if (xmlReader.NodeType == XmlNodeType.Text)
-                        {
-                            xmlReader.Skip();   // Skip text
-                        }
-                    } while (xmlReader.NodeType != XmlNodeType.EndElement && xmlReader.NodeType != XmlNodeType.None);
+                    foreach (var i in StreamElements(reader, elementNames.Skip(1).ToArray()))
+                        yield return i;
                 }
             }
         }

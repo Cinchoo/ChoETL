@@ -27,7 +27,7 @@ namespace ChoXmlReaderTest
          
         static void Main(string[] args)
         {
-            POCOTest();
+            QuickTestWithXmlNS();
         }
 
         static void LoadTextTest()
@@ -127,7 +127,7 @@ namespace ChoXmlReaderTest
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoXmlReader(reader).WithXmlNamespace("cont", "www.tutorialspoint.com/profile", true).WithField("name", "//cont:name"))
+            using (var parser = new ChoXmlReader(reader).WithXPath("/cont:contacts/cont:contact/cont:contact").WithXmlNamespace("cont", "www.tutorialspoint.com/profile", true).WithField("name", "cont:name"))
             {
                 writer.WriteLine(@"<cont:contacts xmlns:cont=""www.tutorialspoint.com/profile"">
                 <cont:contact >
@@ -136,12 +136,27 @@ namespace ChoXmlReaderTest
                        <cont:company>TutorialsPoint</cont:company>
                        <cont:phone> (011) 123 - 4567 </cont:phone>
                     </cont:contact> 
+                    <cont:contact >
+                       <cont:name>Tanmay Patilx1</cont:name>
+                       <cont:company>TutorialsPoint</cont:company>
+                       <cont:phone> (011) 123 - 4567 </cont:phone>
+                    </cont:contact> 
                    <cont:name>Tanmay Patil</cont:name>
                    <cont:company>TutorialsPoint</cont:company>
                    <cont:phone> (011) 123 - 4567 </cont:phone>
                 </cont:contact> 
                 <cont:contact >
-                   <cont:name>Tanmay Patil1</cont:name>
+                     <cont:contact >
+                       <cont:name>Tanmay Patily</cont:name>
+                       <cont:company>TutorialsPoint</cont:company>
+                       <cont:phone> (011) 123 - 4567 </cont:phone>
+                    </cont:contact> 
+                      <cont:contact >
+                       <cont:name>Tanmay Patily1</cont:name>
+                       <cont:company>TutorialsPoint</cont:company>
+                       <cont:phone> (011) 123 - 4567 </cont:phone>
+                    </cont:contact> 
+                 <cont:name>Tanmay Patil1</cont:name>
                    <cont:company>TutorialsPoint1</cont:company>
                    <cont:phone> (011) 123 - 45671 </cont:phone>
                 </cont:contact> 

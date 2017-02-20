@@ -20,7 +20,16 @@ namespace ChoETL
             get;
             set;
         }
-
+        internal bool IsCollection
+        {
+            get;
+            set;
+        }
+        internal bool IsXmlAttribute
+        {
+            get;
+            set;
+        }
         public ChoXmlRecordFieldConfiguration(string name, string xPath = null) : this(name, (ChoXmlNodeRecordFieldAttribute)null)
         {
             XPath = xPath;
