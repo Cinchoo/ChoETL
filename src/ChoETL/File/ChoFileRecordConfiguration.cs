@@ -30,6 +30,12 @@ namespace ChoETL
             get;
             set;
         }
+        public bool MayContainEOLInData
+        {
+            get;
+            set;
+        }
+
         public bool IgnoreEmptyLine
         {
             get;
@@ -66,10 +72,10 @@ namespace ChoETL
             set;
         }
 
-        public ChoFileRecordConfiguration(Type recordType = null) : base(recordType)
+        internal ChoFileRecordConfiguration(Type recordType = null) : base(recordType)
         {
-            BufferSize = 2048;
-            Comments = new string[] { "#", "//" };
+            BufferSize = 4096;
+            Comments = null; // new string[] { "#", "//" };
             Culture = CultureInfo.CurrentCulture;
             EOLDelimiter = Environment.NewLine;
             IgnoreEmptyLine = false;
@@ -114,7 +120,7 @@ namespace ChoETL
                 throw new ChoRecordConfigurationException("Invalid '{0}' quote character specified.".FormatString(QuoteChar));
             if (EOLDelimiter.Contains(QuoteChar))
                 throw new ChoRecordConfigurationException("QuoteChar [{0}] can't be one EOLDelimiter characters [{1}]".FormatString(QuoteChar, EOLDelimiter));
-            if (Comments.Contains(EOLDelimiter))
+            if (Comments != null && Comments.Contains(EOLDelimiter))
                 throw new ChoRecordConfigurationException("One of the Comments contains EOLDelimiter. Not allowed.");
         }
     }

@@ -179,6 +179,23 @@
 
         #region HasProperty Overloads
 
+        public static PropertyInfo GetProperty(Type type, string name)
+        {
+            ChoGuard.ArgumentNotNull(type, "Type");
+            ChoGuard.ArgumentNotNullOrEmpty(name, "Name");
+
+            return type.GetProperty(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance);
+        }
+
+        public static bool TryGetProperty(Type type, string name, out PropertyInfo propertyInfo)
+        {
+            ChoGuard.ArgumentNotNull(type, "Type");
+            ChoGuard.ArgumentNotNullOrEmpty(name, "Name");
+
+            propertyInfo = type.GetProperty(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance);
+            return propertyInfo != null;
+        }
+
         public static bool HasProperty(Type type, string name)
         {
             PropertyInfo propertyInfo = null;
@@ -725,7 +742,7 @@
             {
                 try
                 {
-                    val = ChoUtility.ConvertValueToObjectMemberType(target, (MemberInfo)propertyInfo, val, culture);
+                    val = ChoUtility.ConvertValueToObjectPropertyType(target, propertyInfo, val, culture);
 #if _DYNAMIC_
                 Action<object, object> setter;
                 var key = propertyInfo.GetSetMethod().MethodHandle.Value;
@@ -1719,26 +1736,28 @@
             if (type == null)
                 throw new NullReferenceException("Missing Type.");
 
-            TypeInfo typeInfo = GetTypeInfo(type);
-            if (typeInfo.PropertyInfos == null)
-            {
-                OrderedDictionary myPropertyInfos = new OrderedDictionary();
-                foreach (PropertyInfo propertyInfo in type.GetProperties())
-                {
-                    if (myPropertyInfos.Contains(propertyInfo.Name))
-                    {
-                        if (propertyInfo.DeclaringType.FullName == type.FullName)
-                            myPropertyInfos[propertyInfo.Name] = propertyInfo;
-                        else
-                            continue;
-                    }
-                    else
-                        myPropertyInfos.Add(propertyInfo.Name, propertyInfo);
-                }
+            return type.GetProperties(BindingFlags.Instance | BindingFlags.Public /*| BindingFlags.NonPublic*/ | BindingFlags.Static).Where(mi => ChoType.GetAttribute<ChoIgnoreMemberAttribute>(mi) == null).ToArray();
 
-                typeInfo.PropertyInfos = new ArrayList(myPropertyInfos.Values).ToArray(typeof(PropertyInfo)) as PropertyInfo[];
-            }
-            return typeInfo.PropertyInfos;
+            //TypeInfo typeInfo = GetTypeInfo(type);
+            //if (typeInfo.PropertyInfos == null)
+            //{
+            //    OrderedDictionary myPropertyInfos = new OrderedDictionary();
+            //    foreach (PropertyInfo propertyInfo in type.GetProperties())
+            //    {
+            //        if (myPropertyInfos.Contains(propertyInfo.Name))
+            //        {
+            //            if (propertyInfo.DeclaringType.FullName == type.FullName)
+            //                myPropertyInfos[propertyInfo.Name] = propertyInfo;
+            //            else
+            //                continue;
+            //        }
+            //        else
+            //            myPropertyInfos.Add(propertyInfo.Name, propertyInfo);
+            //    }
+
+            //    typeInfo.PropertyInfos = new ArrayList(myPropertyInfos.Values).ToArray(typeof(PropertyInfo)) as PropertyInfo[];
+            //}
+            //return typeInfo.PropertyInfos;
         }
 
         #endregion GetProperties Overloads

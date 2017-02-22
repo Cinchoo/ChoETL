@@ -6,6 +6,7 @@ using System.Dynamic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -53,10 +54,14 @@ namespace ChoETL
                 foreach (object record in records)
                 {
                     _index++;
-                    if (record is IChoETLNameableObject)
-                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(((IChoETLNameableObject)record).Name));
-                    else
-                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(_index));
+
+                    if (TraceSwitch.TraceVerbose)
+                    {
+                        if (record is IChoETLNameableObject)
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(((IChoETLNameableObject)record).Name));
+                        else
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(_index));
+                    }
 
                     recText = String.Empty;
                     if (record != null)
@@ -103,7 +108,7 @@ namespace ChoETL
                             try
                             {
                                 if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
-                                    record.DoObjectLevelValidatation(Configuration.FixedLengthRecordFieldConfigurations.Cast< ChoRecordFieldConfiguration>().ToArray());
+                                    record.DoObjectLevelValidation(Configuration, Configuration.FixedLengthRecordFieldConfigurations);
 
                                 if (ToText(_index, record, out recText))
                                 {
@@ -118,10 +123,10 @@ namespace ChoETL
                                         yield break;
                                 }
                             }
-                            catch (ChoParserException)
-                            {
-                                throw;
-                            }
+                            //catch (ChoParserException)
+                            //{
+                            //    throw;
+                            //}
                             catch (Exception ex)
                             {
                                 ChoETLFramework.HandleException(ex);
@@ -163,11 +168,15 @@ namespace ChoETL
                 CheckColumnsStrict(rec);
 
             //bool firstColumn = true;
+            PropertyInfo pi = null;
             foreach (KeyValuePair<string, ChoFixedLengthRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
                 fieldConfig = kvp.Value;
                 fieldValue = null;
                 fieldText = String.Empty;
+                if (Configuration.PIDict != null)
+                    Configuration.PIDict.TryGetValue(kvp.Key, out pi);
+
                 if (Configuration.ThrowAndStopOnMissingField)
                 {
                     if (rec is ExpandoObject)
@@ -178,14 +187,14 @@ namespace ChoETL
                     }
                     else
                     {
-                        if (!ChoType.HasProperty(rec.GetType(), kvp.Key))
+                        if (pi == null)
                             throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' FixedLength column.".FormatString(fieldConfig.FieldName));
                     }
                 }
 
                 try
                 {
-                    if (rec is ExpandoObject)
+                    if (Configuration.IsDynamicObject)
                     {
                         IDictionary<string, Object> dict = rec as IDictionary<string, Object>;
                         fieldValue = dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
@@ -199,11 +208,11 @@ namespace ChoETL
                     }
                     else
                     {
-                        if (ChoType.HasProperty(rec.GetType(), kvp.Key))
+                        if (pi != null)
                         {
-                            fieldValue = ChoType.GetPropertyValue(rec, kvp.Key);
+                            fieldValue = ChoType.GetPropertyValue(rec, pi);
                             if (kvp.Value.FieldType == null)
-                                kvp.Value.FieldType = ChoType.GetMemberType(rec.GetType(), kvp.Key);
+                                kvp.Value.FieldType = pi.PropertyType;
                         }
                         else
                             kvp.Value.FieldType = typeof(string);
@@ -211,22 +220,26 @@ namespace ChoETL
 
                     //Discover default value, use it if null
                     if (fieldValue == null)
-                        fieldValue = rec.GetDefaultValue(kvp.Key, fieldConfig);
+                    {
+                        if (fieldConfig.IsDefaultValueSpecified)
+                            fieldValue = fieldConfig.DefaultValue;
+                    }
 
                     if (!RaiseBeforeRecordFieldWrite(rec, index, kvp.Key, ref fieldValue))
                         return false;
 
-                    fieldValue = rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, fieldValue);
+                    rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue);
 
-                    rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
+                    if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.MemberLevel)
+                        rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
 
                     if (!RaiseAfterRecordFieldWrite(rec, index, kvp.Key, fieldValue))
                         return false;
                 }
-                catch (ChoParserException)
-                {
-                    throw;
-                }
+                //catch (ChoParserException)
+                //{
+                //    throw;
+                //}
                 catch (ChoMissingRecordFieldException)
                 {
                     if (Configuration.ThrowAndStopOnMissingField)
@@ -241,23 +254,28 @@ namespace ChoETL
 
                     try
                     {
-                        if (rec is ExpandoObject)
+                        if (Configuration.IsDynamicObject)
                         {
                             var dict = rec as IDictionary<string, Object>;
 
                             if (dict.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
-                            {
                                 dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
-                            }
+                            else if (dict.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                                dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
                             else
-                                throw new ChoParserException($"Failed to write '{fieldValue}' value of '{kvp.Key}' member.", ex);
+                                throw new ChoParserException($"Failed to write '{fieldValue}' value for '{fieldConfig.FieldName}' member.", ex);
                         }
-                        else if (ChoType.HasProperty(rec.GetType(), kvp.Key) && rec.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                        else if (pi != null)
                         {
-                            rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
+                            if (rec.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                                rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
+                            else if (rec.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                                rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
+                            else
+                                throw new ChoParserException($"Failed to write '{fieldValue}' value for '{fieldConfig.FieldName}' member.", ex);
                         }
                         else
-                            throw new ChoParserException($"Failed to write '{fieldValue}' value of '{kvp.Key}' member.", ex);
+                            throw new ChoParserException($"Failed to write '{fieldValue}' value for '{fieldConfig.FieldName}' member.", ex);
                     }
                     catch (Exception innerEx)
                     {
@@ -521,8 +539,8 @@ namespace ChoETL
 
         private bool RaiseRecordFieldWriteError(object target, int index, string propName, object value, Exception ex)
         {
-            if (_callbackRecord == null) return false;
-            return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordFieldWriteError(target, index, propName, value, ex), false);
+            if (_callbackRecord == null) return true;
+            return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordFieldWriteError(target, index, propName, value, ex), true);
         }
     }
 }

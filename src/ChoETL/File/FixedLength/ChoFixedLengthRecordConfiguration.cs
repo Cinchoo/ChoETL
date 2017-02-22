@@ -48,7 +48,12 @@ namespace ChoETL
             }
         }
 
-        public ChoFixedLengthRecordConfiguration(Type recordType = null) : base(recordType)
+        public ChoFixedLengthRecordConfiguration() : this(null)
+        {
+
+        }
+
+        internal ChoFixedLengthRecordConfiguration(Type recordType) : base(recordType)
         {
             FixedLengthRecordFieldConfigurations = new List<ChoFixedLengthRecordFieldConfiguration>();
 
@@ -123,10 +128,13 @@ namespace ChoETL
                         throw new ChoRecordConfigurationException("Invalid '{0}' FillChar specified.".FormatString(FileHeaderConfiguration.FillChar));
                     if (EOLDelimiter.Contains(FileHeaderConfiguration.FillChar.Value))
                         throw new ChoRecordConfigurationException("FillChar [{0}] can't be one of EOLDelimiter characters [{1}]".FormatString(FileHeaderConfiguration.FillChar.Value, EOLDelimiter));
-                    if ((from comm in Comments
-                         where comm.Contains(FileHeaderConfiguration.FillChar.Value.ToString())
-                         select comm).Any())
-                        throw new ChoRecordConfigurationException("One of the Comments contains FillChar. Not allowed.");
+                    if (Comments != null)
+                    {
+                        if ((from comm in Comments
+                             where comm.Contains(FileHeaderConfiguration.FillChar.Value.ToString())
+                             select comm).Any())
+                            throw new ChoRecordConfigurationException("One of the Comments contains FillChar. Not allowed.");
+                    }
                 }
             }
 
@@ -200,6 +208,8 @@ namespace ChoETL
 
             if (FixedLengthRecordFieldConfigurations.Count == 0)
                 throw new ChoRecordConfigurationException("No record fields specified.");
+
+            LoadNCacheMembers(FixedLengthRecordFieldConfigurations);
 
             //Derive record length from fields
             if (RecordLength <= 0)

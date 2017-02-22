@@ -18,7 +18,7 @@ namespace ChoCSVReaderTest
     {
         static void Main(string[] args)
         {
-            LoadTextTest();
+            AsDataTableTest();
         }
 
         static void LoadTextTest()
@@ -119,7 +119,7 @@ namespace ChoCSVReaderTest
             using (var writer = new StreamWriter(stream))
             using (var parser = new ChoCSVReader(reader, config))
             {
-                writer.WriteLine(@"1,Carl,12.345679 kr,2017-10-10,  (5)    ");
+                writer.WriteLine(@"1,Carl,12.345679 kr,2017-10-10,  5    ");
                 writer.WriteLine("2,Markl,50000 kr,2001-10-01,  6    ");
                 writer.WriteLine("3,Toml,150000 kr,1996-01-25,  9    ");
 
@@ -247,6 +247,8 @@ namespace ChoCSVReaderTest
             using (var writer = new StreamWriter(stream))
             using (var parser = new ChoCSVReader<EmployeeRecWithCurrency>(reader, config))
             {
+                parser.Configuration.ObjectValidationMode = ChoObjectValidationMode.ObjectLevel;
+
                 writer.WriteLine(",Carl,$100000");
                 writer.WriteLine("2,Mark,$50000");
                 writer.WriteLine("3,Tom,1000");
@@ -600,7 +602,7 @@ namespace ChoCSVReaderTest
         }
     }
 
-    [MetadataType(typeof(EmployeeRecMeta))]
+    //[MetadataType(typeof(EmployeeRecMeta))]
     //[ChoCSVFileHeader()]
     [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.IgnoreAndContinue,
     IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any, ThrowAndStopOnMissingField = false)]

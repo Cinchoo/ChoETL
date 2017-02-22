@@ -6,6 +6,7 @@ using System.Dynamic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -18,6 +19,7 @@ namespace ChoETL
         private bool _excelSeparatorFound = false;
         private string[] _fieldNames = new string[] { };
         private bool _configCheckDone = false;
+        private Dictionary<string, string> fieldNameValues = null;
 
         public ChoCSVRecordConfiguration Configuration
         {
@@ -29,9 +31,7 @@ namespace ChoETL
         {
             ChoGuard.ArgumentNotNull(configuration, "Configuration");
             Configuration = configuration;
-
             _callbackRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordRead>(recordType);
-
             //Configuration.Validate();
         }
 
@@ -59,14 +59,14 @@ namespace ChoETL
                 yield break;
 
             string[] commentTokens = Configuration.Comments;
+            bool? skip = false;
 
             using (ChoPeekEnumerator<Tuple<int, string>> e = new ChoPeekEnumerator<Tuple<int, string>>(
-                new ChoIndexedEnumerator<string>(sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar)).ToEnumerable(),
+                new ChoIndexedEnumerator<string>(sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, Configuration.MayContainEOLInData)).ToEnumerable(),
                 (pair) =>
                 {
                     //bool isStateAvail = IsStateAvail();
-
-                    bool? skip = false;
+                    skip = false;
 
                     //if (isStateAvail)
                     //{
@@ -83,15 +83,16 @@ namespace ChoETL
                     if (skip == null)
                         return null;
 
-                    //if (!(sr.BaseStream is MemoryStream))
-                    //{
+
+                    if (TraceSwitch.TraceVerbose)
+                    {
                         ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, Environment.NewLine);
 
                         if (!skip.Value)
                             ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Loading line [{0}]...".FormatString(pair.Item1));
                         else
                             ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Skipping line [{0}]...".FormatString(pair.Item1));
-                    //}
+                    }
 
                     if (skip.Value)
                         return skip;
@@ -108,7 +109,8 @@ namespace ChoETL
                             throw new ChoParserException("Empty line found at {0} location.".FormatString(pair.Item1));
                         else
                         {
-                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring empty line found at [{0}].".FormatString(pair.Item1));
+                            if (TraceSwitch.TraceVerbose)
+                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring empty line found at [{0}].".FormatString(pair.Item1));
                             return true;
                         }
                     }
@@ -117,7 +119,9 @@ namespace ChoETL
                     if (pair.Item1 == 1
                         && !_excelSeparatorFound)
                     {
-                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Inspecting for excel separator at [{0}]...".FormatString(pair.Item1));
+                        if (TraceSwitch.TraceVerbose)
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Inspecting for excel separator at [{0}]...".FormatString(pair.Item1));
+
                         bool retVal = LoadExcelSeperatorIfAny(pair);
                         _excelSeparatorFound = true;
 
@@ -130,17 +134,16 @@ namespace ChoETL
                             return true;
                     }
 
-                    if (commentTokens == null)
-                        return false;
-                    else
+                    if (commentTokens != null && commentTokens.Length > 0)
                     {
-                        var x = (from comment in commentTokens
-                                 where !pair.Item2.IsNull() && pair.Item2.StartsWith(comment, true, Configuration.Culture)
-                                 select comment).FirstOrDefault();
-                        if (x != null)
+                        foreach (string comment in commentTokens)
                         {
-                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Comment line found at [{0}]...".FormatString(pair.Item1));
-                            return true;
+                            if (!pair.Item2.IsNull() && pair.Item2.StartsWith(comment, StringComparison.Ordinal)) //, true, Configuration.Culture))
+                            {
+                                if (TraceSwitch.TraceVerbose)
+                                    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Comment line found at [{0}]...".FormatString(pair.Item1));
+                                return true;
+                            }
                         }
                     }
 
@@ -154,7 +157,8 @@ namespace ChoETL
                     if (Configuration.FileHeaderConfiguration.HasHeaderRecord
                         && !_headerFound)
                     {
-                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Loading header line at [{0}]...".FormatString(pair.Item1));
+                        if (TraceSwitch.TraceVerbose)
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Loading header line at [{0}]...".FormatString(pair.Item1));
                         LoadHeaderLine(pair);
                         _headerFound = true;
                         return true;
@@ -172,7 +176,7 @@ namespace ChoETL
                         yield break;
                     }
 
-                    object rec = ChoActivator.CreateInstance(RecordType);
+                    object rec = Activator.CreateInstance(RecordType);
                     if (!LoadLine(pair, ref rec))
                         yield break;
 
@@ -184,6 +188,15 @@ namespace ChoETL
                         continue;
 
                     yield return rec;
+
+                    if (Configuration.NotifyAfter > 0 && pair.Item1 % Configuration.NotifyAfter == 0)
+                    {
+                        if (RaisedRowsLoaded(pair.Item1))
+                        {
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Abort requested.");
+                            yield break;
+                        }
+                    }
                 }
             }
         }
@@ -208,16 +221,16 @@ namespace ChoETL
                     if (!FillRecord(rec, pair))
                         return false;
 
-                    rec.DoObjectLevelValidation(Configuration, Configuration.CSVRecordFieldConfigurations.ToArray());
+                    rec.DoObjectLevelValidation(Configuration, Configuration.CSVRecordFieldConfigurations);
                 }
 
                 if (!RaiseAfterRecordLoad(rec, pair))
                     return false;
             }
-            catch (ChoParserException)
-            {
-                throw;
-            }
+            //catch (ChoParserException)
+            //{
+            //    throw;
+            //}
             catch (ChoMissingRecordFieldException)
             {
                 throw;
@@ -243,35 +256,28 @@ namespace ChoETL
             return true;
         }
 
-        private Dictionary<string, string> ToFieldNameValues(string[] fieldValues)
+        private Dictionary<string, string> InitFieldNameValuesDict()
         {
-            int index = 1;
             Dictionary<string, string> fnv = new Dictionary<string, string>(Configuration.FileHeaderConfiguration.StringComparer);
-            if (Configuration.FileHeaderConfiguration.HasHeaderRecord)
+            foreach (var name in _fieldNames)
             {
-                foreach (var name in _fieldNames)
-                {
-                    if (index - 1 < fieldValues.Length)
-                        fnv.Add(name, fieldValues[index - 1]);
-                    else
-                        fnv.Add(name, String.Empty);
-
-                    index++;
-                }
-            }
-            else
-            {
-                foreach (var fn in Configuration.RecordFieldConfigurationsDict.Keys)
-                {
-                    if (index - 1 < fieldValues.Length)
-                        fnv.Add(fn, fieldValues[index - 1]);
-                    else
-                        fnv.Add(fn, String.Empty);
-
-                    index++;
-                }
+                fnv.Add(name, String.Empty);
             }
             return fnv;
+        }
+
+        private void ToFieldNameValues(Dictionary<string, string> fnv, string[] fieldValues)
+        {
+            int index = 1;
+            foreach (var name in _fieldNames)
+            {
+                if (index - 1 < fieldValues.Length)
+                    fnv[name] = fieldValues[index - 1];
+                else
+                    fnv[name] = String.Empty;
+
+                index++;
+            }
         }
 
         private bool FillRecord(object rec, Tuple<int, string> pair)
@@ -282,27 +288,32 @@ namespace ChoETL
             lineNo = pair.Item1;
             line = pair.Item2;
 
-
-            string[] fieldValues = (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)
-                               select x).ToArray();
+            string[] fieldValues = line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar);
             if (Configuration.ColumnCountStrict)
             {
                 if (fieldValues.Length != Configuration.CSVRecordFieldConfigurations.Count)
                     throw new ChoParserException("Incorrect number of field values found at line [{2}]. Expected [{0}] field values. Found [{1}] field values.".FormatString(Configuration.CSVRecordFieldConfigurations.Count, fieldValues.Length, pair.Item1));
             }
 
-            Dictionary<string, string> fieldNameValues = ToFieldNameValues(fieldValues);
-
+            if (Configuration.FileHeaderConfiguration.HasHeaderRecord && Configuration.ColumnCountStrict)
+            {
+                if (this.fieldNameValues == null)
+                    this.fieldNameValues = InitFieldNameValuesDict();
+                ToFieldNameValues(fieldNameValues, fieldValues);
+            }
             ValidateLine(pair.Item1, fieldValues);
 
             object fieldValue = null;
             ChoCSVRecordFieldConfiguration fieldConfig = null;
-            foreach (KeyValuePair<string, ChoCSVRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
+            PropertyInfo pi = null;
+            foreach (KeyValuePair<string, ChoCSVRecordFieldConfiguration> kvp in Configuration.FCArray)
             {
                 fieldValue = null;
                 fieldConfig = kvp.Value;
+                if (Configuration.PIDict != null)
+                    Configuration.PIDict.TryGetValue(kvp.Key, out pi);
 
-                if (Configuration.FileHeaderConfiguration.HasHeaderRecord)
+                if (Configuration.FileHeaderConfiguration.HasHeaderRecord && Configuration.ColumnCountStrict)
                 {
                     if (fieldNameValues.ContainsKey(fieldConfig.FieldName))
                         fieldValue = fieldNameValues[fieldConfig.FieldName];
@@ -317,17 +328,15 @@ namespace ChoETL
                         throw new ChoParserException("Missing field value for '{0}' [Position: {1}] field.".FormatString(fieldConfig.FieldName, fieldConfig.FieldPosition));
                 }
 
-                if (rec is ExpandoObject)
+                if (Configuration.IsDynamicObject)
                 {
                     if (kvp.Value.FieldType == null)
                         kvp.Value.FieldType = typeof(string);
                 }
                 else
                 {
-                    if (ChoType.HasProperty(rec.GetType(), kvp.Key))
-                    {
-                        kvp.Value.FieldType = ChoType.GetMemberType(rec.GetType(), kvp.Key);
-                    }
+                    if (pi != null)
+                        kvp.Value.FieldType = pi.PropertyType;
                     else
                         kvp.Value.FieldType = typeof(string);
                 }
@@ -341,34 +350,26 @@ namespace ChoETL
                 {
                     bool ignoreFieldValue = fieldConfig.IgnoreFieldValue(fieldValue);
                     if (ignoreFieldValue)
-                        fieldValue = null;
+                        fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
 
-                    if (rec is ExpandoObject)
+                    if (Configuration.IsDynamicObject)
                     {
                         var dict = rec as IDictionary<string, Object>;
 
-                        dict.SetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture);
+                        dict.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
 
-                        if (ignoreFieldValue)
-                            dict.AddOrUpdate(kvp.Key, fieldValue);
-                        else
-                            dict.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
-
-                        dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
+                        if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
+                            dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
                     }
                     else
                     {
-                        if (ChoType.HasProperty(rec.GetType(), kvp.Key))
-                        {
-                            rec.SetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture);
-
-                            if (!ignoreFieldValue)
-                                rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
-                        }
+                        if (pi != null)
+                            rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
                         else
                             throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(kvp.Key, ChoType.GetTypeName(rec)));
 
-                        rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
+                        if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
+                            rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
                     }
 
                     if (!RaiseAfterRecordFieldLoad(rec, pair.Item1, kvp.Key, fieldValue))
@@ -392,20 +393,25 @@ namespace ChoETL
 
                     try
                     {
-                        if (rec is ExpandoObject)
+                        if (Configuration.IsDynamicObject)
                         {
                             var dict = rec as IDictionary<string, Object>;
 
                             if (dict.SetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
-                            {
                                 dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
-                            }
+                            else if (dict.SetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture))
+                                dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
                             else
                                 throw new ChoParserException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                         }
-                        else if (ChoType.HasProperty(rec.GetType(), kvp.Key) && rec.SetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture))
+                        else if (pi != null)
                         {
-                            rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
+                            if (rec.SetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture))
+                                rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
+                            else if (rec.SetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture))
+                                rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
+                            else
+                                throw new ChoParserException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                         }
                         else
                             throw new ChoParserException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
@@ -437,32 +443,29 @@ namespace ChoETL
 
         private string CleanFieldValue(ChoCSVRecordFieldConfiguration config, Type fieldType, string fieldValue)
         {
-            if (fieldValue.IsNull()) return fieldValue;
+            if (fieldValue == null) return fieldValue;
 
-            if (fieldValue != null)
+            ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim;
+
+            if (config.FieldValueTrimOption == null)
             {
-                ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim;
+                //if (fieldType == typeof(string))
+                //    fieldValueTrimOption = ChoFieldValueTrimOption.None;
+            }
+            else
+                fieldValueTrimOption = config.FieldValueTrimOption.Value;
 
-                if (config.FieldValueTrimOption == null)
-                {
-                    //if (fieldType == typeof(string))
-                    //    fieldValueTrimOption = ChoFieldValueTrimOption.None;
-                }
-                else
-                    fieldValueTrimOption = config.FieldValueTrimOption.Value;
-
-                switch (fieldValueTrimOption)
-                {
-                    case ChoFieldValueTrimOption.Trim:
-                        fieldValue = fieldValue.Trim();
-                        break;
-                    case ChoFieldValueTrimOption.TrimStart:
-                        fieldValue = fieldValue.TrimStart();
-                        break;
-                    case ChoFieldValueTrimOption.TrimEnd:
-                        fieldValue = fieldValue.TrimEnd();
-                        break;
-                }
+            switch (fieldValueTrimOption)
+            {
+                case ChoFieldValueTrimOption.Trim:
+                    fieldValue = fieldValue.Trim();
+                    break;
+                case ChoFieldValueTrimOption.TrimStart:
+                    fieldValue = fieldValue.TrimStart();
+                    break;
+                case ChoFieldValueTrimOption.TrimEnd:
+                    fieldValue = fieldValue.TrimEnd();
+                    break;
             }
 
             if (config.Size != null)
@@ -476,13 +479,24 @@ namespace ChoETL
                 }
             }
 
-            if (config.QuoteField != null && config.QuoteField.Value && fieldValue.StartsWith(@"""") && fieldValue.EndsWith(@""""))
-                return fieldValue.Substring(1, fieldValue.Length - 2);
-            else if ((fieldValue.Contains(Configuration.Delimiter)
-                || fieldValue.Contains(Configuration.EOLDelimiter)) && fieldValue.StartsWith(@"""") && fieldValue.EndsWith(@""""))
-                return fieldValue.Substring(1, fieldValue.Length - 2);
-            else
-                return fieldValue;
+            char startChar;
+            char endChar;
+            char quoteChar = Configuration.QuoteChar == '\0' ? '"' : Configuration.QuoteChar;
+
+            if (fieldValue.Length >= 2)
+            {
+                startChar = fieldValue[0];
+                endChar = fieldValue[fieldValue.Length - 1];
+
+                if (config.QuoteField != null && config.QuoteField.Value && startChar == quoteChar && endChar == quoteChar)
+                    return fieldValue.Substring(1, fieldValue.Length - 2);
+                else if (startChar == quoteChar && endChar == quoteChar &&
+                    (fieldValue.Contains(Configuration.Delimiter)
+                    || fieldValue.Contains(Configuration.EOLDelimiter)))
+                    return fieldValue.Substring(1, fieldValue.Length - 2);
+
+            }
+            return fieldValue;
         }
 
         private void ValidateLine(int lineNo, string[] fieldValues)
@@ -666,8 +680,8 @@ namespace ChoETL
 
         private bool RaiseRecordFieldLoadError(object target, int index, string propName, object value, Exception ex)
         {
-            if (_callbackRecord == null) return false;
-            return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordFieldLoadError(target, index, propName, value, ex), false);
+            if (_callbackRecord == null) return true;
+            return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordFieldLoadError(target, index, propName, value, ex), true);
         }
     }
 }

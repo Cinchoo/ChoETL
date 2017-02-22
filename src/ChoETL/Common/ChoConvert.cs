@@ -58,8 +58,14 @@ namespace ChoETL
 
         public static object ConvertFrom(object value, MemberInfo memberInfo, object sourceObject = null, CultureInfo culture = null)
         {
-            ChoGuard.ArgumentNotNull((object)memberInfo, "MemberInfo");
+            ChoGuard.ArgumentNotNull(memberInfo, "MemberInfo");
             return ChoConvert.ConvertFrom(value, ChoType.GetMemberType(memberInfo), sourceObject, ChoTypeDescriptor.GetTypeConverters(memberInfo), ChoTypeDescriptor.GetTypeConverterParams(memberInfo), culture);
+        }
+
+        public static object ConvertFrom(object value, PropertyInfo propertyInfo, object sourceObject = null, CultureInfo culture = null)
+        {
+            ChoGuard.ArgumentNotNull(propertyInfo, "PropertyInfo");
+            return ChoConvert.ConvertFrom(value, propertyInfo.PropertyType, sourceObject, ChoTypeDescriptor.GetTypeConverters(propertyInfo), ChoTypeDescriptor.GetTypeConverterParams(propertyInfo), culture);
         }
 
         public static object ConvertFrom(object value, Type targetType, object sourceObject = null, object[] converters = null, object[] parameters = null, CultureInfo culture = null)

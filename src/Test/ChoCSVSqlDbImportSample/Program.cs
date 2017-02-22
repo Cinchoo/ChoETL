@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Data.Entity.Migrations;
 using System.Data.SqlClient;
+using System.ComponentModel;
 
 namespace ChoCSVSqlDbImportSample
 {
@@ -15,11 +16,103 @@ namespace ChoCSVSqlDbImportSample
     {
         static void Main(string[] args)
         {
+            ChoETLFramework.Initialize();
             BcpDataFile();
 
             //LoadDataFile();
         }
+
+        public class Series //: IChoValidatable
+        {
+            [DefaultValue("XX")]
+            public string Series_reference { get; set; }
+            public string Period { get; set; }
+            public string Data_value { get; set; }
+            public string Suppressed { get; set; }
+            public string Status { get; set; }
+            public string Units { get; set; }
+            public string Magnitude { get; set; }
+            public string Subject { get; set; }
+            public string Group { get; set; }
+            public string Series_title_1 { get; set; }
+            public string Series_title_2 { get; set; }
+            public string Series_title_3 { get; set; }
+            public string Series_title_4 { get; set; }
+            public string Series_title_5 { get; set; }
+
+            public void Validate(object target)
+            {
+            }
+
+            public bool TryValidate(object target, ICollection<ValidationResult> validationResults)
+            {
+                return true;
+            }
+
+            public void ValidateFor(object target, string memberName)
+            {
+            }
+
+            public bool TryValidateFor(object target, string memberName, ICollection<ValidationResult> validationResults)
+            {
+                return true;
+            }
+        }
+
         static void BcpDataFile()
+        {
+            string connectionstring = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True";
+            //using (var db = new NerdDinners(connectionstring))
+            //{
+            //    //db.Database.CreateIfNotExists();
+            //    db.Database.ExecuteSqlCommand("TRUNCATE TABLE Series");
+            //}
+            DateTime st = DateTime.Now;
+            Console.WriteLine("Starting..." + st);
+
+            //using (var dr = new ChoCSVReader<Series>(@"C:\Users\raj\Desktop\Building consents by territorial authority and selected wards (Monthly).csv").NotifyAfter(10000).WithFirstLineHeader())
+            //{
+            //    dr.Configuration.ObjectValidationMode = ChoObjectValidationMode.ObjectLevel;
+            //    dr.RowsLoaded += delegate (object sender, ChoRowsLoadedEventArgs e)
+            //    {
+            //        Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " rows loaded.");
+            //    };
+
+            //    foreach (var item in dr.Take(100))
+            //    {
+            //        Console.WriteLine(item.ToStringEx());
+            //    }
+            //}
+
+            using (SqlBulkCopy bcp = new SqlBulkCopy(connectionstring))
+            {
+                using (var r = new ChoCSVReader<Series>(@"C:\Users\raj\Desktop\Building consents by territorial authority and selected wards (Monthly).csv").WithFirstLineHeader().NotifyAfter(10000))
+                {
+                    r.RowsLoaded += delegate (object sender, ChoRowsLoadedEventArgs e)
+                    {
+                        Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " rows loaded.");
+                    };
+                    using (var dr = r.AsDataReader())
+                    {
+                        bcp.DestinationTableName = "dbo.Series";
+                        bcp.EnableStreaming = true;
+
+                        bcp.BatchSize = 10000;
+                        bcp.BulkCopyTimeout = 0;
+                        //bcp.NotifyAfter = 10000;
+                        //bcp.SqlRowsCopied += delegate (object sender, SqlRowsCopiedEventArgs e)
+                        //{
+                        //    Console.WriteLine(e.RowsCopied.ToString("#,##0") + " rows copied.");
+                        //};
+                        bcp.WriteToServer(dr);
+                    }
+                }
+            }
+            Console.WriteLine("Completed."+ (DateTime.Now - st));
+            Console.ReadLine();
+        }
+
+        static void BcpDataFile1()
         {
             string connectionstring = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True";
             using (var db = new NerdDinners (connectionstring))

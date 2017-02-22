@@ -79,7 +79,7 @@ namespace ChoETL
 
             if (results.Count > 0)
             {
-                aggEx = new ApplicationException("Failed to validate '{0}' object. {2}{1}".FormatString(@this.GetType().FullName, ToString(results), Environment.NewLine));
+                aggEx = new ApplicationException("Failed to validate record object. {2}{1}".FormatString(@this.GetType().FullName, ToString(results), Environment.NewLine));
                 return false;
             }
             else
@@ -141,9 +141,6 @@ namespace ChoETL
             }
             else
             {
-                //if (ChoObjectMemberMetaDataCache.Default.IsRequired(mi) && ChoType.GetMemberValue(@this, mi) == null)
-                //    results.Add(new ValidationResult("Null value found for {0} member.".FormatString(mi.Name)));
-
                 var context = new ValidationContext(@this, null, null);
                 context.MemberName = mi.Name;
 
@@ -185,12 +182,6 @@ namespace ChoETL
             }
             else
             {
-                foreach (MemberInfo mi in ChoType.GetMembers(@this.GetType()).Where(m => ChoType.GetMemberAttributeByBaseType<ChoMemberAttribute>(m) != null))
-                {
-                    //if (ChoObjectMemberMetaDataCache.Default.IsRequired(mi) && ChoType.GetMemberValue(@this, mi) == null)
-                    //    results.Add(new ValidationResult("Null value found for {0} member.".FormatString(mi.Name)));
-                }
-
                 var context = new ValidationContext(@this, null, null);
                 Validator.TryValidateObject(@this, context, results, true);
             }

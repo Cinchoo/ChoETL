@@ -19,7 +19,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;_DYNAMIC_</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
@@ -66,15 +66,17 @@
     <CodeContractsRuntimeCheckingLevel>Full</CodeContractsRuntimeCheckingLevel>
     <CodeContractsReferenceAssembly>%28none%29</CodeContractsReferenceAssembly>
     <CodeContractsAnalysisWarningLevel>0</CodeContractsAnalysisWarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;_DYNAMIC_</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="PresentationFramework" />
@@ -117,9 +119,15 @@
     <Compile Include="Common\Converters\ChoBooleanConverter.cs" />
     <Compile Include="Common\Converters\ChoBigIntegerConverter.cs" />
     <Compile Include="Common\Converters\ChoEnumConverter.cs" />
+    <Compile Include="Common\Reflection\ChoFieldInfoEx.cs" />
+    <Compile Include="Common\Reflection\ChoMemberInfoEx.cs" />
+    <Compile Include="Common\Reflection\ChoPropertyInfoEx.cs" />
+    <Compile Include="Common\Reflection\Emit\ChoEmitHelper.cs" />
+    <Compile Include="Common\Reflection\Emit\ChoILGeneratorEx.cs" />
     <Compile Include="Common\Validators\ChoCustomCodeValidatorAttribute.cs" />
     <Compile Include="Common\Validators\ChoCustomExprValidatorAttribute.cs" />
     <Compile Include="ETLCommon\IChoETLNameableObject.cs" />
+    <Compile Include="File\ChoRowsLoadedEventArgs.cs" />
     <Compile Include="File\CSV\ChoCSVFluentPlugIn.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthFileHeaderConfiguration.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthRecordWriter.cs" />

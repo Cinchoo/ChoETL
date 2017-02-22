@@ -20,6 +20,8 @@ namespace ChoETL
         private Lazy<IEnumerator<T>> _enumerator = null;
         private CultureInfo _prevCultureInfo = null;
         private bool _clearFields = false;
+        internal TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
+        public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
 
         public ChoFixedLengthRecordConfiguration Configuration
         {
@@ -87,34 +89,6 @@ namespace ChoETL
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
         }
 
-        public IEnumerator<T> GetEnumerator()
-        {
-            ChoFixedLengthRecordReader reader = new ChoFixedLengthRecordReader(typeof(T), Configuration);
-            var e = reader.AsEnumerable(_streamReader).GetEnumerator();
-            return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        public IDataReader AsDataReader()
-        {
-            ChoFixedLengthRecordReader reader = new ChoFixedLengthRecordReader(typeof(T), Configuration);
-            reader.LoadSchema(_streamReader);
-
-            var dr = new ChoEnumerableDataReader(GetEnumerator().ToEnumerable(), Configuration.FixedLengthRecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType)).ToArray());
-            return dr;
-        }
-
-        public DataTable AsDataTable(string tableName = null)
-        {
-            DataTable dt = tableName.IsNullOrWhiteSpace() ? new DataTable() : new DataTable(tableName);
-            dt.Load(AsDataReader());
-            return dt;
-        }
-
         public static ChoFixedLengthReader<T> LoadText(string inputText, ChoFixedLengthRecordConfiguration configuration = null)
         {
             var r = new ChoFixedLengthReader<T>(inputText.ToStream(), configuration);
@@ -130,14 +104,59 @@ namespace ChoETL
             return reader.AsEnumerable(new StreamReader(inputText.ToStream(), encoding, false, bufferSize)).GetEnumerator();
         }
 
+        public IEnumerator<T> GetEnumerator()
+        {
+            ChoFixedLengthRecordReader reader = new ChoFixedLengthRecordReader(typeof(T), Configuration);
+            reader.TraceSwitch = TraceSwitch;
+            reader.RowsLoaded += NotifyRowsLoaded;
+            var e = reader.AsEnumerable(_streamReader).GetEnumerator();
+            return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public IDataReader AsDataReader()
+        {
+            ChoFixedLengthRecordReader reader = new ChoFixedLengthRecordReader(typeof(T), Configuration);
+            reader.TraceSwitch = TraceSwitch;
+            reader.LoadSchema(_streamReader);
+            reader.RowsLoaded += NotifyRowsLoaded;
+            var dr = new ChoEnumerableDataReader(GetEnumerator().ToEnumerable(), Configuration.FixedLengthRecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType)).ToArray());
+            return dr;
+        }
+
+        public DataTable AsDataTable(string tableName = null)
+        {
+            DataTable dt = tableName.IsNullOrWhiteSpace() ? new DataTable() : new DataTable(tableName);
+            dt.Load(AsDataReader());
+            return dt;
+        }
+
+        private void NotifyRowsLoaded(object sender, ChoRowsLoadedEventArgs e)
+        {
+            EventHandler<ChoRowsLoadedEventArgs> rowsLoadedEvent = RowsLoaded;
+            if (rowsLoadedEvent == null)
+                return;
+
+            rowsLoadedEvent(this, e);
+        }
+
         #region Fluent API
+
+        public ChoFixedLengthReader<T> NotifyAfter(long rowsLoaded)
+        {
+            Configuration.NotifyAfter = rowsLoaded;
+            return this;
+        }
 
         public ChoFixedLengthReader<T> WithRecordLength(int length)
         {
             Configuration.RecordLength = length;
             return this;
         }
-
 
         public ChoFixedLengthReader<T> WithFirstLineHeader(bool flag = true)
         {

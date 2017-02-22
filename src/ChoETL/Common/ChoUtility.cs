@@ -1286,6 +1286,14 @@ namespace ChoETL
                 return ChoConvert.ConvertFrom(value, memberInfo, (object)null, culture);
             return ChoConvert.ConvertFrom(value, memberInfo, target, culture);
         }
+        public static object ConvertValueToObjectPropertyType(object target, PropertyInfo propertyInfo, object value, CultureInfo culture = null)
+        {
+            ChoGuard.ArgumentNotNull(target, "Target");
+            ChoGuard.ArgumentNotNull((object)propertyInfo, "PropertyInfo");
+            if (target is Type)
+                return ChoConvert.ConvertFrom(value, propertyInfo, (object)null, culture);
+            return ChoConvert.ConvertFrom(value, propertyInfo, target, culture);
+        }
 
         public static void TryCatch(Action action)
         {

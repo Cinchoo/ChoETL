@@ -151,35 +151,144 @@ namespace ChoETL
         /// <param name="Separators">List of Separators used to split the string.</param>
         /// <param name="ignoreEmptyWord">true, to ignore the empry words in the output list</param>
         /// <returns>A string array contains splitted values, if the input text is null/empty, an empty array will be returned.</returns>
-        public static string[] Split(this string text, char[] Separators, ChoStringSplitOptions stringSplitOptions, char quoteChar = '"')
+        //public static string[] Split(this string text, char[] Separators, ChoStringSplitOptions stringSplitOptions, char quoteChar = '"')
+        //{
+        //    return Split(text, (object)Separators, stringSplitOptions, quoteChar);
+        //}
+        public static string[] FastSplit(this string sText, char? cSeparator = ',', char? cQuotes = '"')
         {
-            return Split(text, (object)Separators, stringSplitOptions, quoteChar);
+            string[] oTokens;
+
+            unsafe
+            {
+                fixed (char* lpText = sText)
+                {
+                    #region Fast array estimatation
+
+                    char* lpCurrent = lpText;
+                    int nEstimatedSize = 0;
+
+                    while (0 != *lpCurrent)
+                    {
+                        if (cSeparator == *lpCurrent)
+                        {
+                            nEstimatedSize++;
+                        }
+
+                        lpCurrent++;
+                    }
+
+                    nEstimatedSize++; // Add EOL char(s)
+                    string[] oEstimatedTokens = new string[nEstimatedSize];
+
+                    #endregion
+
+                    #region Parsing
+
+                    char[] oBuffer = new char[sText.Length];
+                    int nIndex = 0;
+                    int nTokens = 0;
+
+                    lpCurrent = lpText;
+
+                    while (0 != *lpCurrent)
+                    {
+                        if (cQuotes == *lpCurrent)
+                        {
+                            // Quotes parsing
+
+                            lpCurrent++; // Skip quote
+                            nIndex = 0;  // Reset buffer
+
+                            while (
+                                   (0 != *lpCurrent)
+                                && (cQuotes != *lpCurrent)
+                            )
+                            {
+                                oBuffer[nIndex] = *lpCurrent; // Store char
+
+                                lpCurrent++; // Move source cursor
+                                nIndex++;    // Move target cursor
+                            }
+
+                        }
+                        else if (cSeparator == *lpCurrent)
+                        {
+                            // Separator char parsing
+
+                            oEstimatedTokens[nTokens++] = new string(oBuffer, 0, nIndex); // Store token
+                            nIndex = 0;                              // Skip separator and Reset buffer
+                        }
+                        else
+                        {
+                            // Content parsing
+
+                            oBuffer[nIndex] = *lpCurrent; // Store char
+                            nIndex++;                     // Move target cursor
+                        }
+
+                        lpCurrent++; // Move source cursor
+                    }
+
+                    // Recover pending buffer
+
+                    if (nIndex > 0)
+                    {
+                        // Store token
+
+                        oEstimatedTokens[nTokens++] = new string(oBuffer, 0, nIndex);
+                    }
+
+                    // Build final tokens list
+
+                    if (nTokens == nEstimatedSize)
+                    {
+                        oTokens = oEstimatedTokens;
+                    }
+                    else
+                    {
+                        oTokens = new string[nTokens];
+                        Array.Copy(oEstimatedTokens, 0, oTokens, 0, nTokens);
+                    }
+
+                    #endregion
+                }
+            }
+
+            // Epilogue            
+
+            return oTokens;
         }
 
         public static string[] Split(this string text, string value, ChoStringSplitOptions stringSplitOptions, char quoteChar = '"')
         {
-            return Split(text, (object)value, stringSplitOptions, quoteChar);
+            return Split(text, value.ToArray(), stringSplitOptions, quoteChar);
         }
 
-        private static string[] Split(this string text, object Separators, ChoStringSplitOptions stringSplitOptions, char quoteChar = '"')
+        private static string[] Split(this string text, char[] separators, ChoStringSplitOptions stringSplitOptions, char quoteChar = '"')
         {
             if (String.IsNullOrEmpty(text)) return new string[0];
-
-            List<string> splitStrings = new List<string>();
+            if (separators == null || separators.Length == 0) return new string[0];
 
             if (quoteChar == '\0')
-                quoteChar = '"';
+            {
+                if (separators.Length == 1)
+                    return text.Split(separators[0]);
 
-            if (Separators is char[] && Array.IndexOf(((char[])Separators), quoteChar) >= 0)
+                return text.Split(separators);
+            }
+            else if (separators.Length == 1)
+                return text.FastSplit(separators[0], quoteChar);
+
+            List<string> splitStrings = new List<string>();
+            string sepText = new string(separators);
+
+            if (Array.IndexOf((separators), quoteChar) >= 0)
             {
                 throw new ApplicationException("Invalid quote character passed.");
             }
-            else if (Separators is string && ((string)Separators).Contains(quoteChar))
-            {
-                throw new ApplicationException("Invalid quote character passed.");
-            }
 
-            int len = Separators is char[] ? 0 : ((string)Separators).Length - 1;
+            int len = separators.Length - 1;
             int i = 0;
             int quotes = 0;
             int singleQuotes = 0;
@@ -191,11 +300,11 @@ namespace ChoETL
                 if ((stringSplitOptions & ChoStringSplitOptions.AllowQuotes) != ChoStringSplitOptions.AllowQuotes && text[i] == quoteChar) { quotes++; }
                 //else if ((stringSplitOptions & ChoStringSplitOptions.AllowSingleQuoteEntry) != ChoStringSplitOptions.AllowSingleQuoteEntry && text[i] == '\'') { singleQuotes++; }
                 else if (text[i] == '\\'
-                    && i + 1 < text.Length && Contains(text, ++i, Separators))
+                    && i + 1 < text.Length && Contains(text, ++i, separators))
                     hasChar = true;
-                else if (Contains(text, i, Separators) &&
+                else if (Contains(text, i, separators) &&
                     ((quotes > 0 && quotes % 2 == 0) || (singleQuotes > 0 && singleQuotes % 2 == 0))
-                    || Contains(text, i, Separators) && quotes == 0 && singleQuotes == 0)
+                    || Contains(text, i, separators) && quotes == 0 && singleQuotes == 0)
                 {
                     if (hasChar)
                     {
@@ -243,6 +352,19 @@ namespace ChoETL
 
         #region Contains Overloads (Public)
 
+        private static string NormalizeString(string inString, char quoteChar)
+        {
+            if (inString == null || inString.Length < 2) return inString;
+            if (inString[0] == quoteChar && inString[inString.Length - 1] == quoteChar)
+                return inString.Substring(1, inString.Length - 2);
+            //if (inString.Contains("\"\""))
+            //    return inString.Replace("\"\"", "\"");
+            //else if (inString.Contains("''"))
+            //    return inString.Replace("''", "'");
+            else
+                return inString;
+        }
+
         public static bool Contains(char inChar, char[] findInChars)
         {
             foreach (char findInChar in findInChars)
@@ -264,36 +386,24 @@ namespace ChoETL
 
         public static bool Contains(string text, int index, string findInText)
         {
-            index = index - (findInText.Length - 1);
-            if (index < 0) return false;
+            return findInText.IndexOf(text[index]) >= 0;
+            //index = index - (findInText.Length - 1);
+            //if (index < 0) return false;
 
-            return text.IndexOf(findInText, index) == index;
+            //return text.IndexOf(findInText, index) == index;
         }
 
         #endregion Contains Overloads (Public)
 
-        private static bool Contains(string text, int index, object findInChars)
-        {
-            if (findInChars is char[])
-                return Contains(text, index, ((char[])findInChars));
-            else if (findInChars is string)
-                return Contains(text, index, ((string)findInChars));
-            else
-                return false;
-        }
-
-        private static string NormalizeString(string inString, char quoteChar)
-        {
-            if (inString == null || inString.Length < 2) return inString;
-            if (inString[0] == quoteChar && inString[inString.Length - 1] == quoteChar)
-                return inString.Substring(1, inString.Length - 2);
-            //if (inString.Contains("\"\""))
-            //    return inString.Replace("\"\"", "\"");
-            //else if (inString.Contains("''"))
-            //    return inString.Replace("''", "'");
-            else
-                return inString;
-        }
+        //private static bool Contains(string text, int index, object findInChars)
+        //{
+        //    if (findInChars is char[])
+        //        return Contains(text, index, ((char[])findInChars));
+        //    else if (findInChars is string)
+        //        return Contains(text, index, ((string)findInChars));
+        //    else
+        //        return false;
+        //}
 
         public static string Indent(this String text, int totalWidth = 1)
         {
@@ -414,7 +524,7 @@ namespace ChoETL
                 {
                     defaultValue = ChoTypeDescriptor.GetPropetyAttribute<DefaultValueAttribute>(pd).Value;
                     if (defaultValue != null)
-                        ChoType.ConvertNSetMemberValue(target, pd.Name, defaultValue);
+                        ChoType.ConvertNSetPropertyValue(target, pd.Name, defaultValue);
                 }
                 catch (Exception ex)
                 {
@@ -422,7 +532,7 @@ namespace ChoETL
                 }
             }
 
-            ChoETLFramework.InitializeObject(target);
+            //ChoETLFramework.InitializeObject(target);
 
             if (target is IChoInitializable)
                 ((IChoInitializable)target).Initialize();
@@ -467,10 +577,24 @@ namespace ChoETL
             }
         }
 
-        public static IEnumerable<string> ReadLines(this TextReader reader, string EOLDelimiter = null, char quoteChar = ChoCharEx.NUL, int maxLineSize = 32768)
+        public static IEnumerable<string> ReadLines(this TextReader reader, string EOLDelimiter = null, char quoteChar = ChoCharEx.NUL, bool mayContainEOLInData = false, int maxLineSize = 32768)
         {
             ChoGuard.ArgumentNotNull(reader, "TextReader");
             EOLDelimiter = EOLDelimiter ?? Environment.NewLine;
+
+            if (!mayContainEOLInData
+                && (EOLDelimiter == Environment.NewLine
+                || (EOLDelimiter.Length == 1 && EOLDelimiter[0] == '\r')
+                || (EOLDelimiter.Length == 1 && EOLDelimiter[0] == '\n')
+                ))
+            {
+                string line;
+
+                while ((line = reader.ReadLine()) != null)
+                {
+                    yield return line;
+                }
+            }
 
             bool inQuote = false;
             List<char> buffer = new List<char>();
@@ -483,7 +607,7 @@ namespace ChoETL
                 {
                     inQuote = !inQuote;
                 }
-                
+
                 if (!inQuote)
                 {
                     if (delim_buffer.ToString() == EOLDelimiter)
@@ -530,12 +654,12 @@ namespace ChoETL
 
             public override string ToString()
             {
-                List<String> items = new List<string>();
+                StringBuilder items = new StringBuilder();
                 foreach (var x in this)
                 {
-                    items.Add(x.ToString());
+                    items.Append(x);
                 };
-                return String.Join("", items);
+                return items.ToString();
             }
         }
 

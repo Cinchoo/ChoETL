@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
@@ -64,6 +65,10 @@ namespace ChoETL
         }
 
         internal readonly List<object> Converters = new List<object>();
+        internal PropertyInfo PI;
+        internal PropertyDescriptor PD;
+        internal object[] PropConverters;
+        internal object[] PropConverterParams;
 
         public ChoRecordFieldConfiguration(string name, ChoRecordFieldAttribute attr = null)
         {

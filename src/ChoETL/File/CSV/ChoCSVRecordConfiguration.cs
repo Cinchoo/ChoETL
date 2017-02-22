@@ -43,6 +43,8 @@ namespace ChoETL
             private set;
         }
 
+        internal KeyValuePair<string, ChoCSVRecordFieldConfiguration>[] FCArray;
+
         public ChoCSVRecordFieldConfiguration this[string name]
         {
             get
@@ -51,7 +53,12 @@ namespace ChoETL
             }
         }
 
-        public ChoCSVRecordConfiguration(Type recordType = null) : base(recordType)
+        public ChoCSVRecordConfiguration() : this(null)
+        {
+
+        }
+
+        internal ChoCSVRecordConfiguration(Type recordType) : base(recordType)
         {
             CSVRecordFieldConfigurations = new List<ChoCSVRecordFieldConfiguration>();
 
@@ -140,7 +147,7 @@ namespace ChoETL
                 throw new ChoRecordConfigurationException("Delimiter [{0}] can't be same as EODDelimiter [{1}]".FormatString(Delimiter, EOLDelimiter));
             if (Delimiter.Contains(QuoteChar))
                 throw new ChoRecordConfigurationException("QuoteChar [{0}] can't be one of Delimiter characters [{1}]".FormatString(QuoteChar, Delimiter));
-            if (Comments.Contains(Delimiter))
+            if (Comments != null && Comments.Contains(Delimiter))
                 throw new ChoRecordConfigurationException("One of the Comments contains Delimiter. Not allowed.");
 
             //Validate Header
@@ -169,7 +176,7 @@ namespace ChoETL
                 {
                     int index = 0;
                     CSVRecordFieldConfigurations = (from header in headers
-                                                 select new ChoCSVRecordFieldConfiguration(header, ++index)).ToList();
+                                                    select new ChoCSVRecordFieldConfiguration(header, ++index)).ToList();
                 }
                 else
                 {
@@ -181,6 +188,8 @@ namespace ChoETL
                 MaxFieldPosition = CSVRecordFieldConfigurations.Max(r => r.FieldPosition);
             else
                 throw new ChoRecordConfigurationException("No record fields specified.");
+
+            LoadNCacheMembers(CSVRecordFieldConfigurations);
 
             //Validate each record field
             foreach (var fieldConfig in CSVRecordFieldConfigurations)
@@ -216,6 +225,7 @@ namespace ChoETL
             }
 
             RecordFieldConfigurationsDict = CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
+            FCArray = RecordFieldConfigurationsDict.ToArray();
         }
     }
 }

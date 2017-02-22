@@ -21,6 +21,7 @@ namespace ChoETL
         private CultureInfo _prevCultureInfo = null;
         private bool _clearFields = false;
         internal TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
+        public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
 
         public ChoCSVRecordConfiguration Configuration
         {
@@ -107,6 +108,7 @@ namespace ChoETL
         {
             ChoCSVRecordReader reader = new ChoCSVRecordReader(typeof(T), Configuration);
             reader.TraceSwitch = TraceSwitch;
+            reader.RowsLoaded += NotifyRowsLoaded;
             var e = reader.AsEnumerable(_streamReader).GetEnumerator();
             return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
         }
@@ -121,7 +123,7 @@ namespace ChoETL
             ChoCSVRecordReader reader = new ChoCSVRecordReader(typeof(T), Configuration);
             reader.TraceSwitch = TraceSwitch;
             reader.LoadSchema(_streamReader);
-
+            reader.RowsLoaded += NotifyRowsLoaded;
             var dr = new ChoEnumerableDataReader(GetEnumerator().ToEnumerable(), Configuration.CSVRecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType)).ToArray());
             return dr;
         }
@@ -133,7 +135,22 @@ namespace ChoETL
             return dt;
         }
 
+        private void NotifyRowsLoaded(object sender, ChoRowsLoadedEventArgs e)
+        {
+            EventHandler<ChoRowsLoadedEventArgs> rowsLoadedEvent = RowsLoaded;
+            if (rowsLoadedEvent == null)
+                return;
+
+            rowsLoadedEvent(this, e);
+        }
+
         #region Fluent API
+
+        public ChoCSVReader<T> NotifyAfter(long rowsLoaded)
+        {
+            Configuration.NotifyAfter = rowsLoaded;
+            return this;
+        }
 
         public ChoCSVReader<T> WithDelimiter(string delimiter)
         {

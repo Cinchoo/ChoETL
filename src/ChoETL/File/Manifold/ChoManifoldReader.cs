@@ -18,6 +18,8 @@ namespace ChoETL
         private bool _closeStreamOnDispose = false;
         private Lazy<IEnumerator> _enumerator = null;
         private CultureInfo _prevCultureInfo = null;
+        internal TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
+        public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
 
         public ChoManifoldRecordConfiguration Configuration
         {
@@ -88,6 +90,8 @@ namespace ChoETL
         public IEnumerator GetEnumerator()
         {
             ChoManifoldRecordReader reader = new ChoManifoldRecordReader(Configuration);
+            reader.TraceSwitch = TraceSwitch;
+            reader.RowsLoaded += NotifyRowsLoaded;
             return reader.AsEnumerable(_streamReader).GetEnumerator();
         }
 
@@ -104,7 +108,22 @@ namespace ChoETL
             return r;
         }
 
+        private void NotifyRowsLoaded(object sender, ChoRowsLoadedEventArgs e)
+        {
+            EventHandler<ChoRowsLoadedEventArgs> rowsLoadedEvent = RowsLoaded;
+            if (rowsLoadedEvent == null)
+                return;
+
+            rowsLoadedEvent(this, e);
+        }
+
         #region Fluent API
+
+        public ChoManifoldReader NotifyAfter(long rowsLoaded)
+        {
+            Configuration.NotifyAfter = rowsLoaded;
+            return this;
+        }
 
         public ChoManifoldReader WithFirstLineHeader(bool flag = true)
         {

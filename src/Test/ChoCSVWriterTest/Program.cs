@@ -17,7 +17,7 @@ namespace ChoCSVWriterTest
     {
         static void Main(string[] args)
         {
-            ToTextTest();
+            CodeFirstWithDeclarativeApproachWriteRecords();
         }
 
         static void QuickDynamicTest()
@@ -452,7 +452,7 @@ namespace ChoCSVWriterTest
             config.FileHeaderConfiguration.HasHeaderRecord = true;
             config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1) { Validators = new ValidationAttribute[] { new RangeAttribute(3, 100) } });
             config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
-            config.ObjectValidationMode = ChoObjectValidationMode.ObjectLevel;
+            config.ObjectValidationMode = ChoObjectValidationMode.Off;
 
             List<ExpandoObject> objs = new List<ExpandoObject>();
             dynamic rec1 = new ExpandoObject();

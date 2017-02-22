@@ -60,7 +60,7 @@ namespace ChoFixedLengthReaderTest
             //ChoFixedLengthFieldDefaultSizeConfiguation.Instance.SetSize(typeof(int), 3);
             //ChoFixedLengthFieldDefaultSizeConfiguation.Instance.SetSize(typeof(string), 5);
 
-            DynamicApproach();
+            DefaultValueUsedViaConfigFirstApproach();
         }
 
         static void DynamicApproach()
@@ -166,6 +166,7 @@ namespace ChoFixedLengthReaderTest
             object row = null;
             using (var parser = new ChoFixedLengthReader("Emp.csv").WithFirstLineHeader().WithField("Id", 0, 8).WithField("Name", 8, 10, true))
             {
+                parser.Configuration.MayContainEOLInData = true;
                 while ((row = parser.Read()) != null)
                 {
                     Console.WriteLine(row.ToStringEx());
@@ -250,7 +251,7 @@ namespace ChoFixedLengthReaderTest
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoFixedLengthReader<CreditBalanceRecordEx>(reader).WithFirstLineHeader())
+            using (var parser = new ChoFixedLengthReader<EmployeeRecWithCurrency>(reader).WithFirstLineHeader())
             {
                 writer.WriteLine("Id      Name      ");
                 writer.WriteLine("1       Carl      ");
@@ -378,7 +379,7 @@ namespace ChoFixedLengthReaderTest
             config.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration("Salary", 18, 10) { FieldType = typeof(ChoCurrency) });
             config.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration("IsActive", 28, 1) { FieldType = typeof(bool) });
             config.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration("Status", 29, 1) { FieldType = typeof(char) });
-            config.ErrorMode = ChoErrorMode.IgnoreAndContinue;
+            config.ErrorMode = ChoErrorMode.ReportAndContinue;
 
             ExpandoObject row = null;
             using (var stream = new MemoryStream())

@@ -12,201 +12,69 @@ namespace ChoETL
 {
     internal static class ChoETLRecordHelper
     {
-        public static void DoObjectLevelValidation(this object recObject, ChoRecordConfiguration configuration, ChoRecordFieldConfiguration[] fieldConfigurations)
+        public static void ConvertNSetMemberValue(this IDictionary<string, object> dict, string fn, ChoRecordFieldConfiguration fieldConfig, ref object fieldValue, CultureInfo culture)
         {
-            if ((configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
-            {
-                bool hasConfigValidators = (from fc in fieldConfigurations
-                                            where !fc.Validators.IsNullOrEmpty()
-                                            select fc).Any();
+            if (fieldConfig.Converters.IsNullOrEmpty())
+                fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, null, ChoTypeDescriptor.GetTypeConvertersForType(fieldConfig.FieldType), null, culture);
+            else
+                fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), null, culture);
 
-                if (hasConfigValidators)
-                {
-                    Dictionary<string, ValidationAttribute[]> valDict = (from fc in fieldConfigurations
-                                                                         select new KeyValuePair<string, ValidationAttribute[]>(fc.Name, fc.Validators)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-                    IDictionary<string, Object> dict = null;
-                    if (recObject is ExpandoObject)
-                        dict = recObject as IDictionary<string, Object>;
-                    else
-                        dict = recObject.ToDictionary();
-
-                    ChoValidator.Validate(dict, valDict);
-                }
-                else
-                {
-                    if (!(recObject is ExpandoObject))
-                        ChoValidator.Validate(recObject);
-                }
-            }
+            dict.AddOrUpdate(fn, fieldValue);
         }
 
-        public static void DoMemberLevelValidation(this IDictionary<string, object> dict, string fn, ChoRecordFieldConfiguration fieldConfig, ChoObjectValidationMode vm)
+        public static void ConvertNSetMemberValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, ref object fieldValue, CultureInfo culture)
         {
-            if (!fieldConfig.Validators.IsNullOrEmpty() && (vm & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
-                ChoValidator.ValidateFor(dict[fn], fn, fieldConfig.Validators);
-        }
-
-        public static void DoMemberLevelValidation(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, ChoObjectValidationMode vm)
-        {
-            if (rec is ExpandoObject)
+            if (fieldConfig.Converters.IsNullOrEmpty())
             {
-                ((IDictionary<string, object>)rec).DoMemberLevelValidation(fn, fieldConfig, vm);
+                fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
             }
             else
             {
-                if ((vm & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
-                {
-                    if (fieldConfig.Validators.IsNullOrEmpty())
-                        ChoValidator.ValidateFor(rec, fn);
-                    else
-                        ChoValidator.ValidateFor(ChoType.GetMemberValue(rec, fn), fn, fieldConfig.Validators);
-                }
+                fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), null, culture);
             }
-        }
-
-        public static void DoMemberLevelValidation(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, ChoObjectValidationMode vm, object fieldValue)
-        {
-            if ((vm & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
-            {
-                if (fieldConfig.Validators.IsNullOrEmpty())
-                {
-                    if (!(rec is ExpandoObject))
-                        ChoValidator.ValidateFor(fieldValue, fn, ChoTypeDescriptor.GetPropetyAttributes<ValidationAttribute>(ChoTypeDescriptor.GetProperty<ValidationAttribute>(rec.GetType(), fn)).ToArray());
-                }
-                else
-                    ChoValidator.ValidateFor(fieldValue, fn, fieldConfig.Validators);
-            }
-        }
-
-        public static void DoObjectLevelValidatation(this object record, ChoRecordFieldConfiguration[] fieldConfigs)
-        {
-            bool hasConfigValidators = (from fc in fieldConfigs
-                                        where !fc.Validators.IsNullOrEmpty()
-                                        select fc).Any();
-
-            if (hasConfigValidators)
-            {
-                Dictionary<string, ValidationAttribute[]> valDict = (from fc in fieldConfigs
-                                                                     select new KeyValuePair<string, ValidationAttribute[]>(fc.Name, fc.Validators)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-                IDictionary<string, Object> dict = null;
-                if (record is ExpandoObject)
-                    dict = record as IDictionary<string, Object>;
-                else
-                    dict = record.ToDictionary();
-
-                ChoValidator.Validate(dict, valDict);
-            }
-            else
-            {
-                if (!(record is ExpandoObject))
-                    ChoValidator.Validate(record);
-            }
-        }
-
-        public static void SetDefaultValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, CultureInfo culture)
-        {
-            if (rec is ExpandoObject)
-            {
-                ((IDictionary<string, object>)rec).SetDefaultValue(fn, fieldConfig, culture);
-                return;
-            }
-
-            object fieldValue = null;
-
-            //Set default value to member
-            try
-            {
-                bool defaultValueExists = true;
-                object defaultValue = null;
-                if (fieldConfig.IsDefaultValueSpecified)
-                    defaultValue = fieldConfig.DefaultValue;
-                else if (ChoType.HasDefaultValue(ChoTypeDescriptor.GetProperty(rec.GetType(), fn)))
-                    defaultValue = ChoType.GetRawDefaultValue(ChoTypeDescriptor.GetProperty(rec.GetType(), fn));
-                else
-                    defaultValueExists = false;
-
-                if (defaultValueExists)
-                {
-                    if (fieldConfig.Converters.IsNullOrEmpty())
-                        fieldValue = ChoConvert.ConvertFrom(defaultValue, ChoType.GetMemberInfo(rec.GetType(), fn), null, culture);
-                    else
-                        fieldValue = ChoConvert.ConvertFrom(defaultValue, ChoType.GetMemberType(rec.GetType(), fn), null, fieldConfig.Converters.ToArray(), null, culture);
-
-                    ChoType.SetMemberValue(rec, fn, fieldValue);
-                }
-            }
-            catch { }
-        }
-
-        public static void SetDefaultValue(this IDictionary<string, object> dict, string fn, ChoRecordFieldConfiguration fieldConfig, CultureInfo culture)
-        {
-            object fieldValue = null;
-            //Set default value to member
-            try
-            {
-                if (fieldConfig.IsDefaultValueSpecified)
-                {
-                    if (fieldConfig.Converters.IsNullOrEmpty())
-                        fieldValue = ChoConvert.ConvertFrom(fieldConfig.DefaultValue, fieldConfig.FieldType, null, ChoTypeDescriptor.GetTypeConvertersForType(fieldConfig.FieldType), null, culture);
-                    else
-                        fieldValue = ChoConvert.ConvertFrom(fieldConfig.DefaultValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), null, culture);
-
-                    dict.AddOrUpdate(fn, fieldValue);
-                }
-            }
-            catch { }
-        }
-
-        public static object GetDefaultValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig)
-        {
-            if (fieldConfig.IsDefaultValueSpecified)
-            {
-                return fieldConfig.DefaultValue;
-            }
-            else
-            {
-                if (rec is ExpandoObject)
-                {
-                }
-                else if (ChoType.HasProperty(rec.GetType(), fn))
-                {
-                    return ChoType.GetRawDefaultValue(ChoTypeDescriptor.GetProperty(rec.GetType(), fn));
-                }
-            }
-
-            return null;
+            ChoType.SetPropertyValue(rec, fieldConfig.PI, fieldValue);
         }
 
         public static bool SetFallbackValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, CultureInfo culture)
         {
+            if (!fieldConfig.IsFallbackValueSpecified)
+                return false;
+
             if (rec is ExpandoObject)
             {
                 return ((IDictionary<string, object>)rec).SetFallbackValue(fn, fieldConfig, culture);
             }
 
+            //Set fallback value to member
             object fieldValue = null;
-
-            //Set Fallback value to member
-            bool FallbackValueExists = true;
-            object FallbackValue = null;
-            if (fieldConfig.IsFallbackValueSpecified)
-                FallbackValue = fieldConfig.FallbackValue;
-            else if (ChoType.HasFallbackValue(ChoTypeDescriptor.GetProperty(rec.GetType(), fn)))
-                FallbackValue = ChoType.GetRawFallbackValue(ChoTypeDescriptor.GetProperty(rec.GetType(), fn));
+            if (fieldConfig.Converters.IsNullOrEmpty())
+                fieldValue = ChoConvert.ConvertFrom(fieldConfig.FallbackValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
             else
-                FallbackValueExists = false;
+                fieldValue = ChoConvert.ConvertFrom(fieldConfig.FallbackValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), null, culture);
 
-            if (FallbackValueExists)
+            ChoType.SetPropertyValue(rec, fieldConfig.PI, fieldValue);
+            return true;
+        }
+
+        public static bool SetDefaultValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, CultureInfo culture)
+        {
+            if (!fieldConfig.IsDefaultValueSpecified)
+                return false;
+
+            if (rec is ExpandoObject)
             {
-                if (fieldConfig.Converters.IsNullOrEmpty())
-                    fieldValue = ChoConvert.ConvertFrom(FallbackValue, ChoType.GetMemberInfo(rec.GetType(), fn), null, culture);
-                else
-                    fieldValue = ChoConvert.ConvertFrom(FallbackValue, ChoType.GetMemberType(rec.GetType(), fn), null, fieldConfig.Converters.ToArray(), null, culture);
-
-                ChoType.SetMemberValue(rec, fn, fieldValue);
+                return ((IDictionary<string, object>)rec).SetDefaultValue(fn, fieldConfig, culture);
             }
 
-            return FallbackValueExists;
+            //Set default value to member
+            object fieldValue = null;
+            if (fieldConfig.Converters.IsNullOrEmpty())
+                fieldValue = ChoConvert.ConvertFrom(fieldConfig.DefaultValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+            else
+                fieldValue = ChoConvert.ConvertFrom(fieldConfig.DefaultValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), null, culture);
+
+            ChoType.SetPropertyValue(rec, fieldConfig.PI, fieldValue);
+            return true;
         }
 
         public static bool SetFallbackValue(this IDictionary<string, object> dict, string fn, ChoRecordFieldConfiguration fieldConfig, CultureInfo culture, ref object fallbackValue)
@@ -225,90 +93,141 @@ namespace ChoETL
             return fieldConfig.IsFallbackValueSpecified;
         }
 
+        public static bool SetDefaultValue(this IDictionary<string, object> dict, string fn, ChoRecordFieldConfiguration fieldConfig, CultureInfo culture)
+        {
+            object fieldValue = null;
+            //Set default value to member
+            if (fieldConfig.IsDefaultValueSpecified)
+            {
+                if (fieldConfig.Converters.IsNullOrEmpty())
+                    fieldValue = ChoConvert.ConvertFrom(fieldConfig.DefaultValue, fieldConfig.FieldType, null, ChoTypeDescriptor.GetTypeConvertersForType(fieldConfig.FieldType), null, culture);
+                else
+                    fieldValue = ChoConvert.ConvertFrom(fieldConfig.DefaultValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), null, culture);
+
+                dict.AddOrUpdate(fn, fieldValue);
+            }
+
+            return fieldConfig.IsDefaultValueSpecified;
+        }
+
+        public static void DoObjectLevelValidation(this object recObject, ChoRecordConfiguration configuration, IEnumerable<ChoRecordFieldConfiguration> fieldConfigurations)
+        {
+            if ((configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
+            {
+                if (configuration.HasConfigValidators)
+                {
+                    IDictionary<string, Object> dict = null;
+                    if (recObject is ExpandoObject)
+                        dict = recObject as IDictionary<string, Object>;
+                    else
+                    {
+                        dict = new Dictionary<string, object>();
+
+                        foreach (var pd in configuration.PIDict.Values)
+                        {
+                            dict.Add(pd.Name, ChoType.GetPropertyValue(recObject, pd));
+                        }
+                    }
+
+                    ChoValidator.Validate(dict, configuration.ValDict);
+                }
+                else
+                {
+                    if (!configuration.IsDynamicObject)
+                        ChoValidator.Validate(recObject);
+                }
+            }
+        }
+
+        public static void DoMemberLevelValidation(this IDictionary<string, object> dict, string fn, ChoRecordFieldConfiguration fieldConfig, ChoObjectValidationMode vm)
+        {
+            if (!fieldConfig.Validators.IsNullOrEmpty() && (vm & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
+                ChoValidator.ValidateFor(dict[fn], fn, fieldConfig.Validators);
+        }
+
+        public static void DoMemberLevelValidation(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, ChoObjectValidationMode vm)
+        {
+            if (!((vm & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel))
+                return;
+
+            if (rec is ExpandoObject)
+            {
+                ((IDictionary<string, object>)rec).DoMemberLevelValidation(fn, fieldConfig, vm);
+            }
+            else
+            {
+                if (fieldConfig.Validators.IsNullOrEmpty())
+                    ChoValidator.ValidateFor(rec, fieldConfig.PI);
+                else
+                    ChoValidator.ValidateFor(ChoType.GetPropertyValue(rec, fieldConfig.PI), fn, fieldConfig.Validators);
+            }
+        }
+
+        public static void DoMemberLevelValidation(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, ChoObjectValidationMode vm, object fieldValue)
+        {
+            if ((vm & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
+            {
+                if (fieldConfig.Validators.IsNullOrEmpty())
+                {
+                    ChoValidator.ValidateFor(fieldValue, fn, fieldConfig.Validators);
+                }
+            }
+        }
+
+        //*****
+        public static bool GetDefaultValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, CultureInfo culture, ref object fieldValue)
+        {
+            if (!fieldConfig.IsDefaultValueSpecified)
+                return false;
+
+            if (fieldConfig.Converters.IsNullOrEmpty())
+                fieldValue = ChoConvert.ConvertTo(fieldConfig.DefaultValue, fieldConfig.FieldType, null, ChoTypeDescriptor.GetTypeConvertersForType(fieldConfig.FieldType), null, culture);
+            else
+                fieldValue = ChoConvert.ConvertTo(fieldConfig.DefaultValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), null, culture);
+
+            return true;
+        }
+
         public static bool GetFallbackValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, CultureInfo culture, ref object fieldValue)
         {
-            if (rec is ExpandoObject)
-            {
-                return ((IDictionary<string, object>)rec).GetFallbackValue(fn, fieldConfig, culture, ref fieldValue);
-            }
+            if (!fieldConfig.IsFallbackValueSpecified)
+                return false;
 
-            //Set Fallback value to member
-            bool FallbackValueExists = true;
-            object FallbackValue = null;
-            if (fieldConfig.IsFallbackValueSpecified)
-                FallbackValue = fieldConfig.FallbackValue;
-            else if (ChoType.HasFallbackValue(ChoTypeDescriptor.GetProperty(rec.GetType(), fn)))
-                FallbackValue = ChoType.GetRawFallbackValue(ChoTypeDescriptor.GetProperty(rec.GetType(), fn));
+            if (fieldConfig.Converters.IsNullOrEmpty())
+                fieldValue = ChoConvert.ConvertTo(fieldConfig.FallbackValue, fieldConfig.FieldType, null, ChoTypeDescriptor.GetTypeConvertersForType(fieldConfig.FieldType), null, culture);
             else
-                FallbackValueExists = false;
+                fieldValue = ChoConvert.ConvertTo(fieldConfig.FallbackValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), null, culture);
 
-            if (FallbackValueExists)
-            {
-                if (fieldConfig.Converters.IsNullOrEmpty())
-                    fieldValue = ChoConvert.ConvertTo(FallbackValue, ChoType.GetMemberInfo(rec.GetType(), fn), null, culture);
-                else
-                    fieldValue = ChoConvert.ConvertTo(FallbackValue, ChoType.GetMemberType(rec.GetType(), fn), null, fieldConfig.Converters.ToArray(), null, culture);
-            }
-
-            return FallbackValueExists;
+            return true;
         }
 
-        public static bool GetFallbackValue(this IDictionary<string, object> dict, string fn, ChoRecordFieldConfiguration fieldConfig, CultureInfo culture, ref object fieldValue)
-        {
-            //Set Fallback value to member
-            if (fieldConfig.IsFallbackValueSpecified)
-            {
-                if (fieldConfig.Converters.IsNullOrEmpty())
-                    fieldValue = ChoConvert.ConvertFrom(fieldConfig.FallbackValue, fieldConfig.FieldType, null, ChoTypeDescriptor.GetTypeConvertersForType(fieldConfig.FieldType), null, culture);
-                else
-                    fieldValue = ChoConvert.ConvertFrom(fieldConfig.FallbackValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), null, culture);
-            }
-
-            return fieldConfig.IsFallbackValueSpecified;
-        }
-
-        public static void ConvertNSetMemberValue(this IDictionary<string, object> dict, string fn, ChoRecordFieldConfiguration fieldConfig, ref object fieldValue, CultureInfo culture)
+        public static void GetNConvertMemberValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, CultureInfo culture, ref object fieldValue)
         {
             if (fieldConfig.Converters.IsNullOrEmpty())
-                fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, null, ChoTypeDescriptor.GetTypeConvertersForType(fieldConfig.FieldType), null, culture);
+                fieldValue = ChoConvert.ConvertTo(fieldValue, fieldConfig.FieldType, null, ChoTypeDescriptor.GetTypeConvertersForType(fieldConfig.FieldType), null, culture);
             else
-                fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), null, culture);
-
-            dict.AddOrUpdate(fn, fieldValue);
+                fieldValue = ChoConvert.ConvertTo(fieldValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), null, culture);
         }
 
-        public static void ConvertNSetMemberValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, ref object fieldValue, CultureInfo culture)
-        {
-            if (fieldConfig.Converters.IsNullOrEmpty())
-            {
-                ChoType.ConvertNSetMemberValue(rec, fn, fieldValue, culture);
-                fieldValue = ChoType.GetMemberValue(rec, fn);
-            }
-            else
-            {
-                fieldValue = ChoConvert.ConvertFrom(fieldValue, ChoType.GetMemberType(rec.GetType(), fn), null, fieldConfig.Converters.ToArray(), null, culture);
-                ChoType.SetMemberValue(rec, fn, fieldValue);
-            }
-        }
+        //public static void DoObjectLevelValidatation(this object record, ChoRecordConfiguration rc,  ChoRecordFieldConfiguration[] fieldConfigs)
+        //{
+        //    if (rc.HasConfigValidators)
+        //    {
+        //        Dictionary<string, ValidationAttribute[]> valDict = rc.ValDict;
+        //        IDictionary<string, Object> dict = null;
+        //        if (record is ExpandoObject)
+        //            dict = record as IDictionary<string, Object>;
+        //        else
+        //            dict = record.ToDictionary();
 
-        public static object GetNConvertMemberValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, CultureInfo culture, object fieldValue)
-        {
-            if (rec is ExpandoObject)
-            {
-                if (fieldConfig.Converters.IsNullOrEmpty())
-                    fieldValue = ChoConvert.ConvertTo(fieldValue, typeof(string), culture);
-                else
-                    fieldValue = ChoConvert.ConvertTo(fieldValue, typeof(string), null, fieldConfig.Converters.ToArray(), null, culture);
-            }
-            else
-            {
-                if (fieldConfig.Converters.IsNullOrEmpty())
-                    fieldValue = ChoConvert.ConvertTo(fieldValue, ChoType.GetMemberInfo(rec.GetType(), fn), typeof(string), null, culture);
-                else
-                    fieldValue = ChoConvert.ConvertTo(fieldValue, typeof(string), null, fieldConfig.Converters.ToArray(), null, culture);
-            }
+        //        ChoValidator.Validate(dict, valDict);
+        //    }
+        //    else
+        //    {
+        //        if (!(record is ExpandoObject))
+        //            ChoValidator.Validate(record);
+        //    }
+        //}
 
-            return fieldValue;
-        }
     }
 }

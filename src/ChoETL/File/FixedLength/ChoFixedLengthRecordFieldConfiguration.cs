@@ -52,15 +52,17 @@ namespace ChoETL
                     if (config.EOLDelimiter.Contains(FillChar.Value))
                         throw new ChoRecordConfigurationException("FillChar [{0}] can't be one EOLDelimiter characters [{1}]".FormatString(FillChar, config.EOLDelimiter));
                 }
-                if ((from comm in config.Comments
-                     where comm.Contains(FillChar.ToNString(' '))
-                     select comm).Any())
-                    throw new ChoRecordConfigurationException("One of the Comments contains FillChar. Not allowed.");
-                if ((from comm in config.Comments
-                     where comm.Contains(config.EOLDelimiter)
-                     select comm).Any())
-                    throw new ChoRecordConfigurationException("One of the Comments contains EOLDelimiter. Not allowed.");
-
+                if (config.Comments != null)
+                {
+                    if ((from comm in config.Comments
+                         where comm.Contains(FillChar.ToNString(' '))
+                         select comm).Any())
+                        throw new ChoRecordConfigurationException("One of the Comments contains FillChar. Not allowed.");
+                    if ((from comm in config.Comments
+                         where comm.Contains(config.EOLDelimiter)
+                         select comm).Any())
+                        throw new ChoRecordConfigurationException("One of the Comments contains EOLDelimiter. Not allowed.");
+                }
                 if (Size != null && Size.Value <= 0)
                     throw new ChoRecordConfigurationException("Size must be > 0.");
                 if (ErrorMode == null)

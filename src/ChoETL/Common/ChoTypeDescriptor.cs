@@ -39,7 +39,16 @@
         {
             ChoGuard.ArgumentNotNull(type, "Type");
 
-            return TypeDescriptor.GetProperties(type).AsTypedEnumerable<PropertyDescriptor>();
+            return _pdDict[type];
+        }
+
+        private static readonly Dictionary<Type, PropertyDescriptor[]> _pdDict = new Dictionary<Type, PropertyDescriptor[]>();
+        private static void Init(Type type)
+        {
+            if (!_pdDict.ContainsKey(type))
+            {
+                _pdDict.Add(type, TypeDescriptor.GetProperties(type).AsTypedEnumerable<PropertyDescriptor>().ToArray());
+            }
         }
 
         public static IEnumerable<PropertyDescriptor> GetProperties<T>(Type type)
@@ -47,14 +56,21 @@
         {
             ChoGuard.ArgumentNotNull(type, "Type");
 
-            return TypeDescriptor.GetProperties(type).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<T>().Any());
+            Init(type);
+
+            return _pdDict[type].Where(pd => pd.Attributes.OfType<T>().Any());
+
+            //return _pdDict[type].Where(pd => pd.Attributes.OfType<T>().Any());
         }
 
         public static IEnumerable<PropertyDescriptor> GetProperties(Type type)
         {
             ChoGuard.ArgumentNotNull(type, "Type");
+            Init(type);
 
-            return TypeDescriptor.GetProperties(type).AsTypedEnumerable<PropertyDescriptor>();
+            return _pdDict[type];
+
+            //return _pdDict[type];
         }
 
         public static PropertyDescriptor GetProperty<T>(Type type, string propName)
@@ -62,18 +78,25 @@
         {
             ChoGuard.ArgumentNotNull(type, "Type");
             ChoGuard.ArgumentNotNullOrEmpty(propName, "PropName");
+            Init(type);
 
-            return TypeDescriptor.GetProperties(type).AsTypedEnumerable<PropertyDescriptor>().Where(pd =>
+            return _pdDict[type].Where(pd =>
                 pd.Name == propName && pd.Attributes.OfType<T>().Any()).FirstOrDefault();
+
+            //return _pdDict[type].Where(pd =>
+            //    pd.Name == propName && pd.Attributes.OfType<T>().Any()).FirstOrDefault();
         }
 
         public static PropertyDescriptor GetProperty(Type type, string propName)
         {
             ChoGuard.ArgumentNotNull(type, "Type");
             ChoGuard.ArgumentNotNullOrEmpty(propName, "PropName");
+            Init(type);
 
-            return TypeDescriptor.GetProperties(type).AsTypedEnumerable<PropertyDescriptor>().Where(pd =>
-                pd.Name == propName).FirstOrDefault();
+            return _pdDict[type].Where(pd =>
+               pd.Name == propName).FirstOrDefault();
+            //return _pdDict[type].Where(pd =>
+            //    pd.Name == propName).FirstOrDefault();
         }
 
         public static T GetPropetyAttribute<T>(PropertyDescriptor pd)
@@ -99,8 +122,9 @@
         {
             ChoGuard.ArgumentNotNull(type, "Type");
             ChoGuard.ArgumentNotNullOrEmpty(propName, "PropName");
+            Init(type);
 
-            PropertyDescriptor pd = TypeDescriptor.GetProperties(type).AsTypedEnumerable<PropertyDescriptor>().Where(pd1 => 
+            PropertyDescriptor pd = _pdDict[type].Where(pd1 => 
                 pd1.Name == propName && pd1.Attributes.OfType<T>().Any()).FirstOrDefault();
             if (pd == null)
                 return null;
@@ -113,8 +137,9 @@
         {
             ChoGuard.ArgumentNotNull(type, "Type");
             ChoGuard.ArgumentNotNullOrEmpty(propName, "PropName");
+            Init(type);
 
-            PropertyDescriptor pd = TypeDescriptor.GetProperties(type).AsTypedEnumerable<PropertyDescriptor>().Where(pd1 =>
+            PropertyDescriptor pd = _pdDict[type].Where(pd1 =>
                 pd1.Name == propName && pd1.Attributes.OfType<T>().Any()).FirstOrDefault();
             if (pd == null)
                 return Enumerable.Empty<T>();
@@ -188,16 +213,16 @@
             if (memberInfo == null)
                 return null;
 
-            Type memberType;
-            if (!ChoType.TryGetMemberType(memberInfo, out memberType) || (memberType == null /*|| memberType.IsSimple() */))
-                return null;
-
-            if (_typeMemberTypeConverterCache.ContainsKey(memberInfo))
+            object[] tcs = null;
+            if (_typeMemberTypeConverterCache.TryGetValue(memberInfo, out tcs))
             {
-                if (_typeMemberTypeConverterCache[memberInfo] == EmptyTypeConverters)
+                if (tcs == EmptyTypeConverters)
                 {
-                    if (_typeTypeConverterCache.ContainsKey(memberType))
-                        return _typeTypeConverterCache[memberType];
+                    Type memberType;
+                    if (!ChoType.TryGetMemberType(memberInfo, out memberType) || (memberType == null /*|| memberType.IsSimple() */))
+                        return null;
+                    _typeTypeConverterCache.TryGetValue(memberType, out tcs);
+                    return tcs;
                 }
 
                 return _typeMemberTypeConverterCache[memberInfo];

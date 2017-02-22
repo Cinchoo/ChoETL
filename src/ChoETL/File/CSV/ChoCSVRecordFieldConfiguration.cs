@@ -51,18 +51,21 @@ namespace ChoETL
                     if (config.EOLDelimiter.Contains(FillChar.Value))
                         throw new ChoRecordConfigurationException("FillChar [{0}] can't be one of EOLDelimiter characters [{1}]".FormatString(FillChar, config.EOLDelimiter));
                 }
-                if ((from comm in config.Comments
-                     where comm.Contains(FillChar.ToNString(' '))
-                     select comm).Any())
-                    throw new ChoRecordConfigurationException("One of the Comments contains FillChar. Not allowed.");
-                if ((from comm in config.Comments
-                     where comm.Contains(config.Delimiter)
-                     select comm).Any())
-                    throw new ChoRecordConfigurationException("One of the Comments contains Delimiter. Not allowed.");
-                if ((from comm in config.Comments
-                     where comm.Contains(config.EOLDelimiter)
-                     select comm).Any())
-                    throw new ChoRecordConfigurationException("One of the Comments contains EOLDelimiter. Not allowed.");
+                if (config.Comments != null)
+                {
+                    if ((from comm in config.Comments
+                         where comm.Contains(FillChar.ToNString(' '))
+                         select comm).Any())
+                        throw new ChoRecordConfigurationException("One of the Comments contains FillChar. Not allowed.");
+                    if ((from comm in config.Comments
+                         where comm.Contains(config.Delimiter)
+                         select comm).Any())
+                        throw new ChoRecordConfigurationException("One of the Comments contains Delimiter. Not allowed.");
+                    if ((from comm in config.Comments
+                         where comm.Contains(config.EOLDelimiter)
+                         select comm).Any())
+                        throw new ChoRecordConfigurationException("One of the Comments contains EOLDelimiter. Not allowed.");
+                }
 
                 if (Size != null && Size.Value <= 0)
                     throw new ChoRecordConfigurationException("Size must be > 0.");
@@ -81,14 +84,18 @@ namespace ChoETL
 
         internal bool IgnoreFieldValue(object fieldValue)
         {
-            if ((IgnoreFieldValueMode & ChoIgnoreFieldValueMode.Null) == ChoIgnoreFieldValueMode.Null && fieldValue == null)
-                return true;
-            else if ((IgnoreFieldValueMode & ChoIgnoreFieldValueMode.DBNull) == ChoIgnoreFieldValueMode.DBNull && fieldValue == DBNull.Value)
-                return true;
-            else if ((IgnoreFieldValueMode & ChoIgnoreFieldValueMode.Empty) == ChoIgnoreFieldValueMode.Empty && fieldValue is string && ((string)fieldValue).IsEmpty())
-                return true;
-            else if ((IgnoreFieldValueMode & ChoIgnoreFieldValueMode.WhiteSpace) == ChoIgnoreFieldValueMode.WhiteSpace && fieldValue is string && ((string)fieldValue).IsNullOrWhiteSpace())
-                return true;
+            if (fieldValue == null)
+                return (IgnoreFieldValueMode & ChoIgnoreFieldValueMode.Null) == ChoIgnoreFieldValueMode.Null;
+            else if (fieldValue == DBNull.Value)
+                return (IgnoreFieldValueMode & ChoIgnoreFieldValueMode.DBNull) == ChoIgnoreFieldValueMode.DBNull;
+            else if (fieldValue is string)
+            {
+                string strValue = fieldValue as string;
+                if (String.IsNullOrEmpty(strValue))
+                    return (IgnoreFieldValueMode & ChoIgnoreFieldValueMode.Empty) == ChoIgnoreFieldValueMode.Empty;
+                else if (String.IsNullOrWhiteSpace(strValue))
+                    return (IgnoreFieldValueMode & ChoIgnoreFieldValueMode.WhiteSpace) == ChoIgnoreFieldValueMode.WhiteSpace;
+            }
 
             return false;
         }

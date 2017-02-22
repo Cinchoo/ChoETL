@@ -17,7 +17,7 @@ namespace ChoETL
 
         public ChoObjectAttribute()
         {
-            ObjectValidationMode = ChoObjectValidationMode.MemberLevel;
+            ObjectValidationMode = ChoObjectValidationMode.Off;
         }
     }
 }

@@ -36,7 +36,7 @@ namespace ChoETL
 
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
         {
-            return AsEnumerable(source, ChoETLFramework.TraceSwitch, filterFunc);
+            return AsEnumerable(source, TraceSwitch, filterFunc);
         }
 
         private IEnumerable<object> AsEnumerable(object source, TraceSwitch traceSwitch, Func<object, bool?> filterFunc = null)
@@ -55,14 +55,15 @@ namespace ChoETL
                 yield break;
 
             string[] commentTokens = Configuration.Comments;
+            bool? skip = false;
             bool _headerFound = false;
             using (ChoPeekEnumerator<Tuple<int, string>> e = new ChoPeekEnumerator<Tuple<int, string>>(
-                new ChoIndexedEnumerator<string>(sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar)).ToEnumerable(),
+                new ChoIndexedEnumerator<string>(sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, Configuration.MayContainEOLInData)).ToEnumerable(),
                 (pair) =>
                 {
                     //bool isStateAvail = IsStateAvail();
 
-                    bool? skip = false;
+                    skip = false;
 
                     //if (isStateAvail)
                     //{
@@ -79,15 +80,16 @@ namespace ChoETL
                     if (skip == null)
                         return null;
 
-                    //if (!(sr.BaseStream is MemoryStream))
-                    //{
+
+                    if (TraceSwitch.TraceVerbose)
+                    {
                         ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, Environment.NewLine);
 
                         if (!skip.Value)
                             ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Loading line [{0}]...".FormatString(pair.Item1));
                         else
                             ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Skipping line [{0}]...".FormatString(pair.Item1));
-                    //}
+                    }
 
                     if (skip.Value)
                         return skip;
@@ -101,25 +103,25 @@ namespace ChoETL
                     if (pair.Item2.IsNullOrWhiteSpace())
                     {
                         if (!Configuration.IgnoreEmptyLine)
-                            throw new ChoParserException("Empty line found at {0} location.".FormatString(e.Peek.Item1));
+                            throw new ChoParserException("Empty line found at {0} location.".FormatString(pair.Item1));
                         else
                         {
-                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Empty line found at [{0}]...".FormatString(pair.Item1));
+                            if (TraceSwitch.TraceVerbose)
+                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring empty line found at [{0}].".FormatString(pair.Item1));
                             return true;
                         }
                     }
 
-                    if (commentTokens == null)
-                        return false;
-                    else
+                    if (commentTokens != null && commentTokens.Length > 0)
                     {
-                        var x = (from comment in commentTokens
-                                 where !pair.Item2.IsNull() && pair.Item2.StartsWith(comment, true, Configuration.Culture)
-                                 select comment).FirstOrDefault();
-                        if (x != null)
+                        foreach (string comment in commentTokens)
                         {
-                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Comment line found at [{0}]...".FormatString(pair.Item1));
-                            return true;
+                            if (!pair.Item2.IsNull() && pair.Item2.StartsWith(comment, StringComparison.Ordinal)) //, true, Configuration.Culture))
+                            {
+                                if (TraceSwitch.TraceVerbose)
+                                    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Comment line found at [{0}]...".FormatString(pair.Item1));
+                                return true;
+                            }
                         }
                     }
 
@@ -133,6 +135,7 @@ namespace ChoETL
                     if (Configuration.FileHeaderConfiguration.HasHeaderRecord
                         && !_headerFound)
                     {
+                        if (TraceSwitch.TraceVerbose)
                         ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring header line at [{0}]...".FormatString(pair.Item1));
                         _headerFound = true;
                         return true;
@@ -159,7 +162,7 @@ namespace ChoETL
                             throw new ChoParserException($"No record type found for [{pair.Item1}] line to parse.");
                     }
 
-                    object rec = ChoActivator.CreateInstance(recType);
+                    object rec = Activator.CreateInstance(recType);
                     if (!LoadLine(pair, ref rec))
                         yield break;
 
@@ -171,10 +174,18 @@ namespace ChoETL
                         continue;
 
                     yield return rec;
+                    if (Configuration.NotifyAfter > 0 && pair.Item1 % Configuration.NotifyAfter == 0)
+                    {
+                        if (RaisedRowsLoaded(pair.Item1))
+                        {
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Abort requested.");
+                            yield break;
+                        }
+                    }
                 }
             }
         }
-
+        
         private ChoFileRecordConfiguration GetConfiguration(Type recordType)
         {
             ChoFileRecordConfiguration config = Configuration[recordType];
@@ -229,10 +240,10 @@ namespace ChoETL
                 if (!RaiseAfterRecordLoad(rec, pair))
                     return false;
             }
-            catch (ChoParserException pEx)
-            {
-                throw new ChoParserException($"Failed to parse line to '{recType}' object.", pEx);
-            }
+            //catch (ChoParserException pEx)
+            //{
+            //    throw new ChoParserException($"Failed to parse line to '{recType}' object.", pEx);
+            //}
             catch (ChoMissingRecordFieldException mEx)
             {
                 throw new ChoParserException($"Failed to parse line to '{recType}' object.", mEx);
@@ -315,8 +326,8 @@ namespace ChoETL
 
         private bool RaiseRecordFieldLoadError(object target, int index, string propName, object value, Exception ex)
         {
-            if (Configuration.NotifyRecordReadObject == null) return false;
-            return ChoFuncEx.RunWithIgnoreError(() => Configuration.NotifyRecordReadObject.RecordFieldLoadError(target, index, propName, value, ex), false);
+            if (Configuration.NotifyRecordReadObject == null) return true;
+            return ChoFuncEx.RunWithIgnoreError(() => Configuration.NotifyRecordReadObject.RecordFieldLoadError(target, index, propName, value, ex), true);
         }
     }
 }

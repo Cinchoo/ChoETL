@@ -48,7 +48,12 @@ namespace ChoETL
             }
         }
 
-        public ChoXmlRecordConfiguration(Type recordType = null) : base(recordType)
+        public ChoXmlRecordConfiguration() : this(null)
+        {
+
+        }
+
+        internal ChoXmlRecordConfiguration(Type recordType) : base(recordType)
         {
             XmlRecordFieldConfigurations = new List<ChoXmlRecordFieldConfiguration>();
 
