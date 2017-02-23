@@ -187,28 +187,28 @@ namespace ChoETL
                 }
                 else
                 {
-                    fXElements = ((IEnumerable)node.XPathEvaluate(fieldConfig.XPath, Configuration.NamespaceManager)).OfType<XElement>().ToArray();
-                    if (fXElements != null)
-                    {
-                        if (fieldConfig.IsCollection)
-                        {
-                            List<string> list = new List<string>();
-                            foreach (var ele in fXElements)
-                                list.Add(ele.Value);
-                            fieldValue = list.ToArray();
-                        }
-                        else
-                        {
-                            XElement fXElement = fXElements.FirstOrDefault();
-                            if (fXElement != null)
-                                fieldValue = fXElement.Value;
-                        }
-                    }
+                    XAttribute fXAttribute = ((IEnumerable)node.XPathEvaluate(fieldConfig.XPath, Configuration.NamespaceManager)).OfType<XAttribute>().FirstOrDefault();
+                    if (fXAttribute != null)
+                        fieldValue = fXAttribute.Value;
                     else
                     {
-                        XAttribute fXAttribute = ((IEnumerable)node.XPathEvaluate(fieldConfig.XPath, Configuration.NamespaceManager)).OfType<XAttribute>().FirstOrDefault();
-                        if (fXAttribute != null)
-                            fieldValue = fXAttribute.Value;
+                        fXElements = ((IEnumerable)node.XPathEvaluate(fieldConfig.XPath, Configuration.NamespaceManager)).OfType<XElement>().ToArray();
+                        if (fXElements != null)
+                        {
+                            if (fieldConfig.IsCollection)
+                            {
+                                List<string> list = new List<string>();
+                                foreach (var ele in fXElements)
+                                    list.Add(ele.Value);
+                                fieldValue = list.ToArray();
+                            }
+                            else
+                            {
+                                XElement fXElement = fXElements.FirstOrDefault();
+                                if (fXElement != null)
+                                    fieldValue = fXElement.Value;
+                            }
+                        }
                         else if (Configuration.ColumnCountStrict)
                             throw new ChoParserException("Missing '{0}' xml node.".FormatString(fieldConfig.FieldName));
                     }

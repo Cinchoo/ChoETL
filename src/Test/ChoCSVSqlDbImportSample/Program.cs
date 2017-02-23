@@ -22,7 +22,7 @@ namespace ChoCSVSqlDbImportSample
             //LoadDataFile();
         }
 
-        public class Series //: IChoValidatable
+        public class Series
         {
             [DefaultValue("XX")]
             public string Series_reference { get; set; }
@@ -39,24 +39,6 @@ namespace ChoCSVSqlDbImportSample
             public string Series_title_3 { get; set; }
             public string Series_title_4 { get; set; }
             public string Series_title_5 { get; set; }
-
-            public void Validate(object target)
-            {
-            }
-
-            public bool TryValidate(object target, ICollection<ValidationResult> validationResults)
-            {
-                return true;
-            }
-
-            public void ValidateFor(object target, string memberName)
-            {
-            }
-
-            public bool TryValidateFor(object target, string memberName, ICollection<ValidationResult> validationResults)
-            {
-                return true;
-            }
         }
 
         static void BcpDataFile()
@@ -70,44 +52,43 @@ namespace ChoCSVSqlDbImportSample
             DateTime st = DateTime.Now;
             Console.WriteLine("Starting..." + st);
 
-            //using (var dr = new ChoCSVReader<Series>(@"C:\Users\raj\Desktop\Building consents by territorial authority and selected wards (Monthly).csv").NotifyAfter(10000).WithFirstLineHeader())
-            //{
-            //    dr.Configuration.ObjectValidationMode = ChoObjectValidationMode.ObjectLevel;
-            //    dr.RowsLoaded += delegate (object sender, ChoRowsLoadedEventArgs e)
-            //    {
-            //        Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " rows loaded.");
-            //    };
+            using (var dr = new ChoCSVReader<Series>(@"C:\temp\Building consents by territorial authority and selected wards (Monthly).csv").NotifyAfter(10000).WithFirstLineHeader())
+            {
+                dr.RowsLoaded += delegate (object sender, ChoRowsLoadedEventArgs e)
+                {
+                    Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " rows loaded.");
+                };
+                dr.Loop();
+                //foreach (var item in dr.Take(100))
+                //{
+                //    Console.WriteLine(item.ToStringEx());
+                //}
+            }
 
-            //    foreach (var item in dr.Take(100))
+            //using (SqlBulkCopy bcp = new SqlBulkCopy(connectionstring))
+            //{
+            //    using (var r = new ChoCSVReader<Series>(@"C:\Users\raj\Desktop\Building consents by territorial authority and selected wards (Monthly).csv").WithFirstLineHeader().NotifyAfter(10000))
             //    {
-            //        Console.WriteLine(item.ToStringEx());
+            //        r.RowsLoaded += delegate (object sender, ChoRowsLoadedEventArgs e)
+            //        {
+            //            Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " rows loaded.");
+            //        };
+            //        using (var dr = r.AsDataReader())
+            //        {
+            //            bcp.DestinationTableName = "dbo.Series";
+            //            bcp.EnableStreaming = true;
+
+            //            bcp.BatchSize = 10000;
+            //            bcp.BulkCopyTimeout = 0;
+            //            //bcp.NotifyAfter = 10000;
+            //            //bcp.SqlRowsCopied += delegate (object sender, SqlRowsCopiedEventArgs e)
+            //            //{
+            //            //    Console.WriteLine(e.RowsCopied.ToString("#,##0") + " rows copied.");
+            //            //};
+            //            bcp.WriteToServer(dr);
+            //        }
             //    }
             //}
-
-            using (SqlBulkCopy bcp = new SqlBulkCopy(connectionstring))
-            {
-                using (var r = new ChoCSVReader<Series>(@"C:\Users\raj\Desktop\Building consents by territorial authority and selected wards (Monthly).csv").WithFirstLineHeader().NotifyAfter(10000))
-                {
-                    r.RowsLoaded += delegate (object sender, ChoRowsLoadedEventArgs e)
-                    {
-                        Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " rows loaded.");
-                    };
-                    using (var dr = r.AsDataReader())
-                    {
-                        bcp.DestinationTableName = "dbo.Series";
-                        bcp.EnableStreaming = true;
-
-                        bcp.BatchSize = 10000;
-                        bcp.BulkCopyTimeout = 0;
-                        //bcp.NotifyAfter = 10000;
-                        //bcp.SqlRowsCopied += delegate (object sender, SqlRowsCopiedEventArgs e)
-                        //{
-                        //    Console.WriteLine(e.RowsCopied.ToString("#,##0") + " rows copied.");
-                        //};
-                        bcp.WriteToServer(dr);
-                    }
-                }
-            }
             Console.WriteLine("Completed."+ (DateTime.Now - st));
             Console.ReadLine();
         }

@@ -216,6 +216,8 @@ namespace ChoETL
             if (XmlRecordFieldConfigurations.Count <= 0)
                 throw new ChoRecordConfigurationException("No record fields specified.");
 
+            LoadNCacheMembers(XmlRecordFieldConfigurations);
+
             //Validate each record field
             //foreach (var fieldConfig in XmlRecordFieldConfigurations)
             //    fieldConfig.Validate(this);
