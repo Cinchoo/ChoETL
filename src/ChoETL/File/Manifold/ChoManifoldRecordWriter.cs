@@ -141,10 +141,10 @@ namespace ChoETL
                                 else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
                                 {
                                     if (!RaiseRecordWriteError(record, _index, recText, ex))
-                                        throw new ChoParserException($"Failed to write line for '{recType}' object.", ex);
+                                        throw new ChoWriterException($"Failed to write line for '{recType}' object.", ex);
                                 }
                                 else
-                                    throw new ChoParserException($"Failed to write line for '{recType}' object.", ex);
+                                    throw new ChoWriterException($"Failed to write line for '{recType}' object.", ex);
                             }
                         }
                     }

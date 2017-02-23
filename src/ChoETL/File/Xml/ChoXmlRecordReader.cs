@@ -119,10 +119,10 @@ namespace ChoETL
                 if (!RaiseAfterRecordLoad(rec, pair))
                     return false;
             }
-            //catch (ChoParserException)
-            //{
-            //    throw;
-            //}
+            catch (ChoParserException)
+            {
+                throw;
+            }
             catch (ChoMissingRecordFieldException)
             {
                 throw;
@@ -264,10 +264,10 @@ namespace ChoETL
                     if (!RaiseAfterRecordFieldLoad(rec, pair.Item1, kvp.Key, fieldValue))
                         return false;
                 }
-                //catch (ChoParserException)
-                //{
-                //    throw;
-                //}
+                catch (ChoParserException)
+                {
+                    throw;
+                }
                 catch (ChoMissingRecordFieldException)
                 {
                     if (Configuration.ThrowAndStopOnMissingField)
@@ -291,7 +291,7 @@ namespace ChoETL
                             else if (dict.SetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture))
                                 dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
                             else
-                                throw new ChoParserException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
+                                throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                         }
                         else if (pi != null)
                         {
@@ -300,10 +300,10 @@ namespace ChoETL
                             else if (rec.SetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture))
                                 rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
                             else
-                                throw new ChoParserException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
+                                throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                         }
                         else
-                            throw new ChoParserException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
+                            throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                     }
                     catch (Exception innerEx)
                     {
@@ -316,12 +316,12 @@ namespace ChoETL
                             else
                             {
                                 if (!RaiseRecordFieldLoadError(rec, pair.Item1, kvp.Key, fieldValue, ex))
-                                    throw new ChoParserException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
+                                    throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                             }
                         }
                         else
                         {
-                            throw new ChoParserException("Failed to assign '{0}' fallback value to '{1}' field.".FormatString(fieldValue, fieldConfig.FieldName), innerEx);
+                            throw new ChoReaderException("Failed to assign '{0}' fallback value to '{1}' field.".FormatString(fieldValue, fieldConfig.FieldName), innerEx);
                         }
                     }
                 }

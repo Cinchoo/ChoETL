@@ -227,10 +227,10 @@ namespace ChoETL
                 if (!RaiseAfterRecordLoad(rec, pair))
                     return false;
             }
-            //catch (ChoParserException)
-            //{
-            //    throw;
-            //}
+            catch (ChoParserException)
+            {
+                throw;
+            }
             catch (ChoMissingRecordFieldException)
             {
                 throw;
@@ -402,7 +402,7 @@ namespace ChoETL
                             else if (dict.SetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture))
                                 dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
                             else
-                                throw new ChoParserException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
+                                throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                         }
                         else if (pi != null)
                         {
@@ -411,10 +411,10 @@ namespace ChoETL
                             else if (rec.SetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture))
                                 rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
                             else
-                                throw new ChoParserException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
+                                throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                         }
                         else
-                            throw new ChoParserException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
+                            throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                     }
                     catch (Exception innerEx)
                     {
@@ -427,12 +427,12 @@ namespace ChoETL
                             else
                             {
                                 if (!RaiseRecordFieldLoadError(rec, pair.Item1, kvp.Key, fieldValue, ex))
-                                    throw new ChoParserException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
+                                    throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                             }
                         }
                         else
                         {
-                            throw new ChoParserException("Failed to assign '{0}' fallback value to '{1}' field.".FormatString(fieldValue, fieldConfig.FieldName), innerEx);
+                            throw new ChoReaderException("Failed to assign '{0}' fallback value to '{1}' field.".FormatString(fieldValue, fieldConfig.FieldName), innerEx);
                         }
                     }
                 }
@@ -506,7 +506,7 @@ namespace ChoETL
             if (Configuration.ColumnCountStrict)
             {
                 if (fieldValues.Length != maxPos)
-                    throw new ApplicationException("Mismatched number of fields found at {0} line. [Expected: {1}, Found: {2}].".FormatString(
+                    throw new ChoReaderException("Mismatched number of fields found at {0} line. [Expected: {1}, Found: {2}].".FormatString(
                         lineNo, maxPos, fieldValues.Length));
             }
 
@@ -541,8 +541,17 @@ namespace ChoETL
         private string[] GetHeaders(string line)
         {
             if (Configuration.FileHeaderConfiguration.HasHeaderRecord)
-                return (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)
-                        select CleanHeaderValue(x)).ToArray();
+            {
+                string[] headers = null;
+                headers = (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)
+                           select CleanHeaderValue(x)).ToArray();
+
+                //Check for any empty column headers
+                if (headers.Where(h => h.IsNullOrEmpty()).Any())
+                    throw new ChoParserException("At least one of the field header is empty.");
+
+                return headers;
+            }
             else
             {
                 if (RecordType == typeof(ExpandoObject))

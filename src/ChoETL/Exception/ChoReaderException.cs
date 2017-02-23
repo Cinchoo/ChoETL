@@ -30,4 +30,28 @@ namespace ChoETL
         {
         }
     }
+
+    [Serializable]
+    public class ChoWriterException : ApplicationException
+    {
+        public ChoWriterException()
+            : base()
+        {
+        }
+
+        public ChoWriterException(string message)
+            : base(message)
+        {
+        }
+
+        public ChoWriterException(string message, Exception e)
+            : base(message, e)
+        {
+        }
+
+        protected ChoWriterException(SerializationInfo si, StreamingContext sc)
+            : base(si, sc)
+        {
+        }
+    }
 }

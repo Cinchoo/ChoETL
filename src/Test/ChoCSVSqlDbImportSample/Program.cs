@@ -52,7 +52,7 @@ namespace ChoCSVSqlDbImportSample
             DateTime st = DateTime.Now;
             Console.WriteLine("Starting..." + st);
 
-            using (var dr = new ChoCSVReader<Series>(@"C:\temp\Building consents by territorial authority and selected wards (Monthly).csv").NotifyAfter(10000).WithFirstLineHeader())
+            using (var dr = new ChoCSVReader(@"C:\Personal\LabCorpTest\bin\Debug\20170202_CUST_CIF.IN").NotifyAfter(10000))
             {
                 dr.RowsLoaded += delegate (object sender, ChoRowsLoadedEventArgs e)
                 {

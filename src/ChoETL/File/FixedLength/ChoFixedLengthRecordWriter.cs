@@ -123,10 +123,10 @@ namespace ChoETL
                                         yield break;
                                 }
                             }
-                            //catch (ChoParserException)
-                            //{
-                            //    throw;
-                            //}
+                            catch (ChoParserException)
+                            {
+                                throw;
+                            }
                             catch (Exception ex)
                             {
                                 ChoETLFramework.HandleException(ex);
@@ -236,10 +236,10 @@ namespace ChoETL
                     if (!RaiseAfterRecordFieldWrite(rec, index, kvp.Key, fieldValue))
                         return false;
                 }
-                //catch (ChoParserException)
-                //{
-                //    throw;
-                //}
+                catch (ChoParserException)
+                {
+                    throw;
+                }
                 catch (ChoMissingRecordFieldException)
                 {
                     if (Configuration.ThrowAndStopOnMissingField)
@@ -263,7 +263,7 @@ namespace ChoETL
                             else if (dict.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
                                 dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
                             else
-                                throw new ChoParserException($"Failed to write '{fieldValue}' value for '{fieldConfig.FieldName}' member.", ex);
+                                throw new ChoWriterException($"Failed to write '{fieldValue}' value for '{fieldConfig.FieldName}' member.", ex);
                         }
                         else if (pi != null)
                         {
@@ -272,10 +272,10 @@ namespace ChoETL
                             else if (rec.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
                                 rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
                             else
-                                throw new ChoParserException($"Failed to write '{fieldValue}' value for '{fieldConfig.FieldName}' member.", ex);
+                                throw new ChoWriterException($"Failed to write '{fieldValue}' value for '{fieldConfig.FieldName}' member.", ex);
                         }
                         else
-                            throw new ChoParserException($"Failed to write '{fieldValue}' value for '{fieldConfig.FieldName}' member.", ex);
+                            throw new ChoWriterException($"Failed to write '{fieldValue}' value for '{fieldConfig.FieldName}' member.", ex);
                     }
                     catch (Exception innerEx)
                     {
@@ -288,12 +288,12 @@ namespace ChoETL
                             else
                             {
                                 if (!RaiseRecordFieldWriteError(rec, index, kvp.Key, fieldText, ex))
-                                    throw new ChoParserException($"Failed to write '{fieldValue}' value of '{kvp.Key}' member.", ex);
+                                    throw new ChoWriterException($"Failed to write '{fieldValue}' value of '{kvp.Key}' member.", ex);
                             }
                         }
                         else
                         {
-                            throw new ChoParserException("Failed to use '{0}' fallback value for '{1}' member.".FormatString(fieldValue, kvp.Key), innerEx);
+                            throw new ChoWriterException("Failed to use '{0}' fallback value for '{1}' member.".FormatString(fieldValue, kvp.Key), innerEx);
                         }
                     }
                 }

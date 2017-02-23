@@ -240,10 +240,10 @@ namespace ChoETL
                 if (!RaiseAfterRecordLoad(rec, pair))
                     return false;
             }
-            //catch (ChoParserException pEx)
-            //{
-            //    throw new ChoParserException($"Failed to parse line to '{recType}' object.", pEx);
-            //}
+            catch (ChoParserException pEx)
+            {
+                throw new ChoParserException($"Failed to parse line to '{recType}' object.", pEx);
+            }
             catch (ChoMissingRecordFieldException mEx)
             {
                 throw new ChoParserException($"Failed to parse line to '{recType}' object.", mEx);
@@ -258,10 +258,10 @@ namespace ChoETL
                 else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
                 {
                     if (!RaiseRecordLoadError(rec, pair, ex))
-                        throw new ChoParserException($"Failed to parse line to '{recType}' object.", ex);
+                        throw new ChoReaderException($"Failed to parse line to '{recType}' object.", ex);
                 }
                 else
-                    throw new ChoParserException($"Failed to parse line to '{recType}' object.", ex);
+                    throw new ChoReaderException($"Failed to parse line to '{recType}' object.", ex);
 
                 return true;
             }
