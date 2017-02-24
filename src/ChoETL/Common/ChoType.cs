@@ -2310,7 +2310,7 @@
             }
             catch (Exception ex)
             {
-                Trace.WriteLine(ChoETLFramework.TraceSwitch.TraceError, ex.ToString());
+                ChoETLLog.Error(ex.ToString());
             }
         }
         #endregion GetTypes (By Attribute) Overloads

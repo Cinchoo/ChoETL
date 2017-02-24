@@ -32,10 +32,30 @@ namespace ChoETL
             set;
         }
 
+        public static void LogIf(bool condition, string msg)
+        {
+            if (!condition)
+                return;
+
+            if (msg == null)
+                msg = String.Empty;
+
+            Log(msg);
+        }
+
+        private static Action<string> _defaultLog = ((m) =>
+        {
+            Console.WriteLine(m);
+            Trace.WriteLine(m);
+        });
         public static Action<string> Log
         {
-            get;
-            set;
+            get { return _defaultLog; }
+            set
+            {
+                if (value != null)
+                    _defaultLog = value;
+            }
         }
 
         public static string ConfigDirectory

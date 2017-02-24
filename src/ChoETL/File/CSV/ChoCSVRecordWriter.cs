@@ -417,12 +417,24 @@ namespace ChoETL
                 }
                 else
                 {
+                    //******** ORDER IMPORTANT *********
+
+                    //Fields that contain double quote characters must be surounded by double-quotes, and the embedded double-quotes must each be represented by a pair of consecutive double quotes.
+                    if (fieldValue.IndexOf(@"""") >= 0)
+                    {
+                        fieldValue = "\"{0}\"".FormatString(fieldValue.Replace(@"""", @""""""));
+                    }
+
                     if (fieldValue.Contains(Configuration.Delimiter))
                     {
                         if (isHeader)
                             throw new ChoParserException("Field header '{0}' value contains delimiter character.".FormatString(fieldName));
                         else
-                            throw new ChoParserException("Field '{0}' value contains delimiter character.".FormatString(fieldName));
+                        {
+                            //Fields with embedded commas must be delimited with double-quote characters.
+                            fieldValue = "\"{0}\"".FormatString(fieldValue);
+                            //throw new ChoParserException("Field '{0}' value contains delimiter character.".FormatString(fieldName));
+                        }
                     }
 
                     if (fieldValue.Contains(Configuration.EOLDelimiter))
@@ -430,7 +442,17 @@ namespace ChoETL
                         if (isHeader)
                             throw new ChoParserException("Field header '{0}' value contains EOL delimiter character.".FormatString(fieldName));
                         else
-                            throw new ChoParserException("Field '{0}' value contains EOL delimiter character.".FormatString(fieldName));
+                        {
+                            //A field that contains embedded line-breaks must be surounded by double-quotes
+                            fieldValue = "\"{0}\"".FormatString(fieldValue);
+                            //throw new ChoParserException("Field '{0}' value contains EOL delimiter character.".FormatString(fieldName));
+                        }
+                    }
+
+                    //Fields with leading or trailing spaces must be delimited with double-quote characters.
+                    if (!fieldValue.IsNull() && !fieldValue.IsNullOrWhiteSpace() && (char.IsWhiteSpace(fieldValue[0]) || char.IsWhiteSpace(fieldValue[fieldValue.Length - 1])))
+                    {
+                        fieldValue = "\"{0}\"".FormatString(fieldValue);
                     }
                 }
             }
@@ -442,6 +464,12 @@ namespace ChoETL
                 }
                 else
                 {
+                    //Fields that contain double quote characters must be surounded by double-quotes, and the embedded double-quotes must each be represented by a pair of consecutive double quotes.
+                    if (fieldValue.IndexOf(@"""") >= 0)
+                    {
+                        fieldValue = "\"{0}\"".FormatString(fieldValue.Replace(@"""", @""""""));
+                    }
+
                     fieldValue = "\"{0}\"".FormatString(fieldValue);
                 }
             }

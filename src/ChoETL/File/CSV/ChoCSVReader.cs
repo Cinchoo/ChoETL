@@ -139,9 +139,9 @@ namespace ChoETL
         {
             EventHandler<ChoRowsLoadedEventArgs> rowsLoadedEvent = RowsLoaded;
             if (rowsLoadedEvent == null)
-                return;
-
-            rowsLoadedEvent(this, e);
+                Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " records loaded.");
+            else
+                rowsLoadedEvent(this, e);
         }
 
         #region Fluent API

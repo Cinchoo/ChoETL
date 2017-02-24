@@ -201,7 +201,8 @@ namespace ChoETL
                     if (!FillRecord(rec, pair))
                         return false;
 
-                    rec.DoObjectLevelValidation(Configuration, Configuration.FixedLengthRecordFieldConfigurations);
+                    if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
+                        rec.DoObjectLevelValidation(Configuration, Configuration.FixedLengthRecordFieldConfigurations);
                 }
 
                 if (!RaiseAfterRecordLoad(rec, pair))

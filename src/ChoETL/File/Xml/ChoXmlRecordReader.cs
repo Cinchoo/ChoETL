@@ -114,7 +114,8 @@ namespace ChoETL
                 if (!FillRecord(rec, pair))
                     return false;
 
-                rec.DoObjectLevelValidation(Configuration, Configuration.XmlRecordFieldConfigurations);
+                if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
+                    rec.DoObjectLevelValidation(Configuration, Configuration.XmlRecordFieldConfigurations);
 
                 if (!RaiseAfterRecordLoad(rec, pair))
                     return false;
@@ -148,6 +149,7 @@ namespace ChoETL
             return true;
         }
 
+        List<object> xNodes = new List<object>();
         private bool FillRecord(object rec, Tuple<int, XElement> pair)
         {
             int lineNo;
@@ -172,12 +174,14 @@ namespace ChoETL
             object fieldValue = null;
             ChoXmlRecordFieldConfiguration fieldConfig = null;
             PropertyInfo pi = null;
+            XPathNavigator xpn = node.CreateNavigator(Configuration.NamespaceManager.NameTable);
             foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
                 fieldValue = null;
                 fieldConfig = kvp.Value;
                 if (Configuration.PIDict != null)
                     Configuration.PIDict.TryGetValue(kvp.Key, out pi);
+
                 if (fieldConfig.XPath == "text()")
                 {
                     if (Configuration.GetNameWithNamespace(node.Name) == fieldConfig.FieldName)
@@ -187,12 +191,20 @@ namespace ChoETL
                 }
                 else
                 {
-                    XAttribute fXAttribute = ((IEnumerable)node.XPathEvaluate(fieldConfig.XPath, Configuration.NamespaceManager)).OfType<XAttribute>().FirstOrDefault();
+                    xNodes.Clear();
+                    foreach (XPathNavigator z in xpn.Select(fieldConfig.GetXPathExpr(xpn)))
+                    {
+                        xNodes.Add(z.UnderlyingObject);
+                    }
+
+                    //object[] xNodes = ((IEnumerable)node.XPathEvaluate(fieldConfig.XPath, Configuration.NamespaceManager)).OfType<object>().ToArray();
+                    //continue;
+                    XAttribute fXAttribute = xNodes.OfType<XAttribute>().FirstOrDefault();
                     if (fXAttribute != null)
                         fieldValue = fXAttribute.Value;
                     else
                     {
-                        fXElements = ((IEnumerable)node.XPathEvaluate(fieldConfig.XPath, Configuration.NamespaceManager)).OfType<XElement>().ToArray();
+                        fXElements = xNodes.OfType<XElement>().ToArray();
                         if (fXElements != null)
                         {
                             if (fieldConfig.IsCollection)
@@ -213,7 +225,6 @@ namespace ChoETL
                             throw new ChoParserException("Missing '{0}' xml node.".FormatString(fieldConfig.FieldName));
                     }
                 }
-
                 if (rec is ExpandoObject)
                 {
                     if (kvp.Value.FieldType == null)
@@ -245,7 +256,7 @@ namespace ChoETL
                     {
                         var dict = rec as IDictionary<string, Object>;
 
-                            dict.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
+                        dict.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
 
                         if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
                             dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);

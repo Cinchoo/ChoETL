@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.XPath;
 
 namespace ChoETL
 {
@@ -43,6 +44,21 @@ namespace ChoETL
                 XPath = attr.XPath;
                 FieldName = attr.FieldName.IsNullOrWhiteSpace() ? Name.NTrim() : attr.FieldName.NTrim();
             }
+        }
+
+        bool init = false;
+        XPathExpression query = null;
+        internal XPathExpression GetXPathExpr(XPathNavigator navigator)
+        {
+            if (init)
+                return query;
+
+            init = true;
+            if (!XPath.IsNullOrWhiteSpace())
+            {
+                query = navigator.Compile(XPath);
+            }
+            return query;
         }
 
         internal void Validate(ChoXmlRecordConfiguration config)

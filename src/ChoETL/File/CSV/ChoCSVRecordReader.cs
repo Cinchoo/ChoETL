@@ -221,7 +221,8 @@ namespace ChoETL
                     if (!FillRecord(rec, pair))
                         return false;
 
-                    rec.DoObjectLevelValidation(Configuration, Configuration.CSVRecordFieldConfigurations);
+                    if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
+                        rec.DoObjectLevelValidation(Configuration, Configuration.CSVRecordFieldConfigurations);
                 }
 
                 if (!RaiseAfterRecordLoad(rec, pair))

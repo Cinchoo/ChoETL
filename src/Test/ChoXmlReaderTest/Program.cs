@@ -27,7 +27,23 @@ namespace ChoXmlReaderTest
          
         static void Main(string[] args)
         {
-            QuickTestWithXmlNS();
+            LoadTest();
+        }
+
+        static void LoadTest()
+        {
+            DateTime st = DateTime.Now;
+            Console.WriteLine("Starting..." + st);
+            using (var r = new ChoXmlReader(@"C:\temp\EPAXMLDownload1.xml").NotifyAfter(10000).WithXPath("Document/FacilitySite"))
+            {
+                //r.Loop();
+                foreach (var e in r.Take(10))
+                {
+                    Console.WriteLine(e.ToStringEx());
+                }
+            }
+            Console.WriteLine("Completed." + (DateTime.Now - st));
+            Console.ReadLine();
         }
 
         static void LoadTextTest()

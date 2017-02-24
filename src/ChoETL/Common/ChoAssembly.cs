@@ -119,7 +119,7 @@ namespace ChoETL
                         }
                         catch (Exception ex)
                         {
-                            Trace.WriteLine(ChoETLFramework.TraceSwitch.TraceError, ex.ToString());
+                            ChoETLLog.Error(ex.ToString());
                         }
                     }
                     return String.Empty;
@@ -166,7 +166,7 @@ namespace ChoETL
                     }
                     catch (Exception ex)
                     {
-                        Trace.WriteLine(ChoETLFramework.TraceSwitch.TraceError, ex.ToString());
+                        ChoETLLog.Error(ex.ToString());
                     }
                 }
             }
