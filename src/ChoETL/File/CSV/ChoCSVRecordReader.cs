@@ -296,7 +296,7 @@ namespace ChoETL
                     throw new ChoParserException("Incorrect number of field values found at line [{2}]. Expected [{0}] field values. Found [{1}] field values.".FormatString(Configuration.CSVRecordFieldConfigurations.Count, fieldValues.Length, pair.Item1));
             }
 
-            if (Configuration.FileHeaderConfiguration.HasHeaderRecord && Configuration.ColumnCountStrict)
+            if (Configuration.FileHeaderConfiguration.HasHeaderRecord && Configuration.ColumnOrderStrict)
             {
                 if (this.fieldNameValues == null)
                     this.fieldNameValues = InitFieldNameValuesDict();
@@ -314,7 +314,7 @@ namespace ChoETL
                 if (Configuration.PIDict != null)
                     Configuration.PIDict.TryGetValue(kvp.Key, out pi);
 
-                if (Configuration.FileHeaderConfiguration.HasHeaderRecord && Configuration.ColumnCountStrict)
+                if (Configuration.FileHeaderConfiguration.HasHeaderRecord && Configuration.ColumnOrderStrict)
                 {
                     if (fieldNameValues.ContainsKey(fieldConfig.FieldName))
                         fieldValue = fieldNameValues[fieldConfig.FieldName];

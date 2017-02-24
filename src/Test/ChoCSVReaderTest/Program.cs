@@ -18,7 +18,7 @@ namespace ChoCSVReaderTest
     {
         static void Main(string[] args)
         {
-            AsDataTableTest();
+            QuickTest();
         }
 
         static void LoadTextTest()
@@ -33,7 +33,7 @@ namespace ChoCSVReaderTest
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoCSVReader<EmployeeRec>(reader).WithDelimiter(",").WithFirstLineHeader().WithFields().WithField("Salary").WithField("Name", typeof(string)))
+            using (var parser = new ChoCSVReader<EmployeeRec>(reader).WithDelimiter(",").WithFirstLineHeader().WithFields().WithField("Salary"))
             {
                 writer.WriteLine("Id,Name,Salary");
                 writer.WriteLine("1,Carl,1000");

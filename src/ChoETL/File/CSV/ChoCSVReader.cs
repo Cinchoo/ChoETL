@@ -184,6 +184,7 @@ namespace ChoETL
                     {
                         Configuration.CSVRecordFieldConfigurations.Clear();
                         _clearFields = true;
+                        Configuration.ColumnOrderStrict = true;
                     }
 
                     Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fn.Trim(), ++maxFieldPos));
@@ -213,6 +214,7 @@ namespace ChoETL
                 {
                     Configuration.CSVRecordFieldConfigurations.Clear();
                     _clearFields = true;
+                    Configuration.ColumnOrderStrict = true;
                 }
 
                 Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fieldName.Trim(), position) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption });
@@ -226,15 +228,15 @@ namespace ChoETL
             return WithField(fieldName, position, null, quoteField, fieldValueTrimOption);
         }
 
-        public ChoCSVReader<T> ColumnCountStrict()
+        public ChoCSVReader<T> ColumnCountStrict(bool flag = true)
         {
-            Configuration.ColumnCountStrict = true;
+            Configuration.ColumnCountStrict = flag;
             return this;
         }
 
-        public ChoCSVReader<T> ColumnOrderStrict()
+        public ChoCSVReader<T> ColumnOrderStrict(bool flag = true)
         {
-            Configuration.ColumnOrderStrict = true;
+            Configuration.ColumnOrderStrict = flag;
             return this;
         }
 
