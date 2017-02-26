@@ -150,6 +150,15 @@ namespace ChoETL
                     }
 
                     yield return record;
+
+                    if (Configuration.NotifyAfter > 0 && _index % Configuration.NotifyAfter == 0)
+                    {
+                        if (RaisedRowsWritten(_index))
+                        {
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Abort requested.");
+                            yield break;
+                        }
+                    }
                 }
             }
             finally

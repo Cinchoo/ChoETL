@@ -17,6 +17,7 @@ namespace ChoETL
         private bool _closeStreamOnDispose = false;
         private ChoCSVRecordWriter _writer = null;
         private bool _clearFields = false;
+        public event EventHandler<ChoRowsWrittenEventArgs> RowsWritten;
 
         public ChoCSVRecordConfiguration Configuration
         {
@@ -68,6 +69,7 @@ namespace ChoETL
                 Configuration = new ChoCSVRecordConfiguration(typeof(T));
 
             _writer = new ChoCSVRecordWriter(typeof(T), Configuration);
+            _writer.RowsWritten += NotifyRowsWritten;
         }
 
         public void Write(IEnumerable<T> records)
@@ -123,7 +125,22 @@ namespace ChoETL
             }
         }
 
+        private void NotifyRowsWritten(object sender, ChoRowsWrittenEventArgs e)
+        {
+            EventHandler<ChoRowsWrittenEventArgs> rowsWrittenEvent = RowsWritten;
+            if (rowsWrittenEvent == null)
+                Console.WriteLine(e.RowsWritten.ToString("#,##0") + " records written.");
+            else
+                rowsWrittenEvent(this, e);
+        }
+
         #region Fluent API
+
+        public ChoCSVWriter<T> NotifyAfter(long rowsWritten)
+        {
+            Configuration.NotifyAfter = rowsWritten;
+            return this;
+        }
 
         public ChoCSVWriter<T> WithDelimiter(string delimiter)
         {
@@ -193,6 +210,12 @@ namespace ChoETL
             bool truncate = true)
         {
             return WithField(fieldName, null, quoteField, fillChar, fieldValueJustification, truncate);
+        }
+
+        public ChoCSVWriter<T> ColumnCountStrict(bool flag = true)
+        {
+            Configuration.ColumnCountStrict = flag;
+            return this;
         }
 
         #endregion Fluent API

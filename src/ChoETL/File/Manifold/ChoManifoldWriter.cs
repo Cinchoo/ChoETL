@@ -15,6 +15,7 @@ namespace ChoETL
         private StreamWriter _streamWriter;
         private bool _closeStreamOnDispose = false;
         private ChoManifoldRecordWriter _writer = null;
+        public event EventHandler<ChoRowsWrittenEventArgs> RowsWritten;
 
         public ChoManifoldRecordConfiguration Configuration
         {
@@ -66,6 +67,7 @@ namespace ChoETL
                 Configuration = new ChoManifoldRecordConfiguration();
 
             _writer = new ChoManifoldRecordWriter(Configuration);
+            _writer.RowsWritten += NotifyRowsWritten;
         }
 
         public void Write(IEnumerable records)
@@ -95,7 +97,22 @@ namespace ChoETL
             }
         }
 
+        private void NotifyRowsWritten(object sender, ChoRowsWrittenEventArgs e)
+        {
+            EventHandler<ChoRowsWrittenEventArgs> rowsWrittenEvent = RowsWritten;
+            if (rowsWrittenEvent == null)
+                Console.WriteLine(e.RowsWritten.ToString("#,##0") + " records written.");
+            else
+                rowsWrittenEvent(this, e);
+        }
+
         #region Fluent API
+
+        public ChoManifoldWriter NotifyAfter(long rowsWritten)
+        {
+            Configuration.NotifyAfter = rowsWritten;
+            return this;
+        }
 
         public ChoManifoldWriter WithFirstLineHeader(bool flag = true)
         {

@@ -17,6 +17,7 @@ namespace ChoETL
         private bool _closeStreamOnDispose = false;
         private ChoFixedLengthRecordWriter _writer = null;
         private bool _clearFields = false;
+        public event EventHandler<ChoRowsWrittenEventArgs> RowsWritten;
 
         public ChoFixedLengthRecordConfiguration Configuration
         {
@@ -68,6 +69,7 @@ namespace ChoETL
                 Configuration = new ChoFixedLengthRecordConfiguration(typeof(T));
 
             _writer = new ChoFixedLengthRecordWriter(typeof(T), Configuration);
+            _writer.RowsWritten += NotifyRowsWritten;
         }
 
         public void Write(IEnumerable<T> records)
@@ -120,7 +122,22 @@ namespace ChoETL
             }
         }
 
+        private void NotifyRowsWritten(object sender, ChoRowsWrittenEventArgs e)
+        {
+            EventHandler<ChoRowsWrittenEventArgs> rowsWrittenEvent = RowsWritten;
+            if (rowsWrittenEvent == null)
+                Console.WriteLine(e.RowsWritten.ToString("#,##0") + " records written.");
+            else
+                rowsWrittenEvent(this, e);
+        }
+
         #region Fluent API
+
+        public ChoFixedLengthWriter<T> NotifyAfter(long rowsWritten)
+        {
+            Configuration.NotifyAfter = rowsWritten;
+            return this;
+        }
 
         public ChoFixedLengthWriter<T> WithRecordLength(int length)
         {
@@ -167,6 +184,12 @@ namespace ChoETL
             bool truncate = true, string fieldName = null)
         {
             return WithField(name, startIndex, size, null, quoteField, fillChar, fieldValueJustification, truncate, fieldName);
+        }
+
+        public ChoFixedLengthWriter<T> ColumnCountStrict(bool flag = true)
+        {
+            Configuration.ColumnCountStrict = flag;
+            return this;
         }
 
         #endregion Fluent API

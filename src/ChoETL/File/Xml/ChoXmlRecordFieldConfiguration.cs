@@ -31,14 +31,21 @@ namespace ChoETL
             get;
             set;
         }
+        internal bool UseCache
+        {
+            get;
+            set;
+        }
         public ChoXmlRecordFieldConfiguration(string name, string xPath = null) : this(name, (ChoXmlNodeRecordFieldAttribute)null)
         {
             XPath = xPath;
+            UseCache = true;
         }
 
         internal ChoXmlRecordFieldConfiguration(string name, ChoXmlNodeRecordFieldAttribute attr = null) : base(name, attr)
         {
             FieldName = name;
+            UseCache = true;
             if (attr != null)
             {
                 XPath = attr.XPath;

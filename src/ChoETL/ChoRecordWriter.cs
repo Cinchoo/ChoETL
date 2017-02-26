@@ -11,6 +11,7 @@ namespace ChoETL
     {
         public readonly Type RecordType;
         internal TraceSwitch TraceSwitch;
+        public event EventHandler<ChoRowsWrittenEventArgs> RowsWritten;
 
         static ChoRecordWriter()
         {
@@ -23,6 +24,17 @@ namespace ChoETL
 
             RecordType = recordType;
             TraceSwitch = ChoETLFramework.TraceSwitch;
+        }
+
+        protected bool RaisedRowsWritten(long rowsWritten)
+        {
+            EventHandler<ChoRowsWrittenEventArgs> rowsWrittenEvent = RowsWritten;
+            if (rowsWrittenEvent == null)
+                return false;
+
+            var ea = new ChoRowsWrittenEventArgs(rowsWritten);
+            rowsWrittenEvent(this, ea);
+            return ea.Abort;
         }
 
         public abstract IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null);

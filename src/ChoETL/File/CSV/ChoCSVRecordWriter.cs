@@ -62,7 +62,6 @@ namespace ChoETL
                         else
                             ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(_index));
                     }
-
                     recText = String.Empty;
                     if (record != null)
                     {
@@ -144,6 +143,15 @@ namespace ChoETL
                     }
 
                     yield return record;
+
+                    if (Configuration.NotifyAfter > 0 && _index % Configuration.NotifyAfter == 0)
+                    {
+                        if (RaisedRowsWritten(_index))
+                        {
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Abort requested.");
+                            yield break;
+                        }
+                    }
                 }
             }
             finally
@@ -154,13 +162,15 @@ namespace ChoETL
             RaiseEndWrite(sw);
         }
 
+        StringBuilder msg = new StringBuilder(6400);
+        object fieldValue = null;
+        string fieldText = null;
+        ChoCSVRecordFieldConfiguration fieldConfig = null;
+        IDictionary<string, Object> dict = null;
         private bool ToText(int index, object rec, out string recText)
         {
             recText = null;
-            StringBuilder msg = new StringBuilder();
-            object fieldValue = null;
-            string fieldText = null;
-            ChoCSVRecordFieldConfiguration fieldConfig = null;
+            msg.Clear();
 
             if (Configuration.ColumnCountStrict)
                 CheckColumnsStrict(rec);
@@ -174,13 +184,13 @@ namespace ChoETL
                 fieldText = String.Empty;
                 if (Configuration.PIDict != null)
                     Configuration.PIDict.TryGetValue(kvp.Key, out pi);
+                dict = rec as IDictionary<string, Object>;
 
                 if (Configuration.ThrowAndStopOnMissingField)
                 {
                     if (rec is ExpandoObject)
                     {
-                        var dict = rec as IDictionary<string, Object>;
-                        if (!dict.Keys.Contains(kvp.Key, Configuration.FileHeaderConfiguration.StringComparer))
+                        if (!dict.ContainsKey(kvp.Key))
                             throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' CSV column.".FormatString(fieldConfig.FieldName));
                     }
                     else
@@ -194,8 +204,7 @@ namespace ChoETL
                 {
                     if (Configuration.IsDynamicObject)
                     {
-                        IDictionary<string, Object> dict = rec as IDictionary<string, Object>;
-                        fieldValue = dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
+                        fieldValue = dict[kvp.Key]; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
                         if (kvp.Value.FieldType == null)
                         {
                             if (fieldValue == null)
@@ -254,8 +263,6 @@ namespace ChoETL
                     {
                         if (Configuration.IsDynamicObject)
                         {
-                            var dict = rec as IDictionary<string, Object>;
-
                             if (dict.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
                                 dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
                             else if (dict.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
@@ -334,7 +341,7 @@ namespace ChoETL
                 if (eoDict.Count != Configuration.CSVRecordFieldConfigurations.Count)
                     throw new ChoParserException("Incorrect number of fields found in record object. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.CSVRecordFieldConfigurations.Count, eoDict.Count));
 
-                string[] missingColumns = Configuration.CSVRecordFieldConfigurations.Select(v => v.Name).Except(eoDict.Keys, Configuration.FileHeaderConfiguration.StringComparer).ToArray();
+                string[] missingColumns = Configuration.CSVRecordFieldConfigurations.Select(v => v.Name).Except(eoDict.Keys/*, Configuration.FileHeaderConfiguration.StringComparer*/).ToArray();
                 if (missingColumns.Length > 0)
                     throw new ChoParserException("[{0}] fields are not found in record object.".FormatString(String.Join(",", missingColumns)));
             }
@@ -345,7 +352,7 @@ namespace ChoETL
                 if (pds.Length != Configuration.CSVRecordFieldConfigurations.Count)
                     throw new ChoParserException("Incorrect number of fields found in record object. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.CSVRecordFieldConfigurations.Count, pds.Length));
 
-                string[] missingColumns = Configuration.CSVRecordFieldConfigurations.Select(v => v.Name).Except(pds.Select(pd => pd.Name), Configuration.FileHeaderConfiguration.StringComparer).ToArray();
+                string[] missingColumns = Configuration.CSVRecordFieldConfigurations.Select(v => v.Name).Except(pds.Select(pd => pd.Name)/*, Configuration.FileHeaderConfiguration.StringComparer*/).ToArray();
                 if (missingColumns.Length > 0)
                     throw new ChoParserException("[{0}] fields are not found in record object.".FormatString(String.Join(",", missingColumns)));
             }
@@ -397,11 +404,14 @@ namespace ChoETL
             return msg.ToString();
         }
 
+        private char[] searchStrings = null;
+        bool quoteValue = false;
         private string NormalizeFieldValue(string fieldName, string fieldValue, int? size, bool truncate, bool? quoteField,
             ChoFieldValueJustification fieldValueJustification, char fillChar, bool isHeader = false)
         {
             string lFieldValue = fieldValue;
             bool retValue = false;
+            quoteValue = false;
 
             if (retValue)
                 return lFieldValue;
@@ -417,43 +427,53 @@ namespace ChoETL
                 }
                 else
                 {
-                    //******** ORDER IMPORTANT *********
+                    if (searchStrings == null)
+                        searchStrings = (@"""" + Configuration.Delimiter + Configuration.EOLDelimiter).ToArray();
 
-                    //Fields that contain double quote characters must be surounded by double-quotes, and the embedded double-quotes must each be represented by a pair of consecutive double quotes.
-                    if (fieldValue.IndexOf(@"""") >= 0)
+                    if (fieldValue.IndexOfAny(searchStrings) >= 0)
                     {
-                        fieldValue = "\"{0}\"".FormatString(fieldValue.Replace(@"""", @""""""));
-                    }
+                        //******** ORDER IMPORTANT *********
 
-                    if (fieldValue.Contains(Configuration.Delimiter))
-                    {
-                        if (isHeader)
-                            throw new ChoParserException("Field header '{0}' value contains delimiter character.".FormatString(fieldName));
-                        else
+                        //Fields that contain double quote characters must be surounded by double-quotes, and the embedded double-quotes must each be represented by a pair of consecutive double quotes.
+                        if (fieldValue.IndexOf('"') >= 0)
                         {
-                            //Fields with embedded commas must be delimited with double-quote characters.
-                            fieldValue = "\"{0}\"".FormatString(fieldValue);
-                            //throw new ChoParserException("Field '{0}' value contains delimiter character.".FormatString(fieldName));
+                            fieldValue = fieldValue.Replace(@"""", @"""""");
+                            quoteValue = true;
                         }
-                    }
 
-                    if (fieldValue.Contains(Configuration.EOLDelimiter))
-                    {
-                        if (isHeader)
-                            throw new ChoParserException("Field header '{0}' value contains EOL delimiter character.".FormatString(fieldName));
-                        else
+                        if (fieldValue.IndexOf(Configuration.Delimiter) >= 0)
                         {
-                            //A field that contains embedded line-breaks must be surounded by double-quotes
-                            fieldValue = "\"{0}\"".FormatString(fieldValue);
-                            //throw new ChoParserException("Field '{0}' value contains EOL delimiter character.".FormatString(fieldName));
+                            if (isHeader)
+                                throw new ChoParserException("Field header '{0}' value contains delimiter character.".FormatString(fieldName));
+                            else
+                            {
+                                //Fields with embedded commas must be delimited with double-quote characters.
+                                quoteValue = true;
+                                //throw new ChoParserException("Field '{0}' value contains delimiter character.".FormatString(fieldName));
+                            }
+                        }
+
+                        if (fieldValue.IndexOf(Configuration.EOLDelimiter) >= 0)
+                        {
+                            if (isHeader)
+                                throw new ChoParserException("Field header '{0}' value contains EOL delimiter character.".FormatString(fieldName));
+                            else
+                            {
+                                //A field that contains embedded line-breaks must be surounded by double-quotes
+                                quoteValue = true;
+                                //throw new ChoParserException("Field '{0}' value contains EOL delimiter character.".FormatString(fieldName));
+                            }
                         }
                     }
 
                     //Fields with leading or trailing spaces must be delimited with double-quote characters.
-                    if (!fieldValue.IsNull() && !fieldValue.IsNullOrWhiteSpace() && (char.IsWhiteSpace(fieldValue[0]) || char.IsWhiteSpace(fieldValue[fieldValue.Length - 1])))
+                    if (!fieldValue.IsNullOrWhiteSpace() && (char.IsWhiteSpace(fieldValue[0]) || char.IsWhiteSpace(fieldValue[fieldValue.Length - 1])))
                     {
-                        fieldValue = "\"{0}\"".FormatString(fieldValue);
+                        quoteValue = true;
                     }
+
+                    if (quoteValue)
+                        fieldValue = "\"{0}\"".FormatString(fieldValue);
                 }
             }
             else
@@ -464,13 +484,13 @@ namespace ChoETL
                 }
                 else
                 {
-                    //Fields that contain double quote characters must be surounded by double-quotes, and the embedded double-quotes must each be represented by a pair of consecutive double quotes.
-                    if (fieldValue.IndexOf(@"""") >= 0)
+                    //Fields that contain double quote characters must be surrounded by double-quotes, and the embedded double-quotes must each be represented by a pair of consecutive double quotes.
+                    if (fieldValue.IndexOf('"') >= 0)
                     {
                         fieldValue = "\"{0}\"".FormatString(fieldValue.Replace(@"""", @""""""));
                     }
-
-                    fieldValue = "\"{0}\"".FormatString(fieldValue);
+                    else
+                        fieldValue = "\"{0}\"".FormatString(fieldValue);
                 }
             }
 

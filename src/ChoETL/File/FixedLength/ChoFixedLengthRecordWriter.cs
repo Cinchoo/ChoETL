@@ -146,6 +146,15 @@ namespace ChoETL
                     }
 
                     yield return record;
+
+                    if (Configuration.NotifyAfter > 0 && _index % Configuration.NotifyAfter == 0)
+                    {
+                        if (RaisedRowsWritten(_index))
+                        {
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Abort requested.");
+                            yield break;
+                        }
+                    }
                 }
             }
             finally
@@ -182,7 +191,7 @@ namespace ChoETL
                     if (rec is ExpandoObject)
                     {
                         var dict = rec as IDictionary<string, Object>;
-                        if (!dict.Keys.Contains(kvp.Key, Configuration.FileHeaderConfiguration.StringComparer))
+                        if (!dict.ContainsKey(kvp.Key))
                             throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' FixedLength column.".FormatString(fieldConfig.FieldName));
                     }
                     else
@@ -197,7 +206,7 @@ namespace ChoETL
                     if (Configuration.IsDynamicObject)
                     {
                         IDictionary<string, Object> dict = rec as IDictionary<string, Object>;
-                        fieldValue = dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
+                        fieldValue = dict[kvp.Key]; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
                         if (kvp.Value.FieldType == null)
                         {
                             if (fieldValue == null)
@@ -439,7 +448,7 @@ namespace ChoETL
                         if (isHeader)
                             throw new ChoParserException("Field header '{0}' value contains EOL delimiter character.".FormatString(fieldName));
                         else
-                            throw new ChoParserException("Field '{0}' value contains EOL delimiter character.".FormatString(fieldName));
+                            fieldValue = "\"{0}\"".FormatString(fieldValue);
                     }
                 }
             }

@@ -149,7 +149,45 @@ namespace ChoETL
             return true;
         }
 
+        private Dictionary<string, List<string>> ToDictionary(XElement node)
+        {
+            Dictionary<string, List<string>> dictionary = new Dictionary<string, List<string>>();
+            //if (Configuration.IsComplexXPathUsed)
+            //    return dictionary;
+
+            string key = null;
+            //get all child elements, skip parent nodes
+            foreach (XElement elem in node.Elements().Where(a => !a.HasElements))
+            {
+                key = Configuration.GetNameWithNamespace(elem.Name);
+
+                //avoid duplicates
+                if (!dictionary.ContainsKey(key))
+                    dictionary.Add(key, new List<string>());
+
+                dictionary[key].Add(elem.Value);
+            }
+            foreach (XAttribute elem in node.Attributes())
+            {
+                key = Configuration.GetNameWithNamespace(elem.Name);
+
+                //avoid duplicates
+                if (!dictionary.ContainsKey(key))
+                    dictionary.Add(key, new List<string>());
+
+                dictionary[key].Add(elem.Value);
+            }
+
+            return dictionary;
+        }
+
         List<object> xNodes = new List<object>();
+        XElement[] fXElements = null;
+        object fieldValue = null;
+        ChoXmlRecordFieldConfiguration fieldConfig = null;
+        PropertyInfo pi = null;
+        XPathNavigator xpn = null;
+        Dictionary<string, List<string>> xDict = null;
         private bool FillRecord(object rec, Tuple<int, XElement> pair)
         {
             int lineNo;
@@ -158,23 +196,12 @@ namespace ChoETL
             lineNo = pair.Item1;
             node = pair.Item2;
 
-            //string[] fieldValues = (from x in node.Split(Configuration.XPath, Configuration.StringSplitOptions, Configuration.QuoteChar)
-            //                        select x).ToArray();
-            //if (Configuration.ColumnCountStrict)
-            //{
-            //    if (fieldValues.Length != Configuration.XmlRecordFieldConfigurations.Count)
-            //        throw new ChoParserException("Incorrect number of field values found at line [{2}]. Expected [{0}] field values. Found [{1}] field values.".FormatString(Configuration.XmlRecordFieldConfigurations.Count, fieldValues.Length, pair.Item1));
-            //}
-
-            //Dictionary<string, string> fieldNameValues = ToFieldNameValues(fieldValues);
-
-            //ValidateLine(pair.Item1, fieldValues);
-
-            XElement[] fXElements = null;
-            object fieldValue = null;
-            ChoXmlRecordFieldConfiguration fieldConfig = null;
-            PropertyInfo pi = null;
-            XPathNavigator xpn = node.CreateNavigator(Configuration.NamespaceManager.NameTable);
+            fXElements = null;
+            fieldValue = null;
+            fieldConfig = null;
+            pi = null;
+            xpn = node.CreateNavigator(Configuration.NamespaceManager.NameTable);
+            xDict = ToDictionary(node);
             foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
                 fieldValue = null;
@@ -191,38 +218,48 @@ namespace ChoETL
                 }
                 else
                 {
-                    xNodes.Clear();
-                    foreach (XPathNavigator z in xpn.Select(fieldConfig.GetXPathExpr(xpn)))
+                    if (!fieldConfig.UseCache && !xDict.ContainsKey(fieldConfig.FieldName))
                     {
-                        xNodes.Add(z.UnderlyingObject);
-                    }
+                        xNodes.Clear();
+                        foreach (XPathNavigator z in xpn.Select(fieldConfig.XPath, Configuration.NamespaceManager))
+                        {
+                            xNodes.Add(z.UnderlyingObject);
+                        }
 
-                    //object[] xNodes = ((IEnumerable)node.XPathEvaluate(fieldConfig.XPath, Configuration.NamespaceManager)).OfType<object>().ToArray();
-                    //continue;
-                    XAttribute fXAttribute = xNodes.OfType<XAttribute>().FirstOrDefault();
-                    if (fXAttribute != null)
-                        fieldValue = fXAttribute.Value;
+                        //object[] xNodes = ((IEnumerable)node.XPathEvaluate(fieldConfig.XPath, Configuration.NamespaceManager)).OfType<object>().ToArray();
+                        //continue;
+                        XAttribute fXAttribute = xNodes.OfType<XAttribute>().FirstOrDefault();
+                        if (fXAttribute != null)
+                            fieldValue = fXAttribute.Value;
+                        else
+                        {
+                            fXElements = xNodes.OfType<XElement>().ToArray();
+                            if (fXElements != null)
+                            {
+                                if (fieldConfig.IsCollection)
+                                {
+                                    List<string> list = new List<string>();
+                                    foreach (var ele in fXElements)
+                                        list.Add(ele.Value);
+                                    fieldValue = list.ToArray();
+                                }
+                                else
+                                {
+                                    XElement fXElement = fXElements.FirstOrDefault();
+                                    if (fXElement != null)
+                                        fieldValue = fXElement.Value;
+                                }
+                            }
+                            else if (Configuration.ColumnCountStrict)
+                                throw new ChoParserException("Missing '{0}' xml node.".FormatString(fieldConfig.FieldName));
+                        }
+                    }
                     else
                     {
-                        fXElements = xNodes.OfType<XElement>().ToArray();
-                        if (fXElements != null)
-                        {
-                            if (fieldConfig.IsCollection)
-                            {
-                                List<string> list = new List<string>();
-                                foreach (var ele in fXElements)
-                                    list.Add(ele.Value);
-                                fieldValue = list.ToArray();
-                            }
-                            else
-                            {
-                                XElement fXElement = fXElements.FirstOrDefault();
-                                if (fXElement != null)
-                                    fieldValue = fXElement.Value;
-                            }
-                        }
-                        else if (Configuration.ColumnCountStrict)
-                            throw new ChoParserException("Missing '{0}' xml node.".FormatString(fieldConfig.FieldName));
+                        if (xDict[fieldConfig.FieldName].Count == 1)
+                            fieldValue = xDict[fieldConfig.FieldName][0];
+                        else
+                            fieldValue = xDict[fieldConfig.FieldName];
                     }
                 }
                 if (rec is ExpandoObject)
