@@ -149,9 +149,10 @@ namespace ChoETL
             return true;
         }
 
-        private Dictionary<string, List<string>> ToDictionary(XElement node)
+        private void ToDictionary(XElement node)
         {
-            Dictionary<string, List<string>> dictionary = new Dictionary<string, List<string>>();
+            Dictionary<string, List<string>> dictionary = xDict; // new Dictionary<string, List<string>>();
+            xDict.Clear();
             //if (Configuration.IsComplexXPathUsed)
             //    return dictionary;
 
@@ -177,8 +178,6 @@ namespace ChoETL
 
                 dictionary[key].Add(elem.Value);
             }
-
-            return dictionary;
         }
 
         List<object> xNodes = new List<object>();
@@ -187,7 +186,7 @@ namespace ChoETL
         ChoXmlRecordFieldConfiguration fieldConfig = null;
         PropertyInfo pi = null;
         XPathNavigator xpn = null;
-        Dictionary<string, List<string>> xDict = null;
+        private readonly Dictionary<string, List<string>> xDict = new Dictionary<string, List<string>>();
         private bool FillRecord(object rec, Tuple<int, XElement> pair)
         {
             int lineNo;
@@ -201,7 +200,7 @@ namespace ChoETL
             fieldConfig = null;
             pi = null;
             xpn = node.CreateNavigator(Configuration.NamespaceManager.NameTable);
-            xDict = ToDictionary(node);
+            ToDictionary(node);
             foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
                 fieldValue = null;
@@ -269,9 +268,9 @@ namespace ChoETL
                 }
                 else
                 {
-                    if (ChoType.HasProperty(rec.GetType(), kvp.Key))
+                    if (pi != null)
                     {
-                        kvp.Value.FieldType = ChoType.GetMemberType(rec.GetType(), kvp.Key);
+                        kvp.Value.FieldType = pi.PropertyType;
                     }
                     else
                         kvp.Value.FieldType = typeof(string);
