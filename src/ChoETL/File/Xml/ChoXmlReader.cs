@@ -229,23 +229,23 @@ namespace ChoETL
             return this;
         }
 
-        public ChoXmlReader<T> WithXmlElementField(string fieldName, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim)
+        public ChoXmlReader<T> WithXmlElementField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null)
         {
-            string fnTrim = fieldName.NTrim();
+            string fnTrim = name.NTrim();
             string xPath = $"//{fnTrim}";
-            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption);
+            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, false, fieldName);
         }
 
-        public ChoXmlReader<T> WithXmlAttributeField(string fieldName, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim)
+        public ChoXmlReader<T> WithXmlAttributeField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null)
         {
-            string fnTrim = fieldName.NTrim();
+            string fnTrim = name.NTrim();
             string xPath = $"//@{fnTrim}";
-            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption);
+            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, true, fieldName);
         }
 
-        public ChoXmlReader<T> WithField(string fieldName, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim)
+        public ChoXmlReader<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isXmlAttribute = false, string fieldName = null)
         {
-            if (!fieldName.IsNullOrEmpty())
+            if (!name.IsNullOrEmpty())
             {
                 if (!_clearFields)
                 {
@@ -253,11 +253,11 @@ namespace ChoETL
                     _clearFields = true;
                 }
 
-                string fnTrim = fieldName.NTrim();
+                string fnTrim = name.NTrim();
                 fieldType = fieldType == null ? typeof(string) : fieldType;
                 xPath = xPath.IsNullOrWhiteSpace() ? $"//{fnTrim}" : xPath;
 
-                Configuration.XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(fnTrim, xPath) { FieldType = fieldType, FieldValueTrimOption = fieldValueTrimOption });
+                Configuration.XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(fnTrim, xPath) { FieldType = fieldType, FieldValueTrimOption = fieldValueTrimOption, IsXmlAttribute = isXmlAttribute, FieldName = fieldName });
             }
 
             return this;

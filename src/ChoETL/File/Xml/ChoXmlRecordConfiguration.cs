@@ -24,6 +24,11 @@ namespace ChoETL
             get;
             set;
         }
+        public string Indent
+        {
+            get;
+            set;
+        }
         public string DefaultNamespace
         {
             get;
@@ -40,6 +45,8 @@ namespace ChoETL
             private set;
         }
         internal bool IsComplexXPathUsed = true;
+        internal string RootName;
+        internal string NodeName;
 
         public ChoXmlRecordFieldConfiguration this[string name]
         {
@@ -58,6 +65,7 @@ namespace ChoETL
         {
             XmlRecordFieldConfigurations = new List<ChoXmlRecordFieldConfiguration>();
 
+            Indent = "  ";
             if (recordType != null)
             {
                 Init(recordType);
@@ -135,7 +143,32 @@ namespace ChoETL
             if (XPath.IsNull())
                 throw new ChoRecordConfigurationException("XPath can't be null or whitespace.");
 
-            XElement xpr = state is Tuple<int, XElement> ? ((Tuple<int, XElement>)state).Item2 : null;
+            if (XPath.IsNullOrWhiteSpace())
+            {
+                if (RecordType != null)
+                {
+                    NodeName = RecordType.Name;
+                    RootName = RecordType.Namespace;
+                }
+            }
+            else
+            {
+                RootName = XPath.SplitNTrim("/").Where(t => !t.IsNullOrWhiteSpace() && t.NTrim() != "." && t.NTrim() != "..").FirstOrDefault();
+                NodeName = XPath.SplitNTrim("/").Where(t => !t.IsNullOrWhiteSpace() && t.NTrim() != "." && t.NTrim() != "..").Skip(1).FirstOrDefault();
+            }
+
+            if (RootName.IsNullOrWhiteSpace())
+                RootName = "Root";
+            if (NodeName.IsNullOrWhiteSpace())
+                NodeName = "XElement";
+
+            string[] fieldNames = null;
+            XElement xpr = null;
+            if (state is Tuple<int, XElement>)
+                xpr = ((Tuple<int, XElement>)state).Item2;
+            else
+                fieldNames = state as string[];
+
             if (AutoDiscoverColumns
                 && XmlRecordFieldConfigurations.Count == 0)
             {
@@ -221,6 +254,14 @@ namespace ChoETL
                     foreach (ChoXmlRecordFieldConfiguration obj in dict.Values)
                         XmlRecordFieldConfigurations.Add(obj);
                 }
+                else if (!fieldNames.IsNullOrEmpty())
+                {
+                    foreach (string fn in fieldNames)
+                    {
+                        var obj = new ChoXmlRecordFieldConfiguration(fn, xPath: null);
+                        XmlRecordFieldConfigurations.Add(obj);
+                    }
+                }
             }
             else
             {
@@ -254,8 +295,8 @@ namespace ChoETL
             LoadNCacheMembers(XmlRecordFieldConfigurations);
 
             //Validate each record field
-            //foreach (var fieldConfig in XmlRecordFieldConfigurations)
-            //    fieldConfig.Validate(this);
+            foreach (var fieldConfig in XmlRecordFieldConfigurations)
+                fieldConfig.Validate(this);
 
             //Check field position for duplicate
             string[] dupFields = XmlRecordFieldConfigurations.GroupBy(i => i.Name)
@@ -265,7 +306,7 @@ namespace ChoETL
             if (dupFields.Length > 0)
                 throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(String.Join(",", dupFields)));
 
-            RecordFieldConfigurationsDict = XmlRecordFieldConfigurations.Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
+            RecordFieldConfigurationsDict = XmlRecordFieldConfigurations.OrderBy(c => c.IsXmlAttribute).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
         }
 
         internal string GetNameWithNamespace(XName name)

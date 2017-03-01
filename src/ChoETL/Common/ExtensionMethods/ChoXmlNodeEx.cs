@@ -61,7 +61,7 @@ namespace ChoETL
             else
             {
                 //string rootName = null;
-                string[] matchNames = xPath.SplitNTrim("/").Where(i => !i.IsNullOrWhiteSpace() && i.NTrim() != ".").ToArray();
+                string[] matchNames = xPath.SplitNTrim("/").Where(i => !i.IsNullOrWhiteSpace() && i.NTrim() != "." && i.NTrim() != "..").ToArray();
                 if (matchNames.Length == 0) yield break;
                 foreach (var ele in StreamElements(xmlReader, matchNames))
                     yield return ele;

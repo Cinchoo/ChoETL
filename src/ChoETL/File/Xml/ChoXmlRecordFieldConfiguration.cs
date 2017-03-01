@@ -26,7 +26,7 @@ namespace ChoETL
             get;
             set;
         }
-        internal bool IsXmlAttribute
+        public bool IsXmlAttribute
         {
             get;
             set;
@@ -50,6 +50,7 @@ namespace ChoETL
             {
                 XPath = attr.XPath;
                 FieldName = attr.FieldName.IsNullOrWhiteSpace() ? Name.NTrim() : attr.FieldName.NTrim();
+                IsXmlAttribute = attr is ChoXmlAttributeRecordFieldAttribute;
             }
         }
 
@@ -72,6 +73,9 @@ namespace ChoETL
         {
             try
             {
+                if (FieldName.IsNullOrWhiteSpace())
+                    FieldName = Name;
+
                 if (XPath.IsNullOrWhiteSpace())
                     throw new ChoRecordConfigurationException("Missing XPath.");
                 if (FillChar != null)

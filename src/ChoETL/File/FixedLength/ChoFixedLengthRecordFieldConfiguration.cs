@@ -41,6 +41,8 @@ namespace ChoETL
         {
             try
             {
+                if (FieldName.IsNullOrWhiteSpace())
+                    FieldName = Name;
                 if (StartIndex < 0)
                     throw new ChoRecordConfigurationException("StartIndex must be > 0.");
                 if (Size == null || Size.Value < 0)
