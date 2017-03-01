@@ -185,18 +185,10 @@ namespace ChoETL
             return this;
         }
 
-        public ChoXmlReader<T> WithXmlNamespace(string prefix, string uri, bool isDefault = false)
+        public ChoXmlReader<T> WithXmlNamespace(string prefix, string uri)
         {
             Configuration.NamespaceManager.AddNamespace(prefix, uri);
-            if (isDefault)
-                Configuration.DefaultNamespace = prefix;
 
-            return this;
-        }
-
-        public ChoXmlReader<T> DefaultXmlNamespace(string prefix)
-        {
-            Configuration.DefaultNamespace = prefix;
             return this;
         }
 

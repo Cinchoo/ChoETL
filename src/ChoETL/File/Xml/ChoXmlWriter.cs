@@ -140,6 +140,21 @@ namespace ChoETL
             return this;
         }
 
+        public ChoXmlWriter<T> WithXmlNamespaceManager(XmlNamespaceManager nsMgr)
+        {
+            ChoGuard.ArgumentNotNull(nsMgr, "XmlNamespaceManager");
+
+            Configuration.NamespaceManager = nsMgr;
+            return this;
+        }
+
+        public ChoXmlWriter<T> WithXmlNamespace(string prefix, string uri)
+        {
+            Configuration.NamespaceManager.AddNamespace(prefix, uri);
+
+            return this;
+        }
+
         public ChoXmlWriter<T> WithXPath(string xPath)
         {
             Configuration.XPath = xPath;

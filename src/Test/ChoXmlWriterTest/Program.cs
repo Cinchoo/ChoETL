@@ -38,7 +38,7 @@ namespace ChoXmlWriterTest
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoXmlWriter(writer).WithXPath("Emps/Emp").WithField("Id", fieldName: "id"))
+            using (var parser = new ChoXmlWriter(writer).WithXPath("Emps/Emp").WithField("Id", fieldName: "xx:id").WithXmlNamespace("xx", "http://cinchoo.com/ns"))
             {
                 parser.Write(objs);
 

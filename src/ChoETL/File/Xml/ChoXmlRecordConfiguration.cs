@@ -29,11 +29,6 @@ namespace ChoETL
             get;
             set;
         }
-        public string DefaultNamespace
-        {
-            get;
-            set;
-        }
         public XmlNamespaceManager NamespaceManager
         {
             get;

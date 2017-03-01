@@ -90,7 +90,7 @@ namespace ChoETL
                                 Configuration.Validate(fieldNames);
 
                                 _configCheckDone = true;
-                                sw.Write("<{0}>".FormatString(Configuration.RootName));
+                                sw.Write("<{0}{1}>".FormatString(Configuration.RootName, GetNamespaceText()));
                             }
 
                             if (!RaiseBeforeRecordWrite(record, _index, ref recText))
@@ -154,6 +154,29 @@ namespace ChoETL
             }
 
             RaiseEndWrite(sw);
+        }
+
+        private string GetNamespaceText()
+        {
+            if (Configuration.NamespaceManager == null)
+                return null;
+
+            StringBuilder nsText = new StringBuilder();
+            foreach (var kvp in new ChoXmlNamespaceManager(Configuration.NamespaceManager).NSDict)
+            {
+                if (kvp.Key == "xml")
+                    continue;
+
+                if (nsText.Length > 0)
+                    nsText.Append(' ');
+
+                nsText.Append($"xmlns:{kvp.Key}=\"{kvp.Value}\"");
+            }
+
+            if (nsText.Length == 0)
+                return null;
+            else
+                return " " + nsText.ToString();
         }
 
         private bool ToText(int index, object rec, out string recText)
