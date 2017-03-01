@@ -2250,6 +2250,16 @@
             return attributeArray;
         }
 
+        public static Type GetNType(this object target)
+        {
+            if (target == null)
+                return typeof(object);
+
+            if (target is Type)
+                return target as Type;
+            else
+                return target.GetType();
+        }
         /// <summary>Applies a function to every element of the list.</summary>
         private static void Apply<T>(this IEnumerable<T> enumerable, Action<T> function)
         {

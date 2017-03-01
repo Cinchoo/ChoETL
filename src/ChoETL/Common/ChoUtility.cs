@@ -75,7 +75,7 @@ namespace ChoETL
             if (src == null) return null;
 
             IDictionary<string, object> expando = new ExpandoObject();
-            foreach (PropertyDescriptor pd in TypeDescriptor.GetProperties(src))
+            foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(src.GetType()))
             {
                 if (pd.Attributes.OfType<ChoIgnoreMemberAttribute>().Any()) continue;
 
@@ -112,7 +112,7 @@ namespace ChoETL
             if (src is ExpandoObject)
             {
                 var srcDict = (IDictionary<string, object>)src;
-                foreach (PropertyDescriptor pd in TypeDescriptor.GetProperties(dest).AsTypedEnumerable<PropertyDescriptor>().Where(pd => !pd.Attributes.OfType<ChoIgnoreMemberAttribute>().Any()))
+                foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(dest.GetType()))
                 {
                     try
                     {
@@ -127,8 +127,8 @@ namespace ChoETL
             }
             else
             {
-                Dictionary<string, PropertyDescriptor> destMembers = TypeDescriptor.GetProperties(dest).AsTypedEnumerable<PropertyDescriptor>().Where(pd => !pd.Attributes.OfType<ChoIgnoreMemberAttribute>().Any()).ToDictionary(m => m.Name, StringComparer.CurrentCultureIgnoreCase);
-                foreach (PropertyDescriptor pd in TypeDescriptor.GetProperties(src).AsTypedEnumerable<PropertyDescriptor>().Where(pd => !pd.Attributes.OfType<ChoIgnoreMemberAttribute>().Any()))
+                Dictionary<string, PropertyDescriptor> destMembers = ChoTypeDescriptor.GetProperties(dest.GetType()).ToDictionary(m => m.Name, StringComparer.CurrentCultureIgnoreCase);
+                foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(src.GetType()))
                 {
                     try
                     {

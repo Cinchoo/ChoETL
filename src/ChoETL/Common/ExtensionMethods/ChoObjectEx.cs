@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Dynamic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -15,9 +16,12 @@ namespace ChoETL
         {
             ChoGuard.ArgumentNotNull(target, "Target");
 
+            if (target is ExpandoObject)
+                return (Dictionary<string, object>)target;
+
             Dictionary<string, object> dict = new Dictionary<string, object>();
                
-            foreach (PropertyDescriptor pd in TypeDescriptor.GetProperties(target).AsTypedEnumerable<PropertyDescriptor>().Where(pd => !pd.Attributes.OfType<ChoIgnoreMemberAttribute>().Any()))
+            foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(target.GetType()))
             {
                 dict.Add(pd.Name, ChoType.GetPropertyValue(target, pd.Name));
             }

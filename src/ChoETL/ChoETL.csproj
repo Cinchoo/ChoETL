@@ -119,6 +119,7 @@
     <Compile Include="Common\Converters\ChoBooleanConverter.cs" />
     <Compile Include="Common\Converters\ChoBigIntegerConverter.cs" />
     <Compile Include="Common\Converters\ChoEnumConverter.cs" />
+    <Compile Include="Common\Data\ChoSqlTableHelper.cs" />
     <Compile Include="Common\Reflection\ChoFieldInfoEx.cs" />
     <Compile Include="Common\Reflection\ChoMemberInfoEx.cs" />
     <Compile Include="Common\Reflection\ChoPropertyInfoEx.cs" />

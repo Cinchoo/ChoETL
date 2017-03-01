@@ -61,7 +61,7 @@ namespace ChoETL
             return SplitNTrim(text, separator, ChoStringSplitOptions.All);
         }
 
-        public static string[] SplitNTrim(this string text, string separator, ChoStringSplitOptions stringSplitOptions, char quoteChar = '"')
+        public static string[] SplitNTrim(this string text, string separator, ChoStringSplitOptions stringSplitOptions, char quoteChar = '\0')
         {
             if (text == null || text.Trim().Length == 0) return new string[] { };
 
@@ -82,7 +82,7 @@ namespace ChoETL
             return tokenList.ToArray();
         }
 
-        public static string[] SplitNTrim(this string text, char[] Separators, ChoStringSplitOptions stringSplitOptions, char quoteChar = '"')
+        public static string[] SplitNTrim(this string text, char[] Separators, ChoStringSplitOptions stringSplitOptions, char quoteChar = '\0')
         {
             if (text == null || text.Trim().Length == 0) return new string[] { };
 
@@ -151,7 +151,7 @@ namespace ChoETL
         /// <param name="Separators">List of Separators used to split the string.</param>
         /// <param name="ignoreEmptyWord">true, to ignore the empry words in the output list</param>
         /// <returns>A string array contains splitted values, if the input text is null/empty, an empty array will be returned.</returns>
-        //public static string[] Split(this string text, char[] Separators, ChoStringSplitOptions stringSplitOptions, char quoteChar = '"')
+        //public static string[] Split(this string text, char[] Separators, ChoStringSplitOptions stringSplitOptions, char quoteChar = '\0')
         //{
         //    return Split(text, (object)Separators, stringSplitOptions, quoteChar);
         //}
@@ -260,35 +260,42 @@ namespace ChoETL
             return oTokens;
         }
 
-        public static string[] Split(this string text, string value, ChoStringSplitOptions stringSplitOptions, char quoteChar = '"')
+        public static string[] Split(this string text, string value, ChoStringSplitOptions stringSplitOptions, char quoteChar = '\0')
         {
-            return Split(text, value.ToArray(), stringSplitOptions, quoteChar);
+            return Split(text, (object)value, stringSplitOptions, quoteChar);
         }
 
-        private static string[] Split(this string text, char[] separators, ChoStringSplitOptions stringSplitOptions, char quoteChar = '"')
+        private static string[] Split(this string text, object separators, ChoStringSplitOptions stringSplitOptions, char quoteChar = '\0')
         {
             if (String.IsNullOrEmpty(text)) return new string[0];
-            if (separators == null || separators.Length == 0) return new string[0];
+
+            if (separators is char[] && ((char[])separators).Length == 0)
+                throw new ApplicationException("Invalid separator characters passed.");
+            else if (separators is string && ((string)separators).Length == 0)
+            {
+                throw new ApplicationException("Invalid separator characters passed.");
+            }
 
             if (quoteChar == '\0')
             {
-                if (separators.Length == 1)
-                    return text.Split(separators[0]);
-
-                return text.Split(separators);
+                if (separators is char[])
+                    return text.Split(separators as char[]);
+                else if (separators is string)
+                    return text.Split(new string[] { (string)separators }, StringSplitOptions.None);
+                else
+                    throw new NotSupportedException();
             }
-            else if (separators.Length == 1)
-                return text.FastSplit(separators[0], quoteChar);
+            else if (separators is char[] && ((char[])separators).Length == 1)
+                return text.FastSplit(((char[])separators)[0], quoteChar);
 
             List<string> splitStrings = new List<string>();
-            string sepText = new string(separators);
 
-            if (Array.IndexOf((separators), quoteChar) >= 0)
+            if (separators is char[] && Array.IndexOf(((char[])separators), quoteChar) >= 0)
             {
-                throw new ApplicationException("Invalid quote character passed.");
+                throw new ApplicationException("Invalid separator characters passed.");
             }
 
-            int len = separators.Length - 1;
+            int len = separators is char[] ? 0 : ((string)separators).Length - 1;
             int i = 0;
             int quotes = 0;
             int singleQuotes = 0;
@@ -395,15 +402,15 @@ namespace ChoETL
 
         #endregion Contains Overloads (Public)
 
-        //private static bool Contains(string text, int index, object findInChars)
-        //{
-        //    if (findInChars is char[])
-        //        return Contains(text, index, ((char[])findInChars));
-        //    else if (findInChars is string)
-        //        return Contains(text, index, ((string)findInChars));
-        //    else
-        //        return false;
-        //}
+        private static bool Contains(string text, int index, object findInChars)
+        {
+            if (findInChars is char[])
+                return Contains(text, index, ((char[])findInChars));
+            else if (findInChars is string)
+                return Contains(text, index, ((string)findInChars));
+            else
+                return false;
+        }
 
         public static string Indent(this String text, int totalWidth = 1)
         {

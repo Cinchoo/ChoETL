@@ -94,7 +94,7 @@ namespace ChoETL
             {
                 FixedLengthRecordFieldConfigurations.Clear();
 
-                foreach (PropertyDescriptor pd in TypeDescriptor.GetProperties(recordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().Any()))
+                foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().Any()))
                 {
                     //if (!pd.PropertyType.IsSimple())
                     //    throw new ChoRecordConfigurationException("Property '{0}' is not a simple type.".FormatString(pd.Name));
@@ -143,11 +143,11 @@ namespace ChoETL
                 && FixedLengthRecordFieldConfigurations.Count == 0 /*&& headers != null*/)
             {
                 if (RecordType != null && RecordType != typeof(ExpandoObject)
-                    && TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().Any()).Any())
+                    && ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().Any()).Any())
                 {
                     int startIndex = 0;
                     int size = 0;
-                    foreach (PropertyDescriptor pd in TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().Any()))
+                    foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().Any()))
                     {
                         //if (!pd.PropertyType.IsSimple())
                         //    throw new ChoRecordConfigurationException("Property '{0}' is not a simple type.".FormatString(pd.Name));
@@ -180,7 +180,7 @@ namespace ChoETL
                     else
                     {
                         Tuple<string, int, int>[] tuples = DiscoverColumns(line);
-                        foreach (PropertyDescriptor pd in TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>())
+                        foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(RecordType))
                         {
                             if (index < tuples.Length)
                             {

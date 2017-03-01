@@ -335,6 +335,7 @@ namespace ChoETL
               || fieldType == typeof(float)
               || fieldType == typeof(double)
               || fieldType == typeof(decimal)
+              || fieldType == typeof(Single)
               )
             {
                 return ChoFieldValueJustification.Right;
@@ -359,6 +360,7 @@ namespace ChoETL
                 || fieldType == typeof(float)
                 || fieldType == typeof(double)
                 || fieldType == typeof(decimal)
+                || fieldType == typeof(Single)
                 )
             {
                 return '0';

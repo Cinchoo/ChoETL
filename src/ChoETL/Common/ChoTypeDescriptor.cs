@@ -47,7 +47,7 @@
         {
             if (!_pdDict.ContainsKey(type))
             {
-                _pdDict.Add(type, TypeDescriptor.GetProperties(type).AsTypedEnumerable<PropertyDescriptor>().ToArray());
+                _pdDict.Add(type, TypeDescriptor.GetProperties(type).AsTypedEnumerable<PropertyDescriptor>().Where(pd => !pd.Attributes.OfType<ChoIgnoreMemberAttribute>().Any()).ToArray());
             }
         }
 
