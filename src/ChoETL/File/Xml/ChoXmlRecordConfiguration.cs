@@ -292,8 +292,6 @@ namespace ChoETL
             if (XmlRecordFieldConfigurations.Count <= 0)
                 throw new ChoRecordConfigurationException("No record fields specified.");
 
-            LoadNCacheMembers(XmlRecordFieldConfigurations);
-
             //Validate each record field
             foreach (var fieldConfig in XmlRecordFieldConfigurations)
                 fieldConfig.Validate(this);
@@ -307,6 +305,8 @@ namespace ChoETL
                 throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(String.Join(",", dupFields)));
 
             RecordFieldConfigurationsDict = XmlRecordFieldConfigurations.OrderBy(c => c.IsXmlAttribute).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
+
+            LoadNCacheMembers(XmlRecordFieldConfigurations);
         }
 
         internal string GetNameWithNamespace(XName name)

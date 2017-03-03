@@ -262,6 +262,9 @@ namespace ChoETL
             Dictionary<string, string> fnv = new Dictionary<string, string>(Configuration.FileHeaderConfiguration.StringComparer);
             foreach (var name in _fieldNames)
             {
+                if (fnv.ContainsKey(name))
+                    throw new ChoParserException($"Duplicate '{name}' field found.");
+
                 fnv.Add(name, String.Empty);
             }
             return fnv;

@@ -213,8 +213,6 @@ namespace ChoETL
             if (FixedLengthRecordFieldConfigurations.Count == 0)
                 throw new ChoRecordConfigurationException("No record fields specified.");
 
-            LoadNCacheMembers(FixedLengthRecordFieldConfigurations);
-
             //Derive record length from fields
             if (RecordLength <= 0)
             {
@@ -266,6 +264,8 @@ namespace ChoETL
             else
             {
             }
+
+            LoadNCacheMembers(FixedLengthRecordFieldConfigurations);
         }
 
         private Tuple<string, int, int>[] DiscoverColumns(string line)

@@ -214,7 +214,6 @@ namespace ChoETL
                 {
                     Configuration.CSVRecordFieldConfigurations.Clear();
                     _clearFields = true;
-                    Configuration.ColumnOrderStrict = true;
                 }
 
                 Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fieldName.Trim(), position) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption });

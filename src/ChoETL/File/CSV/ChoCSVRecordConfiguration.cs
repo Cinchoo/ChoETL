@@ -195,8 +195,6 @@ namespace ChoETL
             else
                 throw new ChoRecordConfigurationException("No record fields specified.");
 
-            LoadNCacheMembers(CSVRecordFieldConfigurations);
-
             //Validate each record field
             foreach (var fieldConfig in CSVRecordFieldConfigurations)
                 fieldConfig.Validate(this);
@@ -213,7 +211,7 @@ namespace ChoETL
                     .Select(g => g.Key).ToArray();
 
                 if (dupPositions.Length > 0)
-                    throw new ChoRecordConfigurationException("Duplicate field position(s) [Index: {0}] specified to record fields.".FormatString(String.Join(",", dupPositions)));
+                    throw new ChoRecordConfigurationException("Duplicate field position(s) [Index: {0}] found.".FormatString(String.Join(",", dupPositions)));
             }
             else
             {
@@ -227,11 +225,13 @@ namespace ChoETL
                     .Select(g => g.Key).ToArray();
 
                 if (dupFields.Length > 0)
-                    throw new ChoRecordConfigurationException("Duplicate field name(s) [Name: {0}] specified to record fields.".FormatString(String.Join(",", dupFields)));
+                    throw new ChoRecordConfigurationException("Duplicate field name(s) [Name: {0}] found.".FormatString(String.Join(",", dupFields)));
             }
 
             RecordFieldConfigurationsDict = CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
             FCArray = RecordFieldConfigurationsDict.ToArray();
+
+            LoadNCacheMembers(CSVRecordFieldConfigurations);
         }
     }
 }

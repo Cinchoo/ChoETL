@@ -46,7 +46,7 @@ namespace ChoETL
             {
                 if (FieldName.IsNullOrWhiteSpace())
                     FieldName = Name;
-                if (FieldPosition < 0)
+                if (FieldPosition <= 0)
                     throw new ChoRecordConfigurationException("Invalid '{0}' field position specified. Must be > 0.".FormatString(FieldPosition));
                 if (FillChar != null)
                 {
