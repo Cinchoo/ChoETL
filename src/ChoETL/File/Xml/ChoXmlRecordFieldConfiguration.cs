@@ -2,31 +2,36 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.XPath;
 
 namespace ChoETL
 {
+    [DataContract]
     public class ChoXmlRecordFieldConfiguration : ChoFileRecordFieldConfiguration
     {
+        [DataMember]
         public string XPath
         {
             get;
             set;
         }
-
+        [DataMember]
         public string FieldName
         {
             get;
             set;
         }
-        internal bool IsCollection
+        [DataMember]
+        public bool IsXmlAttribute
         {
             get;
             set;
         }
-        public bool IsXmlAttribute
+
+        internal bool IsCollection
         {
             get;
             set;
@@ -36,6 +41,7 @@ namespace ChoETL
             get;
             set;
         }
+
         public ChoXmlRecordFieldConfiguration(string name, string xPath = null) : this(name, (ChoXmlNodeRecordFieldAttribute)null)
         {
             XPath = xPath;

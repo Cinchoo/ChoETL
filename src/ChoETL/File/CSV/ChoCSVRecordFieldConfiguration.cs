@@ -2,19 +2,23 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace ChoETL
 {
+    [DataContract]
     public class ChoCSVRecordFieldConfiguration : ChoFileRecordFieldConfiguration
     {
+        [DataMember]
         public int FieldPosition
         {
             get;
             set;
         }
 
+        [DataMember]
         public string FieldName
         {
             get;

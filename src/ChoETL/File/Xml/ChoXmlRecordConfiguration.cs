@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
@@ -12,18 +13,22 @@ using System.Xml.Linq;
 
 namespace ChoETL
 {
+    [DataContract]
     public class ChoXmlRecordConfiguration : ChoFileRecordConfiguration
     {
+        [DataMember]
         public List<ChoXmlRecordFieldConfiguration> XmlRecordFieldConfigurations
         {
             get;
             private set;
         }
+        [DataMember]
         public string XPath
         {
             get;
             set;
         }
+        [DataMember]
         public string Indent
         {
             get;
@@ -253,7 +258,7 @@ namespace ChoETL
                 {
                     foreach (string fn in fieldNames)
                     {
-                        var obj = new ChoXmlRecordFieldConfiguration(fn, xPath: null);
+                        var obj = new ChoXmlRecordFieldConfiguration(fn, xPath: $"//{fn}");
                         XmlRecordFieldConfigurations.Add(obj);
                     }
                 }

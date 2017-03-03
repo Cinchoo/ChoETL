@@ -3,69 +3,97 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace ChoETL
 {
+    [DataContract]
     public abstract class ChoFileRecordConfiguration : ChoRecordConfiguration
     {
+        [DataMember]
         public int BufferSize
         {
             get;
             set;
         }
+        [DataMember]
         public string[] Comments
         {
             get;
             set;
         }
+        [DataMember]
+        public string CultureName
+        {
+            get { return Culture.Name; }
+            set
+            {
+                Culture = value != null ? new CultureInfo(value) : CultureInfo.CurrentCulture;
+            }
+        }
+        [ChoIgnoreMember]
         public CultureInfo Culture
         {
             get;
             set;
         }
+        [DataMember]
         public string EOLDelimiter
         {
             get;
             set;
         }
+        [DataMember]
         public bool MayContainEOLInData
         {
             get;
             set;
         }
-
+        [DataMember]
         public bool IgnoreEmptyLine
         {
             get;
             set;
         }
+        [DataMember]
         public bool ColumnCountStrict
         {
             get;
             set;
         }
+        [DataMember]
         public bool ColumnOrderStrict
         {
             get;
             set;
         }
+        [DataMember]
         public char QuoteChar
         {
             get;
             set;
         }
+        [DataMember]
         public bool QuoteAllFields
         {
             get;
             set;
         }
+        [DataMember]
         public ChoStringSplitOptions StringSplitOptions
         {
             get;
             set;
         }
+        [DataMember]
+        public int EncodingPage
+        {
+            get { return Encoding.CodePage; }
+            set { Encoding = Encoding.GetEncoding(value); }
+        }
+
         public Encoding Encoding
         {
             get;

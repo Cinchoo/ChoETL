@@ -127,6 +127,7 @@
     <Compile Include="Common\Reflection\Emit\ChoILGeneratorEx.cs" />
     <Compile Include="Common\Validators\ChoCustomCodeValidatorAttribute.cs" />
     <Compile Include="Common\Validators\ChoCustomExprValidatorAttribute.cs" />
+    <Compile Include="Common\Xml\ChoCDATA.cs" />
     <Compile Include="ETLCommon\IChoETLNameableObject.cs" />
     <Compile Include="File\ChoRowsWrittenEventArgs.cs" />
     <Compile Include="File\ChoRowsLoadedEventArgs.cs" />
@@ -304,7 +305,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Common\Cryptography\" />
-    <Folder Include="Common\Xml\" />
     <Folder Include="Libs\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

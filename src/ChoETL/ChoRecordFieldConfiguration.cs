@@ -4,28 +4,39 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
 
 namespace ChoETL
 {
+    [DataContract]
     public abstract class ChoRecordFieldConfiguration
     {
+        [DataMember]
         public string Name
         {
             get;
             private set;
         }
+        [DataMember]
         public ChoErrorMode? ErrorMode
         {
             get;
             set;
         }
+        [DataMember]
         public ChoIgnoreFieldValueMode? IgnoreFieldValueMode
         {
             get;
             set;
+        }
+        [DataMember]
+        public string FieldTypeName
+        {
+            get { return FieldType != null ? FieldType.FullName : null; }
+            set { FieldType = value != null ? Type.GetType(value) : null; }
         }
 
         public Type FieldType

@@ -5,24 +5,28 @@ using System.Dynamic;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace ChoETL
 {
+    [DataContract]
     public class ChoFixedLengthRecordConfiguration : ChoFileRecordConfiguration
     {
+        [DataMember]
         public ChoFixedLengthFileHeaderConfiguration FileHeaderConfiguration
         {
             get;
             set;
         }
-
+        [DataMember]
         public List<ChoFixedLengthRecordFieldConfiguration> FixedLengthRecordFieldConfigurations
         {
             get;
             private set;
         }
+        [DataMember]
         public int RecordLength
         {
             get;

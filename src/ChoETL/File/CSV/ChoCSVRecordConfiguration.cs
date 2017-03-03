@@ -4,34 +4,40 @@ using System.ComponentModel;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace ChoETL
 {
+    [DataContract]
     public class ChoCSVRecordConfiguration : ChoFileRecordConfiguration
     {
+        [DataMember]
         public ChoCSVFileHeaderConfiguration FileHeaderConfiguration
         {
             get;
             set;
         }
-
-        public List<ChoCSVRecordFieldConfiguration> CSVRecordFieldConfigurations
-        {
-            get;
-            private set;
-        }
+        [DataMember]
         public string Delimiter
         {
             get;
             set;
         }
+        [DataMember]
         public bool? HasExcelSeparator
         {
             get;
             set;
         }
+        [DataMember]
+        public List<ChoCSVRecordFieldConfiguration> CSVRecordFieldConfigurations
+        {
+            get;
+            private set;
+        }
+
         internal int MaxFieldPosition
         {
             get;

@@ -457,7 +457,7 @@ namespace ChoETL
                 }
             }
 
-            return System.Net.WebUtility.HtmlEncode(fieldValue);
+            return fieldValue.StartsWith("<![CDATA[") ? fieldValue : System.Net.WebUtility.HtmlEncode(fieldValue);
         }
 
         private bool RaiseBeginWrite(object state)

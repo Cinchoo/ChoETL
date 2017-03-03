@@ -2,39 +2,47 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
 
 namespace ChoETL
 {
+    [DataContract]
     public abstract class ChoFileRecordFieldConfiguration : ChoRecordFieldConfiguration
     {
+        [DataMember]
         public char? FillChar
         {
             get;
             set;
         }
+        [DataMember]
         public ChoFieldValueJustification? FieldValueJustification
         {
             get;
             set;
         }
+        [DataMember]
         public ChoFieldValueTrimOption? FieldValueTrimOption
         {
             get;
             set;
         }
+        [DataMember]
         public bool Truncate
         {
             get;
             set;
         }
+        [DataMember]
         public int? Size
         {
             get;
             set;
         }
+        [DataMember]
         public bool? QuoteField
         {
             get;

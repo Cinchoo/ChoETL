@@ -3,8 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Dynamic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -102,5 +104,120 @@ namespace ChoETL
         //            return null;
         //    //}
         //}
+
+        #region JsonSerialize Overloads
+
+        public static readonly DataContractJsonSerializerSettings jsonSettings = new DataContractJsonSerializerSettings { UseSimpleDictionaryFormat = true };
+
+        public static MemoryStream AsStream(string path)
+        {
+            using (FileStream fileStream = File.OpenRead(path))
+            {
+                MemoryStream memStream = new MemoryStream();
+                memStream.SetLength(fileStream.Length);
+                fileStream.Read(memStream.GetBuffer(), 0, (int)fileStream.Length);
+                return memStream;
+            }
+        }
+
+        
+        public static void JsonSerialize(Stream sr, object target)
+        {
+            ChoGuard.ArgumentNotNull(sr, "Stream");
+            ChoGuard.ArgumentNotNull(target, "Target");
+
+            DataContractJsonSerializer serializer = new DataContractJsonSerializer(target.GetType(), jsonSettings);
+            serializer.WriteObject(sr, target);
+        }
+
+        
+        public static string JsonSerialize(object target, Encoding encoding = null)
+        {
+            ChoGuard.ArgumentNotNull(target, "Target");
+
+            encoding = encoding == null ? Encoding.UTF8 : encoding;
+            StringBuilder JsonString = new StringBuilder();
+            using (MemoryStream ms = new MemoryStream())
+            {
+                using (var writer = JsonReaderWriterFactory.CreateJsonWriter(
+                     ms, encoding, true, true, "  "))
+                {
+                    DataContractJsonSerializer serializer = new DataContractJsonSerializer(target.GetType(), jsonSettings);
+                    serializer.WriteObject(writer, target);
+                    writer.Flush();
+                    byte[] json = ms.ToArray();
+                    return encoding.GetString(json, 0, json.Length);
+                }
+            }
+        }
+        
+        public static void JsonSerialize(string path, object target, Encoding encoding = null)
+        {
+            ChoGuard.ArgumentNotNullOrEmpty(path, "Path");
+            ChoGuard.ArgumentNotNull(target, "Target");
+
+            Directory.CreateDirectory(Path.GetDirectoryName(ChoPath.GetFullPath(path)));
+
+            File.WriteAllText(path, JsonSerialize(target, encoding));
+        }
+
+        #endregion JsonSerialize Overloads
+
+        #region JsonDeserialize Overloads
+
+        public static T JsonDeserialize<T>(Stream sr)
+        {
+            return (T)JsonDeserialize(sr, typeof(T));
+        }
+
+        
+        public static object JsonDeserialize(Stream sr, Type type)
+        {
+            ChoGuard.ArgumentNotNullOrEmpty(sr, "Stream");
+            ChoGuard.ArgumentNotNullOrEmpty(type, "Type");
+
+            DataContractJsonSerializer serializer = new DataContractJsonSerializer(type);
+            return serializer.ReadObject(sr);
+        }
+
+        
+        public static T JsonDeserialize<T>(string JsonString, Encoding encoding = null)
+        {
+            ChoGuard.ArgumentNotNullOrEmpty(JsonString, "JsonString");
+
+            return (T)JsonDeserialize(JsonString, typeof(T), encoding);
+        }
+
+        
+        public static object JsonDeserialize(string JsonString, Type type, Encoding encoding = null)
+        {
+            ChoGuard.ArgumentNotNullOrEmpty(JsonString, "JsonString");
+            ChoGuard.ArgumentNotNullOrEmpty(type, "Type");
+            encoding = encoding == null ? Encoding.UTF8 : encoding;
+
+            using (MemoryStream ms = new MemoryStream(encoding.GetBytes(JsonString)))
+            {
+                DataContractJsonSerializer serializer = new DataContractJsonSerializer(type);
+                return serializer.ReadObject(ms);
+            }
+        }
+
+        
+        public static T JsonDeserializeFromFile<T>(string path)
+        {
+            return (T)JsonDeserializeFromFile(path, typeof(T));
+        }
+
+        
+        public static object JsonDeserializeFromFile(string path, Type type)
+        {
+            ChoGuard.ArgumentNotNullOrEmpty(path, "Path");
+            ChoGuard.ArgumentNotNullOrEmpty(type, "Type");
+
+            DataContractJsonSerializer serializer = new DataContractJsonSerializer(type);
+            return serializer.ReadObject(AsStream(path));
+        }
+
+        #endregion JsonDeserialize Overloads
     }
 }

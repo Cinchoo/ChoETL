@@ -1150,7 +1150,6 @@ namespace ChoETL
 
         public static readonly DataContractJsonSerializerSettings jsonSettings = new DataContractJsonSerializerSettings { UseSimpleDictionaryFormat = true };
 
-
         public static string DumpAsJson(this object target, Encoding encoding = null)
         {
             encoding = encoding == null ? Encoding.UTF8 : encoding;
@@ -1222,7 +1221,7 @@ namespace ChoETL
                         object value = ChoType.GetMemberValue(target, memberInfo);
                         string memberText = null;
 
-                        if (!type.IsSimple())
+                        if (!type.IsSimple() && type != typeof(Type))
                         {
                             memberText = value != null ? ChoUtility.ToStringEx(value) : "[NULL]";
                             if (memberText.ContainsMultiLines())

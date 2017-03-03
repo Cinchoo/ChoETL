@@ -5,11 +5,13 @@ using System.ComponentModel.DataAnnotations;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace ChoETL
 {
+    [DataContract]
     public abstract class ChoRecordConfiguration
     {
         private Type _recordType;
@@ -31,31 +33,37 @@ namespace ChoETL
             }
         }
 
+        [DataMember]
         public ChoErrorMode ErrorMode
         {
             get;
             set;
         }
+        [DataMember]
         public ChoIgnoreFieldValueMode IgnoreFieldValueMode
         {
             get;
             set;
         }
+        [DataMember]
         public bool AutoDiscoverColumns
         {
             get;
             set;
         }
+        [DataMember]
         public bool ThrowAndStopOnMissingField
         {
             get;
             set;
         }
+        [DataMember]
         public ChoObjectValidationMode ObjectValidationMode
         {
             get;
             set;
         }
+        [DataMember]
         public long NotifyAfter { get; set; }
 
         internal Dictionary<string, PropertyInfo> PIDict = null;

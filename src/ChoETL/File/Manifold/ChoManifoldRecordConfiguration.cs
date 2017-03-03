@@ -5,11 +5,13 @@ using System.Dynamic;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace ChoETL
 {
+    [DataContract]
     public class ChoManifoldRecordConfiguration : ChoFileRecordConfiguration
     {
         private Func<string, Type> _recordSelecter = null;
@@ -18,12 +20,19 @@ namespace ChoETL
             get { return _recordSelecter; }
             set { _recordSelecter = value; }
         }
-        public bool IgnoreIfNoRecordParserExists { get; set; }
+        [DataMember]
+        public bool IgnoreIfNoRecordParserExists
+        {
+            get;
+            set;
+        }
+        [DataMember]
         public ChoManifoldFileHeaderConfiguration FileHeaderConfiguration
         {
             get;
             set;
         }
+        [DataMember]
         public ChoManifoldRecordTypeConfiguration RecordTypeConfiguration
         {
             get;

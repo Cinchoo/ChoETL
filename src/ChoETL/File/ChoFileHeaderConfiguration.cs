@@ -2,43 +2,52 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace ChoETL
 {
+    [DataContract]
     public abstract class ChoFileHeaderConfiguration
     {
+        [DataMember]
         public bool HasHeaderRecord
         {
             get;
             set;
         }
+        [DataMember]
         public bool IgnoreCase
         {
             get;
             set;
         }
+        [DataMember]
         public char? FillChar
         {
             get;
             set;
         }
+        [DataMember]
         public ChoFieldValueJustification? Justification
         {
             get;
             set;
         }
+        [DataMember]
         public ChoFieldValueTrimOption TrimOption
         {
             get;
             set;
         }
+        [DataMember]
         public bool? Truncate
         {
             get;
             set;
         }
+
         internal StringComparer StringComparer
         {
             get;
