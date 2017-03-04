@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
+using System.Xml.Serialization;
 
 namespace ChoETL
 {
@@ -153,14 +154,37 @@ namespace ChoETL
             }
             else
             {
-                RootName = XPath.SplitNTrim("/").Where(t => !t.IsNullOrWhiteSpace() && t.NTrim() != "." && t.NTrim() != "..").FirstOrDefault();
-                NodeName = XPath.SplitNTrim("/").Where(t => !t.IsNullOrWhiteSpace() && t.NTrim() != "." && t.NTrim() != "..").Skip(1).FirstOrDefault();
+                RootName = XPath.SplitNTrim("/").Where(t => !t.IsNullOrWhiteSpace() && t.NTrim() != "." && t.NTrim() != ".." && t.NTrim() != "*").FirstOrDefault();
+                NodeName = XPath.SplitNTrim("/").Where(t => !t.IsNullOrWhiteSpace() && t.NTrim() != "." && t.NTrim() != ".." && t.NTrim() != "*").Skip(1).FirstOrDefault();
             }
 
             if (RootName.IsNullOrWhiteSpace())
-                RootName = "Root";
+            {
+                ChoXmlDocumentRootAttribute da = TypeDescriptor.GetAttributes(RecordType).OfType<ChoXmlDocumentRootAttribute>().FirstOrDefault();
+                if (da != null)
+                    NodeName = da.Name;
+                if (RootName.IsNullOrWhiteSpace())
+                {
+                    RootName = "Root";
+                }
+            }
+
             if (NodeName.IsNullOrWhiteSpace())
-                NodeName = "XElement";
+            {
+                if (!IsDynamicObject)
+                {
+                    XmlRootAttribute ra = TypeDescriptor.GetAttributes(RecordType).OfType<XmlRootAttribute>().FirstOrDefault();
+                    if (ra != null)
+                        NodeName = ra.ElementName;
+                }
+
+                if (NodeName.IsNullOrWhiteSpace())
+                    NodeName = "XElement";
+            }
+
+            //Encode Root and node names
+            RootName = System.Net.WebUtility.HtmlEncode(RootName);
+            NodeName = System.Net.WebUtility.HtmlEncode(NodeName);
 
             string[] fieldNames = null;
             XElement xpr = null;

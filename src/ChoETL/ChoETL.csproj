@@ -286,6 +286,7 @@
     <Compile Include="File\Manifold\ChoManifoldRecordReader.cs" />
     <Compile Include="File\Manifold\ChoManifoldRecordConfiguration.cs" />
     <Compile Include="File\Manifold\ChoManifoldReader.cs" />
+    <Compile Include="File\Xml\ChoXmlDocumentRootAttribute.cs" />
     <Compile Include="File\Xml\ChoXmlRecordWriter.cs" />
     <Compile Include="File\Xml\ChoXmlWriter.cs" />
     <Compile Include="File\Xml\ChoXmlAttributeRecordFieldAttribute.cs" />

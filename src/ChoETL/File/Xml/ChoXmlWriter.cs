@@ -83,6 +83,23 @@ namespace ChoETL
             _writer.WriteTo(_streamWriter, new T[] { record } ).Loop();
         }
 
+        public static string ToText<TRec>(IEnumerable<TRec> records, string xPath)
+            where TRec : class
+        {
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoXmlWriter<TRec>(writer).WithXPath(xPath))
+            {
+                parser.Write(records);
+
+                writer.Flush();
+                stream.Position = 0;
+
+                return reader.ReadToEnd();
+            }
+        }
+
         public static string ToText<TRec>(IEnumerable<TRec> records, ChoXmlRecordConfiguration configuration = null)
             where TRec : class
         {
