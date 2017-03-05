@@ -1203,39 +1203,45 @@ namespace ChoETL
             }
             else
             {
-                BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Instance;
-                ChoStringMsgBuilder msg = new ChoStringMsgBuilder(String.Format("{0} State", target.GetType().FullName));
-
-                //MemberInfo[] memberInfos = target.GetType().GetMembers(bindingFlags /*BindingFlags.Public | BindingFlags.Instance /*| BindingFlags.DeclaredOnly*/ /*| BindingFlags.GetField | BindingFlags.GetProperty*/);
-                IEnumerable<MemberInfo> memberInfos = ChoType.GetGetFieldsNProperties(target.GetType(), bindingFlags);
-                if (memberInfos == null || memberInfos.Count() == 0)
-                    msg.AppendFormatLine(ChoStringMsgBuilder.Empty);
-                else
+                //Check if ToString is overridden
+                if (!target.GetType().IsOverrides("ToString"))
                 {
-                    foreach (MemberInfo memberInfo in memberInfos)
+                    BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Instance;
+                    ChoStringMsgBuilder msg = new ChoStringMsgBuilder(String.Format("{0} State", target.GetType().FullName));
+
+                    //MemberInfo[] memberInfos = target.GetType().GetMembers(bindingFlags /*BindingFlags.Public | BindingFlags.Instance /*| BindingFlags.DeclaredOnly*/ /*| BindingFlags.GetField | BindingFlags.GetProperty*/);
+                    IEnumerable<MemberInfo> memberInfos = ChoType.GetGetFieldsNProperties(target.GetType(), bindingFlags);
+                    if (memberInfos == null || memberInfos.Count() == 0)
+                        msg.AppendFormatLine(ChoStringMsgBuilder.Empty);
+                    else
                     {
-                        if (!ChoType.IsValidObjectMember(memberInfo))
-                            continue;
-
-                        Type type = ChoType.GetMemberType(memberInfo);
-                        object value = ChoType.GetMemberValue(target, memberInfo);
-                        string memberText = null;
-
-                        if (!type.IsSimple() && type != typeof(Type))
+                        foreach (MemberInfo memberInfo in memberInfos)
                         {
-                            memberText = value != null ? ChoUtility.ToStringEx(value) : "[NULL]";
-                            if (memberText.ContainsMultiLines())
-                                memberText = Environment.NewLine + memberText.Indent();
+                            if (!ChoType.IsValidObjectMember(memberInfo))
+                                continue;
+
+                            Type type = ChoType.GetMemberType(memberInfo);
+                            object value = ChoType.GetMemberValue(target, memberInfo);
+                            string memberText = null;
+
+                            if (!type.IsSimple() && type != typeof(Type))
+                            {
+                                memberText = value != null ? ChoUtility.ToStringEx(value) : "[NULL]";
+                                if (memberText.ContainsMultiLines())
+                                    memberText = Environment.NewLine + memberText.Indent();
+                            }
+                            else
+                                memberText = value.ToNString();
+
+                            msg.AppendFormatLine("{0}: {1}", memberInfo.Name, memberText);
                         }
-                        else
-                            memberText = value.ToNString();
-
-                        msg.AppendFormatLine("{0}: {1}", memberInfo.Name, memberText);
                     }
-                }
-                msg.AppendNewLine();
+                    msg.AppendNewLine();
 
-                return msg.ToString();
+                    return msg.ToString();
+                }
+                else
+                    return target.ToString();
             }
         }
 

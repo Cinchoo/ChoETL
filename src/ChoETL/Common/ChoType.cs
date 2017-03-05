@@ -2429,6 +2429,7 @@
 
         public static IEnumerable<MethodInfo> GetMethodsBySig(this Type type, Type returnType, params Type[] parameterTypes)
         {
+            ChoGuard.ArgumentNotNull(type, "Type");
             return type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).Where((m) =>
             {
                 if (m.ReturnType != returnType) return false;
@@ -2446,6 +2447,26 @@
             });
         }
 
-        #endregion 
+        #endregion
+
+        #region IsOverridden Overloads
+
+        public static bool IsOverrides(this Type type, MethodInfo baseMethod)
+        {
+            ChoGuard.ArgumentNotNull(type, "Type");
+            ChoGuard.ArgumentNotNull(baseMethod, "BaseMethod");
+            return baseMethod.GetBaseDefinition().DeclaringType != baseMethod.DeclaringType;
+        }
+
+        public static bool IsOverrides(this Type type, string memberName, Type[] parameters = null)
+        {
+            ChoGuard.ArgumentNotNull(type, "Type");
+            ChoGuard.ArgumentNotNull(memberName, "MemberName");
+
+            parameters = parameters ?? Type.EmptyTypes;
+            return IsOverrides(type, type.GetMethod(memberName, parameters));
+        }
+
+        #endregion IsOverridden Overloads
     }
 }
