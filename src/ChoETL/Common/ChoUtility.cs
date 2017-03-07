@@ -1176,30 +1176,35 @@ namespace ChoETL
                 return target.ToString();
             else if (target is IEnumerable)
             {
-                StringBuilder arrMsg = new StringBuilder();
-
-                int count = 0;
-                foreach (object item in (IEnumerable)target)
+                if (!target.GetType().IsOverrides("ToString"))
                 {
-                    Type valueType = item.GetType();
-                    if (valueType.IsGenericType)
-                    {
-                        Type baseType = valueType.GetGenericTypeDefinition();
-                        if (baseType == typeof(KeyValuePair<,>))
-                        {
-                            object kvpKey = valueType.GetProperty("Key").GetValue(item, null);
-                            object kvpValue = valueType.GetProperty("Value").GetValue(item, null);
-                            arrMsg.AppendFormat("Key: {0} [Type: {2}]{1}", ToStringEx(kvpKey), Environment.NewLine, kvpValue == null ? "UNKNOWN" : kvpValue.GetType().Name);
-                            arrMsg.AppendFormat("Value: {0}{1}", ToStringEx(kvpValue), Environment.NewLine);
-                            count++;
-                            continue;
-                        }
-                    }
-                    count++;
-                    arrMsg.AppendFormat("{0}{1}", ToStringEx(item), Environment.NewLine);
-                }
+                    StringBuilder arrMsg = new StringBuilder();
 
-                return "[Count: {0}]{1}{2}".FormatString(count, Environment.NewLine, arrMsg.ToString());
+                    int count = 0;
+                    foreach (object item in (IEnumerable)target)
+                    {
+                        Type valueType = item.GetType();
+                        if (valueType.IsGenericType)
+                        {
+                            Type baseType = valueType.GetGenericTypeDefinition();
+                            if (baseType == typeof(KeyValuePair<,>))
+                            {
+                                object kvpKey = valueType.GetProperty("Key").GetValue(item, null);
+                                object kvpValue = valueType.GetProperty("Value").GetValue(item, null);
+                                arrMsg.AppendFormat("Key: {0} [Type: {2}]{1}", ToStringEx(kvpKey), Environment.NewLine, kvpValue == null ? "UNKNOWN" : kvpValue.GetType().Name);
+                                arrMsg.AppendFormat("Value: {0}{1}", ToStringEx(kvpValue), Environment.NewLine);
+                                count++;
+                                continue;
+                            }
+                        }
+                        count++;
+                        arrMsg.AppendFormat("{0}{1}", ToStringEx(item), Environment.NewLine);
+                    }
+
+                    return "[Count: {0}]{1}{2}".FormatString(count, Environment.NewLine, arrMsg.ToString());
+                }
+                else
+                    return target.ToString();
             }
             else
             {
