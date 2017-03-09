@@ -23,7 +23,7 @@ namespace ChoKVPReaderTest
             using (var parser = new ChoKVPReader(reader))
             {
                 writer.WriteLine("BEGIN:VCALENDAR");
-                writer.WriteLine("VERSION");
+                writer.WriteLine("VERSION:2.0");
                 writer.WriteLine("PRODID:-//hacksw/handcal//NONSGML v1.0//EN");
                 writer.WriteLine("BEGIN:VEVENT");
                 writer.WriteLine("UID:uid1@example.com");

@@ -62,12 +62,18 @@ namespace ChoETL
             long seekOriginPos = sr.BaseStream.Position;
             List<string> headers = new List<string>();
             bool isHeaderFound = false;
-            List<string> recLines = new List<string>();
+            List<Tuple<int, string>> recLines = new List<Tuple<int, string>>();
+            int recNo = 0;
 
             for (int i = 0; i < 2; i++)
             {
                 if (i == 1)
+                {
                     sr.Seek(seekOriginPos, SeekOrigin.Begin);
+                    TraceSwitch = traceSwitch;
+                }
+                else
+                    TraceSwitch = ChoETLFramework.TraceSwitchOff;
 
                 using (ChoPeekEnumerator<Tuple<int, string>> e = new ChoPeekEnumerator<Tuple<int, string>>(
                     new ChoIndexedEnumerator<string>(sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, Configuration.MayContainEOLInData)).ToEnumerable(),
@@ -156,6 +162,7 @@ namespace ChoETL
 
                         if (!isRecordStartFound)
                         {
+                            recLines.Clear();
                             isRecordStartFound = true;
                             if (!Configuration.RecordStart.IsNullOrWhiteSpace())
                             {
@@ -177,6 +184,7 @@ namespace ChoETL
                                 if (String.Compare(e.Peek.Item2, Configuration.RecordEnd, Configuration.FileHeaderConfiguration.IgnoreCase) == 0)
                                 {
                                     isRecordEndFound = true;
+                                    isRecordStartFound = false;
                                 }
                             }
 
@@ -206,14 +214,13 @@ namespace ChoETL
                                     throw new ChoParserException("Unexpected EOF found.");
                                 else if (!isRecordEndFound)
                                 {
-                                    var tokens = pair.Item2.Split(Configuration.Seperator).Take(2);
-
+                                    recLines.Add(pair);
                                     e.MoveNext();
                                 }
                                 else
                                 {
                                     object rec = Activator.CreateInstance(RecordType);
-                                    if (!LoadLine(pair, ref rec))
+                                    if (!LoadLines(new Tuple<int, List<Tuple<int, string>>>(++recNo, recLines), ref rec))
                                         yield break;
 
                                     //StoreState(e.Current, rec != null);
@@ -241,57 +248,70 @@ namespace ChoETL
             }
         }
 
-        private bool LoadLine(Tuple<int, string> pair, ref object rec)
+        private bool LoadLines(Tuple<int, List<Tuple<int, string>>> pairs, ref object rec)
         {
-            try
+            Tuple<int, string> pair = null;
+            int recNo = pairs.Item1;
+
+            foreach (var pair1 in pairs.Item2)
             {
-                if (!RaiseBeforeRecordLoad(rec, ref pair))
-                    return false;
-
-                if (pair.Item2 == null)
+                pair = pair1;
+                try
                 {
-                    rec = null;
-                    return true;
-                }
-                else if (pair.Item2 == String.Empty)
-                    return true;
+                    if (Configuration.ColumnCountStrict)
+                    {
+                        if (pairs.Item2.Count != Configuration.KVPRecordFieldConfigurations.Count)
+                            throw new ChoParserException("Incorrect number of field values found at record [{2}]. Expected [{0}] field values. Found [{1}] field values.".FormatString(Configuration.KVPRecordFieldConfigurations.Count, pairs.Item2.Count, recNo));
+                    }
 
-                if (!pair.Item2.IsNullOrWhiteSpace())
-                {
-                    if (!FillRecord(rec, pair))
+                    if (!RaiseBeforeRecordLoad(rec, ref pair))
                         return false;
 
-                    if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
-                        rec.DoObjectLevelValidation(Configuration, Configuration.KVPRecordFieldConfigurations);
-                }
+                    if (pair.Item2 == null)
+                    {
+                        rec = null;
+                        return true;
+                    }
+                    else if (pair.Item2 == String.Empty)
+                        return true;
 
-                if (!RaiseAfterRecordLoad(rec, pair))
-                    return false;
-            }
-            catch (ChoParserException)
-            {
-                throw;
-            }
-            catch (ChoMissingRecordFieldException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                ChoETLFramework.HandleException(ex);
-                if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
-                {
-                    rec = null;
+                    if (!pair.Item2.IsNullOrWhiteSpace())
+                    {
+                        if (!FillRecord(rec, pair))
+                            return false;
+
+                        if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
+                            rec.DoObjectLevelValidation(Configuration, Configuration.KVPRecordFieldConfigurations);
+                    }
+
+                    if (!RaiseAfterRecordLoad(rec, pair))
+                        return false;
                 }
-                else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
+                catch (ChoParserException)
                 {
-                    if (!RaiseRecordLoadError(rec, pair, ex))
-                        throw;
-                }
-                else
                     throw;
+                }
+                catch (ChoMissingRecordFieldException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    ChoETLFramework.HandleException(ex);
+                    if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
+                    {
+                        rec = null;
+                    }
+                    else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
+                    {
+                        if (!RaiseRecordLoadError(rec, pair, ex))
+                            throw;
+                    }
+                    else
+                        throw;
 
-                return true;
+                    return true;
+                }
             }
 
             return true;
@@ -305,14 +325,12 @@ namespace ChoETL
             lineNo = pair.Item1;
             line = pair.Item2;
 
-            string[] fieldValues = line.Split(Configuration.Seperator, Configuration.StringSplitOptions, Configuration.QuoteChar);
-            if (Configuration.ColumnCountStrict)
-            {
-                if (fieldValues.Length != Configuration.KVPRecordFieldConfigurations.Count)
-                    throw new ChoParserException("Incorrect number of field values found at line [{2}]. Expected [{0}] field values. Found [{1}] field values.".FormatString(Configuration.KVPRecordFieldConfigurations.Count, fieldValues.Length, pair.Item1));
-            }
+            //var tokens = pair.Item2.Split(Configuration.Seperator).Take(2).ToArray();
+            //if (tokens.Length < 2)
+            //    throw new ChoParserException("Invalid line found.");
 
-            ValidateLine(pair.Item1, fieldValues);
+
+            //ValidateLine(pair.Item1, fieldValues);
 
             object fieldValue = null;
             ChoKVPRecordFieldConfiguration fieldConfig = null;
