@@ -51,6 +51,7 @@ namespace ChoETL
         }
 
         internal KeyValuePair<string, ChoKVPRecordFieldConfiguration>[] FCArray;
+        internal bool AutoDiscoveredColumns = false;
 
         public ChoKVPRecordFieldConfiguration this[string name]
         {
@@ -189,6 +190,7 @@ namespace ChoETL
                 if (AutoDiscoverColumns
                     && KVPRecordFieldConfigurations.Count == 0)
                 {
+                    AutoDiscoveredColumns = true;
                     if (headers != null)
                     {
                         KVPRecordFieldConfigurations = (from header in headers

@@ -61,11 +61,13 @@ namespace ChoETL
             bool isRecordEndFound = false;
             long seekOriginPos = sr.BaseStream.Position;
             List<string> headers = new List<string>();
-            bool isHeaderFound = false;
+            Tuple<int, string> lastLine = null;
             List<Tuple<int, string>> recLines = new List<Tuple<int, string>>();
             int recNo = 0;
+            int loopCount = Configuration.AutoDiscoverColumns && Configuration.KVPRecordFieldConfigurations.Count == 0 ? 2 : 1;
+            bool isHeaderFound = loopCount == 1;
 
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < loopCount; i++)
             {
                 if (i == 1)
                 {
@@ -154,22 +156,26 @@ namespace ChoETL
                     while (true)
                     {
                         Tuple<int, string> pair = e.Peek;
-                        if (pair == null)
-                        {
-                            RaiseEndLoad(sr);
-                            yield break;
-                        }
+                        //if (pair == null)
+                        //{
+                        //    RaiseEndLoad(sr);
+                        //    yield break;
+                        //}
 
                         if (!isRecordStartFound)
                         {
+                            lastLine = null;
                             recLines.Clear();
+                            isRecordEndFound = false;
                             isRecordStartFound = true;
                             if (!Configuration.RecordStart.IsNullOrWhiteSpace())
                             {
                                 //Move to record start
-                                while (String.Compare(e.Peek.Item2, Configuration.RecordStart, Configuration.FileHeaderConfiguration.IgnoreCase) == 0)
+                                while (!Configuration.FileHeaderConfiguration.IsEqual(e.Peek.Item2, Configuration.RecordStart))
                                 {
                                     e.MoveNext();
+                                    if (e.Peek == null)
+                                        break;
                                 }
                             }
 
@@ -180,25 +186,42 @@ namespace ChoETL
                         {
                             if (!Configuration.RecordEnd.IsNullOrWhiteSpace())
                             {
+                                if (e.Peek == null)
+                                    break;
+
                                 //Move to record start
-                                if (String.Compare(e.Peek.Item2, Configuration.RecordEnd, Configuration.FileHeaderConfiguration.IgnoreCase) == 0)
+                                if (Configuration.FileHeaderConfiguration.IsEqual(e.Peek.Item2, Configuration.RecordEnd))
                                 {
                                     isRecordEndFound = true;
                                     isRecordStartFound = false;
                                 }
                             }
+                            else if (e.Peek == null)
+                                isRecordEndFound = true;
 
                             if (!isHeaderFound)
                             {
-                                if (isRecordEndFound && headers.Count == 0)
-                                    throw new ChoParserException("Unexpected EOF found.");
-                                else if (!isRecordEndFound)
+                                //if (isRecordEndFound && headers.Count == 0)
+                                //{
+                                //    //throw new ChoParserException("Unexpected EOF found.");
+                                //}
+                                if (!isRecordEndFound)
                                 {
-                                    string header = pair.Item2.Split(Configuration.Seperator).FirstOrDefault();
-                                    if (!header.IsNullOrWhiteSpace())
-                                        headers.Add(header);
-
                                     e.MoveNext();
+                                    if (e.Peek != null)
+                                    {
+                                        //If line empty or line continuation, skip
+                                        if (pair.Item2.IsNullOrWhiteSpace() || pair.Item2[0] == ' ' || pair.Item2[0] == '\t')
+                                        {
+
+                                        }
+                                        else
+                                        {
+                                            string header = pair.Item2.Split(Configuration.Seperator).FirstOrDefault();
+                                            if (!header.IsNullOrWhiteSpace())
+                                                headers.Add(header);
+                                        }
+                                    }
                                 }
                                 else
                                 {
@@ -211,11 +234,43 @@ namespace ChoETL
                             else
                             {
                                 if (isRecordEndFound && recLines.Count == 0)
-                                    throw new ChoParserException("Unexpected EOF found.");
+                                {
+                                    //throw new ChoParserException("Unexpected EOF found.");
+                                }
                                 else if (!isRecordEndFound)
                                 {
-                                    recLines.Add(pair);
                                     e.MoveNext();
+                                    if (e.Peek != null)
+                                    {
+                                        //If line empty or line continuation, skip
+                                        if (pair.Item2.IsNullOrWhiteSpace())
+                                        {
+                                            if (!Configuration.IgnoreEmptyLine)
+                                                throw new ChoParserException("Empty line found at {0} location.".FormatString(pair.Item1));
+                                            else
+                                            {
+                                                Tuple<int, string> t = new Tuple<int, string>(lastLine.Item1, lastLine.Item2 + Configuration.EOLDelimiter);
+                                                recLines.RemoveAt(recLines.Count - 1);
+                                                recLines.Add(t);
+                                            }
+                                        }
+                                        else if (pair.Item2[0] == ' ' || pair.Item2[0] == '\t')
+                                        {
+                                            if (lastLine == null)
+                                                throw new ChoParserException("Unexpected line continuation found at {0} location.".FormatString(pair.Item1));
+                                            else
+                                            {
+                                                Tuple<int, string> t = new Tuple<int, string>(lastLine.Item1, lastLine.Item2 + Configuration.EOLDelimiter + pair.Item2);
+                                                recLines.RemoveAt(recLines.Count - 1);
+                                                recLines.Add(t);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            lastLine = pair;
+                                            recLines.Add(pair);
+                                        }
+                                    }
                                 }
                                 else
                                 {
@@ -240,6 +295,12 @@ namespace ChoETL
                                             yield break;
                                         }
                                     }
+
+                                    if (pair == null)
+                                    {
+                                        RaiseEndLoad(sr);
+                                        yield break;
+                                    }
                                 }
                             }
                         }
@@ -253,17 +314,23 @@ namespace ChoETL
             Tuple<int, string> pair = null;
             int recNo = pairs.Item1;
 
+            if (Configuration.ColumnCountStrict && Configuration.AutoDiscoveredColumns)
+            {
+                if (pairs.Item2.Count != Configuration.KVPRecordFieldConfigurations.Count)
+                    throw new ChoParserException("Incorrect number of field values found at record [{2}]. Expected [{0}] field values. Found [{1}] field values.".FormatString(Configuration.KVPRecordFieldConfigurations.Count, pairs.Item2.Count, recNo));
+
+                ChoKVPRecordFieldConfiguration fieldConfig = null;
+                foreach (KeyValuePair<string, ChoKVPRecordFieldConfiguration> kvp in Configuration.FCArray)
+                {
+                    fieldConfig = kvp.Value;
+                }
+            }
+
             foreach (var pair1 in pairs.Item2)
             {
                 pair = pair1;
                 try
                 {
-                    if (Configuration.ColumnCountStrict)
-                    {
-                        if (pairs.Item2.Count != Configuration.KVPRecordFieldConfigurations.Count)
-                            throw new ChoParserException("Incorrect number of field values found at record [{2}]. Expected [{0}] field values. Found [{1}] field values.".FormatString(Configuration.KVPRecordFieldConfigurations.Count, pairs.Item2.Count, recNo));
-                    }
-
                     if (!RaiseBeforeRecordLoad(rec, ref pair))
                         return false;
 
@@ -325,132 +392,122 @@ namespace ChoETL
             lineNo = pair.Item1;
             line = pair.Item2;
 
-            //var tokens = pair.Item2.Split(Configuration.Seperator).Take(2).ToArray();
-            //if (tokens.Length < 2)
-            //    throw new ChoParserException("Invalid line found.");
+            var tokens = pair.Item2.Split(Configuration.Seperator).Take(2).ToArray();
+            if (tokens.Length < 2)
+                throw new ChoParserException("Invalid line found.");
 
 
             //ValidateLine(pair.Item1, fieldValues);
 
-            object fieldValue = null;
-            ChoKVPRecordFieldConfiguration fieldConfig = null;
+            object fieldValue = tokens[1];
+            string key = tokens[0];
+            ChoKVPRecordFieldConfiguration fieldConfig = Configuration.RecordFieldConfigurationsDict[tokens[0]];
             PropertyInfo pi = null;
-            foreach (KeyValuePair<string, ChoKVPRecordFieldConfiguration> kvp in Configuration.FCArray)
-            {
-                fieldValue = null;
-                fieldConfig = kvp.Value;
-                if (Configuration.PIDict != null)
-                    Configuration.PIDict.TryGetValue(kvp.Key, out pi);
 
-                    if (Configuration.ColumnCountStrict)
-                        throw new ChoParserException("Missing field value for '{0}' [Position: {1}] field.".FormatString(fieldConfig.FieldName));
+            if (Configuration.IsDynamicObject)
+            {
+                if (fieldConfig.FieldType == null)
+                    fieldConfig.FieldType = typeof(string);
+            }
+            else
+            {
+                if (pi != null)
+                    fieldConfig.FieldType = pi.PropertyType;
+                else
+                    fieldConfig.FieldType = typeof(string);
+            }
+
+            fieldValue = CleanFieldValue(fieldConfig, fieldConfig.FieldType, fieldValue as string);
+
+            if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, key, ref fieldValue))
+                return false;
+
+            try
+            {
+                bool ignoreFieldValue = fieldConfig.IgnoreFieldValue(fieldValue);
+                if (ignoreFieldValue)
+                    fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
 
                 if (Configuration.IsDynamicObject)
                 {
-                    if (kvp.Value.FieldType == null)
-                        kvp.Value.FieldType = typeof(string);
+                    var dict = rec as IDictionary<string, Object>;
+
+                    dict.ConvertNSetMemberValue(key, fieldConfig, ref fieldValue, Configuration.Culture);
+
+                    if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
+                        dict.DoMemberLevelValidation(key, fieldConfig, Configuration.ObjectValidationMode);
                 }
                 else
                 {
                     if (pi != null)
-                        kvp.Value.FieldType = pi.PropertyType;
+                        rec.ConvertNSetMemberValue(key, fieldConfig, ref fieldValue, Configuration.Culture);
                     else
-                        kvp.Value.FieldType = typeof(string);
+                        throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(key, ChoType.GetTypeName(rec)));
+
+                    if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
+                        rec.DoMemberLevelValidation(key, fieldConfig, Configuration.ObjectValidationMode);
                 }
 
-                fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue as string);
-
-                if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
+                if (!RaiseAfterRecordFieldLoad(rec, pair.Item1, key, fieldValue))
                     return false;
+            }
+            catch (ChoParserException)
+            {
+                throw;
+            }
+            catch (ChoMissingRecordFieldException)
+            {
+                if (Configuration.ThrowAndStopOnMissingField)
+                    throw;
+            }
+            catch (Exception ex)
+            {
+                ChoETLFramework.HandleException(ex);
+
+                if (fieldConfig.ErrorMode == ChoErrorMode.ThrowAndStop)
+                    throw;
 
                 try
                 {
-                    bool ignoreFieldValue = fieldConfig.IgnoreFieldValue(fieldValue);
-                    if (ignoreFieldValue)
-                        fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
-
                     if (Configuration.IsDynamicObject)
                     {
                         var dict = rec as IDictionary<string, Object>;
 
-                        dict.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
-
-                        if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
-                            dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
-                    }
-                    else
-                    {
-                        if (pi != null)
-                            rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
-                        else
-                            throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(kvp.Key, ChoType.GetTypeName(rec)));
-
-                        if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
-                            rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
-                    }
-
-                    if (!RaiseAfterRecordFieldLoad(rec, pair.Item1, kvp.Key, fieldValue))
-                        return false;
-                }
-                catch (ChoParserException)
-                {
-                    throw;
-                }
-                catch (ChoMissingRecordFieldException)
-                {
-                    if (Configuration.ThrowAndStopOnMissingField)
-                        throw;
-                }
-                catch (Exception ex)
-                {
-                    ChoETLFramework.HandleException(ex);
-
-                    if (fieldConfig.ErrorMode == ChoErrorMode.ThrowAndStop)
-                        throw;
-
-                    try
-                    {
-                        if (Configuration.IsDynamicObject)
-                        {
-                            var dict = rec as IDictionary<string, Object>;
-
-                            if (dict.SetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
-                                dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
-                            else if (dict.SetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture))
-                                dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
-                            else
-                                throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
-                        }
-                        else if (pi != null)
-                        {
-                            if (rec.SetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture))
-                                rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
-                            else if (rec.SetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture))
-                                rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
-                            else
-                                throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
-                        }
+                        if (dict.SetFallbackValue(key, fieldConfig, Configuration.Culture, ref fieldValue))
+                            dict.DoMemberLevelValidation(key, fieldConfig, Configuration.ObjectValidationMode);
+                        else if (dict.SetDefaultValue(key, fieldConfig, Configuration.Culture))
+                            dict.DoMemberLevelValidation(key, fieldConfig, Configuration.ObjectValidationMode);
                         else
                             throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                     }
-                    catch (Exception innerEx)
+                    else if (pi != null)
                     {
-                        if (ex == innerEx.InnerException)
+                        if (rec.SetFallbackValue(key, fieldConfig, Configuration.Culture))
+                            rec.DoMemberLevelValidation(key, fieldConfig, Configuration.ObjectValidationMode);
+                        else if (rec.SetDefaultValue(key, fieldConfig, Configuration.Culture))
+                            rec.DoMemberLevelValidation(key, fieldConfig, Configuration.ObjectValidationMode);
+                        else
+                            throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
+                    }
+                    else
+                        throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
+                }
+                catch (Exception innerEx)
+                {
+                    if (ex == innerEx.InnerException)
+                    {
+                        if (fieldConfig.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                         {
-                            if (fieldConfig.ErrorMode == ChoErrorMode.IgnoreAndContinue)
-                            {
-                                continue;
-                            }
-                            else
-                            {
-                                if (!RaiseRecordFieldLoadError(rec, pair.Item1, kvp.Key, fieldValue, ex))
-                                    throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
-                            }
                         }
                         else
                         {
-                            throw new ChoReaderException("Failed to assign '{0}' fallback value to '{1}' field.".FormatString(fieldValue, fieldConfig.FieldName), innerEx);
+                            if (!RaiseRecordFieldLoadError(rec, pair.Item1, key, fieldValue, ex))
+                                throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                         }
+                    }
+                    else
+                    {
+                        throw new ChoReaderException("Failed to assign '{0}' fallback value to '{1}' field.".FormatString(fieldValue, fieldConfig.FieldName), innerEx);
                     }
                 }
             }

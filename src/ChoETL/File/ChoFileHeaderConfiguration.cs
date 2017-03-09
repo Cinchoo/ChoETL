@@ -85,5 +85,13 @@ namespace ChoETL
                 Truncate = recObjAttr.TruncateInternal;
             }
         }
+
+        internal bool IsEqual(String strA, String strB)
+        {
+            if (IgnoreCase)
+                return String.Compare(strA, strB, IgnoreCase) == 0;
+            else
+                return strA == strB;
+        }
     }
 }
