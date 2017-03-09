@@ -272,6 +272,13 @@
     <Compile Include="File\CSV\ChoCSVFileHeaderAttribute.cs" />
     <Compile Include="File\CSV\ChoCSVRecordWriter.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthRecordReader.cs" />
+    <Compile Include="File\KeyValue\ChoKVPFileHeaderConfiguration.cs" />
+    <Compile Include="File\KeyValue\ChoKVPRecordFieldAttribute.cs" />
+    <Compile Include="File\KeyValue\ChoKVPRecordObjectAttribute.cs" />
+    <Compile Include="File\KeyValue\ChoKVPRecordFieldConfiguration.cs" />
+    <Compile Include="File\KeyValue\ChoKVPRecordConfiguration.cs" />
+    <Compile Include="File\KeyValue\ChoKVPRecordReader.cs" />
+    <Compile Include="File\KeyValue\ChoKVPReader.cs" />
     <Compile Include="File\Manifold\ChoRecordTypeCodeAttribute.cs" />
     <Compile Include="File\Manifold\ChoManifoldRecordTypeConfiguration.cs" />
     <Compile Include="File\Manifold\ChoManifoldRecordWriter.cs" />
@@ -306,7 +313,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Common\Cryptography\" />
-    <Folder Include="File\JSON\" />
     <Folder Include="Libs\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -54,7 +54,6 @@ namespace ChoETL
             private set;
         }
         private CultureInfo _culture;
-        internal bool IsSimpleComparison;
 
         public ChoFileHeaderConfiguration(Type recordType = null, CultureInfo culture = null)
         {
@@ -66,7 +65,6 @@ namespace ChoETL
             //Truncate = false;
             _culture = culture;
             StringComparer = StringComparer.Create(_culture == null ? CultureInfo.CurrentCulture : _culture, IgnoreCase);
-            IsSimpleComparison = (_culture == null || _culture == CultureInfo.CurrentCulture) && !IgnoreCase;
 
             if (recordType != null)
             {
@@ -86,7 +84,6 @@ namespace ChoETL
                 if (recObjAttr.TrimOptionInternal != null) TrimOption = recObjAttr.TrimOptionInternal.Value;
                 Truncate = recObjAttr.TruncateInternal;
             }
-            IsSimpleComparison = (_culture == null || _culture == CultureInfo.CurrentCulture) && !IgnoreCase;
         }
     }
 }

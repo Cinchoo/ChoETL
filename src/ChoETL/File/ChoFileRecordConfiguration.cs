@@ -148,8 +148,13 @@ namespace ChoETL
                 throw new ChoRecordConfigurationException("Invalid '{0}' quote character specified.".FormatString(QuoteChar));
             if (EOLDelimiter.Contains(QuoteChar))
                 throw new ChoRecordConfigurationException("QuoteChar [{0}] can't be one EOLDelimiter characters [{1}]".FormatString(QuoteChar, EOLDelimiter));
-            if (Comments != null && Comments.Contains(EOLDelimiter))
-                throw new ChoRecordConfigurationException("One of the Comments contains EOLDelimiter. Not allowed.");
+            if (Comments != null)
+            {
+                if (Comments.Contains(EOLDelimiter))
+                    throw new ChoRecordConfigurationException("One of the Comments contains EOLDelimiter. Not allowed.");
+                else if (Comments.Where(c => c.IsNullOrWhiteSpace()).Any())
+                    throw new ChoRecordConfigurationException("One of the Comments contains Whitespace characters. Not allowed.");
+            }
         }
     }
 }

@@ -1066,7 +1066,7 @@ namespace ChoETL
 
             return false;
         }
-        public static void Seek(this StreamReader sr, int position, SeekOrigin origin)
+        public static void Seek(this StreamReader sr, long position, SeekOrigin origin)
         {
             sr.BaseStream.Seek(position, origin);
             sr.DiscardBufferedData();
