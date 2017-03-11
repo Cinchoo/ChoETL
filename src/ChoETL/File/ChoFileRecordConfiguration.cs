@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -98,8 +99,12 @@ namespace ChoETL
         [DataMember]
         public int EncodingPage
         {
-            get { return Encoding.CodePage; }
-            set { Encoding = Encoding.GetEncoding(value); }
+            get { return Encoding != null ? Encoding.CodePage : 0; }
+            set
+            {
+                if (value > 0)
+                    Encoding = Encoding.GetEncoding(value);
+            }
         }
 
         public Encoding Encoding
@@ -120,7 +125,7 @@ namespace ChoETL
             QuoteChar = '"';
             QuoteAllFields = false;
             StringSplitOptions = ChoStringSplitOptions.None;
-            Encoding = Encoding.UTF8;
+            //Encoding = Encoding.UTF8;
         }
 
         protected override void Init(Type recordType)
@@ -144,7 +149,8 @@ namespace ChoETL
                 QuoteChar = recObjAttr.QuoteChar;
                 QuoteAllFields = recObjAttr.QuoteAllFields;
                 StringSplitOptions = recObjAttr.StringSplitOptions;
-                Encoding = recObjAttr.Encoding.CastTo<Encoding>(Encoding);
+                if (!recObjAttr.Encoding.IsNullOrWhiteSpace())
+                    Encoding = Encoding.GetEncoding(recObjAttr.Encoding);
             }
         }
 
@@ -163,6 +169,48 @@ namespace ChoETL
                 else if (Comments.Where(c => c.IsNullOrWhiteSpace()).Any())
                     throw new ChoRecordConfigurationException("One of the Comments contains Whitespace characters. Not allowed.");
             }
+        }
+
+        internal Encoding GetEncoding(Stream inStream)
+        {
+            if (Encoding == null)
+            {
+                try
+                {
+                    ChoETLLog.Info("Determining file encoding...");
+                    Encoding = ChoFile.GetEncodingFromStream(inStream);
+                    ChoETLLog.Info("Found {0} encoding in file.".FormatString(Encoding));
+                }
+                catch (Exception ex)
+                {
+                    Encoding = Encoding.UTF8;
+                    ChoETLLog.Error("Error finding encoding in file. Default to UTF8.");
+                    ChoETLLog.Error(ex.Message);
+                }
+            }
+
+            return Encoding;
+        }
+
+        internal Encoding GetEncoding(string fileName)
+        {
+            if (Encoding == null)
+            {
+                try
+                {
+                    ChoETLLog.Info("Determining '{0}' file encoding...".FormatString(fileName));
+                    Encoding = ChoFile.GetEncodingFromFile(fileName);
+                    ChoETLLog.Info("Found {1} encoding in '{0}' file.".FormatString(fileName, Encoding));
+                }
+                catch (Exception ex)
+                {
+                    Encoding = Encoding.UTF8;
+                    ChoETLLog.Error("Error finding encoding in '{0}' file. Default to UTF8.".FormatString(fileName));
+                    ChoETLLog.Error(ex.Message);
+                }
+            }
+
+            return Encoding;
         }
     }
 }

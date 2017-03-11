@@ -48,6 +48,12 @@ namespace ChoETL
             get;
             private set;
         }
+        internal Dictionary<string, ChoCSVRecordFieldConfiguration> RecordFieldConfigurationsDict2
+        {
+            get;
+            private set;
+        }
+
 
         internal KeyValuePair<string, ChoCSVRecordFieldConfiguration>[] FCArray;
 
@@ -228,7 +234,8 @@ namespace ChoETL
                     throw new ChoRecordConfigurationException("Duplicate field name(s) [Name: {0}] found.".FormatString(String.Join(",", dupFields)));
             }
 
-            RecordFieldConfigurationsDict = CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
+            RecordFieldConfigurationsDict = CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name, FileHeaderConfiguration.StringComparer);
+            RecordFieldConfigurationsDict2 = CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName, FileHeaderConfiguration.StringComparer);
             FCArray = RecordFieldConfigurationsDict.ToArray();
 
             LoadNCacheMembers(CSVRecordFieldConfigurations);

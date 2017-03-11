@@ -33,7 +33,7 @@ namespace ChoCSVReaderTest
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoCSVReader<EmployeeRec>(reader).WithDelimiter(",").WithFirstLineHeader().WithFields().WithField("Salary"))
+            using (var parser = new ChoCSVReader<EmployeeRec>(reader).WithDelimiter(",").WithFirstLineHeader())
             {
                 writer.WriteLine("Id,Name,Salary");
                 writer.WriteLine("1,Carl,1000");
@@ -604,22 +604,23 @@ namespace ChoCSVReaderTest
 
     //[MetadataType(typeof(EmployeeRecMeta))]
     //[ChoCSVFileHeader()]
-    [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.IgnoreAndContinue,
+    [ChoCSVRecordObject(Encoding = "utf-32", ErrorMode = ChoErrorMode.IgnoreAndContinue,
     IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any, ThrowAndStopOnMissingField = false)]
     public partial class EmployeeRec //: IChoNotifyRecordRead, IChoValidatable
     {
-        //[ChoCSVRecordField(1, FieldName = "id")]
+        [ChoCSVRecordField(1, FieldName = "id")]
         //[ChoTypeConverter(typeof(IntConverter))]
         //[Range(1, int.MaxValue, ErrorMessage = "Id must be > 0.")]
         //[ChoFallbackValue(1)]
         public int Id { get; set; }
 
-        //[ChoCSVRecordField(2, FieldName = "Name")]
+        [ChoCSVRecordField(2, FieldName = "Name2")]
         //[Required]
         //[DefaultValue("ZZZ")]
         //[ChoFallbackValue("XXX")]
         public string Name { get; set; }
 
+        [ChoCSVRecordField(3, FieldName = "Salary")]
         public int Salary { get; set; }
         //[ChoCSVRecordField(3, FieldName = "Address")]
         //public string Address { get; set; }

@@ -466,15 +466,100 @@ namespace ChoETL
                 int pos = line.IndexOf(Configuration.Seperator[0]);
                 if (pos <= 0)
                     throw new ChoMissingRecordFieldException("Missing key at '{0}' line.".FormatString(lineNo));
-                return new KeyValuePair<string, string>(line.Substring(0, pos), line.Substring(pos + 1));
+                return new KeyValuePair<string, string>(CleanKeyValue(line.Substring(0, pos)), line.Substring(pos + 1));
             }
             else
             {
                 int pos = line.IndexOf(Configuration.Seperator);
                 if (pos <= 0)
                     throw new ChoMissingRecordFieldException("Missing key at '{0}' line.".FormatString(lineNo));
-                return new KeyValuePair<string, string>(line.Substring(0, pos), line.Substring(pos + Configuration.Seperator.Length));
+                return new KeyValuePair<string, string>(CleanKeyValue(line.Substring(0, pos)), line.Substring(pos + Configuration.Seperator.Length));
             }
+        }
+
+        private string CleanFieldValue(ChoKVPRecordFieldConfiguration config, Type fieldType, string fieldValue)
+        {
+            if (fieldValue == null) return fieldValue;
+
+            ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim;
+
+            if (config.FieldValueTrimOption == null)
+            {
+                //if (fieldType == typeof(string))
+                //    fieldValueTrimOption = ChoFieldValueTrimOption.None;
+            }
+            else
+                fieldValueTrimOption = config.FieldValueTrimOption.Value;
+
+            switch (fieldValueTrimOption)
+            {
+                case ChoFieldValueTrimOption.Trim:
+                    fieldValue = fieldValue.Trim();
+                    break;
+                case ChoFieldValueTrimOption.TrimStart:
+                    fieldValue = fieldValue.TrimStart();
+                    break;
+                case ChoFieldValueTrimOption.TrimEnd:
+                    fieldValue = fieldValue.TrimEnd();
+                    break;
+            }
+
+            if (config.Size != null)
+            {
+                if (fieldValue.Length > config.Size.Value)
+                {
+                    if (!config.Truncate)
+                        throw new ChoParserException("Incorrect field value length found for '{0}' member [Expected: {1}, Actual: {2}].".FormatString(config.FieldName, config.Size.Value, fieldValue.Length));
+                    else
+                        fieldValue = fieldValue.Substring(0, config.Size.Value);
+                }
+            }
+
+            char startChar;
+            char endChar;
+            char quoteChar = Configuration.QuoteChar == '\0' ? '"' : Configuration.QuoteChar;
+
+            if (fieldValue.Length >= 2)
+            {
+                startChar = fieldValue[0];
+                endChar = fieldValue[fieldValue.Length - 1];
+
+                if (config.QuoteField != null && config.QuoteField.Value && startChar == quoteChar && endChar == quoteChar)
+                    return fieldValue.Substring(1, fieldValue.Length - 2);
+                else if (startChar == quoteChar && endChar == quoteChar &&
+                    (fieldValue.Contains(Configuration.Seperator)
+                    || fieldValue.Contains(Configuration.EOLDelimiter)))
+                    return fieldValue.Substring(1, fieldValue.Length - 2);
+
+            }
+            return fieldValue;
+        }
+
+        private string CleanKeyValue(string key)
+        {
+            if (key.IsNull()) return key;
+
+            ChoFileHeaderConfiguration config = Configuration.FileHeaderConfiguration;
+            if (key != null)
+            {
+                switch (config.TrimOption)
+                {
+                    case ChoFieldValueTrimOption.Trim:
+                        key = key.Trim();
+                        break;
+                    case ChoFieldValueTrimOption.TrimStart:
+                        key = key.TrimStart();
+                        break;
+                    case ChoFieldValueTrimOption.TrimEnd:
+                        key = key.TrimEnd();
+                        break;
+                }
+            }
+
+            if (Configuration.QuoteAllFields && key.StartsWith(@"""") && key.EndsWith(@""""))
+                return key.Substring(1, key.Length - 2);
+            else
+                return key;
         }
 
         private bool FillRecord(object rec, Tuple<long, string> pair)
@@ -496,6 +581,8 @@ namespace ChoETL
 
             ChoKVPRecordFieldConfiguration fieldConfig = Configuration.RecordFieldConfigurationsDict[key];
             PropertyInfo pi = null;
+
+            fieldValue = CleanFieldValue(fieldConfig, fieldConfig.FieldType, fieldValue as string);
 
             if (Configuration.IsDynamicObject)
             {
@@ -606,117 +693,6 @@ namespace ChoETL
             }
 
             return true;
-        }
-
-        private string CleanFieldValue(ChoKVPRecordFieldConfiguration config, Type fieldType, string fieldValue)
-        {
-            if (fieldValue == null) return fieldValue;
-
-            ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim;
-
-            if (config.FieldValueTrimOption == null)
-            {
-                //if (fieldType == typeof(string))
-                //    fieldValueTrimOption = ChoFieldValueTrimOption.None;
-            }
-            else
-                fieldValueTrimOption = config.FieldValueTrimOption.Value;
-
-            switch (fieldValueTrimOption)
-            {
-                case ChoFieldValueTrimOption.Trim:
-                    fieldValue = fieldValue.Trim();
-                    break;
-                case ChoFieldValueTrimOption.TrimStart:
-                    fieldValue = fieldValue.TrimStart();
-                    break;
-                case ChoFieldValueTrimOption.TrimEnd:
-                    fieldValue = fieldValue.TrimEnd();
-                    break;
-            }
-
-            if (config.Size != null)
-            {
-                if (fieldValue.Length > config.Size.Value)
-                {
-                    if (!config.Truncate)
-                        throw new ChoParserException("Incorrect field value length found for '{0}' member [Expected: {1}, Actual: {2}].".FormatString(config.FieldName, config.Size.Value, fieldValue.Length));
-                    else
-                        fieldValue = fieldValue.Substring(0, config.Size.Value);
-                }
-            }
-
-            char startChar;
-            char endChar;
-            char quoteChar = Configuration.QuoteChar == '\0' ? '"' : Configuration.QuoteChar;
-
-            if (fieldValue.Length >= 2)
-            {
-                startChar = fieldValue[0];
-                endChar = fieldValue[fieldValue.Length - 1];
-
-                if (config.QuoteField != null && config.QuoteField.Value && startChar == quoteChar && endChar == quoteChar)
-                    return fieldValue.Substring(1, fieldValue.Length - 2);
-                else if (startChar == quoteChar && endChar == quoteChar &&
-                    (fieldValue.Contains(Configuration.Seperator)
-                    || fieldValue.Contains(Configuration.EOLDelimiter)))
-                    return fieldValue.Substring(1, fieldValue.Length - 2);
-
-            }
-            return fieldValue;
-        }
-
-        private void ValidateLine(int lineNo, string[] fieldValues)
-        {
-            //int maxPos = Configuration.MaxFieldPosition;
-
-            //if (Configuration.ColumnCountStrict)
-            //{
-            //    if (fieldValues.Length != maxPos)
-            //        throw new ChoReaderException("Mismatched number of fields found at {0} line. [Expected: {1}, Found: {2}].".FormatString(
-            //            lineNo, maxPos, fieldValues.Length));
-            //}
-
-            //ChoKVPRecordFieldAttribute attr = null;
-            //foreach (Tuple<MemberInfo, ChoOrderedAttribute> member in _members)
-            //{
-            //    if (attr.Position > fields.Length)
-            //        throw new ApplicationException("Record Member '{0}' has incorrect Position specified.".FormatString(ChoType.GetMemberName(member.Item1)));
-            //}
-        }
-
-        private bool LoadExcelSeperatorIfAny(Tuple<long, string> pair)
-        {
-            string line = pair.Item2.NTrim();
-            if (!line.IsNullOrWhiteSpace() && line.StartsWith("sep=", true, Configuration.Culture))
-            {
-                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Excel separator specified at [{0}]...".FormatString(pair.Item1));
-                string delimiter = line.Substring(4);
-                if (!delimiter.IsNullOrWhiteSpace())
-                {
-                    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Excel separator [{0}] found.".FormatString(delimiter));
-                    Configuration.Seperator = delimiter;
-                }
-
-                return true;
-            }
-
-            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Excel separator NOT found. Default separator [{0}] used.".FormatString(Configuration.Seperator));
-            return false;
-        }
-
-        private string[] GetHeaders(string line)
-        {
-                if (RecordType == typeof(ExpandoObject))
-                {
-                    long index = 0;
-                    return (from x in line.Split(Configuration.Seperator, Configuration.StringSplitOptions, Configuration.QuoteChar)
-                            select "Column{0}".FormatString(++index)).ToArray();
-                }
-                else
-                {
-                    return null;
-                }
         }
 
         private bool RaiseBeginLoad(object state)

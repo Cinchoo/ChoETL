@@ -43,6 +43,12 @@ namespace ChoETL
             get;
             private set;
         }
+        internal Dictionary<string, ChoFixedLengthRecordFieldConfiguration> RecordFieldConfigurationsDict2
+        {
+            get;
+            private set;
+        }
+
 
         public ChoFixedLengthRecordFieldConfiguration this[string name]
         {
@@ -252,7 +258,8 @@ namespace ChoETL
                     throw new ChoRecordConfigurationException("Found '{0}' record field out of bounds of record length.".FormatString(f.FieldName));
             }
 
-            RecordFieldConfigurationsDict = FixedLengthRecordFieldConfigurations.OrderBy(i => i.StartIndex).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
+            RecordFieldConfigurationsDict = FixedLengthRecordFieldConfigurations.OrderBy(i => i.StartIndex).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name, FileHeaderConfiguration.StringComparer);
+            RecordFieldConfigurationsDict2 = FixedLengthRecordFieldConfigurations.OrderBy(i => i.StartIndex).Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName, FileHeaderConfiguration.StringComparer);
 
             //Validate each record field
             foreach (var fieldConfig in FixedLengthRecordFieldConfigurations)

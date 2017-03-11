@@ -12,14 +12,15 @@ namespace ChoKVPReaderTest
     {
         static void Main(string[] args)
         {
-            QuickDynamicTest();
+            LoadINIFileTest();
         }
 
         static void LoadINIFileTest()
         {
-            using (var r = new ChoKVPReader(@"C:\temp\test.INI").WithDelimiter("="))
+            using (var r = new ChoKVPReader(@"C:\Program Files (x86)\VS Revo Group\Revo Uninstaller\lang\hellenic.ini").WithDelimiter("="))
             {
-                r.Configuration.RecordStart = "[*";
+                r.Configuration.RecordStart = "[Uninstaller Toolbar]";
+                r.Configuration.RecordEnd = "[*";
                 r.Configuration.IgnoreEmptyLine = true;
                 r.Configuration.Comment = ";";
                 foreach (var item in r.ToArray())
