@@ -10,7 +10,7 @@
 
 	#endregion NameSpaces
 
-	public class ChoIndexedEnumerator<T> : IEnumerator<Tuple<int, T>>
+	public class ChoIndexedEnumerator<T> : IEnumerator<Tuple<long, T>>
 	{
 		#region Instance Data Members (Private)
 
@@ -42,11 +42,11 @@
 
 		#region IEnumerator Members
 
-		public Tuple<int, T> Current
+		public Tuple<long, T> Current
 		{
 			get
 			{
-				return new Tuple<int, T>(_currentIndex, _enumerator.Current);
+				return new Tuple<long, T>(_currentIndex, _enumerator.Current);
 			}
 		}
 

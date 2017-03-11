@@ -21,13 +21,13 @@ namespace ChoETL
             RecordType = recordType;
         }
 
-        protected bool RaisedRowsLoaded(long rowsLoaded)
+        protected bool RaisedRowsLoaded(long rowsLoaded, bool isFinal = false)
         {
             EventHandler<ChoRowsLoadedEventArgs> rowsLoadedEvent = RowsLoaded;
             if (rowsLoadedEvent == null)
                 return false;
 
-            var ea = new ChoRowsLoadedEventArgs(rowsLoaded);
+            var ea = new ChoRowsLoadedEventArgs(rowsLoaded, isFinal);
             rowsLoadedEvent(this, ea);
             return ea.Abort;
         }

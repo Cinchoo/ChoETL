@@ -93,5 +93,13 @@ namespace ChoETL
             else
                 return strA == strB;
         }
+
+        internal bool StartsWith(String strA, String strB)
+        {
+            if (IgnoreCase)
+                return strA.StartsWith(strB, IgnoreCase, _culture);
+            else
+                return strA.StartsWith(strB);
+        }
     }
 }

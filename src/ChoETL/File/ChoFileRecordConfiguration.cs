@@ -18,6 +18,14 @@ namespace ChoETL
             get;
             set;
         }
+        public string Comment
+        {
+            set
+            {
+                if (!value.IsNullOrWhiteSpace())
+                    Comments = new string[] { value };
+            }
+        }
         [DataMember]
         public string[] Comments
         {

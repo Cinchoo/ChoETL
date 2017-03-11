@@ -30,7 +30,7 @@
         {
             public MemberInfo[] MemberInfos;
             public FieldInfo[] FieldInfos;
-            public PropertyInfo[] PropertyInfos;
+            //public PropertyInfo[] PropertyInfos;
         }
 
         #endregion TypeInfo Class (Private)

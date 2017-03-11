@@ -63,6 +63,7 @@ namespace ChoETL
             XmlReader xpr = sr;
             int counter = 0;
             Tuple<int, XElement> pair = null;
+            bool abortRequested = false;
 
             foreach (XElement el in xpr.GetXmlElements(Configuration.XPath))
             {
@@ -90,10 +91,13 @@ namespace ChoETL
                     if (RaisedRowsLoaded(pair.Item1))
                     {
                         ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Abort requested.");
+                        abortRequested = true;
                         yield break;
                     }
                 }
             }
+            if (!abortRequested)
+                RaisedRowsLoaded(pair.Item1);
 
             RaiseEndLoad(sr);
         }

@@ -139,7 +139,12 @@ namespace ChoETL
         {
             EventHandler<ChoRowsLoadedEventArgs> rowsLoadedEvent = RowsLoaded;
             if (rowsLoadedEvent == null)
-                Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " records loaded.");
+            {
+                if (!e.IsFinal)
+                    Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " records loaded.");
+                else
+                    Console.WriteLine("Total " + e.RowsLoaded.ToString("#,##0") + " records loaded.");
+            }
             else
                 rowsLoadedEvent(this, e);
         }

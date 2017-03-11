@@ -11,12 +11,12 @@ namespace ChoETL
         bool BeginLoad(object source);
         void EndLoad(object source);
 
-        bool BeforeRecordLoad(object target, int index, ref object source);
-        bool AfterRecordLoad(object target, int index, object source);
-        bool RecordLoadError(object target, int index, object source, Exception ex);
+        bool BeforeRecordLoad(object target, long index, ref object source);
+        bool AfterRecordLoad(object target, long index, object source);
+        bool RecordLoadError(object target, long index, object source, Exception ex);
 
-        bool BeforeRecordFieldLoad(object target, int index, string propName, ref object value);
-        bool AfterRecordFieldLoad(object target, int index, string propName, object value);
-        bool RecordFieldLoadError(object target, int index, string propName, object value, Exception ex);
+        bool BeforeRecordFieldLoad(object target, long index, string propName, ref object value);
+        bool AfterRecordFieldLoad(object target, long index, string propName, object value);
+        bool RecordFieldLoadError(object target, long index, string propName, object value, Exception ex);
     }
 }

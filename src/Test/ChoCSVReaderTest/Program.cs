@@ -543,22 +543,22 @@ namespace ChoCSVReaderTest
         [ChoTypeConverter(typeof(Name1Formatter))]
         public string Name { get; set; }
 
-        public bool AfterRecordFieldLoad(object target, int index, string propName, object value)
+        public bool AfterRecordFieldLoad(object target, long index, string propName, object value)
         {
             throw new NotImplementedException();
         }
 
-        public bool AfterRecordLoad(object target, int index, object source)
+        public bool AfterRecordLoad(object target, long index, object source)
         {
             throw new NotImplementedException();
         }
 
-        public bool BeforeRecordFieldLoad(object target, int index, string propName, ref object value)
+        public bool BeforeRecordFieldLoad(object target, long index, string propName, ref object value)
         {
             throw new NotImplementedException();
         }
 
-        public bool BeforeRecordLoad(object target, int index, ref object source)
+        public bool BeforeRecordLoad(object target, long index, ref object source)
         {
             throw new NotImplementedException();
         }
@@ -573,12 +573,12 @@ namespace ChoCSVReaderTest
             throw new NotImplementedException();
         }
 
-        public bool RecordFieldLoadError(object target, int index, string propName, object value, Exception ex)
+        public bool RecordFieldLoadError(object target, long index, string propName, object value, Exception ex)
         {
             return true;
         }
 
-        public bool RecordLoadError(object target, int index, object source, Exception ex)
+        public bool RecordLoadError(object target, long index, object source, Exception ex)
         {
             throw new NotImplementedException();
         }
@@ -624,22 +624,22 @@ namespace ChoCSVReaderTest
         //[ChoCSVRecordField(3, FieldName = "Address")]
         //public string Address { get; set; }
 
-        public bool AfterRecordFieldLoad(object target, int index, string propName, object value)
+        public bool AfterRecordFieldLoad(object target, long index, string propName, object value)
         {
             throw new NotImplementedException();
         }
 
-        public bool AfterRecordLoad(object target, int index, object source)
+        public bool AfterRecordLoad(object target, long index, object source)
         {
             throw new NotImplementedException();
         }
 
-        public bool BeforeRecordFieldLoad(object target, int index, string propName, ref object value)
+        public bool BeforeRecordFieldLoad(object target, long index, string propName, ref object value)
         {
             throw new NotImplementedException();
         }
 
-        public bool BeforeRecordLoad(object target, int index, ref object source)
+        public bool BeforeRecordLoad(object target, long index, ref object source)
         {
             throw new NotImplementedException();
         }
@@ -654,12 +654,12 @@ namespace ChoCSVReaderTest
             throw new NotImplementedException();
         }
 
-        public bool RecordFieldLoadError(object target, int index, string propName, object value, Exception ex)
+        public bool RecordFieldLoadError(object target, long index, string propName, object value, Exception ex)
         {
             throw new NotImplementedException();
         }
 
-        public bool RecordLoadError(object target, int index, object source, Exception ex)
+        public bool RecordLoadError(object target, long index, object source, Exception ex)
         {
             throw new NotImplementedException();
         }

@@ -57,7 +57,7 @@ namespace ChoETL
             string[] commentTokens = Configuration.Comments;
             bool? skip = false;
             bool _headerFound = false;
-            using (ChoPeekEnumerator<Tuple<int, string>> e = new ChoPeekEnumerator<Tuple<int, string>>(
+            using (ChoPeekEnumerator<Tuple<long, string>> e = new ChoPeekEnumerator<Tuple<long, string>>(
                 new ChoIndexedEnumerator<string>(sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, Configuration.MayContainEOLInData)).ToEnumerable(),
                 (pair) =>
                 {
@@ -103,7 +103,7 @@ namespace ChoETL
                     if (pair.Item2.IsNullOrWhiteSpace())
                     {
                         if (!Configuration.IgnoreEmptyLine)
-                            throw new ChoParserException("Empty line found at {0} location.".FormatString(pair.Item1));
+                            throw new ChoParserException("Empty line found at [{0}] location.".FormatString(pair.Item1));
                         else
                         {
                             if (TraceSwitch.TraceVerbose)
@@ -146,7 +146,7 @@ namespace ChoETL
             {
                 while (true)
                 {
-                    Tuple<int, string> pair = e.Peek;
+                    Tuple<long, string> pair = e.Peek;
                     if (pair == null)
                     {
                         RaiseEndLoad(sr);
@@ -201,7 +201,7 @@ namespace ChoETL
             return Configuration[recordType];
         }
 
-        private bool LoadLine(Tuple<int, string> pair, ref object rec)
+        private bool LoadLine(Tuple<long, string> pair, ref object rec)
         {
             Type recType = rec.GetType();
             try
@@ -281,26 +281,26 @@ namespace ChoETL
             ChoActionEx.RunWithIgnoreError(() => Configuration.NotifyRecordReadObject.EndLoad(state));
         }
 
-        private bool RaiseBeforeRecordLoad(object target, ref Tuple<int, string> pair)
+        private bool RaiseBeforeRecordLoad(object target, ref Tuple<long, string> pair)
         {
             if (Configuration.NotifyRecordReadObject == null) return true;
-            int index = pair.Item1;
+            long index = pair.Item1;
             object state = pair.Item2;
             bool retValue = ChoFuncEx.RunWithIgnoreError(() => Configuration.NotifyRecordReadObject.BeforeRecordLoad(target, index, ref state), true);
 
             if (retValue)
-                pair = new Tuple<int, string>(index, state as string);
+                pair = new Tuple<long, string>(index, state as string);
 
             return retValue;
         }
 
-        private bool RaiseAfterRecordLoad(object target, Tuple<int, string> pair)
+        private bool RaiseAfterRecordLoad(object target, Tuple<long, string> pair)
         {
             if (Configuration.NotifyRecordReadObject == null) return true;
             return ChoFuncEx.RunWithIgnoreError(() => Configuration.NotifyRecordReadObject.AfterRecordLoad(target, pair.Item1, pair.Item2), true);
         }
 
-        private bool RaiseRecordLoadError(object target, Tuple<int, string> pair, Exception ex)
+        private bool RaiseRecordLoadError(object target, Tuple<long, string> pair, Exception ex)
         {
             if (Configuration.NotifyRecordReadObject == null) return true;
             return ChoFuncEx.RunWithIgnoreError(() => Configuration.NotifyRecordReadObject.RecordLoadError(target, pair.Item1, pair.Item2, ex), false);

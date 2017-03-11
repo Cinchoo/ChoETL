@@ -49,9 +49,18 @@ namespace ChoETL
             get;
             private set;
         }
+        internal Dictionary<string, ChoKVPRecordFieldConfiguration> RecordFieldConfigurationsDict2
+        {
+            get;
+            private set;
+        }
 
         internal KeyValuePair<string, ChoKVPRecordFieldConfiguration>[] FCArray;
         internal bool AutoDiscoveredColumns = false;
+        private bool _isWildcardComparisionOnRecordStart = false;
+        private bool _isWildcardComparisionOnRecordEnd = false;
+        private ChoWildcard _recordStartWildCard = null;
+        private ChoWildcard _recordEndWildCard = null;
 
         public ChoKVPRecordFieldConfiguration this[string name]
         {
@@ -162,8 +171,20 @@ namespace ChoETL
                 {
                     if (RecordStart.IsNullOrWhiteSpace())
                         throw new ChoRecordConfigurationException("RecordStart is missing.");
-                    else if (RecordEnd.IsNullOrWhiteSpace())
-                        throw new ChoRecordConfigurationException("RecordEnd is missing.");
+                    //else if (RecordEnd.IsNullOrWhiteSpace())
+                    //    RecordEnd = RecordStart;
+                    //throw new ChoRecordConfigurationException("RecordEnd is missing.");
+
+                    if (RecordStart.Contains("*") || RecordStart.Contains("?"))
+                    {
+                        _isWildcardComparisionOnRecordStart = true;
+                        _recordStartWildCard = new ChoWildcard(RecordStart);
+                    }
+                    if (!RecordEnd.IsNullOrWhiteSpace() && (RecordEnd.EndsWith("*") || RecordStart.Contains("?")))
+                    {
+                        _isWildcardComparisionOnRecordEnd = true;
+                        _recordEndWildCard = new ChoWildcard(RecordEnd);
+                    }
                 }
 
                 //Validate Header
@@ -222,9 +243,41 @@ namespace ChoETL
                     throw new ChoRecordConfigurationException("Duplicate field name(s) [Name: {0}] found.".FormatString(String.Join(",", dupFields)));
 
                 RecordFieldConfigurationsDict = KVPRecordFieldConfigurations.Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
+                RecordFieldConfigurationsDict2 = KVPRecordFieldConfigurations.Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName);
                 FCArray = RecordFieldConfigurationsDict.ToArray();
 
                 LoadNCacheMembers(KVPRecordFieldConfigurations);
+            }
+        }
+
+        internal bool IsRecordStartMatch(string line)
+        {
+            if (_isWildcardComparisionOnRecordStart)
+            {
+                return _recordStartWildCard.IsMatch(line);
+            }
+            else
+            {
+                return FileHeaderConfiguration.IsEqual(line, RecordStart);
+            }
+        }
+
+        internal bool IsRecordEndMatch(string line)
+        {
+            if (RecordEnd.IsNullOrWhiteSpace())
+            {
+                return IsRecordStartMatch(line);
+            }
+            else
+            {
+                if (_isWildcardComparisionOnRecordEnd)
+                {
+                    return _recordEndWildCard.IsMatch(line);
+                }
+                else
+                {
+                    return FileHeaderConfiguration.IsEqual(line, RecordEnd);
+                }
             }
         }
     }
