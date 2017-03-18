@@ -39,7 +39,7 @@ namespace ChoETL
 
             Init();
 
-            _streamReader = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.Encoding, false, Configuration.BufferSize);
+            _streamReader = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
             _closeStreamOnDispose = true;
         }
 
@@ -79,7 +79,7 @@ namespace ChoETL
 
             Configuration = configuration;
             Init();
-            _streamReader = new StreamReader(inStream, Configuration.Encoding, false, Configuration.BufferSize);
+            _streamReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
             _closeStreamOnDispose = true;
         }
 

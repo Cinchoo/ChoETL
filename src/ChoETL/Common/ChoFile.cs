@@ -32,7 +32,7 @@ namespace ChoETL
             if (bom[0] == 0xff && bom[1] == 0xfe) return Encoding.Unicode; //UTF-16LE
             if (bom[0] == 0xfe && bom[1] == 0xff) return Encoding.BigEndianUnicode; //UTF-16BE
             if (bom[0] == 0 && bom[1] == 0 && bom[2] == 0xfe && bom[3] == 0xff) return Encoding.UTF32;
-            return Encoding.ASCII;
+            return Encoding.Default;
         }
 
         public static IEnumerable<string> GetNextSequencedFileNameLike(string filePath, int startIndex = 1, int step = 1, int width = 5, string Separator = "_")

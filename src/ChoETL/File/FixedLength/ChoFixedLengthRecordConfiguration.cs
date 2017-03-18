@@ -121,8 +121,8 @@ namespace ChoETL
 
             string line = null;
             string[] fieldNames = null;
-            if (state is Tuple<int, string>)
-                line = ((Tuple<int, string>)state).Item2;
+            if (state is Tuple<long, string>)
+                line = ((Tuple<long, string>)state).Item2;
             else
                 fieldNames = state as string[];
 

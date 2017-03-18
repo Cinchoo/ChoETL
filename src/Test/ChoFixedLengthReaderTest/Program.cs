@@ -60,7 +60,16 @@ namespace ChoFixedLengthReaderTest
             //ChoFixedLengthFieldDefaultSizeConfiguation.Instance.SetSize(typeof(int), 3);
             //ChoFixedLengthFieldDefaultSizeConfiguation.Instance.SetSize(typeof(string), 5);
 
-            DefaultValueUsedViaConfigFirstApproach();
+            QuickLoad();
+        }
+
+        static void QuickLoad()
+        {
+            foreach (var rec in new ChoFixedLengthReader("accounts.txt"))
+            {
+                Console.WriteLine(rec.ToStringEx());
+            }
+
         }
 
         static void DynamicApproach()
@@ -164,7 +173,7 @@ namespace ChoFixedLengthReaderTest
         static void MultiLineTest()
         {
             object row = null;
-            using (var parser = new ChoFixedLengthReader("Emp.csv").WithFirstLineHeader().WithField("Id", 0, 8).WithField("Name", 8, 10, true))
+            using (var parser = new ChoFixedLengthReader("Emp.txt").WithFirstLineHeader().WithField("Id", 0, 8).WithField("Name", 8, 10, true))
             {
                 parser.Configuration.MayContainEOLInData = true;
                 while ((row = parser.Read()) != null)

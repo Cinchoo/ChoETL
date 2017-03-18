@@ -29,7 +29,7 @@ namespace ChoETL
 
         public static T GetValue<T>(string key, T defaultValue = default(T), bool saveDefaultValue = false)
         {
-            return GetValue(key, defaultValue.ToNString(), saveDefaultValue).CastTo<T>();
+            return GetValue(key, defaultValue.ToNString(), saveDefaultValue).CastTo<T>(defaultValue);
         }
 
         public static string GetValue(string key, string defaultValue = null, bool saveDefaultValue = false)

@@ -200,7 +200,7 @@ namespace ChoETL
                 {
                     ChoETLLog.Info("Determining '{0}' file encoding...".FormatString(fileName));
                     Encoding = ChoFile.GetEncodingFromFile(fileName);
-                    ChoETLLog.Info("Found {1} encoding in '{0}' file.".FormatString(fileName, Encoding));
+                    ChoETLLog.Info("Found '{1}' encoding in '{0}' file.".FormatString(fileName, Encoding));
                 }
                 catch (Exception ex)
                 {

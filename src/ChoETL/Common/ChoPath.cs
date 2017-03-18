@@ -24,8 +24,9 @@ namespace ChoETL
         {
             if (System.Web.HttpContext.Current == null)
             {
-                EntryAssemblyBaseDirectory = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-                EntryAssemblyName = Path.GetFileNameWithoutExtension(Assembly.GetEntryAssembly().Location);
+                string loc = Assembly.GetEntryAssembly() != null ? Assembly.GetEntryAssembly().Location : Assembly.GetCallingAssembly().Location;
+                EntryAssemblyBaseDirectory = Path.GetDirectoryName(loc);
+                EntryAssemblyName = Path.GetFileNameWithoutExtension(loc);
             }
             else
             {
