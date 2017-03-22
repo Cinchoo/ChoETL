@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public class ChoFixedLengthReader<T> : IDisposable, IEnumerable<T>
+    public class ChoFixedLengthReader<T> : ChoReader, IDisposable, IEnumerable<T>
         where T : class
     {
         private StreamReader _streamReader;
@@ -99,17 +99,18 @@ namespace ChoETL
 
         internal static IEnumerator<object> LoadText(Type recType, string inputText, ChoFixedLengthRecordConfiguration configuration, Encoding encoding, int bufferSize)
         {
-            ChoFixedLengthRecordReader reader = new ChoFixedLengthRecordReader(recType, configuration);
-            reader.TraceSwitch = ChoETLFramework.TraceSwitchOff;
-            return reader.AsEnumerable(new StreamReader(inputText.ToStream(), encoding, false, bufferSize)).GetEnumerator();
+            ChoFixedLengthRecordReader rr = new ChoFixedLengthRecordReader(recType, configuration);
+            rr.TraceSwitch = ChoETLFramework.TraceSwitchOff;
+            return rr.AsEnumerable(new StreamReader(inputText.ToStream(), encoding, false, bufferSize)).GetEnumerator();
         }
 
         public IEnumerator<T> GetEnumerator()
         {
-            ChoFixedLengthRecordReader reader = new ChoFixedLengthRecordReader(typeof(T), Configuration);
-            reader.TraceSwitch = TraceSwitch;
-            reader.RowsLoaded += NotifyRowsLoaded;
-            var e = reader.AsEnumerable(_streamReader).GetEnumerator();
+            ChoFixedLengthRecordReader rr = new ChoFixedLengthRecordReader(typeof(T), Configuration);
+            rr.Reader = this;
+            rr.TraceSwitch = TraceSwitch;
+            rr.RowsLoaded += NotifyRowsLoaded;
+            var e = rr.AsEnumerable(_streamReader).GetEnumerator();
             return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
         }
 
@@ -120,10 +121,11 @@ namespace ChoETL
 
         public IDataReader AsDataReader()
         {
-            ChoFixedLengthRecordReader reader = new ChoFixedLengthRecordReader(typeof(T), Configuration);
-            reader.TraceSwitch = TraceSwitch;
-            reader.LoadSchema(_streamReader);
-            reader.RowsLoaded += NotifyRowsLoaded;
+            ChoFixedLengthRecordReader rr = new ChoFixedLengthRecordReader(typeof(T), Configuration);
+            rr.Reader = this;
+            rr.TraceSwitch = TraceSwitch;
+            rr.LoadSchema(_streamReader);
+            rr.RowsLoaded += NotifyRowsLoaded;
             var dr = new ChoEnumerableDataReader(GetEnumerator().ToEnumerable(), Configuration.FixedLengthRecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType)).ToArray());
             return dr;
         }

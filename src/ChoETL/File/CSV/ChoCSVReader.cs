@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public class ChoCSVReader<T> : IDisposable, IEnumerable<T>
+    public class ChoCSVReader<T> : ChoReader, IDisposable, IEnumerable<T>
         where T : class
     {
         private StreamReader _streamReader;
@@ -99,17 +99,18 @@ namespace ChoETL
 
         internal static IEnumerator<object> LoadText(Type recType, string inputText, ChoCSVRecordConfiguration configuration, Encoding encoding, int bufferSize)
         {
-            ChoCSVRecordReader reader = new ChoCSVRecordReader(recType, configuration);
-            reader.TraceSwitch = ChoETLFramework.TraceSwitchOff;
-            return reader.AsEnumerable(new StreamReader(inputText.ToStream(), encoding, false, bufferSize)).GetEnumerator();
+            ChoCSVRecordReader rr = new ChoCSVRecordReader(recType, configuration);
+            rr.TraceSwitch = ChoETLFramework.TraceSwitchOff;
+            return rr.AsEnumerable(new StreamReader(inputText.ToStream(), encoding, false, bufferSize)).GetEnumerator();
         }
 
         public IEnumerator<T> GetEnumerator()
         {
-            ChoCSVRecordReader reader = new ChoCSVRecordReader(typeof(T), Configuration);
-            reader.TraceSwitch = TraceSwitch;
-            reader.RowsLoaded += NotifyRowsLoaded;
-            var e = reader.AsEnumerable(_streamReader).GetEnumerator();
+            ChoCSVRecordReader rr = new ChoCSVRecordReader(typeof(T), Configuration);
+            rr.Reader = this;
+            rr.TraceSwitch = TraceSwitch;
+            rr.RowsLoaded += NotifyRowsLoaded;
+            var e = rr.AsEnumerable(_streamReader).GetEnumerator();
             return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
         }
 
@@ -120,10 +121,11 @@ namespace ChoETL
 
         public IDataReader AsDataReader()
         {
-            ChoCSVRecordReader reader = new ChoCSVRecordReader(typeof(T), Configuration);
-            reader.TraceSwitch = TraceSwitch;
-            reader.LoadSchema(_streamReader);
-            reader.RowsLoaded += NotifyRowsLoaded;
+            ChoCSVRecordReader rr = new ChoCSVRecordReader(typeof(T), Configuration);
+            rr.Reader = this;
+            rr.TraceSwitch = TraceSwitch;
+            rr.LoadSchema(_streamReader);
+            rr.RowsLoaded += NotifyRowsLoaded;
             var dr = new ChoEnumerableDataReader(GetEnumerator().ToEnumerable(), Configuration.CSVRecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType)).ToArray());
             return dr;
         }

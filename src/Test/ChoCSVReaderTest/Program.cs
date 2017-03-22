@@ -21,11 +21,57 @@ namespace ChoCSVReaderTest
             QuickTest();
         }
 
+        static void IgnoreLineTest()
+        {
+            using (var parser = new ChoCSVReader("IgnoreLineFile.csv").WithFirstLineHeader())
+            {
+                parser.Configuration.Encoding = Encoding.BigEndianUnicode;
+
+                parser.BeforeRecordLoad += (o, e) =>
+                {
+                    if (e.Source != null)
+                    {
+                        e.Skip = ((string)e.Source).StartsWith("%");
+                    }
+                };
+                parser.BeforeRecordFieldLoad += (o, e) =>
+                {
+                    //if (e.PropertyName == "Id")
+                    //    e.Skip = true;
+                };
+
+                parser.AfterRecordFieldLoad += (o, e) =>
+                {
+                    if (e.Source.ToNString() == "2")
+                        e.Stop = true;
+                };
+                parser.AfterRecordLoad += (o, e) =>
+                {
+                    e.Stop = false;
+                };
+                foreach (var e in parser)
+                    Console.WriteLine(e.ToStringEx());
+            }
+        }
+
+        static void MultiLineColumnValue()
+        {
+            using (var parser = new ChoCSVReader("MultiLineValue.csv").WithFirstLineHeader())
+            {
+                parser.Configuration.MayContainEOLInData = true;
+
+                foreach (var e in parser)
+                    Console.WriteLine(e.ToStringEx());
+            }
+        }
+
         static void LoadTextTest()
         {
             string txt = "Id, Name\r\n1, Mark";
             foreach (var e in ChoCSVReader.LoadText(txt).WithFirstLineHeader())
+            {
                 Console.WriteLine(e.ToStringEx());
+            }
         }
 
         static void QuickTest()
@@ -33,7 +79,7 @@ namespace ChoCSVReaderTest
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoCSVReader<EmployeeRec>(reader).WithDelimiter(",").WithFirstLineHeader())
+            using (var parser = new ChoCSVReader<EmployeeRecWithCurrency>(reader).WithDelimiter(",").WithFirstLineHeader())
             {
                 writer.WriteLine("Id,Name,Salary");
                 writer.WriteLine("1,Carl,1000");
@@ -268,6 +314,7 @@ namespace ChoCSVReaderTest
         {
             public int? Id { get; set; }
             public string Name { get; set; }
+            [ChoIgnoreMember]
             public ChoCurrency Salary { get; set; }
         }
 

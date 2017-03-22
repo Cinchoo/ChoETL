@@ -188,8 +188,8 @@ namespace ChoETL
 
             string[] fieldNames = null;
             XElement xpr = null;
-            if (state is Tuple<int, XElement>)
-                xpr = ((Tuple<int, XElement>)state).Item2;
+            if (state is Tuple<long, XElement>)
+                xpr = ((Tuple<long, XElement>)state).Item2;
             else
                 fieldNames = state as string[];
 
@@ -201,8 +201,8 @@ namespace ChoETL
                 {
                     IsComplexXPathUsed = false;
 
-                    int startIndex = 0;
-                    int size = 0;
+                    long startIndex = 0;
+                    long size = 0;
                     string xpath = null;
                     bool useCache = true;
                     ChoXmlNodeRecordFieldAttribute attr = null;

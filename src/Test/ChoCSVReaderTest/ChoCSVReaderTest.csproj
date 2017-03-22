@@ -46,7 +46,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="IgnoreLineFile.csv" />
+    <None Include="MultiLineValue.csv" />
     <None Include="Emp.csv" />
+    <None Include="Account.csv" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

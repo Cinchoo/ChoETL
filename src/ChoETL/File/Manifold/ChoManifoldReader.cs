@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public class ChoManifoldReader : IDisposable, IEnumerable
+    public class ChoManifoldReader : ChoReader, IDisposable, IEnumerable
     {
         private StreamReader _streamReader;
         private bool _closeStreamOnDispose = false;
@@ -89,10 +89,11 @@ namespace ChoETL
 
         public IEnumerator GetEnumerator()
         {
-            ChoManifoldRecordReader reader = new ChoManifoldRecordReader(Configuration);
-            reader.TraceSwitch = TraceSwitch;
-            reader.RowsLoaded += NotifyRowsLoaded;
-            return reader.AsEnumerable(_streamReader).GetEnumerator();
+            ChoManifoldRecordReader rr = new ChoManifoldRecordReader(Configuration);
+            rr.Reader = this;
+            rr.TraceSwitch = TraceSwitch;
+            rr.RowsLoaded += NotifyRowsLoaded;
+            return rr.AsEnumerable(_streamReader).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

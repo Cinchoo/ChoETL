@@ -133,6 +133,7 @@
     <Compile Include="File\ChoRowsWrittenEventArgs.cs" />
     <Compile Include="File\ChoRowsLoadedEventArgs.cs" />
     <Compile Include="File\CSV\ChoCSVFluentPlugIn.cs" />
+    <Compile Include="File\CSV\IChoReader.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthFileHeaderConfiguration.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthRecordWriter.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthWriter.cs" />

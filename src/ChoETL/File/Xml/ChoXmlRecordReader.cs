@@ -20,6 +20,7 @@ namespace ChoETL
     {
         private IChoNotifyRecordRead _callbackRecord;
         private bool _configCheckDone = false;
+        internal ChoReader Reader = null;
 
         public ChoXmlRecordConfiguration Configuration
         {
@@ -61,13 +62,13 @@ namespace ChoETL
                 yield break;
 
             XmlReader xpr = sr;
-            int counter = 0;
-            Tuple<int, XElement> pair = null;
+            long counter = 0;
+            Tuple<long, XElement> pair = null;
             bool abortRequested = false;
 
             foreach (XElement el in xpr.GetXmlElements(Configuration.XPath))
             {
-                pair = new Tuple<int, XElement>(++counter, el);
+                pair = new Tuple<long, XElement>(++counter, el);
 
                 if (!_configCheckDone)
                 {
@@ -102,12 +103,16 @@ namespace ChoETL
             RaiseEndLoad(sr);
         }
 
-        private bool LoadNode(Tuple<int, XElement> pair, ref object rec)
+        private bool LoadNode(Tuple<long, XElement> pair, ref object rec)
         {
             try
             {
                 if (!RaiseBeforeRecordLoad(rec, ref pair))
-                    return false;
+                {
+                    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Skipping...");
+                    rec = null;
+                    return true;
+                }
 
                 if (pair.Item2 == null)
                 {
@@ -191,9 +196,9 @@ namespace ChoETL
         PropertyInfo pi = null;
         XPathNavigator xpn = null;
         private readonly Dictionary<string, List<string>> xDict = new Dictionary<string, List<string>>();
-        private bool FillRecord(object rec, Tuple<int, XElement> pair)
+        private bool FillRecord(object rec, Tuple<long, XElement> pair)
         {
-            int lineNo;
+            long lineNo;
             XElement node;
 
             lineNo = pair.Item1;
@@ -284,7 +289,7 @@ namespace ChoETL
                     fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue as string);
 
                 if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
-                    return false;
+                    continue;
 
                 try
                 {
@@ -422,65 +427,198 @@ namespace ChoETL
             return System.Net.WebUtility.HtmlDecode(fieldValue);
         }
 
+        #region Event Raisers
+
         private bool RaiseBeginLoad(object state)
         {
-            if (_callbackRecord == null) return true;
-            return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeginLoad(state), true);
+            if (_callbackRecord != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeginLoad(state), true);
+            }
+            else if (Reader != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseBeginLoad(state), true);
+            }
+            return true;
         }
 
         private void RaiseEndLoad(object state)
         {
-            if (_callbackRecord == null) return;
-            ChoActionEx.RunWithIgnoreError(() => _callbackRecord.EndLoad(state));
+            if (_callbackRecord != null)
+            {
+                ChoActionEx.RunWithIgnoreError(() => _callbackRecord.EndLoad(state));
+            }
+            else if (Reader != null)
+            {
+                ChoActionEx.RunWithIgnoreError(() => Reader.RaiseEndLoad(state));
+            }
         }
 
-        private bool RaiseBeforeRecordLoad(object target, ref Tuple<int, XElement> pair)
+        private bool RaiseBeforeRecordLoad(object target, ref Tuple<long, XElement> pair)
         {
-            if (_callbackRecord == null) return true;
-            int index = pair.Item1;
-            object state = pair.Item2;
-            bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeforeRecordLoad(target, index, ref state), true);
+            if (_callbackRecord != null)
+            {
+                long index = pair.Item1;
+                object state = pair.Item2;
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeforeRecordLoad(target, index, ref state), true);
 
-            if (retValue)
-                pair = new Tuple<int, XElement>(index, state as XElement);
+                if (retValue)
+                    pair = new Tuple<long, XElement>(index, state as XElement);
 
-            return retValue;
+                return retValue;
+            }
+            else if (Reader != null)
+            {
+                long index = pair.Item1;
+                object state = pair.Item2;
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseBeforeRecordLoad(target, index, ref state), true);
+
+                if (retValue)
+                    pair = new Tuple<long, XElement>(index, state as XElement);
+
+                return retValue;
+            }
+            return true;
         }
 
-        private bool RaiseAfterRecordLoad(object target, Tuple<int, XElement> pair)
+        private bool RaiseAfterRecordLoad(object target, Tuple<long, XElement> pair)
         {
-            if (_callbackRecord == null) return true;
-            return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordLoad(target, pair.Item1, pair.Item2), true);
+            if (_callbackRecord != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordLoad(target, pair.Item1, pair.Item2), true);
+            }
+            else if (Reader != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseAfterRecordLoad(target, pair.Item1, pair.Item2), true);
+            }
+            return true;
         }
 
-        private bool RaiseRecordLoadError(object target, Tuple<int, XElement> pair, Exception ex)
+        private bool RaiseRecordLoadError(object target, Tuple<long, XElement> pair, Exception ex)
         {
-            if (_callbackRecord == null) return true;
-            return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordLoadError(target, pair.Item1, pair.Item2, ex), false);
+            if (_callbackRecord != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordLoadError(target, pair.Item1, pair.Item2, ex), false);
+            }
+            else if (Reader != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseRecordLoadError(target, pair.Item1, pair.Item2, ex), false);
+            }
+            return true;
         }
 
-        private bool RaiseBeforeRecordFieldLoad(object target, int index, string propName, ref object value)
+        private bool RaiseBeforeRecordFieldLoad(object target, long index, string propName, ref object value)
         {
-            if (_callbackRecord == null) return true;
-            object state = value;
-            bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeforeRecordFieldLoad(target, index, propName, ref state), true);
+            if (_callbackRecord != null)
+            {
+                object state = value;
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeforeRecordFieldLoad(target, index, propName, ref state), true);
 
-            if (retValue)
-                value = state;
+                if (retValue)
+                    value = state;
 
-            return retValue;
+                return retValue;
+            }
+            else if (Reader != null)
+            {
+                object state = value;
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseBeforeRecordFieldLoad(target, index, propName, ref state), true);
+
+                if (retValue)
+                    value = state;
+
+                return retValue;
+            }
+            return true;
         }
 
-        private bool RaiseAfterRecordFieldLoad(object target, int index, string propName, object value)
+        private bool RaiseAfterRecordFieldLoad(object target, long index, string propName, object value)
         {
-            if (_callbackRecord == null) return true;
-            return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordFieldLoad(target, index, propName, value), true);
+            if (_callbackRecord != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordFieldLoad(target, index, propName, value), true);
+            }
+            else if (Reader != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseAfterRecordFieldLoad(target, index, propName, value), true);
+            }
+            return true;
         }
 
-        private bool RaiseRecordFieldLoadError(object target, int index, string propName, object value, Exception ex)
+        private bool RaiseRecordFieldLoadError(object target, long index, string propName, object value, Exception ex)
         {
-            if (_callbackRecord == null) return true;
-            return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordFieldLoadError(target, index, propName, value, ex), true);
+            if (_callbackRecord != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordFieldLoadError(target, index, propName, value, ex), true);
+            }
+            else if (Reader != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseRecordFieldLoadError(target, index, propName, value, ex), true);
+            }
+            return true;
         }
+
+        #endregion Event Raisers
+
+        //private bool RaiseBeginLoad(object state)
+        //{
+        //    if (_callbackRecord == null) return true;
+        //    return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeginLoad(state), true);
+        //}
+
+        //private void RaiseEndLoad(object state)
+        //{
+        //    if (_callbackRecord == null) return;
+        //    ChoActionEx.RunWithIgnoreError(() => _callbackRecord.EndLoad(state));
+        //}
+
+        //private bool RaiseBeforeRecordLoad(object target, ref Tuple<long, XElement> pair)
+        //{
+        //    if (_callbackRecord == null) return true;
+        //    long index = pair.Item1;
+        //    object state = pair.Item2;
+        //    bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeforeRecordLoad(target, index, ref state), true);
+
+        //    if (retValue)
+        //        pair = new Tuple<long, XElement>(index, state as XElement);
+
+        //    return retValue;
+        //}
+
+        //private bool RaiseAfterRecordLoad(object target, Tuple<long, XElement> pair)
+        //{
+        //    if (_callbackRecord == null) return true;
+        //    return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordLoad(target, pair.Item1, pair.Item2), true);
+        //}
+
+        //private bool RaiseRecordLoadError(object target, Tuple<long, XElement> pair, Exception ex)
+        //{
+        //    if (_callbackRecord == null) return true;
+        //    return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordLoadError(target, pair.Item1, pair.Item2, ex), false);
+        //}
+
+        //private bool RaiseBeforeRecordFieldLoad(object target, long index, string propName, ref object value)
+        //{
+        //    if (_callbackRecord == null) return true;
+        //    object state = value;
+        //    bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeforeRecordFieldLoad(target, index, propName, ref state), true);
+
+        //    if (retValue)
+        //        value = state;
+
+        //    return retValue;
+        //}
+
+        //private bool RaiseAfterRecordFieldLoad(object target, long index, string propName, object value)
+        //{
+        //    if (_callbackRecord == null) return true;
+        //    return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordFieldLoad(target, index, propName, value), true);
+        //}
+
+        //private bool RaiseRecordFieldLoadError(object target, long index, string propName, object value, Exception ex)
+        //{
+        //    if (_callbackRecord == null) return true;
+        //    return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordFieldLoadError(target, index, propName, value, ex), true);
+        //}
     }
 }
