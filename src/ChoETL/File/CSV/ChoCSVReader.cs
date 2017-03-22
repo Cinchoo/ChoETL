@@ -194,7 +194,7 @@ namespace ChoETL
                         Configuration.ColumnOrderStrict = true;
                     }
 
-                    Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fn.Trim(), ++maxFieldPos));
+                    Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fn.NTrim(), ++maxFieldPos));
                 }
 
             }
@@ -202,36 +202,38 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVReader<T> WithField(string fieldName, Type fieldType, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim)
+        public ChoCSVReader<T> WithField(string name, Type fieldType, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null)
         {
             int maxFieldPos = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-            return WithField(fieldName, ++maxFieldPos, fieldType, quoteField, fieldValueTrimOption);
+            return WithField(name, ++maxFieldPos, fieldType, quoteField, fieldValueTrimOption, fieldName);
         }
 
-        public ChoCSVReader<T> WithField(string fieldName, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim)
+        public ChoCSVReader<T> WithField(string name, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null)
         {
-            return WithField(fieldName, typeof(string), quoteField, fieldValueTrimOption);
+            return WithField(name, typeof(string), quoteField, fieldValueTrimOption, fieldName);
         }
 
-        public ChoCSVReader<T> WithField(string fieldName, int position, Type fieldType, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim)
+        public ChoCSVReader<T> WithField(string name, int position, Type fieldType, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null)
         {
-            if (!fieldName.IsNullOrEmpty())
+            if (!name.IsNullOrEmpty())
             {
                 if (!_clearFields)
                 {
                     Configuration.CSVRecordFieldConfigurations.Clear();
                     _clearFields = true;
                 }
+                if (fieldName.IsNullOrWhiteSpace())
+                    fieldName = name;
 
-                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fieldName.Trim(), position) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption });
+                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(name.NTrim(), position) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName.NTrim() });
             }
 
             return this;
         }
 
-        public ChoCSVReader<T> WithField(string fieldName, int position, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim)
+        public ChoCSVReader<T> WithField(string name, int position, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null)
         {
-            return WithField(fieldName, position, null, quoteField, fieldValueTrimOption);
+            return WithField(name, position, null, quoteField, fieldValueTrimOption, fieldName);
         }
 
         public ChoCSVReader<T> ColumnCountStrict(bool flag = true)

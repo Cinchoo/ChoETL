@@ -187,7 +187,7 @@ namespace ChoETL
                         Configuration.ColumnOrderStrict = true;
                     }
 
-                    Configuration.KVPRecordFieldConfigurations.Add(new ChoKVPRecordFieldConfiguration(fn.Trim()));
+                    Configuration.KVPRecordFieldConfigurations.Add(new ChoKVPRecordFieldConfiguration(fn.NTrim()));
                 }
 
             }
@@ -195,25 +195,27 @@ namespace ChoETL
             return this;
         }
 
-        public ChoKVPReader<T> WithField(string fieldName, Type fieldType, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim)
+        public ChoKVPReader<T> WithField(string name, Type fieldType, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null)
         {
-            if (!fieldName.IsNullOrEmpty())
+            if (!name.IsNullOrEmpty())
             {
                 if (!_clearFields)
                 {
                     Configuration.KVPRecordFieldConfigurations.Clear();
                     _clearFields = true;
                 }
+                if (fieldName.IsNullOrWhiteSpace())
+                    fieldName = name;
 
-                Configuration.KVPRecordFieldConfigurations.Add(new ChoKVPRecordFieldConfiguration(fieldName.Trim()) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption });
+                Configuration.KVPRecordFieldConfigurations.Add(new ChoKVPRecordFieldConfiguration(name.NTrim()) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName.NTrim() });
             }
 
             return this;
         }
 
-        public ChoKVPReader<T> WithField(string fieldName, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim)
+        public ChoKVPReader<T> WithField(string name, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null)
         {
-            return WithField(fieldName, null, quoteField, fieldValueTrimOption);
+            return WithField(name, null, quoteField, fieldValueTrimOption, fieldName);
         }
 
         public ChoKVPReader<T> ColumnCountStrict(bool flag = true)

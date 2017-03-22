@@ -178,25 +178,30 @@ namespace ChoETL
             return this;
         }
 
-        public ChoFixedLengthReader<T> WithField(string fieldName, int startIndex, int size, Type fieldType, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null)
+        public ChoFixedLengthReader<T> WithField(string name, int startIndex, int size, Type fieldType, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
+            string fieldName = null)
         {
-            if (!fieldName.IsNullOrEmpty())
+            if (!name.IsNullOrEmpty())
             {
                 if (!_clearFields)
                 {
                     Configuration.FixedLengthRecordFieldConfigurations.Clear();
                     _clearFields = true;
                 }
+                if (fieldName.IsNullOrWhiteSpace())
+                    fieldName = name;
 
-                Configuration.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(fieldName.Trim(), startIndex, size) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption });
+                Configuration.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(name.NTrim(), startIndex, size) { FieldType = fieldType,
+                    QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName.NTrim()
+                });
             }
 
             return this;
         }
 
-        public ChoFixedLengthReader<T> WithField(string fieldName, int startIndex, int size, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null)
+        public ChoFixedLengthReader<T> WithField(string name, int startIndex, int size, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null, string fieldName = null)
         {
-            return WithField(fieldName, startIndex, size, null, quoteField, fieldValueTrimOption);
+            return WithField(name, startIndex, size, null, quoteField, fieldValueTrimOption, fieldName);
         }
 
         public ChoFixedLengthReader<T> ColumnCountStrict()

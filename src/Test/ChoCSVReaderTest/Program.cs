@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace ChoCSVReaderTest
 {
@@ -18,7 +19,16 @@ namespace ChoCSVReaderTest
     {
         static void Main(string[] args)
         {
-            QuickTest();
+            var __ = 1;
+            //Console.WriteLine(@_2);
+
+            ////var identifierRegex = new System.Text.RegularExpressions.Regex(@"(?<=^| )(?!\d)\w+|(?<= )(?!\d)\w+(?= |$)");
+            ////Console.WriteLine(Regex.Replace("1sas3", @"(?<=^| )(?!\d)\w+|(?<= )(?!\d)\w+(?= |$)", "_"));
+            ////return;
+            //var i = Microsoft.CSharp.CSharpCodeProvider.CreateProvider("C#").CreateValidIdentifier("@Main 12");
+            //Console.WriteLine(i.ToValidVariableName());
+            //return;
+            QuickDynamicTest();
         }
 
         static void IgnoreLineTest()
@@ -102,9 +112,9 @@ namespace ChoCSVReaderTest
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoCSVReader(reader).WithDelimiter(",").WithFirstLineHeader().WithField("Id", typeof(int)).WithField("Name", typeof(string)))
+            using (var parser = new ChoCSVReader(reader).WithDelimiter(",").WithFirstLineHeader().WithField("Id", typeof(int)).WithField("Name", typeof(string), fieldName: "@Name $1"))
             {
-                writer.WriteLine("Id,Name,Salary");
+                writer.WriteLine("Id,@Name $1,Salary");
                 writer.WriteLine("1,Carl,1000");
                 writer.WriteLine("2,Mark,2000");
                 writer.WriteLine("3,Tom,3000");
@@ -112,10 +122,11 @@ namespace ChoCSVReaderTest
                 writer.Flush();
                 stream.Position = 0;
 
-                object rec;
+                dynamic rec;
                 while ((rec = parser.Read()) != null)
                 {
-                    Console.WriteLine(rec.ToStringEx());
+                    Console.WriteLine(rec.Name);
+                    //Console.WriteLine(rec.ToStringEx());
                 }
             }
         }
@@ -295,7 +306,7 @@ namespace ChoCSVReaderTest
             {
                 parser.Configuration.ObjectValidationMode = ChoObjectValidationMode.ObjectLevel;
 
-                writer.WriteLine(",Carl,$100000");
+                writer.WriteLine("1,Carl,$100000");
                 writer.WriteLine("2,Mark,$50000");
                 writer.WriteLine("3,Tom,1000");
 

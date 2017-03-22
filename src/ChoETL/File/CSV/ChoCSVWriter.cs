@@ -184,32 +184,35 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVWriter<T> WithField(string fieldName, Type fieldType, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
-            bool truncate = true)
+        public ChoCSVWriter<T> WithField(string name, Type fieldType, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
+            bool truncate = true, string fieldName = null)
         {
-            if (!fieldName.IsNullOrEmpty())
+            if (!name.IsNullOrEmpty())
             {
                 if (!_clearFields)
                 {
                     Configuration.CSVRecordFieldConfigurations.Clear();
                     _clearFields = true;
                 }
+                if (fieldName.IsNullOrWhiteSpace())
+                    fieldName = name;
 
                 int maxFieldPos = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fieldName.Trim(), ++maxFieldPos) { FieldType = fieldType, QuoteField = quoteField,
+                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(name.Trim(), ++maxFieldPos) { FieldType = fieldType, QuoteField = quoteField,
                     FillChar = fillChar,
                     FieldValueJustification = fieldValueJustification,
-                    Truncate = truncate
+                    Truncate = truncate,
+                    FieldName = fieldName.NTrim()
                 });
             }
 
             return this;
         }
 
-        public ChoCSVWriter<T> WithField(string fieldName, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
-            bool truncate = true)
+        public ChoCSVWriter<T> WithField(string name, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
+            bool truncate = true, string fieldName = null)
         {
-            return WithField(fieldName, null, quoteField, fillChar, fieldValueJustification, truncate);
+            return WithField(name, null, quoteField, fillChar, fieldValueJustification, truncate, fieldName);
         }
 
         public ChoCSVWriter<T> ColumnCountStrict(bool flag = true)
