@@ -64,7 +64,7 @@ namespace ChoETL
             List<string> headers = new List<string>();
             Tuple<long, string> lastLine = null;
             List<Tuple<long, string>> recLines = new List<Tuple<long, string>>();
-            int recNo = 0;
+            long recNo = 0;
             int loopCount = Configuration.AutoDiscoverColumns && Configuration.KVPRecordFieldConfigurations.Count == 0 ? 2 : 1;
             bool isHeaderFound = loopCount == 1;
             bool IsHeaderLoaded = false;
@@ -297,7 +297,7 @@ namespace ChoETL
                                 else
                                 {
                                     object rec = Activator.CreateInstance(RecordType);
-                                    if (!LoadLines(new Tuple<int, List<Tuple<long, string>>>(++recNo, recLines), ref rec))
+                                    if (!LoadLines(new Tuple<long, List<Tuple<long, string>>>(++recNo, recLines), ref rec))
                                         yield break;
 
                                     //StoreState(e.Current, rec != null);
@@ -334,12 +334,12 @@ namespace ChoETL
             RaiseEndLoad(sr);
         }
 
-        private bool LoadLines(Tuple<int, List<Tuple<long, string>>> pairs, ref object rec)
+        private bool LoadLines(Tuple<long, List<Tuple<long, string>>> pairs, ref object rec)
         {
             ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Loading [{0}] record...".FormatString(pairs.Item1));
 
             Tuple<long, string> pair = null;
-            int recNo = pairs.Item1;
+            long recNo = pairs.Item1;
 
             if (!Configuration.AutoDiscoveredColumns)
             {
@@ -581,9 +581,9 @@ namespace ChoETL
 
             object fieldValue = tokens.Value;
             string key = tokens.Key;
-            if (!Configuration.RecordFieldConfigurationsDict.ContainsKey(key))
+            if (!Configuration.RecordFieldConfigurationsDict2.ContainsKey(key))
                 return true;
-
+            key = Configuration.RecordFieldConfigurationsDict2[key].Name;
             ChoKVPRecordFieldConfiguration fieldConfig = Configuration.RecordFieldConfigurationsDict[key];
             PropertyInfo pi = null;
 

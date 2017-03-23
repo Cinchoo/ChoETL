@@ -148,9 +148,9 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVWriter<T> WithFirstLineHeader(bool flag = true)
+        public ChoCSVWriter<T> WithFirstLineHeader()
         {
-            Configuration.FileHeaderConfiguration.HasHeaderRecord = flag;
+            Configuration.FileHeaderConfiguration.HasHeaderRecord = true;
             return this;
         }
 

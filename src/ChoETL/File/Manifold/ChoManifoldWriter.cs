@@ -114,9 +114,9 @@ namespace ChoETL
             return this;
         }
 
-        public ChoManifoldWriter WithFirstLineHeader(bool flag = true)
+        public ChoManifoldWriter WithFirstLineHeader()
         {
-            Configuration.FileHeaderConfiguration.HasHeaderRecord = flag;
+            Configuration.FileHeaderConfiguration.HasHeaderRecord = true;
             return this;
         }
 

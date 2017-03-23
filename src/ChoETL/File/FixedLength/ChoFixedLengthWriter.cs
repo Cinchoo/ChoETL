@@ -145,9 +145,9 @@ namespace ChoETL
             return this;
         }
 
-        public ChoFixedLengthWriter<T> WithFirstLineHeader(bool flag = true)
+        public ChoFixedLengthWriter<T> WithFirstLineHeader()
         {
-            Configuration.FileHeaderConfiguration.HasHeaderRecord = flag;
+            Configuration.FileHeaderConfiguration.HasHeaderRecord = true;
             return this;
         }
 

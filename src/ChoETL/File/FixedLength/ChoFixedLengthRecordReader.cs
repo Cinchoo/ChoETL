@@ -140,9 +140,17 @@ namespace ChoETL
                     if (Configuration.FileHeaderConfiguration.HasHeaderRecord
                         && !_headerFound)
                     {
-                        if (TraceSwitch.TraceVerbose)
-                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Loading header line at [{0}]...".FormatString(pair.Item1));
-                        LoadHeaderLine(pair);
+                        if (Configuration.FileHeaderConfiguration.IgnoreHeader)
+                        {
+                            if (TraceSwitch.TraceVerbose)
+                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring header line at [{0}]...".FormatString(pair.Item1));
+                        }
+                        else
+                        {
+                            if (TraceSwitch.TraceVerbose)
+                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Loading header line at [{0}]...".FormatString(pair.Item1));
+                            LoadHeaderLine(pair);
+                        }
                         _headerFound = true;
                         return true;
                     }
@@ -506,11 +514,11 @@ namespace ChoETL
                 string[] foundList = Configuration.FixedLengthRecordFieldConfigurations.Select(i => i.FieldName).Except(_fieldNames, Configuration.FileHeaderConfiguration.StringComparer).ToArray();
                 if (foundList.Any())
                     throw new ChoParserException("Header name(s) [{0}] are not found in file header.".FormatString(String.Join(",", foundList)));
+            }
 
-                if (Configuration.ColumnOrderStrict)
-                {
-                    //Not applicable in FixedLength file
-                }
+            if (Configuration.ColumnOrderStrict)
+            {
+                //Not applicable in FixedLength file
             }
         }
 

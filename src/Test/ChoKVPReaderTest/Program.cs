@@ -23,9 +23,10 @@ namespace ChoKVPReaderTest
                 r.Configuration.RecordEnd = "[*";
                 r.Configuration.IgnoreEmptyLine = true;
                 r.Configuration.Comment = ";";
-                foreach (var item in r.ToArray())
+                foreach (dynamic item in r.ToArray())
                 {
-                    Console.WriteLine(item.ToStringEx());
+                    Console.WriteLine(item._102);
+                    Console.WriteLine(((object)item).ToStringEx());
                 }
             }
         }

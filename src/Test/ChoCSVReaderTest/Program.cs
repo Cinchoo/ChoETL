@@ -112,7 +112,8 @@ namespace ChoCSVReaderTest
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoCSVReader(reader).WithDelimiter(",").WithFirstLineHeader().WithField("Id", typeof(int)).WithField("Name", typeof(string), fieldName: "@Name $1"))
+            using (var parser = new ChoCSVReader(reader).WithDelimiter(",").WithFirstLineHeader().WithField("Id", typeof(int)).
+                WithField("Name", typeof(string), fieldName: "@Name $1").ColumnOrderStrict())
             {
                 writer.WriteLine("Id,@Name $1,Salary");
                 writer.WriteLine("1,Carl,1000");
@@ -125,8 +126,8 @@ namespace ChoCSVReaderTest
                 dynamic rec;
                 while ((rec = parser.Read()) != null)
                 {
-                    Console.WriteLine(rec.Name);
-                    //Console.WriteLine(rec.ToStringEx());
+                    //Console.WriteLine(rec.Name);
+                    Console.WriteLine(((object)rec).ToStringEx());
                 }
             }
         }

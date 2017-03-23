@@ -126,9 +126,10 @@ namespace ChoETL
             return this;
         }
 
-        public ChoManifoldReader WithFirstLineHeader(bool flag = true)
+        public ChoManifoldReader WithFirstLineHeader(bool ignoreHeader = false)
         {
-            Configuration.FileHeaderConfiguration.HasHeaderRecord = flag;
+            Configuration.FileHeaderConfiguration.HasHeaderRecord = true;
+            Configuration.FileHeaderConfiguration.IgnoreHeader = ignoreHeader;
             return this;
         }
 

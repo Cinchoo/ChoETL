@@ -17,6 +17,11 @@ namespace ChoETL
             get;
             set;
         }
+        public bool IgnoreHeader
+        {
+            get;
+            set;
+        }
         [DataMember]
         public bool IgnoreCase
         {
@@ -79,6 +84,7 @@ namespace ChoETL
             {
                 HasHeaderRecord = true;
                 IgnoreCase = recObjAttr.IgnoreCase;
+                IgnoreHeader = recObjAttr.IgnoreHeader;
                 FillChar = recObjAttr.FillCharInternal;
                 Justification = recObjAttr.JustificationInternal;
                 if (recObjAttr.TrimOptionInternal != null) TrimOption = recObjAttr.TrimOptionInternal.Value;

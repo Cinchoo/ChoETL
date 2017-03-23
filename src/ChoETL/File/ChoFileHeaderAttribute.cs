@@ -9,7 +9,16 @@ namespace ChoETL
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
     public abstract class ChoFileHeaderAttribute : Attribute
     {
-        public bool IgnoreCase => true;
+        public bool IgnoreCase
+        {
+            get;
+            set;
+        }
+        public bool IgnoreHeader
+        {
+            get;
+            set;
+        }
 
         internal char? FillCharInternal;
         public char FillChar
@@ -41,6 +50,8 @@ namespace ChoETL
 
         public ChoFileHeaderAttribute()
         {
+            IgnoreCase = true;
+            IgnoreHeader = false;
         }
     }
 

@@ -165,9 +165,11 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVReader<T> WithFirstLineHeader(bool flag = true)
+        public ChoCSVReader<T> WithFirstLineHeader(bool ignoreHeader = false)
         {
-            Configuration.FileHeaderConfiguration.HasHeaderRecord = flag;
+            Configuration.FileHeaderConfiguration.HasHeaderRecord = true;
+            Configuration.FileHeaderConfiguration.IgnoreHeader = ignoreHeader;
+
             return this;
         }
 

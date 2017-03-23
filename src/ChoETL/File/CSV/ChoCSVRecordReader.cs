@@ -17,7 +17,7 @@ namespace ChoETL
         private IChoNotifyRecordRead _callbackRecord;
         private bool _headerFound = false;
         private bool _excelSeparatorFound = false;
-        private string[] _fieldNames = new string[] { };
+        private string[] _fieldNames = null;
         private bool _configCheckDone = false;
         private Dictionary<string, string> fieldNameValues = null;
         internal ChoReader Reader = null;
@@ -160,9 +160,17 @@ namespace ChoETL
                     if (Configuration.FileHeaderConfiguration.HasHeaderRecord
                         && !_headerFound)
                     {
-                        if (TraceSwitch.TraceVerbose)
-                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Loading header line at [{0}]...".FormatString(pair.Item1));
-                        LoadHeaderLine(pair);
+                        if (Configuration.FileHeaderConfiguration.IgnoreHeader)
+                        {
+                            if (TraceSwitch.TraceVerbose)
+                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring header line at [{0}]...".FormatString(pair.Item1));
+                        }
+                        else
+                        {
+                            if (TraceSwitch.TraceVerbose)
+                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Loading header line at [{0}]...".FormatString(pair.Item1));
+                            LoadHeaderLine(pair);
+                        }
                         _headerFound = true;
                         return true;
                     }
@@ -271,6 +279,9 @@ namespace ChoETL
 
         private Dictionary<string, string> InitFieldNameValuesDict()
         {
+            if (_fieldNames == null)
+                return null;
+
             Dictionary<string, string> fnv = new Dictionary<string, string>(Configuration.FileHeaderConfiguration.StringComparer);
             foreach (var name in _fieldNames)
             {
@@ -284,6 +295,9 @@ namespace ChoETL
 
         private void ToFieldNameValues(Dictionary<string, string> fnv, string[] fieldValues)
         {
+            if (_fieldNames == null)
+                return;
+
             long index = 1;
             foreach (var name in _fieldNames)
             {
@@ -311,7 +325,7 @@ namespace ChoETL
                     throw new ChoParserException("Incorrect number of field values found at line [{2}]. Expected [{0}] field values. Found [{1}] field values.".FormatString(Configuration.CSVRecordFieldConfigurations.Count, fieldValues.Length, pair.Item1));
             }
 
-            if (Configuration.FileHeaderConfiguration.HasHeaderRecord && Configuration.ColumnOrderStrict)
+            if (_fieldNames != null) //Configuration.FileHeaderConfiguration.HasHeaderRecord && Configuration.ColumnOrderStrict)
             {
                 if (this.fieldNameValues == null)
                     this.fieldNameValues = InitFieldNameValuesDict();
@@ -329,20 +343,38 @@ namespace ChoETL
                 if (Configuration.PIDict != null)
                     Configuration.PIDict.TryGetValue(kvp.Key, out pi);
 
-                if (Configuration.FileHeaderConfiguration.HasHeaderRecord && Configuration.ColumnOrderStrict)
+                if (fieldNameValues != null)
                 {
-                    if (fieldNameValues.ContainsKey(fieldConfig.FieldName))
-                        fieldValue = fieldNameValues[fieldConfig.FieldName];
-                    else if (Configuration.ColumnCountStrict)
-                        throw new ChoParserException("No matching '{0}' field header found.".FormatString(fieldConfig.FieldName));
+                    if (Configuration.ColumnOrderStrict)
+                    {
+                        if (fieldNameValues.ContainsKey(fieldConfig.FieldName))
+                            fieldValue = fieldNameValues[fieldConfig.FieldName];
+                        else
+                            throw new ChoParserException("No matching '{0}' field header found.".FormatString(fieldConfig.FieldName));
+                    }
                 }
                 else
                 {
                     if (fieldConfig.FieldPosition - 1 < fieldValues.Length)
                         fieldValue = fieldValues[fieldConfig.FieldPosition - 1];
-                    else if (Configuration.ColumnCountStrict)
+                    else
                         throw new ChoParserException("Missing field value for '{0}' [Position: {1}] field.".FormatString(fieldConfig.FieldName, fieldConfig.FieldPosition));
                 }
+
+                //if (Configuration.FileHeaderConfiguration.HasHeaderRecord && Configuration.ColumnOrderStrict)
+                //{
+                //    if (fieldNameValues.ContainsKey(fieldConfig.FieldName))
+                //        fieldValue = fieldNameValues[fieldConfig.FieldName];
+                //    else if (Configuration.ColumnCountStrict)
+                //        throw new ChoParserException("No matching '{0}' field header found.".FormatString(fieldConfig.FieldName));
+                //}
+                //else
+                //{
+                //    if (fieldConfig.FieldPosition - 1 < fieldValues.Length)
+                //        fieldValue = fieldValues[fieldConfig.FieldPosition - 1];
+                //    else if (Configuration.ColumnCountStrict)
+                //        throw new ChoParserException("Missing field value for '{0}' [Position: {1}] field.".FormatString(fieldConfig.FieldName, fieldConfig.FieldPosition));
+                //}
 
                 if (Configuration.IsDynamicObject)
                 {
@@ -605,17 +637,17 @@ namespace ChoETL
                 string[] foundList = Configuration.CSVRecordFieldConfigurations.Select(i => i.FieldName).Except(_fieldNames, Configuration.FileHeaderConfiguration.StringComparer).ToArray();
                 if (foundList.Any())
                     throw new ChoParserException("Header name(s) [{0}] are not found in file header.".FormatString(String.Join(",", foundList)));
+            }
 
-                if (Configuration.ColumnOrderStrict)
+            if (Configuration.ColumnOrderStrict)
+            {
+                int colIndex = 0;
+                foreach (string fieldName in Configuration.CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Select(i => i.FieldName))
                 {
-                    int colIndex = 0;
-                    foreach (string fieldName in Configuration.CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Select(i => i.FieldName))
-                    {
-                        if (Configuration.FileHeaderConfiguration.IsEqual(_fieldNames[colIndex], fieldName))
-                            throw new ChoParserException("Incorrect CSV column order found. Expected [{0}] CSV column at '{1}' location.".FormatString(fieldName, colIndex + 1));
+                    if (!Configuration.FileHeaderConfiguration.IsEqual(_fieldNames[colIndex], fieldName))
+                        throw new ChoParserException("Incorrect CSV column order found. Expected [{0}] CSV column at '{1}' location.".FormatString(fieldName, colIndex + 1));
 
-                        colIndex++;
-                    }
+                    colIndex++;
                 }
             }
         }
