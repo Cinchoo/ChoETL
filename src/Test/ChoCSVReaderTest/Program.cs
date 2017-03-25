@@ -28,7 +28,7 @@ namespace ChoCSVReaderTest
             //var i = Microsoft.CSharp.CSharpCodeProvider.CreateProvider("C#").CreateValidIdentifier("@Main 12");
             //Console.WriteLine(i.ToValidVariableName());
             //return;
-            QuickDynamicTest();
+            AsDataTableTest();
         }
 
         static void IgnoreLineTest()
@@ -584,9 +584,9 @@ namespace ChoCSVReaderTest
     }
 
     [ChoCSVFileHeader()]
-    [ChoCSVRecordObject(Encoding = "Encoding.UTF32", ErrorMode = ChoErrorMode.ReportAndContinue,
+    [ChoCSVRecordObject(Encoding = "UTF-32", ErrorMode = ChoErrorMode.ReportAndContinue,
     IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any, ThrowAndStopOnMissingField = false,
-        ObjectValidationMode = ChoObjectValidationMode.MemberLevel)]
+        ObjectValidationMode = ChoObjectValidationMode.Off)]
     public class EmployeeRecMeta : IChoNotifyRecordRead //, IChoValidatable
     {
         [ChoCSVRecordField(1, FieldName = "id", ErrorMode = ChoErrorMode.ReportAndContinue)]
@@ -661,7 +661,7 @@ namespace ChoCSVReaderTest
         }
     }
 
-    //[MetadataType(typeof(EmployeeRecMeta))]
+    [MetadataType(typeof(EmployeeRecMeta))]
     //[ChoCSVFileHeader()]
     [ChoCSVRecordObject(Encoding = "utf-32", ErrorMode = ChoErrorMode.IgnoreAndContinue,
     IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any, ThrowAndStopOnMissingField = false)]

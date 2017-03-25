@@ -745,16 +745,20 @@
                     val = ChoUtility.ConvertValueToObjectPropertyType(target, propertyInfo, val, culture);
 #if _DYNAMIC_
                 Action<object, object> setter;
-                var key = propertyInfo.GetSetMethod().MethodHandle.Value;
-                if (!_setterCache.TryGetValue(key, out setter))
-                {
-                    lock (_padLock)
+                    var mi = propertyInfo.GetSetMethod();
+                    if (mi != null)
                     {
+                        var key = mi.MethodHandle.Value;
                         if (!_setterCache.TryGetValue(key, out setter))
-                            _setterCache.Add(key, setter = propertyInfo.CreateSetMethod());
+                        {
+                            lock (_padLock)
+                            {
+                                if (!_setterCache.TryGetValue(key, out setter))
+                                    _setterCache.Add(key, setter = propertyInfo.CreateSetMethod());
+                            }
+                        }
+                        setter(target, val);
                     }
-                }
-                setter(target, val);
 #else
                     propertyInfo.SetValue(target, val, null);
 #endif
@@ -849,16 +853,20 @@
             {
 #if _DYNAMIC_
                 Action<object, object> setter;
-                var key = propertyInfo.GetSetMethod().MethodHandle.Value;
-                if (!_setterCache.TryGetValue(key, out setter))
+                var mi = propertyInfo.GetSetMethod();
+                if (mi != null)
                 {
-                    lock (_padLock)
+                    var key = mi.MethodHandle.Value;
+                    if (!_setterCache.TryGetValue(key, out setter))
                     {
-                        if (!_setterCache.TryGetValue(key, out setter))
-                            _setterCache.Add(key, setter = propertyInfo.CreateSetMethod());
+                        lock (_padLock)
+                        {
+                            if (!_setterCache.TryGetValue(key, out setter))
+                                _setterCache.Add(key, setter = propertyInfo.CreateSetMethod());
+                        }
                     }
+                    setter(target, val);
                 }
-                setter(target, val);
 #else
                 propertyInfo.SetValue(target, val, null);
 #endif
@@ -978,16 +986,20 @@
             {
 #if _DYNAMIC_
                 Action<object, object> setter;
-                var key = propertyInfo.GetSetMethod().MethodHandle.Value;
-                if (!_setterCache.TryGetValue(key, out setter))
+                var mi = propertyInfo.GetSetMethod();
+                if (mi != null)
                 {
-                    lock (_padLock)
+                    var key = mi.MethodHandle.Value;
+                    if (!_setterCache.TryGetValue(key, out setter))
                     {
-                        if (!_setterCache.TryGetValue(key, out setter))
-                            _setterCache.Add(key, setter = propertyInfo.CreateSetMethod());
+                        lock (_padLock)
+                        {
+                            if (!_setterCache.TryGetValue(key, out setter))
+                                _setterCache.Add(key, setter = propertyInfo.CreateSetMethod());
+                        }
                     }
+                    setter(null, val);
                 }
-                setter(null, val);
 #else
                 propertyInfo.SetValue(null, val, null);
 #endif
@@ -1245,16 +1257,20 @@
 
 #if _DYNAMIC_
                 Action<object, object> setter;
-                var key = propertyInfo.GetSetMethod().MethodHandle.Value;
-                if (!_setterCache.TryGetValue(key, out setter))
+                var mi = propertyInfo.GetSetMethod();
+                if (mi != null)
                 {
-                    lock (_padLock)
+                    var key = mi.MethodHandle.Value;
+                    if (!_setterCache.TryGetValue(key, out setter))
                     {
-                        if (!_setterCache.TryGetValue(key, out setter))
-                            _setterCache.Add(key, setter = propertyInfo.CreateSetMethod());
+                        lock (_padLock)
+                        {
+                            if (!_setterCache.TryGetValue(key, out setter))
+                                _setterCache.Add(key, setter = propertyInfo.CreateSetMethod());
+                        }
                     }
+                    setter(null, val);
                 }
-                setter(null, val);
 #else
                 propertyInfo.SetValue(null, val, null);
 #endif

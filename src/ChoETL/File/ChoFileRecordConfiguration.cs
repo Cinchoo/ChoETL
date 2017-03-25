@@ -171,7 +171,7 @@ namespace ChoETL
             }
         }
 
-        internal Encoding GetEncoding(Stream inStream)
+        public Encoding GetEncoding(Stream inStream)
         {
             if (Encoding == null)
             {
@@ -192,7 +192,7 @@ namespace ChoETL
             return Encoding;
         }
 
-        internal Encoding GetEncoding(string fileName)
+        public Encoding GetEncoding(string fileName)
         {
             if (Encoding == null)
             {

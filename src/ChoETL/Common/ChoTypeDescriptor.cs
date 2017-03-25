@@ -318,6 +318,76 @@
             }
         }
 
+        public static object[] GetTypeConverters(PropertyDescriptor pd)
+        {
+            if (pd == null)
+                return null;
+
+            int index = 0;
+            SortedList<int, object> queue = new SortedList<int, object>();
+            SortedList<int, object> paramsQueue = new SortedList<int, object>();
+            foreach (Attribute attribute in GetPropetyAttributes<ChoTypeConverterAttribute>(pd))
+            {
+                ChoTypeConverterAttribute converterAttribute = (ChoTypeConverterAttribute)attribute;
+                if (converterAttribute != null)
+                {
+                    if (converterAttribute.PriorityInternal == null)
+                    {
+                        queue.Add(index, converterAttribute.CreateInstance());
+                        paramsQueue.Add(index, converterAttribute.ParametersArray);
+                        index++;
+                    }
+                    else
+                    {
+                        queue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.CreateInstance());
+                        paramsQueue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.ParametersArray);
+                    }
+                }
+            }
+
+            if (queue.Count == 0)
+            {
+                return GetTypeConvertersForType(pd.PropertyType);
+            }
+
+            if (queue.Count > 0)
+                return queue.Values.ToArray();
+            else
+                return null;
+        }
+        public static object[] GetTypeConverterParams(PropertyDescriptor pd)
+        {
+            if (pd == null)
+                return null;
+
+            int index = 0;
+            SortedList<int, object> queue = new SortedList<int, object>();
+            SortedList<int, object> paramsQueue = new SortedList<int, object>();
+            foreach (Attribute attribute in GetPropetyAttributes<ChoTypeConverterAttribute>(pd))
+            {
+                ChoTypeConverterAttribute converterAttribute = (ChoTypeConverterAttribute)attribute;
+                if (converterAttribute != null)
+                {
+                    if (converterAttribute.PriorityInternal == null)
+                    {
+                        queue.Add(index, converterAttribute.CreateInstance());
+                        paramsQueue.Add(index, converterAttribute.ParametersArray);
+                        index++;
+                    }
+                    else
+                    {
+                        queue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.CreateInstance());
+                        paramsQueue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.ParametersArray);
+                    }
+                }
+            }
+
+            if (paramsQueue.Count > 0)
+                return paramsQueue.Values.ToArray();
+            else
+                return null;
+        }
+
         public static object[] GetTypeConvertersForType(Type objType)
         {
             if (objType == null)
