@@ -88,7 +88,7 @@ namespace ChoETL
             QuoteChar = '"';
             QuoteAllFields = false;
             StringSplitOptions = ChoStringSplitOptions.None;
-            Encoding = "UTF8";
+            Encoding = "UTF-8";
         }
     }
 }
