@@ -15,7 +15,7 @@ namespace ChoETL
     public class ChoFixedLengthReader<T> : ChoReader, IDisposable, IEnumerable<T>
         where T : class
     {
-        private StreamReader _streamReader;
+        private TextReader _textReader;
         private bool _closeStreamOnDispose = false;
         private Lazy<IEnumerator<T>> _enumerator = null;
         private CultureInfo _prevCultureInfo = null;
@@ -37,18 +37,18 @@ namespace ChoETL
 
             Init();
 
-            _streamReader = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
+            _textReader = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
             _closeStreamOnDispose = true;
         }
 
-        public ChoFixedLengthReader(StreamReader streamReader, ChoFixedLengthRecordConfiguration configuration = null)
+        public ChoFixedLengthReader(TextReader textReader, ChoFixedLengthRecordConfiguration configuration = null)
         {
-            ChoGuard.ArgumentNotNull(streamReader, "StreamReader");
+            ChoGuard.ArgumentNotNull(textReader, "TextReader");
 
             Configuration = configuration;
             Init();
 
-            _streamReader = streamReader;
+            _textReader = textReader;
         }
 
         public ChoFixedLengthReader(Stream inStream, ChoFixedLengthRecordConfiguration configuration = null)
@@ -57,7 +57,7 @@ namespace ChoETL
 
             Configuration = configuration;
             Init();
-            _streamReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+            _textReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
             _closeStreamOnDispose = true;
         }
 
@@ -72,7 +72,7 @@ namespace ChoETL
         public void Dispose()
         {
             if (_closeStreamOnDispose)
-                _streamReader.Dispose();
+                _textReader.Dispose();
 
             System.Threading.Thread.CurrentThread.CurrentCulture = _prevCultureInfo;
         }
@@ -110,7 +110,7 @@ namespace ChoETL
             rr.Reader = this;
             rr.TraceSwitch = TraceSwitch;
             rr.RowsLoaded += NotifyRowsLoaded;
-            var e = rr.AsEnumerable(_streamReader).GetEnumerator();
+            var e = rr.AsEnumerable(_textReader).GetEnumerator();
             return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
         }
 
@@ -124,7 +124,7 @@ namespace ChoETL
             ChoFixedLengthRecordReader rr = new ChoFixedLengthRecordReader(typeof(T), Configuration);
             rr.Reader = this;
             rr.TraceSwitch = TraceSwitch;
-            rr.LoadSchema(_streamReader);
+            rr.LoadSchema(_textReader);
             rr.RowsLoaded += NotifyRowsLoaded;
             var dr = new ChoEnumerableDataReader(GetEnumerator().ToEnumerable(), Configuration.FixedLengthRecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType)).ToArray());
             return dr;
@@ -227,8 +227,8 @@ namespace ChoETL
         {
 
         }
-        public ChoFixedLengthReader(StreamReader streamReader, ChoFixedLengthRecordConfiguration configuration = null)
-            : base(streamReader, configuration)
+        public ChoFixedLengthReader(TextReader textReader, ChoFixedLengthRecordConfiguration configuration = null)
+            : base(textReader, configuration)
         {
         }
         public ChoFixedLengthReader(Stream inStream, ChoFixedLengthRecordConfiguration configuration = null)

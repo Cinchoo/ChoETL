@@ -12,7 +12,7 @@ namespace ChoETL
 {
     public class ChoManifoldWriter : IDisposable
     {
-        private StreamWriter _streamWriter;
+        private TextWriter _textWriter;
         private bool _closeStreamOnDispose = false;
         private ChoManifoldRecordWriter _writer = null;
         public event EventHandler<ChoRowsWrittenEventArgs> RowsWritten;
@@ -31,18 +31,18 @@ namespace ChoETL
 
             Init();
 
-            _streamWriter = new StreamWriter(ChoPath.GetFullPath(filePath), false, Configuration.Encoding, Configuration.BufferSize);
+            _textWriter = new StreamWriter(ChoPath.GetFullPath(filePath), false, Configuration.Encoding, Configuration.BufferSize);
             _closeStreamOnDispose = true;
         }
 
-        public ChoManifoldWriter(StreamWriter streamWriter, ChoManifoldRecordConfiguration configuration = null)
+        public ChoManifoldWriter(TextWriter textWriter, ChoManifoldRecordConfiguration configuration = null)
         {
-            ChoGuard.ArgumentNotNull(streamWriter, "StreamWriter");
+            ChoGuard.ArgumentNotNull(textWriter, "TextWriter");
 
             Configuration = configuration;
             Init();
 
-            _streamWriter = streamWriter;
+            _textWriter = textWriter;
         }
 
         public ChoManifoldWriter(Stream inStream, ChoManifoldRecordConfiguration configuration = null)
@@ -51,14 +51,14 @@ namespace ChoETL
 
             Configuration = configuration;
             Init();
-            _streamWriter = new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize);
+            _textWriter = new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize);
             _closeStreamOnDispose = true;
         }
 
         public void Dispose()
         {
             if (_closeStreamOnDispose)
-                _streamWriter.Dispose();
+                _textWriter.Dispose();
         }
 
         private void Init()
@@ -73,12 +73,12 @@ namespace ChoETL
         public void Write(IEnumerable records)
         {
             foreach (object rec in records)
-                _writer.WriteTo(_streamWriter, new object[] { rec }).Loop();
+                _writer.WriteTo(_textWriter, new object[] { rec }).Loop();
         }
 
         public void Write(object record)
         {
-            _writer.WriteTo(_streamWriter, new object[] { record }).Loop();
+            _writer.WriteTo(_textWriter, new object[] { record }).Loop();
         }
 
         public static string ToText(IEnumerable records)

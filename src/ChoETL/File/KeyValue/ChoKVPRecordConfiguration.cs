@@ -101,6 +101,8 @@ namespace ChoETL
             if (recObjAttr != null)
             {
                 Seperator = recObjAttr.Delimiter;
+                RecordStart = recObjAttr.RecordStart;
+                RecordEnd = recObjAttr.RecordEnd;
             }
 
             DiscoverRecordFields(recordType);

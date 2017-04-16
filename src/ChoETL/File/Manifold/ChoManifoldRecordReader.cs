@@ -44,13 +44,14 @@ namespace ChoETL
         {
             TraceSwitch = traceSwitch;
 
-            StreamReader sr = source as StreamReader;
-            ChoGuard.ArgumentNotNull(sr, "StreamReader");
+            TextReader sr = source as TextReader;
+            ChoGuard.ArgumentNotNull(sr, "TextReader");
+
+            if (sr is StreamReader)
+                ((StreamReader)sr).Seek(0, SeekOrigin.Begin);
 
             if (Configuration.RecordSelector == null)
                 throw new ChoRecordConfigurationException("Missing record selector.");
-
-            sr.Seek(0, SeekOrigin.Begin);
 
             if (!RaiseBeginLoad(sr))
                 yield break;

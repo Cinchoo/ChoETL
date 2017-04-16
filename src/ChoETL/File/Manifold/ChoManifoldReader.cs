@@ -14,7 +14,7 @@ namespace ChoETL
 {
     public class ChoManifoldReader : ChoReader, IDisposable, IEnumerable
     {
-        private StreamReader _streamReader;
+        private TextReader _textReader;
         private bool _closeStreamOnDispose = false;
         private Lazy<IEnumerator> _enumerator = null;
         private CultureInfo _prevCultureInfo = null;
@@ -35,18 +35,18 @@ namespace ChoETL
 
             Init();
 
-            _streamReader = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
+            _textReader = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
             _closeStreamOnDispose = true;
         }
 
-        public ChoManifoldReader(StreamReader streamReader, ChoManifoldRecordConfiguration configuration = null)
+        public ChoManifoldReader(TextReader textReader, ChoManifoldRecordConfiguration configuration = null)
         {
-            ChoGuard.ArgumentNotNull(streamReader, "StreamReader");
+            ChoGuard.ArgumentNotNull(textReader, "TextReader");
 
             Configuration = configuration;
             Init();
 
-            _streamReader = streamReader;
+            _textReader = textReader;
         }
 
         public ChoManifoldReader(Stream inStream, ChoManifoldRecordConfiguration configuration = null)
@@ -55,7 +55,7 @@ namespace ChoETL
 
             Configuration = configuration;
             Init();
-            _streamReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+            _textReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
             _closeStreamOnDispose = true;
         }
 
@@ -70,7 +70,7 @@ namespace ChoETL
         public void Dispose()
         {
             if (_closeStreamOnDispose)
-                _streamReader.Dispose();
+                _textReader.Dispose();
 
             System.Threading.Thread.CurrentThread.CurrentCulture = _prevCultureInfo;
         }
@@ -93,7 +93,7 @@ namespace ChoETL
             rr.Reader = this;
             rr.TraceSwitch = TraceSwitch;
             rr.RowsLoaded += NotifyRowsLoaded;
-            return rr.AsEnumerable(_streamReader).GetEnumerator();
+            return rr.AsEnumerable(_textReader).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

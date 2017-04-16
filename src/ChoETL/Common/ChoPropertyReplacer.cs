@@ -34,6 +34,7 @@ namespace ChoETL
         public readonly string Format;
         public string PropertyValue;
         public bool Resolved;
+        public object State;
 
         #endregion Instance Data Members
 
@@ -43,23 +44,24 @@ namespace ChoETL
             Format = format;
         }
     }
-    public class ChoPropertyReplacer
+    public class ChoPropertyReplacerManager
     {
-        public static readonly ChoPropertyReplacer Default = new ChoPropertyReplacer();
+        public static readonly ChoPropertyReplacerManager Default = new ChoPropertyReplacerManager();
 
         public readonly List<IChoPropertyReplacer> Items = new List<IChoPropertyReplacer>();
         public event EventHandler<ChoUnknownProperyEventArgs> PropertyResolve;
 
-        public ChoPropertyReplacer()
+        public ChoPropertyReplacerManager()
         {
             Items.Add(ChoEnvironmentVariablePropertyReplacer.Instance);
             Items.Add(ChoGlobalDictionaryPropertyReplacer.Instance);
         }
 
-        public bool RaisePropertyReolve(string propertyName, string format, out string value)
+        public bool RaisePropertyReolve(string propertyName, string format, out string value, object state)
         {
             value = null;
             var e = new ChoUnknownProperyEventArgs(propertyName, format);
+            e.State = state;
             EventHandler<ChoUnknownProperyEventArgs> propertyResolve = PropertyResolve;
             if (propertyResolve != null)
             {

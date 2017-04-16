@@ -907,16 +907,16 @@ namespace ChoETL
             return format.IsNullOrWhiteSpace() ? value.ToString() : String.Format("{{0:{0}}}".FormatString(format), value);
         }
 
-        public static string ExpandProperties(this string inString, ChoPropertyReplacer propertyReplacer = null)
+        public static string ExpandProperties(this string inString, ChoPropertyReplacerManager propertyReplacer = null, object state = null)
         {
-            return ExpandProperties(inString, StartSeparator, EndSeparator, FormatSeparator, propertyReplacer);
+            return ExpandProperties(inString, StartSeparator, EndSeparator, FormatSeparator, propertyReplacer, state);
         }
 
         public static string ExpandProperties(string inString, char startSeparator, char endSeparator, char formatSeparator,
-            ChoPropertyReplacer propertyReplacer = null /*IChoPropertyReplacer[] propertyReplacers */)
+            ChoPropertyReplacerManager propertyReplacer = null /*IChoPropertyReplacer[] propertyReplacers */, object state = null)
         {
             if (propertyReplacer == null)
-                propertyReplacer = ChoPropertyReplacer.Default;
+                propertyReplacer = ChoPropertyReplacerManager.Default;
 
             if (inString.IsNullOrEmpty())
                 return inString;
@@ -1002,7 +1002,7 @@ namespace ChoETL
                                             string[] propertyNameNFormat = token.ToString().SplitNTrim(formatSeparator);
                                             if (!(propertyNameNFormat.Length >= 1 &&
                                                 ReplaceToken(propertyReplacer, message, propertyNameNFormat[0],
-                                                    propertyNameNFormat.Length == 2 ? propertyNameNFormat[1] : null)))
+                                                    propertyNameNFormat.Length == 2 ? propertyNameNFormat[1] : null, state)))
                                                 message.AppendFormat("{0}{1}{2}", startSeparator, token, endSeparator);
                                         }
                                     }
@@ -1039,11 +1039,11 @@ namespace ChoETL
             return msg;
         }
 
-        private static bool ReplaceToken(ChoPropertyReplacer propertyReplacer, StringBuilder message,
-            string propertyName, string format)
+        private static bool ReplaceToken(ChoPropertyReplacerManager propertyReplacer, StringBuilder message,
+            string propertyName, string format, object state = null)
         {
             string propertyValue;
-            bool retValue = propertyReplacer.RaisePropertyReolve(propertyName, format, out propertyValue);
+            bool retValue = propertyReplacer.RaisePropertyReolve(propertyName, format, out propertyValue, state);
             if (retValue)
             {
                 if (propertyValue != null)

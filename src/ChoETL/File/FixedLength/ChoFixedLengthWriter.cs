@@ -13,7 +13,7 @@ namespace ChoETL
     public class ChoFixedLengthWriter<T> : IDisposable
         where T : class
     {
-        private StreamWriter _streamWriter;
+        private TextWriter _textWriter;
         private bool _closeStreamOnDispose = false;
         private ChoFixedLengthRecordWriter _writer = null;
         private bool _clearFields = false;
@@ -33,18 +33,18 @@ namespace ChoETL
 
             Init();
 
-            _streamWriter = new StreamWriter(ChoPath.GetFullPath(filePath), false, Configuration.Encoding, Configuration.BufferSize);
+            _textWriter = new StreamWriter(ChoPath.GetFullPath(filePath), false, Configuration.Encoding, Configuration.BufferSize);
             _closeStreamOnDispose = true;
         }
 
-        public ChoFixedLengthWriter(StreamWriter streamWriter, ChoFixedLengthRecordConfiguration configuration = null)
+        public ChoFixedLengthWriter(TextWriter textWriter, ChoFixedLengthRecordConfiguration configuration = null)
         {
-            ChoGuard.ArgumentNotNull(streamWriter, "StreamWriter");
+            ChoGuard.ArgumentNotNull(textWriter, "TextWriter");
 
             Configuration = configuration;
             Init();
 
-            _streamWriter = streamWriter;
+            _textWriter = textWriter;
         }
 
         public ChoFixedLengthWriter(Stream inStream, ChoFixedLengthRecordConfiguration configuration = null)
@@ -53,14 +53,14 @@ namespace ChoETL
 
             Configuration = configuration;
             Init();
-            _streamWriter = new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize);
+            _textWriter = new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize);
             _closeStreamOnDispose = true;
         }
 
         public void Dispose()
         {
             if (_closeStreamOnDispose)
-                _streamWriter.Dispose();
+                _textWriter.Dispose();
         }
 
         private void Init()
@@ -74,12 +74,12 @@ namespace ChoETL
 
         public void Write(IEnumerable<T> records)
         {
-            _writer.WriteTo(_streamWriter, records).Loop();
+            _writer.WriteTo(_textWriter, records).Loop();
         }
 
         public void Write(T record)
         {
-            _writer.WriteTo(_streamWriter, new T[] { record } ).Loop();
+            _writer.WriteTo(_textWriter, new T[] { record } ).Loop();
         }
 
         public static string ToText<TRec>(IEnumerable<TRec> records, ChoFixedLengthRecordConfiguration configuration = null)
@@ -202,8 +202,8 @@ namespace ChoETL
         {
 
         }
-        public ChoFixedLengthWriter(StreamWriter streamWriter, ChoFixedLengthRecordConfiguration configuration = null)
-            : base(streamWriter, configuration)
+        public ChoFixedLengthWriter(TextWriter textWriter, ChoFixedLengthRecordConfiguration configuration = null)
+            : base(textWriter, configuration)
         {
         }
 

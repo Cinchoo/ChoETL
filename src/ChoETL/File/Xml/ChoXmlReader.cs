@@ -16,7 +16,6 @@ namespace ChoETL
     public class ChoXmlReader<T> : ChoReader, IDisposable, IEnumerable<T>
         where T : class
     {
-        private StreamReader _streamReader;
         private XmlReader _xmlReader;
         private bool _closeStreamOnDispose = false;
         private Lazy<IEnumerator<T>> _enumerator = null;
@@ -39,7 +38,8 @@ namespace ChoETL
 
             Init();
 
-            _streamReader = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
+            _xmlReader = XmlReader.Create(new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize),
+                new XmlReaderSettings(), new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
             _closeStreamOnDispose = true;
         }
 
@@ -50,7 +50,7 @@ namespace ChoETL
             Configuration = configuration;
             Init();
 
-            _xmlReader = XmlReader.Create(txtReader);
+            _xmlReader = XmlReader.Create(txtReader, new XmlReaderSettings(), new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
         }
 
         public ChoXmlReader(XmlReader xmlReader, ChoXmlRecordConfiguration configuration = null)
@@ -63,23 +63,14 @@ namespace ChoETL
             _xmlReader = xmlReader;
         }
 
-        public ChoXmlReader(StreamReader streamReader, ChoXmlRecordConfiguration configuration = null)
-        {
-            ChoGuard.ArgumentNotNull(streamReader, "StreamReader");
-
-            Configuration = configuration;
-            Init();
-
-            _streamReader = streamReader;
-        }
-
         public ChoXmlReader(Stream inStream, ChoXmlRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNull(inStream, "Stream");
 
             Configuration = configuration;
             Init();
-            _streamReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+            _xmlReader = XmlReader.Create(new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize), 
+                new XmlReaderSettings(), new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
             _closeStreamOnDispose = true;
         }
 
@@ -94,7 +85,7 @@ namespace ChoETL
         public void Dispose()
         {
             if (_closeStreamOnDispose)
-                _streamReader.Dispose();
+                _xmlReader.Dispose();
 
             System.Threading.Thread.CurrentThread.CurrentCulture = _prevCultureInfo;
         }
@@ -128,9 +119,6 @@ namespace ChoETL
 
         public IEnumerator<T> GetEnumerator()
         {
-            if (_xmlReader == null)
-                _xmlReader = XmlReader.Create(_streamReader, new XmlReaderSettings(), new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
-
             ChoXmlRecordReader rr = new ChoXmlRecordReader(typeof(T), Configuration);
             rr.Reader = this;
             rr.TraceSwitch = TraceSwitch;
@@ -149,7 +137,7 @@ namespace ChoETL
             ChoXmlRecordReader rr = new ChoXmlRecordReader(typeof(T), Configuration);
             rr.Reader = this;
             rr.TraceSwitch = TraceSwitch;
-            rr.LoadSchema(_streamReader);
+            rr.LoadSchema(_xmlReader);
             rr.RowsLoaded += NotifyRowsLoaded;
             var dr = new ChoEnumerableDataReader(GetEnumerator().ToEnumerable(), Configuration.XmlRecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType)).ToArray());
             return dr;
@@ -284,10 +272,6 @@ namespace ChoETL
         }
         public ChoXmlReader(XmlReader xmlReader, ChoXmlRecordConfiguration configuration = null)
             : base(xmlReader, configuration)
-        {
-        }
-        public ChoXmlReader(StreamReader streamReader, ChoXmlRecordConfiguration configuration = null)
-            : base(streamReader, configuration)
         {
         }
         public ChoXmlReader(Stream inStream, ChoXmlRecordConfiguration configuration = null)

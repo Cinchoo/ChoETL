@@ -48,10 +48,11 @@ namespace ChoETL
         {
             TraceSwitch = traceSwitch;
 
-            StreamReader sr = source as StreamReader;
-            ChoGuard.ArgumentNotNull(sr, "StreamReader");
+            TextReader sr = source as TextReader;
+            ChoGuard.ArgumentNotNull(sr, "TextReader");
 
-            sr.Seek(0, SeekOrigin.Begin);
+            if (sr is StreamReader)
+                ((StreamReader)sr).Seek(0, SeekOrigin.Begin);
 
             if (!RaiseBeginLoad(sr))
                 yield break;
@@ -60,7 +61,7 @@ namespace ChoETL
             bool? skip = false;
             bool isRecordStartFound = false;
             bool isRecordEndFound = false;
-            long seekOriginPos = sr.BaseStream.Position;
+            long seekOriginPos = sr is StreamReader ? ((StreamReader)sr).BaseStream.Position : 0;
             List<string> headers = new List<string>();
             Tuple<long, string> lastLine = null;
             List<Tuple<long, string>> recLines = new List<Tuple<long, string>>();
@@ -75,7 +76,8 @@ namespace ChoETL
             {
                 if (i == 1)
                 {
-                    sr.Seek(seekOriginPos, SeekOrigin.Begin);
+                    if (sr is StreamReader)
+                        ((StreamReader)sr).Seek(seekOriginPos, SeekOrigin.Begin);
                     TraceSwitch = traceSwitch;
                 }
                 else
@@ -596,6 +598,9 @@ namespace ChoETL
             }
             else
             {
+                if (Configuration.PIDict != null)
+                    Configuration.PIDict.TryGetValue(key, out pi);
+
                 if (pi != null)
                     fieldConfig.FieldType = pi.PropertyType;
                 else

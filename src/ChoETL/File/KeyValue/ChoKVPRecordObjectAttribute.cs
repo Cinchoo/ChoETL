@@ -14,6 +14,16 @@ namespace ChoETL
             get;
             private set;
         }
+        public string RecordStart
+        {
+            get;
+            set;
+        }
+        public string RecordEnd
+        {
+            get;
+            set;
+        }
 
         public ChoKVPRecordObjectAttribute(string delimiter = null)
         {

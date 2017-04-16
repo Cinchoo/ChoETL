@@ -8,11 +8,29 @@ using System.Threading.Tasks;
 
 namespace ChoKVPReaderTest
 {
+    [ChoKVPRecordObject(RecordStart = "BEGIN:VEVENT")]
+    public class CalendarEvent
+    {
+        [ChoKVPRecordField(FieldName = "DTSTART;VALUE=DATE")]
+        [ChoTypeConverter(typeof(ChoDateTimeConverter), Parameters = "yyyyMMdd")]
+        public DateTime EventDate
+        {
+            get;
+            set;
+        }
+        [ChoKVPRecordField(FieldName = "SUMMARY")]
+        public string Holiday
+        {
+            get;
+            set;
+        }
+    }
+
     class Program
     {
         static void Main(string[] args)
         {
-            LoadINIFileTest();
+            LoadPOCOTest();
         }
 
         static void LoadINIFileTest()
@@ -40,6 +58,38 @@ namespace ChoKVPReaderTest
                 foreach (var item in r)
                 {
                     Console.WriteLine(item.ToStringEx());
+                }
+            }
+        }
+
+        static void ConvertToCSVTest()
+        {
+            using (var r = new ChoKVPReader(@"C:\Users\raj\Documents\GitHub\ChoETL\src\Test\ChoKVPReaderTest\Maldives Holidays Calendar.ics").NotifyAfter(25))
+            {
+                r.Configuration.RecordStart = "BEGIN:VEVENT";
+                r.Configuration.RecordEnd = "END:VEVENT";
+                using (var c = new ChoCSVWriter(Console.Out))
+                {
+                    foreach (var item in r)
+                    {
+                        c.Write(item);
+                    }
+                }
+            }
+        }
+
+        static void LoadPOCOTest()
+        {
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
+
+            using (var r = new ChoKVPReader<CalendarEvent>(@"C:\Users\raj\Documents\GitHub\ChoETL\src\Test\ChoKVPReaderTest\Maldives Holidays Calendar.ics"))
+            {
+                using (var c = new ChoCSVWriter<CalendarEvent>(Console.Out))
+                {
+                    foreach (var item in r)
+                    {
+                        c.Write(item);
+                    }
                 }
             }
         }

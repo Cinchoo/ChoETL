@@ -30,8 +30,8 @@ namespace ChoETL
 
         public override IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null)
         {
-            StreamWriter sw = writer as StreamWriter;
-            ChoGuard.ArgumentNotNull(sw, "StreamWriter");
+            TextWriter sw = writer as TextWriter;
+            ChoGuard.ArgumentNotNull(sw, "TextWriter");
 
             if (records == null) yield break;
 
