@@ -124,9 +124,8 @@ namespace ChoETL
             ChoFixedLengthRecordReader rr = new ChoFixedLengthRecordReader(typeof(T), Configuration);
             rr.Reader = this;
             rr.TraceSwitch = TraceSwitch;
-            rr.LoadSchema(_textReader);
             rr.RowsLoaded += NotifyRowsLoaded;
-            var dr = new ChoEnumerableDataReader(GetEnumerator().ToEnumerable(), Configuration.FixedLengthRecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType)).ToArray());
+            var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_textReader), rr);
             return dr;
         }
 

@@ -38,12 +38,6 @@ namespace ChoETL
             //Configuration.Validate();
         }
 
-        public override void LoadSchema(object source)
-        {
-            var e = AsEnumerable(source, ChoETLFramework.TraceSwitchOff).GetEnumerator();
-            e.MoveNext();
-        }
-
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
         {
             return AsEnumerable(source, TraceSwitch, filterFunc);
@@ -73,6 +67,7 @@ namespace ChoETL
                 if (!_configCheckDone)
                 {
                     Configuration.Validate(pair);
+                    RaiseMembersDiscovered(Configuration.XmlRecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType == null ? typeof(string) : i.FieldType)).ToArray());
                     _configCheckDone = true;
                 }
 
@@ -559,66 +554,5 @@ namespace ChoETL
         }
 
         #endregion Event Raisers
-
-        //private bool RaiseBeginLoad(object state)
-        //{
-        //    if (_callbackRecord == null) return true;
-        //    return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeginLoad(state), true);
-        //}
-
-        //private void RaiseEndLoad(object state)
-        //{
-        //    if (_callbackRecord == null) return;
-        //    ChoActionEx.RunWithIgnoreError(() => _callbackRecord.EndLoad(state));
-        //}
-
-        //private bool RaiseBeforeRecordLoad(object target, ref Tuple<long, XElement> pair)
-        //{
-        //    if (_callbackRecord == null) return true;
-        //    long index = pair.Item1;
-        //    object state = pair.Item2;
-        //    bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeforeRecordLoad(target, index, ref state), true);
-
-        //    if (retValue)
-        //        pair = new Tuple<long, XElement>(index, state as XElement);
-
-        //    return retValue;
-        //}
-
-        //private bool RaiseAfterRecordLoad(object target, Tuple<long, XElement> pair)
-        //{
-        //    if (_callbackRecord == null) return true;
-        //    return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordLoad(target, pair.Item1, pair.Item2), true);
-        //}
-
-        //private bool RaiseRecordLoadError(object target, Tuple<long, XElement> pair, Exception ex)
-        //{
-        //    if (_callbackRecord == null) return true;
-        //    return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordLoadError(target, pair.Item1, pair.Item2, ex), false);
-        //}
-
-        //private bool RaiseBeforeRecordFieldLoad(object target, long index, string propName, ref object value)
-        //{
-        //    if (_callbackRecord == null) return true;
-        //    object state = value;
-        //    bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeforeRecordFieldLoad(target, index, propName, ref state), true);
-
-        //    if (retValue)
-        //        value = state;
-
-        //    return retValue;
-        //}
-
-        //private bool RaiseAfterRecordFieldLoad(object target, long index, string propName, object value)
-        //{
-        //    if (_callbackRecord == null) return true;
-        //    return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordFieldLoad(target, index, propName, value), true);
-        //}
-
-        //private bool RaiseRecordFieldLoadError(object target, long index, string propName, object value, Exception ex)
-        //{
-        //    if (_callbackRecord == null) return true;
-        //    return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordFieldLoadError(target, index, propName, value, ex), true);
-        //}
     }
 }

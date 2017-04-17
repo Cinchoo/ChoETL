@@ -7,11 +7,18 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
+    public interface IChoDeferedObjectMemberDiscoverer
+    {
+        event EventHandler<ChoEventArgs<KeyValuePair<string, Type>[]>> MembersDiscovered;
+    }
+
     public class ChoEnumerableDataReader : ChoObjectDataReader
     {
         private readonly IEnumerator _enumerator;
         private readonly Type _type;
         private object _current;
+        private bool _isDeferred = false;
+        private bool _firstElementExists = false;
 
         /// <summary>
         /// Create an IDataReader over an instance of IEnumerable&lt;>.
@@ -23,32 +30,31 @@ namespace ChoETL
         /// <param name="collection">IEnumerable&lt;>. For IEnumerable use other constructor and specify type.</param>
         public ChoEnumerableDataReader(IEnumerable collection, KeyValuePair<string, Type>[] membersInfo = null)
         {
+            ChoGuard.ArgumentNotNull(collection, "Collection");
+
+            _type = GetElementType(collection);
             _dynamicMembersInfo = membersInfo;
-
-            foreach (Type intface in collection.GetType().GetInterfaces())
-            {
-                if (intface.IsGenericType && intface.GetGenericTypeDefinition() == typeof(IEnumerable<>))
-                {
-                    _type = intface.GetGenericArguments()[0];
-                }
-            }
-
-            if (_type == null && collection.GetType().IsGenericType)
-            {
-                _type = collection.GetType().GetGenericArguments()[0];
-
-            }
-
-            if (_type == null)
-            {
-                throw new ArgumentException(
-                    "collection must be IEnumerable<>. Use other constructor for IEnumerable and specify type");
-            }
-
             SetFields(_type, membersInfo);
 
             _enumerator = collection.GetEnumerator();
 
+        }
+
+        public ChoEnumerableDataReader(IEnumerable collection, IChoDeferedObjectMemberDiscoverer dom)
+        {
+            ChoGuard.ArgumentNotNull(collection, "Collection");
+            ChoGuard.ArgumentNotNull(dom, "DeferedObjectMemberDiscoverer");
+            _isDeferred = true;
+            _type = GetElementType(collection);
+
+            dom.MembersDiscovered += (o, e) =>
+            {
+                _dynamicMembersInfo = e.Value;
+                SetFields(_type, e.Value);
+            };
+
+            _enumerator = collection.GetEnumerator();
+            _firstElementExists = _enumerator.MoveNext();
         }
 
         /// <summary>
@@ -102,16 +108,43 @@ namespace ChoETL
         /// <filterpriority>2</filterpriority>
         public override bool Read()
         {
-            bool returnValue = _enumerator.MoveNext();
+            bool returnValue = false;
+            if (_isDeferred)
+            {
+                returnValue = _firstElementExists;
+                _isDeferred = false;
+            }
+            else
+            {
+                returnValue = _enumerator.MoveNext();
+            }
             _current = returnValue ? _enumerator.Current : _type.IsValueType ? Activator.CreateInstance(_type) : null;
-            //if (_current != null && _current is IChoDynamicRecord)
-            //{
-            //    //SetFields(_current as IChoDynamicRecord);
-            //}
-            //else
-            //    SetFields(_type);
-
             return returnValue;
+        }
+
+        private Type GetElementType(IEnumerable collection)
+        {
+            Type type = null;
+            foreach (Type intface in collection.GetType().GetInterfaces())
+            {
+                if (intface.IsGenericType && intface.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                {
+                    type = intface.GetGenericArguments()[0];
+                }
+            }
+
+            if (type == null && collection.GetType().IsGenericType)
+            {
+                type = collection.GetType().GetGenericArguments()[0];
+
+            }
+
+            if (type == null)
+            {
+                throw new ArgumentException(
+                    "collection must be IEnumerable<>. Use other constructor for IEnumerable and specify type");
+            }
+            return type;
         }
     }
 }

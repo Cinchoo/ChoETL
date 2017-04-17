@@ -60,7 +60,7 @@ namespace ChoFixedLengthReaderTest
             //ChoFixedLengthFieldDefaultSizeConfiguation.Instance.SetSize(typeof(int), 3);
             //ChoFixedLengthFieldDefaultSizeConfiguation.Instance.SetSize(typeof(string), 5);
 
-            QuickLoad();
+            POCODataTableTest();
         }
 
         static void QuickLoad()
@@ -70,6 +70,26 @@ namespace ChoFixedLengthReaderTest
                 Console.WriteLine(rec.ToStringEx());
             }
 
+        }
+
+        static void QuickDataTableTest()
+        {
+            var dt = new ChoFixedLengthReader("accounts.txt").AsDataTable();
+        }
+        static void POCODataTableTest()
+        {
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoFixedLengthReader<CreditBalanceRecord>(reader))
+            {
+                writer.WriteLine("Account LastName        FirstName       Balance     CreditLimit   AccountCreated  Rating ");
+                writer.WriteLine("101     Reeves          Keanu           9315.45     10000.00      1/17/1998       A      ");
+                writer.Flush();
+                stream.Position = 0;
+
+                var dt = parser.AsDataTable();
+            }
         }
 
         static void DynamicApproach()

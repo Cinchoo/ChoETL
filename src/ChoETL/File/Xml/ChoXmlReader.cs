@@ -16,6 +16,7 @@ namespace ChoETL
     public class ChoXmlReader<T> : ChoReader, IDisposable, IEnumerable<T>
         where T : class
     {
+        private TextReader _textReader;
         private XmlReader _xmlReader;
         private bool _closeStreamOnDispose = false;
         private Lazy<IEnumerator<T>> _enumerator = null;
@@ -50,7 +51,7 @@ namespace ChoETL
             Configuration = configuration;
             Init();
 
-            _xmlReader = XmlReader.Create(txtReader, new XmlReaderSettings(), new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
+            _textReader = txtReader;
         }
 
         public ChoXmlReader(XmlReader xmlReader, ChoXmlRecordConfiguration configuration = null)
@@ -69,8 +70,8 @@ namespace ChoETL
 
             Configuration = configuration;
             Init();
-            _xmlReader = XmlReader.Create(new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize), 
-                new XmlReaderSettings(), new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
+
+            _textReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
             _closeStreamOnDispose = true;
         }
 
@@ -85,7 +86,12 @@ namespace ChoETL
         public void Dispose()
         {
             if (_closeStreamOnDispose)
-                _xmlReader.Dispose();
+            {
+                if (_textReader != null)
+                    _textReader.Dispose();
+                if (_xmlReader != null)
+                    _xmlReader.Dispose();
+            }
 
             System.Threading.Thread.CurrentThread.CurrentCulture = _prevCultureInfo;
         }
@@ -120,6 +126,9 @@ namespace ChoETL
         public IEnumerator<T> GetEnumerator()
         {
             ChoXmlRecordReader rr = new ChoXmlRecordReader(typeof(T), Configuration);
+            if (_textReader != null)
+                _xmlReader = XmlReader.Create(_textReader, new XmlReaderSettings(), new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
+
             rr.Reader = this;
             rr.TraceSwitch = TraceSwitch;
             rr.RowsLoaded += NotifyRowsLoaded;
@@ -135,11 +144,12 @@ namespace ChoETL
         public IDataReader AsDataReader()
         {
             ChoXmlRecordReader rr = new ChoXmlRecordReader(typeof(T), Configuration);
+            if (_textReader != null)
+                _xmlReader = XmlReader.Create(_textReader, new XmlReaderSettings(), new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
             rr.Reader = this;
             rr.TraceSwitch = TraceSwitch;
-            rr.LoadSchema(_xmlReader);
             rr.RowsLoaded += NotifyRowsLoaded;
-            var dr = new ChoEnumerableDataReader(GetEnumerator().ToEnumerable(), Configuration.XmlRecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType)).ToArray());
+            var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_xmlReader), rr);
             return dr;
         }
 

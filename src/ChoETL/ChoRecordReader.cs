@@ -8,11 +8,12 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public abstract class ChoRecordReader
+    public abstract class ChoRecordReader : IChoDeferedObjectMemberDiscoverer
     {
         public readonly Type RecordType;
         internal TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
         public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
+        public event EventHandler<ChoEventArgs<KeyValuePair<string, Type>[]>> MembersDiscovered;
 
         public ChoRecordReader(Type recordType)
         {
@@ -33,6 +34,15 @@ namespace ChoETL
         }
 
         public abstract IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null);
-        public abstract void LoadSchema(object source);
+        //public abstract void LoadSchema(object source);
+
+        protected void RaiseMembersDiscovered(KeyValuePair<string, Type>[] membersInfo)
+        {
+            EventHandler<ChoEventArgs<KeyValuePair<string, Type>[]>> membersDiscovered = MembersDiscovered;
+            if (membersDiscovered == null)
+                return;
+
+            membersDiscovered(this, new ChoEventArgs<KeyValuePair<string, Type>[]>(membersInfo));
+        }
     }
 }

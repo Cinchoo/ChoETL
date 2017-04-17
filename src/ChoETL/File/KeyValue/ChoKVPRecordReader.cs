@@ -33,12 +33,6 @@ namespace ChoETL
             //Configuration.Validate();
         }
 
-        public override void LoadSchema(object source)
-        {
-            var e = AsEnumerable(source, ChoETLFramework.TraceSwitchOff).GetEnumerator();
-            e.MoveNext();
-        }
-
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
         {
             return AsEnumerable(source, TraceSwitch, filterFunc);
@@ -157,6 +151,7 @@ namespace ChoETL
                         if (!_configCheckDone)
                         {
                             Configuration.Validate(null);
+                            RaiseMembersDiscovered(Configuration.KVPRecordFieldConfigurations.Select(i1 => new KeyValuePair<string, Type>(i1.Name, i1.FieldType == null ? typeof(string) : i1.FieldType)).ToArray());
                             _configCheckDone = true;
                         }
 

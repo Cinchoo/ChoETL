@@ -14,8 +14,7 @@ namespace ChoXmlReaderTest
 {
     class Program
     {
-        private static string EmpXml = @"
-            <Employees>
+        private static string EmpXml = @"<Employees>
                 <Employee Id='1'>
                     <Name>Tom</Name>
                 </Employee>
@@ -27,7 +26,23 @@ namespace ChoXmlReaderTest
          
         static void Main(string[] args)
         {
-            LoadTest();
+            ToDataTable();
+        }
+
+        static void ToDataTable()
+        {
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoXmlReader<EmployeeRec>(reader))
+            {
+                writer.WriteLine(EmpXml);
+
+                writer.Flush();
+                stream.Position = 0;
+
+                var dt = parser.AsDataTable();
+            }
         }
 
         static void LoadTest()
