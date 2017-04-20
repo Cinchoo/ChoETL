@@ -160,7 +160,7 @@ namespace ChoETL
 
         public ChoKVPReader<T> WithDelimiter(string delimiter)
         {
-            Configuration.Seperator = delimiter;
+            Configuration.Separator = delimiter;
             return this;
         }
 

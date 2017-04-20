@@ -9,7 +9,7 @@ namespace ChoETL
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
     public class ChoKVPRecordObjectAttribute : ChoFileRecordObjectAttribute
     {
-        public string Delimiter
+        public string Separator
         {
             get;
             private set;
@@ -24,10 +24,16 @@ namespace ChoETL
             get;
             set;
         }
+        public char[] LineContinuationChars
+        {
+            get;
+            set;
+        }
 
         public ChoKVPRecordObjectAttribute(string delimiter = null)
         {
-            Delimiter = delimiter;
+            Separator = delimiter;
+            LineContinuationChars = new char[] { ' ', '\t' };
         }
     }
 }

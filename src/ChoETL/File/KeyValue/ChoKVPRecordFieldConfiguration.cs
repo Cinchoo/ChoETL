@@ -41,8 +41,8 @@ namespace ChoETL
                 {
                     if (FillChar.Value == ChoCharEx.NUL)
                         throw new ChoRecordConfigurationException("Invalid '{0}' FillChar specified.".FormatString(FillChar));
-                    if (config.Seperator.Contains(FillChar.Value))
-                        throw new ChoRecordConfigurationException("FillChar [{0}] can't be one of Delimiter characters [{1}]".FormatString(FillChar, config.Seperator));
+                    if (config.Separator.Contains(FillChar.Value))
+                        throw new ChoRecordConfigurationException("FillChar [{0}] can't be one of Delimiter characters [{1}]".FormatString(FillChar, config.Separator));
                     if (config.EOLDelimiter.Contains(FillChar.Value))
                         throw new ChoRecordConfigurationException("FillChar [{0}] can't be one of EOLDelimiter characters [{1}]".FormatString(FillChar, config.EOLDelimiter));
                 }
@@ -53,7 +53,7 @@ namespace ChoETL
                          select comm).Any())
                         throw new ChoRecordConfigurationException("One of the Comments contains FillChar. Not allowed.");
                     if ((from comm in config.Comments
-                         where comm.Contains(config.Seperator)
+                         where comm.Contains(config.Separator)
                          select comm).Any())
                         throw new ChoRecordConfigurationException("One of the Comments contains Delimiter. Not allowed.");
                     if ((from comm in config.Comments

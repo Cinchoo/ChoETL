@@ -32,11 +32,17 @@ namespace ChoETL
             set;
         }
         [DataMember]
-        public string Seperator
+        public string Separator
         {
             get;
             set;
         }
+        public char[] LineContinuationChars
+        {
+            get;
+            set;
+        }
+
         [DataMember]
         public List<ChoKVPRecordFieldConfiguration> KVPRecordFieldConfigurations
         {
@@ -78,16 +84,17 @@ namespace ChoETL
         internal ChoKVPRecordConfiguration(Type recordType) : base(recordType)
         {
             KVPRecordFieldConfigurations = new List<ChoKVPRecordFieldConfiguration>();
+            LineContinuationChars = new char[] { ' ', '\t' };
 
             if (recordType != null)
             {
                 Init(recordType);
             }
 
-            if (Seperator.IsNullOrEmpty())
+            if (Separator.IsNullOrEmpty())
             {
-                if (Seperator.IsNullOrWhiteSpace())
-                    Seperator = ":";
+                if (Separator.IsNullOrWhiteSpace())
+                    Separator = ":";
             }
 
             FileHeaderConfiguration = new ChoKVPFileHeaderConfiguration(recordType, Culture);
@@ -100,9 +107,10 @@ namespace ChoETL
             ChoKVPRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoKVPRecordObjectAttribute>(recordType);
             if (recObjAttr != null)
             {
-                Seperator = recObjAttr.Delimiter;
+                Separator = recObjAttr.Separator;
                 RecordStart = recObjAttr.RecordStart;
                 RecordEnd = recObjAttr.RecordEnd;
+                LineContinuationChars = recObjAttr.LineContinuationChars;
             }
 
             DiscoverRecordFields(recordType);
@@ -157,13 +165,13 @@ namespace ChoETL
             {
                 base.Validate(state);
 
-                if (Seperator.IsNullOrWhiteSpace())
-                    throw new ChoRecordConfigurationException("Delimiter can't be null or whitespace.");
-                if (Seperator == EOLDelimiter)
-                    throw new ChoRecordConfigurationException("Delimiter [{0}] can't be same as EODDelimiter [{1}]".FormatString(Seperator, EOLDelimiter));
-                if (Seperator.Contains(QuoteChar))
-                    throw new ChoRecordConfigurationException("QuoteChar [{0}] can't be one of Delimiter characters [{1}]".FormatString(QuoteChar, Seperator));
-                if (Comments != null && Comments.Contains(Seperator))
+                if (Separator.IsNullOrWhiteSpace())
+                    throw new ChoRecordConfigurationException("Separator can't be null or whitespace.");
+                if (Separator == EOLDelimiter)
+                    throw new ChoRecordConfigurationException("Separator [{0}] can't be same as EODDelimiter [{1}]".FormatString(Separator, EOLDelimiter));
+                if (Separator.Contains(QuoteChar))
+                    throw new ChoRecordConfigurationException("QuoteChar [{0}] can't be one of Delimiter characters [{1}]".FormatString(QuoteChar, Separator));
+                if (Comments != null && Comments.Contains(Separator))
                     throw new ChoRecordConfigurationException("One of the Comments contains Delimiter. Not allowed.");
                 if (RecordStart.IsNullOrWhiteSpace() && RecordEnd.IsNullOrWhiteSpace())
                 {
@@ -196,8 +204,8 @@ namespace ChoETL
                     {
                         if (FileHeaderConfiguration.FillChar.Value == ChoCharEx.NUL)
                             throw new ChoRecordConfigurationException("Invalid '{0}' FillChar specified.".FormatString(FileHeaderConfiguration.FillChar));
-                        if (Seperator.Contains(FileHeaderConfiguration.FillChar.Value))
-                            throw new ChoRecordConfigurationException("FillChar [{0}] can't be one of Delimiter characters [{1}]".FormatString(FileHeaderConfiguration.FillChar, Seperator));
+                        if (Separator.Contains(FileHeaderConfiguration.FillChar.Value))
+                            throw new ChoRecordConfigurationException("FillChar [{0}] can't be one of Delimiter characters [{1}]".FormatString(FileHeaderConfiguration.FillChar, Separator));
                         if (EOLDelimiter.Contains(FileHeaderConfiguration.FillChar.Value))
                             throw new ChoRecordConfigurationException("FillChar [{0}] can't be one of EOLDelimiter characters [{1}]".FormatString(FileHeaderConfiguration.FillChar.Value, EOLDelimiter));
                         if ((from comm in Comments

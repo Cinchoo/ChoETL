@@ -223,7 +223,7 @@ namespace ChoETL
                                     if (e.Peek != null)
                                     {
                                         //If line empty or line continuation, skip
-                                        if (pairIn.Item2.IsNullOrWhiteSpace() || pairIn.Item2[0] == ' ' || pairIn.Item2[0] == '\t')
+                                        if (pairIn.Item2.IsNullOrWhiteSpace() || IsLineContinuationCharFound(pairIn.Item2)) //.Item2[0] == ' ' || pairIn.Item2[0] == '\t')
                                         {
 
                                         }
@@ -273,7 +273,7 @@ namespace ChoETL
                                                 recLines.Add(t);
                                             }
                                         }
-                                        else if (pairIn.Item2[0] == ' ' || pairIn.Item2[0] == '\t')
+                                        else if (IsLineContinuationCharFound(pairIn.Item2)) //pairIn.Item2[0] == ' ' || pairIn.Item2[0] == '\t')
                                         {
                                             if (lastLine == null)
                                                 throw new ChoParserException("Unexpected line continuation found at {0} location.".FormatString(pairIn.Item1));
@@ -329,6 +329,14 @@ namespace ChoETL
             if (!abortRequested)
                 RaisedRowsLoaded(recNo, true);
             RaiseEndLoad(sr);
+        }
+
+        private bool IsLineContinuationCharFound(string line)
+        {
+            if (Configuration.LineContinuationChars.IsNullOrEmpty())
+                return false;
+
+            return Configuration.LineContinuationChars.Contains(line[0]);
         }
 
         private bool LoadLines(Tuple<long, List<Tuple<long, string>>> pairs, ref object rec)
@@ -463,19 +471,23 @@ namespace ChoETL
 
         private KeyValuePair<string, string> ToKVP(long lineNo, string line)
         {
-            if (Configuration.Seperator.Length == 1)
+            if (Configuration.Separator.Length == 0)
             {
-                int pos = line.IndexOf(Configuration.Seperator[0]);
+                throw new ChoParserException("Missing separator.");
+            }
+            else if (Configuration.Separator.Length == 1)
+            {
+                int pos = line.IndexOf(Configuration.Separator[0]);
                 if (pos <= 0)
                     throw new ChoMissingRecordFieldException("Missing key at '{0}' line.".FormatString(lineNo));
                 return new KeyValuePair<string, string>(CleanKeyValue(line.Substring(0, pos)), line.Substring(pos + 1));
             }
             else
             {
-                int pos = line.IndexOf(Configuration.Seperator);
+                int pos = line.IndexOf(Configuration.Separator);
                 if (pos <= 0)
                     throw new ChoMissingRecordFieldException("Missing key at '{0}' line.".FormatString(lineNo));
-                return new KeyValuePair<string, string>(CleanKeyValue(line.Substring(0, pos)), line.Substring(pos + Configuration.Seperator.Length));
+                return new KeyValuePair<string, string>(CleanKeyValue(line.Substring(0, pos)), line.Substring(pos + Configuration.Separator.Length));
             }
         }
 
@@ -529,7 +541,7 @@ namespace ChoETL
                 if (config.QuoteField != null && config.QuoteField.Value && startChar == quoteChar && endChar == quoteChar)
                     return fieldValue.Substring(1, fieldValue.Length - 2);
                 else if (startChar == quoteChar && endChar == quoteChar &&
-                    (fieldValue.Contains(Configuration.Seperator)
+                    (fieldValue.Contains(Configuration.Separator)
                     || fieldValue.Contains(Configuration.EOLDelimiter)))
                     return fieldValue.Substring(1, fieldValue.Length - 2);
 
