@@ -12,12 +12,18 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
+    public interface IChoNotifyKVPRecordRead
+    {
+        KeyValuePair<string, string>? ToKVP(string recText);
+    }
+
     internal class ChoKVPRecordReader : ChoRecordReader
     {
         private IChoNotifyRecordRead _callbackRecord;
+        private IChoNotifyKVPRecordRead _customKVPRecord;
         private string[] _fieldNames = new string[] { };
         private bool _configCheckDone = false;
-        internal ChoReader Reader = null;
+        internal ChoBaseKVPReader Reader = null;
 
         public ChoKVPRecordConfiguration Configuration
         {
@@ -30,6 +36,7 @@ namespace ChoETL
             ChoGuard.ArgumentNotNull(configuration, "Configuration");
             Configuration = configuration;
             _callbackRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordRead>(recordType);
+            _customKVPRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyKVPRecordRead>(recordType);
             //Configuration.Validate();
         }
 
@@ -164,6 +171,9 @@ namespace ChoETL
 
                         if (!isRecordStartFound)
                         {
+                            if (pairIn == null)
+                                break;
+
                             lastLine = null;
                             recLines.Clear();
                             isRecordEndFound = false;
@@ -297,6 +307,7 @@ namespace ChoETL
                                     if (!LoadLines(new Tuple<long, List<Tuple<long, string>>>(++recNo, recLines), ref rec))
                                         yield break;
 
+                                   isRecordStartFound = false;
                                     //StoreState(e.Current, rec != null);
 
                                     if (!Configuration.RecordEnd.IsNullOrWhiteSpace())
@@ -471,6 +482,10 @@ namespace ChoETL
 
         private KeyValuePair<string, string> ToKVP(long lineNo, string line)
         {
+            var kvp = RaiseCustomKVPReader(line);
+            if (kvp != null)
+                return kvp.Value;
+
             if (Configuration.Separator.Length == 0)
             {
                 throw new ChoParserException("Missing separator.");
@@ -713,6 +728,20 @@ namespace ChoETL
         }
 
         #region Event Raisers
+
+        private KeyValuePair<string, string>? RaiseCustomKVPReader(string recText)
+        {
+            KeyValuePair<string, string>? kvp = null;
+            if (_customKVPRecord != null)
+            {
+                kvp = ChoFuncEx.RunWithIgnoreError(() => _customKVPRecord.ToKVP(recText));
+            }
+            else if (Reader != null)
+            {
+                kvp = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseToKVP(recText));
+            }
+            return kvp;
+        }
 
         private bool RaiseBeginLoad(object state)
         {

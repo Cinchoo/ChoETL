@@ -12,7 +12,23 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public class ChoKVPReader<T> : ChoReader, IDisposable, IEnumerable<T>
+    public abstract class ChoBaseKVPReader : ChoReader, IChoCustomKVPReader
+    {
+        public event EventHandler<ChoKVPEventArgs> ToKVP;
+
+        internal KeyValuePair<string, string>? RaiseToKVP(string recText)
+        {
+            EventHandler<ChoKVPEventArgs> eh = ToKVP;
+            if (eh == null)
+                return null;
+
+            ChoKVPEventArgs e = new ChoKVPEventArgs() { RecText = recText };
+            eh(this, e);
+            return e.KVP;
+        }
+    }
+
+    public class ChoKVPReader<T> : ChoBaseKVPReader, IDisposable, IEnumerable<T>
         where T : class
     {
         private TextReader _textReader;
@@ -248,4 +264,24 @@ namespace ChoETL
         {
         }
     }
+    public class ChoKVPEventArgs : EventArgs
+    {
+        public string RecText
+        {
+            get;
+            internal set;
+        }
+
+        public KeyValuePair<string, string>? KVP
+        {
+            get;
+            internal set;
+        }
+    }
+
+    public interface IChoCustomKVPReader
+    {
+        event EventHandler<ChoKVPEventArgs> ToKVP;
+    }
+
 }

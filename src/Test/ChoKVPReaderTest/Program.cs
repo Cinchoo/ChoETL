@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace ChoKVPReaderTest
 {
     [ChoKVPRecordObject(RecordStart = "BEGIN:VEVENT")]
-    public class CalendarEvent
+    public class CalendarEvent : IChoNotifyKVPRecordRead
     {
         [ChoKVPRecordField(FieldName = "DTSTART;VALUE=DATE")]
         [ChoTypeConverter(typeof(ChoDateTimeConverter), Parameters = "yyyyMMdd")]
@@ -23,6 +23,19 @@ namespace ChoKVPReaderTest
         {
             get;
             set;
+        }
+        [ChoKVPRecordField(FieldName = "EMAIL")]
+        public string Email
+        {
+            get;
+            set;
+        }
+
+        public KeyValuePair<string, string>? ToKVP(string recText)
+        {
+            if (recText.StartsWith("EMAIL;"))
+                return new KeyValuePair<string, string>("EMAIL", recText.RightOf("EMAIL;"));
+            return null;
         }
     }
 
@@ -80,7 +93,7 @@ namespace ChoKVPReaderTest
 
         static void LoadPOCOTest()
         {
-            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Verbose;
 
             using (var r = new ChoKVPReader<CalendarEvent>(@"C:\Users\raj\Documents\GitHub\ChoETL\src\Test\ChoKVPReaderTest\Maldives Holidays Calendar.ics"))
             {

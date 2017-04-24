@@ -781,6 +781,21 @@ namespace ChoETL
             return source.Substring(source.Length - length);
         }
 
+        public static string RightOf(this string source, string searchText)
+        {
+            if (source == null)
+                return source;
+
+            if (searchText.IsNullOrWhiteSpace())
+                throw new ArgumentException("Invalid searchText passed.");
+
+            int index = source.IndexOf(searchText);
+            if (index < 0)
+                return source;
+            index = index + searchText.Length;
+            return source.Substring(index);
+        }
+
         public static string MaskDigitsLeft(this string source, int noOfDigitToShowAtEnd = 4)
         {
             if (source == null) return source;
