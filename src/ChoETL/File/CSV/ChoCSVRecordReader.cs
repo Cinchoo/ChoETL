@@ -341,11 +341,11 @@ namespace ChoETL
 
                 if (fieldNameValues != null)
                 {
-                    if (Configuration.ColumnOrderStrict)
+                    if (fieldNameValues.ContainsKey(fieldConfig.FieldName))
+                        fieldValue = fieldNameValues[fieldConfig.FieldName];
+                    else
                     {
-                        if (fieldNameValues.ContainsKey(fieldConfig.FieldName))
-                            fieldValue = fieldNameValues[fieldConfig.FieldName];
-                        else
+                        if (Configuration.ColumnOrderStrict)
                             throw new ChoParserException("No matching '{0}' field header found.".FormatString(fieldConfig.FieldName));
                     }
                 }

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Data;
+using System.Data.SqlClient;
 using System.Dynamic;
 using System.Linq;
 using System.Text;
@@ -35,7 +37,72 @@ namespace ChoETL
 
             return dataMapper;
         });
+        private static dynamic ToExpandoObject(this IDataRecord record)
+        {
+            var expandoObject = new ExpandoObject() as IDictionary<string, object>;
 
+            for (var i = 0; i < record.FieldCount; i++)
+                expandoObject.Add(record.GetName(i), record[i]);
+
+            return expandoObject;
+        }
+
+        public static IEnumerable<T> ToEnumerable<T>(this IDataReader reader)
+        {
+            if (typeof(T) == typeof(ExpandoObject))
+            {
+                while (reader.Read())
+                {
+                    yield return ToExpandoObject(reader);
+                }
+            }
+            else
+                yield break;
+        }
+
+        public static string CreateInsertScript(this object target, string tableName = null)
+        {
+            Type objectType = target is Type ? target as Type : target.GetType();
+            StringBuilder script = new StringBuilder();
+
+            if (target is ExpandoObject)
+            {
+                tableName = tableName.IsNullOrWhiteSpace() ? "Table" : tableName;
+                var eo = target as IDictionary<string, Object>;
+
+                script.Append("INSERT INTO [" + tableName);
+                script.Append("](");
+
+                bool isFirst = true;
+                foreach (KeyValuePair<string, object> kvp in eo)
+                {
+                    if (isFirst)
+                    {
+                        script.Append(kvp.Key);
+                        isFirst = false;
+                    }
+                    else
+                        script.AppendFormat(", [{0}]", kvp.Key);
+                }
+                script.Append(") VALUES (");
+                isFirst = true;
+                foreach (KeyValuePair<string, object> kvp in eo)
+                {
+                    if (isFirst)
+                    {
+                        script.AppendFormat("{0}", kvp.Value == null ? "NULL" : "'{0}'".FormatString(kvp.Value.ToString()));
+                        isFirst = false;
+                    }
+                    else
+                        script.AppendFormat(", {0}", kvp.Value == null ? "NULL" : "'{0}'".FormatString(kvp.Value.ToString()));
+                }
+                script.AppendLine(")");
+            }
+            else
+            {
+            }
+            return script.ToString();
+        }
 
         public static string CreateTableScript(this object target, Dictionary<Type, string> columnDataMapper = null, string tableName = null, string keyColumns = null)
         {
@@ -91,18 +158,17 @@ namespace ChoETL
                 }
                 else
                 {
-                    script.AppendLine("CREATE TABLE " + tableName);
-                    script.AppendLine("(");
+                    script.AppendLine("CREATE TABLE [" + tableName + "](");
                     hasColumns = true;
                 }
 
                 if (columnDataMapper.ContainsKey(pt))
                 {
-                    script.Append($"\t{kvp.Key} {columnDataMapper[pt]}");
+                    script.Append($"\t[{kvp.Key}] {columnDataMapper[pt]}");
                 }
                 else
                 {
-                    script.AppendFormat($"\t{0} {1}", kvp.Key, columnDataMapper.ContainsKey(typeof(string)) ? columnDataMapper[typeof(string)] : "NVARCHAR(500)");
+                    script.AppendFormat("\t[{0}] {1}", kvp.Key, columnDataMapper.ContainsKey(typeof(string)) ? columnDataMapper[typeof(string)] : "NVARCHAR(500)");
                 }
 
                 index++;
@@ -119,11 +185,11 @@ namespace ChoETL
                     {
                         script.Append(",");
                         script.Append(Environment.NewLine);
-                        script.Append($"\tPRIMARY KEY ({keyColumnName}");
+                        script.Append($"\tPRIMARY KEY ([{keyColumnName}]");
                     }
                     else
                     {
-                        script.Append($", {keyColumnName}");
+                        script.Append($", [{keyColumnName}]");
                     }
 
                     index++;

@@ -16,8 +16,9 @@ namespace ChoCSVSqlDbImportSample
     {
         static void Main(string[] args)
         {
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
             ChoETLFramework.Initialize();
-            BcpDataFile();
+            POCOSortUsingSqlite();
 
             //LoadDataFile();
         }
@@ -39,6 +40,60 @@ namespace ChoCSVSqlDbImportSample
             public string Series_title_3 { get; set; }
             public string Series_title_4 { get; set; }
             public string Series_title_5 { get; set; }
+        }
+
+        public class Address
+        {
+            [Key]
+            [ChoCSVRecordField(1)]
+            public int Id
+            {
+                get;
+                set;
+            }
+
+            [ChoCSVRecordField(2)]
+            public string Street
+            {
+                get;
+                set;
+            }
+            [ChoCSVRecordField(4)]
+            public string City
+            {
+                get;
+                set;
+            }
+        }
+        public static void POCOSortUsingSqlite()
+        {
+            using (var dr = new ChoCSVReader(@"Test.txt").WithDelimiter("\t").
+                WithFields("Id", "Street","Filler1", "City").NotifyAfter(10000))
+            {
+                dr.RowsLoaded += delegate (object sender, ChoRowsLoadedEventArgs e)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " rows loaded.");
+                };
+                using (var dw = new ChoCSVWriter<Address>(Console.Out))
+                    dw.Write(dr.AsEnumerable().CastEnumerable<Address>().StageOnSqlServer().GroupBy(x => x.City).Select(y => y.FirstOrDefault()));
+            }
+
+        }
+
+        public static void SortUsingSqlite()
+        {
+            using (var dr = new ChoCSVReader(@"Test.txt").WithDelimiter("\t").NotifyAfter(10000))
+            {
+                dr.RowsLoaded += delegate (object sender, ChoRowsLoadedEventArgs e)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " rows loaded.");
+                };
+                using (var dw = new ChoCSVWriter(Console.Out))
+                    dw.Write(dr.AsEnumerable().StageOnSQLite("ORDER BY Column4"));
+            }
+
         }
 
         static void BcpDataFile()

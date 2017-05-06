@@ -25,18 +25,28 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoXmlReaderTest", "..\Test
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoXmlToCSVSample", "..\Test\ChoXmlToCSVSample\ChoXmlToCSVSample.csproj", "{7CE4A3BE-991E-4A04-A725-7353B495EFC9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoWEIRDRSSFeedReaderTest", "Test\ChoWEIRDRSSFeedReaderTest\ChoWEIRDRSSFeedReaderTest.csproj", "{32F3D0A7-A436-457F-B4CF-DF568997C110}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7DEAF723-0EE1-4A44-9F9C-D8D2B778D773}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoXmlWriterTest", "..\Test\ChoXmlWriterTest\ChoXmlWriterTest.csproj", "{16E4E045-76D3-492B-AD03-C163C96AC3FB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoKVPReaderTest", "..\Test\ChoKVPReaderTest\ChoKVPReaderTest.csproj", "{3E678D7C-6F68-4F82-8ADB-012D579A46AE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoETL.Sqlite", "..\ChoETL.Sqlite\ChoETL.Sqlite.csproj", "{3AE70956-BB21-4503-9268-A72C2E8DCC8F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoETL.SqlServer", "..\ChoETL.SqlServer\ChoETL.SqlServer.csproj", "{4E00E9B1-F938-465D-8B11-9F41DEA75F45}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoWEIRDRSSFeedReaderTest", "..\Test\ChoWEIRDRSSFeedReaderTest\ChoWEIRDRSSFeedReaderTest.csproj", "{32F3D0A7-A436-457F-B4CF-DF568997C110}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libs", "Libs", "{B55FFF85-D024-49E8-9D3C-43AC1750B61F}"
+	ProjectSection(SolutionItems) = preProject
+		..\Libs\EntityFramework.dll = ..\Libs\EntityFramework.dll
+		..\Libs\EntityFramework.SqlServer.dll = ..\Libs\EntityFramework.SqlServer.dll
+		..\Libs\System.Data.SQLite.dll = ..\Libs\System.Data.SQLite.dll
+		..\Libs\System.Data.SQLite.EF6.dll = ..\Libs\System.Data.SQLite.EF6.dll
+		..\Libs\System.Data.SQLite.Linq.dll = ..\Libs\System.Data.SQLite.Linq.dll
+	EndProjectSection
+EndProject
 Global
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -82,10 +92,6 @@ Global
 		{7CE4A3BE-991E-4A04-A725-7353B495EFC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7CE4A3BE-991E-4A04-A725-7353B495EFC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7CE4A3BE-991E-4A04-A725-7353B495EFC9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{32F3D0A7-A436-457F-B4CF-DF568997C110}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{32F3D0A7-A436-457F-B4CF-DF568997C110}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{32F3D0A7-A436-457F-B4CF-DF568997C110}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{32F3D0A7-A436-457F-B4CF-DF568997C110}.Release|Any CPU.Build.0 = Release|Any CPU
 		{16E4E045-76D3-492B-AD03-C163C96AC3FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{16E4E045-76D3-492B-AD03-C163C96AC3FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{16E4E045-76D3-492B-AD03-C163C96AC3FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -94,6 +100,18 @@ Global
 		{3E678D7C-6F68-4F82-8ADB-012D579A46AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3E678D7C-6F68-4F82-8ADB-012D579A46AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3E678D7C-6F68-4F82-8ADB-012D579A46AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3AE70956-BB21-4503-9268-A72C2E8DCC8F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3AE70956-BB21-4503-9268-A72C2E8DCC8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3AE70956-BB21-4503-9268-A72C2E8DCC8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3AE70956-BB21-4503-9268-A72C2E8DCC8F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E00E9B1-F938-465D-8B11-9F41DEA75F45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E00E9B1-F938-465D-8B11-9F41DEA75F45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E00E9B1-F938-465D-8B11-9F41DEA75F45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E00E9B1-F938-465D-8B11-9F41DEA75F45}.Release|Any CPU.Build.0 = Release|Any CPU
+		{32F3D0A7-A436-457F-B4CF-DF568997C110}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32F3D0A7-A436-457F-B4CF-DF568997C110}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32F3D0A7-A436-457F-B4CF-DF568997C110}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32F3D0A7-A436-457F-B4CF-DF568997C110}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -108,8 +126,8 @@ Global
 		{AD56E92F-E83B-4813-BEFE-7BB8AFCC51DE} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 		{4213D2FA-323B-4287-BF6C-5906193163C8} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 		{7CE4A3BE-991E-4A04-A725-7353B495EFC9} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
-		{32F3D0A7-A436-457F-B4CF-DF568997C110} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 		{16E4E045-76D3-492B-AD03-C163C96AC3FB} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 		{3E678D7C-6F68-4F82-8ADB-012D579A46AE} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
+		{32F3D0A7-A436-457F-B4CF-DF568997C110} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 	EndGlobalSection
 EndGlobal

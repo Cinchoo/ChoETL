@@ -185,17 +185,45 @@ namespace ChoETL
 
             if (src is ExpandoObject)
             {
-                var srcDict = (IDictionary<string, object>)src;
-                foreach (MemberInfo memberInfo in ChoType.GetMembers(dest.GetType()).Where(m => ChoType.GetAttribute<ChoMemberAttribute>(m) != null))
+                if (dest is ExpandoObject)
+                    dest = src;
+                else
                 {
-                    try
+                    Dictionary<string, PropertyDescriptor> destMembers = ChoTypeDescriptor.GetProperties<T>(dest.GetType()).ToDictionary(pd => pd.Name, StringComparer.CurrentCultureIgnoreCase);
+                    //Set default values to all members
+                    if (defaultValueCallback != null)
                     {
-                        if (!srcDict.ContainsKey(memberInfo.Name)) continue;
-                        ChoType.ConvertNSetMemberValue(dest, memberInfo, srcDict[memberInfo.Name]);
+                        foreach (string mn in destMembers.Keys)
+                        {
+                            ChoType.ConvertNSetMemberValue(dest, mn, defaultValueCallback(mn, destMembers[mn].PropertyType));
+                        }
                     }
-                    catch (Exception ex)
+
+                    Dictionary<string, PropertyDescriptor> srcMembers = ChoTypeDescriptor.GetProperties<T>(src.GetType()).ToDictionary(pd => pd.Name, StringComparer.CurrentCultureIgnoreCase);
+                    foreach (string mn in srcMembers.Keys)
                     {
-                        ChoETLFramework.WriteLog(ChoETLFramework.TraceSwitch.TraceError, "Clone: Error assigning value for '{0}' member. {1}".FormatString(ChoType.GetMemberName(memberInfo), ex.Message));
+                        try
+                        {
+                            if (!destMembers.ContainsKey(mn)) continue;
+                            ChoType.ConvertNSetMemberValue(dest, mn, ChoType.GetMemberValue(src, mn));
+                        }
+                        catch (Exception ex)
+                        {
+                            if (fallbackValueCallback != null)
+                            {
+                                try
+                                {
+                                    ChoType.ConvertNSetMemberValue(dest, mn, fallbackValueCallback(mn, destMembers[mn].PropertyType));
+                                }
+                                catch
+                                {
+                                    throw new ApplicationException("Clone: Error assigning value for '{0}' member. {1}".FormatString(ChoType.GetMemberName(destMembers[mn]), ex.Message));
+                                }
+                            }
+                            else
+                                throw new ApplicationException("Clone: Error assigning value for '{0}' member. {1}".FormatString(ChoType.GetMemberName(destMembers[mn]), ex.Message));
+                        }
+
                     }
                 }
             }
@@ -308,17 +336,45 @@ namespace ChoETL
 
             if (src is ExpandoObject)
             {
-                var srcDict = (IDictionary<string, object>)src;
-                foreach (MemberInfo memberInfo in ChoType.GetMembers(dest.GetType()).Where(m => ChoType.GetAttribute<ChoMemberAttribute>(m) != null))
+                if (dest is ExpandoObject)
+                    dest = src;
+                else
                 {
-                    try
+                    Dictionary<string, PropertyDescriptor> destMembers = ChoTypeDescriptor.GetProperties(dest.GetType()).ToDictionary(pd => pd.Name, StringComparer.CurrentCultureIgnoreCase);
+                    //Set default values to all members
+                    if (defaultValueCallback != null)
                     {
-                        if (!srcDict.ContainsKey(memberInfo.Name)) continue;
-                        ChoType.ConvertNSetMemberValue(dest, memberInfo, srcDict[memberInfo.Name]);
+                        foreach (string mn in destMembers.Keys)
+                        {
+                            ChoType.ConvertNSetMemberValue(dest, mn, defaultValueCallback(mn, destMembers[mn].PropertyType));
+                        }
                     }
-                    catch (Exception ex)
+
+                    IDictionary<string, object> srcMembers = src as IDictionary<string, object>;
+                    foreach (string mn in srcMembers.Keys)
                     {
-                        ChoETLFramework.WriteLog(ChoETLFramework.TraceSwitch.TraceError, "Clone: Error assigning value for '{0}' member. {1}".FormatString(ChoType.GetMemberName(memberInfo), ex.Message));
+                        try
+                        {
+                            if (!destMembers.ContainsKey(mn)) continue;
+                            ChoType.ConvertNSetMemberValue(dest, mn, srcMembers[mn]);
+                        }
+                        catch (Exception ex)
+                        {
+                            if (fallbackValueCallback != null)
+                            {
+                                try
+                                {
+                                    ChoType.ConvertNSetMemberValue(dest, mn, fallbackValueCallback(mn, destMembers[mn].PropertyType));
+                                }
+                                catch
+                                {
+                                    throw new ApplicationException("Clone: Error assigning value for '{0}' member. {1}".FormatString(ChoType.GetMemberName(destMembers[mn]), ex.Message));
+                                }
+                            }
+                            else
+                                throw new ApplicationException("Clone: Error assigning value for '{0}' member. {1}".FormatString(ChoType.GetMemberName(destMembers[mn]), ex.Message));
+                        }
+
                     }
                 }
             }
@@ -602,7 +658,21 @@ namespace ChoETL
                 yield break;
 
             foreach (object item in @this)
-                yield return (T)System.Convert.ChangeType(item, typeof(T));
+                yield return (T)ChoConvert.ChangeType(item, typeof(T));
+        }
+
+        public static IEnumerable CastEnumerable(this IEnumerable @this, Type toType)
+        {
+            if (@this == null)
+                yield break;
+
+            foreach (object item in @this)
+            {
+                if (toType == null)
+                    yield return item;
+                else
+                    yield return ChoConvert.ChangeType(item, toType);
+            }
         }
 
         public static string ReadResourceFile(this Assembly assembly, string resourceName)

@@ -79,6 +79,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="EntityFramework">
+      <HintPath>..\Libs\EntityFramework.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -102,6 +105,7 @@
     <Compile Include="Common\ChoEnum.cs" />
     <Compile Include="Common\ChoEnumTypeCache.cs" />
     <Compile Include="Common\ChoExternalSorter.cs" />
+    <Compile Include="Common\Data\Entity\ChoDynamicDbContext.cs" />
     <Compile Include="Common\Compiler\ChoCodeDomProvider.cs" />
     <Compile Include="Common\Converters\ChoCustomCodeConverter.cs" />
     <Compile Include="Common\Converters\ChoLowerCaseConverter.cs" />
@@ -120,6 +124,7 @@
     <Compile Include="Common\Converters\ChoBigIntegerConverter.cs" />
     <Compile Include="Common\Converters\ChoEnumConverter.cs" />
     <Compile Include="Common\Data\ChoSqlTableHelper.cs" />
+    <Compile Include="Common\Dynamic\ChoDynamicClassFactory.cs" />
     <Compile Include="Common\Reflection\ChoFieldInfoEx.cs" />
     <Compile Include="Common\Reflection\ChoMemberInfoEx.cs" />
     <Compile Include="Common\Reflection\ChoPropertyInfoEx.cs" />
@@ -315,7 +320,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Common\Cryptography\" />
-    <Folder Include="Libs\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
