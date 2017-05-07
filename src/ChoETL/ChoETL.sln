@@ -46,6 +46,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libs", "Libs", "{B55FFF85-D
 		..\Libs\System.Data.SQLite.Linq.dll = ..\Libs\System.Data.SQLite.Linq.dll
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "x86", "x86", "{7CAADAFD-ECC5-43C9-97AE-56F83743002C}"
+	ProjectSection(SolutionItems) = preProject
+		..\Libs\x86\SQLite.Interop.dll = ..\Libs\x86\SQLite.Interop.dll
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "x64", "x64", "{68175B41-6BD1-47AE-8812-F9169708954F}"
+	ProjectSection(SolutionItems) = preProject
+		..\Libs\x64\SQLite.Interop.dll = ..\Libs\x64\SQLite.Interop.dll
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -129,5 +139,7 @@ Global
 		{16E4E045-76D3-492B-AD03-C163C96AC3FB} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 		{3E678D7C-6F68-4F82-8ADB-012D579A46AE} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 		{32F3D0A7-A436-457F-B4CF-DF568997C110} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
+		{7CAADAFD-ECC5-43C9-97AE-56F83743002C} = {B55FFF85-D024-49E8-9D3C-43AC1750B61F}
+		{68175B41-6BD1-47AE-8812-F9169708954F} = {B55FFF85-D024-49E8-9D3C-43AC1750B61F}
 	EndGlobalSection
 EndGlobal
