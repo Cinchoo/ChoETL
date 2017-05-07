@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("ChoETL.Sqlite")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Cinchoo ETL framework for .NET")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("ChoETL.Sqlite")]
-[assembly: AssemblyCopyright("Copyright ©  2017")]
+[assembly: AssemblyCopyright("Copyright © Cinchoo Inc. 2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("3ae70956-bb21-4503-9268-a72c2e8dcc8f")]
+[assembly: Guid("0a5062f4-b00a-4998-858d-a3c5d99e2074")]
 
 // Version information for an assembly consists of the following four values:
 //

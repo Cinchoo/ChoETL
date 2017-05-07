@@ -143,7 +143,20 @@ namespace ChoETL
                 return;
 
             if (File.Exists(dbFilePath))
+            {
+                if (String.Compare(Path.GetFileNameWithoutExtension(dbFilePath), "localdb", true) == 0)
+                {
+                    foreach (string dbFileName in Directory.GetFiles(Path.GetDirectoryName(dbFilePath), "localdb*.*"))
+                    {
+                        try
+                        {
+                            File.Delete(dbFileName);
+                        }
+                        catch { }
+                    }
+                }
                 return;
+            }
 
             CreateDatabase(Path.GetFileNameWithoutExtension(dbFilePath), dbFilePath, sqlServerSettings.MasterDbConnectionString);
         }
