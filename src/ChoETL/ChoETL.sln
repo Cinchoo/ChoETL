@@ -31,7 +31,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoXmlWriterTest", "..\Test
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoKVPReaderTest", "..\Test\ChoKVPReaderTest\ChoKVPReaderTest.csproj", "{3E678D7C-6F68-4F82-8ADB-012D579A46AE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoETL.Sqlite", "..\ChoETL.Sqlite\ChoETL.Sqlite.csproj", "{3AE70956-BB21-4503-9268-A72C2E8DCC8F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoETL.SQLite", "..\ChoETL.Sqlite\ChoETL.SQLite.csproj", "{3AE70956-BB21-4503-9268-A72C2E8DCC8F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoETL.SqlServer", "..\ChoETL.SqlServer\ChoETL.SqlServer.csproj", "{4E00E9B1-F938-465D-8B11-9F41DEA75F45}"
 EndProject
