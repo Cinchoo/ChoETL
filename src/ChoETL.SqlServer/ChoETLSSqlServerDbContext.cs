@@ -26,6 +26,8 @@ namespace ChoETL
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.Conventions.Remove<PluralizingTableNameConvention>();
+            typeof(T).ScanAndDefineKeyToEntity();
+
             MethodInfo method = modelBuilder.GetType().GetMethod("Entity");
             method = method.MakeGenericMethod(new Type[] { typeof(T) });
             method.Invoke(modelBuilder, null);

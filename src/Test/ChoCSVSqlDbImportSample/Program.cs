@@ -45,7 +45,7 @@ namespace ChoCSVSqlDbImportSample
         public class Address
         {
             [ChoCSVRecordField(1)]
-            public int Id
+            public int Id1
             {
                 get;
                 set;

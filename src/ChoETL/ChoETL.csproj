@@ -103,6 +103,9 @@
     <Compile Include="Common\ChoEnumTypeCache.cs" />
     <Compile Include="Common\ChoExternalSorter.cs" />
     <Compile Include="Common\Compiler\ChoCodeDomProvider.cs" />
+    <Compile Include="Common\ComponentModel\ChoCustomTypeDescriptor.cs" />
+    <Compile Include="Common\ComponentModel\ChoTypeDescriptionProvider.cs" />
+    <Compile Include="Common\Data\Entity\ChoEntityEx.cs" />
     <Compile Include="Common\Converters\ChoCustomCodeConverter.cs" />
     <Compile Include="Common\Converters\ChoLowerCaseConverter.cs" />
     <Compile Include="Common\Converters\ChoUShortConverter.cs" />
