@@ -18,7 +18,7 @@ namespace ChoCSVSqlDbImportSample
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
             ChoETLFramework.Initialize();
-            POCOSortUsingSqlite();
+            SortUsingSqlite();
 
             //LoadDataFile();
         }
@@ -85,7 +85,7 @@ namespace ChoCSVSqlDbImportSample
                     Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " rows loaded.");
                 };
                 using (var dw = new ChoCSVWriter<Address>(Console.Out))
-                    dw.Write(dr.AsEnumerable().StageOnSQLite().OrderByDescending(x => x.City));
+                    dw.Write(dr.AsEnumerable().StageOnSqlServer().OrderByDescending(x => x.City));
             }
         }
 
@@ -99,7 +99,7 @@ namespace ChoCSVSqlDbImportSample
                     Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " rows loaded.");
                 };
                 using (var dw = new ChoCSVWriter(Console.Out))
-                    dw.Write(dr.AsEnumerable().StageOnSQLite("ORDER BY Column4"));
+                    dw.Write(dr.AsEnumerable().StageOnSqlServer("ORDER BY Column4"));
             }
 
         }

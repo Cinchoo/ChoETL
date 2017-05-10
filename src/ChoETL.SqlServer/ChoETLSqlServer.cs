@@ -25,15 +25,50 @@ namespace ChoETL
             if (typeof(T) == typeof(ExpandoObject))
                 throw new NotSupportedException();
 
-            if (sqlServerSettings == null)
-                sqlServerSettings = ChoETLSqlServerSettings.Instance;
-            else
-                sqlServerSettings.Validate();
-
-            sqlServerSettings.TableName = typeof(T).Name;
-
-            bool isFirstItem = true;
             Dictionary<string, PropertyInfo> PIDict = ChoType.GetProperties(typeof(T)).ToDictionary(p => p.Name);
+
+            sqlServerSettings = ValidateSettings<T>(sqlServerSettings);
+            LoadDataToDb(items, sqlServerSettings, PIDict);
+
+            var ctx = new ChoETLSqlServerDbContext<T>(sqlServerSettings.ConnectionString);
+            var dbSet = ctx.Set<T>();
+            return dbSet;
+        }
+
+        public static IEnumerable<ExpandoObject> StageOnSqlServer(this IEnumerable<ExpandoObject> items, string conditions = null, ChoETLSqlServerSettings sqlServerSettings = null)
+        {
+            sqlServerSettings = ValidateSettings<ExpandoObject>(sqlServerSettings);
+            LoadDataToDb(items, sqlServerSettings, null);
+
+            string sql = "SELECT * FROM {0}".FormatString(sqlServerSettings.TableName);
+            if (!conditions.IsNullOrWhiteSpace())
+                sql += " {0}".FormatString(conditions);
+
+            SqlConnection conn = new SqlConnection(sqlServerSettings.ConnectionString);
+            conn.Open();
+
+            SqlCommand command2 = new SqlCommand(sql, conn);
+            return command2.ExecuteReader(CommandBehavior.CloseConnection).ToEnumerable<ExpandoObject>();
+        }
+
+        private static ChoETLSqlServerSettings ValidateSettings<T>(ChoETLSqlServerSettings SqlServerSettings) where T : class
+        {
+            if (SqlServerSettings == null)
+                SqlServerSettings = ChoETLSqlServerSettings.Instance;
+            else
+                SqlServerSettings.Validate();
+
+            if (typeof(T) == typeof(ExpandoObject))
+                SqlServerSettings.TableName = SqlServerSettings.TableName.IsNullOrWhiteSpace() ? "Table" : SqlServerSettings.TableName;
+            else
+                SqlServerSettings.TableName = typeof(T).Name;
+
+            return SqlServerSettings;
+        }
+
+        private static void LoadDataToDb<T>(IEnumerable<T> items, ChoETLSqlServerSettings sqlServerSettings, Dictionary<string, PropertyInfo> PIDict) where T : class
+        {
+            bool isFirstItem = true;
 
             CreateDatabaseIfLocalDb(sqlServerSettings);
 
@@ -63,10 +98,18 @@ namespace ChoETL
                                 //Truncate table
                                 try
                                 {
-                                    SqlCommand command = new SqlCommand("DELETE FROM [{0}]".FormatString(sqlServerSettings.TableName), conn, trans);
+                                    SqlCommand command = new SqlCommand("TRUNCATE TABLE [{0}]".FormatString(sqlServerSettings.TableName), conn, trans);
                                     command.ExecuteNonQuery();
                                 }
-                                catch { }
+                                catch
+                                {
+                                    try
+                                    {
+                                        SqlCommand command = new SqlCommand("DELETE FROM [{0}]".FormatString(sqlServerSettings.TableName), conn, trans);
+                                        command.ExecuteNonQuery();
+                                    }
+                                    catch { }
+                                }
                                 insertCmd = CreateInsertCommand(item, sqlServerSettings.TableName, conn, trans, PIDict);
                             }
                         }
@@ -82,55 +125,6 @@ namespace ChoETL
                     catch { }
                 }
             }
-
-            var ctx = new ChoETLSqlServerDbContext<T>(sqlServerSettings.ConnectionString);
-            var dbSet = ctx.Set<T>();
-            return dbSet;
-        }
-
-        public static IEnumerable<ExpandoObject> StageOnSqlServer(this IEnumerable<ExpandoObject> items, string conditions = null, ChoETLSqlServerSettings SqlServerSettings = null)
-        {
-            if (SqlServerSettings == null)
-                SqlServerSettings = ChoETLSqlServerSettings.Instance;
-            else
-                SqlServerSettings.Validate();
-
-            bool isFirstItem = true;
-
-            //Open SqlServer connection, store the data
-            var conn = new SqlConnection(SqlServerSettings.ConnectionString);
-            SqlCommand insertCmd = null;
-            conn.Open();
-
-            using (var trans = conn.BeginTransaction())
-            {
-                foreach (var item in items)
-                {
-                    if (isFirstItem)
-                    {
-                        isFirstItem = false;
-                        if (item != null)
-                        {
-                            SqlCommand command = new SqlCommand(item.CreateTableScript(SqlServerSettings.ColumnDataMapper, SqlServerSettings.TableName), conn, trans);
-                            command.ExecuteNonQuery();
-
-                            insertCmd = CreateInsertCommand(item, SqlServerSettings.TableName, conn, trans);
-                        }
-                    }
-
-                    PopulateParams(insertCmd, item, null);
-                    insertCmd.ExecuteNonQuery();
-                }
-
-                trans.Commit();
-            }
-
-            string sql = "SELECT * FROM {0}".FormatString(SqlServerSettings.TableName);
-            if (!conditions.IsNullOrWhiteSpace())
-                sql += " {0}".FormatString(conditions);
-
-            SqlCommand command2 = new SqlCommand(sql, conn);
-            return command2.ExecuteReader().ToEnumerable<ExpandoObject>();
         }
 
         private static void CreateDatabaseIfLocalDb(ChoETLSqlServerSettings sqlServerSettings)
@@ -155,7 +149,6 @@ namespace ChoETL
                         catch { }
                     }
                 }
-                return;
             }
 
             CreateDatabase(Path.GetFileNameWithoutExtension(dbFilePath), dbFilePath, sqlServerSettings.MasterDbConnectionString);

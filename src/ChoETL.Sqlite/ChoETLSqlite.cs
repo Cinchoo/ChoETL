@@ -27,11 +27,48 @@ namespace ChoETL
             if (typeof(T) == typeof(ExpandoObject))
                 throw new NotSupportedException();
 
+            Dictionary<string, PropertyInfo> PIDict = ChoType.GetProperties(typeof(T)).ToDictionary(p => p.Name);
+
+            sqliteSettings = ValidateSettings<T>(sqliteSettings);
+            LoadDataToDb(items, sqliteSettings, PIDict);
+
+            var ctx = new ChoETLSQLiteDbContext<T>(sqliteSettings.DatabaseFilePath);
+            var dbSet = ctx.Set<T>();
+            return dbSet;
+        }
+
+        public static IEnumerable<ExpandoObject> StageOnSQLite(this IEnumerable<ExpandoObject> items, string conditions = null, ChoETLSqliteSettings sqliteSettings = null)
+        {
+            sqliteSettings = ValidateSettings<ExpandoObject>(sqliteSettings);
+            LoadDataToDb(items, sqliteSettings, null);
+
+            string sql = "SELECT * FROM {0}".FormatString(sqliteSettings.TableName);
+            if (!conditions.IsNullOrWhiteSpace())
+                sql += " {0}".FormatString(conditions);
+
+            SQLiteConnection conn = new SQLiteConnection(@"DataSource={0}".FormatString(sqliteSettings.DatabaseFilePath));
+            conn.Open();
+            SQLiteCommand command2 = new SQLiteCommand(sql, conn);
+            return command2.ExecuteReader(CommandBehavior.CloseConnection).ToEnumerable<ExpandoObject>();
+        }
+
+        private static ChoETLSqliteSettings ValidateSettings<T>(ChoETLSqliteSettings sqliteSettings) where T : class
+        {
             if (sqliteSettings == null)
                 sqliteSettings = ChoETLSqliteSettings.Instance;
             else
                 sqliteSettings.Validate();
 
+            if (typeof(T) == typeof(ExpandoObject))
+                sqliteSettings.TableName = sqliteSettings.TableName.IsNullOrWhiteSpace() ? "Table" : sqliteSettings.TableName;
+            else
+                sqliteSettings.TableName = typeof(T).Name;
+
+            return sqliteSettings;
+        }
+
+        private static void LoadDataToDb<T>(IEnumerable<T> items, ChoETLSqliteSettings sqliteSettings, Dictionary<string, PropertyInfo> PIDict = null) where T : class
+        {
             sqliteSettings.TableName = typeof(T).Name;
 
             if (File.Exists(sqliteSettings.DatabaseFilePath))
@@ -40,7 +77,6 @@ namespace ChoETL
             SQLiteConnection.CreateFile(sqliteSettings.DatabaseFilePath);
 
             bool isFirstItem = true;
-            Dictionary<string, PropertyInfo> PIDict = ChoType.GetProperties(typeof(T)).ToDictionary(p => p.Name);
 
             //Open sqlite connection, store the data
             using (var conn = new SQLiteConnection(@"DataSource={0}".FormatString(sqliteSettings.DatabaseFilePath)))
@@ -57,8 +93,20 @@ namespace ChoETL
                             isFirstItem = false;
                             if (item != null)
                             {
-                                SQLiteCommand command = new SQLiteCommand(item.CreateTableScript(sqliteSettings.ColumnDataMapper, sqliteSettings.TableName), conn);
-                                command.ExecuteNonQuery();
+                                try
+                                {
+                                    SQLiteCommand command = new SQLiteCommand(item.CreateTableScript(sqliteSettings.ColumnDataMapper, sqliteSettings.TableName), conn);
+                                    command.ExecuteNonQuery();
+                                }
+                                catch { }
+
+                                //Truncate table
+                                try
+                                {
+                                    SQLiteCommand command = new SQLiteCommand("DELETE FROM [{0}]".FormatString(sqliteSettings.TableName), conn, trans);
+                                    command.ExecuteNonQuery();
+                                }
+                                catch { }
 
                                 insertCmd = CreateInsertCommand(item, sqliteSettings.TableName, conn, PIDict);
                             }
@@ -71,70 +119,15 @@ namespace ChoETL
                     trans.Commit();
                 }
             }
-
-            var ctx = new ChoETLSQLiteDbContext<T>(sqliteSettings.DatabaseFilePath);
-            var dbSet = ctx.Set<T>();
-            return dbSet;
         }
 
-        public static IEnumerable<ExpandoObject> StageOnSQLite(this IEnumerable<ExpandoObject> items, string conditions = null, ChoETLSqliteSettings sqliteSettings = null)
-        {
-            if (sqliteSettings == null)
-                sqliteSettings = ChoETLSqliteSettings.Instance;
-            else
-                sqliteSettings.Validate();
-
-            if (File.Exists(sqliteSettings.DatabaseFilePath))
-                File.Delete(sqliteSettings.DatabaseFilePath);
-
-            SQLiteConnection.CreateFile(sqliteSettings.DatabaseFilePath);
-
-            bool isFirstItem = true;
-
-            //Open sqlite connection, store the data
-            var conn = new SQLiteConnection(@"DataSource={0}".FormatString(sqliteSettings.DatabaseFilePath));
-            SQLiteCommand insertCmd = null;
-            conn.Open();
-
-            using (var trans = conn.BeginTransaction())
-            {
-                foreach (var item in items)
-                {
-                    if (isFirstItem)
-                    {
-                        isFirstItem = false;
-                        if (item != null)
-                        {
-                            SQLiteCommand command = new SQLiteCommand(item.CreateTableScript(sqliteSettings.ColumnDataMapper, sqliteSettings.TableName), conn);
-                            command.ExecuteNonQuery();
-
-                            insertCmd = CreateInsertCommand(item, sqliteSettings.TableName, conn);
-                        }
-                    }
-
-                    PopulateParams(insertCmd, item, null);
-                    insertCmd.ExecuteNonQuery();
-                }
-
-                trans.Commit();
-            }
-
-            string sql = "SELECT * FROM {0}".FormatString(sqliteSettings.TableName);
-            if (!conditions.IsNullOrWhiteSpace())
-                sql += " {0}".FormatString(conditions);
-
-            SQLiteCommand command2 = new SQLiteCommand(sql, conn);
-            return command2.ExecuteReader().ToEnumerable<ExpandoObject>();
-        }
-
-        private static SQLiteCommand CreateInsertCommand(object target, string tableName, SQLiteConnection conn, Dictionary<string, PropertyInfo> PIDict = null)
+        private static SQLiteCommand CreateInsertCommand(object target, string tableName, SQLiteConnection conn, Dictionary<string, PropertyInfo> PIDict)
         {
             Type objectType = target is Type ? target as Type : target.GetType();
             StringBuilder script = new StringBuilder();
 
             if (target is ExpandoObject)
             {
-                tableName = tableName.IsNullOrWhiteSpace() ? "Table" : tableName;
                 var eo = target as IDictionary<string, Object>;
                 if (eo.Count == 0)
                     throw new InvalidDataException("No properties found in expando object.");

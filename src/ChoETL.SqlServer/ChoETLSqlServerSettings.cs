@@ -11,6 +11,9 @@ namespace ChoETL
     {
         public static readonly ChoETLSqlServerSettings Instance = new ChoETLSqlServerSettings();
 
+        public string TableName = "TmpTable";
+        public Dictionary<Type, string> ColumnDataMapper = ChoSqlTableHelper.ColumnDataMapper.Value;
+
         private string _connectionString = null;
         public string ConnectionString
         {
@@ -69,9 +72,6 @@ namespace ChoETL
                 _connectionString = cs.ToString();
             }
         }
-            
-        public string TableName = "TmpTable";
-        public Dictionary<Type, string> ColumnDataMapper = ChoSqlTableHelper.ColumnDataMapper.Value;
 
         internal string MasterDbConnectionString
         {
