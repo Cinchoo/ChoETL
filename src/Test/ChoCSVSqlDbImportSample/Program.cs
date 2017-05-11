@@ -18,7 +18,7 @@ namespace ChoCSVSqlDbImportSample
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
             ChoETLFramework.Initialize();
-            SortUsingSqlite();
+            POCOSortUsingSqlServerUsingBcp();
 
             //LoadDataFile();
         }
@@ -66,17 +66,6 @@ namespace ChoCSVSqlDbImportSample
         }
         public static void POCOSortUsingSqlite()
         {
-            //using (var dr = new ChoCSVReader(@"Test.txt").WithDelimiter("\t").
-            //    WithFields("Id", "Street","Filler1", "City").NotifyAfter(10000))
-            //{
-            //    dr.RowsLoaded += delegate (object sender, ChoRowsLoadedEventArgs e)
-            //    {
-            //        Console.WriteLine();
-            //        Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " rows loaded.");
-            //    };
-            //    using (var dw = new ChoCSVWriter<Address>(Console.Out))
-            //        dw.Write(dr.AsEnumerable().CastEnumerable<Address>().StageOnSqlServer().GroupBy(x => x.City).Select(y => y.FirstOrDefault()));
-            //}
             using (var dr = new ChoCSVReader<Address>(@"Test.txt").WithDelimiter("\t").NotifyAfter(10000))
             {
                 dr.RowsLoaded += delegate (object sender, ChoRowsLoadedEventArgs e)
@@ -85,7 +74,7 @@ namespace ChoCSVSqlDbImportSample
                     Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " rows loaded.");
                 };
                 using (var dw = new ChoCSVWriter<Address>(Console.Out))
-                    dw.Write(dr.AsEnumerable().StageOnSqlServer().OrderByDescending(x => x.City));
+                    dw.Write(dr.AsEnumerable().StageOnSQLite().OrderByDescending(x => x.City));
             }
         }
 
@@ -99,11 +88,65 @@ namespace ChoCSVSqlDbImportSample
                     Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " rows loaded.");
                 };
                 using (var dw = new ChoCSVWriter(Console.Out))
+                    dw.Write(dr.AsEnumerable().StageOnSQLite("ORDER BY Column4"));
+            }
+
+        }
+        public static void POCOSortUsingSqlServer()
+        {
+            using (var dr = new ChoCSVReader<Address>(@"Test.txt").WithDelimiter("\t").NotifyAfter(10000))
+            {
+                dr.RowsLoaded += delegate (object sender, ChoRowsLoadedEventArgs e)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " rows loaded.");
+                };
+                using (var dw = new ChoCSVWriter<Address>(Console.Out))
+                    dw.Write(dr.AsEnumerable().StageOnSqlServer().OrderByDescending(x => x.City));
+            }
+        }
+
+        public static void SortUsingSqlServer()
+        {
+            using (var dr = new ChoCSVReader(@"Test.txt").WithDelimiter("\t").NotifyAfter(10000))
+            {
+                dr.RowsLoaded += delegate (object sender, ChoRowsLoadedEventArgs e)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " rows loaded.");
+                };
+                using (var dw = new ChoCSVWriter(Console.Out))
                     dw.Write(dr.AsEnumerable().StageOnSqlServer("ORDER BY Column4"));
             }
 
         }
+        public static void POCOSortUsingSqlServerUsingBcp()
+        {
+            using (var dr = new ChoCSVReader<Address>(@"Test.txt").WithDelimiter("\t").NotifyAfter(10000))
+            {
+                dr.RowsLoaded += delegate (object sender, ChoRowsLoadedEventArgs e)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " rows loaded.");
+                };
+                using (var dw = new ChoCSVWriter<Address>(Console.Out))
+                    dw.Write(dr.AsEnumerable().StageOnSqlServerUsingBcp().OrderByDescending(x => x.City));
+            }
+        }
 
+        public static void SortUsingSqlServerUsingBcp()
+        {
+            //using (var dr = new ChoCSVReader(@"Test.txt").WithDelimiter("\t").NotifyAfter(10000))
+            //{
+            //    dr.RowsLoaded += delegate (object sender, ChoRowsLoadedEventArgs e)
+            //    {
+            //        Console.WriteLine();
+            //        Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " rows loaded.");
+            //    };
+            //    using (var dw = new ChoCSVWriter(Console.Out))
+            //        dw.Write(dr.AsEnumerable().StageOnSqlServerUsingBcp("ORDER BY Column4"));
+            //}
+        }
         static void BcpDataFile()
         {
             string connectionstring = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True";

@@ -19,6 +19,65 @@ namespace ChoETL
 {
     public static class ChoETLSqlServer
     {
+        public static IQueryable<T> StageOnSqlServerUsingBcp<T>(this IEnumerable<T> items, ChoETLSqlServerSettings sqlServerSettings = null)
+            where T : class
+        {
+            if (typeof(T) == typeof(ExpandoObject))
+                throw new NotSupportedException();
+
+            Dictionary<string, PropertyInfo> PIDict = ChoType.GetProperties(typeof(T)).ToDictionary(p => p.Name);
+
+            sqlServerSettings = ValidateSettings<T>(sqlServerSettings);
+            CreateDatabaseIfLocalDb(sqlServerSettings);
+            var firstItem = items.FirstOrDefault();
+            if (firstItem != null)
+            {
+                using (var conn1 = new SqlConnection(sqlServerSettings.ConnectionString))
+                {
+                    conn1.Open();
+                    try
+                    {
+                        SqlCommand command = new SqlCommand(firstItem.CreateTableScript(sqlServerSettings.ColumnDataMapper, sqlServerSettings.TableName), conn1);
+                        command.ExecuteNonQuery();
+                    }
+                    catch { }
+                    //Truncate table
+                    try
+                    {
+                        SqlCommand command = new SqlCommand("TRUNCATE TABLE [{0}]".FormatString(sqlServerSettings.TableName), conn1);
+                        command.ExecuteNonQuery();
+                    }
+                    catch
+                    {
+                        try
+                        {
+                            SqlCommand command = new SqlCommand("DELETE FROM [{0}]".FormatString(sqlServerSettings.TableName), conn1);
+                            command.ExecuteNonQuery();
+                        }
+                        catch { }
+                    }
+                }
+            }
+            else
+                throw new ApplicationException("Empty items found.");
+            using (SqlBulkCopy bcp = new SqlBulkCopy(sqlServerSettings.ConnectionString))
+            {
+                bcp.DestinationTableName = sqlServerSettings.TableName;
+                bcp.EnableStreaming = true;
+
+                bcp.NotifyAfter = 10;
+                //bcp.SqlRowsCopied += delegate (object sender, SqlRowsCopiedEventArgs e)
+                //{
+                //    Console.WriteLine(e.RowsCopied.ToString("#,##0") + " rows copied.");
+                //};
+                bcp.WriteToServer(new ChoEnumerableDataReader(items));
+            }
+
+            var ctx = new ChoETLSqlServerDbContext<T>(sqlServerSettings.ConnectionString);
+            var dbSet = ctx.Set<T>();
+            return dbSet;
+        }
+
         public static IQueryable<T> StageOnSqlServer<T>(this IEnumerable<T> items, ChoETLSqlServerSettings sqlServerSettings = null)
             where T : class
         {
@@ -34,6 +93,66 @@ namespace ChoETL
             var dbSet = ctx.Set<T>();
             return dbSet;
         }
+        //public static IEnumerable<ExpandoObject> StageOnSqlServerUsingBcp(this IEnumerable<ExpandoObject> items, string conditions = null, ChoETLSqlServerSettings sqlServerSettings = null)
+        //{
+        //    sqlServerSettings = ValidateSettings<ExpandoObject>(sqlServerSettings);
+        //    CreateDatabaseIfLocalDb(sqlServerSettings);
+
+        //    var firstItem = items.FirstOrDefault();
+        //    if (firstItem != null)
+        //    {
+        //        using (var conn1 = new SqlConnection(sqlServerSettings.ConnectionString))
+        //        {
+        //            conn1.Open();
+        //            try
+        //            {
+        //                SqlCommand command = new SqlCommand(firstItem.CreateTableScript(sqlServerSettings.ColumnDataMapper, sqlServerSettings.TableName), conn1);
+        //                command.ExecuteNonQuery();
+        //            }
+        //            catch { }
+        //            //Truncate table
+        //            try
+        //            {
+        //                SqlCommand command = new SqlCommand("TRUNCATE TABLE [{0}]".FormatString(sqlServerSettings.TableName), conn1);
+        //                command.ExecuteNonQuery();
+        //            }
+        //            catch
+        //            {
+        //                try
+        //                {
+        //                    SqlCommand command = new SqlCommand("DELETE FROM [{0}]".FormatString(sqlServerSettings.TableName), conn1);
+        //                    command.ExecuteNonQuery();
+        //                }
+        //                catch { }
+        //            }
+        //        }
+        //    }
+        //    else
+        //        throw new ApplicationException("Empty items found.");
+
+        //    using (SqlBulkCopy bcp = new SqlBulkCopy(sqlServerSettings.ConnectionString))
+        //    {
+        //        bcp.DestinationTableName = sqlServerSettings.TableName;
+        //        bcp.EnableStreaming = true;
+
+        //        bcp.NotifyAfter = 10;
+        //        bcp.SqlRowsCopied += delegate (object sender, SqlRowsCopiedEventArgs e)
+        //        {
+        //            Console.WriteLine(e.RowsCopied.ToString("#,##0") + " rows copied.");
+        //        };
+        //        bcp.WriteToServer(new ChoEnumerableDataReader(items));
+        //    }
+
+        //    string sql = "SELECT * FROM {0}".FormatString(sqlServerSettings.TableName);
+        //    if (!conditions.IsNullOrWhiteSpace())
+        //        sql += " {0}".FormatString(conditions);
+
+        //    SqlConnection conn = new SqlConnection(sqlServerSettings.ConnectionString);
+        //    conn.Open();
+
+        //    SqlCommand command2 = new SqlCommand(sql, conn);
+        //    return command2.ExecuteReader(CommandBehavior.CloseConnection).ToEnumerable<ExpandoObject>();
+        //}
 
         public static IEnumerable<ExpandoObject> StageOnSqlServer(this IEnumerable<ExpandoObject> items, string conditions = null, ChoETLSqlServerSettings sqlServerSettings = null)
         {
