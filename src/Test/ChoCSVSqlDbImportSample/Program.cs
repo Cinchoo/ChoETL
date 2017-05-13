@@ -18,7 +18,7 @@ namespace ChoCSVSqlDbImportSample
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
             ChoETLFramework.Initialize();
-            POCOSortUsingSqlServerUsingBcp();
+            POCOSortUsingSqlServer();
 
             //LoadDataFile();
         }
@@ -134,19 +134,19 @@ namespace ChoCSVSqlDbImportSample
             }
         }
 
-        public static void SortUsingSqlServerUsingBcp()
-        {
-            //using (var dr = new ChoCSVReader(@"Test.txt").WithDelimiter("\t").NotifyAfter(10000))
-            //{
-            //    dr.RowsLoaded += delegate (object sender, ChoRowsLoadedEventArgs e)
-            //    {
-            //        Console.WriteLine();
-            //        Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " rows loaded.");
-            //    };
-            //    using (var dw = new ChoCSVWriter(Console.Out))
-            //        dw.Write(dr.AsEnumerable().StageOnSqlServerUsingBcp("ORDER BY Column4"));
-            //}
-        }
+        //public static void SortUsingSqlServerUsingBcp()
+        //{
+        //    using (var dr = new ChoCSVReader(@"Test.txt").WithDelimiter("\t").NotifyAfter(10000))
+        //    {
+        //        dr.RowsLoaded += delegate (object sender, ChoRowsLoadedEventArgs e)
+        //        {
+        //            Console.WriteLine();
+        //            Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " rows loaded.");
+        //        };
+        //        using (var dw = new ChoCSVWriter(Console.Out))
+        //            dw.Write(dr.AsEnumerable().StageOnSqlServerUsingBcp().AsTypedEnumerable<dynamic>().OrderByDescending());
+        //    }
+        //}
         static void BcpDataFile()
         {
             string connectionstring = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True";

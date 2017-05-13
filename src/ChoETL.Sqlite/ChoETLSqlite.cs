@@ -23,8 +23,7 @@ namespace ChoETL
         public static IQueryable<T> StageOnSQLite<T>(this IEnumerable<T> items, ChoETLSqliteSettings sqliteSettings = null)
             where T : class
         {
-            // Use the default SqlCe35 provider.
-            if (typeof(T) == typeof(ExpandoObject))
+            if (typeof(T) == typeof(ExpandoObject) || typeof(T) == typeof(object))
                 throw new NotSupportedException();
 
             Dictionary<string, PropertyInfo> PIDict = ChoType.GetProperties(typeof(T)).ToDictionary(p => p.Name);

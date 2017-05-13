@@ -22,7 +22,7 @@ namespace ChoETL
         public static IQueryable<T> StageOnSqlServerUsingBcp<T>(this IEnumerable<T> items, ChoETLSqlServerSettings sqlServerSettings = null)
             where T : class
         {
-            if (typeof(T) == typeof(ExpandoObject))
+            if (typeof(T) == typeof(ExpandoObject) || typeof(T) == typeof(object))
                 throw new NotSupportedException();
 
             Dictionary<string, PropertyInfo> PIDict = ChoType.GetProperties(typeof(T)).ToDictionary(p => p.Name);
@@ -57,31 +57,34 @@ namespace ChoETL
                         catch { }
                     }
                 }
+
+                using (SqlBulkCopy bcp = new SqlBulkCopy(sqlServerSettings.ConnectionString))
+                {
+                    bcp.DestinationTableName = sqlServerSettings.TableName;
+                    bcp.EnableStreaming = true;
+
+                    //bcp.NotifyAfter = 10;
+                    //bcp.SqlRowsCopied += delegate (object sender, SqlRowsCopiedEventArgs e)
+                    //{
+                    //    Console.WriteLine(e.RowsCopied.ToString("#,##0") + " rows copied.");
+                    //};
+                    bcp.WriteToServer(new ChoEnumerableDataReader(items));
+                }
+
+                var ctx = new ChoETLSqlServerDbContext<T>(sqlServerSettings.ConnectionString);
+                var dbSet = ctx.Set<T>();
+                return dbSet;
             }
             else
-                throw new ApplicationException("Empty items found.");
-            using (SqlBulkCopy bcp = new SqlBulkCopy(sqlServerSettings.ConnectionString))
             {
-                bcp.DestinationTableName = sqlServerSettings.TableName;
-                bcp.EnableStreaming = true;
-
-                bcp.NotifyAfter = 10;
-                //bcp.SqlRowsCopied += delegate (object sender, SqlRowsCopiedEventArgs e)
-                //{
-                //    Console.WriteLine(e.RowsCopied.ToString("#,##0") + " rows copied.");
-                //};
-                bcp.WriteToServer(new ChoEnumerableDataReader(items));
+                return items.AsQueryable();
             }
-
-            var ctx = new ChoETLSqlServerDbContext<T>(sqlServerSettings.ConnectionString);
-            var dbSet = ctx.Set<T>();
-            return dbSet;
         }
 
         public static IQueryable<T> StageOnSqlServer<T>(this IEnumerable<T> items, ChoETLSqlServerSettings sqlServerSettings = null)
             where T : class
         {
-            if (typeof(T) == typeof(ExpandoObject))
+            if (typeof(T) == typeof(ExpandoObject) || typeof(T) == typeof(object))
                 throw new NotSupportedException();
 
             Dictionary<string, PropertyInfo> PIDict = ChoType.GetProperties(typeof(T)).ToDictionary(p => p.Name);
