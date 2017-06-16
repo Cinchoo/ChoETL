@@ -46,6 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="EmpWithSalary.csv" />
     <None Include="IgnoreLineFile.csv" />
     <None Include="MultiLineValue.csv" />
     <None Include="Emp.csv" />

@@ -33,7 +33,7 @@ namespace ChoETL
         public event EventHandler<ChoAfterRecordFieldLoadEventArgs> AfterRecordFieldLoad;
         public event EventHandler<ChoRecordFieldLoadErrorEventArgs> RecordFieldLoadError;
 
-        internal bool RaiseBeginLoad(object source)
+        public bool RaiseBeginLoad(object source)
         {
             EventHandler<ChoBeginLoadEventArgs> eh = BeginLoad;
             if (eh == null)
@@ -44,7 +44,7 @@ namespace ChoETL
             return !e.Stop;
         }
 
-        internal void RaiseEndLoad(object source)
+        public void RaiseEndLoad(object source)
         {
             EventHandler<ChoEndLoadEventArgs> eh = EndLoad;
             if (eh == null)
@@ -54,7 +54,7 @@ namespace ChoETL
             eh(this, e);
         }
 
-        internal bool RaiseBeforeRecordLoad(object record, long index, ref object source)
+        public bool RaiseBeforeRecordLoad(object record, long index, ref object source)
         {
             EventHandler<ChoBeforeRecordLoadEventArgs> eh = BeforeRecordLoad;
             if (eh == null)
@@ -66,7 +66,7 @@ namespace ChoETL
             return !e.Skip;
         }
 
-        internal bool RaiseAfterRecordLoad(object record, long index, object source)
+        public bool RaiseAfterRecordLoad(object record, long index, object source)
         {
             EventHandler<ChoAfterRecordLoadEventArgs> eh = AfterRecordLoad;
             if (eh == null)
@@ -77,7 +77,7 @@ namespace ChoETL
             return !e.Stop;
         }
 
-        internal bool RaiseRecordLoadError(object record, long index, object source, Exception ex)
+        public bool RaiseRecordLoadError(object record, long index, object source, Exception ex)
         {
             EventHandler<ChoRecordLoadErrorEventArgs> eh = RecordLoadError;
             if (eh == null)
@@ -89,7 +89,7 @@ namespace ChoETL
             return e.Handled;
         }
 
-        internal bool RaiseBeforeRecordFieldLoad(object record, long index, string propName, ref object source)
+        public bool RaiseBeforeRecordFieldLoad(object record, long index, string propName, ref object source)
         {
             EventHandler<ChoBeforeRecordFieldLoadEventArgs> eh = BeforeRecordFieldLoad;
             if (eh == null)
@@ -101,7 +101,7 @@ namespace ChoETL
             return !e.Skip;
         }
 
-        internal bool RaiseAfterRecordFieldLoad(object record, long index, string propName, object source)
+        public bool RaiseAfterRecordFieldLoad(object record, long index, string propName, object source)
         {
             EventHandler<ChoAfterRecordFieldLoadEventArgs> eh = AfterRecordFieldLoad;
             if (eh == null)
@@ -112,7 +112,7 @@ namespace ChoETL
             return !e.Stop;
         }
 
-        internal bool RaiseRecordFieldLoadError(object record, long index, string propName, object source, Exception ex)
+        public bool RaiseRecordFieldLoadError(object record, long index, string propName, object source, Exception ex)
         {
             EventHandler<ChoRecordFieldLoadErrorEventArgs> eh = RecordFieldLoadError;
             if (eh == null)

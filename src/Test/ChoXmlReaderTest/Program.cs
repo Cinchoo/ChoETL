@@ -9,10 +9,11 @@ using System.Xml.Linq;
 using System.Xml;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel;
+using System.Xml.Serialization;
 
 namespace ChoXmlReaderTest
 {
-    class Program
+    public class Program
     {
         private static string EmpXml = @"<Employees>
                 <Employee Id='1'>
@@ -26,7 +27,7 @@ namespace ChoXmlReaderTest
          
         static void Main(string[] args)
         {
-            ToDataTable();
+            POCOTest();
         }
 
         static void ToDataTable()
@@ -74,7 +75,7 @@ namespace ChoXmlReaderTest
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoXmlReader<EmployeeRec>(reader))
+            using (var parser = new ChoXmlReader<EmployeeRec>(reader).UseXmlSerialization())
             {
                 writer.WriteLine(EmpXml);
 
@@ -211,8 +212,10 @@ namespace ChoXmlReaderTest
             public string Name { get; set; }
         }
 
+        [XmlRoot(ElementName = "Employee")]
         public class EmployeeRec
         {
+            [XmlAttribute]
             [ChoXmlNodeRecordField(XPath = "//@Id")]
             [Required]
             public int Id

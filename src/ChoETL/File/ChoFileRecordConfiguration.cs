@@ -113,7 +113,7 @@ namespace ChoETL
             set;
         }
 
-        internal ChoFileRecordConfiguration(Type recordType = null) : base(recordType)
+        protected ChoFileRecordConfiguration(Type recordType = null) : base(recordType)
         {
             BufferSize = 4096;
             Comments = null; // new string[] { "#", "//" };

@@ -89,9 +89,9 @@ namespace ChoETL
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
         }
 
-        public static ChoCSVReader<T> LoadText(string inputText, ChoCSVRecordConfiguration configuration = null)
+        public static ChoCSVReader<T> LoadText(string inputText, Encoding encoding = null, ChoCSVRecordConfiguration configuration = null)
         {
-            var r = new ChoCSVReader<T>(inputText.ToStream(), configuration);
+            var r = new ChoCSVReader<T>(inputText.ToStream(encoding), configuration);
             r._closeStreamOnDispose = true;
 
             return r;

@@ -40,6 +40,18 @@ namespace ChoETL
             get;
             set;
         }
+
+        public XmlSerializer XmlSerializer
+        {
+            get;
+            set;
+        }
+        [DataMember]
+        public bool UseXmlSerialization
+        {
+            get;
+            set;
+        }
         internal Dictionary<string, ChoXmlRecordFieldConfiguration> RecordFieldConfigurationsDict
         {
             get;

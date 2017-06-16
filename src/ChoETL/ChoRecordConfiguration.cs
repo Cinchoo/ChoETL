@@ -18,7 +18,7 @@ namespace ChoETL
         public Type RecordType
         {
             get { return _recordType; }
-            internal set
+            set
             {
                 _recordType = value;
 
@@ -66,9 +66,9 @@ namespace ChoETL
         [DataMember]
         public long NotifyAfter { get; set; }
 
-        internal Dictionary<string, PropertyInfo> PIDict = null;
+        public Dictionary<string, PropertyInfo> PIDict = null;
         internal Dictionary<string, PropertyDescriptor> PDDict = null;
-        internal bool IsDynamicObject = true;
+        public bool IsDynamicObject = true;
         internal bool HasConfigValidators = false;
         internal Dictionary<string, ValidationAttribute[]> ValDict = null;
         internal string[] PropertyNames;

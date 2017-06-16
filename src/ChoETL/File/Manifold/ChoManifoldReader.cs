@@ -101,9 +101,9 @@ namespace ChoETL
             return GetEnumerator();
         }
 
-        public static ChoManifoldReader LoadText(string inputText, ChoManifoldRecordConfiguration configuration = null)
+        public static ChoManifoldReader LoadText(string inputText, Encoding encoding = null, ChoManifoldRecordConfiguration configuration = null)
         {
-            var r = new ChoManifoldReader(inputText.ToStream(), configuration);
+            var r = new ChoManifoldReader(inputText.ToStream(encoding), configuration);
             r._closeStreamOnDispose = true;
 
             return r;

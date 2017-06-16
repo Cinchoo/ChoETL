@@ -43,7 +43,7 @@ namespace ChoKVPReaderTest
     {
         static void Main(string[] args)
         {
-            LoadPOCOTest();
+            QuickDynamicTest();
         }
 
         static void LoadINIFileTest()

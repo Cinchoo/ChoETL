@@ -19,7 +19,7 @@ namespace ChoCSVReaderTest
     {
         static void Main(string[] args)
         {
-            var __ = 1;
+            var x = 1;
             //Console.WriteLine(@_2);
 
             ////var identifierRegex = new System.Text.RegularExpressions.Regex(@"(?<=^| )(?!\d)\w+|(?<= )(?!\d)\w+(?= |$)");
@@ -28,7 +28,26 @@ namespace ChoCSVReaderTest
             //var i = Microsoft.CSharp.CSharpCodeProvider.CreateProvider("C#").CreateValidIdentifier("@Main 12");
             //Console.WriteLine(i.ToValidVariableName());
             //return;
-            AsDataTableTest();
+            ErrorHandling();
+        }
+
+        static void CSVToXml()
+        {
+
+        }
+
+        static void ErrorHandling()
+        {
+            using (var parser = new ChoCSVReader<EmployeeRec>("empwithsalary.csv").WithFirstLineHeader())
+            {
+                parser.RecordFieldLoadError += (o, e) =>
+                {
+                    Console.Write(e.Exception.Message);
+                    e.Handled = true;
+                };
+                foreach (var i in parser)
+                    Console.WriteLine(i.ToStringEx());
+            }
         }
 
         static void IgnoreLineTest()
@@ -661,10 +680,10 @@ namespace ChoCSVReaderTest
         }
     }
 
-    [MetadataType(typeof(EmployeeRecMeta))]
+    //[MetadataType(typeof(EmployeeRecMeta))]
     //[ChoCSVFileHeader()]
-    [ChoCSVRecordObject(Encoding = "utf-32", ErrorMode = ChoErrorMode.IgnoreAndContinue,
-    IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any, ThrowAndStopOnMissingField = false)]
+    //[ChoCSVRecordObject(ErrorMode = ChoErrorMode.IgnoreAndContinue,
+    //IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any, ThrowAndStopOnMissingField = false)]
     public partial class EmployeeRec //: IChoNotifyRecordRead, IChoValidatable
     {
         [ChoCSVRecordField(1, FieldName = "id")]
@@ -673,7 +692,7 @@ namespace ChoCSVReaderTest
         //[ChoFallbackValue(1)]
         public int Id { get; set; }
 
-        [ChoCSVRecordField(2, FieldName = "Name2")]
+        [ChoCSVRecordField(2, FieldName = "Name")]
         //[Required]
         //[DefaultValue("ZZZ")]
         //[ChoFallbackValue("XXX")]

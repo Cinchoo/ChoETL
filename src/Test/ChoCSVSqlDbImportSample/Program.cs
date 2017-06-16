@@ -18,7 +18,7 @@ namespace ChoCSVSqlDbImportSample
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
             ChoETLFramework.Initialize();
-            POCOSortUsingSqlServer();
+            POCOSortUsingSqlite();
 
             //LoadDataFile();
         }

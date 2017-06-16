@@ -363,7 +363,7 @@ namespace ChoETL
             throw new ChoConsoleCtrlException(message);
         }
 
-        internal static bool HandleException(Exception ex)
+        public static bool HandleException(Exception ex)
         {
             if (ex is ChoFatalApplicationException)
             {

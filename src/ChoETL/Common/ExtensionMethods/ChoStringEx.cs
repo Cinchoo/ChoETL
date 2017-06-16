@@ -1385,10 +1385,10 @@ namespace ChoETL
 
         #region ToStream Method
 
-        public static Stream ToStream(this string txt)
+        public static Stream ToStream(this string txt, Encoding encoding = null)
         {
             MemoryStream stream = new MemoryStream();
-            StreamWriter writer = new StreamWriter(stream);
+            StreamWriter writer = new StreamWriter(stream, encoding == null ? Encoding.UTF8 : encoding);
             if (txt != null)
                 writer.Write(txt);
 

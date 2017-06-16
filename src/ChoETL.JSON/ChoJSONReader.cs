@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -9,16 +11,15 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml;
 
 namespace ChoETL
 {
-    public class ChoXmlReader<T> : ChoReader, IDisposable, IEnumerable<T>
+    public class ChoJSONReader<T> : ChoReader, IDisposable, IEnumerable<T>
         where T : class
     {
         private TextReader _textReader;
-        private XmlReader _xmlReader;
-        private IEnumerable<XmlElement> _xElements;
+        private JsonTextReader _JSONReader;
+        private IEnumerable<JToken> _jObjects;
         private bool _closeStreamOnDispose = false;
         private Lazy<IEnumerator<T>> _enumerator = null;
         private CultureInfo _prevCultureInfo = null;
@@ -26,13 +27,13 @@ namespace ChoETL
         internal TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
         public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
 
-        public ChoXmlRecordConfiguration Configuration
+        public ChoJSONRecordConfiguration Configuration
         {
             get;
             private set;
         }
 
-        public ChoXmlReader(string filePath, ChoXmlRecordConfiguration configuration = null)
+        public ChoJSONReader(string filePath, ChoJSONRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
 
@@ -40,12 +41,11 @@ namespace ChoETL
 
             Init();
 
-            _xmlReader = XmlReader.Create(new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize),
-                new XmlReaderSettings(), new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
+            _JSONReader = new JsonTextReader(new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
         }
 
-        public ChoXmlReader(TextReader txtReader, ChoXmlRecordConfiguration configuration = null)
+        public ChoJSONReader(TextReader txtReader, ChoJSONRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNull(txtReader, "TextReader");
 
@@ -55,17 +55,17 @@ namespace ChoETL
             _textReader = txtReader;
         }
 
-        public ChoXmlReader(XmlReader xmlReader, ChoXmlRecordConfiguration configuration = null)
+        public ChoJSONReader(JsonTextReader JSONReader, ChoJSONRecordConfiguration configuration = null)
         {
-            ChoGuard.ArgumentNotNull(xmlReader, "XmlReader");
+            ChoGuard.ArgumentNotNull(JSONReader, "JSONReader");
 
             Configuration = configuration;
             Init();
 
-            _xmlReader = xmlReader;
+            _JSONReader = JSONReader;
         }
 
-        public ChoXmlReader(Stream inStream, ChoXmlRecordConfiguration configuration = null)
+        public ChoJSONReader(Stream inStream, ChoJSONRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNull(inStream, "Stream");
 
@@ -76,13 +76,13 @@ namespace ChoETL
             _closeStreamOnDispose = true;
         }
 
-        public ChoXmlReader(IEnumerable<XmlElement> xElements, ChoXmlRecordConfiguration configuration = null)
+        public ChoJSONReader(IEnumerable<JToken> jObjects, ChoJSONRecordConfiguration configuration = null)
         {
-            ChoGuard.ArgumentNotNull(xElements, "XmlElements");
+            ChoGuard.ArgumentNotNull(jObjects, "JObjects");
 
             Configuration = configuration;
             Init();
-            _xElements = xElements;
+            _jObjects = jObjects;
         }
 
         public T Read()
@@ -99,8 +99,8 @@ namespace ChoETL
             {
                 if (_textReader != null)
                     _textReader.Dispose();
-                if (_xmlReader != null)
-                    _xmlReader.Dispose();
+                if (_JSONReader != null)
+                    _JSONReader.Close();
             }
 
             System.Threading.Thread.CurrentThread.CurrentCulture = _prevCultureInfo;
@@ -110,7 +110,7 @@ namespace ChoETL
         {
             _enumerator = new Lazy<IEnumerator<T>>(() => GetEnumerator());
             if (Configuration == null)
-                Configuration = new ChoXmlRecordConfiguration(typeof(T));
+                Configuration = new ChoJSONRecordConfiguration(typeof(T));
             else
                 Configuration.RecordType = typeof(T);
 
@@ -118,49 +118,49 @@ namespace ChoETL
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
         }
 
-        public static ChoXmlReader<T> LoadXElements(IEnumerable<XmlElement> xElements, ChoXmlRecordConfiguration configuration = null)
+        public static ChoJSONReader<T> LoadText(string inputText, Encoding encoding = null, ChoJSONRecordConfiguration configuration = null)
         {
-            var r = new ChoXmlReader<T>(xElements, configuration);
+            var r = new ChoJSONReader<T>(inputText.ToStream(encoding), configuration);
             r._closeStreamOnDispose = true;
 
             return r;
         }
 
-        public static ChoXmlReader<T> LoadText(string inputText, Encoding encoding = null, ChoXmlRecordConfiguration configuration = null)
+        public static ChoJSONReader<T> LoadJTokens(IEnumerable<JToken> jObjects, ChoJSONRecordConfiguration configuration = null)
         {
-            var r = new ChoXmlReader<T>(inputText.ToStream(encoding), configuration);
+            var r = new ChoJSONReader<T>(jObjects, configuration);
             return r;
         }
 
-        internal static IEnumerator<object> LoadText(Type recType, string inputText, ChoXmlRecordConfiguration configuration, Encoding encoding, int bufferSize)
+        internal static IEnumerator<object> LoadText(Type recType, string inputText, ChoJSONRecordConfiguration configuration, Encoding encoding, int bufferSize)
         {
-            ChoXmlRecordReader rr = new ChoXmlRecordReader(recType, configuration);
+            ChoJSONRecordReader rr = new ChoJSONRecordReader(recType, configuration);
             rr.TraceSwitch = ChoETLFramework.TraceSwitchOff;
             return rr.AsEnumerable(new StreamReader(inputText.ToStream(), encoding, false, bufferSize)).GetEnumerator();
         }
 
         public IEnumerator<T> GetEnumerator()
         {
-            if (_xElements == null)
+            if (_jObjects == null)
             {
-                ChoXmlRecordReader rr = new ChoXmlRecordReader(typeof(T), Configuration);
+                ChoJSONRecordReader rr = new ChoJSONRecordReader(typeof(T), Configuration);
                 if (_textReader != null)
-                    _xmlReader = XmlReader.Create(_textReader, new XmlReaderSettings(), new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
+                    _JSONReader = new JsonTextReader(_textReader);
 
                 rr.Reader = this;
                 rr.TraceSwitch = TraceSwitch;
                 rr.RowsLoaded += NotifyRowsLoaded;
-                var e = rr.AsEnumerable(_xmlReader).GetEnumerator();
+                var e = rr.AsEnumerable(_JSONReader).GetEnumerator();
                 return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
             }
             else
             {
-                ChoXmlRecordReader rr = new ChoXmlRecordReader(typeof(T), Configuration);
+                ChoJSONRecordReader rr = new ChoJSONRecordReader(typeof(T), Configuration);
 
                 rr.Reader = this;
                 rr.TraceSwitch = TraceSwitch;
                 rr.RowsLoaded += NotifyRowsLoaded;
-                var e = rr.AsEnumerable(_xElements).GetEnumerator();
+                var e = rr.AsEnumerable(_jObjects).GetEnumerator();
                 return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
             }
         }
@@ -172,25 +172,24 @@ namespace ChoETL
 
         public IDataReader AsDataReader()
         {
-            if (_xElements == null)
+            if (_jObjects == null)
             {
-                ChoXmlRecordReader rr = new ChoXmlRecordReader(typeof(T), Configuration);
+                ChoJSONRecordReader rr = new ChoJSONRecordReader(typeof(T), Configuration);
                 if (_textReader != null)
-                    _xmlReader = XmlReader.Create(_textReader, new XmlReaderSettings(), new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
+                    _JSONReader = new JsonTextReader(_textReader);
                 rr.Reader = this;
                 rr.TraceSwitch = TraceSwitch;
                 rr.RowsLoaded += NotifyRowsLoaded;
-                var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_xmlReader), rr);
+                var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_JSONReader), rr);
                 return dr;
             }
             else
             {
-                ChoXmlRecordReader rr = new ChoXmlRecordReader(typeof(T), Configuration);
-
+                ChoJSONRecordReader rr = new ChoJSONRecordReader(typeof(T), Configuration);
                 rr.Reader = this;
                 rr.TraceSwitch = TraceSwitch;
                 rr.RowsLoaded += NotifyRowsLoaded;
-                var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_xElements), rr);
+                var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_jObjects), rr);
                 return dr;
             }
         }
@@ -218,40 +217,19 @@ namespace ChoETL
 
         #region Fluent API
 
-        public ChoXmlReader<T> NotifyAfter(long rowsLoaded)
+        public ChoJSONReader<T> NotifyAfter(long rowsLoaded)
         {
             Configuration.NotifyAfter = rowsLoaded;
             return this;
         }
 
-        public ChoXmlReader<T> WithXmlNamespaceManager(XmlNamespaceManager nsMgr)
+        public ChoJSONReader<T> WithJSONPath(string jsonPath)
         {
-            ChoGuard.ArgumentNotNull(nsMgr, "XmlNamespaceManager");
-
-            Configuration.NamespaceManager = nsMgr;
+            Configuration.JSONPath = jsonPath;
             return this;
         }
 
-        public ChoXmlReader<T> WithXmlNamespace(string prefix, string uri)
-        {
-            Configuration.NamespaceManager.AddNamespace(prefix, uri);
-
-            return this;
-        }
-
-        public ChoXmlReader<T> WithXPath(string xPath)
-        {
-            Configuration.XPath = xPath;
-            return this;
-        }
-
-        public ChoXmlReader<T> UseXmlSerialization()
-        {
-            Configuration.UseXmlSerialization = true;
-            return this;
-        }
-
-        public ChoXmlReader<T> WithFields(params string[] fieldsNames)
+        public ChoJSONReader<T> WithFields(params string[] fieldsNames)
         {
             string fnTrim = null;
             if (!fieldsNames.IsNullOrEmpty())
@@ -262,11 +240,11 @@ namespace ChoETL
                         continue;
                     if (!_clearFields)
                     {
-                        Configuration.XmlRecordFieldConfigurations.Clear();
+                        Configuration.JSONRecordFieldConfigurations.Clear();
                         _clearFields = true;
                     }
                     fnTrim = fn.NTrim();
-                    Configuration.XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(fnTrim, $"//{fnTrim}"));
+                    Configuration.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration(fnTrim, (string)null));
                 }
 
             }
@@ -274,41 +252,27 @@ namespace ChoETL
             return this;
         }
 
-        public ChoXmlReader<T> WithXmlElementField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null)
-        {
-            string fnTrim = name.NTrim();
-            string xPath = $"//{fnTrim}";
-            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, false, fieldName);
-        }
-
-        public ChoXmlReader<T> WithXmlAttributeField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null)
-        {
-            string fnTrim = name.NTrim();
-            string xPath = $"//@{fnTrim}";
-            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, true, fieldName);
-        }
-
-        public ChoXmlReader<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isXmlAttribute = false, string fieldName = null)
+        public ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null)
         {
             if (!name.IsNullOrEmpty())
             {
                 if (!_clearFields)
                 {
-                    Configuration.XmlRecordFieldConfigurations.Clear();
+                    Configuration.JSONRecordFieldConfigurations.Clear();
                     _clearFields = true;
                 }
 
                 string fnTrim = name.NTrim();
                 fieldType = fieldType == null ? typeof(string) : fieldType;
-                xPath = xPath.IsNullOrWhiteSpace() ? $"//{fnTrim}" : xPath;
+                jsonPath = jsonPath.IsNullOrWhiteSpace() ? null : jsonPath;
 
-                Configuration.XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(fnTrim, xPath) { FieldType = fieldType, FieldValueTrimOption = fieldValueTrimOption, IsXmlAttribute = isXmlAttribute, FieldName = fieldName });
+                Configuration.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration(fnTrim, jsonPath) { FieldType = fieldType, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName });
             }
 
             return this;
         }
 
-        public ChoXmlReader<T> ColumnCountStrict()
+        public ChoJSONReader<T> ColumnCountStrict()
         {
             Configuration.ColumnCountStrict = true;
             return this;
@@ -317,22 +281,18 @@ namespace ChoETL
         #endregion Fluent API
     }
 
-    public class ChoXmlReader : ChoXmlReader<ExpandoObject>
+    public class ChoJSONReader : ChoJSONReader<ExpandoObject>
     {
-        public ChoXmlReader(string filePath, ChoXmlRecordConfiguration configuration = null)
+        public ChoJSONReader(string filePath, ChoJSONRecordConfiguration configuration = null)
             : base(filePath, configuration)
         {
 
         }
-        public ChoXmlReader(TextReader txtReader, ChoXmlRecordConfiguration configuration = null)
+        public ChoJSONReader(TextReader txtReader, ChoJSONRecordConfiguration configuration = null)
             : base(txtReader, configuration)
         {
         }
-        public ChoXmlReader(XmlReader xmlReader, ChoXmlRecordConfiguration configuration = null)
-            : base(xmlReader, configuration)
-        {
-        }
-        public ChoXmlReader(Stream inStream, ChoXmlRecordConfiguration configuration = null)
+        public ChoJSONReader(Stream inStream, ChoJSONRecordConfiguration configuration = null)
             : base(inStream, configuration)
         {
         }

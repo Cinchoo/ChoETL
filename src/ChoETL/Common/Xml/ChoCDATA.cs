@@ -70,6 +70,11 @@
             return String.Format("<![CDATA[{0}]]>", _text);
         }
 
+        public override int GetHashCode()
+        {
+            return _text == null ? 0 : _text.GetHashCode();
+        }
+
         #region IFormattable Members
 
         public string ToString(string format, IFormatProvider formatProvider)

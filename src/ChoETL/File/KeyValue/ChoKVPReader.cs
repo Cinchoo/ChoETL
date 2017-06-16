@@ -105,9 +105,9 @@ namespace ChoETL
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
         }
 
-        public static ChoKVPReader<T> LoadText(string inputText, ChoKVPRecordConfiguration configuration = null)
+        public static ChoKVPReader<T> LoadText(string inputText, Encoding encoding = null, ChoKVPRecordConfiguration configuration = null)
         {
-            var r = new ChoKVPReader<T>(inputText.ToStream(), configuration);
+            var r = new ChoKVPReader<T>(inputText.ToStream(encoding), configuration);
             r._closeStreamOnDispose = true;
 
             return r;

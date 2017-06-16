@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    internal static class ChoETLRecordHelper
+    public static class ChoETLRecordHelper
     {
         public static void ConvertNSetMemberValue(this IDictionary<string, object> dict, string fn, ChoRecordFieldConfiguration fieldConfig, ref object fieldValue, CultureInfo culture)
         {

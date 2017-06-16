@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -10,27 +12,23 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml;
-using System.Xml.Linq;
-using System.Xml.Serialization;
-using System.Xml.XPath;
 
 namespace ChoETL
 {
-    internal class ChoXmlRecordReader : ChoRecordReader
+    internal class ChoJSONRecordReader : ChoRecordReader
     {
         private IChoNotifyRecordRead _callbackRecord;
         private bool _configCheckDone = false;
-        private Lazy<XmlSerializer> _se = null;
+        private Lazy<JsonSerializer> _se;
         internal ChoReader Reader = null;
 
-        public ChoXmlRecordConfiguration Configuration
+        public ChoJSONRecordConfiguration Configuration
         {
             get;
             private set;
         }
 
-        public ChoXmlRecordReader(Type recordType, ChoXmlRecordConfiguration configuration) : base(recordType)
+        public ChoJSONRecordReader(Type recordType, ChoJSONRecordConfiguration configuration) : base(recordType)
         {
             ChoGuard.ArgumentNotNull(configuration, "Configuration");
             Configuration = configuration;
@@ -42,13 +40,13 @@ namespace ChoETL
 
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
         {
-            XmlReader sr = source as XmlReader;
-            ChoGuard.ArgumentNotNull(sr, "XmlReader");
+            JsonTextReader sr = source as JsonTextReader;
+            ChoGuard.ArgumentNotNull(sr, "JsonTextReader");
 
             if (!RaiseBeginLoad(sr))
                 yield break;
 
-            foreach (var item in AsEnumerable(sr.GetXmlElements(Configuration.XPath), TraceSwitch, filterFunc))
+            foreach (var item in AsEnumerable(ReadJObjects(sr), TraceSwitch, filterFunc))
             {
                 yield return item;
             }
@@ -56,34 +54,75 @@ namespace ChoETL
             RaiseEndLoad(sr);
         }
 
-        public IEnumerable<object> AsEnumerable(IEnumerable<XElement> xElements, Func<object, bool?> filterFunc = null)
+        public IEnumerable<object> AsEnumerable(IEnumerable<JToken> jObjects, Func<object, bool?> filterFunc = null)
         {
-            foreach (var item in AsEnumerable(xElements, TraceSwitch, filterFunc))
+            foreach (var item in AsEnumerable(ToJObjects(jObjects), TraceSwitch, filterFunc))
             {
                 yield return item;
             }
         }
 
-        private IEnumerable<object> AsEnumerable(IEnumerable<XElement> xElements, TraceSwitch traceSwitch, Func<object, bool?> filterFunc = null)
+        private IEnumerable<JObject> ReadJObjects(JsonTextReader sr)
+        {
+            if (Configuration.JSONPath.IsNullOrWhiteSpace())
+            {
+                while (sr.Read())
+                {
+                    if (sr.TokenType == JsonToken.StartArray)
+                    {
+                        while (sr.Read())
+                        {
+                            if (sr.TokenType == JsonToken.StartObject)
+                            {
+                                yield return JObject.Load(sr);
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                foreach (var t in ToJObjects(JObject.Load(sr).SelectTokens(Configuration.JSONPath)))
+                {
+                    yield return t;
+                }
+            }
+        }
+
+        private IEnumerable<JObject> ToJObjects(IEnumerable<JToken> tokens)
+        {
+            foreach (var t in tokens)
+            {
+                if (t is JArray)
+                {
+                    foreach (JToken item in ((JArray)t))
+                        yield return item.ToObject<JObject>();
+                }
+                else
+                    yield return t.ToObject<JObject>();
+            }
+
+        }
+
+        private IEnumerable<object> AsEnumerable(IEnumerable<JObject> jObjects, TraceSwitch traceSwitch, Func<object, bool?> filterFunc = null)
         {
             TraceSwitch = traceSwitch;
 
             long counter = 0;
-            Tuple<long, XElement> pair = null;
+            Tuple<long, JObject> pair = null;
             bool abortRequested = false;
-            _se = new Lazy<XmlSerializer>(() => Configuration.XmlSerializer == null ? new XmlSerializer(RecordType) : Configuration.XmlSerializer);
+            _se = new Lazy<JsonSerializer>(() => Configuration.JsonSerializerSettings != null ? JsonSerializer.Create(Configuration.JsonSerializerSettings) : null);
 
-            foreach (XElement el in xElements)
+            foreach (var obj in jObjects)
             {
-                pair = new Tuple<long, XElement>(++counter, el);
+                pair = new Tuple<long, JObject>(++counter, obj);
 
                 if (!_configCheckDone)
                 {
                     Configuration.Validate(pair);
-                    RaiseMembersDiscovered(Configuration.XmlRecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType == null ? typeof(string) : i.FieldType)).ToArray());
+                    RaiseMembersDiscovered(Configuration.JSONRecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType == null ? typeof(string) : i.FieldType)).ToArray());
                     _configCheckDone = true;
                 }
-
 
                 object rec = null;
                 if (TraceSwitch.TraceVerbose)
@@ -111,62 +150,9 @@ namespace ChoETL
                 RaisedRowsLoaded(pair.Item1);
         }
 
-        private static void Parse(dynamic parent, XElement node)
+        private bool LoadNode(Tuple<long, JObject> pair, ref object rec)
         {
-            if (node.HasElements)
-            {
-                if (node.Elements(node.Elements().First().Name.LocalName).Count() > 1)
-                {
-                    //list
-                    var item = new ExpandoObject();
-                    var list = new List<dynamic>();
-                    foreach (var element in node.Elements())
-                    {
-                        Parse(list, element);
-                    }
-
-                    AddProperty(item, node.Elements().First().Name.LocalName, list);
-                    AddProperty(parent, node.Name.ToString(), item);
-                }
-                else
-                {
-                    var item = new ExpandoObject();
-
-                    foreach (var attribute in node.Attributes())
-                    {
-                        AddProperty(item, attribute.Name.ToString(), attribute.Value.Trim());
-                    }
-
-                    //element
-                    foreach (var element in node.Elements())
-                    {
-                        Parse(item, element);
-                    }
-
-                    AddProperty(parent, node.Name.ToString(), item);
-                }
-            }
-            else
-            {
-                AddProperty(parent, node.Name.ToString(), node.Value.Trim());
-            }
-        }
-
-        private static void AddProperty(dynamic parent, string name, object value)
-        {
-            if (parent is List<dynamic>)
-            {
-                (parent as List<dynamic>).Add(value);
-            }
-            else
-            {
-                (parent as IDictionary<String, object>)[name] = value;
-            }
-        }
-
-        private bool LoadNode(Tuple<long, XElement> pair, ref object rec)
-        {
-            if (!Configuration.UseXmlSerialization || RecordType == typeof(ExpandoObject))
+            if (!Configuration.UseJSONSerialization)
                 rec = Activator.CreateInstance(RecordType);
 
             try
@@ -184,27 +170,20 @@ namespace ChoETL
                     return true;
                 }
 
-
-                if (!Configuration.UseXmlSerialization)
+                if (!Configuration.UseJSONSerialization)
                 {
                     if (!FillRecord(rec, pair))
                         return false;
 
                     if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
-                        rec.DoObjectLevelValidation(Configuration, Configuration.XmlRecordFieldConfigurations);
+                        rec.DoObjectLevelValidation(Configuration, Configuration.JSONRecordFieldConfigurations);
                 }
                 else
                 {
-                    if (RecordType == typeof(ExpandoObject))
-                        Parse(rec, pair.Item2);
-                    else
-                    {
-
-                        rec = _se.Value.Deserialize(pair.Item2.CreateReader());
-                    }
+                    rec = _se.Value != null ? pair.Item2.ToObject(RecordType, _se.Value) : pair.Item2.ToObject(RecordType);
 
                     if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.Off) != ChoObjectValidationMode.Off)
-                        rec.DoObjectLevelValidation(Configuration, Configuration.XmlRecordFieldConfigurations);
+                        rec.DoObjectLevelValidation(Configuration, Configuration.JSONRecordFieldConfigurations);
                 }
 
 
@@ -240,123 +219,80 @@ namespace ChoETL
             return true;
         }
 
-        private void ToDictionary(XElement node)
+        private IDictionary<string, object> ToDictionary(JObject @object)
         {
-            Dictionary<string, List<string>> dictionary = xDict; // new Dictionary<string, List<string>>();
-            xDict.Clear();
-            //if (Configuration.IsComplexXPathUsed)
-            //    return dictionary;
+            var result = @object.ToObject<Dictionary<string, object>>();
 
-            string key = null;
-            //get all child elements, skip parent nodes
-            foreach (XElement elem in node.Elements().Where(a => !a.HasElements))
-            {
-                key = Configuration.GetNameWithNamespace(elem.Name);
+            var JObjectKeys = (from r in result
+                               let key = r.Key
+                               let value = r.Value
+                               where value.GetType() == typeof(JObject)
+                               select key).ToList();
 
-                //avoid duplicates
-                if (!dictionary.ContainsKey(key))
-                    dictionary.Add(key, new List<string>());
+            var JArrayKeys = (from r in result
+                              let key = r.Key
+                              let value = r.Value
+                              where value.GetType() == typeof(JArray)
+                              select key).ToList();
 
-                dictionary[key].Add(elem.Value);
-            }
-            foreach (XAttribute elem in node.Attributes())
-            {
-                key = Configuration.GetNameWithNamespace(elem.Name);
+            JArrayKeys.ForEach(key => result[key] = ((JArray)result[key]).Values().Select(x => ((JValue)x).Value).ToArray());
+            JObjectKeys.ForEach(key => result[key] = ToDictionary(result[key] as JObject));
 
-                //avoid duplicates
-                if (!dictionary.ContainsKey(key))
-                    dictionary.Add(key, new List<string>());
-
-                dictionary[key].Add(elem.Value);
-            }
+            return result;
         }
 
-        List<object> xNodes = new List<object>();
-        XElement[] fXElements = null;
+        JObject[] fJObjects = null;
         object fieldValue = null;
-        ChoXmlRecordFieldConfiguration fieldConfig = null;
+        ChoJSONRecordFieldConfiguration fieldConfig = null;
         PropertyInfo pi = null;
-        XPathNavigator xpn = null;
-        private readonly Dictionary<string, List<string>> xDict = new Dictionary<string, List<string>>();
-        private bool FillRecord(object rec, Tuple<long, XElement> pair)
+
+        private bool FillRecord(object rec, Tuple<long, JObject> pair)
         {
             long lineNo;
-            XElement node;
+            JObject node;
+            JToken jToken = null;
 
             lineNo = pair.Item1;
             node = pair.Item2;
 
-            fXElements = null;
+            fJObjects = null;
             fieldValue = null;
             fieldConfig = null;
             pi = null;
-            xpn = node.CreateNavigator(Configuration.NamespaceManager.NameTable);
-            ToDictionary(node);
+            //IDictionary<string, object> dictValues = ToDictionary(node);
 
-            foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
+            foreach (KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
                 fieldValue = null;
                 fieldConfig = kvp.Value;
                 if (Configuration.PIDict != null)
                     Configuration.PIDict.TryGetValue(kvp.Key, out pi);
 
-                if (fieldConfig.XPath == "text()")
+                //fieldValue = dictValues[kvp.Key];
+                if (!kvp.Value.JSONPath.IsNullOrWhiteSpace())
                 {
-                    if (Configuration.GetNameWithNamespace(node.Name) == fieldConfig.FieldName)
-                        fieldValue = node.Value;
-                    else if (Configuration.ColumnCountStrict)
-                        throw new ChoParserException("Missing '{0}' xml node.".FormatString(fieldConfig.FieldName));
+                    jToken = node.SelectToken(kvp.Value.JSONPath);
+                    if (jToken == null)
+                    {
+                        if (Configuration.ColumnCountStrict)
+                            throw new ChoParserException("No matching '{0}' field found.".FormatString(fieldConfig.FieldName));
+                    }
                 }
                 else
                 {
-                    if (!fieldConfig.UseCache && !xDict.ContainsKey(fieldConfig.FieldName))
+                    if (!node.TryGetValue(kvp.Key, StringComparison.CurrentCultureIgnoreCase, out jToken))
                     {
-                        xNodes.Clear();
-                        foreach (XPathNavigator z in xpn.Select(fieldConfig.XPath, Configuration.NamespaceManager))
-                        {
-                            xNodes.Add(z.UnderlyingObject);
-                        }
-
-                        //object[] xNodes = ((IEnumerable)node.XPathEvaluate(fieldConfig.XPath, Configuration.NamespaceManager)).OfType<object>().ToArray();
-                        //continue;
-                        XAttribute fXAttribute = xNodes.OfType<XAttribute>().FirstOrDefault();
-                        if (fXAttribute != null)
-                            fieldValue = fXAttribute.Value;
-                        else
-                        {
-                            fXElements = xNodes.OfType<XElement>().ToArray();
-                            if (fXElements != null)
-                            {
-                                if (fieldConfig.IsCollection)
-                                {
-                                    List<string> list = new List<string>();
-                                    foreach (var ele in fXElements)
-                                        list.Add(ele.Value);
-                                    fieldValue = list.ToArray();
-                                }
-                                else
-                                {
-                                    XElement fXElement = fXElements.FirstOrDefault();
-                                    if (fXElement != null)
-                                        fieldValue = fXElement.Value;
-                                }
-                            }
-                            else if (Configuration.ColumnCountStrict)
-                                throw new ChoParserException("Missing '{0}' xml node.".FormatString(fieldConfig.FieldName));
-                        }
-                    }
-                    else
-                    {
-                        if (xDict[fieldConfig.FieldName].Count == 1)
-                            fieldValue = xDict[fieldConfig.FieldName][0];
-                        else
-                            fieldValue = xDict[fieldConfig.FieldName];
+                        if (Configuration.ColumnCountStrict)
+                            throw new ChoParserException("No matching '{0}' field found.".FormatString(fieldConfig.FieldName));
                     }
                 }
+
                 if (rec is ExpandoObject)
                 {
                     if (kvp.Value.FieldType == null)
-                        kvp.Value.FieldType = fieldValue is ICollection ? typeof(string[]) : typeof(string);
+                        fieldValue = jToken;
+                    else
+                        fieldValue = jToken != null ? jToken.ToObject(kvp.Value.FieldType) : null;
                 }
                 else
                 {
@@ -366,10 +302,15 @@ namespace ChoETL
                     }
                     else
                         kvp.Value.FieldType = typeof(string);
+
+                    fieldValue = jToken != null ? jToken.ToObject(kvp.Value.FieldType) : null;
                 }
 
                 if (!(fieldValue is ICollection))
-                    fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue as string);
+                {
+                    if (fieldValue is string)
+                        fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue as string);
+                }
 
                 if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
                     continue;
@@ -469,7 +410,7 @@ namespace ChoETL
             return true;
         }
 
-        private string CleanFieldValue(ChoXmlRecordFieldConfiguration config, Type fieldType, string fieldValue)
+        private string CleanFieldValue(ChoJSONRecordFieldConfiguration config, Type fieldType, string fieldValue)
         {
             if (fieldValue == null) return fieldValue;
 
@@ -537,7 +478,7 @@ namespace ChoETL
             }
         }
 
-        private bool RaiseBeforeRecordLoad(object target, ref Tuple<long, XElement> pair)
+        private bool RaiseBeforeRecordLoad(object target, ref Tuple<long, JObject> pair)
         {
             if (_callbackRecord != null)
             {
@@ -546,7 +487,7 @@ namespace ChoETL
                 bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeforeRecordLoad(target, index, ref state), true);
 
                 if (retValue)
-                    pair = new Tuple<long, XElement>(index, state as XElement);
+                    pair = new Tuple<long, JObject>(index, state as JObject);
 
                 return retValue;
             }
@@ -557,14 +498,14 @@ namespace ChoETL
                 bool retValue = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseBeforeRecordLoad(target, index, ref state), true);
 
                 if (retValue)
-                    pair = new Tuple<long, XElement>(index, state as XElement);
+                    pair = new Tuple<long, JObject>(index, state as JObject);
 
                 return retValue;
             }
             return true;
         }
 
-        private bool RaiseAfterRecordLoad(object target, Tuple<long, XElement> pair)
+        private bool RaiseAfterRecordLoad(object target, Tuple<long, JObject> pair)
         {
             if (_callbackRecord != null)
             {
@@ -577,7 +518,7 @@ namespace ChoETL
             return true;
         }
 
-        private bool RaiseRecordLoadError(object target, Tuple<long, XElement> pair, Exception ex)
+        private bool RaiseRecordLoadError(object target, Tuple<long, JObject> pair, Exception ex)
         {
             if (_callbackRecord != null)
             {

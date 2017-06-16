@@ -89,9 +89,9 @@ namespace ChoETL
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
         }
 
-        public static ChoFixedLengthReader<T> LoadText(string inputText, ChoFixedLengthRecordConfiguration configuration = null)
+        public static ChoFixedLengthReader<T> LoadText(string inputText, Encoding encoding = null, ChoFixedLengthRecordConfiguration configuration = null)
         {
-            var r = new ChoFixedLengthReader<T>(inputText.ToStream(), configuration);
+            var r = new ChoFixedLengthReader<T>(inputText.ToStream(encoding), configuration);
             r._closeStreamOnDispose = true;
 
             return r;

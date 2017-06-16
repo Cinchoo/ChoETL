@@ -11,9 +11,9 @@ namespace ChoETL
     public abstract class ChoRecordReader : IChoDeferedObjectMemberDiscoverer
     {
         public readonly Type RecordType;
-        internal TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
         public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
         public event EventHandler<ChoEventArgs<KeyValuePair<string, Type>[]>> MembersDiscovered;
+        public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
 
         public ChoRecordReader(Type recordType)
         {

@@ -51,8 +51,10 @@ namespace ChoETL
             set;
         }
 
+        [IgnoreDataMember]
+        public bool IsDefaultValueSpecified;
+
         private object _defaultValue;
-        internal bool IsDefaultValueSpecified;
         public object DefaultValue
         {
             get { return _defaultValue; }
@@ -63,8 +65,10 @@ namespace ChoETL
             }
         }
 
+        [IgnoreDataMember]
+        public bool IsFallbackValueSpecified;
+
         private object _fallbackValue;
-        internal bool IsFallbackValueSpecified;
         public object FallbackValue
         {
             get { return _fallbackValue; }
