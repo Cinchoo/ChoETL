@@ -185,7 +185,7 @@ namespace ChoETL
         }
 
         public ChoCSVWriter<T> WithField(string name, Type fieldType, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
-            bool truncate = true, string fieldName = null)
+            bool truncate = true, string fieldName = null, int? fieldPosition = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -197,8 +197,8 @@ namespace ChoETL
                 if (fieldName.IsNullOrWhiteSpace())
                     fieldName = name;
 
-                int maxFieldPos = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(name.Trim(), ++maxFieldPos) { FieldType = fieldType, QuoteField = quoteField,
+                int maxFieldPos = fieldPosition == null ? (Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) + 1 : 1) : fieldPosition.Value;
+                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(name.Trim(), maxFieldPos) { FieldType = fieldType, QuoteField = quoteField,
                     FillChar = fillChar,
                     FieldValueJustification = fieldValueJustification,
                     Truncate = truncate,
@@ -210,14 +210,20 @@ namespace ChoETL
         }
 
         public ChoCSVWriter<T> WithField(string name, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
-            bool truncate = true, string fieldName = null)
+            bool truncate = true, string fieldName = null, int? fieldPosition = null)
         {
-            return WithField(name, null, quoteField, fillChar, fieldValueJustification, truncate, fieldName);
+            return WithField(name, null, quoteField, fillChar, fieldValueJustification, truncate, fieldName, fieldPosition);
         }
 
         public ChoCSVWriter<T> ColumnCountStrict(bool flag = true)
         {
             Configuration.ColumnCountStrict = flag;
+            return this;
+        }
+
+        public ChoCSVWriter<T> ThrowAndStopOnMissingField(bool flag = true)
+        {
+            Configuration.ThrowAndStopOnMissingField = flag;
             return this;
         }
 

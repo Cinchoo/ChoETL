@@ -195,6 +195,15 @@ namespace ChoETL
                     MapRecordFields(RecordType);
                 }
             }
+            else
+            {
+                int maxFieldPos = CSVRecordFieldConfigurations.Max(r => r.FieldPosition);
+                foreach (var fieldConfig in CSVRecordFieldConfigurations)
+                {
+                    if (fieldConfig.FieldPosition > 0) continue;
+                    fieldConfig.FieldPosition = ++maxFieldPos;
+                }
+            }
 
             if (CSVRecordFieldConfigurations.Count > 0)
                 MaxFieldPosition = CSVRecordFieldConfigurations.Max(r => r.FieldPosition);
@@ -205,19 +214,20 @@ namespace ChoETL
             foreach (var fieldConfig in CSVRecordFieldConfigurations)
                 fieldConfig.Validate(this);
 
+            //Check if any field has 0 
+            if (CSVRecordFieldConfigurations.Where(i => i.FieldPosition <= 0).Count() > 0)
+                throw new ChoRecordConfigurationException("Some fields contain invalid field position. All field positions must be > 0.");
+
+            //Check field position for duplicate
+            int[] dupPositions = CSVRecordFieldConfigurations.GroupBy(i => i.FieldPosition)
+                .Where(g => g.Count() > 1)
+                .Select(g => g.Key).ToArray();
+
+            if (dupPositions.Length > 0)
+                throw new ChoRecordConfigurationException("Duplicate field position(s) [Index: {0}] found.".FormatString(String.Join(",", dupPositions)));
+
             if (!FileHeaderConfiguration.HasHeaderRecord)
             {
-                //Check if any field has 0 
-                if (CSVRecordFieldConfigurations.Where(i => i.FieldPosition <= 0).Count() > 0)
-                    throw new ChoRecordConfigurationException("Some fields contain invalid field position. All field positions must be > 0.");
-
-                //Check field position for duplicate
-                int[] dupPositions = CSVRecordFieldConfigurations.GroupBy(i => i.FieldPosition)
-                    .Where(g => g.Count() > 1)
-                    .Select(g => g.Key).ToArray();
-
-                if (dupPositions.Length > 0)
-                    throw new ChoRecordConfigurationException("Duplicate field position(s) [Index: {0}] found.".FormatString(String.Join(",", dupPositions)));
             }
             else
             {

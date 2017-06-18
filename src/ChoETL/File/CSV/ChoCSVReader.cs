@@ -249,6 +249,12 @@ namespace ChoETL
             return this;
         }
 
+        public ChoCSVReader<T> ThrowAndStopOnMissingField(bool flag = true)
+        {
+            Configuration.ThrowAndStopOnMissingField = flag;
+            return this;
+        }
+
         #endregion Fluent API
     }
 

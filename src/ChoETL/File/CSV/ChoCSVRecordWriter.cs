@@ -191,10 +191,16 @@ namespace ChoETL
                     if (rec is ExpandoObject)
                     {
                         if (!dict.ContainsKey(kvp.Key))
-                            throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' CSV column.".FormatString(fieldConfig.FieldName));
+                        {
+                            if (fieldConfig.FieldPosition > dict.Count)
+                                throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' CSV column.".FormatString(fieldConfig.FieldName));
+                        }
                     }
                     else
                     {
+                        if (pi == null)
+                            pi = Configuration.PIDict.Where(kvp1 => kvp.Value.FieldPosition == kvp.Value.FieldPosition).FirstOrDefault().Value;
+
                         if (pi == null)
                             throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' CSV column.".FormatString(fieldConfig.FieldName));
                     }
@@ -204,7 +210,7 @@ namespace ChoETL
                 {
                     if (Configuration.IsDynamicObject)
                     {
-                        fieldValue = dict[kvp.Key]; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
+                        fieldValue = dict.ContainsKey(kvp.Key) ? dict[kvp.Key] : dict[dict.Keys.ElementAt(fieldConfig.FieldPosition - 1)]; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
                         if (kvp.Value.FieldType == null)
                         {
                             if (fieldValue == null)
