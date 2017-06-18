@@ -22,18 +22,21 @@ using ChoETL;
 Here are the items will be targetted on phase 1. 
 
   1. CSV Reader / Writer
-    + [CSV Reader](http://www.codeproject.com/Articles/1145337/ChoETL-CSVReader)
-    + [CSV Writer](http://www.codeproject.com/Articles/1155891/Cinchoo-ETL-CSVWriter)
+      + [CSV Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickCSVLoad)
+      + [CSV Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickCSVWrite)
   2. Fixed Length Reader / Writer
-    + [Fixed Length Reader](https://www.codeproject.com/Articles/1166802/Cinchoo-ETL-FixedLengthReader)
-    + [Fixed Length Writer](https://www.codeproject.com/Articles/1167944/Cinchoo-ETL-FixedLengthWriter)
+      + [Fixed Length Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickFixedLengthLoad)
+      + [Fixed Length Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickFixedLengthWrite)
   3. Xml Reader / Writer
-    + [Xml Reader](https://www.codeproject.com/Articles/1171289/Cinchoo-ETL-XmlReader)
-    + [Xml Writer](https://www.codeproject.com/Articles/1173777/Cinchoo-ETL-Xml-Writer)
-  4. Key-Value Reader / Writer
-    + Key-Value Reader
-    + Key-Value Writer    
-  5. Manifold Reader / Writer
-    + Manifold Reader
-    + Manifold Writer
+      + [Xml Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickXmlLoad)
+      + [Xml Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickXmlWrite)
+  4. JSON Reader / Writer
+      + [JSON Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickXmlLoad)
+      + [JSON Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickXmlWrite)    
+  5. Key-Value Reader / Writer
+      + Key-Value Reader
+      + Key-Value Writer    
+  6. Manifold Reader / Writer
+      + Manifold Reader
+      + Manifold Writer
 
