@@ -107,10 +107,11 @@ namespace ChoETL
             }
         }
 
+        private Encoding _encoding;
         public Encoding Encoding
         {
-            get;
-            set;
+            get { return _encoding != null ? _encoding : Encoding.UTF8; }
+            set { _encoding = value; }
         }
 
         protected ChoFileRecordConfiguration(Type recordType = null) : base(recordType)
@@ -173,7 +174,7 @@ namespace ChoETL
 
         public Encoding GetEncoding(Stream inStream)
         {
-            if (Encoding == null)
+            if (_encoding == null)
             {
                 try
                 {
@@ -194,7 +195,7 @@ namespace ChoETL
 
         public Encoding GetEncoding(string fileName)
         {
-            if (Encoding == null)
+            if (_encoding == null)
             {
                 try
                 {
