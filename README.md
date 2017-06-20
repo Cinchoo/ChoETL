@@ -34,8 +34,8 @@ Here are the items will be targetted on phase 1.
       + [JSON Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickJSONLoad)
       + [JSON Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickJSONWrite)    
   5. Key-Value Reader / Writer
-      + [Key-Value Reader] (https://github.com/Cinchoo/ChoETL/wiki/QuickKVPLoad)
-      + [Key-Value Writer] (https://github.com/Cinchoo/ChoETL/wiki/QuickKVPWrite)
+      + [Key-Value Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickKVPLoad)
+      + [Key-Value Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickKVPWrite)
   6. Manifold Reader / Writer
       + Manifold Reader
       + Manifold Writer
