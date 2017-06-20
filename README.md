@@ -31,8 +31,8 @@ Here are the items will be targetted on phase 1.
       + [Xml Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickXmlLoad)
       + [Xml Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickXmlWrite)
   4. JSON Reader / Writer
-      + [JSON Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickXmlLoad)
-      + [JSON Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickXmlWrite)    
+      + [JSON Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickJSONLoad)
+      + [JSON Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickJSONWrite)    
   5. Key-Value Reader / Writer
       + Key-Value Reader
       + Key-Value Writer    
