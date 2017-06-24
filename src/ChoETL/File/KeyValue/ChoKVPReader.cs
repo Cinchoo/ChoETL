@@ -36,7 +36,7 @@ namespace ChoETL
         private Lazy<IEnumerator<T>> _enumerator = null;
         private CultureInfo _prevCultureInfo = null;
         private bool _clearFields = false;
-        internal TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
+        public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
         public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
 
         public ChoKVPRecordConfiguration Configuration
@@ -105,18 +105,18 @@ namespace ChoETL
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
         }
 
-        public static ChoKVPReader<T> LoadText(string inputText, Encoding encoding = null, ChoKVPRecordConfiguration configuration = null)
+        public static ChoKVPReader<T> LoadText(string inputText, Encoding encoding = null, ChoKVPRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            var r = new ChoKVPReader<T>(inputText.ToStream(encoding), configuration);
+            var r = new ChoKVPReader<T>(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
             r._closeStreamOnDispose = true;
 
             return r;
         }
 
-        internal static IEnumerator<object> LoadText(Type recType, string inputText, ChoKVPRecordConfiguration configuration, Encoding encoding, int bufferSize)
+        internal static IEnumerator<object> LoadText(Type recType, string inputText, ChoKVPRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null)
         {
             ChoKVPRecordReader rr = new ChoKVPRecordReader(recType, configuration);
-            rr.TraceSwitch = ChoETLFramework.TraceSwitchOff;
+            rr.TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitchOff : traceSwitch;
             return rr.AsEnumerable(new StreamReader(inputText.ToStream(), encoding, false, bufferSize)).GetEnumerator();
         }
 

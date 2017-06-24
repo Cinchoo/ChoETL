@@ -17,7 +17,7 @@ namespace ChoXmlReaderTest
     {
         private static string EmpXml = @"<Employees>
                 <Employee Id='1'>
-                    <Name>Tom</Name>
+                    <Name isActive = 'true'>Tom</Name>
                 </Employee>
                 <Employee Id='2'>
                     <Name>Mark</Name>
@@ -75,7 +75,7 @@ namespace ChoXmlReaderTest
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoXmlReader<EmployeeRec>(reader).UseXmlSerialization())
+            using (var parser = new ChoXmlReader<EmployeeRec>(reader))
             {
                 writer.WriteLine(EmpXml);
 
@@ -230,10 +230,16 @@ namespace ChoXmlReaderTest
                 get;
                 set;
             }
+            [ChoXmlNodeRecordField(XPath = "//Name/@isActive")]
+            public bool IsActive
+            {
+                get;
+                set;
+            }
 
             public override string ToString()
             {
-                return "{0}. {1}.".FormatString(Id, Name);
+                return "{0}. {1}. {2}".FormatString(Id, Name, IsActive);
             }
         }
     }

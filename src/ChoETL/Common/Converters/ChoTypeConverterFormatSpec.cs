@@ -8,7 +8,14 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public enum ChoBooleanFormatSpec { ZeroOrOne, YOrN, TrueOrFalse, YesOrNo };
+    public enum ChoBooleanFormatSpec
+    {
+        ZeroOrOne,
+        YOrN,
+        TrueOrFalse,
+        YesOrNo,
+        Any
+    };
     public enum ChoEnumFormatSpec { Value, Name, Description };
 
     public sealed class ChoTypeConverterFormatSpec
@@ -68,6 +75,7 @@ namespace ChoETL
             CurrencyNumberStyle = NumberStyles.Currency;
             CurrencyFormat = "C";
             EnumFormat = ChoEnumFormatSpec.Value;
+            BooleanFormat = ChoBooleanFormatSpec.Any;
         }
     }
 }

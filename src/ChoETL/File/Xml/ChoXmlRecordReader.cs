@@ -107,7 +107,7 @@ namespace ChoETL
                     }
                 }
             }
-            if (!abortRequested)
+            if (!abortRequested && pair != null)
                 RaisedRowsLoaded(pair.Item1);
         }
 
@@ -249,7 +249,7 @@ namespace ChoETL
 
             string key = null;
             //get all child elements, skip parent nodes
-            foreach (XElement elem in node.Elements().Where(a => !a.HasElements))
+            foreach (XElement elem in node.Elements().Where(a => !a.HasElements && !a.HasAttributes))
             {
                 key = Configuration.GetNameWithNamespace(elem.Name);
 
@@ -303,13 +303,18 @@ namespace ChoETL
                 if (fieldConfig.XPath == "text()")
                 {
                     if (Configuration.GetNameWithNamespace(node.Name) == fieldConfig.FieldName)
+                    {
+                        object value = node;
+                        if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref value))
+                            continue;
                         fieldValue = node.Value;
+                    }
                     else if (Configuration.ColumnCountStrict)
                         throw new ChoParserException("Missing '{0}' xml node.".FormatString(fieldConfig.FieldName));
                 }
                 else
                 {
-                    if (!fieldConfig.UseCache && !xDict.ContainsKey(fieldConfig.FieldName))
+                    if (/*!fieldConfig.UseCache && */!xDict.ContainsKey(fieldConfig.FieldName))
                     {
                         xNodes.Clear();
                         foreach (XPathNavigator z in xpn.Select(fieldConfig.XPath, Configuration.NamespaceManager))
@@ -317,11 +322,17 @@ namespace ChoETL
                             xNodes.Add(z.UnderlyingObject);
                         }
 
+                        object value = xNodes;
+                        if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref value))
+                            continue;
+
                         //object[] xNodes = ((IEnumerable)node.XPathEvaluate(fieldConfig.XPath, Configuration.NamespaceManager)).OfType<object>().ToArray();
                         //continue;
                         XAttribute fXAttribute = xNodes.OfType<XAttribute>().FirstOrDefault();
                         if (fXAttribute != null)
+                        {
                             fieldValue = fXAttribute.Value;
+                        }
                         else
                         {
                             fXElements = xNodes.OfType<XElement>().ToArray();
@@ -370,9 +381,6 @@ namespace ChoETL
 
                 if (!(fieldValue is ICollection))
                     fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue as string);
-
-                if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
-                    continue;
 
                 try
                 {

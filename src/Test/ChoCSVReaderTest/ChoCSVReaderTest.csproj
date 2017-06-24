@@ -51,6 +51,7 @@
     <None Include="MultiLineValue.csv" />
     <None Include="Emp.csv" />
     <None Include="Account.csv" />
+    <None Include="EmpQuote.csv" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

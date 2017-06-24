@@ -105,11 +105,11 @@ namespace ChoETL
 
                                 if (config.GetType() == typeof(ChoCSVRecordConfiguration))
                                 {
-                                    recText = ChoCSVWriter.ToText(record, config as ChoCSVRecordConfiguration, Configuration.Encoding, Configuration.BufferSize);
+                                    recText = ChoCSVWriter.ToText(record, config as ChoCSVRecordConfiguration, Configuration.Encoding, Configuration.BufferSize, TraceSwitch);
                                 }
                                 else if (config.GetType() == typeof(ChoFixedLengthRecordConfiguration))
                                 {
-                                    recText = ChoFixedLengthWriter.ToText(record, config as ChoFixedLengthRecordConfiguration, Configuration.Encoding, Configuration.BufferSize);
+                                    recText = ChoFixedLengthWriter.ToText(record, config as ChoFixedLengthRecordConfiguration, Configuration.Encoding, Configuration.BufferSize, TraceSwitch);
                                 }
                                 else
                                     throw new ChoParserException("Unsupported record found to write.");

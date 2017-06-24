@@ -24,7 +24,7 @@ namespace ChoETL
         private Lazy<IEnumerator<T>> _enumerator = null;
         private CultureInfo _prevCultureInfo = null;
         private bool _clearFields = false;
-        internal TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
+        public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
         public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
 
         public ChoJSONRecordConfiguration Configuration

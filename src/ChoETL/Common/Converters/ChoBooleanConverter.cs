@@ -32,11 +32,20 @@ namespace ChoETL
                         return String.Compare(txt, "true", true) == 0 ? true : false;
                     case ChoBooleanFormatSpec.YesOrNo:
                         return String.Compare(txt, "yes", true) == 0 ? true : false;
-                    default:
+                    case ChoBooleanFormatSpec.ZeroOrOne:
                         if (txt.Length == 1)
                             return txt[0] == '1' ? true : false;
                         else
                             return false;
+                    default:
+                        if (txt.Length == 1)
+                        {
+                            return txt[0] == 'Y' || txt[0] == 'y' || txt[0] == '1' ? true : false;
+                        }
+                        else
+                        {
+                            return String.Compare(txt, "true", true) == 0 || String.Compare(txt, "yes", true) == 0 ? true : false;
+                        }
                 }
             }
             else

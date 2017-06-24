@@ -65,7 +65,48 @@ namespace ChoJSONReaderTest
 
         static void Main(string[] args)
         {
-            StorePOCONodeLoadTest();
+            JsonToCSV();
+        }
+
+        static void JsonToCSV()
+        {
+            using (var csv = new ChoCSVWriter<Company>("companies.csv") { TraceSwitch = ChoETLFramework.TraceSwitchOff }.WithFirstLineHeader())
+            {
+                csv.Write(new ChoJSONReader<Company>("companies.json") { TraceSwitch = ChoETLFramework.TraceSwitchOff }.NotifyAfter(10000).Take(10));
+            }
+        }
+
+        static void LoadTest()
+        {
+            foreach (var e in new ChoJSONReader<Company>("companies.json") { TraceSwitch = ChoETLFramework.TraceSwitchOff }.NotifyAfter(10000))
+            {
+                //Console.WriteLine("overview: " + e.overview);
+            }
+
+            //Console.WriteLine("Id: " + e.name);
+        }
+
+        public class Product
+        {
+            [ChoJSONRecordField]
+            public string name { get; set; }
+            [ChoJSONRecordField]
+            public string Permalink { get; set; }
+        }
+
+        public class Company
+        {
+            [ChoJSONRecordField]
+            public string name { get; set; }
+            [ChoJSONRecordField]
+            public string Permalink { get; set; }
+            [ChoJSONRecordField(JSONPath = "$.products")]
+            public Product[] ProductName { get; set; }
+        }
+        static void QuickLoad()
+        {
+            foreach (dynamic e in new ChoJSONReader("Emp.json"))
+                Console.WriteLine("Id: " + e.Id + " Name: " + e.Name);
         }
 
         static void POCOTest()

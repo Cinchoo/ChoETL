@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using System.Diagnostics;
 
 namespace ChoCSVReaderTest
 {
@@ -28,7 +29,70 @@ namespace ChoCSVReaderTest
             //var i = Microsoft.CSharp.CSharpCodeProvider.CreateProvider("C#").CreateValidIdentifier("@Main 12");
             //Console.WriteLine(i.ToValidVariableName());
             //return;
-            ErrorHandling();
+            CultureSpecificDateTimeTest();
+        }
+        class Transaction
+        {
+            public string Id { get; set; }
+            public DateTime Date { get; set; }
+            public string Account { get; set; }
+            public decimal Amount { get; set; }
+            public string Subcategory { get; set; }
+            public string Memo { get; set; }
+        }
+        public static void CultureSpecificDateTimeTest()
+        {
+            string csvData =
+    @"Number,Date,Account,Amount,Subcategory,Memo
+ ,09/05/2017,XXX XXXXXX,-29.00,FT , [Sample string]
+ ,09/05/2017,XXX XXXXXX,-20.00,FT ,[Sample string]
+ ,25/05/2017,XXX XXXXXX,-6.30,PAYMENT,[Sample string]";
+
+            List<Transaction> result = new List<Transaction>();
+
+            using (MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(csvData)))
+            using (StreamReader sr = new StreamReader(ms))
+            {
+                var csv = new ChoCSVReader<Transaction>(sr).WithFirstLineHeader();
+                csv.TraceSwitch = ChoETLFramework.TraceSwitchOff;
+                csv.Configuration.Culture = CultureInfo.GetCultureInfo("en-GB");
+                foreach (var t in csv)
+                    Console.WriteLine(string.Format("{0:dd-MMM-yyyy}  {1}  {2,6}  {3,-7}  {4}",
+                        t.Date, t.Account, t.Amount, t.Subcategory, t.Memo));
+            }
+        }
+        public class EmpDetail
+        {
+            [ChoCSVRecordField(1, FieldName = "company name")]
+            public string COMPANY_NAME { get; set; }
+        }
+
+        static void QuotedCSVTest()
+        {
+            //using (var engine = new ChoCSVReader<EmpDetail>("EmpQuote.csv").WithFirstLineHeader())
+            //{
+            //    engine.Configuration.FileHeaderConfiguration.IgnoreCase = true;
+            //    foreach (dynamic item in engine)
+            //    {
+            //        Console.WriteLine(item.COMPANY_NAME);
+            //    }
+            //}
+            //return;
+            //using (var engine  = new ChoCSVReader("EmpQuote.csv").WithFirstLineHeader())
+            //{
+            //    engine.Configuration.FileHeaderConfiguration.IgnoreCase = true;
+            //    foreach (dynamic item in engine)
+            //    {
+            //        Console.WriteLine(item.COMPANY_NAME);
+            //        Console.WriteLine(item.COMPANY_type);
+            //    }
+            //}
+
+foreach (dynamic rec in new ChoCSVReader("EmpQuote.csv").WithFirstLineHeader())
+{
+    Console.WriteLine(rec.COMPANY_NAME_);
+    Console.WriteLine(rec.COMPANY_TYPE);
+}
         }
 
         static void CSVToXml()
@@ -38,6 +102,8 @@ namespace ChoCSVReaderTest
 
         static void ErrorHandling()
         {
+            var parser1 = new ChoCSVReader<EmployeeRec>("empwithsalary.csv").WithFirstLineHeader();
+
             using (var parser = new ChoCSVReader<EmployeeRec>("empwithsalary.csv").WithFirstLineHeader())
             {
                 parser.RecordFieldLoadError += (o, e) =>

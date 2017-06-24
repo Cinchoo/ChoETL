@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -19,6 +20,7 @@ namespace ChoETL
         private ChoXmlRecordWriter _writer = null;
         private bool _clearFields = false;
         public event EventHandler<ChoRowsWrittenEventArgs> RowsWritten;
+        public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
 
         public ChoXmlRecordConfiguration Configuration
         {
@@ -75,21 +77,23 @@ namespace ChoETL
 
         public void Write(IEnumerable<T> records)
         {
+            _writer.TraceSwitch = TraceSwitch;
             _writer.WriteTo(_textWriter, records).Loop();
         }
 
         public void Write(T record)
         {
+            _writer.TraceSwitch = TraceSwitch;
             _writer.WriteTo(_textWriter, new T[] { record } ).Loop();
         }
 
-        public static string ToText<TRec>(IEnumerable<TRec> records, string xPath)
+        public static string ToText<TRec>(IEnumerable<TRec> records, string xPath, TraceSwitch traceSwitch = null)
             where TRec : class
         {
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoXmlWriter<TRec>(writer).WithXPath(xPath))
+            using (var parser = new ChoXmlWriter<TRec>(writer) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.WithXPath(xPath))
             {
                 parser.Write(records);
 
@@ -100,13 +104,13 @@ namespace ChoETL
             }
         }
 
-        public static string ToText<TRec>(IEnumerable<TRec> records, ChoXmlRecordConfiguration configuration = null)
+        public static string ToText<TRec>(IEnumerable<TRec> records, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
             where TRec : class
         {
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoXmlWriter<TRec>(writer))
+            using (var parser = new ChoXmlWriter<TRec>(writer) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch })
             {
                 parser.Write(records);
 
@@ -123,10 +127,10 @@ namespace ChoETL
         //    return ToText(ChoEnumerable.AsEnumerable(record), configuration);
         //}
 
-        internal static string ToText(object rec, ChoXmlRecordConfiguration configuration, Encoding encoding, int bufferSize)
+        internal static string ToText(object rec, ChoXmlRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null)
         {
             ChoXmlRecordWriter writer = new ChoXmlRecordWriter(rec.GetType(), configuration);
-            writer.TraceSwitch = ChoETLFramework.TraceSwitchOff;
+            writer.TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitchOff : traceSwitch;
 
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))

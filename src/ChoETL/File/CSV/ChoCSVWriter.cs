@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -18,6 +19,7 @@ namespace ChoETL
         private ChoCSVRecordWriter _writer = null;
         private bool _clearFields = false;
         public event EventHandler<ChoRowsWrittenEventArgs> RowsWritten;
+        public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
 
         public ChoCSVRecordConfiguration Configuration
         {
@@ -74,21 +76,23 @@ namespace ChoETL
 
         public void Write(IEnumerable<T> records)
         {
+            _writer.TraceSwitch = TraceSwitch;
             _writer.WriteTo(_textWriter, records).Loop();
         }
 
         public void Write(T record)
         {
+            _writer.TraceSwitch = TraceSwitch;
             _writer.WriteTo(_textWriter, new T[] { record } ).Loop();
         }
 
-        public static string ToText<TRec>(IEnumerable<TRec> records, ChoCSVRecordConfiguration configuration = null)
+        public static string ToText<TRec>(IEnumerable<TRec> records, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
             where TRec : class
         {
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoCSVWriter<TRec>(writer, configuration))
+            using (var parser = new ChoCSVWriter<TRec>(writer, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch })
             {
                 parser.Write(records);
 
@@ -108,10 +112,10 @@ namespace ChoETL
         //        return ToText(ChoEnumerable.AsEnumerable(record), configuration);
         //}
 
-        internal static string ToText(object rec, ChoCSVRecordConfiguration configuration, Encoding encoding, int bufferSize)
+        internal static string ToText(object rec, ChoCSVRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null)
         {
             ChoCSVRecordWriter writer = new ChoCSVRecordWriter(rec.GetType(), configuration);
-            writer.TraceSwitch = ChoETLFramework.TraceSwitchOff;
+            writer.TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitchOff : traceSwitch;
 
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))

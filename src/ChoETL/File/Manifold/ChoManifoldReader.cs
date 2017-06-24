@@ -18,7 +18,7 @@ namespace ChoETL
         private bool _closeStreamOnDispose = false;
         private Lazy<IEnumerator> _enumerator = null;
         private CultureInfo _prevCultureInfo = null;
-        internal TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
+        public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
         public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
 
         public ChoManifoldRecordConfiguration Configuration
@@ -101,9 +101,9 @@ namespace ChoETL
             return GetEnumerator();
         }
 
-        public static ChoManifoldReader LoadText(string inputText, Encoding encoding = null, ChoManifoldRecordConfiguration configuration = null)
+        public static ChoManifoldReader LoadText(string inputText, Encoding encoding = null, ChoManifoldRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            var r = new ChoManifoldReader(inputText.ToStream(encoding), configuration);
+            var r = new ChoManifoldReader(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
             r._closeStreamOnDispose = true;
 
             return r;

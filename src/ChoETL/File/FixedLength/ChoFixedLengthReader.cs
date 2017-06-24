@@ -20,7 +20,7 @@ namespace ChoETL
         private Lazy<IEnumerator<T>> _enumerator = null;
         private CultureInfo _prevCultureInfo = null;
         private bool _clearFields = false;
-        internal TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
+        public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
         public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
 
         public ChoFixedLengthRecordConfiguration Configuration
@@ -89,18 +89,18 @@ namespace ChoETL
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
         }
 
-        public static ChoFixedLengthReader<T> LoadText(string inputText, Encoding encoding = null, ChoFixedLengthRecordConfiguration configuration = null)
+        public static ChoFixedLengthReader<T> LoadText(string inputText, Encoding encoding = null, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            var r = new ChoFixedLengthReader<T>(inputText.ToStream(encoding), configuration);
+            var r = new ChoFixedLengthReader<T>(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
             r._closeStreamOnDispose = true;
 
             return r;
         }
 
-        internal static IEnumerator<object> LoadText(Type recType, string inputText, ChoFixedLengthRecordConfiguration configuration, Encoding encoding, int bufferSize)
+        internal static IEnumerator<object> LoadText(Type recType, string inputText, ChoFixedLengthRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null)
         {
             ChoFixedLengthRecordReader rr = new ChoFixedLengthRecordReader(recType, configuration);
-            rr.TraceSwitch = ChoETLFramework.TraceSwitchOff;
+            rr.TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitchOff : traceSwitch;
             return rr.AsEnumerable(new StreamReader(inputText.ToStream(), encoding, false, bufferSize)).GetEnumerator();
         }
 

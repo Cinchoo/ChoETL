@@ -66,6 +66,7 @@ namespace ChoETL
         {
             if (Configuration.JSONPath.IsNullOrWhiteSpace())
             {
+                sr.SupportMultipleContent = Configuration.SupportMultipleContent;
                 while (sr.Read())
                 {
                     if (sr.TokenType == JsonToken.StartArray)
@@ -78,6 +79,8 @@ namespace ChoETL
                             }
                         }
                     }
+                    if (sr.TokenType == JsonToken.StartObject)
+                        yield return (JObject)JToken.ReadFrom(sr);
                 }
             }
             else
@@ -98,7 +101,7 @@ namespace ChoETL
                     foreach (JToken item in ((JArray)t))
                         yield return item.ToObject<JObject>();
                 }
-                else
+                else if (t is JObject)
                     yield return t.ToObject<JObject>();
             }
 
@@ -146,7 +149,7 @@ namespace ChoETL
                     }
                 }
             }
-            if (!abortRequested)
+            if (!abortRequested && pair != null)
                 RaisedRowsLoaded(pair.Item1);
         }
 
@@ -251,6 +254,7 @@ namespace ChoETL
             long lineNo;
             JObject node;
             JToken jToken = null;
+            JToken[] jTokens = null;
 
             lineNo = pair.Item1;
             node = pair.Item2;
@@ -271,7 +275,8 @@ namespace ChoETL
                 //fieldValue = dictValues[kvp.Key];
                 if (!kvp.Value.JSONPath.IsNullOrWhiteSpace())
                 {
-                    jToken = node.SelectToken(kvp.Value.JSONPath);
+                    jTokens = node.SelectTokens(kvp.Value.JSONPath).ToArray();
+                    jToken = jTokens.FirstOrDefault();
                     if (jToken == null)
                     {
                         if (Configuration.ColumnCountStrict)
@@ -287,12 +292,26 @@ namespace ChoETL
                     }
                 }
 
+                fieldValue = jTokens != null ? (object)jTokens : jToken;
+
+                if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
+                    continue;
+
                 if (rec is ExpandoObject)
                 {
-                    if (kvp.Value.FieldType == null)
-                        fieldValue = jToken;
-                    else
-                        fieldValue = jToken != null ? jToken.ToObject(kvp.Value.FieldType) : null;
+                    if (kvp.Value.FieldType != null)
+                    {
+                        if (fieldValue is JToken)
+                        {
+                            fieldValue = ((JToken)fieldValue).ToObject(kvp.Value.FieldType);
+                        }
+                        else if (fieldValue is JToken[])
+                        {
+                            jTokens = (JToken[])fieldValue;
+                            fieldValue = null;
+                            HandleCollection(jTokens, kvp);
+                        }
+                    }
                 }
                 else
                 {
@@ -303,7 +322,16 @@ namespace ChoETL
                     else
                         kvp.Value.FieldType = typeof(string);
 
-                    fieldValue = jToken != null ? jToken.ToObject(kvp.Value.FieldType) : null;
+                    if (fieldValue is JToken)
+                    {
+                        fieldValue = ((JToken)fieldValue).ToObject(kvp.Value.FieldType);
+                    }
+                    else if (fieldValue is JToken[])
+                    {
+                        jTokens = (JToken[])fieldValue;
+                        fieldValue = null;
+                        HandleCollection(jTokens, kvp);
+                    }
                 }
 
                 if (!(fieldValue is ICollection))
@@ -311,9 +339,6 @@ namespace ChoETL
                     if (fieldValue is string)
                         fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue as string);
                 }
-
-                if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
-                    continue;
 
                 try
                 {
@@ -410,6 +435,35 @@ namespace ChoETL
             return true;
         }
 
+        private void HandleCollection(JToken[] jTokens, KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp)
+        {
+            if (typeof(ICollection).IsAssignableFrom(kvp.Value.FieldType) && !kvp.Value.FieldType.IsArray)
+            {
+                Type itemType = kvp.Value.FieldType.GetItemType();
+                IList<object> list = new List<object>();
+                foreach (var jt in jTokens)
+                    list.Add(jt.ToObject(itemType));
+
+                MethodInfo method = GetType().GetMethod("CloneListAs", BindingFlags.NonPublic | BindingFlags.Instance);
+                MethodInfo genericMethod = method.MakeGenericMethod(itemType);
+                fieldValue = genericMethod.Invoke(this, new[] { list });
+            }
+            else
+            {
+                foreach (var jt in jTokens)
+                {
+                    fieldValue = jt.ToObject(kvp.Value.FieldType);
+                    break;
+                }
+            }
+        }
+
+        private List<T> CloneListAs<T>(IList<object> source)
+        {
+            // Here we can do anything we want with T
+            // T == source[0].GetType()
+            return source.Cast<T>().ToList();
+        }
         private string CleanFieldValue(ChoJSONRecordFieldConfiguration config, Type fieldType, string fieldValue)
         {
             if (fieldValue == null) return fieldValue;

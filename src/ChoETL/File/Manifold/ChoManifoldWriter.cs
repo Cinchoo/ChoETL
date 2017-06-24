@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -16,6 +17,7 @@ namespace ChoETL
         private bool _closeStreamOnDispose = false;
         private ChoManifoldRecordWriter _writer = null;
         public event EventHandler<ChoRowsWrittenEventArgs> RowsWritten;
+        public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
 
         public ChoManifoldRecordConfiguration Configuration
         {
@@ -72,21 +74,23 @@ namespace ChoETL
 
         public void Write(IEnumerable records)
         {
+            _writer.TraceSwitch = TraceSwitch;
             foreach (object rec in records)
                 _writer.WriteTo(_textWriter, new object[] { rec }).Loop();
         }
 
         public void Write(object record)
         {
+            _writer.TraceSwitch = TraceSwitch;
             _writer.WriteTo(_textWriter, new object[] { record }).Loop();
         }
 
-        public static string ToText(IEnumerable records)
+        public static string ToText(IEnumerable records, TraceSwitch traceSwitch = null)
         {
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoManifoldWriter(writer))
+            using (var parser = new ChoManifoldWriter(writer) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch })
             {
                 parser.Write(records);
 

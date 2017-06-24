@@ -50,7 +50,11 @@ namespace ChoETL
             get;
             set;
         }
-
+        public bool SupportMultipleContent
+        {
+            get;
+            set;
+        }
         internal Dictionary<string, ChoJSONRecordFieldConfiguration> RecordFieldConfigurationsDict
         {
             get;
@@ -72,6 +76,7 @@ namespace ChoETL
 
         internal ChoJSONRecordConfiguration(Type recordType) : base(recordType)
         {
+            SupportMultipleContent = true;
             JSONRecordFieldConfigurations = new List<ChoJSONRecordFieldConfiguration>();
 
             Indent = "  ";
