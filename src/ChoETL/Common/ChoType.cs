@@ -10,10 +10,12 @@
     using System.ComponentModel;
     using System.ComponentModel.DataAnnotations;
     using System.Diagnostics;
+    using System.Dynamic;
     using System.Globalization;
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Runtime.CompilerServices;
     using System.Security.Permissions;
     using System.Text;
     using System.Threading;
@@ -80,6 +82,23 @@
         //{
         //    return ChoType.GetAttribute<ChoDynamicRecordAttribute>(type) != null && typeof(IChoDynamicRecord).IsAssignableFrom(type);
         //}
+
+        public static bool IsDynamicType(this Type type)
+        {
+            return type == null ? true : type == typeof(ExpandoObject) || typeof(IDynamicMetaObjectProvider).IsAssignableFrom(type) || type == typeof(object);
+        }
+
+        public static bool IsAnonymousType(this Type type)
+        {
+            if (type == null)
+                throw new ArgumentNullException("type");
+
+            // HACK: The only way to detect anonymous types right now.
+            return Attribute.IsDefined(type, typeof(CompilerGeneratedAttribute), false)
+                && type.IsGenericType && type.Name.Contains("AnonymousType")
+                && (type.Name.StartsWith("<>") || type.Name.StartsWith("VB$"))
+                && (type.Attributes & TypeAttributes.NotPublic) == TypeAttributes.NotPublic;
+        }
 
         public static bool IsImplGenericTypeDefinition(this Type type, Type genericType)
         {

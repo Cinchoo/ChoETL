@@ -60,8 +60,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="Maldives Holidays Calendar - Copy %282%29.ics" />
     <None Include="Maldives Holidays Calendar - Copy.ics" />
-    <None Include="Maldives Holidays Calendar.ics" />
+    <None Include="Sample.ics" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\ChoETL\ChoETL.csproj">
@@ -70,6 +71,9 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>COPY $(ProjectDir)*.ics $(TargetDir)</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

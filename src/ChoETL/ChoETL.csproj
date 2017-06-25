@@ -124,6 +124,7 @@
     <Compile Include="Common\Converters\ChoEnumConverter.cs" />
     <Compile Include="Common\Data\ChoSqlTableHelper.cs" />
     <Compile Include="Common\Dynamic\ChoDynamicClassFactory.cs" />
+    <Compile Include="Common\ExtensionMethods\ChoLinqEx.cs" />
     <Compile Include="Common\Reflection\ChoFieldInfoEx.cs" />
     <Compile Include="Common\Reflection\ChoMemberInfoEx.cs" />
     <Compile Include="Common\Reflection\ChoPropertyInfoEx.cs" />

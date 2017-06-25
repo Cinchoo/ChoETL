@@ -49,6 +49,8 @@ namespace ChoETL
             get;
             private set;
         }
+        [DataMember]
+        public bool IgnoreDuplicateFields { get; private set; }
 
         internal Dictionary<string, ChoKVPRecordFieldConfiguration> RecordFieldConfigurationsDict
         {
@@ -83,6 +85,7 @@ namespace ChoETL
 
         internal ChoKVPRecordConfiguration(Type recordType) : base(recordType)
         {
+            IgnoreDuplicateFields = true;
             KVPRecordFieldConfigurations = new List<ChoKVPRecordFieldConfiguration>();
             LineContinuationChars = new char[] { ' ', '\t' };
 
@@ -249,11 +252,11 @@ namespace ChoETL
                     .Where(g => g.Count() > 1)
                     .Select(g => g.Key).ToArray();
 
-                if (dupFields.Length > 0)
+                if (dupFields.Length > 0 && !IgnoreDuplicateFields)
                     throw new ChoRecordConfigurationException("Duplicate field name(s) [Name: {0}] found.".FormatString(String.Join(",", dupFields)));
 
-                RecordFieldConfigurationsDict = KVPRecordFieldConfigurations.Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name, FileHeaderConfiguration.StringComparer);
-                RecordFieldConfigurationsDict2 = KVPRecordFieldConfigurations.Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName, FileHeaderConfiguration.StringComparer);
+                RecordFieldConfigurationsDict = KVPRecordFieldConfigurations.Where(i => !i.Name.IsNullOrWhiteSpace()).GroupBy(i => i.Name).Select(g => g.First()).ToDictionary(i => i.Name, FileHeaderConfiguration.StringComparer);
+                RecordFieldConfigurationsDict2 = KVPRecordFieldConfigurations.Where(i => !i.FieldName.IsNullOrWhiteSpace()).GroupBy(i => i.Name).Select(g => g.First()).ToDictionary(i => i.FieldName, FileHeaderConfiguration.StringComparer);
                 FCArray = RecordFieldConfigurationsDict.ToArray();
 
                 LoadNCacheMembers(KVPRecordFieldConfigurations);

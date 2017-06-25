@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace ChoJSONReaderTest
 {
+
     public class Product
     {
         public string Name { get; set; }
@@ -70,9 +71,11 @@ namespace ChoJSONReaderTest
 
         static void JsonToCSV()
         {
-            using (var csv = new ChoCSVWriter<Company>("companies.csv") { TraceSwitch = ChoETLFramework.TraceSwitchOff }.WithFirstLineHeader())
+            using (var csv = new ChoCSVWriter("companies.csv").WithFirstLineHeader())
             {
-                csv.Write(new ChoJSONReader<Company>("companies.json") { TraceSwitch = ChoETLFramework.TraceSwitchOff }.NotifyAfter(10000).Take(10));
+                csv.Write(new ChoJSONReader<Company>("companies.json").NotifyAfter(10000).Take(10).
+                    SelectMany(c => c.Products.Touch().
+                    Select(p => new { c.name, c.Permalink, prod_name = p.name, prod_permalink = p.Permalink })));
             }
         }
 
@@ -101,7 +104,7 @@ namespace ChoJSONReaderTest
             [ChoJSONRecordField]
             public string Permalink { get; set; }
             [ChoJSONRecordField(JSONPath = "$.products")]
-            public Product[] ProductName { get; set; }
+            public Product[] Products { get; set; }
         }
         static void QuickLoad()
         {

@@ -73,9 +73,9 @@ namespace ChoETL
                             {
                                 string[] fieldNames = null;
 
-                                if (record is ExpandoObject)
+                                if (Configuration.IsDynamicObject)
                                 {
-                                    var dict = record as IDictionary<string, Object>;
+                                    var dict = record.ToDynamicObject() as IDictionary<string, Object>;
                                     fieldNames = dict.Keys.ToArray();
                                 }
                                 else
@@ -188,9 +188,9 @@ namespace ChoETL
 
                 if (Configuration.ThrowAndStopOnMissingField)
                 {
-                    if (rec is ExpandoObject)
+                    if (Configuration.IsDynamicObject)
                     {
-                        var dict = rec as IDictionary<string, Object>;
+                        var dict = rec.ToDynamicObject() as IDictionary<string, Object>;
                         if (!dict.ContainsKey(kvp.Key))
                             throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' FixedLength column.".FormatString(fieldConfig.FieldName));
                     }
@@ -205,7 +205,7 @@ namespace ChoETL
                 {
                     if (Configuration.IsDynamicObject)
                     {
-                        IDictionary<string, Object> dict = rec as IDictionary<string, Object>;
+                        IDictionary<string, Object> dict = rec.ToDynamicObject() as IDictionary<string, Object>;
                         fieldValue = dict[kvp.Key]; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
                         if (kvp.Value.FieldType == null)
                         {
@@ -265,7 +265,7 @@ namespace ChoETL
                     {
                         if (Configuration.IsDynamicObject)
                         {
-                            var dict = rec as IDictionary<string, Object>;
+                            var dict = rec.ToDynamicObject() as IDictionary<string, Object>;
 
                             if (dict.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
                                 dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
@@ -371,9 +371,9 @@ namespace ChoETL
 
         private void CheckColumnsStrict(object rec)
         {
-            if (rec is ExpandoObject)
+            if (Configuration.IsDynamicObject)
             {
-                var eoDict = rec as IDictionary<string, Object>;
+                var eoDict = rec.ToDynamicObject() as IDictionary<string, Object>;
 
                 if (eoDict.Count != Configuration.FixedLengthRecordFieldConfigurations.Count)
                     throw new ChoParserException("Incorrect number of fields found in record object. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.FixedLengthRecordFieldConfigurations.Count, eoDict.Count));

@@ -23,6 +23,7 @@ namespace ChoETL
         private IChoNotifyKVPRecordRead _customKVPRecord;
         private string[] _fieldNames = new string[] { };
         private bool _configCheckDone = false;
+        private Dictionary<string, bool> _propInit = new Dictionary<string, bool>();
         internal ChoBaseKVPReader Reader = null;
 
         public ChoKVPRecordConfiguration Configuration
@@ -418,6 +419,7 @@ namespace ChoETL
                 }
             }
 
+            _propInit.Clear();
             foreach (var pair1 in pairs.Item2)
             {
                 pair = pair1;
@@ -494,14 +496,16 @@ namespace ChoETL
             {
                 int pos = line.IndexOf(Configuration.Separator[0]);
                 if (pos <= 0)
-                    throw new ChoMissingRecordFieldException("Missing key at '{0}' line.".FormatString(lineNo));
+                    return new KeyValuePair<string, string>(CleanKeyValue(line), String.Empty);
+                //throw new ChoMissingRecordFieldException("Missing key at '{0}' line.".FormatString(lineNo));
                 return new KeyValuePair<string, string>(CleanKeyValue(line.Substring(0, pos)), line.Substring(pos + 1));
             }
             else
             {
                 int pos = line.IndexOf(Configuration.Separator);
                 if (pos <= 0)
-                    throw new ChoMissingRecordFieldException("Missing key at '{0}' line.".FormatString(lineNo));
+                    return new KeyValuePair<string, string>(CleanKeyValue(line), String.Empty);
+                //throw new ChoMissingRecordFieldException("Missing key at '{0}' line.".FormatString(lineNo));
                 return new KeyValuePair<string, string>(CleanKeyValue(line.Substring(0, pos)), line.Substring(pos + Configuration.Separator.Length));
             }
         }
@@ -610,6 +614,10 @@ namespace ChoETL
             key = Configuration.RecordFieldConfigurationsDict2[key].Name;
             ChoKVPRecordFieldConfiguration fieldConfig = Configuration.RecordFieldConfigurationsDict[key];
             PropertyInfo pi = null;
+
+            if (_propInit.ContainsKey(key))
+                return true;
+            _propInit.Add(key, true);
 
             fieldValue = CleanFieldValue(fieldConfig, fieldConfig.FieldType, fieldValue as string);
 

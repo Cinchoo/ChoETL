@@ -72,9 +72,9 @@ namespace ChoETL
                             {
                                 string[] fieldNames = null;
 
-                                if (record is ExpandoObject)
+                                if (Configuration.IsDynamicObject)
                                 {
-                                    var dict = record as IDictionary<string, Object>;
+                                    var dict = record.ToDynamicObject() as IDictionary<string, Object>;
                                     fieldNames = dict.Keys.ToArray();
                                 }
                                 else
@@ -184,11 +184,11 @@ namespace ChoETL
                 fieldText = String.Empty;
                 if (Configuration.PIDict != null)
                     Configuration.PIDict.TryGetValue(kvp.Key, out pi);
-                dict = rec as IDictionary<string, Object>;
+                dict = rec.ToDynamicObject() as IDictionary<string, Object>;
 
                 if (Configuration.ThrowAndStopOnMissingField)
                 {
-                    if (rec is ExpandoObject)
+                    if (Configuration.IsDynamicObject)
                     {
                         if (!dict.ContainsKey(kvp.Key))
                         {
@@ -340,9 +340,9 @@ namespace ChoETL
 
         private void CheckColumnsStrict(object rec)
         {
-            if (rec is ExpandoObject)
+            if (Configuration.IsDynamicObject)
             {
-                var eoDict = rec as IDictionary<string, Object>;
+                var eoDict = rec.ToDynamicObject() as IDictionary<string, Object>;
 
                 if (eoDict.Count != Configuration.CSVRecordFieldConfigurations.Count)
                     throw new ChoParserException("Incorrect number of fields found in record object. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.CSVRecordFieldConfigurations.Count, eoDict.Count));

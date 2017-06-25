@@ -74,6 +74,9 @@ namespace ChoETL
         {
             if (src == null) return null;
 
+            if (src is ExpandoObject)
+                return src;
+
             IDictionary<string, object> expando = new ExpandoObject();
             foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(src.GetType()))
             {

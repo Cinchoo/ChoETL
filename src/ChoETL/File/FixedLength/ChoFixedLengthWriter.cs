@@ -199,7 +199,7 @@ namespace ChoETL
         #endregion Fluent API
     }
 
-    public class ChoFixedLengthWriter : ChoFixedLengthWriter<ExpandoObject>
+    public class ChoFixedLengthWriter : ChoFixedLengthWriter<dynamic>
     {
         public ChoFixedLengthWriter(string filePath, ChoFixedLengthRecordConfiguration configuration = null)
             : base(filePath, configuration)

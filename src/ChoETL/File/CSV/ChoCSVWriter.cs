@@ -234,12 +234,11 @@ namespace ChoETL
         #endregion Fluent API
     }
 
-    public class ChoCSVWriter : ChoCSVWriter<ExpandoObject>
+    public class ChoCSVWriter : ChoCSVWriter<dynamic>
     {
         public ChoCSVWriter(string filePath, ChoCSVRecordConfiguration configuration = null)
             : base(filePath, configuration)
         {
-
         }
         public ChoCSVWriter(TextWriter textWriter, ChoCSVRecordConfiguration configuration = null)
             : base(textWriter, configuration)

@@ -248,7 +248,7 @@ namespace ChoETL
         #endregion Fluent API
     }
 
-    public class ChoXmlWriter : ChoXmlWriter<ExpandoObject>
+    public class ChoXmlWriter : ChoXmlWriter<dynamic>
     {
         public ChoXmlWriter(string filePath, ChoXmlRecordConfiguration configuration = null)
             : base(filePath, configuration)

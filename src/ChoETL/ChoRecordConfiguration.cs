@@ -22,7 +22,7 @@ namespace ChoETL
             {
                 _recordType = value;
 
-                IsDynamicObject = RecordType == null ? true : RecordType == typeof(ExpandoObject);
+                IsDynamicObject = RecordType.IsDynamicType();
                 if (!IsDynamicObject)
                 {
                     PIDict = ChoType.GetProperties(RecordType).ToDictionary(p => p.Name);
@@ -80,7 +80,7 @@ namespace ChoETL
             AutoDiscoverColumns = true;
             ThrowAndStopOnMissingField = true;
             ObjectValidationMode = ChoObjectValidationMode.Off;
-            IsDynamicObject = RecordType == null ? true : RecordType == typeof(ExpandoObject);
+            IsDynamicObject = RecordType.IsDynamicType();
         }
 
         protected virtual void Init(Type recordType)
@@ -154,7 +154,7 @@ namespace ChoETL
                 }
             }
 
-            ValDict = (from fc in fcs select new KeyValuePair<string, ValidationAttribute[]>(fc.Name, fc.Validators)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            ValDict = (from fc in fcs select new KeyValuePair<string, ValidationAttribute[]>(fc.Name, fc.Validators)).GroupBy(i => i.Key).Select(g => g.First()).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
     }
 }

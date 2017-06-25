@@ -43,10 +43,10 @@ namespace ChoCSVReaderTest
         public static void CultureSpecificDateTimeTest()
         {
             string csvData =
-    @"Number,Date,Account,Amount,Subcategory,Memo
- ,09/05/2017,XXX XXXXXX,-29.00,FT , [Sample string]
- ,09/05/2017,XXX XXXXXX,-20.00,FT ,[Sample string]
- ,25/05/2017,XXX XXXXXX,-6.30,PAYMENT,[Sample string]";
+    @"Id,Date,Date,Amount,Subcategory,Memo
+ 1,09/05/2017,XXX XXXXXX,-29.00,FT , [Sample string]
+ 2,09/05/2017,XXX XXXXXX,-20.00,FT ,[Sample string]
+ 3,25/05/2017,XXX XXXXXX,-6.30,PAYMENT,[Sample string]";
 
             List<Transaction> result = new List<Transaction>();
 

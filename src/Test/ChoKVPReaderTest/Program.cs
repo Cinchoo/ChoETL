@@ -43,7 +43,38 @@ namespace ChoKVPReaderTest
     {
         static void Main(string[] args)
         {
-            QuickDynamicTest();
+            QuickTest();
+        }
+
+        public class Event
+        {
+            public string ORGANIZER { get; set; }
+            public string DTSTART { get; set; }
+            public string DTEND { get; set; }
+            public string LOCATION { get; set; }
+            public string DESCRIPTION { get; set; }
+        }
+
+        static void QuickTest()
+        {
+            using (var r = new ChoKVPReader(@"sample.ics"))
+            {
+                r.Configuration.RecordStart = "BEGIN:VEVENT";
+                r.Configuration.RecordEnd = "END:VEVENT";
+                r.Configuration.IgnoreEmptyLine = true;
+                r.Configuration.Comment = ";";
+                //foreach (dynamic item in r)
+                //{
+                //    Console.WriteLine(item.SUMMARY);
+                //}
+
+                dynamic rec;
+                while ((rec = r.Read()) != null)
+                {
+                    Console.WriteLine(rec.DESCRIPTION);
+                }
+            }
+
         }
 
         static void LoadINIFileTest()
