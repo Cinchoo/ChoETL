@@ -258,7 +258,7 @@ namespace ChoETL
         #endregion Fluent API
     }
 
-    public class ChoCSVReader : ChoCSVReader<ExpandoObject>
+    public class ChoCSVReader : ChoCSVReader<dynamic>
     {
         public ChoCSVReader(string filePath, ChoCSVRecordConfiguration configuration = null)
             : base(filePath, configuration)

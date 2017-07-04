@@ -117,7 +117,7 @@ namespace ChoETL
 
         private void DiscoverRecordFields(Type recordType)
         {
-            if (recordType != typeof(ExpandoObject))
+            if (!IsDynamicObject) //recordType != typeof(ExpandoObject))
             {
                 CSVRecordFieldConfigurations.Clear();
 

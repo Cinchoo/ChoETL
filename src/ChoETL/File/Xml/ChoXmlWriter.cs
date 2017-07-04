@@ -87,24 +87,14 @@ namespace ChoETL
             _writer.WriteTo(_textWriter, new T[] { record } ).Loop();
         }
 
-        public static string ToText<TRec>(IEnumerable<TRec> records, string xPath, TraceSwitch traceSwitch = null)
+        public static string ToText<TRec>(TRec record, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string xpath = null)
             where TRec : class
         {
-            using (var stream = new MemoryStream())
-            using (var reader = new StreamReader(stream))
-            using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoXmlWriter<TRec>(writer) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.WithXPath(xPath))
-            {
-                parser.Write(records);
-
-                writer.Flush();
-                stream.Position = 0;
-
-                return reader.ReadToEnd();
-            }
+            return ToText(ChoEnumerable.AsEnumerable(record), configuration, traceSwitch);
         }
 
-        public static string ToText<TRec>(IEnumerable<TRec> records, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+
+        public static string ToText<TRec>(IEnumerable<TRec> records, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string xpath = null)
             where TRec : class
         {
             using (var stream = new MemoryStream())
@@ -112,6 +102,8 @@ namespace ChoETL
             using (var writer = new StreamWriter(stream))
             using (var parser = new ChoXmlWriter<TRec>(writer) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch })
             {
+                parser.Configuration.XPath = xpath;
+
                 parser.Write(records);
 
                 writer.Flush();

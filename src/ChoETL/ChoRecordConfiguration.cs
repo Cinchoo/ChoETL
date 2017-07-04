@@ -14,23 +14,10 @@ namespace ChoETL
     [DataContract]
     public abstract class ChoRecordConfiguration
     {
-        private Type _recordType;
         public Type RecordType
         {
-            get { return _recordType; }
-            set
-            {
-                _recordType = value;
-
-                IsDynamicObject = RecordType.IsDynamicType();
-                if (!IsDynamicObject)
-                {
-                    PIDict = ChoType.GetProperties(RecordType).ToDictionary(p => p.Name);
-                    PDDict = new Dictionary<string, PropertyDescriptor>();
-                    foreach (var fn in PIDict.Keys)
-                        PDDict.Add(fn, ChoTypeDescriptor.GetProperty(RecordType, fn));
-                }
-            }
+            get;
+            set;
         }
 
         [DataMember]
@@ -66,9 +53,15 @@ namespace ChoETL
         [DataMember]
         public long NotifyAfter { get; set; }
 
+        private bool _isDynamicObject = true;
+        public virtual bool IsDynamicObject
+        {
+            get { return _isDynamicObject; }
+            set { _isDynamicObject = value; }
+        }
+
         public Dictionary<string, PropertyInfo> PIDict = null;
-        internal Dictionary<string, PropertyDescriptor> PDDict = null;
-        public bool IsDynamicObject = true;
+        public Dictionary<string, PropertyDescriptor> PDDict = null;
         internal bool HasConfigValidators = false;
         internal Dictionary<string, ValidationAttribute[]> ValDict = null;
         internal string[] PropertyNames;
@@ -97,7 +90,16 @@ namespace ChoETL
 
         public abstract void MapRecordFields<T>();
         public abstract void MapRecordFields(Type recordType);
-
+        public virtual void Validate(object state)
+        {
+            if (!IsDynamicObject)
+            {
+                PIDict = ChoType.GetProperties(RecordType).ToDictionary(p => p.Name);
+                PDDict = new Dictionary<string, PropertyDescriptor>();
+                foreach (var fn in PIDict.Keys)
+                    PDDict.Add(fn, ChoTypeDescriptor.GetProperty(RecordType, fn));
+            }
+        }
         protected void LoadNCacheMembers(IEnumerable<ChoRecordFieldConfiguration> fcs)
         {
             if (!IsDynamicObject)

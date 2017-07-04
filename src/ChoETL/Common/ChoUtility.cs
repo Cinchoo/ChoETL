@@ -38,6 +38,33 @@ namespace ChoETL
         {
 
         }
+        public static List<T[]> Transpose<T>(this Dictionary<T, T> dict)
+        {
+            List<T[]> ret = new List<T[]>();
+
+            ret.Add(dict.Keys.ToArray());
+            ret.Add(dict.Values.ToArray());
+            return ret;
+        }
+
+        public static List<T[]> Transpose<T>(this Dictionary<T, T[]> dict)
+        {
+            List<T[]> ret = new List<T[]>();
+
+            ret.Add(dict.Keys.ToArray());
+            List<T> dest = new List<T>();
+            for (int i = 0; i < dict.Keys.Count; i++)
+            {
+                dest.Clear();
+                foreach (var value in dict.Values)
+                {
+                    dest.Add(i < value.Length ? value[i] : default(T));
+                }
+                ret.Add(dest.ToArray());
+
+            }
+            return ret;
+        }
 
         public static T FirstOrDefault<T>(this object value, T defaultValue = default(T))
         {
@@ -76,6 +103,8 @@ namespace ChoETL
 
             if (src is ExpandoObject)
                 return src;
+            if (src is DynamicObject)
+                return ChoExpandoObjectEx.ToExpandoObject(src as DynamicObject);
 
             IDictionary<string, object> expando = new ExpandoObject();
             foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(src.GetType()))

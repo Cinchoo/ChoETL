@@ -115,7 +115,7 @@ namespace ChoETL
 
         private void DiscoverRecordFields(Type recordType)
         {
-            if (recordType != typeof(ExpandoObject))
+            if (!IsDynamicObject)
             {
                 XmlRecordFieldConfigurations.Clear();
 
@@ -208,7 +208,7 @@ namespace ChoETL
             if (AutoDiscoverColumns
                 && XmlRecordFieldConfigurations.Count == 0)
             {
-                if (RecordType != null && RecordType != typeof(ExpandoObject)
+                if (RecordType != null && !IsDynamicObject
                     && ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any()).Any())
                 {
                     IsComplexXPathUsed = false;

@@ -317,7 +317,7 @@ namespace ChoETL
         #endregion Fluent API
     }
 
-    public class ChoXmlReader : ChoXmlReader<ExpandoObject>
+    public class ChoXmlReader : ChoXmlReader<dynamic>
     {
         public ChoXmlReader(string filePath, ChoXmlRecordConfiguration configuration = null)
             : base(filePath, configuration)

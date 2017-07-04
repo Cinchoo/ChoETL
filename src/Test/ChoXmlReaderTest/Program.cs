@@ -10,6 +10,8 @@ using System.Xml;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel;
 using System.Xml.Serialization;
+using System.Collections;
+using System.Dynamic;
 
 namespace ChoXmlReaderTest
 {
@@ -27,7 +29,26 @@ namespace ChoXmlReaderTest
          
         static void Main(string[] args)
         {
-            POCOTest();
+            //dynamic p = new ChoPropertyBag();
+            //p.Name = "Raj";
+            //p.Zip = "10020";
+
+            //foreach (var kvp in ChoExpandoObjectEx.ToExpandoObject(p))
+            //    Console.WriteLine(kvp);
+            //return;
+            XmlToCSVSample1();
+        }
+
+        static void XmlToCSVSample1()
+        {
+            using (var parser = new ChoXmlReader("sample.xml").WithXPath("Attributes/Attribute")
+                .WithField("Name", xPath: "Name")
+                .WithField("Value", xPath: "value")
+                )
+            {
+                Console.WriteLine(ChoCSVWriter.ToText(parser.Select(kvp => kvp.Value).ToExpandoObject()));
+            }
+
         }
 
         static void ToDataTable()

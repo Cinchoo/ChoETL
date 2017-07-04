@@ -248,7 +248,7 @@ namespace ChoETL
         #endregion Fluent API
     }
 
-    public class ChoKVPReader : ChoKVPReader<ExpandoObject>
+    public class ChoKVPReader : ChoKVPReader<dynamic>
     {
         public ChoKVPReader(string filePath, ChoKVPRecordConfiguration configuration = null)
             : base(filePath, configuration)

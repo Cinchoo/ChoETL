@@ -55,6 +55,18 @@ namespace ChoETL
             get;
             set;
         }
+        public override bool IsDynamicObject
+        {
+            get
+            {
+                return base.IsDynamicObject && !UseJSONSerialization;
+            }
+
+            set
+            {
+                base.IsDynamicObject = value;
+            }
+        }
         internal Dictionary<string, ChoJSONRecordFieldConfiguration> RecordFieldConfigurationsDict
         {
             get;
@@ -110,7 +122,7 @@ namespace ChoETL
 
         private void DiscoverRecordFields(Type recordType)
         {
-            if (recordType != typeof(ExpandoObject))
+            if (!IsDynamicObject) // recordType != typeof(ExpandoObject))
             {
                 JSONRecordFieldConfigurations.Clear();
 
@@ -149,10 +161,9 @@ namespace ChoETL
             if (AutoDiscoverColumns
                 && JSONRecordFieldConfigurations.Count == 0)
             {
-                if (RecordType != null && RecordType != typeof(ExpandoObject)
+                if (RecordType != null && !IsDynamicObject /*&& RecordType != typeof(ExpandoObject)*/
                     && ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any()).Any())
                 {
-
                     long startIndex = 0;
                     long size = 0;
                     string jpath = null;

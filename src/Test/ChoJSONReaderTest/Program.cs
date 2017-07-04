@@ -66,14 +66,13 @@ namespace ChoJSONReaderTest
 
         static void Main(string[] args)
         {
-            JsonToCSV();
         }
 
         static void JsonToCSV()
         {
-            using (var csv = new ChoCSVWriter("companies.csv").WithFirstLineHeader())
+            using (var csv = new ChoCSVWriter("companies.csv") { TraceSwitch = ChoETLFramework.TraceSwitchOff }.WithFirstLineHeader())
             {
-                csv.Write(new ChoJSONReader<Company>("companies.json").NotifyAfter(10000).Take(10).
+                csv.Write(new ChoJSONReader<Company>("companies.json") { TraceSwitch = ChoETLFramework.TraceSwitchOff }.NotifyAfter(10000).Take(10).
                     SelectMany(c => c.Products.Touch().
                     Select(p => new { c.name, c.Permalink, prod_name = p.name, prod_permalink = p.Permalink })));
             }
@@ -83,7 +82,7 @@ namespace ChoJSONReaderTest
         {
             foreach (var e in new ChoJSONReader<Company>("companies.json") { TraceSwitch = ChoETLFramework.TraceSwitchOff }.NotifyAfter(10000))
             {
-                //Console.WriteLine("overview: " + e.overview);
+                Console.WriteLine("overview: " + e.name);
             }
 
             //Console.WriteLine("Id: " + e.name);

@@ -86,6 +86,12 @@ namespace ChoETL
             _writer.WriteTo(_textWriter, new T[] { record } ).Loop();
         }
 
+        public static string ToText<TRec>(TRec record, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+            where TRec : class
+        {
+            return ToText(ChoEnumerable.AsEnumerable(record), configuration, traceSwitch);
+        }
+
         public static string ToText<TRec>(IEnumerable<TRec> records, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
             where TRec : class
         {

@@ -166,8 +166,8 @@ namespace ChoETL
 
         private bool LoadNode(Tuple<long, XElement> pair, ref object rec)
         {
-            if (!Configuration.UseXmlSerialization || RecordType == typeof(ExpandoObject))
-                rec = Activator.CreateInstance(RecordType);
+            if (!Configuration.UseXmlSerialization || Configuration.IsDynamicObject)
+                rec = Configuration.IsDynamicObject ? new ExpandoObject() : Activator.CreateInstance(RecordType);
 
             try
             {
@@ -195,11 +195,10 @@ namespace ChoETL
                 }
                 else
                 {
-                    if (RecordType == typeof(ExpandoObject))
+                    if (Configuration.IsDynamicObject)
                         Parse(rec, pair.Item2);
                     else
                     {
-
                         rec = _se.Value.Deserialize(pair.Item2.CreateReader());
                     }
 
@@ -364,7 +363,7 @@ namespace ChoETL
                             fieldValue = xDict[fieldConfig.FieldName];
                     }
                 }
-                if (rec is ExpandoObject)
+                if (Configuration.IsDynamicObject)
                 {
                     if (kvp.Value.FieldType == null)
                         kvp.Value.FieldType = fieldValue is ICollection ? typeof(string[]) : typeof(string);

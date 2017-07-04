@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
@@ -153,10 +154,11 @@ namespace ChoETL
                 RaisedRowsLoaded(pair.Item1);
         }
 
+        private ExpandoObjectConverter _expandoObjectConverter = new ExpandoObjectConverter();
         private bool LoadNode(Tuple<long, JObject> pair, ref object rec)
         {
             if (!Configuration.UseJSONSerialization)
-                rec = Activator.CreateInstance(RecordType);
+                rec = Configuration.IsDynamicObject ? new ExpandoObject() : Activator.CreateInstance(RecordType);
 
             try
             {
@@ -183,8 +185,8 @@ namespace ChoETL
                 }
                 else
                 {
-                    rec = _se.Value != null ? pair.Item2.ToObject(RecordType, _se.Value) : pair.Item2.ToObject(RecordType);
-
+                    //rec = _se.Value != null ? pair.Item2.ToObject(RecordType, _se.Value) : pair.Item2.ToObject(RecordType);
+                    rec = JsonConvert.DeserializeObject<ExpandoObject>(pair.Item2.ToString(), new ExpandoObjectConverter());
                     if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.Off) != ChoObjectValidationMode.Off)
                         rec.DoObjectLevelValidation(Configuration, Configuration.JSONRecordFieldConfigurations);
                 }
@@ -297,7 +299,7 @@ namespace ChoETL
                 if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
                     continue;
 
-                if (rec is ExpandoObject)
+                if (Configuration.IsDynamicObject) //rec is ExpandoObject)
                 {
                     if (kvp.Value.FieldType != null)
                     {

@@ -281,7 +281,7 @@ namespace ChoETL
         #endregion Fluent API
     }
 
-    public class ChoJSONReader : ChoJSONReader<ExpandoObject>
+    public class ChoJSONReader : ChoJSONReader<dynamic>
     {
         public ChoJSONReader(string filePath, ChoJSONRecordConfiguration configuration = null)
             : base(filePath, configuration)

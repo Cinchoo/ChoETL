@@ -219,7 +219,7 @@ namespace ChoETL
         #endregion Fluent API
     }
 
-    public class ChoFixedLengthReader : ChoFixedLengthReader<ExpandoObject>
+    public class ChoFixedLengthReader : ChoFixedLengthReader<dynamic>
     {
         public ChoFixedLengthReader(string filePath, ChoFixedLengthRecordConfiguration configuration = null)
             : base(filePath, configuration)

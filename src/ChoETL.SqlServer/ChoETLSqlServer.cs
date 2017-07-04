@@ -22,7 +22,7 @@ namespace ChoETL
         public static IQueryable<T> StageOnSqlServerUsingBcp<T>(this IEnumerable<T> items, ChoETLSqlServerSettings sqlServerSettings = null)
             where T : class
         {
-            if (typeof(T) == typeof(ExpandoObject) || typeof(T) == typeof(object))
+            if (typeof(T).IsDynamicType() || typeof(T) == typeof(object))
                 throw new NotSupportedException();
 
             Dictionary<string, PropertyInfo> PIDict = ChoType.GetProperties(typeof(T)).ToDictionary(p => p.Name);
@@ -84,7 +84,7 @@ namespace ChoETL
         public static IQueryable<T> StageOnSqlServer<T>(this IEnumerable<T> items, ChoETLSqlServerSettings sqlServerSettings = null)
             where T : class
         {
-            if (typeof(T) == typeof(ExpandoObject) || typeof(T) == typeof(object))
+            if (typeof(T).IsDynamicType() || typeof(T) == typeof(object))
                 throw new NotSupportedException();
 
             Dictionary<string, PropertyInfo> PIDict = ChoType.GetProperties(typeof(T)).ToDictionary(p => p.Name);
@@ -96,70 +96,10 @@ namespace ChoETL
             var dbSet = ctx.Set<T>();
             return dbSet;
         }
-        //public static IEnumerable<ExpandoObject> StageOnSqlServerUsingBcp(this IEnumerable<ExpandoObject> items, string conditions = null, ChoETLSqlServerSettings sqlServerSettings = null)
-        //{
-        //    sqlServerSettings = ValidateSettings<ExpandoObject>(sqlServerSettings);
-        //    CreateDatabaseIfLocalDb(sqlServerSettings);
 
-        //    var firstItem = items.FirstOrDefault();
-        //    if (firstItem != null)
-        //    {
-        //        using (var conn1 = new SqlConnection(sqlServerSettings.ConnectionString))
-        //        {
-        //            conn1.Open();
-        //            try
-        //            {
-        //                SqlCommand command = new SqlCommand(firstItem.CreateTableScript(sqlServerSettings.ColumnDataMapper, sqlServerSettings.TableName), conn1);
-        //                command.ExecuteNonQuery();
-        //            }
-        //            catch { }
-        //            //Truncate table
-        //            try
-        //            {
-        //                SqlCommand command = new SqlCommand("TRUNCATE TABLE [{0}]".FormatString(sqlServerSettings.TableName), conn1);
-        //                command.ExecuteNonQuery();
-        //            }
-        //            catch
-        //            {
-        //                try
-        //                {
-        //                    SqlCommand command = new SqlCommand("DELETE FROM [{0}]".FormatString(sqlServerSettings.TableName), conn1);
-        //                    command.ExecuteNonQuery();
-        //                }
-        //                catch { }
-        //            }
-        //        }
-        //    }
-        //    else
-        //        throw new ApplicationException("Empty items found.");
-
-        //    using (SqlBulkCopy bcp = new SqlBulkCopy(sqlServerSettings.ConnectionString))
-        //    {
-        //        bcp.DestinationTableName = sqlServerSettings.TableName;
-        //        bcp.EnableStreaming = true;
-
-        //        bcp.NotifyAfter = 10;
-        //        bcp.SqlRowsCopied += delegate (object sender, SqlRowsCopiedEventArgs e)
-        //        {
-        //            Console.WriteLine(e.RowsCopied.ToString("#,##0") + " rows copied.");
-        //        };
-        //        bcp.WriteToServer(new ChoEnumerableDataReader(items));
-        //    }
-
-        //    string sql = "SELECT * FROM {0}".FormatString(sqlServerSettings.TableName);
-        //    if (!conditions.IsNullOrWhiteSpace())
-        //        sql += " {0}".FormatString(conditions);
-
-        //    SqlConnection conn = new SqlConnection(sqlServerSettings.ConnectionString);
-        //    conn.Open();
-
-        //    SqlCommand command2 = new SqlCommand(sql, conn);
-        //    return command2.ExecuteReader(CommandBehavior.CloseConnection).ToEnumerable<ExpandoObject>();
-        //}
-
-        public static IEnumerable<ExpandoObject> StageOnSqlServer(this IEnumerable<ExpandoObject> items, string conditions = null, ChoETLSqlServerSettings sqlServerSettings = null)
+        public static IEnumerable<dynamic> StageOnSqlServer(this IEnumerable<dynamic> items, string conditions = null, ChoETLSqlServerSettings sqlServerSettings = null)
         {
-            sqlServerSettings = ValidateSettings<ExpandoObject>(sqlServerSettings);
+            sqlServerSettings = ValidateSettings<dynamic>(sqlServerSettings);
             LoadDataToDb(items, sqlServerSettings, null);
 
             string sql = "SELECT * FROM {0}".FormatString(sqlServerSettings.TableName);
@@ -170,7 +110,7 @@ namespace ChoETL
             conn.Open();
 
             SqlCommand command2 = new SqlCommand(sql, conn);
-            return command2.ExecuteReader(CommandBehavior.CloseConnection).ToEnumerable<ExpandoObject>();
+            return command2.ExecuteReader(CommandBehavior.CloseConnection).ToEnumerable<dynamic>();
         }
 
         private static ChoETLSqlServerSettings ValidateSettings<T>(ChoETLSqlServerSettings SqlServerSettings) where T : class
@@ -180,7 +120,7 @@ namespace ChoETL
             else
                 SqlServerSettings.Validate();
 
-            if (typeof(T) == typeof(ExpandoObject))
+            if (typeof(T).IsDynamicType())
                 SqlServerSettings.TableName = SqlServerSettings.TableName.IsNullOrWhiteSpace() ? "Table" : SqlServerSettings.TableName;
             else
                 SqlServerSettings.TableName = typeof(T).Name;
@@ -322,7 +262,7 @@ namespace ChoETL
             Type objectType = target is Type ? target as Type : target.GetType();
             StringBuilder script = new StringBuilder();
 
-            if (target is ExpandoObject)
+            if (target.GetType().IsDynamicType())
             {
                 tableName = tableName.IsNullOrWhiteSpace() ? "Table" : tableName;
                 var eo = target as IDictionary<string, Object>;
@@ -410,7 +350,7 @@ namespace ChoETL
 
         private static void PopulateParams(SqlCommand cmd, object target, Dictionary<string, PropertyInfo> PIDict)
         {
-            if (target is ExpandoObject)
+            if (target.GetType().IsDynamicType())
             {
                 var eo = target as IDictionary<string, Object>;
                 foreach (KeyValuePair<string, object> kvp in eo)

@@ -187,7 +187,7 @@ namespace ChoETL
                     }
                     runningCount = pair.Item1;
 
-                    object rec = Activator.CreateInstance(RecordType);
+                    object rec = Configuration.IsDynamicObject ? new ExpandoObject() : Activator.CreateInstance(RecordType);
                     if (!LoadLine(pair, ref rec))
                         yield break;
 
@@ -598,7 +598,7 @@ namespace ChoETL
             }
             else
             {
-                if (RecordType == typeof(ExpandoObject))
+                if (Configuration.IsDynamicObject) // RecordType == typeof(ExpandoObject))
                 {
                     long index = 0;
                     return (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)

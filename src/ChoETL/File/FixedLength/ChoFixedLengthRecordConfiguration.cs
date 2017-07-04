@@ -100,7 +100,7 @@ namespace ChoETL
 
         private void DiscoverRecordFields(Type recordType)
         {
-            if (recordType != typeof(ExpandoObject))
+            if (!IsDynamicObject)
             {
                 FixedLengthRecordFieldConfigurations.Clear();
 
@@ -152,7 +152,7 @@ namespace ChoETL
             if (AutoDiscoverColumns
                 && FixedLengthRecordFieldConfigurations.Count == 0 /*&& headers != null*/)
             {
-                if (RecordType != null && RecordType != typeof(ExpandoObject)
+                if (RecordType != null && !IsDynamicObject
                     && ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().Any()).Any())
                 {
                     int startIndex = 0;
@@ -179,7 +179,7 @@ namespace ChoETL
                 else if (!line.IsNullOrEmpty())
                 {
                     int index = 0;
-                    if (RecordType == typeof(ExpandoObject))
+                    if (IsDynamicObject)
                     {
                         foreach (var item in DiscoverColumns(line))
                         {

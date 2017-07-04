@@ -23,7 +23,7 @@ namespace ChoETL
         public static IQueryable<T> StageOnSQLite<T>(this IEnumerable<T> items, ChoETLSqliteSettings sqliteSettings = null)
             where T : class
         {
-            if (typeof(T) == typeof(ExpandoObject) || typeof(T) == typeof(object))
+            if (typeof(T).IsDynamicType() || typeof(T) == typeof(object))
                 throw new NotSupportedException();
 
             Dictionary<string, PropertyInfo> PIDict = ChoType.GetProperties(typeof(T)).ToDictionary(p => p.Name);
@@ -36,9 +36,9 @@ namespace ChoETL
             return dbSet;
         }
 
-        public static IEnumerable<ExpandoObject> StageOnSQLite(this IEnumerable<ExpandoObject> items, string conditions = null, ChoETLSqliteSettings sqliteSettings = null)
+        public static IEnumerable<dynamic> StageOnSQLite(this IEnumerable<dynamic> items, string conditions = null, ChoETLSqliteSettings sqliteSettings = null)
         {
-            sqliteSettings = ValidateSettings<ExpandoObject>(sqliteSettings);
+            sqliteSettings = ValidateSettings<dynamic>(sqliteSettings);
             LoadDataToDb(items, sqliteSettings, null);
 
             string sql = "SELECT * FROM {0}".FormatString(sqliteSettings.TableName);
@@ -48,7 +48,7 @@ namespace ChoETL
             SQLiteConnection conn = new SQLiteConnection(@"DataSource={0}".FormatString(sqliteSettings.DatabaseFilePath));
             conn.Open();
             SQLiteCommand command2 = new SQLiteCommand(sql, conn);
-            return command2.ExecuteReader(CommandBehavior.CloseConnection).ToEnumerable<ExpandoObject>();
+            return command2.ExecuteReader(CommandBehavior.CloseConnection).ToEnumerable<dynamic>();
         }
 
         private static ChoETLSqliteSettings ValidateSettings<T>(ChoETLSqliteSettings sqliteSettings) where T : class
@@ -58,7 +58,7 @@ namespace ChoETL
             else
                 sqliteSettings.Validate();
 
-            if (typeof(T) == typeof(ExpandoObject))
+            if (typeof(T).IsDynamicType())
                 sqliteSettings.TableName = sqliteSettings.TableName.IsNullOrWhiteSpace() ? "Table" : sqliteSettings.TableName;
             else
                 sqliteSettings.TableName = typeof(T).Name;
@@ -125,7 +125,7 @@ namespace ChoETL
             Type objectType = target is Type ? target as Type : target.GetType();
             StringBuilder script = new StringBuilder();
 
-            if (target is ExpandoObject)
+            if (target.GetType().IsDynamicType())
             {
                 var eo = target as IDictionary<string, Object>;
                 if (eo.Count == 0)
@@ -212,7 +212,7 @@ namespace ChoETL
 
         private static void PopulateParams(SQLiteCommand cmd, object target, Dictionary<string, PropertyInfo> PIDict)
         {
-            if (target is ExpandoObject)
+            if (target.GetType().IsDynamicType())
             {
                 var eo = target as IDictionary<string, Object>;
                 foreach (KeyValuePair<string, object> kvp in eo)

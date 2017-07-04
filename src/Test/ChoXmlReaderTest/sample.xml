@@ -1,0 +1,27 @@
+﻿<InterConnectResponse>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ConsumerSubjects>
+        <ConsumerSubject subjectIdentifier="Primary">
+            <DataSourceResponses>
+                <RiskViewProducts>
+                    <RiskViewAttribResponse>
+                        <Attributes>
+                            <Attribute>
+                                <Name>PersonN</Name>
+                                <Value>3</Value>
+                            </Attribute>
+                            <Attribute>
+                                <Name>VerifiedHuman</Name>
+                                <Value>2</Value>
+                            </Attribute>
+                            <Attribute>
+                                <Name>CurrAddrBlockIndex</Name>
+                                <Value>0.61</Value>
+                            </Attribute>
+                        </Attributes>
+                    </RiskViewAttribResponse>
+                </RiskViewProducts>
+            </DataSourceResponses>
+        </ConsumerSubject>
+    </ConsumerSubjects>
+</InterConnectResponse>

@@ -1,250 +1,168 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Dynamic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public class ChoPropertyBag : DynamicObject //, INotifyPropertyChanged, IEnumerable
+    public class ChoPropertyBag : DynamicObject
     {
-        public static readonly dynamic Global = new ChoPropertyBag();
+        #region Instance Members
 
-        private readonly Dictionary<string, object> _properties = new Dictionary<string, object>();
-        private readonly List<object> _array = new List<object>();
-        public string Name { get; set; }
+        private Dictionary<string, object> _kvpDict = null;
+        private Func<Dictionary<string, object>> _func = null;
+        private bool _watchChange = false;
 
-        public ChoPropertyBag(string name = null)
+        private bool _isInitialized = false;
+        private event EventHandler<EventArgs> _afterLoaded;
+        public event EventHandler<EventArgs> AfterLoaded
         {
-            Name = name;
+            add
+            {
+                _afterLoaded += value;
+                if (_isInitialized)
+                    value(this, null);
+            }
+            remove
+            {
+                _afterLoaded -= value;
+            }
+        }
+        [ChoIgnoreMember]
+        public bool ThrowExceptionIfPropNotExists
+        {
+            get;
+            set;
+        }
+        [ChoIgnoreMember]
+        public bool IsFixed
+        {
+            get;
+            set;
+        }
+        [ChoIgnoreMember]
+        public bool IsReadOnly
+        {
+            get;
+            set;
         }
 
-        public void Reset()
+        #endregion Instance Members
+
+        #region Constructors
+
+        public ChoPropertyBag(bool watchChange = false) : this(null, watchChange)
         {
-            _properties.Clear();
-            _array.Clear();
+            _watchChange = watchChange;
         }
 
-        public IEnumerable<KeyValuePair<string, object>> AsProperties()
+        public ChoPropertyBag(Dictionary<string, object> kvpDict) : this(null, false)
         {
-            return _properties.AsEnumerable();
+            _kvpDict = kvpDict;
         }
 
-        public object[] ToArray()
+        public ChoPropertyBag(IEnumerable<object> list) : this(null, false)
         {
-            return _array.ToArray();
+            if (list != null)
+            {
+                int index = 0;
+                _kvpDict = list.ToDictionary(x => String.Format("Field{0}", ++index), v => v);
+            }
         }
+
+        public ChoPropertyBag(Func<Dictionary<string, object>> func, bool watchChange = false)
+        {
+            ThrowExceptionIfPropNotExists = false;
+            IsFixed = false;
+            IsReadOnly = false;
+
+            _func = func;
+            _watchChange = watchChange;
+            if (_func == null)
+                _kvpDict = new Dictionary<string, object>();
+
+            Task.Run(() =>
+            {
+                Initialize();
+                _afterLoaded.Raise(this, null);
+
+                if (watchChange)
+                {
+                    int pollIntervalInSec = 60;
+#if DEBUG
+                    pollIntervalInSec = 10;
+#endif
+
+                    System.Threading.Timer timer = null;
+                    timer = new System.Threading.Timer((e) =>
+                    {
+                        timer.Change(Timeout.Infinite, Timeout.Infinite);
+                        try
+                        {
+                            Initialize();
+                        }
+                        catch { }
+                        timer.Change((long)TimeSpan.FromSeconds(pollIntervalInSec).TotalMilliseconds, Timeout.Infinite);
+                    }, null, (long)TimeSpan.FromSeconds(pollIntervalInSec).TotalMilliseconds, Timeout.Infinite);
+                }
+            });
+        }
+
+        #endregion Constructors
+
+        public void Refresh()
+        {
+            Initialize();
+        }
+
+        protected virtual Dictionary<string, object> Seed()
+        {
+            return null;
+        }
+
+        [ChoIgnoreMember]
+        public virtual string BagName
+        {
+            get;
+            set;
+        }
+
+        #region DynamicObject Overrides
 
         public override IEnumerable<string> GetDynamicMemberNames()
         {
-            return _properties.Keys;
-        }
-
-        public object this[string key]
-        {
-            get
-            {
-                ChoGuard.ArgumentNotNullOrEmpty(key, "Key");
-                return _properties.ContainsKey(key) ? _properties[key] : null;
-            }
-
-            set
-            {
-                ChoGuard.ArgumentNotNullOrEmpty(key, "Key");
-                if (_properties.ContainsKey(key))
-                    _properties[key] = value;
-                else
-                    _properties.Add(key, value);
-            }
-        }
-
-        private object GetPropertyValue(string name)
-        {
-            if (!_properties.ContainsKey(name))
-                _properties.Add(name, null); //value == null ? new ChoPropertyBag(name) : value);
-
-            return _properties[name];
-        }
-
-        private void SetPropertyValue(string name, object value)
-        {
-            if (value is Delegate)
-                return;
+            Dictionary<string, object> kvpDict = _kvpDict;
+            if (kvpDict == null)
+                return base.GetDynamicMemberNames();
             else
-            {
-                if (!_properties.ContainsKey(name))
-                    _properties.Add(name, value); //value == null ? new ChoPropertyBag(name) : value);
-                else
-                    _properties[name] = value;
-            }
+                return kvpDict.Keys;
         }
 
-        private object GetOrSetArrayValue(int index, object value)
-        {
-            if (index < _array.Count)
-            {
-                if (value == null)
-                {
-                }
-                else
-                {
-                    dynamic x = _array[index];
-                    x.Value = value;
-                }
-                return _array[index];
-
-            }
-            else
-            {
-                while (index >= _array.Count)
-                {
-                    _array.Add(value == null ? new ChoPropertyBag() : MarshalArrayValue(value));
-                }
-            }
-
-            return _array[index];
-        }
-
-        private void IsValid(object value)
-        {
-            if (value != null /*&& !(value is Delegate)*/ && !value.GetType().IsSimple())
-                throw new ApplicationException("Invalid object passed.");
-        }
-
-        private dynamic MarshalArrayValue(object value)
-        {
-            if (value != null && !(value is ChoPropertyBag))
-            {
-                //if (value.GetType() != typeof(List<dynamic>))
-                //{
-                dynamic x = new ChoPropertyBag();
-                x.Value = value;
-
-                value = x;
-                //}
-            }
-
-            return value == null ? new ChoPropertyBag() : value;
-        }
-
-        private dynamic Marshal(object value)
-        {
-            //if (value != null && !(value is ChoPropertyBag))
-            //{
-            //    //if (value.GetType() != typeof(List<dynamic>))
-            //    //{
-            //        dynamic x = new ChoPropertyBag();
-            //        x.Value = value;
-
-            //        value = x;
-            //    //}
-            //}
-
-            return value == null ? new ChoPropertyBag() : value;
-        }
-
-        /// <summary>
-        /// Catch a get member invocation
-        /// </summary>
-        /// <param name="binder"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
         public override bool TryGetMember(GetMemberBinder binder, out object result)
         {
-            result = GetMember(binder.Name);
-            return true;
+            return GetPropertyValue(binder.Name, out result);
         }
 
-        private object GetMember(string name)
-        {
-            object result;
-            if (PreGetMember(name, out result))
-                return result;
-
-            return GetPropertyValue(name);
-        }
-
-        private bool PreGetMember(string name, out object value)
-        {
-            value = null;
-            if (name == "Name")
-            {
-                value = Name;
-                return true;
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Catch a set member invocation
-        /// </summary>
-        /// <param name="binder"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
         public override bool TrySetMember(SetMemberBinder binder, object value)
         {
-            SetMember(binder.Name, value);
-
-            return true;
+            var key = binder.Name;
+            return SetPropertyValue(key, value);
         }
 
-        private object SetMember(string name, object value)
-        {
-            //IsValid(value);
-            string memberName = name;
-
-            if (PreSetMember(name, value))
-                return GetMember(name);
-
-            if (value is ChoPropertyBag)
-                SetPropertyValue(memberName, value as ChoPropertyBag);
-            else
-                SetPropertyValue(memberName, value);
-
-            OnPropertyChanged(memberName);
-            return GetMember(name);
-        }
-
-        private bool PreSetMember(string name, object value)
-        {
-            if (name == "Name" && value is string)
-            {
-                Name = value as string;
-                return true;
-            }
-
-            return false;
-        }
-
-        #region Commented
-
-        /// <summary>
-        /// Handle the indexer operations
-        /// </summary>
-        /// <param name="binder"></param>
-        /// <param name="indexes"></param>
-        /// <param name="result"></param>
-        /// <returns></returns>
         public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object result)
         {
             result = null;
+
             if ((indexes.Length == 1) && indexes[0] != null)
             {
                 if (indexes[0] is string)
                 {
-                    result = GetPropertyValue((string)indexes[0]);
-                    return true;
-                }
-                else if (indexes[0] is int)
-                {
-                    result = GetOrSetArrayValue((int)indexes[0], null);
-                    return true;
+                    var key = indexes[0] as string;
+                    return GetPropertyValue(key, out result);
                 }
             }
 
@@ -253,145 +171,188 @@ namespace ChoETL
 
         public override bool TrySetIndex(SetIndexBinder binder, object[] indexes, object value)
         {
-            IsValid(value);
             if ((indexes.Length == 1) && indexes[0] != null)
             {
                 if (indexes[0] is string)
                 {
-                    SetPropertyValue((string)indexes[0], value);
-                    return true;
-                }
-                else if (indexes[0] is int)
-                {
-                    GetOrSetArrayValue((int)indexes[0], value);
-                    return true;
+                    var key = indexes[0] as string;
+                    return SetPropertyValue(key, value);
                 }
             }
-
-            return false;
+            return true;
         }
 
-        #endregion Commented
+        #endregion DynamicObject Overrides
 
-        #region INotifyPropertyChanged Members
+        #region Instance Members (Protected/Public)
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void OnPropertyChanged(string prop)
+        public virtual bool ContainsProperty(string key)
         {
-            PropertyChangedEventHandler propertyChanged = PropertyChanged;
-            if (propertyChanged != null) propertyChanged(this, new PropertyChangedEventArgs(prop));
+            Dictionary<string, object> kvpDict = _kvpDict;
+            return kvpDict != null && kvpDict.ContainsKey(key);
         }
+
+        protected virtual bool GetPropertyValue(string name, out object result)
+        {
+            result = null;
+
+            Dictionary<string, object> kvpDict = _kvpDict;
+            if (kvpDict != null && kvpDict.ContainsKey(name))
+                result = AfterKVPLoaded(name, kvpDict[name]);
+            else
+            {
+                if (ThrowExceptionIfPropNotExists)
+                    return false;
+            }
+            return true;
+        }
+
+        protected virtual bool SetPropertyValue(string name, object value)
+        {
+            if (IsReadOnly)
+                return false;
+
+            Dictionary<string, object> kvpDict = _kvpDict;
+            if (kvpDict != null)
+            {
+                if (!kvpDict.ContainsKey(name))
+                {
+                    if (ThrowExceptionIfPropNotExists)
+                        return false;
+                    if (IsFixed)
+                        return true;
+                    else
+                        kvpDict.Add(name, value);
+                }
+                else
+                    kvpDict[name] = value;
+            }
+
+            return true;
+        }
+
+        protected virtual object GetDefaultValue(string name)
+        {
+            return ChoType.GetRawDefaultValue(ChoType.GetMemberInfo(GetType(), name));
+        }
+
+        private void Initialize()
+        {
+            try
+            {
+                Dictionary<string, object> kvpDict = null;
+
+                if (_watchChange)
+                {
+                    if (_func != null)
+                        kvpDict = _func();
+                    else
+                        kvpDict = Seed();
+
+                    if (kvpDict == null)
+                        return;
+
+                    Dictionary<string, object> mkvpDict = _kvpDict;
+                    bool hasDiff = mkvpDict == null || kvpDict.Except(mkvpDict).Concat(mkvpDict.Except(kvpDict)).Any();
+                    if (!hasDiff)
+                        return;
+
+                    _kvpDict = kvpDict;
+                }
+                else
+                    kvpDict = _kvpDict;
+
+                ERPSPropertyAttribute attr = null;
+                object memberValue = null;
+                string propName = null;
+                //scan through members and load them
+                foreach (var prop in ChoType.GetMembers(GetType()).Where(m => !m.HasAttribute(typeof(ChoIgnoreMemberAttribute)) && !ChoType.IsReadOnlyMember(m)))
+                {
+                    attr = ChoType.GetMemberAttribute<ERPSPropertyAttribute>(prop);
+                    try
+                    {
+                        SetDefaultValue(prop, true);
+
+                        propName = attr != null && !attr.Name.IsNullOrWhiteSpace() ? attr.Name : prop.Name;
+
+                        if (kvpDict.ContainsKey(propName))
+                            memberValue = AfterKVPLoaded(prop.Name, kvpDict[propName]);
+                        else
+                            memberValue = AfterKVPLoaded(prop.Name, null);
+
+                        if (memberValue != null && memberValue is string)
+                        {
+                            string mv = memberValue as string;
+                            if (attr != null)
+                            {
+                                switch (attr.TrimOption)
+                                {
+                                    case ChoPropertyValueTrimOption.Trim:
+                                        mv = mv.Trim();
+                                        break;
+                                    case ChoPropertyValueTrimOption.TrimEnd:
+                                        mv = mv.TrimEnd();
+                                        break;
+                                    case ChoPropertyValueTrimOption.TrimStart:
+                                        mv = mv.TrimStart();
+                                        break;
+                                }
+                            }
+
+                            memberValue = mv;
+                        }
+
+                        ChoType.ConvertNSetMemberValue(this, prop, memberValue);
+                        ChoValidator.ValidateFor(this, prop);
+                    }
+                    catch (Exception ex)
+                    {
+                        ChoETLLog.Error("{0}: Error loading '{1}' property. {2}".FormatString(NName, prop.Name, ex.Message));
+                        SetDefaultValue(prop, false);
+                    }
+                }
+            }
+            catch (Exception outerEx)
+            {
+                ChoETLLog.Error("{0}: Error loading options. {1}".FormatString(NName, outerEx.Message));
+            }
+        }
+
+        private string NName
+        {
+            get { return BagName.IsNullOrWhiteSpace() ? GetType().Name : BagName; }
+        }
+
+        private void SetDefaultValue(MemberInfo mi, bool saveDefaultValue = false)
+        {
+            object defaultValue = GetDefaultValue(mi.Name); // ChoType.GetRawDefaultValue(mi);
+            try
+            {
+                ChoType.SetMemberValue(this, mi, defaultValue);
+                ChoETLLog.Error("{0}: Assigned default value '{1}' to '{2}' property.".FormatString(NName, defaultValue.ToNString(), mi.Name));
+            }
+            catch (Exception ex)
+            {
+                ChoETLLog.Error("{0}: Error assigning default value '{1}' to '{2}' property. {3}".FormatString(NName, defaultValue.ToNString(), mi.Name, ex.Message));
+            }
+        }
+
 
         #endregion
 
-        public IEnumerator GetEnumerator()
+        protected virtual object AfterKVPLoaded(string key, object value)
         {
-            return _array.GetEnumerator();
+            return value;
         }
-
-        public override string ToString()
-        {
-            StringBuilder msg = new StringBuilder(Name.IsNullOrWhiteSpace() ? "ExpandoObject Properties" : "{0} ExpandoObject Properties".FormatString(Name));
-            if (_properties != null)
-            {
-                foreach (string key in _properties.Keys)
-                {
-                    if (!(_properties[key] is ChoPropertyBag))
-                        msg.AppendFormat("{0}: {1}{2}".FormatString(key, ChoUtility.ToStringEx(_properties[key])));
-                }
-                foreach (string key in _properties.Keys)
-                {
-                    if (_properties[key] is ChoPropertyBag)
-                        msg.AppendFormat("{0}".FormatString(ChoUtility.ToStringEx(_properties[key])));
-                }
-            }
-            return msg.ToString();
-        }
-
-        public override int GetHashCode()
-        {
-            dynamic x = this;
-            return x.Value == null ? base.GetHashCode() : x.Value.GetHashCode;
-        }
-
-        public override bool Equals(object obj)
-        {
-            dynamic item = obj as ChoPropertyBag;
-
-            if (item == null)
-            {
-                return false;
-            }
-
-            dynamic x = this;
-            return x.Value.Equals(item.Value);
-        }
-
-        public override DynamicMetaObject GetMetaObject(Expression parameter)
-        {
-            return new MyMetaObject(parameter, this);
-        }
-
     }
 
-    public class MyMetaObject : DynamicMetaObject
+    public enum ChoPropertyValueTrimOption { None, TrimStart, TrimEnd, Trim }
+
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
+    public class ERPSPropertyAttribute : Attribute
     {
-        public MyMetaObject(Expression parameter, object value)
-            : base(parameter, BindingRestrictions.Empty, value)
-        {
-        }
-
-        public override DynamicMetaObject BindInvokeMember(InvokeMemberBinder binder, DynamicMetaObject[] args)
-        {
-            return this.PrintAndReturnIdentity("InvokeMember of method {0}", binder.Name);
-        }
-
-        public override DynamicMetaObject BindSetMember(SetMemberBinder binder, DynamicMetaObject value)
-        {
-            // Expression representing the CGValue instance whose member is being set
-            Expression instanceExprExpr = Expression.Convert(Expression, LimitType);
-
-            // Expression representing a call to CGValue.Set with the member name
-            // and a CGValue wrapping an Expression representing the value to assign
-            // to the member.  CGValue.Set will return an expression representing
-            // the assignment.
-            Expression assignExprExpr = Expression.Call(instanceExprExpr, "SetMember", null,
-                Expression.Constant(binder.Name), Expression.Convert(value.Expression, typeof(object)));
-
-            // Package up the result
-            return new DynamicMetaObject(assignExprExpr, BindingRestrictions.GetTypeRestriction(Expression, LimitType));
-        }
-
-        public override DynamicMetaObject BindGetMember(GetMemberBinder binder)
-        {
-            // DynamicMetaObject.Expression is a LINQ expression representing the
-            // dynamic object instance (the CGValue instance).  But its declared type
-            // is Object; we need to cast it to CGValue before we can call anything
-            // on it. 
-            Expression instanceExprExpr = Expression.Convert(Expression, LimitType);
-
-            // Build an expression representing a call to CGValue.Get 
-            Expression memberExprExpr = Expression.Call(instanceExprExpr, "GetMember", null,
-                Expression.Constant(binder.Name));
-
-            // Package it up in a new DynamicMetaObject
-            // NOTE: The binding restriction parameter pertains to the dynamic object whose
-            // member is being accessed, not the dynamic object resulting from the member
-            // access.  So as a general rule, just pass through the binding restrictions
-            // for this DynamicMetaObject instance, which matches the dynamic object whose
-            // member is being accessed.
-            return new DynamicMetaObject(memberExprExpr, BindingRestrictions.GetTypeRestriction(Expression, LimitType));
-        }
-
-        private DynamicMetaObject PrintAndReturnIdentity(string message, string name)
-        {
-            Console.WriteLine(String.Format(message, name));
-            return new DynamicMetaObject(
-                Expression,
-                BindingRestrictions.GetTypeRestriction(
-                    Expression,
-                    typeof(ChoPropertyBag)));
-        }
+        public string Name { get; set; }
+        public ChoPropertyValueTrimOption TrimOption { get; set; }
     }
+
 }
