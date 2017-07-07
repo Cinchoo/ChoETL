@@ -20,6 +20,12 @@ namespace ChoCSVReaderTest
     {
         static void Main(string[] args)
         {
+            foreach (dynamic rec in new ChoCSVReader("emp.csv").WithFirstLineHeader().Configure((c) => c.MayContainEOLInData = true))
+            {
+                Console.WriteLine(rec.Name);
+            }
+            return;
+
             var x = 1;
             //Console.WriteLine(@_2);
 

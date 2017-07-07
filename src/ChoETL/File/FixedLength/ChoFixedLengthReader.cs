@@ -216,6 +216,14 @@ namespace ChoETL
             return this;
         }
 
+        public ChoFixedLengthReader<T> Configure(Action<ChoFixedLengthRecordConfiguration> action)
+        {
+            if (action != null)
+                action(Configuration);
+
+            return this;
+        }
+
         #endregion Fluent API
     }
 

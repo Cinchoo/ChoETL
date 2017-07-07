@@ -255,6 +255,14 @@ namespace ChoETL
             return this;
         }
 
+        public ChoCSVReader<T> Configure(Action<ChoCSVRecordConfiguration> action)
+        {
+            if (action != null)
+                action(Configuration);
+
+            return this;
+        }
+
         #endregion Fluent API
     }
 

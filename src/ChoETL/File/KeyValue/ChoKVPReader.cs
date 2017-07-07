@@ -245,6 +245,14 @@ namespace ChoETL
             return this;
         }
 
+        public ChoKVPReader<T> Configure(Action<ChoKVPRecordConfiguration> action)
+        {
+            if (action != null)
+                action(Configuration);
+
+            return this;
+        }
+
         #endregion Fluent API
     }
 

@@ -204,6 +204,14 @@ namespace ChoETL
             return this;
         }
 
+        public ChoJSONWriter<T> Configure(Action<ChoJSONRecordConfiguration> action)
+        {
+            if (action != null)
+                action(Configuration);
+
+            return this;
+        }
+
         #endregion Fluent API
     }
 
