@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public class ChoFixedLengthWriter<T> : IDisposable
+    public class ChoFixedLengthWriter<T> : ChoWriter, IDisposable
         where T : class
     {
         private TextWriter _textWriter;
@@ -76,12 +76,14 @@ namespace ChoETL
 
         public void Write(IEnumerable<T> records)
         {
+            _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
             _writer.WriteTo(_textWriter, records).Loop();
         }
 
         public void Write(T record)
         {
+            _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
             _writer.WriteTo(_textWriter, new T[] { record } ).Loop();
         }

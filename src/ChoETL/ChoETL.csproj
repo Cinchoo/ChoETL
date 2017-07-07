@@ -96,6 +96,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChoEnums.cs" />
+    <Compile Include="ChoWriter.cs" />
     <Compile Include="ChoTextFileExternalSorter.cs" />
     <Compile Include="Common\Attributes\ChoDefaultValueAttribute.cs" />
     <Compile Include="Common\ChoDisposable.cs" />
@@ -139,7 +140,9 @@
     <Compile Include="File\ChoRowsWrittenEventArgs.cs" />
     <Compile Include="File\ChoRowsLoadedEventArgs.cs" />
     <Compile Include="File\CSV\ChoCSVFluentPlugIn.cs" />
-    <Compile Include="File\CSV\IChoReader.cs" />
+    <Compile Include="ChoReader.cs" />
+    <Compile Include="IChoWriter.cs" />
+    <Compile Include="IChoReader.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthFileHeaderConfiguration.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthRecordWriter.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthWriter.cs" />

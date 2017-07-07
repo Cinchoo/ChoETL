@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public class ChoManifoldWriter : IDisposable
+    public class ChoManifoldWriter : ChoWriter, IDisposable
     {
         private TextWriter _textWriter;
         private bool _closeStreamOnDispose = false;
@@ -74,6 +74,7 @@ namespace ChoETL
 
         public void Write(IEnumerable records)
         {
+            _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
             foreach (object rec in records)
                 _writer.WriteTo(_textWriter, new object[] { rec }).Loop();
@@ -81,6 +82,7 @@ namespace ChoETL
 
         public void Write(object record)
         {
+            _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
             _writer.WriteTo(_textWriter, new object[] { record }).Loop();
         }

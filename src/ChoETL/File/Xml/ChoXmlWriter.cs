@@ -12,7 +12,7 @@ using System.Xml;
 
 namespace ChoETL
 {
-    public class ChoXmlWriter<T> : IDisposable
+    public class ChoXmlWriter<T> : ChoWriter, IDisposable
         where T : class
     {
         private TextWriter _textWriter;
@@ -78,12 +78,14 @@ namespace ChoETL
 
         public void Write(IEnumerable<T> records)
         {
+            _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
             _writer.WriteTo(_textWriter, records).Loop();
         }
 
         public void Write(T record)
         {
+            _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
             _writer.WriteTo(_textWriter, new T[] { record } ).Loop();
         }

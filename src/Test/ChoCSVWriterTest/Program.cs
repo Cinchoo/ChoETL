@@ -415,6 +415,10 @@ namespace ChoCSVWriterTest
             using (var writer = new StreamWriter(stream))
             using (var parser = new ChoCSVWriter<EmployeeRec>(writer))
             {
+                parser.BeforeRecordFieldWrite += (o, e) =>
+                {
+                    Console.WriteLine(e.PropertyName);
+                };
                 parser.Write(objs);
 
                 writer.Flush();

@@ -19,6 +19,7 @@ namespace ChoETL
         private bool _configCheckDone = false;
         private long _index = 0;
         private Lazy<XmlSerializer> _se = null;
+        internal ChoWriter Writer = null;
 
         public ChoXmlRecordConfiguration Configuration
         {
@@ -486,63 +487,127 @@ namespace ChoETL
             return fieldValue.StartsWith("<![CDATA[") ? fieldValue : System.Net.WebUtility.HtmlEncode(fieldValue);
         }
 
-        private bool RaiseBeginWrite(object state)
+       private bool RaiseBeginWrite(object state)
         {
-            if (_callbackRecord == null) return true;
-            return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeginWrite(state), true);
+            if (_callbackRecord != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeginWrite(state), true);
+            }
+            else if (Writer != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseBeginWrite(state), true);
+            }
+            return true;
         }
 
         private void RaiseEndWrite(object state)
         {
-            if (_callbackRecord == null) return;
-            ChoActionEx.RunWithIgnoreError(() => _callbackRecord.EndWrite(state));
+            if (_callbackRecord != null)
+            {
+                ChoActionEx.RunWithIgnoreError(() => _callbackRecord.EndWrite(state));
+            }
+            else if (Writer != null)
+            {
+                ChoActionEx.RunWithIgnoreError(() => Writer.RaiseEndWrite(state));
+            }
         }
 
         private bool RaiseBeforeRecordWrite(object target, long index, ref string state)
         {
-            if (_callbackRecord == null) return true;
-            object inState = state;
-            bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeforeRecordWrite(target, index, ref inState), true);
-            if (retValue)
-                state = inState == null ? null : inState.ToString();
-
-            return retValue;
+            if (_callbackRecord != null)
+            {
+                object inState = state;
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeforeRecordWrite(target, index, ref inState), true);
+                if (retValue)
+                    state = inState == null ? null : inState.ToString();
+                return retValue;
+            }
+            else if (Writer != null)
+            {
+                object inState = state;
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseBeforeRecordWrite(target, index, ref inState), true);
+                if (retValue)
+                    state = inState == null ? null : inState.ToString();
+                return retValue;
+            }
+            return true;
         }
 
         private bool RaiseAfterRecordWrite(object target, long index, string state)
         {
-            if (_callbackRecord == null) return true;
-            return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordWrite(target, index, state), true);
+            if (_callbackRecord != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordWrite(target, index, state), true);
+            }
+            else if (Writer != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseAfterRecordWrite(target, index, state), true);
+            }
+            return true;
         }
 
         private bool RaiseRecordWriteError(object target, long index, string state, Exception ex)
         {
-            if (_callbackRecord == null) return true;
-            return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordWriteError(target, index, state, ex), false);
+            if (_callbackRecord != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordWriteError(target, index, state, ex), false);
+            }
+            else if (Writer != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseRecordWriteError(target, index, state, ex), false);
+            }
+            return true;
         }
 
         private bool RaiseBeforeRecordFieldWrite(object target, long index, string propName, ref object value)
         {
-            if (_callbackRecord == null) return true;
-            object state = value;
-            bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeforeRecordFieldWrite(target, index, propName, ref state), true);
+            if (_callbackRecord != null)
+            {
+                object state = value;
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeforeRecordFieldWrite(target, index, propName, ref state), true);
 
-            if (retValue)
-                value = state;
+                if (retValue)
+                    value = state;
 
-            return retValue;
+                return retValue;
+            }
+            else if (Writer != null)
+            {
+                object state = value;
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseBeforeRecordFieldWrite(target, index, propName, ref state), true);
+
+                if (retValue)
+                    value = state;
+
+                return retValue;
+            }
+            return true;
         }
 
         private bool RaiseAfterRecordFieldWrite(object target, long index, string propName, object value)
         {
-            if (_callbackRecord == null) return true;
-            return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordFieldWrite(target, index, propName, value), true);
+            if (_callbackRecord != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordFieldWrite(target, index, propName, value), true);
+            }
+            else if (Writer != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseAfterRecordFieldWrite(target, index, propName, value), true);
+            }
+            return true;
         }
 
         private bool RaiseRecordFieldWriteError(object target, long index, string propName, object value, Exception ex)
         {
-            if (_callbackRecord == null) return true;
-            return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordFieldWriteError(target, index, propName, value, ex), true);
+            if (_callbackRecord != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordFieldWriteError(target, index, propName, value, ex), true);
+            }
+            else if (Writer != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseRecordFieldWriteError(target, index, propName, value, ex), true);
+            }
+            return true;
         }
     }
 }
