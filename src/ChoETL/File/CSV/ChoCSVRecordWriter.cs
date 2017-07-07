@@ -72,6 +72,10 @@ namespace ChoETL
                             {
                                 string[] fieldNames = null;
 
+                                Configuration.IsDynamicObject = record.GetType().IsDynamicType();
+                                if (!Configuration.IsDynamicObject)
+                                    Configuration.RecordType = record.GetType();
+
                                 if (Configuration.IsDynamicObject)
                                 {
                                     var dict = record.ToDynamicObject() as IDictionary<string, Object>;

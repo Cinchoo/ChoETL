@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -12,19 +13,20 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    internal class ChoFixedLengthRecordWriter : ChoRecordWriter
+    internal class ChoJSONRecordWriter : ChoRecordWriter
     {
         private IChoNotifyRecordWrite _callbackRecord;
         private bool _configCheckDone = false;
         private long _index = 0;
+        bool isFirstRec = true;
 
-        public ChoFixedLengthRecordConfiguration Configuration
+        public ChoJSONRecordConfiguration Configuration
         {
             get;
             private set;
         }
 
-        public ChoFixedLengthRecordWriter(Type recordType, ChoFixedLengthRecordConfiguration configuration) : base(recordType)
+        public ChoJSONRecordWriter(Type recordType, ChoJSONRecordConfiguration configuration) : base(recordType)
         {
             ChoGuard.ArgumentNotNull(configuration, "Configuration");
             Configuration = configuration;
@@ -34,15 +36,22 @@ namespace ChoETL
             //Configuration.Validate();
         }
 
+        internal void EndWrite(object writer)
+        {
+            TextWriter sw = writer as TextWriter;
+
+            if (_configCheckDone)
+                sw.Write(String.Format("{0}]", Environment.NewLine));
+
+            RaiseEndWrite(sw);
+        }
+
         public override IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null)
         {
             TextWriter sw = writer as TextWriter;
             ChoGuard.ArgumentNotNull(sw, "TextWriter");
 
             if (records == null) yield break;
-
-            if (!RaiseBeginWrite(sw))
-                yield break;
 
             CultureInfo prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
@@ -54,6 +63,11 @@ namespace ChoETL
                 foreach (object record in records)
                 {
                     _index++;
+
+                    if (!isFirstRec)
+                    {
+                        sw.Write(",");
+                    }
 
                     if (TraceSwitch.TraceVerbose)
                     {
@@ -68,7 +82,7 @@ namespace ChoETL
                     {
                         if (predicate == null || predicate(record))
                         {
-                            //Discover and load FixedLength columns from first record
+                            //Discover and load Xml columns from first record
                             if (!_configCheckDone)
                             {
                                 string[] fieldNames = null;
@@ -84,7 +98,7 @@ namespace ChoETL
                                 }
                                 else
                                 {
-                                    fieldNames = ChoTypeDescriptor.GetProperties<ChoFixedLengthRecordFieldAttribute>(record.GetType()).Select(pd => pd.Name).ToArray();
+                                    fieldNames = ChoTypeDescriptor.GetProperties<ChoXmlNodeRecordFieldAttribute>(record.GetType()).Select(pd => pd.Name).ToArray();
                                     if (fieldNames.Length == 0)
                                     {
                                         fieldNames = ChoType.GetProperties(record.GetType()).Select(p => p.Name).ToArray();
@@ -93,9 +107,11 @@ namespace ChoETL
 
                                 Configuration.Validate(fieldNames);
 
-                                WriteHeaderLine(sw);
-
                                 _configCheckDone = true;
+
+                                if (!RaiseBeginWrite(sw))
+                                    yield break;
+                                sw.Write("[");
                             }
 
                             if (!RaiseBeforeRecordWrite(record, _index, ref recText))
@@ -103,25 +119,29 @@ namespace ChoETL
 
                             if (recText == null)
                                 continue;
-                            else if (recText.Length > 0)
-                            {
-                                sw.Write("{1}{0}", recText, Configuration.FileHeaderConfiguration.HasHeaderRecord ? Configuration.EOLDelimiter : "");
-                                continue;
-                            }
 
                             try
                             {
-                                if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
-                                    record.DoObjectLevelValidation(Configuration, Configuration.FixedLengthRecordFieldConfigurations);
-
-                                if (ToText(_index, record, out recText))
+                                if (!Configuration.UseJSONSerialization)
                                 {
-                                    if (_index == 1)
+                                    if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
+                                        record.DoObjectLevelValidation(Configuration, Configuration.JSONRecordFieldConfigurations);
+
+                                    if (ToText(_index, record, out recText))
                                     {
-                                        sw.Write("{1}{0}", recText, Configuration.FileHeaderConfiguration.HasHeaderRecord ? Configuration.EOLDelimiter : "");
-                                    }
-                                    else
                                         sw.Write("{1}{0}", recText, Configuration.EOLDelimiter);
+
+                                        if (!RaiseAfterRecordWrite(record, _index, recText))
+                                            yield break;
+                                    }
+                                }
+                                else
+                                {
+                                    if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.Off) != ChoObjectValidationMode.Off)
+                                        record.DoObjectLevelValidation(Configuration, Configuration.JSONRecordFieldConfigurations);
+
+                                    recText = JsonConvert.SerializeObject(record);
+                                    sw.Write("{1}{0}", recText, Configuration.EOLDelimiter);
 
                                     if (!RaiseAfterRecordWrite(record, _index, recText))
                                         yield break;
@@ -159,14 +179,14 @@ namespace ChoETL
                             yield break;
                         }
                     }
+
+                    isFirstRec = false;
                 }
             }
             finally
             {
                 System.Threading.Thread.CurrentThread.CurrentCulture = prevCultureInfo;
             }
-
-            RaiseEndWrite(sw);
         }
 
         private bool ToText(long index, object rec, out string recText)
@@ -175,14 +195,16 @@ namespace ChoETL
             StringBuilder msg = new StringBuilder();
             object fieldValue = null;
             string fieldText = null;
-            ChoFixedLengthRecordFieldConfiguration fieldConfig = null;
+            ChoJSONRecordFieldConfiguration fieldConfig = null;
 
             if (Configuration.ColumnCountStrict)
                 CheckColumnsStrict(rec);
 
             //bool firstColumn = true;
             PropertyInfo pi = null;
-            foreach (KeyValuePair<string, ChoFixedLengthRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
+            bool isFirst = true;
+            msg.AppendFormat("\t{{{0}", Environment.NewLine);
+            foreach (KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
                 fieldConfig = kvp.Value;
                 fieldValue = null;
@@ -196,12 +218,12 @@ namespace ChoETL
                     {
                         var dict = rec.ToDynamicObject() as IDictionary<string, Object>;
                         if (!dict.ContainsKey(kvp.Key))
-                            throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' FixedLength column.".FormatString(fieldConfig.FieldName));
+                            throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' JSON node.".FormatString(fieldConfig.FieldName));
                     }
                     else
                     {
                         if (pi == null)
-                            throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' FixedLength column.".FormatString(fieldConfig.FieldName));
+                            throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' JSON node.".FormatString(fieldConfig.FieldName));
                     }
                 }
 
@@ -241,7 +263,7 @@ namespace ChoETL
                     if (!RaiseBeforeRecordFieldWrite(rec, index, kvp.Key, ref fieldValue))
                         return false;
 
-                    rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue);
+                    rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, true);
 
                     if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.MemberLevel)
                         rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
@@ -258,7 +280,7 @@ namespace ChoETL
                     if (Configuration.ThrowAndStopOnMissingField)
                         throw;
                 }
-                catch (Exception ex)    
+                catch (Exception ex)
                 {
                     ChoETLFramework.HandleException(ex);
 
@@ -311,66 +333,36 @@ namespace ChoETL
                     }
                 }
 
+                bool isSimple = fieldValue.GetType().IsSimple();
+
                 if (fieldValue == null)
                     fieldText = String.Empty;
                 else
                     fieldText = fieldValue.ToString();
 
-                msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false));
+                if (isFirst)
+                {
+                    msg.AppendFormat("\t\t\"{0}\" : {1}", fieldConfig.FieldName, isSimple ? "\"{0}\"".FormatString(fieldText) : JsonConvert.SerializeObject(fieldValue));
+                }
+                else
+                {
+                    msg.AppendFormat(",{2}\t\t\"{0}\" : {1}", fieldConfig.FieldName, isSimple ? "\"{0}\"".FormatString(fieldText) : JsonConvert.SerializeObject(fieldValue), Environment.NewLine);
+                }
+                isFirst = false;
             }
-
+            msg.AppendFormat("{0}\t}}", Environment.NewLine);
             recText = msg.ToString();
             return true;
         }
 
         private ChoFieldValueJustification GetFieldValueJustification(ChoFieldValueJustification? fieldValueJustification, Type fieldType)
         {
-            if (fieldValueJustification != null)
-                return fieldValueJustification.Value;
-
-            if (fieldType == typeof(int)
-              || fieldType == typeof(uint)
-              || fieldType == typeof(long)
-              || fieldType == typeof(ulong)
-              || fieldType == typeof(short)
-              || fieldType == typeof(ushort)
-              || fieldType == typeof(byte)
-              || fieldType == typeof(sbyte)
-              || fieldType == typeof(float)
-              || fieldType == typeof(double)
-              || fieldType == typeof(decimal)
-              || fieldType == typeof(Single)
-              )
-            {
-                return ChoFieldValueJustification.Right;
-            }
-            else
-                return ChoFieldValueJustification.Left;
+            return fieldValueJustification == null ? ChoFieldValueJustification.Left : fieldValueJustification.Value;
         }
 
         private char GetFillChar(char? fillChar, Type fieldType)
         {
-            if (fillChar != null)
-                return fillChar.Value;
-
-            if (fieldType == typeof(int)
-                || fieldType == typeof(uint)
-                || fieldType == typeof(long)
-                || fieldType == typeof(ulong)
-                || fieldType == typeof(short)
-                || fieldType == typeof(ushort)
-                || fieldType == typeof(byte)
-                || fieldType == typeof(sbyte)
-                || fieldType == typeof(float)
-                || fieldType == typeof(double)
-                || fieldType == typeof(decimal)
-                || fieldType == typeof(Single)
-                )
-            {
-                return '0';
-            }
-            else
-                return ' ';
+            return fillChar == null ? ' ' : fillChar.Value;
         }
 
         private void CheckColumnsStrict(object rec)
@@ -379,54 +371,24 @@ namespace ChoETL
             {
                 var eoDict = rec.ToDynamicObject() as IDictionary<string, Object>;
 
-                if (eoDict.Count != Configuration.FixedLengthRecordFieldConfigurations.Count)
-                    throw new ChoParserException("Incorrect number of fields found in record object. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.FixedLengthRecordFieldConfigurations.Count, eoDict.Count));
+                if (eoDict.Count != Configuration.JSONRecordFieldConfigurations.Count)
+                    throw new ChoParserException("Incorrect number of fields found in record object. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.JSONRecordFieldConfigurations.Count, eoDict.Count));
 
-                string[] missingColumns = Configuration.FixedLengthRecordFieldConfigurations.Select(v => v.Name).Except(eoDict.Keys, Configuration.FileHeaderConfiguration.StringComparer).ToArray();
+                string[] missingColumns = Configuration.JSONRecordFieldConfigurations.Select(v => v.Name).Except(eoDict.Keys).ToArray();
                 if (missingColumns.Length > 0)
                     throw new ChoParserException("[{0}] fields are not found in record object.".FormatString(String.Join(",", missingColumns)));
             }
             else
             {
-                PropertyDescriptor[] pds = ChoTypeDescriptor.GetProperties<ChoFixedLengthRecordFieldAttribute>(rec.GetType()).ToArray();
+                PropertyDescriptor[] pds = ChoTypeDescriptor.GetProperties<ChoXmlNodeRecordFieldAttribute>(rec.GetType()).ToArray();
 
-                if (pds.Length != Configuration.FixedLengthRecordFieldConfigurations.Count)
-                    throw new ChoParserException("Incorrect number of fields found in record object. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.FixedLengthRecordFieldConfigurations.Count, pds.Length));
+                if (pds.Length != Configuration.JSONRecordFieldConfigurations.Count)
+                    throw new ChoParserException("Incorrect number of fields found in record object. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.JSONRecordFieldConfigurations.Count, pds.Length));
 
-                string[] missingColumns = Configuration.FixedLengthRecordFieldConfigurations.Select(v => v.Name).Except(pds.Select(pd => pd.Name), Configuration.FileHeaderConfiguration.StringComparer).ToArray();
+                string[] missingColumns = Configuration.JSONRecordFieldConfigurations.Select(v => v.Name).Except(pds.Select(pd => pd.Name)).ToArray();
                 if (missingColumns.Length > 0)
                     throw new ChoParserException("[{0}] fields are not found in record object.".FormatString(String.Join(",", missingColumns)));
             }
-        }
-
-        private void WriteHeaderLine(TextWriter sw)
-        {
-            if (Configuration.FileHeaderConfiguration.HasHeaderRecord)
-            {
-                string header = ToHeaderText();
-                if (header.IsNullOrWhiteSpace())
-                    return;
-
-                sw.Write(header);
-            }
-        }
-
-        private string ToHeaderText()
-        {
-            StringBuilder msg = new StringBuilder();
-            string value;
-            foreach (var member in Configuration.FixedLengthRecordFieldConfigurations)
-            {
-                value = NormalizeFieldValue(member.Name, member.FieldName, member.Size,
-                    Configuration.FileHeaderConfiguration.Truncate == null ? true : Configuration.FileHeaderConfiguration.Truncate.Value,
-                        false,
-                        Configuration.FileHeaderConfiguration.Justification == null ? ChoFieldValueJustification.Left : Configuration.FileHeaderConfiguration.Justification.Value,
-                        Configuration.FileHeaderConfiguration.FillChar == null ? ' ' : Configuration.FileHeaderConfiguration.FillChar.Value,
-                        true);
-
-                msg.Append(value);
-            }
-            return msg.ToString();
         }
 
         private string NormalizeFieldValue(string fieldName, string fieldValue, int? size, bool truncate, bool? quoteField,
@@ -496,7 +458,7 @@ namespace ChoETL
                 }
             }
 
-            return fieldValue;
+            return fieldValue.StartsWith("<![CDATA[") ? fieldValue : System.Net.WebUtility.HtmlEncode(fieldValue);
         }
 
         private bool RaiseBeginWrite(object state)

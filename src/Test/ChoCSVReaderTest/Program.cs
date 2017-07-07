@@ -29,7 +29,7 @@ namespace ChoCSVReaderTest
             //var i = Microsoft.CSharp.CSharpCodeProvider.CreateProvider("C#").CreateValidIdentifier("@Main 12");
             //Console.WriteLine(i.ToValidVariableName());
             //return;
-            CultureSpecificDateTimeTest();
+            QuotedCSVTest();
         }
         class Transaction
         {
@@ -43,7 +43,7 @@ namespace ChoCSVReaderTest
         public static void CultureSpecificDateTimeTest()
         {
             string csvData =
-    @"Id,Date,Date,Amount,Subcategory,Memo
+    @"Id,Date,Account,Amount,Subcategory,Memo
  1,09/05/2017,XXX XXXXXX,-29.00,FT , [Sample string]
  2,09/05/2017,XXX XXXXXX,-20.00,FT ,[Sample string]
  3,25/05/2017,XXX XXXXXX,-6.30,PAYMENT,[Sample string]";
@@ -55,7 +55,7 @@ namespace ChoCSVReaderTest
             {
                 var csv = new ChoCSVReader<Transaction>(sr).WithFirstLineHeader();
                 csv.TraceSwitch = ChoETLFramework.TraceSwitchOff;
-                csv.Configuration.Culture = CultureInfo.GetCultureInfo("en-GB");
+                //csv.Configuration.Culture = CultureInfo.GetCultureInfo("en-GB");
                 foreach (var t in csv)
                     Console.WriteLine(string.Format("{0:dd-MMM-yyyy}  {1}  {2,6}  {3,-7}  {4}",
                         t.Date, t.Account, t.Amount, t.Subcategory, t.Memo));
@@ -88,11 +88,11 @@ namespace ChoCSVReaderTest
             //    }
             //}
 
-foreach (dynamic rec in new ChoCSVReader("EmpQuote.csv").WithFirstLineHeader())
-{
-    Console.WriteLine(rec.COMPANY_NAME_);
-    Console.WriteLine(rec.COMPANY_TYPE);
-}
+            foreach (dynamic rec in new ChoCSVReader("EmpQuote.csv").WithFirstLineHeader())
+            {
+                Console.WriteLine(rec.COMPANY_NAME);
+                Console.WriteLine(rec.COMPANY_TYPE);
+            }
         }
 
         static void CSVToXml()

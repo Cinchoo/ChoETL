@@ -18,9 +18,9 @@ namespace ChoETL
 
         public static IEnumerable<XElement> GetXmlElements(this XmlReader xmlReader, string xPath)
         {
-            if (xPath.IsNullOrWhiteSpace()) yield break;
+            //if (xPath.IsNullOrWhiteSpace()) yield break;
 
-            if (xPath == "//*" || xPath == "./*")
+            if (xPath.IsNullOrWhiteSpace() || xPath == "//*" || xPath == "./*")
             {
                 bool isEmpty;
                 // Empty element?

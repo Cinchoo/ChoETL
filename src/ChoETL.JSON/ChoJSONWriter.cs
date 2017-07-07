@@ -12,23 +12,23 @@ using System.Xml;
 
 namespace ChoETL
 {
-    public class ChoXmlWriter<T> : IDisposable
+    public class ChoJSONWriter<T> : IDisposable
         where T : class
     {
         private TextWriter _textWriter;
         private bool _closeStreamOnDispose = false;
-        private ChoXmlRecordWriter _writer = null;
+        private ChoJSONRecordWriter _writer = null;
         private bool _clearFields = false;
         public event EventHandler<ChoRowsWrittenEventArgs> RowsWritten;
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
 
-        public ChoXmlRecordConfiguration Configuration
+        public ChoJSONRecordConfiguration Configuration
         {
             get;
             private set;
         }
 
-        public ChoXmlWriter(string filePath, ChoXmlRecordConfiguration configuration = null)
+        public ChoJSONWriter(string filePath, ChoJSONRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
 
@@ -40,7 +40,7 @@ namespace ChoETL
             _closeStreamOnDispose = true;
         }
 
-        public ChoXmlWriter(TextWriter textWriter, ChoXmlRecordConfiguration configuration = null)
+        public ChoJSONWriter(TextWriter textWriter, ChoJSONRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNull(textWriter, "TextWriter");
 
@@ -50,7 +50,7 @@ namespace ChoETL
             _textWriter = textWriter;
         }
 
-        public ChoXmlWriter(Stream inStream, ChoXmlRecordConfiguration configuration = null)
+        public ChoJSONWriter(Stream inStream, ChoJSONRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNull(inStream, "Stream");
 
@@ -63,6 +63,7 @@ namespace ChoETL
         public void Dispose()
         {
             _writer.EndWrite(_textWriter);
+
             if (_closeStreamOnDispose)
                 _textWriter.Dispose();
         }
@@ -70,9 +71,9 @@ namespace ChoETL
         private void Init()
         {
             if (Configuration == null)
-                Configuration = new ChoXmlRecordConfiguration(typeof(T));
+                Configuration = new ChoJSONRecordConfiguration(typeof(T));
 
-            _writer = new ChoXmlRecordWriter(typeof(T), Configuration);
+            _writer = new ChoJSONRecordWriter(typeof(T), Configuration);
             _writer.RowsWritten += NotifyRowsWritten;
         }
 
@@ -88,22 +89,22 @@ namespace ChoETL
             _writer.WriteTo(_textWriter, new T[] { record } ).Loop();
         }
 
-        public static string ToText<TRec>(TRec record, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string xpath = null)
+        public static string ToText<TRec>(TRec record, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string xpath = null)
             where TRec : class
         {
             return ToText(ChoEnumerable.AsEnumerable(record), configuration, traceSwitch);
         }
 
 
-        public static string ToText<TRec>(IEnumerable<TRec> records, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string xpath = null)
+        public static string ToText<TRec>(IEnumerable<TRec> records, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string jsonPath = null)
             where TRec : class
         {
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoXmlWriter<TRec>(writer) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch })
+            using (var parser = new ChoJSONWriter<TRec>(writer) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch })
             {
-                parser.Configuration.XPath = xpath;
+                parser.Configuration.JSONPath = jsonPath;
 
                 parser.Write(records);
 
@@ -114,15 +115,15 @@ namespace ChoETL
             }
         }
 
-        //public static string ToText<TRec>(TRec record, ChoXmlRecordConfiguration configuration = null)
+        //public static string ToText<TRec>(TRec record, ChoJSONRecordConfiguration configuration = null)
         //    where TRec : class
         //{
         //    return ToText(ChoEnumerable.AsEnumerable(record), configuration);
         //}
 
-        internal static string ToText(object rec, ChoXmlRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null)
+        internal static string ToText(object rec, ChoJSONRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null)
         {
-            ChoXmlRecordWriter writer = new ChoXmlRecordWriter(rec.GetType(), configuration);
+            ChoJSONRecordWriter writer = new ChoJSONRecordWriter(rec.GetType(), configuration);
             writer.TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitchOff : traceSwitch;
 
             using (var stream = new MemoryStream())
@@ -148,34 +149,13 @@ namespace ChoETL
 
         #region Fluent API
 
-        public ChoXmlWriter<T> NotifyAfter(long rowsLoaded)
+        public ChoJSONWriter<T> NotifyAfter(long rowsLoaded)
         {
             Configuration.NotifyAfter = rowsLoaded;
             return this;
         }
 
-        public ChoXmlWriter<T> WithXmlNamespaceManager(XmlNamespaceManager nsMgr)
-        {
-            ChoGuard.ArgumentNotNull(nsMgr, "XmlNamespaceManager");
-
-            Configuration.NamespaceManager = nsMgr;
-            return this;
-        }
-
-        public ChoXmlWriter<T> WithXmlNamespace(string prefix, string uri)
-        {
-            Configuration.NamespaceManager.AddNamespace(prefix, uri);
-
-            return this;
-        }
-
-        public ChoXmlWriter<T> WithXPath(string xPath)
-        {
-            Configuration.XPath = xPath;
-            return this;
-        }
-
-        public ChoXmlWriter<T> WithFields(params string[] fieldsNames)
+        public ChoJSONWriter<T> WithFields(params string[] fieldsNames)
         {
             string fnTrim = null;
             if (!fieldsNames.IsNullOrEmpty())
@@ -186,53 +166,37 @@ namespace ChoETL
                         continue;
                     if (!_clearFields)
                     {
-                        Configuration.XmlRecordFieldConfigurations.Clear();
+                        Configuration.JSONRecordFieldConfigurations.Clear();
                         _clearFields = true;
                     }
                     fnTrim = fn.NTrim();
-                    Configuration.XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(fnTrim, $"//{fnTrim}"));
                 }
-
             }
 
             return this;
         }
 
-        public ChoXmlWriter<T> WithXmlElementField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null)
-        {
-            string fnTrim = name.NTrim();
-            string xPath = $"//{fnTrim}";
-            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, false, fieldName);
-        }
 
-        public ChoXmlWriter<T> WithXmlAttributeField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null)
-        {
-            string fnTrim = name.NTrim();
-            string xPath = $"//@{fnTrim}";
-            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, true, fieldName);
-        }
-
-        public ChoXmlWriter<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isXmlAttribute = false, string fieldName = null)
+        public ChoJSONWriter<T> WithField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null)
         {
             if (!name.IsNullOrEmpty())
             {
                 if (!_clearFields)
                 {
-                    Configuration.XmlRecordFieldConfigurations.Clear();
+                    Configuration.JSONRecordFieldConfigurations.Clear();
                     _clearFields = true;
                 }
 
                 string fnTrim = name.NTrim();
                 fieldType = fieldType == null ? typeof(string) : fieldType;
-                xPath = xPath.IsNullOrWhiteSpace() ? $"//{fnTrim}" : xPath;
 
-                Configuration.XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(fnTrim, xPath) { FieldType = fieldType, FieldValueTrimOption = fieldValueTrimOption, IsXmlAttribute = isXmlAttribute, FieldName = fieldName });
+                Configuration.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration(fnTrim, (string)null) { FieldType = fieldType, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName });
             }
 
             return this;
         }
 
-        public ChoXmlWriter<T> ColumnCountStrict()
+        public ChoJSONWriter<T> ColumnCountStrict()
         {
             Configuration.ColumnCountStrict = true;
             return this;
@@ -241,19 +205,19 @@ namespace ChoETL
         #endregion Fluent API
     }
 
-    public class ChoXmlWriter : ChoXmlWriter<dynamic>
+    public class ChoJSONWriter : ChoJSONWriter<dynamic>
     {
-        public ChoXmlWriter(string filePath, ChoXmlRecordConfiguration configuration = null)
+        public ChoJSONWriter(string filePath, ChoJSONRecordConfiguration configuration = null)
             : base(filePath, configuration)
         {
 
         }
-        public ChoXmlWriter(TextWriter textWriter, ChoXmlRecordConfiguration configuration = null)
+        public ChoJSONWriter(TextWriter textWriter, ChoJSONRecordConfiguration configuration = null)
             : base(textWriter, configuration)
         {
         }
 
-        public ChoXmlWriter(Stream inStream, ChoXmlRecordConfiguration configuration = null)
+        public ChoJSONWriter(Stream inStream, ChoJSONRecordConfiguration configuration = null)
             : base(inStream, configuration)
         {
         }
@@ -267,7 +231,7 @@ namespace ChoETL
             var expandoDic = (IDictionary<string, object>)expando;
 
             //int ordinal = 0;
-            if (Configuration.XmlRecordFieldConfigurations.IsNullOrEmpty())
+            if (Configuration.JSONRecordFieldConfigurations.IsNullOrEmpty())
             {
                 string colName = null;
                 Type colType = null;
@@ -279,8 +243,8 @@ namespace ChoETL
                     colType = row["DataType"] as Type;
                     //if (!colType.IsSimple()) continue;
 
-                    var obj = new ChoXmlRecordFieldConfiguration(colName, xPath: null);
-                    Configuration.XmlRecordFieldConfigurations.Add(obj);
+                    var obj = new ChoJSONRecordFieldConfiguration(colName, jsonPath: null);
+                    Configuration.JSONRecordFieldConfigurations.Add(obj);
                     startIndex += fieldLength;
                 }
             }
@@ -289,7 +253,7 @@ namespace ChoETL
             {
                 expandoDic.Clear();
 
-                foreach (var fc in Configuration.XmlRecordFieldConfigurations)
+                foreach (var fc in Configuration.JSONRecordFieldConfigurations)
                 {
                     expandoDic.Add(fc.Name, dr[fc.Name]);
                 }
@@ -306,7 +270,7 @@ namespace ChoETL
             var expando = new ExpandoObject();
             var expandoDic = (IDictionary<string, object>)expando;
 
-            if (Configuration.XmlRecordFieldConfigurations.IsNullOrEmpty())
+            if (Configuration.JSONRecordFieldConfigurations.IsNullOrEmpty())
             {
                 string colName = null;
                 Type colType = null;
@@ -318,8 +282,8 @@ namespace ChoETL
                     colType = col.DataType;
                     //if (!colType.IsSimple()) continue;
 
-                    var obj = new ChoXmlRecordFieldConfiguration(colName, xPath: null);
-                    Configuration.XmlRecordFieldConfigurations.Add(obj);
+                    var obj = new ChoJSONRecordFieldConfiguration(colName, jsonPath: null);
+                    Configuration.JSONRecordFieldConfigurations.Add(obj);
                     startIndex += fieldLength;
                 }
             }
@@ -328,7 +292,7 @@ namespace ChoETL
             {
                 expandoDic.Clear();
 
-                foreach (var fc in Configuration.XmlRecordFieldConfigurations)
+                foreach (var fc in Configuration.JSONRecordFieldConfigurations)
                 {
                     expandoDic.Add(fc.Name, row[fc.Name]);
                 }

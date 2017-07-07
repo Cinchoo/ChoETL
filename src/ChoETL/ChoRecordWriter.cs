@@ -10,7 +10,7 @@ namespace ChoETL
     public abstract class ChoRecordWriter
     {
         public readonly Type RecordType;
-        internal TraceSwitch TraceSwitch;
+        public TraceSwitch TraceSwitch;
         public event EventHandler<ChoRowsWrittenEventArgs> RowsWritten;
 
         static ChoRecordWriter()

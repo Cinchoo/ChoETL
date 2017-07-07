@@ -86,7 +86,7 @@ namespace ChoETL
 
             if (XPath.IsNullOrEmpty())
             {
-                XPath = "//*";
+                //XPath = "//*";
             }
             NamespaceManager = new XmlNamespaceManager(new NameTable());
         }
@@ -153,15 +153,15 @@ namespace ChoETL
         {
             base.Validate(state);
 
-            if (XPath.IsNull())
-                throw new ChoRecordConfigurationException("XPath can't be null or whitespace.");
+            //if (XPath.IsNull())
+            //    throw new ChoRecordConfigurationException("XPath can't be null or whitespace.");
 
             if (XPath.IsNullOrWhiteSpace())
             {
-                if (RecordType != null)
+                if (!IsDynamicObject)
                 {
                     NodeName = RecordType.Name;
-                    RootName = RecordType.Namespace;
+                    RootName = NodeName.ToPlural();
                 }
             }
             else

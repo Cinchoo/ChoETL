@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace ChoETL
 {
@@ -17,6 +18,7 @@ namespace ChoETL
         private IChoNotifyRecordWrite _callbackRecord;
         private bool _configCheckDone = false;
         private long _index = 0;
+        private Lazy<XmlSerializer> _se = null;
 
         public ChoXmlRecordConfiguration Configuration
         {
@@ -34,6 +36,15 @@ namespace ChoETL
             //Configuration.Validate();
         }
 
+        internal void EndWrite(object writer)
+        {
+            TextWriter sw = writer as TextWriter;
+
+            if (_configCheckDone)
+                sw.Write("{1}</{0}>".FormatString(Configuration.RootName, Configuration.EOLDelimiter));
+            RaiseEndWrite(sw);
+        }
+
         public override IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null)
         {
             TextWriter sw = writer as TextWriter;
@@ -41,11 +52,9 @@ namespace ChoETL
 
             if (records == null) yield break;
 
-            if (!RaiseBeginWrite(sw))
-                yield break;
-
             CultureInfo prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
+            _se = new Lazy<XmlSerializer>(() => Configuration.XmlSerializer == null ? new XmlSerializer(RecordType) : Configuration.XmlSerializer);
 
             string recText = String.Empty;
 
@@ -73,6 +82,10 @@ namespace ChoETL
                             {
                                 string[] fieldNames = null;
 
+                                Configuration.IsDynamicObject = record.GetType().IsDynamicType();
+                                if (!Configuration.IsDynamicObject)
+                                    Configuration.RecordType = record.GetType();
+
                                 if (Configuration.IsDynamicObject)
                                 {
                                     var dict = record.ToDynamicObject() as IDictionary<string, Object>;
@@ -90,6 +103,10 @@ namespace ChoETL
                                 Configuration.Validate(fieldNames);
 
                                 _configCheckDone = true;
+
+                                if (!RaiseBeginWrite(sw))
+                                    yield break;
+
                                 sw.Write("<{0}{1}>".FormatString(Configuration.RootName, GetNamespaceText()));
                             }
 
@@ -101,14 +118,27 @@ namespace ChoETL
 
                             try
                             {
-                                if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
-                                    record.DoObjectLevelValidation(Configuration, Configuration.XmlRecordFieldConfigurations);
-
-                                if (ToText(_index, record, out recText))
+                                if (!Configuration.UseXmlSerialization)
                                 {
-                                    sw.Write("{1}{0}", recText, Configuration.EOLDelimiter);
+                                    if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
+                                        record.DoObjectLevelValidation(Configuration, Configuration.XmlRecordFieldConfigurations);
 
-                                    if (!RaiseAfterRecordWrite(record, _index, recText))
+                                    if (ToText(_index, record, out recText))
+                                    {
+                                        sw.Write("{1}{0}", recText, Configuration.EOLDelimiter);
+
+                                        if (!RaiseAfterRecordWrite(record, _index, recText))
+                                            yield break;
+                                    }
+                                }
+                                else
+                                {
+                                    if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.Off) != ChoObjectValidationMode.Off)
+                                        record.DoObjectLevelValidation(Configuration, Configuration.XmlRecordFieldConfigurations);
+
+                                    _se.Value.Serialize(sw, record);
+
+                                    if (!RaiseAfterRecordWrite(record, _index, null))
                                         yield break;
                                 }
                             }
@@ -145,15 +175,11 @@ namespace ChoETL
                         }
                     }
                 }
-                if (_configCheckDone)
-                    sw.Write("{1}</{0}>".FormatString(Configuration.RootName, Configuration.EOLDelimiter));
             }
             finally
             {
                 System.Threading.Thread.CurrentThread.CurrentCulture = prevCultureInfo;
             }
-
-            RaiseEndWrite(sw);
         }
 
         private string GetNamespaceText()

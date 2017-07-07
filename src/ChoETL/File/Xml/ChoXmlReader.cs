@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using System.Xml.Linq;
 
 namespace ChoETL
 {
@@ -18,7 +19,7 @@ namespace ChoETL
     {
         private TextReader _textReader;
         private XmlReader _xmlReader;
-        private IEnumerable<XmlElement> _xElements;
+        private IEnumerable<XElement> _xElements;
         private bool _closeStreamOnDispose = false;
         private Lazy<IEnumerator<T>> _enumerator = null;
         private CultureInfo _prevCultureInfo = null;
@@ -76,7 +77,7 @@ namespace ChoETL
             _closeStreamOnDispose = true;
         }
 
-        public ChoXmlReader(IEnumerable<XmlElement> xElements, ChoXmlRecordConfiguration configuration = null)
+        public ChoXmlReader(IEnumerable<XElement> xElements, ChoXmlRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNull(xElements, "XmlElements");
 
@@ -118,7 +119,7 @@ namespace ChoETL
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
         }
 
-        public static ChoXmlReader<T> LoadXElements(IEnumerable<XmlElement> xElements, ChoXmlRecordConfiguration configuration = null)
+        public static ChoXmlReader<T> LoadXElements(IEnumerable<XElement> xElements, ChoXmlRecordConfiguration configuration = null)
         {
             var r = new ChoXmlReader<T>(xElements, configuration);
             r._closeStreamOnDispose = true;

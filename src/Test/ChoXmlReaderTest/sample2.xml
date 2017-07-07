@@ -1,0 +1,18 @@
+﻿<messages>
+    <message messageID="12345" orderNumber="1111111" model="AA" tls="22222" status="99" timestamp="2014-04-25 08:27:17Z">
+        <attributes>
+            <attribute name="aaaaaaaaaa" value="ff" />
+            <attribute name="bbbbbbbb" value="L.f" />
+            <attribute name="ccccccccc" value="333" />
+            <attribute name="ddddddddd" value="n.998" />
+        </attributes>
+    </message>
+    <message messageID="12345" orderNumber="1111111" model="AA" tls="22222" status="99" timestamp="2014-04-25 08:27:17Z">
+        <attributes>
+            <attribute name="yyyyyyy" value="j8" />
+            <attribute name="jjjjjjjjjj" value="L.O" />
+            <attribute name="mmmmmmm" value="33333" />
+            <attribute name="nnnnnnnn" value="K.9999" />
+        </attributes>
+    </message>
+</messages>

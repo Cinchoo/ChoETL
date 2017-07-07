@@ -8,12 +8,18 @@ namespace ChoETL
 {
     public static class ChoEnumerable
     {
-        public static IEnumerable<T> AsEnumerable<T>(Func<T> select)
+        public static IEnumerable<T> AsEnumerable<T>(Func<T> select, int count = 1)
         {
             if (select == null)
                 yield break;
 
-            yield return select();
+            if (count <= 0)
+                yield break;
+            else
+            {
+                for (int i = 0; i < count; i++)
+                    yield return select();
+            }
         }
 
         public static IEnumerable<T> AsEnumerable<T>(T @this)

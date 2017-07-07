@@ -60,6 +60,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="sample3.xml" />
+    <Content Include="sample2.xml" />
+    <Content Include="sample1.xml" />
     <Content Include="sample.xml" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

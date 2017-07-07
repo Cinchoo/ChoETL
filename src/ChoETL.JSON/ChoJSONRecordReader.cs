@@ -246,7 +246,6 @@ namespace ChoETL
             return result;
         }
 
-        JObject[] fJObjects = null;
         object fieldValue = null;
         ChoJSONRecordFieldConfiguration fieldConfig = null;
         PropertyInfo pi = null;
@@ -261,7 +260,6 @@ namespace ChoETL
             lineNo = pair.Item1;
             node = pair.Item2;
 
-            fJObjects = null;
             fieldValue = null;
             fieldConfig = null;
             pi = null;
