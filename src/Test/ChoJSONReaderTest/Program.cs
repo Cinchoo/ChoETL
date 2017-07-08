@@ -66,8 +66,29 @@ namespace ChoJSONReaderTest
 
         static void Main(string[] args)
         {
-            JsonToXml();
+            Sample1();
         }
+        static void Sample1()
+        {
+            var obj = JObject.Parse(File.ReadAllText("sample1.json"));
+
+            // Collect column titles: all property names whose values are of type JValue, distinct, in order of encountering them.
+            var values = obj.DescendantsAndSelf()
+                .OfType<JProperty>()
+                .Where(p => p.Value is JValue)
+                .GroupBy(p => p.Name)
+                .ToList();
+
+            var columns = values.Select(g => g.Key).ToArray();
+
+            // Filter JObjects that have child objects that have values.
+            var parentsWithChildren = values.SelectMany(g => g).SelectMany(v => v.AncestorsAndSelf().OfType<JObject>().Skip(1)).ToHashSet();
+            using (var csv = new ChoCSVWriter("sample1.csv") { TraceSwitch = ChoETLFramework.TraceSwitchOff }.WithFirstLineHeader())
+            {
+                csv.Write(ChoJSONReader.LoadJTokens(parentsWithChildren));
+            }
+        }
+
         static void JsonToXml()
         {
             using (var csv = new ChoXmlWriter("companies.xml") { TraceSwitch = ChoETLFramework.TraceSwitchOff }.WithXPath("companies/company"))
