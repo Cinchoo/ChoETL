@@ -603,16 +603,22 @@ namespace ChoETL
                 }
             }
 
+            bool isPrevEscape = false;
             bool inQuote = false;
             List<char> buffer = new List<char>();
+            char c = ChoCharEx.NUL;
             CircularBuffer<char> delim_buffer = new CircularBuffer<char>(EOLDelimiter.Length);
             while (reader.Peek() >= 0)
             {
-                char c = (char)reader.Read();
+                isPrevEscape = c == ChoCharEx.Backslash;
+                c = (char)reader.Read();
                 delim_buffer.Enqueue(c);
                 if (quoteChar != ChoCharEx.NUL && quoteChar == c)
                 {
-                    inQuote = !inQuote;
+                    if (!isPrevEscape)
+                        inQuote = !inQuote;
+                    else if (reader.Peek() == quoteChar)
+                        inQuote = false;
                 }
 
                 if (!inQuote)

@@ -526,6 +526,14 @@ namespace ChoETL
             char startChar;
             char endChar;
             char quoteChar = Configuration.QuoteChar == '\0' ? '"' : Configuration.QuoteChar;
+            string doubleQuoteChar = "{0}{0}".FormatString(quoteChar);
+            string backslashQuote = "\\{0}".FormatString(quoteChar);
+
+            //quotes are quoted and doubled (excel) i.e. 15" -> field1,"15""",field3
+            if (fieldValue.Contains(doubleQuoteChar))
+                fieldValue = fieldValue.Replace(doubleQuoteChar, quoteChar.ToString());
+            if (fieldValue.Contains(backslashQuote))
+                fieldValue = fieldValue.Replace(backslashQuote, quoteChar.ToString());
 
             if (fieldValue.Length >= 2)
             {
