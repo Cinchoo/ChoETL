@@ -444,7 +444,7 @@ namespace ChoETL
 
             if (quoteField == null || !quoteField.Value)
             {
-                if (fieldValue.StartsWith("\"") && fieldValue.EndsWith("\""))
+                if (fieldValue.StartsWith(Configuration.QuoteChar.ToString()) && fieldValue.EndsWith(Configuration.QuoteChar.ToString()))
                 {
 
                 }
@@ -455,19 +455,19 @@ namespace ChoETL
                         if (isHeader)
                             throw new ChoParserException("Field header '{0}' value contains EOL delimiter character.".FormatString(fieldName));
                         else
-                            fieldValue = "\"{0}\"".FormatString(fieldValue);
+                            fieldValue = "{1}{0}{1}".FormatString(fieldValue, Configuration.QuoteChar);
                     }
                 }
             }
             else
             {
-                if (fieldValue.StartsWith("\"") && fieldValue.EndsWith("\""))
+                if (fieldValue.StartsWith(Configuration.QuoteChar.ToString()) && fieldValue.EndsWith(Configuration.QuoteChar.ToString()))
                 {
 
                 }
                 else
                 {
-                    fieldValue = "\"{0}\"".FormatString(fieldValue);
+                    fieldValue = "{1}{0}{1}".FormatString(fieldValue, Configuration.QuoteChar);
                 }
             }
 

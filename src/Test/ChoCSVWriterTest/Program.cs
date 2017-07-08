@@ -17,7 +17,7 @@ namespace ChoCSVWriterTest
     {
         static void Main(string[] args)
         {
-            CodeFirstWithDeclarativeApproachWriteRecords();
+            QuickDynamicTest();
         }
 
         static void QuickDynamicTest()
@@ -25,7 +25,7 @@ namespace ChoCSVWriterTest
             List<ExpandoObject> objs = new List<ExpandoObject>();
             dynamic rec1 = new ExpandoObject();
             rec1.Id = 10;
-            rec1.Name = "Mark";
+            rec1.Name = @"Mark,'";
             rec1.JoinedDate = new DateTime(2001, 2, 2);
             rec1.IsActive = true;
             rec1.Salary = new ChoCurrency(100000);
@@ -42,7 +42,7 @@ namespace ChoCSVWriterTest
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoCSVWriter(writer).WithDelimiter("|").WithFirstLineHeader().WithField("Id", typeof(int)).WithField("Name"))
+            using (var parser = new ChoCSVWriter(writer).WithFirstLineHeader().Configure(c => c.EscapeQuoteAndDelimiter = true).Configure(c => c.QuoteChar = '\'').WithField("Id", typeof(int)).WithField("Name"))
             {
                 parser.Write(objs);
 

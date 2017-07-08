@@ -525,24 +525,21 @@ namespace ChoETL
 
             char startChar;
             char endChar;
-            char quoteChar = Configuration.QuoteChar == '\0' ? '"' : Configuration.QuoteChar;
-            string doubleQuoteChar = "{0}{0}".FormatString(quoteChar);
-            string backslashQuote = "\\{0}".FormatString(quoteChar);
 
             //quotes are quoted and doubled (excel) i.e. 15" -> field1,"15""",field3
-            if (fieldValue.Contains(doubleQuoteChar))
-                fieldValue = fieldValue.Replace(doubleQuoteChar, quoteChar.ToString());
-            if (fieldValue.Contains(backslashQuote))
-                fieldValue = fieldValue.Replace(backslashQuote, quoteChar.ToString());
+            if (fieldValue.Contains(Configuration.DoubleQuoteChar))
+                fieldValue = fieldValue.Replace(Configuration.DoubleQuoteChar, Configuration.QuoteChar.ToString());
+            if (fieldValue.Contains(Configuration.BackslashQuote))
+                fieldValue = fieldValue.Replace(Configuration.BackslashQuote, Configuration.QuoteChar.ToString());
 
             if (fieldValue.Length >= 2)
             {
                 startChar = fieldValue[0];
                 endChar = fieldValue[fieldValue.Length - 1];
 
-                if (config.QuoteField != null && config.QuoteField.Value && startChar == quoteChar && endChar == quoteChar)
+                if (config.QuoteField != null && config.QuoteField.Value && startChar == Configuration.QuoteChar && endChar == Configuration.QuoteChar)
                     return fieldValue.Substring(1, fieldValue.Length - 2);
-                else if (startChar == quoteChar && endChar == quoteChar &&
+                else if (startChar == Configuration.QuoteChar && endChar == Configuration.QuoteChar &&
                     (fieldValue.Contains(Configuration.Delimiter)
                     || fieldValue.Contains(Configuration.EOLDelimiter)))
                     return fieldValue.Substring(1, fieldValue.Length - 2);

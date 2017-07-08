@@ -430,80 +430,88 @@ namespace ChoETL
             if (fieldValue.IsNull())
                 fieldValue = String.Empty;
 
-            if (quoteField == null || !quoteField.Value)
+            if (fieldValue.StartsWith(Configuration.QuoteChar.ToString()) && fieldValue.EndsWith(Configuration.QuoteChar.ToString()))
             {
-                if (fieldValue.StartsWith("\"") && fieldValue.EndsWith("\""))
-                {
 
-                }
-                else
-                {
-                    if (searchStrings == null)
-                        searchStrings = (@"""" + Configuration.Delimiter + Configuration.EOLDelimiter).ToArray();
-
-                    if (fieldValue.IndexOfAny(searchStrings) >= 0)
-                    {
-                        //******** ORDER IMPORTANT *********
-
-                        //Fields that contain double quote characters must be surounded by double-quotes, and the embedded double-quotes must each be represented by a pair of consecutive double quotes.
-                        if (fieldValue.IndexOf('"') >= 0)
-                        {
-                            fieldValue = fieldValue.Replace(@"""", @"""""");
-                            quoteValue = true;
-                        }
-
-                        if (fieldValue.IndexOf(Configuration.Delimiter) >= 0)
-                        {
-                            if (isHeader)
-                                throw new ChoParserException("Field header '{0}' value contains delimiter character.".FormatString(fieldName));
-                            else
-                            {
-                                //Fields with embedded commas must be delimited with double-quote characters.
-                                quoteValue = true;
-                                //throw new ChoParserException("Field '{0}' value contains delimiter character.".FormatString(fieldName));
-                            }
-                        }
-
-                        if (fieldValue.IndexOf(Configuration.EOLDelimiter) >= 0)
-                        {
-                            if (isHeader)
-                                throw new ChoParserException("Field header '{0}' value contains EOL delimiter character.".FormatString(fieldName));
-                            else
-                            {
-                                //A field that contains embedded line-breaks must be surounded by double-quotes
-                                quoteValue = true;
-                                //throw new ChoParserException("Field '{0}' value contains EOL delimiter character.".FormatString(fieldName));
-                            }
-                        }
-                    }
-
-                    //Fields with leading or trailing spaces must be delimited with double-quote characters.
-                    if (!fieldValue.IsNullOrWhiteSpace() && (char.IsWhiteSpace(fieldValue[0]) || char.IsWhiteSpace(fieldValue[fieldValue.Length - 1])))
-                    {
-                        quoteValue = true;
-                    }
-
-                    if (quoteValue)
-                        fieldValue = "\"{0}\"".FormatString(fieldValue);
-                }
             }
             else
             {
-                if (fieldValue.StartsWith("\"") && fieldValue.EndsWith("\""))
-                {
+                if (searchStrings == null)
+                    searchStrings = (Configuration.QuoteChar.ToString() + Configuration.Delimiter + Configuration.EOLDelimiter).ToArray();
 
-                }
-                else
+                if (fieldValue.IndexOfAny(searchStrings) >= 0)
                 {
-                    //Fields that contain double quote characters must be surrounded by double-quotes, and the embedded double-quotes must each be represented by a pair of consecutive double quotes.
-                    if (fieldValue.IndexOf('"') >= 0)
+                    //******** ORDER IMPORTANT *********
+
+                    //Fields that contain double quote characters must be surounded by double-quotes, and the embedded double-quotes must each be represented by a pair of consecutive double quotes.
+                    if (fieldValue.IndexOf(Configuration.QuoteChar) >= 0)
                     {
-                        fieldValue = "\"{0}\"".FormatString(fieldValue.Replace(@"""", @""""""));
+                        if (!Configuration.EscapeQuoteAndDelimiter)
+                            fieldValue = fieldValue.Replace(Configuration.QuoteChar.ToString(), Configuration.DoubleQuoteChar);
+                        else
+                            fieldValue = fieldValue.Replace(Configuration.QuoteChar.ToString(), "\\{0}".FormatString(Configuration.QuoteChar));
+
+                        quoteValue = true;
                     }
-                    else
-                        fieldValue = "\"{0}\"".FormatString(fieldValue);
+
+                    if (fieldValue.IndexOf(Configuration.Delimiter) >= 0)
+                    {
+                        if (isHeader)
+                            throw new ChoParserException("Field header '{0}' value contains delimiter character.".FormatString(fieldName));
+                        else
+                        {
+                            //Fields with embedded commas must be delimited with double-quote characters.
+                            if (Configuration.EscapeQuoteAndDelimiter)
+                                fieldValue = fieldValue.Replace(Configuration.Delimiter, "\\{0}".FormatString(Configuration.Delimiter));
+
+                            quoteValue = true;
+                            //throw new ChoParserException("Field '{0}' value contains delimiter character.".FormatString(fieldName));
+                        }
+                    }
+
+                    if (fieldValue.IndexOf(Configuration.EOLDelimiter) >= 0)
+                    {
+                        if (isHeader)
+                            throw new ChoParserException("Field header '{0}' value contains EOL delimiter character.".FormatString(fieldName));
+                        else
+                        {
+                            //A field that contains embedded line-breaks must be surounded by double-quotes
+                            //if (Configuration.EscapeQuoteAndDelimiters)
+                            //    fieldValue = fieldValue.Replace(Configuration.EOLDelimiter, "\\{0}".FormatString(Configuration.EOLDelimiter));
+
+                            quoteValue = true;
+                            //throw new ChoParserException("Field '{0}' value contains EOL delimiter character.".FormatString(fieldName));
+                        }
+                    }
                 }
+
+                //Fields with leading or trailing spaces must be delimited with double-quote characters.
+                if (!fieldValue.IsNullOrWhiteSpace() && (char.IsWhiteSpace(fieldValue[0]) || char.IsWhiteSpace(fieldValue[fieldValue.Length - 1])))
+                {
+                    quoteValue = true;
+                }
+
+                if (quoteValue || (quoteField != null && quoteField.Value))
+                    fieldValue = "{1}{0}{1}".FormatString(fieldValue, Configuration.QuoteChar);
             }
+            //}
+            //else
+            //{
+            //    if (fieldValue.StartsWith(Configuration.QuoteChar.ToString()) && fieldValue.EndsWith(Configuration.QuoteChar.ToString()))
+            //    {
+
+            //    }
+            //    else
+            //    {
+            //        //Fields that contain double quote characters must be surrounded by double-quotes, and the embedded double-quotes must each be represented by a pair of consecutive double quotes.
+            //        if (fieldValue.IndexOf(Configuration.QuoteChar) >= 0)
+            //        {
+            //            fieldValue = "{1}{0}{1}".FormatString(fieldValue.Replace(Configuration.QuoteChar.ToString(), Configuration.DoubleQuoteChar), Configuration.QuoteChar);
+            //        }
+            //        else
+            //            fieldValue = "{1}{0}{1}".FormatString(fieldValue, Configuration.QuoteChar);
+            //    }
+            //}
 
             if (size != null)
             {

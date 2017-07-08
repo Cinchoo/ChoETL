@@ -79,10 +79,27 @@ namespace ChoETL
             set;
         }
         [DataMember]
-        public char QuoteChar
+        public bool EscapeQuoteAndDelimiter
         {
             get;
             set;
+        }
+
+        internal string BackslashQuote = @"\""";
+        internal string DoubleQuoteChar = @"""""";
+        private char _quoteChar = '"';
+        [DataMember]
+        public char QuoteChar
+        {
+            get { return _quoteChar; }
+            set
+            {
+                if (_quoteChar != '\0')
+                {
+                    _quoteChar = value;
+                    DoubleQuoteChar = "{0}{0}".FormatString(_quoteChar);
+                }
+            }
         }
         [DataMember]
         public bool QuoteAllFields
