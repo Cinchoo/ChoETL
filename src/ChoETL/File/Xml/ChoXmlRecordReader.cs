@@ -343,10 +343,10 @@ namespace ChoETL
                                     foreach (var ele in fXElements)
                                     {
                                         if (fieldConfig.FieldType.IsSimple())
-                                            list.Add(ChoConvert.ConvertTo(ele.Value, fieldConfig.FieldType));
+                                            list.Add(ChoConvert.ConvertTo(ele.Value, fieldConfig.FieldType.GetItemType()));
                                         else
                                         {
-                                            list.Add(ele.GetOuterXml().ToObjectFromXml(fieldConfig.FieldType));
+                                            list.Add(ele.GetOuterXml().ToObjectFromXml(fieldConfig.FieldType.GetItemType()));
                                         }
                                     }
                                     fieldValue = list.ToArray();

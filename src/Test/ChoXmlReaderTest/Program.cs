@@ -45,6 +45,7 @@ namespace ChoXmlReaderTest
         {
             public string Name;
         }
+        [XmlRoot("Levels")]
         public class Level
         {
             public int Id;
@@ -68,7 +69,7 @@ namespace ChoXmlReaderTest
 
         static void XmlToJSONSample4()
         {
-            using (var parser = new ChoXmlReader("sample4.xml").WithXPath("/").UseXmlSerialization()
+            using (var parser = new ChoXmlReader<ProductionOrderFile>("sample4.xml").WithXPath("/")
     )
             {
                 using (var writer = new ChoJSONWriter("sample3.json"))

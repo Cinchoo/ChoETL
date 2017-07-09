@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
@@ -132,6 +133,14 @@ namespace ChoETL
                 else if (ChoConvert.TryConvertToSpecialValues(value, targetType, culture, out convValue))
                     return convValue;
 
+                if (value is Array && typeof(IList).IsAssignableFrom(targetType))
+                {
+                    MethodInfo convertMethod = typeof(ChoConvert).GetMethod("ConvertArray",
+                        BindingFlags.NonPublic | BindingFlags.Static);
+                    MethodInfo generic = convertMethod.MakeGenericMethod(new[] { targetType.GetItemType() });
+                    return generic.Invoke(null, new object[] { value });
+                }
+
                 throw new ApplicationException("Object conversion failed.");
             }
             catch (Exception ex)
@@ -140,6 +149,10 @@ namespace ChoETL
                     throw new ApplicationException(string.Format("Can't convert '{2}' value from '{0}' type to '{1}' type.", (object)type, (object)targetType, value), ex);
                 throw new ApplicationException(string.Format("Can't convert object from '{0}' type to '{1}' type.", (object)type, (object)targetType), ex);
             }
+        }
+        private static List<T> ConvertArray<T>(Array input)
+        {
+            return input.Cast<T>().ToList(); // Using LINQ for simplicity
         }
 
         private static bool TryConvertXPlicit(object value, Type destinationType, string operatorMethodName, ref object result)

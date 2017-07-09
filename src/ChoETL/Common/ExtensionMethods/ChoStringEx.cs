@@ -570,11 +570,14 @@ namespace ChoETL
             {
                 if (overrides == null)
                 {
-                    var xattribs = new XmlAttributes();
-                    var xroot = new XmlRootAttribute(type.Name);
-                    xattribs.XmlRoot = xroot;
-                    overrides = new XmlAttributeOverrides();
-                    overrides.Add(type, xattribs);
+                    if (ChoType.GetAttribute<XmlRootAttribute>(type) == null)
+                    {
+                        var xattribs = new XmlAttributes();
+                        var xroot = new XmlRootAttribute(type.Name);
+                        xattribs.XmlRoot = xroot;
+                        overrides = new XmlAttributeOverrides();
+                        overrides.Add(type, xattribs);
+                    }
                 }
                 XmlSerializer serializer = overrides != null ? new XmlSerializer(type, overrides) : new XmlSerializer(type);
                 return serializer.Deserialize(reader);
