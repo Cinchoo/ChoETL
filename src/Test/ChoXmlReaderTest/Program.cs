@@ -86,7 +86,8 @@ namespace ChoXmlReaderTest
             using (var parser = new ChoXmlReader<ProductionOrderFile>("sample4.xml").WithXPath("/").Configure(c => c.UseXmlSerialization = true)
                 )
             {
-                using (var writer = new ChoJSONWriter("sample3.json").Configure(c => c.UseJSONSerialization = true))
+                using (var writer = new ChoJSONWriter("sample3.json").Configure(c => c.UseJSONSerialization = true).Configure(c => c.SupportMultipleContent = false).Configure(c => c.Formatting = Newtonsoft.Json.Formatting.None)
+                    )
                     writer.Write(parser);
 
                 //foreach (var x in parser)

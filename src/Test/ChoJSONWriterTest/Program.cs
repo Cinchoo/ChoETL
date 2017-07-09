@@ -11,11 +11,12 @@ namespace ChoJSONWriterTest
     {
         static void Main(string[] args)
         {
-            using (var w = new ChoJSONWriter("test.json"))
+            using (var w = new ChoJSONWriter("test.json").Configure(c => c.SupportMultipleContent = true).Configure(c => c.UseJSONSerialization = false)
+                )
             {
                 w.Write(ChoEnumerable.AsEnumerable(() =>
                 {
-                    return new { Address = new string[] { "NJ", "NY" } ,Name = "Raj", Zip = "08837"};
+                    return new { Address = new string[] { "NJ", "NY" }, Name = "Raj", Zip = "08837" };
                 }));
                 //w.Write(new { Name = "Raj", Zip = "08837", Address = new { City = "New York", State = "NY" } });
             }

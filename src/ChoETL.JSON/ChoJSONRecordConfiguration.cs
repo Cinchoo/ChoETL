@@ -34,12 +34,6 @@ namespace ChoETL
             set;
         }
         [DataMember]
-        public string Indent
-        {
-            get;
-            set;
-        }
-        [DataMember]
         public bool UseJSONSerialization
         {
             get;
@@ -50,7 +44,14 @@ namespace ChoETL
             get;
             set;
         }
-        public bool SupportMultipleContent
+        [DataMember]
+        public bool? SupportMultipleContent
+        {
+            get;
+            set;
+        }
+        [DataMember]
+        public Newtonsoft.Json.Formatting Formatting
         {
             get;
             set;
@@ -88,10 +89,9 @@ namespace ChoETL
 
         internal ChoJSONRecordConfiguration(Type recordType) : base(recordType)
         {
-            SupportMultipleContent = true;
             JSONRecordFieldConfigurations = new List<ChoJSONRecordFieldConfiguration>();
 
-            Indent = "  ";
+            Formatting = Newtonsoft.Json.Formatting.None;
             if (recordType != null)
             {
                 Init(recordType);

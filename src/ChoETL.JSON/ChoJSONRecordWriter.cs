@@ -37,12 +37,19 @@ namespace ChoETL
             //Configuration.Validate();
         }
 
+        private bool SupportMultipleContent
+        {
+            get { return Configuration.SupportMultipleContent == null ? false : Configuration.SupportMultipleContent.Value; }
+        }
         internal void EndWrite(object writer)
         {
             TextWriter sw = writer as TextWriter;
 
             if (_configCheckDone)
-                sw.Write(String.Format("{0}]", Environment.NewLine));
+            {
+                if (!SupportMultipleContent)
+                    sw.Write(String.Format("{0}]", Configuration.EOLDelimiter));
+            }
 
             RaiseEndWrite(sw);
         }
@@ -114,7 +121,9 @@ namespace ChoETL
 
                                     if (!RaiseBeginWrite(sw))
                                         yield break;
-                                    sw.Write("[");
+
+                                    if (!SupportMultipleContent)
+                                        sw.Write("[");
                                 }
 
                                 if (!RaiseBeforeRecordWrite(record, _index, ref recText))
@@ -132,7 +141,15 @@ namespace ChoETL
 
                                         if (ToText(_index, record, out recText))
                                         {
-                                            sw.Write("{1}{0}", recText, Configuration.EOLDelimiter);
+                                            if (!SupportMultipleContent)
+                                                sw.Write("{1}{0}", Configuration.Formatting == Formatting.Indented ? recText.Indent(1, " ") : recText, Configuration.EOLDelimiter);
+                                            else
+                                            {
+                                                if (_index == 1)
+                                                    sw.Write("{0}", recText);
+                                                else
+                                                    sw.Write("{1}{0}", recText, Configuration.EOLDelimiter);
+                                            }
 
                                             if (!RaiseAfterRecordWrite(record, _index, recText))
                                                 yield break;
@@ -143,8 +160,16 @@ namespace ChoETL
                                         if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.Off) != ChoObjectValidationMode.Off)
                                             record.DoObjectLevelValidation(Configuration, Configuration.JSONRecordFieldConfigurations);
 
-                                        recText = JsonConvert.SerializeObject(record);
-                                        sw.Write("{1}{0}", recText, Configuration.EOLDelimiter);
+                                        recText = JsonConvert.SerializeObject(record, Configuration.Formatting);
+                                        if (!SupportMultipleContent)
+                                            sw.Write("{1}{0}", Configuration.Formatting == Formatting.Indented ? recText.Indent(1, " ") : recText, Configuration.EOLDelimiter);
+                                        else
+                                        {
+                                            if (_index == 1)
+                                                sw.Write("{0}", recText);
+                                            else
+                                                sw.Write("{1}{0}", recText, Configuration.EOLDelimiter);
+                                        }
 
                                         if (!RaiseAfterRecordWrite(record, _index, recText))
                                             yield break;
@@ -207,7 +232,7 @@ namespace ChoETL
             //bool firstColumn = true;
             PropertyInfo pi = null;
             bool isFirst = true;
-            msg.AppendFormat("\t{{{0}", Environment.NewLine);
+            msg.AppendFormat("{{{0}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
             foreach (KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
                 fieldConfig = kvp.Value;
@@ -344,17 +369,18 @@ namespace ChoETL
                 else
                     fieldText = fieldValue.ToString();
 
+
                 if (isFirst)
                 {
-                    msg.AppendFormat("\t\t\"{0}\" : {1}", fieldConfig.FieldName, isSimple ? "\"{0}\"".FormatString(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false)) : JsonConvert.SerializeObject(fieldValue));
+                    msg.AppendFormat("{2}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? "\"{0}\"".FormatString(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false)) : JsonConvert.SerializeObject(fieldValue, Configuration.Formatting), Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
                 }
                 else
                 {
-                    msg.AppendFormat(",{2}\t\t\"{0}\" : {1}", fieldConfig.FieldName, isSimple ? "\"{0}\"".FormatString(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false)) : JsonConvert.SerializeObject(fieldValue), Environment.NewLine);
+                    msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? "\"{0}\"".FormatString(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false)) : JsonConvert.SerializeObject(fieldValue, Configuration.Formatting), Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
                 }
                 isFirst = false;
             }
-            msg.AppendFormat("{0}\t}}", Environment.NewLine);
+            msg.AppendFormat("{0}}}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
             recText = msg.ToString();
             return true;
         }

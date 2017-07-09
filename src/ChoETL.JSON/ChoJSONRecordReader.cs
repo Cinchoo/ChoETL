@@ -67,7 +67,7 @@ namespace ChoETL
         {
             if (Configuration.JSONPath.IsNullOrWhiteSpace())
             {
-                sr.SupportMultipleContent = Configuration.SupportMultipleContent;
+                sr.SupportMultipleContent = Configuration.SupportMultipleContent == null ? true : Configuration.SupportMultipleContent.Value;
                 while (sr.Read())
                 {
                     if (sr.TokenType == JsonToken.StartArray)
