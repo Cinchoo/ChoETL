@@ -339,9 +339,16 @@ namespace ChoETL
                             {
                                 if (fieldConfig.IsCollection)
                                 {
-                                    List<string> list = new List<string>();
+                                    List<object> list = new List<object>();
                                     foreach (var ele in fXElements)
-                                        list.Add(ele.Value);
+                                    {
+                                        if (fieldConfig.FieldType.IsSimple())
+                                            list.Add(ChoConvert.ConvertTo(ele.Value, fieldConfig.FieldType));
+                                        else
+                                        {
+                                            list.Add(ele.GetOuterXml().ToObjectFromXml(fieldConfig.FieldType));
+                                        }
+                                    }
                                     fieldValue = list.ToArray();
                                 }
                                 else
@@ -391,7 +398,10 @@ namespace ChoETL
                     {
                         var dict = rec as IDictionary<string, Object>;
 
-                        dict.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
+                        if (!fieldConfig.IsCollection)
+                            dict.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
+                        else
+                            dict[kvp.Key] = fieldValue;
 
                         if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
                             dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);

@@ -47,117 +47,120 @@ namespace ChoETL
 
             try
             {
-                foreach (object record in records)
+                foreach (object ur in records)
                 {
-                    _index++;
-                    recType = record.GetType();
-                    if (record is IChoETLNameableObject)
-                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(((IChoETLNameableObject)record).Name));
-                    else
-                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(_index));
-
-                    recText = String.Empty;
-                    if (record != null)
+                    foreach (object record in ChoEnumerable.AsEnumerable(ur))
                     {
-                        if (predicate == null || predicate(record))
+                        _index++;
+                        recType = record.GetType();
+                        if (record is IChoETLNameableObject)
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(((IChoETLNameableObject)record).Name));
+                        else
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(_index));
+
+                        recText = String.Empty;
+                        if (record != null)
                         {
-                            //Discover and load Manifold columns from first record
-                            if (!_configCheckDone)
+                            if (predicate == null || predicate(record))
                             {
-                                //string[] fieldNames = null;
-
-                                //if (record is ExpandoObject)
-                                //{
-                                //    var dict = record as IDictionary<string, Object>;
-                                //    fieldNames = dict.Keys.ToArray();
-                                //}
-                                //else
-                                //{
-                                //    fieldNames = ChoTypeDescriptor.GetProperties<ChoManifoldRecordFieldAttribute>(record.GetType()).Select(pd => pd.Name).ToArray();
-                                //    if (fieldNames.Length == 0)
-                                //    {
-                                //        fieldNames = ChoType.GetProperties(record.GetType()).Select(p => p.Name).ToArray();
-                                //    }
-                                //}
-
-                                //Configuration.Validate(fieldNames);
-
-                                //WriteHeaderLine(sw);
-
-                                _configCheckDone = true;
-                            }
-
-                            if (!RaiseBeforeRecordWrite(record, _index, ref recText))
-                                yield break;
-
-                            if (recText == null)
-                                continue;
-                            else if (recText.Length > 0)
-                            {
-                                sw.Write("{1}{0}", recText, Configuration.FileHeaderConfiguration.HasHeaderRecord ? Configuration.EOLDelimiter : "");
-                                continue;
-                            }
-
-                            try
-                            {
-                                var config = GetConfiguration(record.GetType());
-                                if (config == null)
-                                    throw new ChoParserException("No writer found to write record.");
-
-                                if (config.GetType() == typeof(ChoCSVRecordConfiguration))
+                                //Discover and load Manifold columns from first record
+                                if (!_configCheckDone)
                                 {
-                                    recText = ChoCSVWriter.ToText(record, config as ChoCSVRecordConfiguration, Configuration.Encoding, Configuration.BufferSize, TraceSwitch);
+                                    //string[] fieldNames = null;
+
+                                    //if (record is ExpandoObject)
+                                    //{
+                                    //    var dict = record as IDictionary<string, Object>;
+                                    //    fieldNames = dict.Keys.ToArray();
+                                    //}
+                                    //else
+                                    //{
+                                    //    fieldNames = ChoTypeDescriptor.GetProperties<ChoManifoldRecordFieldAttribute>(record.GetType()).Select(pd => pd.Name).ToArray();
+                                    //    if (fieldNames.Length == 0)
+                                    //    {
+                                    //        fieldNames = ChoType.GetProperties(record.GetType()).Select(p => p.Name).ToArray();
+                                    //    }
+                                    //}
+
+                                    //Configuration.Validate(fieldNames);
+
+                                    //WriteHeaderLine(sw);
+
+                                    _configCheckDone = true;
                                 }
-                                else if (config.GetType() == typeof(ChoFixedLengthRecordConfiguration))
-                                {
-                                    recText = ChoFixedLengthWriter.ToText(record, config as ChoFixedLengthRecordConfiguration, Configuration.Encoding, Configuration.BufferSize, TraceSwitch);
-                                }
-                                else
-                                    throw new ChoParserException("Unsupported record found to write.");
 
-                                if (recText != null)
+                                if (!RaiseBeforeRecordWrite(record, _index, ref recText))
+                                    yield break;
+
+                                if (recText == null)
+                                    continue;
+                                else if (recText.Length > 0)
                                 {
-                                    if (_index == 1)
+                                    sw.Write("{1}{0}", recText, Configuration.FileHeaderConfiguration.HasHeaderRecord ? Configuration.EOLDelimiter : "");
+                                    continue;
+                                }
+
+                                try
+                                {
+                                    var config = GetConfiguration(record.GetType());
+                                    if (config == null)
+                                        throw new ChoParserException("No writer found to write record.");
+
+                                    if (config.GetType() == typeof(ChoCSVRecordConfiguration))
                                     {
-                                        sw.Write("{1}{0}", recText, Configuration.FileHeaderConfiguration.HasHeaderRecord ? Configuration.EOLDelimiter : "");
+                                        recText = ChoCSVWriter.ToText(record, config as ChoCSVRecordConfiguration, Configuration.Encoding, Configuration.BufferSize, TraceSwitch);
+                                    }
+                                    else if (config.GetType() == typeof(ChoFixedLengthRecordConfiguration))
+                                    {
+                                        recText = ChoFixedLengthWriter.ToText(record, config as ChoFixedLengthRecordConfiguration, Configuration.Encoding, Configuration.BufferSize, TraceSwitch);
                                     }
                                     else
-                                        sw.Write("{1}{0}", recText, Configuration.EOLDelimiter);
+                                        throw new ChoParserException("Unsupported record found to write.");
 
-                                    if (!RaiseAfterRecordWrite(record, _index, recText))
-                                        yield break;
-                                }
-                            }
-                            catch (ChoParserException pEx)
-                            {
-                                throw new ChoParserException($"Failed to write line for '{recType}' object.", pEx);
-                            }
-                            catch (Exception ex)
-                            {
-                                ChoETLFramework.HandleException(ex);
-                                if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
-                                {
+                                    if (recText != null)
+                                    {
+                                        if (_index == 1)
+                                        {
+                                            sw.Write("{1}{0}", recText, Configuration.FileHeaderConfiguration.HasHeaderRecord ? Configuration.EOLDelimiter : "");
+                                        }
+                                        else
+                                            sw.Write("{1}{0}", recText, Configuration.EOLDelimiter);
 
+                                        if (!RaiseAfterRecordWrite(record, _index, recText))
+                                            yield break;
+                                    }
                                 }
-                                else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
+                                catch (ChoParserException pEx)
                                 {
-                                    if (!RaiseRecordWriteError(record, _index, recText, ex))
+                                    throw new ChoParserException($"Failed to write line for '{recType}' object.", pEx);
+                                }
+                                catch (Exception ex)
+                                {
+                                    ChoETLFramework.HandleException(ex);
+                                    if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
+                                    {
+
+                                    }
+                                    else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
+                                    {
+                                        if (!RaiseRecordWriteError(record, _index, recText, ex))
+                                            throw new ChoWriterException($"Failed to write line for '{recType}' object.", ex);
+                                    }
+                                    else
                                         throw new ChoWriterException($"Failed to write line for '{recType}' object.", ex);
                                 }
-                                else
-                                    throw new ChoWriterException($"Failed to write line for '{recType}' object.", ex);
                             }
                         }
-                    }
 
-                    yield return record;
+                        yield return record;
 
-                    if (Configuration.NotifyAfter > 0 && _index % Configuration.NotifyAfter == 0)
-                    {
-                        if (RaisedRowsWritten(_index))
+                        if (Configuration.NotifyAfter > 0 && _index % Configuration.NotifyAfter == 0)
                         {
-                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Abort requested.");
-                            yield break;
+                            if (RaisedRowsWritten(_index))
+                            {
+                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Abort requested.");
+                                yield break;
+                            }
                         }
                     }
                 }

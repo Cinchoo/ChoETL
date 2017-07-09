@@ -37,8 +37,69 @@ namespace ChoXmlReaderTest
             //foreach (var kvp in ChoExpandoObjectEx.ToExpandoObject(p))
             //    Console.WriteLine(kvp);
             //return;
-            XmlToCSVSample3();
+            XmlToJSONSample4();
         }
+
+        [XmlRoot("Batches")]
+        public class Batch
+        {
+            public string Name;
+        }
+        public class Level
+        {
+            public int Id;
+            public string Name;
+            public int PkgRatio;
+        }
+        public class VariableData
+        {
+            public int VariableDataId;
+            public string Value;
+            public int LevelId;
+        }
+        public class ProductionOrderFile
+        {
+            public string ProductionOrderName { get; set; }
+            public string ProductCode { get; set; }
+            public List<Batch> Batches { get; set; }
+            public List<Level> Levels { get; set; }
+            public List<VariableData> VariableData { get; set; }
+        }
+
+        static void XmlToJSONSample4()
+        {
+            using (var parser = new ChoXmlReader("sample4.xml").WithXPath("/").UseXmlSerialization()
+    )
+            {
+                using (var writer = new ChoJSONWriter("sample3.json"))
+                    writer.Write(parser);
+
+                //foreach (var x in parser)
+                //{
+                //    Console.WriteLine(x.ProductionOrderName);
+                //    Console.WriteLine("{0}", ((ICollection)x.Batches).Count);
+                //    Console.WriteLine("{0}", ((ICollection)x.VariableDatas).Count);
+                //}
+            }
+
+            //using (var parser = new ChoXmlReader("sample4.xml").WithXPath("/")
+            //    .WithField("ProductionOrderName", xPath: "ProductionOrderName")
+            //    .WithField("Batches", xPath: "//Batches/Batch", isCollection: true, fieldType: typeof(Batch))
+            //    .WithField("VariableDatas", xPath: "//VariableData", isCollection: true, fieldType: typeof(VariableData))
+            //    )
+            //{
+            //    using (var writer = new ChoJSONWriter("sample3.json"))
+            //        writer.Write(parser);
+
+            //    //foreach (var x in parser)
+            //    //{
+            //    //    Console.WriteLine(x.ProductionOrderName);
+            //    //    Console.WriteLine("{0}", ((ICollection)x.Batches).Count);
+            //    //    Console.WriteLine("{0}", ((ICollection)x.VariableDatas).Count);
+            //    //}
+            //}
+        }
+
         static void XmlToCSVSample3()
         {
             using (var parser = ChoXmlReader.LoadXElements(XDocument.Load("sample3.xml").XPathSelectElements("//member[name='table']/value/array/data/value"))

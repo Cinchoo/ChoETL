@@ -61,118 +61,121 @@ namespace ChoETL
 
             try
             {
-                foreach (object record in records)
+                foreach (object ur in records)
                 {
-                    _index++;
-
-                    if (TraceSwitch.TraceVerbose)
+                    foreach (object record in ChoEnumerable.AsEnumerable(ur))
                     {
-                        if (record is IChoETLNameableObject)
-                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(((IChoETLNameableObject)record).Name));
-                        else
-                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(_index));
-                    }
+                        _index++;
 
-                    recText = String.Empty;
-                    if (record != null)
-                    {
-                        if (predicate == null || predicate(record))
+                        if (TraceSwitch.TraceVerbose)
                         {
-                            //Discover and load Xml columns from first record
-                            if (!_configCheckDone)
+                            if (record is IChoETLNameableObject)
+                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(((IChoETLNameableObject)record).Name));
+                            else
+                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(_index));
+                        }
+
+                        recText = String.Empty;
+                        if (record != null)
+                        {
+                            if (predicate == null || predicate(record))
                             {
-                                string[] fieldNames = null;
-
-                                Configuration.IsDynamicObject = record.GetType().IsDynamicType();
-                                if (!Configuration.IsDynamicObject)
-                                    Configuration.RecordType = record.GetType();
-
-                                if (Configuration.IsDynamicObject)
+                                //Discover and load Xml columns from first record
+                                if (!_configCheckDone)
                                 {
-                                    var dict = record.ToDynamicObject() as IDictionary<string, Object>;
-                                    fieldNames = dict.Keys.ToArray();
-                                }
-                                else
-                                {
-                                    fieldNames = ChoTypeDescriptor.GetProperties<ChoXmlNodeRecordFieldAttribute>(record.GetType()).Select(pd => pd.Name).ToArray();
-                                    if (fieldNames.Length == 0)
+                                    string[] fieldNames = null;
+
+                                    Configuration.IsDynamicObject = record.GetType().IsDynamicType();
+                                    if (!Configuration.IsDynamicObject)
+                                        Configuration.RecordType = record.GetType();
+
+                                    if (Configuration.IsDynamicObject)
                                     {
-                                        fieldNames = ChoType.GetProperties(record.GetType()).Select(p => p.Name).ToArray();
+                                        var dict = record.ToDynamicObject() as IDictionary<string, Object>;
+                                        fieldNames = dict.Keys.ToArray();
                                     }
+                                    else
+                                    {
+                                        fieldNames = ChoTypeDescriptor.GetProperties<ChoXmlNodeRecordFieldAttribute>(record.GetType()).Select(pd => pd.Name).ToArray();
+                                        if (fieldNames.Length == 0)
+                                        {
+                                            fieldNames = ChoType.GetProperties(record.GetType()).Select(p => p.Name).ToArray();
+                                        }
+                                    }
+
+                                    Configuration.Validate(fieldNames);
+
+                                    _configCheckDone = true;
+
+                                    if (!RaiseBeginWrite(sw))
+                                        yield break;
+
+                                    sw.Write("<{0}{1}>".FormatString(Configuration.RootName, GetNamespaceText()));
                                 }
 
-                                Configuration.Validate(fieldNames);
-
-                                _configCheckDone = true;
-
-                                if (!RaiseBeginWrite(sw))
+                                if (!RaiseBeforeRecordWrite(record, _index, ref recText))
                                     yield break;
 
-                                sw.Write("<{0}{1}>".FormatString(Configuration.RootName, GetNamespaceText()));
-                            }
+                                if (recText == null)
+                                    continue;
 
-                            if (!RaiseBeforeRecordWrite(record, _index, ref recText))
-                                yield break;
-
-                            if (recText == null)
-                                continue;
-
-                            try
-                            {
-                                if (!Configuration.UseXmlSerialization)
+                                try
                                 {
-                                    if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
-                                        record.DoObjectLevelValidation(Configuration, Configuration.XmlRecordFieldConfigurations);
-
-                                    if (ToText(_index, record, out recText))
+                                    if (!Configuration.UseXmlSerialization)
                                     {
-                                        sw.Write("{1}{0}", recText, Configuration.EOLDelimiter);
+                                        if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
+                                            record.DoObjectLevelValidation(Configuration, Configuration.XmlRecordFieldConfigurations);
 
-                                        if (!RaiseAfterRecordWrite(record, _index, recText))
+                                        if (ToText(_index, record, out recText))
+                                        {
+                                            sw.Write("{1}{0}", recText, Configuration.EOLDelimiter);
+
+                                            if (!RaiseAfterRecordWrite(record, _index, recText))
+                                                yield break;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.Off) != ChoObjectValidationMode.Off)
+                                            record.DoObjectLevelValidation(Configuration, Configuration.XmlRecordFieldConfigurations);
+
+                                        _se.Value.Serialize(sw, record);
+
+                                        if (!RaiseAfterRecordWrite(record, _index, null))
                                             yield break;
                                     }
                                 }
-                                else
+                                catch (ChoParserException)
                                 {
-                                    if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.Off) != ChoObjectValidationMode.Off)
-                                        record.DoObjectLevelValidation(Configuration, Configuration.XmlRecordFieldConfigurations);
-
-                                    _se.Value.Serialize(sw, record);
-
-                                    if (!RaiseAfterRecordWrite(record, _index, null))
-                                        yield break;
+                                    throw;
                                 }
-                            }
-                            catch (ChoParserException)
-                            {
-                                throw;
-                            }
-                            catch (Exception ex)
-                            {
-                                ChoETLFramework.HandleException(ex);
-                                if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
+                                catch (Exception ex)
                                 {
+                                    ChoETLFramework.HandleException(ex);
+                                    if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
+                                    {
 
-                                }
-                                else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
-                                {
-                                    if (!RaiseRecordWriteError(record, _index, recText, ex))
+                                    }
+                                    else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
+                                    {
+                                        if (!RaiseRecordWriteError(record, _index, recText, ex))
+                                            throw;
+                                    }
+                                    else
                                         throw;
                                 }
-                                else
-                                    throw;
                             }
                         }
-                    }
 
-                    yield return record;
+                        yield return record;
 
-                    if (Configuration.NotifyAfter > 0 && _index % Configuration.NotifyAfter == 0)
-                    {
-                        if (RaisedRowsWritten(_index))
+                        if (Configuration.NotifyAfter > 0 && _index % Configuration.NotifyAfter == 0)
                         {
-                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Abort requested.");
-                            yield break;
+                            if (RaisedRowsWritten(_index))
+                            {
+                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Abort requested.");
+                                yield break;
+                            }
                         }
                     }
                 }

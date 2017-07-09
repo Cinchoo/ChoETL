@@ -19,8 +19,16 @@ namespace ChoETL
         public static IEnumerable<XElement> GetXmlElements(this XmlReader xmlReader, string xPath)
         {
             //if (xPath.IsNullOrWhiteSpace()) yield break;
+            if (!xPath.IsNullOrWhiteSpace() || xPath == "/" || xPath == "//")
+            {
+                string rootNodeName = null;
+                if (xmlReader.MoveToContent() == XmlNodeType.Element)
+                    rootNodeName = xmlReader.Name;
+                yield return XElement.ReadFrom(xmlReader)
+                      as XElement;
 
-            if (xPath.IsNullOrWhiteSpace() || xPath == "//*" || xPath == "./*")
+            }
+            else if (xPath.IsNullOrWhiteSpace() || xPath == "//*" || xPath == "./*")
             {
                 bool isEmpty;
                 // Empty element?
@@ -541,6 +549,28 @@ namespace ChoETL
 
             return result;
         }
+        public static string GetInnerXml(this XNode node)
+        {
+            if (node == null)
+                throw new ArgumentNullException("XmlNode");
+
+            var reader = node.CreateReader();
+            reader.MoveToContent();
+
+            return reader.ReadInnerXml().Trim();
+        }
+        public static string GetOuterXml(this XNode node)
+        {
+            if (node == null)
+                throw new ArgumentNullException("XmlNode");
+
+            var reader = node.CreateReader();
+            reader.MoveToContent();
+
+            return reader.ReadOuterXml().Trim();
+        }
+
+
         #endregion Instance Members (Private)
 
         #region CollectionWrapper Class

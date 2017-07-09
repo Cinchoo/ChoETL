@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -70,25 +71,27 @@ namespace ChoJSONReaderTest
         }
         static void Sample1()
         {
-            var obj = JObject.Parse(File.ReadAllText("sample1.json"));
-
-            // Collect column titles: all property names whose values are of type JValue, distinct, in order of encountering them.
-            var values = obj.DescendantsAndSelf()
-                .OfType<JProperty>()
-                .Where(p => p.Value is JValue)
-                .GroupBy(p => p.Name)
-                .ToList();
-
-            var columns = values.Select(g => g.Key).ToArray();
-
-            // Filter JObjects that have child objects that have values.
-            var parentsWithChildren = values.SelectMany(g => g).SelectMany(v => v.AncestorsAndSelf().OfType<JObject>().Skip(1)).ToHashSet();
             using (var csv = new ChoCSVWriter("sample1.csv") { TraceSwitch = ChoETLFramework.TraceSwitchOff }.WithFirstLineHeader())
             {
-                csv.Write(ChoJSONReader.LoadJTokens(parentsWithChildren));
+                csv.Write(new ChoJSONReader("sample1.json") { TraceSwitch = ChoETLFramework.TraceSwitchOff }.Select(e => Flatten(e)));
             }
         }
-
+        private static object[] Flatten(dynamic e)
+        {
+            List<object> list = new List<object>();
+            list.Add(new { F1 = e.F1, F2 = e.F2, E1 = String.Empty, E2 = String.Empty, D1 = String.Empty, D2 = String.Empty });
+            foreach (var se in e.F3)
+            {
+                if (se["E3"] != null)
+                {
+                    foreach (var de in se.E3)
+                        list.Add(new { F1 = e.F1, F2 = e.F2, E1 = se.E1, E2 = se.E2, D1 = de.D1, D2 = de.D2 });
+                }
+                else
+                    list.Add(new { F1 = e.F1, F2 = e.F2, E1 = se.E1, E2 = se.E2, D1 = String.Empty, D2 = String.Empty });
+            }
+            return list.ToArray();
+        }
         static void JsonToXml()
         {
             using (var csv = new ChoXmlWriter("companies.xml") { TraceSwitch = ChoETLFramework.TraceSwitchOff }.WithXPath("companies/company"))

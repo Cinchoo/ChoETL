@@ -12,6 +12,14 @@ namespace ChoETL
 {
     public static class ChoExpandoObjectEx
     {
+        public static bool IsPropertyExist(this object target, string name)
+        {
+            if (target is ExpandoObject)
+                return ((IDictionary<string, object>)target).ContainsKey(name);
+
+            return target.GetType().GetProperty(name) != null;
+        }
+
         public static ExpandoObject ToExpandoObject(this IEnumerable list)
         {
             var expando = new ExpandoObject();

@@ -60,6 +60,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="sample4.xml" />
     <Content Include="sample3.xml" />
     <Content Include="sample2.xml" />
     <Content Include="sample1.xml" />
@@ -83,6 +84,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\ChoETL.JSON\ChoETL.JSON.csproj">
+      <Project>{ff39c858-da79-4a4b-b0e5-bdf8d8874a15}</Project>
+      <Name>ChoETL.JSON</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\ChoETL\ChoETL.csproj">
       <Project>{0a5062f4-b00a-4998-858d-a3c5d99e2074}</Project>
       <Name>ChoETL</Name>
