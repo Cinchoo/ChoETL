@@ -385,7 +385,7 @@ namespace ChoETL
                         kvp.Value.FieldType = typeof(string);
                 }
 
-                if (!(fieldValue is ICollection))
+                if (fieldValue is string)
                     fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue as string);
 
                 try

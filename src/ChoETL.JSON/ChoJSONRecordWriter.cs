@@ -346,11 +346,11 @@ namespace ChoETL
 
                 if (isFirst)
                 {
-                    msg.AppendFormat("\t\t\"{0}\" : {1}", fieldConfig.FieldName, isSimple ? "\"{0}\"".FormatString(fieldText) : JsonConvert.SerializeObject(fieldValue));
+                    msg.AppendFormat("\t\t\"{0}\" : {1}", fieldConfig.FieldName, isSimple ? "\"{0}\"".FormatString(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false)) : JsonConvert.SerializeObject(fieldValue));
                 }
                 else
                 {
-                    msg.AppendFormat(",{2}\t\t\"{0}\" : {1}", fieldConfig.FieldName, isSimple ? "\"{0}\"".FormatString(fieldText) : JsonConvert.SerializeObject(fieldValue), Environment.NewLine);
+                    msg.AppendFormat(",{2}\t\t\"{0}\" : {1}", fieldConfig.FieldName, isSimple ? "\"{0}\"".FormatString(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false)) : JsonConvert.SerializeObject(fieldValue), Environment.NewLine);
                 }
                 isFirst = false;
             }
@@ -462,7 +462,13 @@ namespace ChoETL
                 }
             }
 
-            return fieldValue.StartsWith("<![CDATA[") ? fieldValue : System.Net.WebUtility.HtmlEncode(fieldValue);
+            //return fieldValue.StartsWith("<![CDATA[") ? fieldValue : System.Net.WebUtility.HtmlEncode(fieldValue);
+
+            //escape quotes
+            if (fieldValue.Contains('"'))
+                fieldValue = fieldValue.Replace(@"""", @"\""");
+
+            return fieldValue;
         }
 
         private bool RaiseBeginWrite(object state)

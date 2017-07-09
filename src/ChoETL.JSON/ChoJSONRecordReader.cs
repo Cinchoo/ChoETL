@@ -186,9 +186,19 @@ namespace ChoETL
                 else
                 {
                     //rec = _se.Value != null ? pair.Item2.ToObject(RecordType, _se.Value) : pair.Item2.ToObject(RecordType);
-                    rec = JsonConvert.DeserializeObject<ExpandoObject>(pair.Item2.ToString(), new ExpandoObjectConverter());
-                    if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.Off) != ChoObjectValidationMode.Off)
-                        rec.DoObjectLevelValidation(Configuration, Configuration.JSONRecordFieldConfigurations);
+                    if (Configuration.IsDynamicObject)
+                    {
+                        rec = JsonConvert.DeserializeObject<ExpandoObject>(pair.Item2.ToString(), new ExpandoObjectConverter());
+                        if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.Off) != ChoObjectValidationMode.Off)
+                            rec.DoObjectLevelValidation(Configuration, Configuration.JSONRecordFieldConfigurations);
+                    }
+                    else
+                    {
+                        rec = JsonConvert.DeserializeObject(pair.Item2.ToString(), RecordType);
+                        if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.Off) != ChoObjectValidationMode.Off)
+                            rec.DoObjectLevelValidation(Configuration, Configuration.JSONRecordFieldConfigurations);
+
+                    }
                 }
 
 
@@ -338,6 +348,8 @@ namespace ChoETL
                 {
                     if (fieldValue is string)
                         fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue as string);
+                    else if (fieldValue is JValue)
+                        fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue.ToString());
                 }
 
                 try
@@ -500,6 +512,10 @@ namespace ChoETL
                     else
                         fieldValue = fieldValue.Substring(0, config.Size.Value);
                 }
+            }
+            if (fieldValue.StartsWith(@"""") && fieldValue.EndsWith(@""""))
+            {
+                fieldValue = fieldValue.Substring(1, fieldValue.Length - 2);
             }
 
             return System.Net.WebUtility.HtmlDecode(fieldValue);

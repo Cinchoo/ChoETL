@@ -27,6 +27,7 @@ namespace ChoETL
         private const char StartSeparator = '%';
         private const char EndSeparator = '%';
         private const char FormatSeparator = '^';
+        private static readonly XmlWriterSettings _xws = new XmlWriterSettings() { OmitXmlDeclaration = true, ConformanceLevel = ConformanceLevel.Auto, Indent = true };
 
         static ChoUtility()
         {
@@ -598,6 +599,7 @@ namespace ChoETL
             return ToObject(node, type, null);
         }
 
+
         public static object ToObject(this XmlNode node, Type type, XmlAttributeOverrides overrides)
         {
             if (node == null)
@@ -754,6 +756,112 @@ namespace ChoETL
                 return new BinaryFormatter().Deserialize(f);
             }
         }
+        #region XmlSerialize Overloads
+
+        public static void XmlSerialize(Stream sr, object target, XmlWriterSettings xws = null)
+        {
+            ChoGuard.ArgumentNotNull(sr, "Stream");
+            ChoGuard.ArgumentNotNull(target, "Target");
+
+            using (XmlWriter xtw = XmlTextWriter.Create(sr, xws ?? _xws))
+            {
+                ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(target.GetType());
+                serializer.Serialize(xtw, target);
+
+                xtw.Flush();
+            }
+        }
+
+        public static string XmlSerialize(object target, XmlWriterSettings xws = null)
+        {
+            ChoGuard.ArgumentNotNull(target, "Target");
+
+            StringBuilder xmlString = new StringBuilder();
+            using (XmlWriter xtw = XmlTextWriter.Create(xmlString, xws ?? _xws))
+            {
+                ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(target.GetType());
+                serializer.Serialize(xtw, target);
+
+                xtw.Flush();
+
+                return xmlString.ToString();
+            }
+        }
+
+        public static void XmlSerialize(string path, object target, XmlWriterSettings xws = null)
+        {
+            ChoGuard.ArgumentNotNullOrEmpty(path, "Path");
+            ChoGuard.ArgumentNotNull(target, "Target");
+
+            Directory.CreateDirectory(Path.GetDirectoryName(ChoPath.GetFullPath(path)));
+
+            File.WriteAllText(path, XmlSerialize(target, xws));
+        }
+
+        #endregion XmlSerialize Overloads
+
+        #region XmlDeserialize Overloads
+
+        public static T XmlDeserialize<T>(Stream sr, XmlReaderSettings xrs = null)
+        {
+            return (T)XmlDeserialize(sr, typeof(T), xrs);
+        }
+
+        public static object XmlDeserialize(Stream sr, Type type, XmlReaderSettings xrs = null)
+        {
+            ChoGuard.ArgumentNotNullOrEmpty(sr, "Stream");
+            ChoGuard.ArgumentNotNullOrEmpty(type, "Type");
+
+            using (XmlReader xtw = XmlTextReader.Create(sr, xrs ?? new XmlReaderSettings()))
+            {
+                ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(type);
+                return serializer.Deserialize(xtw);
+            }
+        }
+
+        public static T XmlDeserialize<T>(string xmlString, XmlReaderSettings xrs = null)
+        {
+            ChoGuard.ArgumentNotNullOrEmpty(xmlString, "xmlString");
+
+            return (T)XmlDeserialize(xmlString, typeof(T), xrs);
+        }
+
+        public static object XmlDeserialize(string xmlString, Type type, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null)
+        {
+            ChoGuard.ArgumentNotNullOrEmpty(xmlString, "XmlString");
+            ChoGuard.ArgumentNotNullOrEmpty(type, "Type");
+
+            using (StringReader sr = new StringReader(xmlString))
+            {
+                using (XmlReader xtw = XmlTextReader.Create(sr, xrs ?? new XmlReaderSettings()))
+                {
+                    ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(type, overrides);
+                    return serializer.Deserialize(xtw);
+                }
+            }
+        }
+
+        public static T XmlDeserializeFromFile<T>(string path, XmlReaderSettings xrs = null)
+        {
+            return (T)XmlDeserializeFromFile(path, typeof(T), xrs);
+        }
+
+        public static object XmlDeserializeFromFile(string path, Type type, XmlReaderSettings xrs = null)
+        {
+            ChoGuard.ArgumentNotNullOrEmpty(path, "Path");
+            ChoGuard.ArgumentNotNullOrEmpty(type, "Type");
+
+            using (StreamReader sr = new StreamReader(path))
+            {
+                using (XmlReader xtw = XmlTextReader.Create(sr, xrs ?? new XmlReaderSettings()))
+                {
+                    ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(type);
+                    return serializer.Deserialize(xtw);
+                }
+            }
+        }
+
+        #endregion XmlDeserialize Overloads
 
         public static string CompareExchange(this string @this, string value, string newValue = null, StringComparison comparer = StringComparison.CurrentCultureIgnoreCase)
         {
@@ -1673,5 +1781,117 @@ namespace ChoETL
                 return m_comparer.Compare(x.Current, y.Current);
             }
         }
+    }
+    public class ChoNullNSXmlSerializer : XmlSerializer
+    {
+        #region Shared Data Members (Private)
+
+        private static XmlSerializerNamespaces _xmlnsEmpty = new XmlSerializerNamespaces();
+
+        #endregion
+
+        #region Constructors
+
+        static ChoNullNSXmlSerializer()
+        {
+            _xmlnsEmpty.Add("", "");
+        }
+
+        public ChoNullNSXmlSerializer(Type type)
+            : base(type)
+        {
+        }
+
+        public ChoNullNSXmlSerializer(XmlTypeMapping xmlTypeMapping)
+            : base(xmlTypeMapping)
+        {
+        }
+
+        public ChoNullNSXmlSerializer(Type type, string defaultNamespace)
+            : base(type, defaultNamespace)
+        {
+        }
+
+        public ChoNullNSXmlSerializer(Type type, Type[] extraTypes)
+            : base(type, extraTypes)
+        {
+        }
+
+        public ChoNullNSXmlSerializer(Type type, XmlAttributeOverrides overrides)
+            : base(type, overrides)
+        {
+        }
+
+        public ChoNullNSXmlSerializer(Type type, XmlRootAttribute root)
+            : base(type, root)
+        {
+        }
+
+        public ChoNullNSXmlSerializer(Type type, XmlAttributeOverrides overrides, Type[] extraTypes, XmlRootAttribute root, string defaultNamespace)
+            : base(type, overrides, extraTypes, root, defaultNamespace)
+        {
+        }
+
+        #endregion
+
+        #region XmlSerialier Overrides (Public)
+
+        //
+        // Summary:
+        //     Serializes the specified System.Object and writes the XML document to a file
+        //     using the specified System.IO.Stream.
+        //
+        // Parameters:
+        //   stream:
+        //     The System.IO.Stream used to write the XML document.
+        //
+        //   o:
+        //     The System.Object to serialize.
+        //
+        // Exceptions:
+        //   System.InvalidOperationException:
+        //     An error occurred during serialization. The original exception is available
+        //     using the System.Exception.InnerException property.
+        public new void Serialize(Stream stream, object o)
+        {
+            base.Serialize(stream, o, _xmlnsEmpty);
+        }
+        //
+        // Summary:
+        //     Serializes the specified System.Object and writes the XML document to a file
+        //     using the specified System.IO.TextWriter.
+        //
+        // Parameters:
+        //   textWriter:
+        //     The System.IO.TextWriter used to write the XML document.
+        //
+        //   o:
+        //     The System.Object to serialize.
+        public new void Serialize(TextWriter textWriter, object o)
+        {
+            base.Serialize(textWriter, o, _xmlnsEmpty);
+        }
+        //
+        // Summary:
+        //     Serializes the specified System.Object and writes the XML document to a file
+        //     using the specified System.Xml.XmlWriter.
+        //
+        // Parameters:
+        //   xmlWriter:
+        //     The System.xml.XmlWriter used to write the XML document.
+        //
+        //   o:
+        //     The System.Object to serialize.
+        //
+        // Exceptions:
+        //   System.InvalidOperationException:
+        //     An error occurred during serialization. The original exception is available
+        //     using the System.Exception.InnerException property.
+        public new void Serialize(XmlWriter xmlWriter, object o)
+        {
+            base.Serialize(xmlWriter, o, _xmlnsEmpty);
+        }
+
+        #endregion
     }
 }

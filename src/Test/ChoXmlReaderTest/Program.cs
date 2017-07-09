@@ -38,6 +38,7 @@ namespace ChoXmlReaderTest
             //    Console.WriteLine(kvp);
             //return;
             XmlToJSONSample4();
+                JSONToXmlSample4();
         }
 
         [XmlRoot("Batches")]
@@ -62,17 +63,30 @@ namespace ChoXmlReaderTest
         {
             public string ProductionOrderName { get; set; }
             public string ProductCode { get; set; }
+            [XmlElement]
             public List<Batch> Batches { get; set; }
+            [XmlElement]
             public List<Level> Levels { get; set; }
+            [XmlElement]
             public List<VariableData> VariableData { get; set; }
+        }
+        static void JSONToXmlSample4()
+        {
+            using (var parser = new ChoJSONReader<ProductionOrderFile>("sample3.json").Configure(c => c.UseJSONSerialization = true)
+    )
+            {
+                using (var writer = new ChoXmlWriter<ProductionOrderFile>("sample31.xml").Configure(c => c.UseXmlSerialization = true))
+                    writer.Write(parser);
+                return;
+            }
         }
 
         static void XmlToJSONSample4()
         {
-            using (var parser = new ChoXmlReader<ProductionOrderFile>("sample4.xml").WithXPath("/")
-    )
+            using (var parser = new ChoXmlReader<ProductionOrderFile>("sample4.xml").WithXPath("/").Configure(c => c.UseXmlSerialization = true)
+                )
             {
-                using (var writer = new ChoJSONWriter("sample3.json"))
+                using (var writer = new ChoJSONWriter("sample3.json").Configure(c => c.UseJSONSerialization = true))
                     writer.Write(parser);
 
                 //foreach (var x in parser)

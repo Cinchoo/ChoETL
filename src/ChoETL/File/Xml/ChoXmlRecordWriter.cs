@@ -9,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.Serialization;
 
 namespace ChoETL
@@ -283,7 +284,7 @@ namespace ChoETL
                     if (!RaiseBeforeRecordFieldWrite(rec, index, kvp.Key, ref fieldValue))
                         return false;
 
-                    rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue);
+                    rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, true);
 
                     if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.MemberLevel)
                         rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
@@ -356,20 +357,35 @@ namespace ChoETL
                 if (fieldValue == null)
                     fieldText = String.Empty;
                 else
-                    fieldText = fieldValue.ToString();
-
-                if (fieldConfig.IsXmlAttribute)
-                    msg.Append(@" {0}=""{1}""".FormatString(fieldConfig.FieldName, NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false)));
-                else
                 {
-                    if (!isElementClosed)
+                    if (fieldValue.GetType().IsSimple())
                     {
-                        msg.AppendFormat(">{0}", Configuration.EOLDelimiter);
-                        isElementClosed = true;
+                        fieldText = fieldValue.ToString();
+                        if (fieldConfig.IsXmlAttribute)
+                            msg.Append(@" {0}=""{1}""".FormatString(fieldConfig.FieldName, NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false)));
+                        else
+                        {
+                            if (!isElementClosed)
+                            {
+                                msg.AppendFormat(">{0}", Configuration.EOLDelimiter);
+                                isElementClosed = true;
+                            }
+                            msg.Append("{2}{2}<{0}>{1}</{0}>{3}".FormatString(fieldConfig.FieldName,
+                                NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false),
+                                Configuration.Indent, Configuration.EOLDelimiter));
+                        }
                     }
-                    msg.Append("{2}{2}<{0}>{1}</{0}>{3}".FormatString(fieldConfig.FieldName, 
-                        NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false),
-                        Configuration.Indent, Configuration.EOLDelimiter));
+                    else
+                    {
+                        fieldText = ChoUtility.XmlSerialize(fieldValue);
+                        if (!isElementClosed)
+                        {
+                            msg.AppendFormat(">{0}", Configuration.EOLDelimiter);
+                            isElementClosed = true;
+                        }
+                        msg.Append("{1}{1}{0}{2}".FormatString(fieldText,
+                            Configuration.Indent, Configuration.EOLDelimiter));
+                    }
                 }
             }
 

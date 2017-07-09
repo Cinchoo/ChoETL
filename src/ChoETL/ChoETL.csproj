@@ -132,6 +132,7 @@
     <Compile Include="Common\Reflection\ChoPropertyInfoEx.cs" />
     <Compile Include="Common\Reflection\Emit\ChoEmitHelper.cs" />
     <Compile Include="Common\Reflection\Emit\ChoILGeneratorEx.cs" />
+    <Compile Include="Common\Serialization\ChoKeyValuePair.cs" />
     <Compile Include="Common\Text\RegularExpressions\ChoWildcard.cs" />
     <Compile Include="Common\Validators\ChoCustomCodeValidatorAttribute.cs" />
     <Compile Include="Common\Validators\ChoCustomExprValidatorAttribute.cs" />
