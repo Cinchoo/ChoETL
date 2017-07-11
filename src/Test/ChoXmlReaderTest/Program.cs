@@ -37,8 +37,36 @@ namespace ChoXmlReaderTest
             //foreach (var kvp in ChoExpandoObjectEx.ToExpandoObject(p))
             //    Console.WriteLine(kvp);
             //return;
-            XmlToJSONSample4();
-                JSONToXmlSample4();
+            //XmlToJSONSample4();
+            //    JSONToXmlSample4();
+
+            string json = @"
+    {
+        ""Row1"":{
+            ""x"":123,
+            ""y"":21,
+            ""z"":22
+        },
+    }";
+            using (var r = ChoJSONReader.LoadText(json)
+                .WithField("x", jsonPath: "$.Row1", fieldType: typeof(object))
+                .WithField("y", jsonPath: "$.Row1.y", fieldType: typeof(object))
+                .WithField("z", jsonPath: "$.Row1", fieldType: typeof(object))
+                )
+            {
+                r.BeforeRecordFieldLoad += (o, e) =>
+                {
+                    if (e.PropertyName == "x")
+                    {
+                        //dynamic x = e.PropertyName;
+                        //e.Record.x = x.x;
+                        e.Skip = true;
+                    }
+                };
+                using (var writer = new ChoXmlWriter("sample.xml"))
+                    writer.Write(r);
+                return;
+            }
         }
 
         [XmlRoot("Batches")]

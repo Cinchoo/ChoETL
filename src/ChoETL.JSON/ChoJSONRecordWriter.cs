@@ -372,11 +372,15 @@ namespace ChoETL
 
                 if (isFirst)
                 {
-                    msg.AppendFormat("{2}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? "\"{0}\"".FormatString(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false)) : JsonConvert.SerializeObject(fieldValue, Configuration.Formatting), Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
+                    msg.AppendFormat("{2}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? "\"{0}\"".FormatString(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false)) :
+                        Configuration.Formatting == Formatting.Indented ? JsonConvert.SerializeObject(fieldValue, Configuration.Formatting).Indent(1, " ") : JsonConvert.SerializeObject(fieldValue, Configuration.Formatting), 
+                        Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
                 }
                 else
                 {
-                    msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? "\"{0}\"".FormatString(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false)) : JsonConvert.SerializeObject(fieldValue, Configuration.Formatting), Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
+                    msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? "\"{0}\"".FormatString(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false)) :
+                        Configuration.Formatting == Formatting.Indented ? JsonConvert.SerializeObject(fieldValue, Configuration.Formatting).Indent(1, " ") : JsonConvert.SerializeObject(fieldValue, Configuration.Formatting),
+                        Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
                 }
                 isFirst = false;
             }

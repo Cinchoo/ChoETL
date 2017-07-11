@@ -12,6 +12,19 @@ using System.Threading.Tasks;
 namespace ChoJSONReaderTest
 {
 
+    public class Message
+    {
+        public string Base
+        {
+            get;
+            set;
+        }
+        public Dictionary<string, string> Rates
+        {
+            get;
+            set;
+        }
+    }
     public class Product
     {
         public string Name { get; set; }
@@ -67,8 +80,20 @@ namespace ChoJSONReaderTest
 
         static void Main(string[] args)
         {
-            Sample1();
+            Sample2();
         }
+        static void Sample2()
+        {
+            using (var csv = new ChoCSVWriter("sample2.csv") { TraceSwitch = ChoETLFramework.TraceSwitchOff }.WithFirstLineHeader())
+            {
+                csv.Write(new ChoJSONReader("sample2.json") { TraceSwitch = ChoETLFramework.TraceSwitchOff }
+                .WithField("Base")
+                .WithField("Rates", fieldType: typeof(Dictionary<string, object>))
+                .Select(m => ((Dictionary<string, object>)m.Rates).Select(r => new { Base = m.Base, Key = r.Key, Value = r.Value })).SelectMany(m => m)
+                );
+            }
+        }
+
         static void Sample1()
         {
             using (var csv = new ChoCSVWriter("sample1.csv") { TraceSwitch = ChoETLFramework.TraceSwitchOff }.WithFirstLineHeader())

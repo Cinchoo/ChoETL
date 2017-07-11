@@ -91,7 +91,7 @@ namespace ChoETL
         {
             JSONRecordFieldConfigurations = new List<ChoJSONRecordFieldConfiguration>();
 
-            Formatting = Newtonsoft.Json.Formatting.None;
+            Formatting = Newtonsoft.Json.Formatting.Indented;
             if (recordType != null)
             {
                 Init(recordType);

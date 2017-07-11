@@ -11,7 +11,7 @@ namespace ChoJSONWriterTest
     {
         static void Main(string[] args)
         {
-            using (var w = new ChoJSONWriter("test.json").Configure(c => c.SupportMultipleContent = true).Configure(c => c.UseJSONSerialization = false)
+            using (var w = new ChoJSONWriter("test.json").Configure(c => c.UseJSONSerialization = false)
                 )
             {
                 w.Write(ChoEnumerable.AsEnumerable(() =>
