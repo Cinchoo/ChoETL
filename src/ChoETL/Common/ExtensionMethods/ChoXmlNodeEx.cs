@@ -19,7 +19,7 @@ namespace ChoETL
         public static IEnumerable<XElement> GetXmlElements(this XmlReader xmlReader, string xPath)
         {
             //if (xPath.IsNullOrWhiteSpace()) yield break;
-            if (!xPath.IsNullOrWhiteSpace() || xPath == "/" || xPath == "//")
+            if (!xPath.IsNullOrWhiteSpace() && (xPath == "/" || xPath == "//"))
             {
                 string rootNodeName = null;
                 if (xmlReader.MoveToContent() == XmlNodeType.Element)

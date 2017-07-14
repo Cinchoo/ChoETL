@@ -128,7 +128,7 @@ namespace ChoFixedLengthWriterTest
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoFixedLengthWriter(writer).WithFirstLineHeader().WithField("Id", 0, 3, null, '0', ChoFieldValueJustification.Right, true).WithField("Name", 3, 10).
+            using (var parser = new ChoFixedLengthWriter(writer).WithFirstLineHeader().WithField("Id", 0, 3, null, null, '0', ChoFieldValueJustification.Right, true).WithField("Name", 3, 10).
                 WithField("JoinedDate", 13, 10, fieldType: typeof(DateTime), fillChar: '0').WithField("IsActive", 23, 1, fieldName: "A").
                 WithField("Salary", 24, 20))
             {

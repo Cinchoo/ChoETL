@@ -538,6 +538,22 @@ namespace ChoETL
                     ChoETLFramework.WriteLog(ChoETLFramework.TraceSwitch.TraceError, "Error while assigning default value '{0}' to '{1}' member. {2}".FormatString(defaultValue, ChoType.GetMemberName(pd), ex.Message));
                 }
             }
+            foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties<ChoDefaultValueAttribute>(target.GetType()))
+            {
+                if (ChoTypeDescriptor.GetPropetyAttribute<DefaultValueAttribute>(pd) != null)
+                    continue;
+
+                try
+                {
+                    defaultValue = ChoTypeDescriptor.GetPropetyAttribute<ChoDefaultValueAttribute>(pd).Value;
+                    if (defaultValue != null)
+                        ChoType.ConvertNSetPropertyValue(target, pd.Name, defaultValue);
+                }
+                catch (Exception ex)
+                {
+                    ChoETLFramework.WriteLog(ChoETLFramework.TraceSwitch.TraceError, "Error while assigning default value '{0}' to '{1}' member. {2}".FormatString(defaultValue, ChoType.GetMemberName(pd), ex.Message));
+                }
+            }
 
             //ChoETLFramework.InitializeObject(target);
 
@@ -820,6 +836,26 @@ namespace ChoETL
                 || typeof(BigInteger) == type 
                 || typeof(ChoCurrency) == type
                 || typeof(Decimal) == type
+                ;
+        }
+
+        public static bool IsNumeric(this Type type)
+        {
+            CheckTypeIsNotNull(type);
+            type = type.GetUnderlyingType();
+            return type.IsPrimitive
+                || typeof(byte) == type
+                || typeof(sbyte) == type
+                || typeof(short) == type
+                || typeof(ushort) == type
+                || typeof(int) == type
+                || typeof(uint) == type
+                || typeof(long) == type
+                || typeof(ulong) == type
+                || typeof(BigInteger) == type
+                || typeof(Decimal) == type
+                || typeof(double) == type
+                || typeof(float) == type
                 ;
         }
 

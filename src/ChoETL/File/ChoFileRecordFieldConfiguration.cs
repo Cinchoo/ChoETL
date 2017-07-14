@@ -48,7 +48,12 @@ namespace ChoETL
             get;
             set;
         }
-        
+        public Func<object, object> ValueConverter
+        {
+            get;
+            set;
+        }
+
         public ChoFileRecordFieldConfiguration(string name, ChoFileRecordFieldAttribute attr = null) : base(name, attr)
         {
             Truncate = true;

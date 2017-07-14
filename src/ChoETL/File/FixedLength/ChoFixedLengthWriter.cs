@@ -170,8 +170,8 @@ namespace ChoETL
             return this;
         }
 
-        public ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, Type fieldType, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
-            bool truncate = true, string fieldName = null)
+        public ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
+            bool truncate = true, string fieldName = null, Func<object, object> valueConverter = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -185,17 +185,11 @@ namespace ChoETL
                     FillChar = fillChar,
                     FieldValueJustification = fieldValueJustification,
                     Truncate = truncate,
-                    FieldName = fieldName.IsNullOrWhiteSpace() ? name : fieldName
+                    FieldName = fieldName.IsNullOrWhiteSpace() ? name : fieldName, ValueConverter = valueConverter
                 });
             }
 
             return this;
-        }
-
-        public ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
-            bool truncate = true, string fieldName = null)
-        {
-            return WithField(name, startIndex, size, null, quoteField, fillChar, fieldValueJustification, truncate, fieldName);
         }
 
         public ChoFixedLengthWriter<T> ColumnCountStrict(bool flag = true)

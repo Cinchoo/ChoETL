@@ -178,8 +178,8 @@ namespace ChoETL
             return this;
         }
 
-        public ChoFixedLengthReader<T> WithField(string name, int startIndex, int size, Type fieldType, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
-            string fieldName = null)
+        public ChoFixedLengthReader<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
+            string fieldName = null, Func<object, object> valueConverter = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -192,16 +192,11 @@ namespace ChoETL
                     fieldName = name;
 
                 Configuration.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(name.NTrim(), startIndex, size) { FieldType = fieldType,
-                    QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName.NTrim()
+                    QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName.NTrim(), ValueConverter = valueConverter
                 });
             }
 
             return this;
-        }
-
-        public ChoFixedLengthReader<T> WithField(string name, int startIndex, int size, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null, string fieldName = null)
-        {
-            return WithField(name, startIndex, size, null, quoteField, fieldValueTrimOption, fieldName);
         }
 
         public ChoFixedLengthReader<T> ColumnCountStrict()

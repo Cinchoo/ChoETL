@@ -306,7 +306,10 @@ namespace ChoETL
                         object value = node;
                         if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref value))
                             continue;
-                        fieldValue = node.Value;
+                        if (fieldConfig.ValueConverter != null)
+                            value = fieldConfig.ValueConverter(value);
+
+                        fieldValue = value is XElement ? node.Value : value;
                     }
                     else if (Configuration.ColumnCountStrict)
                         throw new ChoParserException("Missing '{0}' xml node.".FormatString(fieldConfig.FieldName));
@@ -325,41 +328,46 @@ namespace ChoETL
                         if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref value))
                             continue;
 
-                        //object[] xNodes = ((IEnumerable)node.XPathEvaluate(fieldConfig.XPath, Configuration.NamespaceManager)).OfType<object>().ToArray();
-                        //continue;
-                        XAttribute fXAttribute = xNodes.OfType<XAttribute>().FirstOrDefault();
-                        if (fXAttribute != null)
-                        {
-                            fieldValue = fXAttribute.Value;
-                        }
+                        if (fieldConfig.ValueConverter != null)
+                            fieldValue = fieldConfig.ValueConverter(value);
                         else
                         {
-                            fXElements = xNodes.OfType<XElement>().ToArray();
-                            if (fXElements != null)
+                            //object[] xNodes = ((IEnumerable)node.XPathEvaluate(fieldConfig.XPath, Configuration.NamespaceManager)).OfType<object>().ToArray();
+                            //continue;
+                            XAttribute fXAttribute = xNodes.OfType<XAttribute>().FirstOrDefault();
+                            if (fXAttribute != null)
                             {
-                                if (fieldConfig.IsCollection)
-                                {
-                                    List<object> list = new List<object>();
-                                    foreach (var ele in fXElements)
-                                    {
-                                        if (fieldConfig.FieldType.IsSimple())
-                                            list.Add(ChoConvert.ConvertTo(ele.Value, fieldConfig.FieldType.GetItemType()));
-                                        else
-                                        {
-                                            list.Add(ele.GetOuterXml().ToObjectFromXml(fieldConfig.FieldType.GetItemType()));
-                                        }
-                                    }
-                                    fieldValue = list.ToArray();
-                                }
-                                else
-                                {
-                                    XElement fXElement = fXElements.FirstOrDefault();
-                                    if (fXElement != null)
-                                        fieldValue = fXElement.Value;
-                                }
+                                fieldValue = fXAttribute.Value;
                             }
-                            else if (Configuration.ColumnCountStrict)
-                                throw new ChoParserException("Missing '{0}' xml node.".FormatString(fieldConfig.FieldName));
+                            else
+                            {
+                                fXElements = xNodes.OfType<XElement>().ToArray();
+                                if (fXElements != null)
+                                {
+                                    if (fieldConfig.IsCollection)
+                                    {
+                                        List<object> list = new List<object>();
+                                        foreach (var ele in fXElements)
+                                        {
+                                            if (fieldConfig.FieldType.IsSimple())
+                                                list.Add(ChoConvert.ConvertTo(ele.Value, fieldConfig.FieldType.GetItemType()));
+                                            else
+                                            {
+                                                list.Add(ele.GetOuterXml().ToObjectFromXml(fieldConfig.FieldType.GetItemType()));
+                                            }
+                                        }
+                                        fieldValue = list.ToArray();
+                                    }
+                                    else
+                                    {
+                                        XElement fXElement = fXElements.FirstOrDefault();
+                                        if (fXElement != null)
+                                            fieldValue = fXElement.Value;
+                                    }
+                                }
+                                else if (Configuration.ColumnCountStrict)
+                                    throw new ChoParserException("Missing '{0}' xml node.".FormatString(fieldConfig.FieldName));
+                            }
                         }
                     }
                     else
@@ -368,8 +376,15 @@ namespace ChoETL
                             fieldValue = xDict[fieldConfig.FieldName][0];
                         else
                             fieldValue = xDict[fieldConfig.FieldName];
+
+                        if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
+                            continue;
+
+                        if (fieldConfig.ValueConverter != null)
+                            fieldValue = fieldConfig.ValueConverter(fieldValue);
                     }
                 }
+
                 if (Configuration.IsDynamicObject)
                 {
                     if (kvp.Value.FieldType == null)

@@ -307,6 +307,9 @@ namespace ChoETL
                 if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
                     continue;
 
+                if (fieldConfig.ValueConverter != null)
+                    fieldValue = fieldConfig.ValueConverter(fieldValue);
+
                 if (Configuration.IsDynamicObject) //rec is ExpandoObject)
                 {
                     if (kvp.Value.FieldType != null)
@@ -449,7 +452,7 @@ namespace ChoETL
 
         private void HandleCollection(JToken[] jTokens, KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp)
         {
-            if (typeof(ICollection).IsAssignableFrom(kvp.Value.FieldType) && !kvp.Value.FieldType.IsArray)
+            if (false) //typeof(ICollection).IsAssignableFrom(kvp.Value.FieldType) && !kvp.Value.FieldType.IsArray)
             {
                 Type itemType = kvp.Value.FieldType.GetItemType();
                 IList<object> list = new List<object>();

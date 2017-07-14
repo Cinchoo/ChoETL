@@ -292,6 +292,9 @@ namespace ChoETL
                     if (!RaiseBeforeRecordFieldWrite(rec, index, kvp.Key, ref fieldValue))
                         return false;
 
+                    if (fieldConfig.ValueConverter != null)
+                        fieldValue = fieldConfig.ValueConverter(fieldValue);
+
                     rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, true);
 
                     if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.MemberLevel)
@@ -362,23 +365,37 @@ namespace ChoETL
                     }
                 }
 
-                bool isSimple = fieldValue.GetType().IsSimple();
+                bool isSimple = true;
 
+                Type ft = fieldValue == null ? typeof(object) : fieldValue.GetType();
                 if (fieldValue == null)
-                    fieldText = String.Empty;
-                else
+                    fieldText = "null";
+                else if (ft == typeof(string) || ft == typeof(char))
+                    fieldText = JsonConvert.SerializeObject(NormalizeFieldValue(kvp.Key, fieldValue.ToString(), kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false));
+                else if (ft == typeof(DateTime))
+                    fieldText = JsonConvert.SerializeObject(fieldValue);
+                else if (ft.IsEnum)
+                {
+                    fieldText = JsonConvert.SerializeObject(fieldValue);
+                }
+                else if (ft == typeof(ChoCurrency))
+                    fieldText = "\"{0}\"".FormatString(fieldValue.ToString());
+                else if (ft == typeof(bool))
+                    fieldText = JsonConvert.SerializeObject(fieldValue);
+                else if (ft.IsNumeric())
                     fieldText = fieldValue.ToString();
-
+                else
+                    isSimple = false;
 
                 if (isFirst)
                 {
-                    msg.AppendFormat("{2}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? "\"{0}\"".FormatString(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false)) :
+                    msg.AppendFormat("{2}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? fieldText :
                         Configuration.Formatting == Formatting.Indented ? JsonConvert.SerializeObject(fieldValue, Configuration.Formatting).Indent(1, " ") : JsonConvert.SerializeObject(fieldValue, Configuration.Formatting), 
                         Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
                 }
                 else
                 {
-                    msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? "\"{0}\"".FormatString(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false)) :
+                    msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? fieldText:
                         Configuration.Formatting == Formatting.Indented ? JsonConvert.SerializeObject(fieldValue, Configuration.Formatting).Indent(1, " ") : JsonConvert.SerializeObject(fieldValue, Configuration.Formatting),
                         Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
                 }

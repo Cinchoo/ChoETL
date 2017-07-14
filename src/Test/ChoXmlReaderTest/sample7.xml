@@ -1,0 +1,32 @@
+﻿<UpdateDB>
+    <Transaction>
+        <Insert>
+            <Table>CUSTOMER</Table>
+            <Set>
+                <szCustomerID>2988880562567</szCustomerID>
+                <szCustomerName>130808125028SHM </szCustomerName>
+                <szExternalID>3177@06/07/17</szExternalID>
+            </Set>
+        </Insert>
+    </Transaction>
+    <Transaction>
+        <Insert>
+            <Table>PERSON</Table>
+            <Set>
+                <szCustomerID>2988880562567</szCustomerID>
+                <szCustomerName>130808125028SHM </szCustomerName>
+                <szExternalID>3177@06/07/17</szExternalID>
+            </Set>
+        </Insert>
+    </Transaction>
+    <Transaction>
+        <Insert>
+            <Table>CUSTOMER</Table>
+            <Set>
+                <szCustomerID>12345</szCustomerID>
+                <szCustomerName>130808125028SHM </szCustomerName>
+                <szExternalID>3177@06/07/17</szExternalID>
+            </Set>
+        </Insert>
+    </Transaction>
+</UpdateDB>

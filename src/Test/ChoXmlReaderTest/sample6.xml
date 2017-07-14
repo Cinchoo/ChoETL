@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<JobApplications xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="2407132" bundle_id="2407132" version="1.0">
+    <JobApplication job_type="REQUESTED" request_date="2014-08-02T12:26:00.0000000">
+        <JobApplicationStates>
+            <JobApplicationState type="USEDCL" payment_call_flag="False">
+                <Applicants>
+                    <Applicant social_security_number="999999999" type="PB" date_of_birth="1972-10-01T00:00:00.0000000" first_name="Thomas" last_name="Edison">
+                        <Addresses>
+                            <Address city="Portland" state_code_id="MI" country_code="USA" postal_code="12345" item_code="CURRENT" street_number="6297" street="LAKE ARBOR" />
+                            <Address item_code="PREVIOUS" />
+                        </Addresses>
+                        <Communications>
+                            <Communication item_code="PEMAIL" com="edison@gmail.com" contact_type="CU"/>
+                            <Communication item_code="HOME" com="(123)-456-7890" contact_type="CU"/>
+                            <Communication item_code="OTHER" contact_type="CU"/>
+                            <Communication item_code="WORK" com="(100)-200-3000" contact_type="CU"/>
+                        </Communications>
+                    </Applicant>
+                    <Applicant social_security_number="123456789" type="CB" date_of_birth="1976-10-01T00:00:00.0000000" first_name="Mary" last_name="Edison">
+                        <Addresses>
+                            <Address city="BarHarBor" state_code_id="MI" country_code="USA" postal_code="12345" item_code="CURRENT" street_number="6297" street="LAKE ARBOR" />
+                            <Address item_code="PREVIOUS" />
+                        </Addresses>
+                        <Communications>
+                            <Communication item_code="PEMAIL" com="mary@gmail.com" contact_type="CU"/>
+                            <Communication item_code="HOME" com="(999)-456-7890" contact_type="CU"/>
+                            <Communication item_code="OTHER" contact_type="CU"/>
+                            <Communication item_code="WORK" com="(300)-200-3000" contact_type="CU"/>
+                        </Communications>
+                    </Applicant>
+                </Applicants>
+            </JobApplicationState>
+        </JobApplicationStates>
+    </JobApplication>
+    <JobApplication job_type="RECOMMENDED" request_date="2014-08-02T12:26:00.0000000">
+        <JobApplicationStates>
+            <JobApplicationState type="USEDCL" payment_call_flag="False">
+                <Applicants>
+                    <Applicant social_security_number="999999999" type="PB" date_of_birth="1972-10-01T00:00:00.0000000" first_name="Thomas" last_name="Edison">
+                        <Addresses>
+                            <Address city="Portland" state_code_id="MI" country_code="USA" postal_code="12345" item_code="CURRENT" street_number="6297" street="LAKE ARBOR" />
+                            <Address item_code="PREVIOUS" />
+                        </Addresses>
+                        <Communications>
+                            <Communication item_code="PEMAIL" com="edison@gmail.com" contact_type="CU"/>
+                            <Communication item_code="HOME" com="(123)-456-7890" contact_type="CU"/>
+                            <Communication item_code="OTHER" contact_type="CU"/>
+                            <Communication item_code="WORK" com="(100)-200-3000" contact_type="CU"/>
+                        </Communications>
+                    </Applicant>
+                    <Applicant social_security_number="123456789" type="CB" date_of_birth="1976-10-01T00:00:00.0000000" first_name="Mary" last_name="Edison">
+                        <Addresses>
+                            <Address city="BarHarBor" state_code_id="MI" country_code="USA" postal_code="12345" item_code="CURRENT" street_number="6297" street="LAKE ARBOR" />
+                            <Address item_code="PREVIOUS" />
+                        </Addresses>
+                        <Communications>
+                            <Communication item_code="PEMAIL" com="mary@gmail.com" contact_type="CU"/>
+                            <Communication item_code="HOME" com="(999)-456-7890" contact_type="CU"/>
+                            <Communication item_code="OTHER" contact_type="CU"/>
+                            <Communication item_code="WORK" com="(300)-200-3000" contact_type="CU"/>
+                        </Communications>
+                    </Applicant>
+                </Applicants>
+            </JobApplicationState>
+        </JobApplicationStates>
+    </JobApplication>
+</JobApplications>

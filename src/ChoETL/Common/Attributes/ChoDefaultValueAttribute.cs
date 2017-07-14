@@ -9,20 +9,22 @@ using System.Threading.Tasks;
 namespace ChoETL
 {
     [AttributeUsage(AttributeTargets.All)]
-    public class ChoDefaultValueAttribute : DefaultValueAttribute
+    public class ChoDefaultValueAttribute :Attribute //: DefaultValueAttribute
     {
         private Delegate _defaultValueOps { get; set; }
-        public ChoDefaultValueAttribute(string defaultValueCodeSnippet) : base(0)
+        private string _defaultValue { get; set; }
+        public ChoDefaultValueAttribute(string defaultValueCodeSnippet)// : base(0)
         {
+            _defaultValue = defaultValueCodeSnippet;
             this._defaultValueOps = ConstructOperation(defaultValueCodeSnippet);
         }
 
-        public override object Value
+        public object Value
         {
             get
             {
                 if (_defaultValueOps == null)
-                    return null;
+                    return _defaultValue;
                 else
                     return _defaultValueOps.DynamicInvoke();
             }

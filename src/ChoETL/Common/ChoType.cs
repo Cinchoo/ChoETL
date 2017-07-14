@@ -2436,10 +2436,16 @@
             DefaultValueAttribute defaultValueAttribute = (from a in mi.Attributes.AsTypedEnumerable<Attribute>()
                                                            where typeof(DefaultValueAttribute).IsAssignableFrom(a.GetType())
                                                            select a).FirstOrDefault() as DefaultValueAttribute;
-            if (defaultValueAttribute == null)
-                return null;
+            if (defaultValueAttribute != null)
+                return defaultValueAttribute.Value;
+            ChoDefaultValueAttribute chodefaultValueAttribute = (from a in mi.Attributes.AsTypedEnumerable<Attribute>()
+                                                           where typeof(ChoDefaultValueAttribute).IsAssignableFrom(a.GetType())
+                                                           select a).FirstOrDefault() as ChoDefaultValueAttribute;
 
-            return defaultValueAttribute.Value;
+            if (chodefaultValueAttribute != null)
+                return chodefaultValueAttribute.Value;
+
+            return null;
         }
 
         public static object GetDefaultValue(PropertyDescriptor mi)

@@ -3,14 +3,35 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace ChoJSONReaderTest
 {
+    public class MenuItem
+    {
+        public string Value { get; set; }
+        public string OnClick { get; set; }
+    }
+
+    [Serializable]
+    public class MyObjectType
+    {
+        [ChoJSONRecordField(JSONPath = "$.id")]
+        public string Id { get; set; }
+        [ChoJSONRecordField(JSONPath = "$.value")]
+        [ChoDefaultValue("FileMenu")]
+        public string Value1 { get; set; }
+
+        [XmlElement]
+        [ChoJSONRecordField(JSONPath = "$.popup.menuitem")]
+        public MenuItem[] MenuItems { get; set; }
+    }
 
     public class Message
     {
@@ -80,8 +101,21 @@ namespace ChoJSONReaderTest
 
         static void Main(string[] args)
         {
-            Sample2();
+            Sample3();
         }
+        static void Sample3()
+        {
+using (var jr = new ChoJSONReader<MyObjectType>("sample3.json").WithJSONPath("$.menu")
+    )
+{
+                jr.AfterRecordFieldLoad += (o, e) =>
+                {
+                };
+    using (var xw = new ChoXmlWriter<MyObjectType>("sample3.xml").Configure(c => c.UseXmlSerialization = true))
+        xw.Write(jr);
+}
+        }
+
         static void Sample2()
         {
             using (var csv = new ChoCSVWriter("sample2.csv") { TraceSwitch = ChoETLFramework.TraceSwitchOff }.WithFirstLineHeader())

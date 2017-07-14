@@ -27,9 +27,60 @@ namespace ChoXmlReaderTest
                 </Employee>
             </Employees>
         ";
-         
+
+        static void XmlToCSVSample7()
+        {
+            using (var parser = new ChoXmlReader("sample7.xml").WithXPath("/UpdateDB/Transaction")
+                .WithField("Table", xPath: "/Insert/Table")
+                .WithField("szCustomerID", xPath: "/Insert/Set/szCustomerID")
+                .WithField("szCustomerName", xPath: "/Insert/Set/szCustomerName")
+                .WithField("szExternalID", xPath: "/Insert/Set/szExternalID")
+                )
+            {
+                using (var writer = new ChoCSVWriter("sample7.csv").WithFirstLineHeader())
+                    writer.Write(parser.Where(r => r.Table == "CUSTOMER").Select(r => new { szCustomerID = r.szCustomerID, szCustomerName = r.szCustomerName, szExternalID = r.szExternalID }));
+            }
+
+        }
+
+        static void XmlToCSVSample6()
+        {
+            using (var parser = new ChoXmlReader("sample6.xml").WithXPath("JobApplications")
+                .WithField("ID", xPath: "@id")
+                .WithField("PB_SSN", xPath: "/JobApplication[@job_type='REQUESTED']/JobApplicationStates/JobApplicationState/Applicants/Applicant[@type='PB']/@social_security_number")
+                .WithField("PB_FIRST_NAME", xPath: "/JobApplication[@job_type='REQUESTED']/JobApplicationStates/JobApplicationState/Applicants/Applicant[@type='PB']/@first_name")
+                .WithField("PB_CITY", xPath: "/JobApplication[@job_type='REQUESTED']/JobApplicationStates/JobApplicationState/Applicants/Applicant[@type='PB']/Addresses/Address[@item_code='CURRENT']/@city")
+                .WithField("PB_STATE", xPath: "/JobApplication[@job_type='REQUESTED']/JobApplicationStates/JobApplicationState/Applicants/Applicant[@type='PB']/Addresses/Address[@item_code='CURRENT']/@state_code_id")
+                .WithField("PB_PEMAIL", xPath: "/JobApplication[@job_type='REQUESTED']/JobApplicationStates/JobApplicationState/Applicants/Applicant[@type='PB']/Communications/Communication[@item_code='PEMAIL']/@com")
+                .WithField("CB_SSN", xPath: "/JobApplication[@job_type='REQUESTED']/JobApplicationStates/JobApplicationState/Applicants/Applicant[@type='CB']/@social_security_number")
+                .WithField("CB_FIRST_NAME", xPath: "/JobApplication[@job_type='REQUESTED']/JobApplicationStates/JobApplicationState/Applicants/Applicant[@type='CB']/@first_name")
+                .WithField("CB_CITY", xPath: "/JobApplication[@job_type='REQUESTED']/JobApplicationStates/JobApplicationState/Applicants/Applicant[@type='CB']/Addresses/Address[@item_code='CURRENT']/@city")
+                .WithField("CB_STATE", xPath: "/JobApplication[@job_type='REQUESTED']/JobApplicationStates/JobApplicationState/Applicants/Applicant[@type='CB']/Addresses/Address[@item_code='CURRENT']/@state_code_id")
+                .WithField("CB_PEMAIL", xPath: "/JobApplication[@job_type='REQUESTED']/JobApplicationStates/JobApplicationState/Applicants/Applicant[@type='CB']/Communications/Communication[@item_code='PEMAIL']/@com")
+         )
+            {
+                using (var writer = new ChoCSVWriter("sample6.csv"))
+                    writer.Write(parser);
+            }
+
+        }
+
+
+        static void XmlToCSVSample5()
+        {
+            using (var parser = new ChoXmlReader("sample5.xml").WithXPath("/PRICE")
+            )
+            {
+                using (var writer = new ChoCSVWriter("sample5.csv").WithFirstLineHeader())
+                    writer.Write(parser);
+            }
+
+        }
+
         static void Main(string[] args)
         {
+            XmlToCSVSample1();
+            return;
             //dynamic p = new ChoPropertyBag();
             //p.Name = "Raj";
             //p.Zip = "10020";
@@ -204,7 +255,9 @@ namespace ChoXmlReaderTest
                 .WithField("Value", xPath: "value")
                 )
             {
-                Console.WriteLine(ChoCSVWriter.ToText(parser.Where(kvp => (string)kvp.Name == "PersonN").Select(kvp => kvp.Value).ToExpandoObject()));
+                using (var writer = new ChoCSVWriter("sample.csv"))
+                    writer.Write(parser.Select(kvp => kvp.Value).ToExpandoObject());
+                //Console.WriteLine(ChoCSVWriter.ToText(parser.Select(kvp => kvp.Value).ToExpandoObject()));
             }
 
         }

@@ -56,7 +56,7 @@ namespace ChoETL
 
             CultureInfo prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
-            _se = new Lazy<XmlSerializer>(() => Configuration.XmlSerializer == null ? new XmlSerializer(RecordType) : Configuration.XmlSerializer);
+            _se = new Lazy<XmlSerializer>(() => Configuration.XmlSerializer == null ? null : Configuration.XmlSerializer);
 
             string recText = String.Empty;
 
@@ -140,7 +140,10 @@ namespace ChoETL
                                         if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.Off) != ChoObjectValidationMode.Off)
                                             record.DoObjectLevelValidation(Configuration, Configuration.XmlRecordFieldConfigurations);
 
-                                        _se.Value.Serialize(sw, record);
+                                        if (_se.Value != null)
+                                            _se.Value.Serialize(sw, record);
+                                        else
+                                            sw.Write("{1}{0}", ChoUtility.XmlSerialize(record).Indent(2, " "), Configuration.EOLDelimiter);
 
                                         if (!RaiseAfterRecordWrite(record, _index, null))
                                             yield break;
@@ -283,6 +286,9 @@ namespace ChoETL
 
                     if (!RaiseBeforeRecordFieldWrite(rec, index, kvp.Key, ref fieldValue))
                         return false;
+
+                    if (fieldConfig.ValueConverter != null)
+                        fieldValue = fieldConfig.ValueConverter(fieldValue);
 
                     rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, true);
 

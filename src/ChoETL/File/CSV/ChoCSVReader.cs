@@ -203,18 +203,13 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVReader<T> WithField(string name, Type fieldType, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null)
+        public ChoCSVReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null)
         {
             int maxFieldPos = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-            return WithField(name, ++maxFieldPos, fieldType, quoteField, fieldValueTrimOption, fieldName);
+            return WithField(name, ++maxFieldPos, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter);
         }
 
-        public ChoCSVReader<T> WithField(string name, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null)
-        {
-            return WithField(name, typeof(string), quoteField, fieldValueTrimOption, fieldName);
-        }
-
-        public ChoCSVReader<T> WithField(string name, int position, Type fieldType, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null)
+        public ChoCSVReader<T> WithField(string name, int position, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -226,15 +221,10 @@ namespace ChoETL
                 if (fieldName.IsNullOrWhiteSpace())
                     fieldName = name;
 
-                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(name.NTrim(), position) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName.NTrim() });
+                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(name.NTrim(), position) { FieldType = fieldType == null ? typeof(string) : fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName.NTrim(), ValueConverter = valueConverter });
             }
 
             return this;
-        }
-
-        public ChoCSVReader<T> WithField(string name, int position, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null)
-        {
-            return WithField(name, position, null, quoteField, fieldValueTrimOption, fieldName);
         }
 
         public ChoCSVReader<T> ColumnCountStrict(bool flag = true)

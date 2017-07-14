@@ -15,7 +15,7 @@ namespace ChoETL
         public static void ConvertNSetMemberValue(this IDictionary<string, object> dict, string fn, ChoRecordFieldConfiguration fieldConfig, ref object fieldValue, CultureInfo culture)
         {
             if (fieldConfig.Converters.IsNullOrEmpty())
-                fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, null, fieldConfig.PropConverters, new object[] { fieldConfig.PropConverterParams }, culture);
             else
                 fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), null, culture);
 
@@ -26,7 +26,7 @@ namespace ChoETL
         {
             if (fieldConfig.Converters.IsNullOrEmpty())
             {
-                fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, new object[] { fieldConfig.PropConverterParams }, culture);
             }
             else
             {
@@ -48,7 +48,7 @@ namespace ChoETL
             //Set fallback value to member
             object fieldValue = null;
             if (fieldConfig.Converters.IsNullOrEmpty())
-                fieldValue = ChoConvert.ConvertFrom(fieldConfig.FallbackValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                fieldValue = ChoConvert.ConvertFrom(fieldConfig.FallbackValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, new object[] { fieldConfig.PropConverterParams }, culture);
             else
                 fieldValue = ChoConvert.ConvertFrom(fieldConfig.FallbackValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), null, culture);
 
@@ -69,7 +69,7 @@ namespace ChoETL
             //Set default value to member
             object fieldValue = null;
             if (fieldConfig.Converters.IsNullOrEmpty())
-                fieldValue = ChoConvert.ConvertFrom(fieldConfig.DefaultValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                fieldValue = ChoConvert.ConvertFrom(fieldConfig.DefaultValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, new object[] { fieldConfig.PropConverterParams }, culture);
             else
                 fieldValue = ChoConvert.ConvertFrom(fieldConfig.DefaultValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), null, culture);
 
@@ -83,7 +83,7 @@ namespace ChoETL
             if (fieldConfig.IsFallbackValueSpecified)
             {
                 if (fieldConfig.Converters.IsNullOrEmpty())
-                    fallbackValue = ChoConvert.ConvertFrom(fieldConfig.FallbackValue, fieldConfig.FieldType, null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                    fallbackValue = ChoConvert.ConvertFrom(fieldConfig.FallbackValue, fieldConfig.FieldType, null, fieldConfig.PropConverters, new object[] { fieldConfig.PropConverterParams }, culture);
                 else
                     fallbackValue = ChoConvert.ConvertFrom(fieldConfig.FallbackValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), null, culture);
 
@@ -100,7 +100,7 @@ namespace ChoETL
             if (fieldConfig.IsDefaultValueSpecified)
             {
                 if (fieldConfig.Converters.IsNullOrEmpty())
-                    fieldValue = ChoConvert.ConvertFrom(fieldConfig.DefaultValue, fieldConfig.FieldType, null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                    fieldValue = ChoConvert.ConvertFrom(fieldConfig.DefaultValue, fieldConfig.FieldType, null, fieldConfig.PropConverters, new object[] { fieldConfig.PropConverterParams }, culture);
                 else
                     fieldValue = ChoConvert.ConvertFrom(fieldConfig.DefaultValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), null, culture);
 
@@ -181,7 +181,7 @@ namespace ChoETL
                 return false;
 
             if (fieldConfig.Converters.IsNullOrEmpty())
-                fieldValue = ChoConvert.ConvertTo(fieldConfig.DefaultValue, fieldConfig.FieldType, null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                fieldValue = ChoConvert.ConvertTo(fieldConfig.DefaultValue, fieldConfig.FieldType, null, fieldConfig.PropConverters, new object[] { fieldConfig.PropConverterParams }, culture);
             else
                 fieldValue = ChoConvert.ConvertTo(fieldConfig.DefaultValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), null, culture);
 
@@ -194,7 +194,7 @@ namespace ChoETL
                 return false;
 
             if (fieldConfig.Converters.IsNullOrEmpty())
-                fieldValue = ChoConvert.ConvertTo(fieldConfig.FallbackValue, fieldConfig.FieldType, null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                fieldValue = ChoConvert.ConvertTo(fieldConfig.FallbackValue, fieldConfig.FieldType, null, fieldConfig.PropConverters, new object[] { fieldConfig.PropConverterParams }, culture);
             else
                 fieldValue = ChoConvert.ConvertTo(fieldConfig.FallbackValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), null, culture);
 
@@ -204,7 +204,7 @@ namespace ChoETL
         public static void GetNConvertMemberValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, CultureInfo culture, ref object fieldValue, bool nativeType = false)
         {
             if (fieldConfig.Converters.IsNullOrEmpty())
-                fieldValue = ChoConvert.ConvertTo(fieldValue, nativeType ? fieldConfig.FieldType : typeof(string), null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                fieldValue = ChoConvert.ConvertTo(fieldValue, nativeType ? fieldConfig.FieldType : typeof(string), null, fieldConfig.PropConverters, new object[] { fieldConfig.PropConverterParams }, culture);
             else
                 fieldValue = ChoConvert.ConvertTo(fieldValue, nativeType ? fieldConfig.FieldType : typeof(string), null, fieldConfig.Converters.ToArray(), null, culture);
         }

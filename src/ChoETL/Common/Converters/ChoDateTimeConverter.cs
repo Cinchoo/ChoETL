@@ -27,7 +27,7 @@ namespace ChoETL
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            if (value is DateTime)
+            if (value is DateTime && targetType == typeof(string))
             {
                 string format = parameter.GetValueAt<string>(0, ChoTypeConverterFormatSpec.Instance.DateTimeFormat);
                 return !format.IsNullOrWhiteSpace() ? ((DateTime)value).ToString(format, culture) : value;

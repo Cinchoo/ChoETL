@@ -210,7 +210,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoKVPReader<T> WithField(string name, Type fieldType, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null)
+        public ChoKVPReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -222,15 +222,10 @@ namespace ChoETL
                 if (fieldName.IsNullOrWhiteSpace())
                     fieldName = name;
 
-                Configuration.KVPRecordFieldConfigurations.Add(new ChoKVPRecordFieldConfiguration(name.NTrim()) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName.NTrim() });
+                Configuration.KVPRecordFieldConfigurations.Add(new ChoKVPRecordFieldConfiguration(name.NTrim()) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName.NTrim(), ValueConverter = valueConverter });
             }
 
             return this;
-        }
-
-        public ChoKVPReader<T> WithField(string name, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null)
-        {
-            return WithField(name, null, quoteField, fieldValueTrimOption, fieldName);
         }
 
         public ChoKVPReader<T> ColumnCountStrict(bool flag = true)

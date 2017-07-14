@@ -82,8 +82,8 @@ namespace ChoETL
         internal readonly List<object> Converters = new List<object>();
         internal PropertyInfo PI;
         internal PropertyDescriptor PD;
-        internal object[] PropConverters;
-        internal object[] PropConverterParams;
+        public object[] PropConverters;
+        public object[] PropConverterParams;
 
         public ChoRecordFieldConfiguration(string name, ChoRecordFieldAttribute attr = null)
         {
