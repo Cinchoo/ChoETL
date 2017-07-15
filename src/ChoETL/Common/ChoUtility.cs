@@ -962,7 +962,7 @@ namespace ChoETL
                     }
                 }
             }
-            throw new ArgumentNullException("Invald '{0}' collection type passed.".FormatString(type.Name));
+            throw new ArgumentNullException("Invalid '{0}' collection type passed.".FormatString(type.Name));
         }
 
         public static bool IsGenericList(this Type type, Type itemType)

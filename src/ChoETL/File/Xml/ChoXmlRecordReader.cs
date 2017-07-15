@@ -344,25 +344,57 @@ namespace ChoETL
                                 fXElements = xNodes.OfType<XElement>().ToArray();
                                 if (fXElements != null)
                                 {
-                                    if (fieldConfig.IsCollection)
+                                    if (Configuration.IsDynamicObject)
                                     {
-                                        List<object> list = new List<object>();
-                                        foreach (var ele in fXElements)
+                                        if (fieldConfig.IsArray != null && fieldConfig.IsArray.Value)
                                         {
-                                            if (fieldConfig.FieldType.IsSimple())
-                                                list.Add(ChoConvert.ConvertTo(ele.Value, fieldConfig.FieldType.GetItemType()));
+                                            List<object> list = new List<object>();
+                                            foreach (var ele in fXElements)
+                                            {
+                                                if (fieldConfig.FieldType.IsSimple())
+                                                    list.Add(ChoConvert.ConvertTo(ele.Value, fieldConfig.FieldType.GetItemType()));
+                                                else
+                                                {
+                                                    list.Add(ele.GetOuterXml().ToObjectFromXml(fieldConfig.FieldType.GetItemType()));
+                                                }
+                                            }
+                                            fieldValue = list.ToArray();
+                                        }
+                                        else
+                                        {
+                                            if (fieldConfig.FieldType == typeof(string) || fieldConfig.FieldType.IsSimple())
+                                            {
+                                                XElement fXElement = fXElements.FirstOrDefault();
+                                                if (fXElement != null)
+                                                    fieldValue = fXElement.Value;
+                                            }
                                             else
                                             {
-                                                list.Add(ele.GetOuterXml().ToObjectFromXml(fieldConfig.FieldType.GetItemType()));
+                                                XmlAttributeOverrides overrides = null;
+                                                var xattribs = new XmlAttributes();
+                                                var xroot = new XmlRootAttribute(fieldConfig.FieldName);
+                                                xattribs.XmlRoot = xroot;
+                                                overrides = new XmlAttributeOverrides();
+                                                overrides.Add(fieldConfig.FieldType, xattribs);
+
+                                                XElement fXElement = fXElements.FirstOrDefault();
+                                                if (fXElement != null)
+                                                    fieldValue = fXElement.GetOuterXml().ToObjectFromXml(fieldConfig.FieldType, overrides);
                                             }
                                         }
-                                        fieldValue = list.ToArray();
                                     }
                                     else
                                     {
+                                        XmlAttributeOverrides overrides = null;
+                                        var xattribs = new XmlAttributes();
+                                        var xroot = new XmlRootAttribute(fieldConfig.FieldName);
+                                        xattribs.XmlRoot = xroot;
+                                        overrides = new XmlAttributeOverrides();
+                                        overrides.Add(fieldConfig.FieldType, xattribs);
+
                                         XElement fXElement = fXElements.FirstOrDefault();
                                         if (fXElement != null)
-                                            fieldValue = fXElement.Value;
+                                            fieldValue = fXElement.GetOuterXml().ToObjectFromXml(fieldConfig.FieldType, overrides);
                                     }
                                 }
                                 else if (Configuration.ColumnCountStrict)
@@ -413,7 +445,7 @@ namespace ChoETL
                     {
                         var dict = rec as IDictionary<string, Object>;
 
-                        if (!fieldConfig.IsCollection)
+                        if (!fieldConfig.IsArray.CastTo<bool>())
                             dict.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
                         else
                             dict[kvp.Key] = fieldValue;

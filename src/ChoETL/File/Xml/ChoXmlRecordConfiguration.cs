@@ -242,8 +242,8 @@ namespace ChoETL
                         var obj = new ChoXmlRecordFieldConfiguration(pd.Name, xpath);
                         obj.FieldType = pd.PropertyType;
                         obj.UseCache = useCache;
-                        if (!obj.IsCollection)
-                            obj.IsCollection = typeof(ICollection).IsAssignableFrom(obj.FieldType);
+                        //if (!obj.IsCollection)
+                        //    obj.IsCollection = typeof(ICollection).IsAssignableFrom(obj.FieldType);
                         XmlRecordFieldConfigurations.Add(obj);
 
                         startIndex += size;
@@ -286,7 +286,7 @@ namespace ChoETL
                             if (dict[name].IsXmlAttribute)
                                 throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
 
-                            dict[name].IsCollection = true;
+                            dict[name].IsArray = true;
                         }
                     }
 
@@ -314,8 +314,8 @@ namespace ChoETL
 
                 foreach (var fc in XmlRecordFieldConfigurations)
                 {
-                    if (!fc.IsCollection)
-                        fc.IsCollection = typeof(ICollection).IsAssignableFrom(fc.FieldType);
+                    if (fc.IsArray == null)
+                        fc.IsArray = typeof(ICollection).IsAssignableFrom(fc.FieldType);
 
                     if (fc.XPath.IsNullOrWhiteSpace())
                         fc.XPath = $"//{fc.FieldName}|//@{fc.FieldName}";

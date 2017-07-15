@@ -54,23 +54,39 @@ namespace ChoXmlWriterTest
 
         static void QuickPOCOTest()
         {
-            List<EmployeeRecSimple> objs = new List<EmployeeRecSimple>();
+            //List<EmployeeRecSimple> objs = new List<EmployeeRecSimple>();
 
-            EmployeeRecSimple rec1 = new EmployeeRecSimple();
-            rec1.Id = null;
-            rec1.Name = "Mark";
-            rec1.Depends = new List<string>() { "AA", "BB" };
-            rec1.Courses = new Dictionary<int, string>() { { 1, "AA" }, { 2, "BB" } };
-            objs.Add(rec1);
+            //EmployeeRecSimple rec1 = new EmployeeRecSimple();
+            //rec1.Id = null;
+            //rec1.Name = "Mark";
+            //rec1.Depends = new List<string>() { "AA", "BB" };
+            //rec1.Courses = new Dictionary<int, string>() { { 1, "AA" }, { 2, "BB" } };
+            //objs.Add(rec1);
 
-            EmployeeRecSimple rec2 = new EmployeeRecSimple();
-            rec2.Id = "2";
-            rec2.Name = null;
-            objs.Add(rec2);
+            //EmployeeRecSimple rec2 = new EmployeeRecSimple();
+            //rec2.Id = "2";
+            //rec2.Name = null;
+            //objs.Add(rec2);
 
-            using (var parser = new ChoXmlWriter<EmployeeRecSimple>("Emp.xml").WithXPath("Employees/Employee"))
+            //using (var parser = new ChoXmlWriter<EmployeeRecSimple>("Emp.xml").WithXPath("Employees/Employee"))
+            //{
+            //    parser.Write(objs);
+            //}
+    //        using (var reader = new ChoXmlReader("emp.xml").WithXPath("Employees/Employee")
+    //.WithField("Id")
+    //.WithField("Name")
+    //.WithField("Depends", isArray: false, fieldType: typeof(List<string>))
+    //.WithField("KVP", isArray: false, fieldType: typeof(List<ChoKeyValuePair<int, string>>))
+    //)
+    //        {
+    //            foreach (var i in reader)
+    //                Console.WriteLine(ChoUtility.ToStringEx(i));
+    //        }
+
+            using (var reader = new ChoXmlReader<EmployeeRecSimple>("emp.xml").WithXPath("Employees/Employee"))
             {
-                parser.Write(objs);
+                foreach (var i in reader)
+                    Console.WriteLine(ChoUtility.ToStringEx(i));
             }
         }
 
@@ -124,7 +140,7 @@ namespace ChoXmlWriterTest
             public List<ChoKeyValuePair<int, string>> KVP
             {
                 get { return Courses.Select(kvp => new ChoKeyValuePair<int, string>(kvp)).ToList();  }
-                set { }
+                set { Courses = value != null ? value.ToDictionary(v => v.Key, v => v.Value) : new Dictionary<int, string>(); }
             }
             [ChoIgnoreMember]
             public Dictionary<int, string> Courses { get; set; }
