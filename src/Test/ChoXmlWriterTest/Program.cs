@@ -14,7 +14,7 @@ namespace ChoXmlWriterTest
     {
         static void Main(string[] args)
         {
-            ConfigFirstTest();
+            QuickPOCOTest();
         }
 
         static void ConfigFirstTest()
@@ -29,7 +29,7 @@ namespace ChoXmlWriterTest
 
             dynamic rec2 = new ExpandoObject();
             rec2.Id = 2;
-            rec2.Name = "Jason";
+            rec2.Name = null;
             rec2.IsActive = true;
             rec2.Message = new ChoCDATA("Test");
             objs.Add(rec2);
@@ -57,13 +57,15 @@ namespace ChoXmlWriterTest
             List<EmployeeRecSimple> objs = new List<EmployeeRecSimple>();
 
             EmployeeRecSimple rec1 = new EmployeeRecSimple();
-            rec1.Id = 1;
+            rec1.Id = null;
             rec1.Name = "Mark";
+            rec1.Depends = new List<string>() { "AA", "BB" };
+            rec1.Courses = new Dictionary<int, string>() { { 1, "AA" }, { 2, "BB" } };
             objs.Add(rec1);
 
             EmployeeRecSimple rec2 = new EmployeeRecSimple();
-            rec2.Id = 2;
-            rec2.Name = "Jason";
+            rec2.Id = "2";
+            rec2.Name = null;
             objs.Add(rec2);
 
             using (var parser = new ChoXmlWriter<EmployeeRecSimple>("Emp.xml").WithXPath("Employees/Employee"))
@@ -103,18 +105,29 @@ namespace ChoXmlWriterTest
             }
         }
 
-        public partial class EmployeeRecSimple
+        public partial class EmployeeRecSimple1
         {
             public int Id { get; set; }
             public string Name { get; set; }
         }
 
-        public partial class EmployeeRec
+        public partial class EmployeeRecSimple
         {
-            [ChoXmlElementRecordField]
-            public int Id1 { get; set; }
+            [ChoXmlAttributeRecordField]
+            public string Id { get; set; }
             [ChoXmlElementRecordField]
             public string Name { get; set; }
+            [ChoXmlElementRecordField]
+            public List<string> Depends { get; set; }
+
+            [ChoXmlElementRecordField]
+            public List<ChoKeyValuePair<int, string>> KVP
+            {
+                get { return Courses.Select(kvp => new ChoKeyValuePair<int, string>(kvp)).ToList();  }
+                set { }
+            }
+            [ChoIgnoreMember]
+            public Dictionary<int, string> Courses { get; set; }
         }
     }
 }

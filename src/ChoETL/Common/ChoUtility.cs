@@ -39,6 +39,29 @@ namespace ChoETL
         {
 
         }
+        public static IEnumerable<T> ZipEx<T1, T2, T>(this IEnumerable<T1> first,
+                                    IEnumerable<T2> second, Func<T1, T2, T> operation)
+        {
+            using (var iter1 = first.GetEnumerator())
+            using (var iter2 = second.GetEnumerator())
+            {
+                while (iter1.MoveNext())
+                {
+                    if (iter2.MoveNext())
+                    {
+                        yield return operation(iter1.Current, iter2.Current);
+                    }
+                    else
+                    {
+                        yield return operation(iter1.Current, default(T2));
+                    }
+                }
+                while (iter2.MoveNext())
+                {
+                    yield return operation(default(T1), iter2.Current);
+                }
+            }
+        }
         public static List<T[]> Transpose<T>(this Dictionary<T, T> dict)
         {
             List<T[]> ret = new List<T[]>();
@@ -102,6 +125,8 @@ namespace ChoETL
         {
             if (src == null) return null;
 
+            //if (src.GetType().IsSimple())
+            //    return src;
             if (src is ExpandoObject)
                 return src;
             if (src is DynamicObject)

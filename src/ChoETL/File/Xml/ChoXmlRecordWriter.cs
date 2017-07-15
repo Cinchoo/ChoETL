@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
@@ -20,6 +21,8 @@ namespace ChoETL
         private bool _configCheckDone = false;
         private long _index = 0;
         private Lazy<XmlSerializer> _se = null;
+        private readonly Regex _beginTagRegex = new Regex("^<.*>");
+        private readonly Regex _endTagRegex = new Regex("</.*>$");
         internal ChoWriter Writer = null;
 
         public ChoXmlRecordConfiguration Configuration
@@ -143,7 +146,7 @@ namespace ChoETL
                                         if (_se.Value != null)
                                             _se.Value.Serialize(sw, record);
                                         else
-                                            sw.Write("{1}{0}", ChoUtility.XmlSerialize(record).Indent(2, " "), Configuration.EOLDelimiter);
+                                            sw.Write("{1}{0}", ChoUtility.XmlSerialize(record).Indent(2, Configuration.IndentChar.ToString()), Configuration.EOLDelimiter);
 
                                         if (!RaiseAfterRecordWrite(record, _index, null))
                                             yield break;
@@ -213,6 +216,20 @@ namespace ChoETL
                 return " " + nsText.ToString();
         }
 
+        private IEnumerable<KeyValuePair<string, ChoXmlRecordFieldConfiguration>> GetOrderedKVP()
+        {
+            foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
+            {
+                if (kvp.Value.IsXmlAttribute)
+                    yield return kvp;
+            }
+            foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
+            {
+                if (!kvp.Value.IsXmlAttribute)
+                    yield return kvp;
+            }
+        }
+
         private bool ToText(long index, object rec, out string recText)
         {
             recText = null;
@@ -227,8 +244,8 @@ namespace ChoETL
             //bool firstColumn = true;
             PropertyInfo pi = null;
             bool isElementClosed = false;
-            msg.AppendFormat("{1}<{0}", Configuration.NodeName, Configuration.Indent);
-            foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
+            msg.Append("<{0}".FormatString(Configuration.NodeName).Indent(Configuration.Indent, Configuration.IndentChar.ToString()));
+            foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in GetOrderedKVP())
             {
                 fieldConfig = kvp.Value;
                 fieldValue = null;
@@ -289,8 +306,8 @@ namespace ChoETL
 
                     if (fieldConfig.ValueConverter != null)
                         fieldValue = fieldConfig.ValueConverter(fieldValue);
-
-                    rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, true);
+                    else
+                        rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, true);
 
                     if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.MemberLevel)
                         rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
@@ -376,21 +393,29 @@ namespace ChoETL
                                 msg.AppendFormat(">{0}", Configuration.EOLDelimiter);
                                 isElementClosed = true;
                             }
-                            msg.Append("{2}{2}<{0}>{1}</{0}>{3}".FormatString(fieldConfig.FieldName,
+                            msg.Append("<{0}>{1}</{0}>{2}".FormatString(fieldConfig.FieldName,
                                 NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false),
-                                Configuration.Indent, Configuration.EOLDelimiter));
+                                Configuration.EOLDelimiter).Indent(Configuration.Indent * 2, Configuration.IndentChar.ToString()));
                         }
                     }
                     else
                     {
                         fieldText = ChoUtility.XmlSerialize(fieldValue);
+                        fieldText = _beginTagRegex.Replace(fieldText, delegate (Match thisMatch)
+                        {
+                            return "<{0}>".FormatString(fieldConfig.FieldName);
+                        });
+                        fieldText = _endTagRegex.Replace(fieldText, delegate (Match thisMatch)
+                        {
+                            return "</{0}>".FormatString(fieldConfig.FieldName);
+                        });
                         if (!isElementClosed)
                         {
                             msg.AppendFormat(">{0}", Configuration.EOLDelimiter);
                             isElementClosed = true;
                         }
-                        msg.Append("{1}{1}{0}{2}".FormatString(fieldText,
-                            Configuration.Indent, Configuration.EOLDelimiter));
+                        msg.Append("{0}{1}".FormatString(fieldText,
+                            Configuration.EOLDelimiter).Indent(Configuration.Indent * 2, Configuration.IndentChar.ToString()));
                     }
                 }
             }
@@ -400,7 +425,7 @@ namespace ChoETL
                 msg.AppendFormat(">{0}", Configuration.EOLDelimiter);
                 isElementClosed = true;
             }
-            msg.AppendFormat("{1}</{0}>", Configuration.NodeName, Configuration.Indent);
+            msg.Append("</{0}>".FormatString(Configuration.NodeName).Indent(Configuration.Indent, Configuration.IndentChar.ToString()));
 
             recText = msg.ToString();
             return true;

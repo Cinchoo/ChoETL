@@ -1,0 +1,74 @@
+﻿[
+   
+     {
+        "ccId": "3HZN35631490",
+        "hId": "21640500",
+        "identifiers": [
+            {
+                "identityText": "1234",
+                "identityTypeCode": "SSN"
+            }
+        ],
+        "members": [
+            {
+                "dob": "2016-12-03",
+                "firstName": "HUG HES",
+                "gender": "M",
+                "identifiers": [
+                    {
+                        "identityText": "1234",
+                        "identityTypeCode": "HNJI"
+                    },
+                    {
+                        "identityText": "467",
+                        "identityTypeCode": "HIE_EXSID"
+                    }
+                ],
+                "lastName": "ABREUXSIT",
+                "memberId": "2179410",
+                "optOutIndicator": "N",
+                "relationship": "SUBSCRIER"
+            },
+            {
+                "dob": "2016-12-03",
+                "firstName": "DUG",
+                "gender": "M",
+                "identifiers": [
+                    {
+                        "identityText": "1234",
+                        "identityTypeCode": "HNJID"
+                    },
+                    {
+                        "identityText": "4567",
+                        "identityTypeCode": "HIE_EXSID"
+                    }
+                ],
+                "lastName": "ABREUXSIT",
+                "memberId": "21794420",
+                "optOutIndicator": "N",
+                "relationship": "CHILD"
+            },
+            {
+                "dob": "2016-12-03",
+                "firstName": "HUGE",
+                "gender": "M",
+                "identifiers": [
+                    {
+                        "identityText": "1234",
+                        "identityTypeCode": "HNJID"
+                    },
+                    {
+                        "identityText": "4567",
+                        "identityTypeCode": "HIE_EXSID"
+                    }
+                ],
+                "lastName": "ABREUXSIT",
+                "memberId": "21794420",
+                "optOutIndicator": "N",
+                "relationship": "CHILD"
+            }
+        ],
+        "subscriberFirstame": "HUG HES",
+        "subscriberLastName": "ABREUXSIT"
+    }
+]

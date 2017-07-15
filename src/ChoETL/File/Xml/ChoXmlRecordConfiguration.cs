@@ -30,7 +30,13 @@ namespace ChoETL
             set;
         }
         [DataMember]
-        public string Indent
+        public int Indent
+        {
+            get;
+            set;
+        }
+        [DataMember]
+        public char IndentChar
         {
             get;
             set;
@@ -78,7 +84,8 @@ namespace ChoETL
         {
             XmlRecordFieldConfigurations = new List<ChoXmlRecordFieldConfiguration>();
 
-            Indent = "  ";
+            Indent = 2;
+            IndentChar = ' ';
             if (recordType != null)
             {
                 Init(recordType);

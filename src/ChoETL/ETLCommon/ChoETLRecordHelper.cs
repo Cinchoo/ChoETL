@@ -14,23 +14,33 @@ namespace ChoETL
     {
         public static void ConvertNSetMemberValue(this IDictionary<string, object> dict, string fn, ChoRecordFieldConfiguration fieldConfig, ref object fieldValue, CultureInfo culture)
         {
-            if (fieldConfig.Converters.IsNullOrEmpty())
-                fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, null, fieldConfig.PropConverters, new object[] { fieldConfig.PropConverterParams }, culture);
+            if (fieldConfig.ValueConverter != null)
+                fieldValue = fieldConfig.ValueConverter(fieldValue);
             else
-                fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), null, culture);
+            {
+                if (fieldConfig.Converters.IsNullOrEmpty())
+                    fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, null, fieldConfig.PropConverters, new object[] { fieldConfig.PropConverterParams }, culture);
+                else
+                    fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), null, culture);
+            }
 
             dict.AddOrUpdate(fn, fieldValue);
         }
 
         public static void ConvertNSetMemberValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, ref object fieldValue, CultureInfo culture)
         {
-            if (fieldConfig.Converters.IsNullOrEmpty())
-            {
-                fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, new object[] { fieldConfig.PropConverterParams }, culture);
-            }
+            if (fieldConfig.ValueConverter != null)
+                fieldValue = fieldConfig.ValueConverter(fieldValue);
             else
             {
-                fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), null, culture);
+                if (fieldConfig.Converters.IsNullOrEmpty())
+                {
+                    fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, new object[] { fieldConfig.PropConverterParams }, culture);
+                }
+                else
+                {
+                    fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), null, culture);
+                }
             }
             ChoType.SetPropertyValue(rec, fieldConfig.PI, fieldValue);
         }

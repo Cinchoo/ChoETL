@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Dynamic;
@@ -13,6 +14,7 @@ using System.Xml.Serialization;
 
 namespace ChoJSONReaderTest
 {
+
     public class MenuItem
     {
         public string Value { get; set; }
@@ -54,7 +56,115 @@ namespace ChoJSONReaderTest
 
     class Program
     {
-        private static string EmpJSON = @"    
+        public class Customer
+        {
+            public string FirstName { get; set; }
+            public string LastName { get; set; }
+            // need to flatten these lists
+            public List<CreditCard> CreditCards { get; set; }
+            public List<Address> Addresses { get; set; }
+        }
+
+        public class CreditCard
+        {
+            public string Name { get; set; }
+        }
+
+        public class Address
+        {
+            public string Street { get; set; }
+        }
+
+        public static void Test()
+        {
+            List<Customer> allCustomers = GetAllCustomers();
+            var result = allCustomers
+   .Select(customer => new[]
+   {
+      customer.FirstName,
+      customer.LastName
+   }
+   .Concat(customer.CreditCards.Select(cc => cc.Name))
+   .Concat(customer.Addresses.Select(address => address.Street)));
+
+            foreach (var c in result)
+                Console.WriteLine(ChoUtility.ToStringEx(c.ToList().ToExpandoObject()));
+            return;
+            //  Customer has CreditCards list and Addresses list
+
+            // how to flatten Customer, CreditCards list, and Addresses list into one flattened record/list?
+
+            var flatenned = from c in allCustomers
+                            select
+                                c.FirstName + ", " +
+                                c.LastName + ", " +
+                                String.Join(", ", c.CreditCards.Select(c2 => c2.Name).ToArray()) + ", " +
+                                String.Join(", ", c.Addresses.Select(a => a.Street).ToArray());
+
+            flatenned.ToList().ForEach(Console.WriteLine);
+        }
+
+        private static List<Customer> GetAllCustomers()
+        {
+            return new List<Customer>
+                   {
+                       new Customer
+                           {
+                               FirstName = "Joe",
+                               LastName = "Blow",
+                               CreditCards = new List<CreditCard>
+                                                 {
+                                                     new CreditCard
+                                                         {
+                                                             Name = "Visa"
+                                                         },
+                                                     new CreditCard
+                                                         {
+                                                             Name = "Master Card"
+                                                         }
+                                                 },
+                               Addresses = new List<Address>
+                                               {
+                                                   new Address
+                                                       {
+                                                           Street = "38 Oak Street"
+                                                       },
+                                                   new Address
+                                                       {
+                                                           Street = "432 Main Avenue"
+                                                       }
+                                               }
+                           },
+                       new Customer
+                           {
+                               FirstName = "Sally",
+                               LastName = "Cupcake",
+                               CreditCards = new List<CreditCard>
+                                                 {
+                                                     new CreditCard
+                                                         {
+                                                             Name = "Discover"
+                                                         },
+                                                     new CreditCard
+                                                         {
+                                                             Name = "Master Card"
+                                                         }
+                                                 },
+                               Addresses = new List<Address>
+                                               {
+                                                   new Address
+                                                       {
+                                                           Street = "29 Maple Grove"
+                                                       },
+                                                   new Address
+                                                       {
+                                                           Street = "887 Nut Street"
+                                                       }
+                                               }
+                           }
+                   };
+        }
+    private static string EmpJSON = @"    
         [
           {
             ""Id"": 1,
@@ -101,31 +211,123 @@ namespace ChoJSONReaderTest
 
         static void Main(string[] args)
         {
-            Sample3();
+            Sample4();
         }
+        static void Sample4()
+        {
+            using (var jr = new ChoJSONReader("sample4.json").Configure(c => c.UseJSONSerialization = true))
+            {
+                using (var xw = new ChoCSVWriter("sample4.csv").WithFirstLineHeader())
+                {
+                    foreach (JObject jItem in jr)
+                    {
+                        dynamic item = jItem;
+                        var identifiers = ChoEnumerable.AsEnumerable(jItem).Select(e => ((IList<JToken>)((dynamic)e).identifiers).Select(i =>
+                            new
+                            {
+                                identityText = i["identityText"].ToString(),
+                                identityTypeCode = i["identityTypeCode"].ToString()
+                            })).SelectMany(x => x);
+
+                        var members = ChoEnumerable.AsEnumerable(jItem).Select(e => ((IList<JToken>)((dynamic)e).members).Select(m => ((IList<JToken>)((dynamic)m).identifiers).Select(i =>
+                            new
+                            {
+                                dob = m["dob"].ToString(),
+                                firstName = m["firstName"].ToString(),
+                                gender = m["gender"].ToString(),
+                                identityText = i["identityText"].ToString(),
+                                identityTypeCode = i["identityTypeCode"].ToString(),
+                                lastname = m["lastName"].ToString(),
+                                memberId = m["memberId"].ToString(),
+                                optOutIndicator = m["optOutIndicator"].ToString(),
+                                relationship = m["relationship"].ToString()
+
+                            }))).SelectMany(x => x).SelectMany(y => y);
+
+                        var comb = members.ZipEx(identifiers, (m, i) =>
+                        {
+                            if (i == null)
+                                return new
+                                {
+                                    item.ccId,
+                                    item.hId,
+                                    identifiers_identityText = String.Empty,
+                                    identifiers_identityTypeCode = String.Empty,
+                                    members_dob = m.dob,
+                                    members_firstName = m.firstName,
+                                    members_gender = m.gender,
+                                    members_identifiers_identityText = m.identityText,
+                                    members_identityTypeCode = m.identityTypeCode,
+                                    members_lastname = m.lastname,
+                                    members_memberid = m.memberId,
+                                    member_optOutIndicator = m.optOutIndicator,
+                                    member_relationship = m.relationship,
+                                    SubscriberFirstName = item.subscriberFirstame,
+                                    SubscriberLastName = item.subscriberLastName,
+
+                                };
+                            else
+                                return new
+                                {
+                                    item.ccId,
+                                    item.hId,
+                                    identifiers_identityText = i.identityText,
+                                    identifiers_identityTypeCode = i.identityTypeCode,
+                                    members_dob = m.dob,
+                                    members_firstName = m.firstName,
+                                    members_gender = m.gender,
+                                    members_identifiers_identityText = m.identityText,
+                                    members_identityTypeCode = m.identityTypeCode,
+                                    members_lastname = m.lastname,
+                                    members_memberid = m.memberId,
+                                    member_optOutIndicator = m.optOutIndicator,
+                                    member_relationship = m.relationship,
+                                    SubscriberFirstName = item.subscriberFirstame,
+                                    SubscriberLastName = item.subscriberLastName,
+                                };
+
+                        });
+                        xw.Write(comb);
+                    }
+                }
+            }
+
+            //foreach (var e in jr.Select(i => new[] { i.ccId.ToString(), i.hId.ToString() }
+            //.Concat(((IList<JToken>)i.identifiers).Select(jt => jt["identityText"].ToString()))
+            //.Concat(((IList<JToken>)i.members).Select(jt => jt["dob"].ToString()))
+            //)
+            //)
+            //    xw.Write(e.ToList().ToExpandoObject());
+
+            //foreach (var e in jr.Select(i => new { i.ccId, i.hId, identityText = ((IList<JToken>)i.identifiers).Select(x => x["identityText"]) }))
+            //{
+
+            //}
+        }
+
         static void Sample3()
         {
-using (var jr = new ChoJSONReader<MyObjectType>("sample3.json").WithJSONPath("$.menu")
-    )
-{
+            using (var jr = new ChoJSONReader<MyObjectType>("sample3.json").WithJSONPath("$.menu")
+                )
+            {
                 jr.AfterRecordFieldLoad += (o, e) =>
                 {
                 };
-    using (var xw = new ChoXmlWriter<MyObjectType>("sample3.xml").Configure(c => c.UseXmlSerialization = true))
-        xw.Write(jr);
-}
+                using (var xw = new ChoXmlWriter<MyObjectType>("sample3.xml").Configure(c => c.UseXmlSerialization = true))
+                    xw.Write(jr);
+            }
         }
 
         static void Sample2()
         {
-            using (var csv = new ChoCSVWriter("sample2.csv") { TraceSwitch = ChoETLFramework.TraceSwitchOff }.WithFirstLineHeader())
-            {
-                csv.Write(new ChoJSONReader("sample2.json") { TraceSwitch = ChoETLFramework.TraceSwitchOff }
-                .WithField("Base")
-                .WithField("Rates", fieldType: typeof(Dictionary<string, object>))
-                .Select(m => ((Dictionary<string, object>)m.Rates).Select(r => new { Base = m.Base, Key = r.Key, Value = r.Value })).SelectMany(m => m)
-                );
-            }
+            //using (var csv = new ChoCSVWriter("sample2.csv") { TraceSwitch = ChoETLFramework.TraceSwitchOff }.WithFirstLineHeader())
+            //{
+            //    csv.Write(new ChoJSONReader("sample2.json") { TraceSwitch = ChoETLFramework.TraceSwitchOff }
+            //    .WithField("Base")
+            //    .WithField("Rates", fieldType: typeof(Dictionary<string, object>))
+            //    .Select(m => ((Dictionary<string, object>)m.Rates).Select(r => new { Base = m.Base, Key = r.Key, Value = r.Value })).SelectMany(m => m)
+            //    );
+            //}
         }
 
         static void Sample1()
