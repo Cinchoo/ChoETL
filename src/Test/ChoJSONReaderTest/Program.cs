@@ -164,7 +164,7 @@ namespace ChoJSONReaderTest
                            }
                    };
         }
-    private static string EmpJSON = @"    
+        private static string EmpJSON = @"    
         [
           {
             ""Id"": 1,
@@ -222,27 +222,27 @@ namespace ChoJSONReaderTest
                     foreach (JObject jItem in jr)
                     {
                         dynamic item = jItem;
-                        var identifiers = ChoEnumerable.AsEnumerable(jItem).Select(e => ((IList<JToken>)((dynamic)e).identifiers).Select(i =>
-                            new
-                            {
-                                identityText = i["identityText"].ToString(),
-                                identityTypeCode = i["identityTypeCode"].ToString()
-                            })).SelectMany(x => x);
+                        var identifiers = ChoEnumerable.AsEnumerable<JObject>(jItem).Select(e => ((IList<JToken>)((dynamic)e).identifiers).Select(i =>
+                           new
+                           {
+                               identityText = i["identityText"].ToString(),
+                               identityTypeCode = i["identityTypeCode"].ToString()
+                           })).SelectMany(x => x);
 
-                        var members = ChoEnumerable.AsEnumerable(jItem).Select(e => ((IList<JToken>)((dynamic)e).members).Select(m => ((IList<JToken>)((dynamic)m).identifiers).Select(i =>
-                            new
-                            {
-                                dob = m["dob"].ToString(),
-                                firstName = m["firstName"].ToString(),
-                                gender = m["gender"].ToString(),
-                                identityText = i["identityText"].ToString(),
-                                identityTypeCode = i["identityTypeCode"].ToString(),
-                                lastname = m["lastName"].ToString(),
-                                memberId = m["memberId"].ToString(),
-                                optOutIndicator = m["optOutIndicator"].ToString(),
-                                relationship = m["relationship"].ToString()
+                        var members = ChoEnumerable.AsEnumerable<JObject>(jItem).Select(e => ((IList<JToken>)((dynamic)e).members).Select(m => ((IList<JToken>)((dynamic)m).identifiers).Select(i =>
+                           new
+                           {
+                               dob = m["dob"].ToString(),
+                               firstName = m["firstName"].ToString(),
+                               gender = m["gender"].ToString(),
+                               identityText = i["identityText"].ToString(),
+                               identityTypeCode = i["identityTypeCode"].ToString(),
+                               lastname = m["lastName"].ToString(),
+                               memberId = m["memberId"].ToString(),
+                               optOutIndicator = m["optOutIndicator"].ToString(),
+                               relationship = m["relationship"].ToString()
 
-                            }))).SelectMany(x => x).SelectMany(y => y);
+                           }))).SelectMany(x => x).SelectMany(y => y);
 
                         var comb = members.ZipEx(identifiers, (m, i) =>
                         {

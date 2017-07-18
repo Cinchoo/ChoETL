@@ -79,7 +79,7 @@ namespace ChoXmlReaderTest
 
         static void Main(string[] args)
         {
-            XmlToCSVSample1();
+            XmlToCSVSample();
             return;
             //dynamic p = new ChoPropertyBag();
             //p.Name = "Raj";
@@ -248,7 +248,7 @@ namespace ChoXmlReaderTest
 
         }
 
-        static void XmlToCSVSample1()
+        static void XmlToCSVSample()
         {
             using (var parser = new ChoXmlReader("sample.xml").WithXPath("Attributes/Attribute")
                 .WithField("Name", xPath: "Name")

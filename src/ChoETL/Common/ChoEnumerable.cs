@@ -27,13 +27,7 @@ namespace ChoETL
             if (@this == null)
                 yield break;
 
-            if (@this is ICollection<T>)
-            {
-                foreach (T o in (ICollection<T>)@this)
-                    yield return o;
-            }
-            else
-                yield return @this;
+            yield return @this;
         }
     }
 }

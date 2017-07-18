@@ -123,7 +123,7 @@ namespace ChoETL
                         bool retVal = LoadExcelSeperatorIfAny(pair);
                         _excelSeparatorFound = true;
 
-                        if (Configuration.HasExcelSeparator.HasValue
+                        if (Configuration.HasExcelSeparator != null
                             && Configuration.HasExcelSeparator.Value
                             && !retVal)
                             throw new ChoParserException("Missing excel separator header line in the file.");

@@ -17,7 +17,7 @@ namespace ChoCSVWriterTest
     {
         static void Main(string[] args)
         {
-            QuickDynamicTest();
+            ToTextTest();
         }
 
         static void QuickDynamicTest()
@@ -390,7 +390,9 @@ namespace ChoCSVWriterTest
             rec2.Name = "Lou";
             objs.Add(rec2);
 
+            //config.HasExcelSeparator = false;
             Console.WriteLine(ChoCSVWriter.ToText(objs));
+            Console.WriteLine(ChoCSVWriter.ToTextAll(objs.ToArray()));
         }
 
         static void CodeFirstWithDeclarativeApproachWriteRecords()
@@ -624,7 +626,7 @@ namespace ChoCSVWriterTest
     }
 
     [ChoCSVFileHeader]
-    [ChoCSVRecordObject(HasExcelSeparator = true )]
+    [ChoCSVRecordObject]
     public class EmployeeRec
     {
         public Shape Shape { get; set; }

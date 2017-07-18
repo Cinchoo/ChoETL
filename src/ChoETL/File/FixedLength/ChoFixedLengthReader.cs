@@ -57,7 +57,10 @@ namespace ChoETL
 
             Configuration = configuration;
             Init();
-            _textReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+            if (inStream is MemoryStream)
+                _textReader = new StreamReader(inStream);
+            else
+                _textReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
             _closeStreamOnDispose = true;
         }
 

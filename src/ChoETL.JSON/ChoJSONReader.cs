@@ -72,7 +72,10 @@ namespace ChoETL
             Configuration = configuration;
             Init();
 
-            _textReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+            if (inStream is MemoryStream)
+                _textReader = new StreamReader(inStream);
+            else
+                _textReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
             _closeStreamOnDispose = true;
         }
 
@@ -132,12 +135,12 @@ namespace ChoETL
             return r;
         }
 
-        internal static IEnumerator<object> LoadText(Type recType, string inputText, ChoJSONRecordConfiguration configuration, Encoding encoding, int bufferSize)
-        {
-            ChoJSONRecordReader rr = new ChoJSONRecordReader(recType, configuration);
-            rr.TraceSwitch = ChoETLFramework.TraceSwitchOff;
-            return rr.AsEnumerable(new StreamReader(inputText.ToStream(), encoding, false, bufferSize)).GetEnumerator();
-        }
+        //internal static IEnumerator<object> LoadText(Type recType, string inputText, ChoJSONRecordConfiguration configuration, Encoding encoding, int bufferSize)
+        //{
+        //    ChoJSONRecordReader rr = new ChoJSONRecordReader(recType, configuration);
+        //    rr.TraceSwitch = ChoETLFramework.TraceSwitchOff;
+        //    return rr.AsEnumerable(new StreamReader(inputText.ToStream(), encoding, false, bufferSize)).GetEnumerator();
+        //}
 
         public IEnumerator<T> GetEnumerator()
         {

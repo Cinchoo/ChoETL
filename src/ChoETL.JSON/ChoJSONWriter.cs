@@ -56,7 +56,10 @@ namespace ChoETL
 
             Configuration = configuration;
             Init();
-            _textWriter = new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize);
+            if (inStream is MemoryStream)
+                _textWriter = new StreamWriter(inStream);
+            else
+                _textWriter = new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize);
             _closeStreamOnDispose = true;
         }
 
@@ -94,11 +97,11 @@ namespace ChoETL
         public static string ToText<TRec>(TRec record, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string xpath = null)
             where TRec : class
         {
-            return ToText(ChoEnumerable.AsEnumerable(record), configuration, traceSwitch);
+            return ToTextAll(ChoEnumerable.AsEnumerable<TRec>(record), configuration, traceSwitch);
         }
 
 
-        public static string ToText<TRec>(IEnumerable<TRec> records, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string jsonPath = null)
+        public static string ToTextAll<TRec>(IEnumerable<TRec> records, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string jsonPath = null)
             where TRec : class
         {
             using (var stream = new MemoryStream())
@@ -116,12 +119,6 @@ namespace ChoETL
                 return reader.ReadToEnd();
             }
         }
-
-        //public static string ToText<TRec>(TRec record, ChoJSONRecordConfiguration configuration = null)
-        //    where TRec : class
-        //{
-        //    return ToText(ChoEnumerable.AsEnumerable(record), configuration);
-        //}
 
         internal static string ToText(object rec, ChoJSONRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null)
         {

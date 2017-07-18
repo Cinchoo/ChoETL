@@ -13,6 +13,7 @@ using System.Windows.Data;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
+using Newtonsoft.Json.Linq;
 
 namespace ChoCSVReaderTest
 {
@@ -20,6 +21,8 @@ namespace ChoCSVReaderTest
     {
         static void Main(string[] args)
         {
+            LoadTextTest();
+            return;
             foreach (dynamic rec in new ChoCSVReader("emp.csv").WithFirstLineHeader().Configure((c) => c.MayContainEOLInData = true))
             {
                 Console.WriteLine(rec.Name);
@@ -37,6 +40,43 @@ namespace ChoCSVReaderTest
             //return;
             QuotedCSVTest();
         }
+
+        [ChoCSVRecordObject("|")]
+        public class EmpWithJSON
+        {
+            [ChoCSVRecordField(1)]
+            public int Id { get; set; }
+            [ChoCSVRecordField(2)]
+            public string Name { get; set; }
+            [ChoCSVRecordField(3)]
+            public string JsonValue { get; set; }
+            [ChoIgnoreMember]
+            public string product_version_id { get; set; }
+            [ChoIgnoreMember]
+            public string product_version_name { get; set; }
+
+
+        }
+        public static void CSVWithJSON()
+        {
+            using (var parser = new ChoCSVReader<EmpWithJSON>("emp1.csv"))
+            {
+                parser.BeforeRecordFieldLoad += (o, e) =>
+                {
+                    if (e.PropertyName == "JsonValue")
+                    {
+                        EmpWithJSON rec = e.Record as EmpWithJSON;
+                        dynamic jobject = ChoJSONReader.LoadText((string)e.Source).FirstOrDefault();
+                        rec.product_version_id = jobject.product_version_id;
+                        rec.product_version_name = jobject.product_version_name;
+                        e.Skip = true;
+                    }
+                };
+                foreach (var rec in parser)
+                    Console.WriteLine(rec.product_version_id);
+            }
+        }
+
         class Transaction
         {
             public string Id { get; set; }
@@ -171,7 +211,7 @@ namespace ChoCSVReaderTest
             string txt = "Id, Name\r\n1, Mark";
             foreach (var e in ChoCSVReader.LoadText(txt).WithFirstLineHeader())
             {
-                Console.WriteLine(e.ToStringEx());
+                Console.WriteLine(ChoUtility.ToStringEx(e));
             }
         }
 

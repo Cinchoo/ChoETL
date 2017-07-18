@@ -352,7 +352,12 @@ namespace ChoETL
                     if (fieldValue is string)
                         fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue as string);
                     else if (fieldValue is JValue)
-                        fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue.ToString());
+                    {
+                        if (((JValue)fieldValue).Value is string)
+                            fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue.ToString());
+                        else
+                            fieldValue = ((JValue)fieldValue).Value;
+                    }
                 }
 
                 try

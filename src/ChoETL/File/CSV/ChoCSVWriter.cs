@@ -55,7 +55,11 @@ namespace ChoETL
 
             Configuration = configuration;
             Init();
-            _textWriter = new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize);
+
+            if (inStream is MemoryStream)
+                _textWriter = new StreamWriter(inStream);
+            else
+                _textWriter = new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize);
             _closeStreamOnDispose = true;
         }
 
@@ -88,13 +92,7 @@ namespace ChoETL
             _writer.WriteTo(_textWriter, new T[] { record } ).Loop();
         }
 
-        public static string ToText<TRec>(TRec record, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-            where TRec : class
-        {
-            return ToText(ChoEnumerable.AsEnumerable(record), configuration, traceSwitch);
-        }
-
-        public static string ToText<TRec>(IEnumerable<TRec> records, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static string ToTextAll<TRec>(IEnumerable<TRec> records, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
             where TRec : class
         {
             using (var stream = new MemoryStream())
@@ -110,15 +108,11 @@ namespace ChoETL
                 return reader.ReadToEnd();
             }
         }
-
-        //public static string ToText<TRec>(TRec record, ChoCSVRecordConfiguration configuration = null)
-        //    where TRec : class
-        //{
-        //    if (record is IEnumerable<TRec>)
-        //        return ToText(record as IEnumerable<TRec>, configuration);
-        //    else
-        //        return ToText(ChoEnumerable.AsEnumerable(record), configuration);
-        //}
+        public static string ToText<TRec>(TRec record, ChoCSVRecordConfiguration configuration = null)
+            where TRec : class
+        {
+            return ToTextAll(ChoEnumerable.AsEnumerable(record), configuration);
+        }
 
         internal static string ToText(object rec, ChoCSVRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null)
         {

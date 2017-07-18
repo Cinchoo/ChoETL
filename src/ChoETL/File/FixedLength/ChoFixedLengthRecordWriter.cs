@@ -52,115 +52,112 @@ namespace ChoETL
 
             try
             {
-                foreach (object ur in records)
+                foreach (object record in records)
                 {
-                    foreach (object record in ChoEnumerable.AsEnumerable(ur))
+                    _index++;
+
+                    if (TraceSwitch.TraceVerbose)
                     {
-                        _index++;
+                        if (record is IChoETLNameableObject)
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(((IChoETLNameableObject)record).Name));
+                        else
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(_index));
+                    }
 
-                        if (TraceSwitch.TraceVerbose)
+                    recText = String.Empty;
+                    if (record != null)
+                    {
+                        if (predicate == null || predicate(record))
                         {
-                            if (record is IChoETLNameableObject)
-                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(((IChoETLNameableObject)record).Name));
-                            else
-                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(_index));
-                        }
-
-                        recText = String.Empty;
-                        if (record != null)
-                        {
-                            if (predicate == null || predicate(record))
+                            //Discover and load FixedLength columns from first record
+                            if (!_configCheckDone)
                             {
-                                //Discover and load FixedLength columns from first record
-                                if (!_configCheckDone)
+                                string[] fieldNames = null;
+
+                                Configuration.IsDynamicObject = record.GetType().IsDynamicType();
+                                if (!Configuration.IsDynamicObject)
+                                    Configuration.RecordType = record.GetType();
+
+                                if (Configuration.IsDynamicObject)
                                 {
-                                    string[] fieldNames = null;
-
-                                    Configuration.IsDynamicObject = record.GetType().IsDynamicType();
-                                    if (!Configuration.IsDynamicObject)
-                                        Configuration.RecordType = record.GetType();
-
-                                    if (Configuration.IsDynamicObject)
+                                    var dict = record.ToDynamicObject() as IDictionary<string, Object>;
+                                    fieldNames = dict.Keys.ToArray();
+                                }
+                                else
+                                {
+                                    fieldNames = ChoTypeDescriptor.GetProperties<ChoFixedLengthRecordFieldAttribute>(record.GetType()).Select(pd => pd.Name).ToArray();
+                                    if (fieldNames.Length == 0)
                                     {
-                                        var dict = record.ToDynamicObject() as IDictionary<string, Object>;
-                                        fieldNames = dict.Keys.ToArray();
+                                        fieldNames = ChoType.GetProperties(record.GetType()).Select(p => p.Name).ToArray();
+                                    }
+                                }
+
+                                Configuration.Validate(fieldNames);
+
+                                WriteHeaderLine(sw);
+
+                                _configCheckDone = true;
+                            }
+
+                            if (!RaiseBeforeRecordWrite(record, _index, ref recText))
+                                yield break;
+
+                            if (recText == null)
+                                continue;
+                            else if (recText.Length > 0)
+                            {
+                                sw.Write("{1}{0}", recText, Configuration.FileHeaderConfiguration.HasHeaderRecord ? Configuration.EOLDelimiter : "");
+                                continue;
+                            }
+
+                            try
+                            {
+                                if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
+                                    record.DoObjectLevelValidation(Configuration, Configuration.FixedLengthRecordFieldConfigurations);
+
+                                if (ToText(_index, record, out recText))
+                                {
+                                    if (_index == 1)
+                                    {
+                                        sw.Write("{1}{0}", recText, Configuration.FileHeaderConfiguration.HasHeaderRecord ? Configuration.EOLDelimiter : "");
                                     }
                                     else
-                                    {
-                                        fieldNames = ChoTypeDescriptor.GetProperties<ChoFixedLengthRecordFieldAttribute>(record.GetType()).Select(pd => pd.Name).ToArray();
-                                        if (fieldNames.Length == 0)
-                                        {
-                                            fieldNames = ChoType.GetProperties(record.GetType()).Select(p => p.Name).ToArray();
-                                        }
-                                    }
+                                        sw.Write("{1}{0}", recText, Configuration.EOLDelimiter);
 
-                                    Configuration.Validate(fieldNames);
-
-                                    WriteHeaderLine(sw);
-
-                                    _configCheckDone = true;
+                                    if (!RaiseAfterRecordWrite(record, _index, recText))
+                                        yield break;
                                 }
-
-                                if (!RaiseBeforeRecordWrite(record, _index, ref recText))
-                                    yield break;
-
-                                if (recText == null)
-                                    continue;
-                                else if (recText.Length > 0)
+                            }
+                            catch (ChoParserException)
+                            {
+                                throw;
+                            }
+                            catch (Exception ex)
+                            {
+                                ChoETLFramework.HandleException(ex);
+                                if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                                 {
-                                    sw.Write("{1}{0}", recText, Configuration.FileHeaderConfiguration.HasHeaderRecord ? Configuration.EOLDelimiter : "");
-                                    continue;
+
                                 }
-
-                                try
+                                else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
                                 {
-                                    if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
-                                        record.DoObjectLevelValidation(Configuration, Configuration.FixedLengthRecordFieldConfigurations);
-
-                                    if (ToText(_index, record, out recText))
-                                    {
-                                        if (_index == 1)
-                                        {
-                                            sw.Write("{1}{0}", recText, Configuration.FileHeaderConfiguration.HasHeaderRecord ? Configuration.EOLDelimiter : "");
-                                        }
-                                        else
-                                            sw.Write("{1}{0}", recText, Configuration.EOLDelimiter);
-
-                                        if (!RaiseAfterRecordWrite(record, _index, recText))
-                                            yield break;
-                                    }
-                                }
-                                catch (ChoParserException)
-                                {
-                                    throw;
-                                }
-                                catch (Exception ex)
-                                {
-                                    ChoETLFramework.HandleException(ex);
-                                    if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
-                                    {
-
-                                    }
-                                    else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
-                                    {
-                                        if (!RaiseRecordWriteError(record, _index, recText, ex))
-                                            throw;
-                                    }
-                                    else
+                                    if (!RaiseRecordWriteError(record, _index, recText, ex))
                                         throw;
                                 }
+                                else
+                                    throw;
                             }
                         }
+                    }
 
-                        yield return record;
+                    yield return record;
 
-                        if (Configuration.NotifyAfter > 0 && _index % Configuration.NotifyAfter == 0)
+                    if (Configuration.NotifyAfter > 0 && _index % Configuration.NotifyAfter == 0)
+                    {
+                        if (RaisedRowsWritten(_index))
                         {
-                            if (RaisedRowsWritten(_index))
-                            {
-                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Abort requested.");
-                                yield break;
-                            }
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Abort requested.");
+                            yield break;
                         }
                     }
                 }

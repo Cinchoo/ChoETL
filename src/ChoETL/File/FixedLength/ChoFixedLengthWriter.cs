@@ -55,7 +55,10 @@ namespace ChoETL
 
             Configuration = configuration;
             Init();
-            _textWriter = new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize);
+            if (inStream is MemoryStream)
+                _textWriter = new StreamWriter(inStream);
+            else
+                _textWriter = new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize);
             _closeStreamOnDispose = true;
         }
 
@@ -91,10 +94,10 @@ namespace ChoETL
         public static string ToText<TRec>(TRec record, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
             where TRec : class
         {
-            return ToText(ChoEnumerable.AsEnumerable(record), configuration, traceSwitch);
+            return ToTextAll(ChoEnumerable.AsEnumerable<TRec>(record), configuration, traceSwitch);
         }
 
-        public static string ToText<TRec>(IEnumerable<TRec> records, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static string ToTextAll<TRec>(IEnumerable<TRec> records, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
             where TRec : class
         {
             using (var stream = new MemoryStream())
@@ -110,12 +113,6 @@ namespace ChoETL
                 return reader.ReadToEnd();
             }
         }
-
-        //public static string ToText<TRec>(TRec record, ChoFixedLengthRecordConfiguration configuration = null)
-        //    where TRec : class
-        //{
-        //    return ToText(ChoEnumerable.AsEnumerable(record), configuration);
-        //}
 
         internal static string ToText(object rec, ChoFixedLengthRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null)
         {

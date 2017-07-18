@@ -34,7 +34,7 @@ namespace ChoFixedLengthWriterTest
             rec2.Name = "Lou";
             objs.Add(rec2);
 
-            Console.WriteLine(ChoFixedLengthWriter.ToText< EmployeeRecSimple>(objs));
+            Console.WriteLine(ChoFixedLengthWriter.ToTextAll< EmployeeRecSimple>(objs));
         }
 
         static void POCOTest()

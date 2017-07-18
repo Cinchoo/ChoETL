@@ -53,7 +53,10 @@ namespace ChoETL
 
             Configuration = configuration;
             Init();
-            _textWriter = new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize);
+            if (inStream is MemoryStream)
+                _textWriter = new StreamWriter(inStream);
+            else
+                _textWriter = new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize);
             _closeStreamOnDispose = true;
         }
 
@@ -87,7 +90,13 @@ namespace ChoETL
             _writer.WriteTo(_textWriter, new object[] { record }).Loop();
         }
 
-        public static string ToText(IEnumerable records, TraceSwitch traceSwitch = null)
+        public static string ToText(object record, TraceSwitch traceSwitch = null)
+        {
+            return ToTextAll(ChoEnumerable.AsEnumerable<object>(record), traceSwitch);
+        }
+
+
+        public static string ToTextAll(IEnumerable records, TraceSwitch traceSwitch = null)
         {
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
