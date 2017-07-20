@@ -552,15 +552,20 @@ namespace ChoETL
         public static T GetValueAt<T>(this object array, int index, T defaultValue = default(T))
         {
             Type type = typeof(T).GetUnderlyingType();
-            if (array is IList && index < ((IList)array).Count)
+            if (array is IList)
             {
-                if (type.IsEnum)
-                    return (T)Enum.Parse(type, ((IList)array)[index].ToNString());
+                if (index < ((IList)array).Count)
+                {
+                    if (type.IsEnum)
+                        return (T)Enum.Parse(type, ((IList)array)[index].ToNString());
 
-                return (T)Convert.ChangeType(((IList)array)[index], type);
+                    return (T)Convert.ChangeType(((IList)array)[index], type);
+                }
+                else
+                    return defaultValue;
             }
             else
-                return defaultValue;
+                return (T)array;
         }
 
         public static Type GetTypeFromXmlSectionNode(this XmlNode sectionNode)

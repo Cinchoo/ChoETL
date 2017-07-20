@@ -328,7 +328,7 @@ namespace ChoETL
                     }
                     else
                     {
-                        string subString = text.Substring(offset, i - len - offset);
+                        string subString = offset == 0 ? text.Substring(offset, i) : text.Substring(offset, i - offset);
                         //if (subString.Length == 2)
                         //    splitStrings.Add(subString);
                         //else
@@ -342,6 +342,8 @@ namespace ChoETL
                             else
                                 splitStrings.Add(word);
                         //}
+                        i = i + len ;
+
                     }
 
                     offset = i + 1;
@@ -349,8 +351,9 @@ namespace ChoETL
                 i++;
             }
 
-            splitStrings.Add(hasChar ? NormalizeString(text.Substring(offset).Replace("\\", String.Empty), quoteChar) : 
-                NormalizeString(text.Substring(offset), quoteChar));
+            if (offset < text.Length)
+                splitStrings.Add(hasChar ? NormalizeString(text.Substring(offset).Replace("\\", String.Empty), quoteChar) : 
+                    NormalizeString(text.Substring(offset), quoteChar));
 
             return splitStrings.ToArray();
         }

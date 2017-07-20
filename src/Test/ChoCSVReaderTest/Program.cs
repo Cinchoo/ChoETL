@@ -17,11 +17,23 @@ using Newtonsoft.Json.Linq;
 
 namespace ChoCSVReaderTest
 {
+    public class EmpWithAddress
+    {
+        public int Id { get; set; }
+        [ChoCSVRecordField(2)]
+        public string Name { get; set; }
+        [ChoCSVRecordField(3)]
+        public string JsonValue { get; set; }
+        [ChoIgnoreMember]
+        public string product_version_id { get; set; }
+        [ChoIgnoreMember]
+        public string product_version_name { get; set; }
+    }
     class Program
     {
         static void Main(string[] args)
         {
-            LoadTextTest();
+            LookupTest();
             return;
             foreach (dynamic rec in new ChoCSVReader("emp.csv").WithFirstLineHeader().Configure((c) => c.MayContainEOLInData = true))
             {
@@ -41,6 +53,38 @@ namespace ChoCSVReaderTest
             QuotedCSVTest();
         }
 
+        static void LookupTest()
+        {
+            var zipSortCodeDict = File.ReadAllLines("zipCodes.csv").ToDictionary(line => line.Split("  ")[0], line => line.Split("  ")[1]);
+
+//var zipSortCodeDict = new ChoCSVReader("zipCodes.csv").WithDelimiter("   ").WithFirstLineHeader().ToDictionary(kvp => kvp.ZipCode, kvp => kvp.SortCode);
+//foreach (var item in zipSortCodeDict)
+//    Console.WriteLine(ChoUtility.ToStringEx(item));
+//get the sort code
+string zipCode = "49876";
+string sortCode = zipSortCodeDict[zipCode];
+Console.WriteLine(sortCode);
+        }
+        static void MergeCSV()
+        {
+            using (var p = new ChoCSVReader("mergeinput.csv").WithFirstLineHeader())
+            {
+                var recs = p.Where(r => !String.IsNullOrEmpty(r.szItemId)).GroupBy(r => r.szItemId)
+                    .Select(g => new
+                    {
+                        szItemId = g.Key,
+                        szName = g.Where(i1 => !String.IsNullOrEmpty(i1.szName)).Select(i1 => i1.szName).FirstOrDefault(),
+                        lRetailStoreID = g.Where(i1 => !String.IsNullOrEmpty(i1.lRetailStoreID)).Select(i1 => i1.lRetailStoreID).FirstOrDefault(),
+                        szDesc = g.Where(i1 => !String.IsNullOrEmpty(i1.szDesc)).Select(i1 => i1.szDesc).FirstOrDefault()
+                    });
+
+                using (var o = new ChoCSVWriter("mergeoutput.csv").WithFirstLineHeader())
+                {
+                    o.Write(recs);
+                }
+            }
+        }
+
         [ChoCSVRecordObject("|")]
         public class EmpWithJSON
         {
@@ -54,8 +98,6 @@ namespace ChoCSVReaderTest
             public string product_version_id { get; set; }
             [ChoIgnoreMember]
             public string product_version_name { get; set; }
-
-
         }
         public static void CSVWithJSON()
         {
@@ -72,8 +114,11 @@ namespace ChoCSVReaderTest
                         e.Skip = true;
                     }
                 };
-                foreach (var rec in parser)
-                    Console.WriteLine(rec.product_version_id);
+                using (var jp = new ChoJSONWriter("emp1.json"))
+                    jp.Write(parser.Select(i => new { i.Id, i.Name, i.product_version_id, i.product_version_name }));
+
+                //foreach (var rec in parser)
+                //    Console.WriteLine(rec.product_version_id);
             }
         }
 
@@ -810,7 +855,7 @@ namespace ChoCSVReaderTest
         //[ChoFallbackValue("XXX")]
         public string Name { get; set; }
 
-        [ChoCSVRecordField(3, FieldName = "Salary")]
+        //[ChoCSVRecordField(3, FieldName = "Salary")]
         public int Salary { get; set; }
         //[ChoCSVRecordField(3, FieldName = "Address")]
         //public string Address { get; set; }
