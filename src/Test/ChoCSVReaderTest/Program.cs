@@ -33,7 +33,11 @@ namespace ChoCSVReaderTest
     {
         static void Main(string[] args)
         {
-            LookupTest();
+            //string txt = @"ZipCode  SortCode  3rd  ";
+            //foreach (var x2 in txt.Split("  ", ChoStringSplitOptions.All, '"'))
+            //    Console.WriteLine(x2);
+            //return;
+            CultureSpecificDateTimeTest();
             return;
             foreach (dynamic rec in new ChoCSVReader("emp.csv").WithFirstLineHeader().Configure((c) => c.MayContainEOLInData = true))
             {
@@ -51,6 +55,19 @@ namespace ChoCSVReaderTest
             //Console.WriteLine(i.ToValidVariableName());
             //return;
             QuotedCSVTest();
+        }
+
+        static void CSVToXmlNodeTest()
+        {
+            using (var csv = new ChoCSVReader("NodeData.csv").WithFirstLineHeader(true)
+                .WithFields("ID", "NODE", "PROCESS_STATE", "PREV_TIME_STAMP")
+                )
+            {
+                using (var xml = new ChoXmlWriter("NodeData.xml").WithXPath("data-set/PDA_DATA"))
+                    xml.Write(csv);
+            }
+
+
         }
 
         static void LookupTest()

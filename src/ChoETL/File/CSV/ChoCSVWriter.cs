@@ -236,30 +236,13 @@ namespace ChoETL
         }
 
         #endregion Fluent API
-    }
-
-    public class ChoCSVWriter : ChoCSVWriter<dynamic>
-    {
-        public ChoCSVWriter(string filePath, ChoCSVRecordConfiguration configuration = null)
-            : base(filePath, configuration)
-        {
-        }
-        public ChoCSVWriter(TextWriter textWriter, ChoCSVRecordConfiguration configuration = null)
-            : base(textWriter, configuration)
-        {
-        }
-
-        public ChoCSVWriter(Stream inStream, ChoCSVRecordConfiguration configuration = null)
-            : base(inStream, configuration)
-        {
-        }
 
         public void Write(IDataReader dr)
         {
             ChoGuard.ArgumentNotNull(dr, "DataReader");
 
             DataTable schemaTable = dr.GetSchemaTable();
-            var expando = new ExpandoObject();
+            dynamic expando = new ExpandoObject();
             var expandoDic = (IDictionary<string, object>)expando;
 
             int ordinal = 0;
@@ -295,7 +278,7 @@ namespace ChoETL
             ChoGuard.ArgumentNotNull(dt, "DataTable");
 
             DataTable schemaTable = dt;
-            var expando = new ExpandoObject();
+            dynamic expando = new ExpandoObject();
             var expandoDic = (IDictionary<string, object>)expando;
 
             int ordinal = 0;
@@ -324,6 +307,23 @@ namespace ChoETL
 
                 Write(expando);
             }
+        }
+    }
+
+    public class ChoCSVWriter : ChoCSVWriter<dynamic>
+    {
+        public ChoCSVWriter(string filePath, ChoCSVRecordConfiguration configuration = null)
+            : base(filePath, configuration)
+        {
+        }
+        public ChoCSVWriter(TextWriter textWriter, ChoCSVRecordConfiguration configuration = null)
+            : base(textWriter, configuration)
+        {
+        }
+
+        public ChoCSVWriter(Stream inStream, ChoCSVRecordConfiguration configuration = null)
+            : base(inStream, configuration)
+        {
         }
     }
 }

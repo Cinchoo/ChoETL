@@ -1,0 +1,12 @@
+﻿[
+    {
+        "productId": "17213812",
+        "returnPolicies": {
+            "user": "Regular Guest"
+        }
+    },
+    {
+        "productId":"17813832",
+        "returnPolicies":[]
+    }
+] 

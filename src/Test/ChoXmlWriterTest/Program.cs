@@ -1,6 +1,8 @@
 ﻿using ChoETL;
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -14,8 +16,38 @@ namespace ChoXmlWriterTest
     {
         static void Main(string[] args)
         {
-            QuickPOCOTest();
+            DataReaderTest();
         }
+
+        static void DataTableTest()
+        {
+            string connectionstring = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True";
+            using (var conn = new SqlConnection(connectionstring))
+            {
+                conn.Open();
+                var comm = new SqlCommand("SELECT * FROM Customers", conn);
+                SqlDataAdapter adap = new SqlDataAdapter(comm);
+
+                DataTable dt = new DataTable("Customer");
+                adap.Fill(dt);
+
+                using (var parser = new ChoXmlWriter("customers.xml").WithXPath("Customers/Customer").Configure(c => c.XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration("CustId") { IsXmlAttribute = true })))
+                    parser.Write(dt);
+            }
+        }
+
+        static void DataReaderTest()
+        {
+            string connectionstring = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True";
+            using (var conn = new SqlConnection(connectionstring))
+            {
+                conn.Open();
+                var comm = new SqlCommand("SELECT * FROM Customers", conn);
+                using (var parser = new ChoXmlWriter("customers.xml").WithXPath("Customers/Customer"))
+                    parser.Write(comm.ExecuteReader());
+            }
+        }
+
 
         static void ConfigFirstTest()
         {

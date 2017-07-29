@@ -210,31 +210,12 @@ namespace ChoETL
         }
 
         #endregion Fluent API
-    }
-
-    public class ChoJSONWriter : ChoJSONWriter<dynamic>
-    {
-        public ChoJSONWriter(string filePath, ChoJSONRecordConfiguration configuration = null)
-            : base(filePath, configuration)
-        {
-
-        }
-        public ChoJSONWriter(TextWriter textWriter, ChoJSONRecordConfiguration configuration = null)
-            : base(textWriter, configuration)
-        {
-        }
-
-        public ChoJSONWriter(Stream inStream, ChoJSONRecordConfiguration configuration = null)
-            : base(inStream, configuration)
-        {
-        }
-
         public void Write(IDataReader dr)
         {
             ChoGuard.ArgumentNotNull(dr, "DataReader");
 
             DataTable schemaTable = dr.GetSchemaTable();
-            var expando = new ExpandoObject();
+            dynamic expando = new ExpandoObject();
             var expandoDic = (IDictionary<string, object>)expando;
 
             //int ordinal = 0;
@@ -274,7 +255,7 @@ namespace ChoETL
             ChoGuard.ArgumentNotNull(dt, "DataTable");
 
             DataTable schemaTable = dt;
-            var expando = new ExpandoObject();
+            dynamic expando = new ExpandoObject();
             var expandoDic = (IDictionary<string, object>)expando;
 
             if (Configuration.JSONRecordFieldConfigurations.IsNullOrEmpty())
@@ -307,5 +288,25 @@ namespace ChoETL
                 Write(expando);
             }
         }
+    }
+
+    public class ChoJSONWriter : ChoJSONWriter<dynamic>
+    {
+        public ChoJSONWriter(string filePath, ChoJSONRecordConfiguration configuration = null)
+            : base(filePath, configuration)
+        {
+
+        }
+        public ChoJSONWriter(TextWriter textWriter, ChoJSONRecordConfiguration configuration = null)
+            : base(textWriter, configuration)
+        {
+        }
+
+        public ChoJSONWriter(Stream inStream, ChoJSONRecordConfiguration configuration = null)
+            : base(inStream, configuration)
+        {
+        }
+
+
     }
 }

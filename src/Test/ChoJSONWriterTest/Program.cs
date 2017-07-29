@@ -1,6 +1,8 @@
 ﻿using ChoETL;
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
 using System.Dynamic;
 using System.Linq;
 using System.Text;
@@ -13,6 +15,41 @@ namespace ChoJSONWriterTest
         public enum EmpType {  FullTime, Contract }
 
         static void Main(string[] args)
+        {
+            DataTableTest();
+        }
+
+        static void DataTableTest()
+        {
+            string connectionstring = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True";
+            using (var conn = new SqlConnection(connectionstring))
+            {
+                conn.Open();
+                var comm = new SqlCommand("SELECT * FROM Customers", conn);
+                SqlDataAdapter adap = new SqlDataAdapter(comm);
+
+                DataTable dt = new DataTable("Customer");
+                adap.Fill(dt);
+
+                using (var parser = new ChoJSONWriter("customers.json").Configure(c => c.UseJSONSerialization = true))
+                    parser.Write(dt);
+            }
+        }
+
+        static void DataReaderTest()
+        {
+            string connectionstring = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True";
+            using (var conn = new SqlConnection(connectionstring))
+            {
+                conn.Open();
+                var comm = new SqlCommand("SELECT * FROM Customers", conn);
+                using (var parser = new ChoJSONWriter("customers.json"))
+                    parser.Write(comm.ExecuteReader());
+            }
+        }
+
+
+        static void DynamicTest()
         {
             List<ExpandoObject> objs = new List<ExpandoObject>();
             dynamic rec1 = new ExpandoObject();
@@ -49,6 +86,7 @@ namespace ChoJSONWriterTest
                 //}));
                 //w.Write(new { Name = "Raj", Zip = "08837", Address = new { City = "New York", State = "NY" } });
             }
+
         }
     }
 }

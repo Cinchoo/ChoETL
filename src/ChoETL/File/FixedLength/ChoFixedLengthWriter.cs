@@ -204,31 +204,13 @@ namespace ChoETL
         }
 
         #endregion Fluent API
-    }
-
-    public class ChoFixedLengthWriter : ChoFixedLengthWriter<dynamic>
-    {
-        public ChoFixedLengthWriter(string filePath, ChoFixedLengthRecordConfiguration configuration = null)
-            : base(filePath, configuration)
-        {
-
-        }
-        public ChoFixedLengthWriter(TextWriter textWriter, ChoFixedLengthRecordConfiguration configuration = null)
-            : base(textWriter, configuration)
-        {
-        }
-
-        public ChoFixedLengthWriter(Stream inStream, ChoFixedLengthRecordConfiguration configuration = null)
-            : base(inStream, configuration)
-        {
-        }
 
         public void Write(IDataReader dr)
         {
             ChoGuard.ArgumentNotNull(dr, "DataReader");
 
             DataTable schemaTable = dr.GetSchemaTable();
-            var expando = new ExpandoObject();
+            dynamic expando = new ExpandoObject();
             var expandoDic = (IDictionary<string, object>)expando;
 
             //int ordinal = 0;
@@ -269,7 +251,7 @@ namespace ChoETL
             ChoGuard.ArgumentNotNull(dt, "DataTable");
 
             DataTable schemaTable = dt;
-            var expando = new ExpandoObject();
+            dynamic expando = new ExpandoObject();
             var expandoDic = (IDictionary<string, object>)expando;
 
             if (Configuration.FixedLengthRecordFieldConfigurations.IsNullOrEmpty())
@@ -303,5 +285,24 @@ namespace ChoETL
                 Write(expando);
             }
         }
+    }
+
+    public class ChoFixedLengthWriter : ChoFixedLengthWriter<dynamic>
+    {
+        public ChoFixedLengthWriter(string filePath, ChoFixedLengthRecordConfiguration configuration = null)
+            : base(filePath, configuration)
+        {
+
+        }
+        public ChoFixedLengthWriter(TextWriter textWriter, ChoFixedLengthRecordConfiguration configuration = null)
+            : base(textWriter, configuration)
+        {
+        }
+
+        public ChoFixedLengthWriter(Stream inStream, ChoFixedLengthRecordConfiguration configuration = null)
+            : base(inStream, configuration)
+        {
+        }
+
     }
 }

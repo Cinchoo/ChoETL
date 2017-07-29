@@ -1771,7 +1771,8 @@
             if (type == null)
                 throw new NullReferenceException("Missing Type.");
 
-            return type.GetProperties(BindingFlags.Instance | BindingFlags.Public /*| BindingFlags.NonPublic*/ | BindingFlags.Static).Where(mi => ChoType.GetAttribute<ChoIgnoreMemberAttribute>(mi) == null).ToArray();
+            return type.GetProperties(BindingFlags.Instance | BindingFlags.Public /*| BindingFlags.NonPublic*/ | BindingFlags.Static).Where(mi => mi.GetCustomAttribute<ChoIgnoreMemberAttribute>() == null).ToArray();
+            //return type.GetProperties(BindingFlags.Instance | BindingFlags.Public /*| BindingFlags.NonPublic*/ | BindingFlags.Static).Where(mi => ChoType.GetAttribute<ChoIgnoreMemberAttribute>(mi) == null).ToArray();
 
             //TypeInfo typeInfo = GetTypeInfo(type);
             //if (typeInfo.PropertyInfos == null)

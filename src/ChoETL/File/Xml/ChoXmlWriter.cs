@@ -246,31 +246,13 @@ namespace ChoETL
         }
 
         #endregion Fluent API
-    }
-
-    public class ChoXmlWriter : ChoXmlWriter<dynamic>
-    {
-        public ChoXmlWriter(string filePath, ChoXmlRecordConfiguration configuration = null)
-            : base(filePath, configuration)
-        {
-
-        }
-        public ChoXmlWriter(TextWriter textWriter, ChoXmlRecordConfiguration configuration = null)
-            : base(textWriter, configuration)
-        {
-        }
-
-        public ChoXmlWriter(Stream inStream, ChoXmlRecordConfiguration configuration = null)
-            : base(inStream, configuration)
-        {
-        }
 
         public void Write(IDataReader dr)
         {
             ChoGuard.ArgumentNotNull(dr, "DataReader");
 
             DataTable schemaTable = dr.GetSchemaTable();
-            var expando = new ExpandoObject();
+            dynamic expando = new ExpandoObject();
             var expandoDic = (IDictionary<string, object>)expando;
 
             //int ordinal = 0;
@@ -310,8 +292,13 @@ namespace ChoETL
             ChoGuard.ArgumentNotNull(dt, "DataTable");
 
             DataTable schemaTable = dt;
-            var expando = new ExpandoObject();
+            dynamic expando = new ExpandoObject();
             var expandoDic = (IDictionary<string, object>)expando;
+
+            string rootName = dt.DataSet == null || dt.DataSet.DataSetName.IsNullOrWhiteSpace() ? "Root" : dt.DataSet.DataSetName;
+            string elementName = dt.TableName.IsNullOrWhiteSpace() ? "XElement" : dt.TableName;
+            if (Configuration.XPath.IsNullOrWhiteSpace())
+                Configuration.XPath = "{0}/{1}".FormatString(rootName, elementName);
 
             if (Configuration.XmlRecordFieldConfigurations.IsNullOrEmpty())
             {
@@ -343,5 +330,24 @@ namespace ChoETL
                 Write(expando);
             }
         }
+    }
+
+    public class ChoXmlWriter : ChoXmlWriter<dynamic>
+    {
+        public ChoXmlWriter(string filePath, ChoXmlRecordConfiguration configuration = null)
+            : base(filePath, configuration)
+        {
+
+        }
+        public ChoXmlWriter(TextWriter textWriter, ChoXmlRecordConfiguration configuration = null)
+            : base(textWriter, configuration)
+        {
+        }
+
+        public ChoXmlWriter(Stream inStream, ChoXmlRecordConfiguration configuration = null)
+            : base(inStream, configuration)
+        {
+        }
+
     }
 }

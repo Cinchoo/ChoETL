@@ -307,15 +307,19 @@ namespace ChoETL
                 if ((stringSplitOptions & ChoStringSplitOptions.AllowQuotes) != ChoStringSplitOptions.AllowQuotes && text[i] == quoteChar) { quotes++; }
                 //else if ((stringSplitOptions & ChoStringSplitOptions.AllowSingleQuoteEntry) != ChoStringSplitOptions.AllowSingleQuoteEntry && text[i] == '\'') { singleQuotes++; }
                 else if (text[i] == '\\'
-                    && i + 1 < text.Length && Contains(text, ++i, separators))
-                    hasChar = true;
+                    /*&& i + 1 < text.Length && Contains(text, ++i, separators)*/)
+                //hasChar = true;
+                {
+                i++;
+                }
                 else if (Contains(text, i, separators) &&
                     ((quotes > 0 && quotes % 2 == 0) || (singleQuotes > 0 && singleQuotes % 2 == 0))
                     || Contains(text, i, separators) && quotes == 0 && singleQuotes == 0)
                 {
                     if (hasChar)
                     {
-                        word = NormalizeString(text.Substring(offset, i - len - offset).Replace("\\", String.Empty), quoteChar);
+                        string subString = offset == 0 ? text.Substring(offset, i) : text.Substring(offset, i - offset);
+                        word = NormalizeString(subString.Replace("\\", String.Empty), quoteChar);
                         if (String.IsNullOrEmpty(word))
                         {
                             if (stringSplitOptions != ChoStringSplitOptions.RemoveEmptyEntries)
@@ -396,7 +400,8 @@ namespace ChoETL
 
         public static bool Contains(string text, int index, string findInText)
         {
-            return findInText.IndexOf(text[index]) >= 0;
+            return text.Substring(index).StartsWith(findInText);
+            //return findInText.IndexOf(text[index]) >= 0;
             //index = index - (findInText.Length - 1);
             //if (index < 0) return false;
 

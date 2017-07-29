@@ -60,6 +60,7 @@
     <None Include="EmpQuote.csv" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="NodeData.csv" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

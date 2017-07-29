@@ -211,8 +211,31 @@ namespace ChoJSONReaderTest
 
         static void Main(string[] args)
         {
-            Sample4();
+            IgnoreItems();
         }
+
+        static void IgnoreItems()
+        {
+            using (var jr = new ChoJSONReader("sample6.json")
+                .WithField("ProductId", jsonPath: "$.productId")
+                .WithField("User", jsonPath: "$.returnPolicies.user")
+                )
+            {
+                foreach (var item in jr)
+                    Console.WriteLine(item.ProductId + " " + item.User);
+            }
+        }
+        public static void KVPTest()
+        {
+            using (var jr = new ChoJSONReader<Dictionary<string, string>>("sample5.json").Configure(c => c.UseJSONSerialization = true))
+            {
+                foreach (var dict1 in jr.Select(dict => dict.Select(kvp => new { kvp.Key, kvp.Value })).SelectMany(x => x))
+                {
+                    Console.WriteLine(dict1.Key);
+                }
+            }
+        }
+
         static void Sample4()
         {
             using (var jr = new ChoJSONReader("sample4.json").Configure(c => c.UseJSONSerialization = true))
