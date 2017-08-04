@@ -1,6 +1,8 @@
 # Cinchoo ETL
 
 [![Join the chat at https://gitter.im/ChoETL/Lobby](https://badges.gitter.im/ChoETL/Lobby.svg)](https://gitter.im/ChoETL/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Build status](https://ci.appveyor.com/api/projects/status/6ktkagfa67vbn9ys?svg=true)](https://ci.appveyor.com/project/Cinchoo/choetl)
+
 
 An ETL framework for .NET 
 
@@ -42,3 +44,10 @@ Here are the items will be targetted on phase 1.
       + Manifold Reader
       + Manifold Writer
 
+## Documentation
+
+https://github.com/Cinchoo/ChoETL/wiki
+
+## StackOverflow
+
+[Cinchoo ETL questions in StackOverflow](http://stackoverflow.com/questions/tagged/choetl)
