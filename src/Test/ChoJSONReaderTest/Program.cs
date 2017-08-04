@@ -14,6 +14,12 @@ using System.Xml.Serialization;
 
 namespace ChoJSONReaderTest
 {
+    public enum ChoHL7Version
+    {
+        v2_1,
+        v2_2,
+        v2_3
+    }
 
     public class MenuItem
     {

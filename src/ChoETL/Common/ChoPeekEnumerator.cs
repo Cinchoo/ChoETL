@@ -13,14 +13,15 @@ namespace ChoETL
         private IEnumerator<T> _enumerator;
         private T _peek;
         private bool _didPeek;
-        private Func<T, bool?> _filterFunc;
+        private Func<T, bool?> _filterFunc = (T) => false;
         private T _current;
 
         public ChoPeekEnumerator(IEnumerable<T> enumerable, Func<T, bool?> filterFunc = null)
         {
             ChoGuard.ArgumentNotNull(enumerable, "enumerable");
             _enumerable = enumerable;
-            _filterFunc = filterFunc;
+            if (filterFunc != null)
+                _filterFunc = filterFunc;
 
             Reset();
         }

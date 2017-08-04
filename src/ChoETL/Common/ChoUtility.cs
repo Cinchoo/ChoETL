@@ -565,7 +565,7 @@ namespace ChoETL
                     return defaultValue;
             }
             else
-                return (T)array;
+                return array != null ? (T)array : defaultValue;
         }
 
         public static Type GetTypeFromXmlSectionNode(this XmlNode sectionNode)

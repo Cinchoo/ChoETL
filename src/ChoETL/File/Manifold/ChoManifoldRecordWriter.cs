@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Dynamic;
 using System.Globalization;
 using System.IO;
@@ -16,6 +17,7 @@ namespace ChoETL
         private bool _configCheckDone = false;
         private long _index = 0;
         internal ChoWriter Writer = null;
+        private TraceSwitch _offSwitch = new System.Diagnostics.TraceSwitch("t", "t", "Off");
 
         public ChoManifoldRecordConfiguration Configuration
         {
@@ -106,11 +108,11 @@ namespace ChoETL
 
                                 if (config.GetType() == typeof(ChoCSVRecordConfiguration))
                                 {
-                                    recText = ChoCSVWriter.ToText(record, config as ChoCSVRecordConfiguration, Configuration.Encoding, Configuration.BufferSize, TraceSwitch);
+                                    recText = ChoCSVWriter.ToText(record, config as ChoCSVRecordConfiguration, Configuration.Encoding, Configuration.BufferSize, _offSwitch);
                                 }
                                 else if (config.GetType() == typeof(ChoFixedLengthRecordConfiguration))
                                 {
-                                    recText = ChoFixedLengthWriter.ToText(record, config as ChoFixedLengthRecordConfiguration, Configuration.Encoding, Configuration.BufferSize, TraceSwitch);
+                                    recText = ChoFixedLengthWriter.ToText(record, config as ChoFixedLengthRecordConfiguration, Configuration.Encoding, Configuration.BufferSize, _offSwitch);
                                 }
                                 else
                                     throw new ChoParserException("Unsupported record found to write.");

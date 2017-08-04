@@ -548,7 +548,7 @@ namespace ChoETL
             }
             foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties<ChoDefaultValueAttribute>(target.GetType()))
             {
-                if (ChoTypeDescriptor.GetPropetyAttribute<DefaultValueAttribute>(pd) != null)
+                if (ChoTypeDescriptor.GetPropetyAttribute<ChoDefaultValueAttribute>(pd) != null)
                     continue;
 
                 try

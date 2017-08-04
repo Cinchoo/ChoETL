@@ -1399,7 +1399,7 @@ namespace ChoETL
         public static Stream ToStream(this string txt, Encoding encoding = null)
         {
             MemoryStream stream = new MemoryStream();
-            StreamWriter writer = new StreamWriter(stream, encoding == null ? Encoding.UTF8 : encoding);
+            StreamWriter writer = encoding == null ? new StreamWriter(stream) : new StreamWriter(stream, encoding);
             if (txt != null)
                 writer.Write(txt);
 
