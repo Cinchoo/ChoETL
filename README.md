@@ -45,7 +45,7 @@ Here are the items will be targetted on phase 1.
       + Manifold Writer
 
 # Phase 2:
-ETL Pipelines and ETL process are coming...
+ETL Pipelines and ETL processes are coming...
 
 
 ## Documentation
