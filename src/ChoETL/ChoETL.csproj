@@ -126,6 +126,7 @@
     <Compile Include="Common\Data\ChoSqlTableHelper.cs" />
     <Compile Include="Common\Dynamic\ChoDynamicClassFactory.cs" />
     <Compile Include="Common\Dynamic\ChoExpandoObjectEx.cs" />
+    <Compile Include="Common\Dynamic\ChoDynamicObject.cs" />
     <Compile Include="Common\ExtensionMethods\ChoLinqEx.cs" />
     <Compile Include="Common\Reflection\ChoFieldInfoEx.cs" />
     <Compile Include="Common\Reflection\ChoMemberInfoEx.cs" />
@@ -318,6 +319,7 @@
     <Compile Include="File\Xml\ChoXmlReader.cs" />
     <Compile Include="IChoNotifyRecordWrite.cs" />
     <Compile Include="IChoNotifyRecordRead.cs" />
+    <Compile Include="Operation\ChoReadOperation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
