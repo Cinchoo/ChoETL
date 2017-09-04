@@ -167,7 +167,7 @@ namespace ChoETL
         private bool LoadNode(Tuple<long, XElement> pair, ref object rec)
         {
             if (!Configuration.UseXmlSerialization || Configuration.IsDynamicObject)
-                rec = Configuration.IsDynamicObject ? new ExpandoObject() : Activator.CreateInstance(RecordType);
+                rec = Configuration.IsDynamicObject ? new ChoDynamicObject() : Activator.CreateInstance(RecordType);
 
             try
             {

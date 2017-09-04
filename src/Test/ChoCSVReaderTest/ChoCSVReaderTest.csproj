@@ -50,6 +50,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="CurrencyQuotes.csv" />
+    <None Include="Players.csv" />
     <None Include="MergeInput.csv" />
     <None Include="Emp1.csv" />
     <None Include="EmpWithSalary.csv" />
