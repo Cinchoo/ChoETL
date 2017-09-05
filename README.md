@@ -55,3 +55,9 @@ https://github.com/Cinchoo/ChoETL/wiki
 ## StackOverflow
 
 [Cinchoo ETL questions in StackOverflow](http://stackoverflow.com/questions/tagged/choetl)
+
+## Download Binary
+
+[Nuget](https://www.nuget.org/packages/ChoETL/)
+
+
