@@ -116,6 +116,10 @@ namespace ChoETL
 
                 dict.AddOrUpdate(fn, fieldValue);
             }
+            else
+            {
+                dict.AddOrUpdate(fn, fieldConfig.FieldType.Default());
+            }
 
             return fieldConfig.IsDefaultValueSpecified;
         }

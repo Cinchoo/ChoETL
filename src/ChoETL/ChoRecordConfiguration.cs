@@ -69,7 +69,7 @@ namespace ChoETL
         internal ChoRecordConfiguration(Type recordType = null)
         {
             RecordType = recordType;
-            ErrorMode = ChoErrorMode.ThrowAndStop;
+            ErrorMode = ChoErrorMode.ReportAndContinue;
             AutoDiscoverColumns = true;
             ThrowAndStopOnMissingField = true;
             ObjectValidationMode = ChoObjectValidationMode.Off;

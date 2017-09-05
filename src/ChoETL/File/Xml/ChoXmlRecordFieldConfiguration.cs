@@ -93,7 +93,7 @@ namespace ChoETL
                 if (Size != null && Size.Value <= 0)
                     throw new ChoRecordConfigurationException("Size must be > 0.");
                 if (ErrorMode == null)
-                    ErrorMode = ChoErrorMode.ReportAndContinue; // config.ErrorMode;
+                    ErrorMode = config.ErrorMode; // config.ErrorMode;
                 if (IgnoreFieldValueMode == null)
                     IgnoreFieldValueMode = config.IgnoreFieldValueMode;
                 if (QuoteField == null)

@@ -108,14 +108,10 @@ namespace ChoCSVReaderTest
     {
         static void Main(string[] args)
         {
-            foreach (dynamic rec in new ChoCSVReader("CurrencyQuotes.csv").WithDelimiter(";"))
+            foreach (dynamic rec in new ChoCSVReader("CurrencyQuotes.csv").WithDelimiter(";").WithField("F1", 16, fieldType: typeof(int))
+                )
             {
-                Console.WriteLine("{0}", rec[10]);
-                Console.WriteLine("{0}", rec[11]);
-                Console.WriteLine("{0}", rec[12]);
-                Console.WriteLine("{0}", rec[13]);
-                Console.WriteLine("{0}", rec[14]);
-                Console.WriteLine("{0}", rec[15]);
+                Console.WriteLine("{0}", rec.F1);
             }
             return;
             //string txt = @"ZipCode  SortCode  3rd  ";

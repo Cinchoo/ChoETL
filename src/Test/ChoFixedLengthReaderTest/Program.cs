@@ -60,14 +60,22 @@ namespace ChoFixedLengthReaderTest
             //ChoFixedLengthFieldDefaultSizeConfiguation.Instance.SetSize(typeof(int), 3);
             //ChoFixedLengthFieldDefaultSizeConfiguation.Instance.SetSize(typeof(string), 5);
 
-            POCODataTableTest();
+            QuickLoad();
         }
 
         static void QuickLoad()
         {
-            foreach (var rec in new ChoFixedLengthReader("accounts.txt"))
+            using (var r = new ChoFixedLengthReader("accounts.txt")
+                .WithField("AC", 0, 8, fieldType: typeof(int))
+                )
             {
-                Console.WriteLine(rec.ToStringEx());
+                r.RecordLoadError += (o, e) =>
+                {
+                    Console.WriteLine(e.Exception.Message);
+                    e.Handled = true;
+                };
+                foreach (var rec in r)
+                    Console.WriteLine("{0}", rec.AC);
             }
 
         }

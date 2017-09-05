@@ -102,7 +102,7 @@ namespace ChoETL
         {
             EventHandler<ChoRecordFieldLoadErrorEventArgs> eh = RecordFieldLoadError;
             if (eh == null)
-                return true;
+                return false;
 
             ChoRecordFieldLoadErrorEventArgs e = new ChoRecordFieldLoadErrorEventArgs() { Record = record, Index = index, PropertyName = propName, Source = source, Exception = ex };
             eh(this, e);
