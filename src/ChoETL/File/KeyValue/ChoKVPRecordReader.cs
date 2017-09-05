@@ -304,7 +304,7 @@ namespace ChoETL
                                 }
                                 else
                                 {
-                                    object rec = Configuration.IsDynamicObject ? new ChoDynamicObject() : Activator.CreateInstance(RecordType);
+                                    object rec = Configuration.IsDynamicObject ? new ChoDynamicObject() { ThrowExceptionIfPropNotExists = true } : Activator.CreateInstance(RecordType);
                                     if (!LoadLines(new Tuple<long, List<Tuple<long, string>>>(++recNo, recLines), ref rec))
                                         yield break;
 

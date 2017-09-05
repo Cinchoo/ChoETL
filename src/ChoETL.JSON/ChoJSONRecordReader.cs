@@ -158,7 +158,7 @@ namespace ChoETL
         private bool LoadNode(Tuple<long, JObject> pair, ref object rec)
         {
             if (!Configuration.UseJSONSerialization)
-                rec = Configuration.IsDynamicObject ? new ChoDynamicObject() : Activator.CreateInstance(RecordType);
+                rec = Configuration.IsDynamicObject ? new ChoDynamicObject() { ThrowExceptionIfPropNotExists = true } : Activator.CreateInstance(RecordType);
 
             try
             {

@@ -167,7 +167,7 @@ namespace ChoETL
                     }
                     runningCount = pair.Item1;
 
-                    object rec = Configuration.IsDynamicObject ? new ChoDynamicObject() : Activator.CreateInstance(RecordType);
+                    object rec = Configuration.IsDynamicObject ? new ChoDynamicObject() { ThrowExceptionIfPropNotExists = true } : Activator.CreateInstance(RecordType);
                     if (!LoadLine(pair, ref rec))
                         yield break;
 

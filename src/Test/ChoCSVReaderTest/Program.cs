@@ -108,6 +108,8 @@ namespace ChoCSVReaderTest
     {
         static void Main(string[] args)
         {
+            HierarchyCSV();
+            return;
             foreach (dynamic rec in new ChoCSVReader("CurrencyQuotes.csv").WithDelimiter(";").WithField("F1", 16, fieldType: typeof(int))
                 )
             {

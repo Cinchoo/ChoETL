@@ -294,8 +294,8 @@ namespace ChoETL
             {
                 if (!kvpDict.ContainsKey(name))
                 {
-                    if (ThrowExceptionIfPropNotExists)
-                        return false;
+                    //if (ThrowExceptionIfPropNotExists)
+                    //    return false;
                     if (IsFixed)
                         return true;
                     else
