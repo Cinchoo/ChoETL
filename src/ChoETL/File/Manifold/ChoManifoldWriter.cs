@@ -160,6 +160,13 @@ namespace ChoETL
 
             return this;
         }
+        public ChoManifoldWriter Setup(Action<ChoManifoldWriter> action)
+        {
+            if (action != null)
+                action(this);
+
+            return this;
+        }
 
         #endregion Fluent API
     }

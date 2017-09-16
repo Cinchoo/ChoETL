@@ -22,11 +22,16 @@ namespace ChoETL
             get;
             set;
         }
+        private bool _ignoreCase = true;
         [DataMember]
         public bool IgnoreCase
         {
-            get;
-            set;
+            get { return _ignoreCase; }
+            set
+            {
+                _ignoreCase = value;
+                StringComparer = StringComparer.Create(_culture == null ? CultureInfo.CurrentCulture : _culture, IgnoreCase);
+            }
         }
         [DataMember]
         public char? FillChar
@@ -69,7 +74,6 @@ namespace ChoETL
             TrimOption = ChoFieldValueTrimOption.Trim;
             //Truncate = false;
             _culture = culture;
-            StringComparer = StringComparer.Create(_culture == null ? CultureInfo.CurrentCulture : _culture, IgnoreCase);
 
             if (recordType != null)
             {

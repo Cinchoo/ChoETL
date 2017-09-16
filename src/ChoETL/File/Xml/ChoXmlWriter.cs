@@ -244,6 +244,14 @@ namespace ChoETL
 
             return this;
         }
+        public ChoXmlWriter<T> Setup(Action<ChoXmlWriter<T>> action)
+        {
+            if (action != null)
+                action(this);
+
+            return this;
+        }
+
 
         #endregion Fluent API
 

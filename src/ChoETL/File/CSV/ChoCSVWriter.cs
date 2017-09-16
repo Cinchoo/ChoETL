@@ -204,11 +204,11 @@ namespace ChoETL
                     fieldName = name;
 
                 int maxFieldPos = fieldPosition == null ? (Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) + 1 : 1) : fieldPosition.Value;
-                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(name.Trim(), maxFieldPos) { FieldType = fieldType == null ? typeof(string) : fieldType, QuoteField = quoteField,
+                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(name, maxFieldPos) { FieldType = fieldType == null ? typeof(string) : fieldType, QuoteField = quoteField,
                     FillChar = fillChar,
                     FieldValueJustification = fieldValueJustification,
                     Truncate = truncate,
-                    FieldName = fieldName.NTrim(), ValueConverter = valueConverter
+                    FieldName = fieldName, ValueConverter = valueConverter
                 });
             }
 
@@ -234,6 +234,14 @@ namespace ChoETL
 
             return this;
         }
+        public ChoCSVWriter<T> Setup(Action<ChoCSVWriter<T>> action)
+        {
+            if (action != null)
+                action(this);
+
+            return this;
+        }
+
 
         #endregion Fluent API
 

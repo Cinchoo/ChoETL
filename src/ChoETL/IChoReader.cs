@@ -99,6 +99,11 @@ namespace ChoETL
             get;
             set;
         }
+        public bool Skip
+        {
+            get;
+            set;
+        }
     }
 
     public class ChoAfterRecordFieldLoadEventArgs : ChoAfterRecordLoadEventArgs

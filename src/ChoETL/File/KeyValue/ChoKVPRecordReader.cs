@@ -304,7 +304,15 @@ namespace ChoETL
                                 }
                                 else
                                 {
-                                    object rec = Configuration.IsDynamicObject ? new ChoDynamicObject() { ThrowExceptionIfPropNotExists = true } : Activator.CreateInstance(RecordType);
+                                    object rec = Configuration.IsDynamicObject ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer)) { ThrowExceptionIfPropNotExists = true,
+                                        KeyResolver = (name) =>
+                                        {
+                                            if (Configuration.RecordFieldConfigurationsDict2.ContainsKey(name))
+                                                return Configuration.RecordFieldConfigurationsDict2[name].Name;
+                                            else
+                                                return name;
+                                        }
+                                    } : Activator.CreateInstance(RecordType);
                                     if (!LoadLines(new Tuple<long, List<Tuple<long, string>>>(++recNo, recLines), ref rec))
                                         yield break;
 
@@ -449,13 +457,19 @@ namespace ChoETL
                             rec.DoObjectLevelValidation(Configuration, Configuration.KVPRecordFieldConfigurations);
                     }
 
-                    if (!RaiseAfterRecordLoad(rec, pair))
+                    bool skip = false;
+                    if (!RaiseAfterRecordLoad(rec, pair, ref skip))
                         return false;
+                    else if (skip)
+                    {
+                        rec = null;
+                        return true;
+                    }
                 }
-                catch (ChoParserException)
-                {
-                    throw;
-                }
+                //catch (ChoParserException)
+                //{
+                //    throw;
+                //}
                 catch (ChoMissingRecordFieldException)
                 {
                     throw;
@@ -465,12 +479,18 @@ namespace ChoETL
                     ChoETLFramework.HandleException(ex);
                     if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                     {
+                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
                         rec = null;
                     }
                     else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
                     {
                         if (!RaiseRecordLoadError(rec, pair, ex))
                             throw;
+                        else
+                        {
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                            rec = null;
+                        }
                     }
                     else
                         throw;
@@ -803,17 +823,20 @@ namespace ChoETL
             return true;
         }
 
-        private bool RaiseAfterRecordLoad(object target, Tuple<long, string> pair)
+        private bool RaiseAfterRecordLoad(object target, Tuple<long, string> pair, ref bool skip)
         {
+            bool ret = true;
+            bool sp = false;
             if (_callbackRecord != null)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordLoad(target, pair.Item1, pair.Item2), true);
+                ret = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordLoad(target, pair.Item1, pair.Item2, ref sp), true);
             }
             else if (Reader != null)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseAfterRecordLoad(target, pair.Item1, pair.Item2), true);
+                ret = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseAfterRecordLoad(target, pair.Item1, pair.Item2, ref sp), true);
             }
-            return true;
+            skip = sp;
+            return ret;
         }
 
         private bool RaiseRecordLoadError(object target, Tuple<long, string> pair, Exception ex)

@@ -205,7 +205,7 @@ namespace ChoETL
                         Configuration.ColumnOrderStrict = true;
                     }
 
-                    Configuration.KVPRecordFieldConfigurations.Add(new ChoKVPRecordFieldConfiguration(fn.NTrim()));
+                    Configuration.KVPRecordFieldConfigurations.Add(new ChoKVPRecordFieldConfiguration(fn));
                 }
 
             }
@@ -225,7 +225,7 @@ namespace ChoETL
                 if (fieldName.IsNullOrWhiteSpace())
                     fieldName = name;
 
-                Configuration.KVPRecordFieldConfigurations.Add(new ChoKVPRecordFieldConfiguration(name.NTrim()) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName.NTrim(), ValueConverter = valueConverter });
+                Configuration.KVPRecordFieldConfigurations.Add(new ChoKVPRecordFieldConfiguration(name) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName, ValueConverter = valueConverter });
             }
 
             return this;
@@ -247,6 +247,13 @@ namespace ChoETL
         {
             if (action != null)
                 action(Configuration);
+
+            return this;
+        }
+        public ChoKVPReader<T> Setup(Action<ChoKVPReader<T>> action)
+        {
+            if (action != null)
+                action(this);
 
             return this;
         }

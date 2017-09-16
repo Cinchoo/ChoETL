@@ -52,7 +52,7 @@ namespace ChoETL
             return !e.Skip;
         }
 
-        public bool RaiseAfterRecordLoad(object record, long index, object source)
+        public bool RaiseAfterRecordLoad(object record, long index, object source, ref bool skip)
         {
             EventHandler<ChoAfterRecordLoadEventArgs> eh = AfterRecordLoad;
             if (eh == null)

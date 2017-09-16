@@ -67,6 +67,11 @@ namespace ChoETL
             set;
         }
 
+        public Func<string, string> KeyResolver
+        {
+            get;
+            set;
+        }
         #endregion Instance Members
 
         #region Constructors
@@ -255,6 +260,15 @@ namespace ChoETL
                     var key = indexes[0] as string;
                     return SetPropertyValue(key, value);
                 }
+                else if (indexes[0] is int)
+                {
+                    var index = (int)indexes[0];
+
+                    Dictionary<string, object> kvpDict = _kvpDict;
+                    if (kvpDict != null)
+                        kvpDict[kvpDict.ElementAt(index).Key] = value;
+                    return true;
+                }
             }
             return true;
         }
@@ -274,12 +288,22 @@ namespace ChoETL
             result = null;
 
             Dictionary<string, object> kvpDict = _kvpDict;
-            if (kvpDict != null && kvpDict.ContainsKey(name))
-                result = AfterKVPLoaded(name, kvpDict[name]);
-            else
+            if (kvpDict != null)
             {
-                if (ThrowExceptionIfPropNotExists)
-                    return false;
+                if (KeyResolver != null)
+                {
+                    var newName = KeyResolver(name);
+                    if (!newName.IsNullOrWhiteSpace())
+                        name = newName;
+                }
+
+                if (kvpDict.ContainsKey(name))
+                    result = AfterKVPLoaded(name, kvpDict[name]);
+                else
+                {
+                    if (ThrowExceptionIfPropNotExists)
+                        return false;
+                }
             }
             return true;
         }
@@ -292,6 +316,13 @@ namespace ChoETL
             Dictionary<string, object> kvpDict = _kvpDict;
             if (kvpDict != null)
             {
+                if (KeyResolver != null)
+                {
+                    var newName = KeyResolver(name);
+                    if (!newName.IsNullOrWhiteSpace())
+                        name = newName;
+                }
+
                 if (!kvpDict.ContainsKey(name))
                 {
                     //if (ThrowExceptionIfPropNotExists)

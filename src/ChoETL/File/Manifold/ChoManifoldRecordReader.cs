@@ -237,8 +237,14 @@ namespace ChoETL
                         throw new ChoParserException("Unsupported record line found to parse.");
                 }
 
-                if (!RaiseAfterRecordLoad(rec, pair))
+                bool skip = false;
+                if (!RaiseAfterRecordLoad(rec, pair, ref skip))
                     return false;
+                else if (skip)
+                {
+                    rec = null;
+                    return true;
+                }
             }
             catch (ChoParserException pEx)
             {
@@ -253,15 +259,32 @@ namespace ChoETL
                 ChoETLFramework.HandleException(ex);
                 if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                 {
+                    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
                     rec = null;
                 }
                 else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
                 {
                     if (!RaiseRecordLoadError(rec, pair, ex))
-                        throw new ChoReaderException($"Failed to parse line to '{recType}' object.", ex);
+                        throw;
+                    else
+                    {
+                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                        rec = null;
+                    }
                 }
                 else
-                    throw new ChoReaderException($"Failed to parse line to '{recType}' object.", ex);
+                    throw;
+                //if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
+                //{
+                //    rec = null;
+                //}
+                //else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
+                //{
+                //    if (!RaiseRecordLoadError(rec, pair, ex))
+                //        throw new ChoReaderException($"Failed to parse line to '{recType}' object.", ex);
+                //}
+                //else
+                //    throw new ChoReaderException($"Failed to parse line to '{recType}' object.", ex);
 
                 return true;
             }
@@ -323,17 +346,20 @@ namespace ChoETL
             return true;
         }
 
-        private bool RaiseAfterRecordLoad(object target, Tuple<long, string> pair)
+        private bool RaiseAfterRecordLoad(object target, Tuple<long, string> pair, ref bool skip)
         {
+            bool ret = true;
+            bool sp = false;
             if (Configuration.NotifyRecordReadObject != null)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => Configuration.NotifyRecordReadObject.AfterRecordLoad(target, pair.Item1, pair.Item2), true);
+                ret = ChoFuncEx.RunWithIgnoreError(() => Configuration.NotifyRecordReadObject.AfterRecordLoad(target, pair.Item1, pair.Item2, ref sp), true);
             }
             else if (Reader != null)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseAfterRecordLoad(target, pair.Item1, pair.Item2), true);
+                ret = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseAfterRecordLoad(target, pair.Item1, pair.Item2, ref sp), true);
             }
-            return true;
+            skip = sp;
+            return ret;
         }
 
         private bool RaiseRecordLoadError(object target, Tuple<long, string> pair, Exception ex)

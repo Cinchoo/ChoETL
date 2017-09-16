@@ -162,6 +162,13 @@ namespace ChoETL
 
             return this;
         }
+        public ChoManifoldReader Setup(Action<ChoManifoldReader> action)
+        {
+            if (action != null)
+                action(this);
+
+            return this;
+        }
 
         #endregion Fluent API
     }

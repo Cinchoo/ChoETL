@@ -194,8 +194,8 @@ namespace ChoETL
                 if (fieldName.IsNullOrWhiteSpace())
                     fieldName = name;
 
-                Configuration.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(name.NTrim(), startIndex, size) { FieldType = fieldType,
-                    QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName.NTrim(), ValueConverter = valueConverter
+                Configuration.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(name, startIndex, size) { FieldType = fieldType,
+                    QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName, ValueConverter = valueConverter
                 });
             }
 
@@ -221,6 +221,14 @@ namespace ChoETL
 
             return this;
         }
+        public ChoFixedLengthReader<T> Setup(Action<ChoFixedLengthReader<T>> action)
+        {
+            if (action != null)
+                action(this);
+
+            return this;
+        }
+
 
         #endregion Fluent API
     }

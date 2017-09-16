@@ -56,6 +56,40 @@ namespace ChoFixedLengthReaderTest
     {
         static void Main(string[] args)
         {
+            //foreach (dynamic rec in new ChoFixedLengthReader("emp.txt").WithFirstLineHeader()
+            //    .Configure(c => c.FileHeaderConfiguration.IgnoreCase = false)
+            //    .Configure(c => c.FileHeaderConfiguration.TrimOption = ChoFieldValueTrimOption.None)
+            //    .Configure(c => c.ThrowAndStopOnMissingField = true)
+            //    //.Configure(c => c.ColumnOrderStrict = false)
+            //    )
+            //{
+            //    Console.WriteLine(rec.id);
+            //    //Console.WriteLine(rec[" id "]);
+            //}
+            //return;
+            foreach (var rec in new ChoFixedLengthReader<EmployeeRec>("emp.txt")
+                .Configure(c => c.FileHeaderConfiguration.IgnoreCase = false)
+                .Configure(c => c.ThrowAndStopOnMissingField = true)
+                .Setup(r => r.BeforeRecordLoad += (o, e) =>
+                {
+                })
+                )
+            {
+                Console.WriteLine(rec.Id);
+            }
+
+            return;
+            foreach (dynamic rec in new ChoFixedLengthReader("emp.txt").WithFirstLineHeader()
+                .Configure(c => c.MayContainEOLInData = true)
+                .Configure(c => c.FileHeaderConfiguration.IgnoreCase = true)
+                .Configure(c => c.FileHeaderConfiguration.TrimOption = ChoFieldValueTrimOption.None))
+            {
+                Console.WriteLine(rec.id);
+                Console.WriteLine("{0}", rec[" id     "]);
+                Console.WriteLine(rec[0]);
+            }
+            return;
+
             //Override the width of necessary simple types
             //ChoFixedLengthFieldDefaultSizeConfiguation.Instance.SetSize(typeof(int), 3);
             //ChoFixedLengthFieldDefaultSizeConfiguation.Instance.SetSize(typeof(string), 5);
@@ -75,7 +109,7 @@ namespace ChoFixedLengthReaderTest
                 //    e.Handled = true;
                 //};
                 foreach (var rec in r)
-                    Console.WriteLine("{0}", rec.AC1);
+                    Console.WriteLine("{0}", rec.AC);
             }
 
         }

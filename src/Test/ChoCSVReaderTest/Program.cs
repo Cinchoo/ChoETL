@@ -108,9 +108,44 @@ namespace ChoCSVReaderTest
     {
         static void Main(string[] args)
         {
-            HierarchyCSV();
+            //foreach (dynamic rec in new ChoCSVReader("emp.csv").WithFirstLineHeader()
+            //    .WithFields(" id ", "Name")
+            //    .Configure(c => c.FileHeaderConfiguration.IgnoreCase = false)
+            //    .Configure(c => c.FileHeaderConfiguration.TrimOption = ChoFieldValueTrimOption.None)
+            //    .Configure(c => c.ThrowAndStopOnMissingField = true)
+            //    //.Configure(c => c.ColumnOrderStrict = false)
+            //    )
+            //{
+            //    Console.WriteLine(rec.id);
+            //    //Console.WriteLine(rec[" id "]);
+            //}
+            //return;
+            //foreach (var rec in new ChoCSVReader<EmployeeRec>("emp.csv")
+            //    .Configure(c => c.FileHeaderConfiguration.IgnoreCase = false)
+            //    .Configure(c => c.ThrowAndStopOnMissingField = true)
+            //    )
+            //{
+            //    Console.WriteLine(rec.Id);
+            //}
+
+            //return;
+            foreach (dynamic rec in new ChoCSVReader("emp.csv").WithFirstLineHeader().Configure((c) => c.MayContainEOLInData = true)
+                .Configure(c => c.FileHeaderConfiguration.IgnoreCase = true)
+                .WithFields(" id ", "Name")
+                .Configure(c => c.FileHeaderConfiguration.TrimOption = ChoFieldValueTrimOption.None))
+            {
+                Console.WriteLine(rec.id);
+                //Console.WriteLine(rec["Column1"]);
+                Console.WriteLine(rec[0]);
+            }
             return;
-            foreach (dynamic rec in new ChoCSVReader("CurrencyQuotes.csv").WithDelimiter(";").WithField("F1", 16, fieldType: typeof(int))
+            //HierarchyCSV();
+            //return;
+            foreach (dynamic rec in new ChoCSVReader("CurrencyQuotes.csv").WithDelimiter(";")
+                .WithField("F1", 14, fieldType: typeof(int))
+                .WithField("F2", 15, fieldType: typeof(int))
+                .WithField("F3", 16, fieldType: typeof(int))
+                .Configure(c => c.ErrorMode = ChoErrorMode.ReportAndContinue)
                 )
             {
                 Console.WriteLine("{0}", rec.F1);
@@ -122,11 +157,7 @@ namespace ChoCSVReaderTest
             //return;
             CultureSpecificDateTimeTest();
             return;
-            foreach (dynamic rec in new ChoCSVReader("emp.csv").WithFirstLineHeader().Configure((c) => c.MayContainEOLInData = true))
-            {
-                Console.WriteLine(rec.Name);
-            }
-            return;
+
 
             var x = 1;
             //Console.WriteLine(@_2);
@@ -893,7 +924,7 @@ namespace ChoCSVReaderTest
             throw new NotImplementedException();
         }
 
-        public bool AfterRecordLoad(object target, long index, object source)
+        public bool AfterRecordLoad(object target, long index, object source, ref bool skip)
         {
             throw new NotImplementedException();
         }
@@ -948,12 +979,12 @@ namespace ChoCSVReaderTest
     }
 
     //[MetadataType(typeof(EmployeeRecMeta))]
-    //[ChoCSVFileHeader()]
-    //[ChoCSVRecordObject(ErrorMode = ChoErrorMode.IgnoreAndContinue,
-    //IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any, ThrowAndStopOnMissingField = false)]
+    [ChoCSVFileHeader(TrimOption = ChoFieldValueTrimOption.None)]
+    [ChoCSVRecordObject(ErrorMode = ChoErrorMode.IgnoreAndContinue,
+    IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any, ThrowAndStopOnMissingField = false)]
     public partial class EmployeeRec //: IChoNotifyRecordRead, IChoValidatable
     {
-        [ChoCSVRecordField(1, FieldName = "id")]
+        [ChoCSVRecordField(1, FieldName = " id ")]
         //[ChoTypeConverter(typeof(IntConverter))]
         //[Range(1, int.MaxValue, ErrorMessage = "Id must be > 0.")]
         //[ChoFallbackValue(1)]

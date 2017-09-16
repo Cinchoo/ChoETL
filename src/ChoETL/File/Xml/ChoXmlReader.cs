@@ -325,6 +325,13 @@ namespace ChoETL
 
             return this;
         }
+        public ChoXmlReader<T> Setup(Action<ChoXmlReader<T>> action)
+        {
+            if (action != null)
+                action(this);
+
+            return this;
+        }
 
         #endregion Fluent API
     }

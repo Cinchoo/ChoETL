@@ -207,13 +207,19 @@ namespace ChoETL
                 }
 
 
-                if (!RaiseAfterRecordLoad(rec, pair))
+                bool skip = false;
+                if (!RaiseAfterRecordLoad(rec, pair, ref skip))
                     return false;
+                else if (skip)
+                {
+                    rec = null;
+                    return true;
+                }
             }
-            catch (ChoParserException)
-            {
-                throw;
-            }
+            //catch (ChoParserException)
+            //{
+            //    throw;
+            //}
             catch (ChoMissingRecordFieldException)
             {
                 throw;
@@ -223,12 +229,18 @@ namespace ChoETL
                 ChoETLFramework.HandleException(ex);
                 if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                 {
+                    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
                     rec = null;
                 }
                 else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
                 {
                     if (!RaiseRecordLoadError(rec, pair, ex))
                         throw;
+                    else
+                    {
+                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                        rec = null;
+                    }
                 }
                 else
                     throw;
@@ -628,17 +640,20 @@ namespace ChoETL
             return true;
         }
 
-        private bool RaiseAfterRecordLoad(object target, Tuple<long, XElement> pair)
+        private bool RaiseAfterRecordLoad(object target, Tuple<long, XElement> pair, ref bool skip)
         {
+            bool ret = true;
+            bool sp = false;
             if (_callbackRecord != null)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordLoad(target, pair.Item1, pair.Item2), true);
+                ret = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordLoad(target, pair.Item1, pair.Item2, ref sp), true);
             }
             else if (Reader != null)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseAfterRecordLoad(target, pair.Item1, pair.Item2), true);
+                ret = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseAfterRecordLoad(target, pair.Item1, pair.Item2, ref sp), true);
             }
-            return true;
+            skip = sp;
+            return ret;
         }
 
         private bool RaiseRecordLoadError(object target, Tuple<long, XElement> pair, Exception ex)

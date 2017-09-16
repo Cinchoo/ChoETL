@@ -196,10 +196,10 @@ namespace ChoETL
                     {
                         Configuration.CSVRecordFieldConfigurations.Clear();
                         _clearFields = true;
-                        Configuration.ColumnOrderStrict = true;
+                        //Configuration.ColumnOrderStrict = true;
                     }
 
-                    Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fn.NTrim(), ++maxFieldPos));
+                    Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fn, ++maxFieldPos) { FieldName = fn });
                 }
 
             }
@@ -225,7 +225,7 @@ namespace ChoETL
                 if (fieldName.IsNullOrWhiteSpace())
                     fieldName = name;
 
-                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(name.NTrim(), position) { FieldType = fieldType == null ? typeof(string) : fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName.NTrim(), ValueConverter = valueConverter });
+                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(name, position) { FieldType = fieldType == null ? typeof(string) : fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName, ValueConverter = valueConverter });
             }
 
             return this;
@@ -253,6 +253,13 @@ namespace ChoETL
         {
             if (action != null)
                 action(Configuration);
+
+            return this;
+        }
+        public ChoCSVReader<T> Setup(Action<ChoCSVReader<T>> action)
+        {
+            if (action != null)
+                action(this);
 
             return this;
         }

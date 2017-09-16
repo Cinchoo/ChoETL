@@ -355,7 +355,7 @@ namespace ChoETL
                 i++;
             }
 
-            if (offset < text.Length)
+            if (offset <= text.Length)
                 splitStrings.Add(hasChar ? NormalizeString(text.Substring(offset).Replace("\\", String.Empty), quoteChar) : 
                     NormalizeString(text.Substring(offset), quoteChar));
 

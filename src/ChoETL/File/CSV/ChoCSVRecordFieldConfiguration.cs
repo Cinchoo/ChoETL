@@ -36,7 +36,7 @@ namespace ChoETL
             if (attr != null)
             {
                 FieldPosition = attr.FieldPosition;
-                FieldName = attr.FieldName.IsNullOrWhiteSpace() ? Name.NTrim() : attr.FieldName.NTrim();
+                FieldName = attr.FieldName.IsNullOrWhiteSpace() ? Name : attr.FieldName;
             }
         }
 

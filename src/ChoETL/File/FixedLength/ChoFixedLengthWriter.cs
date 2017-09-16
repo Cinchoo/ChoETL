@@ -202,6 +202,13 @@ namespace ChoETL
 
             return this;
         }
+        public ChoFixedLengthWriter<T> Setup(Action<ChoFixedLengthWriter<T>> action)
+        {
+            if (action != null)
+                action(this);
+
+            return this;
+        }
 
         #endregion Fluent API
 

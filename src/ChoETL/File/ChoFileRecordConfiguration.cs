@@ -84,6 +84,8 @@ namespace ChoETL
             get;
             set;
         }
+        [DataMember]
+        internal bool IgnoreDuplicateFields { get; set; }
 
         internal string BackslashQuote = @"\""";
         internal string DoubleQuoteChar = @"""""";
@@ -133,6 +135,7 @@ namespace ChoETL
 
         protected ChoFileRecordConfiguration(Type recordType = null) : base(recordType)
         {
+            IgnoreDuplicateFields = false;
             BufferSize = 4096;
             Comments = null; // new string[] { "#", "//" };
             Culture = CultureInfo.CurrentCulture;

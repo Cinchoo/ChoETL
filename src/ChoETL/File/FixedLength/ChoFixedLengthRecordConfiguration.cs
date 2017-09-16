@@ -183,7 +183,7 @@ namespace ChoETL
                     {
                         foreach (var item in DiscoverColumns(line))
                         {
-                            var obj = new ChoFixedLengthRecordFieldConfiguration(FileHeaderConfiguration.HasHeaderRecord ? item.Item1.NTrim() : "Column{0}".FormatString(++index), item.Item2, item.Item3);
+                            var obj = new ChoFixedLengthRecordFieldConfiguration(FileHeaderConfiguration.HasHeaderRecord ? item.Item1 : "Column{0}".FormatString(++index), item.Item2, item.Item3);
                             FixedLengthRecordFieldConfigurations.Add(obj);
                         }
                     }
@@ -194,7 +194,7 @@ namespace ChoETL
                         {
                             if (index < tuples.Length)
                             {
-                                var obj = new ChoFixedLengthRecordFieldConfiguration(FileHeaderConfiguration.HasHeaderRecord ? tuples[index].Item1.NTrim() : pd.Name, tuples[index].Item2, tuples[index].Item3);
+                                var obj = new ChoFixedLengthRecordFieldConfiguration(FileHeaderConfiguration.HasHeaderRecord ? tuples[index].Item1 : pd.Name, tuples[index].Item2, tuples[index].Item3);
                                 FixedLengthRecordFieldConfigurations.Add(obj);
                                 index++;
                             }
