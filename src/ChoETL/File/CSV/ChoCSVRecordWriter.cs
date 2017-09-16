@@ -17,6 +17,7 @@ namespace ChoETL
         private IChoNotifyRecordWrite _callbackRecord;
         private bool _configCheckDone = false;
         private long _index = 0;
+        private bool _hadHeaderWritten = false;
         internal ChoWriter Writer = null;
 
         public ChoCSVRecordConfiguration Configuration
@@ -105,7 +106,7 @@ namespace ChoETL
                                 continue;
                             else if (recText.Length > 0)
                             {
-                                sw.Write("{1}{0}", recText, Configuration.FileHeaderConfiguration.HasHeaderRecord || HasExcelSeparator ? Configuration.EOLDelimiter : "");
+                                sw.Write("{1}{0}", recText, _hadHeaderWritten || HasExcelSeparator ? Configuration.EOLDelimiter : "");
                                 continue;
                             }
 
@@ -117,7 +118,7 @@ namespace ChoETL
                                 if (ToText(_index, record, out recText))
                                 {
                                     if (_index == 1)
-                                        sw.Write("{1}{0}", recText, Configuration.FileHeaderConfiguration.HasHeaderRecord || HasExcelSeparator ? Configuration.EOLDelimiter : "");
+                                        sw.Write("{1}{0}", recText, _hadHeaderWritten || HasExcelSeparator ? Configuration.EOLDelimiter : "");
                                     else
                                         sw.Write("{1}{0}", recText, Configuration.EOLDelimiter);
 
@@ -125,21 +126,25 @@ namespace ChoETL
                                         yield break;
                                 }
                             }
-                            catch (ChoParserException)
-                            {
-                                throw;
-                            }
+                            //catch (ChoParserException)
+                            //{
+                            //    throw;
+                            //}
                             catch (Exception ex)
                             {
                                 ChoETLFramework.HandleException(ex);
                                 if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                                 {
-
+                                    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
                                 }
                                 else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
                                 {
                                     if (!RaiseRecordWriteError(record, _index, recText, ex))
                                         throw;
+                                    else
+                                    {
+                                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                                    }
                                 }
                                 else
                                     throw;
@@ -380,10 +385,14 @@ namespace ChoETL
             if (Configuration.FileHeaderConfiguration.HasHeaderRecord)
             {
                 string header = ToHeaderText();
-                if (header.IsNullOrWhiteSpace())
-                    return;
+                if (RaiseFileHeaderWrite(ref header))
+                {
+                    if (header.IsNullOrWhiteSpace())
+                        return;
 
-                sw.Write("{1}{0}", header, HasExcelSeparator ? Configuration.EOLDelimiter : "");
+                    sw.Write("{1}{0}", header, HasExcelSeparator ? Configuration.EOLDelimiter : "");
+                    _hadHeaderWritten = true;
+                }
             }
         }
 
@@ -439,60 +448,68 @@ namespace ChoETL
             }
             else
             {
-                if (searchStrings == null)
-                    searchStrings = (Configuration.QuoteChar.ToString() + Configuration.Delimiter + Configuration.EOLDelimiter).ToArray();
-
-                if (fieldValue.IndexOfAny(searchStrings) >= 0)
+                if (quoteField == null)
                 {
-                    //******** ORDER IMPORTANT *********
+                    if (searchStrings == null)
+                        searchStrings = (Configuration.QuoteChar.ToString() + Configuration.Delimiter + Configuration.EOLDelimiter).ToArray();
 
-                    //Fields that contain double quote characters must be surounded by double-quotes, and the embedded double-quotes must each be represented by a pair of consecutive double quotes.
-                    if (fieldValue.IndexOf(Configuration.QuoteChar) >= 0)
+                    if (fieldValue.IndexOfAny(searchStrings) >= 0)
                     {
-                        if (!Configuration.EscapeQuoteAndDelimiter)
-                            fieldValue = fieldValue.Replace(Configuration.QuoteChar.ToString(), Configuration.DoubleQuoteChar);
-                        else
-                            fieldValue = fieldValue.Replace(Configuration.QuoteChar.ToString(), "\\{0}".FormatString(Configuration.QuoteChar));
+                        //******** ORDER IMPORTANT *********
 
-                        quoteValue = true;
-                    }
-
-                    if (fieldValue.IndexOf(Configuration.Delimiter) >= 0)
-                    {
-                        if (isHeader)
-                            throw new ChoParserException("Field header '{0}' value contains delimiter character.".FormatString(fieldName));
-                        else
+                        //Fields that contain double quote characters must be surounded by double-quotes, and the embedded double-quotes must each be represented by a pair of consecutive double quotes.
+                        if (fieldValue.IndexOf(Configuration.QuoteChar) >= 0)
                         {
-                            //Fields with embedded commas must be delimited with double-quote characters.
-                            if (Configuration.EscapeQuoteAndDelimiter)
-                                fieldValue = fieldValue.Replace(Configuration.Delimiter, "\\{0}".FormatString(Configuration.Delimiter));
+                            if (!Configuration.EscapeQuoteAndDelimiter)
+                                fieldValue = fieldValue.Replace(Configuration.QuoteChar.ToString(), Configuration.DoubleQuoteChar);
+                            else
+                                fieldValue = fieldValue.Replace(Configuration.QuoteChar.ToString(), "\\{0}".FormatString(Configuration.QuoteChar));
 
                             quoteValue = true;
-                            //throw new ChoParserException("Field '{0}' value contains delimiter character.".FormatString(fieldName));
+                        }
+
+                        if (fieldValue.IndexOf(Configuration.Delimiter) >= 0)
+                        {
+                            if (isHeader)
+                                throw new ChoParserException("Field header '{0}' value contains delimiter character.".FormatString(fieldName));
+                            else
+                            {
+                                //Fields with embedded commas must be delimited with double-quote characters.
+                                if (Configuration.EscapeQuoteAndDelimiter)
+                                    fieldValue = fieldValue.Replace(Configuration.Delimiter, "\\{0}".FormatString(Configuration.Delimiter));
+
+                                quoteValue = true;
+                                //throw new ChoParserException("Field '{0}' value contains delimiter character.".FormatString(fieldName));
+                            }
+                        }
+
+                        if (fieldValue.IndexOf(Configuration.EOLDelimiter) >= 0)
+                        {
+                            if (isHeader)
+                                throw new ChoParserException("Field header '{0}' value contains EOL delimiter character.".FormatString(fieldName));
+                            else
+                            {
+                                //A field that contains embedded line-breaks must be surounded by double-quotes
+                                //if (Configuration.EscapeQuoteAndDelimiters)
+                                //    fieldValue = fieldValue.Replace(Configuration.EOLDelimiter, "\\{0}".FormatString(Configuration.EOLDelimiter));
+
+                                quoteValue = true;
+                                //throw new ChoParserException("Field '{0}' value contains EOL delimiter character.".FormatString(fieldName));
+                            }
                         }
                     }
 
-                    if (fieldValue.IndexOf(Configuration.EOLDelimiter) >= 0)
+                    if (!isHeader)
                     {
-                        if (isHeader)
-                            throw new ChoParserException("Field header '{0}' value contains EOL delimiter character.".FormatString(fieldName));
-                        else
+                        //Fields with leading or trailing spaces must be delimited with double-quote characters.
+                        if (!fieldValue.IsNullOrWhiteSpace() && (char.IsWhiteSpace(fieldValue[0]) || char.IsWhiteSpace(fieldValue[fieldValue.Length - 1])))
                         {
-                            //A field that contains embedded line-breaks must be surounded by double-quotes
-                            //if (Configuration.EscapeQuoteAndDelimiters)
-                            //    fieldValue = fieldValue.Replace(Configuration.EOLDelimiter, "\\{0}".FormatString(Configuration.EOLDelimiter));
-
                             quoteValue = true;
-                            //throw new ChoParserException("Field '{0}' value contains EOL delimiter character.".FormatString(fieldName));
                         }
                     }
                 }
-
-                //Fields with leading or trailing spaces must be delimited with double-quote characters.
-                if (!fieldValue.IsNullOrWhiteSpace() && (char.IsWhiteSpace(fieldValue[0]) || char.IsWhiteSpace(fieldValue[fieldValue.Length - 1])))
-                {
-                    quoteValue = true;
-                }
+                else
+                    quoteValue = quoteField.Value;
 
                 if (quoteValue || (quoteField != null && quoteField.Value))
                     fieldValue = "{1}{0}{1}".FormatString(fieldValue, Configuration.QuoteChar);
@@ -666,6 +683,21 @@ namespace ChoETL
                 return ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseRecordFieldWriteError(target, index, propName, value, ex), true);
             }
             return true;
+        }
+        private bool RaiseFileHeaderWrite(ref string headerText)
+        {
+            string ht = null;
+            bool retValue = true;
+            if (_callbackRecord != null)
+            {
+                retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.FileHeaderWrite(ref ht), false);
+            }
+            else if (Writer != null)
+            {
+                retValue = ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseFileHeaderWrite(ref ht), false);
+            }
+            headerText = ht;
+            return !retValue;
         }
     }
 }

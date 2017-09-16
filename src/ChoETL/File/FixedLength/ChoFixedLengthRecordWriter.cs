@@ -17,6 +17,7 @@ namespace ChoETL
         private IChoNotifyRecordWrite _callbackRecord;
         private bool _configCheckDone = false;
         private long _index = 0;
+        private bool _hadHeaderWritten = false;
         internal ChoWriter Writer = null;
 
         public ChoFixedLengthRecordConfiguration Configuration
@@ -106,7 +107,7 @@ namespace ChoETL
                                 continue;
                             else if (recText.Length > 0)
                             {
-                                sw.Write("{1}{0}", recText, Configuration.FileHeaderConfiguration.HasHeaderRecord ? Configuration.EOLDelimiter : "");
+                                sw.Write("{1}{0}", recText, _hadHeaderWritten ? Configuration.EOLDelimiter : "");
                                 continue;
                             }
 
@@ -119,7 +120,7 @@ namespace ChoETL
                                 {
                                     if (_index == 1)
                                     {
-                                        sw.Write("{1}{0}", recText, Configuration.FileHeaderConfiguration.HasHeaderRecord ? Configuration.EOLDelimiter : "");
+                                        sw.Write("{1}{0}", recText, _hadHeaderWritten ? Configuration.EOLDelimiter : "");
                                     }
                                     else
                                         sw.Write("{1}{0}", recText, Configuration.EOLDelimiter);
@@ -128,21 +129,25 @@ namespace ChoETL
                                         yield break;
                                 }
                             }
-                            catch (ChoParserException)
-                            {
-                                throw;
-                            }
+                            //catch (ChoParserException)
+                            //{
+                            //    throw;
+                            //}
                             catch (Exception ex)
                             {
                                 ChoETLFramework.HandleException(ex);
                                 if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                                 {
-
+                                    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
                                 }
                                 else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
                                 {
                                     if (!RaiseRecordWriteError(record, _index, recText, ex))
                                         throw;
+                                    else
+                                    {
+                                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                                    }
                                 }
                                 else
                                     throw;
@@ -408,10 +413,14 @@ namespace ChoETL
             if (Configuration.FileHeaderConfiguration.HasHeaderRecord)
             {
                 string header = ToHeaderText();
-                if (header.IsNullOrWhiteSpace())
-                    return;
+                if (RaiseFileHeaderWrite(ref header))
+                {
+                    if (header.IsNullOrWhiteSpace())
+                        return;
 
-                sw.Write(header);
+                    sw.Write(header);
+                    _hadHeaderWritten = true;
+                }
             }
         }
 
@@ -624,6 +633,21 @@ namespace ChoETL
                 return ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseRecordFieldWriteError(target, index, propName, value, ex), true);
             }
             return true;
+        }
+        private bool RaiseFileHeaderWrite(ref string headerText)
+        {
+            string ht = null;
+            bool retValue = true;
+            if (_callbackRecord != null)
+            {
+                retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.FileHeaderWrite(ref ht), false);
+            }
+            else if (Writer != null)
+            {
+                retValue = ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseFileHeaderWrite(ref ht), false);
+            }
+            headerText = ht;
+            return !retValue;
         }
     }
 }

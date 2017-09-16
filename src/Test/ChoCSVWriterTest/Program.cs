@@ -17,7 +17,33 @@ namespace ChoCSVWriterTest
     {
         static void Main(string[] args)
         {
-            ToTextTest();
+            ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
+            config.FileHeaderConfiguration.HasHeaderRecord = true;
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1) { FieldName = " Id ", QuoteField = true });
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
+
+            List<ExpandoObject> objs = new List<ExpandoObject>();
+            dynamic rec1 = new ExpandoObject();
+            rec1.Id = 1;
+            rec1.Name = "Mark";
+            objs.Add(rec1);
+
+            dynamic rec2 = new ExpandoObject();
+            rec2.Id = 2;
+            rec2.Name = "Tom";
+            objs.Add(rec2);
+
+            using (var parser = new ChoCSVWriter("Emp.csv", config)
+                .Setup(w => w.FileHeaderWrite += (o, e) =>
+                {
+                    e.HeaderText = "C1, C2";
+                }
+                ))
+            {
+                parser.Write(objs);
+            }
+
+            //ToTextTest();
         }
 
         static void QuickDynamicTest()

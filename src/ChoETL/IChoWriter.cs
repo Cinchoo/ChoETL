@@ -147,4 +147,17 @@ namespace ChoETL
             internal set;
         }
     }
+    public class ChoFileHeaderEventArgs : EventArgs
+    {
+        public string HeaderText
+        {
+            get;
+            set;
+        }
+        public bool Skip
+        {
+            get;
+            set;
+        }
+    }
 }

@@ -19,6 +19,8 @@ namespace ChoETL
         public event EventHandler<ChoAfterRecordFieldWriteEventArgs> AfterRecordFieldWrite;
         public event EventHandler<ChoRecordFieldWriteErrorEventArgs> RecordFieldWriteError;
 
+        public event EventHandler<ChoFileHeaderEventArgs> FileHeaderWrite;
+
         public bool RaiseBeginWrite(object source)
         {
             EventHandler<ChoBeginWriteEventArgs> eh = BeginWrite;
@@ -108,6 +110,17 @@ namespace ChoETL
             eh(this, e);
             source = e.Source;
             return e.Handled;
+        }
+        public bool RaiseFileHeaderWrite(ref string headerText)
+        {
+            EventHandler<ChoFileHeaderEventArgs> eh = FileHeaderWrite;
+            if (eh == null)
+                return true;
+
+            ChoFileHeaderEventArgs e = new ChoFileHeaderEventArgs() { HeaderText = headerText };
+            eh(this, e);
+            headerText = e.HeaderText;
+            return e.Skip;
         }
     }
 }

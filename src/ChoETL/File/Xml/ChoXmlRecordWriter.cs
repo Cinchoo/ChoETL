@@ -150,21 +150,25 @@ namespace ChoETL
                                         yield break;
                                 }
                             }
-                            catch (ChoParserException)
-                            {
-                                throw;
-                            }
+                            //catch (ChoParserException)
+                            //{
+                            //    throw;
+                            //}
                             catch (Exception ex)
                             {
                                 ChoETLFramework.HandleException(ex);
                                 if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                                 {
-
+                                    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
                                 }
                                 else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
                                 {
                                     if (!RaiseRecordWriteError(record, _index, recText, ex))
                                         throw;
+                                    else
+                                    {
+                                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                                    }
                                 }
                                 else
                                     throw;

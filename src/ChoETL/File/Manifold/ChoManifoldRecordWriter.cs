@@ -130,21 +130,25 @@ namespace ChoETL
                                         yield break;
                                 }
                             }
-                            catch (ChoParserException pEx)
-                            {
-                                throw new ChoParserException($"Failed to write line for '{recType}' object.", pEx);
-                            }
+                            //catch (ChoParserException pEx)
+                            //{
+                            //    throw new ChoParserException($"Failed to write line for '{recType}' object.", pEx);
+                            //}
                             catch (Exception ex)
                             {
                                 ChoETLFramework.HandleException(ex);
                                 if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                                 {
-
+                                    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
                                 }
                                 else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
                                 {
                                     if (!RaiseRecordWriteError(record, _index, recText, ex))
                                         throw new ChoWriterException($"Failed to write line for '{recType}' object.", ex);
+                                    else
+                                    {
+                                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                                    }
                                 }
                                 else
                                     throw new ChoWriterException($"Failed to write line for '{recType}' object.", ex);
