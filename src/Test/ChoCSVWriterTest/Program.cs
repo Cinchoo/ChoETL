@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Data.SqlClient;
 using System.Dynamic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -24,7 +25,7 @@ namespace ChoCSVWriterTest
 
             List<ExpandoObject> objs = new List<ExpandoObject>();
             dynamic rec1 = new ExpandoObject();
-            rec1.Id = 1;
+            rec1.Id = 1.1;
             rec1.Name = "Mark";
             objs.Add(rec1);
 
@@ -33,7 +34,12 @@ namespace ChoCSVWriterTest
             rec2.Name = "Tom";
             objs.Add(rec2);
 
+            NumberFormatInfo nfi = new NumberFormatInfo();
+            nfi.NumberDecimalSeparator = "~";
+
             using (var parser = new ChoCSVWriter("Emp.csv", config)
+                .WithField("Id", fieldType: typeof(double), valueConverter: (v) => ((double)v).ToString(nfi))
+                .WithField("Name")
                 .Setup(w => w.FileHeaderWrite += (o, e) =>
                 {
                     e.HeaderText = "C1, C2";

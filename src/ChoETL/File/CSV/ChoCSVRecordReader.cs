@@ -359,61 +359,61 @@ namespace ChoETL
                 if (Configuration.PIDict != null)
                     Configuration.PIDict.TryGetValue(kvp.Key, out pi);
 
-                if (fieldNameValues != null)
-                {
-                    if (fieldNameValues.ContainsKey(fieldConfig.FieldName))
-                        fieldValue = fieldNameValues[fieldConfig.FieldName];
-                    else
-                    {
-                        throw new ChoMissingRecordFieldException("Missing '{0}' field in CSV file.".FormatString(fieldConfig.FieldName));
-
-                        //if (Configuration.ColumnOrderStrict)
-                        //    throw new ChoParserException("No matching '{0}' field header found.".FormatString(fieldConfig.FieldName));
-                    }
-                }
-                else
-                {
-                    if (fieldConfig.FieldPosition - 1 < fieldValues.Length)
-                        fieldValue = fieldValues[fieldConfig.FieldPosition - 1];
-                    else
-                        throw new ChoParserException("Missing field value for '{0}' [Position: {1}] field.".FormatString(fieldConfig.FieldName, fieldConfig.FieldPosition));
-                }
-
-                //if (Configuration.FileHeaderConfiguration.HasHeaderRecord && Configuration.ColumnOrderStrict)
-                //{
-                //    if (fieldNameValues.ContainsKey(fieldConfig.FieldName))
-                //        fieldValue = fieldNameValues[fieldConfig.FieldName];
-                //    else if (Configuration.ColumnCountStrict)
-                //        throw new ChoParserException("No matching '{0}' field header found.".FormatString(fieldConfig.FieldName));
-                //}
-                //else
-                //{
-                //    if (fieldConfig.FieldPosition - 1 < fieldValues.Length)
-                //        fieldValue = fieldValues[fieldConfig.FieldPosition - 1];
-                //    else if (Configuration.ColumnCountStrict)
-                //        throw new ChoParserException("Missing field value for '{0}' [Position: {1}] field.".FormatString(fieldConfig.FieldName, fieldConfig.FieldPosition));
-                //}
-
-                if (Configuration.IsDynamicObject)
-                {
-                    if (kvp.Value.FieldType == null)
-                        kvp.Value.FieldType = typeof(string);
-                }
-                else
-                {
-                    if (pi != null)
-                        kvp.Value.FieldType = pi.PropertyType;
-                    else
-                        kvp.Value.FieldType = typeof(string);
-                }
-
-                fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue as string);
-
-                if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
-                    continue;
-
                 try
                 {
+                    if (fieldNameValues != null)
+                    {
+                        if (fieldNameValues.ContainsKey(fieldConfig.FieldName))
+                            fieldValue = fieldNameValues[fieldConfig.FieldName];
+                        else if (Configuration.ThrowAndStopOnMissingField)
+                        {
+                            throw new ChoMissingRecordFieldException("Missing '{0}' field in CSV file.".FormatString(fieldConfig.FieldName));
+
+                            //if (Configuration.ColumnOrderStrict)
+                            //    throw new ChoParserException("No matching '{0}' field header found.".FormatString(fieldConfig.FieldName));
+                        }
+                    }
+                    else
+                    {
+                        if (fieldConfig.FieldPosition - 1 < fieldValues.Length)
+                            fieldValue = fieldValues[fieldConfig.FieldPosition - 1];
+                        else if (Configuration.ThrowAndStopOnMissingField)
+                            throw new ChoMissingRecordFieldException("Missing field value at [Position: {1}] in CSV file.".FormatString(fieldConfig.FieldName, fieldConfig.FieldPosition));
+                    }
+
+                    //if (Configuration.FileHeaderConfiguration.HasHeaderRecord && Configuration.ColumnOrderStrict)
+                    //{
+                    //    if (fieldNameValues.ContainsKey(fieldConfig.FieldName))
+                    //        fieldValue = fieldNameValues[fieldConfig.FieldName];
+                    //    else if (Configuration.ColumnCountStrict)
+                    //        throw new ChoParserException("No matching '{0}' field header found.".FormatString(fieldConfig.FieldName));
+                    //}
+                    //else
+                    //{
+                    //    if (fieldConfig.FieldPosition - 1 < fieldValues.Length)
+                    //        fieldValue = fieldValues[fieldConfig.FieldPosition - 1];
+                    //    else if (Configuration.ColumnCountStrict)
+                    //        throw new ChoParserException("Missing field value for '{0}' [Position: {1}] field.".FormatString(fieldConfig.FieldName, fieldConfig.FieldPosition));
+                    //}
+
+                    if (Configuration.IsDynamicObject)
+                    {
+                        if (kvp.Value.FieldType == null)
+                            kvp.Value.FieldType = typeof(string);
+                    }
+                    else
+                    {
+                        if (pi != null)
+                            kvp.Value.FieldType = pi.PropertyType;
+                        else
+                            kvp.Value.FieldType = typeof(string);
+                    }
+
+                    fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue as string);
+
+                    if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
+                        continue;
+
                     bool ignoreFieldValue = fieldConfig.IgnoreFieldValue(fieldValue);
                     if (ignoreFieldValue)
                         fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;

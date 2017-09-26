@@ -14,7 +14,7 @@ namespace ChoETL
     {
         public static bool IsPropertyExist(this object target, string name)
         {
-            if (target is ExpandoObject)
+            if (target is IDictionary<string, object>)
                 return ((IDictionary<string, object>)target).ContainsKey(name);
 
             return target.GetType().GetProperty(name) != null;

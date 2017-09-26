@@ -127,7 +127,7 @@ namespace ChoETL
 
             //if (src.GetType().IsSimple())
             //    return src;
-            if (src is ExpandoObject)
+            if (src is ExpandoObject || src is IDictionary<string, object>)
                 return src;
             if (src is DynamicObject)
                 return ChoExpandoObjectEx.ToExpandoObject(src as DynamicObject);
@@ -241,9 +241,9 @@ namespace ChoETL
             if (src == null || dest == null)
                 return;
 
-            if (src is ExpandoObject)
+            if (src is ExpandoObject || src is IDictionary<string, object>)
             {
-                if (dest is ExpandoObject)
+                if (dest is ExpandoObject || dest is IDictionary<string, object>)
                     dest = src;
                 else
                 {
@@ -392,9 +392,9 @@ namespace ChoETL
             if (src == null || dest == null)
                 return;
 
-            if (src is ExpandoObject)
+            if (src is ExpandoObject || src is IDictionary<string, object>)
             {
-                if (dest is ExpandoObject)
+                if (dest is ExpandoObject || dest is IDictionary<string, object>)
                     dest = src;
                 else
                 {

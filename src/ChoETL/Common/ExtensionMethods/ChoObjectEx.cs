@@ -18,7 +18,7 @@ namespace ChoETL
         {
             ChoGuard.ArgumentNotNull(target, "Target");
 
-            if (target is ExpandoObject)
+            if (target is IDictionary<string, object>)
                 return (Dictionary<string, object>)target;
 
             Dictionary<string, object> dict = new Dictionary<string, object>();

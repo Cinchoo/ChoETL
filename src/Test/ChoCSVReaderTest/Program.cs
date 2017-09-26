@@ -129,14 +129,27 @@ namespace ChoCSVReaderTest
             //}
 
             //return;
-            foreach (dynamic rec in new ChoCSVReader("emp.csv").WithFirstLineHeader().Configure((c) => c.MayContainEOLInData = true)
-                .Configure(c => c.FileHeaderConfiguration.IgnoreCase = true)
-                .WithFields(" id ", "Name")
-                .Configure(c => c.FileHeaderConfiguration.TrimOption = ChoFieldValueTrimOption.None))
+
+            //Set the culture, if your system different from the file type
+            System.Threading.Thread.CurrentThread.CurrentCulture = new CultureInfo("it");
+
+            using (var p = new ChoCSVReader("Bosch Luglio 2017.csv")
+                .WithDelimiter(";")
+                .Configure((c) => c.MayContainEOLInData = true) //Handle newline chars in data
+                .Configure(c => c.Encoding = Encoding.GetEncoding("iso-8859-1")) //Specify the encoding for reading
+                .WithField("CodArt", 1) //first column
+                .WithField("Descrizione", 2) //second column
+                .WithField("Prezzo", 3, fieldType: typeof(decimal)) //third column
+                .Setup(c => c.BeforeRecordLoad += (o, e) =>
+                {
+                    e.Source = e.Source.CastTo<string>().Replace(@"""", String.Empty); //Remove the quotes
+                }) //Scrub the data
+                )
             {
-                Console.WriteLine(rec.id);
-                //Console.WriteLine(rec["Column1"]);
-                Console.WriteLine(rec[0]);
+                //var dt = p.AsDataTable();
+
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Prezzo);
             }
             return;
             //HierarchyCSV();

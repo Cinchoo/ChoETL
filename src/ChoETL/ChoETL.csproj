@@ -319,7 +319,6 @@
     <Compile Include="File\Xml\ChoXmlReader.cs" />
     <Compile Include="IChoNotifyRecordWrite.cs" />
     <Compile Include="IChoNotifyRecordRead.cs" />
-    <Compile Include="Operation\ChoReadOperation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

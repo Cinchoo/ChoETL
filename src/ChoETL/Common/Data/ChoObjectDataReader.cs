@@ -366,7 +366,7 @@ namespace ChoETL
             {
                 if (MemberInfo != null)
                     return ChoType.GetMemberValue(target, MemberInfo);
-                else if (target is ExpandoObject)
+                else if (target is IDictionary<string, object>) ///ExpandoObject || target is ChoDynamicObject)
                 {
                     IDictionary<string, object> dict = target as IDictionary<string, object>;
 

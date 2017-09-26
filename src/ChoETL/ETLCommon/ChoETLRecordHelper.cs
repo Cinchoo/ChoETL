@@ -50,7 +50,7 @@ namespace ChoETL
             if (!fieldConfig.IsFallbackValueSpecified)
                 return false;
 
-            if (rec is ExpandoObject)
+            if (rec is IDictionary<string, object>)
             {
                 return ((IDictionary<string, object>)rec).SetFallbackValue(fn, fieldConfig, culture);
             }
@@ -71,7 +71,7 @@ namespace ChoETL
             if (!fieldConfig.IsDefaultValueSpecified)
                 return false;
 
-            if (rec is ExpandoObject)
+            if (rec is IDictionary<string, object>)
             {
                 return ((IDictionary<string, object>)rec).SetDefaultValue(fn, fieldConfig, culture);
             }
@@ -131,7 +131,7 @@ namespace ChoETL
                 if (configuration.HasConfigValidators)
                 {
                     IDictionary<string, Object> dict = null;
-                    if (recObject is ExpandoObject)
+                    if (recObject is IDictionary<string, object>)
                         dict = recObject as IDictionary<string, Object>;
                     else
                     {
@@ -164,7 +164,7 @@ namespace ChoETL
             if (!((vm & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel))
                 return;
 
-            if (rec is ExpandoObject)
+            if (rec is IDictionary<string, object>)
             {
                 ((IDictionary<string, object>)rec).DoMemberLevelValidation(fn, fieldConfig, vm);
             }

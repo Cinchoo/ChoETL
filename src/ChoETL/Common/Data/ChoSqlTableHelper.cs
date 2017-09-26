@@ -65,7 +65,7 @@ namespace ChoETL
             Type objectType = target is Type ? target as Type : target.GetType();
             StringBuilder script = new StringBuilder();
 
-            if (target is ExpandoObject)
+            if (target is IDictionary<string, object>)
             {
                 tableName = tableName.IsNullOrWhiteSpace() ? "Table" : tableName;
                 var eo = target as IDictionary<string, Object>;
@@ -113,7 +113,7 @@ namespace ChoETL
 
             StringBuilder script = new StringBuilder();
 
-            if (target is ExpandoObject)
+            if (target is IDictionary<string, object>)
             {
                 tableName = tableName.IsNullOrWhiteSpace() ? "Table" : tableName;
                 var eo = target as IDictionary<string, Object>;
