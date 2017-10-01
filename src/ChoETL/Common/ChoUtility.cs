@@ -131,6 +131,12 @@ namespace ChoETL
                 return src;
             if (src is DynamicObject)
                 return ChoExpandoObjectEx.ToExpandoObject(src as DynamicObject);
+            if (src.GetType().IsSimple())
+            {
+                IDictionary<string, object> expando1 = new ExpandoObject();
+                expando1.Add("Value", src);
+                return expando1;
+            }
 
             IDictionary<string, object> expando = new ExpandoObject();
             foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(src.GetType()))

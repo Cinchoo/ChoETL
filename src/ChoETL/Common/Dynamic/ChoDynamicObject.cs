@@ -519,7 +519,8 @@ namespace ChoETL
         {
             get
             {
-                throw new NotImplementedException();
+                Dictionary<string, object> kvpDict = _kvpDict;
+                return kvpDict != null ? kvpDict.Keys : null;
             }
         }
 

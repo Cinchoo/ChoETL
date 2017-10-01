@@ -73,10 +73,16 @@ namespace ChoETL
                             if (!_configCheckDone)
                             {
                                 string[] fieldNames = null;
+                                Type recordType = record.GetType().GetUnderlyingType();
 
-                                Configuration.IsDynamicObject = record.GetType().IsDynamicType();
+                                Configuration.IsDynamicObject = recordType.IsDynamicType();
                                 if (!Configuration.IsDynamicObject)
-                                    Configuration.RecordType = record.GetType();
+                                {
+                                    if (recordType.IsSimple())
+                                        Configuration.RecordType = typeof(ChoScalarObject);
+                                    else
+                                        Configuration.RecordType = recordType;
+                                }
 
                                 if (Configuration.IsDynamicObject)
                                 {
@@ -85,10 +91,10 @@ namespace ChoETL
                                 }
                                 else
                                 {
-                                    fieldNames = ChoTypeDescriptor.GetProperties<ChoCSVRecordFieldAttribute>(record.GetType()).Select(pd => pd.Name).ToArray();
+                                    fieldNames = ChoTypeDescriptor.GetProperties<ChoCSVRecordFieldAttribute>(Configuration.RecordType).Select(pd => pd.Name).ToArray();
                                     if (fieldNames.Length == 0)
                                     {
-                                        fieldNames = ChoType.GetProperties(record.GetType()).Select(p => p.Name).ToArray();
+                                        fieldNames = ChoType.GetProperties(Configuration.RecordType).Select(p => p.Name).ToArray();
                                     }
                                 }
 
@@ -179,6 +185,9 @@ namespace ChoETL
         IDictionary<string, Object> dict = null;
         private bool ToText(long index, object rec, out string recText)
         {
+            if (Configuration.RecordType == typeof(ChoScalarObject))
+                rec = new ChoScalarObject(rec);
+
             recText = null;
             msg.Clear();
 
@@ -686,7 +695,7 @@ namespace ChoETL
         }
         private bool RaiseFileHeaderWrite(ref string headerText)
         {
-            string ht = null;
+            string ht = headerText;
             bool retValue = true;
             if (_callbackRecord != null)
             {

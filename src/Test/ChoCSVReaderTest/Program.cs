@@ -108,6 +108,55 @@ namespace ChoCSVReaderTest
     {
         static void Main(string[] args)
         {
+            System.Threading.Thread.CurrentThread.CurrentCulture = new CultureInfo("it");
+
+            using (var p = new ChoCSVReader("Bosch Luglio 2017.csv")
+                .Configure((c) => c.MayContainEOLInData = true) //Handle newline chars in data
+                .Configure(c => c.Encoding = Encoding.GetEncoding("iso-8859-1")) //Specify the encoding for reading
+                .WithField("CodArt", 1) //first column
+                .WithField("Descrizione", 2) //second column
+                .WithField("Prezzo", 3, fieldType: typeof(decimal)) //third column
+                .Setup(c => c.BeforeRecordLoad += (o, e) =>
+                {
+                    e.Source = e.Source.CastTo<string>().Replace(@"""", String.Empty); //Remove the quotes
+                }) //Scrub the data
+                )
+            {
+                //var dt = p.AsDataTable();
+
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Prezzo);
+            }
+            return;
+            using (var parser = new ChoCSVReader("Dict1.csv")
+                .WithField("AR_ID", 7)
+                .WithField("AR_TYPE", 8)
+                .WithFirstLineHeader(true)
+                .Configure(c => c.IgnoreEmptyLine = true)
+                )
+            {
+                var dict = parser.ToDictionary(item => item.AR_ID, item => item.AR_TYPE);
+                foreach (var kvp in dict)
+                    Console.WriteLine(kvp.Key + " " + kvp.Value);
+            }
+            return;
+
+            return;
+            using (var parser = new ChoCSVReader("IgnoreLineFile1.csv")
+                .WithField("PolicyNumber", 1)
+                .WithField("VinNumber", 2)
+                .Configure(c => c.IgnoreEmptyLine = true)
+                .Configure(c => c.ColumnCountStrict = true)
+                )
+            {
+                using (var writer = new ChoJSONWriter("ignoreLineFile1.json")
+                        .WithField("PolicyNumber", fieldName: "Policy Number")
+                        .WithField("VinNumber", fieldName: "Vin Number")
+                    )
+                    writer.Write(parser.Skip(1));
+            }
+            return;
+
             //foreach (dynamic rec in new ChoCSVReader("emp.csv").WithFirstLineHeader()
             //    .WithFields(" id ", "Name")
             //    .Configure(c => c.FileHeaderConfiguration.IgnoreCase = false)
@@ -131,27 +180,6 @@ namespace ChoCSVReaderTest
             //return;
 
             //Set the culture, if your system different from the file type
-            System.Threading.Thread.CurrentThread.CurrentCulture = new CultureInfo("it");
-
-            using (var p = new ChoCSVReader("Bosch Luglio 2017.csv")
-                .WithDelimiter(";")
-                .Configure((c) => c.MayContainEOLInData = true) //Handle newline chars in data
-                .Configure(c => c.Encoding = Encoding.GetEncoding("iso-8859-1")) //Specify the encoding for reading
-                .WithField("CodArt", 1) //first column
-                .WithField("Descrizione", 2) //second column
-                .WithField("Prezzo", 3, fieldType: typeof(decimal)) //third column
-                .Setup(c => c.BeforeRecordLoad += (o, e) =>
-                {
-                    e.Source = e.Source.CastTo<string>().Replace(@"""", String.Empty); //Remove the quotes
-                }) //Scrub the data
-                )
-            {
-                //var dt = p.AsDataTable();
-
-                foreach (var rec in p)
-                    Console.WriteLine(rec.Prezzo);
-            }
-            return;
             //HierarchyCSV();
             //return;
             foreach (dynamic rec in new ChoCSVReader("CurrencyQuotes.csv").WithDelimiter(";")

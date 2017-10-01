@@ -14,7 +14,18 @@ namespace ChoFixedLengthWriterTest
     {
         static void Main(string[] args)
         {
-            ToTextTest();
+            SaveStringList();
+        }
+        public static void SaveStringList()
+        {
+            List<string> list = new List<string>();
+            list.Add("1/1/2012");
+            list.Add("1/1");
+
+            using (var w = new ChoFixedLengthWriter("List.txt").WithFirstLineHeader()
+                .WithField("Value", 1, 5, valueConverter: v => v.CastTo<DateTime>().ToString("yyyyMMddhhmmss"))
+                )
+                w.Write(list);
         }
 
         static void ToTextTest()

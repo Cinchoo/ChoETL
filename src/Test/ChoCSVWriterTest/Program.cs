@@ -52,6 +52,18 @@ namespace ChoCSVWriterTest
             //ToTextTest();
         }
 
+        public static void SaveStringList()
+        {
+            List<string> list = new List<string>();
+            list.Add("1/1/2012");
+            list.Add("1/1");
+
+            using (var w = new ChoCSVWriter("List.csv").WithFirstLineHeader()
+                .WithField("Value", fieldName: "Value2", valueConverter: (v => v.CastTo<DateTime>()))
+                )
+                w.Write(list);
+        }
+
         static void QuickDynamicTest()
         {
             List<ExpandoObject> objs = new List<ExpandoObject>();

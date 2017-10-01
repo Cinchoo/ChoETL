@@ -1,0 +1,9 @@
+﻿--- WebKitFormBosdfsdfsfsfsf --------------
+Content-Disposition: form-data;
+name="uploadfile"; filename:"test.csv"
+
+policy number, vin number
+a, 0
+b, 1
+
+--- WebKitFormBosdfsdfsfsfsf ------

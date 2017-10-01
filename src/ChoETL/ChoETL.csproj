@@ -95,6 +95,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChoScalarObject.cs" />
     <Compile Include="ChoEnums.cs" />
     <Compile Include="ChoWriter.cs" />
     <Compile Include="ChoTextFileExternalSorter.cs" />

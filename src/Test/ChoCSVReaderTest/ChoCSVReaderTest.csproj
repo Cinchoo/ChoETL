@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="CurrencyQuotes.csv" />
+    <None Include="IgnoreLineFile1.csv" />
     <None Include="Players.csv" />
     <None Include="MergeInput.csv" />
     <None Include="Emp1.csv" />
@@ -78,6 +79,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Dict1.csv" />
     <None Include="ZipCodes.csv" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

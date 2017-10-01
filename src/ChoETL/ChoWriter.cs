@@ -115,7 +115,7 @@ namespace ChoETL
         {
             EventHandler<ChoFileHeaderEventArgs> eh = FileHeaderWrite;
             if (eh == null)
-                return true;
+                return false;
 
             ChoFileHeaderEventArgs e = new ChoFileHeaderEventArgs() { HeaderText = headerText };
             eh(this, e);
