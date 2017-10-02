@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,6 +19,15 @@ namespace ChoETL
         public event EventHandler<ChoBeforeRecordFieldLoadEventArgs> BeforeRecordFieldLoad;
         public event EventHandler<ChoAfterRecordFieldLoadEventArgs> AfterRecordFieldLoad;
         public event EventHandler<ChoRecordFieldLoadErrorEventArgs> RecordFieldLoadError;
+
+        protected Type ResolveRecordType(Type recordType)
+        {
+            if (typeof(ICollection).IsAssignableFrom(recordType)
+                || recordType.IsSimple())
+                throw new ChoParserException("Invalid record type passed.");
+            else
+                return recordType.GetUnderlyingType();
+        }
 
         public bool RaiseBeginLoad(object source)
         {

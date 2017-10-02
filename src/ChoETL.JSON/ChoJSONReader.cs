@@ -117,6 +117,7 @@ namespace ChoETL
             else
                 Configuration.RecordType = typeof(T);
 
+            Configuration.RecordType = ResolveRecordType(Configuration.RecordType);
             _prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
         }
@@ -266,7 +267,6 @@ namespace ChoETL
                 }
 
                 string fnTrim = name.NTrim();
-                fieldType = fieldType == null ? typeof(string) : fieldType;
                 jsonPath = jsonPath.IsNullOrWhiteSpace() ? null : jsonPath;
 
                 Configuration.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration(fnTrim, jsonPath) { FieldType = fieldType, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName, ValueConverter = valueConverter });

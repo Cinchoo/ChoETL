@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -20,6 +21,7 @@ namespace ChoETL
         private long _index = 0;
         bool isFirstRec = true;
         internal ChoWriter Writer = null;
+        internal Type ElementType = null;
 
         public ChoJSONRecordConfiguration Configuration
         {
@@ -65,7 +67,7 @@ namespace ChoETL
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
 
             string recText = String.Empty;
-
+            bool recordIgnored = false;
             try
             {
                 foreach (object record in records)
@@ -74,7 +76,10 @@ namespace ChoETL
 
                     if (!isFirstRec)
                     {
-                        sw.Write(",");
+                        if (!recordIgnored)
+                            sw.Write(",");
+                        else
+                            recordIgnored = false;
                     }
 
                     if (TraceSwitch.TraceVerbose)
@@ -95,13 +100,17 @@ namespace ChoETL
                                 continue;
 
                             string[] fieldNames = null;
-                            Type recordType = record.GetType().GetUnderlyingType();
+                            Type recordType = ElementType == null ? record.GetType() : ElementType;
+                            if (typeof(ICollection).IsAssignableFrom(recordType))
+                                recordType = recordType.GetEnumerableItemType().GetUnderlyingType();
+                            else
+                                recordType = recordType.GetUnderlyingType();
 
                             Configuration.IsDynamicObject = recordType.IsDynamicType();
                             if (!Configuration.IsDynamicObject)
                             {
                                 if (recordType.IsSimple())
-                                    Configuration.RecordType = typeof(ChoScalarObject);
+                                    Configuration.RecordType = typeof(ChoScalarObject<>).MakeGenericType(recordType);
                                 else
                                     Configuration.RecordType = recordType;
                             }
@@ -192,6 +201,7 @@ namespace ChoETL
                             ChoETLFramework.HandleException(ex);
                             if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                             {
+                                recordIgnored = true;
                                 ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
                             }
                             else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
@@ -200,6 +210,7 @@ namespace ChoETL
                                     throw;
                                 else
                                 {
+                                    recordIgnored = true;
                                     ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
                                 }
                             }
@@ -230,8 +241,8 @@ namespace ChoETL
 
         private bool ToText(long index, object rec, out string recText)
         {
-            if (Configuration.RecordType == typeof(ChoScalarObject))
-                rec = new ChoScalarObject(rec);
+            if (typeof(IChoScalarObject).IsAssignableFrom(Configuration.RecordType))
+                rec = Activator.CreateInstance(Configuration.RecordType, rec);
 
             recText = null;
             if (rec == null)

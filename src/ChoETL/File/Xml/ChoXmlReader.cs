@@ -118,6 +118,7 @@ namespace ChoETL
             else
                 Configuration.RecordType = typeof(T);
 
+            Configuration.RecordType = ResolveRecordType(Configuration.RecordType);
             _prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
         }
@@ -303,7 +304,6 @@ namespace ChoETL
                 }
 
                 string fnTrim = name.NTrim();
-                fieldType = fieldType == null ? typeof(string) : fieldType;
                 xPath = xPath.IsNullOrWhiteSpace() ? $"//{fnTrim}" : xPath;
 
                 Configuration.XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(fnTrim, xPath) { FieldType = fieldType, FieldValueTrimOption = fieldValueTrimOption, IsXmlAttribute = isXmlAttribute, FieldName = fieldName, IsArray = isArray, ValueConverter = valueConverter });

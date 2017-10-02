@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -24,6 +25,7 @@ namespace ChoETL
         private readonly Regex _beginTagRegex = new Regex("^<.*>");
         private readonly Regex _endTagRegex = new Regex("</.*>$");
         internal ChoWriter Writer = null;
+        internal Type ElementType = null;
 
         public ChoXmlRecordConfiguration Configuration
         {
@@ -87,13 +89,17 @@ namespace ChoETL
                                 continue;
 
                             string[] fieldNames = null;
-                            Type recordType = record.GetType().GetUnderlyingType();
+                            Type recordType = ElementType == null ? record.GetType() : ElementType;
+                            if (typeof(ICollection).IsAssignableFrom(recordType))
+                                recordType = recordType.GetEnumerableItemType().GetUnderlyingType();
+                            else
+                                recordType = recordType.GetUnderlyingType();
 
                             Configuration.IsDynamicObject = recordType.IsDynamicType();
                             if (!Configuration.IsDynamicObject)
                             {
                                 if (recordType.IsSimple())
-                                    Configuration.RecordType = typeof(ChoScalarObject);
+                                    Configuration.RecordType = typeof(ChoScalarObject<>).MakeGenericType(recordType);
                                 else
                                     Configuration.RecordType = recordType;
                             }
@@ -243,8 +249,8 @@ namespace ChoETL
 
         private bool ToText(long index, object rec, out string recText)
         {
-            if (Configuration.RecordType == typeof(ChoScalarObject))
-                rec = new ChoScalarObject(rec);
+            if (typeof(IChoScalarObject).IsAssignableFrom(Configuration.RecordType))
+                rec = Activator.CreateInstance(Configuration.RecordType, rec);
 
             recText = null;
             if (rec == null)

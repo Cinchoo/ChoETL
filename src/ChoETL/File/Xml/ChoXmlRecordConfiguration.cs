@@ -171,7 +171,12 @@ namespace ChoETL
 
             if (XPath.IsNullOrWhiteSpace())
             {
-                if (!IsDynamicObject && RecordType != typeof(ChoScalarObject))
+                if (!IsDynamicObject && (RecordType.IsGenericType && RecordType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>)))
+                {
+                    NodeName = "KeyValuePair";
+                    RootName = "KeyValuePairs";
+                }
+                else if (!IsDynamicObject && RecordType != typeof(ChoScalarObject))
                 {
                     NodeName = RecordType.Name;
                     RootName = NodeName.ToPlural();

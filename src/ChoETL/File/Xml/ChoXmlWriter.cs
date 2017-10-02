@@ -15,6 +15,7 @@ namespace ChoETL
     public class ChoXmlWriter<T> : ChoWriter, IDisposable
         where T : class
     {
+        private bool _isDisposed = false;
         private TextWriter _textWriter;
         private bool _closeStreamOnDispose = false;
         private ChoXmlRecordWriter _writer = null;
@@ -65,9 +66,16 @@ namespace ChoETL
 
         public void Dispose()
         {
+            if (_isDisposed)
+                return;
+
             _writer.EndWrite(_textWriter);
             if (_closeStreamOnDispose)
                 _textWriter.Dispose();
+        }
+        public void Close()
+        {
+            Dispose();
         }
 
         private void Init()
@@ -90,7 +98,15 @@ namespace ChoETL
         {
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
-            _writer.WriteTo(_textWriter, new T[] { record } ).Loop();
+            if (!typeof(T).IsSimple() && record is IEnumerable)
+            {
+                if (record is ArrayList)
+                    _writer.ElementType = typeof(object);
+
+                _writer.WriteTo(_textWriter, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
+            }
+            else
+                _writer.WriteTo(_textWriter, new T[] { record }).Loop();
         }
 
         public static string ToText<TRec>(TRec record, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string xpath = null)
@@ -221,7 +237,6 @@ namespace ChoETL
                 }
 
                 string fnTrim = name.NTrim();
-                fieldType = fieldType == null ? typeof(string) : fieldType;
                 xPath = xPath.IsNullOrWhiteSpace() ? $"//{fnTrim}" : xPath;
 
                 Configuration.XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(fnTrim, xPath) { FieldType = fieldType, FieldValueTrimOption = fieldValueTrimOption, IsXmlAttribute = isXmlAttribute, FieldName = fieldName, ValueConverter = valueConverter, IsNullable = isNullable });

@@ -774,6 +774,24 @@ namespace ChoETL
             return (Attribute)null;
         }
 
+        public static bool IsEnumerable(this Type type)
+        {
+            return GetGenericIEnumerables(type).Any();
+        }
+        public static Type GetEnumerableItemType(this Type type)
+        {
+            return GetGenericIEnumerables(type).First();
+        }
+
+        public static IEnumerable<Type> GetGenericIEnumerables(this Type type)
+        {
+            return type
+                    .GetInterfaces()
+                    .Where(t => t.IsGenericType == true
+                        && t.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                    .Select(t => t.GetGenericArguments()[0]);
+        }
+
         //public static T GetCustomAttribute<T>(this Type type) where T : Attribute
         //{
         //    return GetCustomAttribute<T>(type, false);

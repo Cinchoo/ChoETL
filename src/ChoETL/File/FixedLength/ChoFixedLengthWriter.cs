@@ -88,7 +88,15 @@ namespace ChoETL
         {
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
-            _writer.WriteTo(_textWriter, new T[] { record } ).Loop();
+            if (!typeof(T).IsSimple() && record is IEnumerable)
+            {
+                if (record is ArrayList)
+                    _writer.ElementType = typeof(object);
+
+                _writer.WriteTo(_textWriter, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
+            }
+            else
+                _writer.WriteTo(_textWriter, new T[] { record } ).Loop();
         }
 
         public static string ToText<TRec>(TRec record, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)

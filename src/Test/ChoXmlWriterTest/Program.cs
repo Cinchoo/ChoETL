@@ -1,5 +1,6 @@
 ﻿using ChoETL;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -16,16 +17,33 @@ namespace ChoXmlWriterTest
     {
         static void Main(string[] args)
         {
-            QuickPOCOTest();
+            SaveDict();
         }
         public static void SaveStringList()
         {
-            List<string> list = new List<string>();
-            list.Add("1/1/2012");
+            //List<string> list = new List<string>();
+            //list.Add("1/1/2012");
+            //list.Add(null);
+            ArrayList list = new ArrayList();
+            list.Add(1);
+            list.Add("asas");
             list.Add(null);
 
-            using (var w = new ChoXmlWriter("List.xml")
+            using (var w = new ChoXmlWriter("emp.xml")
                 .WithField("Value")
+                )
+                w.Write(list);
+        }
+        public static void SaveDict()
+        {
+            //Dictionary<int, string> list = new Dictionary<int, string>();
+            //list.Add(1, "1/1/2012");
+            //list.Add(2, null);
+            Hashtable list = new Hashtable();
+            list.Add(1, "33");
+            list.Add(2, null);
+
+            using (var w = new ChoXmlWriter("emp.xml")
                 )
                 w.Write(list);
         }
@@ -159,6 +177,7 @@ namespace ChoXmlWriterTest
             using (var parser = new ChoXmlWriter(writer).WithXPath("Employees/Employee"))
             {
                 parser.Write(objs);
+                parser.Close();
 
                 writer.Flush();
                 stream.Position = 0;

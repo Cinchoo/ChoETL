@@ -1,5 +1,6 @@
 ﻿using ChoETL;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
@@ -16,15 +17,38 @@ namespace ChoJSONWriterTest
 
         static void Main(string[] args)
         {
-            POCOTest();
+            SaveDict();
+        }
+        public static void SaveDict()
+        {
+            Dictionary<int, string> list = new Dictionary<int, string>();
+            list.Add(1, "1/1/2012");
+            list.Add(2, null);
+            //Hashtable list = new Hashtable();
+            //list.Add(1, "33");
+            //list.Add(2, null);
+
+            using (var w = new ChoJSONWriter("emp.json")
+                )
+                w.Write(list);
         }
         public static void SaveStringList()
         {
-            List<string> list = new List<string>();
-            list.Add("1/1/2012");
+            //List<EmpType?> list = new List<EmpType?>();
+            //list.Add(EmpType.Contract);
+            //list.Add(null);
+
+            //List<int?> list = new List<int?>();
+            //list.Add(1);
+            //list.Add(null);
+
+            //int[] list = new int[] { 11, 21 };
+            ArrayList list = new ArrayList();
+            list.Add(1);
+            list.Add("asas");
             list.Add(null);
 
-            using (var w = new ChoJSONWriter("List.json")
+            using (var w = new ChoJSONWriter("emp.json")
                 .WithField("Value")
                 )
                 w.Write(list);
@@ -109,11 +133,12 @@ namespace ChoJSONWriterTest
             rec2.Array = new int[] { 1, 2, 4 };
             rec2.Dict = new string[] { "11", "12", "14" };
 
-            //objs.Add(rec2);
+            objs.Add(rec2);
             objs.Add(null);
 
             using (var w = new ChoJSONWriter("emp.json")
                 .Configure(c => c.ThrowAndStopOnMissingField = false)
+                .Configure( c => c.NullValueHandling = ChoNullValueHandling.Empty)
                 )
             {
                 w.Write(objs);

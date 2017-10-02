@@ -89,7 +89,15 @@ namespace ChoETL
         {
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
-            _writer.WriteTo(_textWriter, new T[] { record } ).Loop();
+            if (!typeof(T).IsSimple() && record is IEnumerable)
+            {
+                if (record is ArrayList)
+                    _writer.ElementType = typeof(object);
+
+                _writer.WriteTo(_textWriter, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
+            }
+            else
+                _writer.WriteTo(_textWriter, new T[] { record }).Loop();
         }
 
         public static string ToTextAll<TRec>(IEnumerable<TRec> records, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
@@ -204,7 +212,7 @@ namespace ChoETL
                     fieldName = name;
 
                 int maxFieldPos = fieldPosition == null ? (Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) + 1 : 1) : fieldPosition.Value;
-                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(name, maxFieldPos) { FieldType = fieldType == null ? typeof(string) : fieldType, QuoteField = quoteField,
+                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(name, maxFieldPos) { FieldType = fieldType, QuoteField = quoteField,
                     FillChar = fillChar,
                     FieldValueJustification = fieldValueJustification,
                     Truncate = truncate,

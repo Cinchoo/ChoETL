@@ -88,6 +88,7 @@ namespace ChoETL
                 Configuration = new ChoCSVRecordConfiguration(typeof(T));
             else
                 Configuration.RecordType = typeof(T);
+            Configuration.RecordType = ResolveRecordType(Configuration.RecordType);
 
             _prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
@@ -225,7 +226,7 @@ namespace ChoETL
                 if (fieldName.IsNullOrWhiteSpace())
                     fieldName = name;
 
-                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(name, position) { FieldType = fieldType == null ? typeof(string) : fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName, ValueConverter = valueConverter });
+                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(name, position) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName, ValueConverter = valueConverter });
             }
 
             return this;

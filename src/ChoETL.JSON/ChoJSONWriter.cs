@@ -21,6 +21,7 @@ namespace ChoETL
         private bool _clearFields = false;
         public event EventHandler<ChoRowsWrittenEventArgs> RowsWritten;
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
+        private bool _isDisposed = false;
 
         public ChoJSONRecordConfiguration Configuration
         {
@@ -65,10 +66,17 @@ namespace ChoETL
 
         public void Dispose()
         {
+            if (_isDisposed)
+                return;
+
             _writer.EndWrite(_textWriter);
 
             if (_closeStreamOnDispose)
                 _textWriter.Dispose();
+        }
+        public void Close()
+        {
+            Dispose();
         }
 
         private void Init()
@@ -91,7 +99,15 @@ namespace ChoETL
         {
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
-            _writer.WriteTo(_textWriter, new T[] { record } ).Loop();
+            if (!typeof(T).IsSimple() && record is IEnumerable)
+            {
+                if (record is ArrayList)
+                    _writer.ElementType = typeof(object);
+
+                _writer.WriteTo(_textWriter, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
+            }
+            else
+                _writer.WriteTo(_textWriter, new T[] { record }).Loop();
         }
 
         public static string ToText<TRec>(TRec record, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string xpath = null)
@@ -187,7 +203,6 @@ namespace ChoETL
                 }
 
                 string fnTrim = name.NTrim();
-                fieldType = fieldType == null ? typeof(string) : fieldType;
 
                 Configuration.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration(fnTrim, (string)null) { FieldType = fieldType, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName, ValueConverter = valueConverter });
             }

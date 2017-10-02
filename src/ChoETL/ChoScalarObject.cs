@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace ChoETL
 {
     [Serializable]
-    public class ChoScalarObject
+    public class ChoScalarObject : IChoScalarObject
     {
         public object Value
         {
@@ -24,5 +24,26 @@ namespace ChoETL
             Value = data;
         }
     }
+    public class ChoScalarObject<T> : IChoScalarObject
+    {
+        public T Value
+        {
+            get;
+            set;
+        }
 
+        public ChoScalarObject()
+        {
+
+        }
+        public ChoScalarObject(T data)
+        {
+            Value = data;
+        }
+    }
+
+    public interface IChoScalarObject
+    {
+
+    }
 }

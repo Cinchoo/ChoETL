@@ -88,6 +88,7 @@ namespace ChoETL
             else
                 Configuration.RecordType = typeof(T);
 
+            Configuration.RecordType = ResolveRecordType(Configuration.RecordType);
             _prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
         }
