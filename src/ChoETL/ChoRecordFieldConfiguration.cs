@@ -45,6 +45,12 @@ namespace ChoETL
             set;
         }
 
+        public bool IsNullable
+        {
+            get;
+            set;
+        }
+
         public ValidationAttribute[] Validators
         {
             get;

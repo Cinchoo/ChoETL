@@ -126,6 +126,9 @@ namespace ChoETL
 
         public static void DoObjectLevelValidation(this object recObject, ChoRecordConfiguration configuration, IEnumerable<ChoRecordFieldConfiguration> fieldConfigurations)
         {
+            if (recObject == null)
+                return;
+
             if ((configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
             {
                 if (configuration.HasConfigValidators)

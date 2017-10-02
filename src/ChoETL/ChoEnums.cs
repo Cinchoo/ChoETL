@@ -26,4 +26,11 @@ namespace ChoETL
         WhiteSpace = 8,
         Any = Null | DBNull | Empty | WhiteSpace
     }
+
+    public enum ChoNullValueHandling
+    {
+        Ignore,
+        Empty,
+        Default
+    }
 }

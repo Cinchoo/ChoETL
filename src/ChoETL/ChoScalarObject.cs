@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace ChoETL
 {
     [Serializable]
-    internal class ChoScalarObject
+    public class ChoScalarObject
     {
         public object Value
         {

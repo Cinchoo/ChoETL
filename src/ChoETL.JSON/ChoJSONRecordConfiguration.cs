@@ -56,6 +56,12 @@ namespace ChoETL
             get;
             set;
         }
+        [DataMember]
+        public ChoNullValueHandling NullValueHandling
+        {
+            get;
+            set;
+        }
         public override bool IsDynamicObject
         {
             get

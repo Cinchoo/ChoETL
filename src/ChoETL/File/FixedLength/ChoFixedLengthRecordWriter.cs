@@ -76,7 +76,7 @@ namespace ChoETL
                                 string[] fieldNames = null;
                                 Type recordType = record.GetType().GetUnderlyingType();
 
-                                Configuration.IsDynamicObject = record.GetType().IsDynamicType();
+                                Configuration.IsDynamicObject = recordType.IsDynamicType();
                                 if (!Configuration.IsDynamicObject)
                                 {
                                     if (recordType.IsSimple())

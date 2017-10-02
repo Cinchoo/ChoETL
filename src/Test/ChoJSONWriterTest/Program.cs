@@ -16,7 +16,18 @@ namespace ChoJSONWriterTest
 
         static void Main(string[] args)
         {
-            DataTableTest();
+            POCOTest();
+        }
+        public static void SaveStringList()
+        {
+            List<string> list = new List<string>();
+            list.Add("1/1/2012");
+            list.Add(null);
+
+            using (var w = new ChoJSONWriter("List.json")
+                .WithField("Value")
+                )
+                w.Write(list);
         }
 
         static void DataTableTest()
@@ -48,6 +59,31 @@ namespace ChoJSONWriterTest
             }
         }
 
+        static void POCOTest()
+        {
+            List<EmployeeRecSimple1> objs = new List<EmployeeRecSimple1>();
+            EmployeeRecSimple1 rec1 = new EmployeeRecSimple1();
+            rec1.Id = 1;
+            rec1.Name = "Mark";
+            objs.Add(rec1);
+
+            objs.Add(null);
+
+            using (var w = new ChoJSONWriter<EmployeeRecSimple1>("emp.json")
+                .Configure(c => c.ThrowAndStopOnMissingField = false)
+                .Configure(e => e.NullValueHandling = ChoNullValueHandling.Empty)
+                )
+            {
+                w.Write(objs);
+
+                //w.Write(ChoEnumerable.AsEnumerable(() =>
+                //{
+                //    return new { Address = new string[] { "NJ", "NY" }, Name = "Raj", Zip = "08837" };
+                //}));
+                //w.Write(new { Name = "Raj", Zip = "08837", Address = new { City = "New York", State = "NY" } });
+            }
+
+        }
 
         static void DynamicTest()
         {
@@ -70,12 +106,14 @@ namespace ChoJSONWriterTest
             rec2.Salary = new ChoCurrency(10.01);
             rec2.Active = false;
             rec2.EmpType = EmpType.Contract;
-            rec2.Array = new string[] { "11", "12", "14" };
+            rec2.Array = new int[] { 1, 2, 4 };
             rec2.Dict = new string[] { "11", "12", "14" };
 
-            objs.Add(rec2);
+            //objs.Add(rec2);
+            objs.Add(null);
 
             using (var w = new ChoJSONWriter("emp.json")
+                .Configure(c => c.ThrowAndStopOnMissingField = false)
                 )
             {
                 w.Write(objs);
@@ -88,5 +126,10 @@ namespace ChoJSONWriterTest
             }
 
         }
+    }
+    public partial class EmployeeRecSimple1
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
     }
 }

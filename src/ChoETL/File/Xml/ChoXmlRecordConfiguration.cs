@@ -58,6 +58,12 @@ namespace ChoETL
             get;
             set;
         }
+        [DataMember]
+        public ChoNullValueHandling NullValueHandling
+        {
+            get;
+            set;
+        }
         internal Dictionary<string, ChoXmlRecordFieldConfiguration> RecordFieldConfigurationsDict
         {
             get;
@@ -165,7 +171,7 @@ namespace ChoETL
 
             if (XPath.IsNullOrWhiteSpace())
             {
-                if (!IsDynamicObject)
+                if (!IsDynamicObject && RecordType != typeof(ChoScalarObject))
                 {
                     NodeName = RecordType.Name;
                     RootName = NodeName.ToPlural();
@@ -353,6 +359,15 @@ namespace ChoETL
                 throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(String.Join(",", dupFields)));
 
             RecordFieldConfigurationsDict = XmlRecordFieldConfigurations.OrderBy(c => c.IsXmlAttribute).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
+
+            if (XmlRecordFieldConfigurations.Where(e => e.IsNullable).Any()
+                || NullValueHandling == ChoNullValueHandling.Empty)
+            {
+                if (!NamespaceManager.HasNamespace("xsi"))
+                    NamespaceManager.AddNamespace("xsi", "http://www.w3.org/2001/XMLSchema-instance");
+                if (!NamespaceManager.HasNamespace("xsd"))
+                    NamespaceManager.AddNamespace("xsd", "http://www.w3.org/2001/XMLSchema");
+            }
 
             LoadNCacheMembers(XmlRecordFieldConfigurations);
         }

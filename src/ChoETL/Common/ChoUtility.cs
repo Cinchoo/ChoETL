@@ -123,7 +123,7 @@ namespace ChoETL
 
         public static dynamic ToDynamicObject(this object src)
         {
-            if (src == null) return null;
+            if (src == null) return new ChoDynamicObject();
 
             //if (src.GetType().IsSimple())
             //    return src;

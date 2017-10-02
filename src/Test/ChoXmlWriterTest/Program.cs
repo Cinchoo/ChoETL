@@ -16,7 +16,18 @@ namespace ChoXmlWriterTest
     {
         static void Main(string[] args)
         {
-            DataReaderTest();
+            QuickPOCOTest();
+        }
+        public static void SaveStringList()
+        {
+            List<string> list = new List<string>();
+            list.Add("1/1/2012");
+            list.Add(null);
+
+            using (var w = new ChoXmlWriter("List.xml")
+                .WithField("Value")
+                )
+                w.Write(list);
         }
 
         static void DataTableTest()
@@ -86,40 +97,43 @@ namespace ChoXmlWriterTest
 
         static void QuickPOCOTest()
         {
-            //List<EmployeeRecSimple> objs = new List<EmployeeRecSimple>();
+            List<EmployeeRecSimple> objs = new List<EmployeeRecSimple>();
 
-            //EmployeeRecSimple rec1 = new EmployeeRecSimple();
-            //rec1.Id = null;
-            //rec1.Name = "Mark";
-            //rec1.Depends = new List<string>() { "AA", "BB" };
-            //rec1.Courses = new Dictionary<int, string>() { { 1, "AA" }, { 2, "BB" } };
-            //objs.Add(rec1);
+            EmployeeRecSimple rec1 = new EmployeeRecSimple();
+            rec1.Id = null;
+            rec1.Name = "Mark";
+            rec1.Depends = new List<string>() { "AA", "BB" };
+            rec1.Courses = new Dictionary<int, string>() { { 1, "AA" }, { 2, "BB" } };
+            objs.Add(rec1);
 
             //EmployeeRecSimple rec2 = new EmployeeRecSimple();
             //rec2.Id = "2";
             //rec2.Name = null;
             //objs.Add(rec2);
+            objs.Add(null);
 
-            //using (var parser = new ChoXmlWriter<EmployeeRecSimple>("Emp.xml").WithXPath("Employees/Employee"))
-            //{
-            //    parser.Write(objs);
-            //}
-    //        using (var reader = new ChoXmlReader("emp.xml").WithXPath("Employees/Employee")
-    //.WithField("Id")
-    //.WithField("Name")
-    //.WithField("Depends", isArray: false, fieldType: typeof(List<string>))
-    //.WithField("KVP", isArray: false, fieldType: typeof(List<ChoKeyValuePair<int, string>>))
-    //)
-    //        {
-    //            foreach (var i in reader)
-    //                Console.WriteLine(ChoUtility.ToStringEx(i));
-    //        }
-
-            using (var reader = new ChoXmlReader<EmployeeRecSimple>("emp.xml").WithXPath("Employees/Employee"))
+            using (var parser = new ChoXmlWriter<EmployeeRecSimple>("Emp.xml").WithXPath("Employees/Employee")
+                .Configure(e => e.NullValueHandling = ChoNullValueHandling.Default)
+                )
             {
-                foreach (var i in reader)
-                    Console.WriteLine(ChoUtility.ToStringEx(i));
+                parser.Write(objs);
             }
+            //        using (var reader = new ChoXmlReader("emp.xml").WithXPath("Employees/Employee")
+            //.WithField("Id")
+            //.WithField("Name")
+            //.WithField("Depends", isArray: false, fieldType: typeof(List<string>))
+            //.WithField("KVP", isArray: false, fieldType: typeof(List<ChoKeyValuePair<int, string>>))
+            //)
+            //        {
+            //            foreach (var i in reader)
+            //                Console.WriteLine(ChoUtility.ToStringEx(i));
+            //        }
+
+            //using (var reader = new ChoXmlReader<EmployeeRecSimple>("emp.xml").WithXPath("Employees/Employee"))
+            //{
+            //    foreach (var i in reader)
+            //        Console.WriteLine(ChoUtility.ToStringEx(i));
+            //}
         }
 
         static void QuickDynamicTest()
