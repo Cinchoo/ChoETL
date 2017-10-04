@@ -52,6 +52,7 @@
   <ItemGroup>
     <None Include="CurrencyQuotes.csv" />
     <None Include="IgnoreLineFile1.csv" />
+    <None Include="planets.csv" />
     <None Include="Players.csv" />
     <None Include="MergeInput.csv" />
     <None Include="Emp1.csv" />

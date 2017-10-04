@@ -106,8 +106,17 @@ namespace ChoCSVReaderTest
     }
     class Program
     {
+        static void LoadPlanets()
+        {
+            foreach (var x in new ChoCSVReader("planets1.csv").WithHeaderLineAt(407).Take(1))
+                Console.WriteLine(ChoUtility.ToStringEx(x));
+        }
+
         static void Main(string[] args)
         {
+            LoadPlanets();
+            return;
+
             System.Threading.Thread.CurrentThread.CurrentCulture = new CultureInfo("it");
 
             using (var p = new ChoCSVReader("Bosch Luglio 2017.csv")

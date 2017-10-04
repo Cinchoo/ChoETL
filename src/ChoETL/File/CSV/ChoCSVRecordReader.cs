@@ -145,6 +145,16 @@ namespace ChoETL
                         }
                     }
 
+                    if (Configuration.FileHeaderConfiguration.HeaderLineAt > 0)
+                    {
+                        if (pair.Item1 < Configuration.FileHeaderConfiguration.HeaderLineAt)
+                        {
+                            if (TraceSwitch.TraceVerbose)
+                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Header line at {1}. Skipping [{0}] line...".FormatString(pair.Item1, Configuration.FileHeaderConfiguration.HeaderLineAt));
+                            return true;
+                        }
+                    }
+
                     if (!_configCheckDone)
                     {
                         Configuration.Validate(GetHeaders(pair.Item2));

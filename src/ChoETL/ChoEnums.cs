@@ -33,4 +33,11 @@ namespace ChoETL
         Empty,
         Default
     }
+
+    public enum ChoEmptyLineHandling
+    {
+        Ignore,
+        Null,
+        Default
+    }
 }

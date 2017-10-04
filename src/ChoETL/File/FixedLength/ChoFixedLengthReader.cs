@@ -174,6 +174,15 @@ namespace ChoETL
             Configuration.FileHeaderConfiguration.IgnoreHeader = ignoreHeader;
             return this;
         }
+        public ChoFixedLengthReader<T> WithHeaderLineAt(int pos = 1, bool ignoreHeader = false)
+        {
+            Configuration.FileHeaderConfiguration.HeaderLineAt = pos;
+            Configuration.FileHeaderConfiguration.HasHeaderRecord = true;
+            Configuration.FileHeaderConfiguration.IgnoreHeader = ignoreHeader;
+
+            return this;
+        }
+
 
         public ChoFixedLengthReader<T> QuoteAllFields(bool flag = true, char quoteChar = '"')
         {

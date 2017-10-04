@@ -176,6 +176,14 @@ namespace ChoETL
 
             return this;
         }
+        public ChoCSVReader<T> WithHeaderLineAt(int pos = 1, bool ignoreHeader = false)
+        {
+            Configuration.FileHeaderConfiguration.HeaderLineAt = pos;
+            Configuration.FileHeaderConfiguration.HasHeaderRecord = true;
+            Configuration.FileHeaderConfiguration.IgnoreHeader = ignoreHeader;
+
+            return this;
+        }
 
         public ChoCSVReader<T> QuoteAllFields(bool flag = true, char quoteChar = '"')
         {

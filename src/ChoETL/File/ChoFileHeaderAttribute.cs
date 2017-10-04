@@ -19,7 +19,11 @@ namespace ChoETL
             get;
             set;
         }
-
+        public long HeaderLineAt
+        {
+            get;
+            set;
+        }
         internal char? FillCharInternal;
         public char FillChar
         {

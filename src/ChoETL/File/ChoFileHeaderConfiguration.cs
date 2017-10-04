@@ -12,6 +12,12 @@ namespace ChoETL
     public abstract class ChoFileHeaderConfiguration
     {
         [DataMember]
+        public long HeaderLineAt
+        {
+            get;
+            set;
+        }
+        [DataMember]
         public bool HasHeaderRecord
         {
             get;
@@ -67,6 +73,7 @@ namespace ChoETL
 
         public ChoFileHeaderConfiguration(Type recordType = null, CultureInfo culture = null)
         {
+            HeaderLineAt = 1;
             HasHeaderRecord = false;
             IgnoreCase = true;
             //FillChar = ' ';
@@ -89,6 +96,7 @@ namespace ChoETL
                 HasHeaderRecord = true;
                 IgnoreCase = recObjAttr.IgnoreCase;
                 IgnoreHeader = recObjAttr.IgnoreHeader;
+                HeaderLineAt = recObjAttr.HeaderLineAt;
                 FillChar = recObjAttr.FillCharInternal;
                 Justification = recObjAttr.JustificationInternal;
                 if (recObjAttr.TrimOptionInternal != null) TrimOption = recObjAttr.TrimOptionInternal.Value;
