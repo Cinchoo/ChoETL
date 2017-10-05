@@ -163,7 +163,8 @@ namespace ChoETL
                     }
 
                     //LoadHeader if any
-                    if (Configuration.FileHeaderConfiguration.HasHeaderRecord
+                    if ((Configuration.FileHeaderConfiguration.HasHeaderRecord
+                        || Configuration.FileHeaderConfiguration.HeaderLineAt > 0)
                         && !_headerFound)
                     {
                         if (Configuration.FileHeaderConfiguration.IgnoreHeader)
