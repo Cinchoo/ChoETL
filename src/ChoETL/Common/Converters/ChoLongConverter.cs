@@ -29,7 +29,7 @@ namespace ChoETL
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            if (value is long)
+            if (value is long && targetType == typeof(string))
             {
                 long convValue = (long)value;
                 string format = parameter.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.LongFormat);

@@ -29,7 +29,7 @@ namespace ChoETL
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            if (value is uint)
+            if (value is uint && targetType == typeof(string))
             {
                 uint convValue = (uint)value;
                 string format = parameter.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.UIntFormat);

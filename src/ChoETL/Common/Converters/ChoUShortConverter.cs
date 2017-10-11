@@ -29,7 +29,7 @@ namespace ChoETL
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            if (value is ushort)
+            if (value is ushort && targetType == typeof(string))
             {
                 ushort convValue = (ushort)value;
                 string format = parameter.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.UShortFormat);

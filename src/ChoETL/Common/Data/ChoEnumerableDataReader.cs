@@ -9,7 +9,7 @@ namespace ChoETL
 {
     public interface IChoDeferedObjectMemberDiscoverer
     {
-        event EventHandler<ChoEventArgs<KeyValuePair<string, Type>[]>> MembersDiscovered;
+        event EventHandler<ChoEventArgs<Dictionary<string, Type>>> MembersDiscovered;
     }
 
     public class ChoEnumerableDataReader : ChoObjectDataReader
@@ -49,8 +49,8 @@ namespace ChoETL
 
             dom.MembersDiscovered += (o, e) =>
             {
-                _dynamicMembersInfo = e.Value;
-                SetFields(_type, e.Value);
+                _dynamicMembersInfo = e.Value.ToArray();
+                SetFields(_type, e.Value.ToArray());
             };
 
             _enumerator = collection.GetEnumerator();

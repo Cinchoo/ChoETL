@@ -63,6 +63,54 @@ namespace ChoETL
             return expando;
         }
 
+        public static dynamic ConvertToNestedObject(this object @this, char separator = '/')
+        {
+            if (separator == ChoCharEx.NUL)
+                throw new ArgumentException("Invalid separator passed.");
+
+            if (@this == null || !@this.GetType().IsDynamicType())
+                return @this;
+
+            IDictionary<string, object> expandoDic = null;
+            expandoDic = @this is ExpandoObject || @this is ChoDynamicObject ? (IDictionary<string, object>)@this : ToExpandoObject(@this as DynamicObject);
+            IDictionary<string, object> root = new ExpandoObject();
+
+            foreach (var kvp in expandoDic)
+            {
+                if (kvp.Key.IndexOf(separator) >= 0)
+                {
+                    var tokens = kvp.Key.SplitNTrim(separator).Where(e => !e.IsNullOrWhiteSpace()).ToArray();
+                    IDictionary<string, object> current = root;
+                    foreach (var token in tokens.Take(tokens.Length - 1))
+                    {
+                        if (token.IsNullOrWhiteSpace())
+                            continue;
+
+                        if (!current.ContainsKey(token))
+                            current.Add(token, new ExpandoObject());
+
+                        current = current[token] as IDictionary<string, object>;
+                    }
+                    current.AddOrUpdate(tokens[tokens.Length - 1], kvp.Value);
+                }
+                else
+                    root.Add(kvp.Key, kvp.Value);
+            }
+
+            return root as ExpandoObject;
+        }
+
+        public static dynamic ConvertToFlattenObject(this object @this, char separator = '/')
+        {
+            if (separator == ChoCharEx.NUL)
+                throw new ArgumentException("Invalid separator passed.");
+
+            if (@this == null || !@this.GetType().IsDynamicType())
+                return @this;
+
+            throw new NotImplementedException();
+        }
+
         private static object GetDynamicMember(object obj, string memberName)
         {
             var binder = Binder.GetMember(CSharpBinderFlags.None, memberName, obj.GetType(),

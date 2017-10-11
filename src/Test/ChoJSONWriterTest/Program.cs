@@ -17,7 +17,24 @@ namespace ChoJSONWriterTest
 
         static void Main(string[] args)
         {
-            SaveDict();
+            ConvertAllDataWithNativetype();
+        }
+        private static void ConvertAllDataWithNativetype()
+        {
+            using (var jw = new ChoJSONWriter("sample.json"))
+            {
+                using (var cr = new ChoCSVReader("sample.csv")
+                    .WithFirstLineHeader()
+                    .WithField("firstName")
+                    .WithField("lastName")
+                    .WithField("salary", fieldType: typeof(double))
+                    )
+                {
+                    //foreach (var x in cr)
+                    //    Console.WriteLine(ChoUtility.ToStringEx(x));
+                    jw.Write(cr);
+                }
+            }
         }
         public static void SaveDict()
         {

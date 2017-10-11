@@ -80,7 +80,9 @@ namespace ChoETL
                 if (!_configCheckDone)
                 {
                     Configuration.Validate(pair);
-                    RaiseMembersDiscovered(Configuration.XmlRecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType == null ? typeof(string) : i.FieldType)).ToArray());
+                    var dict = Configuration.XmlRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
+                    RaiseMembersDiscovered(ref dict);
+                    Configuration.UpdateFieldTypesIfAny(dict);
                     _configCheckDone = true;
                 }
 
@@ -432,7 +434,7 @@ namespace ChoETL
                 if (Configuration.IsDynamicObject)
                 {
                     if (kvp.Value.FieldType == null)
-                        kvp.Value.FieldType = fieldValue is ICollection ? typeof(string[]) : typeof(string);
+                        kvp.Value.FieldType = fieldValue is ICollection ? typeof(string[]) : DiscoverFieldType(fieldValue as string);
                 }
                 else
                 {

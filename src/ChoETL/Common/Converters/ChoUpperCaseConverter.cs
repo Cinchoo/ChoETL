@@ -21,7 +21,7 @@ namespace ChoETL
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            if (value is string)
+            if (value is string && targetType == typeof(string))
             {
                 return ((string)value).ToUpper();
             }

@@ -122,7 +122,7 @@ namespace ChoETL
                             }
                             else
                             {
-                                fieldNames = ChoTypeDescriptor.GetProperties<ChoXmlNodeRecordFieldAttribute>(Configuration.RecordType).Select(pd => pd.Name).ToArray();
+                                fieldNames = ChoTypeDescriptor.GetProperties<ChoJSONRecordFieldAttribute>(Configuration.RecordType).Select(pd => pd.Name).ToArray();
                                 if (fieldNames.Length == 0)
                                 {
                                     fieldNames = ChoType.GetProperties(Configuration.RecordType).Select(p => p.Name).ToArray();
@@ -468,7 +468,7 @@ namespace ChoETL
             }
             else
             {
-                PropertyDescriptor[] pds = rec == null ? new PropertyDescriptor[] { } : ChoTypeDescriptor.GetProperties<ChoXmlNodeRecordFieldAttribute>(rec.GetType()).ToArray();
+                PropertyDescriptor[] pds = rec == null ? new PropertyDescriptor[] { } : ChoTypeDescriptor.GetProperties<ChoJSONRecordFieldAttribute>(rec.GetType()).ToArray();
 
                 if (pds.Length != Configuration.JSONRecordFieldConfigurations.Count)
                     throw new ChoParserException("Incorrect number of fields found in record object. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.JSONRecordFieldConfigurations.Count, pds.Length));

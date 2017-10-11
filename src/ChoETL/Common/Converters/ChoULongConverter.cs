@@ -29,7 +29,7 @@ namespace ChoETL
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            if (value is ulong)
+            if (value is ulong && targetType == typeof(string))
             {
                 ulong convValue = (ulong)value;
                 string format = parameter.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.ULongFormat);

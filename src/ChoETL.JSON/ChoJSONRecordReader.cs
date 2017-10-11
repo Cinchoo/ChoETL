@@ -124,7 +124,8 @@ namespace ChoETL
                 if (!_configCheckDone)
                 {
                     Configuration.Validate(pair);
-                    RaiseMembersDiscovered(Configuration.JSONRecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType == null ? typeof(string) : i.FieldType)).ToArray());
+                    var dict = Configuration.JSONRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
+                    RaiseMembersDiscovered(ref dict);
                     _configCheckDone = true;
                 }
 

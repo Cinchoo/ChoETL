@@ -29,7 +29,7 @@ namespace ChoETL
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            if (value is Decimal)
+            if (value is Decimal && targetType == typeof(string))
             {
                 Decimal convValue = (Decimal)value;
                 string format = parameter.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.DecimalFormat);

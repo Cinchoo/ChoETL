@@ -106,15 +106,50 @@ namespace ChoCSVReaderTest
     }
     class Program
     {
+        static void ConvertToNestedObjects()
+        {
+            using (var json = new ChoJSONWriter("nested.json").Configure(c => c.UseJSONSerialization = false))
+            {
+                using (var csv = new ChoCSVReader("nested.csv").WithFirstLineHeader())
+                    json.Write(csv.Select(i => i.ConvertToNestedObject('_')));
+            }
+
+            return;
+            ExpandoObject dict = new ExpandoObject();
+            IDictionary<string, object> root = dict as IDictionary<string, object>;
+
+            root.Add("id", 1);
+            root.Add("name", "NYC");
+            root.Add("category/id /", 11);
+            root.Add("category /name ", "NJ");
+            root.Add("category/subcategory/id", 111);
+            root.Add("category/subcategory/name", "MA");
+
+            using (var json = new ChoJSONWriter<dynamic>("nested.json"))
+                json.Write(dict.ConvertToNestedObject());
+        }
+
         static void LoadPlanets()
         {
-            foreach (var x in new ChoCSVReader("planets1.csv").WithFirstLineHeader().Configure(c => c.Comments = new string[] { "#" }).Take(1))
-                Console.WriteLine(ChoUtility.ToStringEx(x));
+            using (var p = new ChoCSVReader("planets1.csv").WithFirstLineHeader().Configure(c => c.Comments = new string[] { "#" }))
+            {
+                using (var w = new ChoJSONWriter("planets.json"))
+                {
+                    w.Write(p);
+                }
+            }
+
+            //foreach (var x in new ChoCSVReader("planets1.csv").WithFirstLineHeader().Configure(c => c.Comments = new string[] { "#" }).Take(1))
+            //{
+            //    Console.WriteLine(x.Count);
+
+            //    //Console.WriteLine(ChoUtility.ToStringEx(x));
+            //}
         }
 
         static void Main(string[] args)
         {
-            LoadPlanets();
+            ConvertToNestedObjects();
             return;
 
             //System.Threading.Thread.CurrentThread.CurrentCulture = new CultureInfo("it");
@@ -775,6 +810,7 @@ namespace ChoCSVReaderTest
             using (var writer = new StreamWriter(stream))
             using (var parser = new ChoCSVReader<EmployeeRec>(reader))
             {
+                writer.WriteLine("id,name");
                 writer.WriteLine("1,Carl");
                 writer.WriteLine("2,Mark");
                 writer.WriteLine("3,Tom");
@@ -1034,7 +1070,7 @@ namespace ChoCSVReaderTest
     IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any, ThrowAndStopOnMissingField = false)]
     public partial class EmployeeRec //: IChoNotifyRecordRead, IChoValidatable
     {
-        [ChoCSVRecordField(1, FieldName = " id ")]
+        [ChoCSVRecordField(1, FieldName = "id")]
         //[ChoTypeConverter(typeof(IntConverter))]
         //[Range(1, int.MaxValue, ErrorMessage = "Id must be > 0.")]
         //[ChoFallbackValue(1)]

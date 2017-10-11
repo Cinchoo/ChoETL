@@ -13,7 +13,7 @@ namespace ChoETL
     {
         public readonly Type RecordType;
         public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
-        public event EventHandler<ChoEventArgs<KeyValuePair<string, Type>[]>> MembersDiscovered;
+        public event EventHandler<ChoEventArgs<Dictionary<string, Type>>> MembersDiscovered;
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
 
         public ChoRecordReader(Type recordType)
@@ -37,13 +37,28 @@ namespace ChoETL
         public abstract IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null);
         //public abstract void LoadSchema(object source);
 
-        protected void RaiseMembersDiscovered(KeyValuePair<string, Type>[] membersInfo)
+        protected void RaiseMembersDiscovered(ref Dictionary<string, Type> membersInfo)
         {
-            EventHandler<ChoEventArgs<KeyValuePair<string, Type>[]>> membersDiscovered = MembersDiscovered;
+            EventHandler<ChoEventArgs<Dictionary<string, Type>>> membersDiscovered = MembersDiscovered;
             if (membersDiscovered == null)
                 return;
+            var ea = new ChoEventArgs<Dictionary<string, Type>>(membersInfo);
+            membersDiscovered(this, ea);
+            membersInfo = ea.Value;
+        }
 
-            membersDiscovered(this, new ChoEventArgs<KeyValuePair<string, Type>[]>(membersInfo));
+        protected Type DiscoverFieldType(string value)
+        {
+            long lresult = 0;
+            double dresult = 0;
+            if (value == null)
+                return typeof(string);
+            else if (long.TryParse(value, out lresult))
+                return typeof(long);
+            else if (double.TryParse(value, out dresult))
+                return typeof(double);
+            else
+                return typeof(string);
         }
     }
 }

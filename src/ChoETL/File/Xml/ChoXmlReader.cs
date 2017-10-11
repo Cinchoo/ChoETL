@@ -26,6 +26,7 @@ namespace ChoETL
         private bool _clearFields = false;
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
         public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
+        public event EventHandler<ChoEventArgs<Dictionary<string, Type>>> MembersDiscovered;
 
         public ChoXmlRecordConfiguration Configuration
         {
@@ -155,6 +156,7 @@ namespace ChoETL
                 rr.Reader = this;
                 rr.TraceSwitch = TraceSwitch;
                 rr.RowsLoaded += NotifyRowsLoaded;
+                rr.MembersDiscovered += MembersDiscovered;
                 var e = rr.AsEnumerable(_xmlReader).GetEnumerator();
                 return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
             }
@@ -165,6 +167,7 @@ namespace ChoETL
                 rr.Reader = this;
                 rr.TraceSwitch = TraceSwitch;
                 rr.RowsLoaded += NotifyRowsLoaded;
+                rr.MembersDiscovered += MembersDiscovered;
                 var e = rr.AsEnumerable(_xElements).GetEnumerator();
                 return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
             }
@@ -185,6 +188,7 @@ namespace ChoETL
                 rr.Reader = this;
                 rr.TraceSwitch = TraceSwitch;
                 rr.RowsLoaded += NotifyRowsLoaded;
+                rr.MembersDiscovered += MembersDiscovered;
                 var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_xmlReader), rr);
                 return dr;
             }
@@ -195,6 +199,7 @@ namespace ChoETL
                 rr.Reader = this;
                 rr.TraceSwitch = TraceSwitch;
                 rr.RowsLoaded += NotifyRowsLoaded;
+                rr.MembersDiscovered += MembersDiscovered;
                 var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_xElements), rr);
                 return dr;
             }

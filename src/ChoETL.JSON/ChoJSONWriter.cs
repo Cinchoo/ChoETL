@@ -99,7 +99,7 @@ namespace ChoETL
         {
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
-            if (!typeof(T).IsSimple() && record is IEnumerable)
+            if (!typeof(T).IsSimple() && !typeof(T).IsDynamicType() && record is IEnumerable)
             {
                 if (record is ArrayList)
                     _writer.ElementType = typeof(object);

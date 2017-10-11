@@ -158,7 +158,9 @@ namespace ChoETL
                     if (!_configCheckDone)
                     {
                         Configuration.Validate(GetHeaders(pair.Item2));
-                        RaiseMembersDiscovered(Configuration.CSVRecordFieldConfigurations.Select(i => new KeyValuePair<string, Type>(i.Name, i.FieldType == null ? typeof(string) : i.FieldType)).ToArray());
+                        var dict = Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
+                        RaiseMembersDiscovered(ref dict);
+                        Configuration.UpdateFieldTypesIfAny(dict);
                         _configCheckDone = true;
                     }
 
@@ -410,7 +412,7 @@ namespace ChoETL
                     if (Configuration.IsDynamicObject)
                     {
                         if (kvp.Value.FieldType == null)
-                            kvp.Value.FieldType = typeof(string);
+                            kvp.Value.FieldType = DiscoverFieldType(fieldValue as string);
                     }
                     else
                     {
@@ -655,7 +657,9 @@ namespace ChoETL
 
             //Validate header
             _fieldNames = GetHeaders(line);
-            
+            if (_fieldNames == null)
+                return;
+
             if (_fieldNames.Length == 0)
                 throw new ChoParserException("No headers found.");
 

@@ -29,7 +29,7 @@ namespace ChoETL
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            if (value is sbyte)
+            if (value is sbyte && targetType == typeof(string))
             {
                 sbyte convValue = (sbyte)value;
                 string format = parameter.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.SByteFormat);

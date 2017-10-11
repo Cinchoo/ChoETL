@@ -128,6 +128,15 @@ namespace ChoETL
             Initialize();
         }
 
+        public dynamic ConvertToNestedObject(char separator = '/')
+        {
+            return ChoExpandoObjectEx.ConvertToNestedObject(this, separator);
+        }
+        public dynamic ConvertToFlattenObject(char separator = '/')
+        {
+            return ChoExpandoObjectEx.ConvertToFlattenObject(this, separator);
+        }
+
         public string GetDescription(string name)
         {
             var m1 = ChoType.GetMembers(GetType()).Where(m => !ChoType.IsReadOnlyMember(m)).FirstOrDefault();
@@ -643,6 +652,11 @@ namespace ChoETL
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public override IEnumerable<string> GetDynamicMemberNames()
+        {
+            return Keys;
         }
     }
 

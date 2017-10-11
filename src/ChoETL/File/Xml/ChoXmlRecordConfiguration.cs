@@ -116,6 +116,18 @@ namespace ChoETL
             DiscoverRecordFields(recordType);
         }
 
+        internal void UpdateFieldTypesIfAny(Dictionary<string, Type> dict)
+        {
+            if (dict == null)
+                return;
+
+            foreach (var key in dict.Keys)
+            {
+                if (RecordFieldConfigurationsDict.ContainsKey(key) && dict[key] != null)
+                    RecordFieldConfigurationsDict[key].FieldType = dict[key];
+            }
+        }
+
         public override void MapRecordFields<T>()
         {
             DiscoverRecordFields(typeof(T));

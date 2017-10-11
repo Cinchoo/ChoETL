@@ -29,7 +29,7 @@ namespace ChoETL
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            if (value is BigInteger)
+            if (value is BigInteger && targetType == typeof(string))
             {
                 BigInteger convValue = (BigInteger)value;
                 string format = parameter.GetValueAt<string>(1, ChoTypeConverterFormatSpec.Instance.BigIntegerFormat);

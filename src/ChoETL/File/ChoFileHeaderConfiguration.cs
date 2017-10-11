@@ -73,7 +73,7 @@ namespace ChoETL
 
         public ChoFileHeaderConfiguration(Type recordType = null, CultureInfo culture = null)
         {
-            HeaderLineAt = 1;
+            HeaderLineAt = 0;
             HasHeaderRecord = false;
             IgnoreCase = true;
             //FillChar = ' ';

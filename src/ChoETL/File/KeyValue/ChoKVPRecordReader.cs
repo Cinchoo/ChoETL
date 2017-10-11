@@ -159,7 +159,9 @@ namespace ChoETL
                         if (!_configCheckDone)
                         {
                             Configuration.Validate(null);
-                            RaiseMembersDiscovered(Configuration.KVPRecordFieldConfigurations.Select(i1 => new KeyValuePair<string, Type>(i1.Name, i1.FieldType == null ? typeof(string) : i1.FieldType)).ToArray());
+                            var dict = Configuration.KVPRecordFieldConfigurations.ToDictionary(i1 => i1.Name, i1 => i1.FieldType == null ? null : i1.FieldType);
+                            RaiseMembersDiscovered(ref dict);
+                            Configuration.UpdateFieldTypesIfAny(dict);
                             _configCheckDone = true;
                         }
 
