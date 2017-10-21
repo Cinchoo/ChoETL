@@ -915,6 +915,55 @@ namespace ChoETL
                 return @this;
         }
 
+        public static object CastObjectTo(this object @this, Type type, object defaultValue = null)
+        {
+            if (@this == null || @this == DBNull.Value)
+                return defaultValue == null ? type.Default() : defaultValue;
+            else if (@this is string && ((string)@this).IsNullOrWhiteSpace())
+                return defaultValue == null ? type.Default() : defaultValue;
+            else
+            {
+                Type targetType = type;
+                if (targetType == typeof(object))
+                    return @this;
+
+                try
+                {
+                    if (targetType.IsEnum)
+                    {
+                        if (@this is string)
+                            return Enum.Parse(targetType, @this as string);
+                        else
+                            return Enum.ToObject(targetType, @this);
+                    }
+                    else if (targetType == typeof(Type))
+                    {
+                        if (@this is string)
+                            return Convert.ChangeType(Type.GetType(@this as string), targetType);
+                        else
+                            return Convert.ChangeType(@this, targetType);
+                    }
+                    else if (targetType == typeof(bool))
+                    {
+                        bool bResult;
+                        if (ChoBoolean.TryParse(@this.ToNString(), out bResult))
+                            return bResult;
+                        else
+                            return Convert.ChangeType(@this, targetType);
+                    }
+                    else
+                        return Convert.ChangeType(@this, targetType);
+                }
+                catch
+                {
+                    if (defaultValue != null)
+                        return defaultValue;
+
+                    throw;
+                }
+            }
+        }
+
         public static T CastTo<T>(this object @this, T defaultValue = default(T))
         {
             if (@this == null || @this == DBNull.Value)
@@ -942,6 +991,14 @@ namespace ChoETL
                             return (T)Convert.ChangeType(Type.GetType(@this as string), typeof(T));
                         else
                             return (T)Convert.ChangeType(@this, typeof(T));
+                    }
+                    else if (targetType == typeof(bool))
+                    {
+                        bool bResult;
+                        if (ChoBoolean.TryParse(@this.ToNString(), out bResult))
+                            return (T)Convert.ChangeType(bResult, typeof(T));
+
+                        return (T)Convert.ChangeType(@this, typeof(T));
                     }
                     else
                         return (T)Convert.ChangeType(@this, typeof(T));

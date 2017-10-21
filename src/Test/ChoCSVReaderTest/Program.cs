@@ -14,6 +14,7 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
 using Newtonsoft.Json.Linq;
+using System.Threading;
 
 namespace ChoCSVReaderTest
 {
@@ -110,8 +111,10 @@ namespace ChoCSVReaderTest
         {
             using (var json = new ChoJSONWriter("nested.json").Configure(c => c.UseJSONSerialization = false))
             {
-                using (var csv = new ChoCSVReader("nested.csv").WithFirstLineHeader())
-                    json.Write(csv.Select(i => i.ConvertToNestedObject('_')));
+                using (var csv = new ChoCSVReader("nested.csv").WithFirstLineHeader()
+                    .Configure(c => c.NestedColumnSeparator = '/')
+                    )
+                    json.Write(csv);
             }
 
             return;
@@ -131,12 +134,32 @@ namespace ChoCSVReaderTest
 
         static void LoadPlanets()
         {
-            using (var p = new ChoCSVReader("planets1.csv").WithFirstLineHeader().Configure(c => c.Comments = new string[] { "#" }))
-            {
-                using (var w = new ChoJSONWriter("planets.json"))
+            using (var p = new ChoCSVReader("planets.csv").WithFirstLineHeader().Configure(c => c.Comments = new string[] { "#" })
+                //.Configure(c => c.CultureName = "en-CA")
+                //.Configure(c => c.MaxScanRows = 10)
+                .Setup(r => r.MembersDiscovered += (o, e) =>
                 {
-                    w.Write(p);
-                }
+                    //e.Value["rowid"] = typeof(long);
+                })
+                .Setup(r => r.RecordLoadError += (o,e) =>
+                {
+                    Console.WriteLine("@@" + e.Source.ToNString());
+                    e.Handled = true;
+                })
+                .Setup(r => r.AfterRecordLoad += (o, e) =>
+                {
+                    Console.WriteLine("!!" + e.Source.ToNString());
+                })
+                )
+            {
+                foreach (dynamic rec in p.Take(12))
+                    Console.WriteLine(rec.rowid);
+
+                Console.WriteLine(p.IsValid);
+                //using (var w = new ChoJSONWriter("planets.json"))
+                //{
+                //    w.Write(p);
+                //}
             }
 
             //foreach (var x in new ChoCSVReader("planets1.csv").WithFirstLineHeader().Configure(c => c.Comments = new string[] { "#" }).Take(1))
@@ -147,11 +170,20 @@ namespace ChoCSVReaderTest
             //}
         }
 
+        public class Quote
+        {
+            [ChoCSVRecordField(14)]
+            public int F1 { get; set; }
+            //[DefaultValue(10)]
+            [ChoCSVRecordField(15)]
+            public int F2 { get; set; }
+            [ChoCSVRecordField(16)]
+            public int F3 { get; set; }
+        }
         static void Main(string[] args)
         {
-            ConvertToNestedObjects();
+            LoadPlanets();
             return;
-
             //System.Threading.Thread.CurrentThread.CurrentCulture = new CultureInfo("it");
 
             //using (var p = new ChoCSVReader("Bosch Luglio 2017.csv")
@@ -186,20 +218,20 @@ namespace ChoCSVReaderTest
             //return;
 
             //return;
-            using (var parser = new ChoCSVReader("IgnoreLineFile1.csv")
-                .WithField("PolicyNumber", 1)
-                .WithField("VinNumber", 2)
-                .Configure(c => c.IgnoreEmptyLine = true)
-                .Configure(c => c.ColumnCountStrict = true)
-                )
-            {
-                using (var writer = new ChoJSONWriter("ignoreLineFile1.json")
-                        .WithField("PolicyNumber", fieldName: "Policy Number")
-                        .WithField("VinNumber", fieldName: "Vin Number")
-                    )
-                    writer.Write(parser.Skip(1));
-            }
-            return;
+            //using (var parser = new ChoCSVReader("IgnoreLineFile1.csv")
+            //    .WithField("PolicyNumber", 1)
+            //    .WithField("VinNumber", 2)
+            //    .Configure(c => c.IgnoreEmptyLine = true)
+            //    .Configure(c => c.ColumnCountStrict = true)
+            //    )
+            //{
+            //    using (var writer = new ChoJSONWriter("ignoreLineFile1.json")
+            //            .WithField("PolicyNumber", fieldName: "Policy Number")
+            //            .WithField("VinNumber", fieldName: "Vin Number")
+            //        )
+            //        writer.Write(parser.Skip(1));
+            //}
+            //return;
 
             //foreach (dynamic rec in new ChoCSVReader("emp.csv").WithFirstLineHeader()
             //    .WithFields(" id ", "Name")
@@ -226,10 +258,19 @@ namespace ChoCSVReaderTest
             //Set the culture, if your system different from the file type
             //HierarchyCSV();
             //return;
+            //using (var r = new ChoCSVReader<Quote>("CurrencyQuotes.csv").WithDelimiter(";"))
+            //{
+            //    foreach (var rec in r)
+            //        Console.WriteLine(rec.F1);
+
+            //    Console.WriteLine(r.IsValid);
+            //}
+
+            //return;
             foreach (dynamic rec in new ChoCSVReader("CurrencyQuotes.csv").WithDelimiter(";")
-                .WithField("F1", 14, fieldType: typeof(int))
-                .WithField("F2", 15, fieldType: typeof(int))
-                .WithField("F3", 16, fieldType: typeof(int))
+                .WithField("F1", 14)
+                .WithField("F2", 15)
+                .WithField("F3", 16)
                 .Configure(c => c.ErrorMode = ChoErrorMode.ReportAndContinue)
                 )
             {

@@ -22,7 +22,7 @@ namespace ChoETL
         private bool _clearFields = false;
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
         public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
-        public event EventHandler<ChoEventArgs<Dictionary<string, Type>>> MembersDiscovered;
+        public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
 
         public ChoCSVRecordConfiguration Configuration
         {
@@ -150,9 +150,9 @@ namespace ChoETL
             if (rowsLoadedEvent == null)
             {
                 if (!e.IsFinal)
-                    Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " records loaded.");
+                    ChoETLLog.Info(e.RowsLoaded.ToString("#,##0") + " records loaded.");
                 else
-                    Console.WriteLine("Total " + e.RowsLoaded.ToString("#,##0") + " records loaded.");
+                    ChoETLLog.Info("Total " + e.RowsLoaded.ToString("#,##0") + " records loaded.");
             }
             else
                 rowsLoadedEvent(this, e);

@@ -125,7 +125,7 @@ namespace ChoETL
                 {
                     Configuration.Validate(pair);
                     var dict = Configuration.JSONRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
-                    RaiseMembersDiscovered(ref dict);
+                    RaiseMembersDiscovered(dict);
                     _configCheckDone = true;
                 }
 
@@ -216,12 +216,15 @@ namespace ChoETL
             //{
             //    throw;
             //}
-            catch (ChoMissingRecordFieldException)
-            {
-                throw;
-            }
+            //catch (ChoMissingRecordFieldException)
+            //{
+            //    throw;
+            //}
             catch (Exception ex)
             {
+                if (ex is ChoMissingRecordFieldException && Configuration.ThrowAndStopOnMissingField)
+                    throw;
+
                 ChoETLFramework.HandleException(ex);
                 if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                 {
@@ -404,15 +407,18 @@ namespace ChoETL
                 }
                 catch (ChoParserException)
                 {
+                    Reader.IsValid = false;
                     throw;
                 }
                 catch (ChoMissingRecordFieldException)
                 {
+                    Reader.IsValid = false;
                     if (Configuration.ThrowAndStopOnMissingField)
                         throw;
                 }
                 catch (Exception ex)
                 {
+                    Reader.IsValid = false;
                     ChoETLFramework.HandleException(ex);
 
                     if (fieldConfig.ErrorMode == ChoErrorMode.ThrowAndStop)

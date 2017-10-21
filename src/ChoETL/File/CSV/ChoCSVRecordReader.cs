@@ -58,6 +58,10 @@ namespace ChoETL
             bool? skip = false;
             bool abortRequested = false;
             long runningCount = 0;
+            long recCount = 0;
+            bool headerLineLoaded = false;
+            List<object> buffer = new List<object>();
+            IDictionary<string, Type> recFieldTypes = null;
 
             using (ChoPeekEnumerator<Tuple<long, string>> e = new ChoPeekEnumerator<Tuple<long, string>>(
                 new ChoIndexedEnumerator<string>(sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, Configuration.MayContainEOLInData)).ToEnumerable(),
@@ -158,8 +162,8 @@ namespace ChoETL
                     if (!_configCheckDone)
                     {
                         Configuration.Validate(GetHeaders(pair.Item2));
-                        var dict = Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
-                        RaiseMembersDiscovered(ref dict);
+                        var dict = recFieldTypes = Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
+                        RaiseMembersDiscovered(dict);
                         Configuration.UpdateFieldTypesIfAny(dict);
                         _configCheckDone = true;
                     }
@@ -178,6 +182,8 @@ namespace ChoETL
                         {
                             if (TraceSwitch.TraceVerbose)
                                 ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Loading header line at [{0}]...".FormatString(pair.Item1));
+
+                            headerLineLoaded = true;
                             LoadHeaderLine(pair);
                         }
                         _headerFound = true;
@@ -189,6 +195,7 @@ namespace ChoETL
             {
                 while (true)
                 {
+                    recCount++;
                     Tuple<long, string> pair = e.Peek;
                     if (pair == null)
                     {
@@ -200,7 +207,9 @@ namespace ChoETL
                     }
                     runningCount = pair.Item1;
 
-                    object rec = Configuration.IsDynamicObject ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer)) { ThrowExceptionIfPropNotExists = true,
+                    object rec = Configuration.IsDynamicObject ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer))
+                    {
+                        ThrowExceptionIfPropNotExists = true,
                         KeyResolver = (name) =>
                         {
                             if (Configuration.RecordFieldConfigurationsDict2.ContainsKey(name))
@@ -208,7 +217,7 @@ namespace ChoETL
                             else
                                 return name;
                         }
-                        } : Activator.CreateInstance(RecordType);
+                    } : Activator.CreateInstance(RecordType);
                     if (!LoadLine(pair, ref rec))
                         yield break;
 
@@ -219,7 +228,27 @@ namespace ChoETL
                     if (rec == null)
                         continue;
 
-                    yield return rec;
+                    if (Configuration.IsDynamicObject)
+                    {
+                        if (Configuration.AreAllFieldTypesNull && Configuration.MaxScanRows > 0 && recCount <= Configuration.MaxScanRows)
+                        {
+                            buffer.Add(rec);
+                            RaiseRecordFieldTypeAssessment(recFieldTypes, (IDictionary<string, object>)rec, recCount == Configuration.MaxScanRows);
+                            if (recCount == Configuration.MaxScanRows)
+                            {
+                                Configuration.UpdateFieldTypesIfAny(recFieldTypes);
+
+                                foreach (object rec1 in buffer)
+                                    yield return ConvertToNestedObjectIfApplicable(new ChoDynamicObject(MigrateToNewSchema(rec1 as IDictionary<string, object>, recFieldTypes)) as object, headerLineLoaded);
+                            }
+                        }
+                        else
+                        {
+                            yield return ConvertToNestedObjectIfApplicable(rec, headerLineLoaded);
+                        }
+                    }
+                    else
+                        yield return rec;
 
                     if (Configuration.NotifyAfter > 0 && pair.Item1 % Configuration.NotifyAfter == 0)
                     {
@@ -232,6 +261,17 @@ namespace ChoETL
                     }
                 }
             }
+        }
+
+        private object ConvertToNestedObjectIfApplicable(object rec, bool headerLineFound)
+        {
+            if (!headerLineFound || !Configuration.IsDynamicObject || Configuration.NestedColumnSeparator == null)
+                return rec;
+
+            IDictionary<string, object> dict = rec as IDictionary<string, object>;
+            dynamic dict1 = new ChoDynamicObject(dict.ToDictionary(kvp => Configuration.RecordFieldConfigurationsDict[kvp.Key].FieldName, kvp => kvp.Value));
+
+            return dict1.ConvertToNestedObject(Configuration.NestedColumnSeparator.Value);
         }
 
         private bool LoadLine(Tuple<long, string> pair, ref object rec)
@@ -275,12 +315,15 @@ namespace ChoETL
             //{
             //    throw;
             //}
-            catch (ChoMissingRecordFieldException)
-            {
-                throw;
-            }
+            //catch (ChoMissingRecordFieldException)
+            //{
+            //    throw;
+            //}
             catch (Exception ex)
             {
+                if (ex is ChoMissingRecordFieldException && Configuration.ThrowAndStopOnMissingField)
+                    throw;
+
                 ChoETLFramework.HandleException(ex);
                 if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                 {
@@ -411,7 +454,7 @@ namespace ChoETL
 
                     if (Configuration.IsDynamicObject)
                     {
-                        if (kvp.Value.FieldType == null)
+                        if (kvp.Value.FieldType == null && Configuration.MaxScanRows <= 0)
                             kvp.Value.FieldType = DiscoverFieldType(fieldValue as string);
                     }
                     else
@@ -456,15 +499,18 @@ namespace ChoETL
                 }
                 catch (ChoParserException)
                 {
+                    Reader.IsValid = false;
                     throw;
                 }
                 catch (ChoMissingRecordFieldException)
                 {
+                    Reader.IsValid = false;
                     if (Configuration.ThrowAndStopOnMissingField)
                         throw;
                 }
                 catch (Exception ex)
                 {
+                    Reader.IsValid = false;
                     ChoETLFramework.HandleException(ex);
 
                     if (fieldConfig.ErrorMode == ChoErrorMode.ThrowAndStop)

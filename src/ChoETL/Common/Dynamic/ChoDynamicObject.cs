@@ -16,8 +16,8 @@ namespace ChoETL
         #region Instance Members
 
         private readonly object _padLock = new object();
-        private Dictionary<string, object> _kvpDict = new Dictionary<string, object>();
-        private Func<Dictionary<string, object>> _func = null;
+        private IDictionary<string, object> _kvpDict = new Dictionary<string, object>();
+        private Func<IDictionary<string, object>> _func = null;
         private bool _watchChange = false;
 
         private bool _isInitialized = false;
@@ -76,17 +76,22 @@ namespace ChoETL
 
         #region Constructors
 
+        public ChoDynamicObject() : this(false)
+        {
+
+        }
+
         public ChoDynamicObject(bool watchChange = false) : this(null, watchChange)
         {
             _watchChange = watchChange;
         }
 
-        public ChoDynamicObject(Dictionary<string, object> kvpDict) : this(null, false)
+        public ChoDynamicObject(IDictionary<string, object> kvpDict) : this(null, false)
         {
             _kvpDict = kvpDict;
         }
 
-        public ChoDynamicObject(Func<Dictionary<string, object>> func, bool watchChange = false)
+        public ChoDynamicObject(Func<IDictionary<string, object>> func, bool watchChange = false)
         {
             ThrowExceptionIfPropNotExists = false;
             IsFixed = false;
@@ -217,7 +222,7 @@ namespace ChoETL
             return value;
         }
 
-        protected virtual Dictionary<string, object> Seed()
+        protected virtual IDictionary<string, object> Seed()
         {
             return null;
         }
@@ -250,7 +255,7 @@ namespace ChoETL
                 {
                     var index = (int)indexes[0];
 
-                    Dictionary<string, object> kvpDict = _kvpDict;
+                    IDictionary<string, object> kvpDict = _kvpDict;
                     if (kvpDict != null)
                         result = kvpDict.ElementAt(index).Value;
                     return true;
@@ -273,7 +278,7 @@ namespace ChoETL
                 {
                     var index = (int)indexes[0];
 
-                    Dictionary<string, object> kvpDict = _kvpDict;
+                    IDictionary<string, object> kvpDict = _kvpDict;
                     if (kvpDict != null)
                         kvpDict[kvpDict.ElementAt(index).Key] = value;
                     return true;
@@ -288,7 +293,7 @@ namespace ChoETL
 
         public virtual bool ContainsProperty(string key)
         {
-            Dictionary<string, object> kvpDict = _kvpDict;
+            IDictionary<string, object> kvpDict = _kvpDict;
             return kvpDict != null && kvpDict.ContainsKey(key);
         }
 
@@ -296,7 +301,7 @@ namespace ChoETL
         {
             result = null;
 
-            Dictionary<string, object> kvpDict = _kvpDict;
+            IDictionary<string, object> kvpDict = _kvpDict;
             if (kvpDict != null)
             {
                 if (KeyResolver != null)
@@ -322,7 +327,7 @@ namespace ChoETL
             if (IsReadOnly)
                 return false;
 
-            Dictionary<string, object> kvpDict = _kvpDict;
+            IDictionary<string, object> kvpDict = _kvpDict;
             if (kvpDict != null)
             {
                 if (KeyResolver != null)
@@ -360,7 +365,7 @@ namespace ChoETL
                 if (!Monitor.TryEnter(_padLock, 1 * 1000))
                     return;
 
-                Dictionary<string, object> kvpDict = null;
+                IDictionary<string, object> kvpDict = null;
 
                 if (_func != null)
                     kvpDict = _func();
@@ -370,7 +375,7 @@ namespace ChoETL
                 if (kvpDict == null)
                     return;
 
-                Dictionary<string, object> mkvpDict = _kvpDict;
+                IDictionary<string, object> mkvpDict = _kvpDict;
                 bool hasDiff = mkvpDict == null || kvpDict.Except(mkvpDict).Concat(mkvpDict.Except(kvpDict)).Any();
                 if (!hasDiff)
                     return;
@@ -466,9 +471,9 @@ namespace ChoETL
             }
         }
 
-        public Dictionary<string, object> GetDefaults()
+        public IDictionary<string, object> GetDefaults()
         {
-            Dictionary<string, object> dict = new Dictionary<string, object>();
+            IDictionary<string, object> dict = new Dictionary<string, object>();
 
             ChoPropertyAttribute attr = null;
             object memberValue = null;
@@ -528,7 +533,7 @@ namespace ChoETL
         {
             get
             {
-                Dictionary<string, object> kvpDict = _kvpDict;
+                IDictionary<string, object> kvpDict = _kvpDict;
                 return kvpDict != null ? kvpDict.Keys : null;
             }
         }
@@ -537,7 +542,7 @@ namespace ChoETL
         {
             get
             {
-                Dictionary<string, object> kvpDict = _kvpDict;
+                IDictionary<string, object> kvpDict = _kvpDict;
                 return kvpDict != null ? kvpDict.Values : null;
             }
         }
@@ -546,7 +551,7 @@ namespace ChoETL
         {
             get
             {
-                Dictionary<string, object> kvpDict = _kvpDict;
+                IDictionary<string, object> kvpDict = _kvpDict;
                 return kvpDict != null ? kvpDict.Count : 0;
             }
         }
@@ -578,7 +583,7 @@ namespace ChoETL
 
         public bool Remove(string key)
         {
-            Dictionary<string, object> kvpDict = _kvpDict;
+            IDictionary<string, object> kvpDict = _kvpDict;
             if (kvpDict != null && kvpDict.ContainsKey(key))
             {
                 kvpDict.Remove(key);
@@ -598,7 +603,7 @@ namespace ChoETL
 
         public void Clear()
         {
-            Dictionary<string, object> kvpDict = _kvpDict;
+            IDictionary<string, object> kvpDict = _kvpDict;
             if (kvpDict != null)
             {
                 kvpDict.Clear();
@@ -607,7 +612,7 @@ namespace ChoETL
 
         public bool Contains(KeyValuePair<string, object> item)
         {
-            Dictionary<string, object> kvpDict = _kvpDict;
+            IDictionary<string, object> kvpDict = _kvpDict;
             if (kvpDict != null)
             {
                 return kvpDict.Contains(item);
@@ -617,7 +622,7 @@ namespace ChoETL
 
         public void CopyTo(KeyValuePair<string, object>[] array, int arrayIndex)
         {
-            Dictionary<string, object> kvpDict = _kvpDict;
+            IDictionary<string, object> kvpDict = _kvpDict;
             if (kvpDict != null)
             {
                 foreach (var kvp in kvpDict)
@@ -629,7 +634,7 @@ namespace ChoETL
 
         public bool Remove(KeyValuePair<string, object> item)
         {
-            Dictionary<string, object> kvpDict = _kvpDict;
+            IDictionary<string, object> kvpDict = _kvpDict;
             if (kvpDict != null)
             {
                 return kvpDict.Contains(item);
@@ -639,7 +644,7 @@ namespace ChoETL
 
         public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
         {
-            Dictionary<string, object> kvpDict = _kvpDict;
+            IDictionary<string, object> kvpDict = _kvpDict;
             if (kvpDict != null)
             {
                 foreach (var kvp in kvpDict)
@@ -657,6 +662,15 @@ namespace ChoETL
         public override IEnumerable<string> GetDynamicMemberNames()
         {
             return Keys;
+        }
+
+        public string Dump()
+        {
+            return ChoUtility.ToStringEx(this);
+        }
+        public string DumpAsJson()
+        {
+            return ChoUtility.DumpAsJson(this);
         }
     }
 

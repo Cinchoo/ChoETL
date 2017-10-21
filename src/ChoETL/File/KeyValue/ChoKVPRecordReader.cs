@@ -160,7 +160,7 @@ namespace ChoETL
                         {
                             Configuration.Validate(null);
                             var dict = Configuration.KVPRecordFieldConfigurations.ToDictionary(i1 => i1.Name, i1 => i1.FieldType == null ? null : i1.FieldType);
-                            RaiseMembersDiscovered(ref dict);
+                            RaiseMembersDiscovered(dict);
                             Configuration.UpdateFieldTypesIfAny(dict);
                             _configCheckDone = true;
                         }
@@ -472,12 +472,15 @@ namespace ChoETL
                 //{
                 //    throw;
                 //}
-                catch (ChoMissingRecordFieldException)
-                {
-                    throw;
-                }
+                //catch (ChoMissingRecordFieldException)
+                //{
+                //    throw;
+                //}
                 catch (Exception ex)
                 {
+                    if (ex is ChoMissingRecordFieldException && Configuration.ThrowAndStopOnMissingField)
+                        throw;
+
                     ChoETLFramework.HandleException(ex);
                     if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                     {
@@ -695,15 +698,18 @@ namespace ChoETL
             }
             catch (ChoParserException)
             {
+                Reader.IsValid = false;
                 throw;
             }
             catch (ChoMissingRecordFieldException)
             {
+                Reader.IsValid = false;
                 if (Configuration.ThrowAndStopOnMissingField)
                     throw;
             }
             catch (Exception ex)
             {
+                Reader.IsValid = false;
                 ChoETLFramework.HandleException(ex);
 
                 if (fieldConfig.ErrorMode == ChoErrorMode.ThrowAndStop)

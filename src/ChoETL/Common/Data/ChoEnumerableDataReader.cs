@@ -9,7 +9,7 @@ namespace ChoETL
 {
     public interface IChoDeferedObjectMemberDiscoverer
     {
-        event EventHandler<ChoEventArgs<Dictionary<string, Type>>> MembersDiscovered;
+        event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
     }
 
     public class ChoEnumerableDataReader : ChoObjectDataReader

@@ -17,7 +17,17 @@ namespace ChoETL
                 string text = value as string;
                 if (!text.IsNullOrWhiteSpace())
                 {
+                    DateTime outValue;
                     string format = parameter.GetValueAt<string>(0, ChoTypeConverterFormatSpec.Instance.DateTimeFormat);
+                    if (!format.IsNullOrWhiteSpace())
+                    {
+                        if (DateTime.TryParseExact(text, format, culture, System.Globalization.DateTimeStyles.None, out outValue))
+                            return outValue;
+                        else if (DateTime.TryParse(text, out outValue))
+                            return outValue;
+                        else
+                            return value;
+                    }
                     return !format.IsNullOrWhiteSpace() ? DateTime.ParseExact(text, format, culture) : value;
                 }
             }
@@ -30,7 +40,7 @@ namespace ChoETL
             if (value is DateTime && targetType == typeof(string))
             {
                 string format = parameter.GetValueAt<string>(0, ChoTypeConverterFormatSpec.Instance.DateTimeFormat);
-                return !format.IsNullOrWhiteSpace() ? ((DateTime)value).ToString(format, culture) : value;
+                return !format.IsNullOrWhiteSpace() ? ((DateTime)value).ToString(format, culture) : ((DateTime)value).ToLongDateString();
             }
             else
                 return value;

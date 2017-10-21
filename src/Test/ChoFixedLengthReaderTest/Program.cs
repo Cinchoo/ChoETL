@@ -56,6 +56,8 @@ namespace ChoFixedLengthReaderTest
     {
         static void Main(string[] args)
         {
+            QuickLoad();
+            return;
             //foreach (dynamic rec in new ChoFixedLengthReader("emp.txt").WithFirstLineHeader()
             //    .Configure(c => c.FileHeaderConfiguration.IgnoreCase = false)
             //    .Configure(c => c.FileHeaderConfiguration.TrimOption = ChoFieldValueTrimOption.None)
@@ -99,8 +101,8 @@ namespace ChoFixedLengthReaderTest
 
         static void QuickLoad()
         {
-            using (var r = new ChoFixedLengthReader("accounts.txt")
-                .WithField("AC", 0, 8, fieldType: typeof(int))
+            using (var r = new ChoFixedLengthReader("accounts.txt").WithFirstLineHeader()
+                .Configure(c => c.MaxScanRows = 2)
                 )
             {
                 //r.RecordLoadError += (o, e) =>
@@ -108,8 +110,10 @@ namespace ChoFixedLengthReaderTest
                 //    Console.WriteLine(e.Exception.Message);
                 //    e.Handled = true;
                 //};
-                foreach (var rec in r)
-                    Console.WriteLine("{0}", rec.AC);
+                foreach (dynamic rec in r)
+                {
+                    Console.WriteLine("{0}", rec.Dump());
+                }
             }
 
         }

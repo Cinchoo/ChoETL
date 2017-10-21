@@ -116,7 +116,7 @@ namespace ChoETL
         {
             EventHandler<ChoRowsLoadedEventArgs> rowsLoadedEvent = RowsLoaded;
             if (rowsLoadedEvent == null)
-                Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " records loaded.");
+                ChoETLLog.Info(e.RowsLoaded.ToString("#,##0") + " records loaded.");
             else
                 rowsLoadedEvent(this, e);
         }

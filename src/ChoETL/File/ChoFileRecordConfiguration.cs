@@ -14,6 +14,12 @@ namespace ChoETL
     public abstract class ChoFileRecordConfiguration : ChoRecordConfiguration
     {
         [DataMember]
+        public int MaxScanRows
+        {
+            get;
+            set;
+        }
+        [DataMember]
         public int BufferSize
         {
             get;
@@ -86,6 +92,12 @@ namespace ChoETL
         }
         [DataMember]
         internal bool IgnoreDuplicateFields { get; set; }
+        [DataMember]
+        public char? NestedColumnSeparator
+        {
+            get;
+            set;
+        }
 
         internal string BackslashQuote = @"\""";
         internal string DoubleQuoteChar = @"""""";
@@ -185,6 +197,15 @@ namespace ChoETL
                 throw new ChoRecordConfigurationException("Invalid '{0}' quote character specified.".FormatString(QuoteChar));
             if (EOLDelimiter.Contains(QuoteChar))
                 throw new ChoRecordConfigurationException("QuoteChar [{0}] can't be one EOLDelimiter characters [{1}]".FormatString(QuoteChar, EOLDelimiter));
+            if (NestedColumnSeparator != null)
+            {
+                if (NestedColumnSeparator.Value == ChoCharEx.NUL)
+                    throw new ChoRecordConfigurationException("Invalid '{0}' nested column separator specified.".FormatString(NestedColumnSeparator));
+                if (NestedColumnSeparator.Value == QuoteChar)
+                    throw new ChoRecordConfigurationException("Nested column separator [{0}] can't be quote character [{1}]".FormatString(NestedColumnSeparator, QuoteChar));
+                if (EOLDelimiter.Contains(NestedColumnSeparator.Value))
+                    throw new ChoRecordConfigurationException("Nested column separator [{0}] can't be one EOLDelimiter characters [{1}]".FormatString(NestedColumnSeparator, EOLDelimiter));
+            }
             if (Comments != null)
             {
                 if (Comments.Contains(EOLDelimiter))

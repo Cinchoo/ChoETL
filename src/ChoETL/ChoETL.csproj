@@ -128,6 +128,8 @@
     <Compile Include="Common\Dynamic\ChoDynamicClassFactory.cs" />
     <Compile Include="Common\Dynamic\ChoExpandoObjectEx.cs" />
     <Compile Include="Common\Dynamic\ChoDynamicObject.cs" />
+    <Compile Include="Common\Dynamic\ChoDynamicObjectEqualityComparer.cs" />
+    <Compile Include="Common\ExtensionMethods\ChoBoolean.cs" />
     <Compile Include="Common\ExtensionMethods\ChoLinqEx.cs" />
     <Compile Include="Common\Reflection\ChoFieldInfoEx.cs" />
     <Compile Include="Common\Reflection\ChoMemberInfoEx.cs" />
@@ -140,6 +142,7 @@
     <Compile Include="Common\Validators\ChoCustomExprValidatorAttribute.cs" />
     <Compile Include="Common\Xml\ChoCDATA.cs" />
     <Compile Include="ETLCommon\IChoETLNameableObject.cs" />
+    <Compile Include="File\ChoRecordFieldTypeAssessmentEventArgs.cs" />
     <Compile Include="File\ChoRowsWrittenEventArgs.cs" />
     <Compile Include="File\ChoRowsLoadedEventArgs.cs" />
     <Compile Include="File\CSV\ChoCSVFluentPlugIn.cs" />

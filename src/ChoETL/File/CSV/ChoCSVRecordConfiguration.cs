@@ -115,7 +115,13 @@ namespace ChoETL
             DiscoverRecordFields(recordType);
         }
 
-        internal void UpdateFieldTypesIfAny(Dictionary<string, Type> dict)
+        internal bool AreAllFieldTypesNull
+        {
+            get;
+            set;
+        }
+
+        internal void UpdateFieldTypesIfAny(IDictionary<string, Type> dict)
         {
             if (dict == null)
                 return;
@@ -125,6 +131,8 @@ namespace ChoETL
                 if (RecordFieldConfigurationsDict.ContainsKey(key) && dict[key] != null)
                     RecordFieldConfigurationsDict[key].FieldType = dict[key];
             }
+
+            AreAllFieldTypesNull = RecordFieldConfigurationsDict.All(kvp => kvp.Value.FieldType == null);
         }
 
         private void DiscoverRecordFields(Type recordType)
