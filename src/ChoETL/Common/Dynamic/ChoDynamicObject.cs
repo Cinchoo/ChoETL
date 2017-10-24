@@ -5,18 +5,21 @@ using System.ComponentModel;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace ChoETL
 {
+    [Serializable]
     public class ChoDynamicObject : DynamicObject, IDictionary<string, object>
     {
         #region Instance Members
 
         private readonly object _padLock = new object();
         private IDictionary<string, object> _kvpDict = new Dictionary<string, object>();
+        [IgnoreDataMember]
         private Func<IDictionary<string, object>> _func = null;
         private bool _watchChange = false;
 
@@ -67,10 +70,12 @@ namespace ChoETL
             set;
         }
 
+        [NonSerialized]
+        private Func<string, string> _KeyResolver = null;
         public Func<string, string> KeyResolver
         {
-            get;
-            set;
+            get { return _KeyResolver; }
+            set { _KeyResolver = value; }
         }
         #endregion Instance Members
 

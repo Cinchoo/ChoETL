@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -77,4 +78,80 @@ namespace ChoETL
         }
     }
 
+    public class ChoLamdaEqualityComparer<T> : IEqualityComparer<T>
+    {
+        private readonly Func<T, T, bool> _lambdaComparer;
+        private readonly Func<T, int> _lambdaHash;
+
+        public ChoLamdaEqualityComparer(Func<T, T, bool> lambdaComparer) :
+            this(lambdaComparer, o => 0)
+        {
+        }
+
+        public ChoLamdaEqualityComparer(Func<T, T, bool> lambdaComparer, Func<T, int> lambdaHash)
+        {
+            if (lambdaComparer == null)
+                throw new ArgumentNullException("lambdaComparer");
+            if (lambdaHash == null)
+                throw new ArgumentNullException("lambdaHash");
+
+            _lambdaComparer = lambdaComparer;
+            _lambdaHash = lambdaHash;
+        }
+
+        public bool Equals(T x, T y)
+        {
+            return _lambdaComparer(x, y);
+        }
+
+        public int GetHashCode(T obj)
+        {
+            return _lambdaHash(obj);
+        }
+    }
+
+    public class ChoLamdaComparer<T> : IComparer<T>
+    {
+        private readonly Func<T, T, int> _lambdaComparer;
+
+        public ChoLamdaComparer(Func<T, T, int> lambdaComparer)
+        {
+            if (lambdaComparer == null)
+                throw new ArgumentNullException("lambdaComparer");
+
+            _lambdaComparer = lambdaComparer;
+        }
+
+        public int Compare(T x, T y)
+        {
+            return _lambdaComparer(x, y);
+        }
+    }
+
+    public class ChoComparer<T, TKey> : IComparer<T>, IEqualityComparer<T>
+    {
+        private readonly Expression<Func<T, TKey>> _KeyExpr;
+        private readonly Func<T, TKey> _CompiledFunc;
+        // Constructor
+        public ChoComparer(Expression<Func<T, TKey>> getKey)
+        {
+            _KeyExpr = getKey;
+            _CompiledFunc = _KeyExpr.Compile();
+        }
+
+        public int Compare(T obj1, T obj2)
+        {
+            return Comparer<TKey>.Default.Compare(_CompiledFunc(obj1), _CompiledFunc(obj2));
+        }
+
+        public bool Equals(T obj1, T obj2)
+        {
+            return EqualityComparer<TKey>.Default.Equals(_CompiledFunc(obj1), _CompiledFunc(obj2));
+        }
+
+        public int GetHashCode(T obj)
+        {
+            return EqualityComparer<TKey>.Default.GetHashCode(_CompiledFunc(obj));
+        }
+    }
 }

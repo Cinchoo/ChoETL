@@ -152,8 +152,8 @@ namespace ChoCSVReaderTest
                 })
                 )
             {
-                foreach (dynamic rec in p.Take(12))
-                    Console.WriteLine(rec.rowid);
+                foreach (dynamic rec in p.Take(12).ExternalSort(new ChoLamdaComparer<dynamic>((e1, e2) => String.Compare(e1.pl_letter, e2.pl_letter))))
+                    Console.WriteLine(rec.rowid + " " + rec.pl_letter);
 
                 Console.WriteLine(p.IsValid);
                 //using (var w = new ChoJSONWriter("planets.json"))
