@@ -60,6 +60,11 @@ namespace ChoETL
             get;
             private set;
         }
+        internal Dictionary<string, string> AlternativeKeys
+        {
+            get;
+            set;
+        }
 
         internal KeyValuePair<string, ChoKVPRecordFieldConfiguration>[] FCArray;
         internal bool AutoDiscoveredColumns = false;
@@ -266,6 +271,7 @@ namespace ChoETL
 
                 RecordFieldConfigurationsDict = KVPRecordFieldConfigurations.Where(i => !i.Name.IsNullOrWhiteSpace()).GroupBy(i => i.Name).Select(g => g.First()).ToDictionary(i => i.Name, FileHeaderConfiguration.StringComparer);
                 RecordFieldConfigurationsDict2 = KVPRecordFieldConfigurations.Where(i => !i.FieldName.IsNullOrWhiteSpace()).GroupBy(i => i.Name).Select(g => g.First()).ToDictionary(i => i.FieldName, FileHeaderConfiguration.StringComparer);
+                AlternativeKeys = RecordFieldConfigurationsDict2.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Name, FileHeaderConfiguration.StringComparer);
                 FCArray = RecordFieldConfigurationsDict.ToArray();
 
                 LoadNCacheMembers(KVPRecordFieldConfigurations);

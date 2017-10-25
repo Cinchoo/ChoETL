@@ -73,7 +73,7 @@ namespace ChoETL
 
             IDictionary<string, object> expandoDic = null;
             expandoDic = @this is ExpandoObject || @this is ChoDynamicObject ? (IDictionary<string, object>)@this : ToExpandoObject(@this as DynamicObject);
-            IDictionary<string, object> root = new ExpandoObject();
+            IDictionary<string, object> root = new ChoDynamicObject();
 
             foreach (var kvp in expandoDic)
             {
@@ -87,7 +87,7 @@ namespace ChoETL
                             continue;
 
                         if (!current.ContainsKey(token))
-                            current.Add(token, new ExpandoObject());
+                            current.Add(token, new ChoDynamicObject());
 
                         current = current[token] as IDictionary<string, object>;
                     }
@@ -97,7 +97,7 @@ namespace ChoETL
                     root.Add(kvp.Key, kvp.Value);
             }
 
-            return root as ExpandoObject;
+            return root as ChoDynamicObject;
         }
 
         public static dynamic ConvertToFlattenObject(this object @this, char separator = '/')

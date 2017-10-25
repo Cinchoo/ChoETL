@@ -114,7 +114,7 @@ namespace ChoCSVReaderTest
                 using (var csv = new ChoCSVReader("nested.csv").WithFirstLineHeader()
                     .Configure(c => c.NestedColumnSeparator = '/')
                     )
-                    json.Write(csv);
+                    json.Write(csv.ExternalSort(new ChoLamdaComparer<dynamic>((e1, e2) => String.Compare(e1.description, e2.description))));
             }
 
             return;
@@ -182,7 +182,7 @@ namespace ChoCSVReaderTest
         }
         static void Main(string[] args)
         {
-            LoadPlanets();
+            ConvertToNestedObjects();
             return;
             //System.Threading.Thread.CurrentThread.CurrentCulture = new CultureInfo("it");
 

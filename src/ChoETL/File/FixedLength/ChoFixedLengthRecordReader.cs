@@ -190,13 +190,7 @@ namespace ChoETL
                     object rec = Configuration.IsDynamicObject ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer))
                     {
                         ThrowExceptionIfPropNotExists = true,
-                        KeyResolver = (name) =>
-                        {
-                            if (Configuration.RecordFieldConfigurationsDict2.ContainsKey(name))
-                                return Configuration.RecordFieldConfigurationsDict2[name].Name;
-                            else
-                                return name;
-                        }
+                        AlternativeKeys = Configuration.AlternativeKeys
                     } : Activator.CreateInstance(RecordType);
                     if (!LoadLine(pair, ref rec))
                         yield break;

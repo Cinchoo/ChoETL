@@ -70,13 +70,20 @@ namespace ChoETL
             set;
         }
 
-        [NonSerialized]
-        private Func<string, string> _KeyResolver = null;
-        public Func<string, string> KeyResolver
+        //[NonSerialized]
+        //private Func<string, string> _KeyResolver = null;
+        //public Func<string, string> KeyResolver
+        //{
+        //    get { return _KeyResolver; }
+        //    set { _KeyResolver = value; }
+        //}
+
+        public Dictionary<string, string> AlternativeKeys
         {
-            get { return _KeyResolver; }
-            set { _KeyResolver = value; }
+            get;
+            set;
         }
+
         #endregion Instance Members
 
         #region Constructors
@@ -309,9 +316,9 @@ namespace ChoETL
             IDictionary<string, object> kvpDict = _kvpDict;
             if (kvpDict != null)
             {
-                if (KeyResolver != null)
+                if (AlternativeKeys != null && AlternativeKeys.ContainsKey(name))
                 {
-                    var newName = KeyResolver(name);
+                    var newName = AlternativeKeys[name];
                     if (!newName.IsNullOrWhiteSpace())
                         name = newName;
                 }
@@ -335,9 +342,9 @@ namespace ChoETL
             IDictionary<string, object> kvpDict = _kvpDict;
             if (kvpDict != null)
             {
-                if (KeyResolver != null)
+                if (AlternativeKeys != null && AlternativeKeys.ContainsKey(name))
                 {
-                    var newName = KeyResolver(name);
+                    var newName = AlternativeKeys[name];
                     if (!newName.IsNullOrWhiteSpace())
                         name = newName;
                 }

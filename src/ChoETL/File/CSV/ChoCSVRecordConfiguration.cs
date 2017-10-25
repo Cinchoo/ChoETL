@@ -53,7 +53,11 @@ namespace ChoETL
             get;
             private set;
         }
-
+        internal Dictionary<string, string> AlternativeKeys
+        {
+            get;
+            set;
+        }
 
         internal KeyValuePair<string, ChoCSVRecordFieldConfiguration>[] FCArray;
 
@@ -266,6 +270,7 @@ namespace ChoETL
 
             RecordFieldConfigurationsDict = CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name, FileHeaderConfiguration.StringComparer);
             RecordFieldConfigurationsDict2 = CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName, FileHeaderConfiguration.StringComparer);
+            AlternativeKeys = RecordFieldConfigurationsDict2.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Name, FileHeaderConfiguration.StringComparer);
             FCArray = RecordFieldConfigurationsDict.ToArray();
 
             LoadNCacheMembers(CSVRecordFieldConfigurations);

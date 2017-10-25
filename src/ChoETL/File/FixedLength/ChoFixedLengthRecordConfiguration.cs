@@ -48,6 +48,11 @@ namespace ChoETL
             get;
             private set;
         }
+        internal Dictionary<string, string> AlternativeKeys
+        {
+            get;
+            set;
+        }
 
 
         public ChoFixedLengthRecordFieldConfiguration this[string name]
@@ -279,6 +284,7 @@ namespace ChoETL
 
             RecordFieldConfigurationsDict = FixedLengthRecordFieldConfigurations.OrderBy(i => i.StartIndex).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name, FileHeaderConfiguration.StringComparer);
             RecordFieldConfigurationsDict2 = FixedLengthRecordFieldConfigurations.OrderBy(i => i.StartIndex).Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName, FileHeaderConfiguration.StringComparer);
+            AlternativeKeys = RecordFieldConfigurationsDict2.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Name, FileHeaderConfiguration.StringComparer);
 
             //Validate each record field
             foreach (var fieldConfig in FixedLengthRecordFieldConfigurations)
