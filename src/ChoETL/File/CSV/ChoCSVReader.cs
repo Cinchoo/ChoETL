@@ -219,13 +219,15 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null)
+        public ChoCSVReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+            object defaultValue = null, object fallbackValue = null)
         {
             int maxFieldPos = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-            return WithField(name, ++maxFieldPos, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter);
+            return WithField(name, ++maxFieldPos, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, defaultValue, fallbackValue);
         }
 
-        public ChoCSVReader<T> WithField(string name, int position, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null)
+        public ChoCSVReader<T> WithField(string name, int position, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+            object defaultValue = null, object fallbackValue = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -237,7 +239,8 @@ namespace ChoETL
                 if (fieldName.IsNullOrWhiteSpace())
                     fieldName = name;
 
-                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(name, position) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName, ValueConverter = valueConverter });
+                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(name, position) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName,
+                    ValueConverter = valueConverter, DefaultValue = defaultValue, FallbackValue = fallbackValue });
             }
 
             return this;

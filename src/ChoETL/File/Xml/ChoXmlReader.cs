@@ -284,21 +284,24 @@ namespace ChoETL
             return this;
         }
 
-        public ChoXmlReader<T> WithXmlElementField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null)
+        public ChoXmlReader<T> WithXmlElementField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+            object defaultValue = null, object fallbackValue = null)
         {
             string fnTrim = name.NTrim();
             string xPath = $"//{fnTrim}";
-            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, false, fieldName, false, valueConverter);
+            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, false, fieldName, false, valueConverter, defaultValue, fallbackValue);
         }
 
-        public ChoXmlReader<T> WithXmlAttributeField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null)
+        public ChoXmlReader<T> WithXmlAttributeField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+            object defaultValue = null, object fallbackValue = null)
         {
             string fnTrim = name.NTrim();
             string xPath = $"//@{fnTrim}";
-            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, true, fieldName, false, valueConverter);
+            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, true, fieldName, false, valueConverter, defaultValue, fallbackValue);
         }
 
-        public ChoXmlReader<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isXmlAttribute = false, string fieldName = null, bool isArray = false, Func<object, object> valueConverter = null)
+        public ChoXmlReader<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isXmlAttribute = false, string fieldName = null, bool isArray = false, Func<object, object> valueConverter = null,
+            object defaultValue = null, object fallbackValue = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -311,7 +314,11 @@ namespace ChoETL
                 string fnTrim = name.NTrim();
                 xPath = xPath.IsNullOrWhiteSpace() ? $"//{fnTrim}" : xPath;
 
-                Configuration.XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(fnTrim, xPath) { FieldType = fieldType, FieldValueTrimOption = fieldValueTrimOption, IsXmlAttribute = isXmlAttribute, FieldName = fieldName, IsArray = isArray, ValueConverter = valueConverter });
+                Configuration.XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(fnTrim, xPath) { FieldType = fieldType,
+                    FieldValueTrimOption = fieldValueTrimOption, IsXmlAttribute = isXmlAttribute, FieldName = fieldName, IsArray = isArray, ValueConverter = valueConverter,
+                    DefaultValue = defaultValue,
+                    FallbackValue = fallbackValue
+                });
             }
 
             return this;

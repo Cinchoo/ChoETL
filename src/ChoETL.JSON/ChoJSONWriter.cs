@@ -192,7 +192,8 @@ namespace ChoETL
         }
 
 
-        public ChoJSONWriter<T> WithField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null)
+        public ChoJSONWriter<T> WithField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+            object defaultValue = null, object fallbackValue = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -204,7 +205,10 @@ namespace ChoETL
 
                 string fnTrim = name.NTrim();
 
-                Configuration.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration(fnTrim, (string)null) { FieldType = fieldType, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName, ValueConverter = valueConverter });
+                Configuration.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration(fnTrim, (string)null) { FieldType = fieldType, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName, ValueConverter = valueConverter,
+                    DefaultValue = defaultValue,
+                    FallbackValue = fallbackValue
+                });
             }
 
             return this;

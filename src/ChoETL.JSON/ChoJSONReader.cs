@@ -261,7 +261,8 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null)
+        public ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
+            object defaultValue = null, object fallbackValue = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -274,7 +275,10 @@ namespace ChoETL
                 string fnTrim = name.NTrim();
                 jsonPath = jsonPath.IsNullOrWhiteSpace() ? null : jsonPath;
 
-                Configuration.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration(fnTrim, jsonPath) { FieldType = fieldType, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName, ValueConverter = valueConverter });
+                Configuration.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration(fnTrim, jsonPath) { FieldType = fieldType, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName, ValueConverter = valueConverter,
+                    DefaultValue = defaultValue,
+                    FallbackValue = fallbackValue
+                });
             }
 
             return this;

@@ -176,7 +176,7 @@ namespace ChoETL
         }
 
         public ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
-            bool truncate = true, string fieldName = null, Func<object, object> valueConverter = null)
+            bool truncate = true, string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -190,7 +190,9 @@ namespace ChoETL
                     FillChar = fillChar,
                     FieldValueJustification = fieldValueJustification,
                     Truncate = truncate,
-                    FieldName = fieldName.IsNullOrWhiteSpace() ? name : fieldName, ValueConverter = valueConverter
+                    FieldName = fieldName.IsNullOrWhiteSpace() ? name : fieldName, ValueConverter = valueConverter,
+                    DefaultValue = defaultValue,
+                    FallbackValue = fallbackValue
                 });
             }
 

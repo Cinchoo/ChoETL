@@ -199,7 +199,7 @@ namespace ChoETL
         }
 
         public ChoCSVWriter<T> WithField(string name, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
-            bool truncate = true, string fieldName = null, int? fieldPosition = null, Func<object, object> valueConverter = null)
+            bool truncate = true, string fieldName = null, int? fieldPosition = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -216,7 +216,9 @@ namespace ChoETL
                     FillChar = fillChar,
                     FieldValueJustification = fieldValueJustification,
                     Truncate = truncate,
-                    FieldName = fieldName, ValueConverter = valueConverter
+                    FieldName = fieldName, ValueConverter = valueConverter,
+                    DefaultValue = defaultValue,
+                    FallbackValue = fallbackValue
                 });
             }
 

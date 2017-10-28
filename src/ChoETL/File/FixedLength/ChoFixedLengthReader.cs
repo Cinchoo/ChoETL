@@ -195,7 +195,7 @@ namespace ChoETL
         }
 
         public ChoFixedLengthReader<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
-            string fieldName = null, Func<object, object> valueConverter = null)
+            string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -208,7 +208,8 @@ namespace ChoETL
                     fieldName = name;
 
                 Configuration.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(name, startIndex, size) { FieldType = fieldType,
-                    QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName, ValueConverter = valueConverter
+                    QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName, ValueConverter = valueConverter,
+                    DefaultValue = defaultValue, FallbackValue = fallbackValue
                 });
             }
 

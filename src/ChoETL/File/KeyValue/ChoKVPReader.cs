@@ -217,7 +217,8 @@ namespace ChoETL
             return this;
         }
 
-        public ChoKVPReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null)
+        public ChoKVPReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+            object defaultValue = null, object fallbackValue = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -229,7 +230,11 @@ namespace ChoETL
                 if (fieldName.IsNullOrWhiteSpace())
                     fieldName = name;
 
-                Configuration.KVPRecordFieldConfigurations.Add(new ChoKVPRecordFieldConfiguration(name) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName, ValueConverter = valueConverter });
+                Configuration.KVPRecordFieldConfigurations.Add(new ChoKVPRecordFieldConfiguration(name) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName,
+                    ValueConverter = valueConverter,
+                    DefaultValue = defaultValue,
+                    FallbackValue = fallbackValue
+                });
             }
 
             return this;
