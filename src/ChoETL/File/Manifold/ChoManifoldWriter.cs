@@ -141,6 +141,12 @@ namespace ChoETL
             return this;
         }
 
+        public ChoManifoldWriter WithRecordSelector(Func<string, string> recordTypeCodeExtractor)
+        {
+            Configuration.RecordTypeCodeExtractor = recordTypeCodeExtractor;
+            return this;
+        }
+
         public ChoManifoldWriter WithRecordSelector(int startIndex, int size, params Type[] recordTypes)
         {
             Configuration.RecordTypeConfiguration.StartIndex = startIndex;

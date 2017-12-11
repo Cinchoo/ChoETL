@@ -268,8 +268,8 @@
 
         public PriorityQueue(IComparer<T> comparer, int capacity)
         {
-            Contract.Requires<ArgumentOutOfRangeException>(capacity >= 0);
-            Contract.Requires<ArgumentNullException>(comparer != null);
+            Contract.Requires(capacity >= 0);
+            Contract.Requires(comparer != null);
 
             m_comparer = comparer;
             m_items = new T[capacity];
@@ -282,8 +282,8 @@
 
         public PriorityQueue(IEnumerable<T> source, IComparer<T> comparer)
         {
-            Contract.Requires<ArgumentNullException>(source != null);
-            Contract.Requires<ArgumentNullException>(comparer != null);
+            Contract.Requires(source != null);
+            Contract.Requires(comparer != null);
 
             m_comparer = comparer;
             // In most cases queue that is created out of sequence

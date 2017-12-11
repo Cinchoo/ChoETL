@@ -18,8 +18,15 @@ namespace ChoETL
         public Func<string, Type> RecordSelector
         {
             get { return _recordSelecter; }
-            set { _recordSelecter = value; }
+            set { if (value == null) return; _recordSelecter = value; }
         }
+        private Func<string, string> _recordTypeCodeExtractor = null;
+        public Func<string, string> RecordTypeCodeExtractor
+        {
+            get { return _recordTypeCodeExtractor; }
+            set { _recordTypeCodeExtractor = value; }
+        }
+
         [DataMember]
         public bool IgnoreIfNoRecordParserExists
         {
@@ -80,12 +87,21 @@ namespace ChoETL
             _recordSelecter = new Func<string, Type>((line) =>
             {
                 if (line.IsNullOrEmpty()) return null;
-                if (RecordTypeConfiguration.StartIndex >= 0 && RecordTypeConfiguration.Size == 0)
-                    return null;
-                if (RecordTypeConfiguration.StartIndex + RecordTypeConfiguration.Size > line.Length)
-                    return null;
 
-                return RecordTypeConfiguration[line.Substring(RecordTypeConfiguration.StartIndex, RecordTypeConfiguration.Size)];
+                if (_recordTypeCodeExtractor != null)
+                {
+                    string rt = _recordTypeCodeExtractor(line);
+                    return RecordTypeConfiguration[rt];
+                }
+                else
+                {
+                    if (RecordTypeConfiguration.StartIndex >= 0 && RecordTypeConfiguration.Size == 0)
+                        return null;
+                    if (RecordTypeConfiguration.StartIndex + RecordTypeConfiguration.Size > line.Length)
+                        return null;
+
+                    return RecordTypeConfiguration[line.Substring(RecordTypeConfiguration.StartIndex, RecordTypeConfiguration.Size)];
+                }
             });
         }
 
@@ -119,12 +135,15 @@ namespace ChoETL
 
             if (RecordTypeConfiguration != null)
             {
-                if (RecordTypeConfiguration.StartIndex < 0)
-                    throw new ChoRecordConfigurationException("RecordTypeConfiguration start index must be >= 0.");
-                else
+                if (RecordSelector == null && RecordTypeCodeExtractor == null)
                 {
-                    if (RecordTypeConfiguration.Size <= 0)
-                        throw new ChoRecordConfigurationException("RecordTypeConfiguration size must be > 0.");
+                    if (RecordTypeConfiguration.StartIndex < 0)
+                        throw new ChoRecordConfigurationException("RecordTypeConfiguration start index must be >= 0.");
+                    else
+                    {
+                        if (RecordTypeConfiguration.Size <= 0)
+                            throw new ChoRecordConfigurationException("RecordTypeConfiguration size must be > 0.");
+                    }
                 }
             }
         }

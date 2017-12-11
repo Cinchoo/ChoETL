@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -29,11 +30,12 @@ namespace ChoETL
 
         public static IEnumerable<T> AsEnumerable<T>(T @this)
         {
-            if (@this == null)
+            if (!typeof(T).IsValueType && (object)@this == null)
                 yield break;
 
             yield return @this;
         }
+
         public static IEnumerable<IEnumerable<T>> Batch<T>(this IEnumerable<T> collection, int batchSize)
         {
             List<T> nextbatch = new List<T>(batchSize);
@@ -49,6 +51,46 @@ namespace ChoETL
 
             if (nextbatch.Count > 0)
                 yield return nextbatch;
+        }
+
+        public static IEnumerable<IEnumerable<T>> GroupWhile<T>(this IEnumerable<T> source, Func<T, bool> predicate)
+        {
+            using (var iterator = source.GetEnumerator())
+            {
+                if (!iterator.MoveNext())
+                    yield break;
+
+                List<T> list = new List<T>() { iterator.Current };
+
+                while (iterator.MoveNext())
+                {
+                    if (predicate(iterator.Current))
+                    {
+                        list.Add(iterator.Current);
+                    }
+                    else
+                    {
+                        yield return list;
+                        list = new List<T>() { iterator.Current };
+                    }
+                }
+                yield return list;
+            }
+        }
+
+        public static IEnumerable<KeyValuePair<T1, T2[]>> ToMasterDetail<T1, T2>(this IEnumerable source, Func<object, bool> predicate)
+        {
+            if (source == null || predicate == null)
+                yield break;
+
+            foreach (var item in source.AsTypedEnumerable<object>().GroupWhile<object>(src => !predicate(src))
+                .Select(group => new KeyValuePair<T1, T2[]>(
+                    group.First().CastTo<T1>(),
+                    group.Skip(1).OfType<T2>().ToArray())
+                ))
+            {
+                yield return item;
+            }
         }
     }
 }

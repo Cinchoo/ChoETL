@@ -56,7 +56,13 @@
       <Name>ChoETL</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="MasterDetail.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>@COPY $(ProjectDir)*.txt $(TargetDir)</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

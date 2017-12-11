@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoETL", "ChoETL.csproj", "{0A5062F4-B00A-4998-858D-A3C5D99E2074}"
 EndProject
@@ -175,5 +175,8 @@ Global
 		{1561A99A-2793-4730-9D7C-6E8DFD0DDCF7} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 		{7EDD6D4C-1739-4A46-AE8F-76B12B0E0DF6} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 		{FBA69039-25D7-4602-BE03-3930687E3465} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D35E7445-B861-41CC-B854-44981E4F9FFB}
 	EndGlobalSection
 EndGlobal

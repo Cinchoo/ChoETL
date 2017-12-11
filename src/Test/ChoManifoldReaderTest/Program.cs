@@ -13,7 +13,41 @@ namespace ChoManifoldReaderTest
     {
         static void Main(string[] args)
         {
-            LoadTest();
+            MasterDetailTest();
+        }
+
+        static void MasterDetailTest()
+        {
+            using (var parser = new ChoManifoldReader("MasterDetail.txt")
+                .WithCustomRecordSelector((l) =>
+                {
+                    if (l.SplitNTrim(';')[0].CastTo<int>() > 1700)
+                        return typeof(Recipe);
+                    else
+                        return typeof(RecipeLineItem);
+                })
+                )
+            {
+                foreach (var r in parser.ToMasterDetail<Recipe, RecipeLineItem>((src) =>
+                {
+                    return src.GetType() == typeof(Recipe);
+                }))
+                    Console.WriteLine(r.ToStringEx());
+            }
+        }
+
+        [ChoCSVRecordObject(";")]
+        public class Recipe
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+        }
+
+        [ChoCSVRecordObject(";")]
+        public class RecipeLineItem
+        {
+            public int Index { get; set; }
+            public int Amount { get; set; }
         }
 
         static void QuickTest()

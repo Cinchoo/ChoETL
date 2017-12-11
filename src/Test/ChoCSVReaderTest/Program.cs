@@ -180,6 +180,7 @@ namespace ChoCSVReaderTest
             [ChoCSVRecordField(16)]
             public int F3 { get; set; }
         }
+
         static void Main(string[] args)
         {
             ConvertToNestedObjects();

@@ -20,6 +20,7 @@ namespace ChoCSVFileDiff
                 output.Write(input2.OfType<ChoDynamicObject>().Except(input1.OfType<ChoDynamicObject>(), new ChoDynamicObjectEqualityComparer(new string[] { "rowid" })));
             }
 
+            //respon
             //foreach (dynamic x in input1.OfType<ChoDynamicObject>().Except(input2.OfType<ChoDynamicObject>(), new ChoDynamicObjectEqualityComparer(new string[] { "rowid" })))
             //{
             //    Console.WriteLine(x.rowid);
