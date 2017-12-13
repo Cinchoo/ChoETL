@@ -28,6 +28,20 @@ namespace ChoXmlToCSVSample
 ";
         static void Main(string[] args)
         {
+            Test2();
+        }
+
+        private static void Test2()
+        {
+            using (var csvWriter = new ChoCSVWriter("sample1.csv").WithFirstLineHeader())
+            {
+                using (var xmlReader = new ChoXmlReader("sample1.xml"))
+                    csvWriter.Write(xmlReader);
+            }
+        }
+
+        private static void Test1()
+        {
             using (var csvWriter = new ChoCSVWriter("users.csv").WithFirstLineHeader())
             {
                 using (var xmlReader = new ChoXmlReader(new StringReader(_xml.Trim())))

@@ -28,10 +28,7 @@ namespace ChoManifoldReaderTest
                 })
                 )
             {
-                foreach (var r in parser.ToMasterDetail<Recipe, RecipeLineItem>((src) =>
-                {
-                    return src.GetType() == typeof(Recipe);
-                }))
+                foreach (var r in parser.ToMasterDetail<Recipe, RecipeLineItem>())
                     Console.WriteLine(r.ToStringEx());
             }
         }

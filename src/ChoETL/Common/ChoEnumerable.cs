@@ -78,10 +78,18 @@ namespace ChoETL
             }
         }
 
-        public static IEnumerable<KeyValuePair<T1, T2[]>> ToMasterDetail<T1, T2>(this IEnumerable source, Func<object, bool> predicate)
+        public static IEnumerable<KeyValuePair<T, object[]>> ToMasterDetail<T>(this IEnumerable source, Func<object, bool> predicate = null)
         {
-            if (source == null || predicate == null)
+            return ToMasterDetail<T, object>(source, predicate);
+        }
+
+        public static IEnumerable<KeyValuePair<T1, T2[]>> ToMasterDetail<T1, T2>(this IEnumerable source, Func<object, bool> predicate = null)
+        {
+            if (source == null)
                 yield break;
+
+            if (predicate == null)
+                predicate = (obj) => obj != null && obj.GetType() == typeof(T1);
 
             foreach (var item in source.AsTypedEnumerable<object>().GroupWhile<object>(src => !predicate(src))
                 .Select(group => new KeyValuePair<T1, T2[]>(

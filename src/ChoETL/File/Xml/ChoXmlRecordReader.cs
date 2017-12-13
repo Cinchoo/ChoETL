@@ -277,7 +277,7 @@ namespace ChoETL
             }
             foreach (XAttribute elem in node.Attributes())
             {
-                key = Configuration.GetNameWithNamespace(elem.Name);
+                key = Configuration.GetNameWithNamespace(node.Name, elem.Name);
 
                 //avoid duplicates
                 if (!dictionary.ContainsKey(key))

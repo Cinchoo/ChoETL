@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<tlp:WorkUnits xmlns:tlp="http://www.timelog.com/XML/Schema/tlp/v4_4"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:schemaLocation="http://www.timelog.com/XML/Schema/tlp/v4_4 http://www.timelog.com/api/xsd/WorkUnitsRaw.xsd">
+  <tlp:WorkUnit ID="130">
+    <tlp:EmployeeID>3</tlp:EmployeeID>
+    <tlp:AllocationID>114</tlp:AllocationID>
+    <tlp:TaskID>239</tlp:TaskID>
+    <tlp:ProjectID>26</tlp:ProjectID>
+    <tlp:ProjectName>LIK Template</tlp:ProjectName>
+    <tlp:CustomerId>343</tlp:CustomerId>
+    <tlp:CustomerName>Lekt Corp Inc.</tlp:CustomerName>
+    <tlp:IsBillable>1</tlp:IsBillable>
+    <tlp:ApprovedStatus>0</tlp:ApprovedStatus>
+    <tlp:LastModifiedBy>AL</tlp:LastModifiedBy>
+  </tlp:WorkUnit>
+</tlp:WorkUnits>

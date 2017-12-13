@@ -285,7 +285,7 @@ namespace ChoETL
                     {
                         //if (!attr.Name.NamespaceName.IsNullOrWhiteSpace()) continue;
 
-                        name = GetNameWithNamespace(attr.Name);
+                        name = GetNameWithNamespace(xpr.Name, attr.Name);
 
                         if (!dict.ContainsKey(name))
                             dict.Add(name, new ChoXmlRecordFieldConfiguration(name, $"//@{name}")); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//@{name}" : $"//@{DefaultNamespace}" + ":" + $"{name}") { IsXmlAttribute = true });
@@ -402,6 +402,21 @@ namespace ChoETL
             }
             else
                 return name.LocalName;
+        }
+
+        internal string GetNameWithNamespace(XName name, XName propName)
+        {
+            ChoXmlNamespaceManager nsMgr = new ChoXmlNamespaceManager(NamespaceManager);
+
+            if (!name.NamespaceName.IsNullOrWhiteSpace())
+            {
+                string prefix = nsMgr.GetPrefixOfNamespace(name.NamespaceName);
+                if (prefix.IsNullOrWhiteSpace()) return propName.LocalName;
+
+                return prefix + ":" + propName.LocalName;
+            }
+            else
+                return propName.LocalName;
         }
     }
 
