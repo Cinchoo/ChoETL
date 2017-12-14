@@ -77,9 +77,23 @@ namespace ChoXmlReaderTest
 
         }
 
+        static void Sample8Test()
+        {
+            using (var parser = new ChoXmlReader("sample8.xml").WithXPath("/root/data")
+                .WithField("id", xPath: "@name")
+                .WithField("text", xPath: "/value")
+            )
+            {
+                using (var writer = new ChoJSONWriter("sample8.json")
+                    .Configure(c => c.SupportMultipleContent = true)
+                    )
+                    writer.Write(new { Texts = parser.ToArray() });
+            }
+        }
+
         static void Main(string[] args)
         {
-            XmlToCSVSample();
+            Sample8Test();
             return;
             //dynamic p = new ChoPropertyBag();
             //p.Name = "Raj";

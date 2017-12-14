@@ -379,7 +379,7 @@ namespace ChoETL
                                         }
                                         else
                                         {
-                                            if (fieldConfig.FieldType == typeof(string) || fieldConfig.FieldType.IsSimple())
+                                            if (fieldConfig.FieldType == null || fieldConfig.FieldType == typeof(string) || fieldConfig.FieldType.IsSimple())
                                             {
                                                 XElement fXElement = fXElements.FirstOrDefault();
                                                 if (fXElement != null)
