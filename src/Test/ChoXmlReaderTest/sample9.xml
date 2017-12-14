@@ -1,0 +1,16 @@
+﻿<?xml version='1.0' encoding='UTF-8'?>
+<tsResponse xmlns="abc.com/api" xmlns:xsi="www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="abc.com/api abc.com/api/ts-api-2.3.xsd">
+  <pagination pageNumber="1" pageSize="100" totalAvailable="2" />
+  <views>
+    <view id="2adaf1b2" name=" Users by Function" contentUrl="ExampleWorkbook/sheets/UsersbyFunction">
+      <workbook id="9fb2948d" />
+      <owner id="c2abaaa9" />
+      <usage totalViewCount="95" >sdsad</usage>
+    </view>
+    <view id="09ecb39a" name=" Users by Site" contentUrl="ExampleWorkbook/sheets/UsersbySite">
+      <workbook id="9fb2948d" />
+      <owner id="c2abaaa9" />
+      <usage totalViewCount="95" >sdsad</usage>
+    </view>
+  </views>
+</tsResponse>

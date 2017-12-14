@@ -64,6 +64,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="sample9.xml" />
     <Content Include="sample8.xml" />
     <Content Include="sample7.xml" />
     <Content Include="sample6.xml" />

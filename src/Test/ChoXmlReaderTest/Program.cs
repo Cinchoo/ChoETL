@@ -91,6 +91,33 @@ namespace ChoXmlReaderTest
             }
         }
 
+        static void Sample9Test()
+        {
+            int totalAvailable;
+            //using (var parser = new ChoXmlReader("sample9.xml").WithXPath("/tsResponse/pagination")
+            //    .WithField("totalAvailable", fieldType: typeof(int))
+            //    .WithField("pageNumber", fieldType: typeof(int))
+            //)
+            //{
+            //    totalAvailable = parser.FirstOrDefault().totalAvailable;
+            //}
+
+            ChoXmlRecordConfiguration config = new ChoXmlRecordConfiguration();
+            config.NamespaceManager.AddNamespace("", "abc.com/api");
+
+            using (var parser = new ChoXmlReader("sample9.xml", config).WithXPath("/tsResponse/views/view")
+                .WithField("view_id", xPath: "@id")
+                .WithField("view_name", xPath: "@name")
+                .WithField("view_content_url", xPath: "@contentUrl")
+                .WithField("view_total_count", xPath: "/x:usage/@totalViewCount", fieldType: typeof(int))
+            )
+            {
+                using (var writer = new ChoJSONWriter("sample9.json")
+                    )
+                    writer.Write(parser);
+            }
+        }
+
         static void Main(string[] args)
         {
             Sample8Test();

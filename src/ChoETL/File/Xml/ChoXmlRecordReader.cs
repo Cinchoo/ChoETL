@@ -72,6 +72,10 @@ namespace ChoETL
             Tuple<long, XElement> pair = null;
             bool abortRequested = false;
             _se = new Lazy<XmlSerializer>(() => Configuration.XmlSerializer == null ? new XmlSerializer(RecordType) : Configuration.XmlSerializer);
+            if (!Configuration.NamespaceManager.DefaultNamespace.IsNullOrWhiteSpace())
+            {
+                Configuration.NamespaceManager.AddNamespace("x", Configuration.NamespaceManager.DefaultNamespace);
+            }
 
             foreach (XElement el in xElements)
             {
