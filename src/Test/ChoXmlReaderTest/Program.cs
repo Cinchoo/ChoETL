@@ -94,18 +94,15 @@ namespace ChoXmlReaderTest
         static void Sample9Test()
         {
             int totalAvailable;
-            //using (var parser = new ChoXmlReader("sample9.xml").WithXPath("/tsResponse/pagination")
-            //    .WithField("totalAvailable", fieldType: typeof(int))
-            //    .WithField("pageNumber", fieldType: typeof(int))
-            //)
-            //{
-            //    totalAvailable = parser.FirstOrDefault().totalAvailable;
-            //}
+            using (var parser = new ChoXmlReader("sample9.xml", "abc.com/api").WithXPath("/tsResponse/pagination")
+                .WithField("totalAvailable", fieldType: typeof(int))
+                .WithField("pageNumber", fieldType: typeof(int))
+            )
+            {
+                totalAvailable = parser.FirstOrDefault().totalAvailable;
+            }
 
-            ChoXmlRecordConfiguration config = new ChoXmlRecordConfiguration();
-            config.NamespaceManager.AddNamespace("", "abc.com/api");
-
-            using (var parser = new ChoXmlReader("sample9.xml", config).WithXPath("/tsResponse/views/view")
+            using (var parser = new ChoXmlReader("sample9.xml", "abc.com/api").WithXPath("/tsResponse/views/view")
                 .WithField("view_id", xPath: "@id")
                 .WithField("view_name", xPath: "@name")
                 .WithField("view_content_url", xPath: "@contentUrl")
@@ -114,13 +111,17 @@ namespace ChoXmlReaderTest
             {
                 using (var writer = new ChoJSONWriter("sample9.json")
                     )
+                {
+                    foreach (dynamic rec in parser)
+                        writer.Write(new { view_id = rec.view_id, view_name = rec.view_name, view_content_url = rec.view_content_url, view_total_count = rec.view_total_count, view_total_available = totalAvailable });
                     writer.Write(parser);
+                }
             }
         }
 
         static void Main(string[] args)
         {
-            Sample8Test();
+            Sample9Test();
             return;
             //dynamic p = new ChoPropertyBag();
             //p.Name = "Raj";
