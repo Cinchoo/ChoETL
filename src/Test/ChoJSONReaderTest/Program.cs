@@ -62,6 +62,12 @@ namespace ChoJSONReaderTest
 
     class Program
     {
+        public class FamilyMember
+        {
+            public int Age { get; set; }
+            public string Name { get; set; }
+        }
+
         public class Customer
         {
             public string FirstName { get; set; }
@@ -217,7 +223,30 @@ namespace ChoJSONReaderTest
 
         static void Main(string[] args)
         {
-            IgnoreItems();
+            Sample7();
+        }
+
+        static void Sample7()
+        {
+            using (var jr = new ChoJSONReader("sample7.json").WithJSONPath("$.fathers")
+                .WithField("id")
+                .WithField("married")
+                .WithField("name")
+                .WithField("sons", fieldType: typeof(ChoDynamicObject[]))
+                .WithField("daughters", fieldType: typeof(ChoDynamicObject[]))
+                )
+            {
+                foreach (var item in jr)
+                {
+                    Console.WriteLine(item.id);
+                    Console.WriteLine(item.married);
+                    Console.WriteLine(item.name);
+                    foreach (var son in item.sons)
+                        Console.WriteLine(ChoUtility.ToStringEx(son));
+                    foreach (var daughter in item.daughters)
+                        Console.WriteLine(ChoUtility.ToStringEx(daughter));
+                }
+            }
         }
 
         static void IgnoreItems()

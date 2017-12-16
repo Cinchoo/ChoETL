@@ -37,6 +37,24 @@ namespace ChoETL
             get;
             private set;
         }
+        [DataMember]
+        public bool Sanitize
+        {
+            get;
+            set;
+        }
+        [DataMember]
+        public string InjectionChars
+        {
+            get;
+            set;
+        }
+        [DataMember]
+        public char InjectionEscapeChar
+        {
+            get;
+            set;
+        }
 
         internal int MaxFieldPosition
         {
@@ -91,6 +109,10 @@ namespace ChoETL
                 if (Delimiter.IsNullOrWhiteSpace())
                     Delimiter = ",";
             }
+
+            Sanitize = false;
+            InjectionChars = "=@+-";
+            InjectionEscapeChar = '\t';
 
             FileHeaderConfiguration = new ChoCSVFileHeaderConfiguration(recordType, Culture);
         }
@@ -191,16 +213,7 @@ namespace ChoETL
             {
                 if (FileHeaderConfiguration.FillChar != null)
                 {
-                    if (FileHeaderConfiguration.FillChar.Value == ChoCharEx.NUL)
-                        throw new ChoRecordConfigurationException("Invalid '{0}' FillChar specified.".FormatString(FileHeaderConfiguration.FillChar));
-                    if (Delimiter.Contains(FileHeaderConfiguration.FillChar.Value))
-                        throw new ChoRecordConfigurationException("FillChar [{0}] can't be one of Delimiter characters [{1}]".FormatString(FileHeaderConfiguration.FillChar, Delimiter));
-                    if (EOLDelimiter.Contains(FileHeaderConfiguration.FillChar.Value))
-                        throw new ChoRecordConfigurationException("FillChar [{0}] can't be one of EOLDelimiter characters [{1}]".FormatString(FileHeaderConfiguration.FillChar.Value, EOLDelimiter));
-                    if ((from comm in Comments
-                         where comm.Contains(FileHeaderConfiguration.FillChar.Value.ToString())
-                         select comm).Any())
-                        throw new ChoRecordConfigurationException("One of the Comments contains FillChar. Not allowed.");
+                    ValidateChar(FileHeaderConfiguration.FillChar.Value, nameof(FileHeaderConfiguration.FillChar));
                 }
             }
 
@@ -274,6 +287,31 @@ namespace ChoETL
             FCArray = RecordFieldConfigurationsDict.ToArray();
 
             LoadNCacheMembers(CSVRecordFieldConfigurations);
+
+            if (Sanitize)
+            {
+                ValidateChar(InjectionEscapeChar, nameof(InjectionEscapeChar));
+                foreach (char injectionChar in InjectionChars)
+                {
+                    ValidateChar(injectionChar, nameof(InjectionChars));
+                    if (injectionChar.ToString().IsAlphaNumeric())
+                        throw new ChoRecordConfigurationException("Invalid '{0}' injection char specified.".FormatString(injectionChar));
+                }
+            }
+        }
+
+        private void ValidateChar(char src, string name)
+        {
+            if (src == ChoCharEx.NUL)
+                throw new ChoRecordConfigurationException("Invalid 'NUL' {0} specified.".FormatString(name));
+            if (Delimiter.Contains(src))
+                throw new ChoRecordConfigurationException("{2} [{0}] can't be one of Delimiter characters [{1}]".FormatString(FileHeaderConfiguration.FillChar, Delimiter, name));
+            if (EOLDelimiter.Contains(src))
+                throw new ChoRecordConfigurationException("{2} [{0}] can't be one of EOLDelimiter characters [{1}]".FormatString(src, EOLDelimiter, name));
+            if ((from comm in Comments
+                 where comm.Contains(src.ToString())
+                 select comm).Any())
+                throw new ChoRecordConfigurationException("One of the Comments contains {0}. Not allowed.".FormatString(name));
         }
     }
 }

@@ -16,9 +16,31 @@ namespace ChoCSVWriterTest
 {
     class Program
     {
+        public class CustomType
+        {
+            [ChoCSVRecordField(1, FieldName = "date_start")]
+            public DateTime DateStart { get; set; }
+            [ChoCSVRecordField(2, FieldName = "date_end")]
+            public DateTime DateEnd { get; set; }
+            [ChoCSVRecordField(3, FieldName = "current_year")]
+            public int CurrentYear { get; set; }
+        }
+        static void CSVWithQuotes()
+        {
+            using (var writer = new ChoCSVWriter<CustomType>("CSVWithQuotes.csv").WithFirstLineHeader()
+                .Configure(c => c.QuoteAllFields = true)
+                .Configure(c => c.Culture = new CultureInfo("en-CA"))
+                )
+            {
+                var x1 = new CustomType { DateStart = DateTime.Today, DateEnd = DateTime.Today.AddDays(2), CurrentYear = DateTime.Today.Year };
+                writer.Write(x1);
+            }
+
+        }
+
         static void Main(string[] args)
         {
-            QuickDynamicTest();
+            CSVWithQuotes();
             return;
 
             ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();

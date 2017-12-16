@@ -61,6 +61,11 @@ namespace ChoETL
             get;
             set;
         }
+        public Func<object, object> ItemConverter
+        {
+            get;
+            set;
+        }
 
         [IgnoreDataMember]
         public bool IsDefaultValueSpecified;

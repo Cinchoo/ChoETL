@@ -181,8 +181,19 @@ namespace ChoCSVReaderTest
             public int F3 { get; set; }
         }
 
+        static void FindDuplicates()
+        {
+            using (var parser = new ChoCSVReader("EmpDuplicates.csv").WithFirstLineHeader())
+            {
+                foreach (dynamic c in parser.GroupBy(r => r.Id).Where(g => g.Count() > 1).Select(g => g.FirstOrDefault()))
+                    Console.WriteLine(c.DumpAsJson());
+            }
+        }
+
         static void Main(string[] args)
         {
+            FindDuplicates();
+            return;
             ConvertToNestedObjects();
             return;
             //System.Threading.Thread.CurrentThread.CurrentCulture = new CultureInfo("it");

@@ -559,29 +559,138 @@ namespace ChoETL
             return (T)ToObjectFromXml(xml, typeof(T), overrides);
         }
 
+        public static T ToObjectFromXml<T>(this XElement element, XmlAttributeOverrides overrides = null)
+        {
+            return (T)ToObjectFromXml(element, typeof(T), overrides);
+        }
+
+        public static object ToObjectFromXml(this XElement element, Type type, XmlAttributeOverrides overrides = null)
+        {
+            if (element == null)
+                return null;
+            if (type == null)
+                throw new ArgumentNullException("Missing type.");
+
+            if (type.IsDynamicType())
+            {
+                return new ChoDynamicObject(ToDynamic(element));
+            }
+            else
+            {
+                using (StringReader reader = new StringReader(element.GetOuterXml()))
+                {
+                    if (overrides == null)
+                    {
+                        if (ChoType.GetAttribute<XmlRootAttribute>(type) == null)
+                        {
+                            var xattribs = new XmlAttributes();
+                            var xroot = new XmlRootAttribute(element.Name.LocalName); // type.Name);
+                            xattribs.XmlRoot = xroot;
+                            overrides = new XmlAttributeOverrides();
+                            overrides.Add(type, xattribs);
+                        }
+                    }
+                    XmlSerializer serializer = overrides != null ? new XmlSerializer(type, overrides) : new XmlSerializer(type);
+                    return serializer.Deserialize(reader);
+                }
+            }
+        }
+
         public static object ToObjectFromXml(this string xml, Type type, XmlAttributeOverrides overrides = null)
         {
             if (xml.IsNullOrWhiteSpace())
                 return null;
             if (type == null)
                 throw new ArgumentNullException("Missing type.");
+            return ToObjectFromXml(XElement.Parse(xml), type, overrides);
+        }
 
-            using (StringReader reader = new StringReader(xml))
+        public static dynamic ToDynamic(XElement element, bool topLevel = true)
+        {
+            ChoDynamicObject obj = new ChoDynamicObject();
+
+            foreach (var attr in element.Attributes())
             {
-                if (overrides == null)
+                if (obj.ContainsKey(attr.Name.LocalName))
+                    continue;
+
+                obj.Add(attr.Name.LocalName, attr.Value);
+            }
+
+            if (element.Elements().Count() > 0)
+            {
+                foreach (var ge in element.Elements().GroupBy(e => e.Name.LocalName).Select(g => new KeyValuePair<string, XElement[]>(g.Key, g.ToArray())))
                 {
-                    if (ChoType.GetAttribute<XmlRootAttribute>(type) == null)
+                    if (ge.Value.Length == 1)
                     {
-                        var xattribs = new XmlAttributes();
-                        var xroot = new XmlRootAttribute(type.Name);
-                        xattribs.XmlRoot = xroot;
-                        overrides = new XmlAttributeOverrides();
-                        overrides.Add(type, xattribs);
+                        var ele = ge.Value.FirstOrDefault();
+                        obj.Add(ele.Name.LocalName, ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele) : ele.Value);
+                    }
+                    else
+                    {
+                        var fele = ge.Value.FirstOrDefault();
+                        obj.Add(element.Name.LocalName, ge.Value.Select(ele => ele.Elements().Count() >0 || ele.Attributes().Count() > 0 ? ToDynamic(ele) : ele.Value).ToArray());
                     }
                 }
-                XmlSerializer serializer = overrides != null ? new XmlSerializer(type, overrides) : new XmlSerializer(type);
-                return serializer.Deserialize(reader);
             }
+            else
+            {
+                obj.AddOrUpdate(element.Name.LocalName, element.Value);
+            }
+
+
+            //obj.AddOrUpdate(element.Name.LocalName, ToDynamicChild(element));
+            return obj;
+
+            foreach (var attr in element.Attributes())
+            {
+                if (obj.ContainsKey(attr.Name.LocalName))
+                    continue;
+
+                obj.Add(attr.Name.LocalName, attr.Value);
+            }
+
+            if (element.Elements().Count() > 0)
+            {
+                if (element.Elements().Count() == 1)
+                {
+                    var ele = element.Elements().FirstOrDefault();
+                    obj.Add(ele.Name.LocalName, ToDynamic(ele));
+                }
+                else
+                {
+                    int counter = 0;
+                    foreach (var ele in element.Elements().Select(r => ToDynamic(r)).ToArray())
+                        obj.Add((counter++).ToString(), ele);
+                }
+            }
+            else
+            {
+                obj.AddOrUpdate(element.Name.LocalName, element.Value);
+
+            }
+            return obj;
+        }
+
+        private static object ToDynamicChild(XElement element)
+        {
+            if (element.Elements().Count() > 0)
+            {
+                if (element.Elements().Count() == 1)
+                {
+                    var ele = element.Elements().FirstOrDefault();
+                    return ToDynamic(ele);
+                }
+                else
+                {
+                    return element.Elements().Select(r => ToDynamic(r)).ToArray();
+                }
+            }
+            else
+            {
+                return element.Value;
+            }
+
         }
 
         #endregion ToObjectFromXml Overloads

@@ -330,7 +330,9 @@ namespace ChoETL
                         if (fieldConfig.ValueConverter != null)
                             value = fieldConfig.ValueConverter(value);
 
-                        fieldValue = value is XElement ? node.Value : value;
+                        fieldValue = value is XElement ? ((XElement)value).ToObjectFromXml(typeof(ChoDynamicObject)) : value;
+
+                        //fieldValue = value is XElement ? node.Value : value;
                     }
                     else if (Configuration.ColumnCountStrict)
                         throw new ChoParserException("Missing '{0}' xml node.".FormatString(fieldConfig.FieldName));
@@ -369,53 +371,114 @@ namespace ChoETL
                                     {
                                         if (fieldConfig.IsArray != null && fieldConfig.IsArray.Value)
                                         {
+                                            //List<object> list = new List<object>();
+                                            //foreach (var ele in fXElements)
+                                            //{
+                                            //    if (fieldConfig.ItemConverter != null)
+                                            //        list.Add(fieldConfig.ItemConverter(value));
+                                            //    else
+                                            //    {
+                                            //        if (fieldConfig.FieldType.IsSimple())
+                                            //            list.Add(ChoConvert.ConvertTo(ele.Value, fieldConfig.FieldType.GetItemType()));
+                                            //        else
+                                            //        {
+                                            //            list.Add(ele.GetOuterXml().ToObjectFromXml(fieldConfig.FieldType.GetItemType()));
+                                            //        }
+                                            //    }
+                                            //}
+                                            //fieldValue = list.ToArray();
+
                                             List<object> list = new List<object>();
+                                            Type itemType = fieldConfig.FieldType.GetElementType().GetUnderlyingType();
+
                                             foreach (var ele in fXElements)
                                             {
-                                                if (fieldConfig.FieldType.IsSimple())
-                                                    list.Add(ChoConvert.ConvertTo(ele.Value, fieldConfig.FieldType.GetItemType()));
+                                                if (fieldConfig.ItemConverter != null)
+                                                    list.Add(fieldConfig.ItemConverter(ele));
                                                 else
                                                 {
-                                                    list.Add(ele.GetOuterXml().ToObjectFromXml(fieldConfig.FieldType.GetItemType()));
+                                                    if (itemType.IsSimple())
+                                                        list.Add(ChoConvert.ConvertTo(ele.Value, itemType));
+                                                    else
+                                                    {
+                                                        list.Add(ele.GetOuterXml().ToObjectFromXml(itemType, GetXmlOverrides(fieldConfig)));
+                                                    }
                                                 }
                                             }
                                             fieldValue = list.ToArray();
                                         }
                                         else
                                         {
-                                            if (fieldConfig.FieldType == null || fieldConfig.FieldType == typeof(string) || fieldConfig.FieldType.IsSimple())
+                                            if (fieldConfig.FieldType == null)
+                                            {
+                                                if (fXElements.Length == 1)
+                                                {
+                                                    if (fieldConfig.ItemConverter != null)
+                                                        fieldValue = fieldConfig.ItemConverter(fXElements[0]);
+                                                    else
+                                                        fieldValue = fXElements[0].ToObjectFromXml(typeof(ChoDynamicObject));
+                                                }
+                                                else
+                                                {
+                                                    List<object> arr = new List<object>();
+                                                    foreach (var ele in fXElements)
+                                                    {
+                                                        if (fieldConfig.ItemConverter != null)
+                                                            arr.Add(fieldConfig.ItemConverter(ele));
+                                                        else
+                                                            arr.Add(ele.ToObjectFromXml(typeof(ChoDynamicObject)) as ChoDynamicObject);
+                                                    }
+
+                                                    value = arr.ToArray();
+                                                }
+                                            }
+                                            else if(fieldConfig.FieldType == typeof(string) || fieldConfig.FieldType.IsSimple())
                                             {
                                                 XElement fXElement = fXElements.FirstOrDefault();
                                                 if (fXElement != null)
-                                                    fieldValue = fXElement.Value;
+                                                {
+                                                    if (fieldConfig.ItemConverter != null)
+                                                        fieldValue = fieldConfig.ItemConverter(fXElement);
+                                                    else
+                                                        fieldValue = fXElement.Value;
+                                                }
+                                            }
+                                            else if (fieldConfig.FieldType.IsCollection())
+                                            {
+                                                List<object> list = new List<object>();
+                                                Type itemType = fieldConfig.FieldType.GetElementType().GetUnderlyingType();
+
+                                                foreach (var ele in fXElements.SelectMany(e => e.Elements()))
+                                                {
+                                                    if (fieldConfig.ItemConverter != null)
+                                                        list.Add(fieldConfig.ItemConverter(ele));
+                                                    else
+                                                    {
+                                                        if (itemType.IsSimple())
+                                                            list.Add(ChoConvert.ConvertTo(ele.Value, itemType));
+                                                        else
+                                                        {
+                                                            list.Add(ele.ToObjectFromXml(itemType, null));
+                                                        }
+                                                    }
+                                                }
+                                                fieldValue = list.ToArray();
                                             }
                                             else
                                             {
-                                                XmlAttributeOverrides overrides = null;
-                                                var xattribs = new XmlAttributes();
-                                                var xroot = new XmlRootAttribute(fieldConfig.FieldName);
-                                                xattribs.XmlRoot = xroot;
-                                                overrides = new XmlAttributeOverrides();
-                                                overrides.Add(fieldConfig.FieldType, xattribs);
+                                                XmlAttributeOverrides overrides = GetXmlOverrides(fieldConfig);
 
                                                 XElement fXElement = fXElements.FirstOrDefault();
                                                 if (fXElement != null)
-                                                    fieldValue = fXElement.GetOuterXml().ToObjectFromXml(fieldConfig.FieldType, overrides);
+                                                    fieldValue = fXElement.ToObjectFromXml(fieldConfig.FieldType, null);
                                             }
                                         }
                                     }
                                     else
                                     {
-                                        XmlAttributeOverrides overrides = null;
-                                        var xattribs = new XmlAttributes();
-                                        var xroot = new XmlRootAttribute(fieldConfig.FieldName);
-                                        xattribs.XmlRoot = xroot;
-                                        overrides = new XmlAttributeOverrides();
-                                        overrides.Add(fieldConfig.FieldType, xattribs);
-
                                         XElement fXElement = fXElements.FirstOrDefault();
                                         if (fXElement != null)
-                                            fieldValue = fXElement.GetOuterXml().ToObjectFromXml(fieldConfig.FieldType, overrides);
+                                            fieldValue = fXElement.ToObjectFromXml(fieldConfig.FieldType, null);
                                     }
                                 }
                                 else if (Configuration.ColumnCountStrict)
@@ -441,7 +504,7 @@ namespace ChoETL
                 if (Configuration.IsDynamicObject)
                 {
                     if (kvp.Value.FieldType == null)
-                        kvp.Value.FieldType = fieldValue is ICollection ? typeof(string[]) : DiscoverFieldType(fieldValue as string);
+                        kvp.Value.FieldType = fieldValue is ICollection ? typeof(string[]) : fieldValue.GetType().IsSimple() ? DiscoverFieldType(fieldValue as string) : null;
                 }
                 else
                 {
@@ -555,6 +618,18 @@ namespace ChoETL
             }
 
             return true;
+        }
+
+        private XmlAttributeOverrides GetXmlOverrides(ChoXmlRecordFieldConfiguration fieldConfig, Type fieldType = null)
+        {
+            XmlAttributeOverrides overrides = null;
+            var xattribs = new XmlAttributes();
+            var xroot = new XmlRootAttribute(fieldConfig.FieldName);
+            xattribs.XmlRoot = xroot;
+            overrides = new XmlAttributeOverrides();
+            fieldType = fieldType == null ? fieldConfig.FieldType : fieldType;
+            overrides.Add(fieldType, xattribs);
+            return overrides;
         }
 
         private string CleanFieldValue(ChoXmlRecordFieldConfiguration config, Type fieldType, string fieldValue)

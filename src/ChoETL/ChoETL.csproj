@@ -331,6 +331,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Common\Cryptography\" />
+    <Folder Include="Libs\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

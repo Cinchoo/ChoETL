@@ -1024,7 +1024,7 @@ namespace ChoETL
             {
                 if (@interface.IsGenericType)
                 {
-                    if (@interface.GetGenericTypeDefinition() == typeof(ICollection<>))
+                    if (@interface.GetGenericTypeDefinition() == typeof(ICollection<>) && type.GetGenericArguments().Length > 0)
                     {
                         return type.GetGenericArguments()[0];
                     }
@@ -1486,6 +1486,11 @@ namespace ChoETL
             }
         }
 
+        public static string Dump(this object target)
+        {
+            return ToStringEx(target);
+        }
+
         public static string ToStringEx(this object target)
         {
             if (target == null) return String.Empty;
@@ -1568,14 +1573,24 @@ namespace ChoETL
             }
         }
 
+        public static bool IsCollection(this Type type)
+        {
+            if (typeof(Array).IsAssignableFrom(type))
+                return true;
+            else if (typeof(IList).IsAssignableFrom(type))
+                return true;
+            else
+                return false;
+        }
+
         public static Type GetElementType(this Type type)
         {
             if (typeof(Array).IsAssignableFrom(type))
                 type = type.GetElementType();
             else if (typeof(IList).IsAssignableFrom(type))
                 type = type.GetGenericArguments()[0];
-            else
-                return null;
+            //else
+            //    return null;
 
             return type;
         }

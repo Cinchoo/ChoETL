@@ -16,6 +16,13 @@ using System.Xml.XPath;
 
 namespace ChoXmlReaderTest
 {
+    public class FamilyMember
+    {
+        [XmlAttribute("id")]
+        public int Id { get; set; }
+        [XmlAttribute("name")]
+        public string Name { get; set; }
+    }
     public class Program
     {
         private static string EmpXml = @"<Employees>
@@ -119,9 +126,48 @@ namespace ChoXmlReaderTest
             }
         }
 
+        static void Sample10Test()
+        {
+            using (var parser = new ChoXmlReader("sample10.xml").WithXPath("/root/body/e1")
+                .WithField("tag1", xPath: "en/tag1")
+                .WithField("tag2", xPath: "en/tag2")
+                .WithField("tag2a", xPath: "en/tag2/@user")
+                .WithField("tag3", xPath: "en/tag3")
+                .WithField("tag4", xPath: "en/tag4")
+                .WithField("t51", xPath: "en/tag5/t51")
+                .WithField("t52", xPath: "en/tag5/t52")
+                .WithField("t53", xPath: "en/tag5/t53")
+                .WithField("r1", xPath: "r1")
+                .WithField("r2", xPath: "r2/tr1")
+            )
+            {
+                foreach (dynamic rec in parser)
+                {
+                    Console.WriteLine(rec.DumpAsJson());
+                }
+                //using (var writer = new ChoJSONWriter("sample10.json")
+                //    )
+                //    writer.Write(parser);
+            }
+        }
+
+        static void Sample11Test()
+        {
+            using (var parser = new ChoXmlReader("sample11.xml").WithXPath("/members/father")
+                .WithField("id")
+                .WithField("sons", fieldType:typeof(FamilyMember[]), itemConverter: (o) => { Console.WriteLine(o.ToString()); return o; } )
+            )
+            {
+                foreach (dynamic rec in parser)
+                {
+                    Console.WriteLine(ChoUtility.DumpAsJson(rec.sons));
+                }
+            }
+        }
+
         static void Main(string[] args)
         {
-            Sample9Test();
+            Sample11Test();
             return;
             //dynamic p = new ChoPropertyBag();
             //p.Name = "Raj";
