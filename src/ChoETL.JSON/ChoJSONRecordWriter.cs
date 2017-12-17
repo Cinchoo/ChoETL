@@ -426,13 +426,13 @@ namespace ChoETL
 
                 if (isFirst)
                 {
-                    msg.AppendFormat("{2}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? fieldText :
+                    msg.AppendFormat("{2}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? " {0}".FormatString(fieldText) :
                         Configuration.Formatting == Formatting.Indented ? JsonConvert.SerializeObject(fieldValue, Configuration.Formatting).Indent(1, " ") : JsonConvert.SerializeObject(fieldValue, Configuration.Formatting), 
                         Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
                 }
                 else
                 {
-                    msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? fieldText:
+                    msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? " {0}".FormatString(fieldText) :
                         Configuration.Formatting == Formatting.Indented ? JsonConvert.SerializeObject(fieldValue, Configuration.Formatting).Indent(1, " ") : JsonConvert.SerializeObject(fieldValue, Configuration.Formatting),
                         Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
                 }

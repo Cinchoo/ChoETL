@@ -1,0 +1,70 @@
+﻿{
+  "fathers": [
+    {
+      "id": 0,
+      "married": true,
+      "name": "John Lee",
+      "sons": [
+        {
+          "age": 15,
+          "name": "Ronald",
+          "address": {
+            "street": "abc street",
+            "city": "edison",
+            "state": "NJ"
+          } 
+
+
+        }
+      ],
+      "daughters": [
+        {
+          "age": 7,
+          "name": "Amy"
+        },
+        {
+          "age": 29,
+          "name": "Carol"
+        },
+        {
+          "age": 14,
+          "name": "Barbara"
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "married": false,
+      "name": "Kenneth Gonzalez",
+      "sons": [
+      ],
+      "daughters": [
+      ]
+    },
+    {
+      "id": 2,
+      "married": false,
+      "name": "Larry Lee",
+      "sons": [
+        {
+          "age": 4,
+          "name": "Anthony"
+        },
+        {
+          "age": 2,
+          "name": "Donald"
+        }
+      ],
+      "daughters": [
+        {
+          "age": 7,
+          "name": "Elizabeth"
+        },
+        {
+          "age": 15,
+          "name": "Betty"
+        }
+      ]
+    },
+  ]
+}

@@ -17,8 +17,44 @@ namespace ChoJSONWriterTest
 
         static void Main(string[] args)
         {
-            ConvertAllDataWithNativetype();
+            Sample7();
         }
+
+        static void Sample7()
+        {
+            using (var jr = new ChoJSONReader("sample7.json").WithJSONPath("$.fathers")
+                .WithField("id")
+                .WithField("married", fieldType: typeof(bool))
+                .WithField("name")
+                .WithField("sons")
+                .WithField("daughters", fieldType: typeof(Dictionary<string, object>[]))
+                )
+            {
+                using (var w = new ChoJSONWriter("sample7out.json"))
+                {
+                    w.Write(jr);
+                }
+                /*
+                foreach (var item in jr)
+                {
+                    var x = item.id;
+                    Console.WriteLine(x.GetType());
+
+                    Console.WriteLine(item.id);
+                    Console.WriteLine(item.married);
+                    Console.WriteLine(item.name);
+                    foreach (dynamic son in item.sons)
+                    {
+                        var x1 = son.address;
+                        //Console.WriteLine(ChoUtility.ToStringEx(son.address.street));
+                    }
+                    foreach (var daughter in item.daughters)
+                        Console.WriteLine(ChoUtility.ToStringEx(daughter));
+                }
+                */
+            }
+        }
+
         private static void ConvertAllDataWithNativetype()
         {
             using (var jw = new ChoJSONWriter("sample.json"))
