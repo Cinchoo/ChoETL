@@ -542,7 +542,7 @@ namespace ChoETL
 
         private object ToObject(JToken jToken, Type type)
         {
-            if (type == null)
+            if (type == null || type.IsDynamicType())
             {
                 switch (jToken.Type)
                 {
@@ -575,10 +575,6 @@ namespace ChoETL
             }
             else
             {
-                if (type == typeof(ChoDynamicObject))
-                {
-                    return new ChoDynamicObject((Dictionary<string, object>)jToken.ToObject(typeof(Dictionary<string, object>)));
-                }
                 return jToken.ToObject(type);
             }
         }
