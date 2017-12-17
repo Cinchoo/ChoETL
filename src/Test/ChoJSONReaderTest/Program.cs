@@ -232,17 +232,23 @@ namespace ChoJSONReaderTest
                 .WithField("id")
                 .WithField("married")
                 .WithField("name")
-                .WithField("sons", fieldType: typeof(ChoDynamicObject[]))
-                .WithField("daughters", fieldType: typeof(ChoDynamicObject[]))
+                .WithField("sons")
+                .WithField("daughters", fieldType: typeof(Dictionary<string, object>[]))
                 )
             {
                 foreach (var item in jr)
                 {
+                    var x = item.id;
+                    Console.WriteLine(x.GetType());
+
                     Console.WriteLine(item.id);
                     Console.WriteLine(item.married);
                     Console.WriteLine(item.name);
-                    foreach (var son in item.sons)
-                        Console.WriteLine(ChoUtility.ToStringEx(son));
+                    foreach (dynamic son in item.sons)
+                    {
+                        var x1 = son.address;
+                        //Console.WriteLine(ChoUtility.ToStringEx(son.address.street));
+                    }
                     foreach (var daughter in item.daughters)
                         Console.WriteLine(ChoUtility.ToStringEx(daughter));
                 }

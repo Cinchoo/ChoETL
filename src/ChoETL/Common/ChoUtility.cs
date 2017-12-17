@@ -1470,6 +1470,9 @@ namespace ChoETL
 
         public static string DumpAsJson(this object target, Encoding encoding = null)
         {
+            if (target == null)
+                return String.Empty;
+
             encoding = encoding == null ? Encoding.UTF8 : encoding;
 
             using (MemoryStream ms = new MemoryStream())

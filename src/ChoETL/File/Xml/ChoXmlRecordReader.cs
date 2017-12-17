@@ -367,7 +367,7 @@ namespace ChoETL
                                 fXElements = xNodes.OfType<XElement>().ToArray();
                                 if (fXElements != null)
                                 {
-                                    if (Configuration.IsDynamicObject)
+                                    if (true) //Configuration.IsDynamicObject)
                                     {
                                         if (fieldConfig.IsArray != null && fieldConfig.IsArray.Value)
                                         {
@@ -389,7 +389,7 @@ namespace ChoETL
                                             //fieldValue = list.ToArray();
 
                                             List<object> list = new List<object>();
-                                            Type itemType = fieldConfig.FieldType.GetElementType().GetUnderlyingType();
+                                            Type itemType = fieldConfig.FieldType.GetItemType().GetUnderlyingType();
 
                                             foreach (var ele in fXElements)
                                             {
@@ -432,7 +432,7 @@ namespace ChoETL
                                                     value = arr.ToArray();
                                                 }
                                             }
-                                            else if(fieldConfig.FieldType == typeof(string) || fieldConfig.FieldType.IsSimple())
+                                            else if (fieldConfig.FieldType == typeof(string) || fieldConfig.FieldType.IsSimple())
                                             {
                                                 XElement fXElement = fXElements.FirstOrDefault();
                                                 if (fXElement != null)
@@ -446,7 +446,7 @@ namespace ChoETL
                                             else if (fieldConfig.FieldType.IsCollection())
                                             {
                                                 List<object> list = new List<object>();
-                                                Type itemType = fieldConfig.FieldType.GetElementType().GetUnderlyingType();
+                                                Type itemType = fieldConfig.FieldType.GetItemType().GetUnderlyingType();
 
                                                 foreach (var ele in fXElements.SelectMany(e => e.Elements()))
                                                 {
@@ -468,9 +468,16 @@ namespace ChoETL
                                             {
                                                 XmlAttributeOverrides overrides = GetXmlOverrides(fieldConfig);
 
-                                                XElement fXElement = fXElements.FirstOrDefault();
+                                                XElement fXElement = fXElements.SelectMany(e => e.Elements()).FirstOrDefault();
                                                 if (fXElement != null)
-                                                    fieldValue = fXElement.ToObjectFromXml(fieldConfig.FieldType, null);
+                                                {
+                                                    if (fieldConfig.ItemConverter != null)
+                                                        fieldValue = fieldConfig.ItemConverter(fXElement);
+                                                    else
+                                                    {
+                                                        fieldValue = fXElement.ToObjectFromXml(fieldConfig.FieldType, null);
+                                                    }
+                                                }
                                             }
                                         }
                                     }

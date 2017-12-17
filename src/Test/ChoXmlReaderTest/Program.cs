@@ -155,7 +155,7 @@ namespace ChoXmlReaderTest
         {
             using (var parser = new ChoXmlReader("sample11.xml").WithXPath("/members/father")
                 .WithField("id")
-                .WithField("sons", fieldType:typeof(FamilyMember[]), itemConverter: (o) => { Console.WriteLine(o.ToString()); return o; } )
+                .WithField("sons" )
             )
             {
                 foreach (dynamic rec in parser)
