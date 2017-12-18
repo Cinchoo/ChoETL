@@ -17,8 +17,55 @@ namespace ChoXmlWriterTest
     {
         static void Main(string[] args)
         {
-            SaveDict();
+            sample7Test();
         }
+
+        static void sample7Test()
+        {
+
+            //using (var jr = new ChoJSONReader("sample7.json").WithJSONPath("$.fathers")
+            //    .WithField("id")
+            //    .WithField("married", fieldType: typeof(bool))
+            //    .WithField("name")
+            //    .WithField("sons")
+            //    //.WithField("daughters", fieldType: typeof(Dictionary<string, object>[]))
+            //    )
+            //{
+            //    using (var w = new ChoXmlWriter("sample7.xml"))
+            //    {
+            //        w.Write(jr);
+            //    }
+            //    /*
+            //    foreach (var item in jr)
+            //    {
+            //        var x = item.id;
+            //        Console.WriteLine(x.GetType());
+
+            //        Console.WriteLine(item.id);
+            //        Console.WriteLine(item.married);
+            //        Console.WriteLine(item.name);
+            //        foreach (dynamic son in item.sons)
+            //        {
+            //            var x1 = son.address;
+            //            //Console.WriteLine(ChoUtility.ToStringEx(son.address.street));
+            //        }
+            //        foreach (var daughter in item.daughters)
+            //            Console.WriteLine(ChoUtility.ToStringEx(daughter));
+            //    }
+            //    */
+            //}
+
+            using (var xr = new ChoXmlReader("sample7.xml")
+                .WithField("id")
+                .WithField("married")
+                .WithField("sons")
+                )
+            {
+                using (var xr1 = new ChoJSONWriter("sample7out.json"))
+                    xr1.Write(xr);
+            }
+        }
+
         public static void SaveStringList()
         {
             //List<string> list = new List<string>();

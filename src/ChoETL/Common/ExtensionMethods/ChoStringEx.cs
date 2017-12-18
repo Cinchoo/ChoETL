@@ -573,7 +573,7 @@ namespace ChoETL
 
             if (type.IsDynamicType())
             {
-                return new ChoDynamicObject(ToDynamic(element));
+                return ToDynamic(element);
             }
             else
             {
@@ -605,10 +605,15 @@ namespace ChoETL
             return ToObjectFromXml(XElement.Parse(xml), type, overrides);
         }
 
-        public static dynamic ToDynamic(XElement element, bool topLevel = true)
+        public static object ToDynamic(XElement element, bool topLevel = true)
         {
+            if (element.Name.LocalName == "dynamic")
+            {
+                return (ChoUtility.XmlDeserialize<ChoDynamicObject>(element.GetOuterXml()));
+            }
             ChoDynamicObject obj = new ChoDynamicObject();
 
+            bool hasAtts = element.Attributes().Count() > 0;
             foreach (var attr in element.Attributes())
             {
                 if (obj.ContainsKey(attr.Name.LocalName))
@@ -619,17 +624,61 @@ namespace ChoETL
 
             if (element.Elements().Count() > 0)
             {
-                foreach (var ge in element.Elements().GroupBy(e => e.Name.LocalName).Select(g => new KeyValuePair<string, XElement[]>(g.Key, g.ToArray())))
+                var grp = element.Elements().GroupBy(e => e.Name.LocalName).Select(g => new KeyValuePair<string, XElement[]>(g.Key, g.ToArray()));
+                if (grp.Count() == 1)
                 {
-                    if (ge.Value.Length == 1)
+                    if (hasAtts)
                     {
-                        var ele = ge.Value.FirstOrDefault();
-                        obj.Add(ele.Name.LocalName, ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele) : ele.Value);
+                        var ele1 = grp.First().Value.FirstOrDefault();
+                        obj.Add(ele1.Name.LocalName, grp.First().Value.Select(ele =>
+                        {
+                            if (ele.Name.LocalName == "dynamic")
+                            {
+                                return (ChoUtility.XmlDeserialize<ChoDynamicObject>(ele.GetOuterXml()));
+                            }
+                            else
+                                return ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele) : ele.Value;
+                        }).ToArray());
+
                     }
                     else
                     {
-                        var fele = ge.Value.FirstOrDefault();
-                        obj.Add(element.Name.LocalName, ge.Value.Select(ele => ele.Elements().Count() >0 || ele.Attributes().Count() > 0 ? ToDynamic(ele) : ele.Value).ToArray());
+                        return grp.First().Value.Select(ele =>
+                        {
+                            if (ele.Name.LocalName == "dynamic")
+                            {
+                                return (ChoUtility.XmlDeserialize<ChoDynamicObject>(ele.GetOuterXml()));
+                            }
+                            else
+                                return ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele) : ele.Value;
+                        }).ToArray();
+
+                    }
+                }
+                else
+                {
+                    foreach (var ge in grp)
+                    {
+                        if (ge.Value.Length == 1)
+                        {
+                            var ele = ge.Value.FirstOrDefault();
+                            if (ele.Name.LocalName == "dynamic")
+                                obj.Add(ele.Name.LocalName, (ChoUtility.XmlDeserialize<ChoDynamicObject>(ele.GetOuterXml())));
+                            else
+                                obj.Add(ele.Name.LocalName, ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele) : ele.Value);
+                        }
+                        else
+                        {
+                            obj.Add(element.Name.LocalName, ge.Value.Select(ele =>
+                            {
+                                if (ele.Name.LocalName == "dynamic")
+                                {
+                                    return (ChoUtility.XmlDeserialize<ChoDynamicObject>(ele.GetOuterXml()));
+                                }
+                                else
+                                    return ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele) : ele.Value;
+                            }).ToArray());
+                        }
                     }
                 }
             }

@@ -794,10 +794,32 @@ namespace ChoETL
         }
         #region XmlSerialize Overloads
 
-        public static void XmlSerialize(Stream sr, object target, XmlWriterSettings xws = null)
+        public static void XmlSerialize(Stream sr, object target, XmlWriterSettings xws = null, byte[] separator = null)
         {
             ChoGuard.ArgumentNotNull(sr, "Stream");
             ChoGuard.ArgumentNotNull(target, "Target");
+
+            if (target.GetType().IsArray)
+            {
+                if (((object[])target).Length > 0)
+                {
+                    bool first = true;
+                    foreach (object item in (object[])target)
+                    {
+                        if (separator != null)
+                        {
+                            if (!first)
+                                sr.Write(separator, 0, separator.Length);
+                            else
+                                first = false;
+                        }
+
+                        XmlSerialize(sr, item, xws, separator);
+                    }
+                }
+
+                return;
+            }
 
             using (XmlWriter xtw = XmlTextWriter.Create(sr, xws ?? _xws))
             {
@@ -808,15 +830,31 @@ namespace ChoETL
             }
         }
 
-        public static string XmlSerialize(object target, XmlWriterSettings xws = null)
+        public static string XmlSerialize(object target, XmlWriterSettings xws = null, string separator = null)
         {
             ChoGuard.ArgumentNotNull(target, "Target");
 
             StringBuilder xmlString = new StringBuilder();
+
+            if (target.GetType().IsArray)
+            {
+                if (((object[])target).Length > 0)
+                    return ((object[])target).Select(o => XmlSerialize(o, xws)).Aggregate((current, next) => "{0}{1}{2}".FormatString(current, separator, next));
+                else
+                    return String.Empty;
+            }
+
             using (XmlWriter xtw = XmlTextWriter.Create(xmlString, xws ?? _xws))
             {
-                ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(target.GetType());
-                serializer.Serialize(xtw, target);
+                if (target is ChoDynamicObject)
+                {
+                    ((ChoDynamicObject)target).WriteXml(xtw);
+                }
+                else
+                {
+                    ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(target.GetType());
+                    serializer.Serialize(xtw, target);
+                }
 
                 xtw.Flush();
 
@@ -824,14 +862,14 @@ namespace ChoETL
             }
         }
 
-        public static void XmlSerialize(string path, object target, XmlWriterSettings xws = null)
+        public static void XmlSerialize(string path, object target, XmlWriterSettings xws = null, string separator = null)
         {
             ChoGuard.ArgumentNotNullOrEmpty(path, "Path");
             ChoGuard.ArgumentNotNull(target, "Target");
 
             Directory.CreateDirectory(Path.GetDirectoryName(ChoPath.GetFullPath(path)));
 
-            File.WriteAllText(path, XmlSerialize(target, xws));
+            File.WriteAllText(path, XmlSerialize(target, xws, separator));
         }
 
         #endregion XmlSerialize Overloads
@@ -850,8 +888,17 @@ namespace ChoETL
 
             using (XmlReader xtw = XmlTextReader.Create(sr, xrs ?? new XmlReaderSettings()))
             {
-                ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(type);
-                return serializer.Deserialize(xtw);
+                if (type == typeof(ChoDynamicObject))
+                {
+                    ChoDynamicObject obj = new ChoDynamicObject();
+                    obj.ReadXml(xtw);
+                    return obj;
+                }
+                else
+                {
+                    ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(type);
+                    return serializer.Deserialize(xtw);
+                }
             }
         }
 
@@ -871,8 +918,17 @@ namespace ChoETL
             {
                 using (XmlReader xtw = XmlTextReader.Create(sr, xrs ?? new XmlReaderSettings()))
                 {
-                    ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(type, overrides);
-                    return serializer.Deserialize(xtw);
+                    if (type == typeof(ChoDynamicObject))
+                    {
+                        ChoDynamicObject obj = new ChoDynamicObject();
+                        obj.ReadXml(xtw);
+                        return obj;
+                    }
+                    else
+                    {
+                        ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(type, overrides);
+                        return serializer.Deserialize(xtw);
+                    }
                 }
             }
         }
@@ -891,8 +947,17 @@ namespace ChoETL
             {
                 using (XmlReader xtw = XmlTextReader.Create(sr, xrs ?? new XmlReaderSettings()))
                 {
-                    ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(type);
-                    return serializer.Deserialize(xtw);
+                    if (type == typeof(ChoDynamicObject))
+                    {
+                        ChoDynamicObject obj = new ChoDynamicObject();
+                        obj.ReadXml(xtw);
+                        return obj;
+                    }
+                    else
+                    {
+                        ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(type);
+                        return serializer.Deserialize(xtw);
+                    }
                 }
             }
         }

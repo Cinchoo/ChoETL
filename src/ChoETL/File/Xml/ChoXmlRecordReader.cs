@@ -298,6 +298,7 @@ namespace ChoETL
         PropertyInfo pi = null;
         XPathNavigator xpn = null;
         private readonly Dictionary<string, List<string>> xDict = new Dictionary<string, List<string>>();
+
         private bool FillRecord(object rec, Tuple<long, XElement> pair)
         {
             long lineNo;
@@ -510,8 +511,8 @@ namespace ChoETL
 
                 if (Configuration.IsDynamicObject)
                 {
-                    if (kvp.Value.FieldType == null)
-                        kvp.Value.FieldType = fieldValue is ICollection ? typeof(string[]) : fieldValue.GetType().IsSimple() ? DiscoverFieldType(fieldValue as string) : null;
+                    if (kvp.Value.FieldType == null && lineNo == 1)
+                        kvp.Value.FieldType = fieldValue is ICollection ? fieldValue.GetType() : fieldValue.GetType().IsSimple() ? DiscoverFieldType(fieldValue as string) : null;
                 }
                 else
                 {

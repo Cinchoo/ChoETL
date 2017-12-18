@@ -3,18 +3,24 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Dynamic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Schema;
+using System.Xml.Serialization;
 
 namespace ChoETL
 {
     [Serializable]
-    public class ChoDynamicObject : DynamicObject, IDictionary<string, object>
+    public class ChoDynamicObject : DynamicObject, IDictionary<string, object> //, IXmlSerializable
     {
+        private readonly static Dictionary<string, Type> _intrinsicTypes = new Dictionary<string, Type>();
+
         #region Instance Members
 
         private readonly object _padLock = new object();
@@ -87,6 +93,26 @@ namespace ChoETL
         #endregion Instance Members
 
         #region Constructors
+
+        static ChoDynamicObject()
+        {
+            _intrinsicTypes.Add("bool", typeof(System.Boolean));
+            _intrinsicTypes.Add("byte", typeof(System.Byte));
+            _intrinsicTypes.Add("sbyte", typeof(System.SByte));
+            _intrinsicTypes.Add("char", typeof(System.Char));
+            _intrinsicTypes.Add("decimal", typeof(System.Decimal));
+            _intrinsicTypes.Add("double", typeof(System.Double));
+            _intrinsicTypes.Add("float", typeof(System.Single));
+            _intrinsicTypes.Add("int", typeof(System.Int32));
+            _intrinsicTypes.Add("uint", typeof(System.UInt32));
+            _intrinsicTypes.Add("long", typeof(System.Int64));
+            _intrinsicTypes.Add("ulong", typeof(System.UInt64));
+            _intrinsicTypes.Add("object", typeof(System.Object));
+            _intrinsicTypes.Add("short", typeof(System.Int16));
+            _intrinsicTypes.Add("ushort", typeof(System.UInt16));
+            _intrinsicTypes.Add("string", typeof(System.String));
+            _intrinsicTypes.Add("dynamic", typeof(ChoDynamicObject));
+        }
 
         public ChoDynamicObject() : this(false)
         {
@@ -683,6 +709,103 @@ namespace ChoETL
         public string DumpAsJson()
         {
             return ChoUtility.DumpAsJson(this);
+        }
+
+        public XmlSchema GetSchema()
+        {
+            return null;
+        }
+
+        private Type GetType(string typeName)
+        {
+            if (_intrinsicTypes.ContainsKey(typeName))
+                return _intrinsicTypes[typeName];
+            else
+                return Type.GetType(typeName);
+        }
+
+        public void ReadXml(XmlReader reader)
+        {
+            XmlSerializer keySerializer = new XmlSerializer(typeof(string));
+            XmlSerializer valueSerializer = new XmlSerializer(typeof(object));
+
+            bool wasEmpty = reader.IsEmptyElement;
+            reader.Read();
+
+            if (wasEmpty)
+                return;
+
+            reader.ReadStartElement("dynamic");
+            while (reader.NodeType != System.Xml.XmlNodeType.EndElement)
+            {
+                reader.ReadStartElement("kvp");
+
+                reader.ReadStartElement("key");
+                string key = (string)keySerializer.Deserialize(reader);
+                reader.ReadEndElement();
+
+                reader.ReadStartElement("value");
+                reader.MoveToContent();
+                Type type = GetType(reader.LocalName);
+
+                object value = null;
+                if (type == typeof(ChoDynamicObject))
+                {
+                    ChoDynamicObject dobj = new ChoDynamicObject();
+                    dobj.ReadXml(XmlReader.Create(new StringReader(reader.ReadOuterXml())));
+                    value = dobj;
+                }
+                else
+                {
+                    ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(type);
+                    value = serializer.Deserialize(reader);
+                }
+                //object value = ChoUtility.XmlDeserialize<object>(reader); // (TValue)valueSerializer.Deserialize(reader);
+                reader.ReadEndElement();
+
+                this.Add(key, value);
+
+                reader.ReadEndElement();
+                reader.MoveToContent();
+            }
+            reader.ReadEndElement();
+            //reader.ReadEndElement();
+        }
+
+        public void WriteXml(XmlWriter writer)
+        {
+            XmlSerializer keySerializer = new XmlSerializer(typeof(string));
+
+            writer.WriteStartElement("dynamic");
+
+            foreach (string key in this.Keys)
+            {
+                writer.WriteStartElement("kvp");
+
+                writer.WriteStartElement("key");
+                keySerializer.Serialize(writer, key);
+                writer.WriteEndElement();
+
+                writer.WriteStartElement("value");
+                object value = this[key];
+                if (value != null)
+                {
+                    if (value is ChoDynamicObject)
+                    {
+                        ((ChoDynamicObject)value).WriteXml(writer);
+                    }
+                    else
+                    {
+                        XmlSerializer valueSerializer = new XmlSerializer(value.GetType());
+                        valueSerializer.Serialize(writer, value);
+                    }
+                }
+
+                writer.WriteEndElement();
+
+                writer.WriteEndElement();
+            }
+            writer.WriteEndElement();
         }
     }
 

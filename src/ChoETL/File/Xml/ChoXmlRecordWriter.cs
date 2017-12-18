@@ -500,15 +500,25 @@ namespace ChoETL
                     }
                     else
                     {
-                        fieldText = ChoUtility.XmlSerialize(fieldValue);
-                        fieldText = _beginTagRegex.Replace(fieldText, delegate (Match thisMatch)
+                        fieldText = ChoUtility.XmlSerialize(fieldValue, null, Configuration.EOLDelimiter);
+                        if (!fieldValue.GetType().IsArray)
                         {
-                            return "<{0}>".FormatString(fieldConfig.FieldName);
-                        });
-                        fieldText = _endTagRegex.Replace(fieldText, delegate (Match thisMatch)
+                            fieldText = _beginTagRegex.Replace(fieldText, delegate (Match thisMatch)
+                            {
+                                return "<{0}>".FormatString(fieldConfig.FieldName);
+                            });
+                            fieldText = _endTagRegex.Replace(fieldText, delegate (Match thisMatch)
+                            {
+                                return "</{0}>".FormatString(fieldConfig.FieldName);
+                            });
+                        }
+                        else
                         {
-                            return "</{0}>".FormatString(fieldConfig.FieldName);
-                        });
+                            if (fieldText.IsNullOrWhiteSpace())
+                                fieldText = "<{0}>{2}</{0}>".FormatString(fieldConfig.FieldName, fieldText.Indent(1), Configuration.EOLDelimiter);
+                            else
+                                fieldText = "<{0}>{2}{1}{2}</{0}>".FormatString(fieldConfig.FieldName, fieldText.Indent(1), Configuration.EOLDelimiter);
+                        }
                         if (!isElementClosed)
                         {
                             msg.AppendFormat(">{0}", Configuration.EOLDelimiter);
