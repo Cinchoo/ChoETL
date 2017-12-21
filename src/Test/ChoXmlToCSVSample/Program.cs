@@ -36,15 +36,20 @@ namespace ChoXmlToCSVSample
             using (var csvWriter = new ChoCSVWriter("sample2.csv").WithFirstLineHeader())
             {
                 using (var xmlReader = new ChoXmlReader("sample2.xml")
-                    .WithField("originalimpotno", xPath: "x:original-impot-no", fieldType: typeof(string))
-                    .WithField("Smallprice", xPath: "x:product-lineitems/x:product-lineitem/x:Small-price", fieldType: typeof(int[]))
+                    .WithField("impotno", xPath: "x:original-impot-no")
+                    .WithField("productlineitem", xPath: "x:product-lineitems/x:product-lineitem")
                     )
                 {
                     //csvWriter.Write(xmlReader.SelectMany(rec => ((IEnumerable<dynamic>)rec.Smallprice).Select(rec1 => new { rec.originalimpotno, rec1.Small_price })));
-                    csvWriter.Write(xmlReader.SelectMany(rec => ((IEnumerable<int>)rec.Smallprice).Select(rec1 => new { rec.originalimpotno, rec1 })));
+                    csvWriter.Write(xmlReader.SelectMany(rec => ((IEnumerable<dynamic>)rec.productlineitem).Select(rec1 => new
+                    {
+                        ImportNo = rec.impotno,
+                        Price = rec1.price,
+                        SmallPrice = rec1.Small_price,
+                        BigPrice = rec1.Big_price
+                    })));
                 }
             }
-
         }
 
         private static void Test2()

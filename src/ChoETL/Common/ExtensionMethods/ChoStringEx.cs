@@ -605,7 +605,7 @@ namespace ChoETL
             return ToObjectFromXml(XElement.Parse(xml), type, overrides);
         }
 
-        public static object ToDynamic(XElement element)
+        public static object ToDynamic(XElement element, bool topLevel = true)
         {
             if (element.Name.LocalName == "dynamic")
             {
@@ -637,7 +637,7 @@ namespace ChoETL
                                 return (ChoUtility.XmlDeserialize<ChoDynamicObject>(ele.GetOuterXml()));
                             }
                             else
-                                return ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele) : ele.Value;
+                                return ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele, false) : ele.Value;
                         }).ToArray());
 
                     }
@@ -650,7 +650,7 @@ namespace ChoETL
                                 return (ChoUtility.XmlDeserialize<ChoDynamicObject>(ele.GetOuterXml()));
                             }
                             else
-                                return ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele) : ele.Value;
+                                return ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele, false) : ele.Value;
                         }).ToArray();
 
                     }
@@ -665,7 +665,7 @@ namespace ChoETL
                             if (ele.Name.LocalName == "dynamic")
                                 obj.Add(ele.Name.LocalName.ToValidVariableName(), (ChoUtility.XmlDeserialize<ChoDynamicObject>(ele.GetOuterXml())));
                             else
-                                obj.Add(ele.Name.LocalName.ToValidVariableName(), ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele) : ele.Value);
+                                obj.Add(ele.Name.LocalName.ToValidVariableName(), ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele, false) : ele.Value);
                         }
                         else
                         {
@@ -676,7 +676,7 @@ namespace ChoETL
                                     return (ChoUtility.XmlDeserialize<ChoDynamicObject>(ele.GetOuterXml()));
                                 }
                                 else
-                                    return ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele) : ele.Value;
+                                    return ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele, false) : ele.Value;
                             }).ToArray());
                         }
                     }
@@ -684,7 +684,10 @@ namespace ChoETL
             }
             else
             {
-                obj.AddOrUpdate(element.Name.LocalName.ToValidVariableName(), element.Value);
+                if (topLevel)
+                    return element.Value;
+                else
+                    obj.AddOrUpdate(element.Name.LocalName.ToValidVariableName(), element.Value);
             }
 
 
