@@ -190,9 +190,26 @@ namespace ChoCSVReaderTest
             }
         }
 
+        static void NestedQuotes()
+        {
+            //using (var parser = new ChoCSVReader("NestedQuotes.csv")
+            //    .WithFields("name", "desc")
+            //    )
+            //{
+            //    foreach (dynamic x in parser)
+            //        Console.WriteLine(x.name + "-" + x.desc);
+            //}
+
+            using (var parser = new ChoCSVReader("NestedQuotes.csv"))
+            {
+                foreach (dynamic x in parser)
+                    Console.WriteLine(x[0] + "-" + x[1]);
+            }
+        }
+
         static void Main(string[] args)
         {
-            FindDuplicates();
+            NestedQuotes();
             return;
             ConvertToNestedObjects();
             return;

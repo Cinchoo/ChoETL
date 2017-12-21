@@ -427,13 +427,13 @@ namespace ChoETL
                 if (isFirst)
                 {
                     msg.AppendFormat("{2}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? " {0}".FormatString(fieldText) :
-                        Configuration.Formatting == Formatting.Indented ? JsonConvert.SerializeObject(fieldValue, Configuration.Formatting).Indent(1, " ") : JsonConvert.SerializeObject(fieldValue, Configuration.Formatting), 
+                        Configuration.Formatting == Formatting.Indented ? SerializeObject(fieldValue).Indent(1, " ") : JsonConvert.SerializeObject(fieldValue), 
                         Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
                 }
                 else
                 {
                     msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? " {0}".FormatString(fieldText) :
-                        Configuration.Formatting == Formatting.Indented ? JsonConvert.SerializeObject(fieldValue, Configuration.Formatting).Indent(1, " ") : JsonConvert.SerializeObject(fieldValue, Configuration.Formatting),
+                        Configuration.Formatting == Formatting.Indented ? SerializeObject(fieldValue).Indent(1, " ") : JsonConvert.SerializeObject(fieldValue),
                         Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
                 }
                 isFirst = false;
@@ -441,6 +441,16 @@ namespace ChoETL
             msg.AppendFormat("{0}}}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
             recText = msg.ToString();
             return true;
+        }
+
+        private string SerializeObject(object target)
+        {
+            if (Configuration.UseJSONSerialization)
+                return JsonConvert.SerializeObject(target, Configuration.Formatting);
+            else
+            {
+                return JsonConvert.SerializeObject(target, Configuration.Formatting);
+            }
         }
 
         private ChoFieldValueJustification GetFieldValueJustification(ChoFieldValueJustification? fieldValueJustification, Type fieldType)

@@ -59,6 +59,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="sample2.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="sample1.xml">
       <SubType>Designer</SubType>
     </Content>

@@ -1,4 +1,5 @@
 ﻿using ChoETL;
+using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -17,7 +18,110 @@ namespace ChoJSONWriterTest
 
         static void Main(string[] args)
         {
-            Sample7();
+            NestedJSONFile();
+        }
+
+        static void NestedJSONFile()
+        {
+            var dataMapperModels = new List<DataMapper>();
+            var model = new DataMapper
+            {
+                Name = "performanceLevels",
+                SubDataMappers = new List<DataMapper>()
+            {
+                new DataMapper()
+                {
+                    Name = "performanceLevel_1",
+                    SubDataMappers = new List<DataMapper>()
+                    {
+                        new DataMapper()
+                        {
+                            Name = "title",
+                            DataMapperProperty = new DataMapperProperty()
+                                    {
+                                        Source = "column",
+                                        SourceColumn = "title-column",
+                                        DataType = "string",
+                                        Default = "N/A",
+                                        SourceTable = null,
+                                        Value = null
+                                    }
+                        },
+                        new DataMapper()
+                        {
+                            Name = "version1",
+                            DataMapperProperty = new DataMapperProperty()
+                                    {
+                                        Source = "column",
+                                        SourceColumn = "version-column",
+                                        DataType = "int",
+                                        Default = "1",
+                                        SourceTable = null,
+                                        Value = null
+                                    }
+                        },
+                        new DataMapper()
+                        {
+                            Name = "threeLevels",
+                            SubDataMappers = new List<DataMapper>()
+                            {
+                                new DataMapper()
+                                {
+                                    Name = "version",
+                                    DataMapperProperty = new DataMapperProperty()
+                                            {
+                                                Source = "column",
+                                                SourceColumn = "version-column",
+                                                DataType = "int",
+                                                Default = "1",
+                                                SourceTable = null,
+                                                Value = null
+                                            }
+                                }
+                            }
+                        }
+                    }
+                },
+                new DataMapper()
+                {
+                    Name = "performanceLevel_2",
+                    SubDataMappers = new List<DataMapper>()
+                    {
+                        new DataMapper()
+                        {
+                            Name = "title",
+                            DataMapperProperty = new DataMapperProperty()
+                                    {
+                                        Source = "column",
+                                        SourceColumn = "title-column",
+                                        DataType = "string",
+                                        Default = "N/A",
+                                        SourceTable = null,
+                                        Value = null
+                                    }
+                        },
+                        new DataMapper()
+                        {
+                            Name = "version",
+                            DataMapperProperty = new DataMapperProperty()
+                                    {
+                                        Source = "column",
+                                        SourceColumn = "version-column",
+                                        DataType = "int",
+                                        Default = "1",
+                                        SourceTable = null,
+                                        Value = null
+                                    }
+                        }
+                    }
+                }
+            }
+            };
+
+            using (var w = new ChoJSONWriter("nested.json")
+            )
+                w.Write(model);
+
         }
 
         static void Sample7()
@@ -205,9 +309,59 @@ namespace ChoJSONWriterTest
 
         }
     }
+    public class DataMapper
+    {
+        public DataMapper()
+        {
+            SubDataMappers = new List<DataMapper>();
+        }
+
+        public string Name { get; set; }
+
+        public DataMapperProperty DataMapperProperty { get; set; }
+
+        public List<DataMapper> SubDataMappers { get; set; }
+    }
+
+    public class DataMapperProperty
+    {
+        [JsonProperty(PropertyName = "data-type", NullValueHandling = NullValueHandling.Ignore)]
+        public string DataType { get; set; }
+
+        [JsonProperty(PropertyName = "source", NullValueHandling = NullValueHandling.Ignore)]
+        public string Source { get; set; }
+
+        [JsonProperty(PropertyName = "source-column", NullValueHandling = NullValueHandling.Ignore)]
+        public string SourceColumn { get; set; }
+
+        [JsonProperty(PropertyName = "source-table", NullValueHandling = NullValueHandling.Ignore)]
+        public string SourceTable { get; set; }
+
+        [JsonProperty(PropertyName = "default", NullValueHandling = NullValueHandling.Ignore)]
+        public string Default { get; set; }
+
+        [JsonProperty(PropertyName = "value", NullValueHandling = NullValueHandling.Ignore)]
+        public string Value { get; set; }
+
+        //public static explicit operator DataMapperProperty(JToken v)
+        //{
+        //    return new DataMapperProperty()
+        //    {
+        //        DataType = v.Value<string>("data-type"),
+        //        Source = v.Value<string>("source"),
+        //        SourceColumn = v.Value<string>("source-column"),
+        //        SourceTable = v.Value<string>("source-table"),
+        //        Default = v.Value<string>("default"),
+        //        Value = v.Value<string>("value")
+        //    };
+        //}
+    }
+
     public partial class EmployeeRecSimple1
     {
         public int Id { get; set; }
         public string Name { get; set; }
+
+        public List<EmployeeRecSimple1> SubEmployeeRecSimple1;
     }
 }

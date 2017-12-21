@@ -509,6 +509,44 @@ namespace ChoETL
             }
         }
 
+        public static ChoDynamicObject New(Func<IEnumerable<KeyValuePair<string, object>>> func)
+        {
+            Dictionary<string, object> dict = new Dictionary<string, object>();
+            if (func != null)
+            {
+                foreach (var kvp in func())
+                    dict.Add(kvp.Key, kvp.Value);
+            }
+            return new ChoDynamicObject(dict);
+        }
+
+        public static ChoDynamicObject New(string key, object value)
+        {
+            Dictionary<string, object> dict = new Dictionary<string, object>();
+            dict.Add(key, value);
+            return new ChoDynamicObject(dict);
+
+        }
+
+        public static ChoDynamicObject New(string[] keys, params object[] values)
+        {
+            Dictionary<string, object> dict = new Dictionary<string, object>();
+            if (keys != null)
+            {
+                int counter = 0;
+                foreach (var key in keys)
+                {
+                    if (counter < values.Length)
+                        dict.Add(key, values[counter]);
+                    else
+                        dict.Add(key, null);
+                    counter++;
+                }
+            }
+            return new ChoDynamicObject(dict);
+        }
+
+
         public IDictionary<string, object> GetDefaults()
         {
             IDictionary<string, object> dict = new Dictionary<string, object>();

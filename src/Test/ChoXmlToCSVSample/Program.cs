@@ -28,7 +28,23 @@ namespace ChoXmlToCSVSample
 ";
         static void Main(string[] args)
         {
-            Test2();
+            Sample2();
+        }
+
+        private static void Sample2()
+        {
+            using (var csvWriter = new ChoCSVWriter("sample2.csv").WithFirstLineHeader())
+            {
+                using (var xmlReader = new ChoXmlReader("sample2.xml")
+                    .WithField("originalimpotno", xPath: "x:original-impot-no", fieldType: typeof(string))
+                    .WithField("Smallprice", xPath: "x:product-lineitems/x:product-lineitem/x:Small-price", fieldType: typeof(int[]))
+                    )
+                {
+                    //csvWriter.Write(xmlReader.SelectMany(rec => ((IEnumerable<dynamic>)rec.Smallprice).Select(rec1 => new { rec.originalimpotno, rec1.Small_price })));
+                    csvWriter.Write(xmlReader.SelectMany(rec => ((IEnumerable<int>)rec.Smallprice).Select(rec1 => new { rec.originalimpotno, rec1 })));
+                }
+            }
+
         }
 
         private static void Test2()

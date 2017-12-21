@@ -195,7 +195,7 @@ namespace ChoETL
                     }
                     else
                     {
-                        rec = JsonConvert.DeserializeObject(pair.Item2.ToString(), RecordType);
+                        rec = Configuration.JsonSerializerSettings == null ? JsonConvert.DeserializeObject(pair.Item2.ToString(), RecordType) : JsonConvert.DeserializeObject(pair.Item2.ToString(), RecordType, Configuration.JsonSerializerSettings);
                         if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.Off) != ChoObjectValidationMode.Off)
                             rec.DoObjectLevelValidation(Configuration, Configuration.JSONRecordFieldConfigurations);
 
@@ -575,7 +575,7 @@ namespace ChoETL
             }
             else
             {
-                return jToken.ToObject(type);
+                return jToken.ToObject(type, _se.Value);
             }
         }
 

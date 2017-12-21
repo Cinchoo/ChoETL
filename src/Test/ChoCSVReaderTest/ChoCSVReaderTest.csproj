@@ -84,6 +84,7 @@
   <ItemGroup>
     <None Include="Dict1.csv" />
     <None Include="Nested.csv" />
+    <None Include="NestedQuotes.csv" />
     <None Include="ZipCodes.csv" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

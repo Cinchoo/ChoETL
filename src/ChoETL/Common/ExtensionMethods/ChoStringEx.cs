@@ -605,7 +605,7 @@ namespace ChoETL
             return ToObjectFromXml(XElement.Parse(xml), type, overrides);
         }
 
-        public static object ToDynamic(XElement element, bool topLevel = true)
+        public static object ToDynamic(XElement element)
         {
             if (element.Name.LocalName == "dynamic")
             {
@@ -616,10 +616,10 @@ namespace ChoETL
             bool hasAtts = element.Attributes().Count() > 0;
             foreach (var attr in element.Attributes())
             {
-                if (obj.ContainsKey(attr.Name.LocalName))
+                if (obj.ContainsKey(attr.Name.LocalName.ToValidVariableName()))
                     continue;
 
-                obj.Add(attr.Name.LocalName, attr.Value);
+                obj.Add(attr.Name.LocalName.ToValidVariableName(), attr.Value);
             }
 
             if (element.Elements().Count() > 0)
@@ -630,7 +630,7 @@ namespace ChoETL
                     if (hasAtts)
                     {
                         var ele1 = grp.First().Value.FirstOrDefault();
-                        obj.Add(ele1.Name.LocalName, grp.First().Value.Select(ele =>
+                        obj.Add(ele1.Name.LocalName.ToValidVariableName(), grp.First().Value.Select(ele =>
                         {
                             if (ele.Name.LocalName == "dynamic")
                             {
@@ -663,13 +663,13 @@ namespace ChoETL
                         {
                             var ele = ge.Value.FirstOrDefault();
                             if (ele.Name.LocalName == "dynamic")
-                                obj.Add(ele.Name.LocalName, (ChoUtility.XmlDeserialize<ChoDynamicObject>(ele.GetOuterXml())));
+                                obj.Add(ele.Name.LocalName.ToValidVariableName(), (ChoUtility.XmlDeserialize<ChoDynamicObject>(ele.GetOuterXml())));
                             else
-                                obj.Add(ele.Name.LocalName, ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele) : ele.Value);
+                                obj.Add(ele.Name.LocalName.ToValidVariableName(), ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele) : ele.Value);
                         }
                         else
                         {
-                            obj.Add(element.Name.LocalName, ge.Value.Select(ele =>
+                            obj.Add(element.Name.LocalName.ToValidVariableName(), ge.Value.Select(ele =>
                             {
                                 if (ele.Name.LocalName == "dynamic")
                                 {
@@ -684,7 +684,7 @@ namespace ChoETL
             }
             else
             {
-                obj.AddOrUpdate(element.Name.LocalName, element.Value);
+                obj.AddOrUpdate(element.Name.LocalName.ToValidVariableName(), element.Value);
             }
 
 
@@ -1594,6 +1594,7 @@ namespace ChoETL
         public static string ToValidVariableName(this string text)
         {
             text = _csharpProvider.CreateValidIdentifier(text);
+            text = text.Replace("-", "_");
             StringBuilder identifier = new StringBuilder(text);
             if (Char.IsDigit(identifier[0]))
                 identifier = new StringBuilder("_" + identifier.ToString());
