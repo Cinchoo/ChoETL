@@ -41,8 +41,8 @@ Here are the items will be targetted on phase 1.
       + [Key-Value Pair (KVP) Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickKVPLoad)
       + [Key-Value Pair (KVP) Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickKVPWrite)
   6. Manifold Reader / Writer
-      + Manifold Reader
-      + Manifold Writer
+      + [Manifold Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickManifoldLoad)
+      + [Manifold Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickManifoldWrite)
 
 # Phase 2:
 ETL Pipelines and ETL processes are coming...
