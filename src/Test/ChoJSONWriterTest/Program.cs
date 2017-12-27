@@ -348,7 +348,17 @@ namespace ChoJSONWriterTest
             }
         }
 
-        public object Key { get => Name; set => Name = value.ToNString(); }
+        public object Key
+        {
+            get
+            {
+                return Name;
+            }
+            set
+            {
+                Name = value.ToNString();
+            }
+        }
     }
 
     public class DataMapperProperty
