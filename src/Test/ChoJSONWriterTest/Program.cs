@@ -118,9 +118,10 @@ namespace ChoJSONWriterTest
             }
             };
 
+            dataMapperModels.Add(model);
             using (var w = new ChoJSONWriter("nested.json")
             )
-                w.Write(model);
+                w.Write(dataMapperModels);
 
         }
 
@@ -309,7 +310,7 @@ namespace ChoJSONWriterTest
 
         }
     }
-    public class DataMapper
+    public class DataMapper : IChoKeyValueType
     {
         public DataMapper()
         {
@@ -321,6 +322,33 @@ namespace ChoJSONWriterTest
         public DataMapperProperty DataMapperProperty { get; set; }
 
         public List<DataMapper> SubDataMappers { get; set; }
+
+        public object Value
+        {
+            get
+            {
+                if (SubDataMappers.IsNullOrEmpty())
+                    return (object)DataMapperProperty;
+                else
+                {
+                    ChoDynamicObject obj = new ChoDynamicObject();
+                    foreach (var item in SubDataMappers)
+                        obj.AddOrUpdate(item.Name, item.Value);
+                    return obj;
+                }
+            }
+            set
+            {
+                if (value is DataMapperProperty)
+                    DataMapperProperty = value as DataMapperProperty;
+                else if (value is IEnumerable)
+                {
+
+                }
+            }
+        }
+
+        public object Key { get => Name; set => Name = value.ToNString(); }
     }
 
     public class DataMapperProperty

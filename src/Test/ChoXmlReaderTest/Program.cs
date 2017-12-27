@@ -16,6 +16,23 @@ using System.Xml.XPath;
 
 namespace ChoXmlReaderTest
 {
+    public class Applicant
+    {
+        [XmlAttribute(AttributeName = "social_security_number")]
+        public string SSN { get; set; }
+    }
+
+    public class JobApplication
+    {
+        [ChoXmlAttributeRecordField(FieldName = "job_type")]
+        public string JobType { get; set; }
+
+        [ChoXmlNodeRecordField(XPath = "/JobApplicationStates/JobApplicationState/Applicants/Applicant")]
+        public dynamic[] JobApplicant { get; set; }
+        //[ChoXmlNodeRecordField( XPath = "/JobApplicationStates/JobApplicationState/Applicants/Applicant")]
+        //public Applicant[] JobApplicant { get; set; }
+    }
+
     public class FamilyMember
     {
         [XmlAttribute("id")]
@@ -165,9 +182,21 @@ namespace ChoXmlReaderTest
             }
         }
 
+        static void Sample6()
+        {
+            using (var parser = new ChoXmlReader<JobApplication>("sample6.xml")
+            )
+            {
+                foreach (dynamic rec in parser)
+                {
+                    Console.WriteLine(ChoUtility.Dump(rec));
+                }
+            }
+        }
+
         static void Main(string[] args)
         {
-            Sample11Test();
+            Sample6();
             return;
             //dynamic p = new ChoPropertyBag();
             //p.Name = "Raj";
@@ -536,7 +565,7 @@ namespace ChoXmlReaderTest
         public class EmployeeRec
         {
             [XmlAttribute]
-            [ChoXmlNodeRecordField(XPath = "//@Id")]
+            [ChoXmlNodeRecordField(XPath = "//@Id" )]
             [Required]
             public int Id
             {

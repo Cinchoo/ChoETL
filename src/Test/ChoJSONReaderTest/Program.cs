@@ -8,12 +8,119 @@ using System.ComponentModel;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
 namespace ChoJSONReaderTest
 {
+    public class DataMapper : IChoKeyValueType
+    {
+        public DataMapper()
+        {
+            SubDataMappers = new List<DataMapper>();
+        }
+
+        public string Name { get; set; }
+
+        public DataMapperProperty DataMapperProperty { get; set; }
+
+        public List<DataMapper> SubDataMappers { get; set; }
+
+        [ChoIgnoreMember]
+        [IgnoreDataMember]
+        public object Value
+        {
+            get
+            {
+                if (SubDataMappers.IsNullOrEmpty())
+                    return (object)DataMapperProperty;
+                else
+                {
+                    ExpandoObject obj = new ExpandoObject();
+                    foreach (var item in SubDataMappers)
+                        obj.AddOrUpdate(item.Name, item.Value);
+                    return obj;
+                }
+            }
+            set
+            {
+                if (value is IDictionary<string, object>)
+                {
+                    IDictionary<string, object> dict = value as IDictionary<string, object>;
+                    if (!dict.Where(kvp => kvp.Key == "data-type").Any())
+                    {
+                        List<DataMapper> dm = new List<DataMapper>();
+                        foreach (var kvp in (IDictionary<string, object>)value)
+                        {
+                            dm.Add(new DataMapper { Key = kvp.Key, Value = kvp.Value });
+                        }
+                        SubDataMappers = dm;
+                    }
+                    else
+                    {
+                        DataMapperProperty = ((IDictionary<string, object>)value).ToObject<DataMapperProperty>();
+                        //DataMapperProperty dm = new DataMapperProperty();
+                        //foreach (var kvp in (IDictionary<string, object>)value)
+                        //{
+                        //    if (kvp.Key == "data-type")
+                        //        dm.DataType = kvp.Value.ToNString();
+                        //    else if (kvp.Key == "source")
+                        //        dm.Source = kvp.Value.ToNString();
+                        //    else if (kvp.Key == "source-column")
+                        //        dm.SourceColumn = kvp.Value.ToNString();
+                        //    else if (kvp.Key == "source-table")
+                        //        dm.SourceTable = kvp.Value.ToNString();
+                        //    else if (kvp.Key == "default")
+                        //        dm.Default = kvp.Value.ToNString();
+                        //    else if (kvp.Key == "value")
+                        //        dm.Value = kvp.Value.ToNString();
+                        //}
+
+                        //DataMapperProperty = dm;
+                    }
+                }
+            }
+        }
+
+        [IgnoreDataMember]
+        public object Key { get => Name; set => Name = value.ToNString(); }
+    }
+
+    public class DataMapperProperty
+    {
+        [JsonProperty(PropertyName = "data-type", NullValueHandling = NullValueHandling.Ignore)]
+        public string DataType { get; set; }
+
+        [JsonProperty(PropertyName = "source", NullValueHandling = NullValueHandling.Ignore)]
+        public string Source { get; set; }
+
+        [JsonProperty(PropertyName = "source-column", NullValueHandling = NullValueHandling.Ignore)]
+        public string SourceColumn { get; set; }
+
+        [JsonProperty(PropertyName = "source-table", NullValueHandling = NullValueHandling.Ignore)]
+        public string SourceTable { get; set; }
+
+        [JsonProperty(PropertyName = "default", NullValueHandling = NullValueHandling.Ignore)]
+        public string Default { get; set; }
+
+        [JsonProperty(PropertyName = "value", NullValueHandling = NullValueHandling.Ignore)]
+        public string Value { get; set; }
+
+        //public static explicit operator DataMapperProperty(JToken v)
+        //{
+        //    return new DataMapperProperty()
+        //    {
+        //        DataType = v.Value<string>("data-type"),
+        //        Source = v.Value<string>("source"),
+        //        SourceColumn = v.Value<string>("source-column"),
+        //        SourceTable = v.Value<string>("source-table"),
+        //        Default = v.Value<string>("default"),
+        //        Value = v.Value<string>("value")
+        //    };
+        //}
+    }
     public enum ChoHL7Version
     {
         v2_1,
@@ -66,6 +173,12 @@ namespace ChoJSONReaderTest
         {
             public int Age { get; set; }
             public string Name { get; set; }
+        }
+
+        public class Family
+        {
+            public int Id { get; set; }
+            public ArrayList Daughters { get; set; }
         }
 
         public class Customer
@@ -223,11 +336,33 @@ namespace ChoJSONReaderTest
 
         static void Main(string[] args)
         {
-            Sample7();
+            Sample8();
+        }
+
+        static void Sample8()
+        {
+            using (var jr = new ChoJSONReader<DataMapper>("sample8.json"))
+            {
+                foreach (var x in jr)
+                {
+                    Console.WriteLine(ChoUtility.DumpAsJson(x));
+                }
+            }
         }
 
         static void Sample7()
         {
+            using (var jr = new ChoJSONReader<Family>("sample7.json").WithJSONPath("$.fathers"))
+            {
+                foreach (var x in jr)
+                {
+                    Console.WriteLine(x.Id);
+                    foreach (var fm in x.Daughters)
+                        Console.WriteLine(fm);
+                }
+            }
+            return;
+
             using (var jr = new ChoJSONReader("sample7.json").WithJSONPath("$.fathers")
                 .WithField("id")
                 .WithField("married")

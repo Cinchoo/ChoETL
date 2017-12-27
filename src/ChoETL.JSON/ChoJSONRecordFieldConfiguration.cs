@@ -36,6 +36,12 @@ namespace ChoETL
             set;
         }
 
+        public bool? UseJSONSerialization
+        {
+            get;
+            set;
+        }
+
         public ChoJSONRecordFieldConfiguration(string name, string jsonPath = null) : this(name, (ChoJSONRecordFieldAttribute)null)
         {
             JSONPath = jsonPath;

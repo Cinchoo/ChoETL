@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -21,6 +22,9 @@ namespace ChoETL
         public ChoRecordWriter(Type recordType)
         {
             ChoGuard.ArgumentNotNull(recordType, "RecordType");
+
+            if (typeof(ICollection).IsAssignableFrom(recordType))
+                throw new ChoReaderException("Invalid recordtype passed.");
 
             RecordType = recordType;
             TraceSwitch = ChoETLFramework.TraceSwitch;

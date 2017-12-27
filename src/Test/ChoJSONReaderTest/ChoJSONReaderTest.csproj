@@ -39,6 +39,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -48,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="companies.json" />
+    <None Include="sample8.json" />
     <None Include="sample7.json" />
     <None Include="sample6.json" />
     <None Include="sample5.json" />

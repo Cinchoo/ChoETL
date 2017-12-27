@@ -43,6 +43,7 @@ namespace ChoETL
         {
             get { return Configuration.SupportMultipleContent == null ? false : Configuration.SupportMultipleContent.Value; }
         }
+
         internal void EndWrite(object writer)
         {
             TextWriter sw = writer as TextWriter;
@@ -244,6 +245,19 @@ namespace ChoETL
             if (typeof(IChoScalarObject).IsAssignableFrom(Configuration.RecordType))
                 rec = Activator.CreateInstance(Configuration.RecordType, rec);
 
+            if (!Configuration.IsDynamicObject)
+            {
+                if (rec.ToTextIfCustomSerialization(out recText))
+                    return true;
+
+                //Check if KVP object
+                if (rec.GetType().IsKeyValueType())
+                {
+                    recText = SerializeObject(rec);
+                    return true;
+                }
+            }
+
             recText = null;
             if (rec == null)
             {
@@ -427,13 +441,13 @@ namespace ChoETL
                 if (isFirst)
                 {
                     msg.AppendFormat("{2}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? " {0}".FormatString(fieldText) :
-                        Configuration.Formatting == Formatting.Indented ? SerializeObject(fieldValue).Indent(1, " ") : JsonConvert.SerializeObject(fieldValue), 
+                        Configuration.Formatting == Formatting.Indented ? SerializeObject(fieldValue, fieldConfig.UseJSONSerialization).Indent(1, " ") : SerializeObject(fieldValue, fieldConfig.UseJSONSerialization), 
                         Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
                 }
                 else
                 {
                     msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? " {0}".FormatString(fieldText) :
-                        Configuration.Formatting == Formatting.Indented ? SerializeObject(fieldValue).Indent(1, " ") : JsonConvert.SerializeObject(fieldValue),
+                        Configuration.Formatting == Formatting.Indented ? SerializeObject(fieldValue, fieldConfig.UseJSONSerialization).Indent(1, " ") : SerializeObject(fieldValue, fieldConfig.UseJSONSerialization),
                         Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
                 }
                 isFirst = false;
@@ -443,16 +457,167 @@ namespace ChoETL
             return true;
         }
 
-        private string SerializeObject(object target)
+        private string SerializeObject(object target, bool? useJSONSerialization = null)
         {
-            if (Configuration.UseJSONSerialization)
+            bool lUseJSONSerialization = useJSONSerialization == null ? Configuration.UseJSONSerialization : useJSONSerialization.Value;
+            if (lUseJSONSerialization)
                 return JsonConvert.SerializeObject(target, Configuration.Formatting);
             else
             {
-                return JsonConvert.SerializeObject(target, Configuration.Formatting);
+                //return JsonConvert.SerializeObject(target, Configuration.Formatting);
+
+                Type objType = target.GetType();
+                if (objType.IsSimple())
+                    return JsonConvert.SerializeObject(target);
+                else
+                {
+                    if (target is IEnumerable && !(target is IDictionary))
+                    {
+                        StringBuilder msg = new StringBuilder();
+                        bool first = true;
+                        foreach (var item in (IEnumerable)target)
+                        {
+                            if (first)
+                                first = false;
+                            else
+                                msg.Append(Environment.NewLine);
+
+                            var obj = MapToDictionary(item);
+                            msg.Append(JsonConvert.SerializeObject(obj, Configuration.Formatting));
+                        }
+
+                        return msg.ToString();
+                    }
+                    else
+                        return JsonConvert.SerializeObject(MapToDictionary(target), Configuration.Formatting);
+                }
             }
         }
 
+        public IEnumerable<IDictionary<string, object>> MapToDictionary(IEnumerable source)
+        {
+            foreach (var item in source)
+                yield return MapToDictionary(item);
+        }
+        public IDictionary<string, object> MapToDictionary(object source)
+        {
+            var dictionary = new Dictionary<string, object>();
+            MapToDictionaryInternal(dictionary, source);
+            return dictionary;
+        }
+
+        private object SimpleTypeValue(object source)
+        {
+            if (source.GetType() == typeof(ChoCurrency))
+                return ((ChoCurrency)source).Amount;
+            else
+                return source;
+        }
+
+        private object Marshal(object source)
+        {
+            if (source == null)
+                return null;
+            if (source.GetType().IsSimple())
+                return SimpleTypeValue(source);
+
+            return MapToDictionary(source);
+        }
+
+        private void MapToDictionaryInternal(IDictionary<string, object> dictionary, object source)
+        {
+            var isKVPAttrDefined = source.GetType().GetCustomAttribute<ChoKeyValueTypeAttribute>() != null;
+
+            //check if object is KeyValuePair
+            Type valueType = source.GetType();
+            if (valueType.IsGenericType)
+            {
+                Type baseType = valueType.GetGenericTypeDefinition();
+                if (baseType == typeof(KeyValuePair<,>))
+                {
+                    object kvpKey = valueType.GetProperty("Key").GetValue(source, null);
+                    object kvpValue = valueType.GetProperty("Value").GetValue(source, null);
+                    if (kvpValue is IEnumerable)
+                        dictionary[kvpKey.ToNString()] = MapToDictionary(kvpValue as IEnumerable).ToArray();
+                    else if (kvpValue != null)
+                        dictionary[kvpKey.ToNString()] = MapToDictionary(kvpValue);
+                }
+            }
+
+            if (isKVPAttrDefined)
+            {
+                var kP = source.GetType().GetProperties().Where(p => p.GetCustomAttribute<ChoKeyAttribute>() != null).FirstOrDefault();
+                var vP = source.GetType().GetProperties().Where(p => p.GetCustomAttribute<ChoValueAttribute>() != null).FirstOrDefault();
+
+
+                if (kP != null && vP != null)
+                {
+                    object value = vP.GetValue(source);
+                    if (value is IEnumerable)
+                        dictionary[kP.GetValue(source).ToNString()] = MapToDictionary(value as IEnumerable).ToArray();
+                    else if (value != null)
+                        dictionary[kP.GetValue(source).ToNString()] = MapToDictionary(value);
+                    return;
+                }
+            }
+            if (typeof(IChoKeyValueType).IsAssignableFrom(source.GetType()))
+            {
+                IChoKeyValueType kvp = source as IChoKeyValueType;
+                object value = kvp.Value;
+                if (value.GetType().IsDynamicType())
+                    dictionary[kvp.Key.ToNString()] = value;
+                else if (value is IEnumerable && !(value is IDictionary))
+                    dictionary[kvp.Key.ToNString()] = MapToDictionary(value as IEnumerable).ToArray();
+                else if (value != null)
+                    dictionary[kvp.Key.ToNString()] = MapToDictionary(value);
+                return;
+            }
+            var properties = source.GetType().GetProperties();
+            foreach (var p in properties)
+            {
+                var key = p.Name;
+                var attr = p.GetCustomAttribute<JsonPropertyAttribute>();
+                if (attr != null && !attr.PropertyName.IsNullOrWhiteSpace())
+                    key = attr.PropertyName.NTrim();
+
+                object value = p.GetValue(source, null);
+                if (value == null)
+                {
+                    if (attr != null && attr.NullValueHandling == NullValueHandling.Ignore)
+                    {
+
+                    }
+                    else
+                        dictionary[key] = null;
+
+                    continue;
+                }
+                valueType = value.GetType();
+
+                if (valueType.IsSimple())
+                {
+                    dictionary[key] = Marshal(value);
+                }
+                else if (value.GetType().IsDynamicType())
+                {
+                    dictionary[key] = value;
+                }
+                else if (value is IDictionary)
+                {
+                    IDictionary dict = ((IDictionary)value);
+                    foreach (var key1 in dict.Keys)
+                    {
+                        var val = dict[key];
+                        dictionary[key1.ToNString()] = Marshal(value);
+                    }
+                    dictionary[key] = dict;
+                }
+                else if (value is IEnumerable)
+                    dictionary[key] = MapToDictionary((IEnumerable)value).ToArray();
+                else
+                    dictionary[key] = Marshal(value);
+            }
+        }
         private ChoFieldValueJustification GetFieldValueJustification(ChoFieldValueJustification? fieldValueJustification, Type fieldType)
         {
             return fieldValueJustification == null ? ChoFieldValueJustification.Left : fieldValueJustification.Value;

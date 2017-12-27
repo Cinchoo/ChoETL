@@ -96,11 +96,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IChoCustomSerializable.cs" />
+    <Compile Include="IChoKeyValueType.cs" />
     <Compile Include="ChoScalarObject.cs" />
     <Compile Include="ChoEnums.cs" />
     <Compile Include="ChoWriter.cs" />
     <Compile Include="ChoTextFileExternalSorter.cs" />
     <Compile Include="Common\Attributes\ChoDefaultValueAttribute.cs" />
+    <Compile Include="Common\Attributes\ChoKeyValueTypeAttribute.cs" />
     <Compile Include="Common\ChoDisposable.cs" />
     <Compile Include="Common\ChoEnum.cs" />
     <Compile Include="Common\ChoEnumTypeCache.cs" />

@@ -155,7 +155,6 @@ namespace ChoETL
                 RaisedRowsLoaded(pair.Item1);
         }
 
-        private ExpandoObjectConverter _expandoObjectConverter = new ExpandoObjectConverter();
         private bool LoadNode(Tuple<long, JObject> pair, ref object rec)
         {
             if (!Configuration.UseJSONSerialization)
@@ -290,6 +289,15 @@ namespace ChoETL
             fieldConfig = null;
             pi = null;
             //IDictionary<string, object> dictValues = ToDictionary(node);
+
+            if (!Configuration.IsDynamicObject)
+            {
+                if (rec.FillIfCustomSerialization(pair.Item2))
+                    return true;
+
+                if (FillIfKeyValueObject(rec, pair))
+                    return true;
+            }
 
             foreach (KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
@@ -540,7 +548,39 @@ namespace ChoETL
             return true;
         }
 
-        private object ToObject(JToken jToken, Type type)
+        private bool FillIfKeyValueObject(object rec, Tuple<long, JObject> pair)
+        {
+            IDictionary<string, object> dict = ToDynamic(pair.Item2) as IDictionary<string, object>;
+            if (dict.Count == 0)
+                return true;
+
+            var isKVPAttrDefined = rec.GetType().GetCustomAttribute<ChoKeyValueTypeAttribute>() != null;
+
+            if (isKVPAttrDefined)
+            {
+                var kP = rec.GetType().GetProperties().Where(p => p.GetCustomAttribute<ChoKeyAttribute>() != null).FirstOrDefault();
+                var vP = rec.GetType().GetProperties().Where(p => p.GetCustomAttribute<ChoValueAttribute>() != null).FirstOrDefault();
+
+                if (kP != null && vP != null)
+                {
+                    kP.SetValue(rec, dict.First().Key);
+                    vP.SetValue(rec, dict.First().Value);
+                    return true;
+                }
+            }
+            if (typeof(IChoKeyValueType).IsAssignableFrom(rec.GetType()))
+            {
+                IChoKeyValueType kvp = rec as IChoKeyValueType;
+
+                kvp.Key = dict.First().Key;
+                kvp.Value = dict.First().Value;
+                return true;
+            }
+
+            return false;
+        }
+
+        private object ToObject(JToken jToken, Type type, bool? useJSONSerialization = null)
         {
             if (type == null || type.IsDynamicType())
             {
@@ -575,7 +615,21 @@ namespace ChoETL
             }
             else
             {
-                return jToken.ToObject(type, _se.Value);
+                bool lUseJSONSerialization = useJSONSerialization == null ? Configuration.UseJSONSerialization : useJSONSerialization.Value;
+                if (lUseJSONSerialization)
+                {
+                    if (_se == null || _se.Value == null)
+                        return jToken.ToObject(type);
+                    else
+                        return jToken.ToObject(type, _se.Value);
+                }
+                else
+                {
+                    if (_se == null || _se.Value == null)
+                        return jToken.ToObject(type);
+                    else
+                        return jToken.ToObject(type, _se.Value);
+                }
             }
         }
 

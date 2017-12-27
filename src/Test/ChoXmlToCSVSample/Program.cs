@@ -38,6 +38,10 @@ namespace ChoXmlToCSVSample
                 using (var xmlReader = new ChoXmlReader("sample2.xml")
                     .WithField("impotno", xPath: "x:original-impot-no")
                     .WithField("productlineitem", xPath: "x:product-lineitems/x:product-lineitem")
+                    .Setup(s => s.BeforeRecordFieldLoad += (o, e) =>
+                    {
+                        var x = e;
+                    })
                     )
                 {
                     //csvWriter.Write(xmlReader.SelectMany(rec => ((IEnumerable<dynamic>)rec.Smallprice).Select(rec1 => new { rec.originalimpotno, rec1.Small_price })));
