@@ -15,7 +15,7 @@ using System.Xml.Serialization;
 
 namespace ChoJSONReaderTest
 {
-    public class DataMapper : IChoKeyValueType
+    public class DataMapper : IChoKeyValueType 
     {
         public DataMapper()
         {
