@@ -482,11 +482,25 @@ namespace ChoETL
                             else
                                 msg.Append(Environment.NewLine);
 
-                            var obj = MapToDictionary(item);
-                            msg.Append(JsonConvert.SerializeObject(obj, Configuration.Formatting));
+                            if (item == null)
+                            {
+                                if (Configuration.JsonSerializerSettings != null && Configuration.JsonSerializerSettings.NullValueHandling == NullValueHandling.Ignore)
+                                {
+
+                                }
+                                else
+                                    msg.Append(JsonConvert.SerializeObject(null));
+                            }
+                            else if (item.GetType().IsSimple())
+                                msg.Append(JsonConvert.SerializeObject(item));
+                            else
+                            {
+                                var obj = MapToDictionary(item);
+                                msg.Append(JsonConvert.SerializeObject(obj, Configuration.Formatting));
+                            }
                         }
 
-                        return msg.ToString();
+                        return "[{0}{1}{0}]".FormatString(Environment.NewLine, msg.ToString().Indent());
                     }
                     else
                         return JsonConvert.SerializeObject(MapToDictionary(target), Configuration.Formatting);

@@ -42,6 +42,23 @@ namespace ChoXmlReaderTest
     }
     public class Program
     {
+        static void Main(string[] args)
+        {
+            XmlNullTest();
+        }
+
+        private static void XmlNullTest()
+        {
+            using (var parser = new ChoXmlReader("sample13.xml")
+            )
+            {
+                //var c = parser.Select(x => (string)x.AustrittDatum).ToArray();
+                using (var jw = new ChoJSONWriter("sample13.json"))
+                    jw.Write(new { AustrittDatum = parser.Select(x => (string)x.AustrittDatum).ToArray() });
+            }
+
+        }
+
         private static string EmpXml = @"<Employees>
                 <Employee Id='1'>
                     <Name isActive = 'true'>Tom</Name>
@@ -207,7 +224,7 @@ namespace ChoXmlReaderTest
             }
         }
 
-        static void Main(string[] args)
+        static void Main1(string[] args)
         {
             Sample12();
             return;
