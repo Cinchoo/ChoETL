@@ -1,0 +1,55 @@
+﻿{
+  "store": [
+    {
+      "name": "Sunshine Department Store",
+      "address": "Wangfujing Street",
+      "goods": {
+        "book": [
+          {
+            "category": "Reference",
+            "title": "Sayings of the Century",
+            "author": "Nigel Rees",
+            "price": 8.88
+          },
+          {
+            "category": "Fiction",
+            "title": "Sword of Honour",
+            "author": "Evelyn Waugh",
+            "price": 12.66
+          }
+        ],
+        "bicycle": {
+          "type": "GIANT OCR2600",
+          "color": "White",
+          "price": 276
+        }
+      }
+    },
+    {
+      "name": "BY Department Store",
+      "address": "Wangfujing Street",
+      "goods": {
+        "book": [
+          {
+            "category": "Reference",
+            "title": "Sayings of the Century",
+            "author": "Nigel Rees",
+            "price": 8.88
+          },
+          {
+            "category": "Fiction",
+            "title": "Sword of Honour",
+            "author": "Evelyn Waugh",
+            "price": 12.66
+          }
+        ],
+        "bicycle": {
+          "type": "GIANT OCR2600",
+          "color": "White",
+          "price": 276
+        }
+      }
+    }
+
+  ]
+}

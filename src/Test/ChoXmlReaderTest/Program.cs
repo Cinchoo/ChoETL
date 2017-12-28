@@ -194,9 +194,22 @@ namespace ChoXmlReaderTest
             }
         }
 
+        static void Sample12()
+        {
+            using (var parser = new ChoXmlReader("sample12.xml")
+                .WithField("SelectedIds/Id", fieldType: typeof(int[]))
+            )
+            {
+                foreach (dynamic rec in parser)
+                {
+                    Console.WriteLine(ChoUtility.Dump(rec));
+                }
+            }
+        }
+
         static void Main(string[] args)
         {
-            Sample6();
+            Sample12();
             return;
             //dynamic p = new ChoPropertyBag();
             //p.Name = "Raj";

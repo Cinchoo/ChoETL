@@ -256,7 +256,7 @@ namespace ChoETL
             }
             catch (Exception ex)
             {
-                ChoETLFramework.HandleException(ex);
+                ChoETLFramework.HandleException(ref ex);
                 if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                 {
                     ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));

@@ -199,7 +199,7 @@ namespace ChoETL
                         //}
                         catch (Exception ex)
                         {
-                            ChoETLFramework.HandleException(ex);
+                            ChoETLFramework.HandleException(ref ex);
                             if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                             {
                                 recordIgnored = true;
@@ -365,7 +365,7 @@ namespace ChoETL
                 }
                 catch (Exception ex)
                 {
-                    ChoETLFramework.HandleException(ex);
+                    ChoETLFramework.HandleException(ref ex);
 
                     if (fieldConfig.ErrorMode == ChoErrorMode.ThrowAndStop)
                         throw;
@@ -572,7 +572,7 @@ namespace ChoETL
                     dictionary[kvp.Key.ToNString()] = MapToDictionary(value);
                 return;
             }
-            var properties = source.GetType().GetProperties();
+            var properties = ChoType.GetProperties(source.GetType()); // source.GetType().GetProperties();
             foreach (var p in properties)
             {
                 var key = p.Name;

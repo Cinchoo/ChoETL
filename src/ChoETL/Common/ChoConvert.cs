@@ -102,6 +102,8 @@ namespace ChoETL
                         }
                         else if (obj2 is IValueConverter)
                             value = ((IValueConverter)obj2).Convert(value, targetType, (object)objArray, culture);
+                        else if (obj2 is IChoValueConverter)
+                            value = ((IChoValueConverter)obj2).Convert(value, targetType, (object)objArray, culture);
                     }
                     //if (value != obj1)
                     //    return value;
@@ -281,6 +283,8 @@ namespace ChoETL
                         }
                         else if (obj2 is IValueConverter)
                             value = ((IValueConverter)obj2).ConvertBack(value, targetType, (object)objArray, culture);
+                        else if (obj2 is IChoValueConverter)
+                            value = ((IChoValueConverter)obj2).ConvertBack(value, targetType, (object)objArray, culture);
                     }
                     if (obj1 != value)
                         return value;

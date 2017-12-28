@@ -1,0 +1,17 @@
+﻿<Application>
+  <Items>
+    <Item>
+      <Id>0</Id>
+      <StartDate>0001-01-11T00:00:00</StartDate>
+      <EndDate>0001-01-30T00:00:00</EndDate>
+      <ItemType>0</ItemType>
+      <Comments>fgdfg</Comments>
+      <SelectedIds>
+        <Id>108</Id>
+        <Id>110</Id>
+        <Id>111</Id>
+      </SelectedIds>
+    </Item>
+  </Items>
+  </Application>
+  

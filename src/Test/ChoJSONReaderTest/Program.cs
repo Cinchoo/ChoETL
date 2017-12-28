@@ -15,6 +15,14 @@ using System.Xml.Serialization;
 
 namespace ChoJSONReaderTest
 {
+    public class Book
+    {
+        public string Category { get; set; }
+        public string Title { get; set; }
+        public string Author { get; set; }
+        public double Price { get; set; }
+    }
+
     public class DataMapper : IChoKeyValueType 
     {
         public DataMapper()
@@ -346,7 +354,34 @@ namespace ChoJSONReaderTest
 
         static void Main(string[] args)
         {
-            Sample8();
+            Sample9();
+        }
+
+        static void Sample9()
+        {
+            using (var jr = new ChoJSONReader<Book>("sample9.json").WithJSONPath("$..book")
+            )
+            {
+                foreach (var x in jr)
+                {
+                    Console.WriteLine($"Category: {x.Category}");
+                    Console.WriteLine($"Title: {x.Title}");
+                    Console.WriteLine($"Author: {x.Author}");
+                    Console.WriteLine($"Price: {x.Price}");
+                }
+            }
+            return;
+            using (var jr = new ChoJSONReader("sample9.json").WithJSONPath("$..book")
+                )
+            {
+                foreach (var x in jr)
+                {
+                    Console.WriteLine($"Category: {x.category}");
+                    Console.WriteLine($"Title: {x.title}");
+                    Console.WriteLine($"Author: {x.author}");
+                    Console.WriteLine($"Price: {x.price}");
+                }
+            }
         }
 
         static void Sample8()

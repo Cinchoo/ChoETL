@@ -363,7 +363,7 @@ namespace ChoETL
             throw new ChoConsoleCtrlException(message);
         }
 
-        public static bool HandleException(Exception ex)
+        public static bool HandleException(ref Exception ex)
         {
             if (ex is ChoFatalApplicationException)
             {
@@ -371,8 +371,10 @@ namespace ChoETL
                 Environment.Exit(-100);
                 return false;
             }
-            else
-                return true;
+            else if (ex is TargetInvocationException)
+                ex = ex.InnerException;
+
+            return true;
         }
 
         public static T GetConfigValue<T>(string key, T defaultValue = default(T))

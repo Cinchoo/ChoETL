@@ -297,7 +297,7 @@ namespace ChoETL
                 if (ex is ChoMissingRecordFieldException && Configuration.ThrowAndStopOnMissingField)
                     throw;
 
-                ChoETLFramework.HandleException(ex);
+                ChoETLFramework.HandleException(ref ex);
 
                 if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                 {
@@ -413,7 +413,7 @@ namespace ChoETL
                 catch (Exception ex)
                 {
                     Reader.IsValid = false;
-                    ChoETLFramework.HandleException(ex);
+                    ChoETLFramework.HandleException(ref ex);
 
                     if (fieldConfig.ErrorMode == ChoErrorMode.ThrowAndStop)
                         throw;

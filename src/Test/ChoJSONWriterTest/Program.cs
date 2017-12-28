@@ -6,19 +6,53 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Dynamic;
+using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace ChoJSONWriterTest
 {
+public class ToTextConverter : IChoValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        return value;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        return value.ToNString();
+    }
+}
+
+    public class SomeOuterObject
+    {
+        public string stringValue { get; set; }
+        public IPAddress ipValue { get; set; }
+    }
+
     class Program
     {
         public enum EmpType {  FullTime, Contract }
 
         static void Main(string[] args)
         {
-            NestedJSONFile();
+            IPAddressTest();
+        }
+
+        static void IPAddressTest()
+        {
+            using (var jr = new ChoJSONWriter<SomeOuterObject>("ipaddr.json")
+                .WithField("stringValue")
+                .WithField("ipValue", valueConverter: (o) => o.ToString())
+                )
+            {
+                var x1 = new SomeOuterObject { stringValue = "X1", ipValue = IPAddress.Parse("12.23.21.23") };
+                jr.Write(x1);
+            }
+
         }
 
         static void NestedJSONFile()

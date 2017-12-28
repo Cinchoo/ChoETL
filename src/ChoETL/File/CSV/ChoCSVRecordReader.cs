@@ -318,7 +318,7 @@ namespace ChoETL
                 if (ex is ChoMissingRecordFieldException && Configuration.ThrowAndStopOnMissingField)
                     throw;
 
-                ChoETLFramework.HandleException(ex);
+                ChoETLFramework.HandleException(ref ex);
                 if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                 {
                     ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
@@ -505,7 +505,7 @@ namespace ChoETL
                 catch (Exception ex)
                 {
                     Reader.IsValid = false;
-                    ChoETLFramework.HandleException(ex);
+                    ChoETLFramework.HandleException(ref ex);
 
                     if (fieldConfig.ErrorMode == ChoErrorMode.ThrowAndStop)
                         throw;
