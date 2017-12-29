@@ -213,11 +213,11 @@ namespace ChoETL
         }
 
         public ChoXmlWriter<T> WithXmlElementField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
-            object defaultValue = null, object fallbackValue = null)
+            object defaultValue = null, object fallbackValue = null, bool encodeValue = true)
         {
             string fnTrim = name.NTrim();
             string xPath = $"//{fnTrim}";
-            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, false, fieldName, valueConverter, isNullable, defaultValue, fallbackValue);
+            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, false, fieldName, valueConverter, isNullable, defaultValue, fallbackValue, encodeValue);
         }
 
         public ChoXmlWriter<T> WithXmlAttributeField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,

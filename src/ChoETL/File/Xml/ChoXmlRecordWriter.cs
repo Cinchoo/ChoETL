@@ -653,11 +653,8 @@ namespace ChoETL
             if (fieldValue.StartsWith("<![CDATA["))
                 return fieldValue;
 
-            if (isXmlAttribute)
-            {
-                if (!encodeValue)
-                    return fieldValue;
-            }
+            if (!encodeValue)
+                return fieldValue;
 
             return System.Net.WebUtility.HtmlEncode(fieldValue);
         }
