@@ -66,6 +66,7 @@
   <ItemGroup>
     <Content Include="sample10.xml" />
     <Content Include="sample11.xml" />
+    <Content Include="KVPSample.xml" />
     <Content Include="sample13.xml" />
     <Content Include="sample12.xml" />
     <Content Include="sample9.xml" />

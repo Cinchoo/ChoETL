@@ -515,6 +515,9 @@ namespace ChoETL
         }
         public IDictionary<string, object> MapToDictionary(object source)
         {
+            if (source != null && source.GetType().IsDynamicType())
+                return source as IDictionary<string, object>;
+
             var dictionary = new Dictionary<string, object>();
             MapToDictionaryInternal(dictionary, source);
             return dictionary;

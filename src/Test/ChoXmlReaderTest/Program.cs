@@ -44,7 +44,19 @@ namespace ChoXmlReaderTest
     {
         static void Main(string[] args)
         {
-            XmlNullTest();
+            Sample6();
+        }
+
+        static void Sample6()
+        {
+            using (var parser = new ChoXmlReader<JobApplication>("sample6.xml")
+            )
+            {
+                foreach (dynamic rec in parser)
+                {
+                    Console.WriteLine(ChoUtility.Dump(rec));
+                }
+            }
         }
 
         private static void XmlNullTest()
@@ -195,18 +207,6 @@ namespace ChoXmlReaderTest
                 foreach (dynamic rec in parser)
                 {
                     Console.WriteLine(ChoUtility.DumpAsJson(rec.sons));
-                }
-            }
-        }
-
-        static void Sample6()
-        {
-            using (var parser = new ChoXmlReader<JobApplication>("sample6.xml")
-            )
-            {
-                foreach (dynamic rec in parser)
-                {
-                    Console.WriteLine(ChoUtility.Dump(rec));
                 }
             }
         }

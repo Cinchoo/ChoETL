@@ -20,6 +20,16 @@ namespace ChoXmlWriterTest
             sample7Test();
         }
 
+        static void KVPTest()
+        {
+            using (var xr = new ChoXmlWriter("Kvp.xml")
+                )
+            {
+                xr.Write(new KeyValuePair<string, int>("X1", 1));
+            }
+
+        }
+
         static void sample7Test()
         {
 
