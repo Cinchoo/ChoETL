@@ -38,8 +38,23 @@ namespace ChoCSVWriterTest
 
         }
 
+        static void IntArrayTest()
+        {
+            using (var w = new ChoXmlWriter("intarray.csv")
+                .Setup(s => s.RecordFieldWriteError += (o, e) => Console.WriteLine(e.Exception.ToString()))
+                )
+            {
+                //w.Write(new KeyValuePair<int, string>(1, "MM"));
+                //w.Write(new KeyValuePair<int, string>(1, "MM"));
+                w.Write("1s");
+            }
+        }
+
         static void Main(string[] args)
         {
+            IntArrayTest();
+            return;
+
             CSVWithQuotes();
             return;
 

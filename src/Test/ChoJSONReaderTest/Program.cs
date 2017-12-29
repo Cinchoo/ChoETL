@@ -15,6 +15,14 @@ using System.Xml.Serialization;
 
 namespace ChoJSONReaderTest
 {
+    public class Filter
+    {
+        public string filterName { get; set; }
+        public string filterformattedValue { get; set; }
+        public string filterValue { get; set; }
+        public string view { get; set; }
+    }
+
     public class Book
     {
         public string Category { get; set; }
@@ -354,7 +362,31 @@ namespace ChoJSONReaderTest
 
         static void Main(string[] args)
         {
-            Sample9();
+            Sample10();
+        }
+
+        static void Sample10()
+        {
+            using (var jr = new ChoJSONReader<Filter>("sample10.json")
+                )
+            {
+                foreach (var x in jr)
+                {
+                    Console.WriteLine($"FilterName: {x.filterName}");
+                    Console.WriteLine($"FilterformattedValue: {x.filterformattedValue}");
+                    Console.WriteLine($"filterValue : {x.filterValue}");
+                    Console.WriteLine($"View: {x.view}");
+                }
+            }
+            return;
+            using (var jr = new ChoJSONReader("sample10.json")
+                )
+            {
+                foreach (var x in jr)
+                {
+                    Console.WriteLine($"FilterName: {x.filterName}");
+                }
+            }
         }
 
         static void Sample9()

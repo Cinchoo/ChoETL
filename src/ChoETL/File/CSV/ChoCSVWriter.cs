@@ -244,6 +244,7 @@ namespace ChoETL
 
             return this;
         }
+
         public ChoCSVWriter<T> Setup(Action<ChoCSVWriter<T>> action)
         {
             if (action != null)

@@ -228,7 +228,16 @@ namespace ChoETL
             return this;
         }
 
+        public ChoJSONWriter<T> Setup(Action<ChoJSONWriter<T>> action)
+        {
+            if (action != null)
+                action(this);
+
+            return this;
+        }
+
         #endregion Fluent API
+
         public void Write(IDataReader dr)
         {
             ChoGuard.ArgumentNotNull(dr, "DataReader");

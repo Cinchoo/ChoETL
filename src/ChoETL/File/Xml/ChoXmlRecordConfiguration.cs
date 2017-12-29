@@ -188,7 +188,7 @@ namespace ChoETL
                     NodeName = "KeyValuePair";
                     RootName = "KeyValuePairs";
                 }
-                else if (!IsDynamicObject && RecordType != typeof(ChoScalarObject))
+                else if (!IsDynamicObject && !typeof(IChoScalarObject).IsAssignableFrom(RecordType))
                 {
                     NodeName = RecordType.Name;
                     RootName = NodeName.ToPlural();

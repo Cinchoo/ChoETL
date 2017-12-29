@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="companies.json" />
+    <None Include="sample10.json" />
     <None Include="sample9.json" />
     <None Include="sample8.json" />
     <None Include="sample7.json" />

@@ -1,0 +1,42 @@
+﻿[
+  [
+    {
+      "filterName": "Is Active",
+      "filterformattedValue": "True",
+      "filterValue": true,
+      "view": "Demo/UsersbyFunction"
+    },
+    {
+      "filterName": "Sbg",
+      "filterformattedValue": "PMT",
+      "filterValue": "PMT",
+      "view": "Demo/UsersbyFunction"
+    },
+    {
+      "filterName": "Sbg",
+      "filterformattedValue": "SPS",
+      "filterValue": "SPS",
+      "view": "Demo/UsersbyFunction"
+    }
+  ],
+  [
+    {
+      "filterName": "Sbg",
+      "filterformattedValue": "CORP",
+      "filterValue": "CORP",
+      "view": "Demo/UsersbyFunction"
+    },
+    {
+      "filterName": "Sbg",
+      "filterformattedValue": "PMT",
+      "filterValue": "PMT",
+      "view": "Demo/UsersbyFunction"
+    },
+    {
+      "filterName": "Sbg",
+      "filterformattedValue": "SPS",
+      "filterValue": "SPS",
+      "view": "Demo/UsersbyFunction"
+    }
+  ]
+]
