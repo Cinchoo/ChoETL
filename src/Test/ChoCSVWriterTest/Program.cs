@@ -41,12 +41,13 @@ namespace ChoCSVWriterTest
         static void IntArrayTest()
         {
             using (var w = new ChoXmlWriter("intarray.csv")
+                .WithXmlAttributeField("id", encodeValue: false)
                 .Setup(s => s.RecordFieldWriteError += (o, e) => Console.WriteLine(e.Exception.ToString()))
                 )
             {
                 //w.Write(new KeyValuePair<int, string>(1, "MM"));
                 //w.Write(new KeyValuePair<int, string>(1, "MM"));
-                w.Write("1s");
+                w.Write(new { id = "1s->" });
             }
         }
 

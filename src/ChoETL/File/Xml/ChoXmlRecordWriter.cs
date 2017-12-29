@@ -471,7 +471,8 @@ namespace ChoETL
                         if (Configuration.RecordType == typeof(ChoScalarObject))
                         {
                             if (fieldConfig.IsXmlAttribute)
-                                msg.Append(@" {0}=""{1}""".FormatString(fieldConfig.FieldName, NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false)));
+                                msg.Append(@" {0}=""{1}""".FormatString(fieldConfig.FieldName, NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false,
+                                    isXmlAttribute: true, encodeValue: fieldConfig.EncodeValue)));
                             else
                             {
                                 if (!isElementClosed)
@@ -485,7 +486,8 @@ namespace ChoETL
                             }
                         }
                         else if (fieldConfig.IsXmlAttribute)
-                            msg.Append(@" {0}=""{1}""".FormatString(fieldConfig.FieldName, NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false)));
+                            msg.Append(@" {0}=""{1}""".FormatString(fieldConfig.FieldName, NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false,
+                                isXmlAttribute: true, encodeValue: fieldConfig.EncodeValue)));
                         else
                         {
                             if (!isElementClosed)
@@ -582,7 +584,7 @@ namespace ChoETL
         }
 
         private string NormalizeFieldValue(string fieldName, string fieldValue, int? size, bool truncate, bool? quoteField,
-            ChoFieldValueJustification fieldValueJustification, char fillChar, bool isHeader = false)
+            ChoFieldValueJustification fieldValueJustification, char fillChar, bool isHeader = false, bool isXmlAttribute = false, bool encodeValue = true)
         {
             string lFieldValue = fieldValue;
             bool retValue = false;
@@ -648,7 +650,16 @@ namespace ChoETL
                 }
             }
 
-            return fieldValue.StartsWith("<![CDATA[") ? fieldValue : System.Net.WebUtility.HtmlEncode(fieldValue);
+            if (fieldValue.StartsWith("<![CDATA["))
+                return fieldValue;
+
+            if (isXmlAttribute)
+            {
+                if (!encodeValue)
+                    return fieldValue;
+            }
+
+            return System.Net.WebUtility.HtmlEncode(fieldValue);
         }
 
        private bool RaiseBeginWrite(object state)

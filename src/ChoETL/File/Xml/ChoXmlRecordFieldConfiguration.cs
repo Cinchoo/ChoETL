@@ -30,6 +30,12 @@ namespace ChoETL
             get;
             set;
         }
+        [DataMember]
+        public bool EncodeValue
+        {
+            get;
+            set;
+        }
 
         internal bool? IsArray
         {
@@ -50,6 +56,7 @@ namespace ChoETL
 
         internal ChoXmlRecordFieldConfiguration(string name, ChoXmlNodeRecordFieldAttribute attr = null) : base(name, attr)
         {
+            EncodeValue = true;
             FieldName = name;
             UseCache = true;
             if (attr != null)

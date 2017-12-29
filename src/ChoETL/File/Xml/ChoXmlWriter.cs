@@ -221,15 +221,15 @@ namespace ChoETL
         }
 
         public ChoXmlWriter<T> WithXmlAttributeField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
-            object defaultValue = null, object fallbackValue = null)
+            object defaultValue = null, object fallbackValue = null, bool encodeValue = true)
         {
             string fnTrim = name.NTrim();
             string xPath = $"//@{fnTrim}";
-            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, true, fieldName, valueConverter, isNullable, defaultValue, fallbackValue);
+            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, true, fieldName, valueConverter, isNullable, defaultValue, fallbackValue, encodeValue);
         }
 
         public ChoXmlWriter<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isXmlAttribute = false, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
-            object defaultValue = null, object fallbackValue = null)
+            object defaultValue = null, object fallbackValue = null, bool encodeValue = true)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -245,7 +245,8 @@ namespace ChoETL
                 Configuration.XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(fnTrim, xPath) { FieldType = fieldType,
                     FieldValueTrimOption = fieldValueTrimOption, IsXmlAttribute = isXmlAttribute, FieldName = fieldName, ValueConverter = valueConverter, IsNullable = isNullable,
                     DefaultValue = defaultValue,
-                    FallbackValue = fallbackValue
+                    FallbackValue = fallbackValue,
+                    EncodeValue = encodeValue
                 });
             }
 
