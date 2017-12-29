@@ -347,7 +347,9 @@ namespace ChoETL
                     fieldValue = fieldConfig.ValueConverter(fieldValue);
                 else
                 {
-                    if (fieldConfig.FieldType == null)
+                    if (fieldConfig.FieldType == null
+                        || fieldConfig.FieldType == typeof(object)
+                        || fieldConfig.FieldType.GetItemType() == typeof(object))
                     {
                         if (fieldValue is JToken)
                         {

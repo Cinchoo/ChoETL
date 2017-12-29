@@ -35,23 +35,28 @@ namespace ChoXmlToCSVSample
         {
             using (var csvWriter = new ChoCSVWriter("sample2.csv").WithFirstLineHeader())
             {
-                using (var xmlReader = new ChoXmlReader("sample2.xml")
+                using (var xmlReader = new ChoXmlReader("sample2.xml", "http://tempuri.org").WithXPath("/impots/impot")
                     .WithField("impotno", xPath: "x:original-impot-no")
                     .WithField("productlineitem", xPath: "x:product-lineitems/x:product-lineitem")
-                    .Setup(s => s.BeforeRecordFieldLoad += (o, e) =>
-                    {
-                        var x = e;
-                    })
+                    //.Setup(s => s.BeforeRecordFieldLoad += (o, e) =>
+                    //{
+                    //    var x = e;
+                    //})
                     )
                 {
-                    //csvWriter.Write(xmlReader.SelectMany(rec => ((IEnumerable<dynamic>)rec.Smallprice).Select(rec1 => new { rec.originalimpotno, rec1.Small_price })));
-                    csvWriter.Write(xmlReader.SelectMany(rec => ((IEnumerable<dynamic>)rec.productlineitem).Select(rec1 => new
+                    foreach (dynamic i in xmlReader)
                     {
-                        ImportNo = rec.impotno,
-                        Price = rec1.price,
-                        SmallPrice = rec1.Small_price,
-                        BigPrice = rec1.Big_price
-                    })));
+                        foreach (dynamic pl in i.productlineitem)
+                            Console.WriteLine(i.impotno + " " + pl.price);
+                    }
+                    //csvWriter.Write(xmlReader.SelectMany(rec => ((IEnumerable<dynamic>)rec.Smallprice).Select(rec1 => new { rec.originalimpotno, rec1.Small_price })));
+                    //csvWriter.Write(xmlReader.SelectMany(rec => ((IEnumerable<dynamic>)rec.productlineitem).Select(rec1 => new
+                    //{
+                    //    ImportNo = rec.impotno,
+                    //    Price = rec1.price,
+                    //    SmallPrice = rec1.Small_price,
+                    //    BigPrice = rec1.Big_price
+                    //})));
                 }
             }
         }

@@ -419,7 +419,9 @@ namespace ChoETL
                                     }
                                     else
                                     {
-                                        if (fieldConfig.FieldType == null)
+                                        if (fieldConfig.FieldType == null
+                                            || fieldConfig.FieldType == typeof(object)
+                                            || fieldConfig.FieldType.GetItemType() == typeof(object))
                                         {
                                             if (fXElements.Length == 1)
                                             {
