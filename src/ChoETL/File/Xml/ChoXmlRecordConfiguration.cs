@@ -64,6 +64,10 @@ namespace ChoETL
             get;
             set;
         }
+        [DataMember]
+        public string XmlVersion { get; set; }
+        [DataMember]
+        public bool OmitXmlDeclaration { get; set; }
         internal Dictionary<string, ChoXmlRecordFieldConfiguration> RecordFieldConfigurationsDict
         {
             get;
@@ -90,6 +94,8 @@ namespace ChoETL
         {
             XmlRecordFieldConfigurations = new List<ChoXmlRecordFieldConfiguration>();
 
+            XmlVersion = "1.0";
+            OmitXmlDeclaration = true;
             Indent = 2;
             IndentChar = ' ';
             if (recordType != null)

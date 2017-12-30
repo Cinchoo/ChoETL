@@ -52,6 +52,12 @@ namespace ChoETL
             RaiseEndWrite(sw);
         }
 
+        private string GetXmlDeclaration()
+        {
+            XmlDocument doc = new XmlDocument();
+            return doc.CreateXmlDeclaration(Configuration.XmlVersion, Configuration.Encoding.WebName, null).OuterXml;
+        }
+
         public override IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null)
         {
             TextWriter sw = writer as TextWriter;
@@ -64,6 +70,8 @@ namespace ChoETL
             _se = new Lazy<XmlSerializer>(() => Configuration.XmlSerializer == null ? null : Configuration.XmlSerializer);
 
             string recText = String.Empty;
+            if (!Configuration.OmitXmlDeclaration)
+                sw.Write("{0}{1}", GetXmlDeclaration(), Configuration.EOLDelimiter);
 
             try
             {
