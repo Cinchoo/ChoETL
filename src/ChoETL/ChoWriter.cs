@@ -20,6 +20,7 @@ namespace ChoETL
         public event EventHandler<ChoRecordFieldWriteErrorEventArgs> RecordFieldWriteError;
 
         public event EventHandler<ChoFileHeaderEventArgs> FileHeaderWrite;
+        public event EventHandler<ChoRecordFieldSerializeEventArgs> RecordFieldSerialize;
 
         public bool RaiseBeginWrite(object source)
         {
@@ -121,6 +122,18 @@ namespace ChoETL
             eh(this, e);
             headerText = e.HeaderText;
             return e.Skip;
+        }
+
+        public bool RaiseRecordFieldSerialize(object record, long index, string propName, ref object source)
+        {
+            EventHandler<ChoRecordFieldSerializeEventArgs> eh = RecordFieldSerialize;
+            if (eh == null)
+                return true;
+
+            ChoRecordFieldSerializeEventArgs e = new ChoRecordFieldSerializeEventArgs() { Record = record, Index = index, PropertyName = propName, Source = source };
+            eh(this, e);
+            source = e.Source;
+            return e.Handled;
         }
     }
 }

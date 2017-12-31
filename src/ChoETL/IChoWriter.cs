@@ -59,7 +59,7 @@ namespace ChoETL
         public object Source
         {
             get;
-            internal set;
+            set;
         }
         public bool Skip
         {

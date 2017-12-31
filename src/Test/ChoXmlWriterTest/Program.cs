@@ -20,6 +20,37 @@ namespace ChoXmlWriterTest
             sample7Test();
         }
 
+        static void CustomSerialization()
+        {
+            dynamic address = new ChoDynamicObject();
+            address.Street = "10 River Rd";
+            address.City = "Princeton";
+
+            dynamic state = new ChoDynamicObject();
+            state.State = "NJ";
+            state.Zip = "09930";
+
+            address.State = state;
+
+            using (var w = new ChoXmlWriter("custom.xml")
+                .WithXmlAttributeField("id")
+                .WithXmlElementField("address")
+                .Setup(s => s.RecordFieldWriteError += (o, e) => Console.WriteLine(e.Exception.ToString()))
+                .Setup(s => s.RecordFieldSerialize += (o, e) =>
+                {
+                    e.Source = "dd";
+                    //e.Source = "<{0}>DD</{0}>".FormatString(e.PropertyName);
+                    //e.Handled = true;
+                })
+                )
+            {
+                //w.Write(new KeyValuePair<int, string>(1, "MM"));
+                //w.Write(new KeyValuePair<int, string>(1, "MM"));
+                w.Write(new { id = "1s->", address = address });
+            }
+
+        }
+
         static void KVPTest()
         {
             using (var xr = new ChoXmlWriter("Kvp.xml")

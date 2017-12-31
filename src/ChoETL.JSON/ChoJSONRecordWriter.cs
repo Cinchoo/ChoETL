@@ -418,37 +418,55 @@ namespace ChoETL
 
                 bool isSimple = true;
 
-                Type ft = fieldValue == null ? typeof(object) : fieldValue.GetType();
-                if (fieldValue == null)
-                    fieldText = "null";
-                else if (ft == typeof(string) || ft == typeof(char))
-                    fieldText = JsonConvert.SerializeObject(NormalizeFieldValue(kvp.Key, fieldValue.ToString(), kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false));
-                else if (ft == typeof(DateTime))
-                    fieldText = JsonConvert.SerializeObject(fieldValue);
-                else if (ft.IsEnum)
+                if (RaiseRecordFieldSerialize(rec, index, kvp.Key, ref fieldValue))
                 {
-                    fieldText = JsonConvert.SerializeObject(fieldValue);
+                    if (isFirst)
+                    {
+                        msg.AppendFormat("{1}{0}", fieldValue.ToNString(),
+                            Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
+                    }
+                    else
+                    {
+                        msg.AppendFormat(",{1}{2}{0}", fieldValue.ToNString(),
+                            Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, 
+                            Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
+                    }
                 }
-                else if (ft == typeof(ChoCurrency))
-                    fieldText = "\"{0}\"".FormatString(fieldValue.ToString());
-                else if (ft == typeof(bool))
-                    fieldText = JsonConvert.SerializeObject(fieldValue);
-                else if (ft.IsNumeric())
-                    fieldText = fieldValue.ToString();
                 else
-                    isSimple = false;
+                {
 
-                if (isFirst)
-                {
-                    msg.AppendFormat("{2}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? " {0}".FormatString(fieldText) :
-                        Configuration.Formatting == Formatting.Indented ? SerializeObject(fieldValue, fieldConfig.UseJSONSerialization).Indent(1, " ") : SerializeObject(fieldValue, fieldConfig.UseJSONSerialization), 
-                        Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
-                }
-                else
-                {
-                    msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? " {0}".FormatString(fieldText) :
-                        Configuration.Formatting == Formatting.Indented ? SerializeObject(fieldValue, fieldConfig.UseJSONSerialization).Indent(1, " ") : SerializeObject(fieldValue, fieldConfig.UseJSONSerialization),
-                        Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
+                    Type ft = fieldValue == null ? typeof(object) : fieldValue.GetType();
+                    if (fieldValue == null)
+                        fieldText = "null";
+                    else if (ft == typeof(string) || ft == typeof(char))
+                        fieldText = JsonConvert.SerializeObject(NormalizeFieldValue(kvp.Key, fieldValue.ToString(), kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false));
+                    else if (ft == typeof(DateTime))
+                        fieldText = JsonConvert.SerializeObject(fieldValue);
+                    else if (ft.IsEnum)
+                    {
+                        fieldText = JsonConvert.SerializeObject(fieldValue);
+                    }
+                    else if (ft == typeof(ChoCurrency))
+                        fieldText = "\"{0}\"".FormatString(fieldValue.ToString());
+                    else if (ft == typeof(bool))
+                        fieldText = JsonConvert.SerializeObject(fieldValue);
+                    else if (ft.IsNumeric())
+                        fieldText = fieldValue.ToString();
+                    else
+                        isSimple = false;
+
+                    if (isFirst)
+                    {
+                        msg.AppendFormat("{2}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? " {0}".FormatString(fieldText) :
+                            Configuration.Formatting == Formatting.Indented ? SerializeObject(fieldValue, fieldConfig.UseJSONSerialization).Indent(1, " ") : SerializeObject(fieldValue, fieldConfig.UseJSONSerialization),
+                            Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
+                    }
+                    else
+                    {
+                        msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? " {0}".FormatString(fieldText) :
+                            Configuration.Formatting == Formatting.Indented ? SerializeObject(fieldValue, fieldConfig.UseJSONSerialization).Indent(1, " ") : SerializeObject(fieldValue, fieldConfig.UseJSONSerialization),
+                            Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
+                    }
                 }
                 isFirst = false;
             }
@@ -866,6 +884,30 @@ namespace ChoETL
             else if (Writer != null)
             {
                 return ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseRecordFieldWriteError(target, index, propName, value, ex), true);
+            }
+            return true;
+        }
+
+        private bool RaiseRecordFieldSerialize(object target, long index, string propName, ref object value)
+        {
+            if (_callbackRecord is IChoSerializable)
+            {
+                IChoSerializable rec = _callbackRecord as IChoSerializable;
+                object state = value;
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => rec.RecordFieldSerialize(target, index, propName, ref state), true);
+
+                value = state;
+
+                return retValue;
+            }
+            else if (Writer != null && Writer is IChoSerializableWriter)
+            {
+                object state = value;
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => ((IChoSerializableWriter)Writer).RaiseRecordFieldSerialize(target, index, propName, ref state), true);
+
+                value = state;
+
+                return retValue;
             }
             return true;
         }

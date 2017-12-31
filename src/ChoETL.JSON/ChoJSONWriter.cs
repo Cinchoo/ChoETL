@@ -12,7 +12,7 @@ using System.Xml;
 
 namespace ChoETL
 {
-    public class ChoJSONWriter<T> : ChoWriter, IDisposable
+    public class ChoJSONWriter<T> : ChoWriter, IChoSerializableWriter, IDisposable
         where T : class
     {
         private TextWriter _textWriter;
@@ -20,6 +20,7 @@ namespace ChoETL
         private ChoJSONRecordWriter _writer = null;
         private bool _clearFields = false;
         public event EventHandler<ChoRowsWrittenEventArgs> RowsWritten;
+
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
         private bool _isDisposed = false;
 

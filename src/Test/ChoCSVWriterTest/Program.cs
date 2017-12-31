@@ -40,14 +40,24 @@ namespace ChoCSVWriterTest
 
         static void IntArrayTest()
         {
-            using (var w = new ChoXmlWriter("intarray.csv")
-                .WithXmlAttributeField("id", encodeValue: false)
+            dynamic address = new ChoDynamicObject();
+            address.Street = "10 River Rd";
+            address.City = "Princeton";
+
+            dynamic state = new ChoDynamicObject();
+            state.State = "NJ";
+            state.Zip = "09930";
+
+            address.State = state;
+
+            using (var w = new ChoCSVWriter("intarray.csv")
                 .Setup(s => s.RecordFieldWriteError += (o, e) => Console.WriteLine(e.Exception.ToString()))
+                .Configure(c => c.NestedColumnSeparator = '/')
                 )
             {
                 //w.Write(new KeyValuePair<int, string>(1, "MM"));
                 //w.Write(new KeyValuePair<int, string>(1, "MM"));
-                w.Write(new { id = "1s->" });
+                w.Write(new { id = "1s->", address = address });
             }
         }
 

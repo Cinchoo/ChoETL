@@ -12,7 +12,7 @@ using System.Xml;
 
 namespace ChoETL
 {
-    public class ChoXmlWriter<T> : ChoWriter, IDisposable
+    public class ChoXmlWriter<T> : ChoWriter, IChoSerializableWriter, IDisposable
         where T : class
     {
         private bool _isDisposed = false;
@@ -21,7 +21,9 @@ namespace ChoETL
         private ChoXmlRecordWriter _writer = null;
         private bool _clearFields = false;
         public event EventHandler<ChoRowsWrittenEventArgs> RowsWritten;
+
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
+
 
         public ChoXmlRecordConfiguration Configuration
         {
@@ -379,5 +381,45 @@ namespace ChoETL
         {
         }
 
+    }
+
+    public interface IChoSerializable
+    {
+        bool RecordFieldSerialize(object record, long index, string propName, ref object source);
+    }
+
+    public interface IChoSerializableWriter
+    {
+        event EventHandler<ChoRecordFieldSerializeEventArgs> RecordFieldSerialize;
+        bool RaiseRecordFieldSerialize(object record, long index, string propName, ref object source);
+    }
+
+    public class ChoRecordFieldSerializeEventArgs
+    {
+        public string PropertyName
+        {
+            get;
+            internal set;
+        }
+        public object Record
+        {
+            get;
+            internal set;
+        }
+        public long Index
+        {
+            get;
+            internal set;
+        }
+        public object Source
+        {
+            get;
+            set;
+        }
+        public bool Handled
+        {
+            get;
+            set;
+        }
     }
 }
