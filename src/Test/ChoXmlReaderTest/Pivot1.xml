@@ -1,0 +1,9 @@
+﻿<VWSRecipeFile>
+  <EX_Extrusion User="ABC" Version="1.0" Description="" LastChange="41914.7876341204">
+    <Values>
+      <C22O01_A_TempFZ1_Set Item="A_TempFZ1_Set" Type="4" Hex="42700000" Value="60"/>
+      <C13O02_A_TempHZ2_Set Item="A_TempHZ2_Set" Type="4" Hex="43430000" Value="195"/>
+      <C13O03_A_TempHZ3_Set Item="A_TempHZ3_Set" Type="4" Hex="43430000" Value="200"/>
+    </Values>
+  </EX_Extrusion>
+</VWSRecipeFile>

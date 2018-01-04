@@ -64,6 +64,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Pivot1.xml" />
     <Content Include="sample10.xml" />
     <Content Include="sample11.xml" />
     <Content Include="KVPSample.xml" />

@@ -35,7 +35,7 @@ namespace ChoETL
             TypeDescriptor.AddProvider(new ChoExpandoObjectTypeDescriptionProvider(), typeof(ExpandoObject));
         }
 
-        public static void Init() 
+        public static void Init()
         {
 
         }
@@ -62,16 +62,119 @@ namespace ChoETL
                 }
             }
         }
-        public static List<T[]> Transpose<T>(this Dictionary<T, T> dict)
-        {
-            List<T[]> ret = new List<T[]>();
 
-            ret.Add(dict.Keys.ToArray());
-            ret.Add(dict.Values.ToArray());
-            return ret;
+        public static IDictionary<V, K> Transpose<K, V>(
+            this IDictionary<K, IEnumerable<V>> source,
+            Func<IEnumerable<K>, K> selector = null)
+        {
+            if (selector != null)
+                return (from kvp in source
+                        from V value in kvp.Value
+                        group kvp.Key by value)
+                            .ToDictionary(grp => grp.Key, grp => selector(grp));
+            else
+                return source
+                    .SelectMany(e => e.Value.Select(s => new { Key = s, Value = e.Key }))
+                    .ToDictionary(x => x.Key, x => x.Value);
+        }
+        public static IDictionary<V, K> Transpose<K, V>(this IDictionary<K, V> source)
+        {
+            return source
+                .ToDictionary(x => x.Value, x => x.Key);
         }
 
-        public static List<T[]> Transpose<T>(this Dictionary<T, T[]> dict)
+        //public static IEnumerable<object[]> Transpose<K, V>(this IDictionary<K, V> dict)
+        //{
+        //    yield return dict.Keys.Cast<object>().ToArray();
+        //    yield return dict.Values.Cast<object>().ToArray();
+        //}
+        //public static IEnumerable<object[]> Transpose<K, V>(this IEnumerable<IDictionary<K, V>> dicts)
+        //{
+        //    bool first = true;
+        //    foreach (var dict in dicts)
+        //    {
+        //        if (first)
+        //        {
+        //            first = false;
+        //            yield return dict.Keys.Cast<object>().ToArray();
+        //        }
+        //        yield return dict.Values.Cast<object>().ToArray();
+        //    }
+        //}
+        public static ChoDynamicObject Transpose(this ChoDynamicObject dict)
+        {
+            return new ChoDynamicObject(Transpose((IDictionary<string, object>)dict).ToDictionary(kvp => kvp.Key.ToNString(), kvp => (object)kvp.Value));
+        }
+
+        public static IEnumerable<ChoDynamicObject> Transpose(this IEnumerable<ChoDynamicObject> dicts, bool treatFirstItemAsHeader = true)
+        {
+            return Transpose(dicts.Cast<IDictionary<string, object>>(), treatFirstItemAsHeader).Select(d => new ChoDynamicObject(d));
+
+            //var dictsArray = dicts.ToArray();
+
+            //var first = dictsArray.FirstOrDefault();
+            //if (first == null)
+            //    yield break;
+
+            //int counter = 0;
+            //List<string> keys = new List<string>();
+            //string firstColumn = first[0].Key;
+            //foreach (var x in dictsArray)
+            //{
+            //    if (treatFirstItemAsHeader)
+            //        keys.Add(x.First().Value.ToNString());
+            //    else
+            //        keys.Add("Column{0}".FormatString(++counter));
+            //}
+
+            //int length = first.Count;
+            //int startIndex = treatFirstItemAsHeader ? 1 : 0;
+            //for (int index = startIndex; index < length; index++)
+            //{
+            //    ChoDynamicObject obj = new ChoDynamicObject();
+            //    int keyIndex = 0;
+            //    foreach (var x in dictsArray)
+            //    {
+            //        obj.AddOrUpdate(keys[keyIndex++], x[index].Value);
+            //    }
+            //    yield return obj;
+            //}
+        }
+
+        public static IEnumerable<IDictionary<string, object>> Transpose(this IEnumerable<IDictionary<string, object>> dicts, bool treatFirstItemAsHeader = true)
+        {
+            var dictsArray = dicts.ToArray();
+
+            var first = dictsArray.FirstOrDefault();
+            if (first == null)
+                yield break;
+
+            int counter = 0;
+            List<string> keys = new List<string>();
+            string firstColumn = first.ElementAt(0).Key;
+            foreach (var x in dictsArray)
+            {
+                if (treatFirstItemAsHeader)
+                    keys.Add(x.First().Value.ToNString());
+                else
+                    keys.Add("Column{0}".FormatString(++counter));
+            }
+
+            int length = first.Count;
+            int startIndex = treatFirstItemAsHeader ? 1 : 0;
+            for (int index = startIndex; index < length; index++)
+            {
+                Dictionary<string, object> obj = new Dictionary<string, object>();
+                int keyIndex = 0;
+                foreach (var x in dictsArray)
+                {
+                    obj.AddOrUpdate(keys[keyIndex++], x.ElementAt(index).Value);
+                }
+                yield return obj;
+            }
+        }
+
+        public static List<T[]> Transpose<T>(this IDictionary<T, T[]> dict)
         {
             List<T[]> ret = new List<T[]>();
 

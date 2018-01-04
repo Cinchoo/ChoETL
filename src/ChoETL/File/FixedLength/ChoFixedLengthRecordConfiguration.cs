@@ -350,5 +350,13 @@ namespace ChoETL
             //    Console.WriteLine(item.Item1 + " " + item.Item2 + " " + item.Item3);
             return words.ToArray();
         }
+
+        public ChoFixedLengthRecordConfiguration Configure(Action<ChoFixedLengthRecordConfiguration> action)
+        {
+            if (action != null)
+                action(this);
+
+            return this;
+        }
     }
 }

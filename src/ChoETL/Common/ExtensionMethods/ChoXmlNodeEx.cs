@@ -81,16 +81,81 @@ namespace ChoETL
             if (elementNames.Length == 1)
             {
                 string elementName = elementNames[0];
-                while (reader.ReadToFollowing(elementName))
-                    yield return (XElement)XNode.ReadFrom(reader);
+                if (elementName == "*")
+                {
+                    bool isEmpty = reader.IsEmptyElement;
+                    reader.ReadStartElement();
+                    if (isEmpty == false)
+                    {
+                        do
+                        {
+                            // Read document till next element
+                            reader.MoveToContent();
+
+                            if (reader.NodeType == XmlNodeType.Element)
+                            {
+                                // Empty element?
+                                isEmpty = reader.IsEmptyElement;
+
+                                // Decode child element
+                                XElement el = XElement.ReadFrom(reader)
+                                                      as XElement;
+                                if (el != null)
+                                    yield return el;
+
+                                reader.MoveToContent();
+                            }
+                            else if (reader.NodeType == XmlNodeType.Text)
+                            {
+                                reader.Skip();   // Skip text
+                            }
+                        } while (reader.NodeType != XmlNodeType.EndElement);
+                    }
+                }
+                else
+                {
+                    while (reader.ReadToFollowing(elementName))
+                        yield return (XElement)XNode.ReadFrom(reader);
+                }
             }
             else
             {
                 string elementName = elementNames[0];
-                while (reader.ReadToDescendant(elementName))
+                if (elementName == "*")
                 {
-                    foreach (var i in StreamElements(reader, elementNames.Skip(1).ToArray()))
-                        yield return i;
+                    bool isEmpty = reader.IsEmptyElement;
+                    reader.ReadStartElement();
+                    if (isEmpty == false)
+                    {
+                        do
+                        {
+                            // Read document till next element
+                            reader.MoveToContent();
+
+                            if (reader.NodeType == XmlNodeType.Element)
+                            {
+                                // Empty element?
+                                isEmpty = reader.IsEmptyElement;
+
+                                foreach (var i in StreamElements(reader, elementNames.Skip(1).ToArray()))
+                                    yield return i;
+
+                                reader.MoveToContent();
+                            }
+                            else if (reader.NodeType == XmlNodeType.Text)
+                            {
+                                reader.Skip();   // Skip text
+                            }
+                        } while (reader.NodeType != XmlNodeType.EndElement);
+                    }
+                }
+                else
+                {
+                    while (reader.ReadToDescendant(elementName))
+                    {
+                        foreach (var i in StreamElements(reader, elementNames.Skip(1).ToArray()))
+                            yield return i;
+                    }
                 }
             }
         }

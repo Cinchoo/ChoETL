@@ -308,5 +308,13 @@ namespace ChoETL
                 }
             }
         }
+
+        public ChoKVPRecordConfiguration Configure(Action<ChoKVPRecordConfiguration> action)
+        {
+            if (action != null)
+                action(this);
+
+            return this;
+        }
     }
 }

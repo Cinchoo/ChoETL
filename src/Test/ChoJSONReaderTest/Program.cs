@@ -362,7 +362,64 @@ namespace ChoJSONReaderTest
 
         static void Main(string[] args)
         {
-            Sample10();
+            Sample11();
+        }
+
+        static void Sample12()
+        {
+            using (var jr = new ChoJSONReader("sample12.json")
+                )
+            {
+                foreach (var x1 in jr)
+                {
+                    foreach (var z1 in x1)
+                    {
+                        dynamic newObj = new ChoDynamicObject();
+                        newObj.name = z1.Key;
+
+                        foreach (var kvp in (ChoDynamicObject)z1.Value)
+                            ((ChoDynamicObject)newObj).AddOrUpdate(kvp.Key, kvp.Value);
+
+                        Console.WriteLine(ChoUtility.DumpAsJson(newObj));
+                    }
+                }
+            }
+        }
+
+        static void Sample11()
+        {
+            string j1 = @"{
+    ""images"":{
+         ""totalCount"":4,
+         ""0"":{
+                ""url"":""file1.jpg""
+         },
+         ""1"":{
+                ""url"":""file2.jpg""
+         },
+         ""2"":{
+                ""url"":""file3.jpg""
+        },
+        ""3"":{
+                ""url"":""file4.jpg""
+        }
+        }
+    }";
+            using (var jr = ChoJSONReader.LoadText(j1)
+                .WithField("TotalCount", jsonPath: "$..totalCount", fieldType: typeof(int))
+                .WithField("Url", jsonPath: "$..url", fieldType: typeof(string[]))
+                )
+            {
+                foreach (var x in jr)
+                {
+                    Console.WriteLine($"TotalCount: {x.TotalCount}");
+
+                    foreach (var url in x.Url)
+                    {
+                        Console.WriteLine($"Url: {url}");
+                    }
+                }
+            }
         }
 
         static void Sample10()

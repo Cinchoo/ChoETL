@@ -251,5 +251,13 @@ namespace ChoETL
 
             LoadNCacheMembers(JSONRecordFieldConfigurations);
         }
+
+        public ChoJSONRecordConfiguration Configure(Action<ChoJSONRecordConfiguration> action)
+        {
+            if (action != null)
+                action(this);
+
+            return this;
+        }
     }
 }

@@ -129,6 +129,11 @@ namespace ChoETL
             _kvpDict = kvpDict;
         }
 
+        public ChoDynamicObject(ExpandoObject kvpDict) : this(null, false)
+        {
+            _kvpDict = (IDictionary<string, object>)kvpDict;
+        }
+
         public ChoDynamicObject(Func<IDictionary<string, object>> func, bool watchChange = false)
         {
             ThrowExceptionIfPropNotExists = false;
@@ -629,6 +634,19 @@ namespace ChoETL
             {
                 IDictionary<string, object> kvpDict = _kvpDict;
                 return kvpDict != null ? kvpDict.Count : 0;
+            }
+        }
+
+        public KeyValuePair<string, object> this[int index]
+        {
+            get
+            {
+                IDictionary<string, object> kvpDict = _kvpDict;
+                if (kvpDict != null)
+                {
+                    return kvpDict.ElementAtOrDefault(index);
+                }
+                return new KeyValuePair<string, object>();
             }
         }
 

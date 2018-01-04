@@ -71,6 +71,15 @@ namespace ChoETL
             get;
             private set;
         }
+
+        public ChoCSVRecordConfiguration Configure(Action<ChoCSVRecordConfiguration> action)
+        {
+            if (action != null)
+                action(this);
+
+            return this;
+        }
+
         internal Dictionary<string, string> AlternativeKeys
         {
             get;

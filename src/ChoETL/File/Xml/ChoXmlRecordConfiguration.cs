@@ -424,6 +424,14 @@ namespace ChoETL
             else
                 return propName.LocalName;
         }
+
+        public ChoXmlRecordConfiguration Configure(Action<ChoXmlRecordConfiguration> action)
+        {
+            if (action != null)
+                action(this);
+
+            return this;
+        }
     }
 
     public class ChoXmlNamespaceManager

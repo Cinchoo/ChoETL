@@ -326,7 +326,7 @@ namespace ChoETL
                     }
                 }
 
-                fieldValue = jTokens != null ? (object)jTokens : jToken;
+                fieldValue = !jTokens.IsNullOrEmpty() ? (object)jTokens : jToken;
 
                 if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
                     continue;
@@ -414,7 +414,7 @@ namespace ChoETL
                     else
                     {
                         List<object> list = new List<object>();
-                        Type itemType = fieldConfig.FieldType.GetUnderlyingType();
+                        Type itemType = fieldConfig.FieldType.GetUnderlyingType().GetItemType().GetUnderlyingType();
 
                         if (fieldValue is JToken)
                         {
@@ -431,7 +431,7 @@ namespace ChoETL
                                     list.Add(fieldConfig.ItemConverter(ele));
                                 else
                                 {
-                                    fieldValue = ToObject(ele, itemType);
+                                    list.Add(ToObject(ele, itemType));
                                 }
                             }
                             fieldValue = list.ToArray();

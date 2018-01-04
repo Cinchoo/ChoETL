@@ -1,0 +1,17 @@
+﻿{
+  "images": {
+    "totalCount": 4,
+    "0": {
+      "url": "file1.jpg"
+    },
+    "1": {
+      "url": "file2.jpg"
+    },
+    "2": {
+      "url": "file3.jpg"
+    },
+    "3": {
+      "url": "file4.jpg"
+    }
+  }
+}

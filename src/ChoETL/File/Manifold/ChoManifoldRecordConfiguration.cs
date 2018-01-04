@@ -147,5 +147,13 @@ namespace ChoETL
                 }
             }
         }
+
+        public ChoManifoldRecordConfiguration Configure(Action<ChoManifoldRecordConfiguration> action)
+        {
+            if (action != null)
+                action(this);
+
+            return this;
+        }
     }
 }

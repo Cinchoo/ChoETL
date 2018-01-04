@@ -44,7 +44,19 @@ namespace ChoXmlReaderTest
     {
         static void Main(string[] args)
         {
-            Sample6();
+            Pivot1();
+        }
+
+        public static void Pivot1()
+        {
+            using (var parser = new ChoXmlReader("pivot1.xml").WithXPath(@"//Values/*")
+                .WithField("Item")
+                .WithField("Value")
+            )
+            {
+                Console.WriteLine(ChoCSVWriter.ToTextAll(parser.Cast<ChoDynamicObject>().Transpose(false), 
+                    new ChoCSVRecordConfiguration().Configure(c => c.FileHeaderConfiguration.HasHeaderRecord = true)));
+            }
         }
 
         static void Sample6()
