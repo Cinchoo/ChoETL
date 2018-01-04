@@ -1,0 +1,27 @@
+﻿{
+  "sales_invoice": {
+    "contact_id": 201171400939013415,
+    "remove_invoice_sequence_id": true,
+    "invoice_sequence_id": "F2017004",
+    "reference": null,
+    "invoice_date": "5-1-2017",
+    "currency": "EUR",
+    "prices_are_incl_tax": false,
+    "details_attributes": {
+      "0": {
+        "description": "Product description",
+        "price": 13.80,
+        "amount": "10",
+        "tax_rate_id": 197923875808347751,
+        "ledger_account_id": 197923875101607508
+      },
+      "1": {
+        "description": "Product description",
+        "price": 13.80,
+        "amount": "10",
+        "tax_rate_id": 197923875808347751,
+        "ledger_account_id": 197923875101607508
+      }
+    }
+  }
+}

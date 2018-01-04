@@ -80,6 +80,12 @@ namespace ChoETL
                 return value;
             if (culture == null)
                 culture = ChoConvert.DefaultCulture;
+
+            if (value is ICollection && !typeof(ICollection).IsAssignableFrom(targetType))
+            {
+                value = ((IEnumerable)value).FirstOrDefault<object>();
+            }
+
             Type type = value == null ? typeof(object) : value.GetType();
             try
             {

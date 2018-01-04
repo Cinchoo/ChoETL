@@ -358,6 +358,12 @@ namespace ChoETL
                     result = AfterKVPLoaded(name, kvpDict[name]);
                 else
                 {
+                    if (name.StartsWith("_"))
+                    {
+                        string normalizedName = name.Substring(1);
+                        if (kvpDict.ContainsKey(normalizedName))
+                            result = AfterKVPLoaded(name, kvpDict[normalizedName]);
+                    }
                     if (ThrowExceptionIfPropNotExists)
                         return false;
                 }

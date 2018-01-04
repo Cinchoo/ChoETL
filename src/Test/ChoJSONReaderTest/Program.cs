@@ -362,7 +362,18 @@ namespace ChoJSONReaderTest
 
         static void Main(string[] args)
         {
-            Sample11();
+            Sample13();
+        }
+
+        static void Sample13()
+        {
+            using (var p = new ChoJSONReader("sample13.json")
+                .WithField("details_attributes", jsonPath: "$..details_attributes", fieldType: typeof(ChoDynamicObject))
+                )
+            {
+                foreach (dynamic rec in p)
+                    Console.WriteLine(ChoUtility.Dump(rec.details_attributes._1));
+            }
         }
 
         static void Sample12()
