@@ -269,7 +269,7 @@ namespace ChoETL
                     rec = Activator.CreateInstance(Configuration.RecordType);
                 else
                 {
-                    recText = @"<{0} xsi:nil=""true"" />".FormatString(Configuration.NodeName
+                    recText = @"<{0} xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xsi:nil=""true"" />".FormatString(Configuration.NodeName
                                 ).Indent(Configuration.Indent * 1, Configuration.IndentChar.ToString());
                     return true;
                 }
@@ -437,7 +437,7 @@ namespace ChoETL
                             {
                                 if (!isElementStart)
                                 {
-                                    msg.Append(@"<{0} xsi:nil=""true""".FormatString(Configuration.NodeName).Indent(Configuration.Indent, Configuration.IndentChar.ToString()));
+                                    msg.Append(@"<{0} xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xsi:nil=""true""".FormatString(Configuration.NodeName).Indent(Configuration.Indent, Configuration.IndentChar.ToString()));
                                     isElementStart = true;
                                 }
                                 if (!isElementClosed)
@@ -458,7 +458,7 @@ namespace ChoETL
                                     msg.AppendFormat(">{0}", Configuration.EOLDelimiter);
                                     isElementClosed = true;
                                 }
-                                msg.Append(@"<{0} xsi:nil=""true"" />{1}".FormatString(fieldConfig.FieldName,
+                                msg.Append(@"<{0} xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xsi:nil=""true"" />{1}".FormatString(fieldConfig.FieldName,
                                     Configuration.EOLDelimiter).Indent(Configuration.Indent * 2, Configuration.IndentChar.ToString()));
                             }
                         }

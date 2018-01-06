@@ -40,11 +40,27 @@ namespace ChoXmlReaderTest
         [XmlAttribute("name")]
         public string Name { get; set; }
     }
+    public class Item
+    {
+        public int ItemId { get; set; }
+        public string ItemName { get; set; }
+        public int? Number { get; set; }
+        public DateTime? Created { get; set; }
+    }
     public class Program
     {
         static void Main(string[] args)
         {
-            Pivot1();
+            Sample6();
+        }
+
+        public static void NullableTest()
+        {
+            string xml = @"<?xml version=""1.0""?>
+    <Item Number = ""100"" ItemName = ""TestName1"" ItemId = ""1"" />";
+
+            var item = ChoXmlReader<Item>.LoadText(xml); //.WithXPath("//Item");
+            Console.WriteLine(ChoUtility.Dump(item));
         }
 
         public static void Pivot1()

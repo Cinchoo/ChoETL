@@ -30,16 +30,24 @@ namespace ChoETL
             }
             else if (xPath.IsNullOrWhiteSpace() || xPath == "//*" || xPath == "./*")
             {
+                while (xmlReader.Read())
+                {
+                    // first element is the root element
+                    if (xmlReader.NodeType == XmlNodeType.Element)
+                    {
+                        break;
+                    }
+                }
                 bool isEmpty;
                 // Empty element?
                 isEmpty = xmlReader.IsEmptyElement;
 
-                // Read the root start element
-                xmlReader.ReadStartElement();
-
                 // Decode elements
                 if (isEmpty == false)
                 {
+                    // Read the root start element
+                    xmlReader.ReadStartElement();
+
                     do
                     {
                         // Read document till next element
@@ -63,7 +71,18 @@ namespace ChoETL
                         {
                             xmlReader.Skip();   // Skip text
                         }
+                        else
+                            break;
                     } while (xmlReader.NodeType != XmlNodeType.EndElement);
+                }
+                else
+                {
+                    // Decode child element
+                    XElement el = XElement.ReadFrom(xmlReader)
+                                          as XElement;
+                    if (el != null)
+                        yield return el;
+
                 }
             }
             else
