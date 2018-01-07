@@ -786,7 +786,7 @@ namespace ChoETL
                 return Type.GetType(typeName);
         }
 
-        public void ReadXml(XmlReader reader)
+        public virtual void ReadXml(XmlReader reader)
         {
             XmlSerializer keySerializer = new XmlSerializer(typeof(string));
             XmlSerializer valueSerializer = new XmlSerializer(typeof(object));
@@ -797,75 +797,116 @@ namespace ChoETL
             if (wasEmpty)
                 return;
 
-            reader.ReadStartElement("dynamic");
-            while (reader.NodeType != System.Xml.XmlNodeType.EndElement)
+            //reader.ReadStartElement("dynamic");
+            if (true)
             {
-                reader.ReadStartElement("kvp");
-
-                reader.ReadStartElement("key");
-                string key = (string)keySerializer.Deserialize(reader);
-                reader.ReadEndElement();
-
-                reader.ReadStartElement("value");
-                reader.MoveToContent();
-                Type type = GetType(reader.LocalName);
-
-                object value = null;
-                if (type == typeof(ChoDynamicObject))
+                for (int attInd = 0; attInd < reader.AttributeCount; attInd++)
                 {
-                    ChoDynamicObject dobj = new ChoDynamicObject();
-                    dobj.ReadXml(XmlReader.Create(new StringReader(reader.ReadOuterXml())));
-                    value = dobj;
+                    reader.MoveToAttribute(attInd);
+                    this.Add(reader.Name, reader.Value);
                 }
-                else
+
+                //reader.ReadStartElement("kvp");
+
+                //reader.ReadStartElement("key");
+                //string key = (string)keySerializer.Deserialize(reader);
+                //reader.ReadEndElement();
+
+                //reader.ReadStartElement("value");
+                //reader.MoveToContent();
+                //Type type = GetType(reader.LocalName);
+
+                //object value = null;
+                //if (type == typeof(ChoDynamicObject))
+                //{
+                //    ChoDynamicObject dobj = new ChoDynamicObject();
+                //    dobj.ReadXml(XmlReader.Create(new StringReader(reader.ReadOuterXml())));
+                //    value = dobj;
+                //}
+                //else
+                //{
+                //    ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(type);
+                //    value = serializer.Deserialize(reader);
+                //}
+                ////object value = ChoUtility.XmlDeserialize<object>(reader); // (TValue)valueSerializer.Deserialize(reader);
+                //reader.ReadEndElement();
+
+                //this.Add(key, value);
+
+                //reader.ReadEndElement();
+                if (reader.Read())
                 {
-                    ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(type);
-                    value = serializer.Deserialize(reader);
-                }
-                //object value = ChoUtility.XmlDeserialize<object>(reader); // (TValue)valueSerializer.Deserialize(reader);
-                reader.ReadEndElement();
-
-                this.Add(key, value);
-
-                reader.ReadEndElement();
-                reader.MoveToContent();
-            }
-            reader.ReadEndElement();
-            //reader.ReadEndElement();
-        }
-
-        public void WriteXml(XmlWriter writer)
-        {
-            XmlSerializer keySerializer = new XmlSerializer(typeof(string));
-
-            writer.WriteStartElement("dynamic");
-
-            foreach (string key in this.Keys)
-            {
-                writer.WriteStartElement("kvp");
-
-                writer.WriteStartElement("key");
-                keySerializer.Serialize(writer, key);
-                writer.WriteEndElement();
-
-                writer.WriteStartElement("value");
-                object value = this[key];
-                if (value != null)
-                {
-                    if (value is ChoDynamicObject)
+                    if (reader.NodeType == System.Xml.XmlNodeType.EndElement)
                     {
-                        ((ChoDynamicObject)value).WriteXml(writer);
+
                     }
                     else
                     {
-                        XmlSerializer valueSerializer = new XmlSerializer(value.GetType());
+                        object value = null;
+                        string text = reader.Value.NTrim();
+                        if (text.IsNullOrEmpty())
+                        {
+                            reader.MoveToContent();
+                            Type type = GetType(reader.LocalName);
+                            if (type != null)
+                            {
+                                if (type == typeof(ChoDynamicObject))
+                                {
+                                    ChoDynamicObject dobj = new ChoDynamicObject();
+                                    dobj.ReadXml(reader.ReadSubtree());
+                                    value = dobj;
+                                }
+                                else
+                                {
+                                    ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(type);
+                                    value = serializer.Deserialize(reader);
+                                }
+                                this.Add("dynamic", value);
+                            }
+                        }
+                        else
+                            this.Add("Value", reader.Value);
+                    }
+                }
+            }
+            //reader.ReadEndElement();
+            //reader.ReadEndElement();
+        }
+
+        public virtual void WriteXml(XmlWriter writer)
+        {
+            writer.WriteStartElement("dynamic");
+
+            object value = null;
+            foreach (string key in this.Keys)
+            {
+                if (key == "Value")
+                    value = this[key];
+                else if (key == "dynamic")
+                {
+                    ((ChoDynamicObject)this[key]).WriteXml(writer);
+                }
+                else
+                {
+                    writer.WriteAttributeString(key, this[key].ToNString());
+                }
+            }
+            if (value != null)
+            {
+                if (value is ChoDynamicObject)
+                {
+                    ((ChoDynamicObject)value).WriteXml(writer);
+                }
+                else
+                {
+                    if (value.GetType().IsSimple())
+                        writer.WriteString(value.ToNString());
+                    else
+                    {
+                        ChoNullNSXmlSerializer valueSerializer = new ChoNullNSXmlSerializer(value.GetType());
                         valueSerializer.Serialize(writer, value);
                     }
                 }
-
-                writer.WriteEndElement();
-
-                writer.WriteEndElement();
             }
             writer.WriteEndElement();
         }

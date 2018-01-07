@@ -128,7 +128,7 @@ namespace ChoETL
         {
             EventHandler<ChoRecordFieldSerializeEventArgs> eh = RecordFieldSerialize;
             if (eh == null)
-                return true;
+                return false;
 
             ChoRecordFieldSerializeEventArgs e = new ChoRecordFieldSerializeEventArgs() { Record = record, Index = index, PropertyName = propName, Source = source };
             eh(this, e);

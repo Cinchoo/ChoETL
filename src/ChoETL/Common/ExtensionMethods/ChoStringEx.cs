@@ -607,6 +607,8 @@ namespace ChoETL
 
         public static object ToDynamic(XElement element, bool topLevel = true)
         {
+            return (ChoUtility.XmlDeserialize<ChoDynamicObject>(element.GetOuterXml()));
+
             if (element.Name.LocalName == "dynamic")
             {
                 return (ChoUtility.XmlDeserialize<ChoDynamicObject>(element.GetOuterXml()));

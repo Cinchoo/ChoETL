@@ -302,8 +302,8 @@ namespace ChoETL
                     }
 
                     bool hasElements = false;
-                    var z = xpr.Elements().Where(a => !a.HasElements).ToArray();
-                    foreach (var ele in xpr.Elements().Where(a => !a.HasElements))
+                    var z = xpr.Elements().ToArray();
+                    foreach (var ele in xpr.Elements())
                     {
                         name = GetNameWithNamespace(ele.Name);
 

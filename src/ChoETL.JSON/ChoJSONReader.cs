@@ -137,6 +137,13 @@ namespace ChoETL
             return r;
         }
 
+        public static T LoadJToken(JToken jObject, ChoJSONRecordConfiguration configuration = null)
+        {
+            if (jObject == null) return default(T);
+
+            return LoadJTokens(new JToken[] { jObject }, configuration).FirstOrDefault();
+        }
+
         //internal static IEnumerator<object> LoadText(Type recType, string inputText, ChoJSONRecordConfiguration configuration, Encoding encoding, int bufferSize)
         //{
         //    ChoJSONRecordReader rr = new ChoJSONRecordReader(recType, configuration);

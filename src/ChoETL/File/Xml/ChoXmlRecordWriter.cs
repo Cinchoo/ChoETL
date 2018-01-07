@@ -22,7 +22,7 @@ namespace ChoETL
         private bool _configCheckDone = false;
         private long _index = 0;
         private Lazy<XmlSerializer> _se = null;
-        private readonly Regex _beginTagRegex = new Regex("^<.*>");
+        private readonly Regex _beginTagRegex = new Regex(@"^(<\w+)(.*)", RegexOptions.Compiled | RegexOptions.Multiline);
         private readonly Regex _endTagRegex = new Regex("</.*>$");
         internal ChoWriter Writer = null;
         internal Type ElementType = null;
@@ -384,7 +384,11 @@ namespace ChoETL
                             else if (dict.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
                                 dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
                             else
-                                throw new ChoWriterException($"Failed to write '{fieldValue}' value for '{fieldConfig.FieldName}' member.", ex);
+                            {
+                                var ex1 = new ChoWriterException($"Failed to write '{fieldValue}' value for '{fieldConfig.FieldName}' member.", ex);
+                                fieldValue = null;
+                                throw ex1;
+                            }
                         }
                         else if (pi != null)
                         {
@@ -393,10 +397,18 @@ namespace ChoETL
                             else if (rec.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
                                 rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
                             else
-                                throw new ChoWriterException($"Failed to write '{fieldValue}' value for '{fieldConfig.FieldName}' member.", ex);
+                            {
+                                var ex1 = new ChoWriterException($"Failed to write '{fieldValue}' value for '{fieldConfig.FieldName}' member.", ex);
+                                fieldValue = null;
+                                throw ex1;
+                            }
                         }
                         else
-                            throw new ChoWriterException($"Failed to write '{fieldValue}' value for '{fieldConfig.FieldName}' member.", ex);
+                        {
+                            var ex1 = new ChoWriterException($"Failed to write '{fieldValue}' value for '{fieldConfig.FieldName}' member.", ex);
+                            fieldValue = null;
+                            throw ex1;
+                        }
                     }
                     catch (Exception innerEx)
                     {
@@ -524,9 +536,10 @@ namespace ChoETL
                             fieldText = ChoUtility.XmlSerialize(fieldValue, null, Configuration.EOLDelimiter);
                             if (!fieldValue.GetType().IsArray)
                             {
-                                fieldText = _beginTagRegex.Replace(fieldText, delegate (Match thisMatch)
+                                fieldText = _beginTagRegex.Replace(fieldText, delegate (Match m)
                                 {
-                                    return "<{0}>".FormatString(fieldConfig.FieldName);
+                                    return "<" + fieldConfig.FieldName + m.Groups[2].Value;
+                                    //return "<{0}>".FormatString(fieldConfig.FieldName);
                                 });
                                 fieldText = _endTagRegex.Replace(fieldText, delegate (Match thisMatch)
                                 {
@@ -817,7 +830,7 @@ namespace ChoETL
             else if (Writer != null && Writer is IChoSerializableWriter)
             {
                 object state = value;
-                bool retValue = ChoFuncEx.RunWithIgnoreError(() => ((IChoSerializableWriter)Writer).RaiseRecordFieldSerialize(target, index, propName, ref state), true);
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => ((IChoSerializableWriter)Writer).RaiseRecordFieldSerialize(target, index, propName, ref state), false);
 
                 value = state;
 

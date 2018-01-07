@@ -319,10 +319,18 @@ namespace ChoETL
                     //  || ChoConvert.TryConvertToSpecialValues(value, targetType, culture, out value))
                     return value;
 
+                if (targetType == typeof(ChoDynamicObject))
+                {
+                    dynamic ret = new ChoDynamicObject();
+                    ret.Value = value;
+                    return ret;
+                }
+
+                object result = null;
                 if (origType.IsNullableType())
                     return null;
-                else if (ChoConvert.TryConvertToSpecialValues(value, targetType, culture, out value))
-                    return value;
+                else if (ChoConvert.TryConvertToSpecialValues(value, targetType, culture, out result))
+                    return result;
                 
                 throw new ApplicationException("Object conversion failed.");
             }

@@ -147,6 +147,13 @@ namespace ChoETL
             return r;
         }
 
+        public static T LoadXElement(XElement xElement, ChoXmlRecordConfiguration configuration = null)
+        {
+            if (xElement == null) return default(T);
+
+            return LoadXElements(new XElement[] { xElement }, configuration).FirstOrDefault();
+        }
+
         public static ChoXmlReader<T> LoadText(string inputText, Encoding encoding = null, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
             var r = new ChoXmlReader<T>(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
