@@ -31,7 +31,7 @@ namespace ChoJSONReaderTest
         public double Price { get; set; }
     }
 
-    public class DataMapper : IChoKeyValueType 
+    public class DataMapper : IChoKeyValueType
     {
         public DataMapper()
         {
@@ -360,9 +360,91 @@ namespace ChoJSONReaderTest
     }
   ]}            ";
 
+        public class IRCUBE
+        {
+            public string CurveDefinitionId { get; set; }
+            public string CurveFamilyId { get; set; }
+            public string CurveName { get; set; }
+            public string MarketDataSet { get; set; }
+            public string Referenced { get; set; }
+
+            public override string ToString()
+            {
+                StringBuilder msg = new StringBuilder();
+
+                msg.AppendLine("CurveDefinitionId: " + CurveDefinitionId);
+                msg.AppendLine("CurveFamilyId: " + CurveFamilyId);
+                msg.AppendLine("CurveName: " + CurveName);
+                msg.AppendLine("MarketDataSet: " + MarketDataSet);
+                msg.AppendLine("Referenced: " + Referenced);
+
+                return msg.ToString();
+            }
+        }
+
         static void Main(string[] args)
         {
-            Sample13();
+            Sample15();
+        }
+
+        static void Sample15()
+        {
+            using (var p = new ChoJSONReader("sample15.json")
+                .WithField("header", jsonPath: "$..header[*]", fieldType: typeof(string[]))
+                .WithField("results", jsonPath: "$..results[*]", fieldType: typeof(List<string[]>))
+                )
+            {
+                var rec = p.FirstOrDefault();
+                string[] header = rec.header;
+                List<string[]> results = rec.results;
+
+                var z = results.Select(a => header.Zip(a, (k, v) => new { Key = k, Value = v }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value)).ToArray();
+            }
+        }
+
+        static void Sample14()
+        {
+            using (var p = new ChoJSONReader("sample14.json")
+                .WithField("USD", jsonPath: "$..USD.FCC-IRCUBE[*]")
+                .WithField("EUR", jsonPath: "$..EUR.FCC-IRCUBE[*]")
+                .WithField("GBP", jsonPath: "$..GBP.FCC-IRCUBE")
+            )
+            {
+                foreach (dynamic rec in p)
+                {
+                    Console.WriteLine("USD:");
+                    Console.WriteLine();
+                    foreach (var curr in rec.USD)
+                    {
+                        Console.WriteLine(curr.ToString());
+                    }
+                    Console.WriteLine();
+
+                    foreach (var curr in rec.EUR)
+                    {
+                        Console.WriteLine(curr.ToString());
+                    }
+                }
+            }
+            return;
+
+            using (var p = new ChoJSONReader("sample14.json")
+            .WithField("USD", jsonPath: "$..USD.FCC-IRCUBE[*]", fieldType: typeof(IRCUBE[]))
+            .WithField("EUR", jsonPath: "$..EUR.FCC-IRCUBE[*]", fieldType: typeof(IRCUBE[]))
+            .WithField("GBP", jsonPath: "$..GBP.FCC-IRCUBE", fieldType: typeof(IRCUBE[]))
+                )
+            {
+                foreach (dynamic rec in p)
+                {
+                    Console.WriteLine("USD:");
+                    Console.WriteLine();
+                    foreach (var curr in rec.USD)
+                    {
+                        Console.WriteLine(curr.ToString());
+                    }
+                    Console.WriteLine();
+                }
+            }
         }
 
         static void Sample13()

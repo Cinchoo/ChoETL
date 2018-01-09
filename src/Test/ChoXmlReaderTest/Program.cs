@@ -47,11 +47,69 @@ namespace ChoXmlReaderTest
         public int? Number { get; set; }
         public DateTime? Created { get; set; }
     }
+    public class SelectedIds
+    {
+        [XmlElement]
+        public int[] Id;
+    }
     public class Program
     {
         static void Main(string[] args)
         {
-            Sample14();
+            Sample12();
+        }
+
+        static void Sample12()
+        {
+            using (var parser = new ChoXmlReader("sample12.xml")
+            .WithField("SelectedIdValue", xPath: "//SelectedIds", fieldType: typeof(SelectedIds))
+            )
+            {
+                foreach (dynamic rec in parser)
+                {
+                    Console.WriteLine("{0}", rec.GetXml());
+                }
+            }
+        }
+
+        public static void DynamicXmlTest()
+        {
+            ChoDynamicObject src = new ChoDynamicObject("Item1");
+
+            IDictionary<string, object> x = src as IDictionary<string, object>;
+            x.Add("@Id", 100);
+            x.Add("@Name", "Raj");
+
+            //x.Add("@@Value", "Hello!");
+            ChoDynamicObject sd = new ChoDynamicObject();
+            ((IDictionary<string, object>)sd).Add("@@Value", "0001-01-11T00:00:00");
+
+            x.Add("StartDate", sd);
+
+            ChoDynamicObject id1 = new ChoDynamicObject("Id");
+            ((IDictionary<string, object>)id1).Add("@@Value", 101);
+
+            ChoDynamicObject id2 = new ChoDynamicObject();
+            ((IDictionary<string, object>)id2).Add("@@Value", 102);
+
+            ChoDynamicObject id3 = new ChoDynamicObject();
+            ((IDictionary<string, object>)id3).Add("@@Value", 103);
+
+            x.Add("SelectedIds", new object[] { id1, id2, id3 });
+
+            Console.WriteLine(src.GetXml());
+        }
+
+        public static void Sample15()
+        {
+            using (var parser = new ChoXmlReader("sample15.xml")
+            )
+            {
+                foreach (dynamic rec in parser)
+                {
+                    Console.WriteLine(ChoUtility.Dump(rec));
+                }
+            }
         }
 
         public static void Sample14()
@@ -167,7 +225,7 @@ namespace ChoXmlReaderTest
                 .WithField("CB_PEMAIL", xPath: "/JobApplication[@job_type='REQUESTED']/JobApplicationStates/JobApplicationState/Applicants/Applicant[@type='CB']/Communications/Communication[@item_code='PEMAIL']/@com")
          )
             {
-                using (var writer = new ChoCSVWriter("sample6.csv"))
+                using (var writer = new ChoCSVWriter("sample6.csv").WithFirstLineHeader())
                     writer.Write(parser);
             }
 
@@ -262,19 +320,6 @@ namespace ChoXmlReaderTest
                 foreach (dynamic rec in parser)
                 {
                     Console.WriteLine(ChoUtility.DumpAsJson(rec.sons));
-                }
-            }
-        }
-
-        static void Sample12()
-        {
-            using (var parser = new ChoXmlReader("sample12.xml")
-                .WithField("SelectedIds/Id", fieldType: typeof(int[]))
-            )
-            {
-                foreach (dynamic rec in parser)
-                {
-                    Console.WriteLine(ChoUtility.Dump(rec));
                 }
             }
         }

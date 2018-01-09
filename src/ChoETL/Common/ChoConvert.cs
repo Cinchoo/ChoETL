@@ -143,10 +143,20 @@ namespace ChoETL
 
                 if (value is Array && typeof(IList).IsAssignableFrom(targetType))
                 {
-                    MethodInfo convertMethod = typeof(ChoConvert).GetMethod("ConvertArray",
+                    if (typeof(Array).IsAssignableFrom(targetType))
+                    {
+                        MethodInfo convertMethod = typeof(ChoConvert).GetMethod("ConvertToArray",
                         BindingFlags.NonPublic | BindingFlags.Static);
-                    MethodInfo generic = convertMethod.MakeGenericMethod(new[] { targetType.GetItemType() });
-                    return generic.Invoke(null, new object[] { value });
+                        MethodInfo generic = convertMethod.MakeGenericMethod(new[] { targetType.GetItemType() });
+                        return generic.Invoke(null, new object[] { value });
+                    }
+                    else
+                    {
+                        MethodInfo convertMethod = typeof(ChoConvert).GetMethod("ConvertToList",
+                        BindingFlags.NonPublic | BindingFlags.Static);
+                        MethodInfo generic = convertMethod.MakeGenericMethod(new[] { targetType.GetItemType() });
+                        return generic.Invoke(null, new object[] { value });
+                    }
                 }
 
                 throw new ApplicationException("Object conversion failed.");
@@ -158,7 +168,11 @@ namespace ChoETL
                 throw new ApplicationException(string.Format("Can't convert object from '{0}' type to '{1}' type.", (object)type, (object)targetType), ex);
             }
         }
-        private static List<T> ConvertArray<T>(Array input)
+        private static T[] ConvertToArray<T>(Array input)
+        {
+            return input.Cast<T>().ToArray(); // Using LINQ for simplicity
+        }
+        private static List<T> ConvertToList<T>(Array input)
         {
             return input.Cast<T>().ToList(); // Using LINQ for simplicity
         }

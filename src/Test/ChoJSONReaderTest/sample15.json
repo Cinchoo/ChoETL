@@ -1,0 +1,10 @@
+﻿{
+  "rootEntity": "function",
+  "count": 92516,
+  "header": [ [ "eventNumber", "startDate", "eventType" ] ],
+  "results": [
+    [ "40262-1", "Tuesday, December 12, 2017", "Corporate" ],
+    [ "14361-1", "Monday, October 23, 2017", "School" ],
+    [ "5014-1", "Friday, October 13, 2017", "Birthday" ]
+  ]
+}

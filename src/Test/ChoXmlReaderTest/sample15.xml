@@ -1,0 +1,8 @@
+﻿<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+  <SOAP-ENV:Header></SOAP-ENV:Header>
+  <SOAP-ENV:Body>
+    <Status xmlns="">
+      <Message>Success: 12345</Message>
+    </Status>
+  </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

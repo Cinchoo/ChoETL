@@ -114,9 +114,9 @@ namespace ChoETL
             _intrinsicTypes.Add("dynamic", typeof(ChoDynamicObject));
         }
 
-        public ChoDynamicObject() : this(false)
+        public ChoDynamicObject(string name) : this(false)
         {
-
+            DynamicObjectName = name.IsNullOrWhiteSpace() ? "dynamic" : name.Trim();
         }
 
         public ChoDynamicObject(bool watchChange = false) : this(null, watchChange)
@@ -136,6 +136,8 @@ namespace ChoETL
 
         public ChoDynamicObject(Func<IDictionary<string, object>> func, bool watchChange = false)
         {
+            if (DynamicObjectName.IsNullOrWhiteSpace())
+                DynamicObjectName = "dynamic";
             ThrowExceptionIfPropNotExists = false;
             IsFixed = false;
             IsReadOnly = false;
@@ -786,91 +788,83 @@ namespace ChoETL
                 return Type.GetType(typeName);
         }
 
-        public virtual void ReadXml(XmlReader reader)
+        public string GetXml(string tag = null)
         {
-            XmlSerializer keySerializer = new XmlSerializer(typeof(string));
-            XmlSerializer valueSerializer = new XmlSerializer(typeof(object));
+            if (tag.IsNullOrWhiteSpace())
+                tag = NName;
 
-            bool wasEmpty = reader.IsEmptyElement;
-            reader.Read();
-
-            if (wasEmpty)
-                return;
-
-            //reader.ReadStartElement("dynamic");
-            if (true)
+            bool hasAttrs = false;
+            StringBuilder msg = new StringBuilder("<{0}".FormatString(tag));
+            foreach (string key in this.Keys.Where(k => k.StartsWith("@") && k != "@@Value"))
             {
-                for (int attInd = 0; attInd < reader.AttributeCount; attInd++)
+                hasAttrs = true;
+                msg.AppendFormat(@" {0}=""{1}""", key.Substring(1), this[key]);
+            }
+
+            if (ContainsKey("@@Value"))
+            {
+                if (hasAttrs)
                 {
-                    reader.MoveToAttribute(attInd);
-                    this.Add(reader.Name, reader.Value);
+                    msg.AppendFormat(">");
+                    msg.AppendFormat("{0}{1}", Environment.NewLine, this["@@Value"].ToNString().Indent(1, "  "));
+                    msg.AppendFormat("{0}</{1}>", Environment.NewLine, tag);
                 }
-
-                //reader.ReadStartElement("kvp");
-
-                //reader.ReadStartElement("key");
-                //string key = (string)keySerializer.Deserialize(reader);
-                //reader.ReadEndElement();
-
-                //reader.ReadStartElement("value");
-                //reader.MoveToContent();
-                //Type type = GetType(reader.LocalName);
-
-                //object value = null;
-                //if (type == typeof(ChoDynamicObject))
-                //{
-                //    ChoDynamicObject dobj = new ChoDynamicObject();
-                //    dobj.ReadXml(XmlReader.Create(new StringReader(reader.ReadOuterXml())));
-                //    value = dobj;
-                //}
-                //else
-                //{
-                //    ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(type);
-                //    value = serializer.Deserialize(reader);
-                //}
-                ////object value = ChoUtility.XmlDeserialize<object>(reader); // (TValue)valueSerializer.Deserialize(reader);
-                //reader.ReadEndElement();
-
-                //this.Add(key, value);
-
-                //reader.ReadEndElement();
-                if (reader.Read())
+                else
                 {
-                    if (reader.NodeType == System.Xml.XmlNodeType.EndElement)
-                    {
+                    msg.AppendFormat(">");
+                    msg.AppendFormat("{0}", this["@@Value"].ToNString());
+                    msg.AppendFormat("</{0}>", tag);
+                }
+            }
+            else if (this.Keys.Any(k => !k.StartsWith("@")))
+            {
+                object value = null;
+                msg.AppendFormat(">");
+                foreach (string key in this.Keys.Where(k => !k.StartsWith("@")))
+                {
+                    value = this[key];
 
+                    if (value is ChoDynamicObject)
+                    {
+                        msg.AppendFormat("{0}{1}", Environment.NewLine, ((ChoDynamicObject)value).GetXml(((ChoDynamicObject)value).NName).Indent(1, "  "));
                     }
                     else
                     {
-                        object value = null;
-                        string text = reader.Value.NTrim();
-                        if (text.IsNullOrEmpty())
+                        if (value != null)
                         {
-                            reader.MoveToContent();
-                            Type type = GetType(reader.LocalName);
-                            if (type != null)
+                            if (value.GetType().IsSimple())
+                                msg.AppendFormat("{0}{1}", Environment.NewLine, value.ToNString().Indent(1, "  "));
+                            else
                             {
-                                if (type == typeof(ChoDynamicObject))
+                                msg.AppendFormat("{0}{1}", Environment.NewLine, "<{0}>".FormatString(key).Indent(1, "  "));
+                                if (value is IList)
                                 {
-                                    ChoDynamicObject dobj = new ChoDynamicObject();
-                                    dobj.ReadXml(reader.ReadSubtree());
-                                    value = dobj;
+                                    foreach (var collValue in ((IList)value).OfType<ChoDynamicObject>())
+                                    {
+                                        msg.AppendFormat("{0}{1}", Environment.NewLine, collValue.GetXml(collValue.NName == "dynamic" ? key.ToSingular() : collValue.NName).Indent(2, "  "));
+                                    }
                                 }
                                 else
-                                {
-                                    ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(type);
-                                    value = serializer.Deserialize(reader);
-                                }
-                                this.Add("dynamic", value);
+                                    msg.AppendFormat("{0}{1}", Environment.NewLine, ChoUtility.XmlSerialize(value).Indent(2, "  "));
+                                msg.AppendFormat("{0}{1}", Environment.NewLine, "</{0}>".FormatString(key).Indent(1, "  "));
                             }
                         }
                         else
-                            this.Add("Value", reader.Value);
+                        {
+
+                        }
                     }
+
                 }
+                msg.AppendFormat("{0}</{1}>", Environment.NewLine, tag);
             }
-            //reader.ReadEndElement();
-            //reader.ReadEndElement();
+            else
+            {
+                msg.AppendFormat(" />");
+            }
+
+
+            return msg.ToString();
         }
 
         public virtual void WriteXml(XmlWriter writer)
@@ -909,6 +903,36 @@ namespace ChoETL
                 }
             }
             writer.WriteEndElement();
+        }
+
+        public object GetValue()
+        {
+            return ContainsKey("@@Value") ? this["@@Value"] : null;
+        }
+
+        public object GetAttribute(string attrName)
+        {
+            if (!attrName.StartsWith("@"))
+                attrName = "@{0}".FormatString(attrName);
+
+            if (ContainsKey(attrName))
+                return this[attrName];
+            else
+                return null;
+        }
+        public void SetAttribute(string attrName, object value)
+        {
+            if (!attrName.StartsWith("@"))
+                attrName = "@{0}".FormatString(attrName);
+
+            SetPropertyValue(attrName, value);
+        }
+        public bool HasAttribute(string attrName)
+        {
+            if (!attrName.StartsWith("@"))
+                attrName = "@{0}".FormatString(attrName);
+
+            return ContainsKey(attrName);
         }
     }
 

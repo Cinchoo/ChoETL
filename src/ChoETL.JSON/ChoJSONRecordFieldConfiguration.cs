@@ -25,7 +25,7 @@ namespace ChoETL
             set;
         }
 
-        internal bool IsCollection
+        public bool IsArray
         {
             get;
             set;

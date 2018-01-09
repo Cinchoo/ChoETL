@@ -17,6 +17,7 @@ using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 using System.Xml.XPath;
 
@@ -951,7 +952,7 @@ namespace ChoETL
             {
                 if (target is ChoDynamicObject)
                 {
-                    ((ChoDynamicObject)target).WriteXml(xtw);
+                    xtw.WriteRaw(((ChoDynamicObject)target).GetXml());
                 }
                 else
                 {
@@ -993,9 +994,8 @@ namespace ChoETL
             {
                 if (type == typeof(ChoDynamicObject))
                 {
-                    ChoDynamicObject obj = new ChoDynamicObject();
-                    obj.ReadXml(xtw);
-                    return obj;
+                    XElement ele = XElement.Load(xtw);
+                    return ele.ToDynamic();
                 }
                 else
                 {
@@ -1023,8 +1023,7 @@ namespace ChoETL
                 {
                     if (type == typeof(ChoDynamicObject))
                     {
-                        ChoDynamicObject obj = new ChoDynamicObject();
-                        obj.ReadXml(xtw);
+                        ChoDynamicObject obj = XElement.Load(xtw).ToDynamic();
                         return obj;
                     }
                     else
@@ -1052,9 +1051,8 @@ namespace ChoETL
                 {
                     if (type == typeof(ChoDynamicObject))
                     {
-                        ChoDynamicObject obj = new ChoDynamicObject();
-                        obj.ReadXml(xtw);
-                        return obj;
+                        XElement ele = XElement.Load(xtw);
+                        return ele.ToDynamic();
                     }
                     else
                     {

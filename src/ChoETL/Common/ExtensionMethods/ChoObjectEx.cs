@@ -105,6 +105,14 @@ namespace ChoETL
         //    //}
         //}
 
+        public static string GetXml(this object target, string tag = null)
+        {
+            if (target is ChoDynamicObject)
+                return ((ChoDynamicObject)target).GetXml();
+            else
+                return ChoUtility.XmlSerialize(target);
+        }
+
         #region JsonSerialize Overloads
 
         public static readonly DataContractJsonSerializerSettings jsonSettings = new DataContractJsonSerializerSettings { UseSimpleDictionaryFormat = true };

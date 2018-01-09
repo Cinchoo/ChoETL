@@ -347,6 +347,29 @@ namespace ChoETL
                     fieldValue = fieldConfig.ValueConverter(fieldValue);
                 else
                 {
+                    if (fieldConfig.FieldType == null)
+                    {
+                        if (!fieldConfig.IsArray && fieldValue is JToken[])
+                        {
+                            fieldValue = ((JToken[])fieldValue).FirstOrDefault();
+                            if (fieldValue is JArray)
+                            {
+                                fieldValue = ((JArray)fieldValue).FirstOrDefault();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (!fieldConfig.FieldType.IsCollection() && fieldValue is JToken[])
+                        {
+                            fieldValue = ((JToken[])fieldValue).FirstOrDefault();
+                            //if (fieldValue is JArray)
+                            //{
+                            //    fieldValue = ((JArray)fieldValue).FirstOrDefault();
+                            //}
+                        }
+                    }
+
                     if (fieldConfig.FieldType == null
                         || fieldConfig.FieldType == typeof(object)
                         || fieldConfig.FieldType.GetItemType() == typeof(object))
@@ -425,16 +448,30 @@ namespace ChoETL
                         }
                         else if (fieldValue is JToken[])
                         {
-                            foreach (var ele in (JToken[])fieldValue)
+                            var fi = ((JToken[])fieldValue).FirstOrDefault();
+
+                            if (fi is JArray && !itemType.IsCollection())
                             {
                                 if (fieldConfig.ItemConverter != null)
-                                    list.Add(fieldConfig.ItemConverter(ele));
+                                    fieldValue = fieldConfig.ItemConverter(fi);
                                 else
                                 {
-                                    list.Add(ToObject(ele, itemType));
+                                    fieldValue = ToObject(fi, fieldConfig.FieldType);
                                 }
                             }
-                            fieldValue = list.ToArray();
+                            else
+                            {
+                                foreach (var ele in (JToken[])fieldValue)
+                                {
+                                    if (fieldConfig.ItemConverter != null)
+                                        list.Add(fieldConfig.ItemConverter(ele));
+                                    else
+                                    {
+                                        list.Add(ToObject(ele, itemType));
+                                    }
+                                }
+                                fieldValue = list.ToArray();
+                            }
                         }
                     }
                 }
@@ -648,7 +685,25 @@ namespace ChoETL
             }
             else
             {
-
+                switch (jToken.Type)
+                {
+                    case JTokenType.Null:
+                        return null;
+                    case JTokenType.String:
+                        return (string)jToken;
+                    case JTokenType.Integer:
+                        return (int)jToken;
+                    case JTokenType.Float:
+                        return (float)jToken;
+                    case JTokenType.Date:
+                        return (DateTime)jToken;
+                    case JTokenType.TimeSpan:
+                        return (TimeSpan)jToken;
+                    case JTokenType.Guid:
+                        return (Guid)jToken;
+                    case JTokenType.Object:
+                    case JTokenType.Undefined:
+                    case JTokenType.Raw:
                 Dictionary<string, object> dict = jToken.ToObject(typeof(Dictionary<string, object>)) as Dictionary<string, object>;
 
                 dict = dict.Select(kvp =>
@@ -659,6 +714,13 @@ namespace ChoETL
                         return kvp;
                 }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
                 return new ChoDynamicObject(dict);
+                    case JTokenType.Uri:
+                        return (Uri)jToken;
+                    case JTokenType.Array:
+                        return ToDynamic(jToken);
+                    default:
+                        return (string)jToken;
+                }
             }
         }
 

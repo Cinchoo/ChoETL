@@ -1,0 +1,44 @@
+﻿{
+  "irCurves": {
+    "EUR": {
+      "FCC-IRCUBE": [
+        {
+          "curveDefinitionId": "FCC",
+          "curveFamilyId": "EUR/EURCURVE",
+          "curveName": "EURCURVE",
+          "marketDataSet": "FCC-IRCUBE",
+          "referenced": false
+        }
+      ]
+    },
+    "GBP": {
+      "FCC-IRCUBE": [
+        {
+          "curveDefinitionId": "FCC",
+          "curveFamilyId": "value",
+          "curveName": "value",
+          "marketDataSet": "value",
+          "referenced": false
+        }
+      ]
+    },
+    "USD": {
+      "FCC-IRCUBE": [
+        {
+          "curveDefinitionId": "FCC",
+          "curveFamilyId": "value",
+          "curveName": "value",
+          "marketDataSet": "value",
+          "referenced": false
+        },
+        {
+          "curveDefinitionId": "FCC",
+          "curveFamilyId": "value",
+          "curveName": "value",
+          "marketDataSet": "value",
+          "referenced": false
+        }
+      ]
+    }
+  }
+}

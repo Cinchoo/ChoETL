@@ -654,6 +654,85 @@ namespace ChoETL
             return reader.ReadOuterXml().Trim();
         }
 
+        public static dynamic ToDynamic(this XElement element)
+        {
+            // loop through child elements
+            // define an Expando Dynamic
+            dynamic obj = new ChoDynamicObject(element.Name.LocalName);
+
+            // cater for attributes as properties
+            if (element.HasAttributes)
+            {
+                foreach (var attribute in element.Attributes())
+                {
+                    ((IDictionary<string, object>)obj).Add("@{0}".FormatString(attribute.Name.LocalName), attribute.Value);
+                }
+            }
+
+            // cater for child nodes as properties, or child objects
+            if (element.HasElements)
+            {
+                foreach (var kvp in element.Elements().GroupBy(e => e.Name.LocalName).Select(g => new { Name = g.Key, Value = g.ToArray() }))
+                {
+                    if (kvp.Value.Length == 1)
+                    {
+                        XElement subElement = kvp.Value.First();
+                        // if sub element has child elements
+                        if (subElement.HasElements)
+                        {
+                            List<dynamic> subDynamic = new List<dynamic>();
+                            foreach (XElement subsubElement in subElement.Elements())
+                            {
+                                subDynamic.Add(ToDynamic(subsubElement));
+                            }
+                            // using a bit of recursion lets us cater for an unknown chain of child elements
+                            ((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, subDynamic.ToArray());
+                        }
+                        else
+                        {
+                            ChoDynamicObject x = new ChoDynamicObject(subElement.Name.LocalName);
+                            ((IDictionary<string, object>)x).Add("@@Value", subElement.Value);
+                            ((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, x);
+                        }
+                    }
+                    else
+                    {
+                        int counter = 0;
+                        List<ChoDynamicObject> list = new List<ChoDynamicObject>();
+                        string keyName = null;
+                        foreach (var subElement in kvp.Value)
+                        {
+                            keyName = subElement.Name.LocalName;
+
+                            // if sub element has child elements
+                            if (subElement.HasElements)
+                            {
+                                List<ChoDynamicObject> subDynamic = new List<ChoDynamicObject>();
+                                foreach (XElement subsubElement in subElement.Elements())
+                                {
+                                    subDynamic.Add(ToDynamic(subsubElement));
+                                }
+                                // using a bit of recursion lets us cater for an unknown chain of child elements
+                                //((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, subDynamic.ToArray());
+                                list.AddRange(subDynamic.ToArray());
+                            }
+                            else
+                            {
+                                ChoDynamicObject x = new ChoDynamicObject(subElement.Name.LocalName);
+                                ((IDictionary<string, object>)x).Add("@@Value", subElement.Value);
+                                //((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, x);
+                                list.Add(x);
+                            }
+                        }
+                        ((IDictionary<string, object>)obj).Add(keyName, list.ToArray());
+                    }
+                }
+            }
+            else
+                ((IDictionary<string, object>)obj).Add("@@Value", element.Value);
+
+            return obj;
+        }
 
         #endregion Instance Members (Private)
 

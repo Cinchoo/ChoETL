@@ -450,7 +450,8 @@ namespace ChoETL
                                     if (fieldConfig.IsArray != null && fieldConfig.IsArray.Value)
                                     {
                                         List<object> list = new List<object>();
-                                        Type itemType = fieldConfig.FieldType.GetItemType().GetUnderlyingType();
+                                        Type itemType = fieldConfig.FieldType != null ? fieldConfig.FieldType.GetItemType().GetUnderlyingType() :
+                                            typeof(ChoDynamicObject);
 
                                         foreach (var ele in fXElements)
                                         {
@@ -462,7 +463,10 @@ namespace ChoETL
                                                     list.Add(ChoConvert.ConvertTo(ele.Value, itemType));
                                                 else
                                                 {
-                                                    list.Add(ele.GetOuterXml().ToObjectFromXml(itemType, GetXmlOverrides(fieldConfig)));
+                                                    if (itemType == typeof(ChoDynamicObject))
+                                                        list.Add(ele.ToDynamic());
+                                                    else
+                                                        list.Add(ele.ToObjectFromXml(itemType, GetXmlOverrides(fieldConfig)));
                                                 }
                                             }
                                         }
@@ -535,9 +539,7 @@ namespace ChoETL
                                         }
                                         else
                                         {
-                                            XmlAttributeOverrides overrides = GetXmlOverrides(fieldConfig);
-
-                                            XElement fXElement = fXElements.SelectMany(e => e.Elements()).FirstOrDefault();
+                                            XElement fXElement = fXElements.FirstOrDefault(); //.SelectMany(e => e.Elements()).FirstOrDefault();
                                             if (fXElement != null)
                                             {
                                                 if (fieldConfig.ItemConverter != null)
@@ -766,6 +768,8 @@ namespace ChoETL
 
         private XmlAttributeOverrides GetXmlOverrides(ChoXmlRecordFieldConfiguration fieldConfig, Type fieldType = null)
         {
+            if (fieldType == null) return null;
+
             XmlAttributeOverrides overrides = null;
             var xattribs = new XmlAttributes();
             var xroot = new XmlRootAttribute(fieldConfig.FieldName);
