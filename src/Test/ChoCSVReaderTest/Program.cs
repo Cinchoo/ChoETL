@@ -183,7 +183,9 @@ namespace ChoCSVReaderTest
 
         static void FindDuplicates()
         {
-            using (var parser = new ChoCSVReader("EmpDuplicates.csv").WithFirstLineHeader())
+            using (var parser = new ChoCSVReader("EmpDuplicates.csv").WithFirstLineHeader()
+                .Configure(c => c.MaxScanRows = 5)
+                )
             {
                 var dt = parser.AsDataTable();
                 //foreach (dynamic c in parser.GroupBy(r => r.Id).Where(g => g.Count() > 1).Select(g => g.FirstOrDefault()))

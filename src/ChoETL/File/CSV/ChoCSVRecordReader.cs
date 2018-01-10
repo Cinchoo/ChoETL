@@ -231,6 +231,8 @@ namespace ChoETL
                             if (recCount == Configuration.MaxScanRows)
                             {
                                 Configuration.UpdateFieldTypesIfAny(recFieldTypes);
+                                var dict = recFieldTypes = Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
+                                RaiseMembersDiscovered(dict);
 
                                 foreach (object rec1 in buffer)
                                     yield return ConvertToNestedObjectIfApplicable(new ChoDynamicObject(MigrateToNewSchema(rec1 as IDictionary<string, object>, recFieldTypes)) as object, headerLineLoaded);
