@@ -348,10 +348,10 @@ namespace ChoETL
             public ChoObjectDataReaderProperty(string memberName, Type memberType)
             {
                 ChoGuard.ArgumentNotNullOrEmpty(memberName, "MemberName");
-                ChoGuard.ArgumentNotNullOrEmpty(memberType, "MemberType");
+                //ChoGuard.ArgumentNotNullOrEmpty(memberType, "MemberType");
 
                 MemberName = memberName;
-                ProperyType = memberType;
+                ProperyType = memberType == null ? typeof(string) : memberType;
             }
 
             public Type GetPropertyType()

@@ -185,8 +185,9 @@ namespace ChoCSVReaderTest
         {
             using (var parser = new ChoCSVReader("EmpDuplicates.csv").WithFirstLineHeader())
             {
-                foreach (dynamic c in parser.GroupBy(r => r.Id).Where(g => g.Count() > 1).Select(g => g.FirstOrDefault()))
-                    Console.WriteLine(c.DumpAsJson());
+                var dt = parser.AsDataTable();
+                //foreach (dynamic c in parser.GroupBy(r => r.Id).Where(g => g.Count() > 1).Select(g => g.FirstOrDefault()))
+                //    Console.WriteLine(c.DumpAsJson());
             }
         }
 
@@ -209,6 +210,8 @@ namespace ChoCSVReaderTest
 
         static void Main(string[] args)
         {
+            FindDuplicates();
+            return;
             NestedQuotes();
             return;
             ConvertToNestedObjects();
