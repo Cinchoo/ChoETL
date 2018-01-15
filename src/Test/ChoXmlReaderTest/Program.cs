@@ -13,6 +13,7 @@ using System.Xml.Serialization;
 using System.Collections;
 using System.Dynamic;
 using System.Xml.XPath;
+using Newtonsoft.Json;
 
 namespace ChoXmlReaderTest
 {
@@ -52,11 +53,47 @@ namespace ChoXmlReaderTest
         [XmlElement]
         public int[] Id;
     }
+
+    public class Person
+    {
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public DateTime DateOfBirth { get; set; }
+        public string Address { get; set; }
+    }
     public class Program
     {
         static void Main(string[] args)
         {
-            Sample12();
+            HTMLTableToCSV();
+        }
+
+        static void HTMLTableToCSV()
+        {
+            using (var cr = new ChoCSVWriter("HtmlTable.csv").WithFirstLineHeader())
+            {
+                using (var xr = new ChoXmlReader("HTMLTable.xml").WithXPath("/table/tr")
+                    .WithField("Title", xPath: "td[1]", fieldType: typeof(string))
+                    .WithField("Name", xPath: "td[2]", fieldType: typeof(string))
+                    .WithField("Phone", xPath: "td[3]", fieldType: typeof(string))
+                )
+                {
+                    cr.Write(xr.Where(r => !((string)r.Title).IsNullOrWhiteSpace()));
+                }
+            }
+        }
+
+        static void Sample16()
+        {
+            using (var parser = new ChoXmlReader("sample16.xml")
+            )
+            {
+                var dict = parser.ToDictionary(i => (string)i.name, i => (object)i.value, StringComparer.CurrentCultureIgnoreCase);
+                var person = dict.ToObject<Person>();
+                {
+                    Console.WriteLine("{0}", person.DateOfBirth);
+                }
+            }
         }
 
         static void Sample12()

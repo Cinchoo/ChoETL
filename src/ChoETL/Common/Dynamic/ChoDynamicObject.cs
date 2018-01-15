@@ -833,7 +833,7 @@ namespace ChoETL
                         if (value != null)
                         {
                             if (value.GetType().IsSimple())
-                                msg.AppendFormat("{0}{1}", Environment.NewLine, value.ToNString().Indent(1, "  "));
+                                msg.AppendFormat("{0}{1}", Environment.NewLine, "<{0}>{1}</{0}>".FormatString(key, value).Indent(1, "  "));
                             else
                             {
                                 msg.AppendFormat("{0}{1}", Environment.NewLine, "<{0}>".FormatString(key).Indent(1, "  "));

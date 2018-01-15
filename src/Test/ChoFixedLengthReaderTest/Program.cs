@@ -74,6 +74,10 @@ namespace ChoFixedLengthReaderTest
                 .Configure(c => c.ThrowAndStopOnMissingField = true)
                 .Setup(r => r.BeforeRecordLoad += (o, e) =>
                 {
+                    if (e.Source != null)
+                    {
+                        e.Skip = ((string)e.Source).StartsWith("#");
+                    }
                 })
                 )
             {

@@ -1,0 +1,18 @@
+﻿<returns>
+    <return>
+        <name>firstName</name>
+        <value>John</value>
+    </return>
+    <return>
+        <name>lastName</name>
+        <value>Doe</value>
+    </return>
+    <return>
+        <name>dateOfBirth</name>
+        <value>01-12-1900 00:00</value>
+    </return>
+    <return>
+        <name>address</name>
+        <value>100, Example Street</value>
+    </return>
+</returns>

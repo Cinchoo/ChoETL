@@ -1,0 +1,27 @@
+﻿<table id="example1" border="1"  style="background-color:#FFFFCC" width="0%" cellpadding="3" cellspacing="3">
+  <tr>
+    <th>Title</th>
+    <th>Name</th>
+    <th>Phone</th>
+  </tr>
+  <tr>
+    <td>Mr.</td>
+    <td>John</td>
+    <td>07868785831</td>
+  </tr>
+  <tr>
+    <td>Miss</td>
+    <td>Linda</td>
+    <td>0141-2244-5566</td>
+  </tr>
+  <tr>
+    <td>Master</td>
+    <td>Jack</td>
+    <td>0142-1212-1234</td>
+  </tr>
+  <tr>
+    <td>Mr.</td>
+    <td>Bush</td>
+    <td>911-911-911</td>
+  </tr>
+</table>

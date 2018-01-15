@@ -171,6 +171,12 @@ namespace ChoETL
             return this;
         }
 
+        public ChoFixedLengthReader<T> WithEOLDelimiter(string delimiter)
+        {
+            Configuration.EOLDelimiter = delimiter;
+            return this;
+        }
+
         public ChoFixedLengthReader<T> WithFirstLineHeader(bool ignoreHeader = false)
         {
             Configuration.FileHeaderConfiguration.HasHeaderRecord = true;

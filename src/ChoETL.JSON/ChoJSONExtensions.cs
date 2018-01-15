@@ -9,7 +9,7 @@ namespace ChoETL
 {
     public static class ChoJSONExtensions
     {
-        public static object ToObject(this IDictionary<string, object> dict, Type type)
+        public static object ToJSONObject(this IDictionary<string, object> dict, Type type)
         {
             object target = Activator.CreateInstance(type);
             string key = null;
@@ -32,9 +32,10 @@ namespace ChoETL
             return target;
         }
 
-        public static T ToObject<T>(this IDictionary<string, object> dict)
+        public static T ToJSONObject<T>(this IDictionary<string, object> dict)
+            where T : class, new()
         {
-            return (T)ToObject(dict, typeof(T));
+            return (T)ToJSONObject(dict, typeof(T));
         }
     }
 }

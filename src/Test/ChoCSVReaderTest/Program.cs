@@ -210,9 +210,21 @@ namespace ChoCSVReaderTest
             }
         }
 
+        static void CustomNewLine()
+        {
+            using (var parser = new ChoCSVReader("CustomNewLine.csv")
+                .WithDelimiter("~")
+                .WithEOLDelimiter("#####")
+                )
+            {
+                foreach (dynamic x in parser)
+                    Console.WriteLine(x.DumpAsJson());
+            }
+        }
+
         static void Main(string[] args)
         {
-            FindDuplicates();
+            CustomNewLine();
             return;
             NestedQuotes();
             return;

@@ -172,6 +172,12 @@ namespace ChoETL
             return this;
         }
 
+        public ChoCSVReader<T> WithEOLDelimiter(string delimiter)
+        {
+            Configuration.EOLDelimiter = delimiter;
+            return this;
+        }
+
         public ChoCSVReader<T> WithFirstLineHeader(bool ignoreHeader = false)
         {
             Configuration.FileHeaderConfiguration.HasHeaderRecord = true;

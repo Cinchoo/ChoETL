@@ -76,7 +76,7 @@ namespace ChoJSONReaderTest
                     }
                     else
                     {
-                        DataMapperProperty = ((IDictionary<string, object>)value).ToObject<DataMapperProperty>();
+                        DataMapperProperty = ((IDictionary<string, object>)value).ToJSONObject<DataMapperProperty>();
                         //DataMapperProperty dm = new DataMapperProperty();
                         //foreach (var kvp in (IDictionary<string, object>)value)
                         //{
@@ -384,7 +384,24 @@ namespace ChoJSONReaderTest
 
         static void Main(string[] args)
         {
-            Sample15();
+            Sample16();
+        }
+
+        static void Sample16()
+        {
+            using (var p = new ChoJSONReader("sample16.json")
+                .WithField("Ref", jsonPath: "$..ref", fieldType: typeof(string))
+                .WithField("pickcompname", jsonPath: "$..pickcompname", fieldType: typeof(string))
+                .WithField("gw", jsonPath: "$..gw", fieldType: typeof(double))
+                .WithField("qty1", jsonPath: "$..packaing[0].qty", fieldType: typeof(int))
+                .WithField("unit1", jsonPath: "$..packaing[0].unit", fieldType: typeof(string))
+                .WithField("qty2", jsonPath: "$..packaing[1].qty", fieldType: typeof(int))
+                .WithField("unit2", jsonPath: "$..packaing[1].unit", fieldType: typeof(string))
+                )
+            {
+                using (var c = new ChoCSVWriter("sample16.csv").WithFirstLineHeader())
+                    c.Write(p);
+            }
         }
 
         static void Sample15()

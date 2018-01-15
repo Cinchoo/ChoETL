@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="CurrencyQuotes.csv" />
+    <None Include="CustomNewLine.csv" />
     <None Include="EmpDuplicates.csv" />
     <None Include="IgnoreLineFile1.csv" />
     <None Include="MasterDetail.csv" />

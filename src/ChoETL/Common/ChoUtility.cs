@@ -1648,6 +1648,10 @@ namespace ChoETL
                    ms, encoding, true, true, "  "))
                 {
                     DataContractJsonSerializer serializer = new DataContractJsonSerializer(target.GetType(), jsonSettings);
+
+                    if (target.GetType().IsDynamicType())
+                        serializer = new DataContractJsonSerializer(typeof(IDictionary<string, object>), jsonSettings);
+
                     serializer.WriteObject(writer, target);
                     writer.Flush();
                     byte[] json = ms.ToArray();
