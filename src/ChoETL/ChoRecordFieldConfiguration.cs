@@ -104,7 +104,7 @@ namespace ChoETL
         public ChoRecordFieldConfiguration(string name, ChoRecordFieldAttribute attr = null)
         {
             ChoGuard.ArgumentNotNullOrEmpty(name, "Name");
-            Name = Name.NTrim();
+            Name = name.NTrim();
             if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
                 Initialize();
 
