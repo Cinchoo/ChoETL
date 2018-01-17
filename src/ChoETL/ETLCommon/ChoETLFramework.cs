@@ -10,6 +10,8 @@ using System.Security;
 using System.Text;
 using System.Threading.Tasks;
 
+//[assembly: System.Security.Permissions.FileIOPermission( System.Security.Permissions.SecurityAction.RequestRefuse, All =@"C:\")]
+
 namespace ChoETL
 {
     // An enumerated type for the control messages 
@@ -26,6 +28,12 @@ namespace ChoETL
 
     public static class ChoETLFrxBootstrap
     {
+        public static bool IsSandboxEnvironment
+        {
+            get;
+            set;
+        }
+
         public static TraceLevel? TraceLevel
         {
             get;
@@ -46,7 +54,8 @@ namespace ChoETL
         private static Action<string> _defaultLog = ((m) =>
         {
             Console.WriteLine(m);
-            Trace.WriteLine(m);
+            if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
+                Trace.WriteLine(m);
         });
         public static Action<string> Log
         {
@@ -64,7 +73,7 @@ namespace ChoETL
             set;
         }
 
-        private static string _applicationName = ChoPath.EntryAssemblyName;
+        private static string _applicationName;
         public static string ApplicationName
         {
             get { return _applicationName; }
@@ -151,6 +160,9 @@ namespace ChoETL
         private static EventLog _elApplicationEventLog;
         private readonly static Action<string> _defaultLog = (msg) =>
         {
+            if (GlobalProfile == null)
+                return;
+
             if (msg.IsNullOrWhiteSpace())
                 GlobalProfile.AppendIf(true, msg);
             else
@@ -179,7 +191,8 @@ namespace ChoETL
 
         static ChoETLFramework()
         {
-            _Initialize();
+            if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
+                _Initialize();
         }
 
         static void CurrentDomain_ProcessExit(object sender, EventArgs e)
@@ -194,13 +207,16 @@ namespace ChoETL
 
         private static void _Initialize()
         {
-            if (ChoETLFrxBootstrap.TraceLevel != null)
-                TraceLevel = ChoETLFrxBootstrap.TraceLevel.Value;
-            if (ChoETLFrxBootstrap.Log != null)
-                Log = ChoETLFrxBootstrap.Log;
-
             try
             {
+                if (ChoETLFrxBootstrap.TraceLevel != null)
+                    TraceLevel = ChoETLFrxBootstrap.TraceLevel.Value;
+                if (ChoETLFrxBootstrap.Log != null)
+                    Log = ChoETLFrxBootstrap.Log;
+
+                if (ChoETLFrxBootstrap.ApplicationName.IsNullOrWhiteSpace())
+                    ChoETLFrxBootstrap.ApplicationName = ChoPath.EntryAssemblyName;
+
                 if (IniFile == null)
                     IniFile = ChoIniFile.New(ChoPath.EntryAssemblyName);
 
@@ -252,7 +268,8 @@ namespace ChoETL
             }
             catch (Exception ex)
             {
-                Exit(ex);
+                if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
+                    Exit(ex);
             }
             finally
             {

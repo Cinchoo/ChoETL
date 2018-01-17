@@ -12,15 +12,21 @@ namespace ChoETL
 {
     public static class ChoPath
     {
-        public static readonly string EntryAssemblyBaseDirectory = null;
-        public static readonly string EntryAssemblyName = null;
+        public static string EntryAssemblyBaseDirectory = null;
+        public static string EntryAssemblyName = null;
 
         private static readonly string _fileNameCleanerExpression = "[" + string.Join("", Array.ConvertAll(Path.GetInvalidFileNameChars(), x => Regex.Escape(x.ToString()))) + "]";
-        private static readonly Regex _fileNameCleaner = new Regex(_fileNameCleanerExpression, RegexOptions.Compiled);
+        private static readonly Regex _fileNameCleaner = new Regex(_fileNameCleanerExpression); //, RegexOptions.Compiled);
         private static readonly string _pathCleanerExpression = "[" + string.Join("", Array.ConvertAll(Path.GetInvalidPathChars(), x => Regex.Escape(x.ToString()))) + "]";
-        private static readonly Regex _pathCleaner = new Regex(_pathCleanerExpression, RegexOptions.Compiled);
+        private static readonly Regex _pathCleaner = new Regex(_pathCleanerExpression); //, RegexOptions.Compiled);
 
         static ChoPath()
+        {
+            if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
+                _Initialize();
+        }
+
+        private static void _Initialize()
         {
             if (System.Web.HttpContext.Current == null)
             {

@@ -120,5 +120,11 @@ namespace ChoETL
             source = e.Source;
             return e.Handled;
         }
+
+        public virtual bool RaiseMapColumn(int colPos, string colName, out string newColName)
+        {
+            newColName = null;
+            return false;
+        }
     }
 }

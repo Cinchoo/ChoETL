@@ -32,6 +32,12 @@ namespace ChoETL
 
         static ChoUtility()
         {
+            if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
+                _Initialize();
+        }
+
+        private static void _Initialize()
+        {
             ChoMetadataTypesRegister.Init();
             TypeDescriptor.AddProvider(new ChoExpandoObjectTypeDescriptionProvider(), typeof(ExpandoObject));
         }
@@ -40,6 +46,7 @@ namespace ChoETL
         {
 
         }
+
         public static IEnumerable<T> ZipEx<T1, T2, T>(this IEnumerable<T1> first,
                                     IEnumerable<T2> second, Func<T1, T2, T> operation)
         {

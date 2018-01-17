@@ -1598,7 +1598,8 @@ namespace ChoETL
 
         public static string ToValidVariableName(this string text)
         {
-            text = _csharpProvider.CreateValidIdentifier(text);
+            if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
+                text = _csharpProvider.CreateValidIdentifier(text);
             text = text.Replace("-", "_");
             StringBuilder identifier = new StringBuilder(text);
             if (Char.IsDigit(identifier[0]))

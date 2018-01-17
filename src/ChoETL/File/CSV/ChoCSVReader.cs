@@ -23,11 +23,18 @@ namespace ChoETL
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
         public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
         public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
+        public event EventHandler<ChoMapColumnEventArgs> MapColumn;
 
         public ChoCSVRecordConfiguration Configuration
         {
             get;
             private set;
+        }
+
+        public ChoCSVReader(ChoCSVRecordConfiguration configuration = null)
+        {
+            Configuration = configuration;
+            Init();
         }
 
         public ChoCSVReader(string filePath, ChoCSVRecordConfiguration configuration = null)
@@ -79,7 +86,8 @@ namespace ChoETL
             if (_closeStreamOnDispose)
                 _textReader.Dispose();
 
-            System.Threading.Thread.CurrentThread.CurrentCulture = _prevCultureInfo;
+            if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
+                System.Threading.Thread.CurrentThread.CurrentCulture = _prevCultureInfo;
         }
 
         private void Init()
@@ -91,8 +99,43 @@ namespace ChoETL
                 Configuration.RecordType = typeof(T);
             Configuration.RecordType = ResolveRecordType(Configuration.RecordType);
 
-            _prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
-            System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
+            if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
+            {
+                _prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
+                System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
+            }
+        }
+
+        public IEnumerable<T> DeserializeText(string inputText, Encoding encoding = null, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            if (configuration == null)
+                configuration = Configuration;
+
+            return new ChoCSVReader<T>(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
+        }
+
+        public IEnumerable<T> Deserialize(string filePath, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            if (configuration == null)
+                configuration = Configuration;
+
+            return new ChoCSVReader<T>(filePath, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
+        }
+
+        public IEnumerable<T> Deserialize(TextReader textReader, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            if (configuration == null)
+                configuration = Configuration;
+
+            return new ChoCSVReader<T>(textReader, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
+        }
+
+        public IEnumerable<T> Deserialize(Stream inStream, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            if (configuration == null)
+                configuration = Configuration;
+
+            return new ChoCSVReader<T>(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
         }
 
         public static ChoCSVReader<T> LoadText(string inputText, Encoding encoding = null, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
@@ -156,6 +199,21 @@ namespace ChoETL
             }
             else
                 rowsLoadedEvent(this, e);
+        }
+
+        public override bool RaiseMapColumn(int colPos, string colName, out string newColName)
+        {
+            newColName = null;
+            EventHandler<ChoMapColumnEventArgs> mapColumn = MapColumn;
+            if (mapColumn == null)
+                return false;
+
+            var ea = new ChoMapColumnEventArgs(colPos, colName);
+            mapColumn(this, ea);
+            if (ea.Resolved)
+                newColName = ea.NewColName;
+
+            return ea.Resolved;
         }
 
         #region Fluent API
@@ -290,6 +348,11 @@ namespace ChoETL
 
     public class ChoCSVReader : ChoCSVReader<dynamic>
     {
+        public ChoCSVReader(ChoCSVRecordConfiguration configuration = null)
+            : base(configuration)
+        {
+
+        }
         public ChoCSVReader(string filePath, ChoCSVRecordConfiguration configuration = null)
             : base(filePath, configuration)
         {

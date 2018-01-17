@@ -14,6 +14,7 @@ using System.Collections;
 using System.Dynamic;
 using System.Xml.XPath;
 using Newtonsoft.Json;
+using System.Data.SqlClient;
 
 namespace ChoXmlReaderTest
 {
@@ -61,26 +62,100 @@ namespace ChoXmlReaderTest
         public DateTime DateOfBirth { get; set; }
         public string Address { get; set; }
     }
+
+    public class RoomInfo
+    {
+        public int RoomNumber { get; set; }
+    }
+
+    public class Table
+    {
+        public string Color { get; set; }
+    }
+
     public class Program
     {
         static void Main(string[] args)
         {
-            HTMLTableToCSV();
+            ChoETLFrxBootstrap.IsSandboxEnvironment = true;
+            Sample17();
+        }
+
+        static void Sample17()
+        {
+            using (var xr = new ChoXmlReader("Sample17.xml").WithXPath("//HouseInfo")
+                .WithField("HouseNumber", fieldType: typeof(int))
+                .WithField("RoomInfos", xPath: "//HouseLog/RoomInfo", fieldType: typeof(List<RoomInfo>))
+                .WithField("Furnitures", xPath: "//HouseLog/RoomInfo/Furnitures/Table", fieldType: typeof(Table))
+            )
+            {
+                foreach (dynamic rec in xr)
+                    Console.WriteLine(rec.Dump());
+            }
         }
 
         static void HTMLTableToCSV()
         {
             using (var cr = new ChoCSVWriter("HtmlTable.csv").WithFirstLineHeader())
             {
-                using (var xr = new ChoXmlReader("HTMLTable.xml").WithXPath("/table/tr")
-                    .WithField("Title", xPath: "td[1]", fieldType: typeof(string))
-                    .WithField("Name", xPath: "td[2]", fieldType: typeof(string))
-                    .WithField("Phone", xPath: "td[3]", fieldType: typeof(string))
+                using (var xr = new ChoXmlReader("HTMLTable.xml").WithXPath("//tbody/tr")
+                    .WithField("Lot", xPath: "td[1]", fieldType: typeof(int))
+                    .WithField("Op", xPath: "td[2]", fieldType: typeof(int))
+                    .WithField("Status", xPath: "td[3]", fieldType: typeof(string))
+                    .WithField("iDispoStatus", xPath: "td[4]", fieldType: typeof(string))
+                    .WithField("DispoBy", xPath: "td[5]", fieldType: typeof(string))
+                    .WithField("DispoDate", xPath: "td[6]", fieldType: typeof(DateTime))
+                    .WithField("TRCount", xPath: "td[7]", fieldType: typeof(int))
+                    .WithField("View", xPath: "td[8]/a/@href", fieldType: typeof(string))
                 )
                 {
-                    cr.Write(xr.Where(r => !((string)r.Title).IsNullOrWhiteSpace()));
+                    cr.Write(xr);
                 }
             }
+        }
+
+        static void BulkLoad1()
+        {
+            string connectionstring = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=C:\USERS\NRAJ39\DOWNLOADS\ADVENTUREWORKS2012_DATA.MDF;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+
+            int houseNo = 0;
+            using (var xr = new ChoXmlReader("sample17.xml").WithXPath("/HouseInfo")
+                .WithField("HouseNumber", fieldType: typeof(int))
+                )
+            {
+                houseNo = xr.First().HouseNumber;
+            }
+            using (var xr = new ChoXmlReader("sample17.xml").WithXPath("/HouseInfo/HouseLog/RoomInfo")
+                .WithField("HouseNumber", fieldType: typeof(int), valueConverter: (o) => houseNo)
+                .WithField("RoomNumber", fieldType: typeof(int))
+                .WithField("Timestamp", fieldType: typeof(DateTime))
+                .WithField("Color", xPath: "Furnitures/Table/Color", fieldType: typeof(string))
+                .WithField("Height", xPath: "Furnitures/Table/Height", fieldType: typeof(string))
+                .WithField("Scope", xPath: "ToolCounts/Scope", fieldType: typeof(int))
+                .WithField("Code", xPath: "Bathroom/Code", fieldType: typeof(int))
+                .WithField("Faucet", xPath: "Bathroom/Faucets", fieldType: typeof(int))
+            )
+            {
+                //foreach (dynamic rec in xr)
+                //{
+                //    Console.WriteLine(rec.DumpAsJson());
+                //}
+                //return;
+                using (SqlBulkCopy bcp = new SqlBulkCopy(connectionstring))
+                {
+                    bcp.DestinationTableName = "dbo.HOUSEINFO";
+                    bcp.EnableStreaming = true;
+                    bcp.BatchSize = 10000;
+                    bcp.BulkCopyTimeout = 0;
+                    bcp.NotifyAfter = 10;
+                    bcp.SqlRowsCopied += delegate (object sender, SqlRowsCopiedEventArgs e)
+                    {
+                        Console.WriteLine(e.RowsCopied.ToString("#,##0") + " rows copied.");
+                    };
+                    bcp.WriteToServer(xr.AsDataReader());
+                }
+            }
+
         }
 
         static void Sample16()

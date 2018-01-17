@@ -15,6 +15,7 @@ using System.Text.RegularExpressions;
 using System.Diagnostics;
 using Newtonsoft.Json.Linq;
 using System.Threading;
+using System.Security;
 
 namespace ChoCSVReaderTest
 {
@@ -222,8 +223,56 @@ namespace ChoCSVReaderTest
             }
         }
 
+        public class People : IChoCustomColumnMappable
+        {
+            [ChoCSVRecordField(1)]
+            public int PersonId { get; set; }
+            [ChoCSVRecordField(2, QuoteField = true)]
+            public string Name { get; set; }
+            [ChoCSVRecordField(3, QuoteField = true)]
+            public string Doc { get; set; }
+
+            public bool MapColumn(int colPos, string colName, out string newColName)
+            {
+                newColName = null;
+                if (colName == "Id" || colName == "Id_Person")
+                {
+                    newColName = nameof(PersonId);
+                    return true;
+                }
+                if (colName == "Name" || colName == "First_Name")
+                {
+                    newColName = nameof(Name);
+                    return true;
+                }
+                if (colName == "Document" || colName == "Phone")
+                {
+                    newColName = nameof(Doc);
+                    return true;
+                }
+                return false;
+            }
+        }
+
         static void Main(string[] args)
         {
+            //ChoETLFrxBootstrap.IsSandboxEnvironment = true;
+            string txt1 = @"Id;Name;Document
+1;Matheus;555777
+2;Clarice;567890";
+            string txt2 = @"""Id_Person"";""First_Name"";""Phone""
+3; ""John""; ""999 -9999""";
+            string txt3 = @"Id;Name
+1;Matheus
+2;Clarice";
+
+            var r1 = new ChoCSVReader<People>().WithFirstLineHeader(true).WithDelimiter(";");
+
+            foreach (var rec in ChoCSVReader<People>.LoadText(txt2).WithFirstLineHeader().WithDelimiter(";").ThrowAndStopOnMissingField(false)
+                )
+                Console.WriteLine(ChoUtility.Dump(rec));
+
+            return;
             CustomNewLine();
             return;
             NestedQuotes();

@@ -104,7 +104,10 @@ namespace ChoETL
         public ChoRecordFieldConfiguration(string name, ChoRecordFieldAttribute attr = null)
         {
             ChoGuard.ArgumentNotNullOrEmpty(name, "Name");
-            Name = name.NTrim().ToValidVariableName();
+            Name = Name.NTrim();
+            if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
+                Initialize();
+
             //FieldType = typeof(string);
 
             if (attr != null)
@@ -113,6 +116,11 @@ namespace ChoETL
                 IgnoreFieldValueMode = attr.IgnoreFieldValueModeInternal;
                 FieldType = attr.FieldType;
             }
+        }
+
+        private void Initialize()
+        {
+            Name = Name.NTrim().ToValidVariableName();
         }
 
         public void AddConverter(IValueConverter converter)

@@ -152,4 +152,34 @@ namespace ChoETL
             internal set;
         }
     }
+
+    public class ChoMapColumnEventArgs : EventArgs
+    {
+        public int ColPos
+        {
+            get;
+            private set;
+        }
+        public string ColName
+        {
+            get;
+            private set;
+        }
+        public string NewColName
+        {
+            get;
+            set;
+        }
+        public bool Resolved
+        {
+            get;
+            set;
+        }
+
+        public ChoMapColumnEventArgs(int colPos, string colName)
+        {
+            ColPos = colPos;
+            ColName = colName;
+        }
+    }
 }

@@ -96,6 +96,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IChoCustomColumnMappable.cs" />
     <Compile Include="IChoCustomSerializable.cs" />
     <Compile Include="IChoKeyValueType.cs" />
     <Compile Include="ChoScalarObject.cs" />

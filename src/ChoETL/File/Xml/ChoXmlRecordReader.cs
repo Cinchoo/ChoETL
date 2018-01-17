@@ -515,10 +515,10 @@ namespace ChoETL
                                             List<object> list = new List<object>();
                                             Type itemType = fieldConfig.FieldType.GetItemType().GetUnderlyingType();
 
-                                            if (!itemType.IsSimple())
-                                            {
-                                                fXElements = fXElements.SelectMany(e => e.Elements()).ToArray();
-                                            }
+                                            //if (!itemType.IsSimple())
+                                            //{
+                                            //    fXElements = fXElements.SelectMany(e => e.Elements()).ToArray();
+                                            //}
 
                                             foreach (var ele in fXElements)
                                             {

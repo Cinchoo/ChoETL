@@ -23,11 +23,18 @@ namespace ChoETL
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
         public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
         public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
+        public event EventHandler<ChoMapColumnEventArgs> MapColumn;
 
         public ChoFixedLengthRecordConfiguration Configuration
         {
             get;
             private set;
+        }
+
+        public ChoFixedLengthReader(ChoFixedLengthRecordConfiguration configuration = null)
+        {
+            Configuration = configuration;
+            Init();
         }
 
         public ChoFixedLengthReader(string filePath, ChoFixedLengthRecordConfiguration configuration = null)
@@ -78,7 +85,8 @@ namespace ChoETL
             if (_closeStreamOnDispose)
                 _textReader.Dispose();
 
-            System.Threading.Thread.CurrentThread.CurrentCulture = _prevCultureInfo;
+            if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
+                System.Threading.Thread.CurrentThread.CurrentCulture = _prevCultureInfo;
         }
 
         private void Init()
@@ -90,8 +98,11 @@ namespace ChoETL
                 Configuration.RecordType = typeof(T);
 
             Configuration.RecordType = ResolveRecordType(Configuration.RecordType);
-            _prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
-            System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
+            if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
+            {
+                _prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
+                System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
+            }
         }
 
         public static ChoFixedLengthReader<T> LoadText(string inputText, Encoding encoding = null, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
@@ -100,6 +111,38 @@ namespace ChoETL
             r._closeStreamOnDispose = true;
 
             return r;
+        }
+
+        public IEnumerable<T> DeserializeText(string inputText, Encoding encoding = null, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            if (configuration == null)
+                configuration = Configuration;
+
+            return new ChoFixedLengthReader<T>(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
+        }
+
+        public IEnumerable<T> Deserialize(string filePath, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            if (configuration == null)
+                configuration = Configuration;
+
+            return new ChoFixedLengthReader<T>(filePath, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
+        }
+
+        public IEnumerable<T> Deserialize(TextReader textReader, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            if (configuration == null)
+                configuration = Configuration;
+
+            return new ChoFixedLengthReader<T>(textReader, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
+        }
+
+        public IEnumerable<T> Deserialize(Stream inStream, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            if (configuration == null)
+                configuration = Configuration;
+
+            return new ChoFixedLengthReader<T>(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
         }
 
         internal static IEnumerator<object> LoadText(Type recType, string inputText, ChoFixedLengthRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null)
@@ -155,6 +198,21 @@ namespace ChoETL
             }
             else
                 rowsLoadedEvent(this, e);
+        }
+
+        public override bool RaiseMapColumn(int colPos, string colName, out string newColName)
+        {
+            newColName = null;
+            EventHandler<ChoMapColumnEventArgs> mapColumn = MapColumn;
+            if (mapColumn == null)
+                return false;
+
+            var ea = new ChoMapColumnEventArgs(colPos, colName);
+            mapColumn(this, ea);
+            if (ea.Resolved)
+                newColName = ea.NewColName;
+
+            return ea.Resolved;
         }
 
         #region Fluent API
@@ -255,6 +313,11 @@ namespace ChoETL
 
     public class ChoFixedLengthReader : ChoFixedLengthReader<dynamic>
     {
+        public ChoFixedLengthReader(ChoFixedLengthRecordConfiguration configuration = null)
+           : base(configuration)
+        {
+
+        }
         public ChoFixedLengthReader(string filePath, ChoFixedLengthRecordConfiguration configuration = null)
             : base(filePath, configuration)
         {

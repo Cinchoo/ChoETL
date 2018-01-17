@@ -14,6 +14,7 @@ namespace ChoETL
     internal class ChoFixedLengthRecordReader : ChoRecordReader
     {
         private IChoNotifyRecordRead _callbackRecord;
+        private IChoCustomColumnMappable _customColumnMappableRecord;
         private bool _headerFound = false;
         private string[] _fieldNames = new string[] { };
         private bool _configCheckDone = false;
@@ -31,7 +32,7 @@ namespace ChoETL
             Configuration = configuration;
 
             _callbackRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordRead>(recordType);
-
+            _customColumnMappableRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoCustomColumnMappable>(recordType);
             //Configuration.Validate();
         }
 
@@ -526,12 +527,13 @@ namespace ChoETL
 
         private string[] GetHeaders(string line)
         {
-            List<string> headers = new List<string>();
+            string[] headers = null;
             if (Configuration.FileHeaderConfiguration.HasHeaderRecord && !Configuration.FileHeaderConfiguration.IgnoreHeader)
             {
                 //Fields are specified, load them
                 if (Configuration.RecordFieldConfigurationsDict.Count > 0)
                 {
+                    List<string> headersList = new List<string>();
                     string fieldValue = null;
                     ChoFixedLengthRecordFieldConfiguration fieldConfig = null;
                     foreach (KeyValuePair<string, ChoFixedLengthRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
@@ -548,8 +550,28 @@ namespace ChoETL
                             fieldValue = line.Substring(fieldConfig.StartIndex, fieldConfig.Size.Value);
 
                         fieldValue = CleanFieldValue(fieldConfig, typeof(object), fieldValue as string);
-                        headers.Add(fieldValue);
+                        headersList.Add(fieldValue);
                     }
+
+                    headers = headersList.ToArray();
+
+                    List<string> newHeaders = new List<string>();
+                    int index = 1;
+                    string newColName = null;
+                    foreach (string header in headers)
+                    {
+                        if (RaiseMapColumn(this, index, header, out newColName))
+                            newHeaders.Add(newColName);
+                        else
+                            newHeaders.Add(header);
+
+                        index++;
+                    }
+                    headers = newHeaders.ToArray();
+
+                    //Check for any empty column headers
+                    if (headers.Where(h => h.IsNullOrEmpty()).Any())
+                        throw new ChoParserException("At least one of the field header is empty.");
                 }
                 else
                 {
@@ -561,7 +583,7 @@ namespace ChoETL
             {
             }
 
-            return headers.ToArray();
+            return headers;
         }
 
         private void LoadHeaderLine(Tuple<long, string> pair)
@@ -753,6 +775,30 @@ namespace ChoETL
                 return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseRecordFieldLoadError(target, index, propName, value, ex), false);
             }
             return true;
+        }
+
+        private bool RaiseMapColumn(object target, int colPos, string colName, out string newColName)
+        {
+            newColName = null;
+            if (_customColumnMappableRecord != null)
+            {
+                bool retVal = false;
+                string lnewColName = null;
+                retVal = ChoFuncEx.RunWithIgnoreError(() => _customColumnMappableRecord.MapColumn(colPos, colName, out lnewColName), false);
+                if (retVal)
+                    newColName = lnewColName;
+                return retVal;
+            }
+            else if (Reader != null)
+            {
+                string lnewColName = null;
+                bool retVal = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseMapColumn(colPos, colName, out lnewColName), false);
+                if (retVal)
+                    newColName = lnewColName;
+
+                return retVal;
+            }
+            return false;
         }
 
         #endregion Event Raisers

@@ -1,0 +1,54 @@
+﻿<HouseInfo>
+    <HouseNumber>1</HouseNumber>
+    <HouseLog>
+        <RoomInfo>
+            <RoomNumber>1</RoomNumber>
+            <Timestamp>2017-12-29T12:16:51</Timestamp>
+            <Furnitures>
+                <Table>
+                    <Color>Blue</Color>
+                    <Height>23</Height>
+                </Table>
+            </Furnitures>
+            <ToolCounts>
+                <Scope>1</Scope>
+            </ToolCounts>
+        </RoomInfo>
+
+        <RoomInfo>
+            <RoomNumber>2</RoomNumber>
+            <Timestamp>2017-12-29T15:43:23</Timestamp>
+            <Furnitures>
+                <Table>
+                    <Color>Black</Color>
+                    <Height>35.2</Height>
+                </Table>
+            </Furnitures>
+            <ToolCounts>
+                <Scope>1</Scope>
+            </ToolCounts>
+            <Bathroom>
+                <Code>1234</Code>
+                <Faucets>3</Faucets>
+            </Bathroom>
+        </RoomInfo>
+
+        <RoomInfo>
+            <RoomNumber>2</RoomNumber>
+            <Timestamp>2017-12-29T15:45:48</Timestamp>
+            <Furnitures>
+                <Table>
+                    <Color>Red</Color>
+                    <Height>98.56</Height>
+                </Table>
+            </Furnitures>
+            <ToolCounts>
+                <Scope>1</Scope>
+            </ToolCounts>
+            <Bathroom>
+                <Code>1234</Code>
+                <Faucets>2</Faucets>
+            </Bathroom>
+        </RoomInfo>
+    </HouseLog>
+</HouseInfo>

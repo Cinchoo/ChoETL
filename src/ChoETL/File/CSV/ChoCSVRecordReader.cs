@@ -15,6 +15,7 @@ namespace ChoETL
     internal class ChoCSVRecordReader : ChoRecordReader
     {
         private IChoNotifyRecordRead _callbackRecord;
+        private IChoCustomColumnMappable _customColumnMappableRecord;
         private bool _headerFound = false;
         private bool _excelSeparatorFound = false;
         private string[] _fieldNames = null;
@@ -33,6 +34,7 @@ namespace ChoETL
             ChoGuard.ArgumentNotNull(configuration, "Configuration");
             Configuration = configuration;
             _callbackRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordRead>(recordType);
+            _customColumnMappableRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoCustomColumnMappable>(recordType);
             //Configuration.Validate();
         }
 
@@ -672,6 +674,20 @@ namespace ChoETL
                 headers = (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)
                            select CleanHeaderValue(x)).ToArray();
 
+                List<string> newHeaders = new List<string>();
+                int index = 1;
+                string newColName = null;
+                foreach (string header in headers)
+                {
+                    if (RaiseMapColumn(this, index, header, out newColName))
+                        newHeaders.Add(newColName);
+                    else
+                        newHeaders.Add(header);
+
+                    index++;
+                }
+                headers = newHeaders.ToArray();
+
                 //Check for any empty column headers
                 if (headers.Where(h => h.IsNullOrEmpty()).Any())
                     throw new ChoParserException("At least one of the field header is empty.");
@@ -891,6 +907,30 @@ namespace ChoETL
                 return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseRecordFieldLoadError(target, index, propName, value, ex), false);
             }
             return true;
+        }
+
+        private bool RaiseMapColumn(object target, int colPos, string colName, out string newColName)
+        {
+            newColName = null;
+            if (_customColumnMappableRecord != null)
+            {
+                bool retVal = false;
+                string lnewColName = null;
+                retVal = ChoFuncEx.RunWithIgnoreError(() => _customColumnMappableRecord.MapColumn(colPos, colName, out lnewColName), false);
+                if (retVal)
+                    newColName = lnewColName;
+                return retVal;
+            }
+            else if (Reader != null)
+            {
+                string lnewColName = null;
+                bool retVal = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseMapColumn(colPos, colName, out lnewColName), false);
+                if (retVal)
+                    newColName = lnewColName;
+
+                return retVal;
+            }
+            return false;
         }
 
         #endregion Event Raisers

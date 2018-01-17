@@ -68,7 +68,10 @@
     <Content Include="sample10.xml" />
     <Content Include="sample11.xml" />
     <Content Include="KVPSample.xml" />
-    <Content Include="HTMLTable.xml" />
+    <Content Include="HTMLTable.xml">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="sample17.xml" />
     <Content Include="sample16.xml" />
     <Content Include="sample15.xml" />
     <Content Include="sample14.xml" />
