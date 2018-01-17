@@ -111,10 +111,26 @@ namespace ChoETL
                 _writer.WriteTo(_textWriter, new T[] { record }).Loop();
         }
 
-        public static string ToText<TRec>(TRec record, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string xpath = null)
+        public string SerializeAll(IEnumerable<T> records, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            if (configuration == null)
+                configuration = Configuration;
+
+            return ToTextAll<T>(records, configuration, traceSwitch);
+        }
+
+        public string Serialize(T record, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            if (configuration == null)
+                configuration = Configuration;
+
+            return ToText<T>(record, configuration, traceSwitch);
+        }
+
+        public static string ToText<TRec>(TRec record, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string jsonPath = null)
             where TRec : class
         {
-            return ToTextAll(ChoEnumerable.AsEnumerable<TRec>(record), configuration, traceSwitch);
+            return ToTextAll(ChoEnumerable.AsEnumerable<TRec>(record), configuration, traceSwitch, jsonPath);
         }
 
 

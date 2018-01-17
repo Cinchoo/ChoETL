@@ -24,11 +24,15 @@ namespace ChoETL
 
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
 
-
         public ChoXmlRecordConfiguration Configuration
         {
             get;
             private set;
+        }
+
+        public ChoXmlWriter(ChoXmlRecordConfiguration configuration = null)
+        {
+            Configuration = configuration;
         }
 
         public ChoXmlWriter(string filePath, ChoXmlRecordConfiguration configuration = null)
@@ -109,6 +113,22 @@ namespace ChoETL
             }
             else
                 _writer.WriteTo(_textWriter, new T[] { record }).Loop();
+        }
+
+        public string SerializeAll(IEnumerable<T> records, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            if (configuration == null)
+                configuration = Configuration;
+
+            return ToTextAll<T>(records, configuration, traceSwitch);
+        }
+
+        public string Serialize(T record, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            if (configuration == null)
+                configuration = Configuration;
+
+            return ToText<T>(record, configuration, traceSwitch);
         }
 
         public static string ToText<TRec>(TRec record, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string xpath = null)
@@ -366,6 +386,10 @@ namespace ChoETL
 
     public class ChoXmlWriter : ChoXmlWriter<dynamic>
     {
+        public ChoXmlWriter(ChoXmlRecordConfiguration configuration = null)
+            : base(configuration)
+        {
+        }
         public ChoXmlWriter(string filePath, ChoXmlRecordConfiguration configuration = null)
             : base(filePath, configuration)
         {

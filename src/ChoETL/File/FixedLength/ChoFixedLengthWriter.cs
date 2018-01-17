@@ -27,6 +27,11 @@ namespace ChoETL
             private set;
         }
 
+        public ChoFixedLengthWriter(ChoFixedLengthRecordConfiguration configuration = null)
+        {
+            Configuration = configuration;
+        }
+
         public ChoFixedLengthWriter(string filePath, ChoFixedLengthRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
@@ -97,6 +102,22 @@ namespace ChoETL
             }
             else
                 _writer.WriteTo(_textWriter, new T[] { record } ).Loop();
+        }
+
+        public string SerializeAll(IEnumerable<T> records, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            if (configuration == null)
+                configuration = Configuration;
+
+            return ToTextAll<T>(records, configuration, traceSwitch);
+        }
+
+        public string Serialize(T record, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            if (configuration == null)
+                configuration = Configuration;
+
+            return ToText<T>(record, configuration, traceSwitch);
         }
 
         public static string ToText<TRec>(TRec record, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
@@ -306,6 +327,11 @@ namespace ChoETL
 
     public class ChoFixedLengthWriter : ChoFixedLengthWriter<dynamic>
     {
+        public ChoFixedLengthWriter(ChoFixedLengthRecordConfiguration configuration = null)
+           : base(configuration)
+        {
+
+        }
         public ChoFixedLengthWriter(string filePath, ChoFixedLengthRecordConfiguration configuration = null)
             : base(filePath, configuration)
         {

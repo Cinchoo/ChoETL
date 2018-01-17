@@ -27,6 +27,11 @@ namespace ChoETL
             private set;
         }
 
+        public ChoCSVWriter(ChoCSVRecordConfiguration configuration = null)
+        {
+            Configuration = configuration;
+        }
+
         public ChoCSVWriter(string filePath, ChoCSVRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
@@ -100,6 +105,22 @@ namespace ChoETL
                 _writer.WriteTo(_textWriter, new T[] { record }).Loop();
         }
 
+        public string SerializeAll(IEnumerable<T> records, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            if (configuration == null)
+                configuration = Configuration;
+
+            return ToTextAll<T>(records, configuration, traceSwitch);
+        }
+
+        public string Serialize(T record, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            if (configuration == null)
+                configuration = Configuration;
+
+            return ToText<T>(record, configuration, traceSwitch);
+        }
+
         public static string ToTextAll<TRec>(IEnumerable<TRec> records, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
             where TRec : class
         {
@@ -116,10 +137,10 @@ namespace ChoETL
                 return reader.ReadToEnd();
             }
         }
-        public static string ToText<TRec>(TRec record, ChoCSVRecordConfiguration configuration = null)
+        public static string ToText<TRec>(TRec record, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
             where TRec : class
         {
-            return ToTextAll(ChoEnumerable.AsEnumerable(record), configuration);
+            return ToTextAll(ChoEnumerable.AsEnumerable(record), configuration, traceSwitch);
         }
 
         internal static string ToText(object rec, ChoCSVRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null)
@@ -331,6 +352,11 @@ namespace ChoETL
 
     public class ChoCSVWriter : ChoCSVWriter<dynamic>
     {
+        public ChoCSVWriter(ChoCSVRecordConfiguration configuration = null)
+            : base(configuration)
+        {
+
+        }
         public ChoCSVWriter(string filePath, ChoCSVRecordConfiguration configuration = null)
             : base(filePath, configuration)
         {
