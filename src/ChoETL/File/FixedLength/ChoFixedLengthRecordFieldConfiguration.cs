@@ -23,6 +23,14 @@ namespace ChoETL
             set;
         }
 
+        internal string[] AltFieldNamesArray = new string[] { };
+        [DataMember]
+        public string AltFieldNames
+        {
+            get;
+            set;
+        }
+
         public ChoFixedLengthRecordFieldConfiguration(string name, int startIndex, int size) : this(name, null)
         {
             StartIndex = startIndex;
@@ -37,6 +45,7 @@ namespace ChoETL
                 StartIndex = attr.StartIndex;
                 Size = attr.Size;
                 FieldName = attr.FieldName.IsNullOrWhiteSpace() ? Name : attr.FieldName;
+                AltFieldNames = attr.AltFieldNames.IsNullOrWhiteSpace() ? AltFieldNames : attr.AltFieldNames;
             }
         }
 
@@ -44,6 +53,9 @@ namespace ChoETL
         {
             try
             {
+                if (!AltFieldNames.IsNullOrWhiteSpace())
+                    AltFieldNamesArray = AltFieldNames.SplitNTrim();
+
                 if (FieldName.IsNullOrWhiteSpace())
                     FieldName = Name;
                 if (StartIndex < 0)

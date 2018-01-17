@@ -21,6 +21,12 @@ namespace ChoETL
             set;
         }
 
+        public string AltFieldNames
+        {
+            get;
+            set;
+        }
+
         public ChoCSVRecordFieldAttribute(int fieldPosition)
         {
             FieldPosition = fieldPosition;

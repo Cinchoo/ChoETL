@@ -21,6 +21,12 @@ namespace ChoETL
             set;
         }
 
+        public string AltFieldNames
+        {
+            get;
+            set;
+        }
+
         public ChoFixedLengthRecordFieldAttribute(int startIndex, int size)
         {
             StartIndex = startIndex;

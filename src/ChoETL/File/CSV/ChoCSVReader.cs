@@ -206,7 +206,15 @@ namespace ChoETL
             newColName = null;
             EventHandler<ChoMapColumnEventArgs> mapColumn = MapColumn;
             if (mapColumn == null)
+            {
+                var fc = Configuration.CSVRecordFieldConfigurations.Where(c => c.AltFieldNamesArray.Contains(colName)).FirstOrDefault();
+                if (fc != null)
+                {
+                    newColName = fc.FieldName;
+                    return true;
+                }
                 return false;
+            }
 
             var ea = new ChoMapColumnEventArgs(colPos, colName);
             mapColumn(this, ea);
@@ -277,21 +285,20 @@ namespace ChoETL
 
                     Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fn, ++maxFieldPos) { FieldName = fn });
                 }
-
             }
 
             return this;
         }
 
         public ChoCSVReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
-            object defaultValue = null, object fallbackValue = null)
+            object defaultValue = null, object fallbackValue = null, string altFieldNames = null)
         {
             int maxFieldPos = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-            return WithField(name, ++maxFieldPos, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, defaultValue, fallbackValue);
+            return WithField(name, ++maxFieldPos, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames);
         }
 
         public ChoCSVReader<T> WithField(string name, int position, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
-            object defaultValue = null, object fallbackValue = null)
+            object defaultValue = null, object fallbackValue = null, string altFieldNames = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -304,7 +311,8 @@ namespace ChoETL
                     fieldName = name;
 
                 Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(name, position) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName,
-                    ValueConverter = valueConverter, DefaultValue = defaultValue, FallbackValue = fallbackValue });
+                    ValueConverter = valueConverter, DefaultValue = defaultValue, FallbackValue = fallbackValue, AltFieldNames = altFieldNames
+                });
             }
 
             return this;

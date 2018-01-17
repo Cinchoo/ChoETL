@@ -223,35 +223,35 @@ namespace ChoCSVReaderTest
             }
         }
 
-        public class People : IChoCustomColumnMappable
+        public class People //: IChoCustomColumnMappable
         {
-            [ChoCSVRecordField(1)]
+            [ChoCSVRecordField(1, AltFieldNames = "Id, Id_Person")]
             public int PersonId { get; set; }
-            [ChoCSVRecordField(2, QuoteField = true)]
+            [ChoCSVRecordField(2, AltFieldNames = "First_Name", QuoteField = true)]
             public string Name { get; set; }
-            [ChoCSVRecordField(3, QuoteField = true)]
+            [ChoCSVRecordField(3, AltFieldNames = "Document, Phone", QuoteField = true)]
             public string Doc { get; set; }
 
-            public bool MapColumn(int colPos, string colName, out string newColName)
-            {
-                newColName = null;
-                if (colName == "Id" || colName == "Id_Person")
-                {
-                    newColName = nameof(PersonId);
-                    return true;
-                }
-                if (colName == "Name" || colName == "First_Name")
-                {
-                    newColName = nameof(Name);
-                    return true;
-                }
-                if (colName == "Document" || colName == "Phone")
-                {
-                    newColName = nameof(Doc);
-                    return true;
-                }
-                return false;
-            }
+            //public bool MapColumn(int colPos, string colName, out string newColName)
+            //{
+            //    newColName = null;
+            //    if (colName == "Id" || colName == "Id_Person")
+            //    {
+            //        newColName = nameof(PersonId);
+            //        return true;
+            //    }
+            //    if (colName == "Name" || colName == "First_Name")
+            //    {
+            //        newColName = nameof(Name);
+            //        return true;
+            //    }
+            //    if (colName == "Document" || colName == "Phone")
+            //    {
+            //        newColName = nameof(Doc);
+            //        return true;
+            //    }
+            //    return false;
+            //}
         }
 
         static void Main(string[] args)
@@ -268,7 +268,7 @@ namespace ChoCSVReaderTest
 
             var r1 = new ChoCSVReader<People>().WithFirstLineHeader(true).WithDelimiter(";");
 
-            foreach (var rec in ChoCSVReader<People>.LoadText(txt2).WithFirstLineHeader().WithDelimiter(";").ThrowAndStopOnMissingField(false)
+            foreach (var rec in ChoCSVReader<People>.LoadText(txt3).WithFirstLineHeader().WithDelimiter(";").ThrowAndStopOnMissingField(false)
                 )
                 Console.WriteLine(ChoUtility.Dump(rec));
 

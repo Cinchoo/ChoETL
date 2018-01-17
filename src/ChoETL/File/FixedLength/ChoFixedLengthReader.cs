@@ -205,7 +205,15 @@ namespace ChoETL
             newColName = null;
             EventHandler<ChoMapColumnEventArgs> mapColumn = MapColumn;
             if (mapColumn == null)
+            {
+                var fc = Configuration.FixedLengthRecordFieldConfigurations.Where(c => c.AltFieldNamesArray.Contains(colName)).FirstOrDefault();
+                if (fc != null)
+                {
+                    newColName = fc.FieldName;
+                    return true;
+                }
                 return false;
+            }
 
             var ea = new ChoMapColumnEventArgs(colPos, colName);
             mapColumn(this, ea);
@@ -259,7 +267,7 @@ namespace ChoETL
         }
 
         public ChoFixedLengthReader<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
-            string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null)
+            string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string altFieldNames = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -273,7 +281,8 @@ namespace ChoETL
 
                 Configuration.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(name, startIndex, size) { FieldType = fieldType,
                     QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName, ValueConverter = valueConverter,
-                    DefaultValue = defaultValue, FallbackValue = fallbackValue
+                    DefaultValue = defaultValue, FallbackValue = fallbackValue,
+                    AltFieldNames = altFieldNames
                 });
             }
 
