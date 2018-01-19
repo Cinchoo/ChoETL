@@ -45,7 +45,7 @@ namespace ChoETL
             Init();
 
             _xmlReader = XmlReader.Create(new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize),
-                new XmlReaderSettings(), new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
+                new XmlReaderSettings() { DtdProcessing = DtdProcessing.Ignore, XmlResolver = null }, new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
             _closeStreamOnDispose = true;
         }
 
@@ -58,7 +58,7 @@ namespace ChoETL
             Init();
 
             _xmlReader = XmlReader.Create(new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize),
-                new XmlReaderSettings(), new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
+                new XmlReaderSettings() { DtdProcessing = DtdProcessing.Ignore, XmlResolver = null }, new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
             _closeStreamOnDispose = true;
         }
 
@@ -221,7 +221,7 @@ namespace ChoETL
             {
                 ChoXmlRecordReader rr = new ChoXmlRecordReader(typeof(T), Configuration);
                 if (_textReader != null)
-                    _xmlReader = XmlReader.Create(_textReader, new XmlReaderSettings(), new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
+                    _xmlReader = XmlReader.Create(_textReader, new XmlReaderSettings() { DtdProcessing = DtdProcessing.Ignore, XmlResolver = null }, new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
 
                 rr.Reader = this;
                 rr.TraceSwitch = TraceSwitch;
@@ -254,7 +254,7 @@ namespace ChoETL
             {
                 ChoXmlRecordReader rr = new ChoXmlRecordReader(typeof(T), Configuration);
                 if (_textReader != null)
-                    _xmlReader = XmlReader.Create(_textReader, new XmlReaderSettings(), new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
+                    _xmlReader = XmlReader.Create(_textReader, new XmlReaderSettings() { DtdProcessing = DtdProcessing.Ignore, XmlResolver = null }, new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
                 rr.Reader = this;
                 rr.TraceSwitch = TraceSwitch;
                 rr.RowsLoaded += NotifyRowsLoaded;

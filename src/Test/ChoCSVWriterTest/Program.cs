@@ -61,9 +61,47 @@ namespace ChoCSVWriterTest
             }
         }
 
+        public class TRoot
+        {
+            public string Client { get; set; }
+            public List<TDeal> Deals { get; set; }
+        }
+
+        public class TDeal
+        {
+            public string DealName { get; set; }
+            public List<TInterval> TShape { get; set; }
+        }
+
+        public class TInterval
+        {
+            public string StartDate { get; set; }
+            public string EndDate { get; set; }
+            public string Volume { get; set; }
+        }
+        private static void NestedObjects()
+        {
+            TRoot root = new TRoot() { Client = "ABC", Deals = new List<TDeal>() };
+            root.Deals.Add(new TDeal
+            {
+                DealName = "59045599",
+                TShape = new List<TInterval>()
+            {
+                new TInterval { StartDate = DateTime.Today.ToString(), EndDate = DateTime.Today.AddDays(2).ToString(), Volume = "100" },
+                new TInterval { StartDate = DateTime.Today.ToString(), EndDate = DateTime.Today.AddDays(2).ToString(), Volume = "200" }
+            }
+            });
+
+            using (var w = new ChoCSVWriter("nestedObjects.csv").WithFirstLineHeader())
+            {
+                w.Write(root.Deals.SelectMany(d => d.TShape.Select(s => new { ClientName = root.Client, DealNo = d.DealName, StartDate = s.StartDate, EndDate = s.EndDate, Volume = s.Volume })));
+            }
+
+        }
+
         static void Main(string[] args)
         {
-            IntArrayTest();
+            NestedObjects();
             return;
 
             CSVWithQuotes();

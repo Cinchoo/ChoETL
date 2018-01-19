@@ -266,8 +266,11 @@ namespace ChoCSVReaderTest
 1;Matheus
 2;Clarice";
 
-            var r1 = new ChoCSVReader<People>().WithFirstLineHeader(true).WithDelimiter(";");
-
+            var r1 = new ChoCSVReader<People>().WithFirstLineHeader().WithDelimiter(";");
+            var x1 = r1.DeserializeText(txt1).FirstOrDefault();
+            string[] h = r1.Context.Headers;
+            Console.WriteLine(String.Join(",", h));
+            return;
             foreach (var rec in ChoCSVReader<People>.LoadText(txt3).WithFirstLineHeader().WithDelimiter(";").ThrowAndStopOnMissingField(false)
                 )
                 Console.WriteLine(ChoUtility.Dump(rec));

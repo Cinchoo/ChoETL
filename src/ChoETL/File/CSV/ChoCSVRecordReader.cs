@@ -692,6 +692,8 @@ namespace ChoETL
                 if (headers.Where(h => h.IsNullOrEmpty()).Any())
                     throw new ChoParserException("At least one of the field header is empty.");
 
+                Configuration.Context.Headers = headers;
+
                 return headers;
             }
             else

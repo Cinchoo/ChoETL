@@ -155,6 +155,7 @@ namespace ChoETL
             get;
             set;
         }
+        public readonly dynamic Context = new ChoDynamicObject();
 
         internal void UpdateFieldTypesIfAny(IDictionary<string, Type> dict)
         {

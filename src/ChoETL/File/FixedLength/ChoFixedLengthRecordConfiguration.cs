@@ -53,7 +53,7 @@ namespace ChoETL
             get;
             set;
         }
-
+        public readonly dynamic Context = new ChoDynamicObject();
 
         public ChoFixedLengthRecordFieldConfiguration this[string name]
         {
