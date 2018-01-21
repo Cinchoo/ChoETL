@@ -77,7 +77,6 @@ namespace ChoXmlReaderTest
     {
         static void Main(string[] args)
         {
-            ChoETLFrxBootstrap.IsSandboxEnvironment = true;
             Sample17();
         }
 

@@ -213,6 +213,7 @@ namespace ChoCSVReaderTest
 
         static void CustomNewLine()
         {
+
             using (var parser = new ChoCSVReader("CustomNewLine.csv")
                 .WithDelimiter("~")
                 .WithEOLDelimiter("#####")
@@ -254,8 +255,19 @@ namespace ChoCSVReaderTest
             //}
         }
 
+        static void GetHeadersTest()
+        {
+            using (var p = new ChoCSVReader("emp.csv").WithFirstLineHeader())
+            {
+                p.Read();
+                Console.WriteLine(String.Join(", ", p.Context.Headers));
+            }
+        }
+
         static void Main(string[] args)
         {
+            GetHeadersTest();
+            return;
             //ChoETLFrxBootstrap.IsSandboxEnvironment = true;
             string txt1 = @"Id;Name;Document
 1;Matheus;555777
