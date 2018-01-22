@@ -360,27 +360,28 @@ namespace ChoETL
         public ChoXmlReader<T> WithXmlElementField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, 
             Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
-            object defaultValue = null, object fallbackValue = null)
+            object defaultValue = null, object fallbackValue = null, bool encodeValue = false)
         {
             string fnTrim = name.NTrim();
             string xPath = $"//{fnTrim}";
-            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, false, fieldName, false, valueConverter, itemConverter, defaultValue, fallbackValue);
+            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, false, fieldName, false, valueConverter, itemConverter, defaultValue, fallbackValue, encodeValue);
         }
 
         public ChoXmlReader<T> WithXmlAttributeField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, 
             Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
-            object defaultValue = null, object fallbackValue = null)
+            object defaultValue = null, object fallbackValue = null, bool encodeValue = false)
         {
             string fnTrim = name.NTrim();
             string xPath = $"//@{fnTrim}";
-            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, true, fieldName, false, valueConverter, itemConverter, defaultValue, fallbackValue);
+            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, true, fieldName, false, valueConverter, itemConverter, defaultValue, fallbackValue, encodeValue);
         }
 
         public ChoXmlReader<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isXmlAttribute = false, string fieldName = null, bool isArray = false, 
             Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
-            object defaultValue = null, object fallbackValue = null)
+            object defaultValue = null, object fallbackValue = null,
+            bool encodeValue = false)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -398,7 +399,8 @@ namespace ChoETL
                     ValueConverter = valueConverter,
                     ItemConverter = itemConverter,
                     DefaultValue = defaultValue,
-                    FallbackValue = fallbackValue
+                    FallbackValue = fallbackValue,
+                    EncodeValue = encodeValue
                 });
             }
 

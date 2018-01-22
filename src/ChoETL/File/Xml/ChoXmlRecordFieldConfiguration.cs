@@ -31,7 +31,7 @@ namespace ChoETL
             set;
         }
         [DataMember]
-        public bool EncodeValue
+        public bool? EncodeValue
         {
             get;
             set;

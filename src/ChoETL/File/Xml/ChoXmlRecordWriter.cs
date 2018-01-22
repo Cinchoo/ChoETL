@@ -617,7 +617,8 @@ namespace ChoETL
         }
 
         private string NormalizeFieldValue(string fieldName, string fieldValue, int? size, bool truncate, bool? quoteField,
-            ChoFieldValueJustification fieldValueJustification, char fillChar, bool isHeader = false, bool isXmlAttribute = false, bool encodeValue = true)
+            ChoFieldValueJustification fieldValueJustification, char fillChar, bool isHeader = false, bool isXmlAttribute = false, 
+            bool? encodeValue = null)
         {
             string lFieldValue = fieldValue;
             bool retValue = false;
@@ -686,7 +687,7 @@ namespace ChoETL
             if (fieldValue.StartsWith("<![CDATA["))
                 return fieldValue;
 
-            if (!encodeValue)
+            if (encodeValue != null && !encodeValue.Value)
                 return fieldValue;
 
             return System.Net.WebUtility.HtmlEncode(fieldValue);

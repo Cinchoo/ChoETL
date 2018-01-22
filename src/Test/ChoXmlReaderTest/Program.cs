@@ -77,8 +77,20 @@ namespace ChoXmlReaderTest
     {
         static void Main(string[] args)
         {
-            Sample17();
+            NoEncodeTest();
         }
+
+        static void NoEncodeTest()
+        {
+            using (var xr = new ChoXmlReader("NoEncode.xml")
+                .WithField("id", encodeValue: false)
+            )
+            {
+                foreach (dynamic rec in xr)
+                    Console.WriteLine(rec.id);
+            }
+        }
+
 
         static void Sample17()
         {

@@ -663,7 +663,7 @@ namespace ChoETL
                 }
 
                 if (fieldValue is string)
-                    fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue as string);
+                    fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue as string, kvp.Value.EncodeValue);
 
                 try
                 {
@@ -780,7 +780,7 @@ namespace ChoETL
             return overrides;
         }
 
-        private string CleanFieldValue(ChoXmlRecordFieldConfiguration config, Type fieldType, string fieldValue)
+        private string CleanFieldValue(ChoXmlRecordFieldConfiguration config, Type fieldType, string fieldValue, bool? encodeValue)
         {
             if (fieldValue == null) return fieldValue;
 
@@ -817,6 +817,9 @@ namespace ChoETL
                         fieldValue = fieldValue.Substring(0, config.Size.Value);
                 }
             }
+
+            if (encodeValue != null && !encodeValue.Value && fieldValue != null)
+                return System.Net.WebUtility.HtmlEncode(fieldValue);
 
             return System.Net.WebUtility.HtmlDecode(fieldValue);
         }
