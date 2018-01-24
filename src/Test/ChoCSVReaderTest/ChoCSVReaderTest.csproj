@@ -50,9 +50,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="EmptyLines.csv" />
     <None Include="CurrencyQuotes.csv" />
     <None Include="CustomNewLine.csv" />
     <None Include="EmpDuplicates.csv" />
+    <None Include="EmpQuoteInQuote.csv" />
     <None Include="IgnoreLineFile1.csv" />
     <None Include="MasterDetail.csv" />
     <None Include="planets.csv" />

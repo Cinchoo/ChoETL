@@ -264,9 +264,35 @@ namespace ChoCSVReaderTest
             }
         }
 
+        static void QuotesInQuoteTest()
+        {
+            using (var p = new ChoCSVReader("EmpQuoteInQuote.csv"))
+            {
+                foreach (dynamic rec in p)
+                    Console.WriteLine(rec.DumpAsJson());
+            }
+        }
+
+        static void ReportEmptyLines()
+        {
+            using (var p = new ChoCSVReader("EmptyLines.csv").WithFirstLineHeader()
+                .Setup(s => s.EmptyLineFound += (o, e) =>
+                {
+                    Console.WriteLine(e.LineNo);
+                })
+                //.Configure(c => c.IgnoreEmptyLine = true)
+                )
+            {
+                foreach (dynamic rec in p)
+                    Console.WriteLine(rec.DumpAsJson());
+            }
+        }
+
         static void Main(string[] args)
         {
-            GetHeadersTest();
+            ReportEmptyLines();
+            return;
+            QuotesInQuoteTest();
             return;
             //ChoETLFrxBootstrap.IsSandboxEnvironment = true;
             string txt1 = @"Id;Name;Document

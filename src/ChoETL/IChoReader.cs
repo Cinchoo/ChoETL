@@ -182,4 +182,24 @@ namespace ChoETL
             ColName = colName;
         }
     }
+
+    public class ChoEmptyLineEventArgs : EventArgs
+    {
+        public long LineNo
+        {
+            get;
+            private set;
+        }
+        public bool Continue
+        {
+            get;
+            set;
+        }
+
+        public ChoEmptyLineEventArgs(long lineNo)
+        {
+            Continue = true;
+            LineNo = lineNo;
+        }
+    }
 }

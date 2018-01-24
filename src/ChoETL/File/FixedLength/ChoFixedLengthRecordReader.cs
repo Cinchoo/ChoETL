@@ -15,6 +15,7 @@ namespace ChoETL
     {
         private IChoNotifyRecordRead _callbackRecord;
         private IChoCustomColumnMappable _customColumnMappableRecord;
+        private IChoEmptyLineReportable _emptyLineReportableRecord;
         private bool _headerFound = false;
         private string[] _fieldNames = new string[] { };
         private bool _configCheckDone = false;
@@ -33,6 +34,7 @@ namespace ChoETL
 
             _callbackRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordRead>(recordType);
             _customColumnMappableRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoCustomColumnMappable>(recordType);
+            _emptyLineReportableRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoEmptyLineReportable>(recordType);
             //Configuration.Validate();
         }
 
@@ -801,6 +803,19 @@ namespace ChoETL
                 return retVal;
             }
             return false;
+        }
+
+        private bool RaiseReportEmptyLine(object target, long index)
+        {
+            if (_emptyLineReportableRecord != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => _emptyLineReportableRecord.EmptyLineFound(index), true);
+            }
+            else if (Reader != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseReportEmptyLine(index), true);
+            }
+            return true;
         }
 
         #endregion Event Raisers

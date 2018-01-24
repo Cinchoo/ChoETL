@@ -126,5 +126,10 @@ namespace ChoETL
             newColName = null;
             return false;
         }
+
+        public virtual bool RaiseReportEmptyLine(long lineNo)
+        {
+            return true;
+        }
     }
 }

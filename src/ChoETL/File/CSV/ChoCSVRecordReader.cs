@@ -16,6 +16,7 @@ namespace ChoETL
     {
         private IChoNotifyRecordRead _callbackRecord;
         private IChoCustomColumnMappable _customColumnMappableRecord;
+        private IChoEmptyLineReportable _emptyLineReportableRecord;
         private bool _headerFound = false;
         private bool _excelSeparatorFound = false;
         private string[] _fieldNames = null;
@@ -35,6 +36,7 @@ namespace ChoETL
             Configuration = configuration;
             _callbackRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordRead>(recordType);
             _customColumnMappableRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoCustomColumnMappable>(recordType);
+            _emptyLineReportableRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoEmptyLineReportable>(recordType);
             //Configuration.Validate();
         }
 
@@ -109,13 +111,22 @@ namespace ChoETL
 
                     if (pair.Item2.IsNullOrWhiteSpace())
                     {
-                        if (!Configuration.IgnoreEmptyLine)
-                            throw new ChoParserException("Empty line found at [{0}] location.".FormatString(pair.Item1));
-                        else
+                        if (RaiseReportEmptyLine(this, pair.Item1))
                         {
                             if (TraceSwitch.TraceVerbose)
                                 ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring empty line found at [{0}].".FormatString(pair.Item1));
                             return true;
+                        }
+                        else
+                        {
+                            if (!Configuration.IgnoreEmptyLine)
+                                throw new ChoParserException("Empty line found at [{0}] location.".FormatString(pair.Item1));
+                            else
+                            {
+                                if (TraceSwitch.TraceVerbose)
+                                    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring empty line found at [{0}].".FormatString(pair.Item1));
+                                return true;
+                            }
                         }
                     }
 
@@ -933,6 +944,19 @@ namespace ChoETL
                 return retVal;
             }
             return false;
+        }
+
+        private bool RaiseReportEmptyLine(object target, long index)
+        {
+            if (_emptyLineReportableRecord != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => _emptyLineReportableRecord.EmptyLineFound(index), true);
+            }
+            else if (Reader != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseReportEmptyLine(index), true);
+            }
+            return true;
         }
 
         #endregion Event Raisers

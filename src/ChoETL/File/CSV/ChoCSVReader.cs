@@ -24,6 +24,8 @@ namespace ChoETL
         public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
         public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
         public event EventHandler<ChoMapColumnEventArgs> MapColumn;
+        public event EventHandler<ChoEmptyLineEventArgs> EmptyLineFound;
+
         public dynamic Context
         {
             get { return Configuration.Context; }
@@ -226,6 +228,19 @@ namespace ChoETL
                 newColName = ea.NewColName;
 
             return ea.Resolved;
+        }
+
+        public override bool RaiseReportEmptyLine(long lineNo)
+        {
+            EventHandler<ChoEmptyLineEventArgs> emptyLineFound = EmptyLineFound;
+            if (emptyLineFound == null)
+            {
+                return true;
+            }
+
+            var ea = new ChoEmptyLineEventArgs(lineNo);
+            emptyLineFound(this, ea);
+            return ea.Continue;
         }
 
         #region Fluent API
