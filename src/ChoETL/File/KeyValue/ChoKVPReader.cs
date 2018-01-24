@@ -159,6 +159,13 @@ namespace ChoETL
             return dt;
         }
 
+        public void Fill(DataTable dt)
+        {
+            if (dt == null)
+                throw new ArgumentException("Missing datatable.");
+            dt.Load(AsDataReader());
+        }
+
         private void NotifyRowsLoaded(object sender, ChoRowsLoadedEventArgs e)
         {
             EventHandler<ChoRowsLoadedEventArgs> rowsLoadedEvent = RowsLoaded;
