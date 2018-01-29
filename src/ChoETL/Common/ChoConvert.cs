@@ -39,7 +39,7 @@ namespace ChoETL
             if (type == origType)
                 return value;
 
-            return ChoConvert.ConvertTo(value, targetType, value, ChoTypeDescriptor.GetTypeConvertersForType(targetType), null, culture);
+            return ChoConvert.ConvertTo(value, targetType, value, ChoTypeDescriptor.GetTypeConvertersForType(type), null, culture);
         }
 
         public static bool TryConvertFrom(object value, MemberInfo memberInfo, object sourceObject, CultureInfo culture, out object output)

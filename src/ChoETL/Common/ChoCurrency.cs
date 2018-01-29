@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public struct ChoCurrency : IEquatable<ChoCurrency>
+    [ChoDataTableColumnType(typeof(double))]
+    public struct ChoCurrency : IEquatable<ChoCurrency>, IConvertible
     {
         public ChoCurrency(decimal amount)
         {
@@ -110,6 +111,91 @@ namespace ChoETL
         public override string ToString()
         {
             return (string)this;
+        }
+
+        public TypeCode GetTypeCode()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool ToBoolean(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        public char ToChar(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        public sbyte ToSByte(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        public byte ToByte(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        public short ToInt16(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ushort ToUInt16(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int ToInt32(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        public uint ToUInt32(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        public long ToInt64(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ulong ToUInt64(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        public float ToSingle(IFormatProvider provider)
+        {
+            return (float)Amount;
+        }
+
+        public double ToDouble(IFormatProvider provider)
+        {
+            return (double)Amount;
+        }
+
+        public decimal ToDecimal(IFormatProvider provider)
+        {
+            return Amount;
+        }
+
+        public DateTime ToDateTime(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string ToString(IFormatProvider provider)
+        {
+            throw new NotImplementedException();
+        }
+
+        public object ToType(Type conversionType, IFormatProvider provider)
+        {
+            throw new NotImplementedException();
         }
     }
 }
