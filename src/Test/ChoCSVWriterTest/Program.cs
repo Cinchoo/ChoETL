@@ -99,8 +99,43 @@ namespace ChoCSVWriterTest
 
         }
 
+        public class Employee
+        {
+            public string Name { get; set; }
+        }
+
+        [MetadataType(typeof(ManagerMetaData))]
+        public class Manager : Employee
+        {
+            public double Salary { get; set; }
+            public string Department { get; set; }
+        }
+
+        public class ManagerMetaData
+        {
+            public string Name { get; set; }
+            public double Salary { get; set; }
+            [ChoIgnoreMember]
+            public string Department { get; set; }
+        }
+
+        static void InheritanceTest()
+        {
+            using (var w = new ChoCSVWriter<Employee>("Inheritance.csv").WithFirstLineHeader()
+                .MapRecordFields<ManagerMetaData>()
+                )
+            {
+                var o1 = new Manager { Name = "E1", Department = "History", Salary = 100000 };
+                var o2 = new Manager { Name = "E2", Department = "Math", Salary = 110000 };
+                w.Write(o1);
+                w.Write(o2);
+            }
+        }
+
         static void Main(string[] args)
         {
+            InheritanceTest();
+            return;
             NestedObjects();
             return;
 
