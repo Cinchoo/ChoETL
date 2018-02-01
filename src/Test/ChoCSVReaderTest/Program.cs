@@ -288,8 +288,18 @@ namespace ChoCSVReaderTest
             }
         }
 
+        static void CSVToArray()
+        {
+            string txt = @"Device, Signal\""\,Strength\"", Location, Time, Age";
+
+            IDictionary<string, object> x = ChoCSVReader.LoadText(txt).First();
+            var val = x.Values.Cast<string>().ToArray();
+        }
+
         static void Main(string[] args)
         {
+            CSVToArray();
+            return;
             ReportEmptyLines();
             return;
             QuotesInQuoteTest();
