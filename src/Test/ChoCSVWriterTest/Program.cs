@@ -104,7 +104,6 @@ namespace ChoCSVWriterTest
             public string Name { get; set; }
         }
 
-        [MetadataType(typeof(ManagerMetaData))]
         public class Manager : Employee
         {
             public double Salary { get; set; }
