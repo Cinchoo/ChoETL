@@ -25,5 +25,19 @@ namespace ChoETL
                 return defaultValue;
             }
         }
+        public static T? RunWithIgnoreErrorNullableReturn<T>(this Func<T> func)
+            where T : struct
+        {
+            if (func == null) return null;
+
+            try
+            {
+                return func();
+            }
+            catch (NotImplementedException)
+            {
+                return null;
+            }
+        }
     }
 }

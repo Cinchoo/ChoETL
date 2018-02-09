@@ -66,6 +66,7 @@ namespace ChoETL
             bool headerLineLoaded = false;
             List<object> buffer = new List<object>();
             IDictionary<string, Type> recFieldTypes = null;
+            bool? skipUntil = true;
 
             using (ChoPeekEnumerator<Tuple<long, string>> e = new ChoPeekEnumerator<Tuple<long, string>>(
                 new ChoIndexedEnumerator<string>(sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, Configuration.MayContainEOLInData)).ToEnumerable(),
@@ -73,6 +74,25 @@ namespace ChoETL
                 {
                     //bool isStateAvail = IsStateAvail();
                     skip = false;
+
+                    if (skipUntil != null)
+                    {
+                        if (skipUntil.Value)
+                        {
+                            skipUntil = RaiseSkipUntil(pair);
+                            if (skipUntil == null)
+                            {
+
+                            }
+                            else
+                            {
+                                if (skipUntil.Value)
+                                    skip = skipUntil;
+                                else
+                                    skip = true;
+                            }
+                        }
+                    }
 
                     //if (isStateAvail)
                     //{
@@ -88,7 +108,6 @@ namespace ChoETL
 
                     if (skip == null)
                         return null;
-
 
                     if (TraceSwitch.TraceVerbose)
                     {
@@ -464,7 +483,7 @@ namespace ChoETL
                     if (Configuration.IsDynamicObject)
                     {
                         if (kvp.Value.FieldType == null && Configuration.MaxScanRows <= 0)
-                            kvp.Value.FieldType = DiscoverFieldType(fieldValue as string);
+                            kvp.Value.FieldType = DiscoverFieldType(fieldValue as string, Configuration);
                     }
                     else
                     {
@@ -701,7 +720,23 @@ namespace ChoETL
 
                 //Check for any empty column headers
                 if (headers.Where(h => h.IsNullOrEmpty()).Any())
-                    throw new ChoParserException("At least one of the field header is empty.");
+                {
+                    if (!Configuration.FileHeaderConfiguration.IgnoreColumnsWithEmptyHeader)
+                        throw new ChoParserException("At least one of the field header is empty.");
+                    else
+                    {
+                        index = 0;
+                        newHeaders = new List<string>();
+                        foreach (string header in headers)
+                        {
+                            if (header.IsNullOrWhiteSpace())
+                                newHeaders.Add("_Column{0}".FormatString(++index));
+                            else
+                                newHeaders.Add(header);
+                        }
+                        headers = newHeaders.ToArray();
+                    }
+                }
 
                 Configuration.Context.Headers = headers;
 
@@ -813,6 +848,27 @@ namespace ChoETL
             {
                 ChoActionEx.RunWithIgnoreError(() => Reader.RaiseEndLoad(state));
             }
+        }
+
+        private bool? RaiseSkipUntil(Tuple<long, string> pair)
+        {
+            if (_callbackRecord != null)
+            {
+                long index = pair.Item1;
+                object state = pair.Item2;
+                bool? retValue = ChoFuncEx.RunWithIgnoreErrorNullableReturn<bool>(() => _callbackRecord.SkipUntil(index, state));
+
+                return retValue;
+            }
+            else if (Reader != null)
+            {
+                long index = pair.Item1;
+                object state = pair.Item2;
+                bool? retValue = ChoFuncEx.RunWithIgnoreError<bool?>(() => Reader.RaiseSkipUntil(index, state));
+
+                return retValue;
+            }
+            return null;
         }
 
         private bool RaiseBeforeRecordLoad(object target, ref Tuple<long, string> pair)

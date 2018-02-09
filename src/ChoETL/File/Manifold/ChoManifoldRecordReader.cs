@@ -53,6 +53,7 @@ namespace ChoETL
             string[] commentTokens = Configuration.Comments;
             bool? skip = false;
             bool _headerFound = false;
+            bool? skipUntil = true;
             using (ChoPeekEnumerator<Tuple<long, string>> e = new ChoPeekEnumerator<Tuple<long, string>>(
                 new ChoIndexedEnumerator<string>(sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, Configuration.MayContainEOLInData)).ToEnumerable(),
                 (pair) =>
@@ -60,6 +61,24 @@ namespace ChoETL
                     //bool isStateAvail = IsStateAvail();
 
                     skip = false;
+                    if (skipUntil != null)
+                    {
+                        if (skipUntil.Value)
+                        {
+                            skipUntil = RaiseSkipUntil(pair);
+                            if (skipUntil == null)
+                            {
+
+                            }
+                            else
+                            {
+                                if (skipUntil.Value)
+                                    skip = skipUntil;
+                                else
+                                    skip = true;
+                            }
+                        }
+                    }
 
                     //if (isStateAvail)
                     //{
@@ -317,6 +336,27 @@ namespace ChoETL
             {
                 ChoActionEx.RunWithIgnoreError(() => Reader.RaiseEndLoad(state));
             }
+        }
+
+        private bool? RaiseSkipUntil(Tuple<long, string> pair)
+        {
+            if (Configuration.NotifyRecordReadObject != null)
+            {
+                long index = pair.Item1;
+                object state = pair.Item2;
+                bool? retValue = ChoFuncEx.RunWithIgnoreErrorNullableReturn<bool>(() => Configuration.NotifyRecordReadObject.SkipUntil(index, state));
+
+                return retValue;
+            }
+            else if (Reader != null)
+            {
+                long index = pair.Item1;
+                object state = pair.Item2;
+                bool? retValue = ChoFuncEx.RunWithIgnoreError<bool?>(() => Reader.RaiseSkipUntil(index, state));
+
+                return retValue;
+            }
+            return null;
         }
 
         private bool RaiseBeforeRecordLoad(object target, ref Tuple<long, string> pair)

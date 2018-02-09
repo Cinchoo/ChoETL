@@ -73,6 +73,7 @@ namespace ChoETL
             bool IsHeaderLoaded = false;
             Tuple<long, string> pairIn;
             bool abortRequested = false;
+            bool? skipUntil = true;
 
             for (int i = 0; i < loopCount; i++)
             {
@@ -96,19 +97,38 @@ namespace ChoETL
                     //bool isStateAvail = IsStateAvail();
                     skip = false;
 
-                    //if (isStateAvail)
-                    //{
-                    //    if (!IsStateMatches(item))
-                    //    {
-                    //        skip = filterFunc != null ? filterFunc(item) : false;
-                    //    }
-                    //    else
-                    //        skip = true;
-                    //}
-                    //else
-                    //    skip = filterFunc != null ? filterFunc(item) : false;
+                        if (skipUntil != null)
+                        {
+                            if (skipUntil.Value)
+                            {
+                                skipUntil = RaiseSkipUntil(pair);
+                                if (skipUntil == null)
+                                {
 
-                    if (skip == null)
+                                }
+                                else
+                                {
+                                    if (skipUntil.Value)
+                                        skip = skipUntil;
+                                    else
+                                        skip = true;
+                                }
+                            }
+                        }
+
+                        //if (isStateAvail)
+                        //{
+                        //    if (!IsStateMatches(item))
+                        //    {
+                        //        skip = filterFunc != null ? filterFunc(item) : false;
+                        //    }
+                        //    else
+                        //        skip = true;
+                        //}
+                        //else
+                        //    skip = filterFunc != null ? filterFunc(item) : false;
+
+                        if (skip == null)
                             return null;
 
 
@@ -796,6 +816,27 @@ namespace ChoETL
             {
                 ChoActionEx.RunWithIgnoreError(() => Reader.RaiseEndLoad(state));
             }
+        }
+
+        private bool? RaiseSkipUntil(Tuple<long, string> pair)
+        {
+            if (_callbackRecord != null)
+            {
+                long index = pair.Item1;
+                object state = pair.Item2;
+                bool? retValue = ChoFuncEx.RunWithIgnoreErrorNullableReturn<bool>(() => _callbackRecord.SkipUntil(index, state));
+
+                return retValue;
+            }
+            else if (Reader != null)
+            {
+                long index = pair.Item1;
+                object state = pair.Item2;
+                bool? retValue = ChoFuncEx.RunWithIgnoreError<bool?>(() => Reader.RaiseSkipUntil(index, state));
+
+                return retValue;
+            }
+            return null;
         }
 
         private bool RaiseBeforeRecordLoad(object target, ref Tuple<long, string> pair)

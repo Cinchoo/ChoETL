@@ -114,12 +114,38 @@ namespace ChoETL
 
             long counter = 0;
             Tuple<long, JObject> pair = null;
+            bool? skip = false;
+            bool? skipUntil = true;
             bool abortRequested = false;
             _se = new Lazy<JsonSerializer>(() => Configuration.JsonSerializerSettings != null ? JsonSerializer.Create(Configuration.JsonSerializerSettings) : null);
 
             foreach (var obj in jObjects)
             {
                 pair = new Tuple<long, JObject>(++counter, obj);
+                skip = false;
+
+                if (skipUntil != null)
+                {
+                    if (skipUntil.Value)
+                    {
+                        skipUntil = RaiseSkipUntil(pair);
+                        if (skipUntil == null)
+                        {
+
+                        }
+                        else
+                        {
+                            if (skipUntil.Value)
+                                skip = skipUntil;
+                            else
+                                skip = true;
+                        }
+                    }
+                }
+                if (skip == null)
+                    break;
+                if (skip.Value)
+                    continue;
 
                 if (!_configCheckDone)
                 {
@@ -829,6 +855,27 @@ namespace ChoETL
             {
                 ChoActionEx.RunWithIgnoreError(() => Reader.RaiseEndLoad(state));
             }
+        }
+
+        private bool? RaiseSkipUntil(Tuple<long, JObject> pair)
+        {
+            if (_callbackRecord != null)
+            {
+                long index = pair.Item1;
+                object state = pair.Item2;
+                bool? retValue = ChoFuncEx.RunWithIgnoreErrorNullableReturn<bool>(() => _callbackRecord.SkipUntil(index, state));
+
+                return retValue;
+            }
+            else if (Reader != null)
+            {
+                long index = pair.Item1;
+                object state = pair.Item2;
+                bool? retValue = ChoFuncEx.RunWithIgnoreError<bool?>(() => Reader.RaiseSkipUntil(index, state));
+
+                return retValue;
+            }
+            return null;
         }
 
         private bool RaiseBeforeRecordLoad(object target, ref Tuple<long, JObject> pair)

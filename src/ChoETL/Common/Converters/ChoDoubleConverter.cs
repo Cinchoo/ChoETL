@@ -21,6 +21,12 @@ namespace ChoETL
                     text = "0";
 
                 NumberStyles? format = parameter.GetValueAt<NumberStyles?>(0, ChoTypeConverterFormatSpec.Instance.DoubleNumberStyle);
+                if (format == null)
+                {
+                    Double decResult = 0;
+                    if (Double.TryParse(text, NumberStyles.Currency, culture, out decResult))
+                        return decResult;
+                }
                 return format == null ? Double.Parse(text, culture) : Double.Parse(text, format.Value, culture);
             }
 

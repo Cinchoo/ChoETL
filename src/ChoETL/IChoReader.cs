@@ -44,6 +44,25 @@ namespace ChoETL
         }
     }
 
+    public class ChoSkipUntilEventArgs : EventArgs
+    {
+        public long Index
+        {
+            get;
+            internal set;
+        }
+        public object Source
+        {
+            get;
+            set;
+        }
+        public bool Skip
+        {
+            get;
+            set;
+        }
+    }
+
     public class ChoBeforeRecordLoadEventArgs : EventArgs
     {
         public object Record

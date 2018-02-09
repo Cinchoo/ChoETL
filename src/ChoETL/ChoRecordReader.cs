@@ -174,16 +174,29 @@ namespace ChoETL
                 }
             }
         }
-        protected Type DiscoverFieldType(string value)
+        protected Type DiscoverFieldType(string value, ChoFileRecordConfiguration config)
         {
+            bool treatCurrencyAsDecimal = config.TreatCurrencyAsDecimal;
             long lresult = 0;
             double dresult = 0;
+            DateTime dtresult;
+            Decimal decResult = 0;
+            ChoCurrency currResult = 0;
+
             if (value == null)
                 return typeof(string);
             else if (long.TryParse(value, out lresult))
                 return typeof(long);
             else if (double.TryParse(value, out dresult))
                 return typeof(double);
+            else if (DateTime.TryParse(value, out dtresult))
+                return typeof(DateTime);
+            else if (DateTime.TryParse(value, out dtresult))
+                return typeof(DateTime);
+            else if (!treatCurrencyAsDecimal && ChoCurrency.TryParse(value, out currResult))
+                return typeof(ChoCurrency);
+            else if (treatCurrencyAsDecimal && Decimal.TryParse(value, NumberStyles.Currency, CultureInfo.CurrentCulture, out decResult))
+                return typeof(Decimal);
             else
                 return typeof(string);
         }

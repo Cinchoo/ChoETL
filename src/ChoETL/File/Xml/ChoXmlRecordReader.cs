@@ -71,6 +71,8 @@ namespace ChoETL
 
             long counter = 0;
             Tuple<long, XElement> pair = null;
+            bool? skip = false;
+            bool? skipUntil = true;
             bool abortRequested = false;
             _se = new Lazy<XmlSerializer>(() => Configuration.XmlSerializer == null ? new XmlSerializer(RecordType) : Configuration.XmlSerializer);
             if (!Configuration.NamespaceManager.DefaultNamespace.IsNullOrWhiteSpace())
@@ -89,7 +91,32 @@ namespace ChoETL
                         Configuration.NamespaceManager.AddNamespace("x", Configuration.NamespaceManager.DefaultNamespace);
                     }
                 }
+
+                skip = false;
                 pair = new Tuple<long, XElement>(++counter, el);
+
+                if (skipUntil != null)
+                {
+                    if (skipUntil.Value)
+                    {
+                        skipUntil = RaiseSkipUntil(pair);
+                        if (skipUntil == null)
+                        {
+
+                        }
+                        else
+                        {
+                            if (skipUntil.Value)
+                                skip = skipUntil;
+                            else
+                                skip = true;
+                        }
+                    }
+                }
+                if (skip == null)
+                    break;
+                if (skip.Value)
+                    continue;
 
                 if (!_configCheckDone)
                 {
@@ -650,7 +677,7 @@ namespace ChoETL
                 if (Configuration.IsDynamicObject)
                 {
                     if (fieldValue != null && kvp.Value.FieldType == null && lineNo == 1)
-                        kvp.Value.FieldType = fieldValue is ICollection ? fieldValue.GetType() : fieldValue.GetType().IsSimple() ? DiscoverFieldType(fieldValue as string) : null;
+                        kvp.Value.FieldType = fieldValue is ICollection ? fieldValue.GetType() : fieldValue.GetType().IsSimple() ? DiscoverFieldType(fieldValue as string, Configuration) : null;
                 }
                 else
                 {
@@ -849,6 +876,27 @@ namespace ChoETL
             {
                 ChoActionEx.RunWithIgnoreError(() => Reader.RaiseEndLoad(state));
             }
+        }
+
+        private bool? RaiseSkipUntil(Tuple<long, XElement> pair)
+        {
+            if (_callbackRecord != null)
+            {
+                long index = pair.Item1;
+                object state = pair.Item2;
+                bool? retValue = ChoFuncEx.RunWithIgnoreErrorNullableReturn<bool>(() => _callbackRecord.SkipUntil(index, state));
+
+                return retValue;
+            }
+            else if (Reader != null)
+            {
+                long index = pair.Item1;
+                object state = pair.Item2;
+                bool? retValue = ChoFuncEx.RunWithIgnoreError<bool?>(() => Reader.RaiseSkipUntil(index, state));
+
+                return retValue;
+            }
+            return null;
         }
 
         private bool RaiseBeforeRecordLoad(object target, ref Tuple<long, XElement> pair)

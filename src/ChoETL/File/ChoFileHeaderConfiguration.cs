@@ -23,11 +23,19 @@ namespace ChoETL
             get;
             set;
         }
+        [DataMember]
         public bool IgnoreHeader
         {
             get;
             set;
         }
+        [DataMember]
+        public bool IgnoreColumnsWithEmptyHeader
+        {
+            get;
+            set;
+        }
+
         private bool _ignoreCase = true;
         [DataMember]
         public bool IgnoreCase
@@ -96,6 +104,7 @@ namespace ChoETL
                 HasHeaderRecord = true;
                 IgnoreCase = recObjAttr.IgnoreCase;
                 IgnoreHeader = recObjAttr.IgnoreHeader;
+                IgnoreColumnsWithEmptyHeader = recObjAttr.IgnoreColumnsWithEmptyHeader;
                 HeaderLineAt = recObjAttr.HeaderLineAt;
                 FillChar = recObjAttr.FillCharInternal;
                 Justification = recObjAttr.JustificationInternal;

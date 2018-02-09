@@ -645,18 +645,18 @@ namespace ChoETL
             }
         }
 
-        public KeyValuePair<string, object> this[int index]
-        {
-            get
-            {
-                IDictionary<string, object> kvpDict = _kvpDict;
-                if (kvpDict != null)
-                {
-                    return kvpDict.ElementAtOrDefault(index);
-                }
-                return new KeyValuePair<string, object>();
-            }
-        }
+        //public KeyValuePair<string, object> this[int index]
+        //{
+        //    get
+        //    {
+        //        IDictionary<string, object> kvpDict = _kvpDict;
+        //        if (kvpDict != null)
+        //        {
+        //            return kvpDict.ElementAtOrDefault(index);
+        //        }
+        //        return new KeyValuePair<string, object>();
+        //    }
+        //}
 
         public object this[string key]
         {
