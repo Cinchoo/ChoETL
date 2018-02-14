@@ -416,9 +416,43 @@ namespace ChoCSVReaderTest
             }
         }
 
+        public class Site
+        {
+            [Required]
+            public int SiteID { get; set; }
+            [Required]
+            public int House { get; set; }
+            [Required]
+            public string Street { get; set; }
+            [Required]
+            [RegularExpression("^[a-zA-Z][a-zA-Z ]*$")]
+            public string City { get; set; }
+            [Required]
+            [RegularExpression("^[A-Z][A-Z]$")]
+            public string State { get; set; }
+            [Required]
+            [RegularExpression("^[0-9][0-9]*$")]
+            public string Zip { get; set; }
+            public int Apartment { get; set; }
+        }
+
+        static void Sample3()
+        {
+            using (var p = new ChoCSVReader<Site>("Sample3.csv")
+                .WithFirstLineHeader(true)
+                .Configure(c => c.ObjectValidationMode = ChoObjectValidationMode.ObjectLevel)
+                )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+
+                Console.WriteLine("IsValid: " + p.IsValid);
+            }
+        }
+
         static void Main(string[] args)
         {
-            Sample2();
+            Sample3();
             return;
 
             Pontos();

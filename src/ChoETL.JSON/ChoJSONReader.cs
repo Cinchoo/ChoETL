@@ -468,20 +468,6 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONReader<T> MapRecordFields<T1>()
-        {
-            Configuration.MapRecordFields<T1>();
-            return this;
-        }
-
-        public ChoJSONReader<T> MapRecordFields(Type recordType)
-        {
-            if (recordType != null)
-                Configuration.MapRecordFields(recordType);
-
-            return this;
-        }
-
         #endregion Fluent API
     }
 

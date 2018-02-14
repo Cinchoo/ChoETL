@@ -269,6 +269,7 @@ namespace ChoETL
             //}
             catch (Exception ex)
             {
+                Reader.IsValid = false;
                 if (ex is ChoMissingRecordFieldException && Configuration.ThrowAndStopOnMissingField)
                     throw;
 
