@@ -351,7 +351,10 @@ namespace ChoETL
                 //ChoGuard.ArgumentNotNullOrEmpty(memberType, "MemberType");
 
                 MemberName = memberName;
-                ProperyType = memberType == null ? typeof(string) : memberType;
+                ProperyType = memberType == null ? typeof(string) : memberType.GetUnderlyingType();
+                ChoDataTableColumnTypeAttribute dtColumnType = ChoType.GetAttribute<ChoDataTableColumnTypeAttribute>(ProperyType);
+                if (dtColumnType != null && dtColumnType.Type != null)
+                    ProperyType = dtColumnType.Type;
             }
 
             public Type GetPropertyType()
@@ -376,7 +379,7 @@ namespace ChoETL
                         throw new ApplicationException("Can't find '{0}' member in dynamic object.".FormatString(MemberName));
                 }
                 else
-                    return ChoType.GetMemberValue(target, MemberName);
+                    return ChoConvert.ConvertTo(ChoType.GetMemberValue(target, MemberName), ProperyType);
             }
 
             public string GetName()

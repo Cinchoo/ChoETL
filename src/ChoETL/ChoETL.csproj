@@ -96,6 +96,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\Attributes\ChoDataTableColumnTypeAttribute.cs" />
+    <Compile Include="Common\Converters\ChoCDATAToStringConverter.cs" />
     <Compile Include="IChoEmptyLineReportable.cs" />
     <Compile Include="IChoCustomColumnMappable.cs" />
     <Compile Include="IChoCustomSerializable.cs" />

@@ -366,6 +366,14 @@ namespace ChoETL
             return this;
         }
 
+        public ChoJSONReader<T> Setup(Action<ChoJSONReader<T>> action)
+        {
+            if (action != null)
+                action(this);
+
+            return this;
+        }
+
         #endregion Fluent API
     }
 

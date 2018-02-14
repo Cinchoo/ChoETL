@@ -288,21 +288,80 @@ namespace ChoCSVReaderTest
             }
         }
 
-        static void CSVToArray()
+        static void EmptyValueTest()
         {
-            string txt = @"Device, Signal\""\,Strength\"", Location, Time, Age";
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVReader<EmployeeRecWithCurrency>(reader).WithDelimiter(",").WithFirstLineHeader()
+                .Configure(c => c.ThrowAndStopOnMissingField = false)
+                )
+            {
+                writer.WriteLine("Id,Name,Salary");
+                writer.WriteLine("1,Carl,");
+                writer.WriteLine(",Mark,2000");
+                writer.WriteLine("3,Tom,3000");
 
-            IDictionary<string, object> x = ChoCSVReader.LoadText(txt).First();
-            var val = x.Values.Cast<string>().ToArray();
+                writer.Flush();
+                stream.Position = 0;
+
+                var dt = parser.AsDataTable();
+                //object rec;
+                //while ((rec = parser.Read()) != null)
+                //{
+                //    Console.WriteLine(rec.ToStringEx());
+                //}
+            }
+        }
+
+        static void CDataDataSetTest()
+        {
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoCSVReader<EmployeeRecWithCDATA>(reader).WithDelimiter(",").WithFirstLineHeader()
+                .Configure(c => c.ThrowAndStopOnMissingField = false)
+                )
+            {
+                writer.WriteLine("Id,Name,Salary");
+                writer.WriteLine("1,<![CDATA[Carl]]>,");
+                writer.WriteLine("2,<![CDATA[]]>,2000");
+                writer.WriteLine("3,,3000");
+
+                writer.Flush();
+                stream.Position = 0;
+
+                var dt = parser.AsDataTable();
+                //object rec;
+                //while ((rec = parser.Read()) != null)
+                //{
+                //    Console.WriteLine(rec.ToStringEx());
+                //}
+            }
+        }
+
+        static void QuoteValueTest()
+        {
+            using (var p = new ChoCSVReader("empwithsalary.csv").WithFirstLineHeader()
+                .WithField("Id")
+                .WithField("Name", quoteField: false)
+                )
+            {
+                foreach (dynamic rec in p)
+                    Console.WriteLine(rec.DumpAsJson());
+            }
         }
 
         static void Main(string[] args)
         {
-            CSVToArray();
+            CDataDataSetTest();
             return;
+            QuoteValueTest();
+            return;
+            EmptyValueTest();
+            return;
+
             ReportEmptyLines();
-            return;
-            QuotesInQuoteTest();
             return;
             //ChoETLFrxBootstrap.IsSandboxEnvironment = true;
             string txt1 = @"Id;Name;Document
@@ -911,12 +970,19 @@ namespace ChoCSVReaderTest
             }
         }
 
+        public class EmployeeRecWithCDATA
+        {
+            public int? Id { get; set; }
+            public ChoCDATA Name { get; set; }
+            public ChoCurrency? Salary { get; set; }
+        }
+
         public class EmployeeRecWithCurrency
         {
             public int? Id { get; set; }
             public string Name { get; set; }
-            [ChoIgnoreMember]
-            public ChoCurrency Salary { get; set; }
+            //[ChoIgnoreMember]
+            public ChoCurrency? Salary { get; set; }
         }
 
         static void CurrencyTest()

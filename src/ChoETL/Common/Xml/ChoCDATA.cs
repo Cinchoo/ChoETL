@@ -10,6 +10,7 @@
 
     [Serializable]
     //[ChoTypeConverter(typeof(ChoCDATAToStringConverter))]
+    [ChoDataTableColumnType(typeof(string))]
     public class ChoCDATA : IXmlSerializable, IFormattable, IConvertible
     {
         #region Instance Data Members (Private)
@@ -26,6 +27,8 @@
 
         public ChoCDATA(string text)
         {
+            if (text != null && text.StartsWith("<![CDATA["))
+                text = text.Substring(9, text.Length - 9 - 3);
             CheckValue(text);
             this._text = text;
         }
@@ -101,6 +104,7 @@
         public void CheckValue(string text)
         {
             if (text == null) return;
+
             if (text.Contains("<![CDATA["))
                 throw new ApplicationException("Nested CDATA value not allowed.");
         }
@@ -182,6 +186,9 @@
 
         public object ToType(Type conversionType, IFormatProvider provider)
         {
+            if (conversionType == typeof(string))
+                return Value;
+
             throw new NotImplementedException();
         }
 

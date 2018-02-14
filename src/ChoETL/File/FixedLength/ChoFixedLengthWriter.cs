@@ -241,6 +241,20 @@ namespace ChoETL
             return this;
         }
 
+        public ChoFixedLengthWriter<T> MapRecordFields<T1>()
+        {
+            Configuration.MapRecordFields<T1>();
+            return this;
+        }
+
+        public ChoFixedLengthWriter<T> MapRecordFields(Type recordType)
+        {
+            if (recordType != null)
+                Configuration.MapRecordFields(recordType);
+
+            return this;
+        }
+
         #endregion Fluent API
 
         public void Write(IDataReader dr)
