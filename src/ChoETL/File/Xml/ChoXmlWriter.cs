@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using System.Xml.Serialization;
 
 namespace ChoETL
 {
@@ -33,6 +34,7 @@ namespace ChoETL
         public ChoXmlWriter(ChoXmlRecordConfiguration configuration = null)
         {
             Configuration = configuration;
+            Init();
         }
 
         public ChoXmlWriter(string filePath, ChoXmlRecordConfiguration configuration = null)
@@ -75,9 +77,13 @@ namespace ChoETL
             if (_isDisposed)
                 return;
 
-            _writer.EndWrite(_textWriter);
+            if (_writer != null)
+                _writer.EndWrite(_textWriter);
             if (_closeStreamOnDispose)
-                _textWriter.Dispose();
+            {
+                if (_textWriter != null)
+                    _textWriter.Dispose();
+            }
         }
         public void Close()
         {
@@ -134,7 +140,9 @@ namespace ChoETL
         public static string ToText<TRec>(TRec record, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string xpath = null)
             where TRec : class
         {
-            return ToTextAll(ChoEnumerable.AsEnumerable<TRec>(record), configuration, traceSwitch);
+            XmlRootAttribute root = ChoType.GetCustomAttribute<XmlRootAttribute>(typeof(TRec), false);
+            string xPath = root != null ? root.ElementName : typeof(TRec).Name;
+            return ToTextAll(ChoEnumerable.AsEnumerable<TRec>(record), configuration, traceSwitch, xPath);
         }
 
 
@@ -144,7 +152,7 @@ namespace ChoETL
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoXmlWriter<TRec>(writer) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch })
+            using (var parser = new ChoXmlWriter<TRec>(writer, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch })
             {
                 parser.Configuration.XPath = xpath;
 
@@ -225,10 +233,32 @@ namespace ChoETL
                     {
                         Configuration.XmlRecordFieldConfigurations.Clear();
                         _clearFields = true;
+                        Configuration.MapRecordFields(Configuration.RecordType);
                     }
                     fnTrim = fn.NTrim();
+                    if (Configuration.XmlRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                        Configuration.XmlRecordFieldConfigurations.Remove(Configuration.XmlRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
                     Configuration.XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(fnTrim, $"//{fnTrim}"));
                 }
+            }
+
+            return this;
+        }
+
+        public ChoXmlWriter<T> IgnoreField(string fieldName)
+        {
+            if (!fieldName.IsNullOrWhiteSpace())
+            {
+                string fnTrim = null;
+                if (!_clearFields)
+                {
+                    Configuration.XmlRecordFieldConfigurations.Clear();
+                    _clearFields = true;
+                    Configuration.MapRecordFields(Configuration.RecordType);
+                }
+                fnTrim = fieldName.NTrim();
+                if (Configuration.XmlRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                    Configuration.XmlRecordFieldConfigurations.Remove(Configuration.XmlRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
             }
 
             return this;
@@ -259,17 +289,29 @@ namespace ChoETL
                 {
                     Configuration.XmlRecordFieldConfigurations.Clear();
                     _clearFields = true;
+                    Configuration.MapRecordFields(Configuration.RecordType);
                 }
 
                 string fnTrim = name.NTrim();
                 xPath = xPath.IsNullOrWhiteSpace() ? $"//{fnTrim}" : xPath;
 
-                Configuration.XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(fnTrim, xPath) { FieldType = fieldType,
-                    FieldValueTrimOption = fieldValueTrimOption, IsXmlAttribute = isXmlAttribute, FieldName = fieldName, ValueConverter = valueConverter, IsNullable = isNullable,
-                    DefaultValue = defaultValue,
-                    FallbackValue = fallbackValue,
-                    EncodeValue = encodeValue
-                });
+                if (Configuration.XmlRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                    Configuration.XmlRecordFieldConfigurations.Remove(Configuration.XmlRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+
+                {
+                    Configuration.XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(fnTrim, xPath)
+                    {
+                        FieldType = fieldType,
+                        FieldValueTrimOption = fieldValueTrimOption,
+                        IsXmlAttribute = isXmlAttribute,
+                        FieldName = fieldName,
+                        ValueConverter = valueConverter,
+                        IsNullable = isNullable,
+                        DefaultValue = defaultValue,
+                        FallbackValue = fallbackValue,
+                        EncodeValue = encodeValue
+                    });
+                }
             }
 
             return this;

@@ -30,6 +30,7 @@ namespace ChoETL
         public ChoFixedLengthWriter(ChoFixedLengthRecordConfiguration configuration = null)
         {
             Configuration = configuration;
+            Init();
         }
 
         public ChoFixedLengthWriter(string filePath, ChoFixedLengthRecordConfiguration configuration = null)
@@ -70,7 +71,10 @@ namespace ChoETL
         public void Dispose()
         {
             if (_closeStreamOnDispose)
-                _textWriter.Dispose();
+            {
+                if (_textWriter != null)
+                    _textWriter.Dispose();
+            }
         }
 
         private void Init()
@@ -132,7 +136,7 @@ namespace ChoETL
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoFixedLengthWriter<TRec>(writer) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch })
+            using (var parser = new ChoFixedLengthWriter<TRec>(writer, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch })
             {
                 parser.Write(records);
 
@@ -193,6 +197,25 @@ namespace ChoETL
         {
             Configuration.QuoteAllFields = flag;
             Configuration.QuoteChar = quoteChar;
+            return this;
+        }
+
+        public ChoFixedLengthWriter<T> IgnoreField(string fieldName)
+        {
+            if (!fieldName.IsNullOrWhiteSpace())
+            {
+                string fnTrim = null;
+                if (!_clearFields)
+                {
+                    Configuration.FixedLengthRecordFieldConfigurations.Clear();
+                    _clearFields = true;
+                    Configuration.MapRecordFields(Configuration.RecordType);
+                }
+                fnTrim = fieldName.NTrim();
+                if (Configuration.FixedLengthRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                    Configuration.FixedLengthRecordFieldConfigurations.Remove(Configuration.FixedLengthRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+            }
+
             return this;
         }
 

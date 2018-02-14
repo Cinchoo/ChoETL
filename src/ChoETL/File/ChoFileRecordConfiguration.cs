@@ -157,6 +157,7 @@ namespace ChoETL
 
         protected ChoFileRecordConfiguration(Type recordType = null) : base(recordType)
         {
+            MaxScanRows = -1;
             IgnoreDuplicateFields = false;
             BufferSize = 4096;
             Comments = null; // new string[] { "#", "//" };
@@ -179,6 +180,7 @@ namespace ChoETL
             ChoFileRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoFileRecordObjectAttribute>(recordType);
             if (recObjAttr != null)
             {
+                MaxScanRows = -1;
                 if (recObjAttr.BufferSize > 0)
                     BufferSize = recObjAttr.BufferSize;
                 if (recObjAttr.Comments.IsNullOrWhiteSpace())
@@ -267,6 +269,41 @@ namespace ChoETL
             }
 
             return Encoding;
+        }
+
+        protected override void Clone(ChoRecordConfiguration config)
+        {
+            base.Clone(config);
+
+            if (!(config is ChoFileRecordConfiguration))
+                return;
+
+            ChoFileRecordConfiguration fconfig = config as ChoFileRecordConfiguration;
+            fconfig.MaxScanRows = MaxScanRows;
+            fconfig.BufferSize = BufferSize;
+            fconfig.Comments = Comments;
+            fconfig.CultureName = CultureName;
+            fconfig.Culture = Culture;
+            fconfig.EOLDelimiter = EOLDelimiter;
+            fconfig.MayContainEOLInData = MayContainEOLInData;
+            fconfig.IgnoreEmptyLine = IgnoreEmptyLine;
+            fconfig.ColumnCountStrict = ColumnCountStrict;
+            fconfig.ColumnOrderStrict = ColumnOrderStrict;
+            fconfig.EscapeQuoteAndDelimiter = EscapeQuoteAndDelimiter;
+            fconfig.IgnoreDuplicateFields = IgnoreDuplicateFields;
+            fconfig.NestedColumnSeparator = NestedColumnSeparator;
+            fconfig.TreatCurrencyAsDecimal = TreatCurrencyAsDecimal;
+            fconfig.QuoteChar = QuoteChar;
+            fconfig.BackslashQuote = BackslashQuote;
+            fconfig.DoubleQuoteChar = DoubleQuoteChar;
+            fconfig.QuoteAllFields = QuoteAllFields;
+            fconfig.StringSplitOptions = StringSplitOptions;
+            fconfig.EncodingPage = EncodingPage;
+            fconfig.Encoding = Encoding;
+            fconfig.MaxScanRows = MaxScanRows;
+            fconfig.MaxScanRows = MaxScanRows;
+            fconfig.MaxScanRows = MaxScanRows;
+
         }
     }
 }

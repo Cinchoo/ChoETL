@@ -158,5 +158,17 @@ namespace ChoETL
 
             ValDict = (from fc in fcs select new KeyValuePair<string, ValidationAttribute[]>(fc.Name, fc.Validators)).GroupBy(i => i.Key).Select(g => g.First()).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
+        protected virtual void Clone(ChoRecordConfiguration config)
+        {
+            if (config == null)
+                return;
+
+            config.ErrorMode = ErrorMode;
+            config.IgnoreFieldValueMode = IgnoreFieldValueMode;
+            config.AutoDiscoverColumns = AutoDiscoverColumns;
+            config.ThrowAndStopOnMissingField = ThrowAndStopOnMissingField;
+            config.ObjectValidationMode = ObjectValidationMode;
+            config.NotifyAfter = NotifyAfter;
+        }
     }
 }

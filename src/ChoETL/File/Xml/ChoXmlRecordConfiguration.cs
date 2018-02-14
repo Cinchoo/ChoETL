@@ -65,7 +65,8 @@ namespace ChoETL
             set;
         }
         [DataMember]
-        public string XmlVersion { get; set; }
+        public string XmlVersion
+        { get; set; }
         [DataMember]
         public bool OmitXmlDeclaration { get; set; }
         internal Dictionary<string, ChoXmlRecordFieldConfiguration> RecordFieldConfigurationsDict
@@ -108,6 +109,29 @@ namespace ChoETL
                 //XPath = "//*";
             }
             NamespaceManager = new XmlNamespaceManager(new NameTable());
+        }
+
+        protected override void Clone(ChoRecordConfiguration config)
+        {
+            base.Clone(config);
+            if (!(config is ChoXmlRecordConfiguration))
+                return;
+
+            ChoXmlRecordConfiguration xconfig = config as ChoXmlRecordConfiguration;
+
+            xconfig.Indent = Indent;
+            xconfig.IndentChar = IndentChar;
+            xconfig.NamespaceManager = NamespaceManager;
+            xconfig.XmlSerializer = XmlSerializer;
+            xconfig.NullValueHandling = NullValueHandling;
+        }
+
+        public ChoXmlRecordConfiguration Clone(Type recordType = null)
+        {
+            ChoXmlRecordConfiguration config = new ChoXmlRecordConfiguration(recordType);
+            Clone(config);
+
+            return config;
         }
 
         protected override void Init(Type recordType)
@@ -205,7 +229,6 @@ namespace ChoETL
                 RootName = XPath.SplitNTrim("/").Where(t => !t.IsNullOrWhiteSpace() && t.NTrim() != "." && t.NTrim() != ".." && t.NTrim() != "*").FirstOrDefault();
                 NodeName = XPath.SplitNTrim("/").Where(t => !t.IsNullOrWhiteSpace() && t.NTrim() != "." && t.NTrim() != ".." && t.NTrim() != "*").Skip(1).FirstOrDefault();
             }
-
             if (RootName.IsNullOrWhiteSpace())
             {
                 ChoXmlDocumentRootAttribute da = TypeDescriptor.GetAttributes(RecordType).OfType<ChoXmlDocumentRootAttribute>().FirstOrDefault();
@@ -215,6 +238,12 @@ namespace ChoETL
                 {
                     RootName = "Root";
                 }
+            }
+
+            if (!RootName.IsNullOrWhiteSpace() && NodeName.IsNullOrWhiteSpace())
+            {
+                NodeName = RootName;
+                RootName = null;
             }
 
             if (NodeName.IsNullOrWhiteSpace())

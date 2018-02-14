@@ -35,6 +35,12 @@ namespace ChoETL
             private set;
         }
 
+        public ChoXmlReader(ChoXmlRecordConfiguration configuration = null)
+        {
+            Configuration = configuration;
+            Init();
+        }
+
         public ChoXmlReader(string filePath, string defaultNamespace)
         {
             ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
@@ -413,6 +419,25 @@ namespace ChoETL
             return this;
         }
 
+        public ChoXmlReader<T> IgnoreField(string fieldName)
+        {
+            if (!fieldName.IsNullOrWhiteSpace())
+            {
+                string fnTrim = null;
+                if (!_clearFields)
+                {
+                    Configuration.XmlRecordFieldConfigurations.Clear();
+                    _clearFields = true;
+                    Configuration.MapRecordFields(Configuration.RecordType);
+                }
+                fnTrim = fieldName.NTrim();
+                if (Configuration.XmlRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                    Configuration.XmlRecordFieldConfigurations.Remove(Configuration.XmlRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+            }
+
+            return this;
+        }
+
         public ChoXmlReader<T> WithFields(params string[] fieldsNames)
         {
             string fnTrim = null;
@@ -426,8 +451,12 @@ namespace ChoETL
                     {
                         Configuration.XmlRecordFieldConfigurations.Clear();
                         _clearFields = true;
+                        Configuration.MapRecordFields(Configuration.RecordType);
                     }
                     fnTrim = fn.NTrim();
+                    if (Configuration.XmlRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                        Configuration.XmlRecordFieldConfigurations.Remove(Configuration.XmlRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+
                     Configuration.XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(fnTrim, $"//{fnTrim}"));
                 }
 
@@ -468,10 +497,14 @@ namespace ChoETL
                 {
                     Configuration.XmlRecordFieldConfigurations.Clear();
                     _clearFields = true;
+                    Configuration.MapRecordFields(Configuration.RecordType);
                 }
 
                 string fnTrim = name.NTrim();
                 xPath = xPath.IsNullOrWhiteSpace() ? $"//{fnTrim}" : xPath;
+
+                if (Configuration.XmlRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                    Configuration.XmlRecordFieldConfigurations.Remove(Configuration.XmlRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
 
                 Configuration.XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(fnTrim, xPath) { FieldType = fieldType,
                     FieldValueTrimOption = fieldValueTrimOption, IsXmlAttribute = isXmlAttribute, FieldName = fieldName, IsArray = isArray,

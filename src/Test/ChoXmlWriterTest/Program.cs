@@ -13,11 +13,47 @@ using System.Xml.Serialization;
 
 namespace ChoXmlWriterTest
 {
+
+    public class Emp
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+    }
+
+    public class Choice
+    {
+        public string[] Options { get; set; }
+        public Emp Emp { get; set; }
+        public List<int> Ids { get; set; }
+        public Emp[] EmpArr { get; set; }
+        //public Dictionary<int, Emp> EmpDict { get; set; }
+    }
+
     class Program
     {
         static void Main(string[] args)
         {
-            sample7Test();
+            CustomMemberSerialization();
+        }
+
+        static void CustomMemberSerialization()
+        {
+            var sb = new StringBuilder();
+            using (var p = new ChoXmlWriter<Choice>()
+                .WithField("Options", valueConverter: o => String.Join(",", o as string[]))
+                )
+            {
+                Console.WriteLine(p.Serialize(new Choice
+                {
+                    Options = new[] { "op 1", "op 2" },
+                    EmpArr = new Emp[] { new Emp { Id = 1, Name = "Tom" }, new Emp { Id = 2, Name = "Mark" }, null },
+                    Emp = new Emp {  Id = 0, Name = "Raj"},
+                    //EmpDict = new Dictionary<int, Emp> { { 1, new Emp { Id = 11, Name = "Tom1" } } },
+                    Ids = new List<int> { 1, 2, 3}
+                }));
+            }
+            //Console.WriteLine(sb.ToString());
+            //Console.WriteLine(ChoXmlWriter.ToText<Choice>(new Choice { Options = new[] { "op 1", "op 2" } }));
         }
 
         static void CustomSerialization()

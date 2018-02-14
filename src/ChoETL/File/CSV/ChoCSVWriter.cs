@@ -30,6 +30,7 @@ namespace ChoETL
         public ChoCSVWriter(ChoCSVRecordConfiguration configuration = null)
         {
             Configuration = configuration;
+            Init();
         }
 
         public ChoCSVWriter(string filePath, ChoCSVRecordConfiguration configuration = null)
@@ -71,7 +72,10 @@ namespace ChoETL
         public void Dispose()
         {
             if (_closeStreamOnDispose)
-                _textWriter.Dispose();
+            {
+                if (_textWriter != null)
+                    _textWriter.Dispose();
+            }
         }
 
         private void Init()
@@ -196,8 +200,28 @@ namespace ChoETL
             return this;
         }
 
+        public ChoCSVWriter<T> IgnoreField(string fieldName)
+        {
+            if (!fieldName.IsNullOrWhiteSpace())
+            {
+                string fnTrim = null;
+                if (!_clearFields)
+                {
+                    Configuration.CSVRecordFieldConfigurations.Clear();
+                    _clearFields = true;
+                    Configuration.MapRecordFields(Configuration.RecordType);
+                }
+                fnTrim = fieldName.NTrim();
+                if (Configuration.CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                    Configuration.CSVRecordFieldConfigurations.Remove(Configuration.CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+            }
+
+            return this;
+        }
+
         public ChoCSVWriter<T> WithFields(params string[] fieldsNames)
         {
+            string fnTrim = null;
             if (!fieldsNames.IsNullOrEmpty())
             {
                 int maxFieldPos = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
@@ -209,11 +233,14 @@ namespace ChoETL
                     {
                         Configuration.CSVRecordFieldConfigurations.Clear();
                         _clearFields = true;
+                        Configuration.MapRecordFields(Configuration.RecordType);
                     }
 
-                    Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fn.Trim(), ++maxFieldPos));
+                    fnTrim = fn.NTrim();
+                    if (Configuration.CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                        Configuration.CSVRecordFieldConfigurations.Remove(Configuration.CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+                    Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fnTrim, ++maxFieldPos) { FieldName = fn });
                 }
-
             }
 
             return this;
@@ -228,12 +255,17 @@ namespace ChoETL
                 {
                     Configuration.CSVRecordFieldConfigurations.Clear();
                     _clearFields = true;
+                    Configuration.MapRecordFields(Configuration.RecordType);
                 }
                 if (fieldName.IsNullOrWhiteSpace())
                     fieldName = name;
 
+                string fnTrim = name.NTrim();
+                if (Configuration.CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                    Configuration.CSVRecordFieldConfigurations.Remove(Configuration.CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+
                 int maxFieldPos = fieldPosition == null ? (Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) + 1 : 1) : fieldPosition.Value;
-                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(name, maxFieldPos) { FieldType = fieldType, QuoteField = quoteField,
+                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fnTrim, maxFieldPos) { FieldType = fieldType, QuoteField = quoteField,
                     FillChar = fillChar,
                     FieldValueJustification = fieldValueJustification,
                     Truncate = truncate,

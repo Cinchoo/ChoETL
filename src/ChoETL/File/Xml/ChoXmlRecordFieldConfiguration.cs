@@ -36,7 +36,12 @@ namespace ChoETL
             get;
             set;
         }
-
+        [DataMember]
+        public bool UseXmlSerialization
+        {
+            get;
+            set;
+        }
         internal bool? IsArray
         {
             get;
@@ -62,6 +67,8 @@ namespace ChoETL
             if (attr != null)
             {
                 XPath = attr.XPath;
+                EncodeValue = attr.EncodeValue;
+                UseXmlSerialization = attr.UseXmlSerialization;
                 FieldName = attr.FieldName.IsNullOrWhiteSpace() ? Name.NTrim() : attr.FieldName.NTrim();
                 IsXmlAttribute = attr is ChoXmlAttributeRecordFieldAttribute;
             }

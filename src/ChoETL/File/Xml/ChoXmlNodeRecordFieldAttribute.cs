@@ -22,7 +22,16 @@ namespace ChoETL
             get;
             set;
         }
-
+        public bool? EncodeValue
+        {
+            get;
+            set;
+        }
+        public bool UseXmlSerialization
+        {
+            get;
+            set;
+        }
         internal ChoXmlNodeRecordFieldType XmlNodeRecordFieldType
         {
             get;

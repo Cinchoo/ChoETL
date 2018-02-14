@@ -135,8 +135,11 @@ namespace ChoETL
         {
             if (_closeStreamOnDispose)
             {
-                _textReader.Dispose();
-                _textReader = null;
+                if (_textReader != null)
+                {
+                    _textReader.Dispose();
+                    _textReader = null;
+                }
             }
 
             if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
@@ -344,8 +347,28 @@ namespace ChoETL
             return this;
         }
 
+        public ChoCSVReader<T> IgnoreField(string fieldName)
+        {
+            if (!fieldName.IsNullOrWhiteSpace())
+            {
+                string fnTrim = null;
+                if (!_clearFields)
+                {
+                    Configuration.CSVRecordFieldConfigurations.Clear();
+                    _clearFields = true;
+                    Configuration.MapRecordFields(Configuration.RecordType);
+                }
+                fnTrim = fieldName.NTrim();
+                if (Configuration.CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                    Configuration.CSVRecordFieldConfigurations.Remove(Configuration.CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+            }
+
+            return this;
+        }
+
         public ChoCSVReader<T> WithFields(params string[] fieldsNames)
         {
+            string fnTrim = null;
             if (!fieldsNames.IsNullOrEmpty())
             {
                 int maxFieldPos = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
@@ -357,10 +380,14 @@ namespace ChoETL
                     {
                         Configuration.CSVRecordFieldConfigurations.Clear();
                         _clearFields = true;
+                        Configuration.MapRecordFields(Configuration.RecordType);
                         //Configuration.ColumnOrderStrict = true;
                     }
 
-                    Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fn, ++maxFieldPos) { FieldName = fn });
+                    fnTrim = fn.NTrim();
+                    if (Configuration.CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                        Configuration.CSVRecordFieldConfigurations.Remove(Configuration.CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+                    Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fnTrim, ++maxFieldPos) { FieldName = fn });
                 }
             }
 
@@ -383,11 +410,16 @@ namespace ChoETL
                 {
                     Configuration.CSVRecordFieldConfigurations.Clear();
                     _clearFields = true;
+                    Configuration.MapRecordFields(Configuration.RecordType);
                 }
                 if (fieldName.IsNullOrWhiteSpace())
                     fieldName = name;
 
-                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(name, position) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName,
+                string fnTrim = name.NTrim();
+                if (Configuration.CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                    Configuration.CSVRecordFieldConfigurations.Remove(Configuration.CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+
+                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fnTrim, position) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName,
                     ValueConverter = valueConverter, DefaultValue = defaultValue, FallbackValue = fallbackValue, AltFieldNames = altFieldNames
                 });
             }

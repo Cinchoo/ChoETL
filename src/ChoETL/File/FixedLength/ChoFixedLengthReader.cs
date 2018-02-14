@@ -134,8 +134,11 @@ namespace ChoETL
         {
             if (_closeStreamOnDispose)
             {
-                _textReader.Dispose();
-                _textReader = null;
+                if (_textReader != null)
+                {
+                    _textReader.Dispose();
+                    _textReader = null;
+                }
             }
 
             if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
@@ -343,6 +346,25 @@ namespace ChoETL
             return this;
         }
 
+        public ChoFixedLengthReader<T> IgnoreField(string fieldName)
+        {
+            if (!fieldName.IsNullOrWhiteSpace())
+            {
+                string fnTrim = null;
+                if (!_clearFields)
+                {
+                    Configuration.FixedLengthRecordFieldConfigurations.Clear();
+                    _clearFields = true;
+                    Configuration.MapRecordFields(Configuration.RecordType);
+                }
+                fnTrim = fieldName.NTrim();
+                if (Configuration.FixedLengthRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                    Configuration.FixedLengthRecordFieldConfigurations.Remove(Configuration.FixedLengthRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+            }
+
+            return this;
+        }
+
         public ChoFixedLengthReader<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
             string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string altFieldNames = null)
         {
@@ -352,11 +374,16 @@ namespace ChoETL
                 {
                     Configuration.FixedLengthRecordFieldConfigurations.Clear();
                     _clearFields = true;
+                    Configuration.MapRecordFields(Configuration.RecordType);
                 }
                 if (fieldName.IsNullOrWhiteSpace())
                     fieldName = name;
 
-                Configuration.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(name, startIndex, size) { FieldType = fieldType,
+                string fnTrim = name.NTrim();
+                if (Configuration.FixedLengthRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                    Configuration.FixedLengthRecordFieldConfigurations.Remove(Configuration.FixedLengthRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+
+                Configuration.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(fnTrim, startIndex, size) { FieldType = fieldType,
                     QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName, ValueConverter = valueConverter,
                     DefaultValue = defaultValue, FallbackValue = fallbackValue,
                     AltFieldNames = altFieldNames

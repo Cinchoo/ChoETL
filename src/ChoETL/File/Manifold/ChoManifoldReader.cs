@@ -27,6 +27,12 @@ namespace ChoETL
             private set;
         }
 
+        public ChoManifoldReader(ChoManifoldRecordConfiguration configuration = null)
+        {
+            Configuration = configuration;
+            Init();
+        }
+
         public ChoManifoldReader(string filePath, ChoManifoldRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
@@ -118,8 +124,11 @@ namespace ChoETL
         {
             if (_closeStreamOnDispose)
             {
-                _textReader.Dispose();
-                _textReader = null;
+                if (_textReader != null)
+                {
+                    _textReader.Dispose();
+                    _textReader = null;
+                }
             }
 
             if (!ChoETLFrxBootstrap.IsSandboxEnvironment)

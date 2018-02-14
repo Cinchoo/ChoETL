@@ -374,6 +374,25 @@ namespace ChoETL
             return this;
         }
 
+        public ChoJSONReader<T> IgnoreField(string fieldName)
+        {
+            if (!fieldName.IsNullOrWhiteSpace())
+            {
+                string fnTrim = null;
+                if (!_clearFields)
+                {
+                    Configuration.JSONRecordFieldConfigurations.Clear();
+                    _clearFields = true;
+                    Configuration.MapRecordFields(Configuration.RecordType);
+                }
+                fnTrim = fieldName.NTrim();
+                if (Configuration.JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                    Configuration.JSONRecordFieldConfigurations.Remove(Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+            }
+
+            return this;
+        }
+
         public ChoJSONReader<T> WithFields(params string[] fieldsNames)
         {
             string fnTrim = null;
@@ -387,11 +406,14 @@ namespace ChoETL
                     {
                         Configuration.JSONRecordFieldConfigurations.Clear();
                         _clearFields = true;
+                        Configuration.MapRecordFields(Configuration.RecordType);
                     }
                     fnTrim = fn.NTrim();
+                    if (Configuration.JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                        Configuration.JSONRecordFieldConfigurations.Remove(Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+
                     Configuration.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration(fnTrim, (string)null));
                 }
-
             }
 
             return this;
@@ -406,10 +428,14 @@ namespace ChoETL
                 {
                     Configuration.JSONRecordFieldConfigurations.Clear();
                     _clearFields = true;
+                    Configuration.MapRecordFields(Configuration.RecordType);
                 }
 
                 string fnTrim = name.NTrim();
                 jsonPath = jsonPath.IsNullOrWhiteSpace() ? null : jsonPath;
+
+                if (Configuration.JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                    Configuration.JSONRecordFieldConfigurations.Remove(Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
 
                 Configuration.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration(fnTrim, jsonPath) { FieldType = fieldType, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName, ValueConverter = valueConverter,
                     DefaultValue = defaultValue,

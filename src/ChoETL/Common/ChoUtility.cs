@@ -941,9 +941,11 @@ namespace ChoETL
             }
         }
 
-        public static string XmlSerialize(object target, XmlWriterSettings xws = null, string separator = null)
+        public static string XmlSerialize(object target, XmlWriterSettings xws = null, string separator = null, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore)
         {
-            ChoGuard.ArgumentNotNull(target, "Target");
+            //ChoGuard.ArgumentNotNull(target, "Target");
+            if (target == null)
+                return null;
 
             StringBuilder xmlString = new StringBuilder();
 

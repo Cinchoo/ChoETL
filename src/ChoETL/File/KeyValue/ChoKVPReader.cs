@@ -46,6 +46,12 @@ namespace ChoETL
             private set;
         }
 
+        public ChoKVPReader(ChoKVPRecordConfiguration configuration = null)
+        {
+            Configuration = configuration;
+            Init();
+        }
+
         public ChoKVPReader(string filePath, ChoKVPRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
@@ -137,8 +143,11 @@ namespace ChoETL
         {
             if (_closeStreamOnDispose)
             {
-                _textReader.Dispose();
-                _textReader = null;
+                if (_textReader != null)
+                {
+                    _textReader.Dispose();
+                    _textReader = null;
+                }
             }
 
             if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
@@ -253,22 +262,47 @@ namespace ChoETL
             return this;
         }
 
+        public ChoKVPReader<T> IgnoreField(string fieldName)
+        {
+            if (!fieldName.IsNullOrWhiteSpace())
+            {
+                string fnTrim = null;
+                if (!_clearFields)
+                {
+                    Configuration.KVPRecordFieldConfigurations.Clear();
+                    _clearFields = true;
+                    Configuration.MapRecordFields(Configuration.RecordType);
+                }
+                fnTrim = fieldName.NTrim();
+                if (Configuration.KVPRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                    Configuration.KVPRecordFieldConfigurations.Remove(Configuration.KVPRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+            }
+
+            return this;
+        }
+
         public ChoKVPReader<T> WithFields(params string[] fieldsNames)
         {
+            string fnTrim = null;
             if (!fieldsNames.IsNullOrEmpty())
             {
                 foreach (string fn in fieldsNames)
                 {
                     if (fn.IsNullOrEmpty())
                         continue;
+
                     if (!_clearFields)
                     {
                         Configuration.KVPRecordFieldConfigurations.Clear();
                         _clearFields = true;
+                        Configuration.MapRecordFields(Configuration.RecordType);
                         Configuration.ColumnOrderStrict = true;
                     }
 
-                    Configuration.KVPRecordFieldConfigurations.Add(new ChoKVPRecordFieldConfiguration(fn));
+                    fnTrim = fn.NTrim();
+                    if (Configuration.KVPRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                        Configuration.KVPRecordFieldConfigurations.Remove(Configuration.KVPRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+                    Configuration.KVPRecordFieldConfigurations.Add(new ChoKVPRecordFieldConfiguration(fnTrim) { FieldName = fn });
                 }
 
             }
@@ -289,7 +323,11 @@ namespace ChoETL
                 if (fieldName.IsNullOrWhiteSpace())
                     fieldName = name;
 
-                Configuration.KVPRecordFieldConfigurations.Add(new ChoKVPRecordFieldConfiguration(name) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName,
+                string fnTrim = name.NTrim();
+                if (Configuration.KVPRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                    Configuration.KVPRecordFieldConfigurations.Remove(Configuration.KVPRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+
+                Configuration.KVPRecordFieldConfigurations.Add(new ChoKVPRecordFieldConfiguration(fnTrim) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName,
                     ValueConverter = valueConverter,
                     DefaultValue = defaultValue,
                     FallbackValue = fallbackValue

@@ -378,8 +378,8 @@ namespace ChoETL
 
                 if (Configuration.IsDynamicObject)
                 {
-                    if (kvp.Value.FieldType == null && Configuration.MaxScanRows <= 0)
-                        kvp.Value.FieldType = DiscoverFieldType(fieldValue as string, Configuration);
+                    if (kvp.Value.FieldType == null)
+                        kvp.Value.FieldType = Configuration.MaxScanRows == -1 ? DiscoverFieldType(fieldValue as string, Configuration) : typeof(string);
                 }
                 else
                 {

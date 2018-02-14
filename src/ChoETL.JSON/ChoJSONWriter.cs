@@ -30,6 +30,12 @@ namespace ChoETL
             private set;
         }
 
+        public ChoJSONWriter(ChoJSONRecordConfiguration configuration = null)
+        {
+            Configuration = configuration;
+            Init();
+        }
+
         public ChoJSONWriter(string filePath, ChoJSONRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
@@ -70,10 +76,14 @@ namespace ChoETL
             if (_isDisposed)
                 return;
 
-            _writer.EndWrite(_textWriter);
+            if (_writer != null)
+                _writer.EndWrite(_textWriter);
 
             if (_closeStreamOnDispose)
-                _textWriter.Dispose();
+            {
+                if (_textWriter != null)
+                    _textWriter.Dispose();
+            }
         }
         public void Close()
         {
@@ -140,7 +150,7 @@ namespace ChoETL
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoJSONWriter<TRec>(writer) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch })
+            using (var parser = new ChoJSONWriter<TRec>(writer, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch })
             {
                 parser.Configuration.JSONPath = jsonPath;
 
@@ -186,6 +196,25 @@ namespace ChoETL
             Configuration.NotifyAfter = rowsLoaded;
             return this;
         }
+        
+        public ChoJSONWriter<T> IgnoreField(string fieldName)
+        {
+            if (!fieldName.IsNullOrWhiteSpace())
+            {
+                string fnTrim = null;
+                if (!_clearFields)
+                {
+                    Configuration.JSONRecordFieldConfigurations.Clear();
+                    _clearFields = true;
+                    Configuration.MapRecordFields(Configuration.RecordType);
+                }
+                fnTrim = fieldName.NTrim();
+                if (Configuration.JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                    Configuration.JSONRecordFieldConfigurations.Remove(Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+            }
+
+            return this;
+        }
 
         public ChoJSONWriter<T> WithFields(params string[] fieldsNames)
         {
@@ -207,7 +236,6 @@ namespace ChoETL
 
             return this;
         }
-
 
         public ChoJSONWriter<T> WithField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
             object defaultValue = null, object fallbackValue = null)

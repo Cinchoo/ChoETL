@@ -25,6 +25,12 @@ namespace ChoETL
             private set;
         }
 
+        public ChoManifoldWriter(ChoManifoldRecordConfiguration configuration = null)
+        {
+            Configuration = configuration;
+            Init();
+        }
+
         public ChoManifoldWriter(string filePath, ChoManifoldRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
@@ -63,7 +69,10 @@ namespace ChoETL
         public void Dispose()
         {
             if (_closeStreamOnDispose)
-                _textWriter.Dispose();
+            {
+                if (_textWriter != null)
+                    _textWriter.Dispose();
+            }
         }
 
         private void Init()
