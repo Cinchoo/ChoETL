@@ -275,6 +275,7 @@ namespace ChoETL
             }
             catch (Exception ex)
             {
+                Reader.IsValid = false;
                 ChoETLFramework.HandleException(ref ex);
                 if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                 {
