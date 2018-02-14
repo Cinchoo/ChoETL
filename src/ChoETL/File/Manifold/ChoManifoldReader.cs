@@ -62,6 +62,50 @@ namespace ChoETL
             _closeStreamOnDispose = true;
         }
 
+        public ChoManifoldReader Load(string filePath)
+        {
+            ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
+
+            Close();
+            Init();
+            _textReader = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
+            _closeStreamOnDispose = true;
+
+            return this;
+        }
+
+        public ChoManifoldReader Load(TextReader textReader)
+        {
+            ChoGuard.ArgumentNotNull(textReader, "TextReader");
+
+            Close();
+            Init();
+            _textReader = textReader;
+            _closeStreamOnDispose = false;
+
+            return this;
+        }
+
+        public ChoManifoldReader Load(Stream inStream)
+        {
+            ChoGuard.ArgumentNotNull(inStream, "Stream");
+
+            Close();
+            Init();
+            if (inStream is MemoryStream)
+                _textReader = new StreamReader(inStream);
+            else
+                _textReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+            _closeStreamOnDispose = true;
+
+            return this;
+        }
+
+        public void Close()
+        {
+            Dispose();
+        }
+
         public object Read()
         {
             if (_enumerator.Value.MoveNext())
@@ -73,9 +117,15 @@ namespace ChoETL
         public void Dispose()
         {
             if (_closeStreamOnDispose)
+            {
                 _textReader.Dispose();
+                _textReader = null;
+            }
 
-            System.Threading.Thread.CurrentThread.CurrentCulture = _prevCultureInfo;
+            if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
+                System.Threading.Thread.CurrentThread.CurrentCulture = _prevCultureInfo;
+
+            _closeStreamOnDispose = false;
         }
 
         private void Init()

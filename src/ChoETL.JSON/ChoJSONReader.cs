@@ -52,14 +52,14 @@ namespace ChoETL
             _closeStreamOnDispose = true;
         }
 
-        public ChoJSONReader(TextReader txtReader, ChoJSONRecordConfiguration configuration = null)
+        public ChoJSONReader(TextReader textReader, ChoJSONRecordConfiguration configuration = null)
         {
-            ChoGuard.ArgumentNotNull(txtReader, "TextReader");
+            ChoGuard.ArgumentNotNull(textReader, "TextReader");
 
             Configuration = configuration;
             Init();
 
-            _textReader = txtReader;
+            _textReader = textReader;
         }
 
         public ChoJSONReader(JsonTextReader JSONReader, ChoJSONRecordConfiguration configuration = null)
@@ -95,6 +95,71 @@ namespace ChoETL
             _jObjects = jObjects;
         }
 
+        public ChoJSONReader<T> Load(string filePath)
+        {
+            ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
+
+            Close();
+            Init();
+            _JSONReader = new JsonTextReader(new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
+            _closeStreamOnDispose = true;
+
+            return this;
+        }
+
+        public ChoJSONReader<T> Load(TextReader textReader)
+        {
+            ChoGuard.ArgumentNotNull(textReader, "TextReader");
+
+            Close();
+            Init();
+            _textReader = textReader;
+            _closeStreamOnDispose = false;
+
+            return this;
+        }
+
+        public ChoJSONReader<T> Load(JsonTextReader JSONReader)
+        {
+            ChoGuard.ArgumentNotNull(JSONReader, "JSONReader");
+
+            Close();
+            Init();
+            _JSONReader = JSONReader;
+            _closeStreamOnDispose = false;
+
+            return this;
+        }
+
+        public ChoJSONReader<T> Load(Stream inStream)
+        {
+            ChoGuard.ArgumentNotNull(inStream, "Stream");
+
+            Close();
+            Init();
+            if (inStream is MemoryStream)
+                _textReader = new StreamReader(inStream);
+            else
+                _textReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+            _closeStreamOnDispose = true;
+
+            return this;
+        }
+
+        public ChoJSONReader<T> Load(IEnumerable<JToken> jObjects)
+        {
+            ChoGuard.ArgumentNotNull(jObjects, "JObjects");
+
+            Init();
+            _jObjects = jObjects;
+            return this;
+        }
+
+        public void Close()
+        {
+            Dispose();
+        }
+
         public T Read()
         {
             if (_enumerator.Value.MoveNext())
@@ -113,7 +178,10 @@ namespace ChoETL
                     _JSONReader.Close();
             }
 
-            System.Threading.Thread.CurrentThread.CurrentCulture = _prevCultureInfo;
+            if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
+                System.Threading.Thread.CurrentThread.CurrentCulture = _prevCultureInfo;
+
+            _closeStreamOnDispose = false;
         }
 
         private void Init()

@@ -65,14 +65,14 @@ namespace ChoETL
             _closeStreamOnDispose = true;
         }
 
-        public ChoXmlReader(TextReader txtReader, ChoXmlRecordConfiguration configuration = null)
+        public ChoXmlReader(TextReader textReader, ChoXmlRecordConfiguration configuration = null)
         {
-            ChoGuard.ArgumentNotNull(txtReader, "TextReader");
+            ChoGuard.ArgumentNotNull(textReader, "TextReader");
 
             Configuration = configuration;
             Init();
 
-            _sr = txtReader as StreamReader;
+            _sr = textReader as StreamReader;
         }
 
         public ChoXmlReader(XmlReader xmlReader, ChoXmlRecordConfiguration configuration = null)
@@ -108,6 +108,73 @@ namespace ChoETL
             _xElements = xElements;
         }
 
+        public ChoXmlReader<T> Load(string filePath)
+        {
+            ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
+
+            Close();
+            Init();
+            _sr = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
+            _xmlReader = XmlReader.Create(_sr,
+                new XmlReaderSettings() { DtdProcessing = DtdProcessing.Ignore, XmlResolver = null }, new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
+            _closeStreamOnDispose = true;
+
+            return this;
+        }
+
+        public ChoXmlReader<T> Load(TextReader textReader)
+        {
+            ChoGuard.ArgumentNotNull(textReader, "TextReader");
+
+            Close();
+            Init();
+            _sr = textReader as StreamReader;
+            _closeStreamOnDispose = false;
+
+            return this;
+        }
+
+        public ChoXmlReader<T> Load(XmlReader xmlReader)
+        {
+            ChoGuard.ArgumentNotNull(xmlReader, "XmlReader");
+
+            Close();
+            Init();
+            _xmlReader = xmlReader;
+            _closeStreamOnDispose = false;
+
+            return this;
+        }
+
+        public ChoXmlReader<T> Load(Stream inStream)
+        {
+            ChoGuard.ArgumentNotNull(inStream, "Stream");
+
+            Close();
+            Init();
+            if (inStream is MemoryStream)
+                _sr = new StreamReader(inStream);
+            else
+                _sr = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+            _closeStreamOnDispose = true;
+
+            return this;
+        }
+
+        public ChoXmlReader<T> Load(IEnumerable<XElement> xElements)
+        {
+            ChoGuard.ArgumentNotNull(xElements, "XmlElements");
+
+            Init();
+            _xElements = xElements;
+            return this;
+        }
+
+        public void Close()
+        {
+            Dispose();
+        }
+
         public T Read()
         {
             if (_enumerator.Value.MoveNext())
@@ -126,7 +193,10 @@ namespace ChoETL
                     _sr.Dispose();
             }
 
-            System.Threading.Thread.CurrentThread.CurrentCulture = _prevCultureInfo;
+            if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
+                System.Threading.Thread.CurrentThread.CurrentCulture = _prevCultureInfo;
+
+            _closeStreamOnDispose = false;
         }
 
         private void Init()
@@ -285,11 +355,13 @@ namespace ChoETL
             return dt;
         }
 
-        public void Fill(DataTable dt)
+        public int Fill(DataTable dt)
         {
             if (dt == null)
                 throw new ArgumentException("Missing datatable.");
             dt.Load(AsDataReader());
+
+            return dt.Rows.Count;
         }
 
         private void NotifyRowsLoaded(object sender, ChoRowsLoadedEventArgs e)

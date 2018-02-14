@@ -13,6 +13,7 @@ namespace ChoETL
         public event EventHandler<ChoBeginLoadEventArgs> BeginLoad;
         public event EventHandler<ChoEndLoadEventArgs> EndLoad;
 
+        public event EventHandler<ChoSkipUntilEventArgs> SkipUntil;
         public event EventHandler<ChoAfterRecordLoadEventArgs> AfterRecordLoad;
         public event EventHandler<ChoBeforeRecordLoadEventArgs> BeforeRecordLoad;
         public event EventHandler<ChoRecordLoadErrorEventArgs> RecordLoadError;
@@ -49,6 +50,17 @@ namespace ChoETL
 
             ChoEndLoadEventArgs e = new ChoEndLoadEventArgs() { Source = source };
             eh(this, e);
+        }
+
+        public bool? RaiseSkipUntil(long index, object source)
+        {
+            EventHandler<ChoSkipUntilEventArgs> eh = SkipUntil;
+            if (eh == null)
+                return null;
+
+            ChoSkipUntilEventArgs e = new ChoSkipUntilEventArgs() { Index = index, Source = source };
+            eh(this, e);
+            return e.Skip;
         }
 
         public bool RaiseBeforeRecordLoad(object record, long index, ref object source)

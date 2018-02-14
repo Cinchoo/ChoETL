@@ -91,9 +91,19 @@ namespace ChoETL
             set;
         }
         [DataMember]
-        internal bool IgnoreDuplicateFields { get; set; }
+        public bool IgnoreDuplicateFields
+        {
+            get;
+            set;
+        }
         [DataMember]
         public char? NestedColumnSeparator
+        {
+            get;
+            set;
+        }
+        [DataMember]
+        public bool TreatCurrencyAsDecimal
         {
             get;
             set;
@@ -159,6 +169,7 @@ namespace ChoETL
             QuoteAllFields = false;
             StringSplitOptions = ChoStringSplitOptions.None;
             //Encoding = Encoding.UTF8;
+            TreatCurrencyAsDecimal = true;
         }
 
         protected override void Init(Type recordType)
@@ -184,6 +195,7 @@ namespace ChoETL
                 StringSplitOptions = recObjAttr.StringSplitOptions;
                 if (!recObjAttr.Encoding.IsNullOrWhiteSpace())
                     Encoding = Encoding.GetEncoding(recObjAttr.Encoding);
+                TreatCurrencyAsDecimal = recObjAttr.TreatCurrencyAsDecimal;
             }
         }
 

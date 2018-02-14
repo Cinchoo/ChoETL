@@ -52,6 +52,12 @@ namespace ChoETL
             set { TruncateInternal = value; }
         }
 
+        public bool IgnoreColumnsWithEmptyHeader
+        {
+            get;
+            set;
+        }
+
         public ChoFileHeaderAttribute()
         {
             IgnoreCase = true;

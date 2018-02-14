@@ -54,6 +54,36 @@ namespace ChoETL
             return this.Currency.GetHashCode() ^ this.Amount.GetHashCode();
         }
 
+        public static bool TryParse(string text, out ChoCurrency currency)
+        {
+            currency = null;
+            Decimal result;
+            if (Decimal.TryParse(text,
+                NumberStyles.Currency,
+                CultureInfo.CurrentCulture,
+                out result))
+            {
+                currency = new ChoCurrency(result);
+                return true;
+            }
+            return false;
+        }
+
+        public static bool TryParse(string text, NumberStyles style, IFormatProvider provider, out ChoCurrency currency)
+        {
+            currency = null;
+            Decimal result;
+            if (Decimal.TryParse(text,
+                style,
+                provider,
+                out result))
+            {
+                currency = new ChoCurrency(result);
+                return true;
+            }
+            return false;
+        }
+
         public static ChoCurrency operator +(ChoCurrency first, ChoCurrency second)
         {
             return new ChoCurrency(first.Amount + second.Amount);

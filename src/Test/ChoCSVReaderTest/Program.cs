@@ -138,6 +138,10 @@ namespace ChoCSVReaderTest
             using (var p = new ChoCSVReader("planets.csv").WithFirstLineHeader().Configure(c => c.Comments = new string[] { "#" })
                 //.Configure(c => c.CultureName = "en-CA")
                 //.Configure(c => c.MaxScanRows = 10)
+                .Setup(r => r.BeforeRecordLoad += (o, e) =>
+                {
+                    e.Skip = ((string)e.Source).StartsWith("3490");
+                })
                 .Setup(r => r.MembersDiscovered += (o, e) =>
                 {
                     //e.Value["rowid"] = typeof(long);
@@ -293,7 +297,7 @@ namespace ChoCSVReaderTest
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoCSVReader<EmployeeRecWithCurrency>(reader).WithDelimiter(",").WithFirstLineHeader()
+            using (var parser = new ChoCSVReader(reader).WithDelimiter(",").WithFirstLineHeader()
                 .Configure(c => c.ThrowAndStopOnMissingField = false)
                 )
             {
@@ -305,7 +309,9 @@ namespace ChoCSVReaderTest
                 writer.Flush();
                 stream.Position = 0;
 
-                var dt = parser.AsDataTable();
+                foreach (dynamic rec in parser)
+                    Console.WriteLine(rec["Id"]);
+                //var dt = parser.AsDataTable();
                 //object rec;
                 //while ((rec = parser.Read()) != null)
                 //{
@@ -352,13 +358,78 @@ namespace ChoCSVReaderTest
             }
         }
 
+        public class CRIContactModel
+        {
+            public int ID { get; set; }
+
+            [Required]
+            [StringLength(25)]
+            public string FirstName { get; set; }
+
+            [Required]
+            [StringLength(25)]
+            public string LastName { get; set; }
+
+            [Required]
+            [StringLength(50)]
+            public string JobTitle { get; set; }
+
+            [Required]
+            [StringLength(50)]
+            public string Department { get; set; }
+
+            [Required]
+            [StringLength(150)]
+            public string Email { get; set; }
+        }
+        static void Sample1()
+        {
+            using (var r = new StreamReader("Sample1.csv"))
+            {
+                foreach (var p in new ChoCSVReader<CRIContactModel>(r).WithFirstLineHeader()
+                    .Configure(c => c.ObjectValidationMode = ChoObjectValidationMode.ObjectLevel)
+                    )
+                {
+                    Console.WriteLine(p.Dump());
+                }
+            }
+        }
+
+        static void Pontos()
+        {
+            foreach (dynamic rec in new ChoCSVReader("pontos.csv").WithHeaderLineAt(9)
+                .Configure(c => c.FileHeaderConfiguration.IgnoreColumnsWithEmptyHeader = true)
+                .Configure(c => c.CultureName = "es-ES")
+                )
+            {
+                Console.WriteLine(String.Format("{0}", (string)rec["CPF/CNPJ"]));
+            }
+        }
+
+        static void Sample2()
+        {
+            foreach (var p in new ChoCSVReader("Sample2.csv").WithFirstLineHeader()
+                .Configure(c => c.TreatCurrencyAsDecimal = false)
+                )
+            {
+                Console.WriteLine(p.Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
+            Sample2();
+            return;
+
+            Pontos();
+            return;
+            Sample1();
+            return;
+            EmptyValueTest();
+            return;
             CDataDataSetTest();
             return;
             QuoteValueTest();
-            return;
-            EmptyValueTest();
             return;
 
             ReportEmptyLines();
@@ -1294,6 +1365,11 @@ namespace ChoCSVReaderTest
         }
 
         public bool RecordLoadError(object target, long index, object source, Exception ex)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool SkipUntil(long index, object source)
         {
             throw new NotImplementedException();
         }
