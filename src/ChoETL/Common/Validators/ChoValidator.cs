@@ -51,7 +51,7 @@ namespace ChoETL
 
             if (results.Count > 0)
             {
-                aggEx = new ApplicationException("Failed to validate '{0}' member. {2}{1}".FormatString(mn, ToString(results), Environment.NewLine));
+                aggEx = new ValidationException("Failed to validate '{0}' member. {2}{1}".FormatString(mn, ToString(results), Environment.NewLine));
                 return false;
             }
             else
@@ -79,7 +79,7 @@ namespace ChoETL
 
             if (results.Count > 0)
             {
-                aggEx = new ApplicationException("Failed to validate record object. {2}{1}".FormatString(@this.GetType().FullName, ToString(results), Environment.NewLine));
+                aggEx = new ValidationException("Failed to validate record object. {2}{1}".FormatString(@this.GetType().FullName, ToString(results), Environment.NewLine));
                 return false;
             }
             else
@@ -134,26 +134,28 @@ namespace ChoETL
 
             var results = new List<ValidationResult>();
             object surrObj = ChoMetadataObjectCache.Default.GetMetadataObject(@this);
+            bool result = false;
 
             if (surrObj is IChoValidatable)
             {
-                ((IChoValidatable)surrObj).TryValidateFor(@this, mi.Name, results);
+                result = ((IChoValidatable)surrObj).TryValidateFor(@this, mi.Name, results);
             }
             else
             {
                 var context = new ValidationContext(@this, null, null);
                 context.MemberName = mi.Name;
 
-                Validator.TryValidateValue(ChoType.GetMemberValue(@this, mi), context, results, ChoTypeDescriptor.GetPropetyAttributes<ValidationAttribute>(ChoTypeDescriptor.GetProperty<ValidationAttribute>(@this.GetType(), mi.Name)));
+                result = Validator.TryValidateValue(ChoType.GetMemberValue(@this, mi), context, results, ChoTypeDescriptor.GetPropetyAttributes<ValidationAttribute>(ChoTypeDescriptor.GetProperty<ValidationAttribute>(@this.GetType(), mi.Name)));
             }
 
-            if (results.Count > 0)
+            if (!result)
             {
-                aggEx = new ApplicationException("Failed to validate '{0}' member. {2}{1}".FormatString(mi.Name, ToString(results), Environment.NewLine));
-                return false;
+                if (results.Count > 0)
+                    aggEx = new ValidationException("Failed to validate '{0}' member. {2}{1}".FormatString(mi.Name, ToString(results), Environment.NewLine));
+                else
+                    aggEx = new ValidationException("Failed to valudate.");
             }
-            else
-                return true;
+            return result;
         }
 
         public static void Validate(this object @this)
@@ -175,24 +177,29 @@ namespace ChoETL
 
             var results = new List<ValidationResult>();
             object surrObj = ChoMetadataObjectCache.Default.GetMetadataObject(@this);
+            bool result = false;
 
             if (surrObj is IChoValidatable)
             {
-                ((IChoValidatable)surrObj).TryValidate(@this, results);
+                result = ((IChoValidatable)surrObj).TryValidate(@this, results);
             }
             else
             {
                 var context = new ValidationContext(@this, null, null);
-                Validator.TryValidateObject(@this, context, results, true);
+                result = Validator.TryValidateObject(@this, context, results, true);
             }
 
-            if (results.Count > 0)
+            if (!result)
             {
-                aggEx = new ApplicationException("Failed to validate '{0}' object. {2}{1}".FormatString(@this.GetType().FullName, ToString(results), Environment.NewLine));
-                return false;
+                if (results.Count > 0)
+                {
+                    aggEx = new ValidationException("Failed to validate '{0}' object. {2}{1}".FormatString(@this.GetType().FullName, ToString(results), Environment.NewLine));
+                }
+                else
+                    aggEx = new ValidationException("Failed to validate.");
             }
-            else
-                return true;
+
+            return result;
         }
 
         private static string ToString(IEnumerable<ValidationResult> results)

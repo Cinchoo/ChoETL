@@ -1918,7 +1918,7 @@ namespace ChoETL
             if (property == null)
                 return new Attribute[] {};
 
-            if (property.GetCustomAttributes().Any(a =>  attributeType.IsAssignableFrom(a.GetType())))
+            if (attributeType != null && property.GetCustomAttributes().Any(a => attributeType.IsAssignableFrom(a.GetType())))
                 return (from x in property.GetCustomAttributes()
                         where attributeType.IsAssignableFrom(x.GetType())
                        select x).ToArray();
@@ -1927,12 +1927,17 @@ namespace ChoETL
             {
                 var interfaces = property.DeclaringType.GetInterfaces();
 
-                for (int i = 0; i < interfaces.Length; i++)
+                if (interfaces.Length > 0)
                 {
-                    Attribute[] attr = GetCustomAttributesEx(interfaces[i].GetProperty(property.Name), attributeType);
-                    if (attr != null && attr.Length > 0)
-                        return attr;
+                    for (int i = 0; i < interfaces.Length; i++)
+                    {
+                        Attribute[] attr = GetCustomAttributesEx(interfaces[i].GetProperty(property.Name), attributeType);
+                        if (attr != null && attr.Length > 0)
+                            return attr;
+                    }
                 }
+                else
+                    return property.GetCustomAttributes().ToArray();
             }
 
             return new Attribute[] { };

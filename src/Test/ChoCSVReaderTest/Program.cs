@@ -19,6 +19,26 @@ using System.Security;
 
 namespace ChoCSVReaderTest
 {
+    public class Site
+    {
+        //[Required(ErrorMessage = "SiteID can't be null")]
+        public int SiteID { get; set; }
+        [Required]
+        public int House { get; set; }
+        [Required]
+        public string Street { get; set; }
+        [Required]
+        [RegularExpression("^[a-zA-Z][a-zA-Z ]*$")]
+        public string City { get; set; }
+        //[Required(ErrorMessage = "State is required")]
+        //[RegularExpression("^[A-Z][A-Z]$", ErrorMessage = "Incorrect zip code.")]
+        public string State { get; set; }
+        [Required]
+        [RegularExpression("^[0-9][0-9]*$")]
+        public string Zip { get; set; }
+        public int Apartment { get; set; }
+    }
+
     public class EmpWithAddress
     {
         public int Id { get; set; }
@@ -416,42 +436,41 @@ namespace ChoCSVReaderTest
             }
         }
 
-        public class Site
-        {
-            [Required]
-            public int SiteID { get; set; }
-            [Required]
-            public int House { get; set; }
-            [Required]
-            public string Street { get; set; }
-            [Required]
-            [RegularExpression("^[a-zA-Z][a-zA-Z ]*$")]
-            public string City { get; set; }
-            [Required]
-            [RegularExpression("^[A-Z][A-Z]$")]
-            public string State { get; set; }
-            [Required]
-            [RegularExpression("^[0-9][0-9]*$")]
-            public string Zip { get; set; }
-            public int Apartment { get; set; }
-        }
-
         static void Sample3()
         {
             using (var p = new ChoCSVReader<Site>("Sample3.csv")
                 .WithFirstLineHeader(true)
-                .Configure(c => c.ObjectValidationMode = ChoObjectValidationMode.ObjectLevel)
                 )
             {
-                foreach (var rec in p)
-                    Console.WriteLine(rec.Dump());
+                Exception ex;
+                Console.WriteLine("IsValid: " + p.IsValid(out ex));
+            }
+        }
 
-                Console.WriteLine("IsValid: " + p.IsValid);
+        static void Sample4()
+        {
+            string csv = @"old,newuser,newpassword
+firstlinetomakesure,firstnewusername,firstnewpassword
+adslusernameplaintext,thisisthenewuser,andthisisthenewpassword
+hello,terion,nadiomn
+somethingdownhere,thisisthelastuser,andthisisthelastpassword 
+11,12,13
+21,22,23 
+31,32,33";
+
+            using (var p = new ChoCSVReader(new StringReader(csv))
+                .WithFirstLineHeader()
+                )
+            {
+                Console.WriteLine(p.Where(rec => rec.old == "hello").Select(rec => rec.newuser).First());
             }
         }
 
         static void Main(string[] args)
         {
+            //Sample4();
+            //return;
+
             Sample3();
             return;
 
@@ -1384,6 +1403,11 @@ namespace ChoCSVReaderTest
         }
 
         public bool BeginLoad(object source)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool DoWhile(long index, object source)
         {
             throw new NotImplementedException();
         }

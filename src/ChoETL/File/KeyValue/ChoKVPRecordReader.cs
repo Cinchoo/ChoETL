@@ -74,6 +74,7 @@ namespace ChoETL
             Tuple<long, string> pairIn;
             bool abortRequested = false;
             bool? skipUntil = true;
+            bool? doWhile = true;
 
             for (int i = 0; i < loopCount; i++)
             {
@@ -357,6 +358,13 @@ namespace ChoETL
                                         break;
                                 }
                             }
+                        }
+
+                        if (doWhile != null)
+                        {
+                            doWhile = RaiseDoWhile(pairIn);
+                            if (doWhile != null && doWhile.Value)
+                                break;
                         }
                     }
                 }
@@ -740,6 +748,8 @@ namespace ChoETL
                             dict.DoMemberLevelValidation(key, fieldConfig, Configuration.ObjectValidationMode);
                         else if (dict.SetDefaultValue(key, fieldConfig, Configuration.Culture))
                             dict.DoMemberLevelValidation(key, fieldConfig, Configuration.ObjectValidationMode);
+                        else if (ex is ValidationException)
+                            throw;
                         else
                             throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                     }
@@ -749,6 +759,8 @@ namespace ChoETL
                             rec.DoMemberLevelValidation(key, fieldConfig, Configuration.ObjectValidationMode);
                         else if (rec.SetDefaultValue(key, fieldConfig, Configuration.Culture))
                             rec.DoMemberLevelValidation(key, fieldConfig, Configuration.ObjectValidationMode);
+                        else if (ex is ValidationException)
+                            throw;
                         else
                             throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                     }
@@ -757,7 +769,7 @@ namespace ChoETL
                 }
                 catch (Exception innerEx)
                 {
-                    if (ex == innerEx.InnerException)
+                    if (ex == innerEx.InnerException || ex is ValidationException)
                     {
                         if (fieldConfig.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                         {
@@ -765,7 +777,12 @@ namespace ChoETL
                         else
                         {
                             if (!RaiseRecordFieldLoadError(rec, pair.Item1, key, fieldValue, ex))
+                            {
+                                if (ex is ValidationException)
+                                    throw;
+
                                 throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
+                            }
                         }
                     }
                     else
@@ -834,6 +851,27 @@ namespace ChoETL
                 long index = pair.Item1;
                 object state = pair.Item2;
                 bool? retValue = ChoFuncEx.RunWithIgnoreError<bool?>(() => Reader.RaiseSkipUntil(index, state));
+
+                return retValue;
+            }
+            return null;
+        }
+
+        private bool? RaiseDoWhile(Tuple<long, string> pair)
+        {
+            if (_callbackRecord != null)
+            {
+                long index = pair.Item1;
+                object state = pair.Item2;
+                bool? retValue = ChoFuncEx.RunWithIgnoreErrorNullableReturn<bool>(() => _callbackRecord.DoWhile(index, state));
+
+                return retValue;
+            }
+            else if (Reader != null)
+            {
+                long index = pair.Item1;
+                object state = pair.Item2;
+                bool? retValue = ChoFuncEx.RunWithIgnoreError<bool?>(() => Reader.RaiseDoWhile(index, state));
 
                 return retValue;
             }

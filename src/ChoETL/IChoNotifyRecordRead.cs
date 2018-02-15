@@ -12,6 +12,8 @@ namespace ChoETL
         void EndLoad(object source);
 
         bool SkipUntil(long index, object source);
+        bool DoWhile(long index, object source);
+
         bool BeforeRecordLoad(object target, long index, ref object source);
         bool AfterRecordLoad(object target, long index, object source, ref bool skip);
         bool RecordLoadError(object target, long index, object source, Exception ex);

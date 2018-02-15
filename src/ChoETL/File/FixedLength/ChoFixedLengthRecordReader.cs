@@ -65,6 +65,7 @@ namespace ChoETL
             List<object> buffer = new List<object>();
             IDictionary<string, Type> recFieldTypes = null;
             bool? skipUntil = true;
+            bool? doWhile = true;
 
             using (ChoPeekEnumerator<Tuple<long, string>> e = new ChoPeekEnumerator<Tuple<long, string>>(
                 new ChoIndexedEnumerator<string>(sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, false /*Configuration.MayContainEOLInData*/)).ToEnumerable(),
@@ -255,6 +256,13 @@ namespace ChoETL
                             ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Abort requested.");
                             yield break;
                         }
+                    }
+
+                    if (doWhile != null)
+                    {
+                        doWhile = RaiseDoWhile(pair);
+                        if (doWhile != null && doWhile.Value)
+                            break;
                     }
                 }
             }
@@ -453,6 +461,8 @@ namespace ChoETL
                                 dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
                             else if (dict.SetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture))
                                 dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
+                            else if (ex is ValidationException)
+                                throw;
                             else
                                 throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                         }
@@ -462,6 +472,8 @@ namespace ChoETL
                                 rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
                             else if (rec.SetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture))
                                 rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
+                            else if (ex is ValidationException)
+                                throw;
                             else
                                 throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                         }
@@ -470,7 +482,7 @@ namespace ChoETL
                     }
                     catch (Exception innerEx)
                     {
-                        if (ex == innerEx.InnerException)
+                        if (ex == innerEx.InnerException || ex is ValidationException)
                         {
                             if (fieldConfig.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                             {
@@ -479,7 +491,12 @@ namespace ChoETL
                             else
                             {
                                 if (!RaiseRecordFieldLoadError(rec, pair.Item1, kvp.Key, fieldValue, ex))
+                                {
+                                    if (ex is ValidationException)
+                                        throw;
+
                                     throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
+                                }
                             }
                         }
                         else
@@ -725,6 +742,27 @@ namespace ChoETL
                 long index = pair.Item1;
                 object state = pair.Item2;
                 bool? retValue = ChoFuncEx.RunWithIgnoreError<bool?>(() => Reader.RaiseSkipUntil(index, state));
+
+                return retValue;
+            }
+            return null;
+        }
+
+        private bool? RaiseDoWhile(Tuple<long, string> pair)
+        {
+            if (_callbackRecord != null)
+            {
+                long index = pair.Item1;
+                object state = pair.Item2;
+                bool? retValue = ChoFuncEx.RunWithIgnoreErrorNullableReturn<bool>(() => _callbackRecord.DoWhile(index, state));
+
+                return retValue;
+            }
+            else if (Reader != null)
+            {
+                long index = pair.Item1;
+                object state = pair.Item2;
+                bool? retValue = ChoFuncEx.RunWithIgnoreError<bool?>(() => Reader.RaiseDoWhile(index, state));
 
                 return retValue;
             }

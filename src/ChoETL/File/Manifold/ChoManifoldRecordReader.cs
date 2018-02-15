@@ -54,6 +54,7 @@ namespace ChoETL
             bool? skip = false;
             bool _headerFound = false;
             bool? skipUntil = true;
+            bool? doWhile = true;
             using (ChoPeekEnumerator<Tuple<long, string>> e = new ChoPeekEnumerator<Tuple<long, string>>(
                 new ChoIndexedEnumerator<string>(sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, Configuration.MayContainEOLInData)).ToEnumerable(),
                 (pair) =>
@@ -196,6 +197,13 @@ namespace ChoETL
                             ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Abort requested.");
                             yield break;
                         }
+                    }
+
+                    if (doWhile != null)
+                    {
+                        doWhile = RaiseDoWhile(pair);
+                        if (doWhile != null && doWhile.Value)
+                            break;
                     }
                 }
             }
@@ -354,6 +362,27 @@ namespace ChoETL
                 long index = pair.Item1;
                 object state = pair.Item2;
                 bool? retValue = ChoFuncEx.RunWithIgnoreError<bool?>(() => Reader.RaiseSkipUntil(index, state));
+
+                return retValue;
+            }
+            return null;
+        }
+
+        private bool? RaiseDoWhile(Tuple<long, string> pair)
+        {
+            if (Configuration.NotifyRecordReadObject != null)
+            {
+                long index = pair.Item1;
+                object state = pair.Item2;
+                bool? retValue = ChoFuncEx.RunWithIgnoreErrorNullableReturn<bool>(() => Configuration.NotifyRecordReadObject.DoWhile(index, state));
+
+                return retValue;
+            }
+            else if (Reader != null)
+            {
+                long index = pair.Item1;
+                object state = pair.Item2;
+                bool? retValue = ChoFuncEx.RunWithIgnoreError<bool?>(() => Reader.RaiseDoWhile(index, state));
 
                 return retValue;
             }

@@ -1,19 +1,21 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public abstract class ChoReader : IChoReader
+    public abstract class ChoReader : IChoReader, IChoValidatable
     {
         public bool IsValid { get; set; } = true;
         public event EventHandler<ChoBeginLoadEventArgs> BeginLoad;
         public event EventHandler<ChoEndLoadEventArgs> EndLoad;
 
         public event EventHandler<ChoSkipUntilEventArgs> SkipUntil;
+        public event EventHandler<ChoDoWhileEventArgs> DoWhile;
         public event EventHandler<ChoAfterRecordLoadEventArgs> AfterRecordLoad;
         public event EventHandler<ChoBeforeRecordLoadEventArgs> BeforeRecordLoad;
         public event EventHandler<ChoRecordLoadErrorEventArgs> RecordLoadError;
@@ -61,6 +63,17 @@ namespace ChoETL
             ChoSkipUntilEventArgs e = new ChoSkipUntilEventArgs() { Index = index, Source = source };
             eh(this, e);
             return e.Skip;
+        }
+
+        public bool? RaiseDoWhile(long index, object source)
+        {
+            EventHandler<ChoDoWhileEventArgs> eh = DoWhile;
+            if (eh == null)
+                return null;
+
+            ChoDoWhileEventArgs e = new ChoDoWhileEventArgs() { Index = index, Source = source };
+            eh(this, e);
+            return e.Stop;
         }
 
         public bool RaiseBeforeRecordLoad(object record, long index, ref object source)
@@ -142,6 +155,16 @@ namespace ChoETL
         public virtual bool RaiseReportEmptyLine(long lineNo)
         {
             return true;
+        }
+
+        public virtual bool TryValidate(object target, ICollection<ValidationResult> validationResults)
+        {
+            return true;
+        }
+
+        public virtual bool TryValidateFor(object target, string memberName, ICollection<ValidationResult> validationResults)
+        {
+            throw new NotSupportedException();
         }
     }
 }

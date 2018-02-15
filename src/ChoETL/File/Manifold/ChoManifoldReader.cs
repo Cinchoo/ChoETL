@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Diagnostics;
 using System.Dynamic;
@@ -178,6 +179,28 @@ namespace ChoETL
                 ChoETLLog.Info(e.RowsLoaded.ToString("#,##0") + " records loaded.");
             else
                 rowsLoadedEvent(this, e);
+        }
+
+        public override bool TryValidate(object target, ICollection<ValidationResult> validationResults)
+        {
+            ChoObjectValidationMode prevObjValidationMode = Configuration.ObjectValidationMode;
+
+            if (Configuration.ObjectValidationMode == ChoObjectValidationMode.Off)
+                Configuration.ObjectValidationMode = ChoObjectValidationMode.ObjectLevel;
+
+            try
+            {
+                object rec = null;
+                while ((rec = Read()) != null)
+                {
+
+                }
+                return IsValid;
+            }
+            finally
+            {
+                Configuration.ObjectValidationMode = prevObjValidationMode;
+            }
         }
 
         #region Fluent API
