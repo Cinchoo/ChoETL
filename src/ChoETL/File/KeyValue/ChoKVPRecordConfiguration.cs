@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Dynamic;
@@ -145,32 +146,48 @@ namespace ChoETL
 
         private void DiscoverRecordFields(Type recordType)
         {
+            KVPRecordFieldConfigurations.Clear();
+            DiscoverRecordFields(recordType, null,
+                ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoKVPRecordFieldAttribute>().Any()).Any());
+        }
+
+        private void DiscoverRecordFields(Type recordType, string declaringMember = null, bool optIn = false)
+        {
             if (!IsDynamicObject)
             {
-                KVPRecordFieldConfigurations.Clear();
-
-                if (ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoKVPRecordFieldAttribute>().Any()).Any())
+                Type pt = null;
+                if (optIn) //ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoKVPRecordFieldAttribute>().Any()).Any())
                 {
-                    foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoKVPRecordFieldAttribute>().Any()))
+                    foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                     {
-                        //if (!pd.PropertyType.IsSimple())
-                        //    throw new ChoRecordConfigurationException("Property '{0}' is not a simple type.".FormatString(pd.Name));
-
-                        var obj = new ChoKVPRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoKVPRecordFieldAttribute>().First());
-                        obj.FieldType = pd.PropertyType;
-                        KVPRecordFieldConfigurations.Add(obj);
+                        pt = pd.PropertyType.GetUnderlyingType();
+                        if (!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+                            DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
+                        else if (pd.Attributes.OfType<ChoKVPRecordFieldAttribute>().Any())
+                        {
+                            var obj = new ChoKVPRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoKVPRecordFieldAttribute>().First());
+                            obj.FieldType = pt;
+                            obj.PropertyDescriptor = pd;
+                            obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                            KVPRecordFieldConfigurations.Add(obj);
+                        }
                     }
                 }
                 else
                 {
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                     {
-                        //if (!pd.PropertyType.IsSimple())
-                        //    throw new ChoRecordConfigurationException("Property '{0}' is not a simple type.".FormatString(pd.Name));
-
-                        var obj = new ChoKVPRecordFieldConfiguration(pd.Name);
-                        obj.FieldType = pd.PropertyType;
-                        KVPRecordFieldConfigurations.Add(obj);
+                        pt = pd.PropertyType.GetUnderlyingType();
+                        if (!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+                            DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
+                        else
+                        {
+                            var obj = new ChoKVPRecordFieldConfiguration(pd.Name);
+                            obj.FieldType = pt;
+                            obj.PropertyDescriptor = pd;
+                            obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                            KVPRecordFieldConfigurations.Add(obj);
+                        }
                     }
                 }
             }

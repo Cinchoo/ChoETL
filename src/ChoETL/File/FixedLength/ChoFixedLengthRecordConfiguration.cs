@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Dynamic;
@@ -124,17 +125,28 @@ namespace ChoETL
 
         private void DiscoverRecordFields(Type recordType)
         {
+            FixedLengthRecordFieldConfigurations.Clear();
+            DiscoverRecordFields(recordType, null);
+        }
+
+        private void DiscoverRecordFields(Type recordType, string declaringMember = null)
+        {
             if (!IsDynamicObject)
             {
-                FixedLengthRecordFieldConfigurations.Clear();
-
-                foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().Any()))
+                Type pt = null;
+                foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                 {
-                    //if (!pd.PropertyType.IsSimple())
-                    //    throw new ChoRecordConfigurationException("Property '{0}' is not a simple type.".FormatString(pd.Name));
-                    var obj = new ChoFixedLengthRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().First());
-                    obj.FieldType = pd.PropertyType;
-                    FixedLengthRecordFieldConfigurations.Add(obj);
+                    pt = pd.PropertyType.GetUnderlyingType();
+                    if (!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+                        DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name));
+                    else if (pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().Any())
+                    {
+                        var obj = new ChoFixedLengthRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().First());
+                        obj.FieldType = pt;
+                        obj.PropertyDescriptor = pd;
+                        obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                        FixedLengthRecordFieldConfigurations.Add(obj);
+                    }
                 }
             }
         }
@@ -192,7 +204,7 @@ namespace ChoETL
                             size = FixedLengthFieldDefaultSizeConfiguation.GetSize(pd.PropertyType);
 
                         var obj = new ChoFixedLengthRecordFieldConfiguration(pd.Name, startIndex, size);
-                        obj.FieldType = pd.PropertyType;
+                        obj.FieldType = pd.PropertyType.GetUnderlyingType();
                         FixedLengthRecordFieldConfigurations.Add(obj);
 
                         startIndex += size;

@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
@@ -173,33 +175,49 @@ namespace ChoETL
 
         private void DiscoverRecordFields(Type recordType)
         {
-            if (!IsDynamicObject) //recordType != typeof(ExpandoObject))
+            int pos = 0;
+            CSVRecordFieldConfigurations.Clear();
+            DiscoverRecordFields(recordType, ref pos, null,
+                ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().Any()).Any());
+        }
+
+        private void DiscoverRecordFields(Type recordType, ref int position, string declaringMember = null, bool optIn = false)
+        {
+            if (!IsDynamicObject)
             {
-                CSVRecordFieldConfigurations.Clear();
-
-                if (ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().Any()).Any())
+                Type pt = null;
+                if (optIn) //ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().Any()).Any())
                 {
-                    foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().Any()))
+                    foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                     {
-                        //if (!pd.PropertyType.IsSimple())
-                        //    throw new ChoRecordConfigurationException("Property '{0}' is not a simple type.".FormatString(pd.Name));
-
-                        var obj = new ChoCSVRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().First());
-                        obj.FieldType = pd.PropertyType;
-                        CSVRecordFieldConfigurations.Add(obj);
+                        pt = pd.PropertyType.GetUnderlyingType();
+                        if (!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+                            DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
+                        else if (pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().Any())
+                        {
+                            var obj = new ChoCSVRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().First());
+                            obj.FieldType = pt;
+                            obj.PropertyDescriptor = pd;
+                            obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                            CSVRecordFieldConfigurations.Add(obj);
+                        }
                     }
                 }
                 else
                 {
-                    int position = 0;
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                     {
-                        //if (!pd.PropertyType.IsSimple())
-                        //    throw new ChoRecordConfigurationException("Property '{0}' is not a simple type.".FormatString(pd.Name));
-
-                        var obj = new ChoCSVRecordFieldConfiguration(pd.Name, ++position);
-                        obj.FieldType = pd.PropertyType;
-                        CSVRecordFieldConfigurations.Add(obj);
+                        pt = pd.PropertyType.GetUnderlyingType();
+                        if (!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+                            DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
+                        else
+                        {
+                            var obj = new ChoCSVRecordFieldConfiguration(pd.Name, ++position);
+                            obj.FieldType = pt;
+                            obj.PropertyDescriptor = pd;
+                            obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                            CSVRecordFieldConfigurations.Add(obj);
+                        }
                     }
                 }
             }
@@ -208,6 +226,17 @@ namespace ChoETL
         public override void Validate(object state)
         {
             base.Validate(state);
+
+            PIDict = new Dictionary<string, System.Reflection.PropertyInfo>();
+            PDDict = new Dictionary<string, PropertyDescriptor>();
+            foreach (var fc in CSVRecordFieldConfigurations)
+            {
+                if (fc.PropertyDescriptor == null)
+                    continue;
+
+                PIDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
+                PDDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor);
+            }
 
             if (Delimiter.IsNull())
                 throw new ChoRecordConfigurationException("Delimiter can't be null or whitespace.");

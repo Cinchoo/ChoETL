@@ -446,12 +446,15 @@ namespace ChoETL
             object fieldValue = null;
             ChoCSVRecordFieldConfiguration fieldConfig = null;
             PropertyInfo pi = null;
+            object rootRec = rec;
             foreach (KeyValuePair<string, ChoCSVRecordFieldConfiguration> kvp in Configuration.FCArray)
             {
                 fieldValue = null;
                 fieldConfig = kvp.Value;
                 if (Configuration.PIDict != null)
                     Configuration.PIDict.TryGetValue(kvp.Key, out pi);
+
+                rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
 
                 try
                 {

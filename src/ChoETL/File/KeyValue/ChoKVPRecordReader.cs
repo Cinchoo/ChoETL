@@ -424,9 +424,11 @@ namespace ChoETL
 
             object fieldValue = String.Empty;
             PropertyInfo pi = null;
+            object rootRec = rec;
             //Set default values
             foreach (KeyValuePair<string, ChoKVPRecordFieldConfiguration> kvp in Configuration.FCArray)
             {
+                rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
                 if (Configuration.PIDict != null)
                     Configuration.PIDict.TryGetValue(kvp.Key, out pi);
                 try
@@ -450,6 +452,8 @@ namespace ChoETL
 
                 }
             }
+
+            rec = rootRec;
 
             _propInit.Clear();
             foreach (var pair1 in pairs.Item2)
@@ -663,35 +667,35 @@ namespace ChoETL
             ChoKVPRecordFieldConfiguration fieldConfig = Configuration.RecordFieldConfigurationsDict[key];
             PropertyInfo pi = null;
 
-            if (_propInit.ContainsKey(key))
-                return true;
-            _propInit.Add(key, true);
-
-            fieldValue = CleanFieldValue(fieldConfig, fieldConfig.FieldType, fieldValue as string);
-
-            if (Configuration.IsDynamicObject)
-            {
-                if (fieldConfig.FieldType == null)
-                    fieldConfig.FieldType = typeof(string);
-            }
-            else
-            {
-                if (Configuration.PIDict != null)
-                    Configuration.PIDict.TryGetValue(key, out pi);
-
-                if (pi != null)
-                    fieldConfig.FieldType = pi.PropertyType;
-                else
-                    fieldConfig.FieldType = typeof(string);
-            }
-
-            fieldValue = CleanFieldValue(fieldConfig, fieldConfig.FieldType, fieldValue as string);
-
-            if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, key, ref fieldValue))
-                return true;
-
             try
             {
+                if (_propInit.ContainsKey(key))
+                    return true;
+                _propInit.Add(key, true);
+
+                fieldValue = CleanFieldValue(fieldConfig, fieldConfig.FieldType, fieldValue as string);
+
+                if (Configuration.IsDynamicObject)
+                {
+                    if (fieldConfig.FieldType == null)
+                        fieldConfig.FieldType = typeof(string);
+                }
+                else
+                {
+                    if (Configuration.PIDict != null)
+                        Configuration.PIDict.TryGetValue(key, out pi);
+
+                    if (pi != null)
+                        fieldConfig.FieldType = pi.PropertyType;
+                    else
+                        fieldConfig.FieldType = typeof(string);
+                }
+
+                fieldValue = CleanFieldValue(fieldConfig, fieldConfig.FieldType, fieldValue as string);
+
+                if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, key, ref fieldValue))
+                    return true;
+
                 bool ignoreFieldValue = fieldConfig.IgnoreFieldValue(fieldValue);
                 if (ignoreFieldValue)
                     fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;

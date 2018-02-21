@@ -149,7 +149,7 @@ namespace ChoETL
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any()))
                     {
                         var obj = new ChoJSONRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().First());
-                        obj.FieldType = pd.PropertyType;
+                        obj.FieldType = pd.PropertyType.GetUnderlyingType();
                         JSONRecordFieldConfigurations.Add(obj);
                     }
                 }
@@ -158,7 +158,7 @@ namespace ChoETL
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                     {
                         var obj = new ChoJSONRecordFieldConfiguration(pd.Name, (string)null);
-                        obj.FieldType = pd.PropertyType;
+                        obj.FieldType = pd.PropertyType.GetUnderlyingType();
                         JSONRecordFieldConfigurations.Add(obj);
                     }
                 }
@@ -191,7 +191,7 @@ namespace ChoETL
                         attr = ChoTypeDescriptor.GetPropetyAttribute<ChoJSONRecordFieldAttribute>(pd);
 
                         var obj = new ChoJSONRecordFieldConfiguration(pd.Name, jpath);
-                        obj.FieldType = pd.PropertyType;
+                        obj.FieldType = pd.PropertyType.GetUnderlyingType();
                         JSONRecordFieldConfigurations.Add(obj);
 
                         startIndex += size;

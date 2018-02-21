@@ -370,6 +370,7 @@ namespace ChoETL
             object fieldValue = null;
             ChoFixedLengthRecordFieldConfiguration fieldConfig = null;
             PropertyInfo pi = null;
+            object rootRec = rec;
             foreach (KeyValuePair<string, ChoFixedLengthRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
                 fieldValue = null;
@@ -377,34 +378,36 @@ namespace ChoETL
                 if (Configuration.PIDict != null)
                     Configuration.PIDict.TryGetValue(kvp.Key, out pi);
 
-                if (fieldConfig.StartIndex + fieldConfig.Size > line.Length)
-                {
-                    if (Configuration.ColumnCountStrict)
-                        throw new ChoParserException("Missing '{0}' field value.".FormatString(kvp.Key));
-                }
-                else
-                    fieldValue = line.Substring(fieldConfig.StartIndex, fieldConfig.Size.Value);
-
-                if (Configuration.IsDynamicObject)
-                {
-                    if (kvp.Value.FieldType == null)
-                        kvp.Value.FieldType = Configuration.MaxScanRows == -1 ? DiscoverFieldType(fieldValue as string, Configuration) : typeof(string);
-                }
-                else
-                {
-                    if (pi != null)
-                        kvp.Value.FieldType = pi.PropertyType;
-                    else
-                        kvp.Value.FieldType = typeof(string);
-                }
-
-                fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue as string);
-
-                if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
-                    continue;
-
+                rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
                 try
                 {
+
+                    if (fieldConfig.StartIndex + fieldConfig.Size > line.Length)
+                    {
+                        if (Configuration.ColumnCountStrict)
+                            throw new ChoParserException("Missing '{0}' field value.".FormatString(kvp.Key));
+                    }
+                    else
+                        fieldValue = line.Substring(fieldConfig.StartIndex, fieldConfig.Size.Value);
+
+                    if (Configuration.IsDynamicObject)
+                    {
+                        if (kvp.Value.FieldType == null)
+                            kvp.Value.FieldType = Configuration.MaxScanRows == -1 ? DiscoverFieldType(fieldValue as string, Configuration) : typeof(string);
+                    }
+                    else
+                    {
+                        if (pi != null)
+                            kvp.Value.FieldType = pi.PropertyType;
+                        else
+                            kvp.Value.FieldType = typeof(string);
+                    }
+
+                    fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue as string);
+
+                    if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
+                        continue;
+
                     bool ignoreFieldValue = fieldConfig.IgnoreFieldValue(fieldValue);
                     if (ignoreFieldValue)
                         fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;

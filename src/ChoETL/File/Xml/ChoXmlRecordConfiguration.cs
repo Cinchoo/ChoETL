@@ -185,7 +185,7 @@ namespace ChoETL
                         if (obj.XPath.IsNullOrWhiteSpace())
                             obj.XPath = $"//{obj.FieldName}|//@{obj.FieldName}";
 
-                        obj.FieldType = pd.PropertyType;
+                        obj.FieldType = pd.PropertyType.GetUnderlyingType();
                         XmlRecordFieldConfigurations.Add(obj);
                     }
                 }
@@ -197,7 +197,7 @@ namespace ChoETL
                         //    throw new ChoRecordConfigurationException("Property '{0}' is not a simple type.".FormatString(pd.Name));
 
                         var obj = new ChoXmlRecordFieldConfiguration(pd.Name, $"//{pd.Name}|//@{pd.Name}");
-                        obj.FieldType = pd.PropertyType;
+                        obj.FieldType = pd.PropertyType.GetUnderlyingType();
                         XmlRecordFieldConfigurations.Add(obj);
                     }
                 }
@@ -298,7 +298,7 @@ namespace ChoETL
                             useCache = false;
 
                         var obj = new ChoXmlRecordFieldConfiguration(pd.Name, xpath);
-                        obj.FieldType = pd.PropertyType;
+                        obj.FieldType = pd.PropertyType.GetUnderlyingType();
                         obj.UseCache = useCache;
                         //if (!obj.IsCollection)
                         //    obj.IsCollection = typeof(ICollection).IsAssignableFrom(obj.FieldType);

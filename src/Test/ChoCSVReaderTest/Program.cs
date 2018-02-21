@@ -20,27 +20,33 @@ using Microsoft.VisualBasic.FileIO;
 
 namespace ChoCSVReaderTest
 {
-	public class SiteAddress
-	{
-		[Required]
-		public string Street { get; set; }
-		[Required]
-		[RegularExpression("^[a-zA-Z][a-zA-Z ]*$")]
-		public string City { get; set; }
-		[Required(ErrorMessage = "State is required")]
-		[RegularExpression("^[A-Z][A-Z]$", ErrorMessage = "Incorrect zip code.")]
-		public string State { get; set; }
-		[Required]
-		[RegularExpression("^[0-9][0-9]*$")]
-		public string Zip { get; set; }
-	}
-	public class Site
+    public class SitePostal
+    {
+        [Required(ErrorMessage = "State is required")]
+        [RegularExpression("^[A-Z][A-Z]$", ErrorMessage = "Incorrect zip code.")]
+        public string State { get; set; }
+        [Required]
+        [RegularExpression("^[0-9][0-9]*$")]
+        public string Zip { get; set; }
+    }
+    public class SiteAddress
+    {
+        [Required]
+        //[ChoCSVRecordField(3)]
+        public string Street { get; set; }
+        [Required]
+        [RegularExpression("^[a-zA-Z][a-zA-Z ]*$")]
+        public string City { get; set; }
+        public SitePostal SitePostal { get; set; }
+    }
+    public class Site
     {
         [Required(ErrorMessage = "SiteID can't be null")]
+        //[ChoCSVRecordField(1)]
         public int SiteID { get; set; }
-		public SiteAddress SiteAddress { get; set; }
-		[Required]
+        [Required]
         public int House { get; set; }
+        public SiteAddress SiteAddress { get; set; }
         public int Apartment { get; set; }
     }
 
@@ -465,75 +471,75 @@ somethingdownhere,thisisthelastuser,andthisisthelastpassword
 1	Tom	New York
 2	Mark	FairFax";
 
-			string CSV2 = @"Id	City
+            string CSV2 = @"Id	City
 1	Las Vegas
 2	Dallas";
 
-			dynamic rec1 = null;
-			dynamic rec2 = null;
-			StringBuilder csv3 = new StringBuilder();
-			using (var csvOut = new ChoCSVWriter(new StringWriter(csv3))
-				.WithFirstLineHeader()
-				.WithDelimiter("\t")
-				)
-			{
-				using (var csv1 = new ChoCSVReader(new StringReader(CSV1))
-					.WithFirstLineHeader()
-					.WithDelimiter("\t")
-					)
-				{
-					using (var csv2 = new ChoCSVReader(new StringReader(CSV2))
-						.WithFirstLineHeader()
-						.WithDelimiter("\t")
-						)
-					{
-						while ((rec1 = csv1.Read()) != null && (rec2 = csv2.Read()) != null)
-						{
-							rec1.City = rec2.City;
-							csvOut.Write(rec1);
-						}
-					}
-				}
-			}
-			Console.WriteLine(csv3.ToString());
+            dynamic rec1 = null;
+            dynamic rec2 = null;
+            StringBuilder csv3 = new StringBuilder();
+            using (var csvOut = new ChoCSVWriter(new StringWriter(csv3))
+                .WithFirstLineHeader()
+                .WithDelimiter("\t")
+                )
+            {
+                using (var csv1 = new ChoCSVReader(new StringReader(CSV1))
+                    .WithFirstLineHeader()
+                    .WithDelimiter("\t")
+                    )
+                {
+                    using (var csv2 = new ChoCSVReader(new StringReader(CSV2))
+                        .WithFirstLineHeader()
+                        .WithDelimiter("\t")
+                        )
+                    {
+                        while ((rec1 = csv1.Read()) != null && (rec2 = csv2.Read()) != null)
+                        {
+                            rec1.City = rec2.City;
+                            csvOut.Write(rec1);
+                        }
+                    }
+                }
+            }
+            Console.WriteLine(csv3.ToString());
         }
 
-		static void Test1()
-		{
-			//string csv = @"4.1,AB,2018-02-16 15:41:39,152,36,""{""A"":{ ""a1"":""A1""},,20";
-			//using (TextFieldParser parser = new TextFieldParser(new StringReader(csv)))
-			//{
-			//	parser.TextFieldType = FieldType.Delimited;
-			//	parser.SetDelimiters(",");
-			//	parser.TrimWhiteSpace = true;
-			//	parser.HasFieldsEnclosedInQuotes = true;
-			//	// I tried HasFieldsEnclosedInQuotes with true and false.
+        static void Test1()
+        {
+            //string csv = @"4.1,AB,2018-02-16 15:41:39,152,36,""{""A"":{ ""a1"":""A1""},,20";
+            //using (TextFieldParser parser = new TextFieldParser(new StringReader(csv)))
+            //{
+            //	parser.TextFieldType = FieldType.Delimited;
+            //	parser.SetDelimiters(",");
+            //	parser.TrimWhiteSpace = true;
+            //	parser.HasFieldsEnclosedInQuotes = true;
+            //	// I tried HasFieldsEnclosedInQuotes with true and false.
 
-			//	string[] fields = new string[] { };
+            //	string[] fields = new string[] { };
 
-			//	while (!parser.EndOfData)
-			//	{
-			//		try
-			//		{
-			//			fields = parser.ReadFields();
-			//		}
-			//		catch (MalformedLineException e)
-			//		{
-			//			Console.WriteLine($"MalformedLineException when parsing CSV");
-			//		}
-			//		//
-			//		//do something of fields...
-			//	}
-			//}
+            //	while (!parser.EndOfData)
+            //	{
+            //		try
+            //		{
+            //			fields = parser.ReadFields();
+            //		}
+            //		catch (MalformedLineException e)
+            //		{
+            //			Console.WriteLine($"MalformedLineException when parsing CSV");
+            //		}
+            //		//
+            //		//do something of fields...
+            //	}
+            //}
 
-			string csv = @"4.1,AB,2018-02-16 15:41:39,152,36,""{""A"":{ ""a1"":""A1""},""B"":{ ""b1"":""B1""}}"",""{""X"":"""",""Y"":""ya""}"",20";
+            string csv = @"4.1,AB,2018-02-16 15:41:39,152,36,""{""A"":{ ""a1"":""A1""},""B"":{ ""b1"":""B1""}}"",""{""X"":"""",""Y"":""ya""}"",20";
 
-			Console.WriteLine(ChoCSVReader.LoadText(csv).First().Dump());
-		}
+            Console.WriteLine(ChoCSVReader.LoadText(csv).First().Dump());
+        }
 
-		static void CombineColumns()
-		{
-			var csv = @"2011.01.07,09:56,1.2985,1.2986,1.2979,1.2981,103
+        static void CombineColumns()
+        {
+            var csv = @"2011.01.07,09:56,1.2985,1.2986,1.2979,1.2981,103
 2011.01.08,09:57,1.2981,1.2982,1.2979,1.2982,75
 2011.01.09,09:58,1.2982,1.2982,1.2976,1.2977,83
 2011.01.07,09:59,1.2977,1.2981,1.2977,1.2980,97
@@ -548,24 +554,24 @@ somethingdownhere,thisisthelastuser,andthisisthelastpassword
 2011.01.07,10:08,1.2976,1.2980,1.2976,1.2980,58
 2011.01.07,10:09,1.2979,1.2985,1.2979,1.2980,63";
 
-			foreach (var rec in ChoCSVReader.LoadText(csv)
-				.Setup(s => s.AfterRecordFieldLoad += (o,e) =>
-				{
-					if (e.PropertyName == "Column2")
-					{
-						dynamic r = e.Record as dynamic;
-						r[1] = new DateTime(((DateTime)r[0]).Year, ((DateTime)r[0]).Month, ((DateTime)r[0]).Day, ((DateTime)r[1]).Hour, ((DateTime)r[1]).Minute, ((DateTime)r[1]).Second);
-					}
-				})
-				)
-			{
-				Console.WriteLine(rec.Dump());
-			}
-		}
+            foreach (var rec in ChoCSVReader.LoadText(csv)
+                .Setup(s => s.AfterRecordFieldLoad += (o,e) =>
+                {
+                    if (e.PropertyName == "Column2")
+                    {
+                        dynamic r = e.Record as dynamic;
+                        r[1] = new DateTime(((DateTime)r[0]).Year, ((DateTime)r[0]).Month, ((DateTime)r[0]).Day, ((DateTime)r[1]).Hour, ((DateTime)r[1]).Minute, ((DateTime)r[1]).Second);
+                    }
+                })
+                )
+            {
+                Console.WriteLine(rec.Dump());
+            }
+        }
 
-		static void DiffCSV()
-		{
-			string csv1 = @"Id, Name, City
+        static void DiffCSV()
+        {
+            string csv1 = @"Id, Name, City
 1, Tom, NY
 2, Mark, NJ
 3, Lou, FL
@@ -573,71 +579,71 @@ somethingdownhere,thisisthelastuser,andthisisthelastpassword
 5, Raj, DC
 ";
 
-			string csv2 = @"Id, Name, City
+            string csv2 = @"Id, Name, City
 3, Lou, FL
 5, Raj, DC
 ";
 
-			HashSet<long> lookup = null;
-			using (var cp2 = new ChoCSVReader(new StringReader(csv2))
-				.WithFirstLineHeader()
-				.Setup(p => p.DoWhile += (o, e) =>
-				{
-					string line = e.Source as string;
-					e.Stop = line.StartsWith("** Some Match **");
-				})
-				)
-			{
-				lookup = new HashSet<long>(cp2.Select(rec => rec.Id).Cast<long>().ToArray());
-			}
+            HashSet<long> lookup = null;
+            using (var cp2 = new ChoCSVReader(new StringReader(csv2))
+                .WithFirstLineHeader()
+                .Setup(p => p.DoWhile += (o, e) =>
+                {
+                    string line = e.Source as string;
+                    e.Stop = line.StartsWith("** Some Match **");
+                })
+                )
+            {
+                lookup = new HashSet<long>(cp2.Select(rec => rec.Id).Cast<long>().ToArray());
+            }
 
-			StringBuilder csvOut = new StringBuilder();
-			using (var cw = new ChoCSVWriter(new StringWriter(csvOut))
-				.WithFirstLineHeader()
-				)
-			{
-				using (var cp1 = new ChoCSVReader(new StringReader(csv1))
-					.WithFirstLineHeader()
-					)
-				{
-					foreach (var rec in cp1)
-					{
-						if (lookup.Contains(rec.Id))
-							continue;
+            StringBuilder csvOut = new StringBuilder();
+            using (var cw = new ChoCSVWriter(new StringWriter(csvOut))
+                .WithFirstLineHeader()
+                )
+            {
+                using (var cp1 = new ChoCSVReader(new StringReader(csv1))
+                    .WithFirstLineHeader()
+                    )
+                {
+                    foreach (var rec in cp1)
+                    {
+                        if (lookup.Contains(rec.Id))
+                            continue;
 
-						cw.Write(rec);
-					}
-				}
-			}
+                        cw.Write(rec);
+                    }
+                }
+            }
 
-			Console.WriteLine(csvOut.ToString());
-		}
+            Console.WriteLine(csvOut.ToString());
+        }
 
-		static void Sample3()
-		{
-			using (var p = new ChoCSVReader<Site>("Sample3.csv")
-				//.WithField(m => m.SiteID)
-				.WithFirstLineHeader(true)
-				)
-			{
-				foreach (var rec in p)
-					Console.WriteLine(rec.Dump());
-				//Exception ex;
-				//Console.WriteLine("IsValid: " + p.IsValid(out ex));
-			}
-		}
+        static void Sample3()
+        {
+            using (var p = new ChoCSVReader<Site>("Sample3.csv")
+                //.WithField(m => m.SiteID)
+                .WithFirstLineHeader(true)
+                )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+                //Exception ex;
+                //Console.WriteLine("IsValid: " + p.IsValid(out ex));
+            }
+        }
 
-		static void Main(string[] args)
+        static void Main(string[] args)
         {
 
-			//DiffCSV();
-			//return;
+            //DiffCSV();
+            //return;
 
-			//CombineColumns();
-			//return;
-			Sample3();
-			return;
-			MergeCSV1();
+            //CombineColumns();
+            //return;
+            Sample3();
+            return;
+            MergeCSV1();
             return;
 
             //Sample4();

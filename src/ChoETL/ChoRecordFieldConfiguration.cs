@@ -95,6 +95,17 @@ namespace ChoETL
             }
         }
 
+        public string DeclaringMember
+        {
+            get;
+            internal set;
+        }
+        public PropertyDescriptor PropertyDescriptor
+        {
+            get;
+            internal set;
+        }
+
         internal readonly List<object> Converters = new List<object>();
         internal PropertyInfo PI;
         internal PropertyDescriptor PD;
