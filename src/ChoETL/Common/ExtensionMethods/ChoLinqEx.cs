@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,5 +15,10 @@ namespace ChoETL
         {
             return new HashSet<T>(source);
         }
-    }
+
+		public static string GetMemberName<TClass, TField>(this Expression<Func<TClass, TField>> field)
+		{
+			return (field.Body as MemberExpression ?? ((UnaryExpression)field.Body).Operand as MemberExpression).Member.Name;
+		}
+	}
 }

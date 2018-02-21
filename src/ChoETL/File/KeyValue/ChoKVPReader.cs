@@ -8,6 +8,7 @@ using System.Dynamic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -285,16 +286,30 @@ namespace ChoETL
             return this;
         }
 
-        public ChoKVPReader<T> IgnoreField(string fieldName)
+		public ChoKVPReader<T> ClearFields()
+		{
+			Configuration.KVPRecordFieldConfigurations.Clear();
+			_clearFields = true;
+			return this;
+		}
+
+		public ChoKVPReader<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
+		{
+			if (field != null)
+				return IgnoreField(field.GetMemberName());
+			else
+				return this;
+		}
+
+		public ChoKVPReader<T> IgnoreField(string fieldName)
         {
             if (!fieldName.IsNullOrWhiteSpace())
             {
                 string fnTrim = null;
                 if (!_clearFields)
                 {
-                    Configuration.KVPRecordFieldConfigurations.Clear();
-                    _clearFields = true;
-                    Configuration.MapRecordFields(Configuration.RecordType);
+					ClearFields();
+					Configuration.MapRecordFields(Configuration.RecordType);
                 }
                 fnTrim = fieldName.NTrim();
                 if (Configuration.KVPRecordFieldConfigurations.Any(o => o.Name == fnTrim))
@@ -304,7 +319,17 @@ namespace ChoETL
             return this;
         }
 
-        public ChoKVPReader<T> WithFields(params string[] fieldsNames)
+		public ChoKVPReader<T> WithFields<TField>(params Expression<Func<T, TField>>[] fields)
+		{
+			if (fields != null)
+			{
+				var x = fields.Select(f => f.GetMemberName()).ToArray();
+				return WithFields(x);
+			}
+			return this;
+		}
+
+		public ChoKVPReader<T> WithFields(params string[] fieldsNames)
         {
             string fnTrim = null;
             if (!fieldsNames.IsNullOrEmpty())
@@ -316,9 +341,8 @@ namespace ChoETL
 
                     if (!_clearFields)
                     {
-                        Configuration.KVPRecordFieldConfigurations.Clear();
-                        _clearFields = true;
-                        Configuration.MapRecordFields(Configuration.RecordType);
+						ClearFields();
+						Configuration.MapRecordFields(Configuration.RecordType);
                         Configuration.ColumnOrderStrict = true;
                     }
 
@@ -333,17 +357,26 @@ namespace ChoETL
             return this;
         }
 
-        public ChoKVPReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
-            object defaultValue = null, object fallbackValue = null)
+		public ChoKVPReader<T> WithField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+			object defaultValue = null, object fallbackValue = null, string altFieldNames = null)
+		{
+			if (field == null)
+				return this;
+
+			return WithField(field.GetMemberName(), fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames);
+		}
+
+		public ChoKVPReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+            object defaultValue = null, object fallbackValue = null, string altFieldNames = null)
         {
             if (!name.IsNullOrEmpty())
             {
                 if (!_clearFields)
                 {
-                    Configuration.KVPRecordFieldConfigurations.Clear();
-                    _clearFields = true;
-                }
-                if (fieldName.IsNullOrWhiteSpace())
+					ClearFields();
+					Configuration.MapRecordFields(Configuration.RecordType);
+				}
+				if (fieldName.IsNullOrWhiteSpace())
                     fieldName = name;
 
                 string fnTrim = name.NTrim();

@@ -10,6 +10,7 @@ using System.Dynamic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -397,16 +398,30 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONReader<T> IgnoreField(string fieldName)
+		public ChoJSONReader<T> ClearFields()
+		{
+			Configuration.JSONRecordFieldConfigurations.Clear();
+			_clearFields = true;
+			return this;
+		}
+
+		public ChoJSONReader<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
+		{
+			if (field != null)
+				return IgnoreField(field.GetMemberName());
+			else
+				return this;
+		}
+
+		public ChoJSONReader<T> IgnoreField(string fieldName)
         {
             if (!fieldName.IsNullOrWhiteSpace())
             {
                 string fnTrim = null;
                 if (!_clearFields)
                 {
-                    Configuration.JSONRecordFieldConfigurations.Clear();
-                    _clearFields = true;
-                    Configuration.MapRecordFields(Configuration.RecordType);
+					ClearFields();
+					Configuration.MapRecordFields(Configuration.RecordType);
                 }
                 fnTrim = fieldName.NTrim();
                 if (Configuration.JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
@@ -416,7 +431,17 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONReader<T> WithFields(params string[] fieldsNames)
+		public ChoJSONReader<T> WithFields<TField>(params Expression<Func<T, TField>>[] fields)
+		{
+			if (fields != null)
+			{
+				var x = fields.Select(f => f.GetMemberName()).ToArray();
+				return WithFields(x);
+			}
+			return this;
+		}
+
+		public ChoJSONReader<T> WithFields(params string[] fieldsNames)
         {
             string fnTrim = null;
             if (!fieldsNames.IsNullOrEmpty())
@@ -427,9 +452,8 @@ namespace ChoETL
                         continue;
                     if (!_clearFields)
                     {
-                        Configuration.JSONRecordFieldConfigurations.Clear();
-                        _clearFields = true;
-                        Configuration.MapRecordFields(Configuration.RecordType);
+						ClearFields();
+						Configuration.MapRecordFields(Configuration.RecordType);
                     }
                     fnTrim = fn.NTrim();
                     if (Configuration.JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
@@ -442,16 +466,25 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
+		public ChoJSONReader<T> WithField<TField>(Expression<Func<T, TField>> field, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
+			object defaultValue = null, object fallbackValue = null)
+		{
+			if (field == null)
+				return this;
+
+			return WithField(field.GetMemberName(), jsonPath, fieldType, fieldValueTrimOption, isJSONAttribute, fieldName, valueConverter,
+				defaultValue, fallbackValue);
+		}
+
+		public ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
             object defaultValue = null, object fallbackValue = null)
         {
             if (!name.IsNullOrEmpty())
             {
                 if (!_clearFields)
                 {
-                    Configuration.JSONRecordFieldConfigurations.Clear();
-                    _clearFields = true;
-                    Configuration.MapRecordFields(Configuration.RecordType);
+					ClearFields();
+					Configuration.MapRecordFields(Configuration.RecordType);
                 }
 
                 string fnTrim = name.NTrim();

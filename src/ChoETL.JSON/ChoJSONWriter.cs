@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
@@ -196,8 +197,23 @@ namespace ChoETL
             Configuration.NotifyAfter = rowsLoaded;
             return this;
         }
-        
-        public ChoJSONWriter<T> IgnoreField(string fieldName)
+
+		public ChoJSONWriter<T> ClearFields()
+		{
+			Configuration.JSONRecordFieldConfigurations.Clear();
+			_clearFields = true;
+			return this;
+		}
+
+		public ChoJSONWriter<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
+		{
+			if (field != null)
+				return IgnoreField(field.GetMemberName());
+			else
+				return this;
+		}
+
+		public ChoJSONWriter<T> IgnoreField(string fieldName)
         {
             if (!fieldName.IsNullOrWhiteSpace())
             {
@@ -216,7 +232,17 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONWriter<T> WithFields(params string[] fieldsNames)
+		public ChoJSONWriter<T> WithFields<TField>(params Expression<Func<T, TField>>[] fields)
+		{
+			if (fields != null)
+			{
+				var x = fields.Select(f => f.GetMemberName()).ToArray();
+				return WithFields(x);
+			}
+			return this;
+		}
+
+		public ChoJSONWriter<T> WithFields(params string[] fieldsNames)
         {
             string fnTrim = null;
             if (!fieldsNames.IsNullOrEmpty())
@@ -237,7 +263,17 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONWriter<T> WithField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+		public ChoJSONWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+			object defaultValue = null, object fallbackValue = null)
+		{
+			if (field == null)
+				return this;
+
+			return WithField(field.GetMemberName(), fieldType, fieldValueTrimOption, fieldName, valueConverter,
+				defaultValue, fallbackValue);
+		}
+
+		public ChoJSONWriter<T> WithField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
             object defaultValue = null, object fallbackValue = null)
         {
             if (!name.IsNullOrEmpty())

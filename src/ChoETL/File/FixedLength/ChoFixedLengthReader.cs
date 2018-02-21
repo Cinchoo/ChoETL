@@ -8,6 +8,7 @@ using System.Dynamic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -369,16 +370,30 @@ namespace ChoETL
             return this;
         }
 
-        public ChoFixedLengthReader<T> IgnoreField(string fieldName)
+		public ChoFixedLengthReader<T> ClearFields()
+		{
+			Configuration.FixedLengthRecordFieldConfigurations.Clear();
+			_clearFields = true;
+			return this;
+		}
+
+		public ChoFixedLengthReader<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
+		{
+			if (field != null)
+				return IgnoreField(field.GetMemberName());
+			else
+				return this;
+		}
+
+		public ChoFixedLengthReader<T> IgnoreField(string fieldName)
         {
             if (!fieldName.IsNullOrWhiteSpace())
             {
                 string fnTrim = null;
                 if (!_clearFields)
                 {
-                    Configuration.FixedLengthRecordFieldConfigurations.Clear();
-                    _clearFields = true;
-                    Configuration.MapRecordFields(Configuration.RecordType);
+					ClearFields();
+					Configuration.MapRecordFields(Configuration.RecordType);
                 }
                 fnTrim = fieldName.NTrim();
                 if (Configuration.FixedLengthRecordFieldConfigurations.Any(o => o.Name == fnTrim))
@@ -388,16 +403,25 @@ namespace ChoETL
             return this;
         }
 
-        public ChoFixedLengthReader<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
+		public ChoFixedLengthReader<T> WithField<TField>(Expression<Func<T, TField>> field, int startIndex, int size, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
+			string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string altFieldNames = null)
+		{
+			if (field == null)
+				return this;
+
+			return WithField(field.GetMemberName(), startIndex, size, fieldType, quoteField, fieldValueTrimOption,
+				fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames);
+		}
+
+		public ChoFixedLengthReader<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
             string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string altFieldNames = null)
         {
             if (!name.IsNullOrEmpty())
             {
                 if (!_clearFields)
                 {
-                    Configuration.FixedLengthRecordFieldConfigurations.Clear();
-                    _clearFields = true;
-                    Configuration.MapRecordFields(Configuration.RecordType);
+					ClearFields();
+					Configuration.MapRecordFields(Configuration.RecordType);
                 }
                 if (fieldName.IsNullOrWhiteSpace())
                     fieldName = name;

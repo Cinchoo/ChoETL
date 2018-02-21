@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -200,16 +201,30 @@ namespace ChoETL
             return this;
         }
 
-        public ChoFixedLengthWriter<T> IgnoreField(string fieldName)
+		public ChoFixedLengthWriter<T> ClearFields()
+		{
+			Configuration.FixedLengthRecordFieldConfigurations.Clear();
+			_clearFields = true;
+			return this;
+		}
+
+		public ChoFixedLengthWriter<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
+		{
+			if (field != null)
+				return IgnoreField(field.GetMemberName());
+			else
+				return this;
+		}
+
+		public ChoFixedLengthWriter<T> IgnoreField(string fieldName)
         {
             if (!fieldName.IsNullOrWhiteSpace())
             {
                 string fnTrim = null;
                 if (!_clearFields)
                 {
-                    Configuration.FixedLengthRecordFieldConfigurations.Clear();
-                    _clearFields = true;
-                    Configuration.MapRecordFields(Configuration.RecordType);
+					ClearFields();
+					Configuration.MapRecordFields(Configuration.RecordType);
                 }
                 fnTrim = fieldName.NTrim();
                 if (Configuration.FixedLengthRecordFieldConfigurations.Any(o => o.Name == fnTrim))
@@ -219,18 +234,28 @@ namespace ChoETL
             return this;
         }
 
-        public ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
+		public ChoFixedLengthWriter<T> WithField<TField>(Expression<Func<T, TField>> field, int startIndex, int size, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
+			bool truncate = true, string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null)
+		{
+			if (field == null)
+				return this;
+
+			return WithField(field.GetMemberName(), startIndex, size, fieldType, quoteField, fillChar, fieldValueJustification,
+					truncate, fieldName, valueConverter, defaultValue, fallbackValue);
+		}
+
+		public ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
             bool truncate = true, string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null)
         {
             if (!name.IsNullOrEmpty())
             {
                 if (!_clearFields)
                 {
-                    Configuration.FixedLengthRecordFieldConfigurations.Clear();
-                    _clearFields = true;
-                }
+					ClearFields();
+					Configuration.MapRecordFields(Configuration.RecordType);
+				}
 
-                Configuration.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(name.Trim(), startIndex, size) { FieldType = fieldType, QuoteField = quoteField,
+				Configuration.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(name.Trim(), startIndex, size) { FieldType = fieldType, QuoteField = quoteField,
                     FillChar = fillChar,
                     FieldValueJustification = fieldValueJustification,
                     Truncate = truncate,

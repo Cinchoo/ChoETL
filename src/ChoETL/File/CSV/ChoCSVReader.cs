@@ -8,6 +8,7 @@ using System.Dynamic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -370,16 +371,30 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVReader<T> IgnoreField(string fieldName)
+		public ChoCSVReader<T> ClearFields()
+		{
+			Configuration.CSVRecordFieldConfigurations.Clear();
+			_clearFields = true;
+			return this;
+		}
+
+		public ChoCSVReader<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
+		{
+			if (field != null)
+				return IgnoreField(field.GetMemberName());
+			else
+				return this;
+		}
+
+		public ChoCSVReader<T> IgnoreField(string fieldName)
         {
             if (!fieldName.IsNullOrWhiteSpace())
             {
                 string fnTrim = null;
                 if (!_clearFields)
                 {
-                    Configuration.CSVRecordFieldConfigurations.Clear();
-                    _clearFields = true;
-                    Configuration.MapRecordFields(Configuration.RecordType);
+					ClearFields();
+					Configuration.MapRecordFields(Configuration.RecordType);
                 }
                 fnTrim = fieldName.NTrim();
                 if (Configuration.CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
@@ -389,7 +404,17 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVReader<T> WithFields(params string[] fieldsNames)
+		public ChoCSVReader<T> WithFields<TField>(params Expression<Func<T, TField>>[] fields)
+		{
+			if (fields != null)
+			{
+				var x = fields.Select(f => f.GetMemberName()).ToArray();
+				return WithFields(x);
+			}
+			return this;
+		}
+
+		public ChoCSVReader<T> WithFields(params string[] fieldsNames)
         {
             string fnTrim = null;
             if (!fieldsNames.IsNullOrEmpty())
@@ -401,9 +426,8 @@ namespace ChoETL
                         continue;
                     if (!_clearFields)
                     {
-                        Configuration.CSVRecordFieldConfigurations.Clear();
-                        _clearFields = true;
-                        Configuration.MapRecordFields(Configuration.RecordType);
+						ClearFields();
+						Configuration.MapRecordFields(Configuration.RecordType);
                         //Configuration.ColumnOrderStrict = true;
                     }
 
@@ -417,32 +441,50 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+		public ChoCSVReader<T> WithField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+			object defaultValue = null, object fallbackValue = null, string altFieldNames = null)
+		{
+			if (field == null)
+				return this;
+
+			return WithField(field.GetMemberName(), fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames);
+		}
+
+		public ChoCSVReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null)
         {
-            int maxFieldPos = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-            return WithField(name, ++maxFieldPos, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames);
+            return WithField(name, null, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames);
         }
 
-        public ChoCSVReader<T> WithField(string name, int position, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+        public ChoCSVReader<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null)
         {
             if (!name.IsNullOrEmpty())
             {
                 if (!_clearFields)
                 {
-                    Configuration.CSVRecordFieldConfigurations.Clear();
-                    _clearFields = true;
-                    Configuration.MapRecordFields(Configuration.RecordType);
+					ClearFields();
+					Configuration.MapRecordFields(Configuration.RecordType);
                 }
                 if (fieldName.IsNullOrWhiteSpace())
                     fieldName = name;
 
                 string fnTrim = name.NTrim();
-                if (Configuration.CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-                    Configuration.CSVRecordFieldConfigurations.Remove(Configuration.CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+				if (Configuration.CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+				{
+					var fc = Configuration.CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+					if (position == null)
+						position = fc.FieldPosition;
 
-                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fnTrim, position) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName,
+					Configuration.CSVRecordFieldConfigurations.Remove(fc);
+				}
+				else
+				{
+					position = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
+					position++;
+				}
+
+				Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fnTrim, position.Value) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName,
                     ValueConverter = valueConverter, DefaultValue = defaultValue, FallbackValue = fallbackValue, AltFieldNames = altFieldNames
                 });
             }

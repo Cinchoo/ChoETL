@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -200,16 +201,30 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVWriter<T> IgnoreField(string fieldName)
+		public ChoCSVWriter<T> ClearFields()
+		{
+			Configuration.CSVRecordFieldConfigurations.Clear();
+			_clearFields = true;
+			return this;
+		}
+
+		public ChoCSVWriter<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
+		{
+			if (field != null)
+				return IgnoreField(field.GetMemberName());
+			else
+				return this;
+		}
+
+		public ChoCSVWriter<T> IgnoreField(string fieldName)
         {
             if (!fieldName.IsNullOrWhiteSpace())
             {
                 string fnTrim = null;
                 if (!_clearFields)
                 {
-                    Configuration.CSVRecordFieldConfigurations.Clear();
-                    _clearFields = true;
-                    Configuration.MapRecordFields(Configuration.RecordType);
+					ClearFields();
+					Configuration.MapRecordFields(Configuration.RecordType);
                 }
                 fnTrim = fieldName.NTrim();
                 if (Configuration.CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
@@ -219,7 +234,17 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVWriter<T> WithFields(params string[] fieldsNames)
+		public ChoCSVWriter<T> WithFields<TField>(params Expression<Func<T, TField>>[] fields)
+		{
+			if (fields != null)
+			{
+				var x = fields.Select(f => f.GetMemberName()).ToArray();
+				return WithFields(x);
+			}
+			return this;
+		}
+
+		public ChoCSVWriter<T> WithFields(params string[] fieldsNames)
         {
             string fnTrim = null;
             if (!fieldsNames.IsNullOrEmpty())
@@ -231,9 +256,8 @@ namespace ChoETL
                         continue;
                     if (!_clearFields)
                     {
-                        Configuration.CSVRecordFieldConfigurations.Clear();
-                        _clearFields = true;
-                        Configuration.MapRecordFields(Configuration.RecordType);
+						ClearFields();
+						Configuration.MapRecordFields(Configuration.RecordType);
                     }
 
                     fnTrim = fn.NTrim();
@@ -246,16 +270,24 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVWriter<T> WithField(string name, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
+		public ChoCSVWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
+			bool truncate = true, string fieldName = null, int? fieldPosition = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null)
+		{
+			if (field == null)
+				return this;
+
+			return WithField(field.GetMemberName(), fieldType, quoteField, fillChar, fieldValueJustification, truncate, fieldName, fieldPosition, valueConverter, defaultValue, fallbackValue);
+		}
+
+		public ChoCSVWriter<T> WithField(string name, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
             bool truncate = true, string fieldName = null, int? fieldPosition = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null)
         {
             if (!name.IsNullOrEmpty())
             {
                 if (!_clearFields)
                 {
-                    Configuration.CSVRecordFieldConfigurations.Clear();
-                    _clearFields = true;
-                    Configuration.MapRecordFields(Configuration.RecordType);
+					ClearFields();
+					Configuration.MapRecordFields(Configuration.RecordType);
                 }
                 if (fieldName.IsNullOrWhiteSpace())
                     fieldName = name;
@@ -263,9 +295,21 @@ namespace ChoETL
                 string fnTrim = name.NTrim();
                 if (Configuration.CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
                     Configuration.CSVRecordFieldConfigurations.Remove(Configuration.CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+				if (Configuration.CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+				{
+					var fc = Configuration.CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+					if (fieldPosition == null)
+						fieldPosition = fc.FieldPosition;
 
-                int maxFieldPos = fieldPosition == null ? (Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) + 1 : 1) : fieldPosition.Value;
-                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fnTrim, maxFieldPos) { FieldType = fieldType, QuoteField = quoteField,
+					Configuration.CSVRecordFieldConfigurations.Remove(fc);
+				}
+				else
+				{
+					fieldPosition = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
+					fieldPosition++;
+				}
+
+                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fnTrim, fieldPosition.Value) { FieldType = fieldType, QuoteField = quoteField,
                     FillChar = fillChar,
                     FieldValueJustification = fieldValueJustification,
                     Truncate = truncate,
