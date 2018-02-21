@@ -622,7 +622,7 @@ somethingdownhere,thisisthelastuser,andthisisthelastpassword
         static void Sample3()
         {
             using (var p = new ChoCSVReader<Site>("Sample3.csv")
-                //.WithField(m => m.SiteID)
+                .WithField(m => m.SiteID)
                 .WithFirstLineHeader(true)
                 )
             {
