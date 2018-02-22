@@ -286,7 +286,19 @@ namespace ChoETL
                 if (dupFields.Length > 0 /* && !IgnoreDuplicateFields */)
                     throw new ChoRecordConfigurationException("Duplicate field name(s) [Name: {0}] found.".FormatString(String.Join(",", dupFields)));
 
-                RecordFieldConfigurationsDict = KVPRecordFieldConfigurations.Where(i => !i.Name.IsNullOrWhiteSpace()).GroupBy(i => i.Name).Select(g => g.First()).ToDictionary(i => i.Name, FileHeaderConfiguration.StringComparer);
+				PIDict = new Dictionary<string, System.Reflection.PropertyInfo>();
+				PDDict = new Dictionary<string, PropertyDescriptor>();
+				foreach (var fc in KVPRecordFieldConfigurations)
+				{
+					if (fc.PropertyDescriptor == null)
+						continue;
+
+					PIDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
+					PDDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor);
+				}
+
+
+				RecordFieldConfigurationsDict = KVPRecordFieldConfigurations.Where(i => !i.Name.IsNullOrWhiteSpace()).GroupBy(i => i.Name).Select(g => g.First()).ToDictionary(i => i.Name, FileHeaderConfiguration.StringComparer);
                 RecordFieldConfigurationsDict2 = KVPRecordFieldConfigurations.Where(i => !i.FieldName.IsNullOrWhiteSpace()).GroupBy(i => i.Name).Select(g => g.First()).ToDictionary(i => i.FieldName, FileHeaderConfiguration.StringComparer);
                 AlternativeKeys = RecordFieldConfigurationsDict2.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Name, FileHeaderConfiguration.StringComparer);
                 FCArray = RecordFieldConfigurationsDict.ToArray();

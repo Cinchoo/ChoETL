@@ -227,17 +227,6 @@ namespace ChoETL
         {
             base.Validate(state);
 
-            PIDict = new Dictionary<string, System.Reflection.PropertyInfo>();
-            PDDict = new Dictionary<string, PropertyDescriptor>();
-            foreach (var fc in CSVRecordFieldConfigurations)
-            {
-                if (fc.PropertyDescriptor == null)
-                    continue;
-
-                PIDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
-                PDDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor);
-            }
-
             if (Delimiter.IsNull())
                 throw new ChoRecordConfigurationException("Delimiter can't be null or whitespace.");
             if (Delimiter == EOLDelimiter)
@@ -320,7 +309,18 @@ namespace ChoETL
                     throw new ChoRecordConfigurationException("Duplicate field name(s) [Name: {0}] found.".FormatString(String.Join(",", dupFields)));
             }
 
-            RecordFieldConfigurationsDict = CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name, FileHeaderConfiguration.StringComparer);
+			PIDict = new Dictionary<string, System.Reflection.PropertyInfo>();
+			PDDict = new Dictionary<string, PropertyDescriptor>();
+			foreach (var fc in CSVRecordFieldConfigurations)
+			{
+				if (fc.PropertyDescriptor == null)
+					continue;
+
+				PIDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
+				PDDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor);
+			}
+
+			RecordFieldConfigurationsDict = CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name, FileHeaderConfiguration.StringComparer);
             RecordFieldConfigurationsDict2 = CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName, FileHeaderConfiguration.StringComparer);
             AlternativeKeys = RecordFieldConfigurationsDict2.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Name, FileHeaderConfiguration.StringComparer);
             FCArray = RecordFieldConfigurationsDict.ToArray();
@@ -337,9 +337,9 @@ namespace ChoETL
                         throw new ChoRecordConfigurationException("Invalid '{0}' injection char specified.".FormatString(injectionChar));
                 }
             }
-        }
+		}
 
-        private void ValidateChar(char src, string name)
+		private void ValidateChar(char src, string name)
         {
             if (src == ChoCharEx.NUL)
                 throw new ChoRecordConfigurationException("Invalid 'NUL' {0} specified.".FormatString(name));

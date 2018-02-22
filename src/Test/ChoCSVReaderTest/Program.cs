@@ -37,7 +37,8 @@ namespace ChoCSVReaderTest
         [Required]
         [RegularExpression("^[a-zA-Z][a-zA-Z ]*$")]
         public string City { get; set; }
-        public SitePostal SitePostal { get; set; }
+		[ChoValidateObject]
+		public SitePostal SitePostal { get; set; }
     }
     public class Site
     {
@@ -46,7 +47,8 @@ namespace ChoCSVReaderTest
         public int SiteID { get; set; }
         [Required]
         public int House { get; set; }
-        public SiteAddress SiteAddress { get; set; }
+		[ChoValidateObject]
+		public SiteAddress SiteAddress { get; set; }
         public int Apartment { get; set; }
     }
 
@@ -624,6 +626,7 @@ somethingdownhere,thisisthelastuser,andthisisthelastpassword
             using (var p = new ChoCSVReader<Site>("Sample3.csv")
                 .WithField(m => m.SiteID)
                 .WithFirstLineHeader(true)
+				.Configure(c => c.ObjectValidationMode = ChoObjectValidationMode.ObjectLevel)
                 )
             {
                 foreach (var rec in p)

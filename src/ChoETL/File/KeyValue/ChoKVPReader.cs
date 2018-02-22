@@ -380,14 +380,27 @@ namespace ChoETL
                     fieldName = name;
 
                 string fnTrim = name.NTrim();
-                if (Configuration.KVPRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-                    Configuration.KVPRecordFieldConfigurations.Remove(Configuration.KVPRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+				ChoKVPRecordFieldConfiguration fc = null;
+				if (Configuration.KVPRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+				{
+					fc = Configuration.KVPRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+					Configuration.KVPRecordFieldConfigurations.Remove(fc);
+				}
 
-                Configuration.KVPRecordFieldConfigurations.Add(new ChoKVPRecordFieldConfiguration(fnTrim) { FieldType = fieldType, QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName,
-                    ValueConverter = valueConverter,
-                    DefaultValue = defaultValue,
-                    FallbackValue = fallbackValue
-                });
+				var nfc = new ChoKVPRecordFieldConfiguration(fnTrim)
+				{
+					FieldType = fieldType,
+					QuoteField = quoteField,
+					FieldValueTrimOption = fieldValueTrimOption,
+					FieldName = fieldName,
+					ValueConverter = valueConverter,
+					DefaultValue = defaultValue,
+					FallbackValue = fallbackValue
+				};
+				nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : null;
+				nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
+
+				Configuration.KVPRecordFieldConfigurations.Add(nfc);
             }
 
             return this;

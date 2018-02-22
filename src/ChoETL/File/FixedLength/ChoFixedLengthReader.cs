@@ -427,14 +427,28 @@ namespace ChoETL
                     fieldName = name;
 
                 string fnTrim = name.NTrim();
-                if (Configuration.FixedLengthRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-                    Configuration.FixedLengthRecordFieldConfigurations.Remove(Configuration.FixedLengthRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+                ChoFixedLengthRecordFieldConfiguration fc = null;
+				if (Configuration.FixedLengthRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+				{
+					fc = Configuration.FixedLengthRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+					Configuration.FixedLengthRecordFieldConfigurations.Remove(fc);
+				}
 
-                Configuration.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(fnTrim, startIndex, size) { FieldType = fieldType,
-                    QuoteField = quoteField, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName, ValueConverter = valueConverter,
-                    DefaultValue = defaultValue, FallbackValue = fallbackValue,
-                    AltFieldNames = altFieldNames
-                });
+				var nfc = new ChoFixedLengthRecordFieldConfiguration(fnTrim, startIndex, size)
+				{
+					FieldType = fieldType,
+					QuoteField = quoteField,
+					FieldValueTrimOption = fieldValueTrimOption,
+					FieldName = fieldName,
+					ValueConverter = valueConverter,
+					DefaultValue = defaultValue,
+					FallbackValue = fallbackValue,
+					AltFieldNames = altFieldNames
+				};
+				nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : null;
+				nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
+
+				Configuration.FixedLengthRecordFieldConfigurations.Add(nfc);
             }
 
             return this;
