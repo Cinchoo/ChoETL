@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Diagnostics;
@@ -334,7 +335,9 @@ namespace ChoETL
             string fnTrim = null;
             if (!fieldsNames.IsNullOrEmpty())
             {
-                foreach (string fn in fieldsNames)
+				PropertyDescriptor pd = null;
+				ChoKVPRecordFieldConfiguration fc = null;
+				foreach (string fn in fieldsNames)
                 {
                     if (fn.IsNullOrEmpty())
                         continue;
@@ -347,9 +350,19 @@ namespace ChoETL
                     }
 
                     fnTrim = fn.NTrim();
-                    if (Configuration.KVPRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-                        Configuration.KVPRecordFieldConfigurations.Remove(Configuration.KVPRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
-                    Configuration.KVPRecordFieldConfigurations.Add(new ChoKVPRecordFieldConfiguration(fnTrim) { FieldName = fn });
+					if (Configuration.KVPRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+					{
+						fc = Configuration.KVPRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+						Configuration.KVPRecordFieldConfigurations.Remove(fc);
+					}
+					else
+						pd = ChoTypeDescriptor.GetProperty(typeof(T), fn);
+
+					var nfc = new ChoKVPRecordFieldConfiguration(fnTrim) { FieldName = fn };
+					nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
+					nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
+
+					Configuration.KVPRecordFieldConfigurations.Add(nfc);
                 }
 
             }
@@ -381,11 +394,14 @@ namespace ChoETL
 
                 string fnTrim = name.NTrim();
 				ChoKVPRecordFieldConfiguration fc = null;
+				PropertyDescriptor pd = null;
 				if (Configuration.KVPRecordFieldConfigurations.Any(o => o.Name == fnTrim))
 				{
 					fc = Configuration.KVPRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
 					Configuration.KVPRecordFieldConfigurations.Remove(fc);
 				}
+				else
+					pd = ChoTypeDescriptor.GetProperty(typeof(T), name);
 
 				var nfc = new ChoKVPRecordFieldConfiguration(fnTrim)
 				{
@@ -397,7 +413,7 @@ namespace ChoETL
 					DefaultValue = defaultValue,
 					FallbackValue = fallbackValue
 				};
-				nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : null;
+				nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
 				nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
 
 				Configuration.KVPRecordFieldConfigurations.Add(nfc);

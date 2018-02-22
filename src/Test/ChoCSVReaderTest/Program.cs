@@ -47,7 +47,7 @@ namespace ChoCSVReaderTest
         public int SiteID { get; set; }
         [Required]
         public int House { get; set; }
-		[ChoValidateObject]
+		//[ChoValidateObject]
 		public SiteAddress SiteAddress { get; set; }
         public int Apartment { get; set; }
     }
@@ -624,6 +624,7 @@ somethingdownhere,thisisthelastuser,andthisisthelastpassword
         static void Sample3()
         {
             using (var p = new ChoCSVReader<Site>("Sample3.csv")
+				.ClearFields()
                 .WithField(m => m.SiteID)
                 .WithFirstLineHeader(true)
 				.Configure(c => c.ObjectValidationMode = ChoObjectValidationMode.ObjectLevel)

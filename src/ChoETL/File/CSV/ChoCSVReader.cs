@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Diagnostics;
@@ -420,7 +421,9 @@ namespace ChoETL
             if (!fieldsNames.IsNullOrEmpty())
             {
                 int maxFieldPos = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-                foreach (string fn in fieldsNames)
+				PropertyDescriptor pd = null;
+                ChoCSVRecordFieldConfiguration fc = null;
+				foreach (string fn in fieldsNames)
                 {
                     if (fn.IsNullOrEmpty())
                         continue;
@@ -432,9 +435,19 @@ namespace ChoETL
                     }
 
                     fnTrim = fn.NTrim();
-                    if (Configuration.CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-                        Configuration.CSVRecordFieldConfigurations.Remove(Configuration.CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
-                    Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fnTrim, ++maxFieldPos) { FieldName = fn });
+					if (Configuration.CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+					{
+						fc = Configuration.CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+						Configuration.CSVRecordFieldConfigurations.Remove(Configuration.CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+					}
+					else
+						pd = ChoTypeDescriptor.GetProperty(typeof(T), fn);
+
+					var nfc = new ChoCSVRecordFieldConfiguration(fnTrim, ++maxFieldPos) { FieldName = fn };
+					nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
+					nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
+
+					Configuration.CSVRecordFieldConfigurations.Add(nfc);
                 }
             }
 
@@ -471,6 +484,7 @@ namespace ChoETL
 
                 string fnTrim = name.NTrim();
                 ChoCSVRecordFieldConfiguration fc = null;
+				PropertyDescriptor pd = null;
                 if (Configuration.CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
                 {
                     fc = Configuration.CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
@@ -481,6 +495,7 @@ namespace ChoETL
                 }
                 else
                 {
+					pd = ChoTypeDescriptor.GetProperty(typeof(T), name);
                     position = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
                     position++;
                 }
@@ -496,7 +511,7 @@ namespace ChoETL
                     FallbackValue = fallbackValue,
                     AltFieldNames = altFieldNames
                 };
-                nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : null;
+                nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
                 nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
 
                 Configuration.CSVRecordFieldConfigurations.Add(nfc);

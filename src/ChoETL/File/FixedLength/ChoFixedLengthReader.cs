@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Diagnostics;
@@ -428,11 +429,14 @@ namespace ChoETL
 
                 string fnTrim = name.NTrim();
                 ChoFixedLengthRecordFieldConfiguration fc = null;
+				PropertyDescriptor pd = null;
 				if (Configuration.FixedLengthRecordFieldConfigurations.Any(o => o.Name == fnTrim))
 				{
 					fc = Configuration.FixedLengthRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
 					Configuration.FixedLengthRecordFieldConfigurations.Remove(fc);
 				}
+				else
+					pd = ChoTypeDescriptor.GetProperty(typeof(T), name);
 
 				var nfc = new ChoFixedLengthRecordFieldConfiguration(fnTrim, startIndex, size)
 				{
@@ -445,7 +449,7 @@ namespace ChoETL
 					FallbackValue = fallbackValue,
 					AltFieldNames = altFieldNames
 				};
-				nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : null;
+				nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
 				nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
 
 				Configuration.FixedLengthRecordFieldConfigurations.Add(nfc);
