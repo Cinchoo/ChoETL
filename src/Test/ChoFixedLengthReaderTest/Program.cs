@@ -56,8 +56,8 @@ namespace ChoFixedLengthReaderTest
     {
         static void Main(string[] args)
         {
-            QuickLoad();
-            return;
+            //QuickLoad();
+            //return;
             //foreach (dynamic rec in new ChoFixedLengthReader("emp.txt").WithFirstLineHeader()
             //    .Configure(c => c.FileHeaderConfiguration.IgnoreCase = false)
             //    .Configure(c => c.FileHeaderConfiguration.TrimOption = ChoFieldValueTrimOption.None)
@@ -69,30 +69,31 @@ namespace ChoFixedLengthReaderTest
             //    //Console.WriteLine(rec[" id "]);
             //}
             //return;
-            foreach (var rec in new ChoFixedLengthReader<EmployeeRec>("emp.txt")
-                .Configure(c => c.FileHeaderConfiguration.IgnoreCase = false)
-                .Configure(c => c.ThrowAndStopOnMissingField = true)
-                .Setup(r => r.BeforeRecordLoad += (o, e) =>
-                {
-                    if (e.Source != null)
-                    {
-                        e.Skip = ((string)e.Source).StartsWith("#");
-                    }
-                })
-                )
-            {
-                Console.WriteLine(rec.Id);
-            }
+            //foreach (var rec in new ChoFixedLengthReader<EmployeeRec>("emp.txt")
+            //    .WithFirstLineHeader()
+            //    //.Configure(c => c.FileHeaderConfiguration.IgnoreCase = false)
+            //    //.Configure(c => c.ThrowAndStopOnMissingField = true)
+            //    //.Setup(r => r.BeforeRecordLoad += (o, e) =>
+            //    //{
+            //    //    if (e.Source != null)
+            //    //    {
+            //    //        e.Skip = ((string)e.Source).StartsWith("#");
+            //    //    }
+            //    //})
+            //    )
+            //{
+            //    Console.WriteLine(rec.Id);
+            //}
 
-            return;
+            //return;
             foreach (dynamic rec in new ChoFixedLengthReader("emp.txt").WithFirstLineHeader()
                 .Configure(c => c.MayContainEOLInData = true)
                 .Configure(c => c.FileHeaderConfiguration.IgnoreCase = true)
                 .Configure(c => c.FileHeaderConfiguration.TrimOption = ChoFieldValueTrimOption.None))
             {
                 Console.WriteLine(rec.id);
-                Console.WriteLine("{0}", rec[" id     "]);
-                Console.WriteLine(rec[0]);
+                //Console.WriteLine("{0}", rec[" id     "]);
+                //Console.WriteLine(rec[0]);
             }
             return;
 

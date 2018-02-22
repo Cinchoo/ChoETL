@@ -626,6 +626,7 @@ somethingdownhere,thisisthelastuser,andthisisthelastpassword
             using (var p = new ChoCSVReader<Site>("Sample3.csv")
 				.ClearFields()
                 .WithField(m => m.SiteID)
+                .WithField(m => m.SiteAddress.City)
                 .WithFirstLineHeader(true)
 				.Configure(c => c.ObjectValidationMode = ChoObjectValidationMode.ObjectLevel)
                 )

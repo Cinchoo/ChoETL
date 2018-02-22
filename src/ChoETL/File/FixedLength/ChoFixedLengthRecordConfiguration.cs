@@ -179,21 +179,6 @@ namespace ChoETL
 						}
 					}
 				}
-
-				foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
-                {
-                    pt = pd.PropertyType.GetUnderlyingType();
-                    if (!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
-                        DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name));
-                    else if (pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().Any())
-                    {
-                        var obj = new ChoFixedLengthRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().First());
-                        obj.FieldType = pt;
-                        obj.PropertyDescriptor = pd;
-                        obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
-                        FixedLengthRecordFieldConfigurations.Add(obj);
-                    }
-                }
             }
         }
 
