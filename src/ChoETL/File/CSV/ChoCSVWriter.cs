@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Dynamic;
@@ -238,8 +239,8 @@ namespace ChoETL
 		{
 			if (fields != null)
 			{
-				var x = fields.Select(f => f.GetMemberName()).ToArray();
-				return WithFields(x);
+				foreach (var field in fields)
+					return WithField(field);
 			}
 			return this;
 		}
@@ -250,7 +251,9 @@ namespace ChoETL
             if (!fieldsNames.IsNullOrEmpty())
             {
                 int maxFieldPos = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-                foreach (string fn in fieldsNames)
+				PropertyDescriptor pd = null;
+				ChoCSVRecordFieldConfiguration fc = null;
+				foreach (string fn in fieldsNames)
                 {
                     if (fn.IsNullOrEmpty())
                         continue;
@@ -261,9 +264,19 @@ namespace ChoETL
                     }
 
                     fnTrim = fn.NTrim();
-                    if (Configuration.CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-                        Configuration.CSVRecordFieldConfigurations.Remove(Configuration.CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
-                    Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fnTrim, ++maxFieldPos) { FieldName = fn });
+					if (Configuration.CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+					{
+						fc = Configuration.CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+						Configuration.CSVRecordFieldConfigurations.Remove(Configuration.CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+					}
+					else
+						pd = ChoTypeDescriptor.GetProperty(typeof(T), fn);
+
+					var nfc = new ChoCSVRecordFieldConfiguration(fnTrim, ++maxFieldPos) { FieldName = fn };
+					nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
+					nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
+
+					Configuration.CSVRecordFieldConfigurations.Add(nfc);
                 }
             }
 
@@ -276,11 +289,20 @@ namespace ChoETL
 			if (field == null)
 				return this;
 
-			return WithField(field.GetMemberName(), fieldType, quoteField, fillChar, fieldValueJustification, truncate, fieldName, fieldPosition, valueConverter, defaultValue, fallbackValue);
+			return WithField(field.GetMemberName(), fieldType, quoteField, fillChar, fieldValueJustification, truncate, fieldName, fieldPosition, valueConverter, defaultValue, fallbackValue,
+				field.GetFullyQualifiedMemberName());
 		}
 
 		public ChoCSVWriter<T> WithField(string name, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
-            bool truncate = true, string fieldName = null, int? fieldPosition = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null)
+			bool truncate = true, string fieldName = null, int? fieldPosition = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null)
+		{
+			return WithField(name, fieldType, quoteField, fillChar, fieldValueJustification,
+				truncate, fieldName, fieldPosition, valueConverter, defaultValue, fallbackValue, null);
+		}
+
+		private ChoCSVWriter<T> WithField(string name, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
+            bool truncate = true, string fieldName = null, int? fieldPosition = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null,
+			string fullyQualifiedMemberName = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -293,11 +315,13 @@ namespace ChoETL
                     fieldName = name;
 
                 string fnTrim = name.NTrim();
-                if (Configuration.CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                ChoCSVRecordFieldConfiguration fc = null;
+				PropertyDescriptor pd = null;
+				if (Configuration.CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
                     Configuration.CSVRecordFieldConfigurations.Remove(Configuration.CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
 				if (Configuration.CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
 				{
-					var fc = Configuration.CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+					fc = Configuration.CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
 					if (fieldPosition == null)
 						fieldPosition = fc.FieldPosition;
 
@@ -305,18 +329,36 @@ namespace ChoETL
 				}
 				else
 				{
+					pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
 					fieldPosition = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
 					fieldPosition++;
 				}
 
-                Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fnTrim, fieldPosition.Value) { FieldType = fieldType, QuoteField = quoteField,
-                    FillChar = fillChar,
-                    FieldValueJustification = fieldValueJustification,
-                    Truncate = truncate,
-                    FieldName = fieldName, ValueConverter = valueConverter,
-                    DefaultValue = defaultValue,
-                    FallbackValue = fallbackValue
-                });
+				var nfc = new ChoCSVRecordFieldConfiguration(fnTrim, fieldPosition.Value)
+				{
+					FieldType = fieldType,
+					QuoteField = quoteField,
+					FillChar = fillChar,
+					FieldValueJustification = fieldValueJustification,
+					Truncate = truncate,
+					FieldName = fieldName,
+					ValueConverter = valueConverter,
+					DefaultValue = defaultValue,
+					FallbackValue = fallbackValue
+				};
+				if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
+				{
+					nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
+					nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
+				}
+				else
+				{
+					pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
+					nfc.PropertyDescriptor = pd;
+					nfc.DeclaringMember = fullyQualifiedMemberName;
+				}
+
+				Configuration.CSVRecordFieldConfigurations.Add(nfc);
             }
 
             return this;

@@ -409,8 +409,8 @@ namespace ChoETL
         {
             if (fields != null)
             {
-                var x = fields.Select(f => f.GetMemberName()).ToArray();
-                return WithFields(x);
+				foreach (var field in fields)
+					return WithField(field);
             }
             return this;
         }
@@ -460,7 +460,8 @@ namespace ChoETL
             if (field == null)
                 return this;
 
-            return WithField(field.GetMemberName(), fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames);
+            return WithField(field.GetMemberName(), null, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames,
+				field.GetFullyQualifiedMemberName());
         }
 
         public ChoCSVReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
@@ -469,8 +470,15 @@ namespace ChoETL
             return WithField(name, null, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames);
         }
 
-        public ChoCSVReader<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
-            object defaultValue = null, object fallbackValue = null, string altFieldNames = null)
+		public ChoCSVReader<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+			object defaultValue = null, object fallbackValue = null, string altFieldNames = null)
+		{
+			return WithField(name, position, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter,
+				defaultValue, fallbackValue, altFieldNames, null);
+		}
+
+		private ChoCSVReader<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string fullyQualifiedMemberName = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -495,12 +503,12 @@ namespace ChoETL
                 }
                 else
                 {
-					pd = ChoTypeDescriptor.GetProperty(typeof(T), name);
-                    position = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
+					pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
+					position = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
                     position++;
                 }
 
-                var nfc = new ChoCSVRecordFieldConfiguration(fnTrim, position.Value)
+				var nfc = new ChoCSVRecordFieldConfiguration(fnTrim, position.Value)
                 {
                     FieldType = fieldType,
                     QuoteField = quoteField,
@@ -511,10 +519,19 @@ namespace ChoETL
                     FallbackValue = fallbackValue,
                     AltFieldNames = altFieldNames
                 };
-                nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
-                nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
+				if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
+				{
+					nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
+					nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
+				}
+				else
+				{
+					pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
+					nfc.PropertyDescriptor = pd;
+					nfc.DeclaringMember = fullyQualifiedMemberName;
+				}
 
-                Configuration.CSVRecordFieldConfigurations.Add(nfc);
+				Configuration.CSVRecordFieldConfigurations.Add(nfc);
             }
 
             return this;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Dynamic;
@@ -211,7 +212,7 @@ namespace ChoETL
 		public ChoFixedLengthWriter<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
 		{
 			if (field != null)
-				return IgnoreField(field.GetMemberName());
+				return IgnoreField(field.GetFullyQualifiedMemberName());
 			else
 				return this;
 		}
@@ -241,28 +242,67 @@ namespace ChoETL
 				return this;
 
 			return WithField(field.GetMemberName(), startIndex, size, fieldType, quoteField, fillChar, fieldValueJustification,
-					truncate, fieldName, valueConverter, defaultValue, fallbackValue);
+					truncate, fieldName, valueConverter, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName());
 		}
 
 		public ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
-            bool truncate = true, string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null)
-        {
-            if (!name.IsNullOrEmpty())
+			bool truncate = true, string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null)
+		{
+			return WithField(name, startIndex, size, fieldType, quoteField, fillChar, fieldValueJustification,
+				truncate, fieldName, valueConverter, defaultValue, fallbackValue, null);
+		}
+
+		private ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
+            bool truncate = true, string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null,
+			string fullyQualifiedMemberName = null)
+		{
+			if (!name.IsNullOrEmpty())
             {
                 if (!_clearFields)
                 {
 					ClearFields();
 					Configuration.MapRecordFields(Configuration.RecordType);
 				}
+				if (fieldName.IsNullOrWhiteSpace())
+					fieldName = name;
 
-				Configuration.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(name.Trim(), startIndex, size) { FieldType = fieldType, QuoteField = quoteField,
-                    FillChar = fillChar,
-                    FieldValueJustification = fieldValueJustification,
-                    Truncate = truncate,
-                    FieldName = fieldName.IsNullOrWhiteSpace() ? name : fieldName, ValueConverter = valueConverter,
-                    DefaultValue = defaultValue,
-                    FallbackValue = fallbackValue
-                });
+				string fnTrim = name.NTrim();
+				ChoFixedLengthRecordFieldConfiguration fc = null;
+				PropertyDescriptor pd = null;
+				if (Configuration.FixedLengthRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+				{
+					fc = Configuration.FixedLengthRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+					Configuration.FixedLengthRecordFieldConfigurations.Remove(fc);
+				}
+				else
+					pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
+
+				var nfc = new ChoFixedLengthRecordFieldConfiguration(name.Trim(), startIndex, size)
+				{
+					FieldType = fieldType,
+					QuoteField = quoteField,
+					FillChar = fillChar,
+					FieldValueJustification = fieldValueJustification,
+					Truncate = truncate,
+					FieldName = fieldName.IsNullOrWhiteSpace() ? name : fieldName,
+					ValueConverter = valueConverter,
+					DefaultValue = defaultValue,
+					FallbackValue = fallbackValue
+				};
+
+				if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
+				{
+					nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
+					nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
+				}
+				else
+				{
+					pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
+					nfc.PropertyDescriptor = pd;
+					nfc.DeclaringMember = fullyQualifiedMemberName;
+				}
+
+				Configuration.FixedLengthRecordFieldConfigurations.Add(nfc);
             }
 
             return this;

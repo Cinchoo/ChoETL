@@ -208,7 +208,7 @@ namespace ChoETL
 		public ChoJSONWriter<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
 		{
 			if (field != null)
-				return IgnoreField(field.GetMemberName());
+				return IgnoreField(field.GetFullyQualifiedMemberName());
 			else
 				return this;
 		}
@@ -236,7 +236,7 @@ namespace ChoETL
 		{
 			if (fields != null)
 			{
-				var x = fields.Select(f => f.GetMemberName()).ToArray();
+				var x = fields.Select(f => f.GetFullyQualifiedMemberName()).ToArray();
 				return WithFields(x);
 			}
 			return this;
@@ -269,7 +269,7 @@ namespace ChoETL
 			if (field == null)
 				return this;
 
-			return WithField(field.GetMemberName(), fieldType, fieldValueTrimOption, fieldName, valueConverter,
+			return WithField(field.GetFullyQualifiedMemberName(), fieldType, fieldValueTrimOption, fieldName, valueConverter,
 				defaultValue, fallbackValue);
 		}
 

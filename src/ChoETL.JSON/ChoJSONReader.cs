@@ -408,7 +408,7 @@ namespace ChoETL
 		public ChoJSONReader<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
 		{
 			if (field != null)
-				return IgnoreField(field.GetMemberName());
+				return IgnoreField(field.GetFullyQualifiedMemberName());
 			else
 				return this;
 		}
@@ -435,7 +435,7 @@ namespace ChoETL
 		{
 			if (fields != null)
 			{
-				var x = fields.Select(f => f.GetMemberName()).ToArray();
+				var x = fields.Select(f => f.GetFullyQualifiedMemberName()).ToArray();
 				return WithFields(x);
 			}
 			return this;
@@ -472,7 +472,7 @@ namespace ChoETL
 			if (field == null)
 				return this;
 
-			return WithField(field.GetMemberName(), jsonPath, fieldType, fieldValueTrimOption, isJSONAttribute, fieldName, valueConverter,
+			return WithField(field.GetFullyQualifiedMemberName(), jsonPath, fieldType, fieldValueTrimOption, isJSONAttribute, fieldName, valueConverter,
 				defaultValue, fallbackValue);
 		}
 

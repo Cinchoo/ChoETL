@@ -231,7 +231,7 @@ namespace ChoETL
 		public ChoXmlWriter<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
 		{
 			if (field != null)
-				return IgnoreField(field.GetMemberName());
+				return IgnoreField(field.GetFullyQualifiedMemberName());
 			else
 				return this;
 		}
@@ -258,7 +258,7 @@ namespace ChoETL
 		{
 			if (fields != null)
 			{
-				var x = fields.Select(f => f.GetMemberName()).ToArray();
+				var x = fields.Select(f => f.GetFullyQualifiedMemberName()).ToArray();
 				return WithFields(x);
 			}
 			return this;
@@ -295,7 +295,7 @@ namespace ChoETL
 			if (field == null)
 				return this;
 
-			return WithXmlElementField(field.GetMemberName(), fieldType, fieldValueTrimOption, fieldName,
+			return WithXmlElementField(field.GetFullyQualifiedMemberName(), fieldType, fieldValueTrimOption, fieldName,
 				valueConverter, isNullable,
 				defaultValue, fallbackValue, encodeValue);
 		}
@@ -316,7 +316,7 @@ namespace ChoETL
 			if (field == null)
 				return this;
 
-			return WithXmlAttributeField(field.GetMemberName(), fieldType, fieldValueTrimOption, fieldName,
+			return WithXmlAttributeField(field.GetFullyQualifiedMemberName(), fieldType, fieldValueTrimOption, fieldName,
 				valueConverter, isNullable,
 				defaultValue, fallbackValue, encodeValue);
 		}
@@ -337,7 +337,7 @@ namespace ChoETL
 			if (field == null)
 				return this;
 
-			return WithField(field.GetMemberName(), xPath, fieldType, fieldValueTrimOption, isXmlAttribute, fieldName,
+			return WithField(field.GetFullyQualifiedMemberName(), xPath, fieldType, fieldValueTrimOption, isXmlAttribute, fieldName,
 				valueConverter, isNullable,
 				defaultValue, fallbackValue, encodeValue);
 		}

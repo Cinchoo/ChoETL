@@ -99,7 +99,24 @@
             //    pd.Name == propName).FirstOrDefault();
         }
 
-        public static T GetPropetyAttribute<T>(PropertyDescriptor pd)
+		public static PropertyDescriptor GetNestedProperty(Type recType, string pn)
+		{
+			if (pn.IsNullOrWhiteSpace()) return null;
+
+			string[] pnTokens = pn.SplitNTrim(".");
+			PropertyDescriptor pd = null;
+			for (int index = 0; index < pnTokens.Length - 1; index++)
+			{
+				pd = ChoTypeDescriptor.GetProperty(recType, pnTokens[index]);
+				if (pd == null) return null;
+
+				recType = pd.PropertyType;
+			}
+
+			return ChoTypeDescriptor.GetProperty(recType, pnTokens.Last());
+		}
+
+		public static T GetPropetyAttribute<T>(PropertyDescriptor pd)
                    where T : Attribute
         {
             if (pd == null)
