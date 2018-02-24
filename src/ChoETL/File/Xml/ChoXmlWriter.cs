@@ -367,19 +367,20 @@ namespace ChoETL
 			if (field == null)
 				return this;
 
-			return WithField(field.GetFullyQualifiedMemberName(), xPath, fieldType, fieldValueTrimOption, isXmlAttribute, fieldName,
+			return WithField(field.GetMemberName(), xPath, fieldType, fieldValueTrimOption, isXmlAttribute, fieldName,
 				valueConverter, isNullable,
-				defaultValue, fallbackValue, encodeValue);
+				defaultValue, fallbackValue, encodeValue, field.GetFullyQualifiedMemberName());
 		}
 
-		public ChoXmlWriter<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isXmlAttribute = false, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
+		public ChoXmlWriter<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
+			bool isXmlAttribute = false, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
 			object defaultValue = null, object fallbackValue = null, bool encodeValue = true)
 		{
 			return WithField(name, xPath, fieldType, fieldValueTrimOption, isXmlAttribute, fieldName, valueConverter, isNullable,
 				defaultValue, fallbackValue, encodeValue, null);
 		}
 
-		public ChoXmlWriter<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isXmlAttribute = false, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
+		private ChoXmlWriter<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isXmlAttribute = false, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string fullyQualifiedMemberName = null)
         {
             if (!name.IsNullOrEmpty())

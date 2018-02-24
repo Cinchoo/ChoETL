@@ -384,7 +384,7 @@ namespace ChoJSONReaderTest
 
         static void Main(string[] args)
         {
-            Sample16();
+			Sample12();
         }
 
         static void Sample16()
