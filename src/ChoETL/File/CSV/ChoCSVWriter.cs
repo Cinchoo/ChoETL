@@ -318,8 +318,6 @@ namespace ChoETL
                 ChoCSVRecordFieldConfiguration fc = null;
 				PropertyDescriptor pd = null;
 				if (Configuration.CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-                    Configuration.CSVRecordFieldConfigurations.Remove(Configuration.CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
-				if (Configuration.CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
 				{
 					fc = Configuration.CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
 					if (fieldPosition == null)

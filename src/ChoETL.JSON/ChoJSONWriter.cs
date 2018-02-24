@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Dynamic;
@@ -220,9 +221,8 @@ namespace ChoETL
                 string fnTrim = null;
                 if (!_clearFields)
                 {
-                    Configuration.JSONRecordFieldConfigurations.Clear();
-                    _clearFields = true;
-                    Configuration.MapRecordFields(Configuration.RecordType);
+					ClearFields();
+					Configuration.MapRecordFields(Configuration.RecordType);
                 }
                 fnTrim = fieldName.NTrim();
                 if (Configuration.JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
@@ -236,8 +236,8 @@ namespace ChoETL
 		{
 			if (fields != null)
 			{
-				var x = fields.Select(f => f.GetFullyQualifiedMemberName()).ToArray();
-				return WithFields(x);
+				foreach (var field in fields)
+					return WithField(field);
 			}
 			return this;
 		}
@@ -247,18 +247,33 @@ namespace ChoETL
             string fnTrim = null;
             if (!fieldsNames.IsNullOrEmpty())
             {
-                foreach (string fn in fieldsNames)
+				PropertyDescriptor pd = null;
+				ChoJSONRecordFieldConfiguration fc = null;
+				foreach (string fn in fieldsNames)
                 {
                     if (fn.IsNullOrEmpty())
                         continue;
                     if (!_clearFields)
                     {
-                        Configuration.JSONRecordFieldConfigurations.Clear();
-                        _clearFields = true;
-                    }
-                    fnTrim = fn.NTrim();
-                }
-            }
+						ClearFields();
+						Configuration.MapRecordFields(Configuration.RecordType);
+					}
+					fnTrim = fn.NTrim();
+					if (Configuration.JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+					{
+						fc = Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+						Configuration.JSONRecordFieldConfigurations.Remove(Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+					}
+					else
+						pd = ChoTypeDescriptor.GetProperty(typeof(T), fn);
+
+					var nfc = new ChoJSONRecordFieldConfiguration(fnTrim, (string)null);
+					nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
+					nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
+
+					Configuration.JSONRecordFieldConfigurations.Add(nfc);
+				}
+			}
 
             return this;
         }
@@ -269,27 +284,61 @@ namespace ChoETL
 			if (field == null)
 				return this;
 
-			return WithField(field.GetFullyQualifiedMemberName(), fieldType, fieldValueTrimOption, fieldName, valueConverter,
-				defaultValue, fallbackValue);
+			return WithField(field.GetMemberName(), fieldType, fieldValueTrimOption, fieldName, valueConverter,
+				defaultValue, fallbackValue, field.GetFullyQualifiedMemberName());
 		}
 
 		public ChoJSONWriter<T> WithField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
-            object defaultValue = null, object fallbackValue = null)
+			object defaultValue = null, object fallbackValue = null)
+		{
+			return WithField(name, fieldType, fieldValueTrimOption, fieldName, valueConverter,
+				defaultValue, fallbackValue, null);
+		}
+
+		private ChoJSONWriter<T> WithField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+            object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null)
         {
             if (!name.IsNullOrEmpty())
             {
                 if (!_clearFields)
                 {
-                    Configuration.JSONRecordFieldConfigurations.Clear();
-                    _clearFields = true;
-                }
+					ClearFields();
+					Configuration.MapRecordFields(Configuration.RecordType);
+				}
 
-                string fnTrim = name.NTrim();
+				string fnTrim = name.NTrim();
+				ChoJSONRecordFieldConfiguration fc = null;
+				PropertyDescriptor pd = null;
+				if (Configuration.JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+				{
+					fc = Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+					Configuration.JSONRecordFieldConfigurations.Remove(fc);
+				}
+				else
+					pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
 
-                Configuration.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration(fnTrim, (string)null) { FieldType = fieldType, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName, ValueConverter = valueConverter,
-                    DefaultValue = defaultValue,
-                    FallbackValue = fallbackValue
-                });
+				var nfc = new ChoJSONRecordFieldConfiguration(fnTrim, (string)null)
+				{
+					FieldType = fieldType,
+					FieldValueTrimOption = fieldValueTrimOption,
+					FieldName = fieldName,
+					ValueConverter = valueConverter,
+					DefaultValue = defaultValue,
+					FallbackValue = fallbackValue
+				};
+				if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
+				{
+					nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
+					nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
+				}
+				else
+				{
+					pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
+					nfc.PropertyDescriptor = pd;
+					nfc.DeclaringMember = fullyQualifiedMemberName;
+				}
+
+				Configuration.JSONRecordFieldConfigurations.Add(nfc);
             }
 
             return this;
