@@ -98,12 +98,12 @@ namespace ChoETL
         public string DeclaringMember
         {
             get;
-            internal set;
+            set;
         }
         public PropertyDescriptor PropertyDescriptor
         {
             get;
-            internal set;
+            set;
         }
 
         internal readonly List<object> Converters = new List<object>();

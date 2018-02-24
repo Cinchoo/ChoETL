@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Diagnostics;
@@ -408,7 +409,7 @@ namespace ChoETL
 		public ChoJSONReader<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
 		{
 			if (field != null)
-				return IgnoreField(field.GetFullyQualifiedMemberName());
+				return IgnoreField(field.GetMemberName());
 			else
 				return this;
 		}
@@ -435,8 +436,8 @@ namespace ChoETL
 		{
 			if (fields != null)
 			{
-				var x = fields.Select(f => f.GetFullyQualifiedMemberName()).ToArray();
-				return WithFields(x);
+				foreach (var field in fields)
+					return WithField(field);
 			}
 			return this;
 		}
@@ -446,7 +447,9 @@ namespace ChoETL
             string fnTrim = null;
             if (!fieldsNames.IsNullOrEmpty())
             {
-                foreach (string fn in fieldsNames)
+				PropertyDescriptor pd = null;
+				ChoJSONRecordFieldConfiguration fc = null;
+				foreach (string fn in fieldsNames)
                 {
                     if (fn.IsNullOrEmpty())
                         continue;
@@ -455,12 +458,22 @@ namespace ChoETL
 						ClearFields();
 						Configuration.MapRecordFields(Configuration.RecordType);
                     }
-                    fnTrim = fn.NTrim();
-                    if (Configuration.JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-                        Configuration.JSONRecordFieldConfigurations.Remove(Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
 
-                    Configuration.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration(fnTrim, (string)null));
-                }
+					fnTrim = fn.NTrim();
+					if (Configuration.JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+					{
+						fc = Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+						Configuration.JSONRecordFieldConfigurations.Remove(Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+					}
+					else
+						pd = ChoTypeDescriptor.GetProperty(typeof(T), fn);
+
+					var nfc = new ChoJSONRecordFieldConfiguration(fnTrim, (string)null);
+					nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
+					nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
+
+					Configuration.JSONRecordFieldConfigurations.Add(nfc);
+				}
             }
 
             return this;
@@ -472,12 +485,19 @@ namespace ChoETL
 			if (field == null)
 				return this;
 
-			return WithField(field.GetFullyQualifiedMemberName(), jsonPath, fieldType, fieldValueTrimOption, isJSONAttribute, fieldName, valueConverter,
-				defaultValue, fallbackValue);
+			return WithField(field.GetMemberName(), jsonPath, fieldType, fieldValueTrimOption, isJSONAttribute, fieldName, valueConverter,
+				defaultValue, fallbackValue, field.GetFullyQualifiedMemberName());
 		}
 
 		public ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
-            object defaultValue = null, object fallbackValue = null)
+			object defaultValue = null, object fallbackValue = null)
+		{
+			return WithField(name, jsonPath, fieldType, fieldValueTrimOption, isJSONAttribute, fieldName, valueConverter,
+				defaultValue, fallbackValue, null);
+		}
+
+		private ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
+            object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -487,16 +507,39 @@ namespace ChoETL
 					Configuration.MapRecordFields(Configuration.RecordType);
                 }
 
-                string fnTrim = name.NTrim();
-                jsonPath = jsonPath.IsNullOrWhiteSpace() ? null : jsonPath;
+				string fnTrim = name.NTrim();
+				ChoJSONRecordFieldConfiguration fc = null;
+				PropertyDescriptor pd = null;
+				if (Configuration.JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+				{
+					fc = Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+					Configuration.JSONRecordFieldConfigurations.Remove(fc);
+				}
+				else
+					pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
 
-                if (Configuration.JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-                    Configuration.JSONRecordFieldConfigurations.Remove(Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+				var nfc = new ChoJSONRecordFieldConfiguration(fnTrim, jsonPath)
+				{
+					FieldType = fieldType,
+					FieldValueTrimOption = fieldValueTrimOption,
+					FieldName = fieldName,
+					ValueConverter = valueConverter,
+					DefaultValue = defaultValue,
+					FallbackValue = fallbackValue
+				};
+				if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
+				{
+					nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
+					nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
+				}
+				else
+				{
+					pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
+					nfc.PropertyDescriptor = pd;
+					nfc.DeclaringMember = fullyQualifiedMemberName;
+				}
 
-                Configuration.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration(fnTrim, jsonPath) { FieldType = fieldType, FieldValueTrimOption = fieldValueTrimOption, FieldName = fieldName, ValueConverter = valueConverter,
-                    DefaultValue = defaultValue,
-                    FallbackValue = fallbackValue
-                });
+				Configuration.JSONRecordFieldConfigurations.Add(nfc);
             }
 
             return this;
