@@ -138,29 +138,51 @@ namespace ChoETL
             DiscoverRecordFields(recordType);
         }
 
-        private void DiscoverRecordFields(Type recordType)
+		private void DiscoverRecordFields(Type recordType)
+		{
+			JSONRecordFieldConfigurations.Clear();
+			DiscoverRecordFields(recordType, null,
+				ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any()).Any());
+		}
+
+		private void DiscoverRecordFields(Type recordType, string declaringMember = null, bool optIn = false)
         {
             if (!IsDynamicObject) // recordType != typeof(ExpandoObject))
             {
-                JSONRecordFieldConfigurations.Clear();
-
-                if (ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any()).Any())
+                Type pt = null;
+				if (optIn) //ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any()).Any())
                 {
-                    foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any()))
-                    {
-                        var obj = new ChoJSONRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().First());
-                        obj.FieldType = pd.PropertyType.GetUnderlyingType();
-                        JSONRecordFieldConfigurations.Add(obj);
-                    }
+					foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
+					{
+						pt = pd.PropertyType.GetUnderlyingType();
+						if (!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+							DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
+						else if (pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any())
+						{
+							var obj = new ChoJSONRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().First());
+							obj.FieldType = pt;
+							obj.PropertyDescriptor = pd;
+							obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
+							JSONRecordFieldConfigurations.Add(obj);
+						}
+					}
                 }
                 else
                 {
-                    foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
-                    {
-                        var obj = new ChoJSONRecordFieldConfiguration(pd.Name, (string)null);
-                        obj.FieldType = pd.PropertyType.GetUnderlyingType();
-                        JSONRecordFieldConfigurations.Add(obj);
-                    }
+					foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
+					{
+						pt = pd.PropertyType.GetUnderlyingType();
+						if (!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+							DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
+						else
+						{
+							var obj = new ChoJSONRecordFieldConfiguration(pd.Name, (string)null);
+							obj.FieldType = pt;
+							obj.PropertyDescriptor = pd;
+							obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
+							JSONRecordFieldConfigurations.Add(obj);
+						}
+					}
                 }
             }
         }
@@ -182,20 +204,7 @@ namespace ChoETL
                 if (RecordType != null && !IsDynamicObject /*&& RecordType != typeof(ExpandoObject)*/
                     && ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any()).Any())
                 {
-                    long startIndex = 0;
-                    long size = 0;
-                    string jpath = null;
-                    ChoJSONRecordFieldAttribute attr = null;
-                    foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any()))
-                    {
-                        attr = ChoTypeDescriptor.GetPropetyAttribute<ChoJSONRecordFieldAttribute>(pd);
-
-                        var obj = new ChoJSONRecordFieldConfiguration(pd.Name, jpath);
-                        obj.FieldType = pd.PropertyType.GetUnderlyingType();
-                        JSONRecordFieldConfigurations.Add(obj);
-
-                        startIndex += size;
-                    }
+					MapRecordFields(RecordType);
                 }
                 else if (jObject != null)
                 {
@@ -247,7 +256,18 @@ namespace ChoETL
             if (dupFields.Length > 0)
                 throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(String.Join(",", dupFields)));
 
-            RecordFieldConfigurationsDict = JSONRecordFieldConfigurations.Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
+			PIDict = new Dictionary<string, System.Reflection.PropertyInfo>();
+			PDDict = new Dictionary<string, PropertyDescriptor>();
+			foreach (var fc in JSONRecordFieldConfigurations)
+			{
+				if (fc.PropertyDescriptor == null)
+					continue;
+
+				PIDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
+				PDDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor);
+			}
+
+			RecordFieldConfigurationsDict = JSONRecordFieldConfigurations.Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
 
             LoadNCacheMembers(JSONRecordFieldConfigurations);
         }
