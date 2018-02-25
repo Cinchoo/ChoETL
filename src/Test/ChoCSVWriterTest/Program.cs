@@ -130,10 +130,60 @@ namespace ChoCSVWriterTest
                 w.Write(o2);
             }
         }
+		public class SitePostal
+		{
+			[Required(ErrorMessage = "State is required")]
+			[RegularExpression("^[A-Z][A-Z]$", ErrorMessage = "Incorrect zip code.")]
+			public string State { get; set; }
+			[Required]
+			[RegularExpression("^[0-9][0-9]*$")]
+			public string Zip { get; set; }
+		}
+		public class SiteAddress
+		{
+			[Required]
+			//[ChoCSVRecordField(3)]
+			public string Street { get; set; }
+			[Required]
+			[RegularExpression("^[a-zA-Z][a-zA-Z ]*$")]
+			public string City { get; set; }
+			[ChoValidateObject]
+			public SitePostal SitePostal { get; set; }
+		}
+		public class Site
+		{
+			[Required(ErrorMessage = "SiteID can't be null")]
+			//[ChoCSVRecordField(1)]
+			public int SiteID { get; set; }
+			[Required]
+			public int House { get; set; }
+			//[ChoValidateObject]
+			public SiteAddress SiteAddress { get; set; }
+			public int Apartment { get; set; }
+		}
 
-        static void Main(string[] args)
+		static void Sample3()
+		{
+			using (var p = new ChoCSVReader<Site>("Sample3.csv")
+				//.ClearFields()
+				//            .WithField(m => m.SiteID)
+				//            .WithField(m => m.SiteAddress.City)
+				.WithFirstLineHeader(true)
+				.Configure(c => c.ObjectValidationMode = ChoObjectValidationMode.ObjectLevel)
+				)
+			{
+				Console.WriteLine(ChoCSVWriter<Site>.ToTextAll(p));
+				//foreach (var rec in p)
+					//Console.WriteLine(rec.Dump());
+			}
+		}
+
+		static void Main(string[] args)
         {
-            InheritanceTest();
+			Sample3();
+			return;
+
+			InheritanceTest();
             return;
             NestedObjects();
             return;

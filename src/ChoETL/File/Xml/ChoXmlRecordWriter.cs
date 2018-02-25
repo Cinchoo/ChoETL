@@ -300,7 +300,8 @@ namespace ChoETL
             PropertyInfo pi = null;
             bool isElementClosed = false;
             bool isElementStart = false;
-            foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in GetOrderedKVP(config))
+            object rootRec = rec;
+			foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in GetOrderedKVP(config))
             {
                 fieldConfig = kvp.Value;
                 fieldValue = null;
@@ -308,7 +309,9 @@ namespace ChoETL
                 if (config.PIDict != null)
                     config.PIDict.TryGetValue(kvp.Key, out pi);
 
-                if (config.ThrowAndStopOnMissingField)
+				rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
+
+				if (config.ThrowAndStopOnMissingField)
                 {
                     if (config.IsDynamicObject)
                     {

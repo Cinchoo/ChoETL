@@ -2509,6 +2509,46 @@
             return IsOverrides(type, type.GetMethod(memberName, parameters));
         }
 
-        #endregion IsOverridden Overloads
-    }
+		#endregion IsOverridden Overloads
+
+		#region GetDeclaringMethod Overrides
+
+		public static object GetDeclaringRecord(string declaringMember, object rec)
+		{
+			if (declaringMember == null)
+				return rec;
+
+			return GetDeclaringRecord(rec, declaringMember);
+		}
+
+		private static object GetDeclaringRecord(object src, string propName, bool leaf = true)
+		{
+			if (src == null) throw new ArgumentException("Value cannot be null.", "src");
+			if (propName == null) throw new ArgumentException("Value cannot be null.", "propName");
+
+			if (propName.Contains("."))//complex type nested
+			{
+				var temp = propName.Split(new char[] { '.' }, 2);
+				return GetDeclaringRecord(GetDeclaringRecord(src, temp[0], false), temp[1]);
+			}
+			else
+			{
+				var prop = src.GetType().GetProperty(propName);
+				if (!leaf && prop != null)
+				{
+					var obj = prop.GetValue(src, null);
+					if (obj == null)
+					{
+						obj = Activator.CreateInstance(prop.PropertyType);
+						prop.SetValue(src, obj);
+					}
+					return obj;
+				}
+				else
+					return src;
+			}
+		}
+
+		#endregion GetDeclaringMethod Overrides
+	}
 }

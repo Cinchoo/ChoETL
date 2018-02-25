@@ -202,14 +202,18 @@ namespace ChoETL
 
             bool firstColumn = true;
             PropertyInfo pi = null;
-            foreach (KeyValuePair<string, ChoCSVRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
+            object rootRec = rec;
+			foreach (KeyValuePair<string, ChoCSVRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
                 fieldConfig = kvp.Value;
                 fieldValue = null;
                 fieldText = String.Empty;
                 if (Configuration.PIDict != null)
                     Configuration.PIDict.TryGetValue(kvp.Key, out pi);
-                dict = rec.ToDynamicObject() as IDictionary<string, Object>;
+
+                rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
+
+				dict = rec.ToDynamicObject() as IDictionary<string, Object>;
 
                 if (Configuration.ThrowAndStopOnMissingField)
                 {

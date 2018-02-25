@@ -203,7 +203,8 @@ namespace ChoETL
 
             //bool firstColumn = true;
             PropertyInfo pi = null;
-            foreach (KeyValuePair<string, ChoFixedLengthRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
+			object rootRec = rec;
+			foreach (KeyValuePair<string, ChoFixedLengthRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
                 fieldConfig = kvp.Value;
                 fieldValue = null;
@@ -211,7 +212,9 @@ namespace ChoETL
                 if (Configuration.PIDict != null)
                     Configuration.PIDict.TryGetValue(kvp.Key, out pi);
 
-                if (Configuration.ThrowAndStopOnMissingField)
+				rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
+
+				if (Configuration.ThrowAndStopOnMissingField)
                 {
                     if (Configuration.IsDynamicObject)
                     {

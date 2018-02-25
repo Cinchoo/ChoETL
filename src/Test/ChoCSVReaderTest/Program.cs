@@ -342,15 +342,15 @@ namespace ChoCSVReaderTest
                 writer.Flush();
                 stream.Position = 0;
 
-                foreach (dynamic rec in parser)
-                    Console.WriteLine(rec["Id"]);
-                //var dt = parser.AsDataTable();
-                //object rec;
-                //while ((rec = parser.Read()) != null)
-                //{
-                //    Console.WriteLine(rec.ToStringEx());
-                //}
-            }
+                //foreach (dynamic rec in parser)
+                //    Console.WriteLine(rec["Id"]);
+				var dt = parser.AsDataTable();
+				//object rec;
+				//while ((rec = parser.Read()) != null)
+				//{
+				//    Console.WriteLine(rec.ToStringEx());
+				//}
+			}
         }
 
         static void CDataDataSetTest()
@@ -624,9 +624,9 @@ somethingdownhere,thisisthelastuser,andthisisthelastpassword
         static void Sample3()
         {
             using (var p = new ChoCSVReader<Site>("Sample3.csv")
-				.ClearFields()
-                .WithField(m => m.SiteID)
-                .WithField(m => m.SiteAddress.City)
+				//.ClearFields()
+    //            .WithField(m => m.SiteID)
+    //            .WithField(m => m.SiteAddress.City)
                 .WithFirstLineHeader(true)
 				.Configure(c => c.ObjectValidationMode = ChoObjectValidationMode.ObjectLevel)
                 )
@@ -640,13 +640,14 @@ somethingdownhere,thisisthelastuser,andthisisthelastpassword
 
         static void Main(string[] args)
         {
+			Sample3();
+			return;
+			//DiffCSV();
+			//return;
 
-            //DiffCSV();
-            //return;
-
-            //CombineColumns();
-            //return;
-            Sample3();
+			//CombineColumns();
+			//return;
+			Sample3();
             return;
             MergeCSV1();
             return;

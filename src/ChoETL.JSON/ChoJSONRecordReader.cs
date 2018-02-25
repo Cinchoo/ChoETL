@@ -334,15 +334,18 @@ namespace ChoETL
                     return true;
             }
 
-            foreach (KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
+            object rootRec = rec;
+			foreach (KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
                 fieldValue = null;
                 fieldConfig = kvp.Value;
                 if (Configuration.PIDict != null)
                     Configuration.PIDict.TryGetValue(kvp.Key, out pi);
 
-                //fieldValue = dictValues[kvp.Key];
-                if (!kvp.Value.JSONPath.IsNullOrWhiteSpace())
+				rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
+
+				//fieldValue = dictValues[kvp.Key];
+				if (!kvp.Value.JSONPath.IsNullOrWhiteSpace())
                 {
                     jTokens = node.SelectTokens(kvp.Value.JSONPath).ToArray();
                     jToken = jTokens.FirstOrDefault();

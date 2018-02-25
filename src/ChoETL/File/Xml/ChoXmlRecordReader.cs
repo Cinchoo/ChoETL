@@ -360,14 +360,17 @@ namespace ChoETL
             xpn = node.CreateNavigator(Configuration.NamespaceManager.NameTable);
             ToDictionary(node);
 
-            foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
+			object rootRec = rec;
+			foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
                 fieldValue = null;
                 fieldConfig = kvp.Value;
                 if (Configuration.PIDict != null)
                     Configuration.PIDict.TryGetValue(kvp.Key, out pi);
 
-                if (fieldConfig.XPath == "text()")
+				rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
+
+				if (fieldConfig.XPath == "text()")
                 {
                     if (Configuration.GetNameWithNamespace(node.Name) == fieldConfig.FieldName)
                     {

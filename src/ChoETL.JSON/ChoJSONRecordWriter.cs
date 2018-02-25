@@ -283,7 +283,8 @@ namespace ChoETL
             //bool firstColumn = true;
             PropertyInfo pi = null;
             bool isFirst = true;
-            msg.AppendFormat("{{{0}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
+            object rootRec = rec;
+			msg.AppendFormat("{{{0}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
             foreach (KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
                 fieldConfig = kvp.Value;
@@ -291,8 +292,9 @@ namespace ChoETL
                 fieldText = String.Empty;
                 if (Configuration.PIDict != null)
                     Configuration.PIDict.TryGetValue(kvp.Key, out pi);
+				rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
 
-                if (Configuration.ThrowAndStopOnMissingField)
+				if (Configuration.ThrowAndStopOnMissingField)
                 {
                     if (Configuration.IsDynamicObject)
                     {
