@@ -669,7 +669,7 @@ namespace ChoETL
         }
         private ChoFieldValueJustification GetFieldValueJustification(ChoFieldValueJustification? fieldValueJustification, Type fieldType)
         {
-            return fieldValueJustification == null ? ChoFieldValueJustification.Left : fieldValueJustification.Value;
+            return fieldValueJustification == null ? ChoFieldValueJustification.None : fieldValueJustification.Value;
         }
 
         private char GetFillChar(char? fillChar, Type fieldType)
