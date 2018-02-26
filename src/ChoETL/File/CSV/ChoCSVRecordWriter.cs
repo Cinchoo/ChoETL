@@ -541,30 +541,30 @@ namespace ChoETL
                 }
                 else
                     quoteValue = quoteField.Value;
-
-                if (quoteValue || (quoteField != null && quoteField.Value))
-                    fieldValue = "{1}{0}{1}".FormatString(fieldValue, Configuration.QuoteChar);
             }
-            //}
-            //else
-            //{
-            //    if (fieldValue.StartsWith(Configuration.QuoteChar.ToString()) && fieldValue.EndsWith(Configuration.QuoteChar.ToString()))
-            //    {
+			//}
+			//else
+			//{
+			//    if (fieldValue.StartsWith(Configuration.QuoteChar.ToString()) && fieldValue.EndsWith(Configuration.QuoteChar.ToString()))
+			//    {
 
-            //    }
-            //    else
-            //    {
-            //        //Fields that contain double quote characters must be surrounded by double-quotes, and the embedded double-quotes must each be represented by a pair of consecutive double quotes.
-            //        if (fieldValue.IndexOf(Configuration.QuoteChar) >= 0)
-            //        {
-            //            fieldValue = "{1}{0}{1}".FormatString(fieldValue.Replace(Configuration.QuoteChar.ToString(), Configuration.DoubleQuoteChar), Configuration.QuoteChar);
-            //        }
-            //        else
-            //            fieldValue = "{1}{0}{1}".FormatString(fieldValue, Configuration.QuoteChar);
-            //    }
-            //}
+			//    }
+			//    else
+			//    {
+			//        //Fields that contain double quote characters must be surrounded by double-quotes, and the embedded double-quotes must each be represented by a pair of consecutive double quotes.
+			//        if (fieldValue.IndexOf(Configuration.QuoteChar) >= 0)
+			//        {
+			//            fieldValue = "{1}{0}{1}".FormatString(fieldValue.Replace(Configuration.QuoteChar.ToString(), Configuration.DoubleQuoteChar), Configuration.QuoteChar);
+			//        }
+			//        else
+			//            fieldValue = "{1}{0}{1}".FormatString(fieldValue, Configuration.QuoteChar);
+			//    }
+			//}
 
-            if (size != null)
+			if (quoteValue)
+				size = size - 2;
+
+			if (size != null)
             {
                 if (fieldValue.Length < size.Value)
                 {
@@ -590,7 +590,10 @@ namespace ChoETL
                 }
             }
 
-            return fieldValue;
+			if (quoteValue || (quoteField != null && quoteField.Value))
+				fieldValue = "{1}{0}{1}".FormatString(fieldValue, Configuration.QuoteChar);
+
+			return fieldValue;
         }
 
         private bool RaiseBeginWrite(object state)

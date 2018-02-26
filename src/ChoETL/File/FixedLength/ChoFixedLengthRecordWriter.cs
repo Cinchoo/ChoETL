@@ -483,6 +483,7 @@ namespace ChoETL
 
             if (fieldValue.IsNull())
                 fieldValue = String.Empty;
+			bool quoteValue = false;
 
             if (quoteField == null || !quoteField.Value)
             {
@@ -494,10 +495,10 @@ namespace ChoETL
                 {
                     if (fieldValue.Contains(Configuration.EOLDelimiter))
                     {
-                        if (isHeader)
-                            throw new ChoParserException("Field header '{0}' value contains EOL delimiter character.".FormatString(fieldName));
-                        else
-                            fieldValue = "{1}{0}{1}".FormatString(fieldValue, Configuration.QuoteChar);
+						if (isHeader)
+							throw new ChoParserException("Field header '{0}' value contains EOL delimiter character.".FormatString(fieldName));
+						else
+							quoteValue = true;
                     }
                 }
             }
@@ -509,9 +510,12 @@ namespace ChoETL
                 }
                 else
                 {
-                    fieldValue = "{1}{0}{1}".FormatString(fieldValue, Configuration.QuoteChar);
+					quoteValue = true;
                 }
             }
+
+			if (quoteValue)
+				size = size - 2;
 
             if (size != null)
             {
@@ -539,7 +543,10 @@ namespace ChoETL
                 }
             }
 
-            return fieldValue;
+			if (quoteValue)
+				fieldValue = "{1}{0}{1}".FormatString(fieldValue, Configuration.QuoteChar);
+
+			return fieldValue;
         }
 
         private bool RaiseBeginWrite(object state)
