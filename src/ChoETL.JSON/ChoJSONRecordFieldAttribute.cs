@@ -15,12 +15,6 @@ namespace ChoETL
             set;
         }
 
-        public string FieldName
-        {
-            get;
-            set;
-        }
-
         public ChoJSONRecordFieldAttribute()
         {
 

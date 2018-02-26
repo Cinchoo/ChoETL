@@ -177,6 +177,14 @@ namespace ChoETL
 							StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
 							if (slAttr != null && slAttr.MaximumLength > 0)
 								obj.Size = slAttr.MaximumLength;
+							DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
+							if (dpAttr != null)
+							{
+								if (!dpAttr.ShortName.IsNullOrWhiteSpace())
+									obj.FieldName = dpAttr.ShortName;
+								else if (!dpAttr.Name.IsNullOrWhiteSpace())
+									obj.FieldName = dpAttr.Name;
+							}
 							FixedLengthRecordFieldConfigurations.Add(obj);
 
 							startIndex += size;

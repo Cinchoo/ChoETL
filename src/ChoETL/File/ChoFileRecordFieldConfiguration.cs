@@ -13,7 +13,13 @@ namespace ChoETL
     [DataContract]
     public abstract class ChoFileRecordFieldConfiguration : ChoRecordFieldConfiguration
     {
-        [DataMember]
+		[DataMember]
+		public string FieldName
+		{
+			get;
+			set;
+		}
+		[DataMember]
         public char? FillChar
         {
             get;
@@ -71,8 +77,16 @@ namespace ChoETL
 						Size = slAttr.MaximumLength;
 					}
 				}
+				DisplayAttribute dpAttr = otherAttrs.OfType<DisplayAttribute>().FirstOrDefault();
+				if (dpAttr != null)
+				{
+					if (!dpAttr.ShortName.IsNullOrWhiteSpace())
+						FieldName = dpAttr.ShortName;
+					else if (!dpAttr.Name.IsNullOrWhiteSpace())
+						FieldName = dpAttr.Name;
+				}
 
-                QuoteField = attr.QuoteFieldInternal;
+				QuoteField = attr.QuoteFieldInternal;
             }
         }
     }

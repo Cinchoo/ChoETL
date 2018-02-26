@@ -11,13 +11,6 @@ namespace ChoETL
     [DataContract]
     public class ChoKVPRecordFieldConfiguration : ChoFileRecordFieldConfiguration
     {
-        [DataMember]
-        public string FieldName
-        {
-            get;
-            set;
-        }
-
         public ChoKVPRecordFieldConfiguration(string name) : this(name, null)
         {
         }

@@ -9,10 +9,5 @@ namespace ChoETL
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true )]
     public class ChoKVPRecordFieldAttribute : ChoFileRecordFieldAttribute
     {
-        public string FieldName
-        {
-            get;
-            set;
-        }
     }
 }

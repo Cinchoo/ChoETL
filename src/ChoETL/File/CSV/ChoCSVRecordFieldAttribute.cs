@@ -15,12 +15,6 @@ namespace ChoETL
             internal set;
         }
 
-        public string FieldName
-        {
-            get;
-            set;
-        }
-
         public string AltFieldNames
         {
             get;

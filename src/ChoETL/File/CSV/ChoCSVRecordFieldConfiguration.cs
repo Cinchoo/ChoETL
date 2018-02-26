@@ -18,13 +18,6 @@ namespace ChoETL
             set;
         }
 
-        [DataMember]
-        public string FieldName
-        {
-            get;
-            set;
-        }
-
         internal string[] AltFieldNamesArray = new string[] { };
         [DataMember]
         public string AltFieldNames

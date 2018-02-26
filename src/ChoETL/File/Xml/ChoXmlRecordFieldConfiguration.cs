@@ -19,12 +19,6 @@ namespace ChoETL
             set;
         }
         [DataMember]
-        public string FieldName
-        {
-            get;
-            set;
-        }
-        [DataMember]
         public bool IsXmlAttribute
         {
             get;

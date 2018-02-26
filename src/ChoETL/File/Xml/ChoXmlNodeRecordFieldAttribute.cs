@@ -16,12 +16,6 @@ namespace ChoETL
             get;
             set;
         }
-
-        public string FieldName
-        {
-            get;
-            set;
-        }
         public bool? EncodeValue
         {
             get;

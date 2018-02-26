@@ -18,12 +18,6 @@ namespace ChoETL
             get;
             set;
         }
-        [DataMember]
-        public string FieldName
-        {
-            get;
-            set;
-        }
 
         public bool IsArray
         {
