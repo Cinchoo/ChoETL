@@ -38,7 +38,7 @@ namespace ChoETL
             FieldPosition = position;
         }
 
-        internal ChoCSVRecordFieldConfiguration(string name, ChoCSVRecordFieldAttribute attr = null) : base(name, attr)
+        internal ChoCSVRecordFieldConfiguration(string name, ChoCSVRecordFieldAttribute attr = null, Attribute[] otherAttrs = null) : base(name, attr, otherAttrs)
         {
             FieldName = name;
             if (attr != null)

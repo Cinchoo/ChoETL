@@ -112,7 +112,7 @@ namespace ChoETL
         public object[] PropConverters;
         public object[] PropConverterParams;
 
-        public ChoRecordFieldConfiguration(string name, ChoRecordFieldAttribute attr = null)
+        public ChoRecordFieldConfiguration(string name, ChoRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)
         {
             ChoGuard.ArgumentNotNullOrEmpty(name, "Name");
             Name = name.NTrim();

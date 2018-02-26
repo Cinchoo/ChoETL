@@ -47,8 +47,8 @@ namespace ChoETL
             JSONPath = jsonPath;
         }
 
-        internal ChoJSONRecordFieldConfiguration(string name, ChoJSONRecordFieldAttribute attr = null) : base(name, attr)
-        {
+        internal ChoJSONRecordFieldConfiguration(string name, ChoJSONRecordFieldAttribute attr = null, Attribute[] otherAttrs = null) : base(name, attr, otherAttrs)
+		{
             FieldName = name;
             if (attr != null)
             {

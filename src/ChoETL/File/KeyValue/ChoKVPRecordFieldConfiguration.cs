@@ -22,8 +22,8 @@ namespace ChoETL
         {
         }
 
-        internal ChoKVPRecordFieldConfiguration(string name, ChoKVPRecordFieldAttribute attr = null) : base(name, attr)
-        {
+        internal ChoKVPRecordFieldConfiguration(string name, ChoKVPRecordFieldAttribute attr = null, Attribute[] otherAttrs = null) : base(name, attr, otherAttrs)
+		{
             FieldName = name;
             if (attr != null)
             {

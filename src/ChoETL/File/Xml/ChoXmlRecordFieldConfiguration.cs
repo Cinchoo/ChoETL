@@ -59,8 +59,8 @@ namespace ChoETL
             UseCache = true;
         }
 
-        internal ChoXmlRecordFieldConfiguration(string name, ChoXmlNodeRecordFieldAttribute attr = null) : base(name, attr)
-        {
+        internal ChoXmlRecordFieldConfiguration(string name, ChoXmlNodeRecordFieldAttribute attr = null, Attribute[] otherAttrs = null) : base(name, attr, otherAttrs)
+		{
             EncodeValue = true;
             FieldName = name;
             UseCache = true;

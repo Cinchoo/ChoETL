@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
@@ -49,7 +50,7 @@ namespace ChoETL
             set;
         }
 
-        public ChoFileRecordFieldConfiguration(string name, ChoFileRecordFieldAttribute attr = null) : base(name, attr)
+        public ChoFileRecordFieldConfiguration(string name, ChoFileRecordFieldAttribute attr = null, Attribute[] otherAttrs = null) : base(name, attr, otherAttrs)
         {
             Truncate = true;
             IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any;
@@ -61,6 +62,16 @@ namespace ChoETL
                 FieldValueTrimOption = attr.FieldValueTrimOptionInternal;
                 Truncate = attr.Truncate;
                 Size = attr.SizeInternal;
+
+				if (Size == null && otherAttrs != null)
+				{
+					StringLengthAttribute slAttr = otherAttrs.OfType<StringLengthAttribute>().FirstOrDefault();
+					if (slAttr != null && slAttr.MaximumLength > 0)
+					{
+						Size = slAttr.MaximumLength;
+					}
+				}
+
                 QuoteField = attr.QuoteFieldInternal;
             }
         }

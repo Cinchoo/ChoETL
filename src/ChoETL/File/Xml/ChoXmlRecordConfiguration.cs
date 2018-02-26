@@ -201,7 +201,7 @@ namespace ChoETL
 							else
 								useCache = false;
 
-							var obj = new ChoXmlRecordFieldConfiguration(pd.Name, attr);
+							var obj = new ChoXmlRecordFieldConfiguration(pd.Name, attr, pd.Attributes.OfType<Attribute>().ToArray());
 							obj.FieldType = pt;
 							obj.PropertyDescriptor = pd;
 							obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);

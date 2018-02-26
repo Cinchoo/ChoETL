@@ -37,8 +37,8 @@ namespace ChoETL
             Size = size;
         }
 
-        internal ChoFixedLengthRecordFieldConfiguration(string name, ChoFixedLengthRecordFieldAttribute attr = null) : base(name, attr)
-        {
+        internal ChoFixedLengthRecordFieldConfiguration(string name, ChoFixedLengthRecordFieldAttribute attr = null, Attribute[] otherAttrs = null) : base(name, attr, otherAttrs)
+		{
             FieldName = name;
             if (attr != null)
             {
