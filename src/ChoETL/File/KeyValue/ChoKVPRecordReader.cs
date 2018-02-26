@@ -641,7 +641,7 @@ namespace ChoETL
                 }
             }
 
-            if (Configuration.QuoteAllFields && key.StartsWith(@"""") && key.EndsWith(@""""))
+            if (Configuration.QuoteAllFields != null && Configuration.QuoteAllFields.Value && key.StartsWith(@"""") && key.EndsWith(@""""))
                 return key.Substring(1, key.Length - 2);
             else
                 return key;

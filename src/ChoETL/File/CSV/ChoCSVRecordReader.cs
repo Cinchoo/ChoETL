@@ -839,7 +839,7 @@ namespace ChoETL
                 }
             }
 
-            if (Configuration.QuoteAllFields && headerValue.StartsWith(@"""") && headerValue.EndsWith(@""""))
+            if (Configuration.QuoteAllFields != null && Configuration.QuoteAllFields.Value && headerValue.StartsWith(@"""") && headerValue.EndsWith(@""""))
                 return headerValue.Substring(1, headerValue.Length - 2);
             else
                 return headerValue;

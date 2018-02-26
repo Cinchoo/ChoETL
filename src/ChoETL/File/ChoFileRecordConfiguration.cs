@@ -126,7 +126,7 @@ namespace ChoETL
             }
         }
         [DataMember]
-        public bool QuoteAllFields
+        public bool? QuoteAllFields
         {
             get;
             set;
@@ -167,7 +167,7 @@ namespace ChoETL
             ColumnCountStrict = false;
             ColumnOrderStrict = false;
             QuoteChar = '"';
-            QuoteAllFields = false;
+            //QuoteAllFields = false;
             StringSplitOptions = ChoStringSplitOptions.None;
             //Encoding = Encoding.UTF8;
             TreatCurrencyAsDecimal = true;

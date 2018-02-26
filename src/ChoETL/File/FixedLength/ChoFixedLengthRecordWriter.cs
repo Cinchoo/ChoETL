@@ -462,7 +462,7 @@ namespace ChoETL
             {
                 value = NormalizeFieldValue(member.Name, member.FieldName, member.Size,
                     Configuration.FileHeaderConfiguration.Truncate == null ? true : Configuration.FileHeaderConfiguration.Truncate.Value,
-                        false,
+                        null,
                         Configuration.FileHeaderConfiguration.Justification == null ? ChoFieldValueJustification.Left : Configuration.FileHeaderConfiguration.Justification.Value,
                         Configuration.FileHeaderConfiguration.FillChar == null ? ' ' : Configuration.FileHeaderConfiguration.FillChar.Value,
                         true);

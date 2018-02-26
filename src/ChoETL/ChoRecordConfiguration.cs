@@ -21,13 +21,13 @@ namespace ChoETL
         }
 
         [DataMember]
-        public ChoErrorMode ErrorMode
+        public ChoErrorMode? ErrorMode
         {
             get;
             set;
         }
         [DataMember]
-        public ChoIgnoreFieldValueMode IgnoreFieldValueMode
+        public ChoIgnoreFieldValueMode? IgnoreFieldValueMode
         {
             get;
             set;
