@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq;
@@ -227,6 +228,9 @@ namespace ChoETL
 							obj.FieldType = pt;
 							obj.PropertyDescriptor = pd;
 							obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
+							StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
+							if (slAttr != null && slAttr.MaximumLength > 0)
+								obj.Size = slAttr.MaximumLength;
 							XmlRecordFieldConfigurations.Add(obj);
 						}
 					}

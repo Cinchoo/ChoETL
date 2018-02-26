@@ -142,6 +142,7 @@ namespace ChoCSVWriterTest
 		public class SiteAddress
 		{
 			[Required]
+			[StringLength(10)]
 			//[ChoCSVRecordField(3)]
 			public string Street { get; set; }
 			[Required]
