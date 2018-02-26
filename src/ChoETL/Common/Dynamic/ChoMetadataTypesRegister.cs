@@ -16,17 +16,36 @@ namespace ChoETL
             foreach (Type type in ChoType.GetTypes(typeof(MetadataTypeAttribute)))
             {
                 MetadataTypeAttribute attrib = type.GetCustomAttribute<MetadataTypeAttribute>();
-                if (attrib == null)
+                if (attrib == null || attrib.MetadataClassType == null)
                     continue;
 
                 TypeDescriptor.AddProviderTransparent(
                     new AssociatedMetadataTypeTypeDescriptionProvider(type, attrib.MetadataClassType), type);
             }
-        }
 
-        public static void Init()
+			foreach (Type type in ChoType.GetTypes(typeof(ChoMetadataRefTypeAttribute)))
+			{
+				ChoMetadataRefTypeAttribute attrib = type.GetCustomAttribute<ChoMetadataRefTypeAttribute>();
+				if (attrib == null || attrib.MetadataRefClassType == null)
+					continue;
+
+				TypeDescriptor.AddProviderTransparent(
+					new AssociatedMetadataTypeTypeDescriptionProvider(attrib.MetadataRefClassType, type), attrib.MetadataRefClassType);
+			}
+		}
+
+		public static void Init()
         {
 
         }
-    }
+
+		public static void Register(Type type, Type metaDataType)
+		{
+			if (type == null || metaDataType == null)
+				return;
+
+			TypeDescriptor.AddProviderTransparent(
+				new AssociatedMetadataTypeTypeDescriptionProvider(type, metaDataType), type);
+		}
+	}
 }

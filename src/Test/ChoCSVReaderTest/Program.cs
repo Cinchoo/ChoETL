@@ -52,7 +52,14 @@ namespace ChoCSVReaderTest
         public int Apartment { get; set; }
     }
 
-    public class EmpWithAddress
+	[ChoMetadataRefType(typeof(Site))]
+	public class SiteMetadata
+	{
+		public int SiteID { get; set; }
+		public int House { get; set; }
+	}
+
+	public class EmpWithAddress
     {
         public int Id { get; set; }
         [ChoCSVRecordField(2)]
