@@ -442,7 +442,7 @@ namespace ChoETL
             string value;
             foreach (var member in Configuration.CSVRecordFieldConfigurations)
             {
-                value = NormalizeFieldValue(member.Name, member.FieldName, member.Size, 
+                value = NormalizeFieldValue(member.Name, member.FieldName, null, 
                     Configuration.FileHeaderConfiguration.Truncate == null ? true : Configuration.FileHeaderConfiguration.Truncate.Value,
                         false, 
                         Configuration.FileHeaderConfiguration.Justification == null ? ChoFieldValueJustification.None : Configuration.FileHeaderConfiguration.Justification.Value,

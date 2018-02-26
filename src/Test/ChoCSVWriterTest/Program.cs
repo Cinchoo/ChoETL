@@ -173,7 +173,14 @@ namespace ChoCSVWriterTest
 				.Configure(c => c.ObjectValidationMode = ChoObjectValidationMode.ObjectLevel)
 				)
 			{
-				Console.WriteLine(ChoCSVWriter<Site>.ToTextAll(p));
+				StringBuilder msg = new StringBuilder();
+				using (var w = new ChoCSVWriter<Site>(new StringWriter(msg))
+					.WithFirstLineHeader()
+					)
+				{
+					w.Write(p);
+				}
+					Console.WriteLine(msg.ToString());
 				//foreach (var rec in p)
 					//Console.WriteLine(rec.Dump());
 			}
