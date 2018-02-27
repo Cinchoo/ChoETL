@@ -561,8 +561,8 @@ namespace ChoETL
 			//    }
 			//}
 
-			if (quoteValue)
-				size = size - 2;
+			//if (quoteValue)
+			//	size = size - 2;
 
 			if (size != null)
             {
