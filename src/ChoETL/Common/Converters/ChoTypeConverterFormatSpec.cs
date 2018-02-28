@@ -14,6 +14,7 @@ namespace ChoETL
         YOrN,
         TrueOrFalse,
         YesOrNo,
+        TOrF,
         Any
     };
     public enum ChoEnumFormatSpec { Value, Name, Description };

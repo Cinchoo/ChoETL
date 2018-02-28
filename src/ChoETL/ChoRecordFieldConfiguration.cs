@@ -38,14 +38,20 @@ namespace ChoETL
             get { return FieldType != null ? FieldType.FullName : null; }
             set { FieldType = value != null ? Type.GetType(value) : null; }
         }
-
+        [DataMember]
         public Type FieldType
         {
             get;
             set;
         }
-
+        [DataMember]
         public bool IsNullable
+        {
+            get;
+            set;
+        }
+        [DataMember]
+        public string FormatText
         {
             get;
             set;
@@ -126,6 +132,8 @@ namespace ChoETL
                 ErrorMode = attr.ErrorModeInternal;
                 IgnoreFieldValueMode = attr.IgnoreFieldValueModeInternal;
                 FieldType = attr.FieldType;
+                IsNullable = attr.IsNullable;
+                FormatText = attr.FormatText;
             }
         }
 

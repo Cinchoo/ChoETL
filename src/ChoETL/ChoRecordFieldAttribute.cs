@@ -26,6 +26,21 @@ namespace ChoETL
             get;
             set;
         }
+        public bool IsNullable
+        {
+            get;
+            set;
+        }
+        public string SourceFormat
+        {
+            get;
+            set;
+        }
+        public string FormatText
+        {
+            get;
+            set;
+        }
 
         public ChoRecordFieldAttribute()
         {

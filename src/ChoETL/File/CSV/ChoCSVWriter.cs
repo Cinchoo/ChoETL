@@ -284,25 +284,25 @@ namespace ChoETL
         }
 
 		public ChoCSVWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
-			bool truncate = true, string fieldName = null, int? fieldPosition = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null)
+			bool truncate = true, string fieldName = null, int? fieldPosition = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string formatText = null)
 		{
 			if (field == null)
 				return this;
 
 			return WithField(field.GetMemberName(), fieldType, quoteField, fillChar, fieldValueJustification, truncate, fieldName, fieldPosition, valueConverter, defaultValue, fallbackValue,
-				field.GetFullyQualifiedMemberName());
+				field.GetFullyQualifiedMemberName(), formatText);
 		}
 
 		public ChoCSVWriter<T> WithField(string name, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
-			bool truncate = true, string fieldName = null, int? fieldPosition = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null)
+			bool truncate = true, string fieldName = null, int? fieldPosition = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string formatText = null)
 		{
 			return WithField(name, fieldType, quoteField, fillChar, fieldValueJustification,
-				truncate, fieldName, fieldPosition, valueConverter, defaultValue, fallbackValue, null);
+				truncate, fieldName, fieldPosition, valueConverter, defaultValue, fallbackValue, null, formatText);
 		}
 
 		private ChoCSVWriter<T> WithField(string name, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
             bool truncate = true, string fieldName = null, int? fieldPosition = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null,
-			string fullyQualifiedMemberName = null)
+			string fullyQualifiedMemberName = null, string formatText = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -342,7 +342,8 @@ namespace ChoETL
 					FieldName = fieldName,
 					ValueConverter = valueConverter,
 					DefaultValue = defaultValue,
-					FallbackValue = fallbackValue
+					FallbackValue = fallbackValue,
+                    FormatText = formatText
 				};
 				if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
 				{

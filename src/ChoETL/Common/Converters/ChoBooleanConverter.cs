@@ -28,6 +28,11 @@ namespace ChoETL
                             return txt[0] == 'Y' || txt[0] == 'y' ? true : false;
                         else
                             return false;
+                    case ChoBooleanFormatSpec.TOrF:
+                        if (txt.Length == 1)
+                            return txt[0] == 'T' || txt[0] == 't' ? true : false;
+                        else
+                            return false;
                     case ChoBooleanFormatSpec.TrueOrFalse:
                         return String.Compare(txt, "true", true) == 0 ? true : false;
                     case ChoBooleanFormatSpec.YesOrNo:
@@ -66,6 +71,8 @@ namespace ChoETL
                     ChoBooleanFormatSpec booleanFormat = parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.BooleanFormat);
                     switch (booleanFormat)
                     {
+                        case ChoBooleanFormatSpec.TOrF:
+                            return boolValue ? "T" : "F";
                         case ChoBooleanFormatSpec.YOrN:
                             return boolValue ? "Y" : "N";
                         case ChoBooleanFormatSpec.TrueOrFalse:

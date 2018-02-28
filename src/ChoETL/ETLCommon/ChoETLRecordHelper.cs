@@ -197,11 +197,15 @@ namespace ChoETL
             if (!fieldConfig.IsDefaultValueSpecified)
                 return false;
 
-            if (fieldConfig.Converters.IsNullOrEmpty())
-                fieldValue = ChoConvert.ConvertTo(fieldConfig.DefaultValue, fieldConfig.FieldType, null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+            if (!fieldConfig.FormatText.IsNullOrWhiteSpace())
+                fieldValue = ("{0:" + fieldConfig.FormatText + "}").FormatString(fieldValue);
             else
-                fieldValue = ChoConvert.ConvertTo(fieldConfig.DefaultValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), null, culture);
-
+            {
+                if (fieldConfig.Converters.IsNullOrEmpty())
+                    fieldValue = ChoConvert.ConvertTo(fieldConfig.DefaultValue, fieldConfig.FieldType, null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                else
+                    fieldValue = ChoConvert.ConvertTo(fieldConfig.DefaultValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), null, culture);
+            }
             return true;
         }
 
@@ -210,20 +214,29 @@ namespace ChoETL
             if (!fieldConfig.IsFallbackValueSpecified)
                 return false;
 
-            if (fieldConfig.Converters.IsNullOrEmpty())
-                fieldValue = ChoConvert.ConvertTo(fieldConfig.FallbackValue, fieldConfig.FieldType, null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+            if (!fieldConfig.FormatText.IsNullOrWhiteSpace())
+                fieldValue = ("{0:" + fieldConfig.FormatText + "}").FormatString(fieldValue);
             else
-                fieldValue = ChoConvert.ConvertTo(fieldConfig.FallbackValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), null, culture);
-
+            {
+                if (fieldConfig.Converters.IsNullOrEmpty())
+                    fieldValue = ChoConvert.ConvertTo(fieldConfig.FallbackValue, fieldConfig.FieldType, null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                else
+                    fieldValue = ChoConvert.ConvertTo(fieldConfig.FallbackValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), null, culture);
+            }
             return true;
         }
 
         public static void GetNConvertMemberValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, CultureInfo culture, ref object fieldValue, bool nativeType = false)
         {
-            if (fieldConfig.Converters.IsNullOrEmpty())
-                fieldValue = ChoConvert.ConvertTo(fieldValue, nativeType ? fieldConfig.FieldType : typeof(string), null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+            if (!fieldConfig.FormatText.IsNullOrWhiteSpace())
+                fieldValue = ("{0:" + fieldConfig.FormatText + "}").FormatString(fieldValue);
             else
-                fieldValue = ChoConvert.ConvertTo(fieldValue, nativeType ? fieldConfig.FieldType : typeof(string), null, fieldConfig.Converters.ToArray(), null, culture);
+            {
+                if (fieldConfig.Converters.IsNullOrEmpty())
+                    fieldValue = ChoConvert.ConvertTo(fieldValue, nativeType ? fieldConfig.FieldType : typeof(string), null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                else
+                    fieldValue = ChoConvert.ConvertTo(fieldValue, nativeType ? fieldConfig.FieldType : typeof(string), null, fieldConfig.Converters.ToArray(), null, culture);
+            }
         }
 
         //public static void DoObjectLevelValidatation(this object record, ChoRecordConfiguration rc,  ChoRecordFieldConfiguration[] fieldConfigs)

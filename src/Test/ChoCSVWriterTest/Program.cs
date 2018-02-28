@@ -154,13 +154,14 @@ namespace ChoCSVWriterTest
 		public class Site
 		{
 			[Required(ErrorMessage = "SiteID can't be null")]
-			//[ChoCSVRecordField(1)]
-			public int SiteID { get; set; }
+            [ChoCSVRecordField(1, FormatText = "000")]
+            public int SiteID { get; set; }
 			[Required]
 			public int House { get; set; }
 			//[ChoValidateObject]
 			public SiteAddress SiteAddress { get; set; }
-			public int Apartment { get; set; }
+            [ChoCSVRecordField(2)]
+            public int Apartment { get; set; }
 		}
 
 		static void Sample3()
@@ -188,6 +189,10 @@ namespace ChoCSVWriterTest
 
 		static void Main(string[] args)
         {
+            //int z = 44;
+            //Console.WriteLine(String.Format("{0:000}", z));
+            //return;
+
 			Sample3();
 			return;
 

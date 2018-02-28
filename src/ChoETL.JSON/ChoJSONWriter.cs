@@ -279,24 +279,24 @@ namespace ChoETL
         }
 
 		public ChoJSONWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
-			object defaultValue = null, object fallbackValue = null)
+			object defaultValue = null, object fallbackValue = null, string formatText = null)
 		{
 			if (field == null)
 				return this;
 
 			return WithField(field.GetMemberName(), fieldType, fieldValueTrimOption, fieldName, valueConverter,
-				defaultValue, fallbackValue, field.GetFullyQualifiedMemberName());
+				defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText);
 		}
 
 		public ChoJSONWriter<T> WithField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
-			object defaultValue = null, object fallbackValue = null)
+			object defaultValue = null, object fallbackValue = null, string formatText = null)
 		{
 			return WithField(name, fieldType, fieldValueTrimOption, fieldName, valueConverter,
-				defaultValue, fallbackValue, null);
+				defaultValue, fallbackValue, null, formatText);
 		}
 
 		private ChoJSONWriter<T> WithField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
-            object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null)
+            object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null, string formatText = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -324,8 +324,9 @@ namespace ChoETL
 					FieldName = fieldName,
 					ValueConverter = valueConverter,
 					DefaultValue = defaultValue,
-					FallbackValue = fallbackValue
-				};
+					FallbackValue = fallbackValue,
+                    FormatText = formatText
+                };
 				if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
 				{
 					nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
