@@ -137,22 +137,28 @@ namespace ChoETL
 
         public override void MapRecordFields<T>()
         {
-            DiscoverRecordFields(typeof(T));
+            MapRecordFields(typeof(T));
         }
 
-        public override void MapRecordFields(Type recordType)
+        public override void MapRecordFields(params Type[] recordTypes)
         {
-            DiscoverRecordFields(recordType);
+            if (recordTypes == null)
+                return;
+
+            DiscoverRecordFields(recordTypes.FirstOrDefault());
+            foreach (var rt in recordTypes.Skip(1))
+                DiscoverRecordFields(rt, false);
         }
 
-        private void DiscoverRecordFields(Type recordType)
+        private void DiscoverRecordFields(Type recordType, bool clear = true)
         {
-            KVPRecordFieldConfigurations.Clear();
+            if (clear)
+                KVPRecordFieldConfigurations.Clear();
             DiscoverRecordFields(recordType, null,
                 ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoKVPRecordFieldAttribute>().Any()).Any());
         }
 
-        private void DiscoverRecordFields(Type recordType, string declaringMember = null, bool optIn = false)
+        private void DiscoverRecordFields(Type recordType, string declaringMember, bool optIn = false)
         {
             if (!IsDynamicObject)
             {
@@ -170,7 +176,8 @@ namespace ChoETL
                             obj.FieldType = pt;
                             obj.PropertyDescriptor = pd;
                             obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
-                            KVPRecordFieldConfigurations.Add(obj);
+                            if (!KVPRecordFieldConfigurations.Any(c => c.Name == pd.Name))
+                                KVPRecordFieldConfigurations.Add(obj);
                         }
                     }
                 }
@@ -187,18 +194,19 @@ namespace ChoETL
                             obj.FieldType = pt;
                             obj.PropertyDescriptor = pd;
                             obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
-							StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
-							if (slAttr != null && slAttr.MaximumLength > 0)
-								obj.Size = slAttr.MaximumLength;
-							DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
-							if (dpAttr != null)
-							{
-								if (!dpAttr.ShortName.IsNullOrWhiteSpace())
-									obj.FieldName = dpAttr.ShortName;
-								else if (!dpAttr.Name.IsNullOrWhiteSpace())
-									obj.FieldName = dpAttr.Name;
-							}
-							KVPRecordFieldConfigurations.Add(obj);
+                            StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
+                            if (slAttr != null && slAttr.MaximumLength > 0)
+                                obj.Size = slAttr.MaximumLength;
+                            DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
+                            if (dpAttr != null)
+                            {
+                                if (!dpAttr.ShortName.IsNullOrWhiteSpace())
+                                    obj.FieldName = dpAttr.ShortName;
+                                else if (!dpAttr.Name.IsNullOrWhiteSpace())
+                                    obj.FieldName = dpAttr.Name;
+                            }
+                            if (!KVPRecordFieldConfigurations.Any(c => c.Name == pd.Name))
+                                KVPRecordFieldConfigurations.Add(obj);
                         }
                     }
                 }
@@ -298,19 +306,19 @@ namespace ChoETL
                 if (dupFields.Length > 0 /* && !IgnoreDuplicateFields */)
                     throw new ChoRecordConfigurationException("Duplicate field name(s) [Name: {0}] found.".FormatString(String.Join(",", dupFields)));
 
-				PIDict = new Dictionary<string, System.Reflection.PropertyInfo>();
-				PDDict = new Dictionary<string, PropertyDescriptor>();
-				foreach (var fc in KVPRecordFieldConfigurations)
-				{
-					if (fc.PropertyDescriptor == null)
-						continue;
+                PIDict = new Dictionary<string, System.Reflection.PropertyInfo>();
+                PDDict = new Dictionary<string, PropertyDescriptor>();
+                foreach (var fc in KVPRecordFieldConfigurations)
+                {
+                    if (fc.PropertyDescriptor == null)
+                        continue;
 
-					PIDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
-					PDDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor);
-				}
+                    PIDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
+                    PDDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor);
+                }
 
 
-				RecordFieldConfigurationsDict = KVPRecordFieldConfigurations.Where(i => !i.Name.IsNullOrWhiteSpace()).GroupBy(i => i.Name).Select(g => g.First()).ToDictionary(i => i.Name, FileHeaderConfiguration.StringComparer);
+                RecordFieldConfigurationsDict = KVPRecordFieldConfigurations.Where(i => !i.Name.IsNullOrWhiteSpace()).GroupBy(i => i.Name).Select(g => g.First()).ToDictionary(i => i.Name, FileHeaderConfiguration.StringComparer);
                 RecordFieldConfigurationsDict2 = KVPRecordFieldConfigurations.Where(i => !i.FieldName.IsNullOrWhiteSpace()).GroupBy(i => i.Name).Select(g => g.First()).ToDictionary(i => i.FieldName, FileHeaderConfiguration.StringComparer);
                 AlternativeKeys = RecordFieldConfigurationsDict2.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Name, FileHeaderConfiguration.StringComparer);
                 FCArray = RecordFieldConfigurationsDict.ToArray();

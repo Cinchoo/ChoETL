@@ -161,87 +161,95 @@ namespace ChoETL
 
         public override void MapRecordFields<T>()
         {
-            DiscoverRecordFields(typeof(T));
+            MapRecordFields(typeof(T));
         }
 
-        public override void MapRecordFields(Type recordType)
+        public override void MapRecordFields(params Type[] recordTypes)
         {
-            DiscoverRecordFields(recordType);
+            if (recordTypes == null)
+                return;
+
+            DiscoverRecordFields(recordTypes.FirstOrDefault());
+            foreach (var rt in recordTypes.Skip(1))
+                DiscoverRecordFields(rt, false);
         }
 
-		private void DiscoverRecordFields(Type recordType)
-		{
-			XmlRecordFieldConfigurations.Clear();
-			DiscoverRecordFields(recordType, null,
-				ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any()).Any());
-		}
+        private void DiscoverRecordFields(Type recordType, bool clear = true)
+        {
+            if (clear)
+                XmlRecordFieldConfigurations.Clear();
+            DiscoverRecordFields(recordType, null,
+                ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any()).Any());
+        }
 
-		private void DiscoverRecordFields(Type recordType, string declaringMember = null, bool optIn = false)
+        private void DiscoverRecordFields(Type recordType, string declaringMember, bool optIn = false)
         {
             if (!IsDynamicObject)
             {
                 IsComplexXPathUsed = false;
-				Type pt = null;
-				if (optIn) //ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any()).Any())
+                Type pt = null;
+                if (optIn) //ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any()).Any())
                 {
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                     {
-						pt = pd.PropertyType.GetUnderlyingType();
-						if (!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
-							DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
-						else if (pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any())
-						{
-							bool useCache = true;
-							string xpath = null;
-							ChoXmlNodeRecordFieldAttribute attr = ChoTypeDescriptor.GetPropetyAttribute<ChoXmlNodeRecordFieldAttribute>(pd);
-							if (attr.XPath.IsNullOrEmpty())
-							{
-								attr.XPath = xpath = $"//{pd.Name}|//@{pd.Name}";
-								IsComplexXPathUsed = true;
-							}
-							else
-								useCache = false;
+                        pt = pd.PropertyType.GetUnderlyingType();
+                        if (!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+                            DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
+                        else if (pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any())
+                        {
+                            bool useCache = true;
+                            string xpath = null;
+                            ChoXmlNodeRecordFieldAttribute attr = ChoTypeDescriptor.GetPropetyAttribute<ChoXmlNodeRecordFieldAttribute>(pd);
+                            if (attr.XPath.IsNullOrEmpty())
+                            {
+                                attr.XPath = xpath = $"//{pd.Name}|//@{pd.Name}";
+                                IsComplexXPathUsed = true;
+                            }
+                            else
+                                useCache = false;
 
-							var obj = new ChoXmlRecordFieldConfiguration(pd.Name, attr, pd.Attributes.OfType<Attribute>().ToArray());
-							obj.FieldType = pt;
-							obj.PropertyDescriptor = pd;
-							obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
-							obj.UseCache = useCache;
-							if (obj.XPath.IsNullOrWhiteSpace())
-								obj.XPath = $"//{obj.FieldName}|//@{obj.FieldName}";
+                            var obj = new ChoXmlRecordFieldConfiguration(pd.Name, attr, pd.Attributes.OfType<Attribute>().ToArray());
+                            obj.FieldType = pt;
+                            obj.PropertyDescriptor = pd;
+                            obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                            obj.UseCache = useCache;
+                            if (obj.XPath.IsNullOrWhiteSpace())
+                                obj.XPath = $"//{obj.FieldName}|//@{obj.FieldName}";
 
-							obj.FieldType = pd.PropertyType.GetUnderlyingType();
-							XmlRecordFieldConfigurations.Add(obj);
-						}
-					}
+                            obj.FieldType = pd.PropertyType.GetUnderlyingType();
+                            if (!XmlRecordFieldConfigurations.Any(c => c.Name == pd.Name))
+                                XmlRecordFieldConfigurations.Add(obj);
+                        }
+                    }
                 }
                 else
                 {
-					foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
-					{
-						pt = pd.PropertyType.GetUnderlyingType();
-						if (!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
-							DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
-						else
-						{
-							var obj = new ChoXmlRecordFieldConfiguration(pd.Name, $"//{pd.Name}|//@{pd.Name}");
-							obj.FieldType = pt;
-							obj.PropertyDescriptor = pd;
-							obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
-							StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
-							if (slAttr != null && slAttr.MaximumLength > 0)
-								obj.Size = slAttr.MaximumLength;
-							DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
-							if (dpAttr != null)
-							{
-								if (!dpAttr.ShortName.IsNullOrWhiteSpace())
-									obj.FieldName = dpAttr.ShortName;
-								else if (!dpAttr.Name.IsNullOrWhiteSpace())
-									obj.FieldName = dpAttr.Name;
-							}
-							XmlRecordFieldConfigurations.Add(obj);
-						}
-					}
+                    foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
+                    {
+                        pt = pd.PropertyType.GetUnderlyingType();
+                        if (!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+                            DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
+                        else
+                        {
+                            var obj = new ChoXmlRecordFieldConfiguration(pd.Name, $"//{pd.Name}|//@{pd.Name}");
+                            obj.FieldType = pt;
+                            obj.PropertyDescriptor = pd;
+                            obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                            StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
+                            if (slAttr != null && slAttr.MaximumLength > 0)
+                                obj.Size = slAttr.MaximumLength;
+                            DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
+                            if (dpAttr != null)
+                            {
+                                if (!dpAttr.ShortName.IsNullOrWhiteSpace())
+                                    obj.FieldName = dpAttr.ShortName;
+                                else if (!dpAttr.Name.IsNullOrWhiteSpace())
+                                    obj.FieldName = dpAttr.Name;
+                            }
+                            if (!XmlRecordFieldConfigurations.Any(c => c.Name == pd.Name))
+                                XmlRecordFieldConfigurations.Add(obj);
+                        }
+                    }
                 }
             }
         }
@@ -318,7 +326,7 @@ namespace ChoETL
                 if (RecordType != null && !IsDynamicObject
                     && ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any()).Any())
                 {
-					DiscoverRecordFields(RecordType);
+                    DiscoverRecordFields(RecordType);
                 }
                 else if (xpr != null)
                 {
@@ -421,18 +429,18 @@ namespace ChoETL
             if (dupFields.Length > 0)
                 throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(String.Join(",", dupFields)));
 
-			PIDict = new Dictionary<string, System.Reflection.PropertyInfo>();
-			PDDict = new Dictionary<string, PropertyDescriptor>();
-			foreach (var fc in XmlRecordFieldConfigurations)
-			{
-				if (fc.PropertyDescriptor == null)
-					continue;
+            PIDict = new Dictionary<string, System.Reflection.PropertyInfo>();
+            PDDict = new Dictionary<string, PropertyDescriptor>();
+            foreach (var fc in XmlRecordFieldConfigurations)
+            {
+                if (fc.PropertyDescriptor == null)
+                    continue;
 
-				PIDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
-				PDDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor);
-			}
+                PIDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
+                PDDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor);
+            }
 
-			RecordFieldConfigurationsDict = XmlRecordFieldConfigurations.OrderBy(c => c.IsXmlAttribute).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
+            RecordFieldConfigurationsDict = XmlRecordFieldConfigurations.OrderBy(c => c.IsXmlAttribute).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
 
             if (XmlRecordFieldConfigurations.Where(e => e.IsNullable).Any()
                 || NullValueHandling == ChoNullValueHandling.Empty)

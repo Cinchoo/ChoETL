@@ -240,11 +240,32 @@ namespace ChoETL
                     }
                     runningCount = pair.Item1;
 
-                    object rec = Configuration.IsDynamicObject ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer))
+                    object rec = null;
+                    if (Configuration.RecordSelector != null)
                     {
-                        ThrowExceptionIfPropNotExists = true,
-                        AlternativeKeys = Configuration.AlternativeKeys
-                    } : Activator.CreateInstance(RecordType);
+                        Type recType = Configuration.RecordSelector(pair.Item2);
+                        if (recType == null)
+                        {
+                            if (Configuration.IgnoreIfNoRecordTypeFound)
+                            {
+                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, $"No record type found for [{pair.Item1}] line to parse.");
+                                continue;
+                            }
+                            else
+                                throw new ChoParserException($"No record type found for [{pair.Item1}] line to parse.");
+                        }
+
+                        rec = Activator.CreateInstance(recType);
+                    }
+                    else
+                    {
+                        rec = Configuration.IsDynamicObject ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer))
+                        {
+                            ThrowExceptionIfPropNotExists = true,
+                            AlternativeKeys = Configuration.AlternativeKeys
+                        } : Activator.CreateInstance(RecordType);
+
+                    }
                     if (!LoadLine(pair, ref rec))
                         yield break;
 
@@ -526,9 +547,15 @@ namespace ChoETL
                     }
                     else
                     {
+                        if (Configuration.SupportsMultiRecordTypes)
+                        {
+                            ChoType.TryGetProperty(rec.GetType(), kvp.Key, out pi);
+                            fieldConfig.PI = pi;
+                        }
+
                         if (pi != null)
                             rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
-                        else
+                        else if (!Configuration.SupportsMultiRecordTypes)
                             throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(kvp.Key, ChoType.GetTypeName(rec)));
 
                         if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)

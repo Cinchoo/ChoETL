@@ -13,6 +13,25 @@ namespace ChoETL
     [DataContract]
     public abstract class ChoFileRecordConfiguration : ChoRecordConfiguration
     {
+        private Func<object, Type> _recordSelector = null;
+        public Func<object, Type> RecordSelector
+        {
+            get { return _recordSelector; }
+            set { if (value == null) return; _recordSelector = value; }
+        }
+        private Func<string, string> _recordTypeCodeExtractor = null;
+        public Func<string, string> RecordTypeCodeExtractor
+        {
+            get { return _recordTypeCodeExtractor; }
+            set { _recordTypeCodeExtractor = value; }
+        }
+
+        [DataMember]
+        public bool IgnoreIfNoRecordTypeFound
+        {
+            get;
+            set;
+        }
         [DataMember]
         public int MaxScanRows
         {
@@ -108,7 +127,11 @@ namespace ChoETL
             get;
             set;
         }
-
+        public bool SupportsMultiRecordTypes
+        {
+            get;
+            set;
+        }
         internal string BackslashQuote = @"\""";
         internal string DoubleQuoteChar = @"""""";
         private char _quoteChar = '"';

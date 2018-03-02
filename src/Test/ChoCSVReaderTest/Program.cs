@@ -37,8 +37,8 @@ namespace ChoCSVReaderTest
         [Required]
         [RegularExpression("^[a-zA-Z][a-zA-Z ]*$")]
         public string City { get; set; }
-		[ChoValidateObject]
-		public SitePostal SitePostal { get; set; }
+        [ChoValidateObject]
+        public SitePostal SitePostal { get; set; }
     }
     public class Site
     {
@@ -47,19 +47,19 @@ namespace ChoCSVReaderTest
         public int SiteID { get; set; }
         [Required]
         public int House { get; set; }
-		//[ChoValidateObject]
-		public SiteAddress SiteAddress { get; set; }
+        //[ChoValidateObject]
+        public SiteAddress SiteAddress { get; set; }
         public int Apartment { get; set; }
     }
 
-	[ChoMetadataRefType(typeof(Site))]
-	public class SiteMetadata
-	{
-		public int SiteID { get; set; }
-		public int House { get; set; }
-	}
+    [ChoMetadataRefType(typeof(Site))]
+    public class SiteMetadata
+    {
+        public int SiteID { get; set; }
+        public int House { get; set; }
+    }
 
-	public class EmpWithAddress
+    public class EmpWithAddress
     {
         public int Id { get; set; }
         [ChoCSVRecordField(2)]
@@ -351,13 +351,13 @@ namespace ChoCSVReaderTest
 
                 //foreach (dynamic rec in parser)
                 //    Console.WriteLine(rec["Id"]);
-				var dt = parser.AsDataTable();
-				//object rec;
-				//while ((rec = parser.Read()) != null)
-				//{
-				//    Console.WriteLine(rec.ToStringEx());
-				//}
-			}
+                var dt = parser.AsDataTable();
+                //object rec;
+                //while ((rec = parser.Read()) != null)
+                //{
+                //    Console.WriteLine(rec.ToStringEx());
+                //}
+            }
         }
 
         static void CDataDataSetTest()
@@ -631,11 +631,11 @@ somethingdownhere,thisisthelastuser,andthisisthelastpassword
         static void Sample3()
         {
             using (var p = new ChoCSVReader<Site>("Sample3.csv")
-				//.ClearFields()
+                //.ClearFields()
     //            .WithField(m => m.SiteID)
     //            .WithField(m => m.SiteAddress.City)
                 .WithFirstLineHeader(true)
-				.Configure(c => c.ObjectValidationMode = ChoObjectValidationMode.ObjectLevel)
+                .Configure(c => c.ObjectValidationMode = ChoObjectValidationMode.ObjectLevel)
                 )
             {
                 foreach (var rec in p)
@@ -645,16 +645,90 @@ somethingdownhere,thisisthelastuser,andthisisthelastpassword
             }
         }
 
+        public interface IEmployee
+        {
+            int Id { get; set; }
+            string Name { get; set; }
+        }
+
+        public class Employee : IEmployee
+        {
+            public int Id
+            {
+                get;
+                set;
+            }
+
+            public string Name
+            {
+                get;
+                set;
+            }
+
+            public string City
+            {
+                get;
+                set;
+            }
+        }
+
+        [ChoRecordTypeCode("1")]
+        public class Manager : IEmployee
+        {
+            public int Id
+            {
+                get;
+                set;
+            }
+
+            public string Name
+            {
+                get;
+                set;
+            }
+        }
+
+        [ChoRecordTypeCode("2")]
+        public class Manager1
+        {
+            public int Id
+            {
+                get;
+                set;
+            }
+
+            public string Name
+            {
+                get;
+                set;
+            }
+        }
+        static void InterfaceTest()
+        {
+            using (var p = new ChoCSVReader<IEmployee>("InterfaceTest.csv")
+                .WithFirstLineHeader()
+                //.MapRecordFields<Employee>()
+                .WithRecordSelector(1, typeof(Employee), typeof(Manager), typeof(Manager1))
+                )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
-			Sample3();
-			return;
-			//DiffCSV();
-			//return;
+            //InterfaceTest();
+            //return;
 
-			//CombineColumns();
-			//return;
-			Sample3();
+            Sample3();
+            return;
+            //DiffCSV();
+            //return;
+
+            //CombineColumns();
+            //return;
+            Sample3();
             return;
             MergeCSV1();
             return;

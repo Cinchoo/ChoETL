@@ -89,7 +89,7 @@ namespace ChoETL
         }
 
         public abstract void MapRecordFields<T>();
-        public abstract void MapRecordFields(Type recordType);
+        public abstract void MapRecordFields(params Type[] recordTypes);
         public virtual void Validate(object state)
         {
             if (!IsDynamicObject)

@@ -144,7 +144,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoManifoldWriter WithRecordSelector(Func<string, Type> recordSelector)
+        public ChoManifoldWriter WithRecordSelector(Func<object, Type> recordSelector)
         {
             Configuration.RecordSelector = recordSelector;
             return this;

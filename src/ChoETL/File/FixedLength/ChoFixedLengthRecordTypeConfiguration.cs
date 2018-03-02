@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace ChoETL
 {
     [DataContract]
-    public class ChoManifoldRecordTypeConfiguration : ChoRecordTypeConfiguration
+    public class ChoFixedLengthRecordTypeConfiguration : ChoRecordTypeConfiguration
     {
         [DataMember]
         public int StartIndex

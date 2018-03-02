@@ -224,7 +224,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoManifoldReader WithCustomRecordSelector(Func<string, Type> recordSelector)
+        public ChoManifoldReader WithCustomRecordSelector(Func<object, Type> recordSelector)
         {
             Configuration.RecordSelector = recordSelector;
             return this;

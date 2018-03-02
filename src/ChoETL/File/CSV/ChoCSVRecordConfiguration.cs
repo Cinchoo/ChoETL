@@ -23,6 +23,12 @@ namespace ChoETL
             set;
         }
         [DataMember]
+        public ChoCSVRecordTypeConfiguration RecordTypeConfiguration
+        {
+            get;
+            set;
+        }
+        [DataMember]
         public string Delimiter
         {
             get;
@@ -58,7 +64,18 @@ namespace ChoETL
             get;
             set;
         }
+        public readonly dynamic Context = new ChoDynamicObject();
 
+        internal bool AreAllFieldTypesNull
+        {
+            get;
+            set;
+        }
+        internal Dictionary<string, string> AlternativeKeys
+        {
+            get;
+            set;
+        }
         internal int MaxFieldPosition
         {
             get;
@@ -81,12 +98,6 @@ namespace ChoETL
                 action(this);
 
             return this;
-        }
-
-        internal Dictionary<string, string> AlternativeKeys
-        {
-            get;
-            set;
         }
 
         internal KeyValuePair<string, ChoCSVRecordFieldConfiguration>[] FCArray;
@@ -127,6 +138,34 @@ namespace ChoETL
             InjectionEscapeChar = '\t';
 
             FileHeaderConfiguration = new ChoCSVFileHeaderConfiguration(recordType, Culture);
+            RecordTypeConfiguration = new ChoCSVRecordTypeConfiguration();
+            RecordTypeConfiguration.DefaultRecordType = recordType;
+
+            RecordSelector = new Func<object, Type>((value) =>
+            {
+                string line = value as string;
+                if (line.IsNullOrEmpty()) return RecordTypeConfiguration.DefaultRecordType;
+
+                if (RecordTypeCodeExtractor != null)
+                {
+                    string rt = RecordTypeCodeExtractor(line);
+                    return RecordTypeConfiguration[rt];
+                }
+                else
+                {
+                    if (RecordTypeConfiguration.Position <= 0)
+                        return RecordTypeConfiguration.DefaultRecordType;
+
+                    string[] fieldValues = line.Split(Delimiter, StringSplitOptions, QuoteChar);
+                    if (fieldValues.Length > 0 && RecordTypeConfiguration.Position - 1 < fieldValues.Length)
+                    {
+                        if (RecordTypeConfiguration.Contains(fieldValues[RecordTypeConfiguration.Position - 1]))
+                            return RecordTypeConfiguration[fieldValues[RecordTypeConfiguration.Position - 1]];
+                    }
+
+                    return RecordTypeConfiguration.DefaultRecordType;
+                }
+            });
         }
 
         protected override void Init(Type recordType)
@@ -148,17 +187,16 @@ namespace ChoETL
             DiscoverRecordFields(typeof(T));
         }
 
-        public override void MapRecordFields(Type recordType)
+        public override void MapRecordFields(params Type[] recordTypes)
         {
-            DiscoverRecordFields(recordType);
-        }
+            if (recordTypes == null)
+                return;
 
-        internal bool AreAllFieldTypesNull
-        {
-            get;
-            set;
+            int pos = 0;
+            DiscoverRecordFields(recordTypes.FirstOrDefault(), ref pos, true);
+            foreach (var rt in recordTypes.Skip(1))
+                DiscoverRecordFields(rt, ref pos, false);
         }
-        public readonly dynamic Context = new ChoDynamicObject();
 
         internal void UpdateFieldTypesIfAny(IDictionary<string, Type> dict)
         {
@@ -177,7 +215,22 @@ namespace ChoETL
         private void DiscoverRecordFields(Type recordType)
         {
             int pos = 0;
-            CSVRecordFieldConfigurations.Clear();
+            DiscoverRecordFields(recordType, ref pos, true);
+        }
+
+        private void DiscoverRecordFields(Type recordType, ref int pos, bool clear = true)
+        {
+            if (recordType == null)
+                return;
+
+            if (clear)
+            {
+                SupportsMultiRecordTypes = false;
+                CSVRecordFieldConfigurations.Clear();
+            }
+            else
+                SupportsMultiRecordTypes = true;
+
             DiscoverRecordFields(recordType, ref pos, null,
                 ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().Any()).Any());
         }
@@ -200,7 +253,8 @@ namespace ChoETL
                             obj.FieldType = pt;
                             obj.PropertyDescriptor = pd;
                             obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
-                            CSVRecordFieldConfigurations.Add(obj);
+                            if (!CSVRecordFieldConfigurations.Any(c => c.Name == pd.Name))
+                                CSVRecordFieldConfigurations.Add(obj);
                         }
                     }
                 }
@@ -217,18 +271,19 @@ namespace ChoETL
                             obj.FieldType = pt;
                             obj.PropertyDescriptor = pd;
                             obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
-							StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
-							if (slAttr != null && slAttr.MaximumLength > 0)
-								obj.Size = slAttr.MaximumLength;
-							DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
-							if (dpAttr != null)
-							{
-								if (!dpAttr.ShortName.IsNullOrWhiteSpace())
-									obj.FieldName = dpAttr.ShortName;
-								else if (!dpAttr.Name.IsNullOrWhiteSpace())
-									obj.FieldName = dpAttr.Name;
-							}
-							CSVRecordFieldConfigurations.Add(obj);
+                            StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
+                            if (slAttr != null && slAttr.MaximumLength > 0)
+                                obj.Size = slAttr.MaximumLength;
+                            DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
+                            if (dpAttr != null)
+                            {
+                                if (!dpAttr.ShortName.IsNullOrWhiteSpace())
+                                    obj.FieldName = dpAttr.ShortName;
+                                else if (!dpAttr.Name.IsNullOrWhiteSpace())
+                                    obj.FieldName = dpAttr.Name;
+                            }
+                            if (!CSVRecordFieldConfigurations.Any(c => c.Name == pd.Name))
+                                CSVRecordFieldConfigurations.Add(obj);
                         }
                     }
                 }
@@ -321,18 +376,18 @@ namespace ChoETL
                     throw new ChoRecordConfigurationException("Duplicate field name(s) [Name: {0}] found.".FormatString(String.Join(",", dupFields)));
             }
 
-			PIDict = new Dictionary<string, System.Reflection.PropertyInfo>();
-			PDDict = new Dictionary<string, PropertyDescriptor>();
-			foreach (var fc in CSVRecordFieldConfigurations)
-			{
-				if (fc.PropertyDescriptor == null)
-					continue;
+            PIDict = new Dictionary<string, System.Reflection.PropertyInfo>();
+            PDDict = new Dictionary<string, PropertyDescriptor>();
+            foreach (var fc in CSVRecordFieldConfigurations)
+            {
+                if (fc.PropertyDescriptor == null)
+                    continue;
 
-				PIDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
-				PDDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor);
-			}
+                PIDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
+                PDDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor);
+            }
 
-			RecordFieldConfigurationsDict = CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name, FileHeaderConfiguration.StringComparer);
+            RecordFieldConfigurationsDict = CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name, FileHeaderConfiguration.StringComparer);
             RecordFieldConfigurationsDict2 = CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName, FileHeaderConfiguration.StringComparer);
             AlternativeKeys = RecordFieldConfigurationsDict2.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Name, FileHeaderConfiguration.StringComparer);
             FCArray = RecordFieldConfigurationsDict.ToArray();
@@ -349,9 +404,16 @@ namespace ChoETL
                         throw new ChoRecordConfigurationException("Invalid '{0}' injection char specified.".FormatString(injectionChar));
                 }
             }
-		}
 
-		private void ValidateChar(char src, string name)
+            if (RecordTypeConfiguration != null)
+            {
+                if (RecordSelector == null && RecordTypeCodeExtractor == null)
+                {
+                }
+            }
+        }
+
+        private void ValidateChar(char src, string name)
         {
             if (src == ChoCharEx.NUL)
                 throw new ChoRecordConfigurationException("Invalid 'NUL' {0} specified.".FormatString(name));

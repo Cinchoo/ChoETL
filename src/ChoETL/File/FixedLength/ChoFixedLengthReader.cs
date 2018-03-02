@@ -363,7 +363,6 @@ namespace ChoETL
             return this;
         }
 
-
         public ChoFixedLengthReader<T> QuoteAllFields(bool flag = true, char quoteChar = '"')
         {
             Configuration.QuoteAllFields = flag;
@@ -502,6 +501,61 @@ namespace ChoETL
             return this;
         }
 
+        public ChoFixedLengthReader<T> MapRecordFields<T1>()
+        {
+            MapRecordFields(typeof(T1));
+            return this;
+        }
+
+        public ChoFixedLengthReader<T> MapRecordFields(Type recordType)
+        {
+            if (recordType != null)
+            {
+                if (recordType != null && !typeof(T).IsAssignableFrom(recordType))
+                    throw new ChoParserException("Incompatible [{0}] record type passed.".FormatString(recordType.FullName));
+                Configuration.MapRecordFields(recordType);
+            }
+
+            return this;
+        }
+
+        public ChoFixedLengthReader<T> WithCustomRecordTyoeCodeExtractor(Func<string, string> recordTypeCodeExtractor)
+        {
+            Configuration.RecordTypeCodeExtractor = recordTypeCodeExtractor;
+            return this;
+        }
+
+        public ChoFixedLengthReader<T> WithCustomRecordSelector(Func<object, Type> recordSelector)
+        {
+            Configuration.RecordSelector = recordSelector;
+            return this;
+        }
+
+        public ChoFixedLengthReader<T> WithRecordSelector(int startIndex, int size, Type defaultRecordType = null, params Type[] recordTypes)
+        {
+            Configuration.RecordTypeConfiguration.StartIndex = startIndex;
+            Configuration.RecordTypeConfiguration.Size = size;
+            if (defaultRecordType != null && !typeof(T).IsAssignableFrom(defaultRecordType))
+                throw new ChoParserException("Incompatible [{0}] record type passed.".FormatString(defaultRecordType.FullName));
+            Configuration.RecordTypeConfiguration.DefaultRecordType = defaultRecordType;
+
+            if (recordTypes != null)
+            {
+                foreach (var t in recordTypes)
+                {
+                    if (t == null)
+                        continue;
+
+                    if (!typeof(T).IsAssignableFrom(t))
+                        throw new ChoParserException("Incompatible [{0}] record type passed.".FormatString(t.FullName));
+
+                    Configuration.RecordTypeConfiguration.RegisterType(t);
+                }
+            }
+
+            Configuration.MapRecordFields(ChoArray.Combine<Type>(new Type[] { defaultRecordType }, recordTypes));
+            return this;
+        }
 
         #endregion Fluent API
     }

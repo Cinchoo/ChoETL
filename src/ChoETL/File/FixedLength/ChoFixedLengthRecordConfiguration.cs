@@ -23,6 +23,12 @@ namespace ChoETL
             set;
         }
         [DataMember]
+        public ChoFixedLengthRecordTypeConfiguration RecordTypeConfiguration
+        {
+            get;
+            set;
+        }
+        [DataMember]
         public List<ChoFixedLengthRecordFieldConfiguration> FixedLengthRecordFieldConfigurations
         {
             get;
@@ -80,6 +86,34 @@ namespace ChoETL
             }
 
             FileHeaderConfiguration = new ChoFixedLengthFileHeaderConfiguration(recordType, Culture);
+            RecordTypeConfiguration = new ChoFixedLengthRecordTypeConfiguration();
+            RecordTypeConfiguration.DefaultRecordType = recordType;
+
+            RecordSelector = new Func<object, Type>((value) =>
+            {
+                string line = value as string;
+                if (line.IsNullOrEmpty()) return RecordTypeConfiguration.DefaultRecordType;
+
+                if (RecordTypeCodeExtractor != null)
+                {
+                    string rt = RecordTypeCodeExtractor(line);
+                    if (RecordTypeConfiguration.Contains(rt))
+                        return RecordTypeConfiguration[rt];
+                }
+                else
+                {
+                    if (RecordTypeConfiguration.StartIndex >= 0 && RecordTypeConfiguration.Size == 0)
+                        return RecordTypeConfiguration.DefaultRecordType;
+                    if (RecordTypeConfiguration.StartIndex + RecordTypeConfiguration.Size > line.Length)
+                        return RecordTypeConfiguration.DefaultRecordType;
+
+                    string rtc = line.Substring(RecordTypeConfiguration.StartIndex, RecordTypeConfiguration.Size);
+                    if (RecordTypeConfiguration.Contains(rtc))
+                        return RecordTypeConfiguration[rtc];
+                }
+
+                return RecordTypeConfiguration.DefaultRecordType;
+            });
         }
 
         protected override void Init(Type recordType)
@@ -119,78 +153,92 @@ namespace ChoETL
             DiscoverRecordFields(typeof(T));
         }
 
-        public override void MapRecordFields(Type recordType)
+        public override void MapRecordFields(params Type[] recordTypes)
         {
-            DiscoverRecordFields(recordType);
+            if (recordTypes == null)
+                return;
+
+            DiscoverRecordFields(recordTypes.FirstOrDefault());
+            foreach (var rt in recordTypes.Skip(1))
+                DiscoverRecordFields(rt, false);
         }
 
-        private void DiscoverRecordFields(Type recordType)
+        private void DiscoverRecordFields(Type recordType, bool clear = true)
         {
-            FixedLengthRecordFieldConfigurations.Clear();
+            if (clear)
+            {
+                SupportsMultiRecordTypes = false;
+                FixedLengthRecordFieldConfigurations.Clear();
+            }
+            else
+                SupportsMultiRecordTypes = true;
+
             DiscoverRecordFields(recordType, null,
-				ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().Any()).Any());
+                ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().Any()).Any());
         }
 
-        private void DiscoverRecordFields(Type recordType, string declaringMember = null, bool optIn = false)
+        private void DiscoverRecordFields(Type recordType, string declaringMember, bool optIn = false)
         {
             if (!IsDynamicObject)
             {
                 Type pt = null;
-				int startIndex = 0;
-				int size = 0;
+                int startIndex = 0;
+                int size = 0;
 
-				if (optIn) //ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().Any()).Any())
-				{
-					foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
-					{
-						pt = pd.PropertyType.GetUnderlyingType();
-						if (!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
-							DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
-						else if (pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().Any())
-						{
-							var obj = new ChoFixedLengthRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray());
-							obj.FieldType = pt;
-							obj.PropertyDescriptor = pd;
-							obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
-							FixedLengthRecordFieldConfigurations.Add(obj);
-						}
-					}
-				}
-				else
-				{
-					foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
-					{
-						pt = pd.PropertyType.GetUnderlyingType();
-						if (!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
-							DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
-						else
-						{
-							if (FixedLengthFieldDefaultSizeConfiguation == null)
-								size = ChoFixedLengthFieldDefaultSizeConfiguation.Instance.GetSize(pd.PropertyType);
-							else
-								size = FixedLengthFieldDefaultSizeConfiguation.GetSize(pd.PropertyType);
+                if (optIn) //ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().Any()).Any())
+                {
+                    foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
+                    {
+                        pt = pd.PropertyType.GetUnderlyingType();
+                        if (!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+                            DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
+                        else if (pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().Any())
+                        {
+                            var obj = new ChoFixedLengthRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray());
+                            obj.FieldType = pt;
+                            obj.PropertyDescriptor = pd;
+                            obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                            if (!FixedLengthRecordFieldConfigurations.Any(c => c.Name == pd.Name))
+                                FixedLengthRecordFieldConfigurations.Add(obj);
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
+                    {
+                        pt = pd.PropertyType.GetUnderlyingType();
+                        if (!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+                            DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
+                        else
+                        {
+                            if (FixedLengthFieldDefaultSizeConfiguation == null)
+                                size = ChoFixedLengthFieldDefaultSizeConfiguation.Instance.GetSize(pd.PropertyType);
+                            else
+                                size = FixedLengthFieldDefaultSizeConfiguation.GetSize(pd.PropertyType);
 
-							var obj = new ChoFixedLengthRecordFieldConfiguration(pd.Name, startIndex, size);
-							obj.FieldType = pt;
-							obj.PropertyDescriptor = pd;
-							obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
-							StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
-							if (slAttr != null && slAttr.MaximumLength > 0)
-								obj.Size = slAttr.MaximumLength;
-							DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
-							if (dpAttr != null)
-							{
-								if (!dpAttr.ShortName.IsNullOrWhiteSpace())
-									obj.FieldName = dpAttr.ShortName;
-								else if (!dpAttr.Name.IsNullOrWhiteSpace())
-									obj.FieldName = dpAttr.Name;
-							}
-							FixedLengthRecordFieldConfigurations.Add(obj);
+                            var obj = new ChoFixedLengthRecordFieldConfiguration(pd.Name, startIndex, size);
+                            obj.FieldType = pt;
+                            obj.PropertyDescriptor = pd;
+                            obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                            StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
+                            if (slAttr != null && slAttr.MaximumLength > 0)
+                                obj.Size = slAttr.MaximumLength;
+                            DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
+                            if (dpAttr != null)
+                            {
+                                if (!dpAttr.ShortName.IsNullOrWhiteSpace())
+                                    obj.FieldName = dpAttr.ShortName;
+                                else if (!dpAttr.Name.IsNullOrWhiteSpace())
+                                    obj.FieldName = dpAttr.Name;
+                            }
+                            if (!FixedLengthRecordFieldConfigurations.Any(c => c.Name == pd.Name))
+                                FixedLengthRecordFieldConfigurations.Add(obj);
 
-							startIndex += size;
-						}
-					}
-				}
+                            startIndex += size;
+                        }
+                    }
+                }
             }
         }
 
@@ -234,9 +282,9 @@ namespace ChoETL
                 if (RecordType != null && !IsDynamicObject
                     && ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().Any()).Any())
                 {
-					MapRecordFields(RecordType);
-				}
-				else if (!line.IsNullOrEmpty())
+                    MapRecordFields(RecordType);
+                }
+                else if (!line.IsNullOrEmpty())
                 {
                     int index = 0;
                     if (IsDynamicObject)
@@ -318,18 +366,18 @@ namespace ChoETL
                     throw new ChoRecordConfigurationException("Found '{0}' record field out of bounds of record length.".FormatString(f.FieldName));
             }
 
-			PIDict = new Dictionary<string, System.Reflection.PropertyInfo>();
-			PDDict = new Dictionary<string, PropertyDescriptor>();
-			foreach (var fc in FixedLengthRecordFieldConfigurations)
-			{
-				if (fc.PropertyDescriptor == null)
-					continue;
+            PIDict = new Dictionary<string, System.Reflection.PropertyInfo>();
+            PDDict = new Dictionary<string, PropertyDescriptor>();
+            foreach (var fc in FixedLengthRecordFieldConfigurations)
+            {
+                if (fc.PropertyDescriptor == null)
+                    continue;
 
-				PIDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
-				PDDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor);
-			}
+                PIDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
+                PDDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor);
+            }
 
-			RecordFieldConfigurationsDict = FixedLengthRecordFieldConfigurations.OrderBy(i => i.StartIndex).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name, FileHeaderConfiguration.StringComparer);
+            RecordFieldConfigurationsDict = FixedLengthRecordFieldConfigurations.OrderBy(i => i.StartIndex).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name, FileHeaderConfiguration.StringComparer);
             RecordFieldConfigurationsDict2 = FixedLengthRecordFieldConfigurations.OrderBy(i => i.StartIndex).Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName, FileHeaderConfiguration.StringComparer);
             AlternativeKeys = RecordFieldConfigurationsDict2.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Name, FileHeaderConfiguration.StringComparer);
 
@@ -345,9 +393,9 @@ namespace ChoETL
             }
 
             LoadNCacheMembers(FixedLengthRecordFieldConfigurations);
-		}
+        }
 
-		private Tuple<string, int, int>[] DiscoverColumns(string line)
+        private Tuple<string, int, int>[] DiscoverColumns(string line)
         {
             List<Tuple<string, int, int>> words = new List<Tuple<string, int, int>>();
             if (!line.IsNullOrEmpty())

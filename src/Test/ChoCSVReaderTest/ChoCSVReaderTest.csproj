@@ -51,6 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="InterfaceTest.csv" />
     <None Include="EmptyLines.csv" />
     <None Include="CurrencyQuotes.csv" />
     <None Include="CustomNewLine.csv" />

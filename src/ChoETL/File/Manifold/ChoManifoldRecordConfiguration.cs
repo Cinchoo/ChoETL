@@ -14,19 +14,6 @@ namespace ChoETL
     [DataContract]
     public class ChoManifoldRecordConfiguration : ChoFileRecordConfiguration
     {
-        private Func<string, Type> _recordSelecter = null;
-        public Func<string, Type> RecordSelector
-        {
-            get { return _recordSelecter; }
-            set { if (value == null) return; _recordSelecter = value; }
-        }
-        private Func<string, string> _recordTypeCodeExtractor = null;
-        public Func<string, string> RecordTypeCodeExtractor
-        {
-            get { return _recordTypeCodeExtractor; }
-            set { _recordTypeCodeExtractor = value; }
-        }
-
         [DataMember]
         public bool IgnoreIfNoRecordParserExists
         {
@@ -39,12 +26,6 @@ namespace ChoETL
             get;
             set;
         }
-        [DataMember]
-        public ChoManifoldRecordTypeConfiguration RecordTypeConfiguration
-        {
-            get;
-            set;
-        }
         internal IChoNotifyRecordRead NotifyRecordReadObject;
         public Type NotifyRecordReadType
         {
@@ -53,6 +34,12 @@ namespace ChoETL
         }
         internal IChoNotifyRecordWrite NotifyRecordWriteObject;
         public Type NotifyRecordWriteType
+        {
+            get;
+            set;
+        }
+        [DataMember]
+        public ChoManifoldRecordTypeConfiguration RecordTypeConfiguration
         {
             get;
             set;
@@ -84,24 +71,31 @@ namespace ChoETL
         {
             FileHeaderConfiguration = new ChoManifoldFileHeaderConfiguration(Culture);
             RecordTypeConfiguration = new ChoManifoldRecordTypeConfiguration();
-            _recordSelecter = new Func<string, Type>((line) =>
-            {
-                if (line.IsNullOrEmpty()) return null;
 
-                if (_recordTypeCodeExtractor != null)
+            RecordSelector = new Func<object, Type>((value) =>
+            {
+                string line = value as string;
+                if (line.IsNullOrEmpty()) return RecordTypeConfiguration.DefaultRecordType;
+
+                if (RecordTypeCodeExtractor != null)
                 {
-                    string rt = _recordTypeCodeExtractor(line);
-                    return RecordTypeConfiguration[rt];
+                    string rt = RecordTypeCodeExtractor(line);
+                    if (RecordTypeConfiguration.Contains(rt))
+                        return RecordTypeConfiguration[rt];
                 }
                 else
                 {
                     if (RecordTypeConfiguration.StartIndex >= 0 && RecordTypeConfiguration.Size == 0)
-                        return null;
+                        return RecordTypeConfiguration.DefaultRecordType;
                     if (RecordTypeConfiguration.StartIndex + RecordTypeConfiguration.Size > line.Length)
-                        return null;
+                        return RecordTypeConfiguration.DefaultRecordType;
 
-                    return RecordTypeConfiguration[line.Substring(RecordTypeConfiguration.StartIndex, RecordTypeConfiguration.Size)];
+                    string rtc = line.Substring(RecordTypeConfiguration.StartIndex, RecordTypeConfiguration.Size);
+                    if (RecordTypeConfiguration.Contains(rtc))
+                        return RecordTypeConfiguration[rtc];
                 }
+
+                return RecordTypeConfiguration.DefaultRecordType;
             });
         }
 
@@ -110,7 +104,7 @@ namespace ChoETL
             throw new NotSupportedException();
         }
 
-        public override void MapRecordFields(Type recordType)
+        public override void MapRecordFields(params Type[] recordTypes)
         {
             throw new NotSupportedException();
         }

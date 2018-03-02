@@ -19,8 +19,9 @@ namespace ChoManifoldReaderTest
         static void MasterDetailTest()
         {
             using (var parser = new ChoManifoldReader("MasterDetail.txt")
-                .WithCustomRecordSelector((l) =>
+                .WithCustomRecordSelector((v) =>
                 {
+                    string l = v as string;
                     if (l.SplitNTrim(';')[0].CastTo<int>() > 1700)
                         return typeof(Recipe);
                     else
@@ -105,8 +106,9 @@ namespace ChoManifoldReaderTest
             using (var writer = new StreamWriter(stream))
             using (var parser = new ChoManifoldReader(reader).WithFirstLineHeader())
             {
-                parser.WithCustomRecordSelector((recordLine) =>
+                parser.WithCustomRecordSelector((value) =>
                 {
+                    string recordLine = value as string;
                     if (recordLine.Length == 0)
                         return null;
 

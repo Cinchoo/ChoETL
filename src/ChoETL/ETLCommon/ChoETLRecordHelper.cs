@@ -29,6 +29,8 @@ namespace ChoETL
 
         public static void ConvertNSetMemberValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, ref object fieldValue, CultureInfo culture)
         {
+            if (fieldConfig.PI == null) return;
+
             if (fieldConfig.ValueConverter != null)
                 fieldValue = fieldConfig.ValueConverter(fieldValue);
             else
@@ -56,13 +58,16 @@ namespace ChoETL
             }
 
             //Set fallback value to member
-            object fieldValue = null;
-            if (fieldConfig.Converters.IsNullOrEmpty())
-                fieldValue = ChoConvert.ConvertFrom(fieldConfig.FallbackValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
-            else
-                fieldValue = ChoConvert.ConvertFrom(fieldConfig.FallbackValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), null, culture);
+            if (fieldConfig.PI != null)
+            {
+                object fieldValue = null;
+                if (fieldConfig.Converters.IsNullOrEmpty())
+                    fieldValue = ChoConvert.ConvertFrom(fieldConfig.FallbackValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                else
+                    fieldValue = ChoConvert.ConvertFrom(fieldConfig.FallbackValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), null, culture);
 
-            ChoType.SetPropertyValue(rec, fieldConfig.PI, fieldValue);
+                ChoType.SetPropertyValue(rec, fieldConfig.PI, fieldValue);
+            }
             return true;
         }
 
@@ -76,14 +81,17 @@ namespace ChoETL
                 return ((IDictionary<string, object>)rec).SetDefaultValue(fn, fieldConfig, culture);
             }
 
-            //Set default value to member
-            object fieldValue = null;
-            if (fieldConfig.Converters.IsNullOrEmpty())
-                fieldValue = ChoConvert.ConvertFrom(fieldConfig.DefaultValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
-            else
-                fieldValue = ChoConvert.ConvertFrom(fieldConfig.DefaultValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), null, culture);
+            if (fieldConfig.PI != null)
+            {
+                //Set default value to member
+                object fieldValue = null;
+                if (fieldConfig.Converters.IsNullOrEmpty())
+                    fieldValue = ChoConvert.ConvertFrom(fieldConfig.DefaultValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                else
+                    fieldValue = ChoConvert.ConvertFrom(fieldConfig.DefaultValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), null, culture);
 
-            ChoType.SetPropertyValue(rec, fieldConfig.PI, fieldValue);
+                ChoType.SetPropertyValue(rec, fieldConfig.PI, fieldValue);
+            }
             return true;
         }
 
@@ -173,10 +181,13 @@ namespace ChoETL
             }
             else
             {
-                if (fieldConfig.Validators.IsNullOrEmpty())
-                    ChoValidator.ValidateFor(rec, fieldConfig.PI);
-                else
-                    ChoValidator.ValidateFor(ChoType.GetPropertyValue(rec, fieldConfig.PI), fn, fieldConfig.Validators);
+                if (fieldConfig.PI != null)
+                {
+                    if (fieldConfig.Validators.IsNullOrEmpty())
+                        ChoValidator.ValidateFor(rec, fieldConfig.PI);
+                    else
+                        ChoValidator.ValidateFor(ChoType.GetPropertyValue(rec, fieldConfig.PI), fn, fieldConfig.Validators);
+                }
             }
         }
 
