@@ -154,13 +154,13 @@ namespace ChoCSVWriterTest
 		public class Site
 		{
 			[Required(ErrorMessage = "SiteID can't be null")]
-            [ChoCSVRecordField(1, FormatText = "000")]
+            //[ChoCSVRecordField(1, FormatText = "000")]
             public int SiteID { get; set; }
 			[Required]
 			public int House { get; set; }
 			//[ChoValidateObject]
 			public SiteAddress SiteAddress { get; set; }
-            [ChoCSVRecordField(2)]
+            //[ChoCSVRecordField(2)]
             public int Apartment { get; set; }
 		}
 
@@ -187,11 +187,60 @@ namespace ChoCSVWriterTest
 			}
 		}
 
+		static void ListTest()
+		{
+			StringBuilder sb = new StringBuilder();
+
+			using (var w = new ChoCSVWriter(new StringWriter(sb))
+				.WithFirstLineHeader()
+				)
+			{
+				List<string> l = new List<string>();
+				l.Add("1");
+				l.Add("Tom");
+				l.Add("Mark");
+
+				w.Write(l);
+
+				l = new List<string>();
+				l.Add("2");
+				l.Add("Tom1");
+				l.Add("Mark1");
+
+				w.Write(l);
+			}
+
+			Console.WriteLine(sb.ToString());
+		}
+
+		static void DictionaryTest()
+		{
+			StringBuilder sb = new StringBuilder();
+
+			using (var w = new ChoCSVWriter(new StringWriter(sb))
+				.WithFirstLineHeader()
+				)
+			{
+				Dictionary<int, string> l = new Dictionary<int, string>();
+				l.Add(1, "Tom");
+				l.Add(2, "Mark");
+
+				w.Write(l);
+			}
+
+			Console.WriteLine(sb.ToString());
+		}
+
 		static void Main(string[] args)
         {
-            //int z = 44;
-            //Console.WriteLine(String.Format("{0:000}", z));
-            //return;
+			//DictionaryTest();
+			//return;
+
+			//ListTest();
+			//return;
+			//int z = 44;
+			//Console.WriteLine(String.Format("{0:000}", z));
+			//return;
 
 			Sample3();
 			return;

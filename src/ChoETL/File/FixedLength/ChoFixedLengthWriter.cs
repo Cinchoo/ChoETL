@@ -106,8 +106,12 @@ namespace ChoETL
 
                 _writer.WriteTo(_textWriter, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
             }
-            else
-                _writer.WriteTo(_textWriter, new T[] { record } ).Loop();
+			else if (typeof(T).IsDynamicType() && record is IDictionary)
+			{
+				_writer.WriteTo(_textWriter, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
+			}
+			else
+				_writer.WriteTo(_textWriter, new T[] { record } ).Loop();
         }
 
         public string SerializeAll(IEnumerable<T> records, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)

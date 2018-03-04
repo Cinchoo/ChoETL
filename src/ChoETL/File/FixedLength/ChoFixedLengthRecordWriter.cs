@@ -89,9 +89,11 @@ namespace ChoETL
                                         Configuration.RecordType = typeof(ChoScalarObject);
                                     else
                                         Configuration.RecordType = recordType;
-                                }
 
-                                if (Configuration.IsDynamicObject)
+									Configuration.MapRecordFields(Configuration.RecordType);
+								}
+
+								if (Configuration.IsDynamicObject)
                                 {
                                     var dict = record.ToDynamicObject() as IDictionary<string, Object>;
                                     fieldNames = dict.Keys.ToArray();
