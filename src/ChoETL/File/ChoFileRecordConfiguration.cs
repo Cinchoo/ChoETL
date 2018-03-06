@@ -177,6 +177,12 @@ namespace ChoETL
             get { return _encoding != null ? _encoding : Encoding.UTF8; }
             set { _encoding = value; }
         }
+        [DataMember]
+        public string NullValue
+        {
+            get;
+            set;
+        }
 
         protected ChoFileRecordConfiguration(Type recordType = null) : base(recordType)
         {
@@ -221,6 +227,7 @@ namespace ChoETL
                 if (!recObjAttr.Encoding.IsNullOrWhiteSpace())
                     Encoding = Encoding.GetEncoding(recObjAttr.Encoding);
                 TreatCurrencyAsDecimal = recObjAttr.TreatCurrencyAsDecimal;
+                NullValue = recObjAttr.NullValue;
             }
         }
 
@@ -322,11 +329,7 @@ namespace ChoETL
             fconfig.QuoteAllFields = QuoteAllFields;
             fconfig.StringSplitOptions = StringSplitOptions;
             fconfig.EncodingPage = EncodingPage;
-            fconfig.Encoding = Encoding;
-            fconfig.MaxScanRows = MaxScanRows;
-            fconfig.MaxScanRows = MaxScanRows;
-            fconfig.MaxScanRows = MaxScanRows;
-
+            fconfig.NullValue = NullValue;
         }
     }
 }

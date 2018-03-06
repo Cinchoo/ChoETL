@@ -89,7 +89,7 @@ namespace ChoETL
                                     else
                                         Configuration.RecordType = recordType;
 
-									Configuration.MapRecordFields(Configuration.RecordType);
+                                    Configuration.MapRecordFields(Configuration.RecordType);
                                 }
 
                                 if (Configuration.IsDynamicObject)
@@ -205,7 +205,7 @@ namespace ChoETL
             bool firstColumn = true;
             PropertyInfo pi = null;
             object rootRec = rec;
-			foreach (KeyValuePair<string, ChoCSVRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
+            foreach (KeyValuePair<string, ChoCSVRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
                 fieldConfig = kvp.Value;
                 fieldValue = null;
@@ -215,7 +215,7 @@ namespace ChoETL
 
                 rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
 
-				dict = rec.ToDynamicObject() as IDictionary<string, Object>;
+                dict = rec.ToDynamicObject() as IDictionary<string, Object>;
 
                 if (Configuration.ThrowAndStopOnMissingField)
                 {
@@ -362,12 +362,12 @@ namespace ChoETL
 
                 if (firstColumn)
                 {
-                    msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification), GetFillChar(kvp.Value.FillChar), false));
+                    msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification), GetFillChar(kvp.Value.FillChar), false, kvp.Value.NullValue));
                     firstColumn = false;
                 }
                 else
                     msg.AppendFormat("{0}{1}", Configuration.Delimiter, NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification),
-                        GetFillChar(kvp.Value.FillChar), false));
+                        GetFillChar(kvp.Value.FillChar), false, kvp.Value.NullValue));
             }
 
             recText = msg.ToString();
@@ -463,7 +463,7 @@ namespace ChoETL
         private char[] searchStrings = null;
         bool quoteValue = false;
         private string NormalizeFieldValue(string fieldName, string fieldValue, int? size, bool truncate, bool? quoteField,
-            ChoFieldValueJustification fieldValueJustification, char fillChar, bool isHeader = false)
+            ChoFieldValueJustification fieldValueJustification, char fillChar, bool isHeader = false, string nullValue = null)
         {
             string lFieldValue = fieldValue;
             bool retValue = false;
@@ -544,29 +544,29 @@ namespace ChoETL
                 else
                     quoteValue = quoteField.Value;
             }
-			//}
-			//else
-			//{
-			//    if (fieldValue.StartsWith(Configuration.QuoteChar.ToString()) && fieldValue.EndsWith(Configuration.QuoteChar.ToString()))
-			//    {
+            //}
+            //else
+            //{
+            //    if (fieldValue.StartsWith(Configuration.QuoteChar.ToString()) && fieldValue.EndsWith(Configuration.QuoteChar.ToString()))
+            //    {
 
-			//    }
-			//    else
-			//    {
-			//        //Fields that contain double quote characters must be surrounded by double-quotes, and the embedded double-quotes must each be represented by a pair of consecutive double quotes.
-			//        if (fieldValue.IndexOf(Configuration.QuoteChar) >= 0)
-			//        {
-			//            fieldValue = "{1}{0}{1}".FormatString(fieldValue.Replace(Configuration.QuoteChar.ToString(), Configuration.DoubleQuoteChar), Configuration.QuoteChar);
-			//        }
-			//        else
-			//            fieldValue = "{1}{0}{1}".FormatString(fieldValue, Configuration.QuoteChar);
-			//    }
-			//}
+            //    }
+            //    else
+            //    {
+            //        //Fields that contain double quote characters must be surrounded by double-quotes, and the embedded double-quotes must each be represented by a pair of consecutive double quotes.
+            //        if (fieldValue.IndexOf(Configuration.QuoteChar) >= 0)
+            //        {
+            //            fieldValue = "{1}{0}{1}".FormatString(fieldValue.Replace(Configuration.QuoteChar.ToString(), Configuration.DoubleQuoteChar), Configuration.QuoteChar);
+            //        }
+            //        else
+            //            fieldValue = "{1}{0}{1}".FormatString(fieldValue, Configuration.QuoteChar);
+            //    }
+            //}
 
-			//if (quoteValue)
-			//	size = size - 2;
+            //if (quoteValue)
+            //	size = size - 2;
 
-			if (size != null)
+            if (size != null)
             {
                 if (fieldValue.Length < size.Value)
                 {
@@ -592,10 +592,16 @@ namespace ChoETL
                 }
             }
 
-			if (quoteValue || (quoteField != null && quoteField.Value))
-				fieldValue = "{1}{0}{1}".FormatString(fieldValue, Configuration.QuoteChar);
+            if (nullValue != null)
+            {
+                if (fieldValue.IsNullOrEmpty())
+                    fieldValue = nullValue;
+            }
 
-			return fieldValue;
+            if (quoteValue || (quoteField != null && quoteField.Value))
+                fieldValue = "{1}{0}{1}".FormatString(fieldValue, Configuration.QuoteChar);
+
+            return fieldValue;
         }
 
         private bool RaiseBeginWrite(object state)

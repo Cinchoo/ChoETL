@@ -31,7 +31,7 @@ namespace ChoETL
         }
 
         internal ChoFixedLengthRecordFieldConfiguration(string name, ChoFixedLengthRecordFieldAttribute attr = null, Attribute[] otherAttrs = null) : base(name, attr, otherAttrs)
-		{
+        {
             FieldName = name;
             if (attr != null)
             {
@@ -81,6 +81,8 @@ namespace ChoETL
                     IgnoreFieldValueMode = config.IgnoreFieldValueMode;
                 if (QuoteField == null)
                     QuoteField = config.QuoteAllFields;
+                if (NullValue == null)
+                    NullValue = config.NullValue;
             }
             catch (Exception ex)
             {

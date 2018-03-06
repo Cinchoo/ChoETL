@@ -90,10 +90,10 @@ namespace ChoETL
                                     else
                                         Configuration.RecordType = recordType;
 
-									Configuration.MapRecordFields(Configuration.RecordType);
-								}
+                                    Configuration.MapRecordFields(Configuration.RecordType);
+                                }
 
-								if (Configuration.IsDynamicObject)
+                                if (Configuration.IsDynamicObject)
                                 {
                                     var dict = record.ToDynamicObject() as IDictionary<string, Object>;
                                     fieldNames = dict.Keys.ToArray();
@@ -205,8 +205,8 @@ namespace ChoETL
 
             //bool firstColumn = true;
             PropertyInfo pi = null;
-			object rootRec = rec;
-			foreach (KeyValuePair<string, ChoFixedLengthRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
+            object rootRec = rec;
+            foreach (KeyValuePair<string, ChoFixedLengthRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
                 fieldConfig = kvp.Value;
                 fieldValue = null;
@@ -214,9 +214,9 @@ namespace ChoETL
                 if (Configuration.PIDict != null)
                     Configuration.PIDict.TryGetValue(kvp.Key, out pi);
 
-				rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
+                rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
 
-				if (Configuration.ThrowAndStopOnMissingField)
+                if (Configuration.ThrowAndStopOnMissingField)
                 {
                     if (Configuration.IsDynamicObject)
                     {
@@ -357,7 +357,7 @@ namespace ChoETL
                 else
                     fieldText = fieldValue.ToString();
 
-                msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false));
+                msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false, kvp.Value.NullValue));
             }
 
             recText = msg.ToString();
@@ -475,7 +475,7 @@ namespace ChoETL
         }
 
         private string NormalizeFieldValue(string fieldName, string fieldValue, int? size, bool truncate, bool? quoteField,
-            ChoFieldValueJustification fieldValueJustification, char fillChar, bool isHeader = false)
+            ChoFieldValueJustification fieldValueJustification, char fillChar, bool isHeader = false, string nullValue = null)
         {
             string lFieldValue = fieldValue;
             bool retValue = false;
@@ -485,7 +485,7 @@ namespace ChoETL
 
             if (fieldValue.IsNull())
                 fieldValue = String.Empty;
-			bool quoteValue = false;
+            bool quoteValue = false;
 
             if (quoteField == null || !quoteField.Value)
             {
@@ -497,10 +497,10 @@ namespace ChoETL
                 {
                     if (fieldValue.Contains(Configuration.EOLDelimiter))
                     {
-						if (isHeader)
-							throw new ChoParserException("Field header '{0}' value contains EOL delimiter character.".FormatString(fieldName));
-						else
-							quoteValue = true;
+                        if (isHeader)
+                            throw new ChoParserException("Field header '{0}' value contains EOL delimiter character.".FormatString(fieldName));
+                        else
+                            quoteValue = true;
                     }
                 }
             }
@@ -512,12 +512,12 @@ namespace ChoETL
                 }
                 else
                 {
-					quoteValue = true;
+                    quoteValue = true;
                 }
             }
 
-			if (quoteValue)
-				size = size - 2;
+            if (quoteValue)
+                size = size - 2;
 
             if (size != null)
             {
@@ -545,10 +545,16 @@ namespace ChoETL
                 }
             }
 
-			if (quoteValue)
-				fieldValue = "{1}{0}{1}".FormatString(fieldValue, Configuration.QuoteChar);
+            if (nullValue != null)
+            {
+                if (fieldValue.IsNullOrEmpty())
+                    fieldValue = nullValue;
+            }
 
-			return fieldValue;
+            if (quoteValue)
+                fieldValue = "{1}{0}{1}".FormatString(fieldValue, Configuration.QuoteChar);
+
+            return fieldValue;
         }
 
         private bool RaiseBeginWrite(object state)

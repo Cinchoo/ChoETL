@@ -86,6 +86,8 @@ namespace ChoETL
                     IgnoreFieldValueMode = config.IgnoreFieldValueMode;
                 if (QuoteField == null)
                     QuoteField = config.QuoteAllFields;
+                if (NullValue == null)
+                    NullValue = config.NullValue;
             }
             catch (Exception ex)
             {

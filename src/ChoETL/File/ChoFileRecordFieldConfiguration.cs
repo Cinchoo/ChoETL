@@ -13,13 +13,13 @@ namespace ChoETL
     [DataContract]
     public abstract class ChoFileRecordFieldConfiguration : ChoRecordFieldConfiguration
     {
-		[DataMember]
-		public string FieldName
-		{
-			get;
-			set;
-		}
-		[DataMember]
+        [DataMember]
+        public string FieldName
+        {
+            get;
+            set;
+        }
+        [DataMember]
         public char? FillChar
         {
             get;
@@ -55,6 +55,12 @@ namespace ChoETL
             get;
             set;
         }
+        [DataMember]
+        public string NullValue
+        {
+            get;
+            set;
+        }
 
         public ChoFileRecordFieldConfiguration(string name, ChoFileRecordFieldAttribute attr = null, Attribute[] otherAttrs = null) : base(name, attr, otherAttrs)
         {
@@ -69,24 +75,25 @@ namespace ChoETL
                 Truncate = attr.Truncate;
                 Size = attr.SizeInternal;
 
-				if (Size == null && otherAttrs != null)
-				{
-					StringLengthAttribute slAttr = otherAttrs.OfType<StringLengthAttribute>().FirstOrDefault();
-					if (slAttr != null && slAttr.MaximumLength > 0)
-					{
-						Size = slAttr.MaximumLength;
-					}
-				}
-				DisplayAttribute dpAttr = otherAttrs.OfType<DisplayAttribute>().FirstOrDefault();
-				if (dpAttr != null)
-				{
-					if (!dpAttr.ShortName.IsNullOrWhiteSpace())
-						FieldName = dpAttr.ShortName;
-					else if (!dpAttr.Name.IsNullOrWhiteSpace())
-						FieldName = dpAttr.Name;
-				}
+                if (Size == null && otherAttrs != null)
+                {
+                    StringLengthAttribute slAttr = otherAttrs.OfType<StringLengthAttribute>().FirstOrDefault();
+                    if (slAttr != null && slAttr.MaximumLength > 0)
+                    {
+                        Size = slAttr.MaximumLength;
+                    }
+                }
+                DisplayAttribute dpAttr = otherAttrs.OfType<DisplayAttribute>().FirstOrDefault();
+                if (dpAttr != null)
+                {
+                    if (!dpAttr.ShortName.IsNullOrWhiteSpace())
+                        FieldName = dpAttr.ShortName;
+                    else if (!dpAttr.Name.IsNullOrWhiteSpace())
+                        FieldName = dpAttr.Name;
+                }
 
-				QuoteField = attr.QuoteFieldInternal;
+                QuoteField = attr.QuoteFieldInternal;
+                NullValue = attr.NullValue;
             }
         }
     }

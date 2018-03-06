@@ -74,6 +74,11 @@ namespace ChoETL
             get;
             set;
         }
+        public string NullValue
+        {
+            get;
+            set;
+        }
         public bool TreatCurrencyAsDecimal { get; set; }
 
         public ChoFileRecordObjectAttribute()

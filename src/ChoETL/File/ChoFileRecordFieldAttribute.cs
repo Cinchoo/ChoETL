@@ -9,12 +9,12 @@ namespace ChoETL
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true )]
     public abstract class ChoFileRecordFieldAttribute : ChoRecordFieldAttribute
     {
-		public string FieldName
-		{
-			get;
-			set;
-		}
-		internal char? FillCharInternal;
+        public string FieldName
+        {
+            get;
+            set;
+        }
+        internal char? FillCharInternal;
         public char FillChar
         {
             get { return FillCharInternal.CastTo<char>(); }
@@ -48,6 +48,11 @@ namespace ChoETL
         {
             get { return QuoteFieldInternal.CastTo<bool>(false); }
             set { QuoteFieldInternal = value; }
+        }
+        public string NullValue
+        {
+            get;
+            set;
         }
 
         public ChoFileRecordFieldAttribute()

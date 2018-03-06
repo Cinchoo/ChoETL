@@ -716,8 +716,39 @@ somethingdownhere,thisisthelastuser,andthisisthelastpassword
             }
         }
 
+        static void NullValueTest()
+        {
+            string csv = @"Id, Name, City
+1, Tom, {NULL}
+2, Mark, NJ
+3, Lou, FL
+4, Smith, PA
+5, Raj, DC
+";
+
+            StringBuilder csvOut = new StringBuilder();
+            using (var cp2 = new ChoCSVReader(new StringReader(csv))
+                .WithFirstLineHeader()
+                .Configure(c => c.NullValue = "{NULL}")
+                )
+            {
+                using (var cw = new ChoCSVWriter(new StringWriter(csvOut))
+                    .WithFirstLineHeader()
+                    .Configure(c => c.NullValue = "{NULL}")
+                )
+                {
+                    cw.Write(cp2);
+                }
+            }
+
+            Console.WriteLine(csvOut.ToString());
+        }
+
         static void Main(string[] args)
         {
+            NullValueTest();
+            return;
+
             //InterfaceTest();
             //return;
 

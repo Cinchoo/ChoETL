@@ -130,122 +130,122 @@ namespace ChoCSVWriterTest
                 w.Write(o2);
             }
         }
-		public class SitePostal
-		{
-			[Required(ErrorMessage = "State is required")]
-			[RegularExpression("^[A-Z][A-Z]$", ErrorMessage = "Incorrect zip code.")]
-			public string State { get; set; }
-			[Required]
-			[RegularExpression("^[0-9][0-9]*$")]
-			public string Zip { get; set; }
-		}
-		public class SiteAddress
-		{
-			[Required]
-			[StringLength(10)]
-			//[ChoCSVRecordField(3)]
-			public string Street { get; set; }
-			[Required]
-			[RegularExpression("^[a-zA-Z][a-zA-Z ]*$")]
-			public string City { get; set; }
-			[ChoValidateObject]
-			public SitePostal SitePostal { get; set; }
-		}
-		public class Site
-		{
-			[Required(ErrorMessage = "SiteID can't be null")]
+        public class SitePostal
+        {
+            [Required(ErrorMessage = "State is required")]
+            [RegularExpression("^[A-Z][A-Z]$", ErrorMessage = "Incorrect zip code.")]
+            public string State { get; set; }
+            [Required]
+            [RegularExpression("^[0-9][0-9]*$")]
+            public string Zip { get; set; }
+        }
+        public class SiteAddress
+        {
+            [Required]
+            [StringLength(10)]
+            //[ChoCSVRecordField(3)]
+            public string Street { get; set; }
+            [Required]
+            [RegularExpression("^[a-zA-Z][a-zA-Z ]*$")]
+            public string City { get; set; }
+            [ChoValidateObject]
+            public SitePostal SitePostal { get; set; }
+        }
+        public class Site
+        {
+            [Required(ErrorMessage = "SiteID can't be null")]
             //[ChoCSVRecordField(1, FormatText = "000")]
             public int SiteID { get; set; }
-			[Required]
-			public int House { get; set; }
-			//[ChoValidateObject]
-			public SiteAddress SiteAddress { get; set; }
+            [Required]
+            public int House { get; set; }
+            //[ChoValidateObject]
+            public SiteAddress SiteAddress { get; set; }
             //[ChoCSVRecordField(2)]
             public int Apartment { get; set; }
-		}
+        }
 
-		static void Sample3()
-		{
-			using (var p = new ChoCSVReader<Site>("Sample3.csv")
-				//.ClearFields()
-				//            .WithField(m => m.SiteID)
-				//            .WithField(m => m.SiteAddress.City)
-				.WithFirstLineHeader(true)
-				.Configure(c => c.ObjectValidationMode = ChoObjectValidationMode.ObjectLevel)
-				)
-			{
-				StringBuilder msg = new StringBuilder();
-				using (var w = new ChoCSVWriter<Site>(new StringWriter(msg))
-					.WithFirstLineHeader()
-					)
-				{
-					w.Write(p);
-				}
-					Console.WriteLine(msg.ToString());
-				//foreach (var rec in p)
-					//Console.WriteLine(rec.Dump());
-			}
-		}
-
-		static void ListTest()
-		{
-			StringBuilder sb = new StringBuilder();
-
-			using (var w = new ChoCSVWriter(new StringWriter(sb))
-				.WithFirstLineHeader()
-				)
-			{
-				List<string> l = new List<string>();
-				l.Add("1");
-				l.Add("Tom");
-				l.Add("Mark");
-
-				w.Write(l);
-
-				l = new List<string>();
-				l.Add("2");
-				l.Add("Tom1");
-				l.Add("Mark1");
-
-				w.Write(l);
-			}
-
-			Console.WriteLine(sb.ToString());
-		}
-
-		static void DictionaryTest()
-		{
-			StringBuilder sb = new StringBuilder();
-
-			using (var w = new ChoCSVWriter(new StringWriter(sb))
-				.WithFirstLineHeader()
-				)
-			{
-				Dictionary<int, string> l = new Dictionary<int, string>();
-				l.Add(1, "Tom");
-				l.Add(2, "Mark");
-
-				w.Write(l);
-			}
-
-			Console.WriteLine(sb.ToString());
-		}
-
-		static void Main(string[] args)
+        static void Sample3()
         {
-			//DictionaryTest();
-			//return;
+            using (var p = new ChoCSVReader<Site>("Sample3.csv")
+                //.ClearFields()
+                //            .WithField(m => m.SiteID)
+                //            .WithField(m => m.SiteAddress.City)
+                .WithFirstLineHeader(true)
+                .Configure(c => c.ObjectValidationMode = ChoObjectValidationMode.ObjectLevel)
+                )
+            {
+                StringBuilder msg = new StringBuilder();
+                using (var w = new ChoCSVWriter<Site>(new StringWriter(msg))
+                    .WithFirstLineHeader()
+                    )
+                {
+                    w.Write(p);
+                }
+                    Console.WriteLine(msg.ToString());
+                //foreach (var rec in p)
+                    //Console.WriteLine(rec.Dump());
+            }
+        }
 
-			//ListTest();
-			//return;
-			//int z = 44;
-			//Console.WriteLine(String.Format("{0:000}", z));
-			//return;
+        static void ListTest()
+        {
+            StringBuilder sb = new StringBuilder();
 
-			Sample3();
-			return;
+            using (var w = new ChoCSVWriter(new StringWriter(sb))
+                .WithFirstLineHeader()
+                )
+            {
+                List<string> l = new List<string>();
+                l.Add("1");
+                l.Add("Tom");
+                l.Add("Mark");
 
-			InheritanceTest();
+                w.Write(l);
+
+                l = new List<string>();
+                l.Add("2");
+                l.Add("Tom1");
+                l.Add("Mark1");
+
+                w.Write(l);
+            }
+
+            Console.WriteLine(sb.ToString());
+        }
+
+        static void DictionaryTest()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            using (var w = new ChoCSVWriter(new StringWriter(sb))
+                .WithFirstLineHeader()
+                )
+            {
+                Dictionary<int, string> l = new Dictionary<int, string>();
+                l.Add(1, "Tom");
+                l.Add(2, "Mark");
+
+                w.Write(l);
+            }
+
+            Console.WriteLine(sb.ToString());
+        }
+
+        static void Main(string[] args)
+        {
+            //DictionaryTest();
+            //return;
+
+            //ListTest();
+            //return;
+            //int z = 44;
+            //Console.WriteLine(String.Format("{0:000}", z));
+            //return;
+
+            Sample3();
+            return;
+
+            InheritanceTest();
             return;
             NestedObjects();
             return;

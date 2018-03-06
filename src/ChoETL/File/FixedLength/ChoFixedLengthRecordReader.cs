@@ -225,7 +225,11 @@ namespace ChoETL
                                 throw new ChoParserException($"No record type found for [{pair.Item1}] line to parse.");
                         }
 
-                        rec = Activator.CreateInstance(recType);
+                        rec = recType.IsDynamicType() ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer))
+                        {
+                            ThrowExceptionIfPropNotExists = true,
+                            AlternativeKeys = Configuration.AlternativeKeys
+                        } : Activator.CreateInstance(RecordType);
                     }
                     else
                     {
@@ -568,17 +572,6 @@ namespace ChoETL
                     break;
             }
 
-            if (config.Size != null)
-            {
-                if (fieldValue.Length > config.Size.Value)
-                {
-                    if (!config.Truncate)
-                        throw new ChoParserException("Incorrect field value length found for '{0}' member [Expected: {1}, Actual: {2}].".FormatString(config.FieldName, config.Size.Value, fieldValue.Length));
-                    else
-                        fieldValue = fieldValue.Substring(0, config.Size.Value);
-                }
-            }
-
             char startChar;
             char endChar;
             char quoteChar = Configuration.QuoteChar == '\0' ? '"' : Configuration.QuoteChar;
@@ -590,6 +583,23 @@ namespace ChoETL
 
                 if (config.QuoteField != null && config.QuoteField.Value && startChar == quoteChar && endChar == quoteChar)
                     return fieldValue.Substring(1, fieldValue.Length - 2);
+            }
+
+            if (config.Size != null)
+            {
+                if (fieldValue.Length > config.Size.Value)
+                {
+                    if (!config.Truncate)
+                        throw new ChoParserException("Incorrect field value length found for '{0}' member [Expected: {1}, Actual: {2}].".FormatString(config.FieldName, config.Size.Value, fieldValue.Length));
+                    else
+                        fieldValue = fieldValue.Substring(0, config.Size.Value);
+                }
+            }
+
+            if (config.NullValue != null)
+            {
+                if (String.Compare(config.NullValue, fieldValue, true) == 0)
+                    fieldValue = null;
             }
 
             return fieldValue;
