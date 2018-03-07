@@ -132,7 +132,12 @@ namespace ChoETL
             get;
             set;
         }
-        internal string BackslashQuote = @"\""";
+		public bool RecordTypeMapped
+		{
+			get;
+			set;
+		}
+		internal string BackslashQuote = @"\""";
         internal string DoubleQuoteChar = @"""""";
         private char _quoteChar = '"';
         [DataMember]
@@ -188,7 +193,8 @@ namespace ChoETL
         {
             MaxScanRows = -1;
             IgnoreDuplicateFields = false;
-            BufferSize = 4096;
+			IgnoreIfNoRecordTypeFound = true;
+			BufferSize = 4096;
             Comments = null; // new string[] { "#", "//" };
             Culture = CultureInfo.CurrentCulture;
             EOLDelimiter = Environment.NewLine;

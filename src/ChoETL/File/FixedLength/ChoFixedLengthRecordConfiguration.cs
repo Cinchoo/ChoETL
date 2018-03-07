@@ -136,8 +136,8 @@ namespace ChoETL
 
         internal void UpdateFieldTypesIfAny(IDictionary<string, Type> dict)
         {
-            if (dict == null)
-                return;
+			if (dict == null || RecordFieldConfigurationsDict == null)
+				return;
 
             foreach (var key in dict.Keys)
             {
@@ -167,11 +167,11 @@ namespace ChoETL
         {
             if (clear)
             {
-                SupportsMultiRecordTypes = false;
+                //SupportsMultiRecordTypes = false;
                 FixedLengthRecordFieldConfigurations.Clear();
             }
-            else
-                SupportsMultiRecordTypes = true;
+            //else
+            //    SupportsMultiRecordTypes = true;
 
             DiscoverRecordFields(recordType, null,
                 ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().Any()).Any());
@@ -179,9 +179,9 @@ namespace ChoETL
 
         private void DiscoverRecordFields(Type recordType, string declaringMember, bool optIn = false)
         {
-            if (!IsDynamicObject)
-            {
-                Type pt = null;
+			if (!recordType.IsDynamicType())
+			{
+				Type pt = null;
                 int startIndex = 0;
                 int size = 0;
 

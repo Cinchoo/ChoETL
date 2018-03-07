@@ -576,33 +576,58 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVReader<T> MapRecordFields(Type recordType)
-        {
-            if (recordType != null)
-            {
-                if (recordType != null && !typeof(T).IsAssignableFrom(recordType))
-                    throw new ChoParserException("Incompatible [{0}] record type passed.".FormatString(recordType.FullName));
-                Configuration.MapRecordFields(recordType);
-            }
+        //public ChoCSVReader<T> MapRecordFields(Type recordType)
+        //{
+        //    if (recordType != null)
+        //    {
+        //        if (recordType != null && !typeof(T).IsAssignableFrom(recordType))
+        //            throw new ChoParserException("Incompatible [{0}] record type passed.".FormatString(recordType.FullName));
+        //        Configuration.MapRecordFields(recordType);
+        //    }
 
-            return this;
-        }
+        //    return this;
+        //}
 
-        public ChoCSVReader<T> WithCustomRecordTyoeCodeExtractor(Func<string, string> recordTypeCodeExtractor)
+		public ChoCSVReader<T> MapRecordFields(params Type[] recordTypes)
+		{
+			Configuration.RecordTypeMapped = true;
+			if (recordTypes != null)
+			{
+				foreach (var t in recordTypes)
+				{
+					if (t == null)
+						continue;
+
+					//if (!typeof(T).IsAssignableFrom(t))
+					//	throw new ChoParserException("Incompatible [{0}] record type passed.".FormatString(t.FullName));
+
+					Configuration.RecordTypeConfiguration.RegisterType(t);
+				}
+			}
+
+			Configuration.MapRecordFields(recordTypes);
+			return this;
+		}
+
+		public ChoCSVReader<T> WithCustomRecordTyoeCodeExtractor(Func<string, string> recordTypeCodeExtractor)
         {
-            Configuration.RecordTypeCodeExtractor = recordTypeCodeExtractor;
+			Configuration.SupportsMultiRecordTypes = true;
+			Configuration.RecordTypeCodeExtractor = recordTypeCodeExtractor;
             return this;
         }
 
         public ChoCSVReader<T> WithCustomRecordSelector(Func<object, Type> recordSelector)
         {
-            Configuration.RecordSelector = recordSelector;
+			Configuration.SupportsMultiRecordTypes = true;
+			Configuration.RecordSelector = recordSelector;
             return this;
         }
 
         public ChoCSVReader<T> WithRecordSelector(int fieldPosition, Type defaultRecordType = null, params Type[] recordTypes)
         {
-            Configuration.RecordTypeConfiguration.Position = fieldPosition;
+			Configuration.SupportsMultiRecordTypes = true;
+
+			Configuration.RecordTypeConfiguration.Position = fieldPosition;
             if (defaultRecordType != null && !typeof(T).IsAssignableFrom(defaultRecordType))
                 throw new ChoParserException("Incompatible [{0}] record type passed.".FormatString(defaultRecordType.FullName));
             Configuration.RecordTypeConfiguration.DefaultRecordType = defaultRecordType;
@@ -621,7 +646,8 @@ namespace ChoETL
                 }
             }
 
-            Configuration.MapRecordFields(ChoArray.Combine<Type>(new Type[] { defaultRecordType }, recordTypes));
+			Configuration.RecordTypeMapped = true;
+			Configuration.MapRecordFields(ChoArray.Combine<Type>(new Type[] { defaultRecordType }, recordTypes));
             return this;
         }
 

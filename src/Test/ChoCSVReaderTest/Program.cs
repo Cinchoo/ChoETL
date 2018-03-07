@@ -708,7 +708,7 @@ somethingdownhere,thisisthelastuser,andthisisthelastpassword
             using (var p = new ChoCSVReader<IEmployee>("InterfaceTest.csv")
                 .WithFirstLineHeader()
                 //.MapRecordFields<Employee>()
-                .WithRecordSelector(1, typeof(Employee), typeof(Manager), typeof(Manager1))
+                .WithRecordSelector(1, typeof(Employee), typeof(Manager))
                 )
             {
                 foreach (var rec in p)
@@ -716,7 +716,18 @@ somethingdownhere,thisisthelastuser,andthisisthelastpassword
             }
         }
 
-        static void NullValueTest()
+		[ChoCSVRecordObject(NullValue = "#NULL#")]
+		public class Emp
+		{
+			[ChoCSVRecordField(1)]
+			public int Id { get; set; }
+			[ChoCSVRecordField(2)]
+			public string Name { get; set; }
+			[ChoCSVRecordField(3, NullValue = "#NULL#")]
+			public string City { get; set; }
+		}
+
+		static void NullValueTest()
         {
             string csv = @"Id, Name, City
 1, Tom, {NULL}
@@ -732,27 +743,81 @@ somethingdownhere,thisisthelastuser,andthisisthelastpassword
                 .Configure(c => c.NullValue = "{NULL}")
                 )
             {
-                using (var cw = new ChoCSVWriter(new StringWriter(csvOut))
-                    .WithFirstLineHeader()
-                    .Configure(c => c.NullValue = "{NULL}")
-                )
-                {
-                    cw.Write(cp2);
-                }
-            }
+				//foreach (var rec in cp2)
+				//	Console.WriteLine(rec.Dump());
+				using (var cw = new ChoCSVWriter(new StringWriter(csvOut))
+					.WithFirstLineHeader()
+					.Configure(c => c.NullValue = "{NULL}")
+				)
+				{
+					cw.Write(cp2);
+				}
+			}
 
             Console.WriteLine(csvOut.ToString());
         }
 
-        static void Main(string[] args)
+		public class LocationDefinition
+		{
+			public string PlaceName { get; set; }
+			public double Longitude { get; set; }
+			public double Latitude { get; set; }
+			public double Elevation { get; set; }
+		}
+		public class CountDefinition
+		{
+			public DateTime Date { get; set; }
+			public int Count { get; set; }
+		}
+
+		static void MultiRecordsInfile()
+		{
+			string csv = @"PlaceName,Longitude,Latitude,Elevation
+NameString,123.456,56.78,40
+
+Date,Count
+1/1/2012,1
+2/1/2012,3
+3/1/2012,10
+4/2/2012,6";
+
+			using (var p = new ChoCSVReader(new StringReader(csv))
+				.WithCustomRecordSelector((l) =>
+				{
+					Tuple<long, string> kvp = l as Tuple<long, string>;
+					if (kvp.Item1 == 1 || kvp.Item1 == 3 || kvp.Item1 == 4)
+						return null;
+
+					if (kvp.Item1 < 4)
+						return typeof(LocationDefinition);
+					else
+						return typeof(CountDefinition);
+				}
+				)
+				//.MapRecordFields(typeof(LocationDefinition), typeof(CountDefinition))
+				.Configure(c => c.ThrowAndStopOnMissingField = false)
+				)
+			{
+				foreach (var rec in p)
+					Console.WriteLine(ChoUtility.Dump(rec));
+
+			}
+		}
+		static void Main(string[] args)
         {
-            NullValueTest();
-            return;
+			//MultiRecordsInfile();
+			//return;
 
-            //InterfaceTest();
-            //return;
+			Sample2();
+			return;
 
-            Sample3();
+			//NullValueTest();
+			//         return;
+
+			InterfaceTest();
+			return;
+
+			Sample3();
             return;
             //DiffCSV();
             //return;

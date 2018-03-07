@@ -213,7 +213,7 @@ namespace ChoETL
                     object rec = null;
                     if (Configuration.RecordSelector != null)
                     {
-                        Type recType = Configuration.RecordSelector(pair.Item2);
+                        Type recType = Configuration.RecordSelector(pair);
                         if (recType == null)
                         {
                             if (Configuration.IgnoreIfNoRecordTypeFound)
@@ -229,7 +229,7 @@ namespace ChoETL
                         {
                             ThrowExceptionIfPropNotExists = true,
                             AlternativeKeys = Configuration.AlternativeKeys
-                        } : Activator.CreateInstance(RecordType);
+                        } : Activator.CreateInstance(recType);
                     }
                     else
                     {

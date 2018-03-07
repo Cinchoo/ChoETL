@@ -194,7 +194,11 @@ namespace ChoETL
 
                     if (!_configCheckDone)
                     {
-                        Configuration.Validate(GetHeaders(pair.Item2));
+						if (Configuration.SupportsMultiRecordTypes && Configuration.RecordSelector != null && !Configuration.RecordTypeMapped)
+						{
+						}
+						else
+							Configuration.Validate(GetHeaders(pair.Item2));
                         var dict = recFieldTypes = Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
                         RaiseMembersDiscovered(dict);
                         Configuration.UpdateFieldTypesIfAny(dict);
@@ -241,25 +245,32 @@ namespace ChoETL
                     runningCount = pair.Item1;
 
                     object rec = null;
-                    if (Configuration.RecordSelector != null)
+                    if (Configuration.SupportsMultiRecordTypes && Configuration.RecordSelector != null)
                     {
-                        Type recType = Configuration.RecordSelector(pair.Item2);
+						Type recType = Configuration.RecordSelector(pair);
                         if (recType == null)
                         {
                             if (Configuration.IgnoreIfNoRecordTypeFound)
                             {
                                 ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, $"No record type found for [{pair.Item1}] line to parse.");
-                                continue;
+								e.MoveNext();
+								continue;
                             }
                             else
                                 throw new ChoParserException($"No record type found for [{pair.Item1}] line to parse.");
                         }
 
-                        rec = recType.IsDynamicType() ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer))
+						if (!Configuration.RecordTypeMapped)
+						{
+							Configuration.MapRecordFields(recType);
+							Configuration.Validate(null);
+						}
+						//Configuration.SupportsMultiRecordTypes = true;
+						rec = recType.IsDynamicType() ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer))
                         {
                             ThrowExceptionIfPropNotExists = true,
                             AlternativeKeys = Configuration.AlternativeKeys
-                        } : Activator.CreateInstance(RecordType);
+                        } : Activator.CreateInstance(recType);
                     }
                     else
                     {
@@ -280,9 +291,9 @@ namespace ChoETL
                     if (rec == null)
                         continue;
 
-                    if (Configuration.IsDynamicObject)
-                    {
-                        if (Configuration.AreAllFieldTypesNull && Configuration.MaxScanRows > 0 && recCount <= Configuration.MaxScanRows)
+					if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+					{
+						if (Configuration.AreAllFieldTypesNull && Configuration.MaxScanRows > 0 && recCount <= Configuration.MaxScanRows)
                         {
                             buffer.Add(rec);
                             RaiseRecordFieldTypeAssessment(recFieldTypes, (IDictionary<string, object>)rec, recCount == Configuration.MaxScanRows);
@@ -503,24 +514,24 @@ namespace ChoETL
                             throw new ChoMissingRecordFieldException("Missing field value at [Position: {1}] in CSV file.".FormatString(fieldConfig.FieldName, fieldConfig.FieldPosition));
                     }
 
-                    //if (Configuration.FileHeaderConfiguration.HasHeaderRecord && Configuration.ColumnOrderStrict)
-                    //{
-                    //    if (fieldNameValues.ContainsKey(fieldConfig.FieldName))
-                    //        fieldValue = fieldNameValues[fieldConfig.FieldName];
-                    //    else if (Configuration.ColumnCountStrict)
-                    //        throw new ChoParserException("No matching '{0}' field header found.".FormatString(fieldConfig.FieldName));
-                    //}
-                    //else
-                    //{
-                    //    if (fieldConfig.FieldPosition - 1 < fieldValues.Length)
-                    //        fieldValue = fieldValues[fieldConfig.FieldPosition - 1];
-                    //    else if (Configuration.ColumnCountStrict)
-                    //        throw new ChoParserException("Missing field value for '{0}' [Position: {1}] field.".FormatString(fieldConfig.FieldName, fieldConfig.FieldPosition));
-                    //}
+					//if (Configuration.FileHeaderConfiguration.HasHeaderRecord && Configuration.ColumnOrderStrict)
+					//{
+					//    if (fieldNameValues.ContainsKey(fieldConfig.FieldName))
+					//        fieldValue = fieldNameValues[fieldConfig.FieldName];
+					//    else if (Configuration.ColumnCountStrict)
+					//        throw new ChoParserException("No matching '{0}' field header found.".FormatString(fieldConfig.FieldName));
+					//}
+					//else
+					//{
+					//    if (fieldConfig.FieldPosition - 1 < fieldValues.Length)
+					//        fieldValue = fieldValues[fieldConfig.FieldPosition - 1];
+					//    else if (Configuration.ColumnCountStrict)
+					//        throw new ChoParserException("Missing field value for '{0}' [Position: {1}] field.".FormatString(fieldConfig.FieldName, fieldConfig.FieldPosition));
+					//}
 
-                    if (Configuration.IsDynamicObject)
-                    {
-                        if (kvp.Value.FieldType == null)
+					if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+					{
+						if (kvp.Value.FieldType == null)
                             kvp.Value.FieldType = Configuration.MaxScanRows == -1 ? DiscoverFieldType(fieldValue as string, Configuration) : typeof(string);
                     }
                     else
@@ -540,7 +551,7 @@ namespace ChoETL
                     if (ignoreFieldValue)
                         fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
 
-                    if (Configuration.IsDynamicObject)
+                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
                     {
                         var dict = rec as IDictionary<string, Object>;
 
@@ -590,9 +601,9 @@ namespace ChoETL
 
                     try
                     {
-                        if (Configuration.IsDynamicObject)
-                        {
-                            var dict = rec as IDictionary<string, Object>;
+						if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+						{
+							var dict = rec as IDictionary<string, Object>;
 
                             if (dict.SetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
                                 dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
@@ -804,9 +815,9 @@ namespace ChoETL
             }
             else
             {
-                if (Configuration.IsDynamicObject) // RecordType == typeof(ExpandoObject))
-                {
-                    long index = 0;
+				if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+				{
+					long index = 0;
                     return (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)
                             select "Column{0}".FormatString(++index)).ToArray();
                 }
