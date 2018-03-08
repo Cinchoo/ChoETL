@@ -377,13 +377,15 @@ namespace ChoCSVReaderTest
                 writer.Flush();
                 stream.Position = 0;
 
-                var dt = parser.AsDataTable();
-                //object rec;
-                //while ((rec = parser.Read()) != null)
-                //{
-                //    Console.WriteLine(rec.ToStringEx());
-                //}
-            }
+				//foreach (var rec in parser)
+				//	Console.WriteLine(rec.Dump());
+				var dt = parser.AsDataTable();
+				//object rec;
+				//while ((rec = parser.Read()) != null)
+				//{
+				//    Console.WriteLine(rec.ToStringEx());
+				//}
+			}
         }
 
         static void QuoteValueTest()
@@ -805,6 +807,9 @@ Date,Count
 		}
 		static void Main(string[] args)
         {
+			MultiRecordsInfile();
+			return;
+
 			//MultiRecordsInfile();
 			//return;
 

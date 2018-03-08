@@ -862,8 +862,9 @@ namespace ChoETL
                 || typeof(BigInteger) == type 
                 || typeof(ChoCurrency) == type
                 || typeof(Decimal) == type
-                ;
-        }
+                || typeof(ChoCDATA) == type
+				;
+		}
 
         public static bool IsNumeric(this Type type)
         {
