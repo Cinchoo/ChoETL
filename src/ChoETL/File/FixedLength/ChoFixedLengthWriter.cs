@@ -430,9 +430,14 @@ namespace ChoETL
                 Write(expando);
             }
         }
-    }
 
-    public class ChoFixedLengthWriter : ChoFixedLengthWriter<dynamic>
+		~ChoFixedLengthWriter()
+		{
+			Dispose();
+		}
+	}
+
+	public class ChoFixedLengthWriter : ChoFixedLengthWriter<dynamic>
     {
         public ChoFixedLengthWriter(ChoFixedLengthRecordConfiguration configuration = null)
            : base(configuration)

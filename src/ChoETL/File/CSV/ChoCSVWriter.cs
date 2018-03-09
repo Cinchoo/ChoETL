@@ -482,9 +482,15 @@ namespace ChoETL
                 Write(expando);
             }
         }
-    }
 
-    public class ChoCSVWriter : ChoCSVWriter<dynamic>
+		~ChoCSVWriter()
+		{
+			Dispose();
+		}
+
+	}
+
+	public class ChoCSVWriter : ChoCSVWriter<dynamic>
     {
         public ChoCSVWriter(ChoCSVRecordConfiguration configuration = null)
             : base(configuration)

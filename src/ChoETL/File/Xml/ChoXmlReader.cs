@@ -700,10 +700,15 @@ namespace ChoETL
             return this;
         }
 
-        #endregion Fluent API
-    }
+		#endregion Fluent API
 
-    public class ChoXmlReader : ChoXmlReader<dynamic>
+		~ChoXmlReader()
+		{
+			Dispose();
+		}
+	}
+
+	public class ChoXmlReader : ChoXmlReader<dynamic>
     {
         public ChoXmlReader(string filePath, string defaultNamespace)
             : base(filePath, defaultNamespace)

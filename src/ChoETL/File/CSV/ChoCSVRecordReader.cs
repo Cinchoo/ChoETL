@@ -297,7 +297,7 @@ namespace ChoETL
                         {
                             buffer.Add(rec);
                             RaiseRecordFieldTypeAssessment(recFieldTypes, (IDictionary<string, object>)rec, recCount == Configuration.MaxScanRows);
-                            if (recCount == Configuration.MaxScanRows)
+                            if (recCount == Configuration.MaxScanRows || e.Peek == null)
                             {
                                 Configuration.UpdateFieldTypesIfAny(recFieldTypes);
                                 var dict = recFieldTypes = Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);

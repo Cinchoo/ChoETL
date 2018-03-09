@@ -259,5 +259,10 @@ namespace ChoETL
         }
 
         #endregion Fluent API
-    }
+    
+		~ChoManifoldReader()
+		{
+			Dispose();
+		}
+}
 }

@@ -561,9 +561,14 @@ namespace ChoETL
                 Write(expando);
             }
         }
-    }
 
-    public class ChoXmlWriter : ChoXmlWriter<dynamic>
+		~ChoXmlWriter()
+		{
+			Dispose();
+		}
+	}
+
+	public class ChoXmlWriter : ChoXmlWriter<dynamic>
     {
         public ChoXmlWriter(ChoXmlRecordConfiguration configuration = null)
             : base(configuration)

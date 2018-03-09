@@ -583,7 +583,12 @@ namespace ChoETL
         }
 
         #endregion Fluent API
-    }
+   
+		~ChoFixedLengthReader()
+		{
+			Dispose();
+		}
+ }
 
     public class ChoFixedLengthReader : ChoFixedLengthReader<dynamic>
     {

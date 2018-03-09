@@ -183,6 +183,11 @@ namespace ChoETL
             return this;
         }
 
-        #endregion Fluent API
-    }
+		#endregion Fluent API
+
+		~ChoManifoldWriter()
+		{
+			Dispose();
+		}
+	}
 }

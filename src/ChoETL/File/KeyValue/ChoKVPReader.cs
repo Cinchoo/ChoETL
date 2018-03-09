@@ -466,10 +466,15 @@ namespace ChoETL
             return this;
         }
 
-        #endregion Fluent API
-    }
+		#endregion Fluent API
 
-    public class ChoKVPReader : ChoKVPReader<dynamic>
+		~ChoKVPReader()
+		{
+			Dispose();
+		}
+	}
+
+	public class ChoKVPReader : ChoKVPReader<dynamic>
     {
         public ChoKVPReader(string filePath, ChoKVPRecordConfiguration configuration = null)
             : base(filePath, configuration)

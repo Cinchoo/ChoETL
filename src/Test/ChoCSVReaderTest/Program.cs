@@ -450,8 +450,11 @@ namespace ChoCSVReaderTest
 
         static void Sample2()
         {
-            foreach (var p in new ChoCSVReader("Sample2.csv").WithFirstLineHeader()
-                .Configure(c => c.TreatCurrencyAsDecimal = false)
+			var recs = new ChoCSVReader("Sample2.csv").WithFirstLineHeader().ToList();
+			return;
+			foreach (var p in new ChoCSVReader("Sample2.csv").WithFirstLineHeader()
+				.Configure(c => c.TreatCurrencyAsDecimal = false)
+				//.Configure(c => c.MaxScanRows = 10)
                 )
             {
                 Console.WriteLine(p.Dump());
@@ -797,7 +800,7 @@ Date,Count
 				}
 				)
 				//.MapRecordFields(typeof(LocationDefinition), typeof(CountDefinition))
-				.Configure(c => c.ThrowAndStopOnMissingField = false)
+				//.Configure(c => c.ThrowAndStopOnMissingField = false)
 				)
 			{
 				foreach (var rec in p)
@@ -807,8 +810,8 @@ Date,Count
 		}
 		static void Main(string[] args)
         {
-			MultiRecordsInfile();
-			return;
+			//MultiRecordsInfile();
+			//return;
 
 			//MultiRecordsInfile();
 			//return;

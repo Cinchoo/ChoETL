@@ -465,9 +465,14 @@ namespace ChoETL
                 Write(expando);
             }
         }
-    }
 
-    public class ChoJSONWriter : ChoJSONWriter<dynamic>
+		~ChoJSONWriter()
+		{
+			Dispose();
+		}
+	}
+
+	public class ChoJSONWriter : ChoJSONWriter<dynamic>
     {
         public ChoJSONWriter(string filePath, ChoJSONRecordConfiguration configuration = null)
             : base(filePath, configuration)
