@@ -12,9 +12,13 @@ Cinchoo ETL is a code-based ETL framework for extracting data from multiple sour
 
 ## Install
 
-To install Cinchoo ETL, run the following command in the Package Manager Console
+To install Cinchoo ETL (.NET Framework), run the following command in the Package Manager Console
 
     PM> Install-Package ChoETL
+
+To install Cinchoo ETL (.NET Standard), run the following command in the Package Manager Console
+
+    PM> Install-Package ChoETL.NETStandard
     
 Add namespace to the program
 
