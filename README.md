@@ -62,6 +62,7 @@ https://github.com/Cinchoo/ChoETL/wiki
 
 ## Download Binary
 
-+ [Nuget](https://www.nuget.org/packages/ChoETL/)
++ [Nuget (.NET Framework)](https://www.nuget.org/packages/ChoETL/)
++ [Nuget (.NET Standard)](https://www.nuget.org/packages/ChoETL.NETStandard/)
 + [GitHub](https://github.com/Cinchoo/ChoETL/releases)
 
