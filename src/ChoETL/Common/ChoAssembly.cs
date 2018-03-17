@@ -30,7 +30,15 @@ namespace ChoETL
 
         private static readonly object _entryAssemblyLock = new object();
         private static Assembly _entryAssembly;
-
+		public static Assembly EntryAssembly
+		{
+			get { return _entryAssembly; }
+			set
+			{
+				if (value != null)
+					_entryAssembly = value;
+			}
+		}
         public static Assembly GetEntryAssembly()
         {
             if (_entryAssembly != null)

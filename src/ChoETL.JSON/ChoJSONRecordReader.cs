@@ -488,7 +488,7 @@ namespace ChoETL
                         {
                             var fi = ((JToken[])fieldValue).FirstOrDefault();
 
-                            if (fi is JArray && !itemType.IsCollection())
+                            if (fi is JArray && !fieldConfig.FieldType.GetUnderlyingType().IsCollection())
                             {
                                 if (fieldConfig.ItemConverter != null)
                                     fieldValue = fieldConfig.ItemConverter(fi);

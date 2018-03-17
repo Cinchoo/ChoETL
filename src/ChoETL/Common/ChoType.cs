@@ -302,13 +302,13 @@
             return CreateInstanceWithReflectionPermission(GetType(typeName));
         }
 
-        [ReflectionPermission(SecurityAction.Assert, Unrestricted = true)]
+        //[ReflectionPermission(SecurityAction.Assert, Unrestricted = true)]
         public static object CreateInstanceWithReflectionPermission(Type type)
         {
             return Activator.CreateInstance(type, true);
         }
 
-        [ReflectionPermission(SecurityAction.Assert, Unrestricted = true)]
+        //[ReflectionPermission(SecurityAction.Assert, Unrestricted = true)]
         public static object CreateInstanceWithReflectionPermission(Type type, object[] args)
         {
             return Activator.CreateInstance(type, args);

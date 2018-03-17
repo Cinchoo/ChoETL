@@ -160,9 +160,9 @@ namespace ChoETL
 
         private void DiscoverRecordFields(Type recordType, string declaringMember, bool optIn = false)
         {
-            if (!IsDynamicObject)
-            {
-                Type pt = null;
+			if (!recordType.IsDynamicType())
+			{
+				Type pt = null;
                 if (optIn) //ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoKVPRecordFieldAttribute>().Any()).Any())
                 {
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))

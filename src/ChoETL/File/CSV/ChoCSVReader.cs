@@ -349,6 +349,14 @@ namespace ChoETL
 			return this;
 		}
 
+		public ChoCSVReader<T> IgnoreHeader()
+		{
+			Configuration.FileHeaderConfiguration.HasHeaderRecord = true;
+			Configuration.FileHeaderConfiguration.IgnoreHeader = true;
+
+			return this;
+		}
+
 		public ChoCSVReader<T> WithFirstLineHeader(bool ignoreHeader = false)
 		{
 			Configuration.FileHeaderConfiguration.HasHeaderRecord = true;
@@ -356,6 +364,7 @@ namespace ChoETL
 
 			return this;
 		}
+
 		public ChoCSVReader<T> WithHeaderLineAt(int pos = 1, bool ignoreHeader = false)
 		{
 			Configuration.FileHeaderConfiguration.HeaderLineAt = pos;

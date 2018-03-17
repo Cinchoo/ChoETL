@@ -43,12 +43,12 @@ namespace ChoCSVReaderTest
     public class Site
     {
         [Required(ErrorMessage = "SiteID can't be null")]
-        //[ChoCSVRecordField(1)]
-        public int SiteID { get; set; }
+		//[ChoCSVRecordField(1)]
+		public int SiteID { get; set; }
         [Required]
         public int House { get; set; }
-        //[ChoValidateObject]
-        public SiteAddress SiteAddress { get; set; }
+		[ChoValidateObject]
+		public SiteAddress SiteAddress { get; set; }
         public int Apartment { get; set; }
     }
 
@@ -633,23 +633,6 @@ somethingdownhere,thisisthelastuser,andthisisthelastpassword
             Console.WriteLine(csvOut.ToString());
         }
 
-        static void Sample3()
-        {
-            using (var p = new ChoCSVReader<Site>("Sample3.csv")
-                //.ClearFields()
-    //            .WithField(m => m.SiteID)
-    //            .WithField(m => m.SiteAddress.City)
-                .WithFirstLineHeader(true)
-                .Configure(c => c.ObjectValidationMode = ChoObjectValidationMode.ObjectLevel)
-                )
-            {
-                foreach (var rec in p)
-                    Console.WriteLine(rec.Dump());
-                //Exception ex;
-                //Console.WriteLine("IsValid: " + p.IsValid(out ex));
-            }
-        }
-
         public interface IEmployee
         {
             int Id { get; set; }
@@ -808,8 +791,61 @@ Date,Count
 
 			}
 		}
+
+		static void Sample3()
+		{
+			using (var p = new ChoCSVReader<Site>("Sample3.csv")
+				//.ClearFields()
+				//            .WithField(m => m.SiteID)
+				//            .WithField(m => m.SiteAddress.City)
+				.WithFirstLineHeader(true)
+				)
+			{
+				foreach (var rec in p.ExternalSort(new ChoLamdaComparer<Site>((e1, e2) => e1.SiteID - e1.SiteID)))
+				{
+
+				}
+				//foreach (var rec in p)
+				//    Console.WriteLine(rec.Dump());
+				//Exception ex;
+				//Console.WriteLine("IsValid: " + p.IsValid(out ex));
+			}
+		}
+
+		public class Customer
+		{
+			public int CustId { get; set; }
+			public string Name { get; set; }
+			public decimal Balance { get; set; }
+			public DateTime AddedDate { get; set; }
+		}
+		public static void POCOSort()
+		{
+			using (var dr = new ChoCSVReader<EmployeeRec>(@"Test.csv").WithFirstLineHeader()
+				.WithField(c => c.Id, valueConverter: (v) => Convert.ToInt32(v as string))
+				)
+			{
+				//foreach (var rec in dr.ExternalSort(new ChoLamdaComparer<EmployeeRec>((e1, e2) => DateTime.Compare(e1.AddedDate, e1.AddedDate))))
+				//{
+				//	Console.WriteLine(rec.CustId);
+				//}
+			}
+		}
+		public static void DynamicSort()
+		{
+			using (var dr = new ChoCSVReader(@"Test.csv").WithFirstLineHeader())
+			{
+				foreach (var rec in dr.ExternalSort(new ChoLamdaComparer<dynamic>((e1, e2) => DateTime.Compare(e1.AddedDate, e1.AddedDate))))
+				{
+					Console.WriteLine(rec.CustId);
+				}
+			}
+		}
+
 		static void Main(string[] args)
         {
+			QuickDynamicTest();
+			return;
 			//MultiRecordsInfile();
 			//return;
 
@@ -1253,24 +1289,28 @@ Date,Count
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoCSVReader(reader).WithDelimiter(",").WithFirstLineHeader().WithField("Id", typeof(int)).
-                WithField("Name", typeof(string), fieldName: "@Name $1").ColumnOrderStrict())
-            {
-                writer.WriteLine("Id,@Name $1,Salary");
-                writer.WriteLine("1,Carl,1000");
-                writer.WriteLine("2,Mark,2000");
-                writer.WriteLine("3,Tom,3000");
+			using (var parser = new ChoCSVReader(reader).WithDelimiter(",")
+				.IgnoreHeader()
+				//.WithField("Id", typeof(int))
+				//.WithField("Name", typeof(string), fieldName: "@Name $1")
+				//.ColumnOrderStrict()
+				)
+			{
+				writer.WriteLine("Id,@Name $1,Salary");
+				writer.WriteLine("1,Carl,1000");
+				writer.WriteLine("2,Mark,2000");
+				writer.WriteLine("3,Tom,3000");
 
-                writer.Flush();
-                stream.Position = 0;
+				writer.Flush();
+				stream.Position = 0;
 
-                dynamic rec;
-                while ((rec = parser.Read()) != null)
-                {
-                    //Console.WriteLine(rec.Name);
-                    Console.WriteLine(((object)rec).ToStringEx());
-                }
-            }
+				dynamic rec;
+				while ((rec = parser.Read()) != null)
+				{
+					//Console.WriteLine(rec.Name);
+					Console.WriteLine(((object)rec).ToStringEx());
+				}
+			}
         }
 
         static void DateTimeTest()
@@ -1776,11 +1816,6 @@ Date,Count
             throw new NotImplementedException();
         }
 
-        public bool DoWhile(long index, object source)
-        {
-            throw new NotImplementedException();
-        }
-
         public void EndLoad(object source)
         {
             throw new NotImplementedException();
@@ -1801,27 +1836,14 @@ Date,Count
             throw new NotImplementedException();
         }
 
-        public bool TryValidate(object target, ICollection<ValidationResult> validationResults)
-        {
-            return true;
-        }
+		public bool DoWhile(long index, object source)
+		{
+			throw new NotImplementedException();
+		}
+	}
 
-        public bool TryValidateFor(object target, string memberName, ICollection<ValidationResult> validationResults)
-        {
-            return true;
-        }
-
-        public void Validate(object target)
-        {
-        }
-
-        public void ValidateFor(object target, string memberName)
-        {
-        }
-    }
-
-    //[MetadataType(typeof(EmployeeRecMeta))]
-    [ChoCSVFileHeader(TrimOption = ChoFieldValueTrimOption.None)]
+	//[MetadataType(typeof(EmployeeRecMeta))]
+	[ChoCSVFileHeader(TrimOption = ChoFieldValueTrimOption.None)]
     [ChoCSVRecordObject(ErrorMode = ChoErrorMode.IgnoreAndContinue,
     IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any, ThrowAndStopOnMissingField = false)]
     public partial class EmployeeRec //: IChoNotifyRecordRead, IChoValidatable

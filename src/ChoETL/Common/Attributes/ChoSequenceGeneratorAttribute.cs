@@ -6,7 +6,6 @@
     using System.Text;
     using System.ComponentModel;
     using System.Collections.Generic;
-    using System.Windows.Data;
 
     #endregion
 

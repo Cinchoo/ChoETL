@@ -184,17 +184,19 @@ namespace ChoETL
 
         private void DiscoverRecordFields(Type recordType, string declaringMember, bool optIn = false)
         {
-            if (!IsDynamicObject)
-            {
-                IsComplexXPathUsed = false;
+			if (!recordType.IsDynamicType())
+			{
+				IsComplexXPathUsed = false;
                 Type pt = null;
                 if (optIn) //ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any()).Any())
                 {
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                     {
                         pt = pd.PropertyType.GetUnderlyingType();
-                        if (!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
-                            DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
+						var fa = pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().FirstOrDefault();
+						bool optIn1 = fa == null || fa.UseXmlSerialization ? optIn : ChoTypeDescriptor.GetProperties(pt).Where(pd1 => pd1.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any()).Any();
+						if (optIn1 && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+                            DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn1);
                         else if (pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any())
                         {
                             bool useCache = true;

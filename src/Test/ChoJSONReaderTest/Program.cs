@@ -384,10 +384,52 @@ namespace ChoJSONReaderTest
 
         static void Main(string[] args)
         {
-			Sample12();
+			Sample17();
         }
 
-        static void Sample16()
+		public class MarketData
+		{
+			[ChoJSONRecordField(JSONPath = @"['Meta Data']")]
+			public MetaData MetaData { get; set; }
+
+			[ChoJSONRecordField(JSONPath = @"$..['Stock Quotes'][*]")]
+			public List<StockQuote> StockQuotes { get; set; }
+		}
+
+		public class MetaData
+		{
+			[JsonProperty(PropertyName = "1. Information")]
+			[ChoJSONRecordField(JSONPath = @"['Meta Data']['1. Information']")]
+			public string Information { get; set; }
+			[JsonProperty(PropertyName = "2. Notes")]
+			public string Notes { get; set; }
+			[JsonProperty(PropertyName = "3. Time Zone")]
+			public string TimeZone { get; set; }
+		}
+
+		public class StockQuote
+		{
+			[JsonProperty(PropertyName = "1. symbol")]
+			public string Symbol { get; set; }
+			[JsonProperty(PropertyName = "2. price")]
+			public double Price { get; set; }
+			[JsonProperty(PropertyName = "3. volume")]
+			public int Volumne { get; set; }
+			[JsonProperty(PropertyName = "4. timestamp")]
+			public DateTime Timestamp { get; set; }
+		}
+
+		static void Sample17()
+		{
+			using (var p = new ChoJSONReader<MarketData>("sample17.json")
+				)
+			{
+				foreach (var rec in p)
+					Console.WriteLine(rec.Dump());
+			}
+		}
+
+		static void Sample16()
         {
             using (var p = new ChoJSONReader("sample16.json")
                 .WithField("Ref", jsonPath: "$..ref", fieldType: typeof(string))

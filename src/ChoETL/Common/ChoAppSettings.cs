@@ -11,7 +11,16 @@ namespace ChoETL
 {
     public static class ChoAppSettings
     {
-        public readonly static Configuration Configuation = null;
+		private static Configuration _configuation = null;
+		public static Configuration Configuation
+		{
+			get { return _configuation; }
+			set
+			{
+				if (value != null)
+					_configuation = value;
+			}
+		}
 
         static ChoAppSettings()
         {

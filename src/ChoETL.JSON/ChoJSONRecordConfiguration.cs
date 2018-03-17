@@ -153,16 +153,17 @@ namespace ChoETL
 
         private void DiscoverRecordFields(Type recordType, string declaringMember, bool optIn = false)
         {
-            if (!IsDynamicObject) // recordType != typeof(ExpandoObject))
-            {
-                Type pt = null;
+			if (!recordType.IsDynamicType())
+			{
+				Type pt = null;
                 if (optIn) //ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any()).Any())
                 {
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                     {
-                        pt = pd.PropertyType.GetUnderlyingType();
-                        if (!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
-                            DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
+						pt = pd.PropertyType.GetUnderlyingType();
+						bool optIn1 = ChoTypeDescriptor.GetProperties(pt).Where(pd1 => pd1.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any()).Any();
+						if (optIn1 && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+                            DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn1);
                         else if (pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any())
                         {
                             var obj = new ChoJSONRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray());

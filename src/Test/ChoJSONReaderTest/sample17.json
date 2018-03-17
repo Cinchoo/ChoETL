@@ -1,0 +1,27 @@
+﻿{
+	"Meta Data": {
+		"1. Information": "Batch Stock Market Quotes",
+		"2. Notes": "IEX Real-Time Price provided for free by IEX (https://iextrading.com/developer/).",
+		"3. Time Zone": "US/Eastern"
+	},
+    "Stock Quotes": [
+        {
+            "1. symbol": "MSFT",
+            "2. price": "96.1800",
+            "3. volume": "20087326",
+            "4. timestamp": "2018-03-09 13:53:07"
+        },
+        {
+            "1. symbol": "AMD",
+            "2. price": "11.6800",
+            "3. volume": "63025764",
+            "4. timestamp": "2018-03-09 13:53:08"
+        },
+        {
+            "1. symbol": "NVDA",
+            "2. price": "243.9600",
+            "3. volume": "8649187",
+            "4. timestamp": "2018-03-09 13:52:51"
+        }
+    ]
+}

@@ -348,7 +348,15 @@ namespace ChoETL
             return this;
         }
 
-        public ChoFixedLengthReader<T> WithFirstLineHeader(bool ignoreHeader = false)
+		public ChoFixedLengthReader<T> IgnoreHeader()
+		{
+			Configuration.FileHeaderConfiguration.HasHeaderRecord = true;
+			Configuration.FileHeaderConfiguration.IgnoreHeader = true;
+
+			return this;
+		}
+
+		public ChoFixedLengthReader<T> WithFirstLineHeader(bool ignoreHeader = false)
         {
             Configuration.FileHeaderConfiguration.HasHeaderRecord = true;
             Configuration.FileHeaderConfiguration.IgnoreHeader = ignoreHeader;
