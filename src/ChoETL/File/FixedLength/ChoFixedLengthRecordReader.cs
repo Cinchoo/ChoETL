@@ -164,7 +164,11 @@ namespace ChoETL
 
                     if (!_configCheckDone)
                     {
-                        Configuration.Validate(pair); // GetHeaders(pair.Item2));
+						if (Configuration.SupportsMultiRecordTypes && Configuration.RecordSelector != null && !Configuration.RecordTypeMapped)
+						{
+						}
+						else
+							Configuration.Validate(pair); // GetHeaders(pair.Item2));
                         var dict = recFieldTypes = Configuration.FixedLengthRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
                         RaiseMembersDiscovered(dict);
                         Configuration.UpdateFieldTypesIfAny(dict);
@@ -211,7 +215,7 @@ namespace ChoETL
                     runningCount = pair.Item1;
 
                     object rec = null;
-                    if (Configuration.RecordSelector != null)
+                    if (Configuration.SupportsMultiRecordTypes && Configuration.RecordSelector != null)
                     {
                         Type recType = Configuration.RecordSelector(pair);
                         if (recType == null)
@@ -225,7 +229,13 @@ namespace ChoETL
                                 throw new ChoParserException($"No record type found for [{pair.Item1}] line to parse.");
                         }
 
-                        rec = recType.IsDynamicType() ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer))
+						if (!Configuration.RecordTypeMapped)
+						{
+							Configuration.MapRecordFields(recType);
+							Configuration.Validate(null);
+						}
+
+						rec = recType.IsDynamicType() ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer))
                         {
                             ThrowExceptionIfPropNotExists = true,
                             AlternativeKeys = Configuration.AlternativeKeys
@@ -251,9 +261,9 @@ namespace ChoETL
                     if (rec == null)
                         continue;
 
-                    if (Configuration.IsDynamicObject)
-                    {
-                        if (Configuration.AreAllFieldTypesNull && Configuration.MaxScanRows > 0 && recCount <= Configuration.MaxScanRows)
+					if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+					{
+						if (Configuration.AreAllFieldTypesNull && Configuration.MaxScanRows > 0 && recCount <= Configuration.MaxScanRows)
                         {
                             buffer.Add(rec);
                             RaiseRecordFieldTypeAssessment(recFieldTypes, (IDictionary<string, object>)rec, recCount == Configuration.MaxScanRows);
@@ -416,9 +426,9 @@ namespace ChoETL
                     else
                         fieldValue = line.Substring(fieldConfig.StartIndex, fieldConfig.Size.Value);
 
-                    if (Configuration.IsDynamicObject)
-                    {
-                        if (kvp.Value.FieldType == null)
+					if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+					{
+						if (kvp.Value.FieldType == null)
                             kvp.Value.FieldType = Configuration.MaxScanRows == -1 ? DiscoverFieldType(fieldValue as string, Configuration) : typeof(string);
                     }
                     else
@@ -438,9 +448,9 @@ namespace ChoETL
                     if (ignoreFieldValue)
                         fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
 
-                    if (Configuration.IsDynamicObject)
-                    {
-                        var dict = rec as IDictionary<string, Object>;
+					if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+					{
+						var dict = rec as IDictionary<string, Object>;
 
                         dict.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
 
@@ -453,9 +463,11 @@ namespace ChoETL
                         {
                             ChoType.TryGetProperty(rec.GetType(), kvp.Key, out pi);
                             fieldConfig.PI = pi;
-                        }
+							fieldConfig.PropConverters = ChoTypeDescriptor.GetTypeConverters(fieldConfig.PI);
+							fieldConfig.PropConverterParams = ChoTypeDescriptor.GetTypeConverterParams(fieldConfig.PI);
+						}
 
-                        if (pi != null)
+						if (pi != null)
                             rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
                         else if (!Configuration.SupportsMultiRecordTypes)
                             throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(kvp.Key, ChoType.GetTypeName(rec)));
@@ -823,7 +835,18 @@ namespace ChoETL
 
                 return retValue;
             }
-            else if (Reader != null)
+			else if (target is IChoNotifyRecordRead)
+			{
+				long index = pair.Item1;
+				object state = pair.Item2;
+				bool retValue = ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordRead)target).BeforeRecordLoad(target, index, ref state), true);
+
+				if (retValue)
+					pair = new Tuple<long, string>(index, state as string);
+
+				return retValue;
+			}
+			else if (Reader != null)
             {
                 long index = pair.Item1;
                 object state = pair.Item2;
@@ -845,7 +868,11 @@ namespace ChoETL
             {
                 ret = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordLoad(target, pair.Item1, pair.Item2, ref sp), true);
             }
-            else if (Reader != null)
+			else if (target is IChoNotifyRecordRead)
+			{
+				ret = ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordRead)target).AfterRecordLoad(target, pair.Item1, pair.Item2, ref sp), true);
+			}
+			else if (Reader != null)
             {
                 ret = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseAfterRecordLoad(target, pair.Item1, pair.Item2, ref sp), true);
             }
@@ -859,7 +886,11 @@ namespace ChoETL
             {
                 return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordLoadError(target, pair.Item1, pair.Item2, ex), false);
             }
-            else if (Reader != null)
+			else if (target is IChoNotifyRecordRead)
+			{
+				return ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordRead)target).RecordLoadError(target, pair.Item1, pair.Item2, ex), false);
+			}
+			else if (Reader != null)
             {
                 return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseRecordLoadError(target, pair.Item1, pair.Item2, ex), false);
             }
@@ -878,7 +909,17 @@ namespace ChoETL
 
                 return retValue;
             }
-            else if (Reader != null)
+			else if (target is IChoNotifyRecordRead)
+			{
+				object state = value;
+				bool retValue = ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordRead)target).BeforeRecordFieldLoad(target, index, propName, ref state), true);
+
+				if (retValue)
+					value = state;
+
+				return retValue;
+			}
+			else if (Reader != null)
             {
                 object state = value;
                 bool retValue = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseBeforeRecordFieldLoad(target, index, propName, ref state), true);
@@ -897,7 +938,11 @@ namespace ChoETL
             {
                 return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordFieldLoad(target, index, propName, value), true);
             }
-            else if (Reader != null)
+			else if (target is IChoNotifyRecordRead)
+			{
+                return ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordRead)target).AfterRecordFieldLoad(target, index, propName, value), true);
+			}
+			else if (Reader != null)
             {
                 return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseAfterRecordFieldLoad(target, index, propName, value), true);
             }
@@ -910,7 +955,11 @@ namespace ChoETL
             {
                 return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordFieldLoadError(target, index, propName, value, ex), false);
             }
-            else if (Reader != null)
+			else if (target is IChoNotifyRecordRead)
+			{
+                return ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordRead)target).RecordFieldLoadError(target, index, propName, value, ex), false);
+			}
+			else if (Reader != null)
             {
                 return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseRecordFieldLoadError(target, index, propName, value, ex), false);
             }

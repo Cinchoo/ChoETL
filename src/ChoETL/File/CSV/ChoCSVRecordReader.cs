@@ -566,9 +566,11 @@ namespace ChoETL
                         {
                             ChoType.TryGetProperty(rec.GetType(), kvp.Key, out pi);
                             fieldConfig.PI = pi;
-                        }
+							fieldConfig.PropConverters = ChoTypeDescriptor.GetTypeConverters(fieldConfig.PI);
+							fieldConfig.PropConverterParams = ChoTypeDescriptor.GetTypeConverterParams(fieldConfig.PI);
+						}
 
-                        if (pi != null)
+						if (pi != null)
                             rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
                         else if (!Configuration.SupportsMultiRecordTypes)
                             throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(kvp.Key, ChoType.GetTypeName(rec)));
@@ -963,114 +965,151 @@ namespace ChoETL
             return null;
         }
 
-        private bool RaiseBeforeRecordLoad(object target, ref Tuple<long, string> pair)
-        {
-            if (_callbackRecord != null)
-            {
-                long index = pair.Item1;
-                object state = pair.Item2;
-                bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeforeRecordLoad(target, index, ref state), true);
+		private bool RaiseBeforeRecordLoad(object target, ref Tuple<long, string> pair)
+		{
+			if (_callbackRecord != null)
+			{
+				long index = pair.Item1;
+				object state = pair.Item2;
+				bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeforeRecordLoad(target, index, ref state), true);
 
-                if (retValue)
-                    pair = new Tuple<long, string>(index, state as string);
+				if (retValue)
+					pair = new Tuple<long, string>(index, state as string);
 
-                return retValue;
-            }
-            else if (Reader != null)
-            {
-                long index = pair.Item1;
-                object state = pair.Item2;
-                bool retValue = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseBeforeRecordLoad(target, index, ref state), true);
+				return retValue;
+			}
+			else if (target is IChoNotifyRecordRead)
+			{
+				long index = pair.Item1;
+				object state = pair.Item2;
+				bool retValue = ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordRead)target).BeforeRecordLoad(target, index, ref state), true);
 
-                if (retValue)
-                    pair = new Tuple<long, string>(index, state as string);
+				if (retValue)
+					pair = new Tuple<long, string>(index, state as string);
 
-                return retValue;
-            }
-            return true;
-        }
+				return retValue;
+			}
+			else if (Reader != null)
+			{
+				long index = pair.Item1;
+				object state = pair.Item2;
+				bool retValue = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseBeforeRecordLoad(target, index, ref state), true);
 
-        private bool RaiseAfterRecordLoad(object target, Tuple<long, string> pair, ref bool skip)
-        {
-            bool ret = true;
-            bool sp = false;
-            if (_callbackRecord != null)
-            {
-                ret = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordLoad(target, pair.Item1, pair.Item2, ref sp), true);
-            }
-            else if (Reader != null)
-            {
-                ret = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseAfterRecordLoad(target, pair.Item1, pair.Item2, ref sp), true);
-            }
-            skip = sp;
-            return ret;
-        }
+				if (retValue)
+					pair = new Tuple<long, string>(index, state as string);
 
-        private bool RaiseRecordLoadError(object target, Tuple<long, string> pair, Exception ex)
-        {
-            if (_callbackRecord != null)
-            {
-                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordLoadError(target, pair.Item1, pair.Item2, ex), false);
-            }
-            else if (Reader != null)
-            {
-                return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseRecordLoadError(target, pair.Item1, pair.Item2, ex), false);
-            }
-            return true;
-        }
+				return retValue;
+			}
+			return true;
+		}
 
-        private bool RaiseBeforeRecordFieldLoad(object target, long index, string propName, ref object value)
-        {
-            if (_callbackRecord != null)
-            {
-                object state = value;
-                bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeforeRecordFieldLoad(target, index, propName, ref state), true);
+		private bool RaiseAfterRecordLoad(object target, Tuple<long, string> pair, ref bool skip)
+		{
+			bool ret = true;
+			bool sp = false;
+			if (_callbackRecord != null)
+			{
+				ret = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordLoad(target, pair.Item1, pair.Item2, ref sp), true);
+			}
+			else if (target is IChoNotifyRecordRead)
+			{
+				ret = ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordRead)target).AfterRecordLoad(target, pair.Item1, pair.Item2, ref sp), true);
+			}
+			else if (Reader != null)
+			{
+				ret = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseAfterRecordLoad(target, pair.Item1, pair.Item2, ref sp), true);
+			}
+			skip = sp;
+			return ret;
+		}
 
-                if (retValue)
-                    value = state;
+		private bool RaiseRecordLoadError(object target, Tuple<long, string> pair, Exception ex)
+		{
+			if (_callbackRecord != null)
+			{
+				return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordLoadError(target, pair.Item1, pair.Item2, ex), false);
+			}
+			else if (target is IChoNotifyRecordRead)
+			{
+				return ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordRead)target).RecordLoadError(target, pair.Item1, pair.Item2, ex), false);
+			}
+			else if (Reader != null)
+			{
+				return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseRecordLoadError(target, pair.Item1, pair.Item2, ex), false);
+			}
+			return true;
+		}
 
-                return retValue;
-            }
-            else if (Reader != null)
-            {
-                object state = value;
-                bool retValue = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseBeforeRecordFieldLoad(target, index, propName, ref state), true);
+		private bool RaiseBeforeRecordFieldLoad(object target, long index, string propName, ref object value)
+		{
+			if (_callbackRecord != null)
+			{
+				object state = value;
+				bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeforeRecordFieldLoad(target, index, propName, ref state), true);
 
-                if (retValue)
-                    value = state;
+				if (retValue)
+					value = state;
 
-                return retValue;
-            }
-            return true;
-        }
+				return retValue;
+			}
+			else if (target is IChoNotifyRecordRead)
+			{
+				object state = value;
+				bool retValue = ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordRead)target).BeforeRecordFieldLoad(target, index, propName, ref state), true);
 
-        private bool RaiseAfterRecordFieldLoad(object target, long index, string propName, object value)
-        {
-            if (_callbackRecord != null)
-            {
-                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordFieldLoad(target, index, propName, value), true);
-            }
-            else if (Reader != null)
-            {
-                return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseAfterRecordFieldLoad(target, index, propName, value), true);
-            }
-            return true;
-        }
+				if (retValue)
+					value = state;
 
-        private bool RaiseRecordFieldLoadError(object target, long index, string propName, object value, Exception ex)
-        {
-            if (_callbackRecord != null)
-            {
-                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordFieldLoadError(target, index, propName, value, ex), false);
-            }
-            else if (Reader != null)
-            {
-                return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseRecordFieldLoadError(target, index, propName, value, ex), false);
-            }
-            return true;
-        }
+				return retValue;
+			}
+			else if (Reader != null)
+			{
+				object state = value;
+				bool retValue = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseBeforeRecordFieldLoad(target, index, propName, ref state), true);
 
-        private bool RaiseMapColumn(object target, int colPos, string colName, out string newColName)
+				if (retValue)
+					value = state;
+
+				return retValue;
+			}
+			return true;
+		}
+
+		private bool RaiseAfterRecordFieldLoad(object target, long index, string propName, object value)
+		{
+			if (_callbackRecord != null)
+			{
+				return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordFieldLoad(target, index, propName, value), true);
+			}
+			else if (target is IChoNotifyRecordRead)
+			{
+				return ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordRead)target).AfterRecordFieldLoad(target, index, propName, value), true);
+			}
+			else if (Reader != null)
+			{
+				return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseAfterRecordFieldLoad(target, index, propName, value), true);
+			}
+			return true;
+		}
+
+		private bool RaiseRecordFieldLoadError(object target, long index, string propName, object value, Exception ex)
+		{
+			if (_callbackRecord != null)
+			{
+				return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordFieldLoadError(target, index, propName, value, ex), false);
+			}
+			else if (target is IChoNotifyRecordRead)
+			{
+				return ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordRead)target).RecordFieldLoadError(target, index, propName, value, ex), false);
+			}
+			else if (Reader != null)
+			{
+				return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseRecordFieldLoadError(target, index, propName, value, ex), false);
+			}
+			return true;
+		}
+
+		private bool RaiseMapColumn(object target, int colPos, string colName, out string newColName)
         {
             newColName = null;
             if (_customColumnMappableRecord != null)

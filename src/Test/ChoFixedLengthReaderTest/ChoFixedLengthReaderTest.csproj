@@ -53,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <Content Include="AABilling.txt" />
     <Content Include="ZipCodes.txt" />
     <Content Include="Emp.txt" />
   </ItemGroup>
