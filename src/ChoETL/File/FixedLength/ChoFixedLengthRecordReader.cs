@@ -223,7 +223,8 @@ namespace ChoETL
                             if (Configuration.IgnoreIfNoRecordTypeFound)
                             {
                                 ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, $"No record type found for [{pair.Item1}] line to parse.");
-                                continue;
+								e.MoveNext();
+								continue;
                             }
                             else
                                 throw new ChoParserException($"No record type found for [{pair.Item1}] line to parse.");

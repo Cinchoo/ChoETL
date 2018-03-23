@@ -578,15 +578,15 @@ namespace ChoETL
                     if (t == null)
                         continue;
 
-                    if (!typeof(T).IsAssignableFrom(t))
-                        throw new ChoParserException("Incompatible [{0}] record type passed.".FormatString(t.FullName));
+                    //if (!typeof(T).IsAssignableFrom(t))
+                    //    throw new ChoParserException("Incompatible [{0}] record type passed.".FormatString(t.FullName));
 
                     Configuration.RecordTypeConfiguration.RegisterType(t);
                 }
             }
 
-			Configuration.RecordTypeMapped = true;
-			Configuration.MapRecordFields(ChoArray.Combine<Type>(new Type[] { defaultRecordType }, recordTypes));
+			//Configuration.RecordTypeMapped = true;
+			//Configuration.MapRecordFields(ChoArray.Combine<Type>(new Type[] { defaultRecordType }, recordTypes));
             return this;
         }
 

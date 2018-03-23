@@ -143,8 +143,9 @@ namespace ChoETL
 
             RecordSelector = new Func<object, Type>((value) =>
             {
-                string line = value as string;
-                if (line.IsNullOrEmpty()) return RecordTypeConfiguration.DefaultRecordType;
+				Tuple<long, string> kvp = value as Tuple<long, string>;
+				string line = kvp.Item2;
+				if (line.IsNullOrEmpty()) return RecordTypeConfiguration.DefaultRecordType;
 
                 if (RecordTypeCodeExtractor != null)
                 {

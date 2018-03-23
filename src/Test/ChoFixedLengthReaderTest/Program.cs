@@ -52,12 +52,13 @@ namespace ChoFixedLengthReaderTest
         public ChoCurrency Salary { get; set; }
     }
 
-    [ChoFixedLengthRecordObject(recordLength: 25)]
+    //[ChoFixedLengthRecordObject(recordLength: 25)]
 	public abstract class AABillingRecord
 	{
 
 	}
 
+	[ChoRecordTypeCode("H")]
 	public class AABillingHeaderRecord : AABillingRecord //, IChoNotifyRecordRead
 	{
 		[ChoFixedLengthRecordField(1, 8)]
@@ -128,6 +129,7 @@ namespace ChoFixedLengthReaderTest
 		public string ClientName { get; set; }
 	}
 
+	[ChoRecordTypeCode("T")]
 	public class AABillingTrailerRecord : AABillingRecord
 	{
 		[ChoFixedLengthRecordField(1, 24)]
@@ -139,16 +141,17 @@ namespace ChoFixedLengthReaderTest
 		public static void AABillingTest()
 		{
 			using (var p = new ChoFixedLengthReader("AABilling.txt")
-				.WithCustomRecordSelector((l) =>
-				{
-					Tuple<long, string> kvp = l as Tuple<long, string>;
-					if (kvp.Item2.StartsWith("H"))
-						return typeof(AABillingHeaderRecord);
-					else if (kvp.Item2.StartsWith("T"))
-						return typeof(AABillingTrailerRecord);
-					else
-						return typeof(AABillingDetailRecord);
-				})
+				.WithRecordSelector(0, 1, null, typeof(AABillingDetailRecord), typeof(AABillingTrailerRecord), typeof(AABillingHeaderRecord))
+				//.WithCustomRecordSelector((l) =>
+				//{
+				//	Tuple<long, string> kvp = l as Tuple<long, string>;
+				//	if (kvp.Item2.StartsWith("H"))
+				//		return typeof(AABillingHeaderRecord);
+				//	else if (kvp.Item2.StartsWith("T"))
+				//		return typeof(AABillingTrailerRecord);
+				//	else
+				//		return typeof(AABillingDetailRecord);
+				//})
 				)
 			{
 				foreach (var rec in p)
