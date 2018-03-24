@@ -842,8 +842,24 @@ Date,Count
 			}
 		}
 
+		static void CharDiscTest()
+		{
+			var csv = @"31350.2,3750.9188,S,14458.8652,E,7.98,50817,0,2.3,0,23
+31350.4,3750.9204,S1,14458.867,E,6.66,50817,0,2.3,0,23";
+
+			using (var p = new ChoCSVReader(new StringReader(csv))
+				.Configure(c => c.MaxScanRows = 10)
+				)
+			{
+				foreach (var rec in p)
+					Console.WriteLine(rec.Dump());
+			}
+		}
 		static void Main(string[] args)
         {
+			CharDiscTest();
+			return;
+
 			QuickDynamicTest();
 			return;
 			//MultiRecordsInfile();

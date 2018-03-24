@@ -72,7 +72,7 @@ namespace ChoETL
                 //newRec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
                 newRec.Add(kvp.Key, kvp.Value.CastObjectTo(recTypes[kvp.Key]));
             }
-            return rec;
+            return newRec;
         }
 
         protected virtual void OnRecordFieldTypeAssessment(IDictionary<string, Type> fieldTypes, IDictionary<string, object> fieldValues, bool isLastScanRow = false)
@@ -104,18 +104,23 @@ namespace ChoETL
                     decimal decResult = 0;
                     DateTime dtResult;
 
-                    if (ChoBoolean.TryParse(value.ToNString(), out boolValue))
-                        fieldType = typeof(bool);
-                    else if (!value.ToNString().Contains(ci.NumberFormat.NumberDecimalSeparator) && long.TryParse(value.ToNString(), out lresult))
-                        fieldType = typeof(long);
-                    else if (double.TryParse(value.ToNString(), out dresult))
-                        fieldType = typeof(double);
-                    else if (decimal.TryParse(value.ToNString(), out decResult))
-                        fieldType = typeof(decimal);
-                    else if (DateTime.TryParse(value.ToNString(), out dtResult))
-                        fieldType = typeof(DateTime);
-                    else
-                        fieldType = typeof(string);
+					if (ChoBoolean.TryParse(value.ToNString(), out boolValue))
+						fieldType = typeof(bool);
+					else if (!value.ToNString().Contains(ci.NumberFormat.NumberDecimalSeparator) && long.TryParse(value.ToNString(), out lresult))
+						fieldType = typeof(long);
+					else if (double.TryParse(value.ToNString(), out dresult))
+						fieldType = typeof(double);
+					else if (decimal.TryParse(value.ToNString(), out decResult))
+						fieldType = typeof(decimal);
+					else if (DateTime.TryParse(value.ToNString(), out dtResult))
+						fieldType = typeof(DateTime);
+					else
+					{
+						if (value.ToNString().Length == 1)
+							fieldType = typeof(char);
+						else
+							fieldType = typeof(string);
+					}
 
                     if (fieldType == typeof(string))
                         fieldTypes[key] = fieldType;
@@ -161,8 +166,13 @@ namespace ChoETL
                         if (fieldTypes[key] == null)
                             fieldTypes[key] = fieldType;
                     }
-                    else
-                        fieldType = typeof(string);
+					else if (fieldType == typeof(char))
+					{
+						if (fieldTypes[key] == null)
+							fieldTypes[key] = fieldType;
+					}
+					else
+						fieldType = typeof(string);
                 }
             }
             else
