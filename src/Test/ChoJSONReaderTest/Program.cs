@@ -395,9 +395,13 @@ namespace ChoJSONReaderTest
 			public int ErrorCode { get; set; }
 			public string ErrorMsg { get; set; }
 			[ChoIgnoreMember]
-			public object Key { get => throw new NotImplementedException(); set => ErrorCode = value.CastTo<int>(); }
+			public object Key
+			{
+				get { throw new NotImplementedException(); }
+				set { ErrorCode = value.CastTo<int>(); }
+			}
 			[ChoIgnoreMember]
-			public object Value { get => throw new NotImplementedException(); set => ErrorMsg = (string)value; }
+			public object Value { get { throw new NotImplementedException(); } set { ErrorMsg = (string)value; } }
 		}
 
 		private static void GetKeyTest()
