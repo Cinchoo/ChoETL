@@ -93,7 +93,7 @@ namespace ChoETL
 
         }
 
-        internal ChoJSONRecordConfiguration(Type recordType) : base(recordType)
+		internal ChoJSONRecordConfiguration(Type recordType) : base(recordType)
         {
             JSONRecordFieldConfigurations = new List<ChoJSONRecordFieldConfiguration>();
 

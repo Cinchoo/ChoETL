@@ -1785,7 +1785,12 @@ namespace ChoETL
             return arr;
         }
 
-        public static IList Cast(this IList list, Type elementType)
+		public static IList CreateGenericList(this Type type)
+		{
+			return (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(new[] { type }));
+		}
+
+		public static IList Cast(this IList list, Type elementType)
         {
             Type listType = typeof(List<>).MakeGenericType(new Type[] { elementType });
             IList list1 = (IList)Activator.CreateInstance(listType);

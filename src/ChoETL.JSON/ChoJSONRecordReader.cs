@@ -330,7 +330,7 @@ namespace ChoETL
                 if (rec.FillIfCustomSerialization(pair.Item2))
                     return true;
 
-                if (FillIfKeyValueObject(rec, pair))
+                if (FillIfKeyValueObject(rec, pair.Item2))
                     return true;
             }
 
@@ -482,7 +482,7 @@ namespace ChoETL
                             if (fieldConfig.ItemConverter != null)
                                 fieldValue = fieldConfig.ItemConverter(fieldValue);
                             else
-                                fieldValue = ToObject((JToken)fieldValue, itemType);
+                                fieldValue = ToObject((JToken)fieldValue, itemType, fieldConfig.UseJSONSerialization);
                         }
                         else if (fieldValue is JToken[])
                         {
@@ -634,12 +634,44 @@ namespace ChoETL
             return true;
         }
 
-        private bool FillIfKeyValueObject(object rec, Tuple<long, JObject> pair)
-        {
-            IDictionary<string, object> dict = ToDynamic(pair.Item2) as IDictionary<string, object>;
-            if (dict.Count == 0)
-                return true;
+		private bool FillIfKeyValueObject(object rec, JToken jObject)
+		{
+			if (rec.GetType().GetCustomAttribute<ChoKeyValueTypeAttribute>() != null
+				|| typeof(IChoKeyValueType).IsAssignableFrom(rec.GetType()))
+			{
+				IDictionary<string, object> dict = ToDynamic(jObject) as IDictionary<string, object>;
+				if (dict == null || dict.Count == 0)
+					return true;
 
+				FillIfKeyValueObject(rec, dict.First());
+			}
+			return false;
+		}
+
+
+		private IList FillIfKeyValueObject(Type type, JToken jObject)
+		{
+			if (type.GetCustomAttribute<ChoKeyValueTypeAttribute>() != null
+				|| typeof(IChoKeyValueType).IsAssignableFrom(type))
+			{
+				IDictionary<string, object> dict = ToDynamic(jObject) as IDictionary<string, object>;
+				if (dict == null || dict.Count == 0)
+					return null;
+
+				IList recs = type.CreateGenericList();
+				foreach (var kvp in dict)
+				{
+					var rec = Activator.CreateInstance(type);
+					FillIfKeyValueObject(rec, kvp);
+					recs.Add(rec);
+				}
+				return recs;
+			}
+			return null;
+		}
+
+		private bool FillIfKeyValueObject(object rec, KeyValuePair<string, object> kvp)
+        {
             var isKVPAttrDefined = rec.GetType().GetCustomAttribute<ChoKeyValueTypeAttribute>() != null;
 
             if (isKVPAttrDefined)
@@ -649,17 +681,17 @@ namespace ChoETL
 
                 if (kP != null && vP != null)
                 {
-                    kP.SetValue(rec, dict.First().Key);
-                    vP.SetValue(rec, dict.First().Value);
+                    kP.SetValue(rec, kvp.Key);
+                    vP.SetValue(rec, kvp.Value);
                     return true;
                 }
             }
             if (typeof(IChoKeyValueType).IsAssignableFrom(rec.GetType()))
             {
-                IChoKeyValueType kvp = rec as IChoKeyValueType;
+                IChoKeyValueType kvp1 = rec as IChoKeyValueType;
 
-                kvp.Key = dict.First().Key;
-                kvp.Value = dict.First().Value;
+                kvp1.Key = kvp.Key;
+                kvp1.Value = kvp.Value;
                 return true;
             }
 
@@ -701,21 +733,27 @@ namespace ChoETL
             }
             else
             {
-                bool lUseJSONSerialization = useJSONSerialization == null ? Configuration.UseJSONSerialization : useJSONSerialization.Value;
-                if (lUseJSONSerialization)
-                {
-                    if (_se == null || _se.Value == null)
-                        return jToken.ToObject(type);
-                    else
-                        return jToken.ToObject(type, _se.Value);
-                }
-                else
-                {
-                    if (_se == null || _se.Value == null)
-                        return jToken.ToObject(type);
-                    else
-                        return jToken.ToObject(type, _se.Value);
-                }
+				if (type.GetCustomAttribute<ChoKeyValueTypeAttribute>() != null
+				|| typeof(IChoKeyValueType).IsAssignableFrom(type))
+				{
+					return FillIfKeyValueObject(type, jToken);
+				}
+
+				bool lUseJSONSerialization = useJSONSerialization == null ? Configuration.UseJSONSerialization : useJSONSerialization.Value;
+				if (lUseJSONSerialization)
+				{
+					if (_se == null || _se.Value == null)
+						return jToken.ToObject(type);
+					else
+						return jToken.ToObject(type, _se.Value);
+				}
+				else
+				{
+					if (_se == null || _se.Value == null)
+						return jToken.ToObject(type);
+					else
+						return jToken.ToObject(type, _se.Value);
+				}
             }
         }
 

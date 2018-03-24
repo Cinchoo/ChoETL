@@ -141,25 +141,41 @@ namespace ChoETL
                 else if (ChoConvert.TryConvertToSpecialValues(value, targetType, culture, out convValue))
                     return convValue;
 
-                if (value is Array && typeof(IList).IsAssignableFrom(targetType))
-                {
-                    if (typeof(Array).IsAssignableFrom(targetType))
-                    {
-                        MethodInfo convertMethod = typeof(ChoConvert).GetMethod("ConvertToArray",
-                        BindingFlags.NonPublic | BindingFlags.Static);
-                        MethodInfo generic = convertMethod.MakeGenericMethod(new[] { targetType.GetItemType() });
-                        return generic.Invoke(null, new object[] { value });
-                    }
-                    else
-                    {
-                        MethodInfo convertMethod = typeof(ChoConvert).GetMethod("ConvertToList",
-                        BindingFlags.NonPublic | BindingFlags.Static);
-                        MethodInfo generic = convertMethod.MakeGenericMethod(new[] { targetType.GetItemType() });
-                        return generic.Invoke(null, new object[] { value });
-                    }
-                }
-
-                throw new ApplicationException("Object conversion failed.");
+				if (value is Array && typeof(IList).IsAssignableFrom(targetType))
+				{
+					if (typeof(Array).IsAssignableFrom(targetType))
+					{
+						MethodInfo convertMethod = typeof(ChoConvert).GetMethod("ConvertToArray",
+						BindingFlags.NonPublic | BindingFlags.Static);
+						MethodInfo generic = convertMethod.MakeGenericMethod(new[] { targetType.GetItemType() });
+						return generic.Invoke(null, new object[] { value });
+					}
+					else
+					{
+						MethodInfo convertMethod = typeof(ChoConvert).GetMethod("ConvertToList",
+						BindingFlags.NonPublic | BindingFlags.Static);
+						MethodInfo generic = convertMethod.MakeGenericMethod(new[] { targetType.GetItemType() });
+						return generic.Invoke(null, new object[] { value });
+					}
+				}
+				else if (value is IList && typeof(Array).IsAssignableFrom(targetType))
+				{
+					if (typeof(Array).IsAssignableFrom(targetType))
+					{
+						MethodInfo convertMethod = typeof(ChoConvert).GetMethod("ConvertListToArray",
+						BindingFlags.NonPublic | BindingFlags.Static);
+						MethodInfo generic = convertMethod.MakeGenericMethod(new[] { targetType.GetItemType() });
+						return generic.Invoke(null, new object[] { value });
+					}
+					else
+					{
+						MethodInfo convertMethod = typeof(ChoConvert).GetMethod("ConvertListToList",
+						BindingFlags.NonPublic | BindingFlags.Static);
+						MethodInfo generic = convertMethod.MakeGenericMethod(new[] { targetType.GetItemType() });
+						return generic.Invoke(null, new object[] { value });
+					}
+				}
+				throw new ApplicationException("Object conversion failed.");
             }
             catch (Exception ex)
             {
@@ -176,8 +192,16 @@ namespace ChoETL
         {
             return input.Cast<T>().ToList(); // Using LINQ for simplicity
         }
+		private static T[] ConvertListToArray<T>(IList input)
+		{
+			return input.Cast<T>().ToArray(); // Using LINQ for simplicity
+		}
+		private static List<T> ConvertListToList<T>(IList input)
+		{
+			return input.Cast<T>().ToList(); // Using LINQ for simplicity
+		}
 
-        private static bool TryConvertXPlicit(object value, Type destinationType, string operatorMethodName, ref object result)
+		private static bool TryConvertXPlicit(object value, Type destinationType, string operatorMethodName, ref object result)
         {
             return ChoConvert.TryConvertXPlicit(value, value.GetType(), destinationType, operatorMethodName, ref result) || ChoConvert.TryConvertXPlicit(value, destinationType, destinationType, operatorMethodName, ref result);
         }
