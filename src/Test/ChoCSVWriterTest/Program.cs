@@ -137,6 +137,7 @@ namespace ChoCSVWriterTest
             public string State { get; set; }
             [Required]
             [RegularExpression("^[0-9][0-9]*$")]
+			[ChoIgnoreMember]
             public string Zip { get; set; }
         }
         public class SiteAddress
@@ -231,18 +232,65 @@ namespace ChoCSVWriterTest
             Console.WriteLine(sb.ToString());
         }
 
-        static void Main(string[] args)
+		public class Test
+		{
+			public int Id { get; set; }
+			public string Name { get; set; }
+			public DateTime CreatedDate { get; set; }
+			public string DueDate { get; set; }
+			public string ReferenceNo { get; set; }
+			public string Parent { get; set; }
+		}
+		static void ListPOCOTest()
+		{
+			List<Test> list = new List<Test>();
+
+			list.Add(new Test { Id = 1, Name = "Tom", CreatedDate = DateTime.Today });
+			list.Add(new Test { Id = 2, Name = "Mark" });
+
+			using (var w = new ChoCSVWriter<Test>(Console.Out)
+				.WithFirstLineHeader()
+				)
+			{
+				w.Write(list);
+			}
+		}
+
+		static void WriteSpecificColumns()
+		{
+			StringBuilder csv = new StringBuilder();
+
+			Site site = new Site { SiteID = 1, House = 12, Apartment = 100, SiteAddress = new SiteAddress { City = "New York", Street = "101 Main St." } };
+
+			using (var w = new ChoCSVWriter<Site>(new StringWriter(csv))
+				.WithFirstLineHeader()
+				//.ClearFields()
+				//.WithField(r => r.SiteID)
+				//.WithField(r => r.SiteAddress.City)
+				)
+			{
+				w.Write(site);
+			}
+
+			Console.WriteLine(csv.ToString());
+		}
+
+		static void Main(string[] args)
         {
-            //DictionaryTest();
-            //return;
+			ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            //ListTest();
-            //return;
-            //int z = 44;
-            //Console.WriteLine(String.Format("{0:000}", z));
-            //return;
+			WriteSpecificColumns();
+			return;
+			//DictionaryTest();
+			//return;
 
-            Sample3();
+			//ListTest();
+			//return;
+			//int z = 44;
+			//Console.WriteLine(String.Format("{0:000}", z));
+			//return;
+
+			Sample3();
             return;
 
             InheritanceTest();

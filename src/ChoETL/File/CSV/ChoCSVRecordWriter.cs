@@ -89,7 +89,8 @@ namespace ChoETL
                                     else
                                         Configuration.RecordType = recordType;
 
-                                    Configuration.MapRecordFields(Configuration.RecordType);
+									if (Configuration.CSVRecordFieldConfigurations.Count == 0)
+										Configuration.MapRecordFields(Configuration.RecordType);
                                 }
 
                                 if (Configuration.IsDynamicObject)

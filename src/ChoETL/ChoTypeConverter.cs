@@ -65,7 +65,19 @@ namespace ChoETL
             }
         }
 
-        public KeyValuePair<Type, object>[] GetAll()
+		public void Add(Type type, IChoValueConverter converter)
+		{
+			ChoGuard.ArgumentNotNull(type, "Type");
+			ChoGuard.ArgumentNotNull(converter, "Converter");
+
+			lock (_padLock)
+			{
+				Remove(type);
+				_defaultTypeConverters.Add(type, converter);
+			}
+		}
+
+		public KeyValuePair<Type, object>[] GetAll()
         {
             lock (_padLock)
             {

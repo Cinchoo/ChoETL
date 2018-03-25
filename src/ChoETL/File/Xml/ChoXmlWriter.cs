@@ -283,7 +283,7 @@ namespace ChoETL
                     if (!_clearFields)
                     {
 						ClearFields();
-						Configuration.MapRecordFields(Configuration.RecordType);
+						//Configuration.MapRecordFields(Configuration.RecordType);
                     }
                     fnTrim = fn.NTrim();
 					if (Configuration.XmlRecordFieldConfigurations.Any(o => o.Name == fnTrim))
@@ -393,7 +393,7 @@ namespace ChoETL
                 if (!_clearFields)
                 {
 					ClearFields();
-					Configuration.MapRecordFields(Configuration.RecordType);
+					//Configuration.MapRecordFields(Configuration.RecordType);
                 }
 
                 string fnTrim = name.NTrim();

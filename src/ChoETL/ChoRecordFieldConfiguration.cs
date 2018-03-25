@@ -148,13 +148,27 @@ namespace ChoETL
             Converters.Add(converter);
         }
 
-        public void AddConverter(TypeConverter converter)
+		public void AddConverter(IChoValueConverter converter)
+		{
+			if (converter == null) return;
+			Converters.Add(converter);
+		}
+
+		public void AddConverter(TypeConverter converter)
         {
             if (converter == null) return;
             Converters.Add(converter);
         }
 
-        public void RemoveConverter(IValueConverter converter)
+		public void RemoveConverter(IChoValueConverter converter)
+		{
+			if (converter == null) return;
+			if (Converters.Contains(converter))
+				Converters.Remove(converter);
+		}
+
+
+		public void RemoveConverter(IValueConverter converter)
         {
             if (converter == null) return;
             if (Converters.Contains(converter))

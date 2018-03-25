@@ -1,0 +1,47 @@
+﻿{
+	"id": 4394,
+	"uuid": "50124928-f58b-4aa9-ab5b-14ce05058dd1",
+	"name": "smarty",
+	"description": null,
+	"state": "not_configured",
+	"system_tags": [
+		"indoor",
+		"offline"
+	],
+	"user_tags": [],
+	"last_reading_at": null,
+	"added_at": "2017-09-24T13:09:02Z",
+	"updated_at": "2017-09-24T13:09:02Z",
+	"mac_address": "[FILTERED]",
+	"owner": {
+		"id": 5424,
+		"uuid": "fea238d0-4c8f-4f0c-8ff5-412eca90bf45",
+		"username": "smarty",
+		"avatar": "https://smartcitizen.s3.amazonaws.com/avatars/default.svg",
+		"url": null,
+		"joined_at": "2016-07-04T22:23:04Z",
+		"location": {
+			"city": null,
+			"country": null,
+			"country_code": null
+		},
+		"device_ids": []
+	},
+	"data": {
+		"recorded_at": null,
+		"added_at": null,
+		"location": {
+			"ip": null,
+			"exposure": "indoor",
+			"elevation": null,
+			"latitude": 50.1234885,
+			"longitude": 8.6892953,
+			"geohash": "u0yjjsxq7r",
+			"city": "Frankfurt am Main",
+			"country_code": "DE",
+			"country": "Germany"
+		},
+		"sensors": []
+	},
+	"kit": null
+}

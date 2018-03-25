@@ -672,10 +672,21 @@ namespace ChoETL
             {
                 if (index < ((IList)array).Count)
                 {
-                    if (type.IsEnum)
-                        return (T)Enum.Parse(type, ((IList)array)[index].ToNString());
-
-                    return (T)Convert.ChangeType(((IList)array)[index], type);
+					try
+					{
+						if (type.IsEnum)
+						{
+							if (Enum.IsDefined(type, ((IList)array)[index].ToNString()))
+								return (T)Enum.Parse(type, ((IList)array)[index].ToNString());
+							else
+								return defaultValue;
+						}
+						return (T)Convert.ChangeType(((IList)array)[index], type);
+					}
+					catch
+					{
+						return defaultValue;
+					}
                 }
                 else
                     return defaultValue;

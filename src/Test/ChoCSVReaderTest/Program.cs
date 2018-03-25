@@ -795,29 +795,21 @@ Date,Count
 		static void Sample3()
 		{
 			using (var p = new ChoCSVReader<Site>("Sample3.csv")
-				//.ClearFields()
-				//            .WithField(m => m.SiteID)
-				//            .WithField(m => m.SiteAddress.City)
+							.ClearFields()
+							.WithField(m => m.SiteID)
+							.WithField(m => m.SiteAddress.City)
 				.WithFirstLineHeader(true)
 				)
 			{
-				foreach (var rec in p.ExternalSort(new ChoLamdaComparer<Site>((e1, e2) => e1.SiteID - e1.SiteID)))
-				{
+				//foreach (var rec in p.ExternalSort(new ChoLamdaComparer<Site>((e1, e2) => e1.SiteID - e1.SiteID)))
+				//{
 
-				}
-				//foreach (var rec in p)
-				//    Console.WriteLine(rec.Dump());
+				//}
+				foreach (var rec in p)
+					Console.WriteLine(rec.Dump());
 				//Exception ex;
 				//Console.WriteLine("IsValid: " + p.IsValid(out ex));
 			}
-		}
-
-		public class Customer
-		{
-			public int CustId { get; set; }
-			public string Name { get; set; }
-			public decimal Balance { get; set; }
-			public DateTime AddedDate { get; set; }
 		}
 		public static void POCOSort()
 		{
@@ -848,16 +840,41 @@ Date,Count
 31350.4,3750.9204,S1,14458.867,E,6.66,50817,0,2.3,0,23";
 
 			using (var p = new ChoCSVReader(new StringReader(csv))
-				.Configure(c => c.MaxScanRows = 10)
+				//.Configure(c => c.MaxScanRows = 10)
 				)
 			{
 				foreach (var rec in p)
 					Console.WriteLine(rec.Dump());
 			}
 		}
+
+		public class Customer
+		{
+			[ChoTypeConverter(typeof(ChoIntConverter), Parameters = "0000")]
+			public int CustId { get; set; }
+			public string Name { get; set; }
+			public decimal Balance { get; set; }
+			public DateTime AddedDate { get; set; }
+		}
+
+		static void ConverterTest()
+		{
+			var csv = @"0001, Tom, 12.001, 1/1/2018
+0002, Mark, 100.001, 12/1/2018";
+
+			using (var p = new ChoCSVReader<Customer>(new StringReader(csv))
+				//.Configure(c => c.MaxScanRows = 10)
+				)
+			{
+				foreach (var rec in p)
+					Console.WriteLine(rec.Dump());
+			}
+
+		}
+
 		static void Main(string[] args)
         {
-			CharDiscTest();
+			Sample3();
 			return;
 
 			QuickDynamicTest();
