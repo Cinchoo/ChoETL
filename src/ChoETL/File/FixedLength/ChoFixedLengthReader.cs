@@ -475,6 +475,11 @@ namespace ChoETL
 					nfc.PropertyDescriptor = pd;
 					nfc.DeclaringMember = fullyQualifiedMemberName;
 				}
+				if (pd != null)
+				{
+					if (nfc.FieldType == null)
+						nfc.FieldType = pd.PropertyType;
+				}
 
 				Configuration.FixedLengthRecordFieldConfigurations.Add(nfc);
             }

@@ -21,7 +21,7 @@ namespace ChoETL
         where T : class
     {
         //private TextReader _textReader;
-        private StreamReader _sr;
+        private TextReader _sr;
         private XmlReader _xmlReader;
         private IEnumerable<XElement> _xElements;
         private bool _closeStreamOnDispose = false;
@@ -45,22 +45,27 @@ namespace ChoETL
         }
 
         public ChoXmlReader(string filePath, string defaultNamespace)
-        {
-            ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
+		{
+			ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
 
-            Configuration = new ChoXmlRecordConfiguration();
-            if (!defaultNamespace.IsNullOrWhiteSpace())
-                Configuration.NamespaceManager.AddNamespace("", defaultNamespace);
+			Configuration = new ChoXmlRecordConfiguration();
+			if (!defaultNamespace.IsNullOrWhiteSpace())
+				Configuration.NamespaceManager.AddNamespace("", defaultNamespace);
 
-            Init();
+			Init();
 
-            _sr = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
-            _xmlReader = XmlReader.Create(_sr,
-                new XmlReaderSettings() { DtdProcessing = DtdProcessing.Ignore, XmlResolver = null }, new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
-            _closeStreamOnDispose = true;
-        }
+			_sr = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
+			InitXml();
+			_closeStreamOnDispose = true;
+		}
 
-        public ChoXmlReader(string filePath, ChoXmlRecordConfiguration configuration = null)
+		private void InitXml()
+		{
+			_xmlReader = XmlReader.Create(_sr,
+				new XmlReaderSettings() { DtdProcessing = DtdProcessing.Ignore, XmlResolver = null }, new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
+		}
+
+		public ChoXmlReader(string filePath, ChoXmlRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
 
@@ -69,9 +74,8 @@ namespace ChoETL
             Init();
 
             _sr = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
-            _xmlReader = XmlReader.Create(_sr,
-                new XmlReaderSettings() { DtdProcessing = DtdProcessing.Ignore, XmlResolver = null }, new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
-            _closeStreamOnDispose = true;
+			InitXml();
+			_closeStreamOnDispose = true;
         }
 
         public ChoXmlReader(TextReader textReader, ChoXmlRecordConfiguration configuration = null)
@@ -81,10 +85,11 @@ namespace ChoETL
             Configuration = configuration;
             Init();
 
-            _sr = textReader as StreamReader;
-        }
+            _sr = textReader;
+			InitXml();
+		}
 
-        public ChoXmlReader(XmlReader xmlReader, ChoXmlRecordConfiguration configuration = null)
+		public ChoXmlReader(XmlReader xmlReader, ChoXmlRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNull(xmlReader, "XmlReader");
 
@@ -105,7 +110,8 @@ namespace ChoETL
                 _sr = new StreamReader(inStream);
             else
                 _sr = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
-            _closeStreamOnDispose = true;
+			InitXml();
+			_closeStreamOnDispose = true;
         }
 
         public ChoXmlReader(IEnumerable<XElement> xElements, ChoXmlRecordConfiguration configuration = null)
@@ -124,9 +130,8 @@ namespace ChoETL
             Close();
             Init();
             _sr = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
-            _xmlReader = XmlReader.Create(_sr,
-                new XmlReaderSettings() { DtdProcessing = DtdProcessing.Ignore, XmlResolver = null }, new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
-            _closeStreamOnDispose = true;
+			InitXml();
+			_closeStreamOnDispose = true;
 
             return this;
         }
@@ -137,8 +142,9 @@ namespace ChoETL
 
             Close();
             Init();
-            _sr = textReader as StreamReader;
-            _closeStreamOnDispose = false;
+            _sr = textReader;
+			InitXml();
+			_closeStreamOnDispose = false;
 
             return this;
         }
@@ -516,6 +522,11 @@ namespace ChoETL
 					var nfc = new ChoXmlRecordFieldConfiguration(fnTrim, $"//{fnTrim}");
 					nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
 					nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
+					if (pd != null)
+					{
+						if (nfc.FieldType == null)
+							nfc.FieldType = pd.PropertyType;
+					}
 
 					Configuration.XmlRecordFieldConfigurations.Add(nfc);
 				}
@@ -672,7 +683,11 @@ namespace ChoETL
 					nfc.PropertyDescriptor = pd;
 					nfc.DeclaringMember = fullyQualifiedMemberName;
 				}
-
+				if (pd != null)
+				{
+					if (nfc.FieldType == null)
+						nfc.FieldType = pd.PropertyType;
+				}
 				Configuration.XmlRecordFieldConfigurations.Add(nfc);
             }
 

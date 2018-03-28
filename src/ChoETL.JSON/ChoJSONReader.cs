@@ -471,6 +471,11 @@ namespace ChoETL
 					var nfc = new ChoJSONRecordFieldConfiguration(fnTrim, (string)null);
 					nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
 					nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
+					if (pd != null)
+					{
+						if (nfc.FieldType == null)
+							nfc.FieldType = pd.PropertyType;
+					}
 
 					Configuration.JSONRecordFieldConfigurations.Add(nfc);
 				}
@@ -537,6 +542,11 @@ namespace ChoETL
 					pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
 					nfc.PropertyDescriptor = pd;
 					nfc.DeclaringMember = fullyQualifiedMemberName;
+				}
+				if (pd != null)
+				{
+					if (nfc.FieldType == null)
+						nfc.FieldType = pd.PropertyType;
 				}
 
 				Configuration.JSONRecordFieldConfigurations.Add(nfc);

@@ -77,9 +77,37 @@ namespace ChoXmlReaderTest
     {
         static void Main(string[] args)
         {
-            NoEncodeTest();
+			CDATATest();
         }
 
+		public class Emp
+		{
+			[ChoXmlElementRecordField(FieldName = "First_Name")]
+			public string FirstName { get; set; }
+			public string Last_Name { get; set; }
+			public EmpID EmpID { get; set; }
+		}
+
+		public class EmpID
+		{
+			public int ID { get; set; }
+		}
+		static void CDATATest()
+		{
+			string xml = @"<CUST><First_Name>Luke</First_Name> <Last_Name>Skywalker</Last_Name> <ID><![CDATA[1234]]></ID> </CUST>";
+
+			using (var p = new ChoXmlReader<Emp>(new StringReader(xml))
+				.Configure(c => c.ThrowAndStopOnMissingField = false)
+				.WithXPath("/")
+				//.ClearFields()
+				.WithField(e => e.FirstName, xPath: "/First_Name")
+				.WithField(e => e.EmpID.ID)
+				)
+			{
+				foreach (var rec in p)
+					Console.WriteLine(rec.Dump());
+			}
+		}
         static void NoEncodeTest()
         {
             using (var xr = new ChoXmlReader("NoEncode.xml")

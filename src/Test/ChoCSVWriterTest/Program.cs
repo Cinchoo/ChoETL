@@ -265,7 +265,7 @@ namespace ChoCSVWriterTest
 			using (var w = new ChoCSVWriter<Site>(new StringWriter(csv))
 				.WithFirstLineHeader()
 				//.ClearFields()
-				//.WithField(r => r.SiteID)
+				.WithField(r => r.SiteID)
 				//.WithField(r => r.SiteAddress.City)
 				)
 			{

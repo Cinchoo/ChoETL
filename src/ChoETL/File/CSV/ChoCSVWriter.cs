@@ -264,8 +264,8 @@ namespace ChoETL
                     if (!_clearFields)
                     {
 						ClearFields();
-						//Configuration.MapRecordFields(Configuration.RecordType);
-                    }
+						Configuration.MapRecordFields(Configuration.RecordType);
+					}
 
                     fnTrim = fn.NTrim();
 					if (Configuration.CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
@@ -279,6 +279,11 @@ namespace ChoETL
 					var nfc = new ChoCSVRecordFieldConfiguration(fnTrim, ++maxFieldPos) { FieldName = fn };
 					nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
 					nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
+					if (pd != null)
+					{
+						if (nfc.FieldType == null)
+							nfc.FieldType = pd.PropertyType;
+					}
 
 					Configuration.CSVRecordFieldConfigurations.Add(nfc);
                 }
@@ -313,8 +318,8 @@ namespace ChoETL
                 if (!_clearFields)
                 {
 					ClearFields();
-					//Configuration.MapRecordFields(Configuration.RecordType);
-                }
+					Configuration.MapRecordFields(Configuration.RecordType);
+				}
                 if (fieldName.IsNullOrWhiteSpace())
                     fieldName = name;
 
@@ -359,6 +364,11 @@ namespace ChoETL
 					pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
 					nfc.PropertyDescriptor = pd;
 					nfc.DeclaringMember = fullyQualifiedMemberName;
+				}
+				if (pd != null)
+				{
+					if (nfc.FieldType == null)
+						nfc.FieldType = pd.PropertyType;
 				}
 
 				Configuration.CSVRecordFieldConfigurations.Add(nfc);

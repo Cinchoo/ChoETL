@@ -265,7 +265,7 @@ namespace ChoETL
                 if (!_clearFields)
                 {
 					ClearFields();
-					//Configuration.MapRecordFields(Configuration.RecordType);
+					Configuration.MapRecordFields(Configuration.RecordType);
 				}
 				if (fieldName.IsNullOrWhiteSpace())
 					fieldName = name;
@@ -305,6 +305,11 @@ namespace ChoETL
 					pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
 					nfc.PropertyDescriptor = pd;
 					nfc.DeclaringMember = fullyQualifiedMemberName;
+				}
+				if (pd != null)
+				{
+					if (nfc.FieldType == null)
+						nfc.FieldType = pd.PropertyType;
 				}
 
 				Configuration.FixedLengthRecordFieldConfigurations.Add(nfc);

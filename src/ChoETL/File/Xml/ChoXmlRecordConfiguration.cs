@@ -215,8 +215,13 @@ namespace ChoETL
                             obj.PropertyDescriptor = pd;
                             obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
                             obj.UseCache = useCache;
-                            if (obj.XPath.IsNullOrWhiteSpace())
-                                obj.XPath = $"//{obj.FieldName}|//@{obj.FieldName}";
+							if (obj.XPath.IsNullOrWhiteSpace())
+							{
+								if (!obj.FieldName.IsNullOrWhiteSpace())
+									obj.XPath = $"//{obj.FieldName}|//@{obj.FieldName}";
+								else
+									obj.XPath = $"//{obj.Name}|//@{obj.Name}";
+							}
 
                             obj.FieldType = pd.PropertyType.GetUnderlyingType();
                             if (!XmlRecordFieldConfigurations.Any(c => c.Name == pd.Name))
@@ -396,7 +401,10 @@ namespace ChoETL
                     if (fc.IsArray == null)
                         fc.IsArray = typeof(ICollection).IsAssignableFrom(fc.FieldType);
 
-                    if (fc.XPath.IsNullOrWhiteSpace())
+					if (fc.FieldName.IsNullOrWhiteSpace())
+						fc.FieldName = fc.Name;
+
+					if (fc.XPath.IsNullOrWhiteSpace())
                         fc.XPath = $"//{fc.FieldName}|//@{fc.FieldName}";
                     else
                     {

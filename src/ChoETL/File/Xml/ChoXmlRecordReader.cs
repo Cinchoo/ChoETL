@@ -380,7 +380,22 @@ namespace ChoETL
                         if (fieldConfig.ValueConverter != null)
                             value = fieldConfig.ValueConverter(value);
 
-                        fieldValue = value is XElement ? ((XElement)value).ToObjectFromXml(typeof(ChoDynamicObject)) : value;
+						if (value is XElement)
+						{
+							IDictionary<string, object> d = ((XElement)value).ToObjectFromXml(typeof(ChoDynamicObject)) as IDictionary<string, object>;
+							fieldValue = null;
+
+							if (d.Count == 0)
+							{
+
+							}
+							else if (d.Count == 1 && d.First().Key == "@@Value")
+								fieldValue = d.First().Value;
+							else
+								fieldValue = d;
+						}
+						else
+							fieldValue = value;
 
                         //fieldValue = value is XElement ? node.Value : value;
                     }

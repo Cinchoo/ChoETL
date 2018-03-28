@@ -715,36 +715,6 @@ somethingdownhere,thisisthelastuser,andthisisthelastpassword
 			public string City { get; set; }
 		}
 
-		static void NullValueTest()
-        {
-            string csv = @"Id, Name, City
-1, Tom, {NULL}
-2, Mark, NJ
-3, Lou, FL
-4, Smith, PA
-5, Raj, DC
-";
-
-            StringBuilder csvOut = new StringBuilder();
-            using (var cp2 = new ChoCSVReader(new StringReader(csv))
-                .WithFirstLineHeader()
-                .Configure(c => c.NullValue = "{NULL}")
-                )
-            {
-				//foreach (var rec in cp2)
-				//	Console.WriteLine(rec.Dump());
-				using (var cw = new ChoCSVWriter(new StringWriter(csvOut))
-					.WithFirstLineHeader()
-					.Configure(c => c.NullValue = "{NULL}")
-				)
-				{
-					cw.Write(cp2);
-				}
-			}
-
-            Console.WriteLine(csvOut.ToString());
-        }
-
 		public class LocationDefinition
 		{
 			public string PlaceName { get; set; }
@@ -872,9 +842,52 @@ Date,Count
 
 		}
 
+		public class EmpIgnoreCase
+		{
+			public int ID { get; set; }
+		}
+		static void NullValueTest()
+		{
+			string csv = @"Id, Name, City
+1, Tom, {NULL}
+2, Mark, NJ
+3, Lou, FL
+4, Smith, PA
+5, Raj, DC
+";
+			//using (var p = new ChoCSVReader<EmpIgnoreCase>(new StringReader(csv))
+			//	.WithFirstLineHeader()
+			//	.Configure(c => c.FileHeaderConfiguration.IgnoreCase = false)
+			//	)
+			//{
+			//	foreach (var rec in p)
+			//		Console.WriteLine(rec.Dump());
+			//}
+			//	return;
+			StringBuilder csvOut = new StringBuilder();
+			using (var cp2 = new ChoCSVReader(new StringReader(csv))
+				.WithFirstLineHeader()
+				.Configure(c => c.NullValue = "{NULL}")
+					.Configure(c => c.FileHeaderConfiguration.IgnoreCase = false)
+				)
+			{
+				foreach (var rec in cp2)
+					Console.WriteLine(rec.Id);
+				//using (var cw = new ChoCSVWriter(new StringWriter(csvOut))
+				//	.WithFirstLineHeader()
+				//	.Configure(c => c.NullValue = "{NULL}")
+				//)
+				//{
+				//	cw.Write(cp2);
+				//}
+			}
+
+			Console.WriteLine(csvOut.ToString());
+		}
+
 		static void Main(string[] args)
         {
-			Sample3();
+			NullValueTest();
 			return;
 
 			QuickDynamicTest();
