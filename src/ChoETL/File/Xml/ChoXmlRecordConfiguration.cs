@@ -204,7 +204,10 @@ namespace ChoETL
                             ChoXmlNodeRecordFieldAttribute attr = ChoTypeDescriptor.GetPropetyAttribute<ChoXmlNodeRecordFieldAttribute>(pd);
                             if (attr.XPath.IsNullOrEmpty())
                             {
-                                attr.XPath = xpath = $"//{pd.Name}|//@{pd.Name}";
+								if (!attr.FieldName.IsNullOrWhiteSpace())
+									attr.XPath = $"/{attr.FieldName}|/@{attr.FieldName}";
+								else
+									attr.XPath = xpath = $"//{pd.Name}|//@{pd.Name}";
                                 IsComplexXPathUsed = true;
                             }
                             else
@@ -349,7 +352,7 @@ namespace ChoETL
                         name = GetNameWithNamespace(xpr.Name, attr.Name);
 
                         if (!dict.ContainsKey(name))
-                            dict.Add(name, new ChoXmlRecordFieldConfiguration(name, $"/@{name}")); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//@{name}" : $"//@{DefaultNamespace}" + ":" + $"{name}") { IsXmlAttribute = true });
+                            dict.Add(name, new ChoXmlRecordFieldConfiguration(attr.Name.LocalName, $"/@{name}")); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//@{name}" : $"//@{DefaultNamespace}" + ":" + $"{name}") { IsXmlAttribute = true });
                         else
                         {
                             throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
@@ -364,7 +367,7 @@ namespace ChoETL
 
                         hasElements = true;
                         if (!dict.ContainsKey(name))
-                            dict.Add(name, new ChoXmlRecordFieldConfiguration(name, $"/{name}")); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//{name}" : $"//{DefaultNamespace}" + ":" + $"{name}"));
+                            dict.Add(name, new ChoXmlRecordFieldConfiguration(ele.Name.LocalName, $"/{name}")); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//{name}" : $"//{DefaultNamespace}" + ":" + $"{name}"));
                         else
                         {
                             if (dict[name].IsXmlAttribute)
@@ -514,7 +517,7 @@ namespace ChoETL
 
         public string GetPrefixOfNamespace(string ns)
         {
-            return NSDict.Where(Xml => Xml.Value == ns).Select(Xml => Xml.Key).FirstOrDefault();
+            return NSDict.Where(Xml => Xml.Value == ns && !Xml.Key.IsNullOrWhiteSpace()).Select(Xml => Xml.Key).FirstOrDefault();
         }
 
         public string GetNamespaceForPrefix(string prefix)
