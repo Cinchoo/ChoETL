@@ -101,7 +101,7 @@ namespace ChoETL
 
                             string[] fieldNames = null;
                             Type recordType = ElementType == null ? record.GetType() : ElementType;
-                            if (typeof(ICollection).IsAssignableFrom(recordType))
+                            if (!recordType.IsDynamicType() && typeof(ICollection).IsAssignableFrom(recordType))
                                 recordType = recordType.GetEnumerableItemType().GetUnderlyingType();
                             else
                                 recordType = recordType.GetUnderlyingType();

@@ -78,9 +78,28 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
 			ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			Sample18();
+			Sample19();
         }
 
+		static void Sample19()
+		{
+			using (var p = new ChoXmlReader("sample19.xml")
+				//.WithXmlNamespace("tlp", "http://www.timelog.com/XML/Schema/tlp/v4_4")
+				)
+			{
+				//foreach (var rec in p)
+				//	Console.WriteLine(rec.Dump());
+				//return;
+				using (var w = new ChoCSVWriter(Console.Out)
+		.WithFirstLineHeader()
+		)
+				{
+					w.Write(p);
+				}
+
+				Console.WriteLine();
+			}
+		}
 		static void Sample18()
 		{
 			using (var p = new ChoXmlReader("sample18.xml")
