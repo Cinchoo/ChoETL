@@ -654,7 +654,7 @@ namespace ChoETL
             return reader.ReadOuterXml().Trim();
         }
 
-        public static dynamic ToDynamic(this XElement element)
+		public static dynamic ToDynamic(this XElement element)
         {
             // loop through child elements
             // define an Expando Dynamic
@@ -680,24 +680,21 @@ namespace ChoETL
                         // if sub element has child elements
                         if (subElement.HasElements)
                         {
-                            List<dynamic> subDynamic = new List<dynamic>();
+                            List<ChoDynamicObject> subDynamic = new List<ChoDynamicObject>();
                             foreach (XElement subsubElement in subElement.Elements())
                             {
                                 subDynamic.Add(ToDynamic(subsubElement));
                             }
-                            // using a bit of recursion lets us cater for an unknown chain of child elements
-                            ((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, subDynamic.ToArray());
+							foreach (var item in subDynamic)
+								obj.Add(item);
                         }
                         else
                         {
-                            ChoDynamicObject x = new ChoDynamicObject(subElement.Name.LocalName);
-                            ((IDictionary<string, object>)x).Add("@@Value", subElement.Value);
-                            ((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, x);
+                            ((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, subElement.Value);
                         }
                     }
                     else
                     {
-                        int counter = 0;
                         List<ChoDynamicObject> list = new List<ChoDynamicObject>();
                         string keyName = null;
                         foreach (var subElement in kvp.Value)
@@ -707,24 +704,16 @@ namespace ChoETL
                             // if sub element has child elements
                             if (subElement.HasElements)
                             {
-                                List<ChoDynamicObject> subDynamic = new List<ChoDynamicObject>();
-                                foreach (XElement subsubElement in subElement.Elements())
-                                {
-                                    subDynamic.Add(ToDynamic(subsubElement));
-                                }
-                                // using a bit of recursion lets us cater for an unknown chain of child elements
-                                //((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, subDynamic.ToArray());
-                                list.AddRange(subDynamic.ToArray());
-                            }
-                            else
+								ChoDynamicObject dobj = ToDynamic(subElement);
+								list.Add(dobj);
+							}
+							else
                             {
-                                ChoDynamicObject x = new ChoDynamicObject(subElement.Name.LocalName);
-                                ((IDictionary<string, object>)x).Add("@@Value", subElement.Value);
-                                //((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, x);
-                                list.Add(x);
-                            }
-                        }
-                        ((IDictionary<string, object>)obj).Add(keyName, list.ToArray());
+								((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, subElement.Value);
+							}
+						}
+						foreach (var item in list)
+							obj.Add(item);
                     }
                 }
             }

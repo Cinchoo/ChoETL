@@ -77,8 +77,27 @@ namespace ChoXmlReaderTest
     {
         static void Main(string[] args)
         {
-			CDATATest();
+			Sample18();
         }
+
+		static void Sample18()
+		{
+			using (var p = new ChoXmlReader("sample18.xml")
+				)
+			{
+				foreach (var rec in p)
+				{
+					Console.WriteLine(rec.original_impot_no);
+					foreach (dynamic li in (IList<object>)rec.product_lineitems)
+					{
+						Console.WriteLine(li.id);
+						Console.WriteLine(li.price);
+					}
+
+					Console.WriteLine(rec.GetXml());
+				}
+			}
+		}
 
 		public class Emp
 		{

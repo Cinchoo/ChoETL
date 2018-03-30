@@ -218,9 +218,9 @@ namespace ChoETL
 							if (obj.XPath.IsNullOrWhiteSpace())
 							{
 								if (!obj.FieldName.IsNullOrWhiteSpace())
-									obj.XPath = $"//{obj.FieldName}|//@{obj.FieldName}";
+									obj.XPath = $"/{obj.FieldName}|/@{obj.FieldName}";
 								else
-									obj.XPath = $"//{obj.Name}|//@{obj.Name}";
+									obj.XPath = $"/{obj.Name}|/@{obj.Name}";
 							}
 
                             obj.FieldType = pd.PropertyType.GetUnderlyingType();
@@ -349,7 +349,7 @@ namespace ChoETL
                         name = GetNameWithNamespace(xpr.Name, attr.Name);
 
                         if (!dict.ContainsKey(name))
-                            dict.Add(name, new ChoXmlRecordFieldConfiguration(name, $"//@{name}")); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//@{name}" : $"//@{DefaultNamespace}" + ":" + $"{name}") { IsXmlAttribute = true });
+                            dict.Add(name, new ChoXmlRecordFieldConfiguration(name, $"/@{name}")); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//@{name}" : $"//@{DefaultNamespace}" + ":" + $"{name}") { IsXmlAttribute = true });
                         else
                         {
                             throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
@@ -364,7 +364,7 @@ namespace ChoETL
 
                         hasElements = true;
                         if (!dict.ContainsKey(name))
-                            dict.Add(name, new ChoXmlRecordFieldConfiguration(name, $"//{name}")); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//{name}" : $"//{DefaultNamespace}" + ":" + $"{name}"));
+                            dict.Add(name, new ChoXmlRecordFieldConfiguration(name, $"/{name}")); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//{name}" : $"//{DefaultNamespace}" + ":" + $"{name}"));
                         else
                         {
                             if (dict[name].IsXmlAttribute)
@@ -405,12 +405,12 @@ namespace ChoETL
 						fc.FieldName = fc.Name;
 
 					if (fc.XPath.IsNullOrWhiteSpace())
-                        fc.XPath = $"//{fc.FieldName}|//@{fc.FieldName}";
+                        fc.XPath = $"/{fc.FieldName}|/@{fc.FieldName}";
                     else
                     {
                         if (fc.XPath == fc.FieldName
-                            || fc.XPath == $"//{fc.FieldName}" || fc.XPath == $"/{fc.FieldName}" || fc.XPath == $"./{fc.FieldName}"
-                            || fc.XPath == $"//@{fc.FieldName}" || fc.XPath == $"/@{fc.FieldName}" || fc.XPath == $"./@{fc.FieldName}"
+                            || fc.XPath == $"/{fc.FieldName}" || fc.XPath == $"/{fc.FieldName}" || fc.XPath == $"./{fc.FieldName}"
+                            || fc.XPath == $"/@{fc.FieldName}" || fc.XPath == $"/@{fc.FieldName}" || fc.XPath == $"./@{fc.FieldName}"
                             )
                         {
 
