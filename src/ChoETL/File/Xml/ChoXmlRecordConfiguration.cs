@@ -352,7 +352,7 @@ namespace ChoETL
                         name = GetNameWithNamespace(xpr.Name, attr.Name);
 
                         if (!dict.ContainsKey(name))
-                            dict.Add(name, new ChoXmlRecordFieldConfiguration(attr.Name.LocalName, $"/@{name}")); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//@{name}" : $"//@{DefaultNamespace}" + ":" + $"{name}") { IsXmlAttribute = true });
+                            dict.Add(name, new ChoXmlRecordFieldConfiguration(attr.Name.LocalName, $"/@{name}") { FieldName = name }); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//@{name}" : $"//@{DefaultNamespace}" + ":" + $"{name}") { IsXmlAttribute = true });
                         else
                         {
                             throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
@@ -367,7 +367,7 @@ namespace ChoETL
 
                         hasElements = true;
                         if (!dict.ContainsKey(name))
-                            dict.Add(name, new ChoXmlRecordFieldConfiguration(ele.Name.LocalName, $"/{name}")); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//{name}" : $"//{DefaultNamespace}" + ":" + $"{name}"));
+                            dict.Add(name, new ChoXmlRecordFieldConfiguration(ele.Name.LocalName, $"/{name}") { FieldName = name }); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//{name}" : $"//{DefaultNamespace}" + ":" + $"{name}"));
                         else
                         {
                             if (dict[name].IsXmlAttribute)
@@ -379,8 +379,9 @@ namespace ChoETL
 
                     if (!hasElements)
                     {
-                        name = xpr.Name.LocalName;
-                        dict.Add(name, new ChoXmlRecordFieldConfiguration(name, "text()"));
+                        //name = xpr.Name.LocalName;
+                        name = GetNameWithNamespace(xpr.Name);
+						dict.Add(name, new ChoXmlRecordFieldConfiguration(name, "text()") { FieldName = name });
                     }
 
                     foreach (ChoXmlRecordFieldConfiguration obj in dict.Values)

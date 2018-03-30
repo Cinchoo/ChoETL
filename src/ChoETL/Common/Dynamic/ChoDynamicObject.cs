@@ -642,6 +642,9 @@ namespace ChoETL
         {
             get
             {
+				if (_list.Count > 0)
+					return _list.Count;
+
                 IDictionary<string, object> kvpDict = _kvpDict;
                 return kvpDict != null ? kvpDict.Count : 0;
             }
