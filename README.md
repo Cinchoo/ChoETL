@@ -2,10 +2,11 @@
 
 <!--
   Title: Cinchoo ETL
-  Description: ETL Framework for .NET (Read / Write CSV, Flat, Xml, JSON, Key-Value formatted files)
+  Description: ETL Framework for .NET (Reader / Writer for CSV, Fixed/Flat, Xml, JSON, Key-Value formatted files)
   Author: Cinchoo
   -->
-  
+ <meta name='keywords' content='CSV, Fixed, Flat, Xml, JSON, Key-Value, KVP, Reader, Writer, Parser'>
+ 
 [![Join the chat at https://gitter.im/ChoETL/Lobby](https://badges.gitter.im/ChoETL/Lobby.svg)](https://gitter.im/ChoETL/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build status](https://ci.appveyor.com/api/projects/status/6ktkagfa67vbn9ys?svg=true)](https://ci.appveyor.com/project/Cinchoo/choetl)
 
