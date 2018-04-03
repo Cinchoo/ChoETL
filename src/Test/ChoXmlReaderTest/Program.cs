@@ -77,8 +77,66 @@ namespace ChoXmlReaderTest
     {
         static void Main(string[] args)
         {
-			CDATATest();
+			ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
+			Sample19();
         }
+
+		static void Sample19()
+		{
+			using (var p = new ChoXmlReader("sample19.xml")
+				//.WithXmlNamespace("tlp", "http://www.timelog.com/XML/Schema/tlp/v4_4")
+				)
+			{
+				//foreach (var rec in p)
+				//	Console.WriteLine(rec.Dump());
+				//return;
+				using (var w = new ChoCSVWriter(Console.Out)
+		.WithFirstLineHeader()
+		)
+				{
+					w.Write(p);
+				}
+
+				Console.WriteLine();
+			}
+		}
+		static void Sample18()
+		{
+			using (var p = new ChoXmlReader("sample18.xml")
+				)
+			{
+				//foreach (dynamic rec in p)
+				//{
+				//	var z = ((IList<object>)rec.product_lineitems).SelectMany<object, string>(r1 => ((dynamic)r1).price);
+				//	foreach (var z1 in z)
+				//		Console.WriteLine(z1);
+				//}
+
+				using (var w = new ChoCSVWriter(Console.Out)
+					.WithFirstLineHeader()
+					)
+				{
+					w.Write(p.SelectMany(r => ((IList<object>)r.product_lineitems).Cast<dynamic>().Select(r1 => new { original_impot_no = r.original_impot_no, price = r1.price })));
+				}
+				Console.WriteLine();
+				return;
+				foreach (var rec in p)
+				{
+					Console.WriteLine(rec.original_impot_no);
+					//var x = ((IList<object>)rec.product_lineitems).ToArray();
+
+					var x = ((IList<object>)rec.product_lineitems).Cast<dynamic>().Select(r => new { original_impot_no = rec.original_impot_no, price = r.price }).ToArray();
+
+					//foreach (dynamic li in (IList<object>)rec.product_lineitems)
+					//{
+					//	Console.WriteLine(li.id);
+					//	Console.WriteLine(li.price);
+					//}
+
+					Console.WriteLine(rec.GetXml());
+				}
+			}
+		}
 
 		public class Emp
 		{

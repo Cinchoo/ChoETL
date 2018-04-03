@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<impots xmlns="http://www.google.com/xml/impot//20016-02-31">
+  <impot impot-no="W0110891258">
+    <impot-date>2017-12-10T22:33:35.000Z</impot-date>
+    <prop-by>Yallo</prop-by>
+    <original-impot-no>891258</original-impot-no>
+    <currency>EUR</currency>
+    <server-locale>Esp</server-locale>
+    <lax>gross</lax>
+    <current-impot-no>123358</current-impot-no>
+    <product-lineitems>
+       <product-lineitem id="1">
+            <price>450</price>
+            <red>6.50</red>
+            <Small-price>39</Small-price>
+            <Big-price>3229</Big-price>
+            <lineitem-text>Grand create</lineitem-text>
+            <basis>234.00</basis>
+        </product-lineitem>
+			<product-lineitem id="2">
+            <price>432</price>
+            <red>12</red>
+            <Small-price>44</Small-price>
+            <Big-price>34</Big-price>
+            <lineitem-text>Small create</lineitem-text>
+            <basis>44.00</basis>
+       </product-lineitem>
+    </product-lineitems>
+  </impot>
+</impots>

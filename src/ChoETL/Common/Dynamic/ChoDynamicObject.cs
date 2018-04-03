@@ -17,7 +17,7 @@ using System.Xml.Serialization;
 namespace ChoETL
 {
     [Serializable]
-    public class ChoDynamicObject : DynamicObject, IDictionary<string, object> //, IXmlSerializable
+    public class ChoDynamicObject : DynamicObject, IDictionary<string, object>, IList<object>, IList //, IXmlSerializable
     {
         private readonly static Dictionary<string, Type> _intrinsicTypes = new Dictionary<string, Type>();
 
@@ -339,7 +339,7 @@ namespace ChoETL
         public virtual bool ContainsProperty(string key)
         {
             IDictionary<string, object> kvpDict = _kvpDict;
-            return kvpDict != null && kvpDict.ContainsKey(key);
+            return kvpDict != null && (kvpDict.ContainsKey(key) || kvpDict.ContainsKey("@{0}".FormatString(key)));
         }
 
         protected virtual bool GetPropertyValue(string name, out object result)
@@ -358,8 +358,10 @@ namespace ChoETL
 
                 if (kvpDict.ContainsKey(name))
                     result = AfterKVPLoaded(name, kvpDict[name]);
-                else
-                {
+				else if (kvpDict.ContainsKey("@{0}".FormatString(name)))
+					result = AfterKVPLoaded(name, kvpDict["@{0}".FormatString(name)]);
+				else
+				{
                     if (name.StartsWith("_"))
                     {
                         string normalizedName = name.Substring(1);
@@ -640,25 +642,56 @@ namespace ChoETL
         {
             get
             {
+				if (_list.Count > 0)
+					return _list.Count;
+
                 IDictionary<string, object> kvpDict = _kvpDict;
                 return kvpDict != null ? kvpDict.Count : 0;
             }
         }
 
-        //public KeyValuePair<string, object> this[int index]
-        //{
-        //    get
-        //    {
-        //        IDictionary<string, object> kvpDict = _kvpDict;
-        //        if (kvpDict != null)
-        //        {
-        //            return kvpDict.ElementAtOrDefault(index);
-        //        }
-        //        return new KeyValuePair<string, object>();
-        //    }
-        //}
+		public bool IsFixedSize
+		{
+			get { return false; }
+		}
 
-        public object this[string key]
+		readonly object _syncRoot = new object();
+		public object SyncRoot
+		{
+			get { return _syncRoot; }
+		}
+
+		public bool IsSynchronized
+		{
+			get { return false; }
+		}
+
+		public object this[int index]
+		{
+			get
+			{
+				return _list[index];
+			}
+			set
+			{
+				_list[index] = value;
+			}
+		}
+
+		//public KeyValuePair<string, object> this[int index]
+		//{
+		//    get
+		//    {
+		//        IDictionary<string, object> kvpDict = _kvpDict;
+		//        if (kvpDict != null)
+		//        {
+		//            return kvpDict.ElementAtOrDefault(index);
+		//        }
+		//        return new KeyValuePair<string, object>();
+		//    }
+		//}
+
+		public object this[string key]
         {
             get
             {
@@ -821,44 +854,25 @@ namespace ChoETL
                 object value = null;
                 msg.AppendFormat(">");
                 foreach (string key in this.Keys.Where(k => !k.StartsWith("@")))
-                {
-                    value = this[key];
+				{
+					value = this[key];
 
-                    if (value is ChoDynamicObject)
-                    {
-                        msg.AppendFormat("{0}{1}", Environment.NewLine, ((ChoDynamicObject)value).GetXml(((ChoDynamicObject)value).NName).Indent(1, "  "));
-                    }
-                    else
-                    {
-                        if (value != null)
-                        {
-                            if (value.GetType().IsSimple())
-                                msg.AppendFormat("{0}{1}", Environment.NewLine, "<{0}>{1}</{0}>".FormatString(key, value).Indent(1, "  "));
-                            else
-                            {
-                                msg.AppendFormat("{0}{1}", Environment.NewLine, "<{0}>".FormatString(key).Indent(1, "  "));
-                                if (value is IList)
-                                {
-                                    foreach (var collValue in ((IList)value).OfType<ChoDynamicObject>())
-                                    {
-                                        msg.AppendFormat("{0}{1}", Environment.NewLine, collValue.GetXml(collValue.NName == "dynamic" ? key.ToSingular() : collValue.NName).Indent(2, "  "));
-                                    }
-                                }
-                                else
-                                    msg.AppendFormat("{0}{1}", Environment.NewLine, ChoUtility.XmlSerialize(value).Indent(2, "  "));
-                                msg.AppendFormat("{0}{1}", Environment.NewLine, "</{0}>".FormatString(key).Indent(1, "  "));
-                            }
-                        }
-                        else
-                        {
+					GetXml(msg, value, key);
 
-                        }
-                    }
-
-                }
-                msg.AppendFormat("{0}</{1}>", Environment.NewLine, tag);
+				}
+				msg.AppendFormat("{0}</{1}>", Environment.NewLine, tag);
             }
-            else
+			else if (_list != null && _list.Count > 0)
+			{
+                msg.AppendFormat(">");
+				foreach (var obj in _list)
+				{
+					if (obj == null) continue;
+					GetXml(msg, obj, tag.ToSingular());
+				}
+				msg.AppendFormat("{0}</{1}>", Environment.NewLine, tag);
+			}
+			else
             {
                 msg.AppendFormat(" />");
             }
@@ -867,7 +881,41 @@ namespace ChoETL
             return msg.ToString();
         }
 
-        public virtual void WriteXml(XmlWriter writer)
+		private void GetXml(StringBuilder msg, object value, string key)
+		{
+			if (value is ChoDynamicObject)
+			{
+				msg.AppendFormat("{0}{1}", Environment.NewLine, ((ChoDynamicObject)value).GetXml(((ChoDynamicObject)value).NName).Indent(1, "  "));
+			}
+			else
+			{
+				if (value != null)
+				{
+					if (value.GetType().IsSimple())
+						msg.AppendFormat("{0}{1}", Environment.NewLine, "<{0}>{1}</{0}>".FormatString(key, value).Indent(1, "  "));
+					else
+					{
+						msg.AppendFormat("{0}{1}", Environment.NewLine, "<{0}>".FormatString(key).Indent(1, "  "));
+						if (value is IList)
+						{
+							foreach (var collValue in ((IList)value).OfType<ChoDynamicObject>())
+							{
+								msg.AppendFormat("{0}{1}", Environment.NewLine, collValue.GetXml(collValue.NName == "dynamic" ? key.ToSingular() : collValue.NName).Indent(2, "  "));
+							}
+						}
+						else
+							msg.AppendFormat("{0}{1}", Environment.NewLine, ChoUtility.XmlSerialize(value).Indent(2, "  "));
+						msg.AppendFormat("{0}{1}", Environment.NewLine, "</{0}>".FormatString(key).Indent(1, "  "));
+					}
+				}
+				else
+				{
+
+				}
+			}
+		}
+
+		public virtual void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement("dynamic");
 
@@ -934,7 +982,70 @@ namespace ChoETL
 
             return ContainsKey(attrName);
         }
-    }
+
+		public int IndexOf(object item)
+		{
+			return _list.IndexOf(item);
+		}
+
+		public void Insert(int index, object item)
+		{
+			_list.Insert(index, item);
+		}
+
+		public void RemoveAt(int index)
+		{
+			_list.RemoveAt(index);
+		}
+
+		public void Add(object item)
+		{
+			_list.Add(item);
+		}
+
+		public bool Contains(object item)
+		{
+			return _list.Contains(item);
+		}
+
+		public void CopyTo(object[] array, int arrayIndex)
+		{
+			_list.CopyTo(array, arrayIndex);
+		}
+
+		public bool Remove(object item)
+		{
+			return _list.Remove(item);
+		}
+		List<object> _list = new List<object>();
+		IEnumerator<object> IEnumerable<object>.GetEnumerator()
+		{
+			return _list.GetEnumerator();
+		}
+
+		int IList.Add(object value)
+		{
+			return ((IList)_list).Add(value);
+		}
+
+		void IList.Remove(object value)
+		{
+			_list.Remove(value);
+		}
+
+		public void CopyTo(Array array, int index)
+		{
+			_list.CopyTo(array.Cast<object>().ToArray(), index);
+		}
+		public int ListCount
+		{
+			get { return _list.Count;  }
+		}
+		public object GetListItemAt(int index)
+		{
+			return _list[index];
+		}
+	}
 
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
     public class ChoPropertyAttribute : Attribute

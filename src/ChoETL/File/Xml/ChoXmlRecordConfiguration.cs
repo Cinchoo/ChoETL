@@ -204,7 +204,10 @@ namespace ChoETL
                             ChoXmlNodeRecordFieldAttribute attr = ChoTypeDescriptor.GetPropetyAttribute<ChoXmlNodeRecordFieldAttribute>(pd);
                             if (attr.XPath.IsNullOrEmpty())
                             {
-                                attr.XPath = xpath = $"//{pd.Name}|//@{pd.Name}";
+								if (!attr.FieldName.IsNullOrWhiteSpace())
+									attr.XPath = $"/{attr.FieldName}|/@{attr.FieldName}";
+								else
+									attr.XPath = xpath = $"//{pd.Name}|//@{pd.Name}";
                                 IsComplexXPathUsed = true;
                             }
                             else
@@ -218,9 +221,9 @@ namespace ChoETL
 							if (obj.XPath.IsNullOrWhiteSpace())
 							{
 								if (!obj.FieldName.IsNullOrWhiteSpace())
-									obj.XPath = $"//{obj.FieldName}|//@{obj.FieldName}";
+									obj.XPath = $"/{obj.FieldName}|/@{obj.FieldName}";
 								else
-									obj.XPath = $"//{obj.Name}|//@{obj.Name}";
+									obj.XPath = $"/{obj.Name}|/@{obj.Name}";
 							}
 
                             obj.FieldType = pd.PropertyType.GetUnderlyingType();
@@ -349,7 +352,7 @@ namespace ChoETL
                         name = GetNameWithNamespace(xpr.Name, attr.Name);
 
                         if (!dict.ContainsKey(name))
-                            dict.Add(name, new ChoXmlRecordFieldConfiguration(name, $"//@{name}")); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//@{name}" : $"//@{DefaultNamespace}" + ":" + $"{name}") { IsXmlAttribute = true });
+                            dict.Add(name, new ChoXmlRecordFieldConfiguration(attr.Name.LocalName, $"/@{name}") { FieldName = name }); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//@{name}" : $"//@{DefaultNamespace}" + ":" + $"{name}") { IsXmlAttribute = true });
                         else
                         {
                             throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
@@ -364,7 +367,7 @@ namespace ChoETL
 
                         hasElements = true;
                         if (!dict.ContainsKey(name))
-                            dict.Add(name, new ChoXmlRecordFieldConfiguration(name, $"//{name}")); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//{name}" : $"//{DefaultNamespace}" + ":" + $"{name}"));
+                            dict.Add(name, new ChoXmlRecordFieldConfiguration(ele.Name.LocalName, $"/{name}") { FieldName = name }); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//{name}" : $"//{DefaultNamespace}" + ":" + $"{name}"));
                         else
                         {
                             if (dict[name].IsXmlAttribute)
@@ -376,8 +379,9 @@ namespace ChoETL
 
                     if (!hasElements)
                     {
-                        name = xpr.Name.LocalName;
-                        dict.Add(name, new ChoXmlRecordFieldConfiguration(name, "text()"));
+                        //name = xpr.Name.LocalName;
+                        name = GetNameWithNamespace(xpr.Name);
+						dict.Add(name, new ChoXmlRecordFieldConfiguration(name, "text()") { FieldName = name });
                     }
 
                     foreach (ChoXmlRecordFieldConfiguration obj in dict.Values)
@@ -405,12 +409,12 @@ namespace ChoETL
 						fc.FieldName = fc.Name;
 
 					if (fc.XPath.IsNullOrWhiteSpace())
-                        fc.XPath = $"//{fc.FieldName}|//@{fc.FieldName}";
+                        fc.XPath = $"/{fc.FieldName}|/@{fc.FieldName}";
                     else
                     {
                         if (fc.XPath == fc.FieldName
-                            || fc.XPath == $"//{fc.FieldName}" || fc.XPath == $"/{fc.FieldName}" || fc.XPath == $"./{fc.FieldName}"
-                            || fc.XPath == $"//@{fc.FieldName}" || fc.XPath == $"/@{fc.FieldName}" || fc.XPath == $"./@{fc.FieldName}"
+                            || fc.XPath == $"/{fc.FieldName}" || fc.XPath == $"/{fc.FieldName}" || fc.XPath == $"./{fc.FieldName}"
+                            || fc.XPath == $"/@{fc.FieldName}" || fc.XPath == $"/@{fc.FieldName}" || fc.XPath == $"./@{fc.FieldName}"
                             )
                         {
 
@@ -514,7 +518,7 @@ namespace ChoETL
 
         public string GetPrefixOfNamespace(string ns)
         {
-            return NSDict.Where(Xml => Xml.Value == ns).Select(Xml => Xml.Key).FirstOrDefault();
+            return NSDict.Where(Xml => Xml.Value == ns && !Xml.Key.IsNullOrWhiteSpace()).Select(Xml => Xml.Key).FirstOrDefault();
         }
 
         public string GetNamespaceForPrefix(string prefix)

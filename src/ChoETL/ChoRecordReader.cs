@@ -23,7 +23,7 @@ namespace ChoETL
         {
             ChoGuard.ArgumentNotNull(recordType, "RecordType");
 
-            if (typeof(ICollection).IsAssignableFrom(recordType))
+            if (!recordType.IsDynamicType() && typeof(ICollection).IsAssignableFrom(recordType))
                 throw new ChoReaderException("Invalid recordtype passed.");
 
             RecordType = recordType;
