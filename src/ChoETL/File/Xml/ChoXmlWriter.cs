@@ -79,6 +79,7 @@ namespace ChoETL
             if (_isDisposed)
                 return;
 
+            _isDisposed = true;
             if (_writer != null)
                 _writer.EndWrite(_textWriter);
             if (_closeStreamOnDispose)
@@ -163,6 +164,7 @@ namespace ChoETL
                 parser.Configuration.XPath = xpath;
 
                 parser.Write(records);
+                parser.Close();
 
                 writer.Flush();
                 stream.Position = 0;

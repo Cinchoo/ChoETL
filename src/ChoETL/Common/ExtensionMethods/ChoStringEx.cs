@@ -639,7 +639,7 @@ namespace ChoETL
                                 return (ChoUtility.XmlDeserialize<ChoDynamicObject>(ele.GetOuterXml()));
                             }
                             else
-                                return ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele, false) : ele.Value;
+                                return ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele, false) : ele.NilAwareValue();
                         }).ToArray());
 
                     }
@@ -652,7 +652,7 @@ namespace ChoETL
                                 return (ChoUtility.XmlDeserialize<ChoDynamicObject>(ele.GetOuterXml()));
                             }
                             else
-                                return ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele, false) : ele.Value;
+                                return ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele, false) : ele.NilAwareValue();
                         }).ToArray();
 
                     }
@@ -667,7 +667,7 @@ namespace ChoETL
                             if (ele.Name.LocalName == "dynamic")
                                 obj.Add(ele.Name.LocalName.ToValidVariableName(), (ChoUtility.XmlDeserialize<ChoDynamicObject>(ele.GetOuterXml())));
                             else
-                                obj.Add(ele.Name.LocalName.ToValidVariableName(), ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele, false) : ele.Value);
+                                obj.Add(ele.Name.LocalName.ToValidVariableName(), ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele, false) : ele.NilAwareValue());
                         }
                         else
                         {
@@ -678,7 +678,7 @@ namespace ChoETL
                                     return (ChoUtility.XmlDeserialize<ChoDynamicObject>(ele.GetOuterXml()));
                                 }
                                 else
-                                    return ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele, false) : ele.Value;
+                                    return ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele, false) : ele.NilAwareValue();
                             }).ToArray());
                         }
                     }
@@ -687,9 +687,9 @@ namespace ChoETL
             else
             {
                 if (topLevel)
-                    return element.Value;
+                    return element.NilAwareValue();
                 else
-                    obj.AddOrUpdate(element.Name.LocalName.ToValidVariableName(), element.Value);
+                    obj.AddOrUpdate(element.Name.LocalName.ToValidVariableName(), element.NilAwareValue());
             }
 
 
@@ -720,7 +720,7 @@ namespace ChoETL
             }
             else
             {
-                obj.AddOrUpdate(element.Name.LocalName, element.Value);
+                obj.AddOrUpdate(element.Name.LocalName, element.NilAwareValue());
 
             }
             return obj;
@@ -742,7 +742,7 @@ namespace ChoETL
             }
             else
             {
-                return element.Value;
+                return element.NilAwareValue();
             }
 
         }

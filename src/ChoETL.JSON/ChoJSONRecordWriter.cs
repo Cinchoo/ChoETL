@@ -48,11 +48,15 @@ namespace ChoETL
         {
             TextWriter sw = writer as TextWriter;
 
-            if (_configCheckDone)
+            try
             {
-                if (!SupportMultipleContent)
-                    sw.Write(String.Format("{0}]", Configuration.EOLDelimiter));
+                if (_configCheckDone)
+                {
+                    if (!SupportMultipleContent)
+                        sw.Write(String.Format("{0}]", Configuration.EOLDelimiter));
+                }
             }
+            catch { }
 
             RaiseEndWrite(sw);
         }
@@ -506,7 +510,7 @@ namespace ChoETL
                     return JsonConvert.SerializeObject(target);
                 else
                 {
-                    if (target is IEnumerable && !(target is IDictionary))
+                    if (target is IEnumerable && !(target is IDictionary) && !target.GetType().IsDynamicType())
                     {
                         StringBuilder msg = new StringBuilder();
                         bool first = true;
@@ -535,10 +539,10 @@ namespace ChoETL
                             }
                         }
 
-                        return "[{0}{1}{0}]".FormatString(Environment.NewLine, msg.ToString().Indent());
+                        return "[{0}{1}{0}]".FormatString(Environment.NewLine, msg.ToString().Indent(1, " "));
                     }
                     else
-                        return JsonConvert.SerializeObject(MapToDictionary(target), Configuration.Formatting);
+                        return JsonConvert.SerializeObject(MapToDictionary(target), Configuration.Formatting, Configuration.JsonSerializerSettings);
                 }
             }
         }

@@ -199,7 +199,7 @@ namespace ChoETL
             }
             else
             {
-                AddProperty(parent, node.Name.ToString(), node.Value.Trim());
+                AddProperty(parent, node.Name.ToString(), node.NilAwareValue().NTrim());
             }
         }
 
@@ -323,7 +323,7 @@ namespace ChoETL
                 if (!dictionary.ContainsKey(key))
                     dictionary.Add(key, new List<string>());
 
-                dictionary[key].Add(elem.Value);
+                dictionary[key].Add(elem.NilAwareValue());
             }
             foreach (XAttribute elem in node.Attributes())
             {
@@ -514,11 +514,11 @@ namespace ChoETL
                                             else
                                             {
                                                 if (itemType.IsSimple())
-                                                    list.Add(ChoConvert.ConvertTo(ele.Value, itemType));
+                                                    list.Add(ChoConvert.ConvertTo(ele.NilAwareValue(), itemType));
                                                 else
                                                 {
                                                     if (itemType == typeof(ChoDynamicObject))
-                                                        list.Add(ele.ToDynamic());
+                                                        list.Add(ele.ToDynamic(Configuration.XmlSchemaNamespace));
                                                     else
                                                         list.Add(ele.ToObjectFromXml(itemType, GetXmlOverrides(fieldConfig)));
                                                 }
@@ -561,7 +561,7 @@ namespace ChoETL
                                                 if (fieldConfig.ItemConverter != null)
                                                     fieldValue = fieldConfig.ItemConverter(fXElement);
                                                 else
-                                                    fieldValue = fXElement.Value;
+                                                    fieldValue = fXElement.NilAwareValue();
                                             }
                                         }
                                         else if (fieldConfig.FieldType.IsCollection())
@@ -581,7 +581,7 @@ namespace ChoETL
                                                 else
                                                 {
                                                     if (itemType.IsSimple())
-                                                        list.Add(ChoConvert.ConvertTo(ele.Value, itemType));
+                                                        list.Add(ChoConvert.ConvertTo(ele.NilAwareValue(), itemType));
                                                     else
                                                     {
                                                         list.Add(ele.ToObjectFromXml(itemType, null));

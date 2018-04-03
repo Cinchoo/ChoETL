@@ -75,6 +75,8 @@ namespace ChoETL
             get;
             private set;
         }
+        public string XmlSchemaNamespace { get; internal set; }
+
         internal bool IsComplexXPathUsed = true;
         internal string RootName;
         internal string NodeName;
@@ -184,18 +186,18 @@ namespace ChoETL
 
         private void DiscoverRecordFields(Type recordType, string declaringMember, bool optIn = false)
         {
-			if (!recordType.IsDynamicType())
-			{
-				IsComplexXPathUsed = false;
+            if (!recordType.IsDynamicType())
+            {
+                IsComplexXPathUsed = false;
                 Type pt = null;
                 if (optIn) //ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any()).Any())
                 {
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                     {
                         pt = pd.PropertyType.GetUnderlyingType();
-						var fa = pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().FirstOrDefault();
-						bool optIn1 = fa == null || fa.UseXmlSerialization ? optIn : ChoTypeDescriptor.GetProperties(pt).Where(pd1 => pd1.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any()).Any();
-						if (optIn1 && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+                        var fa = pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().FirstOrDefault();
+                        bool optIn1 = fa == null || fa.UseXmlSerialization ? optIn : ChoTypeDescriptor.GetProperties(pt).Where(pd1 => pd1.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any()).Any();
+                        if (optIn1 && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
                             DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn1);
                         else if (pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any())
                         {
@@ -204,10 +206,10 @@ namespace ChoETL
                             ChoXmlNodeRecordFieldAttribute attr = ChoTypeDescriptor.GetPropetyAttribute<ChoXmlNodeRecordFieldAttribute>(pd);
                             if (attr.XPath.IsNullOrEmpty())
                             {
-								if (!attr.FieldName.IsNullOrWhiteSpace())
-									attr.XPath = $"/{attr.FieldName}|/@{attr.FieldName}";
-								else
-									attr.XPath = xpath = $"//{pd.Name}|//@{pd.Name}";
+                                if (!attr.FieldName.IsNullOrWhiteSpace())
+                                    attr.XPath = $"/{attr.FieldName}|/@{attr.FieldName}";
+                                else
+                                    attr.XPath = xpath = $"//{pd.Name}|//@{pd.Name}";
                                 IsComplexXPathUsed = true;
                             }
                             else
@@ -218,13 +220,13 @@ namespace ChoETL
                             obj.PropertyDescriptor = pd;
                             obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
                             obj.UseCache = useCache;
-							if (obj.XPath.IsNullOrWhiteSpace())
-							{
-								if (!obj.FieldName.IsNullOrWhiteSpace())
-									obj.XPath = $"/{obj.FieldName}|/@{obj.FieldName}";
-								else
-									obj.XPath = $"/{obj.Name}|/@{obj.Name}";
-							}
+                            if (obj.XPath.IsNullOrWhiteSpace())
+                            {
+                                if (!obj.FieldName.IsNullOrWhiteSpace())
+                                    obj.XPath = $"/{obj.FieldName}|/@{obj.FieldName}";
+                                else
+                                    obj.XPath = $"/{obj.Name}|/@{obj.Name}";
+                            }
 
                             obj.FieldType = pd.PropertyType.GetUnderlyingType();
                             if (!XmlRecordFieldConfigurations.Any(c => c.Name == pd.Name))
@@ -347,6 +349,8 @@ namespace ChoETL
                     string name = null;
                     foreach (var attr in xpr.Attributes())
                     {
+                        if (!IsInNamespace(xpr.Name, attr.Name))
+                            continue;
                         //if (!attr.Name.NamespaceName.IsNullOrWhiteSpace()) continue;
 
                         name = GetNameWithNamespace(xpr.Name, attr.Name);
@@ -360,28 +364,77 @@ namespace ChoETL
                     }
 
                     bool hasElements = false;
-                    var z = xpr.Elements().ToArray();
-                    foreach (var ele in xpr.Elements())
+                    //var z = xpr.Elements().ToArray();
+                    XElement ele = null;
+                    foreach (var kvp in xpr.Elements().GroupBy(e => e.Name.LocalName).Select(g => new { Name = g.Key, Value = g.ToArray() }))
                     {
-                        name = GetNameWithNamespace(ele.Name);
-
-                        hasElements = true;
-                        if (!dict.ContainsKey(name))
-                            dict.Add(name, new ChoXmlRecordFieldConfiguration(ele.Name.LocalName, $"/{name}") { FieldName = name }); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//{name}" : $"//{DefaultNamespace}" + ":" + $"{name}"));
-                        else
+                        if (kvp.Value.Length == 1)
                         {
-                            if (dict[name].IsXmlAttribute)
-                                throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
+                            ele = kvp.Value.First();
+                            if (!IsInNamespace(ele.Name))
+                                continue;
 
-                            dict[name].IsArray = true;
+                            name = GetNameWithNamespace(ele.Name);
+
+                            hasElements = true;
+                            if (!dict.ContainsKey(name))
+                                dict.Add(name, new ChoXmlRecordFieldConfiguration(ele.Name.LocalName, $"/{name}") { FieldName = name }); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//{name}" : $"//{DefaultNamespace}" + ":" + $"{name}"));
+                            else
+                            {
+                                if (dict[name].IsXmlAttribute)
+                                    throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
+
+                                dict[name].IsArray = true;
+                            }
+                        }
+                        else if (kvp.Value.Length > 1)
+                        {
+                            ele = kvp.Value.First();
+                            if (!IsInNamespace(ele.Name))
+                                continue;
+
+                            name = GetNameWithNamespace(ele.Name);
+
+                            hasElements = true;
+                            if (!dict.ContainsKey(name))
+                                dict.Add(name, new ChoXmlRecordFieldConfiguration(xpr.Name.LocalName, $"/{name}") { FieldName = name }); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//{name}" : $"//{DefaultNamespace}" + ":" + $"{name}"));
+                            else
+                            {
+                                if (dict[name].IsXmlAttribute)
+                                    throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
+
+                                dict[name].IsArray = true;
+                            }
                         }
                     }
 
+                    //foreach (var ele in xpr.Elements())
+                    //{
+                    //    if (!IsInNamespace(ele.Name))
+                    //        continue;
+
+                    //    name = GetNameWithNamespace(ele.Name);
+
+                    //    hasElements = true;
+                    //    if (!dict.ContainsKey(name))
+                    //        dict.Add(name, new ChoXmlRecordFieldConfiguration(ele.Name.LocalName, $"/{name}") { FieldName = name }); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//{name}" : $"//{DefaultNamespace}" + ":" + $"{name}"));
+                    //    else
+                    //    {
+                    //        if (dict[name].IsXmlAttribute)
+                    //            throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
+
+                    //        dict[name].IsArray = true;
+                    //    }
+                    //}
+
                     if (!hasElements)
                     {
-                        //name = xpr.Name.LocalName;
-                        name = GetNameWithNamespace(xpr.Name);
-						dict.Add(name, new ChoXmlRecordFieldConfiguration(name, "text()") { FieldName = name });
+                        if (IsInNamespace(xpr.Name))
+                        {
+                            //name = xpr.Name.LocalName;
+                            name = GetNameWithNamespace(xpr.Name);
+                            dict.Add(name, new ChoXmlRecordFieldConfiguration(name, "text()") { FieldName = name });
+                        }
                     }
 
                     foreach (ChoXmlRecordFieldConfiguration obj in dict.Values)
@@ -405,10 +458,10 @@ namespace ChoETL
                     if (fc.IsArray == null)
                         fc.IsArray = typeof(ICollection).IsAssignableFrom(fc.FieldType);
 
-					if (fc.FieldName.IsNullOrWhiteSpace())
-						fc.FieldName = fc.Name;
+                    if (fc.FieldName.IsNullOrWhiteSpace())
+                        fc.FieldName = fc.Name;
 
-					if (fc.XPath.IsNullOrWhiteSpace())
+                    if (fc.XPath.IsNullOrWhiteSpace())
                         fc.XPath = $"/{fc.FieldName}|/@{fc.FieldName}";
                     else
                     {
@@ -468,6 +521,24 @@ namespace ChoETL
             LoadNCacheMembers(XmlRecordFieldConfigurations);
         }
 
+        internal bool IsInNamespace(XName name)
+        {
+            ChoXmlNamespaceManager nsMgr = new ChoXmlNamespaceManager(NamespaceManager);
+
+            if (name.NamespaceName.IsNullOrWhiteSpace())
+                return true;
+
+            if (!name.NamespaceName.IsNullOrWhiteSpace())
+            {
+                string prefix = nsMgr.GetPrefixOfNamespace(name.NamespaceName);
+                if (prefix.IsNullOrWhiteSpace()) return false;
+
+                return true;
+            }
+            else
+                return false;
+        }
+
         internal string GetNameWithNamespace(XName name)
         {
             ChoXmlNamespaceManager nsMgr = new ChoXmlNamespaceManager(NamespaceManager);
@@ -483,13 +554,31 @@ namespace ChoETL
                 return name.LocalName;
         }
 
+        internal bool IsInNamespace(XName name, XName propName)
+        {
+            ChoXmlNamespaceManager nsMgr = new ChoXmlNamespaceManager(NamespaceManager);
+
+            if (propName.NamespaceName.IsNullOrWhiteSpace())
+                return true;
+
+            if (!propName.NamespaceName.IsNullOrWhiteSpace())
+            {
+                string prefix = nsMgr.GetPrefixOfNamespace(propName.NamespaceName);
+                if (prefix.IsNullOrWhiteSpace()) return false;
+
+                return true;
+            }
+            else
+                return false;
+        }
+
         internal string GetNameWithNamespace(XName name, XName propName)
         {
             ChoXmlNamespaceManager nsMgr = new ChoXmlNamespaceManager(NamespaceManager);
 
-            if (!name.NamespaceName.IsNullOrWhiteSpace())
+            if (!propName.NamespaceName.IsNullOrWhiteSpace())
             {
-                string prefix = nsMgr.GetPrefixOfNamespace(name.NamespaceName);
+                string prefix = nsMgr.GetPrefixOfNamespace(propName.NamespaceName);
                 if (prefix.IsNullOrWhiteSpace()) return propName.LocalName;
 
                 return prefix + ":" + propName.LocalName;

@@ -50,7 +50,7 @@ namespace ChoETL
         {
             if (value is XElement)
             {
-                return ((XElement)value).Value;
+                return ((XElement)value).NilAwareValue();
             }
 
             return value;
