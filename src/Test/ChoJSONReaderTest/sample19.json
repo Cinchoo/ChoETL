@@ -1,0 +1,17 @@
+﻿{
+	"ref": "ABC123456",
+	"pickcompname": "ABC Company",
+	"gw": 123.45,
+	"packaing": [
+		{
+			"qty": 5,
+			"unit": "C"
+
+		},
+		{
+			"qty": 7,
+			"unit": "L"
+
+		}
+	]
+}

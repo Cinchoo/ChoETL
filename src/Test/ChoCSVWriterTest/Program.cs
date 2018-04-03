@@ -267,6 +267,10 @@ namespace ChoCSVWriterTest
 				//.ClearFields()
 				.WithField(r => r.SiteID)
 				//.WithField(r => r.SiteAddress.City)
+				.Setup(s => s.FileHeaderWrite += (o, e) =>
+				{
+					e.HeaderText = "ID, House";
+				})
 				)
 			{
 				w.Write(site);

@@ -633,7 +633,23 @@ namespace ChoJSONReaderTest
 
         static void Main(string[] args)
         {
-        }
+			Sample19();
+
+		}
+
+		static void Sample19()
+		{
+			using (var p = new ChoJSONReader("sample19.json"))
+			{
+				var z1 = p.SelectMany(p1 => ((dynamic[])p1.packaing).Select(p2 => new { pickcompname = p1.pickcompname, qty = p2.qty })).ToArray();
+				return;
+
+				foreach (var rec in p)
+				{
+					var z = rec.packaing;
+				}
+			}
+		}
 
 		public class MarketData
 		{
