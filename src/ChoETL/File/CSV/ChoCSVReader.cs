@@ -28,8 +28,9 @@ namespace ChoETL
 		public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
 		public event EventHandler<ChoMapColumnEventArgs> MapColumn;
 		public event EventHandler<ChoEmptyLineEventArgs> EmptyLineFound;
+        private bool _isDisposed = false;
 
-		public dynamic Context
+        public dynamic Context
 		{
 			get { return Configuration.Context; }
 		}
@@ -136,7 +137,11 @@ namespace ChoETL
 
 		public void Dispose()
 		{
-			if (_closeStreamOnDispose)
+            if (_isDisposed)
+                return;
+
+            _isDisposed = true;
+            if (_closeStreamOnDispose)
 			{
 				if (_textReader != null)
 				{

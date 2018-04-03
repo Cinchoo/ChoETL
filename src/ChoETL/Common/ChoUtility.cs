@@ -672,21 +672,21 @@ namespace ChoETL
             {
                 if (index < ((IList)array).Count)
                 {
-					try
-					{
-						if (type.IsEnum)
-						{
-							if (Enum.IsDefined(type, ((IList)array)[index].ToNString()))
-								return (T)Enum.Parse(type, ((IList)array)[index].ToNString());
-							else
-								return defaultValue;
-						}
-						return (T)Convert.ChangeType(((IList)array)[index], type);
-					}
-					catch
-					{
-						return defaultValue;
-					}
+                    try
+                    {
+                        if (type.IsEnum)
+                        {
+                            if (Enum.IsDefined(type, ((IList)array)[index].ToNString()))
+                                return (T)Enum.Parse(type, ((IList)array)[index].ToNString());
+                            else
+                                return defaultValue;
+                        }
+                        return (T)Convert.ChangeType(((IList)array)[index], type);
+                    }
+                    catch
+                    {
+                        return defaultValue;
+                    }
                 }
                 else
                     return defaultValue;
@@ -999,12 +999,12 @@ namespace ChoETL
 
         #region XmlDeserialize Overloads
 
-        public static T XmlDeserialize<T>(Stream sr, XmlReaderSettings xrs = null)
+        public static T XmlDeserialize<T>(Stream sr, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null)
         {
-            return (T)XmlDeserialize(sr, typeof(T), xrs);
+            return (T)XmlDeserialize(sr, typeof(T), xrs, overrides, xmlSchemaNS);
         }
 
-        public static object XmlDeserialize(Stream sr, Type type, XmlReaderSettings xrs = null)
+        public static object XmlDeserialize(Stream sr, Type type, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null)
         {
             ChoGuard.ArgumentNotNullOrEmpty(sr, "Stream");
             ChoGuard.ArgumentNotNullOrEmpty(type, "Type");
@@ -1014,24 +1014,24 @@ namespace ChoETL
                 if (type == typeof(ChoDynamicObject))
                 {
                     XElement ele = XElement.Load(xtw);
-                    return ele.ToDynamic();
+                    return ele.ToDynamic(xmlSchemaNS);
                 }
                 else
                 {
-                    ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(type);
+                    ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(type, overrides);
                     return serializer.Deserialize(xtw);
                 }
             }
         }
 
-        public static T XmlDeserialize<T>(string xmlString, XmlReaderSettings xrs = null)
+        public static T XmlDeserialize<T>(string xmlString, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null)
         {
             ChoGuard.ArgumentNotNullOrEmpty(xmlString, "xmlString");
 
-            return (T)XmlDeserialize(xmlString, typeof(T), xrs);
+            return (T)XmlDeserialize(xmlString, typeof(T), xrs, overrides, xmlSchemaNS);
         }
 
-        public static object XmlDeserialize(string xmlString, Type type, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null)
+        public static object XmlDeserialize(string xmlString, Type type, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null)
         {
             ChoGuard.ArgumentNotNullOrEmpty(xmlString, "XmlString");
             ChoGuard.ArgumentNotNullOrEmpty(type, "Type");
@@ -1042,7 +1042,7 @@ namespace ChoETL
                 {
                     if (type == typeof(ChoDynamicObject))
                     {
-                        ChoDynamicObject obj = XElement.Load(xtw).ToDynamic();
+                        ChoDynamicObject obj = XElement.Load(xtw).ToDynamic(xmlSchemaNS);
                         return obj;
                     }
                     else
@@ -1054,12 +1054,12 @@ namespace ChoETL
             }
         }
 
-        public static T XmlDeserializeFromFile<T>(string path, XmlReaderSettings xrs = null)
+        public static T XmlDeserializeFromFile<T>(string path, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null)
         {
-            return (T)XmlDeserializeFromFile(path, typeof(T), xrs);
+            return (T)XmlDeserializeFromFile(path, typeof(T), xrs, overrides, xmlSchemaNS);
         }
 
-        public static object XmlDeserializeFromFile(string path, Type type, XmlReaderSettings xrs = null)
+        public static object XmlDeserializeFromFile(string path, Type type, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null)
         {
             ChoGuard.ArgumentNotNullOrEmpty(path, "Path");
             ChoGuard.ArgumentNotNullOrEmpty(type, "Type");
@@ -1071,11 +1071,11 @@ namespace ChoETL
                     if (type == typeof(ChoDynamicObject))
                     {
                         XElement ele = XElement.Load(xtw);
-                        return ele.ToDynamic();
+                        return ele.ToDynamic(xmlSchemaNS);
                     }
                     else
                     {
-                        ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(type);
+                        ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(type, overrides);
                         return serializer.Deserialize(xtw);
                     }
                 }
@@ -1796,12 +1796,12 @@ namespace ChoETL
             return arr;
         }
 
-		public static IList CreateGenericList(this Type type)
-		{
-			return (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(new[] { type }));
-		}
+        public static IList CreateGenericList(this Type type)
+        {
+            return (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(new[] { type }));
+        }
 
-		public static IList Cast(this IList list, Type elementType)
+        public static IList Cast(this IList list, Type elementType)
         {
             Type listType = typeof(List<>).MakeGenericType(new Type[] { elementType });
             IList list1 = (IList)Activator.CreateInstance(listType);

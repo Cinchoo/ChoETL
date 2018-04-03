@@ -47,11 +47,16 @@ namespace ChoETL
         {
             TextWriter sw = writer as TextWriter;
 
-            if (_configCheckDone)
+            try
             {
-                if (!Configuration.RootName.IsNullOrWhiteSpace())
-                    sw.Write("{1}</{0}>".FormatString(Configuration.RootName, Configuration.EOLDelimiter));
+                if (_configCheckDone)
+                {
+                    if (!Configuration.RootName.IsNullOrWhiteSpace())
+                        sw.Write("{1}</{0}>".FormatString(Configuration.RootName, Configuration.EOLDelimiter));
+                }
             }
+            catch { }
+
             RaiseEndWrite(sw);
         }
 

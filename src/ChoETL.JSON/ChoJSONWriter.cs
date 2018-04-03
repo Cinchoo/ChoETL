@@ -78,6 +78,7 @@ namespace ChoETL
             if (_isDisposed)
                 return;
 
+            _isDisposed = true;
             if (_writer != null)
                 _writer.EndWrite(_textWriter);
 
@@ -161,8 +162,9 @@ namespace ChoETL
                 parser.Configuration.JSONPath = jsonPath;
 
                 parser.Write(records);
-
+                parser.Close();
                 writer.Flush();
+                
                 stream.Position = 0;
 
                 return reader.ReadToEnd();

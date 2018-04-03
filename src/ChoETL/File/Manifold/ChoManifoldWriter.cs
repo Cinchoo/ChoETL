@@ -18,6 +18,7 @@ namespace ChoETL
         private ChoManifoldRecordWriter _writer = null;
         public event EventHandler<ChoRowsWrittenEventArgs> RowsWritten;
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
+        private bool _isDisposed = false;
 
         public ChoManifoldRecordConfiguration Configuration
         {
@@ -66,8 +67,17 @@ namespace ChoETL
             _closeStreamOnDispose = true;
         }
 
+        public void Close()
+        {
+            Dispose();
+        }
+
         public void Dispose()
         {
+            if (_isDisposed)
+                return;
+
+            _isDisposed = true;
             if (_closeStreamOnDispose)
             {
                 if (_textWriter != null)

@@ -21,6 +21,7 @@ namespace ChoETL
         private CultureInfo _prevCultureInfo = null;
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
         public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
+        private bool _isDisposed = false;
 
         public ChoManifoldRecordConfiguration Configuration
         {
@@ -123,6 +124,10 @@ namespace ChoETL
 
         public void Dispose()
         {
+            if (_isDisposed)
+                return;
+
+            _isDisposed = true;
             if (_closeStreamOnDispose)
             {
                 if (_textReader != null)

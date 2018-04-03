@@ -31,6 +31,7 @@ namespace ChoETL
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
         public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
         public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
+        private bool _isDisposed = false;
 
         public ChoXmlRecordConfiguration Configuration
         {
@@ -200,6 +201,10 @@ namespace ChoETL
 
         public void Dispose()
         {
+            if (_isDisposed)
+                return;
+
+            _isDisposed = true;
             if (_closeStreamOnDispose)
             {
                 if (_xmlReader != null)

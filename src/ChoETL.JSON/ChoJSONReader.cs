@@ -30,8 +30,9 @@ namespace ChoETL
 		public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
 		public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
 		public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
+        private bool _isDisposed = false;
 
-		public ChoJSONRecordConfiguration Configuration
+        public ChoJSONRecordConfiguration Configuration
 		{
 			get;
 			private set;
@@ -173,7 +174,11 @@ namespace ChoETL
 
 		public void Dispose()
 		{
-			if (_closeStreamOnDispose)
+            if (_isDisposed)
+                return;
+
+            _isDisposed = true;
+            if (_closeStreamOnDispose)
 			{
 				if (_textReader != null)
 					_textReader.Dispose();

@@ -77,95 +77,114 @@ namespace ChoXmlReaderTest
     {
         static void Main(string[] args)
         {
-			ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			Sample19();
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
+            Sample20();
         }
 
-		static void Sample19()
-		{
-			using (var p = new ChoXmlReader("sample19.xml")
-				//.WithXmlNamespace("tlp", "http://www.timelog.com/XML/Schema/tlp/v4_4")
-				)
-			{
-				//foreach (var rec in p)
-				//	Console.WriteLine(rec.Dump());
-				//return;
-				using (var w = new ChoCSVWriter(Console.Out)
-		.WithFirstLineHeader()
-		)
-				{
-					w.Write(p);
-				}
+        static void Sample20()
+        {
+            string xml = @"<GetItemRequest xmlns:xsi=""http://www.w3.org/2001/XMLSchema"">
+    <ApplicationCrediential>
+        <ConsumerKey xsi:nil=""true""></ConsumerKey>
+        <ConsumerSecret xsi:nil=""true""></ConsumerSecret>
+    </ApplicationCrediential>
+</GetItemRequest>";
 
-				Console.WriteLine();
-			}
-		}
-		static void Sample18()
-		{
-			using (var p = new ChoXmlReader("sample18.xml")
-				)
-			{
-				//foreach (dynamic rec in p)
-				//{
-				//	var z = ((IList<object>)rec.product_lineitems).SelectMany<object, string>(r1 => ((dynamic)r1).price);
-				//	foreach (var z1 in z)
-				//		Console.WriteLine(z1);
-				//}
+            //ChoXmlSettings.XmlSchemaNamespace = "http://www.w3.org/2001/XMLSchema1";
+            using (var p = new ChoXmlReader(new StringReader(xml))
+                .WithXPath("/")
+            )
+            {
+                var x = p.First();
+                Console.WriteLine(ChoJSONWriter.ToText(x));
+            }
+        }
 
-				using (var w = new ChoCSVWriter(Console.Out)
-					.WithFirstLineHeader()
-					)
-				{
-					w.Write(p.SelectMany(r => ((IList<object>)r.product_lineitems).Cast<dynamic>().Select(r1 => new { original_impot_no = r.original_impot_no, price = r1.price })));
-				}
-				Console.WriteLine();
-				return;
-				foreach (var rec in p)
-				{
-					Console.WriteLine(rec.original_impot_no);
-					//var x = ((IList<object>)rec.product_lineitems).ToArray();
+        static void Sample19()
+        {
+            using (var p = new ChoXmlReader("sample19.xml")
+                //.WithXmlNamespace("tlp", "http://www.timelog.com/XML/Schema/tlp/v4_4")
+                )
+            {
+                //foreach (var rec in p)
+                //	Console.WriteLine(rec.Dump());
+                //return;
+                using (var w = new ChoCSVWriter(Console.Out)
+        .WithFirstLineHeader()
+        )
+                {
+                    w.Write(p);
+                }
 
-					var x = ((IList<object>)rec.product_lineitems).Cast<dynamic>().Select(r => new { original_impot_no = rec.original_impot_no, price = r.price }).ToArray();
+                Console.WriteLine();
+            }
+        }
+        static void Sample18()
+        {
+            using (var p = new ChoXmlReader("sample18.xml")
+                )
+            {
+                //foreach (dynamic rec in p)
+                //{
+                //	var z = ((IList<object>)rec.product_lineitems).SelectMany<object, string>(r1 => ((dynamic)r1).price);
+                //	foreach (var z1 in z)
+                //		Console.WriteLine(z1);
+                //}
 
-					//foreach (dynamic li in (IList<object>)rec.product_lineitems)
-					//{
-					//	Console.WriteLine(li.id);
-					//	Console.WriteLine(li.price);
-					//}
+                using (var w = new ChoCSVWriter(Console.Out)
+                    .WithFirstLineHeader()
+                    )
+                {
+                    w.Write(p.SelectMany(r => ((IList<object>)r.product_lineitems).Cast<dynamic>().Select(r1 => new { original_impot_no = r.original_impot_no, price = r1.price })));
+                }
+                Console.WriteLine();
+                return;
+                foreach (var rec in p)
+                {
+                    Console.WriteLine(rec.original_impot_no);
+                    //var x = ((IList<object>)rec.product_lineitems).ToArray();
 
-					Console.WriteLine(rec.GetXml());
-				}
-			}
-		}
+                    var x = ((IList<object>)rec.product_lineitems).Cast<dynamic>().Select(r => new { original_impot_no = rec.original_impot_no, price = r.price }).ToArray();
 
-		public class Emp
-		{
-			[ChoXmlElementRecordField(FieldName = "First_Name")]
-			public string FirstName { get; set; }
-			public string Last_Name { get; set; }
-			public EmpID EmpID { get; set; }
-		}
+                    //foreach (dynamic li in (IList<object>)rec.product_lineitems)
+                    //{
+                    //	Console.WriteLine(li.id);
+                    //	Console.WriteLine(li.price);
+                    //}
 
-		public class EmpID
-		{
-			public int ID { get; set; }
-		}
-		static void CDATATest()
-		{
-			string xml = @"<CUST><First_Name>Luke</First_Name> <Last_Name>Skywalker</Last_Name> <ID><![CDATA[1234]]></ID> </CUST>";
+                    Console.WriteLine(rec.GetXml());
+                }
+            }
+        }
 
-			using (var p = new ChoXmlReader<Emp>(new StringReader(xml))
-				.Configure(c => c.ThrowAndStopOnMissingField = false)
-				.WithXPath("/")
+        public class Emp
+        {
+            [ChoXmlElementRecordField(FieldName = "First_Name")]
+            public string FirstName { get; set; }
+            public string Last_Name { get; set; }
+            public EmpID EmpID { get; set; }
+        }
+
+        public class EmpID
+        {
+            public int ID { get; set; }
+        }
+        static void CDATATest()
+        {
+            string xml = @"<CUST><First_Name>Luke</First_Name> <Last_Name>Skywalker</Last_Name> <ID><![CDATA[1234]]></ID> </CUST>";
+
+            using (var p = new ChoXmlReader<Emp>(new StringReader(xml))
+                .Configure(c => c.ThrowAndStopOnMissingField = false)
+                .WithXPath("/")
                 //.ClearFields()
                 //.WithField(e => e.FirstName, xPath: "/First_Name")
                 .WithField(e => e.EmpID.ID)
                 )
-			{
-				foreach (var rec in p)
-					Console.WriteLine(rec.Dump());
-			}
-		}
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
         static void NoEncodeTest()
         {
             using (var xr = new ChoXmlReader("NoEncode.xml")
@@ -394,12 +413,12 @@ namespace ChoXmlReaderTest
         }
 
         private static string EmpXml = @"<Employees>
-                <Employee Id='1'>
-                    <Name isActive = 'true'>Tom</Name>
-                </Employee>
-                <Employee Id='2'>
-                    <Name>Mark</Name>
-                </Employee>
+                <Employee Id='1'>
+                    <Name isActive = 'true'>Tom</Name>
+                </Employee>
+                <Employee Id='2'>
+                    <Name>Mark</Name>
+                </Employee>
             </Employees>
         ";
 

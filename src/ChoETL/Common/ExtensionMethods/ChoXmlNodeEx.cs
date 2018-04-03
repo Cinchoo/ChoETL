@@ -12,6 +12,22 @@ using System.Xml.Linq;
 
 namespace ChoETL
 {
+    public static class ChoXmlSettings
+    {
+        private static string _XmlSchemaNamespace = "http://www.w3.org/2001/XMLSchema";
+        public static string XmlSchemaNamespace
+        {
+            get { return _XmlSchemaNamespace; }
+            set
+            {
+                if (value.IsNullOrWhiteSpace())
+                    return;
+
+                _XmlSchemaNamespace = value;
+            }
+        }
+    }
+
     public static class ChoXmlNodeEx
     {
         #region Instance Members (Public)
@@ -654,7 +670,15 @@ namespace ChoETL
             return reader.ReadOuterXml().Trim();
         }
 
-		public static dynamic ToDynamic(this XElement element)
+        public static string NilAwareValue(this XElement element, string xmlSchemaNS = null)
+        {
+            XNamespace ns = xmlSchemaNS.IsNullOrWhiteSpace() ? ChoXmlSettings.XmlSchemaNamespace : xmlSchemaNS;
+
+            XAttribute nil = element.Attribute(ns + "nil");
+            return nil != null && (bool)nil ? null : element.Value;
+        }
+
+        public static dynamic ToDynamic(this XElement element, string xmlSchemaNS = null)
         {
             // loop through child elements
             // define an Expando Dynamic
@@ -683,14 +707,14 @@ namespace ChoETL
                             List<ChoDynamicObject> subDynamic = new List<ChoDynamicObject>();
                             foreach (XElement subsubElement in subElement.Elements())
                             {
-                                subDynamic.Add(ToDynamic(subsubElement));
+                                subDynamic.Add(ToDynamic(subsubElement, xmlSchemaNS));
                             }
 							foreach (var item in subDynamic)
 								obj.Add(item);
                         }
                         else
                         {
-                            ((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, subElement.Value);
+                            ((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, subElement.NilAwareValue());
                         }
                     }
                     else
@@ -704,12 +728,12 @@ namespace ChoETL
                             // if sub element has child elements
                             if (subElement.HasElements)
                             {
-								ChoDynamicObject dobj = ToDynamic(subElement);
+								ChoDynamicObject dobj = ToDynamic(subElement, xmlSchemaNS);
 								list.Add(dobj);
 							}
 							else
                             {
-								((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, subElement.Value);
+								((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, subElement.NilAwareValue());
 							}
 						}
 						foreach (var item in list)
@@ -718,7 +742,7 @@ namespace ChoETL
                 }
             }
             else
-                ((IDictionary<string, object>)obj).Add("@@Value", element.Value);
+                ((IDictionary<string, object>)obj).Add("@@Value", element.NilAwareValue());
 
             return obj;
         }

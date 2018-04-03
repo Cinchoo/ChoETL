@@ -75,6 +75,8 @@ namespace ChoETL
             get;
             private set;
         }
+        public string XmlSchemaNamespace { get; internal set; }
+
         internal bool IsComplexXPathUsed = true;
         internal string RootName;
         internal string NodeName;
@@ -347,6 +349,8 @@ namespace ChoETL
                     string name = null;
                     foreach (var attr in xpr.Attributes())
                     {
+                        if (!IsInNamespace(xpr.Name, attr.Name))
+                            continue;
                         //if (!attr.Name.NamespaceName.IsNullOrWhiteSpace()) continue;
 
                         name = GetNameWithNamespace(xpr.Name, attr.Name);
@@ -363,6 +367,9 @@ namespace ChoETL
                     var z = xpr.Elements().ToArray();
                     foreach (var ele in xpr.Elements())
                     {
+                        if (!IsInNamespace(ele.Name))
+                            continue;
+
                         name = GetNameWithNamespace(ele.Name);
 
                         hasElements = true;
@@ -379,9 +386,12 @@ namespace ChoETL
 
                     if (!hasElements)
                     {
-                        //name = xpr.Name.LocalName;
-                        name = GetNameWithNamespace(xpr.Name);
-						dict.Add(name, new ChoXmlRecordFieldConfiguration(name, "text()") { FieldName = name });
+                        if (IsInNamespace(xpr.Name))
+                        {
+                            //name = xpr.Name.LocalName;
+                            name = GetNameWithNamespace(xpr.Name);
+                            dict.Add(name, new ChoXmlRecordFieldConfiguration(name, "text()") { FieldName = name });
+                        }
                     }
 
                     foreach (ChoXmlRecordFieldConfiguration obj in dict.Values)
@@ -468,6 +478,24 @@ namespace ChoETL
             LoadNCacheMembers(XmlRecordFieldConfigurations);
         }
 
+        internal bool IsInNamespace(XName name)
+        {
+            ChoXmlNamespaceManager nsMgr = new ChoXmlNamespaceManager(NamespaceManager);
+
+            if (name.NamespaceName.IsNullOrWhiteSpace())
+                return true;
+
+            if (!name.NamespaceName.IsNullOrWhiteSpace())
+            {
+                string prefix = nsMgr.GetPrefixOfNamespace(name.NamespaceName);
+                if (prefix.IsNullOrWhiteSpace()) return false;
+
+                return true;
+            }
+            else
+                return false;
+        }
+
         internal string GetNameWithNamespace(XName name)
         {
             ChoXmlNamespaceManager nsMgr = new ChoXmlNamespaceManager(NamespaceManager);
@@ -483,13 +511,28 @@ namespace ChoETL
                 return name.LocalName;
         }
 
+        internal bool IsInNamespace(XName name, XName propName)
+        {
+            ChoXmlNamespaceManager nsMgr = new ChoXmlNamespaceManager(NamespaceManager);
+
+            if (!propName.NamespaceName.IsNullOrWhiteSpace())
+            {
+                string prefix = nsMgr.GetPrefixOfNamespace(propName.NamespaceName);
+                if (prefix.IsNullOrWhiteSpace()) return false;
+
+                return true;
+            }
+            else
+                return false;
+        }
+
         internal string GetNameWithNamespace(XName name, XName propName)
         {
             ChoXmlNamespaceManager nsMgr = new ChoXmlNamespaceManager(NamespaceManager);
 
-            if (!name.NamespaceName.IsNullOrWhiteSpace())
+            if (!propName.NamespaceName.IsNullOrWhiteSpace())
             {
-                string prefix = nsMgr.GetPrefixOfNamespace(name.NamespaceName);
+                string prefix = nsMgr.GetPrefixOfNamespace(propName.NamespaceName);
                 if (prefix.IsNullOrWhiteSpace()) return propName.LocalName;
 
                 return prefix + ":" + propName.LocalName;
