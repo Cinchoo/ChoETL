@@ -78,7 +78,7 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Sample20();
+            Sample21();
         }
 
         static void Sample20()
@@ -98,6 +98,46 @@ namespace ChoXmlReaderTest
                 var x = p.First();
                 Console.WriteLine(ChoJSONWriter.ToText(x));
             }
+        }
+        static void Sample21()
+        {
+            string xml = @"<AdapterCards>
+    <cards type=""MCS"">
+        <card>
+            <id>id1</id>
+            <description>desc1</description>
+            <mccode>code1</mccode>
+        </card>
+        <card>
+            <id>id2</id>
+            <description>desc2</description>
+            <mccode>code2</mccode>
+        </card>
+    </cards>
+    <cards type=""MCM"">
+        <card>
+            <id>id3</id>
+            <description>desc3</description>
+            <mccode>code3</mccode>
+        </card>
+        <card>
+            <id>id4</id>
+            <description>desc4</description>
+            <mccode>code4</mccode>
+        </card>
+    </cards>
+    <cards type=""F""/>
+    <cards type=""B""/>
+</AdapterCards>";
+
+
+            using (var p = new ChoXmlReader(new StringReader(xml))
+            )
+            {
+                foreach (var rec in p.SelectMany(r1 => r1.cards == null ? Enumerable.Empty<object>() : ((dynamic[])r1.cards).Select(r2 => new { type = r1.type, id = r2.id, description = r2.description })))
+                    Console.WriteLine(ChoJSONWriter.ToText(rec));
+            }
+
         }
 
         static void Sample19()
