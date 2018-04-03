@@ -99,10 +99,10 @@ namespace ChoXmlReaderTest
 			using (var p = new ChoXmlReader<Emp>(new StringReader(xml))
 				.Configure(c => c.ThrowAndStopOnMissingField = false)
 				.WithXPath("/")
-				//.ClearFields()
-				.WithField(e => e.FirstName, xPath: "/First_Name")
-				.WithField(e => e.EmpID.ID)
-				)
+                //.ClearFields()
+                //.WithField(e => e.FirstName, xPath: "/First_Name")
+                .WithField(e => e.EmpID.ID)
+                )
 			{
 				foreach (var rec in p)
 					Console.WriteLine(rec.Dump());
