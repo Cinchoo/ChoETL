@@ -95,5 +95,33 @@ namespace ChoETL
                 NullValue = attr.NullValue;
             }
         }
-    }
+
+		public ChoFieldValueTrimOption GetFieldValueTrimOption(Type fieldType)
+		{
+			ChoFieldValueTrimOption? fieldValueTrimOption = FieldValueTrimOption;
+
+			if (fieldValueTrimOption != null)
+				return fieldValueTrimOption.Value;
+
+			if (fieldType == typeof(int)
+			  || fieldType == typeof(uint)
+			  || fieldType == typeof(long)
+			  || fieldType == typeof(ulong)
+			  || fieldType == typeof(short)
+			  || fieldType == typeof(ushort)
+			  || fieldType == typeof(byte)
+			  || fieldType == typeof(sbyte)
+			  || fieldType == typeof(float)
+			  || fieldType == typeof(double)
+			  || fieldType == typeof(decimal)
+			  || fieldType == typeof(Single)
+			  )
+			{
+				return ChoFieldValueTrimOption.TrimStart;
+			}
+			else
+				return ChoFieldValueTrimOption.TrimEnd;
+		}
+
+	}
 }

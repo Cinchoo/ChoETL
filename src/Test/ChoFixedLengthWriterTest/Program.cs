@@ -14,9 +14,29 @@ namespace ChoFixedLengthWriterTest
     {
         static void Main(string[] args)
         {
-            SaveStringList();
+			ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
+
+			TrimTest();
         }
-        public static void SaveStringList()
+
+		public static void TrimTest()
+		{
+			using (var w = new ChoFixedLengthWriter<EmployeeRec>(Console.Out))
+			{
+				w.Write(new EmployeeRec { Id = 90000000000000, Name = "Tom 23423432432 432432423423432423423423432432432423423432" });
+			}
+			Console.WriteLine();
+		}
+
+		public class EmployeeRec
+		{
+			[ChoFixedLengthRecordField(1, 10)]
+			public long Id { get; set; }
+			[ChoFixedLengthRecordField(11, 25)]
+			public string Name { get; set; }
+		}
+
+		public static void SaveStringList()
         {
             List<string> list = new List<string>();
             list.Add("1/1/2012");

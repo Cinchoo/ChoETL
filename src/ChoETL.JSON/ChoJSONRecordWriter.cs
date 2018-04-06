@@ -460,7 +460,7 @@ namespace ChoETL
                     if (fieldValue == null)
                         fieldText = "null";
                     else if (ft == typeof(string) || ft == typeof(char))
-                        fieldText = JsonConvert.SerializeObject(NormalizeFieldValue(kvp.Key, fieldValue.ToString(), kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false));
+                        fieldText = JsonConvert.SerializeObject(NormalizeFieldValue(kvp.Key, fieldValue.ToString(), kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType)));
                     else if (ft == typeof(DateTime))
                         fieldText = JsonConvert.SerializeObject(fieldValue);
                     else if (ft.IsEnum)
@@ -711,7 +711,7 @@ namespace ChoETL
         }
 
         private string NormalizeFieldValue(string fieldName, string fieldValue, int? size, bool truncate, bool? quoteField,
-            ChoFieldValueJustification fieldValueJustification, char fillChar, bool isHeader = false)
+            ChoFieldValueJustification fieldValueJustification, char fillChar, bool isHeader = false, ChoFieldValueTrimOption? fieldValueTrimOption = null)
         {
             string lFieldValue = fieldValue;
             bool retValue = false;
@@ -766,9 +766,19 @@ namespace ChoETL
                 else if (fieldValue.Length > size.Value)
                 {
                     if (truncate)
-                        fieldValue = fieldValue.Substring(0, size.Value);
-                    else
-                    {
+					{
+						if (fieldValueTrimOption != null)
+						{
+							if (fieldValueTrimOption == ChoFieldValueTrimOption.TrimStart)
+								fieldValue = fieldValue.Right(size.Value);
+							else
+								fieldValue = fieldValue.Substring(0, size.Value);
+						}
+						else
+							fieldValue = fieldValue.Substring(0, size.Value);
+					}
+					else
+					{
                         if (isHeader)
                             throw new ApplicationException("Field header value length overflowed for '{0}' member [Expected: {1}, Actual: {2}].".FormatString(fieldName, size, fieldValue.Length));
                         else

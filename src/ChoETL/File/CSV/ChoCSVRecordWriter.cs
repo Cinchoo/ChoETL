@@ -363,12 +363,14 @@ namespace ChoETL
 
                 if (firstColumn)
                 {
-                    msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification), GetFillChar(kvp.Value.FillChar), false, kvp.Value.NullValue));
+                    msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, 
+						GetFieldValueJustification(kvp.Value.FieldValueJustification), GetFillChar(kvp.Value.FillChar), 
+						false, kvp.Value.NullValue, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType)));
                     firstColumn = false;
                 }
                 else
                     msg.AppendFormat("{0}{1}", Configuration.Delimiter, NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification),
-                        GetFillChar(kvp.Value.FillChar), false, kvp.Value.NullValue));
+                        GetFillChar(kvp.Value.FillChar), false, kvp.Value.NullValue, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType)));
             }
 
             recText = msg.ToString();
@@ -464,7 +466,8 @@ namespace ChoETL
         private char[] searchStrings = null;
         bool quoteValue = false;
         private string NormalizeFieldValue(string fieldName, string fieldValue, int? size, bool truncate, bool? quoteField,
-            ChoFieldValueJustification fieldValueJustification, char fillChar, bool isHeader = false, string nullValue = null)
+            ChoFieldValueJustification fieldValueJustification, char fillChar, bool isHeader = false, string nullValue = null,
+			ChoFieldValueTrimOption? fieldValueTrimOption = null)
         {
             string lFieldValue = fieldValue;
             bool retValue = false;
@@ -582,9 +585,19 @@ namespace ChoETL
                 else if (fieldValue.Length > size.Value)
                 {
                     if (truncate)
-                        fieldValue = fieldValue.Substring(0, size.Value);
-                    else
-                    {
+					{
+						if (fieldValueTrimOption != null)
+						{
+							if (fieldValueTrimOption == ChoFieldValueTrimOption.TrimStart)
+								fieldValue = fieldValue.Right(size.Value);
+							else
+								fieldValue = fieldValue.Substring(0, size.Value);
+						}
+						else
+							fieldValue = fieldValue.Substring(0, size.Value);
+					}
+					else
+					{
                         if (isHeader)
                             throw new ApplicationException("Field header value length overflowed for '{0}' member [Expected: {1}, Actual: {2}].".FormatString(fieldName, size, fieldValue.Length));
                         else

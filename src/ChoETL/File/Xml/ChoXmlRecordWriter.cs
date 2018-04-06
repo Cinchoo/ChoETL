@@ -527,7 +527,7 @@ namespace ChoETL
                             {
                                 if (fieldConfig.IsXmlAttribute)
                                     msg.Append(@" {0}=""{1}""".FormatString(fieldConfig.FieldName, NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false,
-                                        isXmlAttribute: true, encodeValue: fieldConfig.EncodeValue)));
+                                        isXmlAttribute: true, encodeValue: fieldConfig.EncodeValue, fieldValueTrimOption: kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType))));
                                 else
                                 {
                                     if (!isElementClosed)
@@ -542,7 +542,7 @@ namespace ChoETL
                             }
                             else if (fieldConfig.IsXmlAttribute)
                                 msg.Append(@" {0}=""{1}""".FormatString(fieldConfig.FieldName, NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false,
-                                    isXmlAttribute: true, encodeValue: fieldConfig.EncodeValue)));
+                                    isXmlAttribute: true, encodeValue: fieldConfig.EncodeValue, fieldValueTrimOption: kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType))));
                             else
                             {
                                 if (!isElementClosed)
@@ -551,7 +551,8 @@ namespace ChoETL
                                     isElementClosed = true;
                                 }
                                 msg.Append("<{0}>{1}</{0}>{2}".FormatString(fieldConfig.FieldName,
-                                    NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false),
+                                    NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, 
+									GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false, fieldValueTrimOption: kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType)),
                                     config.EOLDelimiter).Indent(config.Indent * 2, config.IndentChar.ToString()));
                             }
                         }
@@ -759,7 +760,7 @@ namespace ChoETL
 
         private string NormalizeFieldValue(string fieldName, string fieldValue, int? size, bool truncate, bool? quoteField,
             ChoFieldValueJustification fieldValueJustification, char fillChar, bool isHeader = false, bool isXmlAttribute = false, 
-            bool? encodeValue = null)
+            bool? encodeValue = null, ChoFieldValueTrimOption? fieldValueTrimOption = null)
         {
             string lFieldValue = fieldValue;
             bool retValue = false;
@@ -814,9 +815,19 @@ namespace ChoETL
                 else if (fieldValue.Length > size.Value)
                 {
                     if (truncate)
-                        fieldValue = fieldValue.Substring(0, size.Value);
-                    else
-                    {
+					{
+						if (fieldValueTrimOption != null)
+						{
+							if (fieldValueTrimOption == ChoFieldValueTrimOption.TrimStart)
+								fieldValue = fieldValue.Right(size.Value);
+							else
+								fieldValue = fieldValue.Substring(0, size.Value);
+						}
+						else
+							fieldValue = fieldValue.Substring(0, size.Value);
+					}
+					else
+					{
                         if (isHeader)
                             throw new ApplicationException("Field header value length overflowed for '{0}' member [Expected: {1}, Actual: {2}].".FormatString(fieldName, size, fieldValue.Length));
                         else

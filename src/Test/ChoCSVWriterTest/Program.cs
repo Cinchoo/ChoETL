@@ -283,6 +283,8 @@ namespace ChoCSVWriterTest
         {
 			ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
+			return;
+
 			WriteSpecificColumns();
 			return;
 			//DictionaryTest();

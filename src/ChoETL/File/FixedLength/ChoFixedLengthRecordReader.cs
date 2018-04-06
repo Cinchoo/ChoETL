@@ -562,17 +562,9 @@ namespace ChoETL
         {
             if (fieldValue == null) return fieldValue;
 
-            ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim;
+			ChoFieldValueTrimOption fieldValueTrimOption = config.GetFieldValueTrimOption(fieldType);
 
-            if (config.FieldValueTrimOption == null)
-            {
-                //if (fieldType == typeof(string))
-                //    fieldValueTrimOption = ChoFieldValueTrimOption.None;
-            }
-            else
-                fieldValueTrimOption = config.FieldValueTrimOption.Value;
-
-            switch (fieldValueTrimOption)
+			switch (fieldValueTrimOption)
             {
                 case ChoFieldValueTrimOption.Trim:
                     fieldValue = fieldValue.Trim();
@@ -602,11 +594,16 @@ namespace ChoETL
             {
                 if (fieldValue.Length > config.Size.Value)
                 {
-                    if (!config.Truncate)
-                        throw new ChoParserException("Incorrect field value length found for '{0}' member [Expected: {1}, Actual: {2}].".FormatString(config.FieldName, config.Size.Value, fieldValue.Length));
-                    else
-                        fieldValue = fieldValue.Substring(0, config.Size.Value);
-                }
+					if (!config.Truncate)
+						throw new ChoParserException("Incorrect field value length found for '{0}' member [Expected: {1}, Actual: {2}].".FormatString(config.FieldName, config.Size.Value, fieldValue.Length));
+					else
+					{
+						if (fieldValueTrimOption == ChoFieldValueTrimOption.TrimStart)
+							fieldValue = fieldValue.Right(config.Size.Value);
+						else
+							fieldValue = fieldValue.Substring(0, config.Size.Value);
+					}
+				}
             }
 
             if (config.NullValue != null)
