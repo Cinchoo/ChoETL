@@ -417,25 +417,25 @@ namespace ChoETL
         }
 
 		public ChoFixedLengthReader<T> WithField<TField>(Expression<Func<T, TField>> field, int startIndex, int size, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
-			string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string altFieldNames = null)
+			string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null)
 		{
 			if (field == null)
 				return this;
 
 			return WithField(field.GetMemberName(), startIndex, size, fieldType, quoteField, fieldValueTrimOption,
-				fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames, field.GetFullyQualifiedMemberName());
+				fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames, field.GetFullyQualifiedMemberName(), formatText);
 		}
 
 		public ChoFixedLengthReader<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
-			string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string altFieldNames = null)
+			string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null)
 		{
 			return WithField(name, startIndex, size, fieldType, quoteField, fieldValueTrimOption,
-				fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames, null);
+				fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames, null, formatText);
 		}
 
 		private ChoFixedLengthReader<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
             string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string altFieldNames = null,
-			string fullyQualifiedMemberName = null)
+			string fullyQualifiedMemberName = null, string formatText = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -467,7 +467,8 @@ namespace ChoETL
 					ValueConverter = valueConverter,
 					DefaultValue = defaultValue,
 					FallbackValue = fallbackValue,
-					AltFieldNames = altFieldNames
+					AltFieldNames = altFieldNames,
+                    FormatText = formatText
 				};
 				if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
 				{

@@ -474,30 +474,30 @@ namespace ChoETL
 		}
 
 		public ChoCSVReader<T> WithField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
-			object defaultValue = null, object fallbackValue = null, string altFieldNames = null)
+			object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null)
 		{
 			if (field == null)
 				return this;
 
 			return WithField(field.GetMemberName(), null, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames,
-				field.GetFullyQualifiedMemberName());
+				field.GetFullyQualifiedMemberName(), formatText);
 		}
 
 		public ChoCSVReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
-			object defaultValue = null, object fallbackValue = null, string altFieldNames = null)
+			object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null)
 		{
-			return WithField(name, null, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames);
+			return WithField(name, null, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames, formatText);
 		}
 
 		public ChoCSVReader<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
-			object defaultValue = null, object fallbackValue = null, string altFieldNames = null)
+			object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null)
 		{
 			return WithField(name, position, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter,
-				defaultValue, fallbackValue, altFieldNames, null);
+				defaultValue, fallbackValue, altFieldNames, null, formatText);
 		}
 
 		private ChoCSVReader<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
-			object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string fullyQualifiedMemberName = null)
+			object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string fullyQualifiedMemberName = null, string formatText = null)
 		{
 			if (!name.IsNullOrEmpty())
 			{
@@ -527,16 +527,18 @@ namespace ChoETL
 					position++;
 				}
 
-				var nfc = new ChoCSVRecordFieldConfiguration(fnTrim, position.Value)
-				{
-					FieldType = fieldType,
-					QuoteField = quoteField,
-					FieldValueTrimOption = fieldValueTrimOption,
-					FieldName = fieldName,
-					ValueConverter = valueConverter,
-					DefaultValue = defaultValue,
-					FallbackValue = fallbackValue,
-					AltFieldNames = altFieldNames
+                var nfc = new ChoCSVRecordFieldConfiguration(fnTrim, position.Value)
+                {
+                    FieldType = fieldType,
+                    QuoteField = quoteField,
+                    FieldValueTrimOption = fieldValueTrimOption,
+                    FieldName = fieldName,
+                    ValueConverter = valueConverter,
+                    DefaultValue = defaultValue,
+                    FallbackValue = fallbackValue,
+                    AltFieldNames = altFieldNames,
+                    FormatText = formatText
+                    
 				};
 				if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
 				{

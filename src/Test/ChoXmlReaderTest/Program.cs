@@ -78,7 +78,39 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Sample21();
+            Sample22();
+        }
+
+        static void Sample22()
+        {
+            string xml = @"<?xml version=""1.0"" encoding=""utf- 8""?>
+
+<ListItems dateprodstart=""20180319"" heureprodstart=""12:08:36"" 
+dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
+
+<item>
+    <filename>test5</filename>
+    <destination>O</destination>
+    <test1>EVA00</test1>
+    <test2>ko</test2>
+</item>
+
+<item>
+    <filename>test</filename>
+    <destination>O</destination>
+    <test1>xxxx</test1>
+    <test2>xxxx</test2>
+</item>
+</ListItems>";
+
+            using (var p = new ChoXmlReader(new StringReader(xml))
+                .WithXPath("/ListItems")
+                .WithField("dateprodstart", fieldType: typeof(DateTime), formatText: "yyyyMMdd")
+                )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
         }
 
         static void Sample20()

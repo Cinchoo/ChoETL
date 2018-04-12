@@ -18,10 +18,14 @@ namespace ChoETL
                 fieldValue = fieldConfig.ValueConverter(fieldValue);
             else
             {
+                object[] fcParams = fieldConfig.PropConverterParams;
+                if (!fieldConfig.FormatText.IsNullOrWhiteSpace())
+                    fcParams = new object[] { new object[] { fieldConfig.FormatText } };
+
                 if (fieldConfig.Converters.IsNullOrEmpty())
-                    fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                    fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, null, fieldConfig.PropConverters, fcParams, culture);
                 else
-                    fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), null, culture);
+                    fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), fcParams, culture);
             }
 
             dict.AddOrUpdate(fn, fieldValue);

@@ -43,12 +43,12 @@ namespace ChoCSVReaderTest
     public class Site
     {
         [Required(ErrorMessage = "SiteID can't be null")]
-		//[ChoCSVRecordField(1)]
-		public int SiteID { get; set; }
+        //[ChoCSVRecordField(1)]
+        public int SiteID { get; set; }
         [Required]
         public int House { get; set; }
-		[ChoValidateObject]
-		public SiteAddress SiteAddress { get; set; }
+        [ChoValidateObject]
+        public SiteAddress SiteAddress { get; set; }
         public int Apartment { get; set; }
     }
 
@@ -377,15 +377,15 @@ namespace ChoCSVReaderTest
                 writer.Flush();
                 stream.Position = 0;
 
-				//foreach (var rec in parser)
-				//	Console.WriteLine(rec.Dump());
-				var dt = parser.AsDataTable();
-				//object rec;
-				//while ((rec = parser.Read()) != null)
-				//{
-				//    Console.WriteLine(rec.ToStringEx());
-				//}
-			}
+                //foreach (var rec in parser)
+                //	Console.WriteLine(rec.Dump());
+                var dt = parser.AsDataTable();
+                //object rec;
+                //while ((rec = parser.Read()) != null)
+                //{
+                //    Console.WriteLine(rec.ToStringEx());
+                //}
+            }
         }
 
         static void QuoteValueTest()
@@ -450,11 +450,11 @@ namespace ChoCSVReaderTest
 
         static void Sample2()
         {
-			var recs = new ChoCSVReader("Sample2.csv").WithFirstLineHeader().ToList();
-			return;
-			foreach (var p in new ChoCSVReader("Sample2.csv").WithFirstLineHeader()
-				.Configure(c => c.TreatCurrencyAsDecimal = false)
-				//.Configure(c => c.MaxScanRows = 10)
+            var recs = new ChoCSVReader("Sample2.csv").WithFirstLineHeader().ToList();
+            return;
+            foreach (var p in new ChoCSVReader("Sample2.csv").WithFirstLineHeader()
+                .Configure(c => c.TreatCurrencyAsDecimal = false)
+                //.Configure(c => c.MaxScanRows = 10)
                 )
             {
                 Console.WriteLine(p.Dump());
@@ -704,33 +704,33 @@ somethingdownhere,thisisthelastuser,andthisisthelastpassword
             }
         }
 
-		[ChoCSVRecordObject(NullValue = "#NULL#")]
-		public class Emp
-		{
-			[ChoCSVRecordField(1)]
-			public int Id { get; set; }
-			[ChoCSVRecordField(2)]
-			public string Name { get; set; }
-			[ChoCSVRecordField(3, NullValue = "#NULL#")]
-			public string City { get; set; }
-		}
+        [ChoCSVRecordObject(NullValue = "#NULL#")]
+        public class Emp
+        {
+            [ChoCSVRecordField(1)]
+            public int Id { get; set; }
+            [ChoCSVRecordField(2)]
+            public string Name { get; set; }
+            [ChoCSVRecordField(3, NullValue = "#NULL#")]
+            public string City { get; set; }
+        }
 
-		public class LocationDefinition
-		{
-			public string PlaceName { get; set; }
-			public double Longitude { get; set; }
-			public double Latitude { get; set; }
-			public double Elevation { get; set; }
-		}
-		public class CountDefinition
-		{
-			public DateTime Date { get; set; }
-			public int Count { get; set; }
-		}
+        public class LocationDefinition
+        {
+            public string PlaceName { get; set; }
+            public double Longitude { get; set; }
+            public double Latitude { get; set; }
+            public double Elevation { get; set; }
+        }
+        public class CountDefinition
+        {
+            public DateTime Date { get; set; }
+            public int Count { get; set; }
+        }
 
-		static void MultiRecordsInfile()
-		{
-			string csv = @"PlaceName,Longitude,Latitude,Elevation
+        static void MultiRecordsInfile()
+        {
+            string csv = @"PlaceName,Longitude,Latitude,Elevation
 NameString,123.456,56.78,40
 
 Date,Count
@@ -739,175 +739,213 @@ Date,Count
 3/1/2012,10
 4/2/2012,6";
 
-			using (var p = new ChoCSVReader(new StringReader(csv))
-				.WithCustomRecordSelector((l) =>
-				{
-					Tuple<long, string> kvp = l as Tuple<long, string>;
-					if (kvp.Item1 == 1 || kvp.Item1 == 3 || kvp.Item1 == 4)
-						return null;
+            using (var p = new ChoCSVReader(new StringReader(csv))
+                .WithCustomRecordSelector((l) =>
+                {
+                    Tuple<long, string> kvp = l as Tuple<long, string>;
+                    if (kvp.Item1 == 1 || kvp.Item1 == 3 || kvp.Item1 == 4)
+                        return null;
 
-					if (kvp.Item1 < 4)
-						return typeof(LocationDefinition);
-					else
-						return typeof(CountDefinition);
-				}
-				)
-				//.MapRecordFields(typeof(LocationDefinition), typeof(CountDefinition))
-				//.Configure(c => c.ThrowAndStopOnMissingField = false)
-				)
-			{
-				foreach (var rec in p)
-					Console.WriteLine(ChoUtility.Dump(rec));
+                    if (kvp.Item1 < 4)
+                        return typeof(LocationDefinition);
+                    else
+                        return typeof(CountDefinition);
+                }
+                )
+                //.MapRecordFields(typeof(LocationDefinition), typeof(CountDefinition))
+                //.Configure(c => c.ThrowAndStopOnMissingField = false)
+                )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(ChoUtility.Dump(rec));
 
-			}
-		}
+            }
+        }
 
-		static void Sample3()
-		{
-			using (var p = new ChoCSVReader<Site>("Sample3.csv")
-							.ClearFields()
-							.WithField(m => m.SiteID)
-							.WithField(m => m.SiteAddress.City)
-				.WithFirstLineHeader(true)
-				)
-			{
-				//foreach (var rec in p.ExternalSort(new ChoLamdaComparer<Site>((e1, e2) => e1.SiteID - e1.SiteID)))
-				//{
+        static void Sample3()
+        {
+            using (var p = new ChoCSVReader<Site>("Sample3.csv")
+                            .ClearFields()
+                            .WithField(m => m.SiteID)
+                            .WithField(m => m.SiteAddress.City)
+                .WithFirstLineHeader(true)
+                )
+            {
+                //foreach (var rec in p.ExternalSort(new ChoLamdaComparer<Site>((e1, e2) => e1.SiteID - e1.SiteID)))
+                //{
 
-				//}
-				foreach (var rec in p)
-					Console.WriteLine(rec.Dump());
-				//Exception ex;
-				//Console.WriteLine("IsValid: " + p.IsValid(out ex));
-			}
-		}
-		public static void POCOSort()
-		{
-			using (var dr = new ChoCSVReader<EmployeeRec>(@"Test.csv").WithFirstLineHeader()
-				.WithField(c => c.Id, valueConverter: (v) => Convert.ToInt32(v as string))
-				)
-			{
-				//foreach (var rec in dr.ExternalSort(new ChoLamdaComparer<EmployeeRec>((e1, e2) => DateTime.Compare(e1.AddedDate, e1.AddedDate))))
-				//{
-				//	Console.WriteLine(rec.CustId);
-				//}
-			}
-		}
-		public static void DynamicSort()
-		{
-			using (var dr = new ChoCSVReader(@"Test.csv").WithFirstLineHeader())
-			{
-				foreach (var rec in dr.ExternalSort(new ChoLamdaComparer<dynamic>((e1, e2) => DateTime.Compare(e1.AddedDate, e1.AddedDate))))
-				{
-					Console.WriteLine(rec.CustId);
-				}
-			}
-		}
+                //}
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+                //Exception ex;
+                //Console.WriteLine("IsValid: " + p.IsValid(out ex));
+            }
+        }
+        public static void POCOSort()
+        {
+            using (var dr = new ChoCSVReader<EmployeeRec>(@"Test.csv").WithFirstLineHeader()
+                .WithField(c => c.Id, valueConverter: (v) => Convert.ToInt32(v as string))
+                )
+            {
+                //foreach (var rec in dr.ExternalSort(new ChoLamdaComparer<EmployeeRec>((e1, e2) => DateTime.Compare(e1.AddedDate, e1.AddedDate))))
+                //{
+                //	Console.WriteLine(rec.CustId);
+                //}
+            }
+        }
+        public static void DynamicSort()
+        {
+            using (var dr = new ChoCSVReader(@"Test.csv").WithFirstLineHeader())
+            {
+                foreach (var rec in dr.ExternalSort(new ChoLamdaComparer<dynamic>((e1, e2) => DateTime.Compare(e1.AddedDate, e1.AddedDate))))
+                {
+                    Console.WriteLine(rec.CustId);
+                }
+            }
+        }
 
-		static void CharDiscTest()
-		{
-			var csv = @"31350.2,3750.9188,S,14458.8652,E,7.98,50817,0,2.3,0,23
+        static void CharDiscTest()
+        {
+            var csv = @"31350.2,3750.9188,S,14458.8652,E,7.98,50817,0,2.3,0,23
 31350.4,3750.9204,S1,14458.867,E,6.66,50817,0,2.3,0,23";
 
-			using (var p = new ChoCSVReader(new StringReader(csv))
-				//.Configure(c => c.MaxScanRows = 10)
-				)
-			{
-				foreach (var rec in p)
-					Console.WriteLine(rec.Dump());
-			}
-		}
+            using (var p = new ChoCSVReader(new StringReader(csv))
+                //.Configure(c => c.MaxScanRows = 10)
+                )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
 
-		public class Customer
-		{
-			[ChoTypeConverter(typeof(ChoIntConverter), Parameters = "0000")]
-			public int CustId { get; set; }
-			public string Name { get; set; }
-			public decimal Balance { get; set; }
-			public DateTime AddedDate { get; set; }
-		}
+        public class Customer
+        {
+            [ChoTypeConverter(typeof(ChoIntConverter), Parameters = "0000")]
+            public int CustId { get; set; }
+            public string Name { get; set; }
+            public decimal Balance { get; set; }
+            public DateTime AddedDate { get; set; }
+        }
 
-		static void ConverterTest()
-		{
-			var csv = @"0001, Tom, 12.001, 1/1/2018
+        static void ConverterTest()
+        {
+            var csv = @"0001, Tom, 12.001, 1/1/2018
 0002, Mark, 100.001, 12/1/2018";
 
-			using (var p = new ChoCSVReader<Customer>(new StringReader(csv))
-				//.Configure(c => c.MaxScanRows = 10)
-				)
-			{
-				foreach (var rec in p)
-					Console.WriteLine(rec.Dump());
-			}
+            using (var p = new ChoCSVReader<Customer>(new StringReader(csv))
+                //.Configure(c => c.MaxScanRows = 10)
+                )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
 
-		}
+        }
 
-		public class EmpIgnoreCase
-		{
-			public int ID { get; set; }
-		}
-		static void NullValueTest()
-		{
-			string csv = @"Id, Name, City
+        public class EmpIgnoreCase
+        {
+            public int ID { get; set; }
+        }
+        static void NullValueTest()
+        {
+            string csv = @"Id, Name, City
 1, Tom, {NULL}
 2, Mark, NJ
 3, Lou, FL
 4, Smith, PA
 5, Raj, DC
 ";
-			//using (var p = new ChoCSVReader<EmpIgnoreCase>(new StringReader(csv))
-			//	.WithFirstLineHeader()
-			//	.Configure(c => c.FileHeaderConfiguration.IgnoreCase = false)
-			//	)
-			//{
-			//	foreach (var rec in p)
-			//		Console.WriteLine(rec.Dump());
-			//}
-			//	return;
-			StringBuilder csvOut = new StringBuilder();
-			using (var cp2 = new ChoCSVReader(new StringReader(csv))
-				.WithFirstLineHeader()
-				.Configure(c => c.NullValue = "{NULL}")
-					.Configure(c => c.FileHeaderConfiguration.IgnoreCase = false)
-				)
-			{
-				foreach (var rec in cp2)
-					Console.WriteLine(rec.Id);
-				//using (var cw = new ChoCSVWriter(new StringWriter(csvOut))
-				//	.WithFirstLineHeader()
-				//	.Configure(c => c.NullValue = "{NULL}")
-				//)
-				//{
-				//	cw.Write(cp2);
-				//}
-			}
+            //using (var p = new ChoCSVReader<EmpIgnoreCase>(new StringReader(csv))
+            //	.WithFirstLineHeader()
+            //	.Configure(c => c.FileHeaderConfiguration.IgnoreCase = false)
+            //	)
+            //{
+            //	foreach (var rec in p)
+            //		Console.WriteLine(rec.Dump());
+            //}
+            //	return;
+            StringBuilder csvOut = new StringBuilder();
+            using (var cp2 = new ChoCSVReader(new StringReader(csv))
+                .WithFirstLineHeader()
+                .Configure(c => c.NullValue = "{NULL}")
+                    .Configure(c => c.FileHeaderConfiguration.IgnoreCase = false)
+                )
+            {
+                foreach (var rec in cp2)
+                    Console.WriteLine(rec.Id);
+                //using (var cw = new ChoCSVWriter(new StringWriter(csvOut))
+                //	.WithFirstLineHeader()
+                //	.Configure(c => c.NullValue = "{NULL}")
+                //)
+                //{
+                //	cw.Write(cp2);
+                //}
+            }
 
-			Console.WriteLine(csvOut.ToString());
-		}
+            Console.WriteLine(csvOut.ToString());
+        }
 
-		static void Main(string[] args)
+        static void Sample10()
         {
-			NullValueTest();
-			return;
+            string csv = @"institution_id,UNITID,school_id,gss_code,year,Institution_Name,hdg_inst,toc_code
+88,209612,65,823,2015,Pacific University,1,2
+606,122612,752,202,2015,University of San Francisco,2,2
+606,122612,752,401,2015,University of San Francisco,2,2";
 
-			QuickDynamicTest();
-			return;
-			//MultiRecordsInfile();
-			//return;
+            using (var p = new ChoCSVReader(new StringReader(csv))
+                .WithFirstLineHeader()
+                )
+            {
+                Console.WriteLine(ChoJSONWriter.ToTextAll(p));
+            }
+        }
 
-			//MultiRecordsInfile();
-			//return;
+        static void DateFormatTest()
+        {
+            string csv = @"Id, Date
+                1, 20180201
+                2, 20171120";
 
-			Sample2();
-			return;
+            using (var p = new ChoCSVReader(new StringReader(csv))
+                .WithFirstLineHeader()
+                .WithField("Id", fieldType: typeof(int))
+                .WithField("Date", fieldType: typeof(DateTime), formatText: "yyyyMMdd")
+                )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
 
-			//NullValueTest();
-			//         return;
+        static void Main(string[] args)
+        {
+            DateFormatTest();
+            return;
 
-			InterfaceTest();
-			return;
+            Sample10();
+            return;
 
-			Sample3();
+            NullValueTest();
+            return;
+
+            QuickDynamicTest();
+            return;
+            //MultiRecordsInfile();
+            //return;
+
+            //MultiRecordsInfile();
+            //return;
+
+            Sample2();
+            return;
+
+            //NullValueTest();
+            //         return;
+
+            InterfaceTest();
+            return;
+
+            Sample3();
             return;
             //DiffCSV();
             //return;
@@ -1335,28 +1373,28 @@ Date,Count
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-			using (var parser = new ChoCSVReader(reader).WithDelimiter(",")
-				.IgnoreHeader()
-				//.WithField("Id", typeof(int))
-				//.WithField("Name", typeof(string), fieldName: "@Name $1")
-				//.ColumnOrderStrict()
-				)
-			{
-				writer.WriteLine("Id,@Name $1,Salary");
-				writer.WriteLine("1,Carl,1000");
-				writer.WriteLine("2,Mark,2000");
-				writer.WriteLine("3,Tom,3000");
+            using (var parser = new ChoCSVReader(reader).WithDelimiter(",")
+                .IgnoreHeader()
+                //.WithField("Id", typeof(int))
+                //.WithField("Name", typeof(string), fieldName: "@Name $1")
+                //.ColumnOrderStrict()
+                )
+            {
+                writer.WriteLine("Id,@Name $1,Salary");
+                writer.WriteLine("1,Carl,1000");
+                writer.WriteLine("2,Mark,2000");
+                writer.WriteLine("3,Tom,3000");
 
-				writer.Flush();
-				stream.Position = 0;
+                writer.Flush();
+                stream.Position = 0;
 
-				dynamic rec;
-				while ((rec = parser.Read()) != null)
-				{
-					//Console.WriteLine(rec.Name);
-					Console.WriteLine(((object)rec).ToStringEx());
-				}
-			}
+                dynamic rec;
+                while ((rec = parser.Read()) != null)
+                {
+                    //Console.WriteLine(rec.Name);
+                    Console.WriteLine(((object)rec).ToStringEx());
+                }
+            }
         }
 
         static void DateTimeTest()
@@ -1882,14 +1920,14 @@ Date,Count
             throw new NotImplementedException();
         }
 
-		public bool DoWhile(long index, object source)
-		{
-			throw new NotImplementedException();
-		}
-	}
+        public bool DoWhile(long index, object source)
+        {
+            throw new NotImplementedException();
+        }
+    }
 
-	//[MetadataType(typeof(EmployeeRecMeta))]
-	[ChoCSVFileHeader(TrimOption = ChoFieldValueTrimOption.None)]
+    //[MetadataType(typeof(EmployeeRecMeta))]
+    [ChoCSVFileHeader(TrimOption = ChoFieldValueTrimOption.None)]
     [ChoCSVRecordObject(ErrorMode = ChoErrorMode.IgnoreAndContinue,
     IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any, ThrowAndStopOnMissingField = false)]
     public partial class EmployeeRec //: IChoNotifyRecordRead, IChoValidatable
