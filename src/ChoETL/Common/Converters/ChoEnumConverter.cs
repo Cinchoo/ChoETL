@@ -47,7 +47,15 @@ namespace ChoETL
                     case ChoEnumFormatSpec.Description:
                         return ChoEnum.ToDescription((Enum)value);
                     default:
-                        return ((Enum)value).ToString("D");
+                        string ft = parameter.GetValueAt<string>(0);
+                        if (ft.IsNullOrWhiteSpace())
+                        {
+                            return ((Enum)value).ToString("D");
+                        }
+                        else
+                        {
+                            return ((Enum)value).ToString(ft);
+                        }
                 }
             }
 

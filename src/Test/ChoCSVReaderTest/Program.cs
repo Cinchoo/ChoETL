@@ -902,14 +902,15 @@ Date,Count
 
         static void DateFormatTest()
         {
-            string csv = @"Id, Date
-                1, 20180201
-                2, 20171120";
+            string csv = @"Id, Date, IsActive
+                1, 20180201, A
+                2, 20171120, B";
 
             using (var p = new ChoCSVReader(new StringReader(csv))
                 .WithFirstLineHeader()
                 .WithField("Id", fieldType: typeof(int))
                 .WithField("Date", fieldType: typeof(DateTime), formatText: "yyyyMMdd")
+                .WithField("IsActive", fieldType: typeof(bool), formatText: "A")
                 )
             {
                 foreach (var rec in p)
