@@ -39,13 +39,17 @@ namespace ChoETL
                 fieldValue = fieldConfig.ValueConverter(fieldValue);
             else
             {
-                if (fieldConfig.Converters.IsNullOrEmpty())
+				object[] fcParams = fieldConfig.PropConverterParams;
+				if (!fieldConfig.FormatText.IsNullOrWhiteSpace())
+					fcParams = new object[] { new object[] { fieldConfig.FormatText } };
+
+				if (fieldConfig.Converters.IsNullOrEmpty())
                 {
-                    fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                    fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, fcParams, culture);
                 }
                 else
                 {
-                    fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), null, culture);
+                    fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), fcParams, culture);
                 }
             }
             ChoType.SetPropertyValue(rec, fieldConfig.PI, fieldValue);

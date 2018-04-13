@@ -902,14 +902,14 @@ Date,Count
 
         static void DateFormatTest()
         {
-            string csv = @"Id, Date, IsActive
+            string csv = @"Id, DateCreated, IsActive
                 1, 20180201, A
                 2, 20171120, B";
 
             using (var p = new ChoCSVReader(new StringReader(csv))
                 .WithFirstLineHeader()
                 .WithField("Id", fieldType: typeof(int))
-                .WithField("Date", fieldType: typeof(DateTime), formatText: "yyyyMMdd")
+                .WithField("DateCreated", fieldType: typeof(DateTime), formatText: "yyyyMMdd")
                 .WithField("IsActive", fieldType: typeof(bool), formatText: "A")
                 )
             {
@@ -918,9 +918,55 @@ Date,Count
             }
         }
 
-        static void Main(string[] args)
+		[ChoCSVFileHeader]
+		public class Consumer
+		{
+			public int Id { get; set; }
+			[DisplayFormat(DataFormatString = "yyyyMMdd")]
+			public DateTime DateCreated { get; set; }
+			[DisplayFormat(DataFormatString = "A")]
+			public bool IsActive { get; set; }
+		}
+
+		static void DateFormatTestUsingPOCO()
+		{
+			string csv = @"Id, DateCreated, IsActive
+                1, 20180201, A
+                2, 20171120, B";
+
+			using (var p = new ChoCSVReader<Consumer>(new StringReader(csv)))
+			{
+				foreach (var rec in p)
+					Console.WriteLine(rec.Dump());
+			}
+		}
+		[ChoCSVFileHeader]
+		public class ConsumerOptIn
+		{
+			[ChoCSVRecordField(1)]
+			public int Id { get; set; }
+			[ChoCSVRecordField(2, FormatText = "yyyyMMdd")]
+			public DateTime DateCreated { get; set; }
+			[ChoCSVRecordField(3, FormatText = "C")]
+			public bool IsActive { get; set; }
+		}
+
+		static void DateFormatTestUsingOptInPOCO()
+		{
+			string csv = @"Id, DateCreated, IsActive
+                1, 20180201, A
+                2, 20171120, B";
+
+			using (var p = new ChoCSVReader<ConsumerOptIn>(new StringReader(csv)))
+			{
+				foreach (var rec in p)
+					Console.WriteLine(rec.Dump());
+			}
+		}
+
+		static void Main(string[] args)
         {
-            DateFormatTest();
+			DateFormatTestUsingOptInPOCO();
             return;
 
             Sample10();

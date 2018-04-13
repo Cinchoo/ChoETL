@@ -283,7 +283,12 @@ namespace ChoETL
                                 else if (!dpAttr.Name.IsNullOrWhiteSpace())
                                     obj.FieldName = dpAttr.Name;
                             }
-                            if (!CSVRecordFieldConfigurations.Any(c => c.Name == pd.Name))
+							DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();
+							if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
+							{
+								obj.FormatText = dfAttr.DataFormatString;
+							}
+							if (!CSVRecordFieldConfigurations.Any(c => c.Name == pd.Name))
                                 CSVRecordFieldConfigurations.Add(obj);
                         }
                     }

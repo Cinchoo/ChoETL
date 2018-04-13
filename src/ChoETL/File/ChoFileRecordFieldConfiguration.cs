@@ -90,11 +90,26 @@ namespace ChoETL
                     else if (!dpAttr.Name.IsNullOrWhiteSpace())
                         FieldName = dpAttr.Name;
                 }
+				DisplayFormatAttribute dfAttr = otherAttrs.OfType<DisplayFormatAttribute>().FirstOrDefault();
+				if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
+				{
+					FormatText = dfAttr.DataFormatString;
+				}
 
-                QuoteField = attr.QuoteFieldInternal;
+				QuoteField = attr.QuoteFieldInternal;
                 NullValue = attr.NullValue;
             }
         }
+
+		public ChoFieldValueTrimOption GetFieldValueTrimOptionForRead(Type fieldType)
+		{
+			ChoFieldValueTrimOption? fieldValueTrimOption = FieldValueTrimOption;
+
+			if (fieldValueTrimOption != null)
+				return fieldValueTrimOption.Value;
+			else
+				return ChoFieldValueTrimOption.Trim;
+		}
 
 		public ChoFieldValueTrimOption GetFieldValueTrimOption(Type fieldType)
 		{

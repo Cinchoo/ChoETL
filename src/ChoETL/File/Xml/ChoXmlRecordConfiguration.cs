@@ -258,7 +258,12 @@ namespace ChoETL
                                 else if (!dpAttr.Name.IsNullOrWhiteSpace())
                                     obj.FieldName = dpAttr.Name;
                             }
-                            if (!XmlRecordFieldConfigurations.Any(c => c.Name == pd.Name))
+							DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();
+							if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
+							{
+								obj.FormatText = dfAttr.DataFormatString;
+							}
+							if (!XmlRecordFieldConfigurations.Any(c => c.Name == pd.Name))
                                 XmlRecordFieldConfigurations.Add(obj);
                         }
                     }

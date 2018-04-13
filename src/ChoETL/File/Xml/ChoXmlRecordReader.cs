@@ -847,7 +847,7 @@ namespace ChoETL
         {
             if (fieldValue == null) return fieldValue;
 
-			ChoFieldValueTrimOption fieldValueTrimOption = config.GetFieldValueTrimOption(fieldType);
+			ChoFieldValueTrimOption fieldValueTrimOption = config.GetFieldValueTrimOptionForRead(fieldType);
 
 			if (config.FieldValueTrimOption == null)
             {
