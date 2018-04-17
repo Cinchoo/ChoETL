@@ -204,7 +204,11 @@ namespace ChoETL
 							{
 								obj.FormatText = dfAttr.DataFormatString;
 							}
-							if (!JSONRecordFieldConfigurations.Any(c => c.Name == pd.Name))
+                            if (dfAttr != null && !dfAttr.NullDisplayText.IsNullOrWhiteSpace())
+                            {
+                                obj.NullValue = dfAttr.NullDisplayText;
+                            }
+                            if (!JSONRecordFieldConfigurations.Any(c => c.Name == pd.Name))
                                 JSONRecordFieldConfigurations.Add(obj);
                         }
                     }

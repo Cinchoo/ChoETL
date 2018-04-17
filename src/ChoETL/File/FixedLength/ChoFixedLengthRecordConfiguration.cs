@@ -238,7 +238,11 @@ namespace ChoETL
 							{
 								obj.FormatText = dfAttr.DataFormatString;
 							}
-							if (!FixedLengthRecordFieldConfigurations.Any(c => c.Name == pd.Name))
+                            if (dfAttr != null && !dfAttr.NullDisplayText.IsNullOrWhiteSpace())
+                            {
+                                obj.NullValue = dfAttr.NullDisplayText;
+                            }
+                            if (!FixedLengthRecordFieldConfigurations.Any(c => c.Name == pd.Name))
                                 FixedLengthRecordFieldConfigurations.Add(obj);
 
                             startIndex += size;

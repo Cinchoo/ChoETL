@@ -210,7 +210,11 @@ namespace ChoETL
 							{
 								obj.FormatText = dfAttr.DataFormatString;
 							}
-							if (!KVPRecordFieldConfigurations.Any(c => c.Name == pd.Name))
+                            if (dfAttr != null && !dfAttr.NullDisplayText.IsNullOrWhiteSpace())
+                            {
+                                obj.NullValue = dfAttr.NullDisplayText;
+                            }
+                            if (!KVPRecordFieldConfigurations.Any(c => c.Name == pd.Name))
                                 KVPRecordFieldConfigurations.Add(obj);
                         }
                     }

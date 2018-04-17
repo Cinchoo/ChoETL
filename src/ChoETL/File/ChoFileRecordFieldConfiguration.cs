@@ -95,9 +95,14 @@ namespace ChoETL
 				{
 					FormatText = dfAttr.DataFormatString;
 				}
+                if (dfAttr != null && !dfAttr.NullDisplayText.IsNullOrWhiteSpace())
+                {
+                    NullValue = dfAttr.NullDisplayText;
+                }
+                else
+                    NullValue = attr.NullValue;
 
-				QuoteField = attr.QuoteFieldInternal;
-                NullValue = attr.NullValue;
+                QuoteField = attr.QuoteFieldInternal;
             }
         }
 
