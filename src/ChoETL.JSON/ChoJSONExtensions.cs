@@ -11,7 +11,7 @@ namespace ChoETL
     {
         public static object ToJSONObject(this IDictionary<string, object> dict, Type type)
         {
-            object target = Activator.CreateInstance(type);
+            object target = ChoActivator.CreateInstance(type);
             string key = null;
             foreach (var p in ChoType.GetProperties(type))
             {

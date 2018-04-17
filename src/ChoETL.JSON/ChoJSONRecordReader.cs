@@ -192,7 +192,7 @@ namespace ChoETL
         private bool LoadNode(Tuple<long, JObject> pair, ref object rec)
         {
             if (!Configuration.UseJSONSerialization)
-                rec = Configuration.IsDynamicObject ? new ChoDynamicObject() { ThrowExceptionIfPropNotExists = true } : Activator.CreateInstance(RecordType);
+                rec = Configuration.IsDynamicObject ? new ChoDynamicObject() { ThrowExceptionIfPropNotExists = true } : ChoActivator.CreateInstance(RecordType);
 
             try
             {
@@ -357,7 +357,7 @@ namespace ChoETL
                 }
                 else
                 {
-                    if (!node.TryGetValue(kvp.Key, StringComparison.CurrentCultureIgnoreCase, out jToken))
+                    if (!node.TryGetValue(kvp.Value.FieldName, StringComparison.CurrentCultureIgnoreCase, out jToken))
                     {
                         if (Configuration.ColumnCountStrict)
                             throw new ChoParserException("No matching '{0}' field found.".FormatString(fieldConfig.FieldName));
@@ -661,7 +661,7 @@ namespace ChoETL
 				IList recs = type.CreateGenericList();
 				foreach (var kvp in dict)
 				{
-					var rec = Activator.CreateInstance(type);
+					var rec = ChoActivator.CreateInstance(type);
 					FillIfKeyValueObject(rec, kvp);
 					recs.Add(rec);
 				}

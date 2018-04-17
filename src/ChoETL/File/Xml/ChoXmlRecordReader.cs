@@ -218,7 +218,7 @@ namespace ChoETL
         private bool LoadNode(Tuple<long, XElement> pair, ref object rec)
         {
             if (!Configuration.UseXmlSerialization || Configuration.IsDynamicObject)
-                rec = Configuration.IsDynamicObject ? new ChoDynamicObject() { ThrowExceptionIfPropNotExists = true } : Activator.CreateInstance(RecordType);
+                rec = Configuration.IsDynamicObject ? new ChoDynamicObject() { ThrowExceptionIfPropNotExists = true } : ChoActivator.CreateInstance(RecordType);
 
             try
             {
@@ -382,17 +382,19 @@ namespace ChoETL
 
 						if (value is XElement)
 						{
-							IDictionary<string, object> d = ((XElement)value).ToObjectFromXml(typeof(ChoDynamicObject)) as IDictionary<string, object>;
-							fieldValue = null;
+							dynamic dobj = ((XElement)value).ToObjectFromXml(typeof(ChoDynamicObject));
+							fieldValue = dobj.GetValue();
+							//IDictionary<string, object> d = ((XElement)value).ToObjectFromXml(typeof(ChoDynamicObject)) as IDictionary<string, object>;
+							//fieldValue = null;
 
-							if (d.Count == 0)
-							{
+							//if (d.Count == 0)
+							//{
 
-							}
-							else if (d.Count == 1 && d.First().Key == "@@Value")
-								fieldValue = d.First().Value;
-							else
-								fieldValue = d;
+							//}
+							//else if (d.Count == 1 && d.First().Key == "@@Value")
+							//	fieldValue = d.First().Value;
+							//else
+							//	fieldValue = d;
 						}
 						else
 							fieldValue = value;
@@ -518,7 +520,7 @@ namespace ChoETL
                                                 else
                                                 {
                                                     if (itemType == typeof(ChoDynamicObject))
-                                                        list.Add(ele.ToDynamic(Configuration.XmlSchemaNamespace));
+                                                        list.Add(ele.ToDynamic(Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace));
                                                     else
                                                         list.Add(ele.ToObjectFromXml(itemType, GetXmlOverrides(fieldConfig)));
                                                 }
@@ -537,7 +539,7 @@ namespace ChoETL
                                                 if (fieldConfig.ItemConverter != null)
                                                     fieldValue = fieldConfig.ItemConverter(fXElements[0]);
                                                 else
-                                                    fieldValue = fXElements[0].ToObjectFromXml(typeof(ChoDynamicObject));
+                                                    fieldValue = fXElements[0].ToObjectFromXml(typeof(ChoDynamicObject), null, Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace);
                                             }
                                             else
                                             {

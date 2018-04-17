@@ -329,7 +329,7 @@ namespace ChoETL
                                 {
                                     object rec = Configuration.IsDynamicObject ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer)) { ThrowExceptionIfPropNotExists = true,
                                         AlternativeKeys = Configuration.AlternativeKeys
-                                    } : Activator.CreateInstance(RecordType);
+                                    } : ChoActivator.CreateInstance(RecordType);
                                     if (!LoadLines(new Tuple<long, List<Tuple<long, string>>>(++recNo, recLines), ref rec))
                                         yield break;
 

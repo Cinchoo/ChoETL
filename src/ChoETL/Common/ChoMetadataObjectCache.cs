@@ -36,7 +36,7 @@ namespace ChoETL
 
                         try
                         {
-                            obj = ChoActivator.CreateInstance(attr.MetadataClassType);
+                            obj = ChoActivator.CreateInstanceAndInit(attr.MetadataClassType);
                         }
                         catch { }
 
@@ -97,12 +97,12 @@ namespace ChoETL
                 if (attr == null)
                 {
                     if (typeof(T).IsAssignableFrom(recordType))
-                        callbackRecord = Activator.CreateInstance(recordType) as T;
+                        callbackRecord = ChoActivator.CreateInstance(recordType) as T;
                 }
                 else
                 {
                     if (attr.MetadataClassType != null && typeof(T).IsAssignableFrom(attr.MetadataClassType))
-                        callbackRecord = Activator.CreateInstance(attr.MetadataClassType) as T;
+                        callbackRecord = ChoActivator.CreateInstance(attr.MetadataClassType) as T;
                 }
             }
             catch

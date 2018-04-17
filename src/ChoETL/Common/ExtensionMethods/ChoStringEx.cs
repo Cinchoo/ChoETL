@@ -554,17 +554,17 @@ namespace ChoETL
 
         #region ToObjectFromXml Overloads
 
-        public static T ToObjectFromXml<T>(this string xml, XmlAttributeOverrides overrides = null)
+        public static T ToObjectFromXml<T>(this string xml, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null)
         {
-            return (T)ToObjectFromXml(xml, typeof(T), overrides);
+            return (T)ToObjectFromXml(xml, typeof(T), overrides, xmlSchemaNS, jsonSchemaNS);
         }
 
-        public static T ToObjectFromXml<T>(this XElement element, XmlAttributeOverrides overrides = null)
+        public static T ToObjectFromXml<T>(this XElement element, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null)
         {
-            return (T)ToObjectFromXml(element, typeof(T), overrides);
+            return (T)ToObjectFromXml(element, typeof(T), overrides, xmlSchemaNS, jsonSchemaNS);
         }
 
-        public static object ToObjectFromXml(this XElement element, Type type, XmlAttributeOverrides overrides = null)
+        public static object ToObjectFromXml(this XElement element, Type type, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null)
         {
             if (element == null)
                 return null;
@@ -596,18 +596,18 @@ namespace ChoETL
             }
         }
 
-        public static object ToObjectFromXml(this string xml, Type type, XmlAttributeOverrides overrides = null)
+        public static object ToObjectFromXml(this string xml, Type type, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null)
         {
             if (xml.IsNullOrWhiteSpace())
                 return null;
             if (type == null)
                 throw new ArgumentNullException("Missing type.");
-            return ToObjectFromXml(XElement.Parse(xml), type, overrides);
+            return ToObjectFromXml(XElement.Parse(xml), type, overrides, xmlSchemaNS, jsonSchemaNS);
         }
 
-        public static object ToDynamic(XElement element, bool topLevel = true)
+        public static object ToDynamic(XElement element, bool topLevel = true, string xmlSchemaNS = null, string jsonSchemaNS = null)
         {
-            return (ChoUtility.XmlDeserialize<ChoDynamicObject>(element.GetOuterXml()));
+            return (ChoUtility.XmlDeserialize<ChoDynamicObject>(element.GetOuterXml(), null, null, xmlSchemaNS, jsonSchemaNS));
 
             if (element.Name.LocalName == "dynamic")
             {
@@ -726,26 +726,26 @@ namespace ChoETL
             return obj;
         }
 
-        private static object ToDynamicChild(XElement element)
-        {
-            if (element.Elements().Count() > 0)
-            {
-                if (element.Elements().Count() == 1)
-                {
-                    var ele = element.Elements().FirstOrDefault();
-                    return ToDynamic(ele);
-                }
-                else
-                {
-                    return element.Elements().Select(r => ToDynamic(r)).ToArray();
-                }
-            }
-            else
-            {
-                return element.NilAwareValue();
-            }
+        //private static object ToDynamicChild(XElement element)
+        //{
+        //    if (element.Elements().Count() > 0)
+        //    {
+        //        if (element.Elements().Count() == 1)
+        //        {
+        //            var ele = element.Elements().FirstOrDefault();
+        //            return ToDynamic(ele);
+        //        }
+        //        else
+        //        {
+        //            return element.Elements().Select(r => ToDynamic(r)).ToArray();
+        //        }
+        //    }
+        //    else
+        //    {
+        //        return element.NilAwareValue();
+        //    }
 
-        }
+        //}
 
         #endregion ToObjectFromXml Overloads
 

@@ -178,7 +178,7 @@ namespace ChoETL
                             throw new ChoParserException($"No record type found for [{pair.Item1}] line to parse.");
                     }
 
-                    object rec = Activator.CreateInstance(recType);
+                    object rec = ChoActivator.CreateInstance(recType);
                     if (!LoadLine(pair, ref rec))
                         yield break;
 

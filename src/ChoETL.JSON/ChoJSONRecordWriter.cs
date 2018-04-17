@@ -250,7 +250,7 @@ namespace ChoETL
         private bool ToText(long index, object rec, out string recText)
         {
             if (typeof(IChoScalarObject).IsAssignableFrom(Configuration.RecordType))
-                rec = Activator.CreateInstance(Configuration.RecordType, rec);
+                rec = ChoActivator.CreateInstance(Configuration.RecordType, rec);
 
             if (!Configuration.IsDynamicObject)
             {
@@ -271,7 +271,7 @@ namespace ChoETL
                 if (Configuration.NullValueHandling == ChoNullValueHandling.Ignore)
                     return false;
                 else if (Configuration.NullValueHandling == ChoNullValueHandling.Default)
-                    rec = Activator.CreateInstance(Configuration.RecordType);
+                    rec = ChoActivator.CreateInstance(Configuration.RecordType);
                 else
                 {
                     recText = "{{{0}}}".FormatString(Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);

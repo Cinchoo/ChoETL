@@ -26,9 +26,33 @@ namespace ChoETL
                 _XmlSchemaNamespace = value;
             }
         }
-    }
+		private static string _XmlNamespace = "http://www.w3.org/2000/xmlns/";
+		public static string XmlNamespace
+		{
+			get { return _XmlNamespace; }
+			set
+			{
+				if (value.IsNullOrWhiteSpace())
+					return;
 
-    public static class ChoXmlNodeEx
+				_XmlNamespace = value;
+			}
+		}
+		private static string _JSONSchemaNamespace = "http://james.newtonking.com/projects/json";
+		public static string JSONSchemaNamespace
+		{
+			get { return _JSONSchemaNamespace; }
+			set
+			{
+				if (value.IsNullOrWhiteSpace())
+					return;
+
+				_JSONSchemaNamespace = value;
+			}
+		}
+	}
+
+	public static class ChoXmlNodeEx
     {
         #region Instance Members (Public)
 
@@ -678,7 +702,15 @@ namespace ChoETL
             return nil != null && (bool)nil ? null : element.Value;
         }
 
-        public static dynamic ToDynamic(this XElement element, string xmlSchemaNS = null)
+		public static bool IsJsonArray(this XElement element, string jsonSchemaNS = null)
+		{
+			XNamespace ns = jsonSchemaNS.IsNullOrWhiteSpace() ? ChoXmlSettings.JSONSchemaNamespace : jsonSchemaNS;
+
+			XAttribute nil = element.Attribute(ns + "Array");
+			return nil != null && (bool)nil;
+		}
+
+		public static dynamic ToDynamic(this XElement element, string xmlSchemaNS = null, string jsonSchemaNS = null)
         {
             // loop through child elements
             // define an Expando Dynamic
@@ -687,62 +719,77 @@ namespace ChoETL
             // cater for attributes as properties
             if (element.HasAttributes)
             {
-                foreach (var attribute in element.Attributes())
+				foreach (var attribute in element.Attributes())
                 {
-                    ((IDictionary<string, object>)obj).Add("@{0}".FormatString(attribute.Name.LocalName), attribute.Value);
+					string ns = attribute.Name.Namespace.ToString();
+					if (xmlSchemaNS != null && ns.StartsWith(xmlSchemaNS, StringComparison.InvariantCultureIgnoreCase))
+						continue;
+					if (jsonSchemaNS != null && ns.StartsWith(jsonSchemaNS, StringComparison.InvariantCultureIgnoreCase))
+						continue;
+					if (ns.StartsWith(ChoXmlSettings.XmlSchemaNamespace, StringComparison.InvariantCultureIgnoreCase))
+						continue;
+					if (ns.StartsWith(ChoXmlSettings.JSONSchemaNamespace, StringComparison.InvariantCultureIgnoreCase))
+						continue;
+					if (ns.StartsWith(ChoXmlSettings.XmlNamespace, StringComparison.InvariantCultureIgnoreCase))
+						continue;
+
+					((IDictionary<string, object>)obj).Add("@{0}".FormatString(attribute.Name.LocalName), attribute.Value);
                 }
             }
 
-            // cater for child nodes as properties, or child objects
-            if (element.HasElements)
-            {
-                foreach (var kvp in element.Elements().GroupBy(e => e.Name.LocalName).Select(g => new { Name = g.Key, Value = g.ToArray() }))
-                {
-                    if (kvp.Value.Length == 1)
-                    {
-                        XElement subElement = kvp.Value.First();
-                        // if sub element has child elements
-                        if (subElement.HasElements)
-                        {
-                            List<ChoDynamicObject> subDynamic = new List<ChoDynamicObject>();
-                            foreach (XElement subsubElement in subElement.Elements())
-                            {
-                                subDynamic.Add(ToDynamic(subsubElement, xmlSchemaNS));
-                            }
-							foreach (var item in subDynamic)
-								obj.Add(item);
-                        }
-                        else
-                        {
-                            ((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, subElement.NilAwareValue());
-                        }
-                    }
-                    else
-                    {
-                        List<ChoDynamicObject> list = new List<ChoDynamicObject>();
-                        string keyName = null;
-                        foreach (var subElement in kvp.Value)
-                        {
-                            keyName = subElement.Name.LocalName;
-
-                            // if sub element has child elements
-                            if (subElement.HasElements)
-                            {
-								ChoDynamicObject dobj = ToDynamic(subElement, xmlSchemaNS);
-								list.Add(dobj);
+			// cater for child nodes as properties, or child objects
+			if (element.HasElements)
+			{
+				foreach (var kvp in element.Elements().GroupBy(e => e.Name.LocalName).Select(g => new { Name = g.Key, Value = g.ToArray() }))
+				{
+					if (kvp.Value.Length == 1 && !kvp.Value.First().IsJsonArray(jsonSchemaNS))
+					{
+						XElement subElement = kvp.Value.First();
+						// if sub element has child elements
+						if (subElement.HasElements)
+						{
+							List<object> subDynamic = new List<object>();
+							foreach (XElement subsubElement in subElement.Elements())
+							{
+								subDynamic.Add(ToDynamic(subsubElement, xmlSchemaNS, jsonSchemaNS));
 							}
-							else
-                            {
-								((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, subElement.NilAwareValue());
-							}
+							((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, subDynamic.ToArray());
 						}
-						foreach (var item in list)
-							obj.Add(item);
-                    }
-                }
-            }
-            else
-                ((IDictionary<string, object>)obj).Add("@@Value", element.NilAwareValue());
+						else
+						{
+							((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, subElement.NilAwareValue());
+						}
+					}
+					else
+					{
+						List<ChoDynamicObject> list = new List<ChoDynamicObject>();
+						string keyName = null;
+						foreach (var subElement in kvp.Value)
+						{
+							ChoDynamicObject dobj = ToDynamic(subElement, xmlSchemaNS, jsonSchemaNS);
+							list.Add(dobj);
+
+							keyName = subElement.Name.LocalName + "s";
+
+							//                     // if sub element has child elements
+							//                     if (subElement.HasElements)
+							//                     {
+							//	ChoDynamicObject dobj = ToDynamic(subElement, xmlSchemaNS, jsonSchemaNS);
+							//	list.Add(dobj);
+							//}
+							//else
+							//                     {
+							//	((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, subElement.NilAwareValue());
+							//}
+						}
+							//foreach (var item in list)
+							//	obj.Add(item);
+							((IDictionary<string, object>)obj).Add(keyName, list.ToArray());
+					}
+				}
+			}
+			else
+				obj.SetValue(element.NilAwareValue());
 
             return obj;
         }

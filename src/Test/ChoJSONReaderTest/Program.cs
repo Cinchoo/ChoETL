@@ -635,8 +635,59 @@ namespace ChoJSONReaderTest
 
         static void Main(string[] args)
         {
-			Sample19();
+			Sample20();
 
+		}
+
+		static void Sample21()
+		{
+			string json = @"Name,Description,Account Number
+    Xytrex Co.,Industrial Cleaning Supply Company,ABC15797531
+    Watson and Powell Inc.,Law firm. New York Headquarters,ABC24689753";
+
+			StringBuilder csv = new StringBuilder();
+			using (var p = new ChoCSVReader(new StringReader(json))
+					.WithFirstLineHeader()
+				)
+			{
+				using (var w = new ChoJSONWriter(new StringWriter(csv)))
+				{
+					w.Write(p);
+				}
+			}
+
+			Console.WriteLine(csv.ToString());
+		}
+
+		static void Sample20()
+		{
+			string json = @"
+			[
+			   {
+				  ""Name"" : ""Xytrex Co."",
+				  ""Description"" : ""Industrial Cleaning Supply Company"",
+				  ""Account Number"" : ""ABC15797531""
+			   },
+			   {
+				  ""Name"" : ""Watson and Powell Inc."",
+				  ""Description"" : ""Law firm. New York Headquarters"",
+				  ""Account Number"" : ""ABC24689753""     
+			   }
+			]";
+
+			StringBuilder csv = new StringBuilder();
+			using (var p = new ChoJSONReader(new StringReader(json)))
+			{
+				using (var w = new ChoCSVWriter(new StringWriter(csv))
+					.WithFirstLineHeader()
+					.WithField("Account_Number", fieldName: "Account Number")
+					)
+				{
+					w.Write(p);
+				}
+			}
+
+			Console.WriteLine(csv.ToString());
 		}
 
 		static void Sample19()

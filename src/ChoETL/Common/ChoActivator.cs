@@ -9,22 +9,52 @@ namespace ChoETL
 {
     public static class ChoActivator
     {
+		public static Func<Type, object[], object> Factory
+		{
+			get;
+			set;
+		}
+
         static ChoActivator()
         {
             ChoUtility.Init();
         }
 
-        public static T CreateInstance<T>()
+		public static T CreateInstance<T>()
+		{
+			return (T)CreateInstance(typeof(T));
+		}
+
+		public static object CreateInstance(Type objType, params object[] args)
+		{
+			try
+			{
+				object obj = Factory != null ? Factory(objType, args) : null;
+				if (obj == null)
+					obj = Activator.CreateInstance(objType, args);
+
+				return obj;
+			}
+			catch (TargetInvocationException ex)
+			{
+				throw ex.InnerException;
+			}
+		}
+
+		public static T CreateInstanceAndInit<T>()
         {
-            return (T)CreateInstance(typeof(T));
+            return (T)CreateInstanceAndInit(typeof(T));
         }
 
-        public static object CreateInstance(Type objType, params object[] args)
+        public static object CreateInstanceAndInit(Type objType, params object[] args)
         {
             try
             {
-                object obj = Activator.CreateInstance(objType, args);
-                obj.Initialize();
+				object obj = Factory != null ? Factory(objType, args) : null;
+				if (obj == null)
+					obj = Activator.CreateInstance(objType, args);
+
+				obj.Initialize();
                 return obj;
             }
             catch (TargetInvocationException ex)
@@ -44,7 +74,7 @@ namespace ChoETL
 
             try
             {
-                object obj = CreateInstance(srcObject.GetType());
+                object obj = CreateInstanceAndInit(srcObject.GetType());
                 srcObject.EagerCloneTo(obj);
                 return obj;
             }
@@ -59,7 +89,7 @@ namespace ChoETL
             //if (typeof(ChoRecord).IsAssignableFrom(objType))
             //    return CreateDynamicMoqInstance(objType, iniFile);
 
-            object obj = ChoActivator.CreateInstance(objType);
+            object obj = ChoActivator.CreateInstanceAndInit(objType);
 
             foreach (KeyValuePair<MemberInfo, Attribute> kv in ChoUtility.DiscoverMembers(objType, typeof(ChoRandomAttribute)))
             {

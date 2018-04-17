@@ -78,10 +78,42 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Sample22();
+			JSONArrayTest();
         }
 
-        static void Sample22()
+		static void JSONArrayTest()
+		{
+			string xml = @"<GetItemRequest xmlns:json=""http://james.newtonking.com/projects/json"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema"">
+    <ApplicationCrediential>
+        <ConsumerKey>
+			<Consumer json:Array='true' xsi:nil=""true"">
+				<Name isActive = 'false'>Tom</Name>
+				<Name>Mark</Name>
+			</Consumer>
+		</ConsumerKey>
+        <ConsumerSecret></ConsumerSecret>
+    </ApplicationCrediential>
+</GetItemRequest>";
+
+			StringBuilder msg = new StringBuilder();
+			using (var p = new ChoXmlReader(new StringReader(xml))
+				.WithXPath("//ApplicationCrediential")
+				.WithField("ConsumerKey")
+				.WithField("ConsumerSecret")
+			)
+			{
+				foreach (var rec in p)
+					Console.WriteLine(ChoJSONWriter.ToText(rec));
+
+					//var x = p.First();
+					//Console.WriteLine(ChoJSONWriter.ToText(x));
+					//Console.WriteLine(ChoXmlWriter.ToText(x));
+			}
+
+			Console.WriteLine(msg.ToString());
+		}
+
+		static void Sample22()
         {
             string xml = @"<?xml version=""1.0"" encoding=""utf- 8""?>
 
@@ -117,13 +149,13 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
         {
             string xml = @"<GetItemRequest xmlns:xsi=""http://www.w3.org/2001/XMLSchema"">
     <ApplicationCrediential>
-        <ConsumerKey xsi:nil=""true""></ConsumerKey>
+        <ConsumerKey></ConsumerKey>
         <ConsumerSecret xsi:nil=""true""></ConsumerSecret>
     </ApplicationCrediential>
 </GetItemRequest>";
 
-            //ChoXmlSettings.XmlSchemaNamespace = "http://www.w3.org/2001/XMLSchema1";
-            using (var p = new ChoXmlReader(new StringReader(xml))
+			//ChoXmlSettings.XmlSchemaNamespace = "http://www.w3.org/2001/XMLSchema";
+			using (var p = new ChoXmlReader(new StringReader(xml))
                 .WithXPath("/")
             )
             {

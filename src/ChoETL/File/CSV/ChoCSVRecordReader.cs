@@ -270,7 +270,7 @@ namespace ChoETL
                         {
                             ThrowExceptionIfPropNotExists = true,
                             AlternativeKeys = Configuration.AlternativeKeys
-                        } : Activator.CreateInstance(recType);
+                        } : ChoActivator.CreateInstance(recType);
                     }
                     else
                     {
@@ -278,7 +278,7 @@ namespace ChoETL
                         {
                             ThrowExceptionIfPropNotExists = true,
                             AlternativeKeys = Configuration.AlternativeKeys
-                        } : Activator.CreateInstance(RecordType);
+                        } : ChoActivator.CreateInstance(RecordType);
 
                     }
                     if (!LoadLine(pair, ref rec))

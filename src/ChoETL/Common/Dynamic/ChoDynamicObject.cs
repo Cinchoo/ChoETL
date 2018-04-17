@@ -19,7 +19,9 @@ namespace ChoETL
     [Serializable]
     public class ChoDynamicObject : DynamicObject, IDictionary<string, object>, IList<object>, IList //, IXmlSerializable
     {
-        private readonly static Dictionary<string, Type> _intrinsicTypes = new Dictionary<string, Type>();
+		private static readonly string ValueToken = "@@Value";
+
+		private readonly static Dictionary<string, Type> _intrinsicTypes = new Dictionary<string, Type>();
 
         #region Instance Members
 
@@ -828,24 +830,24 @@ namespace ChoETL
 
             bool hasAttrs = false;
             StringBuilder msg = new StringBuilder("<{0}".FormatString(tag));
-            foreach (string key in this.Keys.Where(k => k.StartsWith("@") && k != "@@Value"))
+            foreach (string key in this.Keys.Where(k => k.StartsWith("@") && k != ValueToken))
             {
                 hasAttrs = true;
                 msg.AppendFormat(@" {0}=""{1}""", key.Substring(1), this[key]);
             }
 
-            if (ContainsKey("@@Value"))
+            if (ContainsKey(ValueToken))
             {
                 if (hasAttrs)
                 {
                     msg.AppendFormat(">");
-                    msg.AppendFormat("{0}{1}", Environment.NewLine, this["@@Value"].ToNString().Indent(1, "  "));
+                    msg.AppendFormat("{0}{1}", Environment.NewLine, this[ValueToken].ToNString().Indent(1, "  "));
                     msg.AppendFormat("{0}</{1}>", Environment.NewLine, tag);
                 }
                 else
                 {
                     msg.AppendFormat(">");
-                    msg.AppendFormat("{0}", this["@@Value"].ToNString());
+                    msg.AppendFormat("{0}", this[ValueToken].ToNString());
                     msg.AppendFormat("</{0}>", tag);
                 }
             }
@@ -955,10 +957,17 @@ namespace ChoETL
 
         public object GetValue()
         {
-            return ContainsKey("@@Value") ? this["@@Value"] : null;
+            return ContainsKey(ValueToken) ? this[ValueToken] : null;
         }
+		public void SetValue(object value)
+		{
+			if (ContainsKey(ValueToken))
+				this[ValueToken] = value;
+			else
+				Add(ValueToken, value);
+		}
 
-        public object GetAttribute(string attrName)
+		public object GetAttribute(string attrName)
         {
             if (!attrName.StartsWith("@"))
                 attrName = "@{0}".FormatString(attrName);

@@ -412,7 +412,7 @@ namespace ChoETL
         public static object ChangeType(object value, Type conversionType)
         {
             if (value == null)
-                return ChoActivator.CreateInstance(conversionType);
+                return ChoActivator.CreateInstanceAndInit(conversionType);
 
             if (conversionType.IsAssignableFrom(value.GetType()))
                 return value;
@@ -422,7 +422,7 @@ namespace ChoETL
                 dest = Convert.ChangeType(value, conversionType);
             else
             {
-                dest = ChoActivator.CreateInstance(conversionType);
+                dest = ChoActivator.CreateInstanceAndInit(conversionType);
                 value.CloneTo(dest);
             }
 
@@ -441,7 +441,7 @@ namespace ChoETL
             where T : Attribute
         {
             if (value == null)
-                return ChoActivator.CreateInstance(conversionType);
+                return ChoActivator.CreateInstanceAndInit(conversionType);
 
             if (conversionType.IsAssignableFrom(value.GetType()))
                 return value;
@@ -451,7 +451,7 @@ namespace ChoETL
                 dest = Convert.ChangeType(value, conversionType);
             else
             {
-                dest = ChoActivator.CreateInstance(conversionType);
+                dest = ChoActivator.CreateInstanceAndInit(conversionType);
                 value.CloneTo<T>(dest);
             }
 

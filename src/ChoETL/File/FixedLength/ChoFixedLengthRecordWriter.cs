@@ -193,7 +193,7 @@ namespace ChoETL
         private bool ToText(long index, object rec, out string recText)
         {
             if (typeof(IChoScalarObject).IsAssignableFrom(Configuration.RecordType))
-                rec = Activator.CreateInstance(Configuration.RecordType, rec);
+                rec = ChoActivator.CreateInstance(Configuration.RecordType, rec);
 
             recText = null;
             StringBuilder msg = new StringBuilder();

@@ -279,7 +279,7 @@ namespace ChoETL
         private bool ToText(long index, object rec, ChoXmlRecordConfiguration config, out string recText)
         {
             if (typeof(IChoScalarObject).IsAssignableFrom(config.RecordType))
-                rec = Activator.CreateInstance(config.RecordType, rec);
+                rec = ChoActivator.CreateInstance(config.RecordType, rec);
 
             recText = null;
             if (rec == null)
@@ -287,7 +287,7 @@ namespace ChoETL
                 if (config.NullValueHandling == ChoNullValueHandling.Ignore)
                     return false;
                 else if (config.NullValueHandling == ChoNullValueHandling.Default)
-                    rec = Activator.CreateInstance(config.RecordType);
+                    rec = ChoActivator.CreateInstance(config.RecordType);
                 else
                 {
                     recText = @"<{0} xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xsi:nil=""true"" />".FormatString(config.NodeName

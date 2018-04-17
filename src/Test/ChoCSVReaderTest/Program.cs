@@ -947,7 +947,7 @@ Date,Count
 			public int Id { get; set; }
 			[ChoCSVRecordField(2, FormatText = "yyyyMMdd")]
 			public DateTime DateCreated { get; set; }
-			[ChoCSVRecordField(3, FormatText = "C")]
+			[ChoCSVRecordField(3, FormatText = "A")]
 			public bool IsActive { get; set; }
 		}
 
