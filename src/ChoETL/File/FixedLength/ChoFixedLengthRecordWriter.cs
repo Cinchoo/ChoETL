@@ -90,8 +90,8 @@ namespace ChoETL
                                     else
                                         Configuration.RecordType = recordType;
 
-									if (Configuration.FixedLengthRecordFieldConfigurations.Count == 0)
-										Configuration.MapRecordFields(Configuration.RecordType);
+                                    if (Configuration.FixedLengthRecordFieldConfigurations.Count == 0)
+                                        Configuration.MapRecordFields(Configuration.RecordType);
                                 }
 
                                 if (Configuration.IsDynamicObject)
@@ -359,16 +359,16 @@ namespace ChoETL
                     fieldText = fieldValue.ToString();
 
                 msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, 
-					GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), 
-					GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false, kvp.Value.NullValue,
-					kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType)));
+                    GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), 
+                    GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false, kvp.Value.NullValue,
+                    kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType)));
             }
 
             recText = msg.ToString();
             return true;
         }
 
-		private ChoFieldValueJustification GetFieldValueJustification(ChoFieldValueJustification? fieldValueJustification, Type fieldType)
+        private ChoFieldValueJustification GetFieldValueJustification(ChoFieldValueJustification? fieldValueJustification, Type fieldType)
         {
             if (fieldValueJustification != null)
                 return fieldValueJustification.Value;
@@ -480,7 +480,7 @@ namespace ChoETL
 
         private string NormalizeFieldValue(string fieldName, string fieldValue, int? size, bool truncate, bool? quoteField,
             ChoFieldValueJustification fieldValueJustification, char fillChar, bool isHeader = false, string nullValue = null, 
-			ChoFieldValueTrimOption? fieldValueTrimOption = null)
+            ChoFieldValueTrimOption? fieldValueTrimOption = null)
         {
             string lFieldValue = fieldValue;
             bool retValue = false;
@@ -490,7 +490,7 @@ namespace ChoETL
 
             if (fieldValue.IsNull())
                 fieldValue = String.Empty;
-            bool quoteValue = false;
+            bool quoteValue = quoteField != null ? quoteField.Value : false;
 
             if (quoteField == null || !quoteField.Value)
             {
@@ -521,11 +521,22 @@ namespace ChoETL
                 }
             }
 
-            if (quoteValue)
-                size = size - 2;
+
+            if (fieldValue.IsNullOrEmpty())
+            {
+                if (nullValue != null)
+                    fieldValue = nullValue;
+            }
 
             if (size != null)
             {
+                if (quoteValue)
+                {
+                    size = size.Value - 2;
+                }
+                if (size <= 0)
+                    return String.Empty;
+
                 if (fieldValue.Length < size.Value)
                 {
                     if (fillChar != ChoCharEx.NUL)
@@ -538,32 +549,26 @@ namespace ChoETL
                 }
                 else if (fieldValue.Length > size.Value)
                 {
-					if (truncate)
-					{
-						if (fieldValueTrimOption != null)
-						{
-							if (fieldValueTrimOption == ChoFieldValueTrimOption.TrimStart)
-								fieldValue = fieldValue.Right(size.Value);
-							else
-								fieldValue = fieldValue.Substring(0, size.Value);
-						}
-						else
-							fieldValue = fieldValue.Substring(0, size.Value);
-					}
-					else
-					{
-						if (isHeader)
-							throw new ApplicationException("Field header value length overflowed for '{0}' member [Expected: {1}, Actual: {2}].".FormatString(fieldName, size, fieldValue.Length));
-						else
-							throw new ApplicationException("Field value length overflowed for '{0}' member [Expected: {1}, Actual: {2}].".FormatString(fieldName, size, fieldValue.Length));
-					}
+                    if (truncate)
+                    {
+                        if (fieldValueTrimOption != null)
+                        {
+                            if (fieldValueTrimOption == ChoFieldValueTrimOption.TrimStart)
+                                fieldValue = fieldValue.Right(size.Value);
+                            else
+                                fieldValue = fieldValue.Substring(0, size.Value);
+                        }
+                        else
+                            fieldValue = fieldValue.Substring(0, size.Value);
+                    }
+                    else
+                    {
+                        if (isHeader)
+                            throw new ApplicationException("Field header value length overflowed for '{0}' member [Expected: {1}, Actual: {2}].".FormatString(fieldName, size, fieldValue.Length));
+                        else
+                            throw new ApplicationException("Field value length overflowed for '{0}' member [Expected: {1}, Actual: {2}].".FormatString(fieldName, size, fieldValue.Length));
+                    }
                 }
-            }
-
-            if (nullValue != null)
-            {
-                if (fieldValue.IsNullOrEmpty())
-                    fieldValue = nullValue;
             }
 
             if (quoteValue)

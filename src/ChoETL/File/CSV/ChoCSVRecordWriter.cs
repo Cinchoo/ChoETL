@@ -471,7 +471,7 @@ namespace ChoETL
         {
             string lFieldValue = fieldValue;
             bool retValue = false;
-            quoteValue = false;
+            quoteValue = quoteField != null ? quoteField.Value : false;
 
             if (retValue)
                 return lFieldValue;
@@ -570,8 +570,21 @@ namespace ChoETL
             //if (quoteValue)
             //	size = size - 2;
 
+            if (fieldValue.IsNullOrEmpty())
+            {
+                if (nullValue != null)
+                    fieldValue = nullValue;
+            }
+
             if (size != null)
             {
+                if (quoteValue)
+                {
+                    size = size.Value - 2;
+                }
+                if (size <= 0)
+                    return String.Empty;
+
                 if (fieldValue.Length < size.Value)
                 {
                     if (fillChar != ChoCharEx.NUL)
@@ -606,13 +619,7 @@ namespace ChoETL
                 }
             }
 
-            if (nullValue != null)
-            {
-                if (fieldValue.IsNullOrEmpty())
-                    fieldValue = nullValue;
-            }
-
-            if (quoteValue || (quoteField != null && quoteField.Value))
+            if (quoteValue)
                 fieldValue = "{1}{0}{1}".FormatString(fieldValue, Configuration.QuoteChar);
 
             return fieldValue;
