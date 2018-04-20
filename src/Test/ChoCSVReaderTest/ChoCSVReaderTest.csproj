@@ -51,6 +51,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="020180412_045106Cropped.csv" />
     <None Include="InterfaceTest.csv" />
     <None Include="EmptyLines.csv" />
     <None Include="CurrencyQuotes.csv" />

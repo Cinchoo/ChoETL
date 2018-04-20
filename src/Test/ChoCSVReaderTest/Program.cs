@@ -17,6 +17,7 @@ using Newtonsoft.Json.Linq;
 using System.Threading;
 using System.Security;
 using Microsoft.VisualBasic.FileIO;
+using Newtonsoft.Json;
 
 namespace ChoCSVReaderTest
 {
@@ -813,9 +814,9 @@ Date,Count
                 //.Configure(c => c.MaxScanRows = 10)
                 )
             {
-                foreach (var rec in p)
-                    Console.WriteLine(rec.Dump());
-            }
+				foreach (var rec in p)
+					Console.WriteLine(rec.Dump());
+			}
         }
 
         public class Customer
@@ -964,8 +965,83 @@ Date,Count
 			}
 		}
 
+		public class ImportRow
+		{
+			public int ImportId { get; set; }
+			public int RowIndex { get; set; }
+			public string fields { get; set; }
+		}
+
+		public class ValueObject
+		{
+			public string value { get; set; }
+		}
+
+		static void Sample20()
+		{
+			string csv = @"""acme"" ""1"" ""1 / 1 / 2015""
+""contoso"" ""34"" ""1/2/2018""
+";
+
+			using (var p = new ChoCSVReader(new StringReader(csv))
+				.WithDelimiter(" ")
+				)
+			{
+				int rowIndex = 0;
+
+				var dr = new ChoEnumerableDataReader(p.Select(r => new ImportRow
+					{
+						ImportId = 42,
+						RowIndex = rowIndex++,
+						fields = JsonConvert.SerializeObject(((ChoDynamicObject)r).Values.Select(r1 => new ValueObject { value = r1.ToNString() }))
+					}
+				));
+				DataTable dt = new DataTable();
+				dt.Load(dr);
+
+				//foreach (var rec in p.Select(r => new ImportRow
+				//	{
+				//		ImportId = 42,
+				//		RowIndex = rowIndex++,
+				//		fields = JsonConvert.SerializeObject(((ChoDynamicObject)r).Values.Select(r1 => new ValueObject { value = r1.ToNString() }))
+				//	}
+				//	)
+				//)
+				//{
+
+				//	Console.WriteLine(rec.Dump());
+				//}
+			}
+		}
+
+		static void Sample21()
+		{
+			using (var p = new ChoCSVReader("020180412_045106Cropped.csv")
+				.WithFirstLineHeader()
+				.Configure(c => c.FileHeaderConfiguration.IgnoreCase = false)
+				)
+			{
+				var dr = p.AsDataReader();
+				var dt = new DataTable();
+				dt.Load(dr);
+			}
+
+			return;
+			foreach (var p in new ChoCSVReader("020180412_045106Cropped.csv")
+				.WithFirstLineHeader()
+				.Configure(c => c.FileHeaderConfiguration.IgnoreCase = false)
+				)
+			{
+				Console.WriteLine(p.DumpAsJson());
+			}
+		}
+
 		static void Main(string[] args)
         {
+			return;
+			Sample21();
+			return;
+
 			DateFormatTestUsingOptInPOCO();
             return;
 

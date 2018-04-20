@@ -20,9 +20,22 @@ namespace ChoETL
 
             if (target is IDictionary<string, object>)
                 return (Dictionary<string, object>)target;
+			if (target is IDictionary)
+			{
+				Dictionary<string, object> dict1 = new Dictionary<string, object>();
+				foreach (var kvp in ((IDictionary)target).Keys)
+				{
+					dict1.Add(kvp.ToNString(), ((IDictionary)target)[kvp]);
+				}
+				return dict1;
+			}
 
-            Dictionary<string, object> dict = new Dictionary<string, object>();
-               
+			if (target is IEnumerable<KeyValuePair<string, object>>)
+				return new List<KeyValuePair<string, object>>(target as IEnumerable<KeyValuePair<string, object>>).ToDictionary(x => x.Key, x => x.Value);
+			if (target is IEnumerable<Tuple<string, object>>)
+				return new List<Tuple<string, object>>(target as IEnumerable<Tuple<string, object>>).ToDictionary(x => x.Item1, x => x.Item2);
+
+			Dictionary<string, object> dict = new Dictionary<string, object>();
             foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(target.GetType()))
             {
                 dict.Add(pd.Name, ChoType.GetPropertyValue(target, pd.Name));

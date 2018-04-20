@@ -11,7 +11,29 @@ namespace ChoETL
 {
     public static class ChoDictionaryEx
     {
-        public static void AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key, TValue value)
+		public static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict)
+		{
+			foreach (var kvp in dict)
+			{
+				if (kvp.Value is IDictionary<string, object>)
+				{
+					foreach (var tuple in Flatten(kvp.Value as IDictionary<string, object>))
+						yield return tuple;
+				}
+				else if (kvp.Value is IList)
+				{
+					int index = 0;
+					foreach (var item in (IList)kvp.Value)
+					{
+						yield return new KeyValuePair<string, object>("{0}_{1}".FormatString(kvp.Key, index++), item);
+					}
+				}
+				else
+					yield return new KeyValuePair<string, object>(kvp.Key.ToString(), kvp.Value);
+			}
+		}
+
+		public static void AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key, TValue value)
         {
             ChoGuard.ArgumentNotNull(dict, "Dictionary");
 

@@ -635,8 +635,97 @@ namespace ChoJSONReaderTest
 
         static void Main(string[] args)
         {
-			Sample20();
+			Sample22();
 
+		}
+
+		static void Sample22()
+		{
+			string json = @"
+{
+        ""node"":[
+            {
+                ""item_1"":""value_11"",
+                ""item_2"":""value_12"",
+                ""item_3"":""value_13"",
+                ""item_4"":[""sub_value_14"", ""sub_value_15""],
+                ""item_5"":{
+                    ""sub_item_1"":""sub_item_value_11"",
+                    ""sub_item_2"":[""sub_item_value_12"", ""sub_item_value_13""]
+                }
+            },
+            {
+                ""item_1"":""value_21"",
+                ""item_2"":""value_22"",
+                ""item_4"":[""sub_value_24"", ""sub_value_25"", ""sub_value_15"", ""sub_value_15"", ""sub_value_15""],
+                ""item_5"":{
+                    ""sub_item_1"":""sub_item_value_21"",
+                    ""sub_item_2"":[""sub_item_value_22"", ""sub_item_value_23""]
+                }
+            },
+            {
+                ""item_1"":""value_21"",
+                ""item_2"":""value_22"",
+                ""item_4"":[""sub_value_24"", ""sub_value_25"", ""sub_value_15"", ""sub_value_15"", ""sub_value_15""],
+                ""item_5"":{
+                    ""sub_item_1"":""sub_item_value_21"",
+                    ""sub_item_2"":[""sub_item_value_22"", ""sub_item_value_23""]
+                }
+            },
+            {
+                ""item_1"":""value_21"",
+                ""item_2"":""value_22"",
+                ""item_4"":[""sub_value_24"", ""sub_value_25""],
+                ""item_5"":{
+                    ""sub_item_1"":""sub_item_value_21"",
+                    ""sub_item_2"":[""sub_item_value_22"", ""sub_item_value_23""]
+                }
+            },
+            {
+                ""item_1"":""value_21"",
+                ""item_2"":""value_22"",
+                ""item_4"":[""sub_value_24"", ""sub_value_25""],
+                ""item_5"":{
+                    ""sub_item_1"":""sub_item_value_21"",
+                    ""sub_item_2"":[""sub_item_value_22"", ""sub_item_value_23""]
+                }
+            },
+            {
+                ""item_1"":""value_21"",
+                ""item_2"":""value_22"",
+                ""item_4"":[""sub_value_24"", ""sub_value_25""],
+                ""item_5"":{
+                    ""sub_item_1"":""sub_item_value_21"",
+                    ""sub_item_2"":[""sub_item_value_22"", ""sub_item_value_23""]
+                }
+            },
+            {
+                ""item_1"":""value_21"",
+                ""item_2"":""value_22"",
+                ""item_4"":[""sub_value_24"", ""sub_value_25""],
+                ""item_5"":{
+                    ""sub_item_1"":""sub_item_value_21"",
+                    ""sub_item_2"":[""sub_item_value_22"", ""sub_item_value_23""]
+                }
+            }
+        ]
+    }";
+			StringBuilder csv = new StringBuilder();
+			using (var p = new ChoJSONReader(new StringReader(json))
+				.WithJSONPath("$..node")
+				)
+			{
+				using (var w = new ChoFixedLengthWriter(new StringWriter(csv))
+					.WithFirstLineHeader()
+					.Configure(c => c.MaxScanRows = 2)
+					.Configure(c => c.ThrowAndStopOnMissingField = false)
+					)
+				{
+					w.Write(p);
+				}
+			}
+
+			Console.WriteLine(csv.ToString());
 		}
 
 		static void Sample21()
