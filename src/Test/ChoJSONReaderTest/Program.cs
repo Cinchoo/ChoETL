@@ -715,7 +715,7 @@ namespace ChoJSONReaderTest
 				.WithJSONPath("$..node")
 				)
 			{
-				using (var w = new ChoFixedLengthWriter(new StringWriter(csv))
+				using (var w = new ChoCSVWriter(new StringWriter(csv))
 					.WithFirstLineHeader()
 					.Configure(c => c.MaxScanRows = 2)
 					.Configure(c => c.ThrowAndStopOnMissingField = false)

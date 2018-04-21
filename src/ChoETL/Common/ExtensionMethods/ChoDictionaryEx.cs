@@ -13,23 +13,45 @@ namespace ChoETL
     {
 		public static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict)
 		{
+			return Flatten(dict, null);
+		}
+
+		private static IEnumerable<KeyValuePair<string, object>> Flatten(this IList list, string key)
+		{
+			int index = 0;
+			foreach (var item in list)
+			{
+				if (item is IDictionary<string, object>)
+				{
+					foreach (var kvp1 in Flatten(item as IDictionary<string, object>, "{0}_{1}".FormatString(key, index++)))
+						yield return kvp1;
+				}
+				else if (item is IList)
+				{
+					foreach (var kvp1 in Flatten(item as IList, "{0}_{1}".FormatString(key, index++)))
+						yield return kvp1;
+				}
+				else
+					yield return new KeyValuePair<string, object>("{0}_{1}".FormatString(key, index++), item);
+			}
+
+		}
+		private static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict, string key = null)
+		{
 			foreach (var kvp in dict)
 			{
 				if (kvp.Value is IDictionary<string, object>)
 				{
-					foreach (var tuple in Flatten(kvp.Value as IDictionary<string, object>))
+					foreach (var tuple in Flatten(kvp.Value as IDictionary<string, object>, key == null ? kvp.Key : "{0}_{1}".FormatString(key, kvp.Key)))
 						yield return tuple;
 				}
 				else if (kvp.Value is IList)
 				{
-					int index = 0;
-					foreach (var item in (IList)kvp.Value)
-					{
-						yield return new KeyValuePair<string, object>("{0}_{1}".FormatString(kvp.Key, index++), item);
-					}
+					foreach (var tuple in Flatten(kvp.Value as IList, key == null ? kvp.Key : "{0}_{1}".FormatString(key, kvp.Key)))
+						yield return tuple;
 				}
 				else
-					yield return new KeyValuePair<string, object>(kvp.Key.ToString(), kvp.Value);
+					yield return new KeyValuePair<string, object>(key == null ? kvp.Key.ToString() : "{0}_{1}".FormatString(key, kvp.Key.ToString()), kvp.Value);
 			}
 		}
 
