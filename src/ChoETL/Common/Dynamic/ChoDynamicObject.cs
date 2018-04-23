@@ -17,7 +17,7 @@ using System.Xml.Serialization;
 namespace ChoETL
 {
     [Serializable]
-    public class ChoDynamicObject : DynamicObject, IDictionary<string, object>, IList<object>, IList //, IXmlSerializable
+    public class ChoDynamicObject : DynamicObject, IDictionary<string, object> //, IList<object>, IList //, IXmlSerializable
     {
 		private static readonly string ValueToken = "@@Value";
 
@@ -644,41 +644,41 @@ namespace ChoETL
         {
             get
             {
-				if (_list.Count > 0)
-					return _list.Count;
+				//if (_list.Count > 0)
+				//	return _list.Count;
 
                 IDictionary<string, object> kvpDict = _kvpDict;
                 return kvpDict != null ? kvpDict.Count : 0;
             }
         }
 
-		public bool IsFixedSize
-		{
-			get { return false; }
-		}
+		//public bool IsFixedSize
+		//{
+		//	get { return false; }
+		//}
 
-		readonly object _syncRoot = new object();
-		public object SyncRoot
-		{
-			get { return _syncRoot; }
-		}
+		//readonly object _syncRoot = new object();
+		//public object SyncRoot
+		//{
+		//	get { return _syncRoot; }
+		//}
 
-		public bool IsSynchronized
-		{
-			get { return false; }
-		}
+		//public bool IsSynchronized
+		//{
+		//	get { return false; }
+		//}
 
-		public object this[int index]
-		{
-			get
-			{
-				return _list[index];
-			}
-			set
-			{
-				_list[index] = value;
-			}
-		}
+		//public object this[int index]
+		//{
+		//	get
+		//	{
+		//		return _list[index];
+		//	}
+		//	set
+		//	{
+		//		_list[index] = value;
+		//	}
+		//}
 
 		//public KeyValuePair<string, object> this[int index]
 		//{
@@ -864,16 +864,16 @@ namespace ChoETL
 				}
 				msg.AppendFormat("{0}</{1}>", Environment.NewLine, tag);
             }
-			else if (_list != null && _list.Count > 0)
-			{
-                msg.AppendFormat(">");
-				foreach (var obj in _list)
-				{
-					if (obj == null) continue;
-					GetXml(msg, obj, tag.ToSingular());
-				}
-				msg.AppendFormat("{0}</{1}>", Environment.NewLine, tag);
-			}
+			//else if (_list != null && _list.Count > 0)
+			//{
+   //             msg.AppendFormat(">");
+			//	foreach (var obj in _list)
+			//	{
+			//		if (obj == null) continue;
+			//		GetXml(msg, obj, tag.ToSingular());
+			//	}
+			//	msg.AppendFormat("{0}</{1}>", Environment.NewLine, tag);
+			//}
 			else
             {
                 msg.AppendFormat(" />");
@@ -912,9 +912,9 @@ namespace ChoETL
 				}
 				else
 				{
-
-				}
-			}
+                    msg.AppendFormat("{0}{1}", Environment.NewLine, @"<{0} xsi:nil=""true"" xmlns:xsi=""{1}""/>".FormatString(key, ChoXmlSettings.XmlSchemaNamespace).Indent(1, "  "));
+                }
+            }
 		}
 
 		public virtual void WriteXml(XmlWriter writer)
@@ -955,6 +955,10 @@ namespace ChoETL
             writer.WriteEndElement();
         }
 
+        public bool HasValue()
+        {
+            return ContainsKey(ValueToken);
+        }
         public object GetValue()
         {
             return ContainsKey(ValueToken) ? this[ValueToken] : null;
@@ -992,68 +996,68 @@ namespace ChoETL
             return ContainsKey(attrName);
         }
 
-		public int IndexOf(object item)
-		{
-			return _list.IndexOf(item);
-		}
+		//public int IndexOf(object item)
+		//{
+		//	return _list.IndexOf(item);
+		//}
 
-		public void Insert(int index, object item)
-		{
-			_list.Insert(index, item);
-		}
+		//public void Insert(int index, object item)
+		//{
+		//	_list.Insert(index, item);
+		//}
 
-		public void RemoveAt(int index)
-		{
-			_list.RemoveAt(index);
-		}
+		//public void RemoveAt(int index)
+		//{
+		//	_list.RemoveAt(index);
+		//}
 
-		public void Add(object item)
-		{
-			_list.Add(item);
-		}
+		//public void Add(object item)
+		//{
+		//	_list.Add(item);
+		//}
 
-		public bool Contains(object item)
-		{
-			return _list.Contains(item);
-		}
+		//public bool Contains(object item)
+		//{
+		//	return _list.Contains(item);
+		//}
 
-		public void CopyTo(object[] array, int arrayIndex)
-		{
-			_list.CopyTo(array, arrayIndex);
-		}
+		//public void CopyTo(object[] array, int arrayIndex)
+		//{
+		//	_list.CopyTo(array, arrayIndex);
+		//}
 
-		public bool Remove(object item)
-		{
-			return _list.Remove(item);
-		}
-		List<object> _list = new List<object>();
-		IEnumerator<object> IEnumerable<object>.GetEnumerator()
-		{
-			return _list.GetEnumerator();
-		}
+		//public bool Remove(object item)
+		//{
+		//	return _list.Remove(item);
+		//}
+		//List<object> _list = new List<object>();
+		//IEnumerator<object> IEnumerable<object>.GetEnumerator()
+		//{
+		//	return _list.GetEnumerator();
+		//}
 
-		int IList.Add(object value)
-		{
-			return ((IList)_list).Add(value);
-		}
+		//int IList.Add(object value)
+		//{
+		//	return ((IList)_list).Add(value);
+		//}
 
-		void IList.Remove(object value)
-		{
-			_list.Remove(value);
-		}
+		//void IList.Remove(object value)
+		//{
+		//	_list.Remove(value);
+		//}
 
-		public void CopyTo(Array array, int index)
-		{
-			_list.CopyTo(array.Cast<object>().ToArray(), index);
-		}
-		public int ListCount
-		{
-			get { return _list.Count;  }
-		}
-		public object GetListItemAt(int index)
-		{
-			return _list[index];
-		}
+		//public void CopyTo(Array array, int index)
+		//{
+		//	_list.CopyTo(array.Cast<object>().ToArray(), index);
+		//}
+		//public int ListCount
+		//{
+		//	get { return _list.Count;  }
+		//}
+		//public object GetListItemAt(int index)
+		//{
+		//	return _list[index];
+		//}
 	}
 
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]

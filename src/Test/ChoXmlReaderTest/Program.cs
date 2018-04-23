@@ -88,10 +88,12 @@ namespace ChoXmlReaderTest
 				.WithXPath("/")
 				)
 			{
-				using (var w = new ChoJSONWriter(new StringWriter(msg)))
-				{
-					w.Write(p);
-				}
+                using (var w = new ChoCSVWriter(new StringWriter(msg))
+                    .WithFirstLineHeader()
+                    )
+                {
+                    w.Write(p);
+                }
 			}
 			Console.WriteLine(msg.ToString());
 		}

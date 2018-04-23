@@ -1,60 +1,63 @@
-﻿<packages>
-	<Package>
-		<trackingNumber>23780498191986</trackingNumber>
-		<shipCost>14</shipCost>
-		<shipDate>2018-04-12T15:33:39.887</shipDate>
-		<items>
-			<item>
-				<dscoItemId>sdsd</dscoItemId>
-				<sku>sdsd</sku>
-				<quantity>1</quantity>
-				<lineNumber>1</lineNumber>
-				<originalLineNumber>1</originalLineNumber>
-				<originalOrderQuantity>1</originalOrderQuantity>
-			</item>
-			<item>
-				<dscoItemId>CCCVSD33</dscoItemId>
-				<sku>TESRRST123</sku>
-				<quantity>2</quantity>
-				<lineNumber>2</lineNumber>
-				<originalLineNumber>2</originalLineNumber>
-				<originalOrderQuantity>2</originalOrderQuantity>
-			</item>
-		</items>
-		<shipCarrier />
-		<shipMethod />
-		<shippingServiceLevelCode>FESDPO</shippingServiceLevelCode>
-		<numberOfLineItems>2</numberOfLineItems>
-		<shipFrom>
-			<attention>OPERATIONS m</attention>
-			<firstName>SD</firstName>
-			<lastName>SD</lastName>
-			<company></company>
-			<address1>ADD1</address1>
-			<address2 />
-			<city>URBANCREST</city>
-			<region>OH</region>
-			<postal>43123</postal>
-			<country>US</country>
-			<phone>123.125.1265</phone>
-			<email />
-			<locationCode />
-		</shipFrom>
-		<shipTo>
-			<attention>SD</attention>
-			<firstName>DD</firstName>
-			<lastName>DD</lastName>
-			<company>ABC CORPORATION</company>
-			<address1>123 FINE WAY</address1>
-			<address2>BUILDING F-1</address2>
-			<city>BALTIMORE</city>
-			<region>MD</region>
-			<postal>21234</postal>
-			<country>US</country>
-			<phone>222-222-2222</phone>
-			<email>XYZ@ACOMP.COM</email>
-			<locationCode />
-		</shipTo>
-		<shipWeight>35.00</shipWeight>
-	</Package>
+﻿<packages xmlns:json ="http://james.newtonking.com/projects/json" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<Package id ="1">
+        <emps json:Array="true"></emps>
+        <trackingNumber>23780498191986</trackingNumber>
+        <shipCost>14</shipCost>
+        <shipDate>2018-04-12T15:33:39.887</shipDate>
+        <items>
+            <item>
+                <dscoItemId Id="4">sdsd</dscoItemId>
+                <sku>sdsd</sku>
+                <quantity>1</quantity>
+                <lineNumber>1</lineNumber>
+                <originalLineNumber>1</originalLineNumber>
+                <originalOrderQuantity>1</originalOrderQuantity>
+            </item>
+            <item>
+                <dscoItemId>CCCVSD33</dscoItemId>
+                <sku>TESRRST123</sku>
+                <quantity>2</quantity>
+                <lineNumber>2</lineNumber>
+                <originalLineNumber>2</originalLineNumber>
+                <originalOrderQuantity>2</originalOrderQuantity>
+            </item>
+        </items>
+        <shipCarrier xsi:nil="true" />
+        <shipMethod />
+        <shippingServiceLevelCode>FESDPO</shippingServiceLevelCode>
+        <numberOfLineItems>2</numberOfLineItems>
+        <shipFrom id="3">
+            <attention>OPERATIONS m</attention>
+            <firstName>SD</firstName>
+            <lastName>SD</lastName>
+            <company></company>
+            <address1>ADD1</address1>
+            <address2 />
+            <city>URBANCREST</city>
+            <region>OH</region>
+            <postal>43123</postal>
+            <country>US</country>
+            <phone>123.125.1265</phone>
+            <email />
+            <locationCode />
+        </shipFrom>
+        <shipTo id="3">
+            <attention id="3">
+                <emp>Raj</emp><name>SD</name>
+            </attention>
+            <firstName>DD</firstName>
+            <lastName>DD</lastName>
+            <company>ABC CORPORATION</company>
+            <address1>123 FINE WAY</address1>
+            <address2>BUILDING F-1</address2>
+            <city>BALTIMORE</city>
+            <region>MD</region>
+            <postal>21234</postal>
+            <country>US</country>
+            <phone>222-222-2222</phone>
+            <email>XYZ@ACOMP.COM</email>
+            <locationCode />
+        </shipTo>
+        <shipWeight>35.00</shipWeight>
+    </Package>
 </packages>
