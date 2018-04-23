@@ -540,6 +540,15 @@ namespace ChoETL
                                                     fieldValue = fieldConfig.ItemConverter(fXElements[0]);
                                                 else
                                                     fieldValue = fXElements[0].ToObjectFromXml(typeof(ChoDynamicObject), null, Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace);
+
+												if (fieldValue is IDictionary<string, object>)
+												{
+													var dict = fieldValue as IDictionary<string, object>;
+													if (dict.Keys.Count == 1 && String.Compare(dict.Keys.First(), kvp.Key, true) == 0)
+													{
+														fieldValue = dict[dict.Keys.First()];
+													}
+												}
                                             }
                                             else
                                             {

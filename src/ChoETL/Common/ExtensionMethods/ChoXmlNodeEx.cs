@@ -751,7 +751,12 @@ namespace ChoETL
 							List<object> subDynamic = new List<object>();
 							foreach (XElement subsubElement in subElement.Elements())
 							{
-								subDynamic.Add(ToDynamic(subsubElement, xmlSchemaNS, jsonSchemaNS));
+								IDictionary<string, object> sd = ToDynamic(subsubElement, xmlSchemaNS, jsonSchemaNS);
+								if (sd.Keys.Count == 1 && sd.Keys.First() == "")
+								{
+
+								}
+								subDynamic.Add(sd);
 							}
 							((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, subDynamic.ToArray());
 						}
@@ -789,7 +794,10 @@ namespace ChoETL
 				}
 			}
 			else
-				obj.SetValue(element.NilAwareValue());
+			{
+				((IDictionary<string, object>)obj).Add(element.Name.LocalName, element.NilAwareValue());
+				//obj.SetValue(element.NilAwareValue());
+			}
 
             return obj;
         }

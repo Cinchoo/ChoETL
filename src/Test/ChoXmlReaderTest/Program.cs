@@ -78,8 +78,23 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			JSONArrayTest();
+			Sample30();
         }
+
+		static void Sample30()
+		{
+			StringBuilder msg = new StringBuilder();
+			using (var p = new ChoXmlReader("sample30.xml")
+				.WithXPath("/")
+				)
+			{
+				using (var w = new ChoJSONWriter(new StringWriter(msg)))
+				{
+					w.Write(p);
+				}
+			}
+			Console.WriteLine(msg.ToString());
+		}
 
 		static void JSONArrayTest()
 		{
