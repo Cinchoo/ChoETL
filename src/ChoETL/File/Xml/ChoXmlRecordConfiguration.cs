@@ -75,9 +75,13 @@ namespace ChoETL
             get;
             private set;
         }
-        public string XmlSchemaNamespace { get; set; }
-        public string JSONSchemaNamespace { get; set; }
-		
+        [DataMember]
+		public string XmlSchemaNamespace { get; set; }
+        [DataMember]
+		public string JSONSchemaNamespace { get; set; }
+        [DataMember]
+		public ChoEmptyXmlNodeValueHandling EmptyXmlNodeValueHandling { get; set; }
+
 		internal bool IsComplexXPathUsed = true;
         internal string RootName;
         internal string NodeName;

@@ -382,7 +382,7 @@ namespace ChoETL
 
 						if (value is XElement)
 						{
-							dynamic dobj = ((XElement)value).ToObjectFromXml(typeof(ChoDynamicObject));
+							dynamic dobj = ((XElement)value).ToObjectFromXml(typeof(ChoDynamicObject), GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling);
 							fieldValue = dobj.GetValue();
 							//IDictionary<string, object> d = ((XElement)value).ToObjectFromXml(typeof(ChoDynamicObject)) as IDictionary<string, object>;
 							//fieldValue = null;
@@ -522,7 +522,7 @@ namespace ChoETL
                                                     if (itemType == typeof(ChoDynamicObject))
                                                         list.Add(ele.ToDynamic(Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace));
                                                     else
-                                                        list.Add(ele.ToObjectFromXml(itemType, GetXmlOverrides(fieldConfig)));
+                                                        list.Add(ele.ToObjectFromXml(itemType, GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling));
                                                 }
                                             }
                                         }
@@ -539,7 +539,7 @@ namespace ChoETL
                                                 if (fieldConfig.ItemConverter != null)
                                                     fieldValue = fieldConfig.ItemConverter(fXElements[0]);
                                                 else
-                                                    fieldValue = fXElements[0].ToObjectFromXml(typeof(ChoDynamicObject), null, Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace);
+                                                    fieldValue = fXElements[0].ToObjectFromXml(typeof(ChoDynamicObject), GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling);
 
 												if (fieldValue is IDictionary<string, object>)
 												{
@@ -558,7 +558,7 @@ namespace ChoETL
                                                     if (fieldConfig.ItemConverter != null)
                                                         arr.Add(fieldConfig.ItemConverter(ele));
                                                     else
-                                                        arr.Add(ele.ToObjectFromXml(typeof(ChoDynamicObject)) as ChoDynamicObject);
+                                                        arr.Add(ele.ToObjectFromXml(typeof(ChoDynamicObject), GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling) as ChoDynamicObject);
                                                 }
 
                                                 fieldValue = arr.ToArray();
@@ -595,7 +595,7 @@ namespace ChoETL
                                                         list.Add(ChoConvert.ConvertTo(ele.NilAwareValue(), itemType));
                                                     else
                                                     {
-                                                        list.Add(ele.ToObjectFromXml(itemType, null));
+                                                        list.Add(ele.ToObjectFromXml(itemType, GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling));
                                                     }
                                                 }
                                             }
@@ -611,7 +611,7 @@ namespace ChoETL
                                                     fieldValue = fieldConfig.ItemConverter(fXElement);
                                                 else
                                                 {
-                                                    fieldValue = fXElement.ToObjectFromXml(fieldConfig.FieldType, null);
+                                                    fieldValue = fXElement.ToObjectFromXml(fieldConfig.FieldType, GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling);
                                                 }
                                             }
                                         }

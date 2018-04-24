@@ -86,10 +86,11 @@ namespace ChoXmlReaderTest
 			StringBuilder msg = new StringBuilder();
 			using (var p = new ChoXmlReader("sample30.xml")
 				.WithXPath("/")
+				.Configure(c => c.EmptyXmlNodeValueHandling =  ChoEmptyXmlNodeValueHandling.Null)
 				)
 			{
-                using (var w = new ChoCSVWriter(new StringWriter(msg))
-                    .WithFirstLineHeader()
+                using (var w = new ChoJSONWriter(new StringWriter(msg))
+                    //.WithFirstLineHeader()
                     )
                 {
                     w.Write(p);

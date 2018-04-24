@@ -12,7 +12,9 @@ using System.Xml.Linq;
 
 namespace ChoETL
 {
-    public static class ChoXmlSettings
+	public enum ChoEmptyXmlNodeValueHandling { Null, Ignore, Empty }
+
+	public static class ChoXmlSettings
     {
         private static string _XmlSchemaNamespace = "http://www.w3.org/2001/XMLSchema-instance";
         public static string XmlSchemaNamespace
@@ -24,6 +26,7 @@ namespace ChoETL
                     return;
 
                 _XmlSchemaNamespace = value;
+
             }
         }
         private static string _XmlNamespace = "http://www.w3.org/2000/xmlns/";
@@ -694,7 +697,15 @@ namespace ChoETL
             return reader.ReadOuterXml().Trim();
         }
 
-        public static string NilAwareValue(this XElement element, string xmlSchemaNS = null)
+		public static bool IsNilElement(this XElement element, string xmlSchemaNS = null)
+		{
+			XNamespace ns = xmlSchemaNS.IsNullOrWhiteSpace() ? ChoXmlSettings.XmlSchemaNamespace : xmlSchemaNS;
+
+			XAttribute nil = element.Attribute(ns + "nil");
+			return nil != null;
+		}
+
+		public static string NilAwareValue(this XElement element, string xmlSchemaNS = null)
         {
             XNamespace ns = xmlSchemaNS.IsNullOrWhiteSpace() ? ChoXmlSettings.XmlSchemaNamespace : xmlSchemaNS;
 
@@ -733,15 +744,13 @@ namespace ChoETL
             return hasAttr;
         }
 
-        public static dynamic ToDynamic(this XElement element, string xmlSchemaNS = null, string jsonSchemaNS = null)
+		public static dynamic ToDynamic(this XElement element, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null)
         {
-            //if (!element.HasAttributes && !element.HasElements)
-            //    return element.NilAwareValue();
+			// loop through child elements
+			// define an Expando Dynamic
+			dynamic obj = new ChoDynamicObject(element.Name.LocalName);
 
-            // loop through child elements
-            // define an Expando Dynamic
-            dynamic obj = new ChoDynamicObject(element.Name.LocalName);
-
+			bool hasAttr = false;
             // cater for attributes as properties
             if (element.HasAttributes(xmlSchemaNS, jsonSchemaNS))
             {
@@ -759,7 +768,8 @@ namespace ChoETL
                     if (ns.StartsWith(ChoXmlSettings.XmlNamespace, StringComparison.InvariantCultureIgnoreCase))
                         continue;
 
-                    ((IDictionary<string, object>)obj).Add("@{0}".FormatString(attribute.Name.LocalName), attribute.Value);
+					hasAttr = true;
+					((IDictionary<string, object>)obj).Add("@{0}".FormatString(attribute.Name.LocalName), attribute.Value);
                 }
             }
 
@@ -771,32 +781,40 @@ namespace ChoETL
                     if (kvp.Value.Length == 1 && !kvp.Value.First().IsJsonArray(jsonSchemaNS))
                     {
                         XElement subElement = kvp.Value.First();
-                        if (subElement.HasAttributes(xmlSchemaNS, jsonSchemaNS))
+                        if (subElement.HasAttributes(xmlSchemaNS, jsonSchemaNS) || subElement.HasElements)
                         {
                             string keyName = null;
-                            ChoDynamicObject dobj = ToDynamic(subElement, xmlSchemaNS, jsonSchemaNS);
+                            object dobj = ToDynamic(subElement, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling);
 
                             keyName = subElement.Name.LocalName;
                             ((IDictionary<string, object>)obj).Add(keyName, dobj);
                         }
                         else
                         {
-                            // if sub element has child elements
-                            if (subElement.HasElements)
-                            {
-                                List<object> subDynamic = new List<object>();
-                                foreach (XElement subsubElement in subElement.Elements())
-                                {
-                                    var sd = ToDynamic(subsubElement, xmlSchemaNS, jsonSchemaNS);
-                                    subDynamic.Add(sd);
-                                }
-                                ((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, subDynamic.ToArray());
-                            }
-                            else
-                            {
-                                ((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, subElement.NilAwareValue());
-                            }
-                        }
+							if (subElement.IsNilElement())
+							{
+								((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, subElement.NilAwareValue(xmlSchemaNS));
+							}
+							else
+							{
+								string value = subElement.NilAwareValue(xmlSchemaNS);
+								if (value.IsNullOrEmpty())
+								{
+									switch (emptyXmlNodeValueHandling)
+									{
+										case ChoEmptyXmlNodeValueHandling.Empty:
+											((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, value);
+											break;
+										case ChoEmptyXmlNodeValueHandling.Null:
+											value = value.IsNullOrEmpty() ? null : value;
+											((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, value);
+											break;
+									}
+								}
+								else
+									((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, value);
+							}
+						}
                     }
                     else
                     {
@@ -806,14 +824,13 @@ namespace ChoETL
                             List<object> subDynamic = new List<object>();
                             foreach (XElement subsubElement in subElement2.Elements())
                             {
-                                var sd = ToDynamic(subsubElement, xmlSchemaNS, jsonSchemaNS);
+                                var sd = ToDynamic(subsubElement, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling);
                                 subDynamic.Add(sd);
                             }
-                            ((IDictionary<string, object>)obj).Add(subElement2.Name.LocalName, subDynamic.ToArray());
+							((IDictionary<string, object>)obj).Add(subElement2.Name.LocalName, subDynamic.ToArray());
                         }
                         else
                         {
-
                             List<ChoDynamicObject> list = new List<ChoDynamicObject>();
                             string keyName = null;
                             foreach (var subElement in kvp.Value)
@@ -821,11 +838,12 @@ namespace ChoETL
                                 if (subElement == null)
                                     continue;
 
-                                ChoDynamicObject dobj = ToDynamic(subElement, xmlSchemaNS, jsonSchemaNS);
+                                ChoDynamicObject dobj = ToDynamic(subElement, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling);
                                 list.Add(dobj);
 
                                 keyName = subElement.Name.LocalName + "s";
                             }
+							return list.ToArray();
                             ((IDictionary<string, object>)obj).Add(keyName, list.ToArray());
                         }
                     }
@@ -833,11 +851,32 @@ namespace ChoETL
             }
             else
             {
-                //((IDictionary<string, object>)obj).Add(element.Name.LocalName, element.NilAwareValue());
-                string value = element.NilAwareValue();
-                if (value != null)
-                    obj.SetValue(value);
-            }
+				if (element.IsNilElement())
+				{
+					obj.SetValue(element.NilAwareValue(xmlSchemaNS));
+				}
+				else
+				{
+					string value = element.NilAwareValue(xmlSchemaNS);
+
+					if (value.IsNullOrEmpty())
+					{
+						switch (emptyXmlNodeValueHandling)
+						{
+							case ChoEmptyXmlNodeValueHandling.Empty:
+								obj.SetValue(value);
+								break;
+							case ChoEmptyXmlNodeValueHandling.Null:
+								obj.SetValue(value.IsNullOrEmpty() ? null : value);
+								break;
+							default:
+								return null;
+						}
+					}
+					else
+						obj.SetValue(value);
+				}
+			}
 
             return obj;
         }
