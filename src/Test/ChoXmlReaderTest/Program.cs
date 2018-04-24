@@ -78,60 +78,62 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			Sample30();
+            Sample30();
         }
 
-		static void Sample30()
-		{
-			StringBuilder msg = new StringBuilder();
-			using (var p = new ChoXmlReader("sample30.xml")
-				.WithXPath("/")
-				.Configure(c => c.EmptyXmlNodeValueHandling =  ChoEmptyXmlNodeValueHandling.Null)
-				)
-			{
+        static void Sample30()
+        {
+            StringBuilder msg = new StringBuilder();
+            using (var p = new ChoXmlReader("sample30.xml")
+                .WithXPath("/")
+                .WithField("packages", fieldName: "Package")
+                .Configure(c => c.EmptyXmlNodeValueHandling =  ChoEmptyXmlNodeValueHandling.Ignore)
+                )
+            {
                 using (var w = new ChoJSONWriter(new StringWriter(msg))
+                    .Configure(c => c.SupportMultipleContent = true)
                     //.WithFirstLineHeader()
                     )
                 {
                     w.Write(p);
                 }
-			}
-			Console.WriteLine(msg.ToString());
-		}
+            }
+            Console.WriteLine(msg.ToString());
+        }
 
-		static void JSONArrayTest()
-		{
-			string xml = @"<GetItemRequest xmlns:json=""http://james.newtonking.com/projects/json"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema"">
+        static void JSONArrayTest()
+        {
+            string xml = @"<GetItemRequest xmlns:json=""http://james.newtonking.com/projects/json"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema"">
     <ApplicationCrediential>
         <ConsumerKey>
-			<Consumer json:Array='true' xsi:nil=""true"">
-				<Name isActive = 'false'>Tom</Name>
-				<Name>Mark</Name>
-			</Consumer>
-		</ConsumerKey>
+            <Consumer json:Array='true' xsi:nil=""true"">
+                <Name isActive = 'false'>Tom</Name>
+                <Name>Mark</Name>
+            </Consumer>
+        </ConsumerKey>
         <ConsumerSecret></ConsumerSecret>
     </ApplicationCrediential>
 </GetItemRequest>";
 
-			StringBuilder msg = new StringBuilder();
-			using (var p = new ChoXmlReader(new StringReader(xml))
-				.WithXPath("//ApplicationCrediential")
-				.WithField("ConsumerKey")
-				.WithField("ConsumerSecret")
-			)
-			{
-				foreach (var rec in p)
-					Console.WriteLine(ChoJSONWriter.ToText(rec));
+            StringBuilder msg = new StringBuilder();
+            using (var p = new ChoXmlReader(new StringReader(xml))
+                .WithXPath("//ApplicationCrediential")
+                .WithField("ConsumerKey")
+                .WithField("ConsumerSecret")
+            )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(ChoJSONWriter.ToText(rec));
 
-					//var x = p.First();
-					//Console.WriteLine(ChoJSONWriter.ToText(x));
-					//Console.WriteLine(ChoXmlWriter.ToText(x));
-			}
+                    //var x = p.First();
+                    //Console.WriteLine(ChoJSONWriter.ToText(x));
+                    //Console.WriteLine(ChoXmlWriter.ToText(x));
+            }
 
-			Console.WriteLine(msg.ToString());
-		}
+            Console.WriteLine(msg.ToString());
+        }
 
-		static void Sample22()
+        static void Sample22()
         {
             string xml = @"<?xml version=""1.0"" encoding=""utf- 8""?>
 
@@ -172,8 +174,8 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
     </ApplicationCrediential>
 </GetItemRequest>";
 
-			//ChoXmlSettings.XmlSchemaNamespace = "http://www.w3.org/2001/XMLSchema";
-			using (var p = new ChoXmlReader(new StringReader(xml))
+            //ChoXmlSettings.XmlSchemaNamespace = "http://www.w3.org/2001/XMLSchema";
+            using (var p = new ChoXmlReader(new StringReader(xml))
                 .WithXPath("/")
             )
             {

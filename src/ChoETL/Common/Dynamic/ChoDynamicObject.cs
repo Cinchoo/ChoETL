@@ -19,7 +19,7 @@ namespace ChoETL
     [Serializable]
     public class ChoDynamicObject : DynamicObject, IDictionary<string, object> //, IList<object>, IList //, IXmlSerializable
     {
-		private static readonly string ValueToken = "@@Value";
+		private static readonly string ValueToken = "#text";
 
 		private readonly static Dictionary<string, Type> _intrinsicTypes = new Dictionary<string, Type>();
 
@@ -912,7 +912,7 @@ namespace ChoETL
 				}
 				else
 				{
-                    msg.AppendFormat("{0}{1}", Environment.NewLine, @"<{0} xsi:nil=""true"" xmlns:xsi=""{1}""/>".FormatString(key, ChoXmlSettings.XmlSchemaNamespace).Indent(1, "  "));
+                    msg.AppendFormat("{0}{1}", Environment.NewLine, @"<{0} xsi:nil=""true"" xmlns:xsi=""{1}""/>".FormatString(key, ChoXmlSettings.XmlSchemaInstanceNamespace).Indent(1, "  "));
                 }
             }
 		}
@@ -955,15 +955,15 @@ namespace ChoETL
             writer.WriteEndElement();
         }
 
-        public bool HasValue()
+        public bool HasText()
         {
             return ContainsKey(ValueToken);
         }
-        public object GetValue()
+        public object GetText()
         {
             return ContainsKey(ValueToken) ? this[ValueToken] : null;
         }
-		public void SetValue(object value)
+		public void SetText(object value)
 		{
 			if (ContainsKey(ValueToken))
 				this[ValueToken] = value;

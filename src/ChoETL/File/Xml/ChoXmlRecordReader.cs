@@ -349,6 +349,7 @@ namespace ChoETL
         {
             long lineNo;
             XElement node;
+            string key = null;
 
             lineNo = pair.Item1;
             node = pair.Item2;
@@ -363,10 +364,12 @@ namespace ChoETL
 			object rootRec = rec;
 			foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
+                key = kvp.Key;
+
                 fieldValue = null;
                 fieldConfig = kvp.Value;
                 if (Configuration.PIDict != null)
-                    Configuration.PIDict.TryGetValue(kvp.Key, out pi);
+                    Configuration.PIDict.TryGetValue(key, out pi);
 
 				rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
 
@@ -375,7 +378,7 @@ namespace ChoETL
                     if (Configuration.GetNameWithNamespace(node.Name) == fieldConfig.FieldName)
                     {
                         object value = node;
-                        if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref value))
+                        if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, key, ref value))
                             continue;
                         if (fieldConfig.ValueConverter != null)
                             value = fieldConfig.ValueConverter(value);
@@ -383,23 +386,10 @@ namespace ChoETL
 						if (value is XElement)
 						{
 							dynamic dobj = ((XElement)value).ToObjectFromXml(typeof(ChoDynamicObject), GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling);
-							fieldValue = dobj.GetValue();
-							//IDictionary<string, object> d = ((XElement)value).ToObjectFromXml(typeof(ChoDynamicObject)) as IDictionary<string, object>;
-							//fieldValue = null;
-
-							//if (d.Count == 0)
-							//{
-
-							//}
-							//else if (d.Count == 1 && d.First().Key == "@@Value")
-							//	fieldValue = d.First().Value;
-							//else
-							//	fieldValue = d;
+							fieldValue = dobj.GetText();
 						}
 						else
 							fieldValue = value;
-
-                        //fieldValue = value is XElement ? node.Value : value;
                     }
                     else if (Configuration.ColumnCountStrict)
                         throw new ChoParserException("Missing '{0}' xml node.".FormatString(fieldConfig.FieldName));
@@ -415,7 +405,7 @@ namespace ChoETL
                         }
 
                         object value = xNodes;
-                        if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref value))
+                        if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, key, ref value))
                             continue;
 
                         if (fieldConfig.ValueConverter != null)
@@ -503,7 +493,8 @@ namespace ChoETL
 
                                 if (!fXElements.IsNullOrEmpty())
                                 {
-                                    if (fieldConfig.IsArray != null && fieldConfig.IsArray.Value)
+                                    if ((fieldConfig.IsArray != null && fieldConfig.IsArray.Value)
+                                        || IsArray(xpn.Name, fXElements))
                                     {
                                         List<object> list = new List<object>();
                                         Type itemType = fieldConfig.FieldType != null ? fieldConfig.FieldType.GetItemType().GetUnderlyingType() :
@@ -527,6 +518,16 @@ namespace ChoETL
                                             }
                                         }
                                         fieldValue = list.ToArray();
+
+                                        if ((fieldConfig.IsArray != null && fieldConfig.IsArray.Value))
+                                        {
+
+                                        }
+                                        else
+                                        {
+                                            if (key.IsSingular())
+                                                key = key.ToPlural();
+                                        }
                                     }
                                     else
                                     {
@@ -544,7 +545,7 @@ namespace ChoETL
 												if (fieldValue is IDictionary<string, object>)
 												{
 													var dict = fieldValue as IDictionary<string, object>;
-													if (dict.Keys.Count == 1 && String.Compare(dict.Keys.First(), kvp.Key, true) == 0)
+													if (dict.Keys.Count == 1 && Configuration.StringComparer.Compare(dict.Keys.First(), key) == 0)
 													{
 														fieldValue = dict[dict.Keys.First()];
 													}
@@ -704,7 +705,7 @@ namespace ChoETL
                         else
                             fieldValue = xDict[fieldConfig.FieldName];
 
-                        if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
+                        if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, key, ref fieldValue))
                             continue;
 
                         if (fieldConfig.ValueConverter != null)
@@ -741,25 +742,25 @@ namespace ChoETL
                         var dict = rec as IDictionary<string, Object>;
 
                         if (!fieldConfig.IsArray.CastTo<bool>())
-                            dict.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
+                            dict.ConvertNSetMemberValue(key, kvp.Value, ref fieldValue, Configuration.Culture);
                         else
-                            dict[kvp.Key] = fieldValue;
+                            dict[key] = fieldValue;
 
                         if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
-                            dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
+                            dict.DoMemberLevelValidation(key, kvp.Value, Configuration.ObjectValidationMode);
                     }
                     else
                     {
                         if (pi != null)
-                            rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
+                            rec.ConvertNSetMemberValue(key, kvp.Value, ref fieldValue, Configuration.Culture);
                         else
-                            throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(kvp.Key, ChoType.GetTypeName(rec)));
+                            throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(key, ChoType.GetTypeName(rec)));
 
                         if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
-                            rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
+                            rec.DoMemberLevelValidation(key, kvp.Value, Configuration.ObjectValidationMode);
                     }
 
-                    if (!RaiseAfterRecordFieldLoad(rec, pair.Item1, kvp.Key, fieldValue))
+                    if (!RaiseAfterRecordFieldLoad(rec, pair.Item1, key, fieldValue))
                         return false;
                 }
                 catch (ChoParserException)
@@ -787,10 +788,10 @@ namespace ChoETL
                         {
                             var dict = rec as IDictionary<string, Object>;
 
-                            if (dict.SetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
-                                dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
-                            else if (dict.SetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture))
-                                dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
+                            if (dict.SetFallbackValue(key, kvp.Value, Configuration.Culture, ref fieldValue))
+                                dict.DoMemberLevelValidation(key, kvp.Value, Configuration.ObjectValidationMode);
+                            else if (dict.SetDefaultValue(key, kvp.Value, Configuration.Culture))
+                                dict.DoMemberLevelValidation(key, kvp.Value, Configuration.ObjectValidationMode);
                             else if (ex is ValidationException)
                                 throw;
                             else
@@ -798,10 +799,10 @@ namespace ChoETL
                         }
                         else if (pi != null)
                         {
-                            if (rec.SetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture))
-                                rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
-                            else if (rec.SetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture))
-                                rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
+                            if (rec.SetFallbackValue(key, kvp.Value, Configuration.Culture))
+                                rec.DoMemberLevelValidation(key, kvp.Value, Configuration.ObjectValidationMode);
+                            else if (rec.SetDefaultValue(key, kvp.Value, Configuration.Culture))
+                                rec.DoMemberLevelValidation(key, kvp.Value, Configuration.ObjectValidationMode);
                             else if (ex is ValidationException)
                                 throw;
                             else
@@ -820,7 +821,7 @@ namespace ChoETL
                             }
                             else
                             {
-                                if (!RaiseRecordFieldLoadError(rec, pair.Item1, kvp.Key, fieldValue, ex))
+                                if (!RaiseRecordFieldLoadError(rec, pair.Item1, key, fieldValue, ex))
                                 {
                                     if (ex is ValidationException)
                                         throw;
@@ -838,6 +839,15 @@ namespace ChoETL
             }
 
             return true;
+        }
+
+        private bool IsArray(string fieldName, XElement[] fXElements)
+        {
+            if (fXElements == null || fieldName == null)
+                return false;
+
+            string parentNodeName = fieldName.ToSingular();
+            return fXElements.All(x => Configuration.StringComparer.Compare(x.Name.LocalName, parentNodeName) == 0);
         }
 
         private XmlAttributeOverrides GetXmlOverrides(ChoXmlRecordFieldConfiguration fieldConfig, Type fieldType = null)

@@ -1,10 +1,10 @@
 ﻿<packages xmlns:json ="http://james.newtonking.com/projects/json" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-<Package id ="1">
+    <Package id ="1">
         <emps json:Array="true">
-					<emp>Tom</emp>
-					<emp>Mark</emp>
-					<emp></emp>
-				</emps>
+            <emp>Tom</emp>
+            <emp>Mark</emp>
+            <emp></emp>
+        </emps>
         <trackingNumber>23780498191986</trackingNumber>
         <shipCost>14</shipCost>
         <shipDate>2018-04-12T15:33:39.887</shipDate>
@@ -46,9 +46,10 @@
             <locationCode />
         </shipFrom>
         <shipTo id="3">
-            <attention id="3">
-                <emp>Raj</emp><name>SD</name>
-            </attention>
+            <attentions>
+                <attention>Raj</attention>
+                <attention>SD</attention>
+            </attentions>
             <firstName>DD</firstName>
             <lastName>DD</lastName>
             <company>ABC CORPORATION</company>

@@ -12,20 +12,20 @@ using System.Xml.Linq;
 
 namespace ChoETL
 {
-	public enum ChoEmptyXmlNodeValueHandling { Null, Ignore, Empty }
+    public enum ChoEmptyXmlNodeValueHandling { Null, Ignore, Empty }
 
-	public static class ChoXmlSettings
+    public static class ChoXmlSettings
     {
-        private static string _XmlSchemaNamespace = "http://www.w3.org/2001/XMLSchema-instance";
-        public static string XmlSchemaNamespace
+        private static string _XmlSchemaInstanceNamespace = "http://www.w3.org/2001/XMLSchema-instance";
+        public static string XmlSchemaInstanceNamespace
         {
-            get { return _XmlSchemaNamespace; }
+            get { return _XmlSchemaInstanceNamespace; }
             set
             {
                 if (value.IsNullOrWhiteSpace())
                     return;
 
-                _XmlSchemaNamespace = value;
+                _XmlSchemaInstanceNamespace = value;
 
             }
         }
@@ -39,6 +39,18 @@ namespace ChoETL
                     return;
 
                 _XmlNamespace = value;
+            }
+        }
+        private static string _XmlSchemaNamespace = "http://www.w3.org/2001/XMLSchema";
+        public static string XmlSchemaNamespace
+        {
+            get { return _XmlSchemaNamespace; }
+            set
+            {
+                if (value.IsNullOrWhiteSpace())
+                    return;
+
+                _XmlSchemaNamespace = value;
             }
         }
         private static string _JSONSchemaNamespace = "http://james.newtonking.com/projects/json";
@@ -697,17 +709,17 @@ namespace ChoETL
             return reader.ReadOuterXml().Trim();
         }
 
-		public static bool IsNilElement(this XElement element, string xmlSchemaNS = null)
-		{
-			XNamespace ns = xmlSchemaNS.IsNullOrWhiteSpace() ? ChoXmlSettings.XmlSchemaNamespace : xmlSchemaNS;
-
-			XAttribute nil = element.Attribute(ns + "nil");
-			return nil != null;
-		}
-
-		public static string NilAwareValue(this XElement element, string xmlSchemaNS = null)
+        public static bool IsNilElement(this XElement element, string xmlSchemaNS = null)
         {
-            XNamespace ns = xmlSchemaNS.IsNullOrWhiteSpace() ? ChoXmlSettings.XmlSchemaNamespace : xmlSchemaNS;
+            XNamespace ns = xmlSchemaNS.IsNullOrWhiteSpace() ? ChoXmlSettings.XmlSchemaInstanceNamespace : xmlSchemaNS;
+
+            XAttribute nil = element.Attribute(ns + "nil");
+            return nil != null;
+        }
+
+        public static string NilAwareValue(this XElement element, string xmlSchemaNS = null)
+        {
+            XNamespace ns = xmlSchemaNS.IsNullOrWhiteSpace() ? ChoXmlSettings.XmlSchemaInstanceNamespace : xmlSchemaNS;
 
             XAttribute nil = element.Attribute(ns + "nil");
             return nil != null && (bool)nil ? null : element.Value;
@@ -731,7 +743,7 @@ namespace ChoETL
                     continue;
                 if (jsonSchemaNS != null && ns.StartsWith(jsonSchemaNS, StringComparison.InvariantCultureIgnoreCase))
                     continue;
-                if (ns.StartsWith(ChoXmlSettings.XmlSchemaNamespace, StringComparison.InvariantCultureIgnoreCase))
+                if (ns.StartsWith(ChoXmlSettings.XmlSchemaInstanceNamespace, StringComparison.InvariantCultureIgnoreCase))
                     continue;
                 if (ns.StartsWith(ChoXmlSettings.JSONSchemaNamespace, StringComparison.InvariantCultureIgnoreCase))
                     continue;
@@ -744,13 +756,13 @@ namespace ChoETL
             return hasAttr;
         }
 
-		public static dynamic ToDynamic(this XElement element, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null)
+        public static dynamic ToDynamic(this XElement element, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null)
         {
-			// loop through child elements
-			// define an Expando Dynamic
-			dynamic obj = new ChoDynamicObject(element.Name.LocalName);
+            // loop through child elements
+            // define an Expando Dynamic
+            dynamic obj = new ChoDynamicObject(element.Name.LocalName);
 
-			bool hasAttr = false;
+            bool hasAttr = false;
             // cater for attributes as properties
             if (element.HasAttributes(xmlSchemaNS, jsonSchemaNS))
             {
@@ -761,15 +773,15 @@ namespace ChoETL
                         continue;
                     if (jsonSchemaNS != null && ns.StartsWith(jsonSchemaNS, StringComparison.InvariantCultureIgnoreCase))
                         continue;
-                    if (ns.StartsWith(ChoXmlSettings.XmlSchemaNamespace, StringComparison.InvariantCultureIgnoreCase))
+                    if (ns.StartsWith(ChoXmlSettings.XmlSchemaInstanceNamespace, StringComparison.InvariantCultureIgnoreCase))
                         continue;
                     if (ns.StartsWith(ChoXmlSettings.JSONSchemaNamespace, StringComparison.InvariantCultureIgnoreCase))
                         continue;
                     if (ns.StartsWith(ChoXmlSettings.XmlNamespace, StringComparison.InvariantCultureIgnoreCase))
                         continue;
 
-					hasAttr = true;
-					((IDictionary<string, object>)obj).Add("@{0}".FormatString(attribute.Name.LocalName), attribute.Value);
+                    hasAttr = true;
+                    ((IDictionary<string, object>)obj).Add("@{0}".FormatString(attribute.Name.LocalName), attribute.Value);
                 }
             }
 
@@ -785,36 +797,38 @@ namespace ChoETL
                         {
                             string keyName = null;
                             object dobj = ToDynamic(subElement, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling);
-
-                            keyName = subElement.Name.LocalName;
-                            ((IDictionary<string, object>)obj).Add(keyName, dobj);
+                            if (dobj != null || (dobj == null && emptyXmlNodeValueHandling != ChoEmptyXmlNodeValueHandling.Ignore))
+                            {
+                                keyName = subElement.Name.LocalName;
+                                ((IDictionary<string, object>)obj).Add(keyName, dobj);
+                            }
                         }
                         else
                         {
-							if (subElement.IsNilElement())
-							{
-								((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, subElement.NilAwareValue(xmlSchemaNS));
-							}
-							else
-							{
-								string value = subElement.NilAwareValue(xmlSchemaNS);
-								if (value.IsNullOrEmpty())
-								{
-									switch (emptyXmlNodeValueHandling)
-									{
-										case ChoEmptyXmlNodeValueHandling.Empty:
-											((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, value);
-											break;
-										case ChoEmptyXmlNodeValueHandling.Null:
-											value = value.IsNullOrEmpty() ? null : value;
-											((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, value);
-											break;
-									}
-								}
-								else
-									((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, value);
-							}
-						}
+                            if (subElement.IsNilElement())
+                            {
+                                ((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, subElement.NilAwareValue(xmlSchemaNS));
+                            }
+                            else
+                            {
+                                string value = subElement.NilAwareValue(xmlSchemaNS);
+                                if (value.IsNullOrEmpty() && !subElement.HasAttributes())
+                                {
+                                    switch (emptyXmlNodeValueHandling)
+                                    {
+                                        case ChoEmptyXmlNodeValueHandling.Empty:
+                                            ((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, value);
+                                            break;
+                                        case ChoEmptyXmlNodeValueHandling.Null:
+                                            value = value.IsNullOrEmpty() ? null : value;
+                                            ((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, value);
+                                            break;
+                                    }
+                                }
+                                else
+                                    ((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, value);
+                            }
+                        }
                     }
                     else
                     {
@@ -825,25 +839,27 @@ namespace ChoETL
                             foreach (XElement subsubElement in subElement2.Elements())
                             {
                                 var sd = ToDynamic(subsubElement, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling);
-                                subDynamic.Add(sd);
+                                if (sd != null || (sd == null && emptyXmlNodeValueHandling != ChoEmptyXmlNodeValueHandling.Ignore))
+                                    subDynamic.Add(sd);
                             }
-							((IDictionary<string, object>)obj).Add(subElement2.Name.LocalName, subDynamic.ToArray());
+                            ((IDictionary<string, object>)obj).Add(subElement2.Name.LocalName, subDynamic.ToArray());
                         }
                         else
                         {
-                            List<ChoDynamicObject> list = new List<ChoDynamicObject>();
+                            List<object> list = new List<object>();
                             string keyName = null;
                             foreach (var subElement in kvp.Value)
                             {
                                 if (subElement == null)
                                     continue;
 
-                                ChoDynamicObject dobj = ToDynamic(subElement, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling);
-                                list.Add(dobj);
+                                object dobj = ToDynamic(subElement, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling);
+                                if (dobj != null || (dobj == null && emptyXmlNodeValueHandling != ChoEmptyXmlNodeValueHandling.Ignore))
+                                    list.Add(dobj);
 
                                 keyName = subElement.Name.LocalName + "s";
                             }
-							return list.ToArray();
+                            return list.ToArray();
                             ((IDictionary<string, object>)obj).Add(keyName, list.ToArray());
                         }
                     }
@@ -851,32 +867,32 @@ namespace ChoETL
             }
             else
             {
-				if (element.IsNilElement())
-				{
-					obj.SetValue(element.NilAwareValue(xmlSchemaNS));
-				}
-				else
-				{
-					string value = element.NilAwareValue(xmlSchemaNS);
+                if (element.IsNilElement())
+                {
+                    obj.SetText(element.NilAwareValue(xmlSchemaNS));
+                }
+                else
+                {
+                    string value = element.NilAwareValue(xmlSchemaNS);
 
-					if (value.IsNullOrEmpty())
-					{
-						switch (emptyXmlNodeValueHandling)
-						{
-							case ChoEmptyXmlNodeValueHandling.Empty:
-								obj.SetValue(value);
-								break;
-							case ChoEmptyXmlNodeValueHandling.Null:
-								obj.SetValue(value.IsNullOrEmpty() ? null : value);
-								break;
-							default:
-								return null;
-						}
-					}
-					else
-						obj.SetValue(value);
-				}
-			}
+                    if (value.IsNullOrEmpty() && !element.HasAttributes())
+                    {
+                        switch (emptyXmlNodeValueHandling)
+                        {
+                            case ChoEmptyXmlNodeValueHandling.Empty:
+                                obj.SetText(value);
+                                break;
+                            case ChoEmptyXmlNodeValueHandling.Null:
+                                obj.SetText(value.IsNullOrEmpty() ? null : value);
+                                break;
+                            default:
+                                return null;
+                        }
+                    }
+                    else
+                        obj.SetText(value);
+                }
+            }
 
             return obj;
         }

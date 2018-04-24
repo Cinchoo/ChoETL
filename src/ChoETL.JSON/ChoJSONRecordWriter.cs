@@ -552,14 +552,44 @@ namespace ChoETL
             foreach (var item in source)
                 yield return MapToDictionary(item);
         }
+
         public IDictionary<string, object> MapToDictionary(object source)
         {
+            IDictionary<string, object> dict = null;
             if (source != null && source.GetType().IsDynamicType())
-                return source as IDictionary<string, object>;
+                dict = source as IDictionary<string, object>;
+            else
+            {
+                var dictionary = new Dictionary<string, object>();
+                MapToDictionaryInternal(dictionary, source);
+                dict = dictionary;
+            }
 
-            var dictionary = new Dictionary<string, object>();
-            MapToDictionaryInternal(dictionary, source);
-            return dictionary;
+            return FixArray(dict);
+        }
+
+        private IDictionary<string, object> FixArray(IDictionary<string, object> dict)
+        {
+            if (dict == null)
+                return dict;
+
+            foreach (var key in dict.Keys.ToArray())
+            {
+                object value = dict[key];
+                if (value is IList && ((IList)value).Cast<object>().All(i => i is ChoDynamicObject))
+                {
+                    if (((IList)value).Cast<ChoDynamicObject>().All(i => i.Count == 1 && i.HasText()))
+                    {
+                        dict[key] = ((IList)value).Cast<ChoDynamicObject>().Select(i => i.GetText()).ToArray();
+                    }
+                }
+                else if (value is IDictionary<string, object>)
+                {
+                    dict[key] = FixArray(value as IDictionary<string, object>);
+                }
+            }
+
+            return dict;
         }
 
         private object SimpleTypeValue(object source)
