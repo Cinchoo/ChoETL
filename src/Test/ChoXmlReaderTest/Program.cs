@@ -90,9 +90,13 @@ namespace ChoXmlReaderTest
                 .Configure(c => c.EmptyXmlNodeValueHandling =  ChoEmptyXmlNodeValueHandling.Ignore)
                 )
             {
-                using (var w = new ChoJSONWriter(new StringWriter(msg))
-                    .Configure(c => c.SupportMultipleContent = true)
+                using (var w = new ChoXmlWriter(new StringWriter(msg))
+                    .Configure(c => c.NullValueHandling = ChoNullValueHandling.Empty)
+                    //.Configure(c => c.SupportMultipleContent = true)
                     //.WithFirstLineHeader()
+                    .Configure(c => c.RootName = String.Empty)
+                    .Configure(c => c.IgnoreRootName = true)
+                    .Configure(c => c.IgnoreNodeName = true)
                     )
                 {
                     w.Write(p);

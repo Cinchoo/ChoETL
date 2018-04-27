@@ -780,7 +780,8 @@ namespace ChoETL
         }
         public static Type GetEnumerableItemType(this Type type)
         {
-            return GetGenericIEnumerables(type).First();
+            Type t = GetGenericIEnumerables(type).FirstOrDefault();
+            return t == null ? typeof(object) : t;
         }
 
         public static IEnumerable<Type> GetGenericIEnumerables(this Type type)

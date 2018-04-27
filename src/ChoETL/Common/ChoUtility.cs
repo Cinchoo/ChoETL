@@ -962,7 +962,7 @@ namespace ChoETL
             if (target.GetType().IsArray)
             {
                 if (((object[])target).Length > 0)
-                    return ((object[])target).Select(o => XmlSerialize(o, xws)).Aggregate((current, next) => "{0}{1}{2}".FormatString(current, separator, next));
+                    return ((object[])target).Select(o => XmlSerialize(o, xws, separator, nullValueHandling)).Aggregate((current, next) => "{0}{1}{2}".FormatString(current, separator, next));
                 else
                     return String.Empty;
             }
@@ -971,7 +971,7 @@ namespace ChoETL
             {
                 if (target is ChoDynamicObject)
                 {
-                    xtw.WriteRaw(((ChoDynamicObject)target).GetXml());
+                    xtw.WriteRaw(((ChoDynamicObject)target).GetXml(null, nullValueHandling));
                 }
                 else
                 {
@@ -1042,7 +1042,14 @@ namespace ChoETL
                 {
                     if (type == typeof(ChoDynamicObject))
                     {
-                        object obj = XElement.Load(xtw).ToDynamic(xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling);
+                        XElement ele = XElement.Load(xtw);
+                        object obj = ele.ToDynamic(xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling);
+                        if (obj is Array)
+                        {
+                            ChoDynamicObject dobj = new ChoDynamicObject();
+                            dobj.Add(ele.Name.LocalName, obj);
+                            return dobj;
+                        }
                         return obj;
                     }
                     else

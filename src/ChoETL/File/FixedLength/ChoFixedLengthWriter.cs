@@ -24,10 +24,20 @@ namespace ChoETL
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
         private bool _isDisposed = false;
 
+        public override dynamic Context
+        {
+            get { return Configuration.Context; }
+        }
+
         public ChoFixedLengthRecordConfiguration Configuration
         {
             get;
             private set;
+        }
+        
+        public ChoFixedLengthWriter(StringBuilder sb, ChoFixedLengthRecordConfiguration configuration = null) : this(new StringWriter(sb), configuration)
+        {
+
         }
 
         public ChoFixedLengthWriter(ChoFixedLengthRecordConfiguration configuration = null)
@@ -109,19 +119,19 @@ namespace ChoETL
         {
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
-            if (!typeof(T).IsSimple() && !typeof(T).IsDynamicType() && record is IEnumerable)
+            if (record != null && !record.GetType().IsSimple() && !record.GetType().IsDynamicType() && record is IList)
             {
                 if (record is ArrayList)
                     _writer.ElementType = typeof(object);
 
                 _writer.WriteTo(_textWriter, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
             }
-			else if (typeof(T).IsDynamicType() && record is IDictionary)
-			{
-				_writer.WriteTo(_textWriter, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
-			}
-			else
-				_writer.WriteTo(_textWriter, new T[] { record } ).Loop();
+            else if (record != null && (!record.GetType().IsDynamicType() && record is IDictionary))
+            {
+                _writer.WriteTo(_textWriter, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
+            }
+            else
+                _writer.WriteTo(_textWriter, new T[] { record } ).Loop();
         }
 
         public string SerializeAll(IEnumerable<T> records, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
@@ -216,30 +226,30 @@ namespace ChoETL
             return this;
         }
 
-		public ChoFixedLengthWriter<T> ClearFields()
-		{
-			Configuration.FixedLengthRecordFieldConfigurations.Clear();
-			_clearFields = true;
-			return this;
-		}
+        public ChoFixedLengthWriter<T> ClearFields()
+        {
+            Configuration.FixedLengthRecordFieldConfigurations.Clear();
+            _clearFields = true;
+            return this;
+        }
 
-		public ChoFixedLengthWriter<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
-		{
-			if (field != null)
-				return IgnoreField(field.GetFullyQualifiedMemberName());
-			else
-				return this;
-		}
+        public ChoFixedLengthWriter<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
+        {
+            if (field != null)
+                return IgnoreField(field.GetFullyQualifiedMemberName());
+            else
+                return this;
+        }
 
-		public ChoFixedLengthWriter<T> IgnoreField(string fieldName)
+        public ChoFixedLengthWriter<T> IgnoreField(string fieldName)
         {
             if (!fieldName.IsNullOrWhiteSpace())
             {
                 string fnTrim = null;
                 if (!_clearFields)
                 {
-					ClearFields();
-					Configuration.MapRecordFields(Configuration.RecordType);
+                    ClearFields();
+                    Configuration.MapRecordFields(Configuration.RecordType);
                 }
                 fnTrim = fieldName.NTrim();
                 if (Configuration.FixedLengthRecordFieldConfigurations.Any(o => o.Name == fnTrim))
@@ -249,80 +259,80 @@ namespace ChoETL
             return this;
         }
 
-		public ChoFixedLengthWriter<T> WithField<TField>(Expression<Func<T, TField>> field, int startIndex, int size, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
-			bool truncate = true, string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string formatText = null)
-		{
-			if (field == null)
-				return this;
+        public ChoFixedLengthWriter<T> WithField<TField>(Expression<Func<T, TField>> field, int startIndex, int size, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
+            bool truncate = true, string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string formatText = null)
+        {
+            if (field == null)
+                return this;
 
-			return WithField(field.GetMemberName(), startIndex, size, fieldType, quoteField, fillChar, fieldValueJustification,
-					truncate, fieldName, valueConverter, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText);
-		}
+            return WithField(field.GetMemberName(), startIndex, size, fieldType, quoteField, fillChar, fieldValueJustification,
+                    truncate, fieldName, valueConverter, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText);
+        }
 
-		public ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
-			bool truncate = true, string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string formatText = null)
-		{
-			return WithField(name, startIndex, size, fieldType, quoteField, fillChar, fieldValueJustification,
-				truncate, fieldName, valueConverter, defaultValue, fallbackValue, null, formatText);
-		}
+        public ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
+            bool truncate = true, string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string formatText = null)
+        {
+            return WithField(name, startIndex, size, fieldType, quoteField, fillChar, fieldValueJustification,
+                truncate, fieldName, valueConverter, defaultValue, fallbackValue, null, formatText);
+        }
 
-		private ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
+        private ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
             bool truncate = true, string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null,
-			string fullyQualifiedMemberName = null, string formatText = null)
-		{
-			if (!name.IsNullOrEmpty())
+            string fullyQualifiedMemberName = null, string formatText = null)
+        {
+            if (!name.IsNullOrEmpty())
             {
                 if (!_clearFields)
                 {
-					ClearFields();
-					Configuration.MapRecordFields(Configuration.RecordType);
-				}
-				if (fieldName.IsNullOrWhiteSpace())
-					fieldName = name;
+                    ClearFields();
+                    Configuration.MapRecordFields(Configuration.RecordType);
+                }
+                if (fieldName.IsNullOrWhiteSpace())
+                    fieldName = name;
 
-				string fnTrim = name.NTrim();
-				ChoFixedLengthRecordFieldConfiguration fc = null;
-				PropertyDescriptor pd = null;
-				if (Configuration.FixedLengthRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-				{
-					fc = Configuration.FixedLengthRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
-					Configuration.FixedLengthRecordFieldConfigurations.Remove(fc);
-				}
-				else
-					pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
+                string fnTrim = name.NTrim();
+                ChoFixedLengthRecordFieldConfiguration fc = null;
+                PropertyDescriptor pd = null;
+                if (Configuration.FixedLengthRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                {
+                    fc = Configuration.FixedLengthRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+                    Configuration.FixedLengthRecordFieldConfigurations.Remove(fc);
+                }
+                else
+                    pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
 
-				var nfc = new ChoFixedLengthRecordFieldConfiguration(name.Trim(), startIndex, size)
-				{
-					FieldType = fieldType,
-					QuoteField = quoteField,
-					FillChar = fillChar,
-					FieldValueJustification = fieldValueJustification,
-					Truncate = truncate,
-					FieldName = fieldName.IsNullOrWhiteSpace() ? name : fieldName,
-					ValueConverter = valueConverter,
-					DefaultValue = defaultValue,
-					FallbackValue = fallbackValue,
+                var nfc = new ChoFixedLengthRecordFieldConfiguration(name.Trim(), startIndex, size)
+                {
+                    FieldType = fieldType,
+                    QuoteField = quoteField,
+                    FillChar = fillChar,
+                    FieldValueJustification = fieldValueJustification,
+                    Truncate = truncate,
+                    FieldName = fieldName.IsNullOrWhiteSpace() ? name : fieldName,
+                    ValueConverter = valueConverter,
+                    DefaultValue = defaultValue,
+                    FallbackValue = fallbackValue,
                     FormatText = formatText
                 };
 
-				if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
-				{
-					nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
-					nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
-				}
-				else
-				{
-					pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
-					nfc.PropertyDescriptor = pd;
-					nfc.DeclaringMember = fullyQualifiedMemberName;
-				}
-				if (pd != null)
-				{
-					if (nfc.FieldType == null)
-						nfc.FieldType = pd.PropertyType;
-				}
+                if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
+                {
+                    nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
+                    nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
+                }
+                else
+                {
+                    pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
+                    nfc.PropertyDescriptor = pd;
+                    nfc.DeclaringMember = fullyQualifiedMemberName;
+                }
+                if (pd != null)
+                {
+                    if (nfc.FieldType == null)
+                        nfc.FieldType = pd.PropertyType;
+                }
 
-				Configuration.FixedLengthRecordFieldConfigurations.Add(nfc);
+                Configuration.FixedLengthRecordFieldConfigurations.Add(nfc);
             }
 
             return this;
@@ -446,14 +456,18 @@ namespace ChoETL
             }
         }
 
-		~ChoFixedLengthWriter()
-		{
-			Dispose();
-		}
-	}
+        ~ChoFixedLengthWriter()
+        {
+            Dispose();
+        }
+    }
 
-	public class ChoFixedLengthWriter : ChoFixedLengthWriter<dynamic>
+    public class ChoFixedLengthWriter : ChoFixedLengthWriter<dynamic>
     {
+        public ChoFixedLengthWriter(StringBuilder sb, ChoFixedLengthRecordConfiguration configuration = null) : base(sb, configuration)
+        {
+
+        }
         public ChoFixedLengthWriter(ChoFixedLengthRecordConfiguration configuration = null)
            : base(configuration)
         {

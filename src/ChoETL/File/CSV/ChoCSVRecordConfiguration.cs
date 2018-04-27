@@ -391,6 +391,8 @@ namespace ChoETL
             foreach (var fc in CSVRecordFieldConfigurations)
             {
                 if (fc.PropertyDescriptor == null)
+                    fc.PropertyDescriptor = ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Name == fc.Name).FirstOrDefault();
+                if (fc.PropertyDescriptor == null)
                     continue;
 
                 PIDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));

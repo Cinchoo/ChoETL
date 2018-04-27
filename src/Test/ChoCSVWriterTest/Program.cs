@@ -1,5 +1,6 @@
 ﻿using ChoETL;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -137,7 +138,7 @@ namespace ChoCSVWriterTest
             public string State { get; set; }
             [Required]
             [RegularExpression("^[0-9][0-9]*$")]
-			[ChoIgnoreMember]
+            [ChoIgnoreMember]
             public string Zip { get; set; }
         }
         public class SiteAddress
@@ -232,71 +233,156 @@ namespace ChoCSVWriterTest
             Console.WriteLine(sb.ToString());
         }
 
-		public class Test
-		{
-			public int Id { get; set; }
-			public string Name { get; set; }
-			public DateTime CreatedDate { get; set; }
-			public string DueDate { get; set; }
-			public string ReferenceNo { get; set; }
-			public string Parent { get; set; }
-		}
-		static void ListPOCOTest()
-		{
-			List<Test> list = new List<Test>();
-
-			list.Add(new Test { Id = 1, Name = "Tom", CreatedDate = DateTime.Today });
-			list.Add(new Test { Id = 2, Name = "Mark" });
-
-			using (var w = new ChoCSVWriter<Test>(Console.Out)
-				.WithFirstLineHeader()
-				)
-			{
-				w.Write(list);
-			}
-		}
-
-		static void WriteSpecificColumns()
-		{
-			StringBuilder csv = new StringBuilder();
-
-			Site site = new Site { SiteID = 1, House = 12, Apartment = 100, SiteAddress = new SiteAddress { City = "New York", Street = "101 Main St." } };
-
-			using (var w = new ChoCSVWriter<Site>(new StringWriter(csv))
-				.WithFirstLineHeader()
-				//.ClearFields()
-				.WithField(r => r.SiteID)
-				//.WithField(r => r.SiteAddress.City)
-				.Setup(s => s.FileHeaderWrite += (o, e) =>
-				{
-					e.HeaderText = "ID, House";
-				})
-				)
-			{
-				w.Write(site);
-			}
-
-			Console.WriteLine(csv.ToString());
-		}
-
-		static void Main(string[] args)
+        public class Test
         {
-			ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
+            public int Id { get; set; }
+            public string Name { get; set; }
+            public DateTime CreatedDate { get; set; }
+            public string DueDate { get; set; }
+            public string ReferenceNo { get; set; }
+            public string Parent { get; set; }
+        }
+        static void ListPOCOTest()
+        {
+            List<Test> list = new List<Test>();
 
-			return;
+            list.Add(new Test { Id = 1, Name = "Tom", CreatedDate = DateTime.Today });
+            list.Add(new Test { Id = 2, Name = "Mark" });
 
-			WriteSpecificColumns();
-			return;
-			//DictionaryTest();
-			//return;
+            using (var w = new ChoCSVWriter<Test>(Console.Out)
+                .WithFirstLineHeader()
+                )
+            {
+                w.Write(list);
+            }
+        }
 
-			//ListTest();
-			//return;
-			//int z = 44;
-			//Console.WriteLine(String.Format("{0:000}", z));
-			//return;
+        static void WriteSpecificColumns()
+        {
+            StringBuilder csv = new StringBuilder();
 
-			Sample3();
+            Site site = new Site { SiteID = 1, House = 12, Apartment = 100, SiteAddress = new SiteAddress { City = "New York", Street = "101 Main St." } };
+
+            using (var w = new ChoCSVWriter<Site>(new StringWriter(csv))
+                .WithFirstLineHeader()
+                //.ClearFields()
+                .WithField(r => r.SiteID)
+                //.WithField(r => r.SiteAddress.City)
+                .Setup(s => s.FileHeaderWrite += (o, e) =>
+                {
+                    e.HeaderText = "ID, House";
+                })
+                )
+            {
+                w.Write(site);
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
+        static void TestListOfInt()
+        {
+            StringBuilder sb = new StringBuilder();
+            using (var w = new ChoCSVWriter(sb)
+                .WithFirstLineHeader()
+                .WithField("Value", fieldName: "Id")
+                )
+            {
+                w.Write((int?)null);
+                w.Write(1);
+                w.Write(2);
+            }
+            Console.WriteLine(sb.ToString());
+        }
+
+        static void TestListOfInt1()
+        {
+            List<int?> l = new List<int?>();
+            l.Add(1);
+            l.Add(null);
+            l.Add(2);
+            StringBuilder sb = new StringBuilder();
+            using (var w = new ChoCSVWriter(sb)
+                .WithFirstLineHeader()
+                .WithField("Value", fieldName: "Id")
+                )
+            {
+                w.Write(l);
+                w.Write(2);
+            }
+            Console.WriteLine(sb.ToString());
+        }
+
+        static void TestHashtable()
+        {
+            Hashtable ht = new Hashtable();
+            ht.Add(1, "Raj");
+            ht.Add(2, "Tom");
+
+            StringBuilder sb = new StringBuilder();
+            using (var w = new ChoCSVWriter(sb)
+                .WithFirstLineHeader()
+                .WithField("Key", fieldName: "Id")
+                .WithField("Value", fieldName: "Name")
+                )
+            {
+                w.Write(ht);
+                w.Write(ht);
+                w.Write((Hashtable)null);
+                w.Write(1);
+            }
+            Console.WriteLine(sb.ToString());
+        }
+
+        static void TestDictionary()
+        {
+            Dictionary<int, Manager> ht = new Dictionary<int, Manager>();
+            ht.Add(1, new Manager { Name = "TOm", Salary = 10000, Department = "IT" });
+            Dictionary<int, Employee> ht1 = new Dictionary<int, Employee>();
+            ht1.Add(1, new Employee { Name = "TOm" });
+
+            StringBuilder sb = new StringBuilder();
+            using (var w = new ChoCSVWriter(sb)
+                .WithFirstLineHeader()
+                )
+            {
+                w.Write(ht);
+            }
+            Console.WriteLine(sb.ToString());
+        }
+
+
+        static void AnonymousTypeTest()
+        {
+            StringBuilder sb = new StringBuilder();
+            using (var w = new ChoCSVWriter(sb)
+                .WithFirstLineHeader()
+                )
+            {
+                w.Write(new { Id = 1, Name = "Tom" });
+            }
+            Console.WriteLine(sb.ToString());
+        }
+
+
+        static void Main(string[] args)
+        {
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
+            TestDictionary();
+            return;
+
+            WriteSpecificColumns();
+            return;
+            //DictionaryTest();
+            //return;
+
+            //ListTest();
+            //return;
+            //int z = 44;
+            //Console.WriteLine(String.Format("{0:000}", z));
+            //return;
+
+            Sample3();
             return;
 
             InheritanceTest();

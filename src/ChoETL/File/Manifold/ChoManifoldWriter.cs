@@ -20,10 +20,21 @@ namespace ChoETL
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
         private bool _isDisposed = false;
 
+        public override dynamic Context
+        {
+            get { return Configuration.Context; }
+        }
+
+
         public ChoManifoldRecordConfiguration Configuration
         {
             get;
             private set;
+        }
+
+        public ChoManifoldWriter(StringBuilder sb, ChoManifoldRecordConfiguration configuration = null) : this(new StringWriter(sb), configuration)
+        {
+
         }
 
         public ChoManifoldWriter(ChoManifoldRecordConfiguration configuration = null)

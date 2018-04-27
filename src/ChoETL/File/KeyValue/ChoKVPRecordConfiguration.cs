@@ -44,6 +44,7 @@ namespace ChoETL
             get;
             set;
         }
+        public readonly dynamic Context = new ChoDynamicObject();
 
         [DataMember]
         public List<ChoKVPRecordFieldConfiguration> KVPRecordFieldConfigurations
@@ -319,6 +320,8 @@ namespace ChoETL
                 PDDict = new Dictionary<string, PropertyDescriptor>();
                 foreach (var fc in KVPRecordFieldConfigurations)
                 {
+                    if (fc.PropertyDescriptor == null)
+                        fc.PropertyDescriptor = ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Name == fc.Name).FirstOrDefault();
                     if (fc.PropertyDescriptor == null)
                         continue;
 

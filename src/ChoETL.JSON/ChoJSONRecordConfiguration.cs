@@ -87,6 +87,7 @@ namespace ChoETL
                 return JSONRecordFieldConfigurations.Where(i => i.Name == name).FirstOrDefault();
             }
         }
+        public readonly dynamic Context = new ChoDynamicObject();
 
         public ChoJSONRecordConfiguration() : this(null)
         {
@@ -162,7 +163,7 @@ namespace ChoETL
                     {
 						pt = pd.PropertyType.GetUnderlyingType();
 						bool optIn1 = ChoTypeDescriptor.GetProperties(pt).Where(pd1 => pd1.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any()).Any();
-						if (optIn1 && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+						if (false) //optIn1 && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
                             DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn1);
                         else if (pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any())
                         {
@@ -180,7 +181,7 @@ namespace ChoETL
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                     {
                         pt = pd.PropertyType.GetUnderlyingType();
-                        if (pt != typeof(object) && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+                        if (false) //pt != typeof(object) && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
                             DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
                         else
                         {
@@ -289,6 +290,8 @@ namespace ChoETL
             PDDict = new Dictionary<string, PropertyDescriptor>();
             foreach (var fc in JSONRecordFieldConfigurations)
             {
+                if (fc.PropertyDescriptor == null)
+                    fc.PropertyDescriptor = ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Name == fc.Name).FirstOrDefault();
                 if (fc.PropertyDescriptor == null)
                     continue;
 

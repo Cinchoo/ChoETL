@@ -27,10 +27,20 @@ namespace ChoETL
 
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
 
+        public override dynamic Context
+        {
+            get { return Configuration.Context; }
+        }
+
         public ChoXmlRecordConfiguration Configuration
         {
             get;
             private set;
+        }
+
+        public ChoXmlWriter(StringBuilder sb, ChoXmlRecordConfiguration configuration = null) : this(new StringWriter(sb), configuration)
+        {
+
         }
 
         public ChoXmlWriter(ChoXmlRecordConfiguration configuration = null)
@@ -113,19 +123,19 @@ namespace ChoETL
         {
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
-            if (!typeof(T).IsSimple() && !typeof(T).IsDynamicType() && record is IEnumerable)
+            if (record != null && !record.GetType().IsSimple() && !record.GetType().IsDynamicType() && record is IList)
             {
                 if (record is ArrayList)
                     _writer.ElementType = typeof(object);
 
                 _writer.WriteTo(_textWriter, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
             }
-			else if (typeof(T).IsDynamicType() && record is IDictionary)
-			{
-				_writer.WriteTo(_textWriter, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
-			}
-			else
-				_writer.WriteTo(_textWriter, new T[] { record }).Loop();
+            else if (record != null && (!record.GetType().IsDynamicType() && record is IDictionary))
+            {
+                _writer.WriteTo(_textWriter, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
+            }
+            else
+                _writer.WriteTo(_textWriter, new T[] { record }).Loop();
         }
 
         public string SerializeAll(IEnumerable<T> records, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
@@ -148,7 +158,9 @@ namespace ChoETL
             where TRec : class
         {
             XmlRootAttribute root = ChoType.GetCustomAttribute<XmlRootAttribute>(typeof(TRec), false);
-            string xPath = root != null ? root.ElementName : typeof(TRec).Name;
+            string xPath = null;
+            if (record != null && !record.GetType().IsDynamicType())
+                xPath = root != null ? root.ElementName : typeof(TRec).Name;
             return ToTextAll(ChoEnumerable.AsEnumerable<TRec>(record), configuration, traceSwitch, xPath);
         }
 
@@ -228,108 +240,108 @@ namespace ChoETL
             return this;
         }
 
-		public ChoXmlWriter<T> ClearFields()
-		{
-			Configuration.XmlRecordFieldConfigurations.Clear();
-			_clearFields = true;
-			return this;
-		}
+        public ChoXmlWriter<T> ClearFields()
+        {
+            Configuration.XmlRecordFieldConfigurations.Clear();
+            _clearFields = true;
+            return this;
+        }
 
-		public ChoXmlWriter<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
-		{
-			if (field != null)
-				return IgnoreField(field.GetFullyQualifiedMemberName());
-			else
-				return this;
-		}
+        public ChoXmlWriter<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
+        {
+            if (field != null)
+                return IgnoreField(field.GetFullyQualifiedMemberName());
+            else
+                return this;
+        }
 
-		public ChoXmlWriter<T> IgnoreField(string fieldName)
-		{
-			if (!fieldName.IsNullOrWhiteSpace())
-			{
-				string fnTrim = null;
-				if (!_clearFields)
-				{
-					ClearFields();
-					Configuration.MapRecordFields(Configuration.RecordType);
-				}
-				fnTrim = fieldName.NTrim();
-				if (Configuration.XmlRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-					Configuration.XmlRecordFieldConfigurations.Remove(Configuration.XmlRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
-			}
+        public ChoXmlWriter<T> IgnoreField(string fieldName)
+        {
+            if (!fieldName.IsNullOrWhiteSpace())
+            {
+                string fnTrim = null;
+                if (!_clearFields)
+                {
+                    ClearFields();
+                    Configuration.MapRecordFields(Configuration.RecordType);
+                }
+                fnTrim = fieldName.NTrim();
+                if (Configuration.XmlRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                    Configuration.XmlRecordFieldConfigurations.Remove(Configuration.XmlRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+            }
 
-			return this;
-		}
+            return this;
+        }
 
-		public ChoXmlWriter<T> WithFields<TField>(params Expression<Func<T, TField>>[] fields)
-		{
-			if (fields != null)
-			{
-				foreach (var field in fields)
-					return WithField(field);
-			}
-			return this;
-		}
+        public ChoXmlWriter<T> WithFields<TField>(params Expression<Func<T, TField>>[] fields)
+        {
+            if (fields != null)
+            {
+                foreach (var field in fields)
+                    return WithField(field);
+            }
+            return this;
+        }
 
-		public ChoXmlWriter<T> WithFields(params string[] fieldsNames)
+        public ChoXmlWriter<T> WithFields(params string[] fieldsNames)
         {
             string fnTrim = null;
             if (!fieldsNames.IsNullOrEmpty())
             {
-				PropertyDescriptor pd = null;
-				ChoXmlRecordFieldConfiguration fc = null;
-				foreach (string fn in fieldsNames)
+                PropertyDescriptor pd = null;
+                ChoXmlRecordFieldConfiguration fc = null;
+                foreach (string fn in fieldsNames)
                 {
                     if (fn.IsNullOrEmpty())
                         continue;
                     if (!_clearFields)
                     {
-						ClearFields();
-						Configuration.MapRecordFields(Configuration.RecordType);
-					}
+                        ClearFields();
+                        Configuration.MapRecordFields(Configuration.RecordType);
+                    }
                     fnTrim = fn.NTrim();
-					if (Configuration.XmlRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-					{
-						fc = Configuration.XmlRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
-						Configuration.XmlRecordFieldConfigurations.Remove(Configuration.XmlRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
-					}
-					else
-						pd = ChoTypeDescriptor.GetProperty(typeof(T), fn);
+                    if (Configuration.XmlRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                    {
+                        fc = Configuration.XmlRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+                        Configuration.XmlRecordFieldConfigurations.Remove(Configuration.XmlRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+                    }
+                    else
+                        pd = ChoTypeDescriptor.GetProperty(typeof(T), fn);
 
-					var nfc = new ChoXmlRecordFieldConfiguration(fnTrim, $"//{fnTrim}");
-					nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
-					nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
+                    var nfc = new ChoXmlRecordFieldConfiguration(fnTrim, $"//{fnTrim}");
+                    nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
+                    nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
 
-					Configuration.XmlRecordFieldConfigurations.Add(nfc);
+                    Configuration.XmlRecordFieldConfigurations.Add(nfc);
                 }
             }
 
             return this;
         }
 
-		public ChoXmlWriter<T> WithXmlElementField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
-			Func<object, object> valueConverter = null, bool isNullable = false,
-			object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string formatText = null)
-		{
-			if (field == null)
-				return this;
+        public ChoXmlWriter<T> WithXmlElementField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
+            Func<object, object> valueConverter = null, bool isNullable = false,
+            object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string formatText = null)
+        {
+            if (field == null)
+                return this;
 
-			return WithXmlElementField(field.GetMemberName(), fieldType, fieldValueTrimOption, fieldName,
-				valueConverter, isNullable,
-				defaultValue, fallbackValue, encodeValue, field.GetFullyQualifiedMemberName(), formatText);
-		}
+            return WithXmlElementField(field.GetMemberName(), fieldType, fieldValueTrimOption, fieldName,
+                valueConverter, isNullable,
+                defaultValue, fallbackValue, encodeValue, field.GetFullyQualifiedMemberName(), formatText);
+        }
 
-		public ChoXmlWriter<T> WithXmlElementField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
-			string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
-			object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string formatText = null)
-		{
-			return WithXmlElementField(name, fieldType, fieldValueTrimOption,
-				fieldName, valueConverter, isNullable,
-				defaultValue, fallbackValue, encodeValue, null, formatText);
-		}
+        public ChoXmlWriter<T> WithXmlElementField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
+            string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
+            object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string formatText = null)
+        {
+            return WithXmlElementField(name, fieldType, fieldValueTrimOption,
+                fieldName, valueConverter, isNullable,
+                defaultValue, fallbackValue, encodeValue, null, formatText);
+        }
 
-		private ChoXmlWriter<T> WithXmlElementField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
-			string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
+        private ChoXmlWriter<T> WithXmlElementField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
+            string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string fullyQualifiedMemberName = null, string formatText = null)
         {
             string fnTrim = name.NTrim();
@@ -338,106 +350,106 @@ namespace ChoETL
                 encodeValue, fullyQualifiedMemberName, formatText);
         }
 
-		public ChoXmlWriter<T> WithXmlAttributeField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
-			Func<object, object> valueConverter = null, bool isNullable = false,
-			object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string formatText = null)
-		{
-			if (field == null)
-				return this;
+        public ChoXmlWriter<T> WithXmlAttributeField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
+            Func<object, object> valueConverter = null, bool isNullable = false,
+            object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string formatText = null)
+        {
+            if (field == null)
+                return this;
 
-			return WithXmlAttributeField(field.GetMemberName(), fieldType, fieldValueTrimOption, fieldName,
-				valueConverter, isNullable,
-				defaultValue, fallbackValue, encodeValue, field.GetFullyQualifiedMemberName(), formatText);
-		}
+            return WithXmlAttributeField(field.GetMemberName(), fieldType, fieldValueTrimOption, fieldName,
+                valueConverter, isNullable,
+                defaultValue, fallbackValue, encodeValue, field.GetFullyQualifiedMemberName(), formatText);
+        }
 
-		public ChoXmlWriter<T> WithXmlAttributeField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
-			object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string formatText = null)
-		{
-			return WithXmlAttributeField(name, fieldType, fieldValueTrimOption, fieldName, valueConverter, isNullable,
-				defaultValue, fallbackValue, encodeValue, null, formatText);
-		}
+        public ChoXmlWriter<T> WithXmlAttributeField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
+            object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string formatText = null)
+        {
+            return WithXmlAttributeField(name, fieldType, fieldValueTrimOption, fieldName, valueConverter, isNullable,
+                defaultValue, fallbackValue, encodeValue, null, formatText);
+        }
 
-		private ChoXmlWriter<T> WithXmlAttributeField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
+        private ChoXmlWriter<T> WithXmlAttributeField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string fullyQualifiedMemberName = null, string formatText = null)
         {
             string fnTrim = name.NTrim();
             string xPath = $"//@{fnTrim}";
             return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, true, fieldName, valueConverter, isNullable, defaultValue, fallbackValue, 
-				encodeValue, fullyQualifiedMemberName, formatText);
+                encodeValue, fullyQualifiedMemberName, formatText);
         }
 
-		public ChoXmlWriter<T> WithField<TField>(Expression<Func<T, TField>> field, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
-			bool isXmlAttribute = false, string fieldName = null,
-			Func<object, object> valueConverter = null, bool isNullable = false,
-			object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string formatText = null)
-		{
-			if (field == null)
-				return this;
+        public ChoXmlWriter<T> WithField<TField>(Expression<Func<T, TField>> field, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
+            bool isXmlAttribute = false, string fieldName = null,
+            Func<object, object> valueConverter = null, bool isNullable = false,
+            object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string formatText = null)
+        {
+            if (field == null)
+                return this;
 
-			return WithField(field.GetMemberName(), xPath, fieldType, fieldValueTrimOption, isXmlAttribute, fieldName,
-				valueConverter, isNullable,
-				defaultValue, fallbackValue, encodeValue, field.GetFullyQualifiedMemberName(), formatText);
-		}
+            return WithField(field.GetMemberName(), xPath, fieldType, fieldValueTrimOption, isXmlAttribute, fieldName,
+                valueConverter, isNullable,
+                defaultValue, fallbackValue, encodeValue, field.GetFullyQualifiedMemberName(), formatText);
+        }
 
-		public ChoXmlWriter<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
-			bool isXmlAttribute = false, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
-			object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string formatText = null)
-		{
-			return WithField(name, xPath, fieldType, fieldValueTrimOption, isXmlAttribute, fieldName, valueConverter, isNullable,
-				defaultValue, fallbackValue, encodeValue, null, formatText);
-		}
+        public ChoXmlWriter<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
+            bool isXmlAttribute = false, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
+            object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string formatText = null)
+        {
+            return WithField(name, xPath, fieldType, fieldValueTrimOption, isXmlAttribute, fieldName, valueConverter, isNullable,
+                defaultValue, fallbackValue, encodeValue, null, formatText);
+        }
 
-		private ChoXmlWriter<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isXmlAttribute = false, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
+        private ChoXmlWriter<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isXmlAttribute = false, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string fullyQualifiedMemberName = null, string formatText = null)
         {
             if (!name.IsNullOrEmpty())
             {
                 if (!_clearFields)
                 {
-					ClearFields();
-					Configuration.MapRecordFields(Configuration.RecordType);
-				}
+                    ClearFields();
+                    Configuration.MapRecordFields(Configuration.RecordType);
+                }
 
                 string fnTrim = name.NTrim();
-				ChoXmlRecordFieldConfiguration fc = null;
-				PropertyDescriptor pd = null;
-				xPath = xPath.IsNullOrWhiteSpace() ? $"//{fnTrim}" : xPath;
+                ChoXmlRecordFieldConfiguration fc = null;
+                PropertyDescriptor pd = null;
+                xPath = xPath.IsNullOrWhiteSpace() ? $"//{fnTrim}" : xPath;
 
-				if (Configuration.XmlRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-				{
-					fc = Configuration.XmlRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
-					Configuration.XmlRecordFieldConfigurations.Remove(fc);
-				}
-				else
-					pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
+                if (Configuration.XmlRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                {
+                    fc = Configuration.XmlRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+                    Configuration.XmlRecordFieldConfigurations.Remove(fc);
+                }
+                else
+                    pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
 
-				var nfc = new ChoXmlRecordFieldConfiguration(fnTrim, xPath)
-				{
-					FieldType = fieldType,
-					FieldValueTrimOption = fieldValueTrimOption,
-					IsXmlAttribute = isXmlAttribute,
-					FieldName = fieldName,
-					ValueConverter = valueConverter,
-					IsNullable = isNullable,
-					DefaultValue = defaultValue,
-					FallbackValue = fallbackValue,
-					EncodeValue = encodeValue,
+                var nfc = new ChoXmlRecordFieldConfiguration(fnTrim, xPath)
+                {
+                    FieldType = fieldType,
+                    FieldValueTrimOption = fieldValueTrimOption,
+                    IsXmlAttribute = isXmlAttribute,
+                    FieldName = fieldName,
+                    ValueConverter = valueConverter,
+                    IsNullable = isNullable,
+                    DefaultValue = defaultValue,
+                    FallbackValue = fallbackValue,
+                    EncodeValue = encodeValue,
                     FormatText = formatText
                 };
 
-				if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
-				{
-					nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
-					nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
-				}
-				else
-				{
-					pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
-					nfc.PropertyDescriptor = pd;
-					nfc.DeclaringMember = fullyQualifiedMemberName;
-				}
+                if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
+                {
+                    nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
+                    nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
+                }
+                else
+                {
+                    pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
+                    nfc.PropertyDescriptor = pd;
+                    nfc.DeclaringMember = fullyQualifiedMemberName;
+                }
 
-				Configuration.XmlRecordFieldConfigurations.Add(nfc);
+                Configuration.XmlRecordFieldConfigurations.Add(nfc);
             }
 
             return this;
@@ -564,14 +576,19 @@ namespace ChoETL
             }
         }
 
-		~ChoXmlWriter()
-		{
-			Dispose();
-		}
-	}
+        ~ChoXmlWriter()
+        {
+            Dispose();
+        }
+    }
 
-	public class ChoXmlWriter : ChoXmlWriter<dynamic>
+    public class ChoXmlWriter : ChoXmlWriter<dynamic>
     {
+
+        public ChoXmlWriter(StringBuilder sb, ChoXmlRecordConfiguration configuration = null) : base(sb, configuration)
+        {
+
+        }
         public ChoXmlWriter(ChoXmlRecordConfiguration configuration = null)
             : base(configuration)
         {

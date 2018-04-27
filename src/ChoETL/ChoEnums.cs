@@ -29,6 +29,7 @@ namespace ChoETL
 
     public enum ChoNullValueHandling
     {
+        Null,
         Ignore,
         Empty,
         Default

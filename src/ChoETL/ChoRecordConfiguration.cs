@@ -94,10 +94,13 @@ namespace ChoETL
         {
             if (!IsDynamicObject)
             {
-                PIDict = ChoType.GetProperties(RecordType).ToDictionary(p => p.Name);
+                //PIDict = ChoType.GetProperties(RecordType).ToDictionary(p => p.Name);
                 PDDict = new Dictionary<string, PropertyDescriptor>();
-                foreach (var fn in PIDict.Keys)
-                    PDDict.Add(fn, ChoTypeDescriptor.GetProperty(RecordType, fn));
+                if (PIDict != null)
+                {
+                    foreach (var fn in PIDict.Keys)
+                        PDDict.Add(fn, ChoTypeDescriptor.GetProperty(RecordType, fn));
+                }
             }
         }
         protected void LoadNCacheMembers(IEnumerable<ChoRecordFieldConfiguration> fcs)

@@ -10,6 +10,8 @@ namespace ChoETL
 {
     public abstract class ChoReader : IChoReader, IChoValidatable
     {
+        public virtual dynamic Context { get; }
+
         public bool IsValid { get; set; } = true;
         public event EventHandler<ChoBeginLoadEventArgs> BeginLoad;
         public event EventHandler<ChoEndLoadEventArgs> EndLoad;

@@ -30,7 +30,7 @@ namespace ChoETL
         public event EventHandler<ChoEmptyLineEventArgs> EmptyLineFound;
         private bool _isDisposed = false;
 
-        public dynamic Context
+        public override dynamic Context
         {
             get { return Configuration.Context; }
         }

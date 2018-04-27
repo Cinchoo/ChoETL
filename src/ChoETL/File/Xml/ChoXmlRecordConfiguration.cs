@@ -93,16 +93,40 @@ namespace ChoETL
                 StringComparer = StringComparer.Create(Culture == null ? CultureInfo.CurrentCulture : Culture, IgnoreCase);
             }
         }
+        [DataMember]
+        public string RootName
+        {
+            get;
+            set;
+        }
+        [DataMember]
+        public string NodeName
+        {
+            get;
+            set;
+        }
+        [DataMember]
+        public bool IgnoreNodeName
+        {
+            get;
+            set;
+        }
+        [DataMember]
+        public bool IgnoreRootName
+        {
+            get;
+            set;
+        }
+
         internal StringComparer StringComparer
         {
             get;
             private set;
         }
 
-        internal bool IsComplexXPathUsed = true;
-        internal string RootName;
-        internal string NodeName;
+        public readonly dynamic Context = new ChoDynamicObject();
 
+        internal bool IsComplexXPathUsed = true;
         public ChoXmlRecordFieldConfiguration this[string name]
         {
             get
@@ -125,6 +149,7 @@ namespace ChoETL
             Indent = 2;
             IndentChar = ' ';
             IgnoreCase = true;
+            NullValueHandling = ChoNullValueHandling.Empty;
             if (recordType != null)
             {
                 Init(recordType);
@@ -221,8 +246,10 @@ namespace ChoETL
                         pt = pd.PropertyType.GetUnderlyingType();
                         var fa = pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().FirstOrDefault();
                         bool optIn1 = fa == null || fa.UseXmlSerialization ? optIn : ChoTypeDescriptor.GetProperties(pt).Where(pd1 => pd1.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any()).Any();
-                        if (optIn1 && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+                        if (false) //optIn1 && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+                        {
                             DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn1);
+                        }
                         else if (pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any())
                         {
                             bool useCache = true;
@@ -263,8 +290,10 @@ namespace ChoETL
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                     {
                         pt = pd.PropertyType.GetUnderlyingType();
-                        if (pt != typeof(object) && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+                        if (false) //pt != typeof(object) && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+                        {
                             DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
+                        }
                         else
                         {
                             var obj = new ChoXmlRecordFieldConfiguration(pd.Name, $"//{pd.Name}|//@{pd.Name}");
@@ -282,11 +311,11 @@ namespace ChoETL
                                 else if (!dpAttr.Name.IsNullOrWhiteSpace())
                                     obj.FieldName = dpAttr.Name;
                             }
-							DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();
-							if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
-							{
-								obj.FormatText = dfAttr.DataFormatString;
-							}
+                            DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();
+                            if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
+                            {
+                                obj.FormatText = dfAttr.DataFormatString;
+                            }
                             if (dfAttr != null && !dfAttr.NullDisplayText.IsNullOrWhiteSpace())
                             {
                                 obj.NullValue = dfAttr.NullDisplayText;
@@ -310,49 +339,44 @@ namespace ChoETL
             {
                 if (!IsDynamicObject && (RecordType.IsGenericType && RecordType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>)))
                 {
-                    NodeName = "KeyValuePair";
-                    RootName = "KeyValuePairs";
+                    NodeName = NodeName.IsNullOrWhiteSpace() ? "KeyValuePair" : NodeName;
+                    RootName = RootName.IsNullOrWhiteSpace() ? "KeyValuePairs" : RootName;
                 }
                 else if (!IsDynamicObject && !typeof(IChoScalarObject).IsAssignableFrom(RecordType))
                 {
-                    NodeName = RecordType.Name;
-                    RootName = NodeName.ToPlural();
+                    NodeName = NodeName.IsNullOrWhiteSpace() ? RecordType.Name : NodeName;
+                    RootName = RootName.IsNullOrWhiteSpace() ? NodeName.ToPlural() : NodeName;
                 }
             }
             else
             {
-                RootName = XPath.SplitNTrim("/").Where(t => !t.IsNullOrWhiteSpace() && t.NTrim() != "." && t.NTrim() != ".." && t.NTrim() != "*").FirstOrDefault();
-                NodeName = XPath.SplitNTrim("/").Where(t => !t.IsNullOrWhiteSpace() && t.NTrim() != "." && t.NTrim() != ".." && t.NTrim() != "*").Skip(1).FirstOrDefault();
+                RootName = RootName.IsNullOrWhiteSpace() ? XPath.SplitNTrim("/").Where(t => !t.IsNullOrWhiteSpace() && t.NTrim() != "." && t.NTrim() != ".." && t.NTrim() != "*").FirstOrDefault() : RootName;
+                NodeName = NodeName.IsNullOrWhiteSpace() ? XPath.SplitNTrim("/").Where(t => !t.IsNullOrWhiteSpace() && t.NTrim() != "." && t.NTrim() != ".." && t.NTrim() != "*").Skip(1).FirstOrDefault() : NodeName;
             }
+
+            string rootName = null;
+            string nodeName = null;
+            ChoXmlDocumentRootAttribute da = TypeDescriptor.GetAttributes(RecordType).OfType<ChoXmlDocumentRootAttribute>().FirstOrDefault();
+            if (da != null)
+                rootName = da.Name;
+            else
+            {
+                XmlRootAttribute ra = TypeDescriptor.GetAttributes(RecordType).OfType<XmlRootAttribute>().FirstOrDefault();
+                if (ra != null)
+                    nodeName = ra.ElementName;
+            }
+
+            RootName = RootName.IsNullOrWhiteSpace() && !rootName.IsNullOrWhiteSpace() ? rootName : RootName;
+            NodeName = NodeName.IsNullOrWhiteSpace() && !nodeName.IsNullOrWhiteSpace() ? nodeName : NodeName;
+
+            RootName = RootName.IsNullOrWhiteSpace() && !NodeName.IsNullOrWhiteSpace() ? NodeName.ToPlural() : RootName;
+            if (!RootName.IsNullOrWhiteSpace() && RootName.ToSingular() != RootName)
+                NodeName = NodeName.IsNullOrWhiteSpace() && !RootName.IsNullOrWhiteSpace() ? RootName.ToSingular() : NodeName;
+
             if (RootName.IsNullOrWhiteSpace())
-            {
-                ChoXmlDocumentRootAttribute da = TypeDescriptor.GetAttributes(RecordType).OfType<ChoXmlDocumentRootAttribute>().FirstOrDefault();
-                if (da != null)
-                    NodeName = da.Name;
-                if (RootName.IsNullOrWhiteSpace())
-                {
-                    RootName = "Root";
-                }
-            }
-
-            if (!RootName.IsNullOrWhiteSpace() && NodeName.IsNullOrWhiteSpace())
-            {
-                NodeName = RootName;
-                RootName = null;
-            }
-
+                RootName = "Root";
             if (NodeName.IsNullOrWhiteSpace())
-            {
-                if (!IsDynamicObject)
-                {
-                    XmlRootAttribute ra = TypeDescriptor.GetAttributes(RecordType).OfType<XmlRootAttribute>().FirstOrDefault();
-                    if (ra != null)
-                        NodeName = ra.ElementName;
-                }
-
-                if (NodeName.IsNullOrWhiteSpace())
-                    NodeName = "XElement";
-            }
+                NodeName = "XElement";
 
             //Encode Root and node names
             RootName = System.Net.WebUtility.HtmlEncode(RootName);
@@ -534,6 +558,8 @@ namespace ChoETL
             foreach (var fc in XmlRecordFieldConfigurations)
             {
                 if (fc.PropertyDescriptor == null)
+                    fc.PropertyDescriptor = ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Name == fc.Name).FirstOrDefault();
+                if (fc.PropertyDescriptor == null)
                     continue;
 
                 PIDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
@@ -543,12 +569,15 @@ namespace ChoETL
             RecordFieldConfigurationsDict = XmlRecordFieldConfigurations.OrderBy(c => c.IsXmlAttribute).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
 
             if (XmlRecordFieldConfigurations.Where(e => e.IsNullable).Any()
-                || NullValueHandling == ChoNullValueHandling.Empty)
+                || NullValueHandling == ChoNullValueHandling.Default)
             {
-                if (!NamespaceManager.HasNamespace("xsi"))
-                    NamespaceManager.AddNamespace("xsi", ChoXmlSettings.XmlSchemaInstanceNamespace);
-                if (!NamespaceManager.HasNamespace("xsd"))
-                    NamespaceManager.AddNamespace("xsd", ChoXmlSettings.XmlSchemaNamespace);
+                if (NamespaceManager != null)
+                {
+                    if (!NamespaceManager.HasNamespace("xsi"))
+                        NamespaceManager.AddNamespace("xsi", ChoXmlSettings.XmlSchemaInstanceNamespace);
+                    if (!NamespaceManager.HasNamespace("xsd"))
+                        NamespaceManager.AddNamespace("xsd", ChoXmlSettings.XmlSchemaNamespace);
+                }
             }
 
             LoadNCacheMembers(XmlRecordFieldConfigurations);

@@ -98,6 +98,7 @@
   <ItemGroup>
     <Compile Include="Common\Attributes\ChoDataTableColumnTypeAttribute.cs" />
     <Compile Include="Common\Attributes\ChoMetadataRefTypeAttribute.cs" />
+    <Compile Include="Common\Collections\ChoSerializableDictionary.cs" />
     <Compile Include="Common\Converters\ChoCDATAToStringConverter.cs" />
     <Compile Include="File\CSV\ChoCSVRecordTypeConfiguration.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthRecordTypeConfiguration.cs" />

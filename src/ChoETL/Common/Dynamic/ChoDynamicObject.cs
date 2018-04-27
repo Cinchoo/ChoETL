@@ -823,7 +823,7 @@ namespace ChoETL
                 return Type.GetType(typeName);
         }
 
-        public string GetXml(string tag = null)
+        public string GetXml(string tag = null, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Empty)
         {
             if (tag.IsNullOrWhiteSpace())
                 tag = NName;
@@ -859,7 +859,7 @@ namespace ChoETL
 				{
 					value = this[key];
 
-					GetXml(msg, value, key);
+					GetXml(msg, value, key, nullValueHandling);
 
 				}
 				msg.AppendFormat("{0}</{1}>", Environment.NewLine, tag);
@@ -883,11 +883,11 @@ namespace ChoETL
             return msg.ToString();
         }
 
-		private void GetXml(StringBuilder msg, object value, string key)
+		private void GetXml(StringBuilder msg, object value, string key, ChoNullValueHandling nullValueHandling)
 		{
 			if (value is ChoDynamicObject)
 			{
-				msg.AppendFormat("{0}{1}", Environment.NewLine, ((ChoDynamicObject)value).GetXml(((ChoDynamicObject)value).NName).Indent(1, "  "));
+				msg.AppendFormat("{0}{1}", Environment.NewLine, ((ChoDynamicObject)value).GetXml(((ChoDynamicObject)value).NName, nullValueHandling).Indent(1, "  "));
 			}
 			else
 			{
@@ -902,7 +902,7 @@ namespace ChoETL
 						{
 							foreach (var collValue in ((IList)value).OfType<ChoDynamicObject>())
 							{
-								msg.AppendFormat("{0}{1}", Environment.NewLine, collValue.GetXml(collValue.NName == "dynamic" ? key.ToSingular() : collValue.NName).Indent(2, "  "));
+								msg.AppendFormat("{0}{1}", Environment.NewLine, collValue.GetXml(collValue.NName == "dynamic" ? key.ToSingular() : collValue.NName, nullValueHandling).Indent(2, "  "));
 							}
 						}
 						else
@@ -912,7 +912,17 @@ namespace ChoETL
 				}
 				else
 				{
-                    msg.AppendFormat("{0}{1}", Environment.NewLine, @"<{0} xsi:nil=""true"" xmlns:xsi=""{1}""/>".FormatString(key, ChoXmlSettings.XmlSchemaInstanceNamespace).Indent(1, "  "));
+                    switch (nullValueHandling)
+                    {
+                        case ChoNullValueHandling.Empty:
+                            msg.AppendFormat("{0}{1}", Environment.NewLine, @"<{0}/>".FormatString(key).Indent(1, "  "));
+                            break;
+                        case ChoNullValueHandling.Ignore:
+                            break;
+                        default:
+                            msg.AppendFormat("{0}{1}", Environment.NewLine, @"<{0} xsi:nil=""true"" xmlns:xsi=""{1}""/>".FormatString(key, ChoXmlSettings.XmlSchemaInstanceNamespace).Indent(1, "  "));
+                            break;
+                    }
                 }
             }
 		}

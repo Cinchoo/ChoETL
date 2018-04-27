@@ -12,6 +12,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 
 namespace ChoETL
@@ -26,6 +27,7 @@ namespace ChoETL
         private readonly Regex _endTagRegex = new Regex("</.*>$");
         internal ChoWriter Writer = null;
         internal Type ElementType = null;
+        private Lazy<List<object>> _recBuffer = null;
 
         public ChoXmlRecordConfiguration Configuration
         {
@@ -39,7 +41,14 @@ namespace ChoETL
             Configuration = configuration;
 
             _callbackRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordWrite>(recordType);
+            _recBuffer = new Lazy<List<object>>(() =>
+            {
+                var b = Writer.Context.RecBuffer;
+                if (b == null)
+                    Writer.Context.RecBuffer = new List<object>();
 
+                return Writer.Context.RecBuffer;
+            });
             //Configuration.Validate();
         }
 
@@ -51,8 +60,10 @@ namespace ChoETL
             {
                 if (_configCheckDone)
                 {
-                    if (!Configuration.RootName.IsNullOrWhiteSpace())
+                    if (!Configuration.RootName.IsNullOrWhiteSpace() && !Configuration.IgnoreRootName)
+                    {
                         sw.Write("{1}</{0}>".FormatString(Configuration.RootName, Configuration.EOLDelimiter));
+                    }
                 }
             }
             catch { }
@@ -64,6 +75,35 @@ namespace ChoETL
         {
             XmlDocument doc = new XmlDocument();
             return doc.CreateXmlDeclaration(Configuration.XmlVersion, Configuration.Encoding.WebName, null).OuterXml;
+        }
+
+
+        private IEnumerable<object> GetRecords(IEnumerator<object> records)
+        {
+            var arr = _recBuffer.Value.ToArray();
+            _recBuffer.Value.Clear();
+
+            foreach (var rec in arr)
+                yield return rec;
+
+            while (records.MoveNext())
+                yield return records.Current;
+        }
+        private object GetFirstNotNullRecord(IEnumerator<object> recEnum)
+        {
+            if (Writer.Context.FirstNotNullRecord != null)
+                return Writer.Context.FirstNotNullRecord;
+
+            while (recEnum.MoveNext())
+            {
+                _recBuffer.Value.Add(recEnum.Current);
+                if (recEnum.Current != null)
+                {
+                    Writer.Context.FirstNotNullRecord = recEnum.Current;
+                    return Writer.Context.FirstNotNullRecord;
+                }
+            }
+            return null;
         }
 
         public override IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null)
@@ -83,7 +123,12 @@ namespace ChoETL
 
             try
             {
-                foreach (object record in records)
+                var recEnum = records.GetEnumerator();
+                object notNullRecord = GetFirstNotNullRecord(recEnum);
+                if (notNullRecord == null)
+                    yield break;
+
+                foreach (object record in GetRecords(recEnum))
                 {
                     _index++;
 
@@ -101,52 +146,63 @@ namespace ChoETL
                         //Discover and load Xml columns from first record
                         if (!_configCheckDone)
                         {
-                            if (record == null)
-                                continue;
-
-                            string[] fieldNames = null;
-                            Type recordType = ElementType == null ? record.GetType() : ElementType;
-                            if (!recordType.IsDynamicType() && typeof(ICollection).IsAssignableFrom(recordType))
-                                recordType = recordType.GetEnumerableItemType().GetUnderlyingType();
-                            else
-                                recordType = recordType.GetUnderlyingType();
-
-                            Configuration.IsDynamicObject = recordType.IsDynamicType();
-                            if (!Configuration.IsDynamicObject)
+                            if (notNullRecord != null)
                             {
-                                if (recordType.IsSimple())
-                                    Configuration.RecordType = typeof(ChoScalarObject<>).MakeGenericType(recordType);
-                                else
-                                    Configuration.RecordType = recordType;
-
-								if (Configuration.XmlRecordFieldConfigurations.Count == 0)
-									Configuration.MapRecordFields(Configuration.RecordType);
-							}
-
-							if (Configuration.IsDynamicObject)
-                            {
-                                var dict = record.ToDynamicObject() as IDictionary<string, Object>;
-                                fieldNames = dict.Keys.ToArray();
-                            }
-                            else
-                            {
-                                fieldNames = ChoTypeDescriptor.GetProperties<ChoXmlNodeRecordFieldAttribute>(Configuration.RecordType).Select(pd => pd.Name).ToArray();
-                                if (fieldNames.Length == 0)
+                                string[] fieldNames = null;
+                                Type recordType = ElementType == null ? notNullRecord.GetType() : ElementType;
+                                Configuration.RecordType = recordType.ResolveType();
+                                Configuration.IsDynamicObject = recordType.IsDynamicType();
+                                if (!Configuration.IsDynamicObject)
                                 {
-                                    fieldNames = ChoType.GetProperties(Configuration.RecordType).Select(p => p.Name).ToArray();
+                                    if (Configuration.XmlRecordFieldConfigurations.Count == 0)
+                                        Configuration.MapRecordFields(Configuration.RecordType);
                                 }
+
+                                if (Configuration.IsDynamicObject)
+                                {
+                                    var dict = notNullRecord.ToDynamicObject() as IDictionary<string, Object>;
+                                    fieldNames = dict.Keys.ToArray();
+                                }
+                                else
+                                {
+                                    fieldNames = ChoTypeDescriptor.GetProperties<ChoXmlNodeRecordFieldAttribute>(Configuration.RecordType).Select(pd => pd.Name).ToArray();
+                                    if (fieldNames.Length == 0)
+                                    {
+                                        fieldNames = ChoType.GetProperties(Configuration.RecordType).Select(p => p.Name).ToArray();
+                                    }
+                                }
+
+                                Configuration.Validate(fieldNames);
+
+                                _configCheckDone = true;
+
+                                if (!RaiseBeginWrite(sw))
+                                    yield break;
+
+                                if (!Configuration.RootName.IsNullOrWhiteSpace() && !Configuration.IgnoreRootName)
+                                    sw.Write("<{0}{1}>".FormatString(Configuration.RootName, GetNamespaceText()));
                             }
-
-                            Configuration.Validate(fieldNames);
-
-                            _configCheckDone = true;
-
-                            if (!RaiseBeginWrite(sw))
-                                yield break;
-
-                            if (!Configuration.RootName.IsNullOrWhiteSpace())
-                                sw.Write("<{0}{1}>".FormatString(Configuration.RootName, GetNamespaceText()));
                         }
+                        //Check record 
+                        if (record != null)
+                        {
+                            Type rt = record.GetType().ResolveType();
+                            if (Configuration.IsDynamicObject)
+                            {
+                                if (ElementType != null)
+                                {
+
+                                }
+                                else if (!rt.IsDynamicType())
+                                    throw new ChoWriterException("Invalid record found.");
+                            }
+                            else
+                            {
+                                if (rt != Configuration.RecordType)
+                                    throw new ChoWriterException("Invalid record found.");
+                            }
+                        }
+
 
                         if (!RaiseBeforeRecordWrite(record, _index, ref recText))
                             yield break;
@@ -165,13 +221,13 @@ namespace ChoETL
                                 {
                                     if (!recText.IsNullOrEmpty())
                                     {
-                                        if (Configuration.RootName.IsNullOrWhiteSpace())
+                                        if (!Configuration.IgnoreRootName)
                                         {
-                                            sw.Write(recText);
+                                            sw.Write("{1}{0}", recText, Configuration.EOLDelimiter);
                                         }
                                         else
                                         {
-                                            sw.Write("{1}{0}", recText, Configuration.EOLDelimiter);
+                                            sw.Write(recText);
                                         }
                                     }
 
@@ -189,7 +245,7 @@ namespace ChoETL
                                     if (_se.Value != null)
                                         _se.Value.Serialize(sw, record);
                                     else
-                                        sw.Write("{1}{0}", ChoUtility.XmlSerialize(record).Indent(2, Configuration.IndentChar.ToString()), Configuration.EOLDelimiter);
+                                        sw.Write("{1}{0}", ChoUtility.XmlSerialize(record, null, Configuration.EOLDelimiter, Configuration.NullValueHandling).Indent(2, Configuration.IndentChar.ToString()), Configuration.EOLDelimiter);
 
                                     if (!RaiseAfterRecordWrite(record, _index, null))
                                         yield break;
@@ -264,6 +320,9 @@ namespace ChoETL
 
         private IEnumerable<KeyValuePair<string, ChoXmlRecordFieldConfiguration>> GetOrderedKVP(ChoXmlRecordConfiguration config)
         {
+            if (config.RecordFieldConfigurationsDict == null)
+                yield break;
+
             foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in config.RecordFieldConfigurationsDict)
             {
                 if (kvp.Value.IsXmlAttribute)
@@ -278,7 +337,7 @@ namespace ChoETL
 
         private bool ToText(long index, object rec, ChoXmlRecordConfiguration config, out string recText)
         {
-            if (typeof(IChoScalarObject).IsAssignableFrom(config.RecordType))
+            if (typeof(IChoScalarObject).IsAssignableFrom(config.RecordType) && rec != null)
                 rec = ChoActivator.CreateInstance(config.RecordType, rec);
 
             recText = null;
@@ -288,9 +347,14 @@ namespace ChoETL
                     return false;
                 else if (config.NullValueHandling == ChoNullValueHandling.Default)
                     rec = ChoActivator.CreateInstance(config.RecordType);
+                else if (config.NullValueHandling == ChoNullValueHandling.Empty)
+                {
+                    recText = @"<{0}/>".FormatString(config.NodeName).Indent(config.Indent * 1, config.IndentChar.ToString());
+                    return true;
+                }
                 else
                 {
-                    recText = @"<{0} xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xsi:nil=""true"" />".FormatString(config.NodeName
+                    recText = @"<{0} xmlns:xsi=""{1}"" xsi:nil=""true"" />".FormatString(config.NodeName, ChoXmlSettings.XmlSchemaInstanceNamespace
                                 ).Indent(config.Indent * 1, config.IndentChar.ToString());
                     return true;
                 }
@@ -306,10 +370,12 @@ namespace ChoETL
 
             //bool firstColumn = true;
             PropertyInfo pi = null;
-            bool isElementClosed = false;
-            bool isElementStart = false;
             object rootRec = rec;
-			foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in GetOrderedKVP(config))
+
+            Dictionary<string, object> attrs = new Dictionary<string, object>();
+            Dictionary<string, object> elems = new Dictionary<string, object>();
+
+            foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in GetOrderedKVP(config))
             {
                 fieldConfig = kvp.Value;
                 fieldValue = null;
@@ -317,9 +383,9 @@ namespace ChoETL
                 if (config.PIDict != null)
                     config.PIDict.TryGetValue(kvp.Key, out pi);
 
-				rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
+                rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
 
-				if (config.ThrowAndStopOnMissingField)
+                if (config.ThrowAndStopOnMissingField)
                 {
                     if (config.IsDynamicObject)
                     {
@@ -342,10 +408,15 @@ namespace ChoETL
                         fieldValue = dict[kvp.Key]; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
                         if (kvp.Value.FieldType == null)
                         {
-                            if (fieldValue == null)
-                                kvp.Value.FieldType = typeof(string);
+                            if (ElementType == null)
+                            {
+                                if (fieldValue == null)
+                                    kvp.Value.FieldType = typeof(string);
+                                else
+                                    kvp.Value.FieldType = fieldValue.GetType();
+                            }
                             else
-                                kvp.Value.FieldType = fieldValue.GetType();
+                                kvp.Value.FieldType = ElementType;
                         }
                     }
                     else
@@ -455,163 +526,114 @@ namespace ChoETL
                     }
                 }
 
-                if (RaiseRecordFieldSerialize(rec, index, kvp.Key, ref fieldValue))
+                RaiseRecordFieldSerialize(rec, index, kvp.Key, ref fieldValue);
+                if (fieldConfig.IsXmlAttribute)
                 {
-                    isElementClosed = true;
-                    if (msg.Length > 0)
-                        msg.AppendFormat("{1}{0}", fieldValue.ToNString().Indent(), config.EOLDelimiter);
-                    else
-                        msg.AppendFormat("{0}", fieldValue.ToNString().Indent());
+                    attrs.Add(kvp.Key, fieldValue);
                 }
                 else
                 {
-                    if (fieldValue == null)
+                    elems.Add(kvp.Key, fieldValue);
+                }
+            }
+
+            XElement ele = new XElement(config.NodeName);
+            string innerXml1 = null;
+            if (typeof(IChoScalarObject).IsAssignableFrom(config.RecordType))
+            {
+                ele = new XElement(config.NodeName, elems.First().Value);
+            }
+            else
+            {
+                ele = new XElement(config.NodeName);
+                foreach (var kvp in attrs)
+                    ele.Add(new XAttribute(kvp.Key, kvp.Value));
+                foreach (var kvp in elems)
+                {
+                    if (kvp.Value == null)
                     {
-                        if (!fieldConfig.IsXmlAttribute && fieldConfig.IsNullable)
+                        string innerXml = null;
+                        if (config.NullValueHandling == ChoNullValueHandling.Ignore)
                         {
-                            if (config.RecordType == typeof(ChoScalarObject))
+                            continue;
+                        }
+                        else if (config.NullValueHandling == ChoNullValueHandling.Default)
+                        {
+                            rec = ChoActivator.CreateInstance(config.RecordType);
+                            innerXml = ChoUtility.XmlSerialize(rec, null, Configuration.EOLDelimiter, Configuration.NullValueHandling);
+                            innerXml = _beginTagRegex.Replace(innerXml, delegate (Match m)
                             {
-                                if (!isElementStart)
-                                {
-                                    msg.Append(@"<{0} xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xsi:nil=""true""".FormatString(config.NodeName).Indent(config.Indent, config.IndentChar.ToString()));
-                                    isElementStart = true;
-                                }
-                                if (!isElementClosed)
-                                {
-                                    msg.AppendFormat(">{0}", config.EOLDelimiter);
-                                    isElementClosed = true;
-                                }
-                            }
-                            else
+                                return "<" + kvp.Key + m.Groups[2].Value;
+                            });
+                            innerXml = _endTagRegex.Replace(innerXml, delegate (Match thisMatch)
                             {
-                                if (!isElementStart)
-                                {
-                                    msg.Append("<{0}".FormatString(config.NodeName).Indent(config.Indent, config.IndentChar.ToString()));
-                                    isElementStart = true;
-                                }
-                                if (!isElementClosed)
-                                {
-                                    msg.AppendFormat(">{0}", config.EOLDelimiter);
-                                    isElementClosed = true;
-                                }
-                                msg.Append(@"<{0} xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xsi:nil=""true"" />{1}".FormatString(fieldConfig.FieldName,
-                                    config.EOLDelimiter).Indent(config.Indent * 2, config.IndentChar.ToString()));
-                            }
+                                return "</{0}>".FormatString(kvp.Key);
+                            });
+                        }
+                        else if (config.NullValueHandling == ChoNullValueHandling.Empty)
+                        {
+                            innerXml = @"<{0}/>".FormatString(kvp.Key);
                         }
                         else
                         {
-                            if (config.RecordType != typeof(ChoScalarObject))
-                            {
-                                if (!isElementStart)
-                                {
-                                    msg.Append("<{0}".FormatString(config.NodeName).Indent(config.Indent, config.IndentChar.ToString()));
-                                    isElementStart = true;
-                                }
-                            }
-                            //isElementClosed = true;
-                            fieldText = String.Empty;
+                            innerXml = @"<{0} xmlns:xsi=""{1}"" xsi:nil=""true"" />".FormatString(kvp.Key, ChoXmlSettings.XmlSchemaInstanceNamespace);
                         }
+                        ele.Add(XElement.Parse(innerXml));
+
+                    }
+                    else if (kvp.Value.GetType().IsSimple())
+                    {
+                        if (ElementType == null)
+                        {
+                            if (kvp.Value is ChoCDATA)
+                                ele.Add(new XElement(kvp.Key, new XCData(((ChoCDATA)kvp.Value).Value)));
+                            else
+                                ele.Add(new XElement(kvp.Key, kvp.Value));
+                        }
+                        else
+                            ele.Value = kvp.Value.ToNString();
                     }
                     else
                     {
-                        if (!isElementStart)
+                        innerXml1 = ChoUtility.XmlSerialize(kvp.Value, null, Configuration.EOLDelimiter, Configuration.NullValueHandling);
+                        if (!kvp.Value.GetType().IsArray)
                         {
-                            msg.Append("<{0}".FormatString(config.NodeName).Indent(config.Indent, config.IndentChar.ToString()));
-                            isElementStart = true;
-                        }
-
-                        if (fieldValue.GetType().IsSimple())
-                        {
-                            fieldText = fieldValue.ToString();
-                            if (config.RecordType == typeof(ChoScalarObject))
+                            innerXml1 = _beginTagRegex.Replace(innerXml1, delegate (Match m)
                             {
-                                if (fieldConfig.IsXmlAttribute)
-                                    msg.Append(@" {0}=""{1}""".FormatString(fieldConfig.FieldName, NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false,
-                                        isXmlAttribute: true, encodeValue: fieldConfig.EncodeValue, fieldValueTrimOption: kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType))));
-                                else
-                                {
-                                    if (!isElementClosed)
-                                    {
-                                        msg.AppendFormat(">{0}", config.EOLDelimiter);
-                                        isElementClosed = true;
-                                    }
-                                    msg.Append("{0}{1}".FormatString(
-                                        NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false),
-                                        config.EOLDelimiter).Indent(config.Indent * 2, config.IndentChar.ToString()));
-                                }
-                            }
-                            else if (fieldConfig.IsXmlAttribute)
-                                msg.Append(@" {0}=""{1}""".FormatString(fieldConfig.FieldName, NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false,
-                                    isXmlAttribute: true, encodeValue: fieldConfig.EncodeValue, fieldValueTrimOption: kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType))));
-                            else
+                                return "<" + kvp.Key + m.Groups[2].Value;
+                            });
+                            innerXml1 = _endTagRegex.Replace(innerXml1, delegate (Match thisMatch)
                             {
-                                if (!isElementClosed)
-                                {
-                                    msg.AppendFormat(">{0}", config.EOLDelimiter);
-                                    isElementClosed = true;
-                                }
-                                msg.Append("<{0}>{1}</{0}>{2}".FormatString(fieldConfig.FieldName,
-                                    NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, 
-									GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false, fieldValueTrimOption: kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType)),
-                                    config.EOLDelimiter).Indent(config.Indent * 2, config.IndentChar.ToString()));
-                            }
+                                return "</{0}>".FormatString(kvp.Key);
+                            });
                         }
                         else
                         {
-                            if (true) //fieldConfig.UseXmlSerialization)
-                            {
-                                fieldText = ChoUtility.XmlSerialize(fieldValue, null, Configuration.EOLDelimiter);
-                                if (!fieldValue.GetType().IsArray)
-                                {
-                                    fieldText = _beginTagRegex.Replace(fieldText, delegate (Match m)
-                                    {
-                                        return "<" + fieldConfig.FieldName + m.Groups[2].Value;
-                                    //return "<{0}>".FormatString(fieldConfig.FieldName);
-                                });
-                                    fieldText = _endTagRegex.Replace(fieldText, delegate (Match thisMatch)
-                                    {
-                                        return "</{0}>".FormatString(fieldConfig.FieldName);
-                                    });
-                                }
-                                else
-                                {
-                                    if (fieldText.IsNullOrWhiteSpace())
-                                        fieldText = "<{0}>{2}</{0}>".FormatString(fieldConfig.FieldName, fieldText.Indent(config.Indent, config.IndentChar.ToString()), config.EOLDelimiter);
-                                    else
-                                        fieldText = "<{0}>{2}{1}{2}</{0}>".FormatString(fieldConfig.FieldName, fieldText.Indent(config.Indent, config.IndentChar.ToString()), config.EOLDelimiter);
-                                }
-                            }
-                            else
-                            {
-                                fieldText = SerializeObject(fieldConfig.FieldName, fieldValue, pi.GetCustomAttributes().ToArray());
-                            }
-                            if (!isElementClosed)
-                            {
-                                msg.AppendFormat(">{0}", config.EOLDelimiter);
-                                isElementClosed = true;
-                            }
-                            msg.Append("{0}{1}".FormatString(fieldText,
-                                config.EOLDelimiter).Indent(config.Indent * 2, config.IndentChar.ToString()));
+                            innerXml1 = "<{0}>{1}</{0}>".FormatString(kvp.Key, innerXml1);
+
                         }
+                        ele.Add(XElement.Parse(innerXml1));
+
                     }
                 }
             }
 
-            if (!isElementClosed && msg.Length > 0)
+            innerXml1 = ele.ToString();
+            if (config.IgnoreNodeName)
             {
-                msg.AppendFormat(">{0}", config.EOLDelimiter);
-                isElementClosed = true;
-            }
-            if (isElementStart)
-            {
-                msg.Append("</{0}>".FormatString(config.NodeName).Indent(config.Indent, config.IndentChar.ToString()));
-                isElementStart = false;
+                innerXml1 = _beginTagRegex.Replace(innerXml1, delegate (Match m)
+                {
+                    return null;
+                });
+                innerXml1 = _endTagRegex.Replace(innerXml1, delegate (Match thisMatch)
+                {
+                    return null;
+                });
+                innerXml1 = XElement.Parse(innerXml1).ToString();
             }
 
-            recText = msg.ToString();
+            recText = config.IgnoreRootName ? innerXml1 : innerXml1.Indent(config.Indent, config.IndentChar.ToString());
 
-            if (config.RootName.IsNullOrWhiteSpace())
-                recText = recText.Unindent(config.Indent, config.IndentChar.ToString());
             return true;
         }
 
@@ -759,7 +781,7 @@ namespace ChoETL
         }
 
         private string NormalizeFieldValue(string fieldName, string fieldValue, int? size, bool truncate, bool? quoteField,
-            ChoFieldValueJustification fieldValueJustification, char fillChar, bool isHeader = false, bool isXmlAttribute = false, 
+            ChoFieldValueJustification fieldValueJustification, char fillChar, bool isHeader = false, bool isXmlAttribute = false,
             bool? encodeValue = null, ChoFieldValueTrimOption? fieldValueTrimOption = null)
         {
             string lFieldValue = fieldValue;
@@ -815,19 +837,19 @@ namespace ChoETL
                 else if (fieldValue.Length > size.Value)
                 {
                     if (truncate)
-					{
-						if (fieldValueTrimOption != null)
-						{
-							if (fieldValueTrimOption == ChoFieldValueTrimOption.TrimStart)
-								fieldValue = fieldValue.Right(size.Value);
-							else
-								fieldValue = fieldValue.Substring(0, size.Value);
-						}
-						else
-							fieldValue = fieldValue.Substring(0, size.Value);
-					}
-					else
-					{
+                    {
+                        if (fieldValueTrimOption != null)
+                        {
+                            if (fieldValueTrimOption == ChoFieldValueTrimOption.TrimStart)
+                                fieldValue = fieldValue.Right(size.Value);
+                            else
+                                fieldValue = fieldValue.Substring(0, size.Value);
+                        }
+                        else
+                            fieldValue = fieldValue.Substring(0, size.Value);
+                    }
+                    else
+                    {
                         if (isHeader)
                             throw new ApplicationException("Field header value length overflowed for '{0}' member [Expected: {1}, Actual: {2}].".FormatString(fieldName, size, fieldValue.Length));
                         else
@@ -845,7 +867,7 @@ namespace ChoETL
             return System.Net.WebUtility.HtmlEncode(fieldValue);
         }
 
-       private bool RaiseBeginWrite(object state)
+        private bool RaiseBeginWrite(object state)
         {
             if (_callbackRecord != null)
             {

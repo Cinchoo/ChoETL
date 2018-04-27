@@ -14,6 +14,8 @@ namespace ChoETL
     [DataContract]
     public class ChoManifoldRecordConfiguration : ChoFileRecordConfiguration
     {
+        public readonly dynamic Context = new ChoDynamicObject();
+
         [DataMember]
         public bool IgnoreIfNoRecordParserExists
         {

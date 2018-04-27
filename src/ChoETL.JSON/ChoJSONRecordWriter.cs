@@ -22,6 +22,7 @@ namespace ChoETL
         bool isFirstRec = true;
         internal ChoWriter Writer = null;
         internal Type ElementType = null;
+        private Lazy<List<object>> _recBuffer = null;
 
         public ChoJSONRecordConfiguration Configuration
         {
@@ -35,6 +36,14 @@ namespace ChoETL
             Configuration = configuration;
 
             _callbackRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordWrite>(recordType);
+            _recBuffer = new Lazy<List<object>>(() =>
+            {
+                var b = Writer.Context.RecBuffer;
+                if (b == null)
+                    Writer.Context.RecBuffer = new List<object>();
+
+                return Writer.Context.RecBuffer;
+            });
 
             //Configuration.Validate();
         }
@@ -106,24 +115,15 @@ namespace ChoETL
 
                             string[] fieldNames = null;
                             Type recordType = ElementType == null ? record.GetType() : ElementType;
-                            if (!recordType.IsDynamicType() && typeof(ICollection).IsAssignableFrom(recordType))
-                                recordType = recordType.GetEnumerableItemType().GetUnderlyingType();
-                            else
-                                recordType = recordType.GetUnderlyingType();
-
+                            Configuration.RecordType = recordType.ResolveType();
                             Configuration.IsDynamicObject = recordType.IsDynamicType();
                             if (!Configuration.IsDynamicObject)
                             {
-                                if (recordType.IsSimple())
-                                    Configuration.RecordType = typeof(ChoScalarObject<>).MakeGenericType(recordType);
-                                else
-                                    Configuration.RecordType = recordType;
+                                if (Configuration.JSONRecordFieldConfigurations.Count == 0)
+                                    Configuration.MapRecordFields(Configuration.RecordType);
+                            }
 
-								if (Configuration.JSONRecordFieldConfigurations.Count == 0)
-									Configuration.MapRecordFields(Configuration.RecordType);
-							}
-
-							if (Configuration.IsDynamicObject)
+                            if (Configuration.IsDynamicObject)
                             {
                                 var dict = record.ToDynamicObject() as IDictionary<string, Object>;
                                 fieldNames = dict.Keys.ToArray();
@@ -291,7 +291,7 @@ namespace ChoETL
             PropertyInfo pi = null;
             bool isFirst = true;
             object rootRec = rec;
-			msg.AppendFormat("{{{0}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
+            msg.AppendFormat("{{{0}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
             foreach (KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
                 fieldConfig = kvp.Value;
@@ -299,9 +299,9 @@ namespace ChoETL
                 fieldText = String.Empty;
                 if (Configuration.PIDict != null)
                     Configuration.PIDict.TryGetValue(kvp.Key, out pi);
-				rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
+                rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
 
-				if (Configuration.ThrowAndStopOnMissingField)
+                if (Configuration.ThrowAndStopOnMissingField)
                 {
                     if (Configuration.IsDynamicObject)
                     {
@@ -796,19 +796,19 @@ namespace ChoETL
                 else if (fieldValue.Length > size.Value)
                 {
                     if (truncate)
-					{
-						if (fieldValueTrimOption != null)
-						{
-							if (fieldValueTrimOption == ChoFieldValueTrimOption.TrimStart)
-								fieldValue = fieldValue.Right(size.Value);
-							else
-								fieldValue = fieldValue.Substring(0, size.Value);
-						}
-						else
-							fieldValue = fieldValue.Substring(0, size.Value);
-					}
-					else
-					{
+                    {
+                        if (fieldValueTrimOption != null)
+                        {
+                            if (fieldValueTrimOption == ChoFieldValueTrimOption.TrimStart)
+                                fieldValue = fieldValue.Right(size.Value);
+                            else
+                                fieldValue = fieldValue.Substring(0, size.Value);
+                        }
+                        else
+                            fieldValue = fieldValue.Substring(0, size.Value);
+                    }
+                    else
+                    {
                         if (isHeader)
                             throw new ApplicationException("Field header value length overflowed for '{0}' member [Expected: {1}, Actual: {2}].".FormatString(fieldName, size, fieldValue.Length));
                         else

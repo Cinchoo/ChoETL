@@ -859,8 +859,9 @@ namespace ChoETL
 
                                 keyName = subElement.Name.LocalName + "s";
                             }
-                            return list.ToArray();
-                            ((IDictionary<string, object>)obj).Add(keyName, list.ToArray());
+                                return list.ToArray();
+                            //else
+                            //    ((IDictionary<string, object>)obj).Add(keyName, list.ToArray());
                         }
                     }
                 }

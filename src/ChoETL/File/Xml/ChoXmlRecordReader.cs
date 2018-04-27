@@ -315,16 +315,18 @@ namespace ChoETL
 
             string key = null;
             //get all child elements, skip parent nodes
-            foreach (XElement elem in node.Elements().Where(a => !a.HasElements && !a.HasAttributes))
-            {
-                key = Configuration.GetNameWithNamespace(elem.Name);
+            //foreach (var kvp in node.Elements().GroupBy(e => e.Name.LocalName).Select(g => new { Name = g.Key, Value = g.ToArray() }))
+            //{
+            //    XElement elem = kvp.Value.First();
 
-                //avoid duplicates
-                if (!dictionary.ContainsKey(key))
-                    dictionary.Add(key, new List<string>());
+            //    key = Configuration.GetNameWithNamespace(elem.Name);
 
-                dictionary[key].Add(elem.NilAwareValue());
-            }
+            //    //avoid duplicates
+            //    if (!dictionary.ContainsKey(key))
+            //        dictionary.Add(key, new List<string>());
+
+            //    dictionary[key] = kvp.Value.Select(e => e.NilAwareValue()).ToList();
+            //}
             foreach (XAttribute elem in node.Attributes())
             {
                 key = Configuration.GetNameWithNamespace(node.Name, elem.Name);
@@ -361,8 +363,8 @@ namespace ChoETL
             xpn = node.CreateNavigator(Configuration.NamespaceManager.NameTable);
             ToDictionary(node);
 
-			object rootRec = rec;
-			foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
+            object rootRec = rec;
+            foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
                 key = kvp.Key;
 
@@ -371,9 +373,9 @@ namespace ChoETL
                 if (Configuration.PIDict != null)
                     Configuration.PIDict.TryGetValue(key, out pi);
 
-				rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
+                rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
 
-				if (fieldConfig.XPath == "text()")
+                if (fieldConfig.XPath == "text()")
                 {
                     if (Configuration.GetNameWithNamespace(node.Name) == fieldConfig.FieldName)
                     {
@@ -383,13 +385,13 @@ namespace ChoETL
                         if (fieldConfig.ValueConverter != null)
                             value = fieldConfig.ValueConverter(value);
 
-						if (value is XElement)
-						{
-							dynamic dobj = ((XElement)value).ToObjectFromXml(typeof(ChoDynamicObject), GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling);
-							fieldValue = dobj.GetText();
-						}
-						else
-							fieldValue = value;
+                        if (value is XElement)
+                        {
+                            dynamic dobj = ((XElement)value).ToObjectFromXml(typeof(ChoDynamicObject), GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling);
+                            fieldValue = dobj.GetText();
+                        }
+                        else
+                            fieldValue = value;
                     }
                     else if (Configuration.ColumnCountStrict)
                         throw new ChoParserException("Missing '{0}' xml node.".FormatString(fieldConfig.FieldName));
@@ -542,14 +544,14 @@ namespace ChoETL
                                                 else
                                                     fieldValue = fXElements[0].ToObjectFromXml(typeof(ChoDynamicObject), GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling);
 
-												if (fieldValue is IDictionary<string, object>)
-												{
-													var dict = fieldValue as IDictionary<string, object>;
-													if (dict.Keys.Count == 1 && Configuration.StringComparer.Compare(dict.Keys.First(), key) == 0)
-													{
-														fieldValue = dict[dict.Keys.First()];
-													}
-												}
+                                                if (fieldValue is IDictionary<string, object>)
+                                                {
+                                                    var dict = fieldValue as IDictionary<string, object>;
+                                                    if (dict.Keys.Count == 1 && Configuration.StringComparer.Compare(dict.Keys.First(), key) == 0)
+                                                    {
+                                                        fieldValue = dict[dict.Keys.First()];
+                                                    }
+                                                }
                                             }
                                             else
                                             {
@@ -868,9 +870,9 @@ namespace ChoETL
         {
             if (fieldValue == null) return fieldValue;
 
-			ChoFieldValueTrimOption fieldValueTrimOption = config.GetFieldValueTrimOptionForRead(fieldType);
+            ChoFieldValueTrimOption fieldValueTrimOption = config.GetFieldValueTrimOptionForRead(fieldType);
 
-			if (config.FieldValueTrimOption == null)
+            if (config.FieldValueTrimOption == null)
             {
                 //if (fieldType == typeof(string))
                 //    fieldValueTrimOption = ChoFieldValueTrimOption.None;
@@ -898,14 +900,14 @@ namespace ChoETL
                     if (!config.Truncate)
                         throw new ChoParserException("Incorrect field value length found for '{0}' member [Expected: {1}, Actual: {2}].".FormatString(config.FieldName, config.Size.Value, fieldValue.Length));
                     else
-					{
-						if (fieldValueTrimOption == ChoFieldValueTrimOption.TrimStart)
-							fieldValue = fieldValue.Right(config.Size.Value);
-						else
-							fieldValue = fieldValue.Substring(0, config.Size.Value);
-					}
-				}
-			}
+                    {
+                        if (fieldValueTrimOption == ChoFieldValueTrimOption.TrimStart)
+                            fieldValue = fieldValue.Right(config.Size.Value);
+                        else
+                            fieldValue = fieldValue.Substring(0, config.Size.Value);
+                    }
+                }
+            }
 
             if (encodeValue != null && !encodeValue.Value && fieldValue != null)
                 return System.Net.WebUtility.HtmlEncode(fieldValue);

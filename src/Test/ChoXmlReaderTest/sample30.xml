@@ -34,7 +34,7 @@
             <attention>OPERATIONS m</attention>
             <firstName>SD</firstName>
             <lastName>SD</lastName>
-            <company></company>
+            <company/>
             <address1>ADD1</address1>
             <address2 />
             <city>URBANCREST</city>
@@ -65,4 +65,6 @@
         </shipTo>
         <shipWeight>35.00</shipWeight>
     </Package>
+    <Package />
+
 </packages>

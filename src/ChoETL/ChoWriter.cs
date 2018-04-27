@@ -8,6 +8,11 @@ namespace ChoETL
 {
     public abstract class ChoWriter : IChoWriter
     {
+        public virtual dynamic Context
+        {
+            get;
+        }
+
         public event EventHandler<ChoBeginWriteEventArgs> BeginWrite;
         public event EventHandler<ChoEndWriteEventArgs> EndWrite;
 

@@ -44,6 +44,11 @@ namespace ChoETL
         public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
         private bool _isDisposed = false;
 
+        public override dynamic Context
+        {
+            get { return Configuration.Context; }
+        }
+
         public ChoKVPRecordConfiguration Configuration
         {
             get;

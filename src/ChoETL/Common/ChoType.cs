@@ -2549,6 +2549,24 @@
 			}
 		}
 
-		#endregion GetDeclaringMethod Overrides
-	}
+        #endregion GetDeclaringMethod Overrides
+
+
+        public static Type ResolveType(this Type recordType)
+        {
+            if (!recordType.IsDynamicType() && typeof(ICollection).IsAssignableFrom(recordType))
+                recordType = recordType.GetEnumerableItemType().GetUnderlyingType();
+            else
+                recordType = recordType.GetUnderlyingType();
+
+            if (!recordType.IsDynamicType())
+            {
+                if (recordType.IsSimple())
+                    recordType = typeof(ChoScalarObject<>).MakeGenericType(recordType);
+            }
+
+            return recordType;
+        }
+
+    }
 }

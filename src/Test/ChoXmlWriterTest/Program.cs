@@ -33,7 +33,7 @@ namespace ChoXmlWriterTest
     {
         static void Main(string[] args)
         {
-            CustomMemberSerialization();
+            QuickDynamicTest();
         }
 
         static void CustomMemberSerialization()
@@ -43,14 +43,26 @@ namespace ChoXmlWriterTest
                 .WithField("Options", valueConverter: o => String.Join(",", o as string[]))
                 )
             {
-                Console.WriteLine(p.Serialize(new Choice
+                List<Choice> l = new List<Choice>
+                {
+                    new Choice
                 {
                     Options = new[] { "op 1", "op 2" },
                     EmpArr = new Emp[] { new Emp { Id = 1, Name = "Tom" }, new Emp { Id = 2, Name = "Mark" }, null },
                     Emp = new Emp {  Id = 0, Name = "Raj"},
                     //EmpDict = new Dictionary<int, Emp> { { 1, new Emp { Id = 11, Name = "Tom1" } } },
                     Ids = new List<int> { 1, 2, 3}
-                }));
+                },
+                    new Choice
+                {
+                    Options = new[] { "op 1", "op 2" },
+                    EmpArr = new Emp[] { new Emp { Id = 1, Name = "Tom" }, new Emp { Id = 2, Name = "Mark" }, null },
+                    Emp = new Emp {  Id = 0, Name = "Raj"},
+                    //EmpDict = new Dictionary<int, Emp> { { 1, new Emp { Id = 11, Name = "Tom1" } } },
+                    Ids = new List<int> { 1, 2, 3}
+                }
+                };
+                Console.WriteLine(p.SerializeAll(l));
             }
             //Console.WriteLine(sb.ToString());
             //Console.WriteLine(ChoXmlWriter.ToText<Choice>(new Choice { Options = new[] { "op 1", "op 2" } }));
@@ -68,7 +80,8 @@ namespace ChoXmlWriterTest
 
             address.State = state;
 
-            using (var w = new ChoXmlWriter("custom.xml")
+            StringBuilder sb = new StringBuilder();
+            using (var w = new ChoXmlWriter(sb)
                 .WithXmlAttributeField("id")
                 .WithXmlElementField("address")
                 .Setup(s => s.RecordFieldWriteError += (o, e) => Console.WriteLine(e.Exception.ToString()))
@@ -82,19 +95,29 @@ namespace ChoXmlWriterTest
             {
                 //w.Write(new KeyValuePair<int, string>(1, "MM"));
                 //w.Write(new KeyValuePair<int, string>(1, "MM"));
+                w.Write(new { id = "2s->", address = address });
                 w.Write(new { id = "1s->", address = address });
             }
-
+            Console.WriteLine(sb.ToString());
         }
 
         static void KVPTest()
         {
-            using (var xr = new ChoXmlWriter("Kvp.xml")
+            StringBuilder msg = new StringBuilder();
+            using (var xr = new ChoXmlWriter(msg)
+                .Configure(c => c.NamespaceManager = null)
+                .Configure(c => c.NullValueHandling = ChoNullValueHandling.Empty)
+                //.Configure(c => c.RootName = "KVP")
+                //.Configure(c => c.NodeName = "KeyValue")
                 )
             {
-                xr.Write(new KeyValuePair<string, int>("X1", 1));
+                xr.Write((KeyValuePair<string, int>?)null);
+                //xr.Write(new KeyValuePair<string, int>("X1", 1));
+                xr.Write(1);
+                xr.Write(2);
+                //xr.Write(new KeyValuePair<string, int>("X2", 2));
             }
-
+            Console.WriteLine(msg.ToString());
         }
 
         static void sample7Test()
@@ -153,10 +176,12 @@ namespace ChoXmlWriterTest
             list.Add("asas");
             list.Add(null);
 
-            using (var w = new ChoXmlWriter("emp.xml")
-                .WithField("Value")
+            StringBuilder msg = new StringBuilder();
+            using (var w = new ChoXmlWriter(msg)
                 )
                 w.Write(list);
+
+            Console.WriteLine(msg.ToString());
         }
         public static void SaveDict()
         {
@@ -167,9 +192,11 @@ namespace ChoXmlWriterTest
             list.Add(1, "33");
             list.Add(2, null);
 
-            using (var w = new ChoXmlWriter("emp.xml")
+            StringBuilder msg = new StringBuilder();
+            using (var w = new ChoXmlWriter(msg)
                 )
                 w.Write(list);
+            Console.WriteLine(msg.ToString());
         }
 
         static void DataTableTest()
@@ -280,12 +307,28 @@ namespace ChoXmlWriterTest
 
         static void QuickDynamicTest()
         {
+            ArrayList al = new ArrayList();
+            al.Add(1);
+            al.Add("abc");
+
+            List<int> lint = new List<int>() { 1, 2 };
+
+            Hashtable ht = new Hashtable();
+            ht.Add(1, "abc");
+
+            ChoSerializableDictionary<int, string> dict = new ChoSerializableDictionary<int, string>();
+            dict.Add(1, "abc");
+
             List<ExpandoObject> objs = new List<ExpandoObject>();
             dynamic rec1 = new ExpandoObject();
             rec1.Id = 1;
             rec1.Name = "Mark";
             rec1.IsActive = true;
             rec1.Message = new ChoCDATA("Test");
+            rec1.Array = al;
+            rec1.Lint = lint;
+            //rec1.HT = ht;
+            rec1.Dict = dict;
             objs.Add(rec1);
 
             dynamic rec2 = new ExpandoObject();
@@ -295,19 +338,17 @@ namespace ChoXmlWriterTest
             rec2.Message = new ChoCDATA("Test");
             objs.Add(rec2);
 
-            using (var stream = new MemoryStream())
-            using (var reader = new StreamReader(stream))
-            using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoXmlWriter(writer).WithXPath("Employees/Employee"))
+            StringBuilder sb = new StringBuilder();
+            using (var parser = new ChoXmlWriter(sb).WithXPath("Employees/Employee"))
             {
                 parser.Write(objs);
-                parser.Close();
-
-                writer.Flush();
-                stream.Position = 0;
-
-                Console.WriteLine(reader.ReadToEnd());
             }
+            Console.WriteLine(sb.ToString());
+
+            var a = ChoXmlReader.LoadText(sb.ToString()).ToArray();
+            var config = new ChoXmlRecordConfiguration();
+            //config.Configure(c => c.RootName = "Root");
+            Console.WriteLine(ChoXmlWriter.ToText(a.First(), config));
         }
 
         public partial class EmployeeRecSimple1
