@@ -1036,8 +1036,24 @@ Date,Count
 			}
 		}
 
+		static void ReadHeaderAt5()
+		{
+			string csv = @"v3,vf,gf
+v1,c,z1,e
+name,q1,q2,q3
+a,0,1,2-Data";
+
+			using (var p = ChoCSVReader.LoadText(csv)
+				.WithHeaderLineAt(3)
+				)
+			{
+				foreach (var rec in p)
+					Console.WriteLine(rec.DumpAsJson());
+			}
+		}
 		static void Main(string[] args)
         {
+			ReadHeaderAt5();
 			return;
 			Sample21();
 			return;

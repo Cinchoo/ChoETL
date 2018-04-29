@@ -609,9 +609,15 @@ namespace ChoETL
                         }
                         else
                         {
-                            innerXml1 = "<{0}>{1}</{0}>".FormatString(kvp.Key, innerXml1);
+							string eleName = kvp.Key.ToSingular();
+							innerXml1 = innerXml1.Replace("<dynamic>", "<{0}>".FormatString(eleName));
+							innerXml1 = innerXml1.Replace("</dynamic>", "</{0}>".FormatString(eleName));
 
-                        }
+							if (eleName == kvp.Key)
+								innerXml1 = "<{0}>{1}</{0}>".FormatString(kvp.Key.ToPlural(), innerXml1);
+							else
+								innerXml1 = "<{0}>{1}</{0}>".FormatString(kvp.Key, innerXml1);
+						}
                         ele.Add(XElement.Parse(innerXml1));
 
                     }

@@ -66,6 +66,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoJSONWriterTest", "..\Tes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoCSVFileDiff", "..\ChoCSVFileDiff\ChoCSVFileDiff.csproj", "{FBA69039-25D7-4602-BE03-3930687E3465}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoQuickJSONToCSVConversion", "..\Test\ChoQuickJSONToCSVConversion\ChoQuickJSONToCSVConversion.csproj", "{A5BD3436-90CC-4EF2-8A47-8197EADDB10B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -152,6 +154,10 @@ Global
 		{FBA69039-25D7-4602-BE03-3930687E3465}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FBA69039-25D7-4602-BE03-3930687E3465}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FBA69039-25D7-4602-BE03-3930687E3465}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A5BD3436-90CC-4EF2-8A47-8197EADDB10B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5BD3436-90CC-4EF2-8A47-8197EADDB10B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5BD3436-90CC-4EF2-8A47-8197EADDB10B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5BD3436-90CC-4EF2-8A47-8197EADDB10B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -175,6 +181,7 @@ Global
 		{1561A99A-2793-4730-9D7C-6E8DFD0DDCF7} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 		{7EDD6D4C-1739-4A46-AE8F-76B12B0E0DF6} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 		{FBA69039-25D7-4602-BE03-3930687E3465} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
+		{A5BD3436-90CC-4EF2-8A47-8197EADDB10B} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D35E7445-B861-41CC-B854-44981E4F9FFB}

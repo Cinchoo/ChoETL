@@ -633,12 +633,73 @@ namespace ChoJSONReaderTest
 			}
 		}
 
+
         static void Main(string[] args)
         {
-			Sample22();
+			Sample23();
 
 		}
 
+		static void Sample23()
+		{
+			string json = @"[
+    {
+        ""firstName"": ""John"",
+        ""lastName"": ""Smith"",
+        ""age"": 25,
+        ""address"": {
+            ""streetAddress"": ""21 2nd Street"",
+            ""city"": ""New York"",
+            ""state"": ""NY"",
+            ""postalCode"": ""10021""
+        },
+        ""phoneNumber"": [
+            {
+                ""type"": ""home"",
+                ""number"": ""212 555-1234""
+            },
+            {
+                ""type"": ""fax"",
+                ""number"": ""646 555-4567""
+            }
+        ]
+    },
+    {
+        ""firstName"": ""Tom"",
+        ""lastName"": ""Mark"",
+        ""age"": 50,
+        ""address"": {
+            ""streetAddress"": ""10 Main Street"",
+            ""city"": ""Edison"",
+            ""state"": ""NJ"",
+            ""postalCode"": ""08837""
+        },
+        ""phoneNumber"": [
+            {
+                ""type"": ""home"",
+                ""number"": ""732 555-1234""
+            },
+            {
+                ""type"": ""fax"",
+                ""number"": ""609 555-4567""
+            }
+        ]
+    }
+]";
+			StringBuilder sb = new StringBuilder();
+			using (var p = ChoJSONReader.LoadText(json)
+				)
+			{
+				//using (var w = new ChoCSVWriter(sb)
+				//	.WithFirstLineHeader()
+				//	)
+				//	w.Write(p);
+				using (var w = new ChoXmlWriter(sb)
+		)
+					w.Write(p);
+			}
+			Console.WriteLine(sb.ToString());
+		}
 		static void Sample22()
 		{
 			string json = @"
