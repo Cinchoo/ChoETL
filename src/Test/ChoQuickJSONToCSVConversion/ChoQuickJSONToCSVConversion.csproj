@@ -34,17 +34,14 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ChoETL, Version=1.0.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\ChoETL.1.0.3.0\lib\ChoETL.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="ChoETL, Version=1.0.6.8, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\ChoETL\packages\ChoETL.1.0.6.8\lib\ChoETL.dll</HintPath>
     </Reference>
-    <Reference Include="ChoETL.JSON, Version=1.0.0.2, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>packages\ChoETL.JSON.1.0.0.2\lib\ChoETL.JSON.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="ChoETL.JSON, Version=1.0.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\ChoETL\packages\ChoETL.JSON.1.0.4\lib\ChoETL.JSON.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\ChoETL\packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />

@@ -12,34 +12,45 @@ namespace ChoQuickJSONToCSVConversion
     {
         static void Main(string[] args)
         {
-            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Verbose;
-
-        }
+			//ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Verbose;
+			UsingProjection();
+		}
 
         private static void QuickConversion()
         {
             using (var csv = new ChoCSVWriter("emp.csv").WithFirstLineHeader())
             {
-                using (var json = new ChoJSONReader("emp.json")
-                    .WithField("FirstName")
-                    .WithField("LastName")
-                    .WithField("Age", fieldType: typeof(int))
-                    .WithField("StreetAddress", jsonPath: "$.address.streetAddress")
-                    .WithField("City", jsonPath: "$.address.city")
-                    .WithField("State", jsonPath: "$.address.state")
-                    .WithField("PostalCode", jsonPath: "$.address.postalCode")
-                    .WithField("Phone", jsonPath: "$.phoneNumber[?(@.type=='home')].number")
-                    .WithField("Fax", jsonPath: "$.phoneNumber[?(@.type=='fax')].number")
-                )
+                using (var json = new ChoJSONReader("emp.json"))
                 {
                     csv.Write(json);
                 }
             }
         }
 
-        private static void UsingPOCO()
+		private static void SelectiveConversion()
+		{
+			using (var csv = new ChoCSVWriter("emp.csv").WithFirstLineHeader())
+			{
+				using (var json = new ChoJSONReader("emp.json")
+					.WithField("FirstName")
+					.WithField("LastName")
+					.WithField("Age", fieldType: typeof(int))
+					.WithField("StreetAddress", jsonPath: "$.address.streetAddress")
+					.WithField("City", jsonPath: "$.address.city")
+					.WithField("State", jsonPath: "$.address.state")
+					.WithField("PostalCode", jsonPath: "$.address.postalCode")
+					.WithField("Phone", jsonPath: "$.phoneNumber[?(@.type=='home')].number")
+					.WithField("Fax", jsonPath: "$.phoneNumber[?(@.type=='fax')].number")
+				)
+				{
+					csv.Write(json);
+				}
+			}
+		}
+
+		private static void UsingPOCO()
         {
-            using (var csv = new ChoCSVWriter("emp.csv").WithFirstLineHeader())
+            using (var csv = new ChoCSVWriter<Employee>("emp.csv").WithFirstLineHeader())
             {
                 using (var json = new ChoJSONReader<Employee>("emp.json"))
                 {
@@ -85,7 +96,7 @@ namespace ChoQuickJSONToCSVConversion
         [ChoJSONRecordField(JSONPath = "$.address.state")]
         public string State { get; set; }
         [ChoJSONRecordField(JSONPath = "$.address.postalCode")]
-        public string PortalCode { get; set; }
+        public string PostalCode { get; set; }
         [ChoJSONRecordField(JSONPath = "$.phoneNumber[?(@.type=='home')].number")]
         public string Phone { get; set; }
         [ChoJSONRecordField(JSONPath = "$.phoneNumber[?(@.type=='fax')].number")]
