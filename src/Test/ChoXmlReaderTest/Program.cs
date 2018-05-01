@@ -78,7 +78,48 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Sample30();
+            Sample31();
+        }
+
+        static void Sample32()
+        {
+            string xml = @"<?xml version=""1.0""?>
+<catalog>
+    <book id=""1"" date=""2012-02-01"">
+        <title>XML Developer's Guide</title>
+        <price>44.95</price>
+        <description>
+            An in-depth look at creating applications
+            with XML.
+        </description>
+    </book>
+    <book id=""2"" date=""2013-10-16"">
+        <author>Mark Colsberg</author>
+        <title>Dolor sit amet</title>
+        <price>5.95</price>
+        <description>Lorem ipsum</description>
+    </book>
+</catalog>";
+
+            using (var p = ChoXmlReader.LoadText(xml))
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+        static void Sample31()
+        {
+            string xml = @"<Columns>
+ <Column Name=""key1"" DataType=""Boolean"">True</Column>
+ <Column Name=""key2"" DataType=""String"">Hello World</Column>
+ <Column Name=""key3"" DataType=""Integer"">999</Column>
+</Columns>";
+
+            using (var p = ChoXmlReader.LoadText(xml))
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
         }
 
         static void Sample30()

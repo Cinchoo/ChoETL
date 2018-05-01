@@ -544,7 +544,16 @@ namespace ChoETL
                                                 else
                                                     fieldValue = fXElements[0].ToObjectFromXml(typeof(ChoDynamicObject), GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling);
 
-                                                if (fieldValue is IDictionary<string, object>)
+                                                if (fieldValue is ChoDynamicObject)
+                                                {
+                                                    var dict = fieldValue as ChoDynamicObject;
+                                                    if (dict.Keys.Count == 1 && (Configuration.StringComparer.Compare(dict.DynamicObjectName, key) == 0
+                                                        || Configuration.StringComparer.Compare(dict.DynamicObjectName, "dynamic") == 0))
+                                                    {
+                                                        fieldValue = dict[dict.Keys.First()];
+                                                    }
+                                                }
+                                                else if (fieldValue is IDictionary<string, object>)
                                                 {
                                                     var dict = fieldValue as IDictionary<string, object>;
                                                     if (dict.Keys.Count == 1 && Configuration.StringComparer.Compare(dict.Keys.First(), key) == 0)
