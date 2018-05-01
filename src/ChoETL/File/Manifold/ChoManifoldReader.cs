@@ -223,7 +223,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoManifoldReader WithCustomRecordTyoeCodeExtractor(Func<string, string> recordTypeCodeExtractor)
+        public ChoManifoldReader WithCustomRecordTypeCodeExtractor(Func<string, string> recordTypeCodeExtractor)
         {
             Configuration.RecordTypeCodeExtractor = recordTypeCodeExtractor;
             return this;

@@ -635,7 +635,7 @@ namespace ChoETL
 			return this;
 		}
 
-		public ChoCSVReader<T> WithCustomRecordTyoeCodeExtractor(Func<string, string> recordTypeCodeExtractor)
+		public ChoCSVReader<T> WithCustomRecordTypeCodeExtractor(Func<string, string> recordTypeCodeExtractor)
 		{
 			Configuration.SupportsMultiRecordTypes = true;
 			Configuration.RecordTypeCodeExtractor = recordTypeCodeExtractor;

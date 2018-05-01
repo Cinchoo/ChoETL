@@ -78,7 +78,37 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Sample31();
+            Sample33();
+        }
+
+        static void Sample33()
+        {
+            string json = @"
+{
+	""id"":""108013515952807"",
+
+    ""posts"":
+	{
+                ""data"":[
+        		{
+			""id"":""108013515952807_470186843068804"",
+        			""created_time"":""2013-05-14T20:43:28+0000""
+
+        },
+		{
+			""message"":""TEKST"",
+			""id"":""108013515952807_470178529736302"",
+			""created_time"":""2013-05-14T20:22:07+0000""
+		}
+		]
+	}
+}";
+
+            using (var p = ChoJSONReader.LoadText(json).WithJSONPath("$..posts.data").Configure(c => c.MaxScanRows = 10))
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
         }
 
         static void Sample32()

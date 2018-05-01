@@ -558,7 +558,7 @@ namespace ChoETL
 			Configuration.MapRecordFields(recordTypes);
 			return this;
 		}
-		public ChoFixedLengthReader<T> WithCustomRecordTyoeCodeExtractor(Func<string, string> recordTypeCodeExtractor)
+		public ChoFixedLengthReader<T> WithCustomRecordTypeCodeExtractor(Func<string, string> recordTypeCodeExtractor)
         {
 			Configuration.SupportsMultiRecordTypes = true;
 			Configuration.RecordTypeCodeExtractor = recordTypeCodeExtractor;
