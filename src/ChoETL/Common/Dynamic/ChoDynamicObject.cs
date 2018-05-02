@@ -131,7 +131,7 @@ namespace ChoETL
             _kvpDict = kvpDict;
         }
 
-        public ChoDynamicObject(ExpandoObject kvpDict) : this(null, false)
+		public ChoDynamicObject(ExpandoObject kvpDict) : this(null, false)
         {
             _kvpDict = (IDictionary<string, object>)kvpDict;
         }
@@ -1068,9 +1068,21 @@ namespace ChoETL
 		//{
 		//	return _list[index];
 		//}
+
+		public static ChoDynamicObject New(IDictionary kvpDict)
+		{
+			ChoDynamicObject obj = new ChoDynamicObject();
+			if (kvpDict != null)
+			{
+				foreach (var key in kvpDict.Keys)
+					obj.AddOrUpdate(key.ToNString(), kvpDict[key]);
+			}
+
+			return obj;
+		}
 	}
 
-    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
+	[AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
     public class ChoPropertyAttribute : Attribute
     {
         public string Name { get; set; }

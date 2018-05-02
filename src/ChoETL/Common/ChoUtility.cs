@@ -84,31 +84,37 @@ namespace ChoETL
                     .SelectMany(e => e.Value.Select(s => new { Key = s, Value = e.Key }))
                     .ToDictionary(x => x.Key, x => x.Value);
         }
+
         public static IDictionary<V, K> Transpose<K, V>(this IDictionary<K, V> source)
         {
             return source
                 .ToDictionary(x => x.Value, x => x.Key);
         }
 
-        //public static IEnumerable<object[]> Transpose<K, V>(this IDictionary<K, V> dict)
-        //{
-        //    yield return dict.Keys.Cast<object>().ToArray();
-        //    yield return dict.Values.Cast<object>().ToArray();
-        //}
-        //public static IEnumerable<object[]> Transpose<K, V>(this IEnumerable<IDictionary<K, V>> dicts)
-        //{
-        //    bool first = true;
-        //    foreach (var dict in dicts)
-        //    {
-        //        if (first)
-        //        {
-        //            first = false;
-        //            yield return dict.Keys.Cast<object>().ToArray();
-        //        }
-        //        yield return dict.Values.Cast<object>().ToArray();
-        //    }
-        //}
-        public static ChoDynamicObject Transpose(this ChoDynamicObject dict)
+		public static IEnumerable<dynamic> ToDynamic(this IDictionary source)
+		{
+			yield return ChoDynamicObject.New(source);
+		}
+
+		//public static IEnumerable<object[]> Transpose<K, V>(this IDictionary<K, V> dict)
+		//{
+		//    yield return dict.Keys.Cast<object>().ToArray();
+		//    yield return dict.Values.Cast<object>().ToArray();
+		//}
+		//public static IEnumerable<object[]> Transpose<K, V>(this IEnumerable<IDictionary<K, V>> dicts)
+		//{
+		//    bool first = true;
+		//    foreach (var dict in dicts)
+		//    {
+		//        if (first)
+		//        {
+		//            first = false;
+		//            yield return dict.Keys.Cast<object>().ToArray();
+		//        }
+		//        yield return dict.Values.Cast<object>().ToArray();
+		//    }
+		//}
+		public static ChoDynamicObject Transpose(this ChoDynamicObject dict)
         {
             return new ChoDynamicObject(Transpose((IDictionary<string, object>)dict).ToDictionary(kvp => kvp.Key.ToNString(), kvp => (object)kvp.Value));
         }

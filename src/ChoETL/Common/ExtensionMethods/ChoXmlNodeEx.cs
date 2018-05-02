@@ -722,7 +722,7 @@ namespace ChoETL
             XNamespace ns = xmlSchemaNS.IsNullOrWhiteSpace() ? ChoXmlSettings.XmlSchemaInstanceNamespace : xmlSchemaNS;
 
             XAttribute nil = element.Attribute(ns + "nil");
-            return nil != null && (bool)nil ? null : element.Value;
+            return nil != null && (bool)nil ? null : element.IsEmpty ? null : element.Value;
         }
 
         public static bool IsJsonArray(this XElement element, string jsonSchemaNS = null)
@@ -890,7 +890,7 @@ namespace ChoETL
                                 return null;
                         }
                     }
-                    else
+                    else if (value != null)
                         obj.SetText(value);
                 }
             }
