@@ -117,6 +117,8 @@ namespace ChoETL
             get;
             set;
         }
+        [DataMember]
+        public bool RetainAsXmlAwareObjects { get; set; }
 
         internal StringComparer StringComparer
         {

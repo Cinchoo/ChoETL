@@ -587,6 +587,19 @@ namespace ChoETL
                 {
                     dict[key] = FixArray(value as IDictionary<string, object>);
                 }
+                else if (value is IList)
+                {
+                    List<object> list = new List<object>();
+                    foreach (var obj in (IList)value)
+                    {
+                        if (obj is IDictionary<string, object>)
+                            list.Add(FixArray(obj as IDictionary<string, object>));
+                        else
+                            list.Add(obj);
+                    }
+
+                    dict[key] = list.ToArray();
+                }
             }
 
             return dict;

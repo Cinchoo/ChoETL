@@ -81,113 +81,102 @@ namespace ChoXmlReaderTest
             Sample36();
         }
 
-		static void Sample36()
-		{
-			string xml = @"<root>
+        static void Sample36()
+        {
+            string xml = @"<root>
   <DataRow>
-    <ColumnName>Value</ColumnName>
-    <ColumnName>Value</ColumnName>
-    <ColumnName>Value</ColumnName>
-    <ColumnName>Value</ColumnName>
-    <ColumnName>Value</ColumnName>
-  </DataRow>
-  <DataRow>
-    <ColumnName>Value</ColumnName>
-    <ColumnName>Value</ColumnName>
-    <ColumnName>Value</ColumnName>
-    <ColumnName>Value</ColumnName>
-    <ColumnName>Value</ColumnName>
-  </DataRow>
-  <DataRow>
-    <ColumnName>Value</ColumnName>
-    <ColumnName>Value</ColumnName>
-    <ColumnName>Value</ColumnName>
-    <ColumnName>Value</ColumnName>
-    <ColumnName>Value</ColumnName>
+    <ColumnName>Value1</ColumnName>
+    <ColumnName>Value3</ColumnName>
+    <ColumnName>Value4</ColumnName>
+    <ColumnName>Value5</ColumnName>
+    <ColumnName>Value6</ColumnName>
   </DataRow>
 </root>";
 
-			StringBuilder sb = new StringBuilder();
-			using (var p = ChoXmlReader.LoadText(xml))
-			{
-				foreach (var rec in p)
-					Console.WriteLine(rec.Dump());
-				//using (var w = new ChoCSVWriter(sb)
-				//	.WithFirstLineHeader()
-				//	)
-				//	w.Write(p);
-			}
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoXmlReader.LoadText(xml)
+                .Configure(c => c.RetainAsXmlAwareObjects = true)
+                )
+            {
+                Console.WriteLine(ChoXmlWriter.ToTextAll(p.ToArray()));
+                //foreach (var rec in p)
+                //    Console.WriteLine(rec.Dump());
+                //using (var w = new ChoCSVWriter(sb)
+                //	.WithFirstLineHeader()
+                //	)
+                //	w.Write(p);
+            }
 
-			Console.WriteLine(sb.ToString());
+            Console.WriteLine(sb.ToString());
 
-		}
+        }
 
-		static void Sample35()
-		{
-			string xml = @"<VWSRecipeFile>
-				<EX_Extrusion User=""ABC"" Version=""1.0"" Description="""" LastChange=""41914.7876341204"">
-					<Values>
-						<C22O01_A_TempFZ1_Set Item=""A_TempFZ1_Set"" Type=""4"" Hex=""42700000"" Value=""60""/>
-						<C13O02_A_TempHZ2_Set Item=""A_TempHZ2_Set"" Type=""4"" Hex=""43430000"" Value=""195""/>
-						<C13O03_A_TempHZ3_Set Item=""A_TempHZ3_Set"" Type=""4"" Hex=""43430000"" Value=""195""/>
-					</Values>
-				</EX_Extrusion>
-			</VWSRecipeFile>";
+        static void Sample35()
+        {
+            string xml = @"<VWSRecipeFile>
+                <EX_Extrusion User=""ABC"" Version=""1.0"" Description="""" LastChange=""41914.7876341204"">
+                    <Values>
+                        <C22O01_A_TempFZ1_Set Item=""A_TempFZ1_Set"" Type=""4"" Hex=""42700000"" Value=""60""/>
+                        <C13O02_A_TempHZ2_Set Item=""A_TempHZ2_Set"" Type=""4"" Hex=""43430000"" Value=""195""/>
+                        <C13O03_A_TempHZ3_Set Item=""A_TempHZ3_Set"" Type=""4"" Hex=""43430000"" Value=""195""/>
+                    </Values>
+                </EX_Extrusion>
+            </VWSRecipeFile>";
 
-			StringBuilder sb = new StringBuilder();
-			using (var p = ChoXmlReader.LoadText(xml).WithXPath("/Values/*"))
-			{
-				using (var w = new ChoCSVWriter(sb)
-					.WithFirstLineHeader()
-					)
-					w.Write(p.ToDictionary(r => r.Item, r => r.Value).ToDynamic());
-			}
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoXmlReader.LoadText(xml).WithXPath("/Values/*"))
+            {
+                using (var w = new ChoCSVWriter(sb)
+                    .WithFirstLineHeader()
+                    )
+                    w.Write(p.ToDictionary(r => r.Item, r => r.Value).ToDynamic());
+            }
 
-			Console.WriteLine(sb.ToString());
-		}
+            Console.WriteLine(sb.ToString());
+        }
 
-		static void Sample34()
-		{
-			string xml = @"<Items>
+        static void Sample34()
+        {
+            string xml = @"<Items>
  <Item>
     <Name>name</Name>
     <Detail>detail</Detail>    
   </Item>
 </Items>";
 
-			StringBuilder sb = new StringBuilder();
-			using (var p = ChoXmlReader.LoadText(xml).WithXPath("/"))
-			{
-				using (var w = new ChoJSONWriter(sb)
-					.Configure(c => c.SupportMultipleContent = true)
-					)
-					w.Write(p);
-			}
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoXmlReader.LoadText(xml).WithXPath("/"))
+            {
+                using (var w = new ChoJSONWriter(sb)
+                    .Configure(c => c.SupportMultipleContent = true)
+                    )
+                    w.Write(p);
+            }
 
-			Console.WriteLine(sb.ToString());
-		}
+            Console.WriteLine(sb.ToString());
+        }
 
         static void Sample33()
         {
             string json = @"
 {
-	""id"":""108013515952807"",
+    ""id"":""108013515952807"",
 
     ""posts"":
-	{
+    {
                 ""data"":[
-        		{
-			""id"":""108013515952807_470186843068804"",
-        			""created_time"":""2013-05-14T20:43:28+0000""
+                {
+            ""id"":""108013515952807_470186843068804"",
+                    ""created_time"":""2013-05-14T20:43:28+0000""
 
         },
-		{
-			""message"":""TEKST"",
-			""id"":""108013515952807_470178529736302"",
-			""created_time"":""2013-05-14T20:22:07+0000""
-		}
-		]
-	}
+        {
+            ""message"":""TEKST"",
+            ""id"":""108013515952807_470178529736302"",
+            ""created_time"":""2013-05-14T20:22:07+0000""
+        }
+        ]
+    }
 }";
 
             using (var p = ChoJSONReader.LoadText(json).WithJSONPath("$..posts.data").Configure(c => c.MaxScanRows = 10))
