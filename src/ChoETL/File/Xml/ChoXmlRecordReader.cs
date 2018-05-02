@@ -364,6 +364,9 @@ namespace ChoETL
             ToDictionary(node);
 
             object rootRec = rec;
+
+            if (rec is ChoDynamicObject)
+                ((ChoDynamicObject)rec).DynamicObjectName = node.Name.LocalName;
             foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
                 key = kvp.Key;
@@ -388,6 +391,9 @@ namespace ChoETL
                         if (value is XElement)
                         {
                             dynamic dobj = ((XElement)value).ToObjectFromXml(typeof(ChoDynamicObject), GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling);
+                            if (!dobj.HasText())
+                                continue;
+
                             fieldValue = dobj.GetText();
                         }
                         else

@@ -78,7 +78,33 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Sample36();
+            Sample37();
+        }
+
+        static void Sample37()
+        {
+            string xml = @"<Products>
+  <Product ProductCode=""C1010"" CategoryName=""Coins"" />
+  <Product ProductCode=""C1012"" CategoryName=""Coins"" />
+  <Product ProductCode=""C1013"" CategoryName=""Coins"" />
+</Products>";
+
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoXmlReader.LoadText(xml)
+                .Configure(c => c.RetainAsXmlAwareObjects = false)
+                )
+            {
+                Console.WriteLine(ChoFixedLengthWriter.ToTextAll(p.ToArray()));
+                //foreach (var rec in p)
+                //    Console.WriteLine(rec.Dump());
+                //using (var w = new ChoCSVWriter(sb)
+                //	.WithFirstLineHeader()
+                //	)
+                //	w.Write(p);
+            }
+
+            Console.WriteLine(sb.ToString());
+
         }
 
         static void Sample36()

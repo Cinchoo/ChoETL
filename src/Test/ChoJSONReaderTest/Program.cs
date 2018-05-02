@@ -636,11 +636,26 @@ namespace ChoJSONReaderTest
 
         static void Main(string[] args)
         {
-			Sample23();
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
+			Sample24();
 
 		}
 
-		static void Sample23()
+        static void Sample24()
+        {
+            StringBuilder sb = new StringBuilder();
+            using (var p = new ChoJSONReader("sample16.json"))
+            {
+                using (var w = new ChoJSONWriter(sb)
+                    )
+                {
+                    w.Write(p);
+                }
+            }
+            Console.WriteLine(sb.ToString());
+        }
+
+        static void Sample23()
 		{
 			string json = @"[
     {

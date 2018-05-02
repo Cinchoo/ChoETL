@@ -537,15 +537,22 @@ namespace ChoETL
                 }
             }
 
-            XElement ele = new XElement(config.NodeName);
+            string nodeName = config.NodeName;
+            if (rec is ChoDynamicObject && ((ChoDynamicObject)rec).DynamicObjectName != "dynamic")
+            {
+                ChoDynamicObject dobj = rec as ChoDynamicObject;
+                nodeName = dobj.DynamicObjectName;
+            }
+
+            XElement ele = new XElement(nodeName);
             string innerXml1 = null;
             if (typeof(IChoScalarObject).IsAssignableFrom(config.RecordType))
             {
-                ele = new XElement(config.NodeName, elems.First().Value);
+                ele = new XElement(nodeName, elems.First().Value);
             }
             else
             {
-                ele = new XElement(config.NodeName);
+                ele = new XElement(nodeName);
                 foreach (var kvp in attrs)
                     ele.Add(new XAttribute(kvp.Key, kvp.Value));
                 foreach (var kvp in elems)
@@ -609,15 +616,15 @@ namespace ChoETL
                         }
                         else
                         {
-							string eleName = kvp.Key.ToSingular();
-							innerXml1 = innerXml1.Replace("<dynamic>", "<{0}>".FormatString(eleName));
-							innerXml1 = innerXml1.Replace("</dynamic>", "</{0}>".FormatString(eleName));
+                            string eleName = kvp.Key.ToSingular();
+                            innerXml1 = innerXml1.Replace("<dynamic>", "<{0}>".FormatString(eleName));
+                            innerXml1 = innerXml1.Replace("</dynamic>", "</{0}>".FormatString(eleName));
 
-							if (eleName == kvp.Key)
-								innerXml1 = "<{0}>{1}</{0}>".FormatString(kvp.Key.ToPlural(), innerXml1);
-							else
-								innerXml1 = "<{0}>{1}</{0}>".FormatString(kvp.Key, innerXml1);
-						}
+                            if (eleName == kvp.Key)
+                                innerXml1 = "<{0}>{1}</{0}>".FormatString(kvp.Key.ToPlural(), innerXml1);
+                            else
+                                innerXml1 = "<{0}>{1}</{0}>".FormatString(kvp.Key, innerXml1);
+                        }
                         ele.Add(XElement.Parse(innerXml1));
 
                     }
