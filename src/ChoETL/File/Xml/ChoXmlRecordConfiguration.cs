@@ -125,6 +125,8 @@ namespace ChoETL
             get;
             private set;
         }
+        [DataMember]
+        public bool RetainXmlAttributesAsNative { get; set; }
 
         public readonly dynamic Context = new ChoDynamicObject();
 

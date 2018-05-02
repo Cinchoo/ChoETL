@@ -390,7 +390,7 @@ namespace ChoETL
 
                         if (value is XElement)
                         {
-                            dynamic dobj = ((XElement)value).ToObjectFromXml(typeof(ChoDynamicObject), GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling);
+                            dynamic dobj = ((XElement)value).ToObjectFromXml(typeof(ChoDynamicObject), GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative);
                             if (!dobj.HasText())
                                 continue;
 
@@ -519,9 +519,9 @@ namespace ChoETL
                                                 else
                                                 {
                                                     if (itemType == typeof(ChoDynamicObject))
-                                                        list.Add(Normalize(ele.ToDynamic(Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace)));
+                                                        list.Add(Normalize(ele.ToDynamic(Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative)));
                                                     else
-                                                        list.Add(Normalize(ele.ToObjectFromXml(itemType, GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling)));
+                                                        list.Add(Normalize(ele.ToObjectFromXml(itemType, GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative)));
                                                 }
                                             }
                                         }
@@ -548,7 +548,7 @@ namespace ChoETL
                                                 if (fieldConfig.ItemConverter != null)
                                                     fieldValue = fieldConfig.ItemConverter(fXElements[0]);
                                                 else
-                                                    fieldValue = fXElements[0].ToObjectFromXml(typeof(ChoDynamicObject), GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling);
+                                                    fieldValue = fXElements[0].ToObjectFromXml(typeof(ChoDynamicObject), GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative);
 
                                                 fieldValue = Normalize(fieldValue);
                                             }
@@ -560,7 +560,7 @@ namespace ChoETL
                                                     if (fieldConfig.ItemConverter != null)
                                                         arr.Add(Normalize(fieldConfig.ItemConverter(ele)));
                                                     else
-                                                        arr.Add(Normalize(ele.ToObjectFromXml(typeof(ChoDynamicObject), GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling) as ChoDynamicObject));
+                                                        arr.Add(Normalize(ele.ToObjectFromXml(typeof(ChoDynamicObject), GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative) as ChoDynamicObject));
                                                 }
 
                                                 fieldValue = arr.ToArray();
@@ -597,7 +597,7 @@ namespace ChoETL
                                                         list.Add(Normalize(ChoConvert.ConvertTo(ele.NilAwareValue(), itemType)));
                                                     else
                                                     {
-                                                        list.Add(Normalize(ele.ToObjectFromXml(itemType, GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling)));
+                                                        list.Add(Normalize(ele.ToObjectFromXml(itemType, GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative)));
                                                     }
                                                 }
                                             }
@@ -613,7 +613,7 @@ namespace ChoETL
                                                     fieldValue = Normalize(fieldConfig.ItemConverter(fXElement));
                                                 else
                                                 {
-                                                    fieldValue = Normalize(fXElement.ToObjectFromXml(fieldConfig.FieldType, GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling));
+                                                    fieldValue = Normalize(fXElement.ToObjectFromXml(fieldConfig.FieldType, GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative));
                                                 }
                                             }
                                         }

@@ -756,7 +756,8 @@ namespace ChoETL
             return hasAttr;
         }
 
-        public static dynamic ToDynamic(this XElement element, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null)
+        public static dynamic ToDynamic(this XElement element, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null,
+            bool retainXmlAttributesAsNative = true)
         {
             // loop through child elements
             // define an Expando Dynamic
@@ -781,7 +782,10 @@ namespace ChoETL
                         continue;
 
                     hasAttr = true;
-                    ((IDictionary<string, object>)obj).Add("@{0}".FormatString(attribute.Name.LocalName), attribute.Value);
+                    if (retainXmlAttributesAsNative)
+                        ((IDictionary<string, object>)obj).Add("@{0}".FormatString(attribute.Name.LocalName), attribute.Value);
+                    else
+                        ((IDictionary<string, object>)obj).Add("{0}".FormatString(attribute.Name.LocalName), attribute.Value);
                 }
             }
 
@@ -796,7 +800,7 @@ namespace ChoETL
                         if (subElement.HasAttributes(xmlSchemaNS, jsonSchemaNS) || subElement.HasElements)
                         {
                             string keyName = null;
-                            object dobj = ToDynamic(subElement, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling);
+                            object dobj = ToDynamic(subElement, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative);
                             if (dobj != null || (dobj == null && emptyXmlNodeValueHandling != ChoEmptyXmlNodeValueHandling.Ignore))
                             {
                                 keyName = subElement.Name.LocalName;
@@ -838,7 +842,7 @@ namespace ChoETL
                             List<object> subDynamic = new List<object>();
                             foreach (XElement subsubElement in subElement2.Elements())
                             {
-                                var sd = ToDynamic(subsubElement, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling);
+                                var sd = ToDynamic(subsubElement, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative);
                                 if (sd != null || (sd == null && emptyXmlNodeValueHandling != ChoEmptyXmlNodeValueHandling.Ignore))
                                     subDynamic.Add(sd);
                             }
@@ -853,7 +857,7 @@ namespace ChoETL
                                 if (subElement == null)
                                     continue;
 
-                                object dobj = ToDynamic(subElement, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling);
+                                object dobj = ToDynamic(subElement, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative);
                                 if (dobj != null || (dobj == null && emptyXmlNodeValueHandling != ChoEmptyXmlNodeValueHandling.Ignore))
                                     list.Add(dobj);
 

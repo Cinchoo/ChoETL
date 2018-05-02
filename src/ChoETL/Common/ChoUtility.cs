@@ -1005,12 +1005,14 @@ namespace ChoETL
 
         #region XmlDeserialize Overloads
 
-        public static T XmlDeserialize<T>(Stream sr, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null)
+        public static T XmlDeserialize<T>(Stream sr, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null,
+            ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null, bool retainXmlAttributesAsNative = true)
         {
-            return (T)XmlDeserialize(sr, typeof(T), xrs, overrides, xmlSchemaNS, jsonSchemaNS);
+            return (T)XmlDeserialize(sr, typeof(T), xrs, overrides, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative);
         }
 
-        public static object XmlDeserialize(Stream sr, Type type, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null)
+        public static object XmlDeserialize(Stream sr, Type type, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null,
+            ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null, bool retainXmlAttributesAsNative = true)
         {
             ChoGuard.ArgumentNotNullOrEmpty(sr, "Stream");
             ChoGuard.ArgumentNotNullOrEmpty(type, "Type");
@@ -1020,7 +1022,7 @@ namespace ChoETL
                 if (type == typeof(ChoDynamicObject))
                 {
                     XElement ele = XElement.Load(xtw);
-                    return ele.ToDynamic(xmlSchemaNS, jsonSchemaNS);
+                    return ele.ToDynamic(xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative);
                 }
                 else
                 {
@@ -1030,14 +1032,16 @@ namespace ChoETL
             }
         }
 
-        public static T XmlDeserialize<T>(string xmlString, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null)
+        public static T XmlDeserialize<T>(string xmlString, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null,
+            bool retainXmlAttributesAsNative = true)
         {
             ChoGuard.ArgumentNotNullOrEmpty(xmlString, "xmlString");
 
-            return (T)XmlDeserialize(xmlString, typeof(T), xrs, overrides, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling);
+            return (T)XmlDeserialize(xmlString, typeof(T), xrs, overrides, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative);
         }
 
-        public static object XmlDeserialize(string xmlString, Type type, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null)
+        public static object XmlDeserialize(string xmlString, Type type, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null,
+            bool retainXmlAttributesAsNative = true)
         {
             ChoGuard.ArgumentNotNullOrEmpty(xmlString, "XmlString");
             ChoGuard.ArgumentNotNullOrEmpty(type, "Type");
@@ -1049,7 +1053,7 @@ namespace ChoETL
                     if (type == typeof(ChoDynamicObject))
                     {
                         XElement ele = XElement.Load(xtw);
-                        object obj = ele.ToDynamic(xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling);
+                        object obj = ele.ToDynamic(xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative);
                         if (obj is Array)
                         {
                             ChoDynamicObject dobj = new ChoDynamicObject();
@@ -1072,7 +1076,9 @@ namespace ChoETL
             return (T)XmlDeserializeFromFile(path, typeof(T), xrs, overrides, xmlSchemaNS, jsonSchemaNS);
         }
 
-        public static object XmlDeserializeFromFile(string path, Type type, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null)
+        public static object XmlDeserializeFromFile(string path, Type type, XmlReaderSettings xrs = null, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null,
+            ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null,
+            bool retainXmlAttributesAsNative = true)
         {
             ChoGuard.ArgumentNotNullOrEmpty(path, "Path");
             ChoGuard.ArgumentNotNullOrEmpty(type, "Type");
@@ -1084,7 +1090,7 @@ namespace ChoETL
                     if (type == typeof(ChoDynamicObject))
                     {
                         XElement ele = XElement.Load(xtw);
-                        return ele.ToDynamic(xmlSchemaNS, jsonSchemaNS);
+                        return ele.ToDynamic(xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative);
                     }
                     else
                     {

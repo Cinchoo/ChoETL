@@ -90,11 +90,11 @@ namespace ChoXmlReaderTest
 </Products>";
 
             StringBuilder sb = new StringBuilder();
-            using (var p = ChoXmlReader.LoadText(xml)
-                .Configure(c => c.RetainAsXmlAwareObjects = false)
+            using (var p = ChoXmlReader.LoadText(xml).WithXPath("/")
+                .Configure(c => c.RetainXmlAttributesAsNative = true)
                 )
             {
-                Console.WriteLine(ChoFixedLengthWriter.ToTextAll(p.ToArray()));
+                Console.WriteLine(ChoJSONWriter.ToTextAll(p.ToArray()));
                 //foreach (var rec in p)
                 //    Console.WriteLine(rec.Dump());
                 //using (var w = new ChoCSVWriter(sb)
