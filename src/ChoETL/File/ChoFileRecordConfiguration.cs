@@ -191,7 +191,7 @@ namespace ChoETL
 
         protected ChoFileRecordConfiguration(Type recordType = null) : base(recordType)
         {
-            MaxScanRows = -1;
+            MaxScanRows = 0;
             IgnoreDuplicateFields = false;
 			IgnoreIfNoRecordTypeFound = true;
 			BufferSize = 4096;
@@ -215,7 +215,7 @@ namespace ChoETL
             ChoFileRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoFileRecordObjectAttribute>(recordType);
             if (recObjAttr != null)
             {
-                MaxScanRows = -1;
+                MaxScanRows = 0;
                 if (recObjAttr.BufferSize > 0)
                     BufferSize = recObjAttr.BufferSize;
                 if (recObjAttr.Comments.IsNullOrWhiteSpace())
