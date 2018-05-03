@@ -246,22 +246,25 @@ namespace ChoETL
             s.ReadXmlSchema(new System.IO.StringReader(shemaTableSchema));
             DataTable t = s.Tables[0];
 
-            for (int i = 0; i < Fields.Count; i++)
+            if (Fields != null)
             {
-                DataRow row = t.NewRow();
-                row["ColumnName"] = Fields[i].GetName();
-                row["ColumnOrdinal"] = i;
-
-                Type type = this.GetFieldType(i);
-                if (type.IsGenericType
-                  && type.GetGenericTypeDefinition() == typeof(System.Nullable<int>).GetGenericTypeDefinition())
+                for (int i = 0; i < Fields.Count; i++)
                 {
-                    type = type.GetGenericArguments()[0];
+                    DataRow row = t.NewRow();
+                    row["ColumnName"] = Fields[i].GetName();
+                    row["ColumnOrdinal"] = i;
+
+                    Type type = this.GetFieldType(i);
+                    if (type.IsGenericType
+                      && type.GetGenericTypeDefinition() == typeof(System.Nullable<int>).GetGenericTypeDefinition())
+                    {
+                        type = type.GetGenericArguments()[0];
+                    }
+                    row["DataType"] = Fields[i].GetPropertyType();
+                    //row["DataTypeName"] = this.GetDataTypeName(i);
+                    row["ColumnSize"] = -1;
+                    t.Rows.Add(row);
                 }
-                row["DataType"] = Fields[i].GetPropertyType();
-                //row["DataTypeName"] = this.GetDataTypeName(i);
-                row["ColumnSize"] = -1;
-                t.Rows.Add(row);
             }
 
             return t;
