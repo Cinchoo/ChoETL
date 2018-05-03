@@ -52,6 +52,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="020180412_045106Cropped.csv" />
+    <None Include="Empty.csv" />
     <None Include="InterfaceTest.csv" />
     <None Include="EmptyLines.csv" />
     <None Include="CurrencyQuotes.csv" />
@@ -96,6 +97,9 @@
     <None Include="Nested.csv" />
     <None Include="NestedQuotes.csv" />
     <None Include="ZipCodes.csv" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="BadFile.csv" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

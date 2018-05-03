@@ -1076,8 +1076,101 @@ a,0,1,2-Data";
 			Console.WriteLine(sb.ToString());
 		}
 
-		static void Main(string[] args)
+        static void MapTest()
         {
+            string csv = @"Id, Name, City
+				1, Tom, NY
+				2, Mark, NJ
+				3, Lou, FL
+				4, Smith, PA
+				5, Raj, DC";
+
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoCSVReader<EmployeeRec>.LoadText(csv)
+                .WithFirstLineHeader()
+                .WithField(m => m.Id)
+                )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.DumpAsJson());
+
+                //using (var w = new ChoXmlWriter(sb)
+                //    .Configure(c => c.RootName = "Emps")
+                //    .Configure(c => c.NodeName = "Emp")
+                //    )
+                //{
+                //    w.Write(p);
+                //}
+            }
+
+        }
+
+        static void VariableFieldsTest()
+        {
+            //ChoETLFrxBootstrap.TraceLevel = TraceLevel.Verbose;
+
+            string csv = @"1, Tom, NY
+				2, Mark, NJ, USA
+				a3, Lou, FL
+				4, Smith, PA
+				5, Raj, DC";
+
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader(true)
+                .Setup(s => s.RecordLoadError += (o, e) => Console.WriteLine(e.Exception.Message))
+                )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.DumpAsJson());
+
+                //using (var w = new ChoXmlWriter(sb)
+                //    .Configure(c => c.RootName = "Emps")
+                //    .Configure(c => c.NodeName = "Emp")
+                //    )
+                //{
+                //    w.Write(p);
+                //}
+            }
+
+        }
+
+        public static void DelimitedImportReaderChoCsvTest()
+        {
+            var errors = new List<Exception>();
+            var rowCount = 0;
+
+            using (var stream = File.Open(@"Empty.csv", FileMode.Open))
+            {
+                using (var reader = new ChoCSVReader(stream).WithDelimiter("\t").WithFirstLineHeader()
+                    .Configure(c => c.MaxScanRows = 0)
+                    )
+                {
+                    reader.RecordLoadError += (sender, e) =>
+                    {
+                        errors.Add(e.Exception);
+                        e.Handled = true;
+                    };
+
+                    var dataReader = reader.AsDataReader();
+
+                    var x = dataReader.GetSchemaTable();
+                    while (dataReader.Read())
+                    {
+                        rowCount++;
+                    }
+                }
+            }
+
+            Console.WriteLine("Errors: " + errors.Count);
+            Console.WriteLine("Total: " + rowCount);
+        }
+
+        static void Main(string[] args)
+        {
+            DelimitedImportReaderChoCsvTest();
+            return;
+
 			CSV2XmlTest();
 			return;
 
@@ -2094,7 +2187,7 @@ a,0,1,2-Data";
     }
 
     //[MetadataType(typeof(EmployeeRecMeta))]
-    [ChoCSVFileHeader(TrimOption = ChoFieldValueTrimOption.None)]
+    //[ChoCSVFileHeader(TrimOption = ChoFieldValueTrimOption.None)]
     [ChoCSVRecordObject(ErrorMode = ChoErrorMode.IgnoreAndContinue,
     IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any, ThrowAndStopOnMissingField = false)]
     public partial class EmployeeRec //: IChoNotifyRecordRead, IChoValidatable
