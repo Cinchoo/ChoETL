@@ -637,7 +637,7 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			Sample26();
+			Sample25();
 		}
 
 		static void Sample26()
@@ -719,14 +719,14 @@ namespace ChoJSONReaderTest
 			StringBuilder sb = new StringBuilder();
 			using (var p = ChoJSONReader.LoadText(json))
 			{
-				foreach (var rec in p)
-					Console.WriteLine(rec.Dump());
-				//using (var w = new ChoCSVWriter(sb)
-				//	.WithFirstLineHeader()
-				//	)
-				//{
-				//	w.Write(p);
-				//}
+				//foreach (var rec in p)
+				//	Console.WriteLine(rec.Dump());
+				using (var w = new ChoCSVWriter(sb)
+					.WithFirstLineHeader()
+					)
+				{
+					w.Write(p);
+				}
 			}
 			Console.WriteLine(sb.ToString());
 

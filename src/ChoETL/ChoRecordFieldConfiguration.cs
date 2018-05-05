@@ -139,7 +139,7 @@ namespace ChoETL
 
         private void Initialize()
         {
-            Name = Name.NTrim().ToValidVariableName();
+            Name = Name.NTrim().FixName();
         }
 
         public void AddConverter(IValueConverter converter)

@@ -619,10 +619,10 @@ namespace ChoETL
             bool hasAtts = element.Attributes().Count() > 0;
             foreach (var attr in element.Attributes())
             {
-                if (obj.ContainsKey(attr.Name.LocalName.ToValidVariableName()))
+                if (obj.ContainsKey(attr.Name.LocalName.FixName()))
                     continue;
 
-                obj.Add(attr.Name.LocalName.ToValidVariableName(), attr.Value);
+                obj.Add(attr.Name.LocalName.FixName(), attr.Value);
             }
 
             if (element.Elements().Count() > 0)
@@ -633,7 +633,7 @@ namespace ChoETL
                     if (hasAtts)
                     {
                         var ele1 = grp.First().Value.FirstOrDefault();
-                        obj.Add(ele1.Name.LocalName.ToValidVariableName(), grp.First().Value.Select(ele =>
+                        obj.Add(ele1.Name.LocalName.FixName(), grp.First().Value.Select(ele =>
                         {
                             if (ele.Name.LocalName == "dynamic")
                             {
@@ -666,13 +666,13 @@ namespace ChoETL
                         {
                             var ele = ge.Value.FirstOrDefault();
                             if (ele.Name.LocalName == "dynamic")
-                                obj.Add(ele.Name.LocalName.ToValidVariableName(), (ChoUtility.XmlDeserialize<ChoDynamicObject>(ele.GetOuterXml())));
+                                obj.Add(ele.Name.LocalName.FixName(), (ChoUtility.XmlDeserialize<ChoDynamicObject>(ele.GetOuterXml())));
                             else
-                                obj.Add(ele.Name.LocalName.ToValidVariableName(), ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele, false) : ele.NilAwareValue());
+                                obj.Add(ele.Name.LocalName.FixName(), ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele, false) : ele.NilAwareValue());
                         }
                         else
                         {
-                            obj.Add(element.Name.LocalName.ToValidVariableName(), ge.Value.Select(ele =>
+                            obj.Add(element.Name.LocalName.FixName(), ge.Value.Select(ele =>
                             {
                                 if (ele.Name.LocalName == "dynamic")
                                 {
@@ -690,7 +690,7 @@ namespace ChoETL
                 if (topLevel)
                     return element.NilAwareValue();
                 else
-                    obj.AddOrUpdate(element.Name.LocalName.ToValidVariableName(), element.NilAwareValue());
+                    obj.AddOrUpdate(element.Name.LocalName.FixName(), element.NilAwareValue());
             }
 
 
@@ -1597,33 +1597,38 @@ namespace ChoETL
 
         private static CodeDomProvider _csharpProvider = Microsoft.CSharp.CSharpCodeProvider.CreateProvider("C#");
 
-        public static string ToValidVariableName(this string text)
+		public static string ToValidVariableName(this string text)
+		{
+			if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
+				text = _csharpProvider.CreateValidIdentifier(text);
+			text = text.Replace("-", "_");
+			StringBuilder identifier = new StringBuilder(text);
+			if (Char.IsDigit(identifier[0]))
+				identifier = new StringBuilder("_" + identifier.ToString());
+			//else if (identifier[0] == '@')
+			//{
+			//    if (identifier.Length == 1)
+			//        throw new ApplicationException("Invalid identifier found.");
+			//    else if (Char.IsDigit(identifier[1]))
+			//    {
+			//        if (identifier.Length == 2)
+			//            throw new ApplicationException("Invalid identifier found.");
+			//        else
+			//            identifier[1] = '_';
+			//    }
+			//}
+			string final = Regex.Replace(identifier.ToString(), @"\s+", "_");
+			final = Regex.Replace(final, @"[^a-zA-Z0-9 -]", "_");
+			return final;
+			//if (!final.StartsWith("@"))
+			//return Regex.Replace(final, @"[^a-zA-Z0-9 -]", "_");
+			//else
+			//return "@" + Regex.Replace(final.Substring(1), @"[^a-zA-Z0-9 -]", "_");
+		}
+
+		public static string FixName(this string text)
         {
-            if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
-                text = _csharpProvider.CreateValidIdentifier(text);
-            text = text.Replace("-", "_");
-            StringBuilder identifier = new StringBuilder(text);
-            if (Char.IsDigit(identifier[0]))
-                identifier = new StringBuilder("_" + identifier.ToString());
-            //else if (identifier[0] == '@')
-            //{
-            //    if (identifier.Length == 1)
-            //        throw new ApplicationException("Invalid identifier found.");
-            //    else if (Char.IsDigit(identifier[1]))
-            //    {
-            //        if (identifier.Length == 2)
-            //            throw new ApplicationException("Invalid identifier found.");
-            //        else
-            //            identifier[1] = '_';
-            //    }
-            //}
-            string final = Regex.Replace(identifier.ToString(), @"\s+", "_");
-            final = Regex.Replace(final, @"[^a-zA-Z0-9 -]", "_");
-            return final;
-            //if (!final.StartsWith("@"))
-            //return Regex.Replace(final, @"[^a-zA-Z0-9 -]", "_");
-            //else
-            //return "@" + Regex.Replace(final.Substring(1), @"[^a-zA-Z0-9 -]", "_");
+			return text;
         }
 
     }
