@@ -1109,16 +1109,18 @@ a,0,1,2-Data";
         {
             //ChoETLFrxBootstrap.TraceLevel = TraceLevel.Verbose;
 
-            string csv = @"1, Tom, NY
-				2, Mark, NJ, USA
-				a3, Lou, FL
+            string csv = @"Id, Name, City
+				1, Tom, NY
+				2, Mark, NJ, 100
+				3, Lou, FL
 				4, Smith, PA
 				5, Raj, DC";
 
             StringBuilder sb = new StringBuilder();
             using (var p = ChoCSVReader.LoadText(csv)
-                .WithFirstLineHeader(true)
-                .Setup(s => s.RecordLoadError += (o, e) => Console.WriteLine(e.Exception.Message))
+				.WithFirstLineHeader(true)
+				.Configure(c => c.MaxScanRows = 5)
+				.Configure(c => c.ThrowAndStopOnMissingField = false)
                 )
             {
                 foreach (var rec in p)
@@ -1140,7 +1142,7 @@ a,0,1,2-Data";
             var errors = new List<Exception>();
             var rowCount = 0;
 
-            using (var stream = File.Open(@"Empty.csv", FileMode.Open))
+            using (var stream = File.Open(@"BadFile.csv", FileMode.Open))
             {
                 using (var reader = new ChoCSVReader(stream).WithDelimiter("\t").WithFirstLineHeader()
                     .Configure(c => c.MaxScanRows = 0)
@@ -1168,7 +1170,7 @@ a,0,1,2-Data";
 
         static void Main(string[] args)
         {
-            DelimitedImportReaderChoCsvTest();
+			VariableFieldsTest();
             return;
 
 			CSV2XmlTest();

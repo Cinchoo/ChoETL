@@ -769,6 +769,9 @@ namespace ChoETL
             {
                 foreach (var attribute in element.Attributes())
                 {
+					if (attribute.Name.ToString().StartsWith("xmlns"))
+						continue;
+
                     string ns = attribute.Name.Namespace.ToString();
                     if (xmlSchemaNS != null && ns.StartsWith(xmlSchemaNS, StringComparison.InvariantCultureIgnoreCase))
                         continue;

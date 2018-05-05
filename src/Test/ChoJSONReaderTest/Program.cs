@@ -637,11 +637,102 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			Sample24();
+			Sample26();
+		}
+
+		static void Sample26()
+		{
+			string json = @"
+{
+  'item': {
+    'name': 'item #1',
+    'code': 'itm-123',
+    'image': {
+      '@url': 'http://www.foo.com/bar.jpg'
+    }
+  }
+}";
+
+			StringBuilder sb = new StringBuilder();
+			using (var p = ChoJSONReader.LoadText(json))
+			{
+				//foreach (var rec in p)
+				//	Console.WriteLine(rec.Dump());
+				//Console.WriteLine(ChoXmlWriter.ToTextAll(p, new ChoXmlRecordConfiguration().Configure(c => c.IgnoreRootName = true).Configure(c => c.IgnoreNodeName = true)));
+
+				using (var w = new ChoXmlWriter(sb)
+					.Configure(c => c.IgnoreRootName = true)
+					.Configure(c => c.IgnoreNodeName = true)
+					.WithDefaultXmlNamespace("x1", "http://unknwn")
+					)
+				{
+					w.Write(p);
+				}
+			}
+			Console.WriteLine(sb.ToString());
+		}
+
+		static void Sample25()
+		{
+			string json = @"
+{
+ ""2017-02-11"":
+  {
+  ""Table1"": [
+    {
+      ""code"": ""code day1.1.1"",
+      ""no"": ""no day1.1.1""
+    }
+  ],
+  ""Table2"": [
+    {
+      ""code"": ""code day1.2.1"",
+      ""no"": ""no day1.2.1""
+    },
+    {
+      ""code"": ""code day1.2.2"",
+      ""no"": ""no day1.2.2""
+    }
+  ]
+ },
+ ""2017-02-12"":
+  {
+  ""Table1"": [
+    {
+      ""code"": ""code day2.1.1"",
+      ""no"": ""no day2.1.1""
+    },
+    {
+      ""code"": ""code day2.1.2"",
+      ""no"": ""no day2.1.2""
+    }
+  ],
+  ""Table2"": [
+    {
+      ""code"": ""code day2.2.1"",
+      ""no"": ""no day2.2.1""
+    }
+  ]
+ }
+}";
+
+			StringBuilder sb = new StringBuilder();
+			using (var p = ChoJSONReader.LoadText(json))
+			{
+				foreach (var rec in p)
+					Console.WriteLine(rec.Dump());
+				//using (var w = new ChoCSVWriter(sb)
+				//	.WithFirstLineHeader()
+				//	)
+				//{
+				//	w.Write(p);
+				//}
+			}
+			Console.WriteLine(sb.ToString());
 
 		}
 
-        static void Sample24()
+		static void Sample24()
         {
             StringBuilder sb = new StringBuilder();
             using (var p = new ChoJSONReader("sample16.json"))

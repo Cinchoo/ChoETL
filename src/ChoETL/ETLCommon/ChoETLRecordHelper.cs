@@ -14,7 +14,10 @@ namespace ChoETL
     {
         public static void ConvertNSetMemberValue(this IDictionary<string, object> dict, string fn, ChoRecordFieldConfiguration fieldConfig, ref object fieldValue, CultureInfo culture)
         {
-            if (fieldConfig.ValueConverter != null)
+			if (fieldValue is ChoDynamicObject)
+				((ChoDynamicObject)fieldValue).DynamicObjectName = fn;
+
+			if (fieldConfig.ValueConverter != null)
                 fieldValue = fieldConfig.ValueConverter(fieldValue);
             else
             {
@@ -35,7 +38,10 @@ namespace ChoETL
         {
             if (fieldConfig.PI == null) return;
 
-            if (fieldConfig.ValueConverter != null)
+			if (fieldValue is ChoDynamicObject)
+				((ChoDynamicObject)fieldValue).DynamicObjectName = fn;
+
+			if (fieldConfig.ValueConverter != null)
                 fieldValue = fieldConfig.ValueConverter(fieldValue);
             else
             {

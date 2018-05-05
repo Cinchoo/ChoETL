@@ -793,10 +793,15 @@ namespace ChoETL
 
                 dict = dict.Select(kvp =>
                 {
-                    if (kvp.Value is JToken)
-                        return new KeyValuePair<string, object>(kvp.Key, ToDynamic((JToken)kvp.Value));
-                    else
-                        return kvp;
+					if (kvp.Value is JToken)
+					{
+						var dobj = ToDynamic((JToken)kvp.Value);
+						if (dobj is ChoDynamicObject)
+							((ChoDynamicObject)dobj).DynamicObjectName = kvp.Key;
+						return new KeyValuePair<string, object>(kvp.Key, dobj);
+					}
+					else
+						return kvp;
                 }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
                 return new ChoDynamicObject(dict);
                     case JTokenType.Uri:

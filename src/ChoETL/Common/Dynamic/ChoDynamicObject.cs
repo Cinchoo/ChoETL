@@ -823,12 +823,15 @@ namespace ChoETL
                 return Type.GetType(typeName);
         }
 
-        public string GetXml(string tag = null, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Empty)
+        public string GetXml(string tag = null, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Empty, string nsPrefix = null)
         {
-            if (tag.IsNullOrWhiteSpace())
+			if (nsPrefix.IsNullOrWhiteSpace())
+				nsPrefix = String.Empty;
+
+			if (tag.IsNullOrWhiteSpace())
                 tag = NName;
 
-            bool hasAttrs = false;
+			bool hasAttrs = false;
             StringBuilder msg = new StringBuilder("<{0}".FormatString(tag));
             foreach (string key in this.Keys.Where(k => k.StartsWith("@") && k != ValueToken))
             {
@@ -883,11 +886,11 @@ namespace ChoETL
             return msg.ToString();
         }
 
-		private void GetXml(StringBuilder msg, object value, string key, ChoNullValueHandling nullValueHandling)
+		private void GetXml(StringBuilder msg, object value, string key, ChoNullValueHandling nullValueHandling, string nsPrefix = null)
 		{
 			if (value is ChoDynamicObject)
 			{
-				msg.AppendFormat("{0}{1}", Environment.NewLine, ((ChoDynamicObject)value).GetXml(((ChoDynamicObject)value).NName, nullValueHandling).Indent(1, "  "));
+				msg.AppendFormat("{0}{1}", Environment.NewLine, ((ChoDynamicObject)value).GetXml(((ChoDynamicObject)value).NName, nullValueHandling, nsPrefix).Indent(1, "  "));
 			}
 			else
 			{
@@ -902,7 +905,7 @@ namespace ChoETL
 						{
 							foreach (var collValue in ((IList)value).OfType<ChoDynamicObject>())
 							{
-								msg.AppendFormat("{0}{1}", Environment.NewLine, collValue.GetXml(collValue.NName == "dynamic" ? key.ToSingular() : collValue.NName, nullValueHandling).Indent(2, "  "));
+								msg.AppendFormat("{0}{1}", Environment.NewLine, collValue.GetXml(collValue.NName == "dynamic" ? key.ToSingular() : collValue.NName, nullValueHandling, nsPrefix).Indent(2, "  "));
 							}
 						}
 						else

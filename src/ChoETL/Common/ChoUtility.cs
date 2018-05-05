@@ -957,7 +957,8 @@ namespace ChoETL
             }
         }
 
-        public static string XmlSerialize(object target, XmlWriterSettings xws = null, string separator = null, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore)
+        public static string XmlSerialize(object target, XmlWriterSettings xws = null, string separator = null, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore,
+			string nsPrefix = null)
         {
             //ChoGuard.ArgumentNotNull(target, "Target");
             if (target == null)
@@ -977,7 +978,7 @@ namespace ChoETL
             {
                 if (target is ChoDynamicObject)
                 {
-                    xtw.WriteRaw(((ChoDynamicObject)target).GetXml(null, nullValueHandling));
+                    xtw.WriteRaw(((ChoDynamicObject)target).GetXml(null, nullValueHandling, nsPrefix));
                 }
                 else
                 {

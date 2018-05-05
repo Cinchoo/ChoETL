@@ -78,10 +78,139 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Sample37();
+            Sample41();
         }
 
-        static void Sample37()
+		static void Sample41()
+		{
+			string xml = @"<GetItemRequest>
+    <ApplicationCrediential>
+        <ConsumerKey></ConsumerKey>
+        <ConsumerSecret></ConsumerSecret>
+    </ApplicationCrediential>
+</GetItemRequest>
+			";
+
+			StringBuilder sb = new StringBuilder();
+			using (var p = ChoXmlReader.LoadText(xml).WithXPath("/")
+				.Configure(c => c.EmptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Empty)
+				)
+			{
+				using (var w = new ChoJSONWriter(sb))
+					w.Write(p);
+			}
+
+			Console.WriteLine(sb.ToString());
+		}
+
+		static void Sample40()
+		{
+			string xml = @"<Employees xmlns=""http://company.com/schemas"">
+				<Employee>
+					<FirstName>name1</FirstName>
+					<LastName>surname1</LastName>
+				</Employee>
+				<Employee>
+					<FirstName>name2</FirstName>
+					<LastName>surname2</LastName>
+				</Employee>
+				<Employee>
+					<FirstName>name3</FirstName>
+					<LastName>surname3</LastName>
+				</Employee>
+			</Employees>
+			";
+
+			StringBuilder sb = new StringBuilder();
+			using (var p = ChoXmlReader.LoadText(xml)
+				)
+			{
+				using (var w = new ChoJSONWriter(sb))
+					w.Write(p);
+			}
+
+			Console.WriteLine(sb.ToString());
+
+		}
+
+		static void Sample39()
+		{
+			string xml = @"<weather>
+	<current_conditions>
+		<condition data=""Mostly Cloudy"" />
+		<temp_f data=""48"" />
+		<temp_c data=""9"" />
+		<humidity data=""Humidity: 71%"" />
+		<icon data=""/ig/images/weather/mostly_cloudy.gif"" />
+		<wind_condition data=""Wind: W at 17 mph"" />
+	</current_conditions>
+	<forecast_conditions>
+		<day_of_week data=""Sun"" />
+		<low data=""34"" />
+		<high data=""48"" />
+		<icon data=""/ig/images/weather/mostly_sunny.gif"" />
+		<condition data=""Partly Sunny"" />
+	</forecast_conditions>
+	<forecast_conditions>
+		<day_of_week data=""Mon"" />
+		<low data=""32"" />
+		<high data=""45"" />
+		<icon data=""/ig/images/weather/sunny.gif"" />
+		<condition data=""Clear"" />
+	</forecast_conditions>
+</weather>";
+
+			StringBuilder sb = new StringBuilder();
+			using (var p = ChoXmlReader.LoadText(xml).WithXPath("/forecast_conditions"))
+			{
+				using (var w = new ChoCSVWriter(sb)
+					.WithFirstLineHeader()
+					)
+					w.Write(p);
+			}
+
+			Console.WriteLine(sb.ToString());
+		}
+
+		static void Sample38()
+		{
+			string xml = @"<?xml version=""1.0""?>
+            <results>
+                <results>
+                        <field>2</field>
+                        <something>0</something>
+                        <name>alex</name>
+                </results>
+                <results>
+                        <field>0</field>
+                        <something>0</something>
+                        <name>jack</name>
+                </results>
+                <results>
+                        <field>2</field>
+                        <something>1</something>
+                        <name>heath</name>
+                </results>
+                <results>
+                        <field>0</field>
+                        <something>0</something>
+                        <name>blake</name>
+                </results>
+            </results>";
+
+			StringBuilder sb = new StringBuilder();
+			using (var p = ChoXmlReader.LoadText(xml))
+			{
+				using (var w = new ChoCSVWriter(sb)
+					.WithFirstLineHeader()
+					)
+					w.Write(p);
+			}
+
+			Console.WriteLine(sb.ToString());
+		}
+
+		static void Sample37()
         {
             string xml = @"<Products>
   <Product ProductCode=""C1010"" CategoryName=""Coins"" />
@@ -91,7 +220,7 @@ namespace ChoXmlReaderTest
 
             StringBuilder sb = new StringBuilder();
             using (var p = ChoXmlReader.LoadText(xml).WithXPath("/")
-                .Configure(c => c.RetainXmlAttributesAsNative = true)
+                .Configure(c => c.RetainXmlAttributesAsNative = false)
                 )
             {
                 Console.WriteLine(ChoJSONWriter.ToTextAll(p.ToArray()));

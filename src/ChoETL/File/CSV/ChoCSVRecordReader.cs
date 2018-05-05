@@ -37,13 +37,66 @@ namespace ChoETL
             _callbackRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordRead>(recordType);
             _customColumnMappableRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoCustomColumnMappable>(recordType);
             _emptyLineReportableRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoEmptyLineReportable>(recordType);
-            //Configuration.Validate();
-        }
+			//Configuration.Validate();
 
-        public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
+			_recBuffer = new Lazy<List<string>>(() =>
+			{
+				var b = Reader.Context.RecBuffer;
+				if (b == null)
+					Reader.Context.RecBuffer = new List<string>();
+
+				return Reader.Context.RecBuffer;
+			});
+		}
+
+		public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
         {
             return AsEnumerable(source, TraceSwitch, filterFunc);
         }
+
+        private Lazy<List<string>> _recBuffer = null;
+		private void CalcFieldMaxCountIfApplicable(IEnumerator<string> recEnum)
+		{
+			if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+			{
+				long recCount = 0;
+				if (Configuration.MaxScanRows <= 0)
+					return;
+
+				while (recEnum.MoveNext())
+				{
+					_recBuffer.Value.Add(recEnum.Current);
+					recCount++;
+
+					string line = recEnum.Current;
+					if (!line.IsNullOrWhiteSpace())
+					{
+						string[] fieldValues = line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar);
+						if (Configuration.MaxFieldPosition < fieldValues.Length)
+							Configuration.MaxFieldPosition = fieldValues.Length;
+					}
+
+					if (Configuration.MaxScanRows == recCount)
+						break;
+				}
+			}
+		}
+
+		private IEnumerable<string> ReadLines(TextReader sr, string EOLDelimiter = null, char quoteChar = ChoCharEx.NUL, bool mayContainEOLInData = false, int maxLineSize = 32768)
+		{
+			var recEnum = sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, Configuration.MayContainEOLInData).GetEnumerator();
+			CalcFieldMaxCountIfApplicable(recEnum);
+
+			object x = Reader.Context.RecBuffer;
+			var arr = _recBuffer.Value.ToArray();
+			_recBuffer.Value.Clear();
+
+			foreach (var rec in arr)
+				yield return rec;
+
+			foreach (var line in sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, Configuration.MayContainEOLInData))
+				yield return line;
+		}
 
         private IEnumerable<object> AsEnumerable(object source, TraceSwitch traceSwitch, Func<object, bool?> filterFunc = null)
         {
@@ -70,7 +123,7 @@ namespace ChoETL
             bool? doWhile = true;
 
             using (ChoPeekEnumerator<Tuple<long, string>> e = new ChoPeekEnumerator<Tuple<long, string>>(
-                new ChoIndexedEnumerator<string>(sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, Configuration.MayContainEOLInData)).ToEnumerable(),
+                new ChoIndexedEnumerator<string>(ReadLines(sr, Configuration.EOLDelimiter, Configuration.QuoteChar, Configuration.MayContainEOLInData)).ToEnumerable(),
                 (pair) =>
                 {
                     //bool isStateAvail = IsStateAvail();
@@ -816,10 +869,22 @@ namespace ChoETL
             {
 				if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
 				{
-					long index = 0;
-                    return (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)
-                            select "Column{0}".FormatString(++index)).ToArray();
-                }
+					if (Configuration.MaxFieldPosition <= 0)
+					{
+						long index = 0;
+						return (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)
+								select "Column{0}".FormatString(++index)).ToArray();
+					}
+					else
+					{
+						List<string> headers = new List<string>();
+						for (var counter = 1; counter <= Configuration.MaxFieldPosition; counter++)
+						{
+							headers.Add("Column{0}".FormatString(counter));
+						}
+						return headers.ToArray();
+					}
+				}
                 else
                 {
                     return null;

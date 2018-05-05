@@ -75,115 +75,113 @@ namespace ChoETL
             return newRec;
         }
 
-        protected virtual void OnRecordFieldTypeAssessment(IDictionary<string, Type> fieldTypes, IDictionary<string, object> fieldValues, bool isLastScanRow = false)
-        {
-            CultureInfo ci = Thread.CurrentThread.CurrentCulture;
-            if (!isLastScanRow)
-            {
-                foreach (var key in fieldTypes.Keys.ToArray())
-                {
-                    if (!fieldValues.ContainsKey(key))
-                        continue;
+		protected virtual void OnRecordFieldTypeAssessment(IDictionary<string, Type> fieldTypes, IDictionary<string, object> fieldValues, bool isLastScanRow = false)
+		{
+			CultureInfo ci = Thread.CurrentThread.CurrentCulture;
+			foreach (var key in fieldTypes.Keys.ToArray())
+			{
+				if (!fieldValues.ContainsKey(key))
+					continue;
 
-                    object value = fieldValues[key];
-                    Type fieldType = null;
-                    if (fieldTypes[key] == typeof(string))
-                        continue;
+				object value = fieldValues[key];
+				Type fieldType = null;
+				if (fieldTypes[key] == typeof(string))
+					continue;
 
-                    if (value == null)
-                    {
-                        if (isLastScanRow)
-                            fieldTypes[key] = typeof(string);
-                        else
-                            continue;
-                    }
-
-                    bool boolValue;
-                    long lresult = 0;
-                    double dresult = 0;
-                    decimal decResult = 0;
-                    DateTime dtResult;
-
-					if (ChoBoolean.TryParse(value.ToNString(), out boolValue))
-						fieldType = typeof(bool);
-					else if (!value.ToNString().Contains(ci.NumberFormat.NumberDecimalSeparator) && long.TryParse(value.ToNString(), out lresult))
-						fieldType = typeof(long);
-					else if (double.TryParse(value.ToNString(), out dresult))
-						fieldType = typeof(double);
-					else if (decimal.TryParse(value.ToNString(), out decResult))
-						fieldType = typeof(decimal);
-					else if (DateTime.TryParse(value.ToNString(), out dtResult))
-						fieldType = typeof(DateTime);
+				if (value == null)
+				{
+					if (isLastScanRow)
+						fieldTypes[key] = typeof(string);
 					else
-					{
-						if (value.ToNString().Length == 1)
-							fieldType = typeof(char);
-						else
-							fieldType = typeof(string);
-					}
+						continue;
+				}
 
-                    if (fieldType == typeof(string))
-                        fieldTypes[key] = fieldType;
-                    else if (fieldType == typeof(DateTime))
-                    {
-                        if (fieldTypes[key] == null)
-                            fieldTypes[key] = fieldType;
-                        else if (fieldTypes[key] != typeof(DateTime))
-                            fieldTypes[key] = typeof(string);
-                    }
-                    else if (fieldType == typeof(decimal))
-                    {
-                        if (fieldTypes[key] == null)
-                            fieldTypes[key] = fieldType;
-                        else if (fieldTypes[key] == typeof(DateTime))
-                            fieldTypes[key] = typeof(string);
-                        else if (fieldTypes[key] == typeof(double)
-                            || fieldTypes[key] == typeof(long)
-                            || fieldTypes[key] == typeof(bool))
-                            fieldTypes[key] = fieldType;
-                    }
-                    else if (fieldType == typeof(double))
-                    {
-                        if (fieldTypes[key] == null)
-                            fieldTypes[key] = fieldType;
-                        else if (fieldTypes[key] == typeof(DateTime))
-                            fieldTypes[key] = typeof(string);
-                        else if (fieldTypes[key] == typeof(long)
-                            || fieldTypes[key] == typeof(bool))
-                            fieldTypes[key] = fieldType;
-                    }
-                    else if (fieldType == typeof(long))
-                    {
-                        if (fieldTypes[key] == null)
-                            fieldTypes[key] = fieldType;
-                        else if (fieldTypes[key] == typeof(DateTime))
-                            fieldTypes[key] = typeof(string);
-                        else if (fieldTypes[key] == typeof(bool))
-                            fieldTypes[key] = fieldType;
-                    }
-                    else if (fieldType == typeof(bool))
-                    {
-                        if (fieldTypes[key] == null)
-                            fieldTypes[key] = fieldType;
-                    }
-					else if (fieldType == typeof(char))
-					{
-						if (fieldTypes[key] == null)
-							fieldTypes[key] = fieldType;
-					}
+				bool boolValue;
+				long lresult = 0;
+				double dresult = 0;
+				decimal decResult = 0;
+				DateTime dtResult;
+
+				if (ChoBoolean.TryParse(value.ToNString(), out boolValue))
+					fieldType = typeof(bool);
+				else if (!value.ToNString().Contains(ci.NumberFormat.NumberDecimalSeparator) && long.TryParse(value.ToNString(), out lresult))
+					fieldType = typeof(long);
+				else if (double.TryParse(value.ToNString(), out dresult))
+					fieldType = typeof(double);
+				else if (decimal.TryParse(value.ToNString(), out decResult))
+					fieldType = typeof(decimal);
+				else if (DateTime.TryParse(value.ToNString(), out dtResult))
+					fieldType = typeof(DateTime);
+				else
+				{
+					if (value.ToNString().Length == 1)
+						fieldType = typeof(char);
 					else
 						fieldType = typeof(string);
-                }
-            }
-            else
-            {
-                foreach (var key in fieldTypes.Keys.ToArray())
-                {
-                    if (fieldTypes[key] == null)
-                        fieldTypes[key] = typeof(string);
-                }
-            }
-        }
+				}
+
+				if (fieldType == typeof(string))
+					fieldTypes[key] = fieldType;
+				else if (fieldType == typeof(DateTime))
+				{
+					if (fieldTypes[key] == null)
+						fieldTypes[key] = fieldType;
+					else if (fieldTypes[key] != typeof(DateTime))
+						fieldTypes[key] = typeof(string);
+				}
+				else if (fieldType == typeof(decimal))
+				{
+					if (fieldTypes[key] == null)
+						fieldTypes[key] = fieldType;
+					else if (fieldTypes[key] == typeof(DateTime))
+						fieldTypes[key] = typeof(string);
+					else if (fieldTypes[key] == typeof(double)
+						|| fieldTypes[key] == typeof(long)
+						|| fieldTypes[key] == typeof(bool))
+						fieldTypes[key] = fieldType;
+				}
+				else if (fieldType == typeof(double))
+				{
+					if (fieldTypes[key] == null)
+						fieldTypes[key] = fieldType;
+					else if (fieldTypes[key] == typeof(DateTime))
+						fieldTypes[key] = typeof(string);
+					else if (fieldTypes[key] == typeof(long)
+						|| fieldTypes[key] == typeof(bool))
+						fieldTypes[key] = fieldType;
+				}
+				else if (fieldType == typeof(long))
+				{
+					if (fieldTypes[key] == null)
+						fieldTypes[key] = fieldType;
+					else if (fieldTypes[key] == typeof(DateTime))
+						fieldTypes[key] = typeof(string);
+					else if (fieldTypes[key] == typeof(bool))
+						fieldTypes[key] = fieldType;
+				}
+				else if (fieldType == typeof(bool))
+				{
+					if (fieldTypes[key] == null)
+						fieldTypes[key] = fieldType;
+				}
+				else if (fieldType == typeof(char))
+				{
+					if (fieldTypes[key] == null)
+						fieldTypes[key] = fieldType;
+				}
+				else
+					fieldType = typeof(string);
+			}
+			if (isLastScanRow)
+			{
+				foreach (var key in fieldTypes.Keys.ToArray())
+				{
+					if (fieldTypes[key] == null)
+						fieldTypes[key] = typeof(string);
+				}
+			}
+		}
+
         protected Type DiscoverFieldType(string value, ChoFileRecordConfiguration config)
         {
             bool treatCurrencyAsDecimal = config.TreatCurrencyAsDecimal;

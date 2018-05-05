@@ -79,7 +79,7 @@ namespace ChoETL
         internal int MaxFieldPosition
         {
             get;
-            private set;
+            set;
         }
         internal Dictionary<string, ChoCSVRecordFieldConfiguration> RecordFieldConfigurationsDict
         {

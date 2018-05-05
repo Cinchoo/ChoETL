@@ -234,7 +234,21 @@ namespace ChoETL
             return this;
         }
 
-        public ChoXmlWriter<T> WithXPath(string xPath)
+		public ChoXmlWriter<T> WithDefaultXmlNamespace(string prefix, string uri)
+		{
+			WithXmlNamespace(prefix, uri);
+			WithDefaultNamespacePrefix(prefix);
+			return this;
+		}
+
+		public ChoXmlWriter<T> WithDefaultNamespacePrefix(string prefix)
+		{
+			Configuration.DefaultNamespacePrefix = prefix;
+
+			return this;
+		}
+
+		public ChoXmlWriter<T> WithXPath(string xPath)
         {
             Configuration.XPath = xPath;
             return this;

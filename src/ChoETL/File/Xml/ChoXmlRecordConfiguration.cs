@@ -18,7 +18,7 @@ namespace ChoETL
     [DataContract]
     public class ChoXmlRecordConfiguration : ChoFileRecordConfiguration
     {
-        [DataMember]
+		[DataMember]
         public List<ChoXmlRecordFieldConfiguration> XmlRecordFieldConfigurations
         {
             get;
@@ -128,7 +128,28 @@ namespace ChoETL
         [DataMember]
         public bool RetainXmlAttributesAsNative { get; set; }
 
-        public readonly dynamic Context = new ChoDynamicObject();
+		private string _defaultNamespacePrefix = "x";
+		[DataMember]
+		public string DefaultNamespacePrefix
+		{
+			get { return _defaultNamespacePrefix; }
+			set
+			{
+				if (value.IsNullOrWhiteSpace())
+					return;
+
+				_defaultNamespacePrefix = value.Trim();
+			}
+		}
+		internal XNamespace NS
+		{
+			get
+			{
+				var nsm = new ChoXmlNamespaceManager(NamespaceManager);
+				return nsm.GetNamespaceForPrefix(DefaultNamespacePrefix);
+			}
+		}
+		public readonly dynamic Context = new ChoDynamicObject();
 
         internal bool IsComplexXPathUsed = true;
         public ChoXmlRecordFieldConfiguration this[string name]
@@ -332,7 +353,7 @@ namespace ChoETL
             }
         }
 
-        public override void Validate(object state)
+		public override void Validate(object state)
         {
             base.Validate(state);
 
@@ -605,20 +626,22 @@ namespace ChoETL
                 return false;
         }
 
-        internal string GetNameWithNamespace(XName name)
-        {
-            ChoXmlNamespaceManager nsMgr = new ChoXmlNamespaceManager(NamespaceManager);
+		internal string GetNameWithNamespace(XName name)
+		{
+			return name.ToString();
 
-            if (!name.NamespaceName.IsNullOrWhiteSpace())
-            {
-                string prefix = nsMgr.GetPrefixOfNamespace(name.NamespaceName);
-                if (prefix.IsNullOrWhiteSpace()) return name.LocalName;
+			ChoXmlNamespaceManager nsMgr = new ChoXmlNamespaceManager(NamespaceManager);
 
-                return prefix + ":" + name.LocalName;
-            }
-            else
-                return name.LocalName;
-        }
+			if (!name.NamespaceName.IsNullOrWhiteSpace())
+			{
+				string prefix = nsMgr.GetPrefixOfNamespace(name.NamespaceName);
+				if (prefix.IsNullOrWhiteSpace()) return name.LocalName;
+
+				return prefix + ":" + name.LocalName;
+			}
+			else
+				return name.LocalName;
+		}
 
         internal bool IsInNamespace(XName name, XName propName)
         {
