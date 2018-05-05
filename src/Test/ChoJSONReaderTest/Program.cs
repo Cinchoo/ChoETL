@@ -13,7 +13,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
-namespace ChoJSONReaderTest
+namespace ChoJSONReaderTest 
 {
     public class Filter
     {
