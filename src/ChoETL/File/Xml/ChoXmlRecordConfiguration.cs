@@ -628,8 +628,6 @@ namespace ChoETL
 
 		internal string GetNameWithNamespace(XName name)
 		{
-			return name.ToString();
-
 			ChoXmlNamespaceManager nsMgr = new ChoXmlNamespaceManager(NamespaceManager);
 
 			if (!name.NamespaceName.IsNullOrWhiteSpace())

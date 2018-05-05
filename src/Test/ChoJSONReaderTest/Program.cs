@@ -661,8 +661,8 @@ namespace ChoJSONReaderTest
 				//Console.WriteLine(ChoXmlWriter.ToTextAll(p, new ChoXmlRecordConfiguration().Configure(c => c.IgnoreRootName = true).Configure(c => c.IgnoreNodeName = true)));
 
 				using (var w = new ChoXmlWriter(sb)
-					.Configure(c => c.IgnoreRootName = true)
-					.Configure(c => c.IgnoreNodeName = true)
+					//.Configure(c => c.IgnoreRootName = true)
+					//.Configure(c => c.IgnoreNodeName = true)
 					.WithDefaultXmlNamespace("x1", "http://unknwn")
 					)
 				{

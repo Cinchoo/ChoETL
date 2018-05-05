@@ -632,7 +632,7 @@ namespace ChoETL
                 }
             }
 
-            innerXml1 = ele.ToString();
+            innerXml1 = ele.ToString(SaveOptions.OmitDuplicateNamespaces);
             if (config.IgnoreNodeName)
             {
                 innerXml1 = _beginTagRegex.Replace(innerXml1, delegate (Match m)
