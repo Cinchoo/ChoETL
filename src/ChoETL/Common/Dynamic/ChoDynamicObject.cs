@@ -640,7 +640,25 @@ namespace ChoETL
             }
         }
 
-        public int Count
+		public string[] KeysArray
+		{
+			get
+			{
+				IDictionary<string, object> kvpDict = _kvpDict;
+				return kvpDict != null ? kvpDict.Keys.ToArray() : new string[] { };
+			}
+		}
+
+		public object[] ValuesArray
+		{
+			get
+			{
+				IDictionary<string, object> kvpDict = _kvpDict;
+				return kvpDict != null ? kvpDict.Values.ToArray() : new object[] { };
+			}
+		}
+
+		public int Count
         {
             get
             {

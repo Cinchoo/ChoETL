@@ -725,7 +725,11 @@ namespace ChoJSONReaderTest
 					.WithFirstLineHeader()
 					)
 				{
-					w.Write(p);
+					w.Write(p.SelectMany(r => (string[])r.KeysArray));
+					//var x = p.Select(r => r.Keys);
+					//Console.WriteLine(x.Dump());
+					//foreach (var rec in p)
+					//	w.Write(ChoUtility.Transpose(rec));
 				}
 			}
 			Console.WriteLine(sb.ToString());

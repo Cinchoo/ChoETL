@@ -116,7 +116,7 @@ namespace ChoETL
 		//}
 		public static ChoDynamicObject Transpose(this ChoDynamicObject dict)
         {
-            return new ChoDynamicObject(Transpose((IDictionary<string, object>)dict).ToDictionary(kvp => kvp.Key.ToNString(), kvp => (object)kvp.Value));
+            return new ChoDynamicObject(Transpose((IDictionary<string, object>)dict).GroupBy(g => g.Key.ToNString(), StringComparer.OrdinalIgnoreCase).ToDictionary(kvp => kvp.Key.ToNString(), kvp => (object)kvp.Last(), StringComparer.OrdinalIgnoreCase));
         }
 
         public static IEnumerable<ChoDynamicObject> Transpose(this IEnumerable<ChoDynamicObject> dicts, bool treatFirstItemAsHeader = true)
