@@ -637,9 +637,52 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			Sample27();
+			Sample28();
 		}
 
+		static void Sample28()
+		{
+			string json = @"
+[
+    { ""value"":50,""name"":""desired_gross_margin"",""type"":""int""},
+	{ ""value"":50,""name"":""desired_adjusted_gross_margin"",""type"":""int""},
+    { ""value"":0,""name"":""target_electricity_tariff_unit_charge"",""type"":""decimal""},
+    { ""value"":0,""name"":""target_electricity_tariff_standing_charge"",""type"":""decimal""},
+    { ""value"":0,""name"":""target_gas_tariff_unit_charge"",""type"":""decimal""},
+    { ""value"":0,""name"":""target_gas_tariff_standing_charge"",""type"":""decimal""},
+    { ""value"":""10/10/2016"",""name"":""planned_go_live_date"",""type"":""DateTime""},
+    { ""value"":""0"",""name"":""assumed_fuel_ratio"",""type"":""int""},
+    {
+				""value"":{
+					""year_one"":""Cold"",
+        ""year_two"":""Average"",
+        ""year_three"":""Warm""
+		   
+		},
+    ""name"":""weather_variable"",""type"":""string""}
+]";
+
+			StringBuilder sb = new StringBuilder();
+			using (var p = ChoJSONReader.LoadText(json)
+				)
+			{
+				//foreach (var rec in p)
+				//	Console.WriteLine(rec.Dump());
+
+				using (var w = new ChoXmlWriter(sb)
+					.WithField("name", isXmlAttribute: true)
+					.WithField("type", isXmlAttribute: true)
+					.WithField("value", isAnyXmlNode: true)
+					//.Configure(c => c.IgnoreRootName = true)
+					//.Configure(c => c.IgnoreNodeName = true)
+					//.WithDefaultXmlNamespace("x1", "http://unknwn")
+					)
+				{
+					w.Write(p);
+				}
+			}
+			Console.WriteLine(sb.ToString());
+		}
 		static void Sample27()
 		{
 			string json = @"

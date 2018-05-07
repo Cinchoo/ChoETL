@@ -18,7 +18,13 @@ namespace ChoETL
             get;
             set;
         }
-        [DataMember]
+		[DataMember]
+		public bool IsAnyXmlNode
+		{
+			get;
+			set;
+		}
+		[DataMember]
         public bool IsXmlAttribute
         {
             get;

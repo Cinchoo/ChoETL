@@ -610,7 +610,7 @@ namespace ChoETL
         {
             return (ChoUtility.XmlDeserialize<ChoDynamicObject>(element.GetOuterXml(), null, null, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative));
 
-            if (element.Name.LocalName == "dynamic")
+            if (element.Name.LocalName == ChoDynamicObject.DefaultName)
             {
                 return (ChoUtility.XmlDeserialize<ChoDynamicObject>(element.GetOuterXml()));
             }
@@ -635,7 +635,7 @@ namespace ChoETL
                         var ele1 = grp.First().Value.FirstOrDefault();
                         obj.Add(ele1.Name.LocalName.FixName(), grp.First().Value.Select(ele =>
                         {
-                            if (ele.Name.LocalName == "dynamic")
+                            if (ele.Name.LocalName == ChoDynamicObject.DefaultName)
                             {
                                 return (ChoUtility.XmlDeserialize<ChoDynamicObject>(ele.GetOuterXml()));
                             }
@@ -648,7 +648,7 @@ namespace ChoETL
                     {
                         return grp.First().Value.Select(ele =>
                         {
-                            if (ele.Name.LocalName == "dynamic")
+                            if (ele.Name.LocalName == ChoDynamicObject.DefaultName)
                             {
                                 return (ChoUtility.XmlDeserialize<ChoDynamicObject>(ele.GetOuterXml()));
                             }
@@ -665,7 +665,7 @@ namespace ChoETL
                         if (ge.Value.Length == 1)
                         {
                             var ele = ge.Value.FirstOrDefault();
-                            if (ele.Name.LocalName == "dynamic")
+                            if (ele.Name.LocalName == ChoDynamicObject.DefaultName)
                                 obj.Add(ele.Name.LocalName.FixName(), (ChoUtility.XmlDeserialize<ChoDynamicObject>(ele.GetOuterXml())));
                             else
                                 obj.Add(ele.Name.LocalName.FixName(), ele.Elements().Count() > 0 || ele.Attributes().Count() > 0 ? ToDynamic(ele, false) : ele.NilAwareValue());
@@ -674,7 +674,7 @@ namespace ChoETL
                         {
                             obj.Add(element.Name.LocalName.FixName(), ge.Value.Select(ele =>
                             {
-                                if (ele.Name.LocalName == "dynamic")
+                                if (ele.Name.LocalName == ChoDynamicObject.DefaultName)
                                 {
                                     return (ChoUtility.XmlDeserialize<ChoDynamicObject>(ele.GetOuterXml()));
                                 }

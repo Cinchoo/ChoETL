@@ -291,8 +291,13 @@ namespace ChoETL
             PropertyInfo pi = null;
             bool isFirst = true;
             object rootRec = rec;
-            msg.AppendFormat("{{{0}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
-            foreach (KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
+
+			if (Configuration.IsDynamicObject && rec is ChoDynamicObject && ((ChoDynamicObject)rec).DynamicObjectName != ChoDynamicObject.DefaultName)
+				msg.AppendFormat(@"""{1}"": {{{0}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, ((ChoDynamicObject)rec).DynamicObjectName);
+			else
+				msg.AppendFormat("{{{0}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
+
+			foreach (KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
                 fieldConfig = kvp.Value;
                 fieldValue = null;
@@ -324,10 +329,11 @@ namespace ChoETL
                         fieldValue = dict[kvp.Key]; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
                         if (kvp.Value.FieldType == null)
                         {
-                            if (fieldValue == null)
-                                kvp.Value.FieldType = typeof(string);
-                            else
-                                kvp.Value.FieldType = fieldValue.GetType();
+                            kvp.Value.FieldType = typeof(object);
+							//if (fieldValue == null)
+       //                         kvp.Value.FieldType = typeof(string);
+       //                     else
+       //                         kvp.Value.FieldType = fieldValue.GetType();
                         }
                     }
                     else

@@ -360,7 +360,7 @@ namespace ChoETL
         {
             string fnTrim = name.NTrim();
             string xPath = $"//{fnTrim}";
-            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, false, fieldName, valueConverter, isNullable, defaultValue, fallbackValue, 
+            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, false, false, fieldName, valueConverter, isNullable, defaultValue, fallbackValue, 
                 encodeValue, fullyQualifiedMemberName, formatText);
         }
 
@@ -388,32 +388,33 @@ namespace ChoETL
         {
             string fnTrim = name.NTrim();
             string xPath = $"//@{fnTrim}";
-            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, true, fieldName, valueConverter, isNullable, defaultValue, fallbackValue, 
+            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, true, false, fieldName, valueConverter, isNullable, defaultValue, fallbackValue, 
                 encodeValue, fullyQualifiedMemberName, formatText);
         }
 
         public ChoXmlWriter<T> WithField<TField>(Expression<Func<T, TField>> field, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
-            bool isXmlAttribute = false, string fieldName = null,
+            bool isXmlAttribute = false, bool isAnyXmlNode = false, string fieldName = null,
             Func<object, object> valueConverter = null, bool isNullable = false,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string formatText = null)
         {
             if (field == null)
                 return this;
 
-            return WithField(field.GetMemberName(), xPath, fieldType, fieldValueTrimOption, isXmlAttribute, fieldName,
+            return WithField(field.GetMemberName(), xPath, fieldType, fieldValueTrimOption, isXmlAttribute, isAnyXmlNode, fieldName,
                 valueConverter, isNullable,
                 defaultValue, fallbackValue, encodeValue, field.GetFullyQualifiedMemberName(), formatText);
         }
 
         public ChoXmlWriter<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
-            bool isXmlAttribute = false, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
+            bool isXmlAttribute = false, bool isAnyXmlNode = false, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string formatText = null)
         {
-            return WithField(name, xPath, fieldType, fieldValueTrimOption, isXmlAttribute, fieldName, valueConverter, isNullable,
+            return WithField(name, xPath, fieldType, fieldValueTrimOption, isXmlAttribute, isAnyXmlNode, fieldName, valueConverter, isNullable,
                 defaultValue, fallbackValue, encodeValue, null, formatText);
         }
 
-        private ChoXmlWriter<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isXmlAttribute = false, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
+        private ChoXmlWriter<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
+			bool isXmlAttribute = false, bool isAnyXmlNode = false, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string fullyQualifiedMemberName = null, string formatText = null)
         {
             if (!name.IsNullOrEmpty())
@@ -448,7 +449,8 @@ namespace ChoETL
                     DefaultValue = defaultValue,
                     FallbackValue = fallbackValue,
                     EncodeValue = encodeValue,
-                    FormatText = formatText
+                    FormatText = formatText,
+					IsAnyXmlNode = isAnyXmlNode
                 };
 
                 if (fullyQualifiedMemberName.IsNullOrWhiteSpace())

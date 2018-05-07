@@ -1192,11 +1192,20 @@ a,0,1,2-Data";
 					.WithFirstLineHeader()
 					)
 				{
-					var j1 = from r1 in p1
-							 join r2 in p2
-								on r1.StudentSisId equals r2.StudentSisId into p22
-								from r22 in p22.DefaultIfEmpty()
-							select new { StudentSisId = r1.StudentSisId, Name = r1.Name, Relationship = r22 != null ? r22.Relationship : null };
+					var j1 = p1.LeftJoin(p2, r1 => r1.StudentSisId,
+						(r1) => new { r1.StudentSisId, r1.Name, Relationship = (string)null },
+						(r1, r2) => new { r1.StudentSisId, r1.Name, Relationship = r2 != null ? (string)r2.Relationship : null }
+						);
+
+					foreach (object rec in j1)
+					{
+						Console.WriteLine(rec);
+					}
+					//var j1 = from r1 in p1
+					//		 join r2 in p2
+					//			on r1.StudentSisId equals r2.StudentSisId into p22
+					//			from r22 in p22.DefaultIfEmpty()
+					//		select new { StudentSisId = r1.StudentSisId, Name = r1.Name, Relationship = r22 != null ? r22.Relationship : null };
 
 					using (var w = new ChoCSVWriter(sb)
 						.WithFirstLineHeader()

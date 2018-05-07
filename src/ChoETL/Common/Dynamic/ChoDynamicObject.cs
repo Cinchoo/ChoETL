@@ -19,6 +19,8 @@ namespace ChoETL
     [Serializable]
     public class ChoDynamicObject : DynamicObject, IDictionary<string, object> //, IList<object>, IList //, IXmlSerializable
     {
+		public const string DefaultName = "dynamic";
+
 		private static readonly string ValueToken = "#text";
 
 		private readonly static Dictionary<string, Type> _intrinsicTypes = new Dictionary<string, Type>();
@@ -118,7 +120,7 @@ namespace ChoETL
 
         public ChoDynamicObject(string name) : this(false)
         {
-            DynamicObjectName = name.IsNullOrWhiteSpace() ? "dynamic" : name.Trim();
+            DynamicObjectName = name.IsNullOrWhiteSpace() ? DefaultName : name.Trim();
         }
 
         public ChoDynamicObject(bool watchChange = false) : this(null, watchChange)
@@ -139,7 +141,7 @@ namespace ChoETL
         public ChoDynamicObject(Func<IDictionary<string, object>> func, bool watchChange = false)
         {
             if (DynamicObjectName.IsNullOrWhiteSpace())
-                DynamicObjectName = "dynamic";
+                DynamicObjectName = DefaultName;
             ThrowExceptionIfPropNotExists = false;
             IsFixed = false;
             IsReadOnly = false;
@@ -923,7 +925,7 @@ namespace ChoETL
 						{
 							foreach (var collValue in ((IList)value).OfType<ChoDynamicObject>())
 							{
-								msg.AppendFormat("{0}{1}", Environment.NewLine, collValue.GetXml(collValue.NName == "dynamic" ? key.ToSingular() : collValue.NName, nullValueHandling, nsPrefix).Indent(2, "  "));
+								msg.AppendFormat("{0}{1}", Environment.NewLine, collValue.GetXml(collValue.NName == DefaultName ? key.ToSingular() : collValue.NName, nullValueHandling, nsPrefix).Indent(2, "  "));
 							}
 						}
 						else
@@ -950,14 +952,14 @@ namespace ChoETL
 
 		public virtual void WriteXml(XmlWriter writer)
         {
-            writer.WriteStartElement("dynamic");
+            writer.WriteStartElement(DefaultName);
 
             object value = null;
             foreach (string key in this.Keys)
             {
                 if (key == "Value")
                     value = this[key];
-                else if (key == "dynamic")
+                else if (key == DefaultName)
                 {
                     ((ChoDynamicObject)this[key]).WriteXml(writer);
                 }

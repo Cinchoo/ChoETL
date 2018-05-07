@@ -410,10 +410,12 @@ namespace ChoETL
                         {
                             if (ElementType == null)
                             {
-                                if (fieldValue == null)
-                                    kvp.Value.FieldType = typeof(string);
-                                else
-                                    kvp.Value.FieldType = fieldValue.GetType();
+								kvp.Value.FieldType = typeof(object);
+
+								//if (fieldValue == null)
+        //                            kvp.Value.FieldType = typeof(object);
+        //                        else
+        //                            kvp.Value.FieldType = fieldValue.GetType();
                             }
                             else
                                 kvp.Value.FieldType = ElementType;
@@ -527,18 +529,29 @@ namespace ChoETL
                 }
 
                 RaiseRecordFieldSerialize(rec, index, kvp.Key, ref fieldValue);
-                if (fieldConfig.IsXmlAttribute)
-                {
-                    attrs.Add(kvp.Key, fieldValue);
-                }
-                else
-                {
-                    elems.Add(kvp.Key, fieldValue);
-                }
+
+				if (!fieldConfig.IsAnyXmlNode)
+				{
+					if (fieldConfig.IsXmlAttribute)
+					{
+						attrs.Add(kvp.Key, fieldValue);
+					}
+					else
+					{
+						elems.Add(kvp.Key, fieldValue);
+					}
+				}
+				else
+				{
+					if (fieldValue == null || fieldValue.GetType().IsSimple())
+						attrs.Add(kvp.Key, fieldValue);
+					else
+						elems.Add(kvp.Key, fieldValue);
+				}
             }
 
             string nodeName = config.NodeName;
-            if (rec is ChoDynamicObject && ((ChoDynamicObject)rec).DynamicObjectName != "dynamic")
+            if (rec is ChoDynamicObject && ((ChoDynamicObject)rec).DynamicObjectName != ChoDynamicObject.DefaultName)
             {
                 ChoDynamicObject dobj = rec as ChoDynamicObject;
                 nodeName = dobj.DynamicObjectName;
