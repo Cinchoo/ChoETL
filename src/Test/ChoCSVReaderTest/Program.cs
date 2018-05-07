@@ -1168,9 +1168,49 @@ a,0,1,2-Data";
             Console.WriteLine("Total: " + rowCount);
         }
 
+		static void Join()
+		{
+			string csv1 = @"StudentSisId,Name
+111111,Betty
+222222,Veronica
+333333,Jughead
+444444,Archie";
+
+			string csv2 = @"StudentSisId,Relationship
+111111,Mother
+111111,Father
+222222,Mother
+444444,Father
+";
+
+			StringBuilder sb = new StringBuilder();
+			using (var p1 = ChoCSVReader.LoadText(csv1)
+				.WithFirstLineHeader()
+				)
+			{
+				using (var p2 = ChoCSVReader.LoadText(csv2)
+					.WithFirstLineHeader()
+					)
+				{
+					var j1 = from r1 in p1
+							 join r2 in p2
+								on r1.StudentSisId equals r2.StudentSisId into p22
+								from r22 in p22.DefaultIfEmpty()
+							select new { StudentSisId = r1.StudentSisId, Name = r1.Name, Relationship = r22 != null ? r22.Relationship : null };
+
+					using (var w = new ChoCSVWriter(sb)
+						.WithFirstLineHeader()
+						)
+						w.Write(j1);
+				}
+			}
+
+			Console.WriteLine(sb.ToString());
+		}
+
         static void Main(string[] args)
         {
-			VariableFieldsTest();
+			Join();
             return;
 
 			CSV2XmlTest();

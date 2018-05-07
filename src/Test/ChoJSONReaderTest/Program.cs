@@ -637,7 +637,45 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			Sample25();
+			Sample27();
+		}
+
+		static void Sample27()
+		{
+			string json = @"
+			[
+				{
+					""car"": {
+						""features"": [{
+							""code"": ""1""
+						}, {
+							""code"": ""2""
+						}]
+					}
+				},
+				{
+					""car"": {
+						""features"": [{
+							""code"": ""3""
+						}, {
+							""code"": ""2""
+						}]
+					}
+				}
+			]";
+			StringBuilder sb = new StringBuilder();
+			using (var p = ChoJSONReader.LoadText(json))
+			{
+				using (var w = new ChoXmlWriter(sb)
+					.Configure(c => c.RootName = "cars")
+					//.Configure(c => c.IgnoreRootName = true)
+					.Configure(c => c.IgnoreNodeName = true)
+					)
+				{
+					w.Write(p);
+				}
+			}
+			Console.WriteLine(sb.ToString());
 		}
 
 		static void Sample26()

@@ -128,7 +128,7 @@ namespace ChoETL
         [DataMember]
         public bool RetainXmlAttributesAsNative { get; set; }
 
-		private string _defaultNamespacePrefix = "x";
+		private string _defaultNamespacePrefix;
 		[DataMember]
 		public string DefaultNamespacePrefix
 		{
@@ -699,7 +699,7 @@ namespace ChoETL
 
         public string GetNamespaceForPrefix(string prefix)
         {
-            if (NSDict.ContainsKey(prefix))
+            if (prefix != null && NSDict.ContainsKey(prefix))
                 return NSDict[prefix];
             else
                 return null;

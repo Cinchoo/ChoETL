@@ -79,7 +79,7 @@ namespace ChoETL
             if (!Configuration.NamespaceManager.DefaultNamespace.IsNullOrWhiteSpace())
             {
                 _nsInitialized = true;
-                Configuration.NamespaceManager.AddNamespace(Configuration.DefaultNamespacePrefix, Configuration.NamespaceManager.DefaultNamespace);
+                Configuration.NamespaceManager.AddNamespace("x", Configuration.NamespaceManager.DefaultNamespace);
             }
 
             foreach (XElement el in xElements)
@@ -89,7 +89,7 @@ namespace ChoETL
                     _nsInitialized = true;
                     if (!Configuration.NamespaceManager.DefaultNamespace.IsNullOrWhiteSpace())
                     {
-                        Configuration.NamespaceManager.AddNamespace(Configuration.DefaultNamespacePrefix, Configuration.NamespaceManager.DefaultNamespace);
+                        Configuration.NamespaceManager.AddNamespace("x", Configuration.NamespaceManager.DefaultNamespace);
 						ChoXmlSettings.XmlNamespace = Configuration.NamespaceManager.DefaultNamespace;
 					}
                 }

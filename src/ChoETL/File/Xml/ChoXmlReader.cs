@@ -61,7 +61,7 @@ namespace ChoETL
 			Init();
 
 			_sr = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
-			InitXml();
+			//InitXml();
 			_closeStreamOnDispose = true;
 		}
 
@@ -80,7 +80,7 @@ namespace ChoETL
             Init();
 
             _sr = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
-			InitXml();
+			//InitXml();
 			_closeStreamOnDispose = true;
         }
 
@@ -116,7 +116,7 @@ namespace ChoETL
                 _sr = new StreamReader(inStream);
             else
                 _sr = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
-			InitXml();
+			//InitXml();
 			_closeStreamOnDispose = true;
         }
 
@@ -136,7 +136,7 @@ namespace ChoETL
             Close();
             Init();
             _sr = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
-			InitXml();
+			//InitXml();
 			_closeStreamOnDispose = true;
 
             return this;
@@ -149,7 +149,7 @@ namespace ChoETL
             Close();
             Init();
             _sr = textReader;
-			InitXml();
+			//InitXml();
 			_closeStreamOnDispose = false;
 
             return this;
@@ -317,7 +317,9 @@ namespace ChoETL
         {
             if (_xElements == null)
             {
-                ChoXmlRecordReader rr = new ChoXmlRecordReader(typeof(T), Configuration);
+				InitXml();
+
+				ChoXmlRecordReader rr = new ChoXmlRecordReader(typeof(T), Configuration);
                 //if (_textReader != null)
                 //    _xmlReader = XmlReader.Create(_textReader, new XmlReaderSettings() { DtdProcessing = DtdProcessing.Ignore, XmlResolver = null }, new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
 

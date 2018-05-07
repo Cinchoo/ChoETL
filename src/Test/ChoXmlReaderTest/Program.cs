@@ -78,8 +78,25 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			Sample40();
+			Sample42();
         }
+
+		static void Sample42()
+		{
+			string xml = @"<CUST><First_Name>Luke</First_Name> <Last_Name>Skywalker</Last_Name> <ID><![CDATA[1234]]></ID> </CUST>";
+			StringBuilder sb = new StringBuilder();
+			using (var p = ChoXmlReader.LoadText(xml).WithXPath("/")
+				.Configure(c => c.EmptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Empty)
+				)
+			{
+				using (var w = new ChoJSONWriter(sb)
+					.Configure(c => c.SupportMultipleContent = true)
+					)
+					w.Write(p);
+			}
+
+			Console.WriteLine(sb.ToString());
+		}
 
 		static void Sample41()
 		{
@@ -105,7 +122,7 @@ namespace ChoXmlReaderTest
 
 		static void Sample40()
 		{
-			string xml = @"<Employees xmlns=""http://company.com/schemas"">
+			string xml = @"<Employees xmlns:x1=""http://company.com/schemas"">
 				<Employee>
 					<FirstName>name1</FirstName>
 					<LastName>surname1</LastName>
@@ -123,6 +140,7 @@ namespace ChoXmlReaderTest
 
 			StringBuilder sb = new StringBuilder();
 			using (var p = ChoXmlReader.LoadText(xml)
+				.WithXmlNamespace("x1", "http://company.com/schemas")
 				)
 			{
 				using (var w = new ChoJSONWriter(sb))

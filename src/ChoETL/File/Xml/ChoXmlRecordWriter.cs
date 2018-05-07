@@ -180,7 +180,7 @@ namespace ChoETL
                                     yield break;
 
                                 if (!Configuration.RootName.IsNullOrWhiteSpace() && !Configuration.IgnoreRootName)
-                                    sw.Write("<{0}>".FormatString(XmlNamespaceStartElementText(Configuration.RootName, Configuration.DefaultNamespacePrefix, Configuration.NS)));
+                                    sw.Write("{0}".FormatString(XmlNamespaceStartElementText(Configuration.RootName, Configuration.DefaultNamespacePrefix, Configuration.NS)));
                             }
                         }
                         //Check record 

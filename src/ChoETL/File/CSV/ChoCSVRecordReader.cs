@@ -346,7 +346,7 @@ namespace ChoETL
 
 					if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
 					{
-						if (Configuration.AreAllFieldTypesNull && Configuration.MaxScanRows > 0 && recCount <= Configuration.MaxScanRows)
+						if (Configuration.AreAllFieldTypesNull && Configuration.AutoDiscoverFieldTypes && Configuration.MaxScanRows > 0 && recCount <= Configuration.MaxScanRows)
                         {
                             buffer.Add(rec);
                             RaiseRecordFieldTypeAssessment(recFieldTypes, (IDictionary<string, object>)rec, recCount == Configuration.MaxScanRows);
