@@ -84,7 +84,7 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			Sample42();
+            Sample21();
         }
 		static void Sample42()
 		{

@@ -92,7 +92,7 @@ namespace ChoETL
             Init();
 
             _sr = textReader;
-			InitXml();
+			//InitXml();
 		}
 
 		public ChoXmlReader(XmlReader xmlReader, ChoXmlRecordConfiguration configuration = null)
