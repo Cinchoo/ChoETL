@@ -62,7 +62,27 @@ namespace ChoETL
             get;
             set;
         }
-        public override bool IsDynamicObject
+		public bool IgnoreNodeName
+		{
+			get;
+			set;
+		}
+		public string NodeName
+		{
+			get;
+			set;
+		}
+		public bool IgnoreRootName
+		{
+			get;
+			set;
+		}
+		public string RootName
+		{
+			get;
+			set;
+		}
+		public override bool IsDynamicObject
         {
             get
             {

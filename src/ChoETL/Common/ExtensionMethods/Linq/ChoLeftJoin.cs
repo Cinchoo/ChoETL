@@ -8,6 +8,8 @@ namespace ChoETL
 {
 	public static partial class ChoLinqEx
 	{
+		static KeyValuePair<TK, TV> Pair<TK, TV>(TK k, TV v) => new KeyValuePair<TK, TV>(k, v);
+
 		public static IEnumerable<TResult> LeftJoin<TFirst, TSecond, TKey, TResult>(
 				this IEnumerable<TFirst> first,
 				IEnumerable<TSecond> second,
@@ -23,8 +25,6 @@ namespace ChoETL
 			if (secondKeySelector == null) throw new ArgumentNullException(nameof(secondKeySelector));
 			if (firstSelector == null) throw new ArgumentNullException(nameof(firstSelector));
 			if (bothSelector == null) throw new ArgumentNullException(nameof(bothSelector));
-
-			KeyValuePair<TK, TV> Pair<TK, TV>(TK k, TV v) => new KeyValuePair<TK, TV>(k, v);
 
 			return // TODO replace KeyValuePair<,> with (,) for clarity
 				from j in first.GroupJoin(second, firstKeySelector, secondKeySelector,

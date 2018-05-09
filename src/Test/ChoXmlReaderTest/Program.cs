@@ -73,6 +73,12 @@ namespace ChoXmlReaderTest
         public string Color { get; set; }
     }
 
+	public class Emp
+	{
+		public string First_Name { get; set; }
+		public string Last_Name { get; set; }
+	}
+
     public class Program
     {
         static void Main(string[] args)
@@ -82,14 +88,16 @@ namespace ChoXmlReaderTest
         }
 		static void Sample42()
 		{
-			string xml = @"<CUST><First_Name>Luke</First_Name> <Last_Name>Skywalker</Last_Name> <ID><![CDATA[1234]]></ID> </CUST>";
+			string xml = @"<custs><CUST><First_Name>Luke</First_Name> <Last_Name>Skywalker</Last_Name> <ID><![CDATA[1234]]></ID> </CUST><CUST><First_Name>Luke</First_Name> <Last_Name>Skywalker</Last_Name> <ID><![CDATA[1234]]></ID> </CUST></custs>";
 			StringBuilder sb = new StringBuilder();
-			using (var p = ChoXmlReader.LoadText(xml).WithXPath("/")
+			using (var p = ChoXmlReader<Emp>.LoadText(xml)/*.WithXPath("/")*/
 				.Configure(c => c.EmptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Empty)
 				)
 			{
-				using (var w = new ChoJSONWriter(sb)
-					.Configure(c => c.SupportMultipleContent = true)
+				using (var w = new ChoJSONWriter<Emp>(sb)
+					//.Configure(c => c.SupportMultipleContent = true)
+					//.Configure(c => c.RootName = "Emp")
+					.Configure(c => c.IgnoreNodeName = true)
 					)
 					w.Write(p);
 			}

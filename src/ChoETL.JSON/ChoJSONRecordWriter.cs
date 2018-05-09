@@ -11,6 +11,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace ChoETL
 {
@@ -119,7 +120,36 @@ namespace ChoETL
                             Configuration.IsDynamicObject = recordType.IsDynamicType();
                             if (!Configuration.IsDynamicObject)
                             {
-                                if (Configuration.JSONRecordFieldConfigurations.Count == 0)
+								if (Configuration.RootName.IsNullOrWhiteSpace())
+								{
+									var root = Configuration.RecordType.GetCustomAttribute<ChoJSONNRootNameAttribute>();
+									if (root != null)
+									{
+										Configuration.RootName = root.Name;
+									}
+								}
+
+								if (Configuration.NodeName.IsNullOrWhiteSpace())
+								{
+									var root = Configuration.RecordType.GetCustomAttribute<ChoJSONNRootNameAttribute>();
+									if (root != null)
+									{
+										Configuration.NodeName = root.Name;
+									}
+									else
+									{
+										var xmlRoot = Configuration.RecordType.GetCustomAttribute<XmlRootAttribute>();
+										if (xmlRoot != null)
+										{
+											Configuration.NodeName = xmlRoot.ElementName;
+										}
+										else
+											Configuration.NodeName = Configuration.RecordType.Name;
+
+									}
+								}
+
+								if (Configuration.JSONRecordFieldConfigurations.Count == 0)
                                     Configuration.MapRecordFields(Configuration.RecordType);
                             }
 
@@ -144,9 +174,17 @@ namespace ChoETL
                             if (!RaiseBeginWrite(sw))
                                 yield break;
 
-                            if (!SupportMultipleContent)
-                                sw.Write("[");
-                        }
+							if (!SupportMultipleContent)
+							{
+								if (Configuration.IgnoreRootName || Configuration.RootName.IsNullOrWhiteSpace())
+									sw.Write("[");
+								else
+									sw.Write(@"""{0}"": [".FormatString(Configuration.RootName.NTrim()));
+							}
+							else
+							{
+							}
+						}
 
                         if (!RaiseBeforeRecordWrite(record, _index, ref recText))
                             yield break;
@@ -292,8 +330,18 @@ namespace ChoETL
             bool isFirst = true;
             object rootRec = rec;
 
-			if (Configuration.IsDynamicObject && rec is ChoDynamicObject && ((ChoDynamicObject)rec).DynamicObjectName != ChoDynamicObject.DefaultName)
-				msg.AppendFormat(@"""{1}"": {{{0}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, ((ChoDynamicObject)rec).DynamicObjectName);
+			if (!Configuration.IgnoreNodeName)
+			{
+				if (Configuration.NodeName.IsNullOrWhiteSpace())
+				{
+					if (Configuration.IsDynamicObject && rec is ChoDynamicObject && ((ChoDynamicObject)rec).DynamicObjectName != ChoDynamicObject.DefaultName)
+						msg.AppendFormat(@"""{1}"": {{{0}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, ((ChoDynamicObject)rec).DynamicObjectName);
+					else
+						msg.AppendFormat("{{{0}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
+				}
+				else
+					msg.AppendFormat(@"""{1}"": {{{0}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, Configuration.NodeName);
+			}
 			else
 				msg.AppendFormat("{{{0}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
 
@@ -497,8 +545,9 @@ namespace ChoETL
                 }
                 isFirst = false;
             }
-            msg.AppendFormat("{0}}}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
-            recText = msg.ToString();
+			msg.AppendFormat("{0}}}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
+
+            recText = Configuration.IgnoreNodeName ? msg.ToString().Unindent(1, " ")  : msg.ToString();
             return true;
         }
 
