@@ -84,9 +84,78 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Sample21();
+            Sample44();
         }
-		static void Sample42()
+
+        static void Sample44()
+        {
+            string xml = @"<RSS xmlns:jwplayer=""http://support.jwplayer.com/customer/portal/articles/1403635-media-format-reference#feeds"" version=""2.0"">
+  <Channel>
+    <items>
+      <item>
+        <title>Overlay HD/CC</title>
+        <guid>1</guid>
+        <description>This example shows tooltip overlays for captions and quality.</description>
+        <jwplayer:image>http://content.jwplatform.com/thumbs/3XnJSIm4-640.jpg</jwplayer:image>
+        <jwplayer:sources>
+          <jwplayer:source file=""http://content.jwplatform.com/videos/3XnJSIm4-DZ7jSYgM.mp4"" label=""720p"" />
+          <jwplayer:source file=""http://content.jwplatform.com/videos/3XnJSIm4-kNspJqnJ.mp4"" label=""360p"" />
+          <jwplayer:source file=""http://content.jwplatform.com/videos/3XnJSIm4-injeKYZS.mp4"" label=""180p"" />
+        </jwplayer:sources>
+        <jwplayer:tracks>
+          <jwplayer:track file=""http://content.jwplatform.com/captions/2UEDrDhv.txt"" label=""English"" />
+          <jwplayer:track file=""http://content.jwplatform.com/captions/6aaGiPcs.txt"" label=""Japanese"" />
+          <jwplayer:track file=""http://content.jwplatform.com/captions/2nxzdRca.txt"" label=""Russian"" />
+          <jwplayer:track file=""http://content.jwplatform.com/captions/BMjSl0KC.txt"" label=""Spanish"" />
+        </jwplayer:tracks>
+      </item>
+    </items>
+  </Channel>
+</RSS>";
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoXmlReader.LoadText(xml)
+                .Configure(c => c.NullValueHandling = ChoNullValueHandling.Ignore)
+                .Configure(c => c.RetainXmlAttributesAsNative = true)
+                )
+            {
+                using (var w = new ChoJSONWriter(sb))
+                {
+                    w.Write(p);
+                }
+
+            }
+            Console.WriteLine(sb.ToString());
+
+
+        }
+        static void Sample43()
+        {
+            string xml = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
+<XslMapper>
+  <type name=""slideshow"" xsl=""http://localhost:8080/Xsl-c.xslt"" >
+    <category name=""1234"" xsl=""http://localhost:8080/Xsl-b.xslt""></category>
+  </type>
+  <type name=""article"" xsl=""http://localhost:8080/Xsl-a.xslt"">
+    <category name=""1234"" xsl=""http://localhost:8080/Xsl-b.xslt""></category>
+    <category name=""1234"" xsl=""http://localhost:8080/Xsl-b.xslt""></category>
+  </type>
+</XslMapper>";
+
+			StringBuilder sb = new StringBuilder();
+            using (var p = ChoXmlReader.LoadText(xml)
+                .Configure(c => c.NullValueHandling = ChoNullValueHandling.Ignore)
+                .Setup(s => s.MembersDiscovered += (o, e) => e.Value.AddOrUpdate("category", typeof(Object[])))
+                )
+            {
+                using (var w = new ChoJSONWriter(sb))
+                {
+                    w.Write(p);
+                }
+
+            }
+			Console.WriteLine(sb.ToString());
+        }
+        static void Sample42()
 		{
 			string xml = @"<custs><CUST><First_Name>Luke</First_Name> <Last_Name>Skywalker</Last_Name> <ID><![CDATA[1234]]></ID> </CUST><CUST><First_Name>Luke</First_Name> <Last_Name>Skywalker</Last_Name> <ID><![CDATA[1234]]></ID> </CUST></custs>";
 			StringBuilder sb = new StringBuilder();

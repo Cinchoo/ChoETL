@@ -637,10 +637,75 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			Sample28();
+			Sample29();
 		}
 
-		static void Sample28()
+        static void Sample29()
+        {
+            string json = @"{
+  ""RSS"": {
+    ""Channel"": {
+      ""item"": [
+        {
+          ""title"": ""Overlay HD/CC"",
+          ""guid"": ""1"",
+          ""description"": ""This example shows tooltip overlays for captions and quality."",
+          ""jwplayer:image"": ""http://content.jwplatform.com/thumbs/3XnJSIm4-640.jpg"",
+          ""jwplayer:source"": [
+            {
+              ""@file"": ""http://content.jwplatform.com/videos/3XnJSIm4-DZ7jSYgM.mp4"",
+              ""@label"": ""720p""
+            },
+            {
+              ""@file"": ""http://content.jwplatform.com/videos/3XnJSIm4-kNspJqnJ.mp4"",
+              ""@label"": ""360p""
+            },
+            {
+              ""@file"": ""http://content.jwplatform.com/videos/3XnJSIm4-injeKYZS.mp4"",
+              ""@label"": ""180p""
+            }
+          ],
+          ""jwplayer:track"": [
+            {
+              ""@file"": ""http://content.jwplatform.com/captions/2UEDrDhv.txt"",
+              ""@label"": ""English""
+            },
+            {
+              ""@file"": ""http://content.jwplatform.com/captions/6aaGiPcs.txt"",
+              ""@label"": ""Japanese""
+            },
+            {
+              ""@file"": ""http://content.jwplatform.com/captions/2nxzdRca.txt"",
+              ""@label"": ""Russian""
+            },
+            {
+              ""@file"": ""http://content.jwplatform.com/captions/BMjSl0KC.txt"",
+              ""@label"": ""Spanish""
+            }
+          ]
+        }
+      ]
+    },
+    ""@xmlns:jwplayer"": ""http://support.jwplayer.com/customer/portal/articles/1403635-media-format-reference#feeds"",
+    ""@version"": ""2.0""
+  }
+}";
+
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoJSONReader.LoadText(json)
+                )
+            {
+                using (var w = new ChoXmlWriter(sb)
+                    .Configure(c => c.IgnoreRootName = true)
+                    .Configure(c => c.IgnoreNodeName = true)
+                    )
+                    w.Write(p);
+            }
+
+            Console.WriteLine(sb.ToString());
+        }
+
+        static void Sample28()
 		{
 			string json = @"
 [

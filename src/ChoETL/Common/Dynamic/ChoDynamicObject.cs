@@ -920,8 +920,9 @@ namespace ChoETL
 						msg.AppendFormat("{0}{1}", Environment.NewLine, "<{0}>{1}</{0}>".FormatString(key, value).Indent(1, "  "));
 					else
 					{
+                        key = value is IList ? key.ToPlural() != key ? key.ToPlural() : "{0}s".FormatString(key) : key;
 						msg.AppendFormat("{0}{1}", Environment.NewLine, "<{0}>".FormatString(key).Indent(1, "  "));
-						if (value is IList)
+                        if (value is IList)
 						{
 							foreach (var collValue in ((IList)value).OfType<ChoDynamicObject>())
 							{
