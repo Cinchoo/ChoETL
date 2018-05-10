@@ -637,8 +637,77 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			Sample28();
+            Sample30();
 		}
+
+        static void Sample30()
+        {
+            string json = @"{""Emp"": [
+ {
+                ""items"": [
+                  {
+      ""title"": ""Overlay HD/CC"",
+                    ""guid"": ""1"",
+                    ""description"": ""This example shows tooltip overlays for captions and quality."",
+                    ""image"": ""http://content.jwplatform.com/thumbs/3XnJSIm4-640.jpg"",
+                    ""source"": {
+        ""@file"": ""http://content.jwplatform.com/videos/3XnJSIm4-kNspJqnJ.mp4"",
+                      ""@label"": ""360p""
+      },
+      ""sources"": [
+        {
+          ""@file"": ""http://content.jwplatform.com/videos/3XnJSIm4-DZ7jSYgM.mp4"",
+          ""@label"": ""720p""
+        },
+        {
+          ""@file"": ""http://content.jwplatform.com/videos/3XnJSIm4-kNspJqnJ.mp4"",
+          ""@label"": ""360p""
+        },
+        {
+          ""@file"": ""http://content.jwplatform.com/videos/3XnJSIm4-injeKYZS.mp4"",
+          ""@label"": ""180p""
+        }
+      ],
+      ""tracks"": [
+        {
+          ""@file"": ""http://content.jwplatform.com/captions/2UEDrDhv.txt"",
+          ""@label"": ""English""
+        },
+        {
+          ""@file"": ""http://content.jwplatform.com/captions/6aaGiPcs.txt"",
+          ""@label"": ""Japanese""
+        },
+        {
+          ""@file"": ""http://content.jwplatform.com/captions/2nxzdRca.txt"",
+          ""@label"": ""Russian""
+        },
+        {
+          ""@file"": ""http://content.jwplatform.com/captions/BMjSl0KC.txt"",
+          ""@label"": ""Spanish""
+        }
+      ]
+    }
+  ]
+ },
+  {
+  ""items"": null
+ }
+]
+}
+";
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoJSONReader.LoadText(json).Configure(c => c.SupportMultipleContent = true)
+                )
+            {
+                using (var w = new ChoXmlWriter(sb)
+                    .Configure(c => c.IgnoreRootName = true)
+                    .Configure(c => c.IgnoreNodeName = false)
+                    )
+                    w.Write(p);
+            }
+
+            Console.WriteLine(sb.ToString());
+        }
 
         static void Sample29()
         {

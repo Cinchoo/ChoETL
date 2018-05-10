@@ -330,6 +330,11 @@ namespace ChoETL
             bool isFirst = true;
             object rootRec = rec;
 
+            if (!Configuration.IgnoreNodeName)
+            {
+                if (Configuration.SupportMultipleContent == null || !Configuration.SupportMultipleContent.Value)
+                    Configuration.IgnoreNodeName = true;
+            }
 			if (!Configuration.IgnoreNodeName)
 			{
 				if (Configuration.NodeName.IsNullOrWhiteSpace())

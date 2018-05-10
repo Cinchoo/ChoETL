@@ -112,6 +112,9 @@ namespace ChoXmlReaderTest
       </item>
     </items>
   </Channel>
+  <Channel>
+  </Channel>
+
 </RSS>";
             StringBuilder sb = new StringBuilder();
             using (var p = ChoXmlReader.LoadText(xml)
@@ -119,7 +122,10 @@ namespace ChoXmlReaderTest
                 .Configure(c => c.RetainXmlAttributesAsNative = true)
                 )
             {
-                using (var w = new ChoJSONWriter(sb))
+                using (var w = new ChoJSONWriter(sb)
+                    .Configure(c => c.SupportMultipleContent = true)
+                    .Configure(c => c.IgnoreNodeName = true)
+                    )
                 {
                     w.Write(p);
                 }
@@ -167,7 +173,7 @@ namespace ChoXmlReaderTest
 				using (var w = new ChoJSONWriter<Emp>(sb)
 					//.Configure(c => c.SupportMultipleContent = true)
 					//.Configure(c => c.RootName = "Emp")
-					.Configure(c => c.IgnoreNodeName = true)
+					//.Configure(c => c.IgnoreNodeName = true)
 					)
 					w.Write(p);
 			}
