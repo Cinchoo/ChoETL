@@ -749,6 +749,8 @@ namespace ChoETL
                     continue;
                 if (ns.StartsWith(ChoXmlSettings.XmlNamespace, StringComparison.InvariantCultureIgnoreCase))
                     continue;
+				if (ns.IsNullOrWhiteSpace() && attribute.Name == "xmlns")
+					continue;
 
                 hasAttr = true;
             }

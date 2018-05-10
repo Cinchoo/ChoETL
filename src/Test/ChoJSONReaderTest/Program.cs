@@ -637,7 +637,7 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			Sample29();
+			Sample28();
 		}
 
         static void Sample29()

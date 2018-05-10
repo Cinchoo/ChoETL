@@ -602,13 +602,15 @@ namespace ChoETL
             }
         }
 
-        public IEnumerable<IDictionary<string, object>> MapToDictionary(IEnumerable source)
+        public IEnumerable<IDictionary<string, object>> MapToDictionary(IList source)
         {
             foreach (var item in source)
-                yield return MapToDictionary(item);
-        }
+                return MapToDictionary(item);
 
-        public IDictionary<string, object> MapToDictionary(object source)
+			return Enumerable.Empty<IDictionary<string, object>>();
+		}
+
+        public IEnumerable<IDictionary<string, object>> MapToDictionary(object source)
         {
             IDictionary<string, object> dict = null;
             if (source != null && source.GetType().IsDynamicType())
@@ -620,45 +622,62 @@ namespace ChoETL
                 dict = dictionary;
             }
 
-            return FixArray(dict);
+			if (dict is ChoDynamicObject && dict.Keys.Count == 1 && ((ChoDynamicObject)dict).DynamicObjectName == dict.Keys.First().ToPlural())
+			{
+				object x = dict[dict.Keys.First()];
+				if (!(x is IList))
+					yield return FixArray(x as IDictionary<string, object>);
+				else
+				{
+					foreach (var z in (IList)x)
+						yield return FixArray(x as IDictionary<string, object>);
+				}
+			}
+			else
+			{
+				yield return FixArray(dict);
+			}
         }
 
-        private IDictionary<string, object> FixArray(IDictionary<string, object> dict)
-        {
-            if (dict == null)
-                return dict;
+		private IDictionary<string, object> FixArray(IDictionary<string, object> dict)
+		{
+			if (dict == null)
+				return dict;
 
-            foreach (var key in dict.Keys.ToArray())
-            {
-                object value = dict[key];
-                if (value is IList && ((IList)value).Cast<object>().All(i => i is ChoDynamicObject))
-                {
-                    if (((IList)value).Cast<ChoDynamicObject>().All(i => i.Count == 1 && i.HasText()))
-                    {
-                        dict[key] = ((IList)value).Cast<ChoDynamicObject>().Select(i => i.GetText()).ToArray();
-                    }
-                }
-                else if (value is IDictionary<string, object>)
-                {
-                    dict[key] = FixArray(value as IDictionary<string, object>);
-                }
-                else if (value is IList)
-                {
-                    List<object> list = new List<object>();
-                    foreach (var obj in (IList)value)
-                    {
-                        if (obj is IDictionary<string, object>)
-                            list.Add(FixArray(obj as IDictionary<string, object>));
-                        else
-                            list.Add(obj);
-                    }
+			foreach (var key in dict.Keys.ToArray())
+			{
+				object value = dict[key];
+				if (value is IList && ((IList)value).Cast<object>().All(i => i is ChoDynamicObject))
+				{
+					if (((IList)value).Cast<ChoDynamicObject>().All(i => i.Count == 1 && i.HasText()))
+					{
+						dict[key] = ((IList)value).Cast<ChoDynamicObject>().Select(i => i.GetText()).ToArray();
+					}
+				}
+				else if (value is IDictionary<string, object>)
+				{
+					var value1 = MapToDictionary(value as IDictionary<string, object>).ToArray();
+					if (value1.Length == 1)
+						dict[key] = MapToDictionary(value as IDictionary<string, object>).First();
+					else
+						dict[key] = MapToDictionary(value as IDictionary<string, object>).ToArray();
+				}
+				else if (value is IList)
+				{
+					List<object> list = new List<object>();
+					foreach (var obj in (IList)value)
+					{
+						if (obj is IDictionary<string, object>)
+							list.AddRange(MapToDictionary(obj as IDictionary<string, object>).ToArray());
+						else
+							list.Add(obj);
+					}
 
-                    dict[key] = list.ToArray();
-                }
-            }
-
-            return dict;
-        }
+					dict[key] = list.ToArray();
+				}
+			}
+			return dict;
+		}
 
         private object SimpleTypeValue(object source)
         {
