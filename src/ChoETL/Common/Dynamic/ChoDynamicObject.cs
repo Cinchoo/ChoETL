@@ -349,10 +349,16 @@ namespace ChoETL
         protected virtual bool GetPropertyValue(string name, out object result)
         {
             result = null;
-
             IDictionary<string, object> kvpDict = _kvpDict;
             if (kvpDict != null)
             {
+                if (name.StartsWith("Contains"))
+                {
+                    name = name.Substring(8);
+                    result = kvpDict.ContainsKey(name);
+                    return true;
+                }
+
                 if (AlternativeKeys != null && AlternativeKeys.ContainsKey(name))
                 {
                     var newName = AlternativeKeys[name];

@@ -84,7 +84,82 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Sample44();
+            Sample45();
+        }
+
+        static void Sample45()
+        {
+            string xml = @"<SPSecurableObject>
+  <ObjectName>New Data</ObjectName>
+  <ChildObjects>
+    <SPSecurableObject>
+      <ObjectName>Documents</ObjectName>
+    </SPSecurableObject>
+    <SPSecurableObject>
+      <ObjectName>Documents2</ObjectName>
+      <RoleAssignments>
+        <SPRoleAssignment>
+          <PrincipalType>User</PrincipalType>
+          <Member>
+            <User>
+              <DisplayName>John Doe</DisplayName>
+            </User>
+          </Member>
+          <RoleDefBindings>
+            <RoleName>Limited Access</RoleName>
+          </RoleDefBindings>
+        </SPRoleAssignment>
+        <SPRoleAssignment>
+          <PrincipalType>Group</PrincipalType>
+          <Member>
+            <Group>
+              <GroupName>Group1</GroupName>
+            </Group>
+          </Member>
+          <RoleDefBindings>
+            <RoleName>Full Control</RoleName>
+          </RoleDefBindings>
+        </SPRoleAssignment>
+      </RoleAssignments>
+    </SPSecurableObject>
+</ChildObjects>
+</SPSecurableObject>";
+
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoXmlReader.LoadText(xml).WithXPath("/")
+                )
+            {
+                using (var w = new ChoCSVWriter(sb)
+                    .WithFirstLineHeader()
+                    )
+                    w.Write(Flatten(p.First()));
+            }
+
+            Console.WriteLine(sb.ToString());
+        }
+
+        static IEnumerable Flatten(dynamic obj)
+        {
+            yield return new { ObjectName = obj.ObjectName, PrincipalType = (string)null, DisplayName = (string)null, RoleDefBindings = (string)null };
+
+            if (obj.ContainsRoleAssignments)
+            {
+                foreach (dynamic child in (IList)obj.RoleAssignments)
+                {
+                    yield return new { ObjectName = obj.ObjectName, PrincipalType = child.PrincipalType, DisplayName = (string)null, RoleDefBindings = (string)null };
+                }
+            }
+
+            if (obj.ChildObjects == null)
+                yield break;
+            else
+            {
+                foreach (dynamic child in (IList)obj.ChildObjects.ChildObjects)
+                {
+                    foreach (object rec in Flatten(child))
+                        yield return rec;
+                }
+            }
         }
 
         static void Sample44()
