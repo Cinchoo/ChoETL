@@ -44,18 +44,23 @@ namespace ChoETL
             private set;
         }
 
+        public ChoXmlReader(StringBuilder sb, ChoXmlRecordConfiguration configuration = null) : this(new StringReader(sb.ToString()), configuration)
+        {
+
+        }
+
         public ChoXmlReader(ChoXmlRecordConfiguration configuration = null)
         {
             Configuration = configuration;
             Init();
         }
 
-        public ChoXmlReader(string filePath, string defaultNamespace)
+        public ChoXmlReader(string filePath, string defaultNamespace, ChoXmlRecordConfiguration configuration = null)
 		{
 			ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
 
-			Configuration = new ChoXmlRecordConfiguration();
-			if (!defaultNamespace.IsNullOrWhiteSpace())
+            Configuration = configuration;
+            if (!defaultNamespace.IsNullOrWhiteSpace())
 				Configuration.NamespaceManager.AddNamespace("", defaultNamespace);
 
 			Init();
@@ -352,6 +357,8 @@ namespace ChoETL
         {
             if (_xElements == null)
             {
+				InitXml();
+
                 ChoXmlRecordReader rr = new ChoXmlRecordReader(typeof(T), Configuration);
                 //if (_textReader != null)
                 //    _xmlReader = XmlReader.Create(_textReader, new XmlReaderSettings() { DtdProcessing = DtdProcessing.Ignore, XmlResolver = null }, new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
@@ -738,8 +745,13 @@ namespace ChoETL
 
 	public class ChoXmlReader : ChoXmlReader<dynamic>
     {
-        public ChoXmlReader(string filePath, string defaultNamespace)
-            : base(filePath, defaultNamespace)
+        public ChoXmlReader(StringBuilder sb, ChoXmlRecordConfiguration configuration = null) : base(sb, configuration)
+        {
+
+        }
+
+        public ChoXmlReader(string filePath, string defaultNamespace, ChoXmlRecordConfiguration configuration = null)
+            : base(filePath, defaultNamespace, configuration)
         {
 
         }

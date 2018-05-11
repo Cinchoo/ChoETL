@@ -29,6 +29,11 @@ namespace ChoETL
             private set;
         }
 
+        public ChoManifoldReader(StringBuilder sb, ChoManifoldRecordConfiguration configuration = null) : this(new StringReader(sb.ToString()), configuration)
+        {
+
+        }
+
         public ChoManifoldReader(ChoManifoldRecordConfiguration configuration = null)
         {
             Configuration = configuration;

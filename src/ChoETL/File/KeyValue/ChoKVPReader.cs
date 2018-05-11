@@ -55,6 +55,11 @@ namespace ChoETL
             private set;
         }
 
+        public ChoKVPReader(StringBuilder sb, ChoKVPRecordConfiguration configuration = null) : this(new StringReader(sb.ToString()), configuration)
+        {
+
+        }
+
         public ChoKVPReader(ChoKVPRecordConfiguration configuration = null)
         {
             Configuration = configuration;
@@ -497,6 +502,11 @@ namespace ChoETL
 
 	public class ChoKVPReader : ChoKVPReader<dynamic>
     {
+        public ChoKVPReader(StringBuilder sb, ChoKVPRecordConfiguration configuration = null) : base(sb, configuration)
+        {
+
+        }
+
         public ChoKVPReader(string filePath, ChoKVPRecordConfiguration configuration = null)
             : base(filePath, configuration)
         {

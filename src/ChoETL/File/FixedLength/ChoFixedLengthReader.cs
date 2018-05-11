@@ -41,6 +41,11 @@ namespace ChoETL
             private set;
         }
 
+        public ChoFixedLengthReader(StringBuilder sb, ChoFixedLengthRecordConfiguration configuration = null) : this(new StringReader(sb.ToString()), configuration)
+        {
+
+        }
+
         public ChoFixedLengthReader(ChoFixedLengthRecordConfiguration configuration = null)
         {
             Configuration = configuration;
@@ -611,6 +616,11 @@ namespace ChoETL
 
     public class ChoFixedLengthReader : ChoFixedLengthReader<dynamic>
     {
+        public ChoFixedLengthReader(StringBuilder sb, ChoFixedLengthRecordConfiguration configuration = null) : base(sb, configuration)
+        {
+
+        }
+
         public ChoFixedLengthReader(ChoFixedLengthRecordConfiguration configuration = null)
            : base(configuration)
         {

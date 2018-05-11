@@ -41,7 +41,12 @@ namespace ChoETL
 			private set;
 		}
 
-		public ChoCSVReader(ChoCSVRecordConfiguration configuration = null)
+        public ChoCSVReader(StringBuilder sb, ChoCSVRecordConfiguration configuration = null) : this(new StringReader(sb.ToString()), configuration)
+        {
+
+        }
+
+        public ChoCSVReader(ChoCSVRecordConfiguration configuration = null)
 		{
 			Configuration = configuration;
 			Init();
@@ -687,6 +692,11 @@ namespace ChoETL
 
     public class ChoCSVReader : ChoCSVReader<dynamic>
     {
+        public ChoCSVReader(StringBuilder sb, ChoCSVRecordConfiguration configuration = null) : base(sb, configuration)
+        {
+
+        }
+
         public ChoCSVReader(ChoCSVRecordConfiguration configuration = null)
             : base(configuration)
         {

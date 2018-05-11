@@ -38,7 +38,12 @@ namespace ChoETL
 			private set;
 		}
 
-		public ChoJSONReader(ChoJSONRecordConfiguration configuration = null)
+        public ChoJSONReader(StringBuilder sb, ChoJSONRecordConfiguration configuration = null) : this(new StringReader(sb.ToString()), configuration)
+        {
+
+        }
+
+        public ChoJSONReader(ChoJSONRecordConfiguration configuration = null)
 		{
 			Configuration = configuration;
 			Init();
@@ -593,6 +598,11 @@ namespace ChoETL
 
     public class ChoJSONReader : ChoJSONReader<dynamic>
     {
+        public ChoJSONReader(StringBuilder sb, ChoJSONRecordConfiguration configuration = null) : base(sb, configuration)
+        {
+
+        }
+
         public ChoJSONReader(ChoJSONRecordConfiguration configuration = null)
             : base(configuration)
         {

@@ -152,6 +152,11 @@ namespace ChoXmlReaderTest
                     .WithFirstLineHeader()
                     )
                     w.Write(p);
+
+                using (var csv = new ChoCSVReader(sb))
+                {
+
+                }
             }
 
             Console.WriteLine(sb.ToString());
