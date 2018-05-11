@@ -84,7 +84,77 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Sample45();
+            Sample46();
+        }
+
+        static void Sample46()
+        {
+            string xml = @"<session
+    beginTime=""2018-05-11T10:37:30""
+    halSerialNumber=""08J-0735""
+    testMode=""Remote""
+    userName=""Myname"">
+    <appliance overallResult=""Passed"" partNumber=""AN-02-203"" serialNumber=""3"">
+        <test_set testState=""Passed"">
+            <test
+                arcDetect=""0""
+                lowerLimitMilliamps=""0.00""
+                name=""HiPot 50Hz""
+                numTests=""1""
+                startConditions=""StartKey""
+                targetOutputKilovolts=""1.50""
+                testVoltageOutput=""Back""
+                timeHoldSeconds=""2.0""
+                timeRampDownSeconds=""0.0""
+                timeRampUpSeconds=""0.0""
+                type=""HiPot50""
+                upperLimitMilliamps=""20.00""
+            />
+            <test_result
+                appliedOutputKilovolts=""1.50""
+                leakageMilliamps=""0.57""
+                testDurationSeconds=""2.00""
+                testState=""Passed""
+                timeOfTest=""2018-05-11T10:39:29""
+            />
+        </test_set>
+        <test_set testState=""Passed"">
+            <test
+                lowerLimitMilliamps=""0.00""
+                name=""Power Leakage""
+                numTests=""1""
+                powerFactorLowerLimit=""0.000""
+                powerFactorUpperLimit=""1.000""
+                powerLowerLimitKVA=""3.00""
+                powerUpperLimitKVA=""4.00""
+                reversePolarity=""0""
+                timeHoldSeconds=""3.0""
+                type=""PowerLeakage""
+                upperLimitMilliamps=""20.00""
+            />
+            <test_result
+                leakageMilliamps=""0.05""
+                powerAV=""3.437""
+                powerFactor=""1.000""
+                testDurationSeconds=""3.00""
+                testState=""Passed""
+                timeOfTest=""2018-05-11T10:39:33""
+            />
+        </test_set>
+    </appliance>
+</session>";
+
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoXmlReader.LoadText(xml).WithXPath("/")
+                )
+            {
+                using (var w = new ChoCSVWriter(sb)
+                    .WithFirstLineHeader()
+                    )
+                    w.Write(p);
+            }
+
+            Console.WriteLine(sb.ToString());
         }
 
         static void Sample45()
