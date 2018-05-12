@@ -276,7 +276,7 @@ namespace ChoETL
             {
                 var dictKeys = new List<string>();
                 var dict = record.ToDynamicObject() as IDictionary<string, Object>;
-                fieldNames = dict.Flatten().ToDictionary().Keys.ToArray();
+                fieldNames = dict.Flatten(Configuration.UseNestedKeyFormat).ToDictionary().Keys.ToArray();
             }
             else
             {

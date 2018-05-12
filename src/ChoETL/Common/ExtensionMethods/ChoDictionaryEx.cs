@@ -11,12 +11,12 @@ namespace ChoETL
 {
     public static class ChoDictionaryEx
     {
-		public static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict)
+		public static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict, bool useNestedKeyFormat = true)
 		{
-			return Flatten(dict, null);
+			return Flatten(dict, null, useNestedKeyFormat);
 		}
 
-		private static IEnumerable<KeyValuePair<string, object>> Flatten(this IList list, string key)
+		private static IEnumerable<KeyValuePair<string, object>> Flatten(this IList list, string key, bool useNestedKeyFormat = true)
 		{
 			int index = 0;
 			foreach (var item in list)
@@ -36,22 +36,22 @@ namespace ChoETL
 			}
 
 		}
-		private static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict, string key = null)
+		private static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict, string key = null, bool useNestedKeyFormat = true)
 		{
 			foreach (var kvp in dict)
 			{
 				if (kvp.Value is IDictionary<string, object>)
 				{
-					foreach (var tuple in Flatten(kvp.Value as IDictionary<string, object>, key == null ? kvp.Key : "{0}_{1}".FormatString(key, kvp.Key)))
+					foreach (var tuple in Flatten(kvp.Value as IDictionary<string, object>, key == null ? kvp.Key : useNestedKeyFormat ? "{0}_{1}".FormatString(key, kvp.Key) : kvp.Key, useNestedKeyFormat))
 						yield return tuple;
 				}
 				else if (kvp.Value is IList)
 				{
-					foreach (var tuple in Flatten(kvp.Value as IList, key == null ? kvp.Key : "{0}_{1}".FormatString(key, kvp.Key)))
+					foreach (var tuple in Flatten(kvp.Value as IList, key == null ? kvp.Key : useNestedKeyFormat ? "{0}_{1}".FormatString(key, kvp.Key) : kvp.Key, useNestedKeyFormat))
 						yield return tuple;
 				}
 				else
-					yield return new KeyValuePair<string, object>(key == null ? kvp.Key.ToString() : "{0}_{1}".FormatString(key, kvp.Key.ToString()), kvp.Value);
+					yield return new KeyValuePair<string, object>(key == null ? kvp.Key.ToString() : useNestedKeyFormat ? "{0}_{1}".FormatString(key, kvp.Key.ToString()) : kvp.Key.ToString(), kvp.Value);
 			}
 		}
 

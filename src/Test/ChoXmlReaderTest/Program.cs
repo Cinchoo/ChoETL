@@ -150,8 +150,9 @@ namespace ChoXmlReaderTest
             {
                 using (var w = new ChoCSVWriter(sb)
                     .WithFirstLineHeader()
+					.Configure(c => c.UseNestedKeyFormat = false)
                     )
-                    w.Write(p);
+                    w.Write(p.SelectMany(r => ((dynamic[])r.appliance.test_sets).Select(r1 => new { r.appliance.overallResult, test = r1.test })));
 
                 using (var csv = new ChoCSVReader(sb)
                                     .WithFirstLineHeader()

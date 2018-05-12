@@ -92,7 +92,7 @@ namespace ChoETL
             private set;
         }
 
-        public ChoCSVRecordConfiguration Configure(Action<ChoCSVRecordConfiguration> action)
+		public ChoCSVRecordConfiguration Configure(Action<ChoCSVRecordConfiguration> action)
         {
             if (action != null)
                 action(this);

@@ -142,6 +142,8 @@ namespace ChoETL
 			get;
 			set;
 		}
+		public bool UseNestedKeyFormat { get; set; }
+
 		internal string BackslashQuote = @"\""";
         internal string DoubleQuoteChar = @"""""";
         private char _quoteChar = '"';
@@ -196,6 +198,7 @@ namespace ChoETL
 
         protected ChoFileRecordConfiguration(Type recordType = null) : base(recordType)
         {
+			UseNestedKeyFormat = true;
 			AutoDiscoverFieldTypes = true;
 			MaxScanRows = 0;
             IgnoreDuplicateFields = false;
