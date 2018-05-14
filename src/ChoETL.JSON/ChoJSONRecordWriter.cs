@@ -607,15 +607,15 @@ namespace ChoETL
             }
         }
 
-        public IEnumerable<IDictionary<string, object>> MapToDictionary(IList source)
-        {
-            foreach (var item in source)
-                return MapToDictionary(item);
+  //      public IEnumerable<IDictionary<string, object>> MapToDictionary(IList source)
+  //      {
+  //          foreach (var item in source)
+  //              return MapToDictionary(item);
 
-			return Enumerable.Empty<IDictionary<string, object>>();
-		}
+		//	return Enumerable.Empty<IDictionary<string, object>>();
+		//}
 
-        public IEnumerable<IDictionary<string, object>> MapToDictionary(object source)
+        public object MapToDictionary(object source)
         {
             IDictionary<string, object> dict = null;
             if (source != null && source.GetType().IsDynamicType())
@@ -631,16 +631,15 @@ namespace ChoETL
 			{
 				object x = dict[dict.Keys.First()];
 				if (!(x is IList))
-					yield return FixArray(x as IDictionary<string, object>);
+					return FixArray(x as IDictionary<string, object>);
 				else
 				{
-					foreach (var z in (IList)x)
-						yield return FixArray(x as IDictionary<string, object>);
+					return ((IList)x).Cast<object>().Select(i => FixArray(i as IDictionary<string, object>)).ToArray();
 				}
 			}
 			else
 			{
-				yield return FixArray(dict);
+				return FixArray(dict);
 			}
         }
 
@@ -661,11 +660,11 @@ namespace ChoETL
 				}
 				else if (value is IDictionary<string, object>)
 				{
-					var value1 = MapToDictionary(value as IDictionary<string, object>).ToArray();
-					if (value1.Length == 1)
-						dict[key] = MapToDictionary(value as IDictionary<string, object>).First();
-					else
-						dict[key] = MapToDictionary(value as IDictionary<string, object>).ToArray();
+					dict[key] = MapToDictionary(value as IDictionary<string, object>);
+					//if (!(value1 is IList))
+					//	dict[key] = MapToDictionary(value as IDictionary<string, object>);
+					//else
+					//	dict[key] = MapToDictionary(value as IDictionary<string, object>).ToArray();
 				}
 				else if (value is IList)
 				{
@@ -673,7 +672,13 @@ namespace ChoETL
 					foreach (var obj in (IList)value)
 					{
 						if (obj is IDictionary<string, object>)
-							list.AddRange(MapToDictionary(obj as IDictionary<string, object>).ToArray());
+						{
+							object value1 = MapToDictionary(obj as IDictionary<string, object>);
+							if (value1 is IList)
+								list.AddRange(((IList)value1).Cast<object>().ToArray());
+							else
+								list.Add(value1);
+						}
 						else
 							list.Add(obj);
 					}
@@ -716,7 +721,7 @@ namespace ChoETL
                     object kvpKey = valueType.GetProperty("Key").GetValue(source, null);
                     object kvpValue = valueType.GetProperty("Value").GetValue(source, null);
                     if (kvpValue is IEnumerable)
-                        dictionary[kvpKey.ToNString()] = MapToDictionary(kvpValue as IEnumerable).ToArray();
+                        dictionary[kvpKey.ToNString()] = MapToDictionary(kvpValue as IEnumerable);
                     else if (kvpValue != null)
                         dictionary[kvpKey.ToNString()] = MapToDictionary(kvpValue);
                 }
@@ -732,7 +737,7 @@ namespace ChoETL
                 {
                     object value = vP.GetValue(source);
                     if (value is IEnumerable)
-                        dictionary[kP.GetValue(source).ToNString()] = MapToDictionary(value as IEnumerable).ToArray();
+                        dictionary[kP.GetValue(source).ToNString()] = MapToDictionary(value as IEnumerable);
                     else if (value != null)
                         dictionary[kP.GetValue(source).ToNString()] = MapToDictionary(value);
                     return;
@@ -745,7 +750,7 @@ namespace ChoETL
                 if (value.GetType().IsDynamicType())
                     dictionary[kvp.Key.ToNString()] = value;
                 else if (value is IEnumerable && !(value is IDictionary))
-                    dictionary[kvp.Key.ToNString()] = MapToDictionary(value as IEnumerable).ToArray();
+                    dictionary[kvp.Key.ToNString()] = MapToDictionary(value as IEnumerable);
                 else if (value != null)
                     dictionary[kvp.Key.ToNString()] = MapToDictionary(value);
                 return;
@@ -791,7 +796,7 @@ namespace ChoETL
                     dictionary[key] = dict;
                 }
                 else if (value is IEnumerable)
-                    dictionary[key] = MapToDictionary((IEnumerable)value).ToArray();
+                    dictionary[key] = MapToDictionary((IEnumerable)value);
                 else
                     dictionary[key] = Marshal(value);
             }

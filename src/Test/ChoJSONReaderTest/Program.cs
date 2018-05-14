@@ -637,10 +637,53 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Sample30();
+			Sample30();
 		}
 
-        static void Sample30()
+		static void Sample31()
+		{
+			string json = @"{
+    ""mercedes"": {
+
+		""model"" : ""GLS 350 d 4MATIC"",
+        ""code"" : ""MB-GLS"",
+        ""year"": 2015
+
+	},
+    ""bmw"": {
+        ""model"" : ""BMW 420d Cabrio"",
+        ""code"" : ""BM-420D"",
+        ""year"": 2017
+    },
+    ""audi"": {
+        ""model"" : ""A5 Sportback 2.0 TDI quattro"",
+        ""code"" : ""AU-A5"",
+        ""year"": 2018
+    },
+    ""tesla"": {
+        ""model"" : ""Model S"",
+        ""code"" : ""TS-MOS"",
+        ""year"": 2016
+    },
+  ""test_drive"": 0,
+  ""path"": ""D:\\Mizz\\cars\\""
+}";
+
+			StringBuilder sb = new StringBuilder();
+			using (var p = ChoJSONReader.LoadText(json)
+				)
+			{
+				//foreach (ChoDynamicObject rec in p)
+				//	Console.WriteLine(ChoUtility.Dump(rec.Keys));
+
+				using (var w = new ChoXmlWriter(sb)
+					)
+					w.Write(p);
+			}
+
+			Console.WriteLine(sb.ToString());
+		}
+		static void Sample30()
         {
             string json = @"{""Emp"": [
  {
