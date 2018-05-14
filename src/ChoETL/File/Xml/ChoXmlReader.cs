@@ -60,10 +60,10 @@ namespace ChoETL
 			ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
 
             Configuration = configuration;
-            if (!defaultNamespace.IsNullOrWhiteSpace())
+			Init();
+			if (!defaultNamespace.IsNullOrWhiteSpace())
 				Configuration.NamespaceManager.AddNamespace("", defaultNamespace);
 
-			Init();
 
 			_sr = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
 			//InitXml();

@@ -84,7 +84,7 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Sample46();
+			Sample9Test();
         }
 
         static void Sample46()
@@ -645,21 +645,29 @@ namespace ChoXmlReaderTest
             StringBuilder msg = new StringBuilder();
             using (var p = new ChoXmlReader("sample30.xml")
                 .WithXPath("/")
-                .WithField("packages", fieldName: "Package")
+                //.WithField("packages", fieldName: "Package")
                 .Configure(c => c.EmptyXmlNodeValueHandling =  ChoEmptyXmlNodeValueHandling.Ignore)
                 )
             {
-                using (var w = new ChoXmlWriter(new StringWriter(msg))
-                    .Configure(c => c.NullValueHandling = ChoNullValueHandling.Empty)
-                    //.Configure(c => c.SupportMultipleContent = true)
-                    //.WithFirstLineHeader()
-                    .Configure(c => c.RootName = String.Empty)
-                    .Configure(c => c.IgnoreRootName = true)
-                    .Configure(c => c.IgnoreNodeName = true)
-                    )
-                {
-                    w.Write(p);
-                }
+				using (var w = new ChoJSONWriter(msg)
+					.Configure(c => c.SupportMultipleContent = true)
+					.Configure(c => c.IgnoreRootName = true)
+					.Configure(c => c.IgnoreNodeName = true)
+					)
+				{
+					w.Write(p);
+				}
+				//using (var w = new ChoXmlWriter(new StringWriter(msg))
+				//	.Configure(c => c.NullValueHandling = ChoNullValueHandling.Empty)
+				//	//.Configure(c => c.SupportMultipleContent = true)
+				//	//.WithFirstLineHeader()
+				//	.Configure(c => c.RootName = String.Empty)
+				//	.Configure(c => c.IgnoreRootName = true)
+				//	.Configure(c => c.IgnoreNodeName = true)
+				//	)
+				//{
+				//	w.Write(p);
+				//}
             }
             Console.WriteLine(msg.ToString());
         }
@@ -1174,6 +1182,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
 
         static void Sample9Test()
         {
+			StringBuilder sb = new StringBuilder();
             int totalAvailable;
             using (var parser = new ChoXmlReader("sample9.xml", "abc.com/api").WithXPath("/tsResponse/pagination")
                 .WithField("totalAvailable", fieldType: typeof(int))
@@ -1190,14 +1199,16 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
                 .WithField("view_total_count", xPath: "/x:usage/@totalViewCount", fieldType: typeof(int))
             )
             {
-                using (var writer = new ChoJSONWriter("sample9.json")
+                using (var writer = new ChoJSONWriter(sb)
                     )
                 {
-                    foreach (dynamic rec in parser)
-                        writer.Write(new { view_id = rec.view_id, view_name = rec.view_name, view_content_url = rec.view_content_url, view_total_count = rec.view_total_count, view_total_available = totalAvailable });
+                    //foreach (dynamic rec in parser)
+                    //    writer.Write(new { view_id = rec.view_id, view_name = rec.view_name, view_content_url = rec.view_content_url, view_total_count = rec.view_total_count, view_total_available = totalAvailable });
                     writer.Write(parser);
                 }
             }
+
+			Console.WriteLine(sb.ToString());
         }
 
         static void Sample10Test()
@@ -1239,9 +1250,9 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
             }
         }
 
-        static void Main1(string[] args)
+        static void xMain1(string[] args)
         {
-            Sample12();
+			Sample43();
             return;
             //dynamic p = new ChoPropertyBag();
             //p.Name = "Raj";

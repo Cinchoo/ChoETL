@@ -742,11 +742,14 @@ namespace ChoJSONReaderTest
             using (var p = ChoJSONReader.LoadText(json).Configure(c => c.SupportMultipleContent = true)
                 )
             {
-                using (var w = new ChoXmlWriter(sb)
-                    .Configure(c => c.IgnoreRootName = true)
-                    .Configure(c => c.IgnoreNodeName = false)
-                    )
-                    w.Write(p);
+				dynamic rec = p.First();
+				var x = rec.Emp[0];
+
+                //using (var w = new ChoXmlWriter(sb)
+                //    .Configure(c => c.IgnoreRootName = true)
+                //    .Configure(c => c.IgnoreNodeName = false)
+                //    )
+                //    w.Write(p);
             }
 
             Console.WriteLine(sb.ToString());
