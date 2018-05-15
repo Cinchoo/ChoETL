@@ -1219,7 +1219,7 @@ a,0,1,2-Data";
 
         static void Main(string[] args)
         {
-			Join();
+            CSV2XmlTest();
             return;
 
 			CSV2XmlTest();

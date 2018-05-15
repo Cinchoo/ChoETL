@@ -637,10 +637,37 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			Sample30();
+            Sample32();
 		}
 
-		static void Sample31()
+        static void Sample32()
+        {
+            string json = @"{
+""HDRDTL"":[""SRNO"",""STK_IDN"",""CERTIMG""],
+""PKTDTL"":[
+{""SRNO"":""2814"",""STK_IDN"":""1001101259"",""CERTIMG"":""6262941723""},
+{""SRNO"":""2815"",""STK_IDN"":""1001101269"",""CERTIMG"":""6262941726""},
+{""SRNO"":""2816"",""STK_IDN"":""1001101279"",""CERTIMG"":""6262941729""}
+],
+""IMGTTL"":
+[""CERTIMG"",""ARRIMG""],
+""IMGDTL"":{""CERTIMG"":""CRd6z2uq3gvx7kk"",""ARRIMG"":""ASd6z2uq3gvx7kk""}
+}";
+
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoJSONReader.LoadText(json).WithJSONPath("$..PKTDTL")
+                )
+            {
+                using (var w = new ChoCSVWriter(sb)
+                    .WithFirstLineHeader()
+                    )
+                    w.Write(p);
+            }
+
+            Console.WriteLine(sb.ToString());
+        }
+
+        static void Sample31()
 		{
 			string json = @"{
     ""mercedes"": {
