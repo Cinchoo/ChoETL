@@ -733,6 +733,26 @@ namespace ChoETL
             return nil != null && (bool)nil;
         }
 
+        public static bool IsValidAttribute(this XAttribute attribute, string xmlSchemaNS = null, string jsonSchemaNS = null)
+        {
+            if (attribute.Name.ToString().StartsWith("xmlns"))
+                return false;
+
+            string ns = attribute.Name.Namespace.ToString();
+            if (xmlSchemaNS != null && ns.StartsWith(xmlSchemaNS, StringComparison.InvariantCultureIgnoreCase))
+                return false;
+            if (jsonSchemaNS != null && ns.StartsWith(jsonSchemaNS, StringComparison.InvariantCultureIgnoreCase))
+                return false;
+            if (!ns.IsNullOrEmpty() && ChoXmlSettings.XmlSchemaInstanceNamespace.EndsWith(ns, StringComparison.InvariantCultureIgnoreCase))
+                return false;
+            if (!ns.IsNullOrEmpty() && ChoXmlSettings.JSONSchemaNamespace.EndsWith(ns, StringComparison.InvariantCultureIgnoreCase))
+                return false;
+            if (!ns.IsNullOrEmpty() && ChoXmlSettings.XmlNamespace.EndsWith(ns, StringComparison.InvariantCultureIgnoreCase))
+                return false;
+
+            return true;
+        }
+
         private static bool HasAttributes(this XElement element, string xmlSchemaNS = null, string jsonSchemaNS = null)
         {
             bool hasAttr = false;
@@ -743,11 +763,11 @@ namespace ChoETL
                     continue;
                 if (jsonSchemaNS != null && ns.StartsWith(jsonSchemaNS, StringComparison.InvariantCultureIgnoreCase))
                     continue;
-                if (ns.StartsWith(ChoXmlSettings.XmlSchemaInstanceNamespace, StringComparison.InvariantCultureIgnoreCase))
+                if (!ns.IsNullOrEmpty() && ChoXmlSettings.XmlSchemaInstanceNamespace.EndsWith(ns, StringComparison.InvariantCultureIgnoreCase))
                     continue;
-                if (ns.StartsWith(ChoXmlSettings.JSONSchemaNamespace, StringComparison.InvariantCultureIgnoreCase))
+                if (!ns.IsNullOrEmpty() && ChoXmlSettings.JSONSchemaNamespace.EndsWith(ns, StringComparison.InvariantCultureIgnoreCase))
                     continue;
-                if (ns.StartsWith(ChoXmlSettings.XmlNamespace, StringComparison.InvariantCultureIgnoreCase))
+                if (!ns.IsNullOrEmpty() && ChoXmlSettings.XmlNamespace.EndsWith(ns, StringComparison.InvariantCultureIgnoreCase))
                     continue;
 				if (ns.IsNullOrWhiteSpace() && attribute.Name == "xmlns")
 					continue;
@@ -771,20 +791,23 @@ namespace ChoETL
             {
                 foreach (var attribute in element.Attributes())
                 {
-					if (attribute.Name.ToString().StartsWith("xmlns"))
-						continue;
+                    if (!attribute.IsValidAttribute())
+                        continue;
 
-                    string ns = attribute.Name.Namespace.ToString();
-                    if (xmlSchemaNS != null && ns.StartsWith(xmlSchemaNS, StringComparison.InvariantCultureIgnoreCase))
-                        continue;
-                    if (jsonSchemaNS != null && ns.StartsWith(jsonSchemaNS, StringComparison.InvariantCultureIgnoreCase))
-                        continue;
-                    if (ns.StartsWith(ChoXmlSettings.XmlSchemaInstanceNamespace, StringComparison.InvariantCultureIgnoreCase))
-                        continue;
-                    if (ns.StartsWith(ChoXmlSettings.JSONSchemaNamespace, StringComparison.InvariantCultureIgnoreCase))
-                        continue;
-                    if (ns.StartsWith(ChoXmlSettings.XmlNamespace, StringComparison.InvariantCultureIgnoreCase))
-                        continue;
+					//if (attribute.Name.ToString().StartsWith("xmlns"))
+					//	continue;
+
+     //               string ns = attribute.Name.Namespace.ToString();
+     //               if (xmlSchemaNS != null && ns.StartsWith(xmlSchemaNS, StringComparison.InvariantCultureIgnoreCase))
+     //                   continue;
+     //               if (jsonSchemaNS != null && ns.StartsWith(jsonSchemaNS, StringComparison.InvariantCultureIgnoreCase))
+     //                   continue;
+     //               if (ns.StartsWith(ChoXmlSettings.XmlSchemaInstanceNamespace, StringComparison.InvariantCultureIgnoreCase))
+     //                   continue;
+     //               if (ns.StartsWith(ChoXmlSettings.JSONSchemaNamespace, StringComparison.InvariantCultureIgnoreCase))
+     //                   continue;
+     //               if (ns.StartsWith(ChoXmlSettings.XmlNamespace, StringComparison.InvariantCultureIgnoreCase))
+     //                   continue;
 
                     hasAttr = true;
                     if (retainXmlAttributesAsNative)

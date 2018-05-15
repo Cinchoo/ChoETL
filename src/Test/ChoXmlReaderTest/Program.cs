@@ -1183,6 +1183,23 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
         static void Sample9Test()
         {
 			StringBuilder sb = new StringBuilder();
+            using (var parser = new ChoXmlReader("sample9.xml", "abc.com/api").WithXPath("/")
+                )
+            {
+                var x = parser.SelectMany(r1 => ((dynamic[])r1.views).Select(r2 =>
+                new
+                {
+                    view_id = r2.id,
+                    view_name = r2.name,
+                    view_content_url = r2.contentUrl,
+                    view_total_count = Int32.Parse(r1.pagination.totalAvailable)
+                }));
+
+                Console.WriteLine(ChoJSONWriter.ToTextAll(x));
+            }
+
+            return;
+
             int totalAvailable;
             using (var parser = new ChoXmlReader("sample9.xml", "abc.com/api").WithXPath("/tsResponse/pagination")
                 .WithField("totalAvailable", fieldType: typeof(int))
@@ -1202,9 +1219,9 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
                 using (var writer = new ChoJSONWriter(sb)
                     )
                 {
-                    //foreach (dynamic rec in parser)
-                    //    writer.Write(new { view_id = rec.view_id, view_name = rec.view_name, view_content_url = rec.view_content_url, view_total_count = rec.view_total_count, view_total_available = totalAvailable });
-                    writer.Write(parser);
+                    foreach (dynamic rec in parser)
+                        writer.Write(new { view_id = rec.view_id, view_name = rec.view_name, view_content_url = rec.view_content_url, view_total_count = rec.view_total_count, view_total_available = totalAvailable });
+                    //writer.Write(parser);
                 }
             }
 

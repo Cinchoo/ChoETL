@@ -744,7 +744,16 @@ namespace ChoETL
                         var dict = rec as IDictionary<string, Object>;
 
                         if (!fieldConfig.IsArray.CastTo<bool>())
-                            dict.ConvertNSetMemberValue(key, kvp.Value, ref fieldValue, Configuration.Culture);
+                        {
+                            bool isArray = fieldValue is IDictionary<string, Object> ? ((IDictionary<string, Object>)fieldValue).Count == 1 && key == ((IDictionary<string, Object>)fieldValue).Keys.First() : false;
+                            if (isArray)
+                            {
+                                fieldValue = ((IDictionary<string, Object>)fieldValue).Values.First();
+                                dict.ConvertNSetMemberValue(key, kvp.Value, ref fieldValue, Configuration.Culture);
+                            }
+                            else
+                                dict.ConvertNSetMemberValue(key, kvp.Value, ref fieldValue, Configuration.Culture);
+                        }
                         else
                             dict[key] = fieldValue;
 

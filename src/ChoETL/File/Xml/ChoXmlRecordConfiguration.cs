@@ -431,6 +431,9 @@ namespace ChoETL
                     string name = null;
                     foreach (var attr in xpr.Attributes())
                     {
+                        if (!attr.IsValidAttribute(XmlSchemaNamespace, JSONSchemaNamespace))
+                            continue;
+
                         if (!IsInNamespace(xpr.Name, attr.Name))
                             continue;
                         //if (!attr.Name.NamespaceName.IsNullOrWhiteSpace()) continue;
