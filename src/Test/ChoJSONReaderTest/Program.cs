@@ -637,50 +637,165 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Sample36();
+            Sample39();
+		}
+
+		public class RootObject
+		{
+			public string Id { get; set; }
+			public List<CustomField> Custom_fields { get; set; }
+		}
+		public class CustomField
+		{
+			public string Definition { get; set; }
+			public object Value { get; set; }
+		}
+
+		static void Sample39()
+		{
+string json = @"
+	{
+		""id"": ""12345"",
+		""custom_fields"": [
+			{
+			""definition"": ""field1"",
+			""value"": ""stringvalue""
+
+			},      
+			{
+			""definition"": ""field2"",
+			""value"": [ ""arrayvalue1"", ""arrayvalue2"" ]
+	},
+			{
+			""definition"": ""field3"",
+			""value"": {
+				""type"": ""user"",
+				""id"": ""1245""
+			}
+			}
+		]
+	}";
+
+StringBuilder sb = new StringBuilder();
+using (var p = ChoJSONReader<RootObject>.LoadText(json)
+	)
+{
+				//var x = p.ToArray();
+
+	Console.WriteLine(ChoJSONWriter<RootObject>.ToTextAll(p));
+}
+		}
+
+		static void Sample38()
+		{
+			var testJson = @"{'entry1': {
+                       '49208118': [
+                          {
+                             'description': 'just a description'
+                          },
+                          {
+                             'description': 'another description' 
+                          }
+                       ],
+                       '29439559': [
+                          {
+                             'description': 'just a description'
+                          },
+                          {
+                             'description': 'another description' 
+                          }
+                       ]
+                     }
+                }";
+		}
+
+		public class sp
+		{
+			public string mKey { get; set; }
+			public string productType { get; set; }
+			public string key { get; set; }
+		}
+
+		static void Sample37()
+		{
+			string json = @"{  
+       ""success"":1,
+	   ""results"":[
+          {  
+             ""Markets"":{  
+                ""924.136028459"":{  
+                   ""productType"":""BOOK1"",
+                   ""key"":""SB_MARKET:924.136028459""
+
+				},
+                ""924.136028500"":{  
+                   ""productType"":""BOOK2"",
+                   ""key"":""SB_MARKET:924.136028459""
+                }
+             }
+          }
+       ]
+    }
+			";
+
+			foreach (var rec in ChoJSONReader.LoadText(json).WithJSONPath("$..Markets")
+				.Select(r => (IDictionary<string, object>)r).SelectMany(r1 => r1.Keys.Select(k => new { key = k, value = ((dynamic)((IDictionary<string, object>)r1)[k]) })
+				.Select(k1 => new sp { mKey = k1.key, key = k1.value.productType, productType = k1.value.productType })))
+				Console.WriteLine(rec.Dump());
+				//Console.WriteLine($"ProductType: {rec.productType}, Key: {rec.key}");
+
+			//StringBuilder sb = new StringBuilder();
+			//using (var p = ChoJSONReader.LoadText(json)
+			//	.WithJSONPath("$..Markets.*")
+			//	)
+			//{
+			//	foreach (var rec in p)
+			//		Console.WriteLine(rec.Dump());
+			//}
+			//Console.WriteLine(sb.ToString());
 		}
 
 		static void Sample36()
 		{
 			string json = @"{
-   ""paging"": {
+			   ""paging"": {
 
-	  ""limit"": 100,
-      ""total"": 1394,
-      ""next"": ""Mg==""
-   },
-   ""data"": [
-      {
-         ""mmsi"": 538006090,
-         ""imo"": 9700665,
-         ""last_known_position"": {
-            ""timestamp"": ""2017-12-18T20:24:27+00:00"",
-            ""geometry"": {
-               ""type"": ""Point"",
-               ""coordinates"": [
-                  60.87363,
-                  -13.02203
-               ]
-	}
-}
-      },
-      {
-         ""mmsi"": 527555481,
-         ""imo"": 970000,
-         ""last_known_position"": {
-            ""timestamp"": ""2017-12-18T20:24:27+00:00"",
-            ""geometry"": {
-               ""type"": ""Point"",
-               ""coordinates"": [
-                  4.57883,
-                  3.76899
-               ]
-            }
-         }
-      }
-   ]
-}
-";
+				  ""limit"": 100,
+				  ""total"": 1394,
+				  ""next"": ""Mg==""
+			   },
+			   ""data"": [
+				  {
+					 ""mmsi"": 538006090,
+					 ""imo"": 9700665,
+					 ""last_known_position"": {
+						""timestamp"": ""2017-12-18T20:24:27+00:00"",
+						""geometry"": {
+						   ""type"": ""Point"",
+						   ""coordinates"": [
+							  60.87363,
+							  -13.02203
+						   ]
+				}
+			}
+				  },
+				  {
+					 ""mmsi"": 527555481,
+					 ""imo"": 970000,
+					 ""last_known_position"": {
+						""timestamp"": ""2017-12-18T20:24:27+00:00"",
+						""geometry"": {
+						   ""type"": ""Point"",
+						   ""coordinates"": [
+							  4.57883,
+							  3.76899
+						   ]
+						}
+					 }
+				  }
+			   ]
+			}
+			";
 			StringBuilder sb = new StringBuilder();
 			using (var p = ChoJSONReader.LoadText(json)
 				.WithJSONPath("$..data")

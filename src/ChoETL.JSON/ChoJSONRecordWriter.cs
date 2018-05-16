@@ -591,11 +591,11 @@ namespace ChoETL
                                     msg.Append(JsonConvert.SerializeObject(null));
                             }
                             else if (item.GetType().IsSimple())
-                                msg.Append(JsonConvert.SerializeObject(item));
+                                msg.Append(JsonConvert.SerializeObject(item, Configuration.Formatting));
                             else
                             {
-                                var obj = MapToDictionary(item);
-                                msg.Append(JsonConvert.SerializeObject(obj, Configuration.Formatting));
+                                //var obj = MapToDictionary(item);
+                                msg.Append(JsonConvert.SerializeObject(item, Configuration.Formatting));
                             }
                         }
 

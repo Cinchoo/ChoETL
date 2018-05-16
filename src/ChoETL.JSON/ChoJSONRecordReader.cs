@@ -541,7 +541,7 @@ namespace ChoETL
                     else
                     {
                         List<object> list = new List<object>();
-                        Type itemType = fieldConfig.FieldType.GetUnderlyingType().GetItemType().GetUnderlyingType();
+						Type itemType = fieldConfig.FieldType.GetUnderlyingType(); //.GetItemType().GetUnderlyingType();
 
                         if (fieldValue is JToken)
                         {
@@ -554,13 +554,13 @@ namespace ChoETL
                         {
                             var fi = ((JToken[])fieldValue).FirstOrDefault();
 
-                            if (fi is JArray && !fieldConfig.FieldType.GetUnderlyingType().IsCollection())
+                            if (fi is JArray && !itemType.IsCollection())
                             {
                                 if (fieldConfig.ItemConverter != null)
                                     fieldValue = fieldConfig.ItemConverter(fi);
                                 else
                                 {
-                                    fieldValue = ToObject(fi, fieldConfig.FieldType);
+                                    fieldValue = ToObject(fi, itemType);
                                 }
                             }
                             else
