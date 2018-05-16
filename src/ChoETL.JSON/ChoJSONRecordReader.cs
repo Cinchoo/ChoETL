@@ -92,21 +92,87 @@ namespace ChoETL
                 }
             }
         }
+		
+		private bool IsKeyValuePairArray(JArray array)
+		{
+			try
+			{
+				object key = ((JArray)array).FirstOrDefault();
+				object value = ((JArray)array).Skip(1).FirstOrDefault();
+
+				if (key is JValue && value != null)
+					return true;
+			}
+			catch { }
+
+			return false;
+		}
 
         private IEnumerable<JObject> ToJObjects(IEnumerable<JToken> tokens)
         {
             foreach (var t in tokens)
             {
-                if (t is JArray)
-                {
-                    foreach (JToken item in ((JArray)t))
-                        yield return item.ToObject<JObject>();
-                }
-                else if (t is JObject)
-                    yield return t.ToObject<JObject>();
-            }
+				if (t is JArray)
+				{
+					if (IsKeyValuePairArray(t as JArray))
+					{
+						int counter = 0;
+						JValue key = null;
+						JToken value = null;
 
-        }
+						foreach (JToken item in ((JArray)t))
+						{
+							counter++;
+
+							if (counter % 2 == 1)
+								key = item as JValue;
+							else
+							{
+								value = item as JToken;
+								dynamic obj = new JObject();
+								obj.Key = key;
+								obj.Value = value;
+
+								yield return obj;
+							}
+						}
+						if (counter % 2 == 1)
+						{
+							dynamic obj = new JObject();
+							obj.Key = key;
+							obj.Value = null;
+
+							yield return obj;
+						}
+					}
+					else
+					{
+						foreach (JToken item in ((JArray)t))
+						{
+							if (item is JObject)
+								yield return item.ToObject<JObject>();
+							else if (item is JValue)
+							{
+								dynamic x = new JObject();
+								x.Value = ((JValue)item).Value;
+								yield return x;
+							}
+							else if (item is JArray)
+							{
+								dynamic x = new JObject();
+								x.Value = item;
+								yield return x;
+							}
+						}
+					}
+				}
+				else if (t is JObject)
+					yield return t.ToObject<JObject>();
+				else if (t is JValue)
+					yield return new JObject(((JValue)t).Value);
+			}
+
+		}
 
         private IEnumerable<object> AsEnumerable(IEnumerable<JObject> jObjects, TraceSwitch traceSwitch, Func<object, bool?> filterFunc = null)
         {

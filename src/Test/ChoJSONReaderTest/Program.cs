@@ -637,10 +637,129 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Sample32();
+            Sample36();
 		}
 
-        static void Sample32()
+		static void Sample36()
+		{
+			string json = @"{
+   ""paging"": {
+
+	  ""limit"": 100,
+      ""total"": 1394,
+      ""next"": ""Mg==""
+   },
+   ""data"": [
+      {
+         ""mmsi"": 538006090,
+         ""imo"": 9700665,
+         ""last_known_position"": {
+            ""timestamp"": ""2017-12-18T20:24:27+00:00"",
+            ""geometry"": {
+               ""type"": ""Point"",
+               ""coordinates"": [
+                  60.87363,
+                  -13.02203
+               ]
+	}
+}
+      },
+      {
+         ""mmsi"": 527555481,
+         ""imo"": 970000,
+         ""last_known_position"": {
+            ""timestamp"": ""2017-12-18T20:24:27+00:00"",
+            ""geometry"": {
+               ""type"": ""Point"",
+               ""coordinates"": [
+                  4.57883,
+                  3.76899
+               ]
+            }
+         }
+      }
+   ]
+}
+";
+			StringBuilder sb = new StringBuilder();
+			using (var p = ChoJSONReader.LoadText(json)
+				.WithJSONPath("$..data")
+				)
+			{
+				using (var w = new ChoXmlWriter(sb)
+					.Configure(c => c.RootName = "vessel")
+					.Configure(c => c.NodeName = "row")
+					)
+				{
+					w.Write(p.Select(r => new { _mmsi = r.mmsi, _imo = r.imo, _lat = r.last_known_position.geometry.coordinates[0], _lon = r.last_known_position.geometry.coordinates[1] }));
+				}
+			}
+			Console.WriteLine(sb.ToString());
+		}
+
+		static void Sample35()
+		{
+			string json = @"[
+{""SelFoodId"":""2"",""SelQuantity"":""5""},
+{ ""SelFoodId"":""7"",""SelQuantity"":""3""},
+{ ""SelFoodId"":""9"",""SelQuantity"":""7""}]
+";
+			foreach (var rec in ChoJSONReader.LoadText(json))
+				Console.WriteLine(rec.Dump());
+		}
+
+		static void Sample34()
+		{
+			string json = @"{
+    ""build"": 44396,
+    ""files"": [
+		""00005DC8F14C92FFA13E7FDF1C9C35E4684F8B7A"", 
+		[
+			[""file1.zip"", 462485959, 462485959, 2, 0, 883, true, 266716, 1734, 992, 558, 0],
+			[""file1.doc"", 521042, 521042, 2, 0, 883, true, 266716, 1734, 992, 558, 0]
+		], 
+		""0001194B90612DFB5E8D363249719FB62E221430"", 
+		[
+			[""file2.iso"", 501163544, 501163544, 2, 0, 956, true, 194777, 2573, 0, 0, 0]
+		], 
+		""0002B5245B0897BEA7D7F426E104B6D24FF368DE"", 
+		[
+			[""file3.mp4"", 284564707, 284564707, 2, 0, 543, true, 205165, 1387, 853, 480, 0]
+		]
+	]
+}";
+			foreach (var rec in ChoJSONReader.LoadText(json).WithJSONPath("$..files").Select(e => new { key = e.Key, fileName = ((object[])((object[])e.Value).Cast<object>().First())[0], fileSize = ((object[])((object[])e.Value).Cast<object>().First())[1] }))
+				Console.WriteLine(rec.Dump());
+		}
+
+		public class Issue
+		{
+			[ChoJSONRecordField(JSONPath = "$..id")]
+			public int? id { get; set; }
+			[ChoJSONRecordField(JSONPath = "$..project.id")]
+			public int project_id { get; set; }
+			[ChoJSONRecordField(JSONPath = "$..project.name")]
+			public string project_name { get; set; }
+		}
+
+		static void Sample33()
+		{
+			string json = @"{
+			   ""issue"" : 
+			   {
+				  ""id"": 1,
+				  ""project"":
+				  {
+					 ""id"":1,
+					 ""name"":""name of project""
+				  }
+			   }
+			}";
+			var issue = ChoJSONReader<Issue>.LoadText(json).First();
+			Console.WriteLine(issue.Dump());
+		}
+
+		static void Sample32()
         {
             string json = @"{
 ""HDRDTL"":[""SRNO"",""STK_IDN"",""CERTIMG""],

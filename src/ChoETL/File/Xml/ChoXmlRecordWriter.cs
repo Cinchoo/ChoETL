@@ -534,19 +534,19 @@ namespace ChoETL
 				{
 					if (fieldConfig.IsXmlAttribute)
 					{
-						attrs.Add(kvp.Key, fieldValue);
+						attrs.Add(fieldConfig.FieldName, fieldValue);
 					}
 					else
 					{
-						elems.Add(kvp.Key, fieldValue);
+						elems.Add(fieldConfig.FieldName, fieldValue);
 					}
 				}
 				else
 				{
 					if (fieldValue == null || fieldValue.GetType().IsSimple())
-						attrs.Add(kvp.Key, fieldValue);
+						attrs.Add(fieldConfig.FieldName, fieldValue);
 					else
-						elems.Add(kvp.Key, fieldValue);
+						elems.Add(fieldConfig.FieldName, fieldValue);
 				}
             }
 
