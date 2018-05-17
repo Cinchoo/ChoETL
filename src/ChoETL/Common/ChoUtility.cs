@@ -1833,7 +1833,24 @@ namespace ChoETL
             return list1;
         }
 
-        public static IEnumerable<T> ToEnumerable<T>(this IEnumerator<T> enumerator)
+		public static IList Cast(this IList list, Func<object, object> itemConverter)
+		{
+			if (itemConverter == null)
+				return list;
+
+			var oldList = new ArrayList();
+			foreach (object t in list)
+				oldList.Add(t);
+
+			list.Clear();
+
+			foreach (object t in oldList)
+				list.Add(itemConverter(t));
+
+			return list;
+		}
+
+		public static IEnumerable<T> ToEnumerable<T>(this IEnumerator<T> enumerator)
         {
             while (enumerator.MoveNext())
             {

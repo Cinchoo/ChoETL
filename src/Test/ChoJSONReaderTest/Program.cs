@@ -637,7 +637,8 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Sample39();
+			System.Net.WebUtility.HtmlDecode(null);
+			Sample39();
 		}
 
 		public class RootObject
@@ -653,37 +654,45 @@ namespace ChoJSONReaderTest
 
 		static void Sample39()
 		{
-string json = @"
-	{
-		""id"": ""12345"",
-		""custom_fields"": [
-			{
-			""definition"": ""field1"",
-			""value"": ""stringvalue""
+			string json = @"
+				{
+					""id"": ""12345"",
+					""custom_fields"": [
+						{
+						""definition"": ""field1"",
+						""value"": ""stringvalue""
 
-			},      
+						},      
+						{
+						""definition"": ""field2"",
+						""value"": [ ""arrayvalue1"", ""arrayvalue2"" ]
+				},
+						{
+						""definition"": ""field3"",
+						""value"": {
+							""type"": ""user"",
+							""id"": ""1245""
+						}
+						}
+					]
+				}";
+
+
+			StringBuilder sb = new StringBuilder();
+			//using (var p = ChoJSONReader.LoadText(json)
+			//	)
+			//{
+			//	var x = p.ToArray();
+			//}
+			//return;
+
+			using (var p = ChoJSONReader<RootObject>.LoadText(json)
+						.WithField(m => m.Custom_fields, itemConverter: v => v)
+			)
 			{
-			""definition"": ""field2"",
-			""value"": [ ""arrayvalue1"", ""arrayvalue2"" ]
-	},
-			{
-			""definition"": ""field3"",
-			""value"": {
-				""type"": ""user"",
-				""id"": ""1245""
+				var x = p.ToArray();
+				Console.WriteLine(ChoJSONWriter<RootObject>.ToTextAll(p));
 			}
-			}
-		]
-	}";
-
-StringBuilder sb = new StringBuilder();
-using (var p = ChoJSONReader<RootObject>.LoadText(json)
-	)
-{
-				//var x = p.ToArray();
-
-	Console.WriteLine(ChoJSONWriter<RootObject>.ToTextAll(p));
-}
 		}
 
 		static void Sample38()
@@ -781,7 +790,7 @@ using (var p = ChoJSONReader<RootObject>.LoadText(json)
 				  },
 				  {
 					 ""mmsi"": 527555481,
-					 ""imo"": 970000,
+					 ""imo"": null,
 					 ""last_known_position"": {
 						""timestamp"": ""2017-12-18T20:24:27+00:00"",
 						""geometry"": {
@@ -804,12 +813,15 @@ using (var p = ChoJSONReader<RootObject>.LoadText(json)
 				using (var w = new ChoXmlWriter(sb)
 					.Configure(c => c.RootName = "vessel")
 					.Configure(c => c.NodeName = "row")
+					//.Configure(c => c.NullValueHandling = ChoNullValueHandling.Ignore)
 					)
 				{
 					w.Write(p.Select(r => new { _mmsi = r.mmsi, _imo = r.imo, _lat = r.last_known_position.geometry.coordinates[0], _lon = r.last_known_position.geometry.coordinates[1] }));
 				}
 			}
 			Console.WriteLine(sb.ToString());
+
+			var x = ChoXmlReader.LoadText(sb.ToString()).ToArray();
 		}
 
 		static void Sample35()

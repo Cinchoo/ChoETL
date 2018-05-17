@@ -811,9 +811,9 @@ namespace ChoETL
 
                     hasAttr = true;
                     if (retainXmlAttributesAsNative)
-                        ((IDictionary<string, object>)obj).Add("@{0}".FormatString(attribute.Name.LocalName), attribute.Value);
+                        ((IDictionary<string, object>)obj).Add("@{0}".FormatString(attribute.Name.LocalName), System.Net.WebUtility.HtmlDecode(attribute.Value));
                     else
-                        ((IDictionary<string, object>)obj).Add("{0}".FormatString(attribute.Name.LocalName), attribute.Value);
+                        ((IDictionary<string, object>)obj).Add("{0}".FormatString(attribute.Name.LocalName), System.Net.WebUtility.HtmlDecode(attribute.Value));
                 }
             }
 
@@ -843,7 +843,7 @@ namespace ChoETL
                             }
                             else
                             {
-                                string value = subElement.NilAwareValue(xmlSchemaNS);
+                                string value = System.Net.WebUtility.HtmlDecode(subElement.NilAwareValue(xmlSchemaNS));
                                 if (value.IsNullOrEmpty() && !subElement.HasAttributes())
                                 {
                                     switch (emptyXmlNodeValueHandling)
@@ -905,11 +905,11 @@ namespace ChoETL
             {
                 if (element.IsNilElement())
                 {
-                    obj.SetText(element.NilAwareValue(xmlSchemaNS));
+                    obj.SetText(System.Net.WebUtility.HtmlDecode(element.NilAwareValue(xmlSchemaNS)));
                 }
                 else
                 {
-                    string value = element.NilAwareValue(xmlSchemaNS);
+                    string value = System.Net.WebUtility.HtmlDecode(element.NilAwareValue(xmlSchemaNS));
 
                     if (value.IsNullOrEmpty())
                     {

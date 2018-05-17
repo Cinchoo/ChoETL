@@ -4,6 +4,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Dynamic;
@@ -479,21 +480,21 @@ namespace ChoETL
                         || fieldConfig.FieldType.GetItemType() == typeof(object))
                     {
                         if (fieldValue is JToken)
-                        {
-                            if (fieldConfig.ItemConverter != null)
-                                fieldValue = fieldConfig.ItemConverter(fieldValue);
-                            else
-                                fieldValue = ToObject((JToken)fieldValue, null);
-                        }
-                        else if (fieldValue is JToken[])
+						{
+							fieldValue = ToObject((JToken)fieldValue, null);
+							fieldValue = RaiseItemConverter(fieldConfig, fieldValue);
+						}
+						else if (fieldValue is JToken[])
                         {
                             List<object> arr = new List<object>();
                             foreach (var ele in (JToken[])fieldValue)
                             {
-                                if (fieldConfig.ItemConverter != null)
-                                    arr.Add(fieldConfig.ItemConverter(ele));
-                                else
-                                    arr.Add(ToObject(ele, null));
+								object fv = ToObject(ele, null);
+
+								if (fieldConfig.ItemConverter != null)
+                                    fv = fieldConfig.ItemConverter(fv);
+
+								arr.Add(fv);
                             }
 
                             fieldValue = arr.ToArray();
@@ -506,12 +507,10 @@ namespace ChoETL
 
                         if (fieldValue is JToken)
                         {
-                            if (fieldConfig.ItemConverter != null)
-                                fieldValue = fieldConfig.ItemConverter(fieldValue);
-                            else
-                                fieldValue = ToObject((JToken)fieldValue, fieldConfig.FieldType);
-                        }
-                    }
+                            fieldValue = ToObject((JToken)fieldValue, fieldConfig.FieldType);
+							fieldValue = RaiseItemConverter(fieldConfig, fieldValue);
+						}
+					}
                     //else if (fieldConfig.FieldType.IsCollection())
                     //{
                     //    List<object> list = new List<object>();
@@ -545,10 +544,8 @@ namespace ChoETL
 
                         if (fieldValue is JToken)
                         {
-                            if (fieldConfig.ItemConverter != null)
-                                fieldValue = fieldConfig.ItemConverter(fieldValue);
-                            else
-                                fieldValue = ToObject((JToken)fieldValue, itemType, fieldConfig.UseJSONSerialization);
+                            fieldValue = ToObject((JToken)fieldValue, itemType, fieldConfig.UseJSONSerialization);
+							fieldValue = RaiseItemConverter(fieldConfig, fieldValue);
                         }
                         else if (fieldValue is JToken[])
                         {
@@ -556,24 +553,19 @@ namespace ChoETL
 
                             if (fi is JArray && !itemType.IsCollection())
                             {
-                                if (fieldConfig.ItemConverter != null)
-                                    fieldValue = fieldConfig.ItemConverter(fi);
-                                else
-                                {
-                                    fieldValue = ToObject(fi, itemType);
-                                }
-                            }
-                            else
+                                fieldValue = ToObject(fi, itemType);
+								fieldValue = RaiseItemConverter(fieldConfig, fieldValue);
+							}
+							else
                             {
                                 foreach (var ele in (JToken[])fieldValue)
                                 {
-                                    if (fieldConfig.ItemConverter != null)
-                                        list.Add(fieldConfig.ItemConverter(ele));
-                                    else
-                                    {
-                                        list.Add(ToObject(ele, itemType));
-                                    }
-                                }
+									object fv = ToObject(ele, itemType);
+									if (fieldConfig.ItemConverter != null)
+										fv = fieldConfig.ItemConverter(fv);
+
+									list.Add(fv);
+								}
                                 fieldValue = list.ToArray();
                             }
                         }
@@ -697,8 +689,86 @@ namespace ChoETL
                 }
             }
 
-            return true;
+			//Find any object members and serialize them
+			if (!Configuration.IsDynamicObject) //rec is ExpandoObject)
+			{
+				rec = SerializeObjectMembers(rec);
+			}
+
+			return true;
         }
+
+		private object SerializeObjectMembers(object target, bool isTop = true)
+		{
+			if (target == null)
+				return target;
+
+			Type recordType = target.GetType();
+			if (recordType.IsSimple())
+				return target;
+			if (typeof(IList).IsAssignableFrom(recordType))
+			{
+				return ((IList)target).Cast((t) =>
+				{
+					return SerializeObjectMembers(t, false);
+				});
+			}
+
+			if (typeof(IEnumerable).IsAssignableFrom(recordType))
+				return target;
+
+			foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
+			{
+				if (pd.PropertyType == typeof(object))
+				{
+					var pi = ChoType.GetProperty(recordType, pd.Name);
+					var propConverters = ChoTypeDescriptor.GetTypeConverters(pi);
+					var propConverterParams = ChoTypeDescriptor.GetTypeConverterParams(pi);
+
+					var itemValue = ChoType.GetPropertyValue(target, pd.Name);
+
+					if (propConverters.IsNullOrEmpty())
+					{
+						if (itemValue != null)
+						{
+							if (typeof(JToken).IsAssignableFrom(itemValue.GetType()))
+							{
+								ChoType.SetPropertyValue(target, pd.Name, ToObject(itemValue as JToken, typeof(ChoDynamicObject)));
+							}
+						}
+					}
+					else
+					{
+						var fv = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, null, propConverters, propConverterParams, Configuration.Culture);
+						ChoType.SetPropertyValue(target, pd.Name, fv);
+					}
+				}
+				else
+				{
+					ChoType.SetPropertyValue(target, pd.Name, SerializeObjectMembers(ChoType.GetPropertyValue(target, pd.Name), false));
+				}
+			}
+			return target;
+		}
+
+		private object RaiseItemConverter(ChoJSONRecordFieldConfiguration fieldConfig, object fieldValue)
+		{
+			if (fieldConfig.ItemConverter != null)
+			{
+				if (fieldValue is IList)
+				{
+					fieldValue = ((IList)fieldValue).Cast(fieldConfig.ItemConverter);
+				}
+				else
+					fieldValue = fieldConfig.ItemConverter(fieldValue);
+			}
+			else
+			{
+
+			}
+
+			return fieldValue;
+		}
 
 		private bool FillIfKeyValueObject(object rec, JToken jObject)
 		{

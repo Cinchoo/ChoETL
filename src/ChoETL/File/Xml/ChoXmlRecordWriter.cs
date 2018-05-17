@@ -568,7 +568,18 @@ namespace ChoETL
             {
 				ele = NewXElement(nodeName, Configuration.DefaultNamespacePrefix, ns);
 				foreach (var kvp in attrs)
-                    ele.Add(new XAttribute(kvp.Key, kvp.Value));
+				{
+					object value = kvp.Value;
+					if (value == null)
+					{
+						if (config.NullValueHandling == ChoNullValueHandling.Ignore)
+							continue;
+						else
+							value = String.Empty;
+					}
+
+					ele.Add(new XAttribute(kvp.Key, value));
+				}
                 foreach (var kvp in elems)
                 {
                     if (kvp.Value == null)
