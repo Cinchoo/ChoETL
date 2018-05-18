@@ -637,7 +637,32 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			Sample36();
+			Sample41();
+		}
+
+		static void Sample41()
+		{
+			string json = @"[
+[{""Key"":""entity_id"",""Value"":""1""},{""Key"":""CustomerName"",""Value"":""Test1""},{""Key"":""AccountNumber"",""Value"":""ACC17-001""},{""Key"":""CustomerType"",""Value"":""Direct Sale""}],
+[{""Key"":""entity_id"",""Value"":""2""},{""Key"":""CustomerName"",""Value"":""Test2""},{""Key"":""AccountNumber"",""Value"":""ACC17-002""},{""Key"":""CustomerType"",""Value"":""Direct Sale""}],
+[{""Key"":""entity_id"",""Value"":""3""},{""Key"":""CustomerName"",""Value"":""Test3""},{""Key"":""AccountNumber"",""Value"":""ACC17-003""},{""Key"":""CustomerType"",""Value"":""Direct Sale""}],
+[{""Key"":""entity_id"",""Value"":""4""},{""Key"":""CustomerName"",""Value"":""Test4""},{""Key"":""AccountNumber"",""Value"":""ACC17-004""},{""Key"":""CustomerType"",""Value"":""Direct Sale""}],
+[{""Key"":""entity_id"",""Value"":""5""},{""Key"":""CustomerName"",""Value"":""Test5""},{""Key"":""AccountNumber"",""Value"":""ACC17-005""},{""Key"":""CustomerType"",""Value"":""Invoice""}],
+[{""Key"":""entity_id"",""Value"":""6""},{""Key"":""CustomerName"",""Value"":""Test6""},{""Key"":""AccountNumber"",""Value"":""ACC17-006""},{""Key"":""CustomerType"",""Value"":""Invoice""}]
+]";
+			using (var p = ChoJSONReader.LoadText(json)
+				)
+			{
+				var result = p.Select(r1 => (dynamic[])r1.Value).Select(r2 =>
+				{
+					ChoDynamicObject obj = new ChoDynamicObject();
+					foreach (dynamic r3 in r2)
+						obj.Add(r3.Key.ToString(), r3.Value);
+					return obj;
+				});
+
+				Console.WriteLine(ChoJSONWriter.ToTextAll(result));
+			}
 		}
 
 		static void Sample40()

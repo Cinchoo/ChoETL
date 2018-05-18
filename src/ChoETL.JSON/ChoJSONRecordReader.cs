@@ -79,7 +79,13 @@ namespace ChoETL
                             {
                                 yield return JObject.Load(sr);
                             }
-                        }
+							else if (sr.TokenType == JsonToken.StartArray)
+							{
+								var z = JArray.Load(sr).Children().ToArray();
+								dynamic x = new JObject(new JProperty("Value", z));
+								yield return x;
+							}
+						}
                     }
                     if (sr.TokenType == JsonToken.StartObject)
                         yield return (JObject)JToken.ReadFrom(sr);
