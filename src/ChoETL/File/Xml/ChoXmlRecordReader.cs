@@ -874,6 +874,18 @@ namespace ChoETL
 					return SerializeObjectMembers(t, false);
 				});
 			}
+			if (typeof(IDictionary).IsAssignableFrom(recordType))
+			{
+				return ((IDictionary)target).Cast((t) =>
+				{
+					var key = t.Key;
+					var value = t.Value;
+
+					key = SerializeObjectMembers(key, false);
+					value = SerializeObjectMembers(value, false);
+					return new KeyValuePair<object, object>(key, value);
+				});
+			}
 
 			if (typeof(IEnumerable).IsAssignableFrom(recordType))
 				return target;

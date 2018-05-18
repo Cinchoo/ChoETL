@@ -30,7 +30,13 @@ namespace ChoETL
             get;
             set;
         }
-        [DataMember]
+		[DataMember]
+		public bool IsXmlCDATA
+		{
+			get;
+			set;
+		}
+		[DataMember]
         public bool? EncodeValue
         {
             get;

@@ -282,7 +282,7 @@ namespace ChoJSONReaderTest
                                                        },
                                                    new Address
                                                        {
-                                                           Street = "432 Main Avenue"
+                                                           Street = "432 Cross Avenue"
                                                        }
                                                }
                            },
@@ -637,8 +637,30 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			System.Net.WebUtility.HtmlDecode(null);
-			Sample39();
+			Sample36();
+		}
+
+		static void Sample40()
+		{
+			string json = @"{
+    ""Excited"":[""https://github.com/vedantroy/image-test/raw/master/Happy/excited1.gif"",
+			""https://github.com/vedantroy/image-test/raw/master/Happy/excited2.gif"",
+                ""https://github.com/vedantroy/image-test/raw/master/Happy/excited3.gif""],
+
+    ""Sad"":[""https://github.com/vedantroy/image-test/raw/master/Sad/sad1.gif"",
+            ""https://github.com/vedantroy/image-test/raw/master/Sad/sad2.gif"",
+            ""https://github.com/vedantroy/image-test/raw/master/Sad/sad3.gif"",
+            ""https://github.com/vedantroy/image-test/raw/master/Sad/sad4.gif""]
+	}";
+
+			StringBuilder sb = new StringBuilder();
+			using (var p = ChoJSONReader.LoadText(json)
+			)
+			{
+				var x = p.ToArray();
+				//Console.WriteLine(ChoJSONWriter<RootObject>.ToTextAll(p));
+			}
+
 		}
 
 		public class RootObject
@@ -690,7 +712,7 @@ namespace ChoJSONReaderTest
 						.WithField(m => m.Custom_fields, itemConverter: v => v)
 			)
 			{
-				var x = p.ToArray();
+				//var x = p.ToArray();
 				Console.WriteLine(ChoJSONWriter<RootObject>.ToTextAll(p));
 			}
 		}
@@ -816,7 +838,7 @@ namespace ChoJSONReaderTest
 					//.Configure(c => c.NullValueHandling = ChoNullValueHandling.Ignore)
 					)
 				{
-					w.Write(p.Select(r => new { _mmsi = r.mmsi, _imo = r.imo, _lat = r.last_known_position.geometry.coordinates[0], _lon = r.last_known_position.geometry.coordinates[1] }));
+					w.Write(p.Select(r => new { _mmsi = r.mmsi, _imo = r.imo == null ? "0" : r.imo, lat_ = r.last_known_position.geometry.coordinates[0], _lon = r.last_known_position.geometry.coordinates[1] }));
 				}
 			}
 			Console.WriteLine(sb.ToString());

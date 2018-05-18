@@ -126,7 +126,7 @@ namespace ChoETL
             private set;
         }
         [DataMember]
-        public bool RetainXmlAttributesAsNative { get; set; }
+        internal bool RetainXmlAttributesAsNative { get; set; }
 
 		private string _defaultNamespacePrefix;
 		[DataMember]
@@ -535,6 +535,14 @@ namespace ChoETL
 							var obj = new ChoXmlRecordFieldConfiguration(fn, xPath: $"./{fn1}");
 							obj.FieldName = fn1;
 							obj.IsXmlAttribute = true;
+							XmlRecordFieldConfigurations.Add(obj);
+						}
+						else if (fn.EndsWith("_"))
+						{
+							string fn1 = fn.Substring(0, fn.Length - 1);
+							var obj = new ChoXmlRecordFieldConfiguration(fn, xPath: $"./{fn1}");
+							obj.FieldName = fn1;
+							obj.IsXmlCDATA = true;
 							XmlRecordFieldConfigurations.Add(obj);
 						}
 						else

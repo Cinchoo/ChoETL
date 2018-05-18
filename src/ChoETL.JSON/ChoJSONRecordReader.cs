@@ -693,10 +693,77 @@ namespace ChoETL
 			if (!Configuration.IsDynamicObject) //rec is ExpandoObject)
 			{
 				rec = SerializeObjectMembers(rec);
+				rec = AssignDefaultsToNullableMembers(rec);
 			}
 
 			return true;
         }
+
+		private object AssignDefaultsToNullableMembers(object target, bool isTop = true)
+		{
+			if (target == null)
+				return target;
+
+			Type recordType = target.GetType();
+			if (recordType.IsSimple())
+				return target;
+			if (typeof(IList).IsAssignableFrom(recordType))
+			{
+				return ((IList)target).Cast((t) =>
+				{
+					return AssignDefaultsToNullableMembers(t, false);
+				});
+			}
+			if (typeof(IDictionary).IsAssignableFrom(recordType))
+			{
+				return ((IDictionary)target).Cast((t) =>
+				{
+					var key = t.Key;
+					var value = t.Value;
+
+					key = AssignDefaultsToNullableMembers(key, false);
+					value = AssignDefaultsToNullableMembers(value, false);
+					return new KeyValuePair<object, object>(key, value);
+				});
+			}
+
+			if (typeof(IEnumerable).IsAssignableFrom(recordType))
+				return target;
+
+			foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
+			{
+				if (pd.PropertyType == typeof(object))
+				{
+					var pi = ChoType.GetProperty(recordType, pd.Name);
+					var propConverters = ChoTypeDescriptor.GetTypeConverters(pi);
+					var propConverterParams = ChoTypeDescriptor.GetTypeConverterParams(pi);
+
+					var itemValue = ChoType.GetPropertyValue(target, pd.Name);
+
+					if (propConverters.IsNullOrEmpty())
+					{
+						if (itemValue != null)
+						{
+							if (typeof(JToken).IsAssignableFrom(itemValue.GetType()))
+							{
+								ChoType.SetPropertyValue(target, pd.Name, ToObject(itemValue as JToken, typeof(ChoDynamicObject)));
+							}
+						}
+					}
+					else
+					{
+						var fv = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, null, propConverters, propConverterParams, Configuration.Culture);
+						ChoType.SetPropertyValue(target, pd.Name, fv);
+					}
+				}
+				else
+				{
+					ChoType.SetPropertyValue(target, pd.Name, AssignDefaultsToNullableMembers(ChoType.GetPropertyValue(target, pd.Name), false));
+				}
+			}
+
+			return target;
+		}
 
 		private object SerializeObjectMembers(object target, bool isTop = true)
 		{
@@ -711,6 +778,18 @@ namespace ChoETL
 				return ((IList)target).Cast((t) =>
 				{
 					return SerializeObjectMembers(t, false);
+				});
+			}
+			if (typeof(IDictionary).IsAssignableFrom(recordType))
+			{
+				return ((IDictionary)target).Cast((t) =>
+				{
+					var key = t.Key;
+					var value = t.Value;
+
+					key = SerializeObjectMembers(key, false);
+					value = SerializeObjectMembers(value, false);
+					return new KeyValuePair<object, object>(key, value);
 				});
 			}
 

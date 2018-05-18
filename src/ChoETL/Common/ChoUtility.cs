@@ -1850,6 +1850,25 @@ namespace ChoETL
 			return list;
 		}
 
+		public static IDictionary Cast(this IDictionary dict, Func<KeyValuePair<object, object>, KeyValuePair<object, object>> itemConverter)
+		{
+			if (itemConverter == null)
+				return dict;
+
+			var oldDict = new Hashtable();
+			foreach (var t in dict.Keys)
+				oldDict.Add(t, dict[t]);
+
+			dict.Clear();
+
+			foreach (var t in oldDict)
+			{
+				var kvp = itemConverter(new KeyValuePair<object, object>(t, oldDict[t]));
+				dict.Add(kvp.Key, kvp.Value);
+			}
+
+			return dict;
+		}
 		public static IEnumerable<T> ToEnumerable<T>(this IEnumerator<T> enumerator)
         {
             while (enumerator.MoveNext())
