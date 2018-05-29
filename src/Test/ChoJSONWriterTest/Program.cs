@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Data.SqlClient;
 using System.Dynamic;
@@ -32,14 +33,40 @@ public class ToTextConverter : IChoValueConverter
         public string stringValue { get; set; }
         public IPAddress ipValue { get; set; }
     }
+    public enum Gender
+    {
+        [Description("M")]
+        Male,
+        [Description("F")]
+        Female
+    }
 
+    public class Person
+    {
+        public int Age { get; set; }
+        [ChoTypeConverter(typeof(ChoEnumConverter), Parameters = "Description")]
+        public Gender Gender { get; set; }
+    }
     class Program
     {
         public enum EmpType {  FullTime, Contract }
 
         static void Main(string[] args)
         {
-            IPAddressTest();
+            EnumTest();
+        }
+
+        static void EnumTest()
+        {
+            StringBuilder sb = new StringBuilder();
+            using (var jr = new ChoJSONWriter<Person>(sb)
+                )
+            {
+                jr.Write(new Person { Age = 1, Gender = Gender.Female });
+            }
+
+            Console.WriteLine(sb.ToString());
+
         }
 
         static void IPAddressTest()
