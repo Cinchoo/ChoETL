@@ -47,13 +47,52 @@ public class ToTextConverter : IChoValueConverter
         [ChoTypeConverter(typeof(ChoEnumConverter), Parameters = "Description")]
         public Gender Gender { get; set; }
     }
+
+    public class MyDate
+    {
+        public int year { get; set; }
+        public int month { get; set; }
+        public int day { get; set; }
+    }
+
+    public class Lad
+    {
+        public string firstName { get; set; }
+        public string lastName { get; set; }
+        public MyDate dateOfBirth { get; set; }
+    }
+
     class Program
     {
         public enum EmpType {  FullTime, Contract }
 
         static void Main(string[] args)
         {
-            EnumTest();
+            ComplexObjTest();
+        }
+
+        static void ComplexObjTest()
+        {
+            StringBuilder sb = new StringBuilder();
+            var obj = new Lad
+            {
+                firstName = "Markoff",
+                lastName = "Chaney",
+                dateOfBirth = new MyDate
+                {
+                    year = 1901,
+                    month = 4,
+                    day = 30
+                }
+            };
+            using (var jr = new ChoJSONWriter<Lad>(sb)
+                )
+            {
+                jr.Write(obj);
+            }
+
+            Console.WriteLine(sb.ToString());
+
         }
 
         static void EnumTest()
@@ -67,6 +106,22 @@ public class ToTextConverter : IChoValueConverter
 
             Console.WriteLine(sb.ToString());
 
+        }
+
+        static void EnumLoadTest()
+        {
+            string json = @"[
+ {
+  ""Age"": 1,
+  ""Gender"": ""M""
+ }
+]";
+
+            using (var p = ChoJSONReader<Person>.LoadText(json))
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
         }
 
         static void IPAddressTest()
