@@ -100,6 +100,16 @@ namespace ChoETL
             private set;
         }
 
+		internal bool IsInitialized
+		{
+			get;
+			set;
+		}
+		internal string DataSetName
+		{
+			get;
+			set;
+		}
         public ChoJSONRecordFieldConfiguration this[string name]
         {
             get
@@ -136,6 +146,12 @@ namespace ChoETL
 
             DiscoverRecordFields(recordType);
         }
+
+		internal void Reset()
+		{
+			IsInitialized = false;
+			JSONRecordFieldConfigurations.Clear();
+		}
 
         internal void UpdateFieldTypesIfAny(Dictionary<string, Type> dict)
         {

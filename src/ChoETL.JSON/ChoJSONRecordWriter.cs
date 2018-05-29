@@ -18,7 +18,6 @@ namespace ChoETL
     internal class ChoJSONRecordWriter : ChoRecordWriter
     {
         private IChoNotifyRecordWrite _callbackRecord;
-        private bool _configCheckDone = false;
         private long _index = 0;
         bool isFirstRec = true;
         internal ChoWriter Writer = null;
@@ -60,12 +59,22 @@ namespace ChoETL
 
             try
             {
-                if (_configCheckDone)
+                if (Configuration.IsInitialized)
                 {
-                    if (!SupportMultipleContent)
-                        sw.Write(String.Format("{0}]", Configuration.EOLDelimiter));
-                }
-            }
+					if (!SupportMultipleContent)
+					{
+						if (Configuration.IgnoreRootName || Configuration.RootName.IsNullOrWhiteSpace())
+							sw.Write(String.Format("{0}]", Configuration.EOLDelimiter));
+						else
+						{
+							sw.Write(String.Format("{0}]}}", Configuration.EOLDelimiter));
+						}
+					}
+					else
+					{
+					}
+				}
+			}
             catch { }
 
             RaiseEndWrite(sw);
@@ -109,7 +118,7 @@ namespace ChoETL
                     if (predicate == null || predicate(record))
                     {
                         //Discover and load Xml columns from first record
-                        if (!_configCheckDone)
+                        if (!Configuration.IsInitialized)
                         {
                             if (record == null)
                                 continue;
@@ -169,7 +178,7 @@ namespace ChoETL
 
                             Configuration.Validate(fieldNames);
 
-                            _configCheckDone = true;
+							Configuration.IsInitialized = true;
 
                             if (!RaiseBeginWrite(sw))
                                 yield break;
@@ -179,7 +188,9 @@ namespace ChoETL
 								if (Configuration.IgnoreRootName || Configuration.RootName.IsNullOrWhiteSpace())
 									sw.Write("[");
 								else
-									sw.Write(@"""{0}"": [".FormatString(Configuration.RootName.NTrim()));
+								{
+									sw.Write(@"{{""{0}"": [".FormatString(Configuration.RootName.NTrim()));
+								}
 							}
 							else
 							{

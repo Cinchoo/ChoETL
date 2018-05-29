@@ -507,15 +507,16 @@ namespace ChoETL
 
 		public ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
 			Func<object, object> itemConverter = null,
-			object defaultValue = null, object fallbackValue = null, string formatText = null)
+			object defaultValue = null, object fallbackValue = null, string formatText = null, bool isArray = false)
 		{
 			return WithField(name, jsonPath, fieldType, fieldValueTrimOption, isJSONAttribute, fieldName, valueConverter, itemConverter,
-				defaultValue, fallbackValue, null, formatText);
+				defaultValue, fallbackValue, null, formatText, isArray);
 		}
 
 		private ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
 			Func<object, object> itemConverter = null,
-			object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null, string formatText = null)
+			object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null, 
+			string formatText = null, bool isArray = false)
 		{
 			if (!name.IsNullOrEmpty())
 			{
@@ -545,7 +546,8 @@ namespace ChoETL
 					DefaultValue = defaultValue,
 					FallbackValue = fallbackValue,
                     FormatText = formatText,
-					ItemConverter = itemConverter
+					ItemConverter = itemConverter,
+					IsArray = isArray
 				};
 				if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
 				{

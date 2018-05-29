@@ -1123,13 +1123,41 @@ namespace ChoETL
 		//	return _list[index];
 		//}
 
-		public static ChoDynamicObject New(IDictionary kvpDict)
+		public static ChoDynamicObject FromDictionary(IDictionary kvpDict)
 		{
 			ChoDynamicObject obj = new ChoDynamicObject();
 			if (kvpDict != null)
 			{
 				foreach (var key in kvpDict.Keys)
 					obj.AddOrUpdate(key.ToNString(), kvpDict[key]);
+			}
+
+			return obj;
+		}
+
+		public static ChoDynamicObject FromKeyValuePairs(IEnumerable<KeyValuePair<string, object>> kvps, string name = null)
+		{
+			ChoDynamicObject obj = new ChoDynamicObject(name);
+			if (kvps != null)
+			{
+				foreach (var kvp in kvps)
+				{
+					obj.AddOrUpdate(kvp.Key.ToNString(), kvp.Value);
+				}
+			}
+
+			return obj;
+		}
+
+		public static ChoDynamicObject From(IEnumerable<KeyValuePair<string, object>> kvps, string name = null)
+		{
+			ChoDynamicObject obj = new ChoDynamicObject(name);
+			if (kvps != null)
+			{
+				foreach (var kvp in kvps)
+				{
+					obj.AddOrUpdate(kvp.Key.ToNString(), kvp.Value);
+				}
 			}
 
 			return obj;
@@ -1143,4 +1171,14 @@ namespace ChoETL
         public ChoPropertyValueTrimOption TrimOption { get; set; }
     }
 
+	public static class ChoDynamicObjectEx
+	{
+		public static T ToObject<T>(this ChoDynamicObject obj)
+			where T : class, new()
+		{
+			T ret = ((IDictionary<string, object>)obj).ToObject<T>();
+
+			return ret;
+		}
+	}
 }

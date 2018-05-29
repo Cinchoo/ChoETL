@@ -637,7 +637,95 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			Sample41();
+			Colors2DataTable();
+		}
+
+		static void Colors2DataTable()
+		{
+			using (var p = new ChoJSONReader("colors.json")
+				.WithJSONPath("$.colors")
+				//.WithField("color")
+				//.WithField("category")
+				)
+			{
+				var dt = p.AsDataTable();
+				//foreach (var rec in p)
+				//	Console.WriteLine(rec.Dump());
+			}
+		}
+
+		static void Sample43()
+		{
+			string json = @"{
+    ""property1"": 1,
+    ""property2"": 2,
+    ""someArray"": [
+        {
+            ""item1"": 1,
+            ""item2"": 2
+        },
+        {
+            ""item1"": 5
+        }
+    ]
+}";
+			using (var p = ChoJSONReader.LoadText(json)
+				.WithField("property1", jsonPath: "$.property1")
+				.WithField("property2", jsonPath: "$.property2")
+				.WithField("someArray", jsonPath: @"$.someArray[*][?(@.item2)]", isArray: true)
+			)
+			{
+				foreach (var rec in p)
+					Console.WriteLine(rec.Dump());
+			}
+		}
+
+		public partial class MyNode
+		{
+			public long Param1 { get; set; }
+			public string Param2 { get; set; }
+			public object Param3 { get; set; }
+		}
+
+		static void Sample42()
+		{
+			string json = @"{
+""myNodes"": [
+    {
+        ""param1"": 1,
+        ""param2"": ""myValue2a"",
+        ""param3"": {
+            ""myParam3param"": 0
+        }
+    },
+    {
+        ""param1"": 1,
+        ""param2"": ""myValue2b"",
+        ""param3"": [
+        {
+            ""myItemA"": ""abc"",
+            ""myItemB"": ""def"",
+            ""myItemC"": ""0""
+        }]
+    },
+    {
+        ""param1"": 1,
+        ""param2"": ""myValue2c"",
+        ""param3"": [
+        {
+            ""myItemA"": ""ghi"",
+            ""myItemB"": ""jkl"",
+            ""myItemC"": ""0""
+        }]
+    }]
+}";
+			using (var p = ChoJSONReader<MyNode>.LoadText(json)
+				.WithJSONPath("$..myNodes")
+				)
+			{
+				Console.WriteLine(ChoJSONWriter.ToTextAll(p));
+			}
+
 		}
 
 		static void Sample41()
@@ -650,19 +738,28 @@ namespace ChoJSONReaderTest
 [{""Key"":""entity_id"",""Value"":""5""},{""Key"":""CustomerName"",""Value"":""Test5""},{""Key"":""AccountNumber"",""Value"":""ACC17-005""},{""Key"":""CustomerType"",""Value"":""Invoice""}],
 [{""Key"":""entity_id"",""Value"":""6""},{""Key"":""CustomerName"",""Value"":""Test6""},{""Key"":""AccountNumber"",""Value"":""ACC17-006""},{""Key"":""CustomerType"",""Value"":""Invoice""}]
 ]";
-			using (var p = ChoJSONReader.LoadText(json)
-				)
+
+			using (var p = ChoJSONReader.LoadText(json))
 			{
 				var result = p.Select(r1 => (dynamic[])r1.Value).Select(r2 =>
-				{
-					ChoDynamicObject obj = new ChoDynamicObject();
-					foreach (dynamic r3 in r2)
-						obj.Add(r3.Key.ToString(), r3.Value);
-					return obj;
-				});
+					ChoDynamicObject.FromKeyValuePairs(r2.Select(kvp => new KeyValuePair<string, object>(kvp.Key.ToString(), kvp.Value)))
+				);
 
 				Console.WriteLine(ChoJSONWriter.ToTextAll(result));
 			}
+
+			//using (var p = ChoJSONReader.LoadText(json))
+			//{
+			//	var result = p.Select(r1 => (dynamic[])r1.Value).Select(r2 => 
+			//	{
+			//		ChoDynamicObject obj = new ChoDynamicObject();
+			//		foreach (dynamic r3 in r2)
+			//			obj.Add(r3.Key.ToString(), r3.Value);
+			//		return obj;
+			//	});
+
+			//	Console.WriteLine(ChoJSONWriter.ToTextAll(result));
+			//}
 		}
 
 		static void Sample40()

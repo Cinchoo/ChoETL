@@ -84,8 +84,23 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			CDATATest();
+			Sample47();
         }
+
+		static void Sample47()
+		{
+			using (var p = new ChoXmlReader("sample47.xml")
+				.WithXPath("/QBPOSXML/QBPOSXMLMsgsRs/SalesOrderQueryRs")
+				)
+			{
+				foreach (dynamic rec in p)
+				{
+					foreach (dynamic rec1 in rec.SalesOrderRets)
+						Console.WriteLine(rec1.CustomerListID);
+				}
+			}
+		}
+
 		static void CDATATest()
 		{
 			string ID = null;

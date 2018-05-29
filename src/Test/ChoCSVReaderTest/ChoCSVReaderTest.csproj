@@ -63,6 +63,7 @@
     <None Include="MasterDetail.csv" />
     <None Include="planets.csv" />
     <None Include="pontos.csv" />
+    <None Include="DoubleQuotesTest.csv" />
     <None Include="Sample3.csv" />
     <None Include="Sample2.csv" />
     <None Include="Sample1.csv" />

@@ -753,7 +753,29 @@ namespace ChoETL
 								dict.ConvertNSetMemberValue(key, kvp.Value, ref fieldValue, Configuration.Culture);
 							}
 							else
-								dict.ConvertNSetMemberValue(key, kvp.Value, ref fieldValue, Configuration.Culture);
+							{
+								isArray = fieldValue is IList;
+								if (isArray)
+								{
+									var objs = ((IList)fieldValue).OfType<ChoDynamicObject>();
+									string firstName = objs.FirstOrDefault() != null ? objs.First().DynamicObjectName : null;
+
+									if (objs.Count() == ((IList)fieldValue).Count && firstName != null
+										&& objs.All(o => o.DynamicObjectName == firstName))
+									{
+										string key1 = firstName.ToPlural();
+										if (key1 == firstName)
+											key1 = "{0}s".FormatString(firstName);
+										dict.ConvertNSetMemberValue(key1, kvp.Value, ref fieldValue, Configuration.Culture);
+									}
+									else
+									{
+										dict.ConvertNSetMemberValue(key, kvp.Value, ref fieldValue, Configuration.Culture);
+									}
+								}
+								else
+									dict.ConvertNSetMemberValue(key, kvp.Value, ref fieldValue, Configuration.Culture);
+							}
 						}
 						else
 							dict[key] = fieldValue;

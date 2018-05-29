@@ -39,10 +39,61 @@ public class ToTextConverter : IChoValueConverter
 
         static void Main(string[] args)
         {
-            IPAddressTest();
+			DataSetTest();
         }
 
-        static void IPAddressTest()
+		static void DataSetTest()
+		{
+			DataTable colorsDt = null;
+			DataTable testDataDt = null;
+			using (var p = new ChoJSONReader("colors.json")
+				.WithJSONPath("$.colors")
+				.WithField("color")
+				.WithField("category")
+				)
+			{
+				colorsDt = p.AsDataTable();
+				colorsDt.TableName = "Colors";
+			}
+			using (var p = new ChoJSONReader("TestData.json")
+				)
+			{
+				testDataDt = p.AsDataTable();
+			}
+
+			DataSet ds = new DataSet("Test");
+			ds.Tables.Add(colorsDt);
+			ds.Tables.Add(testDataDt);
+
+			StringBuilder sb = new StringBuilder();
+			using (var w = new ChoJSONWriter(sb))
+			{
+				w.Write(ds);
+			}
+			Console.WriteLine(sb.ToString());
+		}
+
+		static void DataTableTest1()
+		{
+			StringBuilder sb = new StringBuilder();
+			using (var p = new ChoJSONReader("colors.json")
+				.WithJSONPath("$.colors")
+				.WithField("color")
+				.WithField("category")
+				)
+			{
+				using (var w = new ChoJSONWriter(sb)
+					)
+				{
+					var dt = p.AsDataTable();
+					dt.TableName = "Colors";
+					w.Write(dt);
+				}
+			}
+			Console.WriteLine(sb.ToString());
+		}
+
+		static void IPAddressTest()
         {
             using (var jr = new ChoJSONWriter<SomeOuterObject>("ipaddr.json")
                 .WithField("stringValue")
@@ -248,6 +299,7 @@ public class ToTextConverter : IChoValueConverter
 
         static void DataTableTest()
         {
+			StringBuilder sb = new StringBuilder();
             string connectionstring = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True";
             using (var conn = new SqlConnection(connectionstring))
             {
@@ -258,9 +310,11 @@ public class ToTextConverter : IChoValueConverter
                 DataTable dt = new DataTable("Customer");
                 adap.Fill(dt);
 
-                using (var parser = new ChoJSONWriter("customers.json").Configure(c => c.UseJSONSerialization = true))
+                using (var parser = new ChoJSONWriter(sb).Configure(c => c.UseJSONSerialization = true))
                     parser.Write(dt);
             }
+
+			Console.WriteLine(sb.ToString());
         }
 
         static void DataReaderTest()

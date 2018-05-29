@@ -93,7 +93,7 @@ namespace ChoETL
 
 		public static IEnumerable<dynamic> ToDynamic(this IDictionary source)
 		{
-			yield return ChoDynamicObject.New(source);
+			yield return ChoDynamicObject.FromDictionary(source);
 		}
 
 		//public static IEnumerable<object[]> Transpose<K, V>(this IDictionary<K, V> dict)

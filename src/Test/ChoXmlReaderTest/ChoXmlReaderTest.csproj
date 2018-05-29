@@ -72,6 +72,9 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="NoEncode.xml" />
+    <Content Include="sample47.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="sample30.xml">
       <SubType>Designer</SubType>
     </Content>
