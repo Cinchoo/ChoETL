@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Data.SqlClient;
 using System.Dynamic;
@@ -32,6 +33,34 @@ public class ToTextConverter : IChoValueConverter
         public string stringValue { get; set; }
         public IPAddress ipValue { get; set; }
     }
+    public enum Gender
+    {
+        [Description("M")]
+        Male,
+        [Description("F")]
+        Female
+    }
+
+    public class Person
+    {
+        public int Age { get; set; }
+        //[ChoTypeConverter(typeof(ChoEnumConverter), Parameters = "Name")]
+        public Gender Gender { get; set; }
+    }
+
+    public class MyDate
+    {
+        public int year { get; set; }
+        public int month { get; set; }
+        public int day { get; set; }
+    }
+
+    public class Lad
+    {
+        public string firstName { get; set; }
+        public string lastName { get; set; }
+        public MyDate dateOfBirth { get; set; }
+    }
 
     class Program
     {
@@ -39,59 +68,61 @@ public class ToTextConverter : IChoValueConverter
 
         static void Main(string[] args)
         {
-			DataSetTest();
+            EnumTest();
         }
 
-		static void DataSetTest()
-		{
-			DataTable colorsDt = null;
-			DataTable testDataDt = null;
-			using (var p = new ChoJSONReader("colors.json")
-				.WithJSONPath("$.colors")
-				.WithField("color")
-				.WithField("category")
-				)
-			{
-				colorsDt = p.AsDataTable();
-				colorsDt.TableName = "Colors";
-			}
-			using (var p = new ChoJSONReader("TestData.json")
-				)
-			{
-				testDataDt = p.AsDataTable();
-			}
+        static void ComplexObjTest()
+        {
+            StringBuilder sb = new StringBuilder();
+            var obj = new Lad
+            {
+                firstName = "Markoff",
+                lastName = "Chaney",
+                dateOfBirth = new MyDate
+                {
+                    year = 1901,
+                    month = 4,
+                    day = 30
+                }
+            };
+            using (var jr = new ChoJSONWriter<Lad>(sb)
+                )
+            {
+                jr.Write(obj);
+            }
 
-			DataSet ds = new DataSet("Test");
-			ds.Tables.Add(colorsDt);
-			ds.Tables.Add(testDataDt);
+            Console.WriteLine(sb.ToString());
 
-			StringBuilder sb = new StringBuilder();
-			using (var w = new ChoJSONWriter(sb))
-			{
-				w.Write(ds);
-			}
-			Console.WriteLine(sb.ToString());
-		}
+        }
 
-		static void DataTableTest1()
-		{
-			StringBuilder sb = new StringBuilder();
-			using (var p = new ChoJSONReader("colors.json")
-				.WithJSONPath("$.colors")
-				.WithField("color")
-				.WithField("category")
-				)
-			{
-				using (var w = new ChoJSONWriter(sb)
-					)
-				{
-					var dt = p.AsDataTable();
-					dt.TableName = "Colors";
-					w.Write(dt);
-				}
-			}
-			Console.WriteLine(sb.ToString());
-		}
+        static void EnumTest()
+        {
+            StringBuilder sb = new StringBuilder();
+            using (var jr = new ChoJSONWriter<Person>(sb)
+                )
+            {
+                jr.Write(new Person { Age = 1, Gender = Gender.Female });
+            }
+
+            Console.WriteLine(sb.ToString());
+
+        }
+
+        static void EnumLoadTest()
+        {
+            string json = @"[
+ {
+  ""Age"": 1,
+  ""Gender"": ""M""
+ }
+]";
+
+            using (var p = ChoJSONReader<Person>.LoadText(json))
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
 
 		static void IPAddressTest()
         {

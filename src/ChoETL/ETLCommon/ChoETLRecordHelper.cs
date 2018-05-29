@@ -258,9 +258,18 @@ namespace ChoETL
             else
             {
                 if (fieldConfig.Converters.IsNullOrEmpty())
-                    fieldValue = ChoConvert.ConvertTo(fieldValue, nativeType ? fieldConfig.FieldType : typeof(string), null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                {
+                    if (fieldConfig.PropConverters.IsNullOrEmpty())
+                    {
+                        fieldValue = ChoConvert.ConvertTo(fieldValue, nativeType ? fieldConfig.FieldType : typeof(string), null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                    }
+                    else
+                        fieldValue = ChoConvert.ConvertTo(fieldValue, typeof(string), null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                }
                 else
-                    fieldValue = ChoConvert.ConvertTo(fieldValue, nativeType ? fieldConfig.FieldType : typeof(string), null, fieldConfig.Converters.ToArray(), null, culture);
+                {
+                    fieldValue = ChoConvert.ConvertTo(fieldValue, typeof(string), null, fieldConfig.Converters.ToArray(), null, culture);
+                }
             }
         }
 

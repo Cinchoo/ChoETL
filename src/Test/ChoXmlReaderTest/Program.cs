@@ -84,23 +84,8 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			Sample47();
+			Sample9Test();
         }
-
-		static void Sample47()
-		{
-			using (var p = new ChoXmlReader("sample47.xml")
-				.WithXPath("/QBPOSXML/QBPOSXMLMsgsRs/SalesOrderQueryRs")
-				)
-			{
-				foreach (dynamic rec in p)
-				{
-					foreach (dynamic rec1 in rec.SalesOrderRets)
-						Console.WriteLine(rec1.CustomerListID);
-				}
-			}
-		}
-
 		static void CDATATest()
 		{
 			string ID = null;
@@ -1199,22 +1184,22 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
         static void Sample9Test()
         {
 			StringBuilder sb = new StringBuilder();
-            using (var parser = new ChoXmlReader("sample9.xml", "abc.com/api").WithXPath("/")
-                )
-            {
-                var x = parser.SelectMany(r1 => ((dynamic[])r1.views).Select(r2 =>
-                new
-                {
-                    view_id = r2.id,
-                    view_name = r2.name,
-                    view_content_url = r2.contentUrl,
-                    view_total_count = Int32.Parse(r1.pagination.totalAvailable)
-                }));
+            //using (var parser = new ChoXmlReader("sample9.xml", "abc.com/api").WithXPath("/")
+            //    )
+            //{
+            //    var x = parser.SelectMany(r1 => ((dynamic[])r1.views).Select(r2 =>
+            //    new
+            //    {
+            //        view_id = r2.id,
+            //        view_name = r2.name,
+            //        view_content_url = r2.contentUrl,
+            //        view_total_count = Int32.Parse(r1.pagination.totalAvailable)
+            //    }));
 
-                Console.WriteLine(ChoJSONWriter.ToTextAll(x));
-            }
+            //    Console.WriteLine(ChoJSONWriter.ToTextAll(x));
+            //}
 
-            return;
+            //return;
 
             int totalAvailable;
             using (var parser = new ChoXmlReader("sample9.xml", "abc.com/api").WithXPath("/tsResponse/pagination")
@@ -1248,7 +1233,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
         {
             using (var parser = new ChoXmlReader("sample10.xml").WithXPath("/root/body/e1")
                 .WithField("tag1", xPath: "en/tag1")
-                .WithField("tag2", xPath: "en/tag2")
+                .WithField("tag2", xPath: "en/tag2/text()")
                 .WithField("tag2a", xPath: "en/tag2/@user")
                 .WithField("tag3", xPath: "en/tag3")
                 .WithField("tag4", xPath: "en/tag4")
@@ -1259,10 +1244,12 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
                 .WithField("r2", xPath: "r2/tr1")
             )
             {
-                foreach (dynamic rec in parser)
-                {
-                    Console.WriteLine(rec.DumpAsJson());
-                }
+                Console.WriteLine(ChoJSONWriter.ToTextAll(parser));
+
+                //foreach (dynamic rec in parser)
+                //{
+                //    Console.WriteLine(rec.Dump());
+                //}
                 //using (var writer = new ChoJSONWriter("sample10.json")
                 //    )
                 //    writer.Write(parser);
@@ -1276,10 +1263,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
                 .WithField("sons" )
             )
             {
-                foreach (dynamic rec in parser)
-                {
-                    Console.WriteLine(ChoUtility.DumpAsJson(rec.sons));
-                }
+                Console.WriteLine(ChoJSONWriter.ToTextAll(parser));
             }
         }
 

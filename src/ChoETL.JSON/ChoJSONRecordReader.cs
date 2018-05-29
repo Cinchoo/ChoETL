@@ -513,7 +513,13 @@ namespace ChoETL
 
                         if (fieldValue is JToken)
                         {
-                            fieldValue = ToObject((JToken)fieldValue, fieldConfig.FieldType);
+                            try
+                            {
+                                fieldValue = ToObject((JToken)fieldValue, fieldConfig.FieldType);
+                            }
+                            catch
+                            {
+                            }
 							fieldValue = RaiseItemConverter(fieldConfig, fieldValue);
 						}
 					}
