@@ -859,7 +859,7 @@ namespace ChoETL
 
 			bool hasAttrs = false;
             StringBuilder msg = new StringBuilder("<{0}".FormatString(tag));
-            foreach (string key in this.Keys.Where(k => k.StartsWith("@") && k != ValueToken))
+            foreach (string key in this.Keys.Where(k => IsAttribute(k) && k != ValueToken))
             {
                 hasAttrs = true;
                 msg.AppendFormat(@" {0}=""{1}""", key.Substring(1), this[key]);
@@ -880,16 +880,16 @@ namespace ChoETL
                     msg.AppendFormat("</{0}>", tag);
                 }
             }
-            else if (this.Keys.Any(k => !k.StartsWith("@")))
+            else if (this.Keys.Any(k => !IsAttribute(k)))
             {
                 object value = null;
                 msg.AppendFormat(">");
-                foreach (string key in this.Keys.Where(k => !k.StartsWith("@")))
+                foreach (string key in this.Keys.Where(k => !IsAttribute(k)))
 				{
 					value = this[key];
+					var x = IsCDATA(key);
 
-					GetXml(msg, value, key, nullValueHandling);
-
+					GetXml(msg, value, key, nullValueHandling, nsPrefix, IsCDATA(key));
 				}
 				msg.AppendFormat("{0}</{1}>", Environment.NewLine, tag);
             }
@@ -908,11 +908,10 @@ namespace ChoETL
                 msg.AppendFormat(" />");
             }
 
-
             return msg.ToString();
         }
 
-		private void GetXml(StringBuilder msg, object value, string key, ChoNullValueHandling nullValueHandling, string nsPrefix = null)
+		private void GetXml(StringBuilder msg, object value, string key, ChoNullValueHandling nullValueHandling, string nsPrefix = null, bool isCDATA = false)
 		{
 			if (value is ChoDynamicObject)
 			{
@@ -923,12 +922,19 @@ namespace ChoETL
 				if (value != null)
 				{
 					if (value.GetType().IsSimple())
-						msg.AppendFormat("{0}{1}", Environment.NewLine, "<{0}>{1}</{0}>".FormatString(key, value).Indent(1, "  "));
+					{
+						if (isCDATA)
+						{
+							msg.AppendFormat("{0}{1}", Environment.NewLine, "<{0}><![CDATA[{1}]]></{0}>".FormatString(key, value).Indent(1, "  "));
+						}
+						else
+							msg.AppendFormat("{0}{1}", Environment.NewLine, "<{0}>{1}</{0}>".FormatString(key, value).Indent(1, "  "));
+					}
 					else
 					{
-                        key = value is IList ? key.ToPlural() != key ? key.ToPlural() : key.Length > 1 && key.EndsWith("s", StringComparison.InvariantCultureIgnoreCase) ? key : "{0}s".FormatString(key) : key;
+						key = value is IList ? key.ToPlural() != key ? key.ToPlural() : key.Length > 1 && key.EndsWith("s", StringComparison.InvariantCultureIgnoreCase) ? key : "{0}s".FormatString(key) : key;
 						msg.AppendFormat("{0}{1}", Environment.NewLine, "<{0}>".FormatString(key).Indent(1, "  "));
-                        if (value is IList)
+						if (value is IList)
 						{
 							foreach (var collValue in ((IList)value).OfType<ChoDynamicObject>())
 							{
@@ -1011,31 +1017,49 @@ namespace ChoETL
 				Add(ValueToken, value);
 		}
 
+		private HashSet<string> _attributes = new HashSet<string>();
 		public object GetAttribute(string attrName)
         {
-            if (!attrName.StartsWith("@"))
-                attrName = "@{0}".FormatString(attrName);
-
-            if (ContainsKey(attrName))
-                return this[attrName];
-            else
-                return null;
+			if (_attributes.Contains(attrName))
+				return this[attrName];
+			else
+				return null;
         }
+
         public void SetAttribute(string attrName, object value)
         {
-            if (!attrName.StartsWith("@"))
-                attrName = "@{0}".FormatString(attrName);
+			if (!_attributes.Contains(attrName))
+				_attributes.Add(attrName);
 
-            SetPropertyValue(attrName, value);
+			SetPropertyValue(attrName, value);
         }
-        public bool HasAttribute(string attrName)
+        public bool IsAttribute(string attrName)
         {
-            if (!attrName.StartsWith("@"))
-                attrName = "@{0}".FormatString(attrName);
+			return _attributes.Contains(attrName);
+		}
 
-            return ContainsKey(attrName);
-        }
+		private HashSet<string> _cDatas = new HashSet<string>();
+		public void SetElement(string elementName, object value, bool isCDATA = false)
+		{
+			if (isCDATA)
+			{
+				if (!_cDatas.Contains(elementName))
+					_cDatas.Add(elementName);
 
+				SetPropertyValue(elementName, value);
+			}
+			else
+			{
+				if (_cDatas.Contains(elementName))
+					_cDatas.Remove(elementName);
+
+				SetPropertyValue(elementName, value);
+			}
+		}
+		public bool IsCDATA(string elementName)
+		{
+			return _cDatas.Contains(elementName);
+		}
 		//public int IndexOf(object item)
 		//{
 		//	return _list.IndexOf(item);

@@ -495,23 +495,26 @@ namespace ChoETL
 		}
 
 		public ChoJSONReader<T> WithField<TField>(Expression<Func<T, TField>> field, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
+			Func<object, object> itemConverter = null, 
 			object defaultValue = null, object fallbackValue = null, string formatText = null)
 		{
 			if (field == null)
 				return this;
 
-			return WithField(field.GetMemberName(), jsonPath, fieldType, fieldValueTrimOption, isJSONAttribute, fieldName, valueConverter,
+			return WithField(field.GetMemberName(), jsonPath, fieldType, fieldValueTrimOption, isJSONAttribute, fieldName, valueConverter, itemConverter,
 				defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText);
 		}
 
 		public ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
+			Func<object, object> itemConverter = null,
 			object defaultValue = null, object fallbackValue = null, string formatText = null)
 		{
-			return WithField(name, jsonPath, fieldType, fieldValueTrimOption, isJSONAttribute, fieldName, valueConverter,
+			return WithField(name, jsonPath, fieldType, fieldValueTrimOption, isJSONAttribute, fieldName, valueConverter, itemConverter,
 				defaultValue, fallbackValue, null, formatText);
 		}
 
 		private ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
+			Func<object, object> itemConverter = null,
 			object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null, string formatText = null)
 		{
 			if (!name.IsNullOrEmpty())
@@ -541,7 +544,8 @@ namespace ChoETL
 					ValueConverter = valueConverter,
 					DefaultValue = defaultValue,
 					FallbackValue = fallbackValue,
-                    FormatText = formatText
+                    FormatText = formatText,
+					ItemConverter = itemConverter
 				};
 				if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
 				{

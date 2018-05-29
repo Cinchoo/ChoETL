@@ -84,10 +84,26 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Sample11Test();
+			Sample9Test();
         }
+		static void CDATATest()
+		{
+			string ID = null;
 
-        static void Sample46()
+			string xml = @"<CUST><First_Name>Luke</First_Name> <Last_Name>Skywalker</Last_Name> <ID ID1=""1""><Name><![CDATA[1234]]></Name></ID> </CUST>";
+
+			using (var p = new ChoXmlReader(new StringReader(xml))
+				.Configure(c => c.ThrowAndStopOnMissingField = false)
+				//.Configure(c => c.RetainXmlAttributesAsNative = true)
+				.WithXPath("/")
+				)
+			{
+				Console.WriteLine(ChoJSONWriter.ToTextAll(p));
+				//foreach (var rec in p)
+				//	Console.WriteLine(rec.Dump());
+			}
+		}
+		static void Sample46()
         {
             string xml = @"<session
     beginTime=""2018-05-11T10:37:30""
@@ -272,7 +288,7 @@ namespace ChoXmlReaderTest
             StringBuilder sb = new StringBuilder();
             using (var p = ChoXmlReader.LoadText(xml)
                 .Configure(c => c.NullValueHandling = ChoNullValueHandling.Ignore)
-                .Configure(c => c.RetainXmlAttributesAsNative = true)
+                //.Configure(c => c.RetainXmlAttributesAsNative = true)
                 )
             {
                 using (var w = new ChoJSONWriter(sb)
@@ -478,7 +494,7 @@ namespace ChoXmlReaderTest
 
             StringBuilder sb = new StringBuilder();
             using (var p = ChoXmlReader.LoadText(xml).WithXPath("/")
-                .Configure(c => c.RetainXmlAttributesAsNative = false)
+                //.Configure(c => c.RetainXmlAttributesAsNative = false)
                 )
             {
                 Console.WriteLine(ChoJSONWriter.ToTextAll(p.ToArray()));
@@ -864,22 +880,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
         {
             public int ID { get; set; }
         }
-        static void CDATATest()
-        {
-            string xml = @"<CUST><First_Name>Luke</First_Name> <Last_Name>Skywalker</Last_Name> <ID><![CDATA[1234]]></ID> </CUST>";
 
-            using (var p = new ChoXmlReader<Emp>(new StringReader(xml))
-                .Configure(c => c.ThrowAndStopOnMissingField = false)
-                .WithXPath("/")
-                //.ClearFields()
-                //.WithField(e => e.FirstName, xPath: "/First_Name")
-                .WithField(e => e.EmpID.ID)
-                )
-            {
-                foreach (var rec in p)
-                    Console.WriteLine(rec.Dump());
-            }
-        }
         static void NoEncodeTest()
         {
             using (var xr = new ChoXmlReader("NoEncode.xml")

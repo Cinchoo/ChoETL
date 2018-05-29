@@ -374,8 +374,9 @@ namespace ChoETL
 
             Dictionary<string, object> attrs = new Dictionary<string, object>();
             Dictionary<string, object> elems = new Dictionary<string, object>();
+			HashSet<string> CDATAs = new HashSet<string>();
 
-            foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in GetOrderedKVP(config))
+			foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in GetOrderedKVP(config))
             {
                 fieldConfig = kvp.Value;
                 fieldValue = null;
@@ -534,19 +535,25 @@ namespace ChoETL
 				{
 					if (fieldConfig.IsXmlAttribute)
 					{
-						attrs.Add(kvp.Key, fieldValue);
+						attrs.Add(fieldConfig.FieldName, fieldValue);
 					}
 					else
 					{
-						elems.Add(kvp.Key, fieldValue);
+						elems.Add(fieldConfig.FieldName, fieldValue);
+
+						if (fieldConfig.IsXmlCDATA)
+							CDATAs.Add(fieldConfig.FieldName);
 					}
 				}
 				else
 				{
 					if (fieldValue == null || fieldValue.GetType().IsSimple())
-						attrs.Add(kvp.Key, fieldValue);
+						attrs.Add(fieldConfig.FieldName, fieldValue);
 					else
-						elems.Add(kvp.Key, fieldValue);
+						elems.Add(fieldConfig.FieldName, fieldValue);
+
+					if (fieldConfig.IsXmlCDATA)
+						CDATAs.Add(fieldConfig.FieldName);
 				}
             }
 
@@ -568,7 +575,18 @@ namespace ChoETL
             {
 				ele = NewXElement(nodeName, Configuration.DefaultNamespacePrefix, ns);
 				foreach (var kvp in attrs)
-                    ele.Add(new XAttribute(kvp.Key, kvp.Value));
+				{
+					object value = kvp.Value;
+					if (value == null)
+					{
+						if (config.NullValueHandling == ChoNullValueHandling.Ignore)
+							continue;
+						else
+							value = String.Empty;
+					}
+
+					ele.Add(new XAttribute(kvp.Key, value));
+				}
                 foreach (var kvp in elems)
                 {
                     if (kvp.Value == null)
@@ -604,14 +622,22 @@ namespace ChoETL
                     }
                     else if (kvp.Value.GetType().IsSimple())
                     {
-                        if (ElementType == null)
+						var isCDATA = CDATAs.Contains(kvp.Key);
+
+						if (ElementType == null)
                         {
                             if (kvp.Value is ChoCDATA)
                                 ele.Add(ns != null ? new XElement(ns + kvp.Key, new XCData(((ChoCDATA)kvp.Value).Value)) : new XElement(kvp.Key, new XCData(((ChoCDATA)kvp.Value).Value)));
-                            else
-                                ele.Add(ns != null ? new XElement(ns + kvp.Key, kvp.Value) : new XElement(kvp.Key, kvp.Value));
+							else if (isCDATA)
+								ele.Add(ns != null ? new XElement(ns + kvp.Key, new XCData(kvp.Value.ToNString())) : new XElement(kvp.Key, new XCData(kvp.Value.ToNString())));
+							else
+								ele.Add(ns != null ? new XElement(ns + kvp.Key, kvp.Value) : new XElement(kvp.Key, kvp.Value));
                         }
-                        else
+                        else if (isCDATA)
+						{
+							ele.Add(new XCData(kvp.Value.ToNString()));
+						}
+						else
                             ele.Value = kvp.Value.ToNString();
                     }
                     else

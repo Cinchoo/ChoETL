@@ -717,7 +717,12 @@ namespace ChoETL
             return nil != null;
         }
 
-        public static string NilAwareValue(this XElement element, string xmlSchemaNS = null)
+		public static bool IsCDATANode(this XElement element)
+		{
+			return element.FirstNode != null ? element.FirstNode.NodeType == XmlNodeType.CDATA : false;
+		}
+
+		public static string NilAwareValue(this XElement element, string xmlSchemaNS = null)
         {
             XNamespace ns = xmlSchemaNS.IsNullOrWhiteSpace() ? ChoXmlSettings.XmlSchemaInstanceNamespace : xmlSchemaNS;
 
@@ -781,9 +786,9 @@ namespace ChoETL
         public static dynamic ToDynamic(this XElement element, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null,
             bool retainXmlAttributesAsNative = true, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore)
         {
-            // loop through child elements
-            // define an Expando Dynamic
-            dynamic obj = new ChoDynamicObject(element.Name.LocalName);
+			// loop through child elements
+			// define an Expando Dynamic
+			ChoDynamicObject obj = new ChoDynamicObject(element.Name.LocalName);
 
             bool hasAttr = false;
             // cater for attributes as properties
@@ -794,26 +799,8 @@ namespace ChoETL
                     if (!attribute.IsValidAttribute())
                         continue;
 
-					//if (attribute.Name.ToString().StartsWith("xmlns"))
-					//	continue;
-
-     //               string ns = attribute.Name.Namespace.ToString();
-     //               if (xmlSchemaNS != null && ns.StartsWith(xmlSchemaNS, StringComparison.InvariantCultureIgnoreCase))
-     //                   continue;
-     //               if (jsonSchemaNS != null && ns.StartsWith(jsonSchemaNS, StringComparison.InvariantCultureIgnoreCase))
-     //                   continue;
-     //               if (ns.StartsWith(ChoXmlSettings.XmlSchemaInstanceNamespace, StringComparison.InvariantCultureIgnoreCase))
-     //                   continue;
-     //               if (ns.StartsWith(ChoXmlSettings.JSONSchemaNamespace, StringComparison.InvariantCultureIgnoreCase))
-     //                   continue;
-     //               if (ns.StartsWith(ChoXmlSettings.XmlNamespace, StringComparison.InvariantCultureIgnoreCase))
-     //                   continue;
-
                     hasAttr = true;
-                    if (retainXmlAttributesAsNative)
-                        ((IDictionary<string, object>)obj).Add("@{0}".FormatString(attribute.Name.LocalName), attribute.Value);
-                    else
-                        ((IDictionary<string, object>)obj).Add("{0}".FormatString(attribute.Name.LocalName), attribute.Value);
+					obj.SetAttribute(attribute.Name.LocalName, System.Net.WebUtility.HtmlDecode(attribute.Value));
                 }
             }
 
@@ -832,33 +819,33 @@ namespace ChoETL
                             if (dobj != null || (dobj == null && emptyXmlNodeValueHandling != ChoEmptyXmlNodeValueHandling.Ignore))
                             {
                                 keyName = subElement.Name.LocalName;
-                                ((IDictionary<string, object>)obj).Add(keyName, dobj);
+                                obj.SetElement(keyName, dobj, IsCDATANode(subElement));
                             }
                         }
                         else
                         {
                             if (subElement.IsNilElement())
                             {
-                                ((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, subElement.NilAwareValue(xmlSchemaNS));
+                                obj.SetElement(subElement.Name.LocalName, subElement.NilAwareValue(xmlSchemaNS), IsCDATANode(subElement));
                             }
                             else
                             {
-                                string value = subElement.NilAwareValue(xmlSchemaNS);
+                                string value = System.Net.WebUtility.HtmlDecode(subElement.NilAwareValue(xmlSchemaNS));
                                 if (value.IsNullOrEmpty() && !subElement.HasAttributes())
                                 {
                                     switch (emptyXmlNodeValueHandling)
                                     {
                                         case ChoEmptyXmlNodeValueHandling.Empty:
-                                            ((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, value);
+                                            obj.SetElement(subElement.Name.LocalName, value, IsCDATANode(subElement));
                                             break;
                                         case ChoEmptyXmlNodeValueHandling.Null:
                                             value = value.IsNullOrEmpty() ? null : value;
-                                            ((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, value);
+                                            obj.SetElement(subElement.Name.LocalName, value, IsCDATANode(subElement));
                                             break;
                                     }
                                 }
                                 else
-                                    ((IDictionary<string, object>)obj).Add(subElement.Name.LocalName, value);
+                                    obj.SetElement(subElement.Name.LocalName, value, IsCDATANode(subElement));
                             }
                         }
                     }
@@ -874,7 +861,7 @@ namespace ChoETL
                                 if (sd != null || (sd == null && emptyXmlNodeValueHandling != ChoEmptyXmlNodeValueHandling.Ignore))
                                     subDynamic.Add(sd);
                             }
-                            ((IDictionary<string, object>)obj).Add(subElement2.Name.LocalName, subDynamic.ToArray());
+                            obj.SetElement(subElement2.Name.LocalName, subDynamic.ToArray(), IsCDATANode(subElement2));
                         }
                         else
                         {
@@ -894,9 +881,7 @@ namespace ChoETL
                             if (!hasAttr)
                                 return list.ToArray();
                             else
-                                ((IDictionary<string, object>)obj).Add(keyName, list.ToArray());
-                            //else
-                            //    ((IDictionary<string, object>)obj).Add(keyName, list.ToArray());
+                                obj.SetElement(keyName, list.ToArray());
                         }
                     }
                 }
@@ -905,11 +890,11 @@ namespace ChoETL
             {
                 if (element.IsNilElement())
                 {
-                    obj.SetText(element.NilAwareValue(xmlSchemaNS));
+                    obj.SetText(System.Net.WebUtility.HtmlDecode(element.NilAwareValue(xmlSchemaNS)));
                 }
                 else
                 {
-                    string value = element.NilAwareValue(xmlSchemaNS);
+                    string value = System.Net.WebUtility.HtmlDecode(element.NilAwareValue(xmlSchemaNS));
 
                     if (value.IsNullOrEmpty())
                     {
