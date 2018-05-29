@@ -44,7 +44,7 @@ public class ToTextConverter : IChoValueConverter
     public class Person
     {
         public int Age { get; set; }
-        [ChoTypeConverter(typeof(ChoEnumConverter), Parameters = "Description")]
+        //[ChoTypeConverter(typeof(ChoEnumConverter), Parameters = "Name")]
         public Gender Gender { get; set; }
     }
 
@@ -68,7 +68,7 @@ public class ToTextConverter : IChoValueConverter
 
         static void Main(string[] args)
         {
-            ComplexObjTest();
+            EnumTest();
         }
 
         static void ComplexObjTest()
