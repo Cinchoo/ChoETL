@@ -34,11 +34,16 @@ namespace ChoETL
             _callbackRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordWrite>(recordType);
             _recBuffer = new Lazy<List<object>>(() =>
             {
-                var b = Writer.Context.RecBuffer;
-                if (b == null)
-                    Writer.Context.RecBuffer = new List<object>();
+                if (Writer != null)
+                {
+                    var b = Writer.Context.RecBuffer;
+                    if (b == null)
+                        Writer.Context.RecBuffer = new List<object>();
 
-                return Writer.Context.RecBuffer;
+                    return Writer.Context.RecBuffer;
+                }
+                else
+                    return new List<object>();
             });
 
             //Configuration.Validate();
@@ -56,7 +61,7 @@ namespace ChoETL
 
         private IEnumerable<object> GetRecords(IEnumerator<object> records)
         {
-            object x = Writer.Context.RecBuffer;
+            object x = Writer != null ? Writer.Context.RecBuffer : null;
             var arr = _recBuffer.Value.ToArray();
             _recBuffer.Value.Clear();
 
@@ -69,7 +74,7 @@ namespace ChoETL
         }
         private object GetFirstNotNullRecord(IEnumerator<object> recEnum)
         {
-            if (!Object.ReferenceEquals(Writer.Context.FirstNotNullRecord, null))
+            if (Writer != null && !Object.ReferenceEquals(Writer.Context.FirstNotNullRecord, null))
                 return Writer.Context.FirstNotNullRecord;
 
             while (recEnum.MoveNext())
@@ -77,8 +82,13 @@ namespace ChoETL
                 _recBuffer.Value.Add(recEnum.Current);
                 if (recEnum.Current != null)
                 {
-                    Writer.Context.FirstNotNullRecord = recEnum.Current;
-                    return Writer.Context.FirstNotNullRecord;
+                    if (Writer != null)
+                    {
+                        Writer.Context.FirstNotNullRecord = recEnum.Current;
+                        return Writer.Context.FirstNotNullRecord;
+                    }
+                    else
+                        return recEnum.Current;
                 }
             }
             return null;
