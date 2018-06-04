@@ -1844,8 +1844,19 @@ namespace ChoETL
 
 			list.Clear();
 
-			foreach (object t in oldList)
-				list.Add(itemConverter(t));
+			if (list is Array)
+			{
+				ArrayList l = new ArrayList();
+				foreach (object t in oldList)
+					l.Add(itemConverter(t));
+
+				list = l.ToArray();
+			}
+			else
+			{
+				foreach (object t in oldList)
+					list.Add(itemConverter(t));
+			}
 
 			return list;
 		}

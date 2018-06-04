@@ -637,7 +637,149 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			Colors2DataTable();
+			BookingInfoTest();
+		}
+
+		public class BookingInfo : IChoNotifyChildRecordRead
+		{
+			[ChoJSONRecordField(JSONPath = "$.travel_class")]
+			public string TravelClass { get; set; }
+			[ChoJSONRecordField(JSONPath = "$.booking_code")]
+			public string BookingCode { get; set; }
+
+			public bool AfterRecordFieldLoad(object target, long index, string propName, object value)
+			{
+				throw new NotImplementedException();
+			}
+
+			public bool BeforeRecordFieldLoad(object target, long index, string propName, ref object value)
+			{
+				throw new NotImplementedException();
+			}
+
+			public bool RecordFieldLoadError(object target, long index, string propName, object value, Exception ex)
+			{
+				throw new NotImplementedException();
+			}
+		}
+
+		public class FlightInfo
+		{
+			[ChoJSONRecordField(JSONPath = "$.departs_at")]
+			public DateTime DepartAt { get; set; }
+			[ChoJSONRecordField(JSONPath = "$.arrives_at")]
+			public DateTime ArriveAt { get; set; }
+
+			[ChoJSONRecordField(JSONPath = "$.origin.airport")]
+			public string Origin { get; set; }
+
+			[ChoJSONRecordField(JSONPath = "$.booking_info")]
+			public BookingInfo[] BookingInfo { get; set; }
+		}
+
+		static void BookingInfoTest()
+		{
+			string json = @"{
+  ""currency"": ""MYR"",
+  ""results"": [
+    {
+      ""itineraries"": [
+        {
+          ""outbound"": {
+            ""flights"": [
+              {
+                ""departs_at"": ""2018-06-03T06:25"",
+                ""arrives_at"": ""2018-06-03T07:25"",
+                ""origin"": {
+                  ""airport"": ""PEN""
+
+				},
+                ""destination"": {
+                  ""airport"": ""KUL"",
+                  ""terminal"": ""M""
+                },
+                ""marketing_airline"": ""OD"",
+                ""operating_airline"": ""OD"",
+                ""flight_number"": ""2105"",
+                ""aircraft"": ""738"",
+                ""booking_info"": {
+                  ""travel_class"": ""ECONOMY"",
+                  ""booking_code"": ""Q"",
+                  ""seats_remaining"": 9
+                }
+              }
+            ]
+          },
+          ""inbound"": {
+            ""flights"": [
+              {
+                ""departs_at"": ""2018-06-04T14:10"",
+                ""arrives_at"": ""2018-06-04T15:10"",
+                ""origin"": {
+                  ""airport"": ""KUL"",
+                  ""terminal"": ""M""
+                },
+                ""destination"": {
+                  ""airport"": ""PEN""
+                },
+                ""marketing_airline"": ""OD"",
+                ""operating_airline"": ""OD"",
+                ""flight_number"": ""2108"",
+                ""aircraft"": ""739"",
+                ""booking_info"": {
+                  ""travel_class"": ""ECONOMY"",
+                  ""booking_code"": ""O"",
+                  ""seats_remaining"": 5
+                }
+              }
+            ]
+          }
+        }
+      ],
+      ""fare"": {
+        ""total_price"": ""360.00"",
+        ""price_per_adult"": {
+          ""total_fare"": ""360.00"",
+          ""tax"": ""104.00""
+        },
+        ""restrictions"": {
+          ""refundable"": false,
+          ""change_penalties"": true
+        }
+      }
+    }
+  ]
+}";
+			var x = ChoJSONReader<FlightInfo>.LoadText(json).Configure(c => c.SupportMultipleContent = false)
+				.WithJSONPath("$.results[0].itineraries[0].outbound.flights")
+				.FirstOrDefault();
+			Console.WriteLine(x.Dump());
+		}
+
+		static void JsonToString()
+		{
+			string json = @"[
+    {
+        ""eng_trans"": ""wide, outstretched,""
+    },
+    {
+        ""eng_trans"": ""width,breadth, town, street,earth, country, greatness.""
+    },
+    {
+        ""eng_trans"": ""wife, the mistress of the house,""
+    },
+    {
+        ""eng_trans"": ""wide agricultural tract,""
+    },
+    {
+        ""eng_trans"": ""waste land the land which is not suitabie for cultivation.""
+    }]";
+
+			Console.WriteLine(String.Join(" ", ChoJSONReader.LoadText(json).Select(r1 => r1.eng_trans)));
+
+			//var x = ChoJSONReader.LoadText(json, null, new ChoJSONRecordConfiguration().Configure(c => c.JSONPath = "$.eng_trans")).Select(r => r.Value).ToArray();
+			//Console.WriteLine(x.Dump());
+
 		}
 
 		static void Colors2DataTable()

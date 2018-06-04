@@ -2,7 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Dynamic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -14,7 +16,62 @@ namespace ChoETL
 {
     public static class ChoObjectEx
     {
-        public static Dictionary<string, object> ToDictionary(this object target)
+		public static void ConvertNSetValue(this object target, PropertyDescriptor pd, object fv, CultureInfo culture, long index = 0)
+		{
+			PropertyInfo pi = pd.ComponentType.GetProperty(pd.Name);
+			IChoNotifyChildRecordRead callbackRecord = target as IChoNotifyChildRecordRead;
+			if (callbackRecord != null)
+			{
+				object state = fv;
+				bool retValue = ChoFuncEx.RunWithIgnoreError(() => callbackRecord.BeforeRecordFieldLoad(target, index, pd.Name, ref state), true);
+
+				if (retValue)
+					fv = state;
+			}
+
+			try
+			{
+				object[] PropConverters = ChoTypeDescriptor.GetTypeConverters(pi);
+				object[] PropConverterParams = ChoTypeDescriptor.GetTypeConverterParams(pi);
+				string formatText = null;
+				DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();
+				if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
+					formatText = dfAttr.DataFormatString;
+
+				object[] fcParams = PropConverterParams;
+				if (formatText.IsNullOrWhiteSpace())
+					fcParams = new object[] { new object[] { formatText } };
+
+				if (PropConverters.IsNullOrEmpty())
+				{
+					fv = ChoConvert.ConvertFrom(fv, pi.PropertyType, null, PropConverters, fcParams, culture);
+				}
+				else
+				{
+					fv = ChoConvert.ConvertFrom(fv, pi.PropertyType, null, PropConverters, fcParams, culture);
+				}
+				pd.SetValue(target, fv);
+
+				if (callbackRecord != null)
+					ChoFuncEx.RunWithIgnoreError(() => callbackRecord.AfterRecordFieldLoad(target, index, pd.Name, fv), true);
+			}
+			catch (Exception ex)
+			{
+				if (callbackRecord != null)
+				{
+					bool ret = ChoFuncEx.RunWithIgnoreError(() => callbackRecord.RecordFieldLoadError(target, index, pd.Name, fv, ex), false);
+					if (!ret)
+					{
+						if (ex is ValidationException)
+							throw;
+
+						throw new ChoReaderException($"Failed to parse '{fv}' value for '{pd.Name}' field in '{target.GetType().Name}' object.", ex);
+					}
+				}
+			}
+		}
+
+		public static Dictionary<string, object> ToDictionary(this object target)
         {
             ChoGuard.ArgumentNotNull(target, "Target");
 

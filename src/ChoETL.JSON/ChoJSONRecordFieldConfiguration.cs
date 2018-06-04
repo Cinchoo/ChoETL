@@ -47,7 +47,8 @@ namespace ChoETL
             if (attr != null)
             {
                 JSONPath = attr.JSONPath;
-                FieldName = attr.FieldName.IsNullOrWhiteSpace() ? Name.NTrim() : attr.FieldName.NTrim();
+                UseJSONSerialization = attr.UseJSONSerializationInternal;
+				FieldName = attr.FieldName.IsNullOrWhiteSpace() ? Name.NTrim() : attr.FieldName.NTrim();
             }
         }
 
