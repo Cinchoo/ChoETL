@@ -48,10 +48,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Colors.json" />
     <None Include="sample.csv" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <None Include="sample7.json" />
+    <None Include="TestData.json" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

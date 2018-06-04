@@ -48,7 +48,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="TestData.json" />
     <None Include="companies.json" />
+    <None Include="Colors.json" />
     <None Include="sample19.json" />
     <None Include="sample18.json" />
     <None Include="sample17.json" />

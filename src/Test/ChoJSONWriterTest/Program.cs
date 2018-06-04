@@ -124,7 +124,7 @@ public class ToTextConverter : IChoValueConverter
             }
         }
 
-        static void IPAddressTest()
+		static void IPAddressTest()
         {
             using (var jr = new ChoJSONWriter<SomeOuterObject>("ipaddr.json")
                 .WithField("stringValue")
@@ -330,6 +330,7 @@ public class ToTextConverter : IChoValueConverter
 
         static void DataTableTest()
         {
+			StringBuilder sb = new StringBuilder();
             string connectionstring = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True";
             using (var conn = new SqlConnection(connectionstring))
             {
@@ -340,9 +341,11 @@ public class ToTextConverter : IChoValueConverter
                 DataTable dt = new DataTable("Customer");
                 adap.Fill(dt);
 
-                using (var parser = new ChoJSONWriter("customers.json").Configure(c => c.UseJSONSerialization = true))
+                using (var parser = new ChoJSONWriter(sb).Configure(c => c.UseJSONSerialization = true))
                     parser.Write(dt);
             }
+
+			Console.WriteLine(sb.ToString());
         }
 
         static void DataReaderTest()

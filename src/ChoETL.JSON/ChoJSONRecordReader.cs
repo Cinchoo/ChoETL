@@ -421,7 +421,8 @@ namespace ChoETL
 				if (!kvp.Value.JSONPath.IsNullOrWhiteSpace())
                 {
                     jTokens = node.SelectTokens(kvp.Value.JSONPath).ToArray();
-                    jToken = jTokens.FirstOrDefault();
+					if (!fieldConfig.FieldType.IsCollection())
+						jToken = jTokens.FirstOrDefault();
                     if (jToken == null)
                     {
                         if (Configuration.ColumnCountStrict)
@@ -487,7 +488,7 @@ namespace ChoETL
                     {
                         if (fieldValue is JToken)
 						{
-							fieldValue = ToObject((JToken)fieldValue, null);
+							fieldValue = ToObject((JToken)fieldValue, null, fieldConfig.UseJSONSerialization);
 							fieldValue = RaiseItemConverter(fieldConfig, fieldValue);
 						}
 						else if (fieldValue is JToken[])
@@ -495,7 +496,7 @@ namespace ChoETL
                             List<object> arr = new List<object>();
                             foreach (var ele in (JToken[])fieldValue)
                             {
-								object fv = ToObject(ele, null);
+								object fv = ToObject(ele, null, fieldConfig.UseJSONSerialization);
 
 								if (fieldConfig.ItemConverter != null)
                                     fv = fieldConfig.ItemConverter(fv);
@@ -515,7 +516,7 @@ namespace ChoETL
                         {
                             try
                             {
-                                fieldValue = ToObject((JToken)fieldValue, fieldConfig.FieldType);
+                                fieldValue = ToObject((JToken)fieldValue, fieldConfig.FieldType, fieldConfig.UseJSONSerialization);
                             }
                             catch
                             {
@@ -559,27 +560,68 @@ namespace ChoETL
                             fieldValue = ToObject((JToken)fieldValue, itemType, fieldConfig.UseJSONSerialization);
 							fieldValue = RaiseItemConverter(fieldConfig, fieldValue);
                         }
-                        else if (fieldValue is JToken[])
-                        {
-                            var fi = ((JToken[])fieldValue).FirstOrDefault();
-
-                            if (fi is JArray && !itemType.IsCollection())
-                            {
-                                fieldValue = ToObject(fi, itemType);
-								fieldValue = RaiseItemConverter(fieldConfig, fieldValue);
-							}
-							else
-                            {
-                                foreach (var ele in (JToken[])fieldValue)
-                                {
-									object fv = ToObject(ele, itemType);
+						else if (fieldValue is JArray)
+						{
+							if (fieldConfig.FieldType.GetUnderlyingType().IsCollection())
+							{
+								itemType = fieldConfig.FieldType.GetUnderlyingType().GetItemType().GetUnderlyingType();
+								foreach (var ele in (JArray)fieldValue)
+								{
+									object fv = ToObject(ele, itemType, fieldConfig.UseJSONSerialization);
 									if (fieldConfig.ItemConverter != null)
 										fv = fieldConfig.ItemConverter(fv);
 
 									list.Add(fv);
 								}
-                                fieldValue = list.ToArray();
-                            }
+								fieldValue = list.ToArray();
+							}
+							else
+							{
+								var fi = ((JArray)fieldValue).FirstOrDefault();
+								fieldValue = ToObject(fi, itemType, fieldConfig.UseJSONSerialization);
+								fieldValue = RaiseItemConverter(fieldConfig, fieldValue);
+							}
+						}
+						else if (fieldValue is JToken[])
+                        {
+							itemType = fieldConfig.FieldType.GetUnderlyingType().GetItemType().GetUnderlyingType();
+							if (fieldConfig.FieldType.GetUnderlyingType().IsCollection())
+							{
+								foreach (var ele in (JToken[])fieldValue)
+								{
+									object fv = ToObject(ele, itemType, fieldConfig.UseJSONSerialization);
+									if (fieldConfig.ItemConverter != null)
+										fv = fieldConfig.ItemConverter(fv);
+
+									list.Add(fv);
+								}
+								fieldValue = list.ToArray();
+							}
+							else
+							{
+								var fi = ((JToken[])fieldValue).FirstOrDefault();
+								fieldValue = ToObject(fi, itemType, fieldConfig.UseJSONSerialization);
+								fieldValue = RaiseItemConverter(fieldConfig, fieldValue);
+							}
+
+
+							//if (fi is JArray && !itemType.IsCollection())
+       //                     {
+       //                         fieldValue = ToObject(fi, itemType);
+							//	fieldValue = RaiseItemConverter(fieldConfig, fieldValue);
+							//}
+							//else
+       //                     {
+       //                         foreach (var ele in (JToken[])fieldValue)
+       //                         {
+							//		object fv = ToObject(ele, itemType);
+							//		if (fieldConfig.ItemConverter != null)
+							//			fv = fieldConfig.ItemConverter(fv);
+
+							//		list.Add(fv);
+							//	}
+       //                         fieldValue = list.ToArray();
+       //                     }
                         }
                     }
                 }
@@ -976,15 +1018,71 @@ namespace ChoETL
 				}
 				else
 				{
-					if (_se == null || _se.Value == null)
-						return jToken.ToObject(type);
+					if (type.GetUnderlyingType().IsSimple())
+					{
+						if (_se == null || _se.Value == null)
+							return jToken.ToObject(type);
+						else
+							return jToken.ToObject(type, _se.Value);
+					}
 					else
-						return jToken.ToObject(type, _se.Value);
+						return DeserializeToObject(type, jToken);
 				}
-            }
+			}
         }
 
-        private dynamic ToDynamicArray(JArray jArray)
+		private object DeserializeToObject(Type type, JToken token)
+		{
+			if (token == null)
+				return null;
+
+			object obj = Activator.CreateInstance(type);
+
+			string jsonPath = null;
+			Type propertyType = null;
+			bool? useJsonSerialization = null;
+			foreach (var pd in ChoTypeDescriptor.GetProperties(type))
+			{
+				jsonPath = "$.{0}".FormatString(pd.Name);
+				propertyType = pd.PropertyType.GetUnderlyingType();
+				useJsonSerialization = null;
+
+				var fa = pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().FirstOrDefault();
+				if (fa != null)
+				{
+					if (!fa.JSONPath.IsNullOrWhiteSpace())
+						jsonPath = fa.JSONPath;
+					useJsonSerialization = fa.UseJSONSerializationInternal;
+				}
+
+				if (propertyType.IsCollection())
+				{
+					var nodes = token.SelectTokens(jsonPath);
+					if (nodes == null)
+						continue;
+
+					List<object> list = new List<object>();
+					foreach (var node in nodes)
+					{
+						list.Add(ToObject(node, propertyType, useJsonSerialization));
+					}
+					obj.ConvertNSetValue(pd, list.ToArray(), Configuration.Culture);
+				}
+				else
+				{
+					var node = token.SelectToken(jsonPath);
+					if (node == null)
+							continue;
+
+					obj.ConvertNSetValue(pd, ToObject(node, propertyType, useJsonSerialization), Configuration.Culture);
+				}
+			}
+
+			return obj;
+		}
+
+
+		private dynamic ToDynamicArray(JArray jArray)
         {
             return jArray.Select(jToken => ToDynamic(jToken)).ToArray();
         }
@@ -1063,7 +1161,7 @@ namespace ChoETL
                         list.Add(fieldConfig.ValueConverter(jt));
                     else
                     {
-                        list.Add(ToObject(jt, kvp.Value.FieldType));
+                        list.Add(ToObject(jt, kvp.Value.FieldType, kvp.Value.UseJSONSerialization));
                     }
                 }
                 fieldValue = list.ToArray();

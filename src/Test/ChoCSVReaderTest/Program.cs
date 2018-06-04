@@ -1239,9 +1239,18 @@ a,0,1,2-Data";
 			Console.WriteLine(sb.ToString());
 		}
 
+		static void DoubleQuotesFix()
+		{
+			using (var x = new ChoCSVReader("DoubleQuotesTest.csv"))
+			{
+				foreach (var rec in x)
+					Console.WriteLine(rec.Dump());
+			}
+		}
+
         static void Main(string[] args)
         {
-			CSV2JSON();
+			DoubleQuotesFix();
             return;
 
 			CSV2XmlTest();

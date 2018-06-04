@@ -93,7 +93,7 @@ namespace ChoETL
 
 		public static IEnumerable<dynamic> ToDynamic(this IDictionary source)
 		{
-			yield return ChoDynamicObject.New(source);
+			yield return ChoDynamicObject.FromDictionary(source);
 		}
 
 		//public static IEnumerable<object[]> Transpose<K, V>(this IDictionary<K, V> dict)
@@ -1844,8 +1844,19 @@ namespace ChoETL
 
 			list.Clear();
 
-			foreach (object t in oldList)
-				list.Add(itemConverter(t));
+			if (list is Array)
+			{
+				ArrayList l = new ArrayList();
+				foreach (object t in oldList)
+					l.Add(itemConverter(t));
+
+				list = l.ToArray();
+			}
+			else
+			{
+				foreach (object t in oldList)
+					list.Add(itemConverter(t));
+			}
 
 			return list;
 		}

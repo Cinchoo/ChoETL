@@ -873,12 +873,17 @@ namespace ChoETL
                                     continue;
 
                                 object dobj = ToDynamic(subElement, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling);
-                                if (dobj != null || (dobj == null && emptyXmlNodeValueHandling != ChoEmptyXmlNodeValueHandling.Ignore))
-                                    list.Add(dobj);
+								if (dobj != null || (dobj == null && emptyXmlNodeValueHandling != ChoEmptyXmlNodeValueHandling.Ignore))
+								{
+									if (dobj is IList && ((IList)dobj).OfType<ChoDynamicObject>().Count() == ((IList)dobj).Count)
+										list.AddRange(((IList)dobj).Cast<object>());
+									else
+										list.Add(dobj);
+								}
 
                                 keyName = subElement.Name.LocalName + "s";
                             }
-                            if (!hasAttr)
+                            if (!hasAttr && obj.Count == 0)
                                 return list.ToArray();
                             else
                                 obj.SetElement(keyName, list.ToArray());

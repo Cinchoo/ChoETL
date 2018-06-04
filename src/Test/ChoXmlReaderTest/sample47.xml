@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<QBPOSXML>
+	<QBPOSXMLMsgsRs>
+		<SalesOrderQueryRs requestID="809150883" retCount="4" statusCode="0" statusMessage="Status OK" statusSeverity="Info">
+			<SalesOrderRet>
+				<TxnID>2425100528976298241</TxnID>
+				<TimeModified>2018-05-24T13:40:31-04:00</TimeModified>
+				<BalanceDue>83.60</BalanceDue>
+				<CustomerListID>2421462034504646913</CustomerListID>
+				<DepositBalance>0.00</DepositBalance>
+				<Discount>0.00</Discount>
+				<DiscountPercent>0.00</DiscountPercent>
+				<ItemsCount>1</ItemsCount>
+				<PriceLevelNumber>1</PriceLevelNumber>
+				<Qty>1.00</Qty>
+				<SalesOrderNumber>6</SalesOrderNumber>
+				<SalesOrderStatusDesc>Open</SalesOrderStatusDesc>
+				<StoreExchangeStatus>Modified</StoreExchangeStatus>
+				<Subtotal>77.77</Subtotal>
+				<TaxAmount>5.83</TaxAmount>
+				<TaxCategory>Local Sales Tax</TaxCategory>
+				<TaxPercentage>7.50</TaxPercentage>
+				<Total>83.60</Total>
+				<TxnDate>2018-05-24</TxnDate>
+				<UnfilledPercent>100.00</UnfilledPercent>
+				<BillingInformation>
+					<CompanyName>SimboliQ</CompanyName>
+					<FirstName>Basel</FirstName>
+					<LastName>Abdo</LastName>
+				</BillingInformation>
+				<ShippingInformation>
+					<Shipping>0.00</Shipping>
+				</ShippingInformation>
+				<SalesOrderItemRet>
+					<ListID>5523943615132238081</ListID>
+					<TxnLineID>1</TxnLineID>
+					<ALU>YX650-15532</ALU>
+					<Attribute>15.5</Attribute>
+					<Commission>0.00</Commission>
+					<Desc1>Youth Baseball Bat</Desc1>
+					<Desc2>Metal</Desc2>
+					<Discount>0.00</Discount>
+					<DiscountPercent>0.00</DiscountPercent>
+					<ExtendedPrice>77.77</ExtendedPrice>
+					<ExtendedTax>5.83</ExtendedTax>
+					<ItemNumber>21</ItemNumber>
+					<Price>77.77</Price>
+					<PriceLevelNumber>1</PriceLevelNumber>
+					<Qty>1.00</Qty>
+					<Size>32 in</Size>
+					<TaxAmount>5.83</TaxAmount>
+					<TaxCode>Tax</TaxCode>
+					<TaxPercentage>7.50</TaxPercentage>
+				</SalesOrderItemRet>
+			</SalesOrderRet>
+			<SalesOrderRet>
+				<TxnID>5835181227425825025</TxnID>
+				<TimeModified>2010-11-16T09:04:25-04:00</TimeModified>
+				<Associate>BrianS</Associate>
+				<BalanceDue>242.95</BalanceDue>
+				<Cashier>BrianS</Cashier>
+				<CustomerListID>5515925198240383233</CustomerListID>
+				<DepositBalance>0.00</DepositBalance>
+				<Discount>26.99</Discount>
+				<DiscountPercent>10.00</DiscountPercent>
+				<ItemsCount>3</ItemsCount>
+				<PriceLevelNumber>1</PriceLevelNumber>
+				<Qty>3.00</Qty>
+				<SalesOrderNumber>1</SalesOrderNumber>
+				<SalesOrderStatusDesc>Open</SalesOrderStatusDesc>
+				<StoreExchangeStatus>Modified</StoreExchangeStatus>
+				<Subtotal>269.94</Subtotal>
+				<TaxAmount>0.00</TaxAmount>
+				<TaxCategory>Local Sales Tax</TaxCategory>
+				<TaxPercentage>0.00</TaxPercentage>
+				<Total>242.95</Total>
+				<TxnDate>2010-11-16</TxnDate>
+				<UnfilledPercent>100.00</UnfilledPercent>
+				<BillingInformation>
+					<City>Mountain View</City>
+					<FirstName>Michael</FirstName>
+					<LastName>Beene</LastName>
+					<Phone>650-555-2214</Phone>
+					<PostalCode>94040</PostalCode>
+					<State>CA</State>
+					<Street>1005 Lily Blvd.</Street>
+				</BillingInformation>
+				<ShippingInformation>
+					<City>Mountain View</City>
+					<FullName>Michael Beene</FullName>
+					<Phone>650-555-2214</Phone>
+					<PostalCode>94040</PostalCode>
+					<ShipBy>FedEx Home Delivery®</ShipBy>
+					<Shipping>0.00</Shipping>
+					<State>CA</State>
+					<Street>1005 Lily Blvd.</Street>
+				</ShippingInformation>
+				<SalesOrderItemRet>
+					<ListID>5523943646161699073</ListID>
+					<TxnLineID>1</TxnLineID>
+					<ALU>PRSC48-12</ALU>
+					<Associate>BrianS</Associate>
+					<Attribute>Left</Attribute>
+					<Commission>9.00</Commission>
+					<Desc1>Adult Baseball Glove</Desc1>
+					<Discount>0.00</Discount>
+					<DiscountPercent>0.00</DiscountPercent>
+					<ExtendedPrice>89.98</ExtendedPrice>
+					<ExtendedTax>0.00</ExtendedTax>
+					<ItemNumber>78</ItemNumber>
+					<Price>89.98</Price>
+					<PriceLevelNumber>1</PriceLevelNumber>
+					<Qty>1.00</Qty>
+					<Size>12</Size>
+					<TaxAmount>0.00</TaxAmount>
+					<TaxCode>Tax</TaxCode>
+					<TaxPercentage>0.00</TaxPercentage>
+				</SalesOrderItemRet>
+				<SalesOrderItemRet>
+					<ListID>5523943641824788737</ListID>
+					<TxnLineID>2</TxnLineID>
+					<ALU>PRSC48-1125</ALU>
+					<Associate>BrianS</Associate>
+					<Attribute>Left</Attribute>
+					<Commission>9.00</Commission>
+					<Desc1>Adult Baseball Glove</Desc1>
+					<Discount>0.00</Discount>
+					<DiscountPercent>0.00</DiscountPercent>
+					<ExtendedPrice>89.98</ExtendedPrice>
+					<ExtendedTax>0.00</ExtendedTax>
+					<ItemNumber>76</ItemNumber>
+					<Price>89.98</Price>
+					<PriceLevelNumber>1</PriceLevelNumber>
+					<Qty>1.00</Qty>
+					<Size>11 1/4</Size>
+					<TaxAmount>0.00</TaxAmount>
+					<TaxCode>Tax</TaxCode>
+					<TaxPercentage>0.00</TaxPercentage>
+				</SalesOrderItemRet>
+				<SalesOrderItemRet>
+					<ListID>5523943646195253505</ListID>
+					<TxnLineID>3</TxnLineID>
+					<ALU>PRSC48-1275</ALU>
+					<Associate>BrianS</Associate>
+					<Attribute>Left</Attribute>
+					<Commission>9.00</Commission>
+					<Desc1>Adult Baseball Glove</Desc1>
+					<Discount>0.00</Discount>
+					<DiscountPercent>0.00</DiscountPercent>
+					<ExtendedPrice>89.98</ExtendedPrice>
+					<ExtendedTax>0.00</ExtendedTax>
+					<ItemNumber>80</ItemNumber>
+					<Price>89.98</Price>
+					<PriceLevelNumber>1</PriceLevelNumber>
+					<Qty>1.00</Qty>
+					<Size>12 3/4</Size>
+					<TaxAmount>0.00</TaxAmount>
+					<TaxCode>Tax</TaxCode>
+					<TaxPercentage>0.00</TaxPercentage>
+				</SalesOrderItemRet>
+			</SalesOrderRet>
+			<SalesOrderRet>
+				<TxnID>5835195847536443649</TxnID>
+				<TimeModified>2010-12-18T08:45:23-04:00</TimeModified>
+				<BalanceDue>807.97</BalanceDue>
+				<CustomerListID>5515925198240383233</CustomerListID>
+				<DepositBalance>0.00</DepositBalance>
+				<Discount>42.53</Discount>
+				<DiscountPercent>5.00</DiscountPercent>
+				<ItemsCount>4</ItemsCount>
+				<PriceLevelNumber>3</PriceLevelNumber>
+				<Qty>7.00</Qty>
+				<SalesOrderNumber>1</SalesOrderNumber>
+				<SalesOrderStatusDesc>Open</SalesOrderStatusDesc>
+				<StoreExchangeStatus>Modified</StoreExchangeStatus>
+				<Subtotal>850.50</Subtotal>
+				<TaxAmount>0.00</TaxAmount>
+				<TaxCategory>Local Sales Tax</TaxCategory>
+				<TaxPercentage>0.00</TaxPercentage>
+				<Total>807.97</Total>
+				<TxnDate>2010-12-18</TxnDate>
+				<UnfilledPercent>100.00</UnfilledPercent>
+				<BillingInformation>
+					<City>Mountain View</City>
+					<FirstName>Michael</FirstName>
+					<LastName>Beene</LastName>
+					<Phone>650-555-2214</Phone>
+					<PostalCode>94040</PostalCode>
+					<State>CA</State>
+					<Street>1005 Lily Blvd.</Street>
+				</BillingInformation>
+				<ShippingInformation>
+					<Shipping>0.00</Shipping>
+				</ShippingInformation>
+				<SalesOrderItemRet>
+					<ListID>5757732990096408833</ListID>
+					<TxnLineID>1</TxnLineID>
+					<ALU>34530-22-STR</ALU>
+					<Attribute>Red/Wht/Bl</Attribute>
+					<Commission>0.00</Commission>
+					<Desc1>Wet Suit</Desc1>
+					<Discount>0.00</Discount>
+					<DiscountPercent>0.00</DiscountPercent>
+					<ExtendedPrice>243.00</ExtendedPrice>
+					<ExtendedTax>0.00</ExtendedTax>
+					<ItemNumber>309</ItemNumber>
+					<Price>121.50</Price>
+					<PriceLevelNumber>3</PriceLevelNumber>
+					<Qty>2.00</Qty>
+					<Size>XXL</Size>
+					<TaxAmount>0.00</TaxAmount>
+					<TaxCode>Tax</TaxCode>
+					<TaxPercentage>0.00</TaxPercentage>
+				</SalesOrderItemRet>
+				<SalesOrderItemRet>
+					<ListID>5757741489887019265</ListID>
+					<TxnLineID>2</TxnLineID>
+					<Attribute>Red/Wht/Bl</Attribute>
+					<Commission>0.00</Commission>
+					<Desc1>Wet Suit</Desc1>
+					<Discount>0.00</Discount>
+					<DiscountPercent>0.00</DiscountPercent>
+					<ExtendedPrice>243.00</ExtendedPrice>
+					<ExtendedTax>0.00</ExtendedTax>
+					<ItemNumber>310</ItemNumber>
+					<Price>121.50</Price>
+					<PriceLevelNumber>3</PriceLevelNumber>
+					<Qty>2.00</Qty>
+					<Size>XL</Size>
+					<TaxAmount>0.00</TaxAmount>
+					<TaxCode>Tax</TaxCode>
+					<TaxPercentage>0.00</TaxPercentage>
+				</SalesOrderItemRet>
+				<SalesOrderItemRet>
+					<ListID>5757743289578979585</ListID>
+					<TxnLineID>3</TxnLineID>
+					<Attribute>Red/Wht/Bl</Attribute>
+					<Commission>0.00</Commission>
+					<Desc1>Wet Suit</Desc1>
+					<Discount>0.00</Discount>
+					<DiscountPercent>0.00</DiscountPercent>
+					<ExtendedPrice>121.50</ExtendedPrice>
+					<ExtendedTax>0.00</ExtendedTax>
+					<ItemNumber>312</ItemNumber>
+					<Price>121.50</Price>
+					<PriceLevelNumber>3</PriceLevelNumber>
+					<Qty>1.00</Qty>
+					<Size>MED</Size>
+					<TaxAmount>0.00</TaxAmount>
+					<TaxCode>Tax</TaxCode>
+					<TaxPercentage>0.00</TaxPercentage>
+				</SalesOrderItemRet>
+				<SalesOrderItemRet>
+					<ListID>5757742417658675457</ListID>
+					<TxnLineID>4</TxnLineID>
+					<Attribute>Red/Wht/Bl</Attribute>
+					<Commission>0.00</Commission>
+					<Desc1>Wet Suit</Desc1>
+					<Discount>0.00</Discount>
+					<DiscountPercent>0.00</DiscountPercent>
+					<ExtendedPrice>243.00</ExtendedPrice>
+					<ExtendedTax>0.00</ExtendedTax>
+					<ItemNumber>311</ItemNumber>
+					<Price>121.50</Price>
+					<PriceLevelNumber>3</PriceLevelNumber>
+					<Qty>2.00</Qty>
+					<Size>LRG</Size>
+					<TaxAmount>0.00</TaxAmount>
+					<TaxCode>Tax</TaxCode>
+					<TaxPercentage>0.00</TaxPercentage>
+				</SalesOrderItemRet>
+			</SalesOrderRet>
+		</SalesOrderQueryRs>
+	</QBPOSXMLMsgsRs>
+</QBPOSXML>

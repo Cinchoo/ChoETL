@@ -474,8 +474,9 @@ namespace ChoETL
                     startIndex += fieldLength;
                 }
             }
+			Configuration.RootName = dt.TableName.IsNullOrWhiteSpace() ? null : dt.TableName;
 
-            foreach (DataRow row in dt.Rows)
+			foreach (DataRow row in dt.Rows)
             {
                 expandoDic.Clear();
 
@@ -488,7 +489,19 @@ namespace ChoETL
             }
         }
 
-        ~ChoJSONWriter()
+		public void Write(DataSet ds)
+		{
+			ChoGuard.ArgumentNotNull(ds, "DataSet");
+
+			foreach (DataTable dt in ds.Tables)
+			{
+				Configuration.Reset();
+				Configuration.RootName = ds.DataSetName.IsNullOrWhiteSpace() ? "Root" : ds.DataSetName;
+				Write(dt);
+			}
+		}
+
+		~ChoJSONWriter()
         {
             Dispose();
         }
