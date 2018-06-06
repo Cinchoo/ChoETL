@@ -14,8 +14,56 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
+    public class ChoTypePropertyInfo
+    {
+        public object[] PropConverters;
+        public object[] PropConverterParams;
+        public string FormatText;
+    }
+
     public static class ChoObjectEx
     {
+        private static readonly object _padLock = new object();
+        private static readonly Dictionary<Type, Dictionary<PropertyInfo, ChoTypePropertyInfo>> _typeCache = new Dictionary<Type, Dictionary<PropertyInfo, ChoTypePropertyInfo>>();
+
+        private static ChoTypePropertyInfo GetTypePropertyInfo(Type type, PropertyInfo pi)
+        {
+            if (_typeCache.ContainsKey(type))
+                return _typeCache[type][pi];
+
+            lock (_padLock)
+            {
+                if (_typeCache.ContainsKey(type))
+                    return _typeCache[type][pi];
+
+                Dictionary<PropertyInfo, ChoTypePropertyInfo> dict = new Dictionary<PropertyInfo, ChoTypePropertyInfo>();
+                foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(type))
+                {
+                    PropertyInfo lpi = pd.ComponentType.GetProperty(pd.Name);
+                    object[] propConverters = ChoTypeDescriptor.GetTypeConverters(pi);
+                    object[] propConverterParams = ChoTypeDescriptor.GetTypeConverterParams(pi);
+
+				    string formatText = null;
+                    DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();
+                    if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
+                        formatText = dfAttr.DataFormatString;
+
+                    if (formatText.IsNullOrWhiteSpace())
+                        propConverterParams = new object[] { new object[] { formatText } };
+
+                    dict.Add(lpi, new ChoTypePropertyInfo
+                    {
+                        FormatText = formatText,
+                        PropConverterParams = propConverterParams,
+                        PropConverters = propConverters
+                    });
+                }
+                _typeCache.Add(type, dict);
+
+                return _typeCache[type][pi];
+            }
+        }
+
 		public static void ConvertNSetValue(this object target, PropertyDescriptor pd, object fv, CultureInfo culture, long index = 0)
 		{
 			PropertyInfo pi = pd.ComponentType.GetProperty(pd.Name);
@@ -31,24 +79,18 @@ namespace ChoETL
 
 			try
 			{
-				object[] PropConverters = ChoTypeDescriptor.GetTypeConverters(pi);
-				object[] PropConverterParams = ChoTypeDescriptor.GetTypeConverterParams(pi);
-				string formatText = null;
-				DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();
-				if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
-					formatText = dfAttr.DataFormatString;
+                var tpi = GetTypePropertyInfo(pd.ComponentType, pi);
 
-				object[] fcParams = PropConverterParams;
-				if (formatText.IsNullOrWhiteSpace())
-					fcParams = new object[] { new object[] { formatText } };
+                object[] propConverters = tpi.PropConverters;
+                object[] propConverterParams = tpi.PropConverterParams;
 
-				if (PropConverters.IsNullOrEmpty())
+				if (propConverters.IsNullOrEmpty())
 				{
-					fv = ChoConvert.ConvertFrom(fv, pi.PropertyType, null, PropConverters, fcParams, culture);
+					fv = ChoConvert.ConvertFrom(fv, pi.PropertyType, null, propConverters, propConverterParams, culture);
 				}
 				else
 				{
-					fv = ChoConvert.ConvertFrom(fv, pi.PropertyType, null, PropConverters, fcParams, culture);
+					fv = ChoConvert.ConvertFrom(fv, pi.PropertyType, null, propConverters, propConverterParams, culture);
 				}
 				pd.SetValue(target, fv);
 
