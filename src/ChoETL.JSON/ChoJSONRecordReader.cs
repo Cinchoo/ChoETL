@@ -20,6 +20,7 @@ namespace ChoETL
     internal class ChoJSONRecordReader : ChoRecordReader
     {
         private IChoNotifyRecordRead _callbackRecord;
+        private IChoNotifyRecordFieldRead _callbackRecordField;
         private bool _configCheckDone = false;
         private Lazy<JsonSerializer> _se;
         internal ChoReader Reader = null;
@@ -36,6 +37,9 @@ namespace ChoETL
             Configuration = configuration;
 
             _callbackRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordRead>(recordType);
+            _callbackRecordField = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordFieldRead>(recordType);
+            if (_callbackRecordField == null)
+                _callbackRecordField = _callbackRecord;
 
             //Configuration.Validate();
         }
@@ -1041,7 +1045,13 @@ namespace ChoETL
 			string jsonPath = null;
 			Type propertyType = null;
 			bool? useJsonSerialization = null;
-			foreach (var pd in ChoTypeDescriptor.GetProperties(type))
+            IEnumerable<PropertyDescriptor> pds = null;
+            if (ChoTypeDescriptor.GetProperties(type).Where(pd1 => pd1.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any()).Any())
+                pds = ChoTypeDescriptor.GetProperties(type).Where(pd1 => pd1.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any());
+            else
+                pds = ChoTypeDescriptor.GetProperties(type);
+
+            foreach (var pd in pds)
 			{
 				jsonPath = "$.{0}".FormatString(pd.Name);
 				propertyType = pd.PropertyType.GetUnderlyingType();
@@ -1174,7 +1184,7 @@ namespace ChoETL
             // T == source[0].GetType()
             return source.Cast<T>().ToList();
         }
-        private string CleanFieldValue(ChoJSONRecordFieldConfiguration config, Type fieldType, string fieldValue)
+        private string CleanFieldValue(ChoFileRecordFieldConfiguration config, Type fieldType, string fieldValue)
         {
             if (fieldValue == null) return fieldValue;
 
@@ -1343,10 +1353,10 @@ namespace ChoETL
 
         private bool RaiseBeforeRecordFieldLoad(object target, long index, string propName, ref object value)
         {
-            if (_callbackRecord != null)
+            if (_callbackRecordField != null)
             {
                 object state = value;
-                bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeforeRecordFieldLoad(target, index, propName, ref state), true);
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecordField.BeforeRecordFieldLoad(target, index, propName, ref state), true);
 
                 if (retValue)
                     value = state;
@@ -1368,9 +1378,9 @@ namespace ChoETL
 
         private bool RaiseAfterRecordFieldLoad(object target, long index, string propName, object value)
         {
-            if (_callbackRecord != null)
+            if (_callbackRecordField != null)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordFieldLoad(target, index, propName, value), true);
+                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecordField.AfterRecordFieldLoad(target, index, propName, value), true);
             }
             else if (Reader != null)
             {
@@ -1381,9 +1391,9 @@ namespace ChoETL
 
         private bool RaiseRecordFieldLoadError(object target, long index, string propName, object value, Exception ex)
         {
-            if (_callbackRecord != null)
+            if (_callbackRecordField != null)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordFieldLoadError(target, index, propName, value, ex), false);
+                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecordField.RecordFieldLoadError(target, index, propName, value, ex), false);
             }
             else if (Reader != null)
             {

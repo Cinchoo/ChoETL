@@ -640,7 +640,7 @@ namespace ChoJSONReaderTest
 			BookingInfoTest();
 		}
 
-		public class BookingInfo : IChoNotifyChildRecordRead
+		public class BookingInfo : IChoNotifyRecordFieldRead
 		{
 			[ChoJSONRecordField(JSONPath = "$.travel_class")]
 			public string TravelClass { get; set; }
@@ -663,8 +663,8 @@ namespace ChoJSONReaderTest
 			}
 		}
 
-		public class FlightInfo
-		{
+		public class FlightInfo : IChoNotifyRecordRead
+        {
 			[ChoJSONRecordField(JSONPath = "$.departs_at")]
 			public DateTime DepartAt { get; set; }
 			[ChoJSONRecordField(JSONPath = "$.arrives_at")]
@@ -675,7 +675,57 @@ namespace ChoJSONReaderTest
 
 			[ChoJSONRecordField(JSONPath = "$.booking_info")]
 			public BookingInfo[] BookingInfo { get; set; }
-		}
+
+            public bool BeforeRecordFieldLoad(object target, long index, string propName, ref object value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool AfterRecordFieldLoad(object target, long index, string propName, object value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool RecordFieldLoadError(object target, long index, string propName, object value, Exception ex)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool BeginLoad(object source)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void EndLoad(object source)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool SkipUntil(long index, object source)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool DoWhile(long index, object source)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool BeforeRecordLoad(object target, long index, ref object source)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool AfterRecordLoad(object target, long index, object source, ref bool skip)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool RecordLoadError(object target, long index, object source, Exception ex)
+            {
+                throw new NotImplementedException();
+            }
+        }
 
 		static void BookingInfoTest()
 		{

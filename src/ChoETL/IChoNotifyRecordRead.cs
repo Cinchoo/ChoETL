@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-	public interface IChoNotifyChildRecordRead
+	public interface IChoNotifyRecordFieldRead
 	{
 		bool BeforeRecordFieldLoad(object target, long index, string propName, ref object value);
 		bool AfterRecordFieldLoad(object target, long index, string propName, object value);
 		bool RecordFieldLoadError(object target, long index, string propName, object value, Exception ex);
 	}
 
-	public interface IChoNotifyRecordRead : IChoNotifyChildRecordRead
+	public interface IChoNotifyRecordRead : IChoNotifyRecordFieldRead
 	{
         bool BeginLoad(object source);
         void EndLoad(object source);

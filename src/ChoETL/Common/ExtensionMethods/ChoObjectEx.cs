@@ -19,6 +19,8 @@ namespace ChoETL
         public object[] PropConverters;
         public object[] PropConverterParams;
         public string FormatText;
+        public int? Size;
+        public string NullValueText;
     }
 
     public static class ChoObjectEx
@@ -42,20 +44,39 @@ namespace ChoETL
                     PropertyInfo lpi = pd.ComponentType.GetProperty(pd.Name);
                     object[] propConverters = ChoTypeDescriptor.GetTypeConverters(pi);
                     object[] propConverterParams = ChoTypeDescriptor.GetTypeConverterParams(pi);
+                    int? size = null;
+                    string formatText = null;
+                    string nullValueText = null;
 
-				    string formatText = null;
-                    DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();
-                    if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
-                        formatText = dfAttr.DataFormatString;
+                    if (pd.Attributes.OfType<ChoFileRecordFieldAttribute>().Any())
+                    {
+                        var fa = pd.Attributes.OfType<ChoFileRecordFieldAttribute>().First();
+                        size = fa.SizeInternal;
+                        formatText = fa.FormatText;
+                        nullValueText = fa.NullValue;
+                    }
+                    else
+                    {
+                        StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
+                        if (slAttr != null && slAttr.MaximumLength > 0)
+                            size = slAttr.MaximumLength;
 
-                    if (formatText.IsNullOrWhiteSpace())
-                        propConverterParams = new object[] { new object[] { formatText } };
+                        DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();
+                        if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
+                            formatText = dfAttr.DataFormatString;
+                        if (dfAttr != null && !dfAttr.NullDisplayText.IsNullOrWhiteSpace())
+                            nullValueText = dfAttr.NullDisplayText;
+                        if (formatText.IsNullOrWhiteSpace())
+                            propConverterParams = new object[] { new object[] { formatText } };
+                    }
 
                     dict.Add(lpi, new ChoTypePropertyInfo
                     {
                         FormatText = formatText,
                         PropConverterParams = propConverterParams,
-                        PropConverters = propConverters
+                        PropConverters = propConverters,
+                        Size = size,
+                        NullValueText = nullValueText
                     });
                 }
                 _typeCache.Add(type, dict);
@@ -67,7 +88,7 @@ namespace ChoETL
 		public static void ConvertNSetValue(this object target, PropertyDescriptor pd, object fv, CultureInfo culture, long index = 0)
 		{
 			PropertyInfo pi = pd.ComponentType.GetProperty(pd.Name);
-			IChoNotifyChildRecordRead callbackRecord = target as IChoNotifyChildRecordRead;
+			IChoNotifyRecordFieldRead callbackRecord = target as IChoNotifyRecordFieldRead;
 			if (callbackRecord != null)
 			{
 				object state = fv;
