@@ -23,8 +23,9 @@ namespace ChoETL
         private bool _configCheckDone = false;
         private long _index = 0;
         private Lazy<XmlSerializer> _se = null;
-        private readonly Regex _beginTagRegex = new Regex(@"^(<\w+)(.*)", RegexOptions.Compiled | RegexOptions.Multiline);
-        private readonly Regex _endTagRegex = new Regex("</.*>$");
+        private readonly Regex _beginNSTagRegex = new Regex(@"^(<\w+\:\w+)(.*)", RegexOptions.Compiled | RegexOptions.Multiline);
+		private readonly Regex _beginTagRegex = new Regex(@"^(<\w+)(.*)", RegexOptions.Compiled | RegexOptions.Multiline);
+		private readonly Regex _endTagRegex = new Regex("</.*>$");
         internal ChoWriter Writer = null;
         internal Type ElementType = null;
         private Lazy<List<object>> _recBuffer = null;
@@ -600,11 +601,21 @@ namespace ChoETL
                         {
                             rec = ChoActivator.CreateInstance(config.RecordType);
                             innerXml = ChoUtility.XmlSerialize(rec, null, Configuration.EOLDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix);
-                            innerXml = _beginTagRegex.Replace(innerXml, delegate (Match m)
-                            {
-                                return "<" + XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
-                            });
-                            innerXml = _endTagRegex.Replace(innerXml, delegate (Match thisMatch)
+							if (_beginNSTagRegex.Match(innerXml1).Success)
+							{
+								innerXml = _beginNSTagRegex.Replace(innerXml, delegate (Match m)
+								{
+									return "<" + XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
+								});
+							}
+							else
+							{
+								innerXml = _beginTagRegex.Replace(innerXml, delegate (Match m)
+								{
+									return "<" + XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
+								});
+							}
+							innerXml = _endTagRegex.Replace(innerXml, delegate (Match thisMatch)
                             {
                                 return "</{0}>".FormatString(XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix));
                             });
@@ -645,10 +656,20 @@ namespace ChoETL
                         innerXml1 = ChoUtility.XmlSerialize(kvp.Value, null, Configuration.EOLDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix);
                         if (!kvp.Value.GetType().IsArray)
                         {
-                            innerXml1 = _beginTagRegex.Replace(innerXml1, delegate (Match m)
-                            {
-                                return "<" + XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
-                            });
+							if (_beginNSTagRegex.Match(innerXml1).Success)
+							{
+								innerXml1 = _beginNSTagRegex.Replace(innerXml1, delegate (Match m)
+								{
+									return "<" + XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
+								});
+							}
+							else
+							{
+								innerXml1 = _beginTagRegex.Replace(innerXml1, delegate (Match m)
+								{
+									return "<" + XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
+								});
+							}
                             innerXml1 = _endTagRegex.Replace(innerXml1, delegate (Match thisMatch)
                             {
                                 return "</{0}>".FormatString(XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix));
@@ -674,11 +695,22 @@ namespace ChoETL
             innerXml1 = ele.ToString(SaveOptions.OmitDuplicateNamespaces);
             if (config.IgnoreNodeName)
             {
-                innerXml1 = _beginTagRegex.Replace(innerXml1, delegate (Match m)
-                {
-                    return null;
-                });
-                innerXml1 = _endTagRegex.Replace(innerXml1, delegate (Match thisMatch)
+				if (_beginNSTagRegex.Match(innerXml1).Success)
+				{
+					innerXml1 = _beginNSTagRegex.Replace(innerXml1, delegate (Match m)
+					{
+						return null;
+					});
+				}
+				else
+				{
+					innerXml1 = _beginTagRegex.Replace(innerXml1, delegate (Match m)
+					{
+						return null;
+					});
+				}
+
+				innerXml1 = _endTagRegex.Replace(innerXml1, delegate (Match thisMatch)
                 {
                     return null;
                 });

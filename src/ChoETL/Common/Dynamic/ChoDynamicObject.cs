@@ -1035,7 +1035,7 @@ namespace ChoETL
         }
         public bool IsAttribute(string attrName)
         {
-			return _attributes.Contains(attrName);
+			return _attributes.Contains(attrName) || attrName.StartsWith("@");
 		}
 
 		private HashSet<string> _cDatas = new HashSet<string>();

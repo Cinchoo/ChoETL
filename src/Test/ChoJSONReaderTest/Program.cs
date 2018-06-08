@@ -637,7 +637,26 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			BookingInfoTest();
+			NSTest();
+		}
+
+		static void NSTest()
+		{
+			//string json = @"{""ns3:Test_Service"" : {""@xmlns:ns3"":""http://www.CCKS.org/XRT/Form"",""ns3:fname"":""mark"",""ns3:lname"":""joye"",""ns3:CarCompany"":""saab"",""ns3:CarNumber"":""9741"",""ns3:IsInsured"":""true"",""ns3:safty"":[""ABS"",""AirBags"",""childdoorlock""],""ns3:CarDescription"":""test Car"",""ns3:collections"":[{""ns3:XYZ"":""1"",""ns3:PQR"":""11"",""ns3:contactdetails"":[{""ns3:contname"":""DOM"",""ns3:contnumber"":""8787""},{""ns3:contname"":""COM"",""ns3:contnumber"":""4564"",""ns3:addtionaldetails"":[{""ns3:description"":""54657667""}]},{""ns3:contname"":""gf"",""ns3:contnumber"":""123"",""ns3:addtionaldetails"":[{""ns3:description"":""123""}]}]}]}}";
+			string json = @"{""Test_Service"" : {""fname"":""mark"",""lname"":""joye"",""CarCompany"":""saab"",""CarNumber"":""9741"",""IsInsured"":""true"",""safty"":[""ABS"",""AirBags"",""childdoorlock""],""CarDescription"":""test Car"",""collections"":[{""XYZ"":""1"",""PQR"":""11"",""contactdetails"":[{""contname"":""DOM"",""contnumber"":""8787""},{""contname"":""COM"",""contnumber"":""4564"",""addtionaldetails"":[{""description"":""54657667""}]},{""contname"":""gf"",""contnumber"":""123"",""addtionaldetails"":[{""description"":""123""}]}]}]}}";
+
+			StringBuilder sb = new StringBuilder();
+			using (var p = ChoJSONReader.LoadText(json).Configure(c => c.SupportMultipleContent = true))
+			{
+				//Console.WriteLine(p.First().Dump());
+				//return;
+				using (var w = new ChoXmlWriter(sb))
+				{
+					w.Write(p);
+				}
+			}
+
+			Console.WriteLine(sb.ToString());
 		}
 
 		public class BookingInfo : IChoNotifyRecordFieldRead
