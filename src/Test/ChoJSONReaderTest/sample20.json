@@ -1,0 +1,34 @@
+﻿{
+	"ns3:Test_Service": {
+		"@xmlns:ns3": "http://www.CCKS.org/XRT/Form",
+		"ns3:fname": "mark",
+		"ns3:lname": "joye",
+		"ns3:CarCompany": "saab",
+		"ns3:CarNumber": "9741",
+		"ns3:IsInsured": "true",
+		"ns3:safty": [ "ABS", "AirBags", "childdoorlock" ],
+		"ns3:CarDescription": "test Car",
+		"ns3:collections": [
+			{
+				"ns3:XYZ": "1",
+				"ns3:PQR": "11",
+				"ns3:contactdetails": [
+					{
+						"ns3:contname": "DOM",
+						"ns3:contnumber": "8787"
+					},
+					{
+						"ns3:contname": "COM",
+						"ns3:contnumber": "4564",
+						"ns3:addtionaldetails": [ { "ns3:description": "54657667" } ]
+					},
+					{
+						"ns3:contname": "gf",
+						"ns3:contnumber": "123",
+						"ns3:addtionaldetails": [ { "ns3:description": "123" } ]
+					}
+				]
+			}
+		]
+	}
+}

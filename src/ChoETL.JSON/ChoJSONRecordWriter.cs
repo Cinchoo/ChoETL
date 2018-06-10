@@ -72,6 +72,7 @@ namespace ChoETL
 					}
 					else
 					{
+						sw.Write(String.Format("{0}}}", Configuration.EOLDelimiter));
 					}
 				}
 			}
@@ -194,6 +195,7 @@ namespace ChoETL
 							}
 							else
 							{
+								sw.Write(String.Format("{{{0}", Configuration.EOLDelimiter));
 							}
 						}
 
@@ -219,9 +221,9 @@ namespace ChoETL
                                         else
                                         {
                                             if (_index == 1)
-                                                sw.Write("{0}", recText);
+                                                sw.Write("{0}", recText.Indent(1, " "));
                                             else
-                                                sw.Write("{1}{0}", recText, Configuration.EOLDelimiter);
+                                                sw.Write("{1}{0}", recText.Indent(1, " "), Configuration.EOLDelimiter);
                                         }
 
                                         if (!RaiseAfterRecordWrite(record, _index, recText))
@@ -240,9 +242,9 @@ namespace ChoETL
                                 else
                                 {
                                     if (_index == 1)
-                                        sw.Write("{0}", recText);
+                                        sw.Write("{0}", recText.Indent(1, " "));
                                     else
-                                        sw.Write("{1}{0}", recText, Configuration.EOLDelimiter);
+                                        sw.Write("{1}{0}", recText.Indent(1, " "), Configuration.EOLDelimiter);
                                 }
 
                                 if (!RaiseAfterRecordWrite(record, _index, recText))

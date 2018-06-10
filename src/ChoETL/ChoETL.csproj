@@ -100,6 +100,7 @@
     <Compile Include="Common\Attributes\ChoMetadataRefTypeAttribute.cs" />
     <Compile Include="Common\Collections\ChoSerializableDictionary.cs" />
     <Compile Include="Common\Converters\ChoCDATAToStringConverter.cs" />
+    <Compile Include="Common\ExtensionMethods\ChoEnumerableEx.cs" />
     <Compile Include="Common\ExtensionMethods\Linq\ChoLeftJoin.cs" />
     <Compile Include="File\CSV\ChoCSVRecordTypeConfiguration.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthRecordTypeConfiguration.cs" />

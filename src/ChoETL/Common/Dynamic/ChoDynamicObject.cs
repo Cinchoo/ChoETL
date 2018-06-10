@@ -390,7 +390,10 @@ namespace ChoETL
             if (IsReadOnly)
                 return false;
 
-            IDictionary<string, object> kvpDict = _kvpDict;
+			if (!_prefix.IsNullOrWhiteSpace() && !name.StartsWith("@xmlns:", StringComparison.InvariantCultureIgnoreCase))
+				name = "{0}:{1}".FormatString(_prefix, name);
+
+			IDictionary<string, object> kvpDict = _kvpDict;
             if (kvpDict != null)
             {
                 if (AlternativeKeys != null && AlternativeKeys.ContainsKey(name))
@@ -827,6 +830,12 @@ namespace ChoETL
             return Keys;
         }
 
+		public ChoDynamicObject Flatten()
+		{
+			_kvpDict = _kvpDict.Flatten().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+			return this;
+		}
+
         public string Dump()
         {
             return ChoUtility.ToStringEx(this);
@@ -1161,6 +1170,75 @@ namespace ChoETL
 			}
 
 			return obj;
+		}
+
+		private string _prefix = null;
+		public ChoDynamicObject AddNamespace(string prefix, string uri)
+		{
+			ChoGuard.ArgumentNotNullOrEmpty(prefix, nameof(prefix));
+			ChoGuard.ArgumentNotNullOrEmpty(uri, nameof(uri));
+
+			SetAttribute("@xmlns:{0}".FormatString(prefix), uri);
+			AddPrefixNS(prefix);
+			return this;
+		}
+
+		private void AddPrefixNS(string prefix)
+		{
+			_prefix = prefix;
+			_kvpDict = PrefixNS(prefix, _kvpDict);
+			if (!_prefix.IsNullOrWhiteSpace())
+				DynamicObjectName = "{0}:{1}".FormatString(prefix, DynamicObjectName.IndexOf(":") > 0 ? DynamicObjectName.Substring(DynamicObjectName.IndexOf(":") + 1) : DynamicObjectName);
+		}
+
+		private object PrefixNS(string prefix, object value)
+		{
+			if (value == null)
+				return value;
+
+			if (value is ChoDynamicObject)
+			{
+				((ChoDynamicObject)value).AddPrefixNS(prefix);
+				return value;
+			}
+			else if (value is IDictionary<string, object>)
+			{
+				return PrefixNS(prefix, value as IDictionary<string, object>);
+			}
+			else if (value is IList)
+			{
+				var ret = ((IList)value).OfType<object>().Select(value1 =>
+				{
+					if (value1 is ChoDynamicObject)
+					{
+						((ChoDynamicObject)value1).AddPrefixNS(prefix);
+						return value1;
+					}
+					else if (value1 is IDictionary<string, object>)
+					{
+						return PrefixNS(prefix, value1 as IDictionary<string, object>);
+					}
+					else
+					{
+						return PrefixNS(prefix, value1);
+					}
+				});
+
+				return value is Array ? (object)ret.ToArray() : (object)ret.ToList();
+			}
+			else
+			{
+				return value;
+			}
+		}
+
+		private IDictionary<string, object> PrefixNS(string prefix, IDictionary<string, object> kvpDict)
+		{
+			if (kvpDict == null)
+				return kvpDict;
+
+			return kvpDict.ToDictionary(kvp => kvp.Key.StartsWith("@xmlns", StringComparison.InvariantCultureIgnoreCase) ? kvp.Key : "{0}:{1}".FormatString(prefix, kvp.Key.IndexOf(":") > 0 ? kvp.Key.Substring(kvp.Key.IndexOf(":") + 1) : kvp.Key),
+				kvp => PrefixNS(prefix, kvp.Value));
 		}
 	}
 

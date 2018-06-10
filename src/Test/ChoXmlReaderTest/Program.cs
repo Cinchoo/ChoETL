@@ -84,8 +84,67 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			Sample9Test();
+			NSTest();
         }
+
+		static void NSTest()
+		{
+			string xml = @"<ns3:Test_Service xmlns:ns3=""http://www.CCKS.org/XRT/Form"">
+  <ns3:fname>mark</ns3:fname>
+  <ns3:lname>joye</ns3:lname>
+  <ns3:CarCompany>saab</ns3:CarCompany>
+  <ns3:CarNumber>9741</ns3:CarNumber>
+  <ns3:IsInsured>true</ns3:IsInsured>
+  <ns3:safties></ns3:safties>
+  <ns3:CarDescription>test Car</ns3:CarDescription>
+  <ns3:collections>
+    <ns3:collection>
+      <ns3:XYZ>1</ns3:XYZ>
+      <ns3:PQR>11</ns3:PQR>
+      <ns3:contactdetails>
+        <ns3:contactdetail>
+          <ns3:contname>DOM</ns3:contname>
+          <ns3:contnumber>8787</ns3:contnumber>
+        </ns3:contactdetail>
+        <ns3:contactdetail>
+          <ns3:contname>COM</ns3:contname>
+          <ns3:contnumber>4564</ns3:contnumber>
+          <ns3:addtionaldetails>
+            <ns3:addtionaldetail>
+              <ns3:description>54657667</ns3:description>
+            </ns3:addtionaldetail>
+          </ns3:addtionaldetails>
+        </ns3:contactdetail>
+        <ns3:contactdetail>
+          <ns3:contname>gf</ns3:contname>
+          <ns3:contnumber>123</ns3:contnumber>
+          <ns3:addtionaldetails>
+            <ns3:addtionaldetail>
+              <ns3:description>123</ns3:description>
+            </ns3:addtionaldetail>
+          </ns3:addtionaldetails>
+        </ns3:contactdetail>
+      </ns3:contactdetails>
+    </ns3:collection>
+  </ns3:collections>
+</ns3:Test_Service>";
+
+			StringBuilder sb = new StringBuilder();
+			using (var p = ChoXmlReader.LoadText(xml).WithXPath("//")
+				.WithXmlNamespace("ns3", "http://www.CCKS.org/XRT/Form")
+				)
+			{
+				using (var w = new ChoJSONWriter(sb)
+					.Configure(c => c.SupportMultipleContent = true)
+					)
+				{
+					w.Write(p.Select(e => e.AddNamespace("ns3", "http://www.CCKS.org/XRT/Form")));
+				}
+			}
+
+			Console.WriteLine(sb.ToString());
+		}
+
 		static void CDATATest()
 		{
 			string ID = null;

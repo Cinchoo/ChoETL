@@ -637,20 +637,142 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			NSTest();
+			DataTableTest();
 		}
 
+		static void DataTableTest()
+		{
+			string json = @"{
+    ""data"": [
+        {
+            ""Val1"": ""1234"",
+            ""Val2"": ""foo1"",
+            ""Val3"": ""bar1"",
+            ""links"": [
+                {
+                    ""rel"": ""self"",
+                    ""uri"": ""/blah/1234""
+                },
+                {
+                    ""rel"": ""pricing_data"",
+                    ""uri"": ""/blah/1234/pricing_data""
+                }
+            ]
+        },
+        {
+            ""Val1"": ""5678"",
+            ""Val2"": ""foo2"",
+            ""Val3"": ""bar2"",
+            ""links"": [
+                {
+                    ""rel"": ""self"",
+                    ""uri"": ""/blah/5678""
+                },
+                {
+                    ""rel"": ""pricing_data"",
+                    ""uri"": ""/blah/5678/pricing_data""
+                }
+            ]
+        }
+    ],
+    ""meta"": {
+        ""pagination"": {
+            ""total"": 2,
+            ""count"": 2,
+            ""per_page"": 25,
+            ""current_page"": 1,
+            ""total_pages"": 1,
+            ""links"": []
+        }
+    }
+}";
+
+			using (var r = ChoJSONReader.LoadText(json)
+				.WithJSONPath("$..data[*]")
+				//.WithField("Val1")
+				//.WithField("Val2")
+				//.WithField("Val3")
+				)
+			{
+				//foreach (var rec in r)
+				//	Console.WriteLine(rec.Flatten().Dump());
+				var dt = r.ToArray().Select(i => i.Flatten()).AsDataTable();
+			}
+		}
+
+		public class Alert
+		{
+			public string alert { get; set; }
+			public string riskcode { get; set; }
+		}
+		static void SelectiveFieldsTest()
+		{
+			string json = @"{
+    ""@version"": ""2.7.0"",
+    ""@generated"": ""Wed, 30 May 2018 17:23:14"",
+    ""site"": {
+        ""@name"": ""http://google.com"",
+        ""@host"": ""google.com"",
+        ""@port"": ""80"",
+        ""@ssl"": ""false"",
+        ""alerts"": [
+            {
+                ""alert"": ""X-Content-Type-Options Header Missing"",
+                ""name"": ""X-Content-Type-Options Header Missing"",
+                ""riskcode"": ""1"",
+                ""confidence"": ""2"",
+                ""riskdesc"": ""Low (Medium)"",
+                ""desc"": ""<p>The Anti-MIME-Sniffing header X-Content-Type-Options was not set to 'nosniff'. This allows older versions of Internet Explorer and Chrome to perform MIME-sniffing on the response body, potentially causing the response body to be interpreted and displayed as a content type other than the declared content type. Current (early 2014) and legacy versions of Firefox will use the declared content type (if one is set), rather than performing MIME-sniffing.</p>"",
+                ""instances"": [
+                    {
+                        ""uri"": ""http://google.com"",
+                        ""method"": ""GET"",
+                        ""param"": ""X-Content-Type-Options""
+                    }
+                ],          
+                ""wascid"": ""15"",
+                ""sourceid"": ""3""
+            },
+            {
+                ""alert"": ""X-Content-Type-Options Header Missing"",
+                ""name"": ""X-Content-Type-Options Header Missing"",
+                ""riskcode"": ""1"",
+                ""confidence"": ""2"",
+                ""riskdesc"": ""Low (Medium)"",
+                ""desc"": ""<p>The Anti-MIME-Sniffing header X-Content-Type-Options was not set to 'nosniff'. This allows older versions of Internet Explorer and Chrome to perform MIME-sniffing on the response body, potentially causing the response body to be interpreted and displayed as a content type other than the declared content type. Current (early 2014) and legacy versions of Firefox will use the declared content type (if one is set), rather than performing MIME-sniffing.</p>"",
+                ""instances"": [
+                    {
+                        ""uri"": ""http://google.com"",
+                        ""method"": ""GET"",
+                        ""param"": ""X-Content-Type-Options""
+                    }
+                ],          
+                ""wascid"": ""15"",
+                ""sourceid"": ""3""
+            }
+        ]
+    }
+}";
+			using (var p = ChoJSONReader<Alert>.LoadText(json).WithJSONPath("$..alerts[*]"))
+			{
+				foreach (var rec in p)
+					Console.WriteLine(rec.Dump());
+			}
+		}
 		static void NSTest()
 		{
-			//string json = @"{""ns3:Test_Service"" : {""@xmlns:ns3"":""http://www.CCKS.org/XRT/Form"",""ns3:fname"":""mark"",""ns3:lname"":""joye"",""ns3:CarCompany"":""saab"",""ns3:CarNumber"":""9741"",""ns3:IsInsured"":""true"",""ns3:safty"":[""ABS"",""AirBags"",""childdoorlock""],""ns3:CarDescription"":""test Car"",""ns3:collections"":[{""ns3:XYZ"":""1"",""ns3:PQR"":""11"",""ns3:contactdetails"":[{""ns3:contname"":""DOM"",""ns3:contnumber"":""8787""},{""ns3:contname"":""COM"",""ns3:contnumber"":""4564"",""ns3:addtionaldetails"":[{""ns3:description"":""54657667""}]},{""ns3:contname"":""gf"",""ns3:contnumber"":""123"",""ns3:addtionaldetails"":[{""ns3:description"":""123""}]}]}]}}";
-			string json = @"{""Test_Service"" : {""fname"":""mark"",""lname"":""joye"",""CarCompany"":""saab"",""CarNumber"":""9741"",""IsInsured"":""true"",""safty"":[""ABS"",""AirBags"",""childdoorlock""],""CarDescription"":""test Car"",""collections"":[{""XYZ"":""1"",""PQR"":""11"",""contactdetails"":[{""contname"":""DOM"",""contnumber"":""8787""},{""contname"":""COM"",""contnumber"":""4564"",""addtionaldetails"":[{""description"":""54657667""}]},{""contname"":""gf"",""contnumber"":""123"",""addtionaldetails"":[{""description"":""123""}]}]}]}}";
+			string json = @"{""ns3:Test_Service"" : {""@xmlns:ns3"":""http://www.CCKS.org/XRT/Form"",""ns3:fname"":""mark"",""ns3:lname"":""joye"",""ns3:CarCompany"":""saab"",""ns3:CarNumber"":""9741"",""ns3:IsInsured"":""true"",""ns3:safty"":[""ABS"",""AirBags"",""childdoorlock""],""ns3:CarDescription"":""test Car"",""ns3:collections"":[{""ns3:XYZ"":""1"",""ns3:PQR"":""11"",""ns3:contactdetails"":[{""ns3:contname"":""DOM"",""ns3:contnumber"":""8787""},{""ns3:contname"":""COM"",""ns3:contnumber"":""4564"",""ns3:addtionaldetails"":[{""ns3:description"":""54657667""}]},{""ns3:contname"":""gf"",""ns3:contnumber"":""123"",""ns3:addtionaldetails"":[{""ns3:description"":""123""}]}]}]}}";
+			////string json = @"{""Test_Service"" : {""fname"":""mark"",""lname"":""joye"",""CarCompany"":""saab"",""CarNumber"":""9741"",""IsInsured"":""true"",""safty"":[""ABS"",""AirBags"",""childdoorlock""],""CarDescription"":""test Car"",""collections"":[{""XYZ"":""1"",""PQR"":""11"",""contactdetails"":[{""contname"":""DOM"",""contnumber"":""8787""},{""contname"":""COM"",""contnumber"":""4564"",""addtionaldetails"":[{""description"":""54657667""}]},{""contname"":""gf"",""contnumber"":""123"",""addtionaldetails"":[{""description"":""123""}]}]}]}}";
 
 			StringBuilder sb = new StringBuilder();
 			using (var p = ChoJSONReader.LoadText(json).Configure(c => c.SupportMultipleContent = true))
 			{
 				//Console.WriteLine(p.First().Dump());
 				//return;
-				using (var w = new ChoXmlWriter(sb))
+				using (var w = new ChoXmlWriter(sb)
+					.Configure(c => c.IgnoreRootName = true)
+					.Configure(c => c.IgnoreNodeName = true)
+					)
 				{
 					w.Write(p);
 				}
@@ -658,6 +780,7 @@ namespace ChoJSONReaderTest
 
 			Console.WriteLine(sb.ToString());
 		}
+
 
 		public class BookingInfo : IChoNotifyRecordFieldRead
 		{

@@ -9,10 +9,13 @@ namespace ChoETL
 {
     public static class ChoEnumerable
     {
-        public static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
+        public static IEnumerable<T> ForEach<T>(this IEnumerable<T> source, Action<T> action)
         {
-            foreach (T element in source)
-                action(element);
+			foreach (T element in source)
+			{
+				action(element);
+				yield return element;
+			}
         }
         public static IEnumerable<T> AsEnumerableFrom<T>(Func<T> select, int count = 1)
         {

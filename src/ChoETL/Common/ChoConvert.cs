@@ -361,7 +361,8 @@ namespace ChoETL
                     //  || ChoConvert.TryConvertToSpecialValues(value, targetType, culture, out value))
                     return value;
 
-                if (targetType == typeof(ChoDynamicObject))
+                if (targetType == typeof(
+					ChoDynamicObject))
                 {
                     dynamic ret = new ChoDynamicObject();
                     ret.Value = value;
