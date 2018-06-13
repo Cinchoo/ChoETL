@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -637,9 +638,117 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			DataTableTest();
+			ArrayToDataTableTest();
 		}
 
+		static void ArrayToDataTableTest()
+		{
+			string json = @"[
+[
+    ""Test123"",
+
+	""TestHub"",
+    ""TestVersion"",
+    ""TestMKT"",
+    ""TestCAP"",
+    ""TestRegion"",
+    ""TestAssembly"",
+    ""TestProduct"",
+    ""Testgroup"",
+    ""Testsample"",
+    ""1806"",
+    ""1807"",
+    ""1808"",
+    ""1809"",
+    ""1810"",
+    ""1811"",
+    ""1812"",
+    ""1901"",
+    ""1902"",
+    ""1903"",
+    ""1904"",
+    ""1905"",
+    ""1906"",
+    ""1907"",
+    ""1908"",
+    ""1909"",
+    ""1910"",
+    ""1911"",
+    ""1912""
+],
+[
+    ""Sample12"",
+    ""Sample879"",
+    ""201806.1.0"",
+    ""Sample098"",
+    ""TSA CBU"",
+    ""B8"",
+    ""B8"",
+    ""63"",
+    ""63EM"",
+    ""EM 42 T"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0""
+],
+[
+    ""Sample121233"",
+    ""Sample233879"",
+    ""2012323806.1.0"",
+    ""Sampl233e098"",
+    ""TSA CBU"",
+    ""B8"",
+    ""B8"",
+    ""B3"",
+    ""B3ULUE"",
+    ""UL 42 R"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0""
+]
+]";
+			using (var p = ChoJSONReader.LoadText(json))
+			{
+				//var dt = p.Select(r => ((object[])r.Value).ToDictionary()).AsDataTable();
+				DataTable dt = new DataTable();
+				dt.Columns.Add("Column_1");
+				dt.Columns.Add("C2");
+
+				p.Select(r => ((object[])r.Value).ToDictionary()).Fill(dt);
+			}
+		}
 		static void DataTableTest()
 		{
 			string json = @"{

@@ -52,7 +52,41 @@ namespace ChoETL
 		{
 			if (dt == null)
 				throw new ArgumentException("Missing datatable.");
-			dt.Load(AsDataReader(collection));
+
+			var dr = AsDataReader(collection);
+			DataTable dtSchema = dr.GetSchemaTable();
+
+			if (dt.Columns.Count == 0)
+				dt.Load(dr);
+			else
+			{
+				var match = dt.Columns.OfType<DataColumn>().Select(dc => dc.ColumnName).Intersect(
+					dtSchema.Rows.OfType<DataRow>().Select(dr1 => (string)dr1["ColumnName"]));
+				if (match.Any())
+				{
+					while (dr.Read())
+					{
+						DataRow dataRow = dt.NewRow();
+						foreach (string cn in match)
+						{
+							dataRow[((DataColumn)dt.Columns[cn])] = dr[cn];
+						}
+						dt.Rows.Add(dataRow);
+					}
+				}
+				else
+				{
+					while (dr.Read())
+					{
+						DataRow dataRow = dt.NewRow();
+						for (int i = 0; i < dt.Columns.Count; i++)
+						{
+							dataRow[((DataColumn)dt.Columns[i])] = dr[i];
+						}
+						dt.Rows.Add(dataRow);
+					}
+				}
+			}
 
 			return dt.Rows.Count;
 		}

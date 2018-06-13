@@ -149,7 +149,8 @@ namespace ChoETL
 				}
 				return dict1;
 			}
-
+			if (target is IList)
+				return ((IList)(target)).OfType<object>().Select((item, index) => new KeyValuePair<string, object>("Column_{0}".FormatString(index), item)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 			if (target is IEnumerable<KeyValuePair<string, object>>)
 				return new List<KeyValuePair<string, object>>(target as IEnumerable<KeyValuePair<string, object>>).ToDictionary(x => x.Key, x => x.Value);
 			if (target is IEnumerable<Tuple<string, object>>)
