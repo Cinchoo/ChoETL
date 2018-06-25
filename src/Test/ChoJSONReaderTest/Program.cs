@@ -638,7 +638,30 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			ArrayToDataTableTest();
+			ListOfStringTest();
+		}
+
+		public class Attributes
+		{
+			public int id { get; set; }
+			public string name { get; set; }
+			public string list_type { get; set; }
+			public List<string> attribute_list { get; set; }
+		}
+		static void ListOfStringTest()
+		{
+			string json = @"{
+    ""id"":1047,
+    ""name"":""City"",
+    ""attribute_list"":[""RWC"",""HMO"",""SJ"",""Ensenada""],
+    ""list_type"":1
+}";
+
+			using (var p = ChoJSONReader.LoadText(json))
+			{
+				foreach (var rec in p)
+					Console.WriteLine(rec.Dump());
+			}
 		}
 
 		static void ArrayToDataTableTest()

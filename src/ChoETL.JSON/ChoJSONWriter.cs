@@ -157,7 +157,10 @@ namespace ChoETL
         public static string ToText<TRec>(TRec record, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string jsonPath = null)
             where TRec : class
         {
-            return ToTextAll(ChoEnumerable.AsEnumerable<TRec>(record), configuration, traceSwitch, jsonPath);
+			configuration.IgnoreRootName = true;
+			configuration.RootName = null;
+			configuration.SingleElement = true;
+			return ToTextAll(ChoEnumerable.AsEnumerable<TRec>(record), configuration, traceSwitch, jsonPath);
         }
 
 

@@ -68,8 +68,297 @@ public class ToTextConverter : IChoValueConverter
 
         static void Main(string[] args)
         {
-            EnumTest();
+			Sample50();
         }
+
+		public class Rootobject
+		{
+			public Home home { get; set; }
+			public Away away { get; set; }
+		}
+
+		public class Home
+		{
+			[ChoUseJSONSerialization]
+			public _0_15 _0_15 { get; set; }
+			public _15_30 _15_30 { get; set; }
+			public _30_45 _30_45 { get; set; }
+			public _45_60 _45_60 { get; set; }
+			public _60_75 _60_75 { get; set; }
+			public _75_90 _75_90 { get; set; }
+		}
+
+		public class _0_15
+		{
+			public int goals { get; set; }
+			public int percentage { get; set; }
+		}
+
+		public class _15_30
+		{
+			public int goals { get; set; }
+			public int percentage { get; set; }
+		}
+
+		public class _30_45
+		{
+			public int goals { get; set; }
+			public int percentage { get; set; }
+		}
+
+		public class _45_60
+		{
+			public int goals { get; set; }
+			public int percentage { get; set; }
+		}
+
+		public class _60_75
+		{
+			public int goals { get; set; }
+			public int percentage { get; set; }
+		}
+
+		public class _75_90
+		{
+			public int goals { get; set; }
+			public int percentage { get; set; }
+		}
+
+		public class Away
+		{
+			public _0_151 _0_15 { get; set; }
+			public _15_301 _15_30 { get; set; }
+			public _30_451 _30_45 { get; set; }
+			public _45_601 _45_60 { get; set; }
+			public _60_751 _60_75 { get; set; }
+			public _75_901 _75_90 { get; set; }
+		}
+
+		public class _0_151
+		{
+			public int goals { get; set; }
+			public float percentage { get; set; }
+		}
+
+		public class _15_301
+		{
+			public int goals { get; set; }
+			public float percentage { get; set; }
+		}
+
+		public class _30_451
+		{
+			public int goals { get; set; }
+			public float percentage { get; set; }
+		}
+
+		public class _45_601
+		{
+			public int goals { get; set; }
+			public float percentage { get; set; }
+		}
+
+		public class _60_751
+		{
+			public int goals { get; set; }
+			public float percentage { get; set; }
+		}
+
+		public class _75_901
+		{
+			public int goals { get; set; }
+			public float percentage { get; set; }
+		}
+		static void Sample50()
+		{
+			string json = @"
+{
+    ""home"": {
+        ""0_15"": {
+            ""goals"": 7,
+            ""percentage"": 14
+        },
+        ""15_30"": {
+            ""goals"": 6,
+            ""percentage"": 12
+        },
+        ""30_45"": {
+            ""goals"": 11,
+            ""percentage"": 22
+        },
+        ""45_60"": {
+            ""goals"": 4,
+            ""percentage"": 8
+        },
+        ""60_75"": {
+            ""goals"": 8,
+            ""percentage"": 16
+        },
+        ""75_90"": {
+            ""goals"": 14,
+            ""percentage"": 28
+        }
+    },
+    ""away"": {
+        ""0_15"": {
+            ""goals"": 7,
+            ""percentage"": 15.56
+        },
+        ""15_30"": {
+            ""goals"": 7,
+            ""percentage"": 15.56
+        },
+        ""30_45"": {
+            ""goals"": 5,
+            ""percentage"": 11.11
+        },
+        ""45_60"": {
+            ""goals"": 6,
+            ""percentage"": 13.33
+        },
+        ""60_75"": {
+            ""goals"": 13,
+            ""percentage"": 28.89
+        },
+        ""75_90"": {
+            ""goals"": 7,
+            ""percentage"": 15.56
+        }
+    }
+}";
+
+			using (var p = ChoJSONReader<Rootobject>.LoadText(json).Configure(c => c.SupportMultipleContent = true))
+			{
+				//foreach (var rec in p)
+				//	Console.WriteLine(rec.Dump());
+				Console.WriteLine(ChoJSONWriter<Rootobject>.ToText(p.First(), new ChoJSONRecordConfiguration().Configure(c => c.SupportMultipleContent = true)));
+			}
+		}
+		public class Customer
+		{
+			[ChoJSONRecordField]
+			public long Id { get; set; }
+
+			[ChoJSONRecordField]
+			public string UserName { get; set; }
+
+			[ChoJSONRecordField()]
+			public AddressModel Address { get; set; }
+		}
+
+		public class AddressModel
+		{
+			public string Address { get; set; }
+
+			public string Address2 { get; set; }
+
+			public string City { get; set; }
+		}
+
+		static void Nested2NestedObjectTest()
+		{
+			string json = @"{ 
+""id"": 123,   ""userName"": ""fflintstone"",   ""Address"": {
+""address"": ""345 Cave Stone Road"",
+""address2"": """",
+""city"": ""Bedrock"",
+""state"": ""AZ"",
+""zip"": """"   } }";
+
+			using (var p = ChoJSONReader<Customer>.LoadText(json).Configure(c => c.FlatToNestedObjectSupport = true)
+				//.WithField(r => r.Address.Address, fieldName: "Address")
+				)
+			{
+				var x = p.First();
+				Console.WriteLine(x.Dump());
+			}
+		}
+
+		static void NestedObjectTest()
+		{
+			string json = @"{
+    ""id"": 123,
+    ""userName"": ""fflintstone"",
+    ""address"": ""345 Cave Stone Road"",
+    ""address2"": """",
+    ""city"": ""Bedrock"",
+    ""state"": ""AZ"",
+    ""zip"": """",   
+}";
+
+			using (var p = ChoJSONReader<Customer>.LoadText(json).Configure(c => c.FlatToNestedObjectSupport = true)
+				//.WithField(r => r.Address.Address, fieldName: "Address")
+				)
+			{
+				var x = p.First();
+				Console.WriteLine(x.Dump());
+			}
+		}
+
+		static void CombineJSONTest()
+		{
+			string json = @"[
+  {
+    ""deliveryDay"": ""2018-06-19T15:00:00.000+0300"",
+    ""currencyCode"": ""TRY"",
+    ""offerType"": ""HOURLY"",
+    ""regionCode"": ""TR1"",
+    ""offerDetails"": [
+         {
+           ""startPeriod"": ""1"",
+            ""duration"": ""1"",
+            ""offerPrices"": [
+                {
+                  ""price"": ""0"",
+                   ""amount"": ""5""
+                 }
+               ]
+             }
+           ]
+          },
+  {
+   ""deliveryDay"": ""2018-06-19T15:00:00.000+0300"",
+   ""currencyCode"": ""TRY"",
+   ""offerType"": ""HOURLY"",
+   ""regionCode"": ""TR1"",
+   ""offerDetails"": [
+         {
+           ""startPeriod"": ""1"",
+           ""duration"": ""1"",
+           ""offerPrices"": [
+                {
+                  ""price"": ""2000"",
+                   ""amount"": ""5""
+               }
+              ]
+            }
+          ]
+        }
+       ]";
+
+
+			StringBuilder sb = new StringBuilder();
+			using (var p = ChoJSONReader.LoadText(json))
+			{
+				var list = p.GroupBy(r => r.deliveryDay).Select(r => new
+				{
+					deliveryDay = r.Key,
+					r.First().currencyCode,
+					r.First().offerType,
+					r.First().regionCode,
+					offerDetails = new
+					{
+						((Array)r.First().offerDetails).OfType<dynamic>().First().startPeriod,
+						((Array)r.First().offerDetails).OfType<dynamic>().First().duration,
+						offerPrices = r.Select(r1 => ((Array)r1.offerDetails[0].offerPrices).OfType<object>().First()).ToArray()
+					}
+				}).ToArray();
+
+				Console.WriteLine(ChoJSONWriter.ToTextAll(list));
+				//foreach (var rec in )
+				//	Console.WriteLine(rec.Dump());
+			}
+		}
 
         static void ComplexObjTest()
         {

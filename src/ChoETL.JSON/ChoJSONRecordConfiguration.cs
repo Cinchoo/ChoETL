@@ -62,6 +62,11 @@ namespace ChoETL
             get;
             set;
         }
+		public bool FlatToNestedObjectSupport
+		{
+			get;
+			set;
+		}
 		public bool IgnoreNodeName
 		{
 			get;
@@ -78,6 +83,11 @@ namespace ChoETL
 			set;
 		}
 		public string RootName
+		{
+			get;
+			set;
+		}
+		internal bool SingleElement
 		{
 			get;
 			set;
@@ -129,13 +139,9 @@ namespace ChoETL
             JSONRecordFieldConfigurations = new List<ChoJSONRecordFieldConfiguration>();
 
             Formatting = Newtonsoft.Json.Formatting.Indented;
-            if (recordType != null)
-            {
-                Init(recordType);
-            }
         }
 
-        protected override void Init(Type recordType)
+		protected override void Init(Type recordType)
         {
             base.Init(recordType);
 
@@ -193,23 +199,26 @@ namespace ChoETL
 			if (!recordType.IsDynamicType())
 			{
 				Type pt = null;
-                if (optIn) //ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any()).Any())
+                if (ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any()).Any())
                 {
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                     {
 						pt = pd.PropertyType.GetUnderlyingType();
 						bool optIn1 = ChoTypeDescriptor.GetProperties(pt).Where(pd1 => pd1.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any()).Any();
-						if (false) //optIn1 && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
-                            DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn1);
-                        else if (pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any())
-                        {
-                            var obj = new ChoJSONRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray());
-                            obj.FieldType = pt;
-                            obj.PropertyDescriptor = pd;
-                            obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
-                            if (!JSONRecordFieldConfigurations.Any(c => c.Name == pd.Name))
-                                JSONRecordFieldConfigurations.Add(obj);
-                        }
+						if (optIn1 && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+						{
+							if (FlatToNestedObjectSupport)
+								DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn1);
+						}
+						else if (pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any())
+						{
+							var obj = new ChoJSONRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray());
+							obj.FieldType = pt;
+							obj.PropertyDescriptor = pd;
+							obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
+							if (!JSONRecordFieldConfigurations.Any(c => c.Name == pd.Name))
+								JSONRecordFieldConfigurations.Add(obj);
+						}
                     }
                 }
                 else
@@ -217,37 +226,43 @@ namespace ChoETL
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                     {
                         pt = pd.PropertyType.GetUnderlyingType();
-                        if (false) //pt != typeof(object) && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
-                            DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
-                        else
-                        {
-                            var obj = new ChoJSONRecordFieldConfiguration(pd.Name, (string)null);
-                            obj.FieldType = pt;
-                            obj.PropertyDescriptor = pd;
-                            obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
-                            StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
-                            if (slAttr != null && slAttr.MaximumLength > 0)
-                                obj.Size = slAttr.MaximumLength;
-                            DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
-                            if (dpAttr != null)
-                            {
-                                if (!dpAttr.ShortName.IsNullOrWhiteSpace())
-                                    obj.FieldName = dpAttr.ShortName;
-                                else if (!dpAttr.Name.IsNullOrWhiteSpace())
-                                    obj.FieldName = dpAttr.Name;
-                            }
+						if (pt != typeof(object) && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+						{
+							if (FlatToNestedObjectSupport)
+								DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
+						}
+						else
+						{
+							var obj = new ChoJSONRecordFieldConfiguration(pd.Name, (string)null);
+							obj.FieldType = pt;
+							obj.PropertyDescriptor = pd;
+							obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
+							StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
+							if (slAttr != null && slAttr.MaximumLength > 0)
+								obj.Size = slAttr.MaximumLength;
+							ChoUseJSONSerializationAttribute sAttr = pd.Attributes.OfType<ChoUseJSONSerializationAttribute>().FirstOrDefault();
+							if (sAttr != null)
+								obj.UseJSONSerialization = true;
+							DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
+							if (dpAttr != null)
+							{
+								if (!dpAttr.ShortName.IsNullOrWhiteSpace())
+									obj.FieldName = dpAttr.ShortName;
+								else if (!dpAttr.Name.IsNullOrWhiteSpace())
+									obj.FieldName = dpAttr.Name;
+							}
 							DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();
 							if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
 							{
 								obj.FormatText = dfAttr.DataFormatString;
 							}
-                            if (dfAttr != null && !dfAttr.NullDisplayText.IsNullOrWhiteSpace())
-                            {
-                                obj.NullValue = dfAttr.NullDisplayText;
-                            }
-                            if (!JSONRecordFieldConfigurations.Any(c => c.Name == pd.Name))
-                                JSONRecordFieldConfigurations.Add(obj);
-                        }
+							if (dfAttr != null && !dfAttr.NullDisplayText.IsNullOrWhiteSpace())
+							{
+								obj.NullValue = dfAttr.NullDisplayText;
+							}
+							if (!JSONRecordFieldConfigurations.Any(c => c.Name == pd.Name))
+								JSONRecordFieldConfigurations.Add(obj);
+						}
                     }
                 }
             }
@@ -255,7 +270,12 @@ namespace ChoETL
 
         public override void Validate(object state)
         {
-            base.Validate(state);
+			if (RecordType != null)
+			{
+				Init(RecordType);
+			}
+
+			base.Validate(state);
 
             string[] fieldNames = null;
             JObject jObject = null;

@@ -1053,7 +1053,7 @@ namespace ChoETL
 
             foreach (var pd in pds)
 			{
-				jsonPath = "$.{0}".FormatString(pd.Name);
+				jsonPath = pd.Name.StartsWith("_") ? "$.{0}".FormatString(pd.Name.Substring(1)) : "$.{0}".FormatString(pd.Name);
 				propertyType = pd.PropertyType.GetUnderlyingType();
 				useJsonSerialization = null;
 
@@ -1064,7 +1064,12 @@ namespace ChoETL
 						jsonPath = fa.JSONPath;
 					useJsonSerialization = fa.UseJSONSerializationInternal;
 				}
-
+				if (useJsonSerialization == null)
+				{
+					ChoUseJSONSerializationAttribute sAttr = pd.Attributes.OfType<ChoUseJSONSerializationAttribute>().FirstOrDefault();
+					if (sAttr != null)
+						useJsonSerialization = true;
+				}
 				if (propertyType.IsCollection())
 				{
 					var nodes = token.SelectTokens(jsonPath);

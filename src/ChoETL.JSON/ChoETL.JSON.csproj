@@ -48,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChoJSONExtensions.cs" />
+    <Compile Include="ChoUseJSONSerializationAttribute.cs" />
     <Compile Include="ChoJSONRootNameAttribute.cs" />
     <Compile Include="ChoJSONNodeNameAttribute.cs" />
     <Compile Include="ChoJSONReader.cs" />
