@@ -1041,8 +1041,10 @@ namespace ChoETL
 				return null;
 
 			object obj = Activator.CreateInstance(type);
+			Dictionary<string, string> dict = new Dictionary<string, string>(token.ToObject<IDictionary<string, object>>().ToDictionary(kvp => kvp.Key, kvp => kvp.Key), StringComparer.CurrentCultureIgnoreCase);
 
 			string jsonPath = null;
+			string jsonPropName = null;
 			Type propertyType = null;
 			bool? useJsonSerialization = null;
             IEnumerable<PropertyDescriptor> pds = null;
@@ -1053,7 +1055,10 @@ namespace ChoETL
 
             foreach (var pd in pds)
 			{
-				jsonPath = pd.Name.StartsWith("_") ? "$.{0}".FormatString(pd.Name.Substring(1)) : "$.{0}".FormatString(pd.Name);
+				jsonPropName = pd.Name.StartsWith("_") ? pd.Name.Substring(1) : pd.Name;
+				if (dict.ContainsKey(jsonPropName))
+					jsonPropName = dict[jsonPropName];
+
 				propertyType = pd.PropertyType.GetUnderlyingType();
 				useJsonSerialization = null;
 
@@ -1072,7 +1077,7 @@ namespace ChoETL
 				}
 				if (propertyType.IsCollection())
 				{
-					var nodes = token.SelectTokens(jsonPath);
+					var nodes = jsonPath != null ? token.SelectTokens(jsonPath) : token[jsonPropName];
 					if (nodes == null)
 						continue;
 
@@ -1083,11 +1088,11 @@ namespace ChoETL
 					}
 					obj.ConvertNSetValue(pd, list.ToArray(), Configuration.Culture);
 				}
-				else
+				else if (jsonPropName != null)
 				{
-					var node = token.SelectToken(jsonPath);
+					var node = jsonPath != null ? token.SelectToken(jsonPath) : token[jsonPropName];
 					if (node == null)
-							continue;
+						continue;
 
 					obj.ConvertNSetValue(pd, ToObject(node, propertyType, useJsonSerialization), Configuration.Culture);
 				}
