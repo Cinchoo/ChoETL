@@ -78,6 +78,9 @@ namespace ChoETL
 
         protected virtual void Init(Type recordType)
         {
+            if (recordType == null)
+                return;
+
             ChoRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoRecordObjectAttribute>(recordType);
             if (recObjAttr != null)
             {

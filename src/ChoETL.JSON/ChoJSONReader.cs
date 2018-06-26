@@ -572,7 +572,15 @@ namespace ChoETL
 			return this;
 		}
 
-		public ChoJSONReader<T> ColumnCountStrict()
+        public ChoJSONReader<T> WithFlatToNestedObjectSupport(bool flatToNestedObjectSupport = true)
+        {
+            Configuration.FlatToNestedObjectSupport = flatToNestedObjectSupport;
+            ClearFields();
+            Configuration.MapRecordFields(Configuration.RecordType);
+            return this;
+        }
+
+        public ChoJSONReader<T> ColumnCountStrict()
 		{
 			Configuration.ColumnCountStrict = true;
 			return this;

@@ -374,6 +374,14 @@ namespace ChoETL
             return this;
         }
 
+        public ChoJSONWriter<T> WithFlatToNestedObjectSupport(bool flatToNestedObjectSupport = true)
+        {
+            Configuration.FlatToNestedObjectSupport = flatToNestedObjectSupport;
+            ClearFields();
+            Configuration.MapRecordFields(Configuration.RecordType);
+            return this;
+        }
+
         public ChoJSONWriter<T> ColumnCountStrict()
         {
             Configuration.ColumnCountStrict = true;

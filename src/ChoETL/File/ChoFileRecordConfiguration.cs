@@ -221,6 +221,9 @@ namespace ChoETL
         {
             base.Init(recordType);
 
+            if (recordType == null)
+                return;
+
             ChoFileRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoFileRecordObjectAttribute>(recordType);
             if (recObjAttr != null)
             {

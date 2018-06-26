@@ -62,7 +62,7 @@ namespace ChoETL
             get;
             set;
         }
-		public bool FlatToNestedObjectSupport
+		internal bool FlatToNestedObjectSupport
 		{
 			get;
 			set;
@@ -139,11 +139,18 @@ namespace ChoETL
             JSONRecordFieldConfigurations = new List<ChoJSONRecordFieldConfiguration>();
 
             Formatting = Newtonsoft.Json.Formatting.Indented;
+            if (recordType != null)
+            {
+                Init(recordType);
+            }
         }
 
-		protected override void Init(Type recordType)
+        protected override void Init(Type recordType)
         {
             base.Init(recordType);
+
+            if (recordType == null)
+                return;
 
             ChoJSONRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoJSONRecordObjectAttribute>(recordType);
             if (recObjAttr != null)

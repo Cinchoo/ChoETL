@@ -471,6 +471,14 @@ namespace ChoETL
             return this;
         }
 
+        public ChoXmlWriter<T> WithFlatToNestedObjectSupport(bool flatToNestedObjectSupport = true)
+        {
+            Configuration.FlatToNestedObjectSupport = flatToNestedObjectSupport;
+            ClearFields();
+            Configuration.MapRecordFields(Configuration.RecordType);
+            return this;
+        }
+
         public ChoXmlWriter<T> ColumnCountStrict()
         {
             Configuration.ColumnCountStrict = true;

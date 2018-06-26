@@ -68,7 +68,7 @@ public class ToTextConverter : IChoValueConverter
 
         static void Main(string[] args)
         {
-			Sample50();
+            NestedObjectTest();
         }
 
 		public class Rootobject
@@ -236,13 +236,10 @@ public class ToTextConverter : IChoValueConverter
 		}
 		public class Customer
 		{
-			[ChoJSONRecordField]
 			public long Id { get; set; }
 
-			[ChoJSONRecordField]
 			public string UserName { get; set; }
 
-			[ChoJSONRecordField()]
 			public AddressModel Address { get; set; }
 		}
 
@@ -265,7 +262,7 @@ public class ToTextConverter : IChoValueConverter
 ""state"": ""AZ"",
 ""zip"": """"   } }";
 
-			using (var p = ChoJSONReader<Customer>.LoadText(json).Configure(c => c.FlatToNestedObjectSupport = true)
+			using (var p = ChoJSONReader<Customer>.LoadText(json)
 				//.WithField(r => r.Address.Address, fieldName: "Address")
 				)
 			{
@@ -286,7 +283,7 @@ public class ToTextConverter : IChoValueConverter
     ""zip"": """",   
 }";
 
-			using (var p = ChoJSONReader<Customer>.LoadText(json).Configure(c => c.FlatToNestedObjectSupport = true)
+			using (var p = ChoJSONReader<Customer>.LoadText(json).WithFlatToNestedObjectSupport(true)
 				//.WithField(r => r.Address.Address, fieldName: "Address")
 				)
 			{

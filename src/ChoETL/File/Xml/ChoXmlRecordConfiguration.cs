@@ -149,7 +149,12 @@ namespace ChoETL
 				return nsm.GetNamespaceForPrefix(DefaultNamespacePrefix);
 			}
 		}
-		public readonly dynamic Context = new ChoDynamicObject();
+        internal bool FlatToNestedObjectSupport
+        {
+            get;
+            set;
+        }
+        public readonly dynamic Context = new ChoDynamicObject();
 
         internal bool IsComplexXPathUsed = true;
         public ChoXmlRecordFieldConfiguration this[string name]
