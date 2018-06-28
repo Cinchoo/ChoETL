@@ -15,10 +15,11 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-	public class ChoCSVReader<T> : ChoReader, IDisposable, IEnumerable<T>
+	public class ChoCSVReader<T> : ChoReader, IDisposable, IEnumerable<T>, IChoSanitizableReader
 		where T : class
 	{
 		private TextReader _textReader;
+		private IEnumerable<string> _lines;
 		private bool _closeStreamOnDispose = false;
 		private Lazy<IEnumerator<T>> _enumerator = null;
 		private CultureInfo _prevCultureInfo = null;
@@ -28,7 +29,8 @@ namespace ChoETL
 		public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
 		public event EventHandler<ChoMapColumnEventArgs> MapColumn;
 		public event EventHandler<ChoEmptyLineEventArgs> EmptyLineFound;
-        private bool _isDisposed = false;
+		public event EventHandler<ChoSanitizeLineEventArgs> SanitizeLine;
+		private bool _isDisposed = false;
 
         public override dynamic Context
 		{
@@ -72,6 +74,16 @@ namespace ChoETL
 			Init();
 
 			_textReader = textReader;
+		}
+
+		internal ChoCSVReader(IEnumerable<string> lines, ChoCSVRecordConfiguration configuration = null)
+		{
+			ChoGuard.ArgumentNotNull(lines, "Lines");
+
+			Configuration = configuration;
+			Init();
+
+			_lines = lines;
 		}
 
 		public ChoCSVReader(Stream inStream, ChoCSVRecordConfiguration configuration = null)
@@ -217,6 +229,14 @@ namespace ChoETL
 			return r;
 		}
 
+		public static ChoCSVReader<T> LoadLines(IEnumerable<string> inputLines, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+		{
+			var r = new ChoCSVReader<T>(inputLines, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
+			r._closeStreamOnDispose = true;
+
+			return r;
+		}
+
 		internal static IEnumerator<object> LoadText(Type recType, string inputText, ChoCSVRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null)
 		{
 			ChoCSVRecordReader rr = new ChoCSVRecordReader(recType, configuration);
@@ -231,7 +251,7 @@ namespace ChoETL
 			rr.TraceSwitch = TraceSwitch;
 			rr.RowsLoaded += NotifyRowsLoaded;
 			rr.MembersDiscovered += MembersDiscovered;
-			var e = rr.AsEnumerable(_textReader).GetEnumerator();
+			var e = _lines != null ? rr.AsEnumerable(_lines).GetEnumerator() : rr.AsEnumerable(_textReader).GetEnumerator();
 			return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
 		}
 
@@ -247,13 +267,14 @@ namespace ChoETL
 			rr.TraceSwitch = TraceSwitch;
 			rr.RowsLoaded += NotifyRowsLoaded;
 			rr.MembersDiscovered += MembersDiscovered;
-			var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_textReader), rr);
+			var dr = new ChoEnumerableDataReader(_lines != null ? rr.AsEnumerable(_lines) : rr.AsEnumerable(_textReader), rr);
 			return dr;
 		}
 
 		public DataTable AsDataTable(string tableName = null)
 		{
 			DataTable dt = tableName.IsNullOrWhiteSpace() ? new DataTable() : new DataTable(tableName);
+			dt.Locale = Configuration.Culture;
 			dt.Load(AsDataReader());
 			return dt;
 		}
@@ -315,6 +336,17 @@ namespace ChoETL
 			var ea = new ChoEmptyLineEventArgs(lineNo);
 			emptyLineFound(this, ea);
 			return ea.Continue;
+		}
+
+		public string RaiseSanitizeLine(long lineNo, string line)
+		{
+			EventHandler<ChoSanitizeLineEventArgs> sanitizeLine = SanitizeLine;
+			if (sanitizeLine == null)
+				return line;
+
+			var ea = new ChoSanitizeLineEventArgs(lineNo, line);
+			sanitizeLine(this, ea);
+			return ea.Line;
 		}
 
 		public override bool TryValidate(object target, ICollection<ValidationResult> validationResults)
@@ -690,7 +722,7 @@ namespace ChoETL
 		}
     }
 
-    public class ChoCSVReader : ChoCSVReader<dynamic>
+	public class ChoCSVReader : ChoCSVReader<dynamic>
     {
         public ChoCSVReader(StringBuilder sb, ChoCSVRecordConfiguration configuration = null) : base(sb, configuration)
         {
@@ -715,5 +747,10 @@ namespace ChoETL
             : base(inStream, configuration)
         {
         }
+	}
+
+	internal interface IChoSanitizableReader
+	{
+		string RaiseSanitizeLine(long lineNo, string line);
 	}
 }

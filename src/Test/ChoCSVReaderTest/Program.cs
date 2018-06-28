@@ -1248,9 +1248,47 @@ a,0,1,2-Data";
 			}
 		}
 
-        static void Main(string[] args)
+		static void Sample5()
+		{
+			using (var p = new ChoCSVReader("Sample5.csv"))
+			{
+				var dt = p.AsDataTable();
+			}
+		}
+
+		static void Sample6()
+		{
+			using (var p = new ChoCSVReader("Sample6.csv"))
+			{
+				p.SanitizeLine += (o, e) =>
+				{
+					string line = e.Line as string;
+					if (line != null)
+					{
+						line = line.Substring(1, line.Length - 2);
+						e.Line = line.Replace(@"""""", @"""");
+					}
+				};
+
+				var dt = p.AsDataTable();
+			}
+		}
+
+		static void Sample61()
+		{
+			using (var p = new ChoCSVReader("Sample6.csv"))
+			{
+				var lines = p.Select(r => (string)r[0]).ToArray();
+				using (var p1 = ChoCSVReader.LoadLines(lines))
+				{
+					var dt = p1.AsDataTable();
+				}
+			}
+		}
+
+		static void Main(string[] args)
         {
-			DoubleQuotesFix();
+			Sample61();
             return;
 
 			CSV2XmlTest();

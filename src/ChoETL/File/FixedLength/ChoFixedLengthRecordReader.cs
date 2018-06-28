@@ -52,12 +52,13 @@ namespace ChoETL
             TraceSwitch = traceSwitch;
 
             TextReader sr = source as TextReader;
-            ChoGuard.ArgumentNotNull(sr, "TextReader");
+			if (!(source is IEnumerable<string>))
+				ChoGuard.ArgumentNotNull(sr, "TextReader");
 
             if (sr is StreamReader)
                 ((StreamReader)sr).Seek(0, SeekOrigin.Begin);
 
-            if (!RaiseBeginLoad(sr))
+            if (!RaiseBeginLoad(source))
                 yield break;
 
             string[] commentTokens = Configuration.Comments;
@@ -72,7 +73,8 @@ namespace ChoETL
             bool? doWhile = true;
 
             using (ChoPeekEnumerator<Tuple<long, string>> e = new ChoPeekEnumerator<Tuple<long, string>>(
-                new ChoIndexedEnumerator<string>(sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, false /*Configuration.MayContainEOLInData*/)).ToEnumerable(),
+                new ChoIndexedEnumerator<string>(source is IEnumerable<string> ? (IEnumerable<string>)source : 
+				sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, false /*Configuration.MayContainEOLInData*/)).ToEnumerable(),
                 (pair) =>
                 {
                     //bool isStateAvail = IsStateAvail();
@@ -123,15 +125,15 @@ namespace ChoETL
                     }
 
                     if (skip.Value)
-                        return skip;
+						return new Tuple<bool?, Tuple<long, string>>(skip, pair);
 
-                    //if (!(sr.BaseStream is MemoryStream))
-                    //    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, ChoETLFramework.Switch.TraceVerbose, "Loading line [{0}]...".FormatString(item.Item1));
+					//if (!(sr.BaseStream is MemoryStream))
+					//    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, ChoETLFramework.Switch.TraceVerbose, "Loading line [{0}]...".FormatString(item.Item1));
 
-                    //if (Task != null)
-                    //    return !IsStateNOTExistsOrNOTMatch(item);
+					//if (Task != null)
+					//    return !IsStateNOTExistsOrNOTMatch(item);
 
-                    if (pair.Item2.IsNullOrWhiteSpace())
+					if (pair.Item2.IsNullOrWhiteSpace())
                     {
                         if (!Configuration.IgnoreEmptyLine)
                             throw new ChoParserException("Empty line found at [{0}] location.".FormatString(pair.Item1));
@@ -139,9 +141,9 @@ namespace ChoETL
                         {
                             if (TraceSwitch.TraceVerbose)
                                 ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring empty line found at [{0}].".FormatString(pair.Item1));
-                            return true;
-                        }
-                    }
+							return new Tuple<bool?, Tuple<long, string>>(true, pair);
+						}
+					}
 
                     if (commentTokens != null && commentTokens.Length > 0)
                     {
@@ -151,9 +153,9 @@ namespace ChoETL
                             {
                                 if (TraceSwitch.TraceVerbose)
                                     ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Comment line found at [{0}]...".FormatString(pair.Item1));
-                                return true;
-                            }
-                        }
+								return new Tuple<bool?, Tuple<long, string>>(true, pair);
+							}
+						}
                     }
 
                     if (Configuration.FileHeaderConfiguration.HeaderLineAt > 0)
@@ -162,11 +164,16 @@ namespace ChoETL
                         {
                             if (TraceSwitch.TraceVerbose)
                                 ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Header line at {1}. Skipping [{0}] line...".FormatString(pair.Item1, Configuration.FileHeaderConfiguration.HeaderLineAt));
-                            return true;
-                        }
-                    }
+							return new Tuple<bool?, Tuple<long, string>>(true, pair);
+						}
+					}
 
-                    if (!_configCheckDone)
+					if (Reader is IChoSanitizableReader)
+					{
+						pair = new Tuple<long, string>(pair.Item1, ((IChoSanitizableReader)Reader).RaiseSanitizeLine(pair.Item1, pair.Item2));
+					}
+
+					if (!_configCheckDone)
                     {
 						if (Configuration.SupportsMultiRecordTypes && Configuration.RecordSelector != null && !Configuration.RecordTypeMapped)
 						{
@@ -197,12 +204,11 @@ namespace ChoETL
                             headerLineLoaded = true;
                             LoadHeaderLine(pair);
                         }
-                        _headerFound = true;
-                        return true;
+						return new Tuple<bool?, Tuple<long, string>>(true, pair);
                     }
 
-                    return false;
-                }))
+					return new Tuple<bool?, Tuple<long, string>>(false, pair);
+				}))
             {
                 while (true)
                 {
@@ -213,7 +219,7 @@ namespace ChoETL
                         if (!abortRequested)
                             RaisedRowsLoaded(runningCount);
 
-                        RaiseEndLoad(sr);
+                        RaiseEndLoad(source);
                         yield break;
                     }
                     runningCount = pair.Item1;

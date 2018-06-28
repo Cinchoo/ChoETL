@@ -240,4 +240,24 @@ namespace ChoETL
             LineNo = lineNo;
         }
     }
+
+	public class ChoSanitizeLineEventArgs : EventArgs
+	{
+		public long LineNo
+		{
+			get;
+			private set;
+		}
+		public string Line
+		{
+			get;
+			set;
+		}
+
+		public ChoSanitizeLineEventArgs(long lineNo, string line)
+		{
+			Line = line;
+			LineNo = lineNo;
+		}
+	}
 }

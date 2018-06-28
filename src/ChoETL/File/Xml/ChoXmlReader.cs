@@ -385,7 +385,8 @@ namespace ChoETL
         public DataTable AsDataTable(string tableName = null)
         {
             DataTable dt = tableName.IsNullOrWhiteSpace() ? new DataTable() : new DataTable(tableName);
-            dt.Load(AsDataReader());
+			dt.Locale = Configuration.Culture;
+			dt.Load(AsDataReader());
             return dt;
         }
 

@@ -15,11 +15,12 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public class ChoFixedLengthReader<T> : ChoReader, IDisposable, IEnumerable<T>
-        where T : class
+    public class ChoFixedLengthReader<T> : ChoReader, IDisposable, IEnumerable<T>, IChoSanitizableReader
+		where T : class
     {
         private TextReader _textReader;
-        private bool _closeStreamOnDispose = false;
+		private IEnumerable<string> _lines;
+		private bool _closeStreamOnDispose = false;
         private Lazy<IEnumerator<T>> _enumerator = null;
         private CultureInfo _prevCultureInfo = null;
         private bool _clearFields = false;
@@ -28,7 +29,8 @@ namespace ChoETL
         public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
         public event EventHandler<ChoMapColumnEventArgs> MapColumn;
         public event EventHandler<ChoEmptyLineEventArgs> EmptyLineFound;
-        private bool _isDisposed = false;
+		public event EventHandler<ChoSanitizeLineEventArgs> SanitizeLine;
+		private bool _isDisposed = false;
 
         public override dynamic Context
         {
@@ -74,7 +76,17 @@ namespace ChoETL
             _textReader = textReader;
         }
 
-        public ChoFixedLengthReader(Stream inStream, ChoFixedLengthRecordConfiguration configuration = null)
+		internal ChoFixedLengthReader(IEnumerable<string> lines, ChoFixedLengthRecordConfiguration configuration = null)
+		{
+			ChoGuard.ArgumentNotNull(lines, "Lines");
+
+			Configuration = configuration;
+			Init();
+
+			_lines = lines;
+		}
+
+		public ChoFixedLengthReader(Stream inStream, ChoFixedLengthRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNull(inStream, "Stream");
 
@@ -176,7 +188,15 @@ namespace ChoETL
             }
         }
 
-        public static ChoFixedLengthReader<T> LoadText(string inputText, Encoding encoding = null, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+		public static ChoFixedLengthReader<T> LoadLines(IEnumerable<string> inputLines, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+		{
+			var r = new ChoFixedLengthReader<T>(inputLines, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
+			r._closeStreamOnDispose = true;
+
+			return r;
+		}
+
+		public static ChoFixedLengthReader<T> LoadText(string inputText, Encoding encoding = null, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
             var r = new ChoFixedLengthReader<T>(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
             r._closeStreamOnDispose = true;
@@ -230,8 +250,8 @@ namespace ChoETL
             rr.TraceSwitch = TraceSwitch;
             rr.RowsLoaded += NotifyRowsLoaded;
             rr.MembersDiscovered += MembersDiscovered;
-            var e = rr.AsEnumerable(_textReader).GetEnumerator();
-            return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
+			var e = _lines != null ? rr.AsEnumerable(_lines).GetEnumerator() : rr.AsEnumerable(_textReader).GetEnumerator();
+			return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -246,14 +266,15 @@ namespace ChoETL
             rr.TraceSwitch = TraceSwitch;
             rr.RowsLoaded += NotifyRowsLoaded;
             rr.MembersDiscovered += MembersDiscovered;
-            var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_textReader), rr);
-            return dr;
+			var dr = new ChoEnumerableDataReader(_lines != null ? rr.AsEnumerable(_lines) : rr.AsEnumerable(_textReader), rr);
+			return dr;
         }
 
         public DataTable AsDataTable(string tableName = null)
         {
             DataTable dt = tableName.IsNullOrWhiteSpace() ? new DataTable() : new DataTable(tableName);
-            dt.Load(AsDataReader());
+			dt.Locale = Configuration.Culture;
+			dt.Load(AsDataReader());
             return dt;
         }
 
@@ -315,8 +336,19 @@ namespace ChoETL
             emptyLineFound(this, ea);
             return ea.Continue;
         }
-        
-        public override bool TryValidate(object target, ICollection<ValidationResult> validationResults)
+
+		public string RaiseSanitizeLine(long lineNo, string line)
+		{
+			EventHandler<ChoSanitizeLineEventArgs> sanitizeLine = SanitizeLine;
+			if (sanitizeLine == null)
+				return line;
+
+			var ea = new ChoSanitizeLineEventArgs(lineNo, line);
+			sanitizeLine(this, ea);
+			return ea.Line;
+		}
+
+		public override bool TryValidate(object target, ICollection<ValidationResult> validationResults)
         {
             ChoObjectValidationMode prevObjValidationMode = Configuration.ObjectValidationMode;
 
