@@ -83,9 +83,14 @@ namespace ChoETL
             Dispose();
         }
 
-        public void Dispose()
-        {
-            if (_isDisposed)
+		public void Dispose()
+		{
+			Dispose(false);
+		}
+
+		protected virtual void Dispose(bool finalize)
+		{
+			if (_isDisposed)
                 return;
 
             _isDisposed = true;
@@ -94,9 +99,12 @@ namespace ChoETL
                 if (_textWriter != null)
                     _textWriter.Dispose();
             }
-        }
 
-        private void Init()
+			if (!finalize)
+				GC.SuppressFinalize(this);
+		}
+
+		private void Init()
         {
             if (Configuration == null)
                 Configuration = new ChoManifoldRecordConfiguration();
@@ -208,7 +216,7 @@ namespace ChoETL
 
 		~ChoManifoldWriter()
 		{
-			Dispose();
+			Dispose(true);
 		}
 	}
 }

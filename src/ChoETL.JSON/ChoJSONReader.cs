@@ -179,7 +179,12 @@ namespace ChoETL
 
 		public void Dispose()
 		{
-            if (_isDisposed)
+			Dispose(false);
+		}
+
+		protected virtual void Dispose(bool finalize)
+		{
+			if (_isDisposed)
                 return;
 
             _isDisposed = true;
@@ -195,6 +200,9 @@ namespace ChoETL
 				System.Threading.Thread.CurrentThread.CurrentCulture = _prevCultureInfo;
 
 			_closeStreamOnDispose = false;
+
+			if (!finalize)
+				GC.SuppressFinalize(this);
 		}
 
 		private void Init()
@@ -607,7 +615,7 @@ namespace ChoETL
 
 		~ChoJSONReader()
 		{
-			Dispose();
+			Dispose(true);
 		}
 	}
 

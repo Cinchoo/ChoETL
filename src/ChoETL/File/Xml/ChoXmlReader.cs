@@ -209,9 +209,14 @@ namespace ChoETL
                 return default(T);
         }
 
-        public void Dispose()
-        {
-            if (_isDisposed)
+		public void Dispose()
+		{
+			Dispose(false);
+		}
+
+		protected virtual void Dispose(bool finalize)
+		{
+			if (_isDisposed)
                 return;
 
             _isDisposed = true;
@@ -227,9 +232,12 @@ namespace ChoETL
                 System.Threading.Thread.CurrentThread.CurrentCulture = _prevCultureInfo;
 
             _closeStreamOnDispose = false;
-        }
 
-        private void Init()
+			if (!finalize)
+				GC.SuppressFinalize(this);
+		}
+
+		private void Init()
         {
             _enumerator = new Lazy<IEnumerator<T>>(() => GetEnumerator());
             if (Configuration == null)
@@ -748,7 +756,7 @@ namespace ChoETL
 
 		~ChoXmlReader()
 		{
-			Dispose();
+			Dispose(true);
 		}
 	}
 

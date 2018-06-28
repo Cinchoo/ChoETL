@@ -154,6 +154,11 @@ namespace ChoETL
 
 		public void Dispose()
 		{
+			Dispose(false);
+		}
+
+		protected virtual void Dispose(bool finalize)
+		{
             if (_isDisposed)
                 return;
 
@@ -171,6 +176,9 @@ namespace ChoETL
 				System.Threading.Thread.CurrentThread.CurrentCulture = _prevCultureInfo;
 
 			_closeStreamOnDispose = false;
+
+			if (!finalize)
+				GC.SuppressFinalize(this);
 		}
 
 		private void Init()
@@ -718,7 +726,7 @@ namespace ChoETL
 
 		~ChoCSVReader()
 		{
-			Dispose();
+			Dispose(true);
 		}
     }
 

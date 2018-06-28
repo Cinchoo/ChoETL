@@ -87,7 +87,12 @@ namespace ChoETL
             Dispose();
         }
 
-        public void Dispose()
+		public void Dispose()
+		{
+			Dispose(false);
+		}
+
+		protected virtual void Dispose(bool finalize)
         {
             if (_isDisposed)
                 return;
@@ -98,6 +103,9 @@ namespace ChoETL
                 if (_textWriter != null)
                     _textWriter.Dispose();
             }
+
+			if (!finalize)
+				GC.SuppressFinalize(this);
         }
 
         private void Init()
@@ -515,7 +523,7 @@ namespace ChoETL
 
         ~ChoCSVWriter()
         {
-            Dispose();
+            Dispose(true);
         }
 
     }

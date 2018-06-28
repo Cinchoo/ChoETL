@@ -84,9 +84,14 @@ namespace ChoETL
             _closeStreamOnDispose = true;
         }
 
-        public void Dispose()
-        {
-            if (_isDisposed)
+		public void Dispose()
+		{
+			Dispose(false);
+		}
+
+		protected virtual void Dispose(bool finalize)
+		{
+			if (_isDisposed)
                 return;
 
             _isDisposed = true;
@@ -97,8 +102,11 @@ namespace ChoETL
                 if (_textWriter != null)
                     _textWriter.Dispose();
             }
-        }
-        public void Close()
+
+			if (!finalize)
+				GC.SuppressFinalize(this);
+		}
+		public void Close()
         {
             Dispose();
         }
@@ -602,7 +610,7 @@ namespace ChoETL
 
         ~ChoXmlWriter()
         {
-            Dispose();
+            Dispose(true);
         }
     }
 
