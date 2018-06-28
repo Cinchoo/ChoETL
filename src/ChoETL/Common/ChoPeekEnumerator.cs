@@ -14,7 +14,8 @@ namespace ChoETL
         private T _peek;
         private bool _didPeek;
         private Func<T, bool?> _filterFunc = (T) => false;
-        private T _current;
+        private Func<T, Tuple<bool?, T>> _filterFuncEx = (T) => new Tuple<bool?, T>(false, T);
+		private T _current;
 		private bool _firstItem = true;
 
 		public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
@@ -25,12 +26,23 @@ namespace ChoETL
             _enumerable = enumerable;
             if (filterFunc != null)
                 _filterFunc = filterFunc;
+			_filterFuncEx = null;
 
-            Reset();
+			Reset();
         }
+		public ChoPeekEnumerator(IEnumerable<T> enumerable, Func<T, Tuple<bool?, T>> filterFuncEx = null)
+		{
+			ChoGuard.ArgumentNotNull(enumerable, "enumerable");
+			_enumerable = enumerable;
+			if (_filterFuncEx != null)
+				_filterFuncEx = filterFuncEx;
+			_filterFunc = null;
 
-        #region IEnumerator implementation
-        public virtual bool MoveNext()
+			Reset();
+		}
+
+		#region IEnumerator implementation
+		public virtual bool MoveNext()
         {
             return _didPeek ? !(_didPeek = false) : MoveToNext();
         }
@@ -86,23 +98,40 @@ namespace ChoETL
         private bool MoveToNext()
         {
             bool ret = false;
-            bool? filterRet = null;
             _current = default(T);
             while (ret = _enumerator.MoveNext())
             {
-                if (_filterFunc != null)
-                    filterRet = _filterFunc(_enumerator.Current);
+				if (_filterFuncEx != null)
+				{
+					Tuple<bool?, T> filterRet = null;
+					filterRet = _filterFuncEx(_enumerator.Current);
+					if (filterRet == null || filterRet.Item1 == null)
+					{
+						_current = default(T);
+						return false;
+					}
 
-                if (filterRet == null)
-                {
-                    _current = default(T);
-                    return false;
-                }
+					if (filterRet.Item1.Value)
+						continue;
 
-                if (filterRet.Value)
-                    continue;
+					_current = filterRet.Item2;
+				}
+				else if (_filterFunc != null)
+				{
+					bool? filterRet = null;
+					filterRet = _filterFunc(_enumerator.Current);
+					if (filterRet == null)
+					{
+						_current = default(T);
+						return false;
+					}
 
-                _current = _enumerator.Current;
+					if (filterRet.Value)
+						continue;
+
+					_current = _enumerator.Current;
+				}
+
 				if (_current != null && _firstItem)
 				{
 					_firstItem = false;
