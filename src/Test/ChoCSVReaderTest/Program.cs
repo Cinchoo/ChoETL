@@ -1062,7 +1062,10 @@ a,0,1,2-Data";
 				5, Raj, DC";
 
 			StringBuilder sb = new StringBuilder();
-			using (var p = ChoCSVReader.LoadText(csv).WithFirstLineHeader())
+			using (var p = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
+				.WithField("Id")
+				.WithField("Name")
+				)
 			{
 				using (var w = new ChoXmlWriter(sb)
 					.Configure(c => c.RootName = "Emps")
@@ -1288,7 +1291,7 @@ a,0,1,2-Data";
 
 		static void Main(string[] args)
         {
-			Sample61();
+			CSV2XmlTest();
             return;
 
 			CSV2XmlTest();

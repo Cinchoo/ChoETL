@@ -330,7 +330,7 @@ namespace ChoETL
                     else
                         pd = ChoTypeDescriptor.GetProperty(typeof(T), fn);
 
-                    var nfc = new ChoXmlRecordFieldConfiguration(fnTrim, $"//{fnTrim}");
+                    var nfc = new ChoXmlRecordFieldConfiguration(fnTrim, $"/{fnTrim}");
                     nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
                     nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
 
@@ -367,7 +367,7 @@ namespace ChoETL
             object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string fullyQualifiedMemberName = null, string formatText = null)
         {
             string fnTrim = name.NTrim();
-            string xPath = $"//{fnTrim}";
+            string xPath = $"/{fnTrim}";
             return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, false, false, fieldName, valueConverter, isNullable, defaultValue, fallbackValue, 
                 encodeValue, fullyQualifiedMemberName, formatText);
         }
@@ -395,7 +395,7 @@ namespace ChoETL
             object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string fullyQualifiedMemberName = null, string formatText = null)
         {
             string fnTrim = name.NTrim();
-            string xPath = $"//@{fnTrim}";
+            string xPath = $"/@{fnTrim}";
             return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, true, false, fieldName, valueConverter, isNullable, defaultValue, fallbackValue, 
                 encodeValue, fullyQualifiedMemberName, formatText);
         }
@@ -436,7 +436,7 @@ namespace ChoETL
                 string fnTrim = name.NTrim();
                 ChoXmlRecordFieldConfiguration fc = null;
                 PropertyDescriptor pd = null;
-                xPath = xPath.IsNullOrWhiteSpace() ? $"//{fnTrim}" : xPath;
+                xPath = xPath.IsNullOrWhiteSpace() ? $"/{fnTrim}" : xPath;
 
                 if (Configuration.XmlRecordFieldConfigurations.Any(o => o.Name == fnTrim))
                 {

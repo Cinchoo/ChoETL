@@ -84,8 +84,44 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			NSTest();
+			Sample20();
         }
+
+		public class Naptan
+		{
+			[ChoXmlNodeRecordField(XPath = "/z:AtcoCode")]
+			public string AtcoCode { get; set; }
+			[ChoXmlNodeRecordField(XPath = "/z:NaptanCode")]
+			public string NaptanCode { get; set; }
+			[ChoXmlNodeRecordField(XPath = "/z:Place/z:Location/z:Translation/z:Longitude")]
+			public double Latitude { get; set; }
+			[ChoXmlNodeRecordField(XPath = "/z:Place/z:Location/z:Translation/z:Longitude")]
+			public double Longitude { get; set; }
+			[ChoXmlNodeRecordField(XPath = "/z:StopClassification/z:OnStreet/z:Bus/z:TimingStatus")]
+			public string TimmingStatus { get; set; }
+			[ChoXmlNodeRecordField(XPath = "/z:StopClassification/z:OnStreet/z:Bus/z:BusStopType")]
+			public string BusStopType { get; set; }
+			[ChoXmlNodeRecordField(XPath = "/z:Descriptor/z:CommonName")]
+			public string CommonName { get; set; }
+			[ChoXmlNodeRecordField(XPath = "/z:Descriptor/z:Landmark")]
+			public string Landmark { get; set; }
+			[ChoXmlNodeRecordField(XPath = "/z:Descriptor/z:Street")]
+			public string Street { get; set; }
+			[ChoXmlNodeRecordField(XPath = "/z:Descriptor/z:Indicator")]
+			public string Indicator { get; set; }
+		}
+
+		static void Sample20()
+		{
+			using (var p = new ChoXmlReader<Naptan>("sample20.xml")
+				.WithXPath("//NaPTAN/StopPoints/StopPoint")
+				.WithXmlNamespace("z", "http://www.naptan.org.uk/")
+				)
+			{
+				foreach (var rec in p)
+					Console.WriteLine(rec.Dump());
+			}
+		}
 
 		static void NSTest()
 		{
@@ -811,7 +847,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
             }
         }
 
-        static void Sample20()
+        static void Sample20Test()
         {
             string xml = @"<GetItemRequest xmlns:xsi=""http://www.w3.org/2001/XMLSchema"">
     <ApplicationCrediential>

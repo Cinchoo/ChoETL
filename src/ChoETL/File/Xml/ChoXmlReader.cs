@@ -547,7 +547,7 @@ namespace ChoETL
 					else
 						pd = ChoTypeDescriptor.GetProperty(typeof(T), fn);
 
-					var nfc = new ChoXmlRecordFieldConfiguration(fnTrim, $"//{fnTrim}");
+					var nfc = new ChoXmlRecordFieldConfiguration(fnTrim, $"/{fnTrim}");
 					nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
 					nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
 					if (pd != null)
@@ -594,7 +594,7 @@ namespace ChoETL
             object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string fullyQualifiedMemberName = null, string formatText = null)
         {
             string fnTrim = name.NTrim();
-            string xPath = $"//{fnTrim}";
+            string xPath = $"/{fnTrim}|/x:{fnTrim}";
             return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, false, fieldName, false, valueConverter, itemConverter, defaultValue, 
 				fallbackValue, encodeValue, formatText);
         }
@@ -630,7 +630,7 @@ namespace ChoETL
             object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string fullyQualifiedMemberName = null, string formatText = null)
         {
             string fnTrim = name.NTrim();
-            string xPath = $"//@{fnTrim}";
+            string xPath = $"/@{fnTrim}|/@x:{fnTrim}";
             return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, true, fieldName, false, valueConverter, itemConverter, defaultValue, fallbackValue, encodeValue, formatText);
         }
 
