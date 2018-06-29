@@ -594,7 +594,7 @@ namespace ChoETL
             object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string fullyQualifiedMemberName = null, string formatText = null)
         {
             string fnTrim = name.NTrim();
-            string xPath = $"/{fnTrim}|/x:{fnTrim}";
+            string xPath = $"/{fnTrim}";
             return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, false, fieldName, false, valueConverter, itemConverter, defaultValue, 
 				fallbackValue, encodeValue, formatText);
         }
@@ -630,7 +630,7 @@ namespace ChoETL
             object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string fullyQualifiedMemberName = null, string formatText = null)
         {
             string fnTrim = name.NTrim();
-            string xPath = $"/@{fnTrim}|/@x:{fnTrim}";
+            string xPath = $"/@{fnTrim}";
             return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, true, fieldName, false, valueConverter, itemConverter, defaultValue, fallbackValue, encodeValue, formatText);
         }
 

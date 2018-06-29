@@ -84,8 +84,20 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			Sample20();
+			Sample21Test();
         }
+
+		static void Sample21Test()
+		{
+			using (var p = new ChoXmlReader("sample21.xml")
+				.WithField("Key")
+				.WithField("Values", xPath: "/Values/string")
+				)
+			{
+				foreach (var rec in p)
+					Console.WriteLine(rec.Dump());
+			}
+		}
 
 		public class Naptan
 		{
