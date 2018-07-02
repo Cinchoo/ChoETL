@@ -383,54 +383,54 @@ namespace ChoJSONReaderTest
             }
         }
 
-		public class Error
-		{
-			//[ChoJSONRecordField()]
-			public string Status { get; set; }
-			//[ChoJSONRecordField()]
-			public List<ErrorMessage> ErrorMessages { get; set; }
-		}
+        public class Error
+        {
+            //[ChoJSONRecordField()]
+            public string Status { get; set; }
+            //[ChoJSONRecordField()]
+            public List<ErrorMessage> ErrorMessages { get; set; }
+        }
 
-		public class ErrorMessage : IChoKeyValueType
-		{
-			public int ErrorCode { get; set; }
-			public string ErrorMsg { get; set; }
-			[ChoIgnoreMember]
-			public object Key
-			{
-				get { throw new NotImplementedException(); }
-				set { ErrorCode = value.CastTo<int>(); }
-			}
-			[ChoIgnoreMember]
-			public object Value { get { throw new NotImplementedException(); } set { ErrorMsg = (string)value; } }
-		}
+        public class ErrorMessage : IChoKeyValueType
+        {
+            public int ErrorCode { get; set; }
+            public string ErrorMsg { get; set; }
+            [ChoIgnoreMember]
+            public object Key
+            {
+                get { throw new NotImplementedException(); }
+                set { ErrorCode = value.CastTo<int>(); }
+            }
+            [ChoIgnoreMember]
+            public object Value { get { throw new NotImplementedException(); } set { ErrorMsg = (string)value; } }
+        }
 
-		private static void GetKeyTest()
-		{
-			string json = @"{
-			   ""status"":""Error"",
-			   ""errorMessages"":{
-					""1001"":""Schema validation Error"",
-					""1002"":""Schema validation Error""
-			   }
-			}";
+        private static void GetKeyTest()
+        {
+            string json = @"{
+               ""status"":""Error"",
+               ""errorMessages"":{
+                    ""1001"":""Schema validation Error"",
+                    ""1002"":""Schema validation Error""
+               }
+            }";
 
-			using (var p = new ChoJSONReader<Error>(new StringReader(json))
-				//.WithField("Status")
-				//.WithField("ErrorMessages")
-				)
-			{
-				foreach (var rec in p)
-					Console.WriteLine(rec.Dump());
-			}
-		}
+            using (var p = new ChoJSONReader<Error>(new StringReader(json))
+                //.WithField("Status")
+                //.WithField("ErrorMessages")
+                )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
 
-		static void Sample18()
-		{
-			using (var csv = new ChoCSVWriter("dev.csv").WithFirstLineHeader())
-			{
-				using (var json = new ChoJSONReader("sample18.json"))
-				{
+        static void Sample18()
+        {
+            using (var csv = new ChoCSVWriter("dev.csv").WithFirstLineHeader())
+            {
+                using (var json = new ChoJSONReader("sample18.json"))
+                {
                     //var result = json.Select(a => a.data.sensors).ToArray();
                     csv.Write(json.Select(i => new
                     {
@@ -628,67 +628,67 @@ namespace ChoJSONReaderTest
 
                         x = i.data.ContainsKey("Date") ? i.Date : null
 
-					}));
+                    }));
 
-				}
-			}
-		}
+                }
+            }
+        }
 
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			Sample100();
-		}
+            Sample100();
+        }
 
-		public class AttendanceStatistics
-		{
-			[JsonProperty(PropertyName = "registrantCount")]
-			public int RegistrantCount { get; set; }
+        public class AttendanceStatistics
+        {
+            [JsonProperty(PropertyName = "registrantCount")]
+            public int RegistrantCount { get; set; }
 
-			[JsonProperty(PropertyName = "percentageAttendance")]
-			public float PercentageAttendance { get; set; }
+            [JsonProperty(PropertyName = "percentageAttendance")]
+            public float PercentageAttendance { get; set; }
 
-			[JsonProperty(PropertyName = "averageInterestRating")]
-			public float AverageInterestRating { get; set; }
+            [JsonProperty(PropertyName = "averageInterestRating")]
+            public float AverageInterestRating { get; set; }
 
-			[JsonProperty(PropertyName = "averageAttentiveness")]
-			public float AverageAttentiveness { get; set; }
+            [JsonProperty(PropertyName = "averageAttentiveness")]
+            public float AverageAttentiveness { get; set; }
 
-			[JsonProperty(PropertyName = "averageAttendanceTimeSeconds")]
-			public float AverageAttendanceTimeSeconds { get; set; }
-		}
+            [JsonProperty(PropertyName = "averageAttendanceTimeSeconds")]
+            public float AverageAttendanceTimeSeconds { get; set; }
+        }
 
-		public class PollsAndSurveysStatistics
-		{
-			[JsonProperty(PropertyName = "pollCount")]
-			public int PollCount { get; set; }
+        public class PollsAndSurveysStatistics
+        {
+            [JsonProperty(PropertyName = "pollCount")]
+            public int PollCount { get; set; }
 
-			[JsonProperty(PropertyName = "surveyCount")]
-			public float SurveyCount { get; set; }
+            [JsonProperty(PropertyName = "surveyCount")]
+            public float SurveyCount { get; set; }
 
-			[JsonProperty(PropertyName = "questionsAsked")]
-			public int QuestionsAsked { get; set; }
+            [JsonProperty(PropertyName = "questionsAsked")]
+            public int QuestionsAsked { get; set; }
 
-			[JsonProperty(PropertyName = "percentagePollsCompleted")]
-			public float PercentagePollsCompleted { get; set; }
+            [JsonProperty(PropertyName = "percentagePollsCompleted")]
+            public float PercentagePollsCompleted { get; set; }
 
-			[JsonProperty(PropertyName = "percentageSurveysCompleted")]
-			public float PercentageSurveysCompleted { get; set; }
-		}
+            [JsonProperty(PropertyName = "percentageSurveysCompleted")]
+            public float PercentageSurveysCompleted { get; set; }
+        }
 
-		public class SessionPerformanceStats
-		{
-			[JsonProperty(PropertyName = "attendance")]
-			public AttendanceStatistics Attendance { get; set; }
+        public class SessionPerformanceStats
+        {
+            [JsonProperty(PropertyName = "attendance")]
+            public AttendanceStatistics Attendance { get; set; }
 
-			[JsonProperty(PropertyName = "pollsAndSurveys")]
-			public PollsAndSurveysStatistics PollsAndSurveys { get; set; }
-		}
+            [JsonProperty(PropertyName = "pollsAndSurveys")]
+            public PollsAndSurveysStatistics PollsAndSurveys { get; set; }
+        }
 
-		static void Sample100()
-		{
-			string json = @"{
+        static void Sample100()
+        {
+            string json = @"{
     ""5234592"":{
     ""pollsAndSurveys"":{
         ""questionsAsked"":1,
@@ -718,45 +718,45 @@ namespace ChoJSONReaderTest
         ""percentageAttendance"":100}
     }
 }";
-			using (var p = ChoJSONReader<SessionPerformanceStats>.LoadText(json)
-				.WithJSONPath("$.*")
-				)
-			{
-				foreach (var rec in p)
-					Console.WriteLine(rec.Dump());
-			}
-		}
+            using (var p = ChoJSONReader<SessionPerformanceStats>.LoadText(json)
+                .WithJSONPath("$.*")
+                )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
 
-		public class Attributes
-		{
-			public int id { get; set; }
-			public string name { get; set; }
-			public string list_type { get; set; }
-			public List<string> attribute_list { get; set; }
-		}
-		static void ListOfStringTest()
-		{
-			string json = @"{
+        public class Attributes
+        {
+            public int id { get; set; }
+            public string name { get; set; }
+            public string list_type { get; set; }
+            public List<string> attribute_list { get; set; }
+        }
+        static void ListOfStringTest()
+        {
+            string json = @"{
     ""id"":1047,
     ""name"":""City"",
     ""attribute_list"":[""RWC"",""HMO"",""SJ"",""Ensenada""],
     ""list_type"":1
 }";
 
-			using (var p = ChoJSONReader.LoadText(json))
-			{
-				foreach (var rec in p)
-					Console.WriteLine(rec.Dump());
-			}
-		}
+            using (var p = ChoJSONReader.LoadText(json))
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
 
-		static void ArrayToDataTableTest()
-		{
-			string json = @"[
+        static void ArrayToDataTableTest()
+        {
+            string json = @"[
 [
     ""Test123"",
 
-	""TestHub"",
+    ""TestHub"",
     ""TestVersion"",
     ""TestMKT"",
     ""TestCAP"",
@@ -848,19 +848,19 @@ namespace ChoJSONReaderTest
     ""0""
 ]
 ]";
-			using (var p = ChoJSONReader.LoadText(json))
-			{
-				//var dt = p.Select(r => ((object[])r.Value).ToDictionary()).AsDataTable();
-				DataTable dt = new DataTable();
-				dt.Columns.Add("Column_1");
-				dt.Columns.Add("C2");
+            using (var p = ChoJSONReader.LoadText(json))
+            {
+                //var dt = p.Select(r => ((object[])r.Value).ToDictionary()).AsDataTable();
+                DataTable dt = new DataTable();
+                dt.Columns.Add("Column_1");
+                dt.Columns.Add("C2");
 
-				p.Select(r => ((object[])r.Value).ToDictionary()).Fill(dt);
-			}
-		}
-		static void DataTableTest()
-		{
-			string json = @"{
+                p.Select(r => ((object[])r.Value).ToDictionary()).Fill(dt);
+            }
+        }
+        static void DataTableTest()
+        {
+            string json = @"{
     ""data"": [
         {
             ""Val1"": ""1234"",
@@ -905,27 +905,27 @@ namespace ChoJSONReaderTest
     }
 }";
 
-			using (var r = ChoJSONReader.LoadText(json)
-				.WithJSONPath("$..data[*]")
-				//.WithField("Val1")
-				//.WithField("Val2")
-				//.WithField("Val3")
-				)
-			{
-				//foreach (var rec in r)
-				//	Console.WriteLine(rec.Flatten().Dump());
-				var dt = r.ToArray().Select(i => i.Flatten()).AsDataTable();
-			}
-		}
+            using (var r = ChoJSONReader.LoadText(json)
+                .WithJSONPath("$..data[*]")
+                //.WithField("Val1")
+                //.WithField("Val2")
+                //.WithField("Val3")
+                )
+            {
+                //foreach (var rec in r)
+                //	Console.WriteLine(rec.Flatten().Dump());
+                var dt = r.ToArray().Select(i => i.Flatten()).AsDataTable();
+            }
+        }
 
-		public class Alert
-		{
-			public string alert { get; set; }
-			public string riskcode { get; set; }
-		}
-		static void SelectiveFieldsTest()
-		{
-			string json = @"{
+        public class Alert
+        {
+            public string alert { get; set; }
+            public string riskcode { get; set; }
+        }
+        static void SelectiveFieldsTest()
+        {
+            string json = @"{
     ""@version"": ""2.7.0"",
     ""@generated"": ""Wed, 30 May 2018 17:23:14"",
     ""site"": {
@@ -971,70 +971,70 @@ namespace ChoJSONReaderTest
         ]
     }
 }";
-			using (var p = ChoJSONReader<Alert>.LoadText(json).WithJSONPath("$..alerts[*]"))
-			{
-				foreach (var rec in p)
-					Console.WriteLine(rec.Dump());
-			}
-		}
-		static void NSTest()
-		{
-			string json = @"{""ns3:Test_Service"" : {""@xmlns:ns3"":""http://www.CCKS.org/XRT/Form"",""ns3:fname"":""mark"",""ns3:lname"":""joye"",""ns3:CarCompany"":""saab"",""ns3:CarNumber"":""9741"",""ns3:IsInsured"":""true"",""ns3:safty"":[""ABS"",""AirBags"",""childdoorlock""],""ns3:CarDescription"":""test Car"",""ns3:collections"":[{""ns3:XYZ"":""1"",""ns3:PQR"":""11"",""ns3:contactdetails"":[{""ns3:contname"":""DOM"",""ns3:contnumber"":""8787""},{""ns3:contname"":""COM"",""ns3:contnumber"":""4564"",""ns3:addtionaldetails"":[{""ns3:description"":""54657667""}]},{""ns3:contname"":""gf"",""ns3:contnumber"":""123"",""ns3:addtionaldetails"":[{""ns3:description"":""123""}]}]}]}}";
-			////string json = @"{""Test_Service"" : {""fname"":""mark"",""lname"":""joye"",""CarCompany"":""saab"",""CarNumber"":""9741"",""IsInsured"":""true"",""safty"":[""ABS"",""AirBags"",""childdoorlock""],""CarDescription"":""test Car"",""collections"":[{""XYZ"":""1"",""PQR"":""11"",""contactdetails"":[{""contname"":""DOM"",""contnumber"":""8787""},{""contname"":""COM"",""contnumber"":""4564"",""addtionaldetails"":[{""description"":""54657667""}]},{""contname"":""gf"",""contnumber"":""123"",""addtionaldetails"":[{""description"":""123""}]}]}]}}";
-
-			StringBuilder sb = new StringBuilder();
-			using (var p = ChoJSONReader.LoadText(json).Configure(c => c.SupportMultipleContent = true))
-			{
-				//Console.WriteLine(p.First().Dump());
-				//return;
-				using (var w = new ChoXmlWriter(sb)
-					.Configure(c => c.IgnoreRootName = true)
-					.Configure(c => c.IgnoreNodeName = true)
-					)
-				{
-					w.Write(p);
-				}
-			}
-
-			Console.WriteLine(sb.ToString());
-		}
-
-
-		public class BookingInfo : IChoNotifyRecordFieldRead
-		{
-			[ChoJSONRecordField(JSONPath = "$.travel_class")]
-			public string TravelClass { get; set; }
-			[ChoJSONRecordField(JSONPath = "$.booking_code")]
-			public string BookingCode { get; set; }
-
-			public bool AfterRecordFieldLoad(object target, long index, string propName, object value)
-			{
-				throw new NotImplementedException();
-			}
-
-			public bool BeforeRecordFieldLoad(object target, long index, string propName, ref object value)
-			{
-				throw new NotImplementedException();
-			}
-
-			public bool RecordFieldLoadError(object target, long index, string propName, object value, Exception ex)
-			{
-				throw new NotImplementedException();
-			}
-		}
-
-		public class FlightInfo : IChoNotifyRecordRead
+            using (var p = ChoJSONReader<Alert>.LoadText(json).WithJSONPath("$..alerts[*]"))
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+        static void NSTest()
         {
-			[ChoJSONRecordField(JSONPath = "$.departs_at")]
-			public DateTime DepartAt { get; set; }
-			[ChoJSONRecordField(JSONPath = "$.arrives_at")]
-			public DateTime ArriveAt { get; set; }
+            string json = @"{""ns3:Test_Service"" : {""@xmlns:ns3"":""http://www.CCKS.org/XRT/Form"",""ns3:fname"":""mark"",""ns3:lname"":""joye"",""ns3:CarCompany"":""saab"",""ns3:CarNumber"":""9741"",""ns3:IsInsured"":""true"",""ns3:safty"":[""ABS"",""AirBags"",""childdoorlock""],""ns3:CarDescription"":""test Car"",""ns3:collections"":[{""ns3:XYZ"":""1"",""ns3:PQR"":""11"",""ns3:contactdetails"":[{""ns3:contname"":""DOM"",""ns3:contnumber"":""8787""},{""ns3:contname"":""COM"",""ns3:contnumber"":""4564"",""ns3:addtionaldetails"":[{""ns3:description"":""54657667""}]},{""ns3:contname"":""gf"",""ns3:contnumber"":""123"",""ns3:addtionaldetails"":[{""ns3:description"":""123""}]}]}]}}";
+            ////string json = @"{""Test_Service"" : {""fname"":""mark"",""lname"":""joye"",""CarCompany"":""saab"",""CarNumber"":""9741"",""IsInsured"":""true"",""safty"":[""ABS"",""AirBags"",""childdoorlock""],""CarDescription"":""test Car"",""collections"":[{""XYZ"":""1"",""PQR"":""11"",""contactdetails"":[{""contname"":""DOM"",""contnumber"":""8787""},{""contname"":""COM"",""contnumber"":""4564"",""addtionaldetails"":[{""description"":""54657667""}]},{""contname"":""gf"",""contnumber"":""123"",""addtionaldetails"":[{""description"":""123""}]}]}]}}";
 
-			[ChoJSONRecordField(JSONPath = "$.origin.airport")]
-			public string Origin { get; set; }
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoJSONReader.LoadText(json).Configure(c => c.SupportMultipleContent = true))
+            {
+                //Console.WriteLine(p.First().Dump());
+                //return;
+                using (var w = new ChoXmlWriter(sb)
+                    .Configure(c => c.IgnoreRootName = true)
+                    .Configure(c => c.IgnoreNodeName = true)
+                    )
+                {
+                    w.Write(p);
+                }
+            }
 
-			[ChoJSONRecordField(JSONPath = "$.booking_info")]
-			public BookingInfo[] BookingInfo { get; set; }
+            Console.WriteLine(sb.ToString());
+        }
+
+
+        public class BookingInfo : IChoNotifyRecordFieldRead
+        {
+            [ChoJSONRecordField(JSONPath = "$.travel_class")]
+            public string TravelClass { get; set; }
+            [ChoJSONRecordField(JSONPath = "$.booking_code")]
+            public string BookingCode { get; set; }
+
+            public bool AfterRecordFieldLoad(object target, long index, string propName, object value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool BeforeRecordFieldLoad(object target, long index, string propName, ref object value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool RecordFieldLoadError(object target, long index, string propName, object value, Exception ex)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public class FlightInfo : IChoNotifyRecordRead
+        {
+            [ChoJSONRecordField(JSONPath = "$.departs_at")]
+            public DateTime DepartAt { get; set; }
+            [ChoJSONRecordField(JSONPath = "$.arrives_at")]
+            public DateTime ArriveAt { get; set; }
+
+            [ChoJSONRecordField(JSONPath = "$.origin.airport")]
+            public string Origin { get; set; }
+
+            [ChoJSONRecordField(JSONPath = "$.booking_info")]
+            public BookingInfo[] BookingInfo { get; set; }
 
             public bool BeforeRecordFieldLoad(object target, long index, string propName, ref object value)
             {
@@ -1087,9 +1087,9 @@ namespace ChoJSONReaderTest
             }
         }
 
-		static void BookingInfoTest()
-		{
-			string json = @"{
+        static void BookingInfoTest()
+        {
+            string json = @"{
   ""currency"": ""MYR"",
   ""results"": [
     {
@@ -1103,7 +1103,7 @@ namespace ChoJSONReaderTest
                 ""origin"": {
                   ""airport"": ""PEN""
 
-				},
+                },
                 ""destination"": {
                   ""airport"": ""KUL"",
                   ""terminal"": ""M""
@@ -1160,15 +1160,15 @@ namespace ChoJSONReaderTest
     }
   ]
 }";
-			var x = ChoJSONReader<FlightInfo>.LoadText(json).Configure(c => c.SupportMultipleContent = false)
-				.WithJSONPath("$.results[0].itineraries[0].outbound.flights")
-				.FirstOrDefault();
-			Console.WriteLine(x.Dump());
-		}
+            var x = ChoJSONReader<FlightInfo>.LoadText(json).Configure(c => c.SupportMultipleContent = false)
+                .WithJSONPath("$.results[0].itineraries[0].outbound.flights")
+                .FirstOrDefault();
+            Console.WriteLine(x.Dump());
+        }
 
-		static void JsonToString()
-		{
-			string json = @"[
+        static void JsonToString()
+        {
+            string json = @"[
     {
         ""eng_trans"": ""wide, outstretched,""
     },
@@ -1185,30 +1185,30 @@ namespace ChoJSONReaderTest
         ""eng_trans"": ""waste land the land which is not suitabie for cultivation.""
     }]";
 
-			Console.WriteLine(String.Join(" ", ChoJSONReader.LoadText(json).Select(r1 => r1.eng_trans)));
+            Console.WriteLine(String.Join(" ", ChoJSONReader.LoadText(json).Select(r1 => r1.eng_trans)));
 
-			//var x = ChoJSONReader.LoadText(json, null, new ChoJSONRecordConfiguration().Configure(c => c.JSONPath = "$.eng_trans")).Select(r => r.Value).ToArray();
-			//Console.WriteLine(x.Dump());
+            //var x = ChoJSONReader.LoadText(json, null, new ChoJSONRecordConfiguration().Configure(c => c.JSONPath = "$.eng_trans")).Select(r => r.Value).ToArray();
+            //Console.WriteLine(x.Dump());
 
-		}
+        }
 
-		static void Colors2DataTable()
-		{
-			using (var p = new ChoJSONReader("colors.json")
-				.WithJSONPath("$.colors")
-				//.WithField("color")
-				//.WithField("category")
-				)
-			{
-				var dt = p.AsDataTable();
-				//foreach (var rec in p)
-				//	Console.WriteLine(rec.Dump());
-			}
-		}
+        static void Colors2DataTable()
+        {
+            using (var p = new ChoJSONReader("colors.json")
+                .WithJSONPath("$.colors")
+                //.WithField("color")
+                //.WithField("category")
+                )
+            {
+                var dt = p.AsDataTable();
+                //foreach (var rec in p)
+                //	Console.WriteLine(rec.Dump());
+            }
+        }
 
-		static void Sample43()
-		{
-			string json = @"{
+        static void Sample43()
+        {
+            string json = @"{
     ""property1"": 1,
     ""property2"": 2,
     ""someArray"": [
@@ -1221,27 +1221,27 @@ namespace ChoJSONReaderTest
         }
     ]
 }";
-			using (var p = ChoJSONReader.LoadText(json)
-				.WithField("property1", jsonPath: "$.property1")
-				.WithField("property2", jsonPath: "$.property2")
-				.WithField("someArray", jsonPath: @"$.someArray[*][?(@.item2)]", isArray: true)
-			)
-			{
-				foreach (var rec in p)
-					Console.WriteLine(rec.Dump());
-			}
-		}
+            using (var p = ChoJSONReader.LoadText(json)
+                .WithField("property1", jsonPath: "$.property1")
+                .WithField("property2", jsonPath: "$.property2")
+                .WithField("someArray", jsonPath: @"$.someArray[*][?(@.item2)]", isArray: true)
+            )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
 
-		public partial class MyNode
-		{
-			public long Param1 { get; set; }
-			public string Param2 { get; set; }
-			public object Param3 { get; set; }
-		}
+        public partial class MyNode
+        {
+            public long Param1 { get; set; }
+            public string Param2 { get; set; }
+            public object Param3 { get; set; }
+        }
 
-		static void Sample42()
-		{
-			string json = @"{
+        static void Sample42()
+        {
+            string json = @"{
 ""myNodes"": [
     {
         ""param1"": 1,
@@ -1271,18 +1271,18 @@ namespace ChoJSONReaderTest
         }]
     }]
 }";
-			using (var p = ChoJSONReader<MyNode>.LoadText(json)
-				.WithJSONPath("$..myNodes")
-				)
-			{
-				Console.WriteLine(ChoJSONWriter.ToTextAll(p));
-			}
+            using (var p = ChoJSONReader<MyNode>.LoadText(json)
+                .WithJSONPath("$..myNodes")
+                )
+            {
+                Console.WriteLine(ChoJSONWriter.ToTextAll(p));
+            }
 
-		}
+        }
 
-		static void Sample41()
-		{
-			string json = @"[
+        static void Sample41()
+        {
+            string json = @"[
 [{""Key"":""entity_id"",""Value"":""1""},{""Key"":""CustomerName"",""Value"":""Test1""},{""Key"":""AccountNumber"",""Value"":""ACC17-001""},{""Key"":""CustomerType"",""Value"":""Direct Sale""}],
 [{""Key"":""entity_id"",""Value"":""2""},{""Key"":""CustomerName"",""Value"":""Test2""},{""Key"":""AccountNumber"",""Value"":""ACC17-002""},{""Key"":""CustomerType"",""Value"":""Direct Sale""}],
 [{""Key"":""entity_id"",""Value"":""3""},{""Key"":""CustomerName"",""Value"":""Test3""},{""Key"":""AccountNumber"",""Value"":""ACC17-003""},{""Key"":""CustomerType"",""Value"":""Direct Sale""}],
@@ -1291,109 +1291,109 @@ namespace ChoJSONReaderTest
 [{""Key"":""entity_id"",""Value"":""6""},{""Key"":""CustomerName"",""Value"":""Test6""},{""Key"":""AccountNumber"",""Value"":""ACC17-006""},{""Key"":""CustomerType"",""Value"":""Invoice""}]
 ]";
 
-			using (var p = ChoJSONReader.LoadText(json))
-			{
-				var result = p.Select(r1 => (dynamic[])r1.Value).Select(r2 =>
-					ChoDynamicObject.FromKeyValuePairs(r2.Select(kvp => new KeyValuePair<string, object>(kvp.Key.ToString(), kvp.Value)))
-				);
+            using (var p = ChoJSONReader.LoadText(json))
+            {
+                var result = p.Select(r1 => (dynamic[])r1.Value).Select(r2 =>
+                    ChoDynamicObject.FromKeyValuePairs(r2.Select(kvp => new KeyValuePair<string, object>(kvp.Key.ToString(), kvp.Value)))
+                );
 
-				Console.WriteLine(ChoJSONWriter.ToTextAll(result));
-			}
+                Console.WriteLine(ChoJSONWriter.ToTextAll(result));
+            }
 
-			//using (var p = ChoJSONReader.LoadText(json))
-			//{
-			//	var result = p.Select(r1 => (dynamic[])r1.Value).Select(r2 => 
-			//	{
-			//		ChoDynamicObject obj = new ChoDynamicObject();
-			//		foreach (dynamic r3 in r2)
-			//			obj.Add(r3.Key.ToString(), r3.Value);
-			//		return obj;
-			//	});
+            //using (var p = ChoJSONReader.LoadText(json))
+            //{
+            //	var result = p.Select(r1 => (dynamic[])r1.Value).Select(r2 => 
+            //	{
+            //		ChoDynamicObject obj = new ChoDynamicObject();
+            //		foreach (dynamic r3 in r2)
+            //			obj.Add(r3.Key.ToString(), r3.Value);
+            //		return obj;
+            //	});
 
-			//	Console.WriteLine(ChoJSONWriter.ToTextAll(result));
-			//}
-		}
+            //	Console.WriteLine(ChoJSONWriter.ToTextAll(result));
+            //}
+        }
 
-		static void Sample40()
-		{
-			string json = @"{
+        static void Sample40()
+        {
+            string json = @"{
     ""Excited"":[""https://github.com/vedantroy/image-test/raw/master/Happy/excited1.gif"",
-			""https://github.com/vedantroy/image-test/raw/master/Happy/excited2.gif"",
+            ""https://github.com/vedantroy/image-test/raw/master/Happy/excited2.gif"",
                 ""https://github.com/vedantroy/image-test/raw/master/Happy/excited3.gif""],
 
     ""Sad"":[""https://github.com/vedantroy/image-test/raw/master/Sad/sad1.gif"",
             ""https://github.com/vedantroy/image-test/raw/master/Sad/sad2.gif"",
             ""https://github.com/vedantroy/image-test/raw/master/Sad/sad3.gif"",
             ""https://github.com/vedantroy/image-test/raw/master/Sad/sad4.gif""]
-	}";
+    }";
 
-			StringBuilder sb = new StringBuilder();
-			using (var p = ChoJSONReader.LoadText(json)
-			)
-			{
-				var x = p.ToArray();
-				//Console.WriteLine(ChoJSONWriter<RootObject>.ToTextAll(p));
-			}
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoJSONReader.LoadText(json)
+            )
+            {
+                var x = p.ToArray();
+                //Console.WriteLine(ChoJSONWriter<RootObject>.ToTextAll(p));
+            }
 
-		}
+        }
 
-		public class RootObject
-		{
-			public string Id { get; set; }
-			public List<CustomField> Custom_fields { get; set; }
-		}
-		public class CustomField
-		{
-			public string Definition { get; set; }
-			public object Value { get; set; }
-		}
+        public class RootObject
+        {
+            public string Id { get; set; }
+            public List<CustomField> Custom_fields { get; set; }
+        }
+        public class CustomField
+        {
+            public string Definition { get; set; }
+            public object Value { get; set; }
+        }
 
-		static void Sample39()
-		{
-			string json = @"
-				{
-					""id"": ""12345"",
-					""custom_fields"": [
-						{
-						""definition"": ""field1"",
-						""value"": ""stringvalue""
+        static void Sample39()
+        {
+            string json = @"
+                {
+                    ""id"": ""12345"",
+                    ""custom_fields"": [
+                        {
+                        ""definition"": ""field1"",
+                        ""value"": ""stringvalue""
 
-						},      
-						{
-						""definition"": ""field2"",
-						""value"": [ ""arrayvalue1"", ""arrayvalue2"" ]
-				},
-						{
-						""definition"": ""field3"",
-						""value"": {
-							""type"": ""user"",
-							""id"": ""1245""
-						}
-						}
-					]
-				}";
+                        },      
+                        {
+                        ""definition"": ""field2"",
+                        ""value"": [ ""arrayvalue1"", ""arrayvalue2"" ]
+                },
+                        {
+                        ""definition"": ""field3"",
+                        ""value"": {
+                            ""type"": ""user"",
+                            ""id"": ""1245""
+                        }
+                        }
+                    ]
+                }";
 
 
-			StringBuilder sb = new StringBuilder();
-			//using (var p = ChoJSONReader.LoadText(json)
-			//	)
-			//{
-			//	var x = p.ToArray();
-			//}
-			//return;
+            StringBuilder sb = new StringBuilder();
+            //using (var p = ChoJSONReader.LoadText(json)
+            //	)
+            //{
+            //	var x = p.ToArray();
+            //}
+            //return;
 
-			using (var p = ChoJSONReader<RootObject>.LoadText(json)
-						.WithField(m => m.Custom_fields, itemConverter: v => v)
-			)
-			{
-				//var x = p.ToArray();
-				Console.WriteLine(ChoJSONWriter<RootObject>.ToTextAll(p));
-			}
-		}
+            using (var p = ChoJSONReader<RootObject>.LoadText(json)
+                        .WithField(m => m.Custom_fields, itemConverter: v => v)
+            )
+            {
+                //var x = p.ToArray();
+                Console.WriteLine(ChoJSONWriter<RootObject>.ToTextAll(p));
+            }
+        }
 
-		static void Sample38()
-		{
-			var testJson = @"{'entry1': {
+        static void Sample38()
+        {
+            var testJson = @"{'entry1': {
                        '49208118': [
                           {
                              'description': 'just a description'
@@ -1412,27 +1412,27 @@ namespace ChoJSONReaderTest
                        ]
                      }
                 }";
-		}
+        }
 
-		public class sp
-		{
-			public string mKey { get; set; }
-			public string productType { get; set; }
-			public string key { get; set; }
-		}
+        public class sp
+        {
+            public string mKey { get; set; }
+            public string productType { get; set; }
+            public string key { get; set; }
+        }
 
-		static void Sample37()
-		{
-			string json = @"{  
+        static void Sample37()
+        {
+            string json = @"{  
        ""success"":1,
-	   ""results"":[
+       ""results"":[
           {  
              ""Markets"":{  
                 ""924.136028459"":{  
                    ""productType"":""BOOK1"",
                    ""key"":""SB_MARKET:924.136028459""
 
-				},
+                },
                 ""924.136028500"":{  
                    ""productType"":""BOOK2"",
                    ""key"":""SB_MARKET:924.136028459""
@@ -1441,148 +1441,148 @@ namespace ChoJSONReaderTest
           }
        ]
     }
-			";
+            ";
 
-			foreach (var rec in ChoJSONReader.LoadText(json).WithJSONPath("$..Markets")
-				.Select(r => (IDictionary<string, object>)r).SelectMany(r1 => r1.Keys.Select(k => new { key = k, value = ((dynamic)((IDictionary<string, object>)r1)[k]) })
-				.Select(k1 => new sp { mKey = k1.key, key = k1.value.productType, productType = k1.value.productType })))
-				Console.WriteLine(rec.Dump());
-				//Console.WriteLine($"ProductType: {rec.productType}, Key: {rec.key}");
+            foreach (var rec in ChoJSONReader.LoadText(json).WithJSONPath("$..Markets")
+                .Select(r => (IDictionary<string, object>)r).SelectMany(r1 => r1.Keys.Select(k => new { key = k, value = ((dynamic)((IDictionary<string, object>)r1)[k]) })
+                .Select(k1 => new sp { mKey = k1.key, key = k1.value.productType, productType = k1.value.productType })))
+                Console.WriteLine(rec.Dump());
+                //Console.WriteLine($"ProductType: {rec.productType}, Key: {rec.key}");
 
-			//StringBuilder sb = new StringBuilder();
-			//using (var p = ChoJSONReader.LoadText(json)
-			//	.WithJSONPath("$..Markets.*")
-			//	)
-			//{
-			//	foreach (var rec in p)
-			//		Console.WriteLine(rec.Dump());
-			//}
-			//Console.WriteLine(sb.ToString());
-		}
+            //StringBuilder sb = new StringBuilder();
+            //using (var p = ChoJSONReader.LoadText(json)
+            //	.WithJSONPath("$..Markets.*")
+            //	)
+            //{
+            //	foreach (var rec in p)
+            //		Console.WriteLine(rec.Dump());
+            //}
+            //Console.WriteLine(sb.ToString());
+        }
 
-		static void Sample36()
-		{
-			string json = @"{
-			   ""paging"": {
+        static void Sample36()
+        {
+            string json = @"{
+               ""paging"": {
 
-				  ""limit"": 100,
-				  ""total"": 1394,
-				  ""next"": ""Mg==""
-			   },
-			   ""data"": [
-				  {
-					 ""mmsi"": 538006090,
-					 ""imo"": 9700665,
-					 ""last_known_position"": {
-						""timestamp"": ""2017-12-18T20:24:27+00:00"",
-						""geometry"": {
-						   ""type"": ""Point"",
-						   ""coordinates"": [
-							  60.87363,
-							  -13.02203
-						   ]
-				}
-			}
-				  },
-				  {
-					 ""mmsi"": 527555481,
-					 ""imo"": null,
-					 ""last_known_position"": {
-						""timestamp"": ""2017-12-18T20:24:27+00:00"",
-						""geometry"": {
-						   ""type"": ""Point"",
-						   ""coordinates"": [
-							  4.57883,
-							  3.76899
-						   ]
-						}
-					 }
-				  }
-			   ]
-			}
-			";
-			StringBuilder sb = new StringBuilder();
-			using (var p = ChoJSONReader.LoadText(json)
-				.WithJSONPath("$..data")
-				)
-			{
-				using (var w = new ChoXmlWriter(sb)
-					.Configure(c => c.RootName = "vessel")
-					.Configure(c => c.NodeName = "row")
-					//.Configure(c => c.NullValueHandling = ChoNullValueHandling.Ignore)
-					)
-				{
-					w.Write(p.Select(r => new { _mmsi = r.mmsi, _imo = r.imo == null ? "0" : r.imo, lat_ = r.last_known_position.geometry.coordinates[0], _lon = r.last_known_position.geometry.coordinates[1] }));
-				}
-			}
-			Console.WriteLine(sb.ToString());
+                  ""limit"": 100,
+                  ""total"": 1394,
+                  ""next"": ""Mg==""
+               },
+               ""data"": [
+                  {
+                     ""mmsi"": 538006090,
+                     ""imo"": 9700665,
+                     ""last_known_position"": {
+                        ""timestamp"": ""2017-12-18T20:24:27+00:00"",
+                        ""geometry"": {
+                           ""type"": ""Point"",
+                           ""coordinates"": [
+                              60.87363,
+                              -13.02203
+                           ]
+                }
+            }
+                  },
+                  {
+                     ""mmsi"": 527555481,
+                     ""imo"": null,
+                     ""last_known_position"": {
+                        ""timestamp"": ""2017-12-18T20:24:27+00:00"",
+                        ""geometry"": {
+                           ""type"": ""Point"",
+                           ""coordinates"": [
+                              4.57883,
+                              3.76899
+                           ]
+                        }
+                     }
+                  }
+               ]
+            }
+            ";
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoJSONReader.LoadText(json)
+                .WithJSONPath("$..data")
+                )
+            {
+                using (var w = new ChoXmlWriter(sb)
+                    .Configure(c => c.RootName = "vessel")
+                    .Configure(c => c.NodeName = "row")
+                    //.Configure(c => c.NullValueHandling = ChoNullValueHandling.Ignore)
+                    )
+                {
+                    w.Write(p.Select(r => new { _mmsi = r.mmsi, _imo = r.imo == null ? "0" : r.imo, lat_ = r.last_known_position.geometry.coordinates[0], _lon = r.last_known_position.geometry.coordinates[1] }));
+                }
+            }
+            Console.WriteLine(sb.ToString());
 
-			var x = ChoXmlReader.LoadText(sb.ToString()).ToArray();
-		}
+            var x = ChoXmlReader.LoadText(sb.ToString()).ToArray();
+        }
 
-		static void Sample35()
-		{
-			string json = @"[
+        static void Sample35()
+        {
+            string json = @"[
 {""SelFoodId"":""2"",""SelQuantity"":""5""},
 { ""SelFoodId"":""7"",""SelQuantity"":""3""},
 { ""SelFoodId"":""9"",""SelQuantity"":""7""}]
 ";
-			foreach (var rec in ChoJSONReader.LoadText(json))
-				Console.WriteLine(rec.Dump());
-		}
+            foreach (var rec in ChoJSONReader.LoadText(json))
+                Console.WriteLine(rec.Dump());
+        }
 
-		static void Sample34()
-		{
-			string json = @"{
+        static void Sample34()
+        {
+            string json = @"{
     ""build"": 44396,
     ""files"": [
-		""00005DC8F14C92FFA13E7FDF1C9C35E4684F8B7A"", 
-		[
-			[""file1.zip"", 462485959, 462485959, 2, 0, 883, true, 266716, 1734, 992, 558, 0],
-			[""file1.doc"", 521042, 521042, 2, 0, 883, true, 266716, 1734, 992, 558, 0]
-		], 
-		""0001194B90612DFB5E8D363249719FB62E221430"", 
-		[
-			[""file2.iso"", 501163544, 501163544, 2, 0, 956, true, 194777, 2573, 0, 0, 0]
-		], 
-		""0002B5245B0897BEA7D7F426E104B6D24FF368DE"", 
-		[
-			[""file3.mp4"", 284564707, 284564707, 2, 0, 543, true, 205165, 1387, 853, 480, 0]
-		]
-	]
+        ""00005DC8F14C92FFA13E7FDF1C9C35E4684F8B7A"", 
+        [
+            [""file1.zip"", 462485959, 462485959, 2, 0, 883, true, 266716, 1734, 992, 558, 0],
+            [""file1.doc"", 521042, 521042, 2, 0, 883, true, 266716, 1734, 992, 558, 0]
+        ], 
+        ""0001194B90612DFB5E8D363249719FB62E221430"", 
+        [
+            [""file2.iso"", 501163544, 501163544, 2, 0, 956, true, 194777, 2573, 0, 0, 0]
+        ], 
+        ""0002B5245B0897BEA7D7F426E104B6D24FF368DE"", 
+        [
+            [""file3.mp4"", 284564707, 284564707, 2, 0, 543, true, 205165, 1387, 853, 480, 0]
+        ]
+    ]
 }";
-			foreach (var rec in ChoJSONReader.LoadText(json).WithJSONPath("$..files").Select(e => new { key = e.Key, fileName = ((object[])((object[])e.Value).Cast<object>().First())[0], fileSize = ((object[])((object[])e.Value).Cast<object>().First())[1] }))
-				Console.WriteLine(rec.Dump());
-		}
+            foreach (var rec in ChoJSONReader.LoadText(json).WithJSONPath("$..files").Select(e => new { key = e.Key, fileName = ((object[])((object[])e.Value).Cast<object>().First())[0], fileSize = ((object[])((object[])e.Value).Cast<object>().First())[1] }))
+                Console.WriteLine(rec.Dump());
+        }
 
-		public class Issue
-		{
-			[ChoJSONRecordField(JSONPath = "$..id")]
-			public int? id { get; set; }
-			[ChoJSONRecordField(JSONPath = "$..project.id")]
-			public int project_id { get; set; }
-			[ChoJSONRecordField(JSONPath = "$..project.name")]
-			public string project_name { get; set; }
-		}
+        public class Issue
+        {
+            [ChoJSONRecordField(JSONPath = "$..id")]
+            public int? id { get; set; }
+            [ChoJSONRecordField(JSONPath = "$..project.id")]
+            public int project_id { get; set; }
+            [ChoJSONRecordField(JSONPath = "$..project.name")]
+            public string project_name { get; set; }
+        }
 
-		static void Sample33()
-		{
-			string json = @"{
-			   ""issue"" : 
-			   {
-				  ""id"": 1,
-				  ""project"":
-				  {
-					 ""id"":1,
-					 ""name"":""name of project""
-				  }
-			   }
-			}";
-			var issue = ChoJSONReader<Issue>.LoadText(json).First();
-			Console.WriteLine(issue.Dump());
-		}
+        static void Sample33()
+        {
+            string json = @"{
+               ""issue"" : 
+               {
+                  ""id"": 1,
+                  ""project"":
+                  {
+                     ""id"":1,
+                     ""name"":""name of project""
+                  }
+               }
+            }";
+            var issue = ChoJSONReader<Issue>.LoadText(json).First();
+            Console.WriteLine(issue.Dump());
+        }
 
-		static void Sample32()
+        static void Sample32()
         {
             string json = @"{
 ""HDRDTL"":[""SRNO"",""STK_IDN"",""CERTIMG""],
@@ -1610,15 +1610,15 @@ namespace ChoJSONReaderTest
         }
 
         static void Sample31()
-		{
-			string json = @"{
+        {
+            string json = @"{
     ""mercedes"": {
 
-		""model"" : ""GLS 350 d 4MATIC"",
+        ""model"" : ""GLS 350 d 4MATIC"",
         ""code"" : ""MB-GLS"",
         ""year"": 2015
 
-	},
+    },
     ""bmw"": {
         ""model"" : ""BMW 420d Cabrio"",
         ""code"" : ""BM-420D"",
@@ -1638,21 +1638,21 @@ namespace ChoJSONReaderTest
   ""path"": ""D:\\Mizz\\cars\\""
 }";
 
-			StringBuilder sb = new StringBuilder();
-			using (var p = ChoJSONReader.LoadText(json)
-				)
-			{
-				//foreach (ChoDynamicObject rec in p)
-				//	Console.WriteLine(ChoUtility.Dump(rec.Keys));
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoJSONReader.LoadText(json)
+                )
+            {
+                //foreach (ChoDynamicObject rec in p)
+                //	Console.WriteLine(ChoUtility.Dump(rec.Keys));
 
-				using (var w = new ChoXmlWriter(sb)
-					)
-					w.Write(p);
-			}
+                using (var w = new ChoXmlWriter(sb)
+                    )
+                    w.Write(p);
+            }
 
-			Console.WriteLine(sb.ToString());
-		}
-		static void Sample30()
+            Console.WriteLine(sb.ToString());
+        }
+        static void Sample30()
         {
             string json = @"{""Emp"": [
  {
@@ -1711,8 +1711,8 @@ namespace ChoJSONReaderTest
             using (var p = ChoJSONReader.LoadText(json).Configure(c => c.SupportMultipleContent = true)
                 )
             {
-				dynamic rec = p.First();
-				var x = rec.Emp[0];
+                dynamic rec = p.First();
+                var x = rec.Emp[0];
 
                 //using (var w = new ChoXmlWriter(sb)
                 //    .Configure(c => c.IgnoreRootName = true)
@@ -1790,11 +1790,11 @@ namespace ChoJSONReaderTest
         }
 
         static void Sample28()
-		{
-			string json = @"
+        {
+            string json = @"
 [
     { ""value"":50,""name"":""desired_gross_margin"",""type"":""int""},
-	{ ""value"":50,""name"":""desired_adjusted_gross_margin"",""type"":""int""},
+    { ""value"":50,""name"":""desired_adjusted_gross_margin"",""type"":""int""},
     { ""value"":0,""name"":""target_electricity_tariff_unit_charge"",""type"":""decimal""},
     { ""value"":0,""name"":""target_electricity_tariff_standing_charge"",""type"":""decimal""},
     { ""value"":0,""name"":""target_gas_tariff_unit_charge"",""type"":""decimal""},
@@ -1802,77 +1802,77 @@ namespace ChoJSONReaderTest
     { ""value"":""10/10/2016"",""name"":""planned_go_live_date"",""type"":""DateTime""},
     { ""value"":""0"",""name"":""assumed_fuel_ratio"",""type"":""int""},
     {
-				""value"":{
-					""year_one"":""Cold"",
+                ""value"":{
+                    ""year_one"":""Cold"",
         ""year_two"":""Average"",
         ""year_three"":""Warm""
-		   
-		},
+           
+        },
     ""name"":""weather_variable"",""type"":""string""}
 ]";
 
-			StringBuilder sb = new StringBuilder();
-			using (var p = ChoJSONReader.LoadText(json)
-				)
-			{
-				//foreach (var rec in p)
-				//	Console.WriteLine(rec.Dump());
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoJSONReader.LoadText(json)
+                )
+            {
+                //foreach (var rec in p)
+                //	Console.WriteLine(rec.Dump());
 
-				using (var w = new ChoXmlWriter(sb)
-					.WithField("name", isXmlAttribute: true)
-					.WithField("type", isXmlAttribute: true)
-					.WithField("value", isAnyXmlNode: true)
-					//.Configure(c => c.IgnoreRootName = true)
-					//.Configure(c => c.IgnoreNodeName = true)
-					//.WithDefaultXmlNamespace("x1", "http://unknwn")
-					)
-				{
-					w.Write(p);
-				}
-			}
-			Console.WriteLine(sb.ToString());
-		}
-		static void Sample27()
-		{
-			string json = @"
-			[
-				{
-					""car"": {
-						""features"": [{
-							""code"": ""1""
-						}, {
-							""code"": ""2""
-						}]
-					}
-				},
-				{
-					""car"": {
-						""features"": [{
-							""code"": ""3""
-						}, {
-							""code"": ""2""
-						}]
-					}
-				}
-			]";
-			StringBuilder sb = new StringBuilder();
-			using (var p = ChoJSONReader.LoadText(json))
-			{
-				using (var w = new ChoXmlWriter(sb)
-					.Configure(c => c.RootName = "cars")
-					//.Configure(c => c.IgnoreRootName = true)
-					.Configure(c => c.IgnoreNodeName = true)
-					)
-				{
-					w.Write(p);
-				}
-			}
-			Console.WriteLine(sb.ToString());
-		}
+                using (var w = new ChoXmlWriter(sb)
+                    .WithField("name", isXmlAttribute: true)
+                    .WithField("type", isXmlAttribute: true)
+                    .WithField("value", isAnyXmlNode: true)
+                    //.Configure(c => c.IgnoreRootName = true)
+                    //.Configure(c => c.IgnoreNodeName = true)
+                    //.WithDefaultXmlNamespace("x1", "http://unknwn")
+                    )
+                {
+                    w.Write(p);
+                }
+            }
+            Console.WriteLine(sb.ToString());
+        }
+        static void Sample27()
+        {
+            string json = @"
+            [
+                {
+                    ""car"": {
+                        ""features"": [{
+                            ""code"": ""1""
+                        }, {
+                            ""code"": ""2""
+                        }]
+                    }
+                },
+                {
+                    ""car"": {
+                        ""features"": [{
+                            ""code"": ""3""
+                        }, {
+                            ""code"": ""2""
+                        }]
+                    }
+                }
+            ]";
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoJSONReader.LoadText(json))
+            {
+                using (var w = new ChoXmlWriter(sb)
+                    .Configure(c => c.RootName = "cars")
+                    //.Configure(c => c.IgnoreRootName = true)
+                    .Configure(c => c.IgnoreNodeName = true)
+                    )
+                {
+                    w.Write(p);
+                }
+            }
+            Console.WriteLine(sb.ToString());
+        }
 
-		static void Sample26()
-		{
-			string json = @"
+        static void Sample26()
+        {
+            string json = @"
 {
   'item': {
     'name': 'item #1',
@@ -1883,28 +1883,28 @@ namespace ChoJSONReaderTest
   }
 }";
 
-			StringBuilder sb = new StringBuilder();
-			using (var p = ChoJSONReader.LoadText(json))
-			{
-				//foreach (var rec in p)
-				//	Console.WriteLine(rec.Dump());
-				//Console.WriteLine(ChoXmlWriter.ToTextAll(p, new ChoXmlRecordConfiguration().Configure(c => c.IgnoreRootName = true).Configure(c => c.IgnoreNodeName = true)));
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoJSONReader.LoadText(json))
+            {
+                //foreach (var rec in p)
+                //	Console.WriteLine(rec.Dump());
+                //Console.WriteLine(ChoXmlWriter.ToTextAll(p, new ChoXmlRecordConfiguration().Configure(c => c.IgnoreRootName = true).Configure(c => c.IgnoreNodeName = true)));
 
-				using (var w = new ChoXmlWriter(sb)
-					//.Configure(c => c.IgnoreRootName = true)
-					//.Configure(c => c.IgnoreNodeName = true)
-					.WithDefaultXmlNamespace("x1", "http://unknwn")
-					)
-				{
-					w.Write(p);
-				}
-			}
-			Console.WriteLine(sb.ToString());
-		}
+                using (var w = new ChoXmlWriter(sb)
+                    //.Configure(c => c.IgnoreRootName = true)
+                    //.Configure(c => c.IgnoreNodeName = true)
+                    .WithDefaultXmlNamespace("x1", "http://unknwn")
+                    )
+                {
+                    w.Write(p);
+                }
+            }
+            Console.WriteLine(sb.ToString());
+        }
 
-		static void Sample25()
-		{
-			string json = @"
+        static void Sample25()
+        {
+            string json = @"
 {
  ""2017-02-11"":
   {
@@ -1946,27 +1946,27 @@ namespace ChoJSONReaderTest
  }
 }";
 
-			StringBuilder sb = new StringBuilder();
-			using (var p = ChoJSONReader.LoadText(json))
-			{
-				//foreach (var rec in p)
-				//	Console.WriteLine(rec.Dump());
-				using (var w = new ChoCSVWriter(sb)
-					.WithFirstLineHeader()
-					)
-				{
-					w.Write(p.SelectMany(r => (string[])r.KeysArray));
-					//var x = p.Select(r => r.Keys);
-					//Console.WriteLine(x.Dump());
-					//foreach (var rec in p)
-					//	w.Write(ChoUtility.Transpose(rec));
-				}
-			}
-			Console.WriteLine(sb.ToString());
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoJSONReader.LoadText(json))
+            {
+                //foreach (var rec in p)
+                //	Console.WriteLine(rec.Dump());
+                using (var w = new ChoCSVWriter(sb)
+                    .WithFirstLineHeader()
+                    )
+                {
+                    w.Write(p.SelectMany(r => (string[])r.KeysArray));
+                    //var x = p.Select(r => r.Keys);
+                    //Console.WriteLine(x.Dump());
+                    //foreach (var rec in p)
+                    //	w.Write(ChoUtility.Transpose(rec));
+                }
+            }
+            Console.WriteLine(sb.ToString());
 
-		}
+        }
 
-		static void Sample24()
+        static void Sample24()
         {
             StringBuilder sb = new StringBuilder();
             using (var p = new ChoJSONReader("sample16.json"))
@@ -1981,8 +1981,8 @@ namespace ChoJSONReaderTest
         }
 
         static void Sample23()
-		{
-			string json = @"[
+        {
+            string json = @"[
     {
         ""firstName"": ""John"",
         ""lastName"": ""Smith"",
@@ -2026,23 +2026,23 @@ namespace ChoJSONReaderTest
         ]
     }
 ]";
-			StringBuilder sb = new StringBuilder();
-			using (var p = ChoJSONReader.LoadText(json)
-				)
-			{
-				//using (var w = new ChoCSVWriter(sb)
-				//	.WithFirstLineHeader()
-				//	)
-				//	w.Write(p);
-				using (var w = new ChoXmlWriter(sb)
-		)
-					w.Write(p);
-			}
-			Console.WriteLine(sb.ToString());
-		}
-		static void Sample22()
-		{
-			string json = @"
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoJSONReader.LoadText(json)
+                )
+            {
+                //using (var w = new ChoCSVWriter(sb)
+                //	.WithFirstLineHeader()
+                //	)
+                //	w.Write(p);
+                using (var w = new ChoXmlWriter(sb)
+        )
+                    w.Write(p);
+            }
+            Console.WriteLine(sb.ToString());
+        }
+        static void Sample22()
+        {
+            string json = @"
 {
         ""node"":[
             {
@@ -2111,132 +2111,132 @@ namespace ChoJSONReaderTest
             }
         ]
     }";
-			StringBuilder csv = new StringBuilder();
-			using (var p = new ChoJSONReader(new StringReader(json))
-				.WithJSONPath("$..node")
-				)
-			{
-				using (var w = new ChoCSVWriter(new StringWriter(csv))
-					.WithFirstLineHeader()
-					.Configure(c => c.MaxScanRows = 2)
-					.Configure(c => c.ThrowAndStopOnMissingField = false)
-					)
-				{
-					w.Write(p);
-				}
-			}
+            StringBuilder csv = new StringBuilder();
+            using (var p = new ChoJSONReader(new StringReader(json))
+                .WithJSONPath("$..node")
+                )
+            {
+                using (var w = new ChoCSVWriter(new StringWriter(csv))
+                    .WithFirstLineHeader()
+                    .Configure(c => c.MaxScanRows = 2)
+                    .Configure(c => c.ThrowAndStopOnMissingField = false)
+                    )
+                {
+                    w.Write(p);
+                }
+            }
 
-			Console.WriteLine(csv.ToString());
-		}
+            Console.WriteLine(csv.ToString());
+        }
 
-		static void Sample21()
-		{
-			string json = @"Name,Description,Account Number
+        static void Sample21()
+        {
+            string json = @"Name,Description,Account Number
     Xytrex Co.,Industrial Cleaning Supply Company,ABC15797531
     Watson and Powell Inc.,Law firm. New York Headquarters,ABC24689753";
 
-			StringBuilder csv = new StringBuilder();
-			using (var p = new ChoCSVReader(new StringReader(json))
-					.WithFirstLineHeader()
-				)
-			{
-				using (var w = new ChoJSONWriter(new StringWriter(csv)))
-				{
-					w.Write(p);
-				}
-			}
+            StringBuilder csv = new StringBuilder();
+            using (var p = new ChoCSVReader(new StringReader(json))
+                    .WithFirstLineHeader()
+                )
+            {
+                using (var w = new ChoJSONWriter(new StringWriter(csv)))
+                {
+                    w.Write(p);
+                }
+            }
 
-			Console.WriteLine(csv.ToString());
-		}
+            Console.WriteLine(csv.ToString());
+        }
 
-		static void Sample20()
-		{
-			string json = @"
-			[
-			   {
-				  ""Name"" : ""Xytrex Co."",
-				  ""Description"" : ""Industrial Cleaning Supply Company"",
-				  ""Account Number"" : ""ABC15797531""
-			   },
-			   {
-				  ""Name"" : ""Watson and Powell Inc."",
-				  ""Description"" : ""Law firm. New York Headquarters"",
-				  ""Account Number"" : ""ABC24689753""     
-			   }
-			]";
+        static void Sample20()
+        {
+            string json = @"
+            [
+               {
+                  ""Name"" : ""Xytrex Co."",
+                  ""Description"" : ""Industrial Cleaning Supply Company"",
+                  ""Account Number"" : ""ABC15797531""
+               },
+               {
+                  ""Name"" : ""Watson and Powell Inc."",
+                  ""Description"" : ""Law firm. New York Headquarters"",
+                  ""Account Number"" : ""ABC24689753""     
+               }
+            ]";
 
-			StringBuilder csv = new StringBuilder();
-			using (var p = new ChoJSONReader(new StringReader(json)))
-			{
-				using (var w = new ChoCSVWriter(new StringWriter(csv))
-					.WithFirstLineHeader()
-					.WithField("Account_Number", fieldName: "Account Number")
-					)
-				{
-					w.Write(p);
-				}
-			}
+            StringBuilder csv = new StringBuilder();
+            using (var p = new ChoJSONReader(new StringReader(json)))
+            {
+                using (var w = new ChoCSVWriter(new StringWriter(csv))
+                    .WithFirstLineHeader()
+                    .WithField("Account_Number", fieldName: "Account Number")
+                    )
+                {
+                    w.Write(p);
+                }
+            }
 
-			Console.WriteLine(csv.ToString());
-		}
+            Console.WriteLine(csv.ToString());
+        }
 
-		static void Sample19()
-		{
-			using (var p = new ChoJSONReader("sample19.json"))
-			{
-				var z1 = p.SelectMany(p1 => ((dynamic[])p1.packaing).Select(p2 => new { pickcompname = p1.pickcompname, qty = p2.qty })).ToArray();
-				return;
+        static void Sample19()
+        {
+            using (var p = new ChoJSONReader("sample19.json"))
+            {
+                var z1 = p.SelectMany(p1 => ((dynamic[])p1.packaing).Select(p2 => new { pickcompname = p1.pickcompname, qty = p2.qty })).ToArray();
+                return;
 
-				foreach (var rec in p)
-				{
-					var z = rec.packaing;
-				}
-			}
-		}
+                foreach (var rec in p)
+                {
+                    var z = rec.packaing;
+                }
+            }
+        }
 
-		public class MarketData
-		{
-			[ChoJSONRecordField(JSONPath = @"['Meta Data']")]
-			public MetaData MetaData { get; set; }
+        public class MarketData
+        {
+            [ChoJSONRecordField(JSONPath = @"['Meta Data']")]
+            public MetaData MetaData { get; set; }
 
-			[ChoJSONRecordField(JSONPath = @"$..['Stock Quotes'][*]")]
-			public List<StockQuote> StockQuotes { get; set; }
-		}
+            [ChoJSONRecordField(JSONPath = @"$..['Stock Quotes'][*]")]
+            public List<StockQuote> StockQuotes { get; set; }
+        }
 
-		public class MetaData
-		{
-			[JsonProperty(PropertyName = "1. Information")]
-			[ChoJSONRecordField(JSONPath = @"['Meta Data']['1. Information']")]
-			public string Information { get; set; }
-			[JsonProperty(PropertyName = "2. Notes")]
-			public string Notes { get; set; }
-			[JsonProperty(PropertyName = "3. Time Zone")]
-			public string TimeZone { get; set; }
-		}
+        public class MetaData
+        {
+            [JsonProperty(PropertyName = "1. Information")]
+            [ChoJSONRecordField(JSONPath = @"['Meta Data']['1. Information']")]
+            public string Information { get; set; }
+            [JsonProperty(PropertyName = "2. Notes")]
+            public string Notes { get; set; }
+            [JsonProperty(PropertyName = "3. Time Zone")]
+            public string TimeZone { get; set; }
+        }
 
-		public class StockQuote
-		{
-			[JsonProperty(PropertyName = "1. symbol")]
-			public string Symbol { get; set; }
-			[JsonProperty(PropertyName = "2. price")]
-			public double Price { get; set; }
-			[JsonProperty(PropertyName = "3. volume")]
-			public int Volumne { get; set; }
-			[JsonProperty(PropertyName = "4. timestamp")]
-			public DateTime Timestamp { get; set; }
-		}
+        public class StockQuote
+        {
+            [JsonProperty(PropertyName = "1. symbol")]
+            public string Symbol { get; set; }
+            [JsonProperty(PropertyName = "2. price")]
+            public double Price { get; set; }
+            [JsonProperty(PropertyName = "3. volume")]
+            public int Volumne { get; set; }
+            [JsonProperty(PropertyName = "4. timestamp")]
+            public DateTime Timestamp { get; set; }
+        }
 
-		static void Sample17()
-		{
-			using (var p = new ChoJSONReader<MarketData>("sample17.json")
-				)
-			{
-				foreach (var rec in p)
-					Console.WriteLine(rec.Dump());
-			}
-		}
+        static void Sample17()
+        {
+            using (var p = new ChoJSONReader<MarketData>("sample17.json")
+                )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
 
-		static void Sample16()
+        static void Sample16()
         {
             using (var p = new ChoJSONReader("sample16.json")
                 .WithField("Ref", jsonPath: "$..ref", fieldType: typeof(string))

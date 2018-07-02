@@ -62,11 +62,29 @@ public class ToTextConverter : IChoValueConverter
         public MyDate dateOfBirth { get; set; }
     }
 
-	public class PlaceObj
-	{
-		public string Place { get; set; }
-		public int SkuNumber { get; set; }
-	}
+    public class PlaceObj : IChoNotifyRecordFieldWrite
+    {
+        public string Place { get; set; }
+        public int SkuNumber { get; set; }
+
+        public bool AfterRecordFieldWrite(object target, long index, string propName, object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool BeforeRecordFieldWrite(object target, long index, string propName, ref object value)
+        {
+            //if (propName == nameof(SkuNumber))
+            //    value = String.Format("SKU_{0}", value.ToNString());
+
+            return true;
+        }
+
+        public bool RecordFieldWriteError(object target, long index, string propName, object value, Exception ex)
+        {
+            throw new NotImplementedException();
+        }
+    }
 
     class Program
     {
@@ -74,149 +92,149 @@ public class ToTextConverter : IChoValueConverter
 
         static void Main(string[] args)
         {
-			CustomFormat2();
+            CustomFormat2();
         }
 
-		static void CustomFormat2()
-		{
-			StringBuilder sb = new StringBuilder();
+        static void CustomFormat2()
+        {
+            StringBuilder sb = new StringBuilder();
 
-			using (var w = new ChoJSONWriter<PlaceObj>(sb)
-				.WithField(m => m.SkuNumber, valueConverter: (o) => String.Format("SKU_{0}", o.ToNString()))
-			)
-			{
-				PlaceObj o1 = new PlaceObj();
-				o1.Place = "1";
-				o1.SkuNumber = 100;
+            using (var w = new ChoJSONWriter<PlaceObj>(sb)
+                //.WithField(m => m.SkuNumber, valueConverter: (o) => String.Format("SKU_{0}", o.ToNString()))
+            )
+            {
+                PlaceObj o1 = new PlaceObj();
+                o1.Place = "1";
+                o1.SkuNumber = 100;
 
-				w.Write(o1);
-			}
+                w.Write(o1);
+            }
 
-			Console.WriteLine(sb.ToString());
-		}
+            Console.WriteLine(sb.ToString());
+        }
 
-		static void CustomFormat1()
-		{
-			StringBuilder sb = new StringBuilder();
+        static void CustomFormat1()
+        {
+            StringBuilder sb = new StringBuilder();
 
-			using (var w = new ChoJSONWriter(sb)
-				.WithField("Place")
-				.WithField("SkuNumber", valueConverter: (o) => String.Format("SKU_{0}", o.ToNString()))
-				)
-			{
-				dynamic o1 = new ExpandoObject();
-				o1.Place = 1;
-				o1.SkuNumber = 100;
+            using (var w = new ChoJSONWriter(sb)
+                .WithField("Place")
+                .WithField("SkuNumber", valueConverter: (o) => String.Format("SKU_{0}", o.ToNString()))
+                )
+            {
+                dynamic o1 = new ExpandoObject();
+                o1.Place = 1;
+                o1.SkuNumber = 100;
 
-				w.Write(o1);
-			}
+                w.Write(o1);
+            }
 
-			Console.WriteLine(sb.ToString());
-		}
+            Console.WriteLine(sb.ToString());
+        }
 
-		#region Sample50
+        #region Sample50
 
-		public class Rootobject
-		{
-			public Home home { get; set; }
-			public Away away { get; set; }
-		}
+        public class Rootobject
+        {
+            public Home home { get; set; }
+            public Away away { get; set; }
+        }
 
-		public class Home
-		{
-			[ChoUseJSONSerialization]
-			public _0_15 _0_15 { get; set; }
-			public _15_30 _15_30 { get; set; }
-			public _30_45 _30_45 { get; set; }
-			public _45_60 _45_60 { get; set; }
-			public _60_75 _60_75 { get; set; }
-			public _75_90 _75_90 { get; set; }
-		}
+        public class Home
+        {
+            [ChoUseJSONSerialization]
+            public _0_15 _0_15 { get; set; }
+            public _15_30 _15_30 { get; set; }
+            public _30_45 _30_45 { get; set; }
+            public _45_60 _45_60 { get; set; }
+            public _60_75 _60_75 { get; set; }
+            public _75_90 _75_90 { get; set; }
+        }
 
-		public class _0_15
-		{
-			public int goals { get; set; }
-			public int percentage { get; set; }
-		}
+        public class _0_15
+        {
+            public int goals { get; set; }
+            public int percentage { get; set; }
+        }
 
-		public class _15_30
-		{
-			public int goals { get; set; }
-			public int percentage { get; set; }
-		}
+        public class _15_30
+        {
+            public int goals { get; set; }
+            public int percentage { get; set; }
+        }
 
-		public class _30_45
-		{
-			public int goals { get; set; }
-			public int percentage { get; set; }
-		}
+        public class _30_45
+        {
+            public int goals { get; set; }
+            public int percentage { get; set; }
+        }
 
-		public class _45_60
-		{
-			public int goals { get; set; }
-			public int percentage { get; set; }
-		}
+        public class _45_60
+        {
+            public int goals { get; set; }
+            public int percentage { get; set; }
+        }
 
-		public class _60_75
-		{
-			public int goals { get; set; }
-			public int percentage { get; set; }
-		}
+        public class _60_75
+        {
+            public int goals { get; set; }
+            public int percentage { get; set; }
+        }
 
-		public class _75_90
-		{
-			public int goals { get; set; }
-			public int percentage { get; set; }
-		}
+        public class _75_90
+        {
+            public int goals { get; set; }
+            public int percentage { get; set; }
+        }
 
-		public class Away
-		{
-			public _0_151 _0_15 { get; set; }
-			public _15_301 _15_30 { get; set; }
-			public _30_451 _30_45 { get; set; }
-			public _45_601 _45_60 { get; set; }
-			public _60_751 _60_75 { get; set; }
-			public _75_901 _75_90 { get; set; }
-		}
+        public class Away
+        {
+            public _0_151 _0_15 { get; set; }
+            public _15_301 _15_30 { get; set; }
+            public _30_451 _30_45 { get; set; }
+            public _45_601 _45_60 { get; set; }
+            public _60_751 _60_75 { get; set; }
+            public _75_901 _75_90 { get; set; }
+        }
 
-		public class _0_151
-		{
-			public int goals { get; set; }
-			public float percentage { get; set; }
-		}
+        public class _0_151
+        {
+            public int goals { get; set; }
+            public float percentage { get; set; }
+        }
 
-		public class _15_301
-		{
-			public int goals { get; set; }
-			public float percentage { get; set; }
-		}
+        public class _15_301
+        {
+            public int goals { get; set; }
+            public float percentage { get; set; }
+        }
 
-		public class _30_451
-		{
-			public int goals { get; set; }
-			public float percentage { get; set; }
-		}
+        public class _30_451
+        {
+            public int goals { get; set; }
+            public float percentage { get; set; }
+        }
 
-		public class _45_601
-		{
-			public int goals { get; set; }
-			public float percentage { get; set; }
-		}
+        public class _45_601
+        {
+            public int goals { get; set; }
+            public float percentage { get; set; }
+        }
 
-		public class _60_751
-		{
-			public int goals { get; set; }
-			public float percentage { get; set; }
-		}
+        public class _60_751
+        {
+            public int goals { get; set; }
+            public float percentage { get; set; }
+        }
 
-		public class _75_901
-		{
-			public int goals { get; set; }
-			public float percentage { get; set; }
-		}
-		static void Sample50()
-		{
-			string json = @"
+        public class _75_901
+        {
+            public int goals { get; set; }
+            public float percentage { get; set; }
+        }
+        static void Sample50()
+        {
+            string json = @"
 {
     ""home"": {
         ""0_15"": {
@@ -272,39 +290,39 @@ public class ToTextConverter : IChoValueConverter
     }
 }";
 
-			using (var p = ChoJSONReader<Rootobject>.LoadText(json).Configure(c => c.SupportMultipleContent = true))
-			{
-				//foreach (var rec in p)
-				//	Console.WriteLine(rec.Dump());
-				Console.WriteLine(ChoJSONWriter<Rootobject>.ToText(p.First(), new ChoJSONRecordConfiguration().Configure(c => c.SupportMultipleContent = true)));
-			}
-		}
+            using (var p = ChoJSONReader<Rootobject>.LoadText(json).Configure(c => c.SupportMultipleContent = true))
+            {
+                //foreach (var rec in p)
+                //	Console.WriteLine(rec.Dump());
+                Console.WriteLine(ChoJSONWriter<Rootobject>.ToText(p.First(), new ChoJSONRecordConfiguration().Configure(c => c.SupportMultipleContent = true)));
+            }
+        }
 
-		#endregion Sample50
+        #endregion Sample50
 
-		#region Nested2NestedObjectTest
+        #region Nested2NestedObjectTest
 
-		public class Customer
-		{
-			public long Id { get; set; }
+        public class Customer
+        {
+            public long Id { get; set; }
 
-			public string UserName { get; set; }
+            public string UserName { get; set; }
 
-			public AddressModel Address { get; set; }
-		}
+            public AddressModel Address { get; set; }
+        }
 
-		public class AddressModel
-		{
-			public string Address { get; set; }
+        public class AddressModel
+        {
+            public string Address { get; set; }
 
-			public string Address2 { get; set; }
+            public string Address2 { get; set; }
 
-			public string City { get; set; }
-		}
+            public string City { get; set; }
+        }
 
-		static void Nested2NestedObjectTest()
-		{
-			string json = @"{ 
+        static void Nested2NestedObjectTest()
+        {
+            string json = @"{ 
 ""id"": 123,   ""userName"": ""fflintstone"",   ""Address"": {
 ""address"": ""345 Cave Stone Road"",
 ""address2"": """",
@@ -312,20 +330,20 @@ public class ToTextConverter : IChoValueConverter
 ""state"": ""AZ"",
 ""zip"": """"   } }";
 
-			using (var p = ChoJSONReader<Customer>.LoadText(json).WithFlatToNestedObjectSupport(false)
-				//.WithField(r => r.Address.Address, fieldName: "Address")
-				)
-			{
-				var x = p.First();
-				Console.WriteLine(x.Dump());
-			}
-		}
+            using (var p = ChoJSONReader<Customer>.LoadText(json).WithFlatToNestedObjectSupport(false)
+                //.WithField(r => r.Address.Address, fieldName: "Address")
+                )
+            {
+                var x = p.First();
+                Console.WriteLine(x.Dump());
+            }
+        }
 
-		#endregion Nested2NestedObjectTest
+        #endregion Nested2NestedObjectTest
 
-		static void NestedObjectTest()
-		{
-			string json = @"{
+        static void NestedObjectTest()
+        {
+            string json = @"{
     ""id"": 123,
     ""userName"": ""fflintstone"",
     ""address"": ""345 Cave Stone Road"",
@@ -335,18 +353,18 @@ public class ToTextConverter : IChoValueConverter
     ""zip"": """",   
 }";
 
-			using (var p = ChoJSONReader<Customer>.LoadText(json).WithFlatToNestedObjectSupport(true)
-				//.WithField(r => r.Address.Address, fieldName: "Address")
-				)
-			{
-				var x = p.First();
-				Console.WriteLine(x.Dump());
-			}
-		}
+            using (var p = ChoJSONReader<Customer>.LoadText(json).WithFlatToNestedObjectSupport(true)
+                //.WithField(r => r.Address.Address, fieldName: "Address")
+                )
+            {
+                var x = p.First();
+                Console.WriteLine(x.Dump());
+            }
+        }
 
-		static void CombineJSONTest()
-		{
-			string json = @"[
+        static void CombineJSONTest()
+        {
+            string json = @"[
   {
     ""deliveryDay"": ""2018-06-19T15:00:00.000+0300"",
     ""currencyCode"": ""TRY"",
@@ -386,28 +404,28 @@ public class ToTextConverter : IChoValueConverter
        ]";
 
 
-			StringBuilder sb = new StringBuilder();
-			using (var p = ChoJSONReader.LoadText(json))
-			{
-				var list = p.GroupBy(r => r.deliveryDay).Select(r => new
-				{
-					deliveryDay = r.Key,
-					r.First().currencyCode,
-					r.First().offerType,
-					r.First().regionCode,
-					offerDetails = new
-					{
-						((Array)r.First().offerDetails).OfType<dynamic>().First().startPeriod,
-						((Array)r.First().offerDetails).OfType<dynamic>().First().duration,
-						offerPrices = r.Select(r1 => ((Array)r1.offerDetails[0].offerPrices).OfType<object>().First()).ToArray()
-					}
-				}).ToArray();
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoJSONReader.LoadText(json))
+            {
+                var list = p.GroupBy(r => r.deliveryDay).Select(r => new
+                {
+                    deliveryDay = r.Key,
+                    r.First().currencyCode,
+                    r.First().offerType,
+                    r.First().regionCode,
+                    offerDetails = new
+                    {
+                        ((Array)r.First().offerDetails).OfType<dynamic>().First().startPeriod,
+                        ((Array)r.First().offerDetails).OfType<dynamic>().First().duration,
+                        offerPrices = r.Select(r1 => ((Array)r1.offerDetails[0].offerPrices).OfType<object>().First()).ToArray()
+                    }
+                }).ToArray();
 
-				Console.WriteLine(ChoJSONWriter.ToTextAll(list));
-				//foreach (var rec in )
-				//	Console.WriteLine(rec.Dump());
-			}
-		}
+                Console.WriteLine(ChoJSONWriter.ToTextAll(list));
+                //foreach (var rec in )
+                //	Console.WriteLine(rec.Dump());
+            }
+        }
 
         static void ComplexObjTest()
         {
@@ -462,7 +480,7 @@ public class ToTextConverter : IChoValueConverter
             }
         }
 
-		static void IPAddressTest()
+        static void IPAddressTest()
         {
             using (var jr = new ChoJSONWriter<SomeOuterObject>("ipaddr.json")
                 .WithField("stringValue")
@@ -668,7 +686,7 @@ public class ToTextConverter : IChoValueConverter
 
         static void DataTableTest()
         {
-			StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
             string connectionstring = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=Northwind;Integrated Security=True";
             using (var conn = new SqlConnection(connectionstring))
             {
@@ -683,7 +701,7 @@ public class ToTextConverter : IChoValueConverter
                     parser.Write(dt);
             }
 
-			Console.WriteLine(sb.ToString());
+            Console.WriteLine(sb.ToString());
         }
 
         static void DataReaderTest()
