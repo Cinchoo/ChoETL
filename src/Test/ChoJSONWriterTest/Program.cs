@@ -62,28 +62,10 @@ public class ToTextConverter : IChoValueConverter
         public MyDate dateOfBirth { get; set; }
     }
 
-	public class PlaceObj : IChoNotifyRecordFieldRead
+	public class PlaceObj
 	{
 		public string Place { get; set; }
 		public int SkuNumber { get; set; }
-
-		public bool AfterRecordFieldLoad(object target, long index, string propName, object value)
-		{
-			if (propName == nameof(SkuNumber))
-				value = String.Format("SKU_{0}", value.ToNString());
-
-			return true;
-		}
-
-		public bool BeforeRecordFieldLoad(object target, long index, string propName, ref object value)
-		{
-			throw new NotImplementedException();
-		}
-
-		public bool RecordFieldLoadError(object target, long index, string propName, object value, Exception ex)
-		{
-			throw new NotImplementedException();
-		}
 	}
 
     class Program
@@ -100,7 +82,8 @@ public class ToTextConverter : IChoValueConverter
 			StringBuilder sb = new StringBuilder();
 
 			using (var w = new ChoJSONWriter<PlaceObj>(sb)
-				)
+				.WithField(m => m.SkuNumber, valueConverter: (o) => String.Format("SKU_{0}", o.ToNString()))
+			)
 			{
 				PlaceObj o1 = new PlaceObj();
 				o1.Place = "1";
