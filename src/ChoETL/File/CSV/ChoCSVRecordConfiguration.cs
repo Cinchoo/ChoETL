@@ -180,7 +180,8 @@ namespace ChoETL
                 HasExcelSeparator = recObjAttr.HasExcelSeparatorInternal;
             }
 
-            DiscoverRecordFields(recordType);
+			if (CSVRecordFieldConfigurations.Count == 0)
+				DiscoverRecordFields(recordType);
         }
 
         public override void MapRecordFields<T>()

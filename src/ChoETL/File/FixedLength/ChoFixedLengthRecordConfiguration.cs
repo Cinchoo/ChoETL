@@ -127,7 +127,8 @@ namespace ChoETL
                 RecordLength = recObjAttr.RecordLength;
             }
 
-            DiscoverRecordFields(recordType);
+			if (FixedLengthRecordFieldConfigurations.Count == 0)
+				DiscoverRecordFields(recordType);
         }
         internal bool AreAllFieldTypesNull
         {

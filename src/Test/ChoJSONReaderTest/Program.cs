@@ -638,7 +638,93 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			ListOfStringTest();
+			Sample100();
+		}
+
+		public class AttendanceStatistics
+		{
+			[JsonProperty(PropertyName = "registrantCount")]
+			public int RegistrantCount { get; set; }
+
+			[JsonProperty(PropertyName = "percentageAttendance")]
+			public float PercentageAttendance { get; set; }
+
+			[JsonProperty(PropertyName = "averageInterestRating")]
+			public float AverageInterestRating { get; set; }
+
+			[JsonProperty(PropertyName = "averageAttentiveness")]
+			public float AverageAttentiveness { get; set; }
+
+			[JsonProperty(PropertyName = "averageAttendanceTimeSeconds")]
+			public float AverageAttendanceTimeSeconds { get; set; }
+		}
+
+		public class PollsAndSurveysStatistics
+		{
+			[JsonProperty(PropertyName = "pollCount")]
+			public int PollCount { get; set; }
+
+			[JsonProperty(PropertyName = "surveyCount")]
+			public float SurveyCount { get; set; }
+
+			[JsonProperty(PropertyName = "questionsAsked")]
+			public int QuestionsAsked { get; set; }
+
+			[JsonProperty(PropertyName = "percentagePollsCompleted")]
+			public float PercentagePollsCompleted { get; set; }
+
+			[JsonProperty(PropertyName = "percentageSurveysCompleted")]
+			public float PercentageSurveysCompleted { get; set; }
+		}
+
+		public class SessionPerformanceStats
+		{
+			[JsonProperty(PropertyName = "attendance")]
+			public AttendanceStatistics Attendance { get; set; }
+
+			[JsonProperty(PropertyName = "pollsAndSurveys")]
+			public PollsAndSurveysStatistics PollsAndSurveys { get; set; }
+		}
+
+		static void Sample100()
+		{
+			string json = @"{
+    ""5234592"":{
+    ""pollsAndSurveys"":{
+        ""questionsAsked"":1,
+        ""surveyCount"":0,
+        ""percentageSurveysCompleted"":0,
+        ""percentagePollsCompleted"":100,
+        ""pollCount"":2},
+    ""attendance"":{
+        ""averageAttendanceTimeSeconds"":253,
+        ""averageInterestRating"":0,
+        ""averageAttentiveness"":0,
+        ""registrantCount"":1,
+        ""percentageAttendance"":100}
+    },
+    ""5235291"":{
+    ""pollsAndSurveys"":{
+        ""questionsAsked"":2,
+        ""surveyCount"":0,
+        ""percentageSurveysCompleted"":0,
+        ""percentagePollsCompleted"":0,
+        ""pollCount"":0},
+    ""attendance"":{
+        ""averageAttendanceTimeSeconds"":83,
+        ""averageInterestRating"":0,
+        ""averageAttentiveness"":0,
+        ""registrantCount"":1,
+        ""percentageAttendance"":100}
+    }
+}";
+			using (var p = ChoJSONReader<SessionPerformanceStats>.LoadText(json)
+				.WithJSONPath("$.*")
+				)
+			{
+				foreach (var rec in p)
+					Console.WriteLine(rec.Dump());
+			}
 		}
 
 		public class Attributes

@@ -62,14 +62,74 @@ public class ToTextConverter : IChoValueConverter
         public MyDate dateOfBirth { get; set; }
     }
 
+	public class PlaceObj : IChoNotifyRecordFieldRead
+	{
+		public string Place { get; set; }
+		public int SkuNumber { get; set; }
+
+		public bool AfterRecordFieldLoad(object target, long index, string propName, object value)
+		{
+			if (propName == nameof(SkuNumber))
+				value = String.Format("SKU_{0}", value.ToNString());
+
+			return true;
+		}
+
+		public bool BeforeRecordFieldLoad(object target, long index, string propName, ref object value)
+		{
+			throw new NotImplementedException();
+		}
+
+		public bool RecordFieldLoadError(object target, long index, string propName, object value, Exception ex)
+		{
+			throw new NotImplementedException();
+		}
+	}
+
     class Program
     {
         public enum EmpType {  FullTime, Contract }
 
         static void Main(string[] args)
         {
-			Nested2NestedObjectTest();
+			CustomFormat2();
         }
+
+		static void CustomFormat2()
+		{
+			StringBuilder sb = new StringBuilder();
+
+			using (var w = new ChoJSONWriter<PlaceObj>(sb)
+				)
+			{
+				PlaceObj o1 = new PlaceObj();
+				o1.Place = "1";
+				o1.SkuNumber = 100;
+
+				w.Write(o1);
+			}
+
+			Console.WriteLine(sb.ToString());
+		}
+
+		static void CustomFormat1()
+		{
+			StringBuilder sb = new StringBuilder();
+
+			using (var w = new ChoJSONWriter(sb)
+				.WithField("Place")
+				.WithField("SkuNumber", valueConverter: (o) => String.Format("SKU_{0}", o.ToNString()))
+				)
+			{
+				dynamic o1 = new ExpandoObject();
+				o1.Place = 1;
+				o1.SkuNumber = 100;
+
+				w.Write(o1);
+			}
+
+			Console.WriteLine(sb.ToString());
+		}
 
 		#region Sample50
 
@@ -626,17 +686,17 @@ public class ToTextConverter : IChoValueConverter
         static void DataTableTest()
         {
 			StringBuilder sb = new StringBuilder();
-            string connectionstring = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True";
+            string connectionstring = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=Northwind;Integrated Security=True";
             using (var conn = new SqlConnection(connectionstring))
             {
                 conn.Open();
-                var comm = new SqlCommand("SELECT * FROM Customers", conn);
+                var comm = new SqlCommand("SELECT TOP 2 * FROM Customers", conn);
                 SqlDataAdapter adap = new SqlDataAdapter(comm);
 
                 DataTable dt = new DataTable("Customer");
                 adap.Fill(dt);
 
-                using (var parser = new ChoJSONWriter(sb).Configure(c => c.UseJSONSerialization = true))
+                using (var parser = new ChoJSONWriter(sb))
                     parser.Write(dt);
             }
 

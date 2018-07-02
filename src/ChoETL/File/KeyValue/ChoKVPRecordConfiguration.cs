@@ -121,7 +121,8 @@ namespace ChoETL
                 LineContinuationChars = recObjAttr.LineContinuationChars;
             }
 
-            DiscoverRecordFields(recordType);
+			if (KVPRecordFieldConfigurations.Count == 0)
+				DiscoverRecordFields(recordType);
         }
 
         internal void UpdateFieldTypesIfAny(Dictionary<string, Type> dict)

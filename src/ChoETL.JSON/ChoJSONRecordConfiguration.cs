@@ -157,7 +157,8 @@ namespace ChoETL
             {
             }
 
-            DiscoverRecordFields(recordType);
+			if (JSONRecordFieldConfigurations.Count == 0)
+				DiscoverRecordFields(recordType, false);
         }
 
 		internal void Reset()

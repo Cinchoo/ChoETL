@@ -18,7 +18,8 @@ namespace ChoETL
     internal class ChoJSONRecordWriter : ChoRecordWriter
     {
         private IChoNotifyRecordWrite _callbackRecord;
-        private long _index = 0;
+        private IChoNotifyRecordFieldWrite _callbackFieldRecord;
+		private long _index = 0;
         bool isFirstRec = true;
         internal ChoWriter Writer = null;
         internal Type ElementType = null;
@@ -36,7 +37,10 @@ namespace ChoETL
             Configuration = configuration;
 
             _callbackRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordWrite>(recordType);
-            _recBuffer = new Lazy<List<object>>(() =>
+			_callbackFieldRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordFieldWrite>(recordType);
+			if (_callbackFieldRecord == null)
+				_callbackFieldRecord = _callbackRecord;
+			_recBuffer = new Lazy<List<object>>(() =>
             {
                 var b = Writer.Context.RecBuffer;
                 if (b == null)
@@ -1036,10 +1040,10 @@ namespace ChoETL
 
         private bool RaiseBeforeRecordFieldWrite(object target, long index, string propName, ref object value)
         {
-            if (_callbackRecord != null)
+            if (_callbackFieldRecord != null)
             {
                 object state = value;
-                bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeforeRecordFieldWrite(target, index, propName, ref state), true);
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackFieldRecord.BeforeRecordFieldWrite(target, index, propName, ref state), true);
 
                 if (retValue)
                     value = state;
@@ -1061,9 +1065,9 @@ namespace ChoETL
 
         private bool RaiseAfterRecordFieldWrite(object target, long index, string propName, object value)
         {
-            if (_callbackRecord != null)
+            if (_callbackFieldRecord != null)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordFieldWrite(target, index, propName, value), true);
+                return ChoFuncEx.RunWithIgnoreError(() => _callbackFieldRecord.AfterRecordFieldWrite(target, index, propName, value), true);
             }
             else if (Writer != null)
             {
@@ -1074,9 +1078,9 @@ namespace ChoETL
 
         private bool RaiseRecordFieldWriteError(object target, long index, string propName, object value, Exception ex)
         {
-            if (_callbackRecord != null)
+            if (_callbackFieldRecord != null)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordFieldWriteError(target, index, propName, value, ex), true);
+                return ChoFuncEx.RunWithIgnoreError(() => _callbackFieldRecord.RecordFieldWriteError(target, index, propName, value, ex), true);
             }
             else if (Writer != null)
             {

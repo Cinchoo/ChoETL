@@ -225,7 +225,8 @@ namespace ChoETL
             {
             }
 
-            DiscoverRecordFields(recordType);
+			if (XmlRecordFieldConfigurations.Count == 0)
+				DiscoverRecordFields(recordType);
         }
 
         internal void UpdateFieldTypesIfAny(Dictionary<string, Type> dict)

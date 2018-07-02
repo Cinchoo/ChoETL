@@ -91,11 +91,10 @@ namespace ChoXmlReaderTest
 		{
 			using (var p = new ChoXmlReader("sample21.xml")
 				.WithField("Key")
-				.WithField("Values", xPath: "/Values/string")
+				.WithField("Value", xPath: "/Values/string")
 				)
 			{
-				foreach (var rec in p)
-					Console.WriteLine(rec.Dump());
+				var dt = p.SelectMany(r => ((Array)r.Value).OfType<string>().Select(r1 => new { Key = r.Key, Value = r1})).AsDataTable();
 			}
 		}
 
