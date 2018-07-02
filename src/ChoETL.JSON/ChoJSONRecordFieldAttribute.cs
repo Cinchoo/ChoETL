@@ -20,11 +20,11 @@ namespace ChoETL
 
         }
 
-		internal bool? UseJSONSerializationInternal = null;
-		public bool UseJSONSerialization
-		{
-			get { return UseJSONSerializationInternal == null ? false : UseJSONSerializationInternal.Value; }
-			set { UseJSONSerializationInternal = value; }
-		}
-	}
+        internal bool? UseJSONSerializationInternal = null;
+        public bool UseJSONSerialization
+        {
+            get { return UseJSONSerializationInternal == null ? false : UseJSONSerializationInternal.Value; }
+            set { UseJSONSerializationInternal = value; }
+        }
+    }
 }

@@ -83,14 +83,14 @@ namespace ChoETL
             Dispose();
         }
 
-		public void Dispose()
-		{
-			Dispose(false);
-		}
+        public void Dispose()
+        {
+            Dispose(false);
+        }
 
-		protected virtual void Dispose(bool finalize)
-		{
-			if (_isDisposed)
+        protected virtual void Dispose(bool finalize)
+        {
+            if (_isDisposed)
                 return;
 
             _isDisposed = true;
@@ -100,11 +100,11 @@ namespace ChoETL
                     _textWriter.Dispose();
             }
 
-			if (!finalize)
-				GC.SuppressFinalize(this);
-		}
+            if (!finalize)
+                GC.SuppressFinalize(this);
+        }
 
-		private void Init()
+        private void Init()
         {
             if (Configuration == null)
                 Configuration = new ChoManifoldRecordConfiguration();
@@ -212,11 +212,11 @@ namespace ChoETL
             return this;
         }
 
-		#endregion Fluent API
+        #endregion Fluent API
 
-		~ChoManifoldWriter()
-		{
-			Dispose(true);
-		}
-	}
+        ~ChoManifoldWriter()
+        {
+            Dispose(true);
+        }
+    }
 }

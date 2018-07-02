@@ -127,12 +127,12 @@ namespace ChoETL
                 return null;
         }
 
-		public void Dispose()
-		{
-			Dispose(false);
-		}
+        public void Dispose()
+        {
+            Dispose(false);
+        }
 
-		protected virtual void Dispose(bool finalize)
+        protected virtual void Dispose(bool finalize)
         {
             if (_isDisposed)
                 return;
@@ -152,11 +152,11 @@ namespace ChoETL
 
             _closeStreamOnDispose = false;
 
-			if (!finalize)
-				GC.SuppressFinalize(this);
-		}
+            if (!finalize)
+                GC.SuppressFinalize(this);
+        }
 
-		private void Init()
+        private void Init()
         {
             _enumerator = new Lazy<IEnumerator>(() => GetEnumerator());
             if (Configuration == null)
@@ -278,9 +278,9 @@ namespace ChoETL
 
         #endregion Fluent API
     
-		~ChoManifoldReader()
-		{
-			Dispose(true);
-		}
+        ~ChoManifoldReader()
+        {
+            Dispose(true);
+        }
 }
 }

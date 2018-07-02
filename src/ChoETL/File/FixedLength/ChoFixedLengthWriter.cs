@@ -86,12 +86,12 @@ namespace ChoETL
             Dispose();
         }
 
-		public void Dispose()
-		{
-			Dispose(false);
-		}
+        public void Dispose()
+        {
+            Dispose(false);
+        }
 
-		protected virtual void Dispose(bool finalize)
+        protected virtual void Dispose(bool finalize)
         {
             if (_isDisposed)
                 return;
@@ -103,11 +103,11 @@ namespace ChoETL
                     _textWriter.Dispose();
             }
 
-			if (!finalize)
-				GC.SuppressFinalize(this);
-		}
+            if (!finalize)
+                GC.SuppressFinalize(this);
+        }
 
-		private void Init()
+        private void Init()
         {
             if (Configuration == null)
                 Configuration = new ChoFixedLengthRecordConfiguration(typeof(T));

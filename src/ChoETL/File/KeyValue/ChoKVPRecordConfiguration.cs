@@ -121,8 +121,8 @@ namespace ChoETL
                 LineContinuationChars = recObjAttr.LineContinuationChars;
             }
 
-			if (KVPRecordFieldConfigurations.Count == 0)
-				DiscoverRecordFields(recordType);
+            if (KVPRecordFieldConfigurations.Count == 0)
+                DiscoverRecordFields(recordType);
         }
 
         internal void UpdateFieldTypesIfAny(Dictionary<string, Type> dict)
@@ -162,9 +162,9 @@ namespace ChoETL
 
         private void DiscoverRecordFields(Type recordType, string declaringMember, bool optIn = false)
         {
-			if (!recordType.IsDynamicType())
-			{
-				Type pt = null;
+            if (!recordType.IsDynamicType())
+            {
+                Type pt = null;
                 if (optIn) //ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoKVPRecordFieldAttribute>().Any()).Any())
                 {
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
@@ -207,11 +207,11 @@ namespace ChoETL
                                 else if (!dpAttr.Name.IsNullOrWhiteSpace())
                                     obj.FieldName = dpAttr.Name;
                             }
-							DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();
-							if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
-							{
-								obj.FormatText = dfAttr.DataFormatString;
-							}
+                            DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();
+                            if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
+                            {
+                                obj.FormatText = dfAttr.DataFormatString;
+                            }
                             if (dfAttr != null && !dfAttr.NullDisplayText.IsNullOrWhiteSpace())
                             {
                                 obj.NullValue = dfAttr.NullDisplayText;

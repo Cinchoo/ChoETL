@@ -16,11 +16,11 @@ using System.Threading.Tasks;
 namespace ChoETL
 {
     public class ChoFixedLengthReader<T> : ChoReader, IDisposable, IEnumerable<T>, IChoSanitizableReader
-		where T : class
+        where T : class
     {
         private TextReader _textReader;
-		private IEnumerable<string> _lines;
-		private bool _closeStreamOnDispose = false;
+        private IEnumerable<string> _lines;
+        private bool _closeStreamOnDispose = false;
         private Lazy<IEnumerator<T>> _enumerator = null;
         private CultureInfo _prevCultureInfo = null;
         private bool _clearFields = false;
@@ -29,8 +29,8 @@ namespace ChoETL
         public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
         public event EventHandler<ChoMapColumnEventArgs> MapColumn;
         public event EventHandler<ChoEmptyLineEventArgs> EmptyLineFound;
-		public event EventHandler<ChoSanitizeLineEventArgs> SanitizeLine;
-		private bool _isDisposed = false;
+        public event EventHandler<ChoSanitizeLineEventArgs> SanitizeLine;
+        private bool _isDisposed = false;
 
         public override dynamic Context
         {
@@ -76,17 +76,17 @@ namespace ChoETL
             _textReader = textReader;
         }
 
-		internal ChoFixedLengthReader(IEnumerable<string> lines, ChoFixedLengthRecordConfiguration configuration = null)
-		{
-			ChoGuard.ArgumentNotNull(lines, "Lines");
+        internal ChoFixedLengthReader(IEnumerable<string> lines, ChoFixedLengthRecordConfiguration configuration = null)
+        {
+            ChoGuard.ArgumentNotNull(lines, "Lines");
 
-			Configuration = configuration;
-			Init();
+            Configuration = configuration;
+            Init();
 
-			_lines = lines;
-		}
+            _lines = lines;
+        }
 
-		public ChoFixedLengthReader(Stream inStream, ChoFixedLengthRecordConfiguration configuration = null)
+        public ChoFixedLengthReader(Stream inStream, ChoFixedLengthRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNull(inStream, "Stream");
 
@@ -151,12 +151,12 @@ namespace ChoETL
                 return default(T);
         }
 
-		public void Dispose()
-		{
-			Dispose(false);
-		}
+        public void Dispose()
+        {
+            Dispose(false);
+        }
 
-		protected virtual void Dispose(bool finalize)
+        protected virtual void Dispose(bool finalize)
         {
             if (_isDisposed)
                 return;
@@ -176,11 +176,11 @@ namespace ChoETL
 
             _closeStreamOnDispose = false;
 
-			if (!finalize)
-				GC.SuppressFinalize(this);
-		}
+            if (!finalize)
+                GC.SuppressFinalize(this);
+        }
 
-		private void Init()
+        private void Init()
         {
             _enumerator = new Lazy<IEnumerator<T>>(() => GetEnumerator());
             if (Configuration == null)
@@ -196,15 +196,15 @@ namespace ChoETL
             }
         }
 
-		public static ChoFixedLengthReader<T> LoadLines(IEnumerable<string> inputLines, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-		{
-			var r = new ChoFixedLengthReader<T>(inputLines, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
-			r._closeStreamOnDispose = true;
+        public static ChoFixedLengthReader<T> LoadLines(IEnumerable<string> inputLines, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            var r = new ChoFixedLengthReader<T>(inputLines, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
+            r._closeStreamOnDispose = true;
 
-			return r;
-		}
+            return r;
+        }
 
-		public static ChoFixedLengthReader<T> LoadText(string inputText, Encoding encoding = null, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static ChoFixedLengthReader<T> LoadText(string inputText, Encoding encoding = null, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
             var r = new ChoFixedLengthReader<T>(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
             r._closeStreamOnDispose = true;
@@ -258,8 +258,8 @@ namespace ChoETL
             rr.TraceSwitch = TraceSwitch;
             rr.RowsLoaded += NotifyRowsLoaded;
             rr.MembersDiscovered += MembersDiscovered;
-			var e = _lines != null ? rr.AsEnumerable(_lines).GetEnumerator() : rr.AsEnumerable(_textReader).GetEnumerator();
-			return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
+            var e = _lines != null ? rr.AsEnumerable(_lines).GetEnumerator() : rr.AsEnumerable(_textReader).GetEnumerator();
+            return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -274,15 +274,15 @@ namespace ChoETL
             rr.TraceSwitch = TraceSwitch;
             rr.RowsLoaded += NotifyRowsLoaded;
             rr.MembersDiscovered += MembersDiscovered;
-			var dr = new ChoEnumerableDataReader(_lines != null ? rr.AsEnumerable(_lines) : rr.AsEnumerable(_textReader), rr);
-			return dr;
+            var dr = new ChoEnumerableDataReader(_lines != null ? rr.AsEnumerable(_lines) : rr.AsEnumerable(_textReader), rr);
+            return dr;
         }
 
         public DataTable AsDataTable(string tableName = null)
         {
             DataTable dt = tableName.IsNullOrWhiteSpace() ? new DataTable() : new DataTable(tableName);
-			dt.Locale = Configuration.Culture;
-			dt.Load(AsDataReader());
+            dt.Locale = Configuration.Culture;
+            dt.Load(AsDataReader());
             return dt;
         }
 
@@ -345,18 +345,18 @@ namespace ChoETL
             return ea.Continue;
         }
 
-		public string RaiseSanitizeLine(long lineNo, string line)
-		{
-			EventHandler<ChoSanitizeLineEventArgs> sanitizeLine = SanitizeLine;
-			if (sanitizeLine == null)
-				return line;
+        public string RaiseSanitizeLine(long lineNo, string line)
+        {
+            EventHandler<ChoSanitizeLineEventArgs> sanitizeLine = SanitizeLine;
+            if (sanitizeLine == null)
+                return line;
 
-			var ea = new ChoSanitizeLineEventArgs(lineNo, line);
-			sanitizeLine(this, ea);
-			return ea.Line;
-		}
+            var ea = new ChoSanitizeLineEventArgs(lineNo, line);
+            sanitizeLine(this, ea);
+            return ea.Line;
+        }
 
-		public override bool TryValidate(object target, ICollection<ValidationResult> validationResults)
+        public override bool TryValidate(object target, ICollection<ValidationResult> validationResults)
         {
             ChoObjectValidationMode prevObjValidationMode = Configuration.ObjectValidationMode;
 
@@ -398,15 +398,15 @@ namespace ChoETL
             return this;
         }
 
-		public ChoFixedLengthReader<T> IgnoreHeader()
-		{
-			Configuration.FileHeaderConfiguration.HasHeaderRecord = true;
-			Configuration.FileHeaderConfiguration.IgnoreHeader = true;
+        public ChoFixedLengthReader<T> IgnoreHeader()
+        {
+            Configuration.FileHeaderConfiguration.HasHeaderRecord = true;
+            Configuration.FileHeaderConfiguration.IgnoreHeader = true;
 
-			return this;
-		}
+            return this;
+        }
 
-		public ChoFixedLengthReader<T> WithFirstLineHeader(bool ignoreHeader = false)
+        public ChoFixedLengthReader<T> WithFirstLineHeader(bool ignoreHeader = false)
         {
             Configuration.FileHeaderConfiguration.HasHeaderRecord = true;
             Configuration.FileHeaderConfiguration.IgnoreHeader = ignoreHeader;
@@ -428,30 +428,30 @@ namespace ChoETL
             return this;
         }
 
-		public ChoFixedLengthReader<T> ClearFields()
-		{
-			Configuration.FixedLengthRecordFieldConfigurations.Clear();
-			_clearFields = true;
-			return this;
-		}
+        public ChoFixedLengthReader<T> ClearFields()
+        {
+            Configuration.FixedLengthRecordFieldConfigurations.Clear();
+            _clearFields = true;
+            return this;
+        }
 
-		public ChoFixedLengthReader<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
-		{
-			if (field != null)
-				return IgnoreField(field.GetFullyQualifiedMemberName());
-			else
-				return this;
-		}
+        public ChoFixedLengthReader<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
+        {
+            if (field != null)
+                return IgnoreField(field.GetFullyQualifiedMemberName());
+            else
+                return this;
+        }
 
-		public ChoFixedLengthReader<T> IgnoreField(string fieldName)
+        public ChoFixedLengthReader<T> IgnoreField(string fieldName)
         {
             if (!fieldName.IsNullOrWhiteSpace())
             {
                 string fnTrim = null;
                 if (!_clearFields)
                 {
-					ClearFields();
-					Configuration.MapRecordFields(Configuration.RecordType);
+                    ClearFields();
+                    Configuration.MapRecordFields(Configuration.RecordType);
                 }
                 fnTrim = fieldName.NTrim();
                 if (Configuration.FixedLengthRecordFieldConfigurations.Any(o => o.Name == fnTrim))
@@ -461,78 +461,78 @@ namespace ChoETL
             return this;
         }
 
-		public ChoFixedLengthReader<T> WithField<TField>(Expression<Func<T, TField>> field, int startIndex, int size, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
-			string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null)
-		{
-			if (field == null)
-				return this;
+        public ChoFixedLengthReader<T> WithField<TField>(Expression<Func<T, TField>> field, int startIndex, int size, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
+            string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null)
+        {
+            if (field == null)
+                return this;
 
-			return WithField(field.GetMemberName(), startIndex, size, fieldType, quoteField, fieldValueTrimOption,
-				fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames, field.GetFullyQualifiedMemberName(), formatText);
-		}
+            return WithField(field.GetMemberName(), startIndex, size, fieldType, quoteField, fieldValueTrimOption,
+                fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames, field.GetFullyQualifiedMemberName(), formatText);
+        }
 
-		public ChoFixedLengthReader<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
-			string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null)
-		{
-			return WithField(name, startIndex, size, fieldType, quoteField, fieldValueTrimOption,
-				fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames, null, formatText);
-		}
+        public ChoFixedLengthReader<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
+            string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null)
+        {
+            return WithField(name, startIndex, size, fieldType, quoteField, fieldValueTrimOption,
+                fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames, null, formatText);
+        }
 
-		private ChoFixedLengthReader<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
+        private ChoFixedLengthReader<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
             string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string altFieldNames = null,
-			string fullyQualifiedMemberName = null, string formatText = null)
+            string fullyQualifiedMemberName = null, string formatText = null)
         {
             if (!name.IsNullOrEmpty())
             {
                 if (!_clearFields)
                 {
-					ClearFields();
-					Configuration.MapRecordFields(Configuration.RecordType);
+                    ClearFields();
+                    Configuration.MapRecordFields(Configuration.RecordType);
                 }
                 if (fieldName.IsNullOrWhiteSpace())
                     fieldName = name;
 
                 string fnTrim = name.NTrim();
                 ChoFixedLengthRecordFieldConfiguration fc = null;
-				PropertyDescriptor pd = null;
-				if (Configuration.FixedLengthRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-				{
-					fc = Configuration.FixedLengthRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
-					Configuration.FixedLengthRecordFieldConfigurations.Remove(fc);
-				}
-				else
-					pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
+                PropertyDescriptor pd = null;
+                if (Configuration.FixedLengthRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                {
+                    fc = Configuration.FixedLengthRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+                    Configuration.FixedLengthRecordFieldConfigurations.Remove(fc);
+                }
+                else
+                    pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
 
-				var nfc = new ChoFixedLengthRecordFieldConfiguration(fnTrim, startIndex, size)
-				{
-					FieldType = fieldType,
-					QuoteField = quoteField,
-					FieldValueTrimOption = fieldValueTrimOption,
-					FieldName = fieldName,
-					ValueConverter = valueConverter,
-					DefaultValue = defaultValue,
-					FallbackValue = fallbackValue,
-					AltFieldNames = altFieldNames,
+                var nfc = new ChoFixedLengthRecordFieldConfiguration(fnTrim, startIndex, size)
+                {
+                    FieldType = fieldType,
+                    QuoteField = quoteField,
+                    FieldValueTrimOption = fieldValueTrimOption,
+                    FieldName = fieldName,
+                    ValueConverter = valueConverter,
+                    DefaultValue = defaultValue,
+                    FallbackValue = fallbackValue,
+                    AltFieldNames = altFieldNames,
                     FormatText = formatText
-				};
-				if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
-				{
-					nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
-					nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
-				}
-				else
-				{
-					pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
-					nfc.PropertyDescriptor = pd;
-					nfc.DeclaringMember = fullyQualifiedMemberName;
-				}
-				if (pd != null)
-				{
-					if (nfc.FieldType == null)
-						nfc.FieldType = pd.PropertyType;
-				}
+                };
+                if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
+                {
+                    nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
+                    nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
+                }
+                else
+                {
+                    pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
+                    nfc.PropertyDescriptor = pd;
+                    nfc.DeclaringMember = fullyQualifiedMemberName;
+                }
+                if (pd != null)
+                {
+                    if (nfc.FieldType == null)
+                        nfc.FieldType = pd.PropertyType;
+                }
 
-				Configuration.FixedLengthRecordFieldConfigurations.Add(nfc);
+                Configuration.FixedLengthRecordFieldConfigurations.Add(nfc);
             }
 
             return this;
@@ -583,45 +583,45 @@ namespace ChoETL
         //    return this;
         //}
 
-		public ChoFixedLengthReader<T> MapRecordFields(params Type[] recordTypes)
-		{
-			Configuration.RecordTypeMapped = true;
-			if (recordTypes != null)
-			{
-				foreach (var t in recordTypes)
-				{
-					if (t == null)
-						continue;
-
-					//if (!typeof(T).IsAssignableFrom(t))
-					//	throw new ChoParserException("Incompatible [{0}] record type passed.".FormatString(t.FullName));
-
-					Configuration.RecordTypeConfiguration.RegisterType(t);
-				}
-			}
-
-			Configuration.MapRecordFields(recordTypes);
-			return this;
-		}
-		public ChoFixedLengthReader<T> WithCustomRecordTypeCodeExtractor(Func<string, string> recordTypeCodeExtractor)
+        public ChoFixedLengthReader<T> MapRecordFields(params Type[] recordTypes)
         {
-			Configuration.SupportsMultiRecordTypes = true;
-			Configuration.RecordTypeCodeExtractor = recordTypeCodeExtractor;
+            Configuration.RecordTypeMapped = true;
+            if (recordTypes != null)
+            {
+                foreach (var t in recordTypes)
+                {
+                    if (t == null)
+                        continue;
+
+                    //if (!typeof(T).IsAssignableFrom(t))
+                    //	throw new ChoParserException("Incompatible [{0}] record type passed.".FormatString(t.FullName));
+
+                    Configuration.RecordTypeConfiguration.RegisterType(t);
+                }
+            }
+
+            Configuration.MapRecordFields(recordTypes);
+            return this;
+        }
+        public ChoFixedLengthReader<T> WithCustomRecordTypeCodeExtractor(Func<string, string> recordTypeCodeExtractor)
+        {
+            Configuration.SupportsMultiRecordTypes = true;
+            Configuration.RecordTypeCodeExtractor = recordTypeCodeExtractor;
             return this;
         }
 
         public ChoFixedLengthReader<T> WithCustomRecordSelector(Func<object, Type> recordSelector)
         {
-			Configuration.SupportsMultiRecordTypes = true;
-			Configuration.RecordSelector = recordSelector;
+            Configuration.SupportsMultiRecordTypes = true;
+            Configuration.RecordSelector = recordSelector;
             return this;
         }
 
         public ChoFixedLengthReader<T> WithRecordSelector(int startIndex, int size, Type defaultRecordType = null, params Type[] recordTypes)
         {
-			Configuration.SupportsMultiRecordTypes = true;
+            Configuration.SupportsMultiRecordTypes = true;
 
-			Configuration.RecordTypeConfiguration.StartIndex = startIndex;
+            Configuration.RecordTypeConfiguration.StartIndex = startIndex;
             Configuration.RecordTypeConfiguration.Size = size;
             if (defaultRecordType != null && !typeof(T).IsAssignableFrom(defaultRecordType))
                 throw new ChoParserException("Incompatible [{0}] record type passed.".FormatString(defaultRecordType.FullName));
@@ -641,17 +641,17 @@ namespace ChoETL
                 }
             }
 
-			//Configuration.RecordTypeMapped = true;
-			//Configuration.MapRecordFields(ChoArray.Combine<Type>(new Type[] { defaultRecordType }, recordTypes));
+            //Configuration.RecordTypeMapped = true;
+            //Configuration.MapRecordFields(ChoArray.Combine<Type>(new Type[] { defaultRecordType }, recordTypes));
             return this;
         }
 
         #endregion Fluent API
    
-		~ChoFixedLengthReader()
-		{
-			Dispose(true);
-		}
+        ~ChoFixedLengthReader()
+        {
+            Dispose(true);
+        }
  }
 
     public class ChoFixedLengthReader : ChoFixedLengthReader<dynamic>

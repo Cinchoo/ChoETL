@@ -153,12 +153,12 @@ namespace ChoETL
                 return default(T);
         }
 
-		public void Dispose()
-		{
-			Dispose(false);
-		}
+        public void Dispose()
+        {
+            Dispose(false);
+        }
 
-		protected virtual void Dispose(bool finalize)
+        protected virtual void Dispose(bool finalize)
         {
             if (_isDisposed)
                 return;
@@ -178,11 +178,11 @@ namespace ChoETL
 
             _closeStreamOnDispose = false;
 
-			if (!finalize)
-				GC.SuppressFinalize(this);
-		}
+            if (!finalize)
+                GC.SuppressFinalize(this);
+        }
 
-		private void Init()
+        private void Init()
         {
             _enumerator = new Lazy<IEnumerator<T>>(() => GetEnumerator());
             if (Configuration == null)
@@ -240,8 +240,8 @@ namespace ChoETL
         public DataTable AsDataTable(string tableName = null)
         {
             DataTable dt = tableName.IsNullOrWhiteSpace() ? new DataTable() : new DataTable(tableName);
-			dt.Locale = Configuration.Culture;
-			dt.Load(AsDataReader());
+            dt.Locale = Configuration.Culture;
+            dt.Load(AsDataReader());
             return dt;
         }
 
@@ -311,30 +311,30 @@ namespace ChoETL
             return this;
         }
 
-		public ChoKVPReader<T> ClearFields()
-		{
-			Configuration.KVPRecordFieldConfigurations.Clear();
-			_clearFields = true;
-			return this;
-		}
+        public ChoKVPReader<T> ClearFields()
+        {
+            Configuration.KVPRecordFieldConfigurations.Clear();
+            _clearFields = true;
+            return this;
+        }
 
-		public ChoKVPReader<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
-		{
-			if (field != null)
-				return IgnoreField(field.GetFullyQualifiedMemberName());
-			else
-				return this;
-		}
+        public ChoKVPReader<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
+        {
+            if (field != null)
+                return IgnoreField(field.GetFullyQualifiedMemberName());
+            else
+                return this;
+        }
 
-		public ChoKVPReader<T> IgnoreField(string fieldName)
+        public ChoKVPReader<T> IgnoreField(string fieldName)
         {
             if (!fieldName.IsNullOrWhiteSpace())
             {
                 string fnTrim = null;
                 if (!_clearFields)
                 {
-					ClearFields();
-					Configuration.MapRecordFields(Configuration.RecordType);
+                    ClearFields();
+                    Configuration.MapRecordFields(Configuration.RecordType);
                 }
                 fnTrim = fieldName.NTrim();
                 if (Configuration.KVPRecordFieldConfigurations.Any(o => o.Name == fnTrim))
@@ -344,54 +344,54 @@ namespace ChoETL
             return this;
         }
 
-		public ChoKVPReader<T> WithFields<TField>(params Expression<Func<T, TField>>[] fields)
-		{
-			if (fields != null)
-			{
-				foreach (var field in fields)
-					return WithField(field);
-			}
-			return this;
-		}
+        public ChoKVPReader<T> WithFields<TField>(params Expression<Func<T, TField>>[] fields)
+        {
+            if (fields != null)
+            {
+                foreach (var field in fields)
+                    return WithField(field);
+            }
+            return this;
+        }
 
-		public ChoKVPReader<T> WithFields(params string[] fieldsNames)
+        public ChoKVPReader<T> WithFields(params string[] fieldsNames)
         {
             string fnTrim = null;
             if (!fieldsNames.IsNullOrEmpty())
             {
-				PropertyDescriptor pd = null;
-				ChoKVPRecordFieldConfiguration fc = null;
-				foreach (string fn in fieldsNames)
+                PropertyDescriptor pd = null;
+                ChoKVPRecordFieldConfiguration fc = null;
+                foreach (string fn in fieldsNames)
                 {
                     if (fn.IsNullOrEmpty())
                         continue;
 
                     if (!_clearFields)
                     {
-						ClearFields();
-						Configuration.MapRecordFields(Configuration.RecordType);
+                        ClearFields();
+                        Configuration.MapRecordFields(Configuration.RecordType);
                         Configuration.ColumnOrderStrict = true;
                     }
 
                     fnTrim = fn.NTrim();
-					if (Configuration.KVPRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-					{
-						fc = Configuration.KVPRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
-						Configuration.KVPRecordFieldConfigurations.Remove(fc);
-					}
-					else
-						pd = ChoTypeDescriptor.GetProperty(typeof(T), fn);
+                    if (Configuration.KVPRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                    {
+                        fc = Configuration.KVPRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+                        Configuration.KVPRecordFieldConfigurations.Remove(fc);
+                    }
+                    else
+                        pd = ChoTypeDescriptor.GetProperty(typeof(T), fn);
 
-					var nfc = new ChoKVPRecordFieldConfiguration(fnTrim) { FieldName = fn };
-					nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
-					nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
-					if (pd != null)
-					{
-						if (nfc.FieldType == null)
-							nfc.FieldType = pd.PropertyType;
-					}
+                    var nfc = new ChoKVPRecordFieldConfiguration(fnTrim) { FieldName = fn };
+                    nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
+                    nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
+                    if (pd != null)
+                    {
+                        if (nfc.FieldType == null)
+                            nfc.FieldType = pd.PropertyType;
+                    }
 
-					Configuration.KVPRecordFieldConfigurations.Add(nfc);
+                    Configuration.KVPRecordFieldConfigurations.Add(nfc);
                 }
 
             }
@@ -399,76 +399,76 @@ namespace ChoETL
             return this;
         }
 
-		public ChoKVPReader<T> WithField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
-			object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null)
-		{
-			if (field == null)
-				return this;
+        public ChoKVPReader<T> WithField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null)
+        {
+            if (field == null)
+                return this;
 
-			return WithField(field.GetMemberName(), fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames,
-				field.GetFullyQualifiedMemberName(), formatText);
-		}
+            return WithField(field.GetMemberName(), fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames,
+                field.GetFullyQualifiedMemberName(), formatText);
+        }
 
-		public ChoKVPReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
-			object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null)
-		{
-			return WithField(name, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter,
-				defaultValue, fallbackValue, altFieldNames, null, formatText);
-		}
+        public ChoKVPReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null)
+        {
+            return WithField(name, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter,
+                defaultValue, fallbackValue, altFieldNames, null, formatText);
+        }
 
-		private ChoKVPReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+        private ChoKVPReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string fullyQualifiedMemberName = null, string formatText = null)
         {
             if (!name.IsNullOrEmpty())
             {
                 if (!_clearFields)
                 {
-					ClearFields();
-					Configuration.MapRecordFields(Configuration.RecordType);
-				}
-				if (fieldName.IsNullOrWhiteSpace())
+                    ClearFields();
+                    Configuration.MapRecordFields(Configuration.RecordType);
+                }
+                if (fieldName.IsNullOrWhiteSpace())
                     fieldName = name;
 
                 string fnTrim = name.NTrim();
-				ChoKVPRecordFieldConfiguration fc = null;
-				PropertyDescriptor pd = null;
-				if (Configuration.KVPRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-				{
-					fc = Configuration.KVPRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
-					Configuration.KVPRecordFieldConfigurations.Remove(fc);
-				}
-				else
-					pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
+                ChoKVPRecordFieldConfiguration fc = null;
+                PropertyDescriptor pd = null;
+                if (Configuration.KVPRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                {
+                    fc = Configuration.KVPRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+                    Configuration.KVPRecordFieldConfigurations.Remove(fc);
+                }
+                else
+                    pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
 
-				var nfc = new ChoKVPRecordFieldConfiguration(fnTrim)
-				{
-					FieldType = fieldType,
-					QuoteField = quoteField,
-					FieldValueTrimOption = fieldValueTrimOption,
-					FieldName = fieldName,
-					ValueConverter = valueConverter,
-					DefaultValue = defaultValue,
-					FallbackValue = fallbackValue,
+                var nfc = new ChoKVPRecordFieldConfiguration(fnTrim)
+                {
+                    FieldType = fieldType,
+                    QuoteField = quoteField,
+                    FieldValueTrimOption = fieldValueTrimOption,
+                    FieldName = fieldName,
+                    ValueConverter = valueConverter,
+                    DefaultValue = defaultValue,
+                    FallbackValue = fallbackValue,
                     FormatText = formatText
-				};
-				if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
-				{
-					nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
-					nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
-				}
-				else
-				{
-					pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
-					nfc.PropertyDescriptor = pd;
-					nfc.DeclaringMember = fullyQualifiedMemberName;
-				}
-				if (pd != null)
-				{
-					if (nfc.FieldType == null)
-						nfc.FieldType = pd.PropertyType;
-				}
+                };
+                if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
+                {
+                    nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
+                    nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
+                }
+                else
+                {
+                    pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
+                    nfc.PropertyDescriptor = pd;
+                    nfc.DeclaringMember = fullyQualifiedMemberName;
+                }
+                if (pd != null)
+                {
+                    if (nfc.FieldType == null)
+                        nfc.FieldType = pd.PropertyType;
+                }
 
-				Configuration.KVPRecordFieldConfigurations.Add(nfc);
+                Configuration.KVPRecordFieldConfigurations.Add(nfc);
             }
 
             return this;
@@ -501,15 +501,15 @@ namespace ChoETL
             return this;
         }
 
-		#endregion Fluent API
+        #endregion Fluent API
 
-		~ChoKVPReader()
-		{
-			Dispose(true);
-		}
-	}
+        ~ChoKVPReader()
+        {
+            Dispose(true);
+        }
+    }
 
-	public class ChoKVPReader : ChoKVPReader<dynamic>
+    public class ChoKVPReader : ChoKVPReader<dynamic>
     {
         public ChoKVPReader(StringBuilder sb, ChoKVPRecordConfiguration configuration = null) : base(sb, configuration)
         {

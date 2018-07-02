@@ -84,14 +84,14 @@ namespace ChoETL
             _closeStreamOnDispose = true;
         }
 
-		public void Dispose()
-		{
-			Dispose(false);
-		}
+        public void Dispose()
+        {
+            Dispose(false);
+        }
 
-		protected virtual void Dispose(bool finalize)
-		{
-			if (_isDisposed)
+        protected virtual void Dispose(bool finalize)
+        {
+            if (_isDisposed)
                 return;
 
             _isDisposed = true;
@@ -103,10 +103,10 @@ namespace ChoETL
                     _textWriter.Dispose();
             }
 
-			if (!finalize)
-				GC.SuppressFinalize(this);
-		}
-		public void Close()
+            if (!finalize)
+                GC.SuppressFinalize(this);
+        }
+        public void Close()
         {
             Dispose();
         }
@@ -242,21 +242,21 @@ namespace ChoETL
             return this;
         }
 
-		public ChoXmlWriter<T> WithDefaultXmlNamespace(string prefix, string uri)
-		{
-			WithXmlNamespace(prefix, uri);
-			WithDefaultNamespacePrefix(prefix);
-			return this;
-		}
+        public ChoXmlWriter<T> WithDefaultXmlNamespace(string prefix, string uri)
+        {
+            WithXmlNamespace(prefix, uri);
+            WithDefaultNamespacePrefix(prefix);
+            return this;
+        }
 
-		public ChoXmlWriter<T> WithDefaultNamespacePrefix(string prefix)
-		{
-			Configuration.DefaultNamespacePrefix = prefix;
+        public ChoXmlWriter<T> WithDefaultNamespacePrefix(string prefix)
+        {
+            Configuration.DefaultNamespacePrefix = prefix;
 
-			return this;
-		}
+            return this;
+        }
 
-		public ChoXmlWriter<T> WithXPath(string xPath)
+        public ChoXmlWriter<T> WithXPath(string xPath)
         {
             Configuration.XPath = xPath;
             return this;
@@ -422,7 +422,7 @@ namespace ChoETL
         }
 
         private ChoXmlWriter<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
-			bool isXmlAttribute = false, bool isAnyXmlNode = false, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
+            bool isXmlAttribute = false, bool isAnyXmlNode = false, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string fullyQualifiedMemberName = null, string formatText = null)
         {
             if (!name.IsNullOrEmpty())
@@ -458,7 +458,7 @@ namespace ChoETL
                     FallbackValue = fallbackValue,
                     EncodeValue = encodeValue,
                     FormatText = formatText,
-					IsAnyXmlNode = isAnyXmlNode
+                    IsAnyXmlNode = isAnyXmlNode
                 };
 
                 if (fullyQualifiedMemberName.IsNullOrWhiteSpace())

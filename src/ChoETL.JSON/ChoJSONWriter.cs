@@ -83,14 +83,14 @@ namespace ChoETL
             _closeStreamOnDispose = true;
         }
 
-		public void Dispose()
-		{
-			Dispose(false);
-		}
+        public void Dispose()
+        {
+            Dispose(false);
+        }
 
-		protected virtual void Dispose(bool finalize)
-		{
-			if (_isDisposed)
+        protected virtual void Dispose(bool finalize)
+        {
+            if (_isDisposed)
                 return;
 
             _isDisposed = true;
@@ -103,10 +103,10 @@ namespace ChoETL
                     _textWriter.Dispose();
             }
 
-			if (!finalize)
-				GC.SuppressFinalize(this);
-		}
-		public void Close()
+            if (!finalize)
+                GC.SuppressFinalize(this);
+        }
+        public void Close()
         {
             Dispose();
         }
@@ -165,10 +165,10 @@ namespace ChoETL
         public static string ToText<TRec>(TRec record, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string jsonPath = null)
             where TRec : class
         {
-			configuration.IgnoreRootName = true;
-			configuration.RootName = null;
-			configuration.SingleElement = true;
-			return ToTextAll(ChoEnumerable.AsEnumerable<TRec>(record), configuration, traceSwitch, jsonPath);
+            configuration.IgnoreRootName = true;
+            configuration.RootName = null;
+            configuration.SingleElement = true;
+            return ToTextAll(ChoEnumerable.AsEnumerable<TRec>(record), configuration, traceSwitch, jsonPath);
         }
 
 
@@ -493,9 +493,9 @@ namespace ChoETL
                     startIndex += fieldLength;
                 }
             }
-			Configuration.RootName = dt.TableName.IsNullOrWhiteSpace() ? null : dt.TableName;
+            Configuration.RootName = dt.TableName.IsNullOrWhiteSpace() ? null : dt.TableName;
 
-			foreach (DataRow row in dt.Rows)
+            foreach (DataRow row in dt.Rows)
             {
                 expandoDic.Clear();
 
@@ -508,19 +508,19 @@ namespace ChoETL
             }
         }
 
-		public void Write(DataSet ds)
-		{
-			ChoGuard.ArgumentNotNull(ds, "DataSet");
+        public void Write(DataSet ds)
+        {
+            ChoGuard.ArgumentNotNull(ds, "DataSet");
 
-			foreach (DataTable dt in ds.Tables)
-			{
-				Configuration.Reset();
-				Configuration.RootName = ds.DataSetName.IsNullOrWhiteSpace() ? "Root" : ds.DataSetName;
-				Write(dt);
-			}
-		}
+            foreach (DataTable dt in ds.Tables)
+            {
+                Configuration.Reset();
+                Configuration.RootName = ds.DataSetName.IsNullOrWhiteSpace() ? "Root" : ds.DataSetName;
+                Write(dt);
+            }
+        }
 
-		~ChoJSONWriter()
+        ~ChoJSONWriter()
         {
             Dispose(true);
         }

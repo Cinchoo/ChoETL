@@ -241,23 +241,23 @@ namespace ChoETL
         }
     }
 
-	public class ChoSanitizeLineEventArgs : EventArgs
-	{
-		public long LineNo
-		{
-			get;
-			private set;
-		}
-		public string Line
-		{
-			get;
-			set;
-		}
+    public class ChoSanitizeLineEventArgs : EventArgs
+    {
+        public long LineNo
+        {
+            get;
+            private set;
+        }
+        public string Line
+        {
+            get;
+            set;
+        }
 
-		public ChoSanitizeLineEventArgs(long lineNo, string line)
-		{
-			Line = line;
-			LineNo = lineNo;
-		}
-	}
+        public ChoSanitizeLineEventArgs(long lineNo, string line)
+        {
+            Line = line;
+            LineNo = lineNo;
+        }
+    }
 }

@@ -19,11 +19,11 @@ namespace ChoETL
     [Serializable]
     public class ChoDynamicObject : DynamicObject, IDictionary<string, object> //, IList<object>, IList //, IXmlSerializable
     {
-		public const string DefaultName = "dynamic";
+        public const string DefaultName = "dynamic";
 
-		private static readonly string ValueToken = "#text";
+        private static readonly string ValueToken = "#text";
 
-		private readonly static Dictionary<string, Type> _intrinsicTypes = new Dictionary<string, Type>();
+        private readonly static Dictionary<string, Type> _intrinsicTypes = new Dictionary<string, Type>();
 
         #region Instance Members
 
@@ -133,7 +133,7 @@ namespace ChoETL
             _kvpDict = kvpDict;
         }
 
-		public ChoDynamicObject(ExpandoObject kvpDict) : this(null, false)
+        public ChoDynamicObject(ExpandoObject kvpDict) : this(null, false)
         {
             _kvpDict = (IDictionary<string, object>)kvpDict;
         }
@@ -368,10 +368,10 @@ namespace ChoETL
 
                 if (kvpDict.ContainsKey(name))
                     result = AfterKVPLoaded(name, kvpDict[name]);
-				else if (kvpDict.ContainsKey("@{0}".FormatString(name)))
-					result = AfterKVPLoaded(name, kvpDict["@{0}".FormatString(name)]);
-				else
-				{
+                else if (kvpDict.ContainsKey("@{0}".FormatString(name)))
+                    result = AfterKVPLoaded(name, kvpDict["@{0}".FormatString(name)]);
+                else
+                {
                     if (name.StartsWith("_"))
                     {
                         string normalizedName = name.Substring(1);
@@ -390,10 +390,10 @@ namespace ChoETL
             if (IsReadOnly)
                 return false;
 
-			if (!_prefix.IsNullOrWhiteSpace() && !name.StartsWith("@xmlns:", StringComparison.InvariantCultureIgnoreCase))
-				name = "{0}:{1}".FormatString(_prefix, name);
+            if (!_prefix.IsNullOrWhiteSpace() && !name.StartsWith("@xmlns:", StringComparison.InvariantCultureIgnoreCase))
+                name = "{0}:{1}".FormatString(_prefix, name);
 
-			IDictionary<string, object> kvpDict = _kvpDict;
+            IDictionary<string, object> kvpDict = _kvpDict;
             if (kvpDict != null)
             {
                 if (AlternativeKeys != null && AlternativeKeys.ContainsKey(name))
@@ -651,78 +651,78 @@ namespace ChoETL
             }
         }
 
-		public string[] KeysArray
-		{
-			get
-			{
-				IDictionary<string, object> kvpDict = _kvpDict;
-				return kvpDict != null ? kvpDict.Keys.ToArray() : new string[] { };
-			}
-		}
-
-		public object[] ValuesArray
-		{
-			get
-			{
-				IDictionary<string, object> kvpDict = _kvpDict;
-				return kvpDict != null ? kvpDict.Values.ToArray() : new object[] { };
-			}
-		}
-
-		public int Count
+        public string[] KeysArray
         {
             get
             {
-				//if (_list.Count > 0)
-				//	return _list.Count;
+                IDictionary<string, object> kvpDict = _kvpDict;
+                return kvpDict != null ? kvpDict.Keys.ToArray() : new string[] { };
+            }
+        }
+
+        public object[] ValuesArray
+        {
+            get
+            {
+                IDictionary<string, object> kvpDict = _kvpDict;
+                return kvpDict != null ? kvpDict.Values.ToArray() : new object[] { };
+            }
+        }
+
+        public int Count
+        {
+            get
+            {
+                //if (_list.Count > 0)
+                //	return _list.Count;
 
                 IDictionary<string, object> kvpDict = _kvpDict;
                 return kvpDict != null ? kvpDict.Count : 0;
             }
         }
 
-		//public bool IsFixedSize
-		//{
-		//	get { return false; }
-		//}
+        //public bool IsFixedSize
+        //{
+        //	get { return false; }
+        //}
 
-		//readonly object _syncRoot = new object();
-		//public object SyncRoot
-		//{
-		//	get { return _syncRoot; }
-		//}
+        //readonly object _syncRoot = new object();
+        //public object SyncRoot
+        //{
+        //	get { return _syncRoot; }
+        //}
 
-		//public bool IsSynchronized
-		//{
-		//	get { return false; }
-		//}
+        //public bool IsSynchronized
+        //{
+        //	get { return false; }
+        //}
 
-		//public object this[int index]
-		//{
-		//	get
-		//	{
-		//		return _list[index];
-		//	}
-		//	set
-		//	{
-		//		_list[index] = value;
-		//	}
-		//}
+        //public object this[int index]
+        //{
+        //	get
+        //	{
+        //		return _list[index];
+        //	}
+        //	set
+        //	{
+        //		_list[index] = value;
+        //	}
+        //}
 
-		//public KeyValuePair<string, object> this[int index]
-		//{
-		//    get
-		//    {
-		//        IDictionary<string, object> kvpDict = _kvpDict;
-		//        if (kvpDict != null)
-		//        {
-		//            return kvpDict.ElementAtOrDefault(index);
-		//        }
-		//        return new KeyValuePair<string, object>();
-		//    }
-		//}
+        //public KeyValuePair<string, object> this[int index]
+        //{
+        //    get
+        //    {
+        //        IDictionary<string, object> kvpDict = _kvpDict;
+        //        if (kvpDict != null)
+        //        {
+        //            return kvpDict.ElementAtOrDefault(index);
+        //        }
+        //        return new KeyValuePair<string, object>();
+        //    }
+        //}
 
-		public object this[string key]
+        public object this[string key]
         {
             get
             {
@@ -830,11 +830,11 @@ namespace ChoETL
             return Keys;
         }
 
-		public ChoDynamicObject Flatten()
-		{
-			_kvpDict = _kvpDict.Flatten().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-			return this;
-		}
+        public ChoDynamicObject Flatten()
+        {
+            _kvpDict = _kvpDict.Flatten().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            return this;
+        }
 
         public string Dump()
         {
@@ -860,13 +860,13 @@ namespace ChoETL
 
         public string GetXml(string tag = null, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Empty, string nsPrefix = null)
         {
-			if (nsPrefix.IsNullOrWhiteSpace())
-				nsPrefix = String.Empty;
+            if (nsPrefix.IsNullOrWhiteSpace())
+                nsPrefix = String.Empty;
 
-			if (tag.IsNullOrWhiteSpace())
+            if (tag.IsNullOrWhiteSpace())
                 tag = NName;
 
-			bool hasAttrs = false;
+            bool hasAttrs = false;
             StringBuilder msg = new StringBuilder("<{0}".FormatString(tag));
             foreach (string key in this.Keys.Where(k => IsAttribute(k) && k != ValueToken))
             {
@@ -894,25 +894,25 @@ namespace ChoETL
                 object value = null;
                 msg.AppendFormat(">");
                 foreach (string key in this.Keys.Where(k => !IsAttribute(k)))
-				{
-					value = this[key];
-					var x = IsCDATA(key);
+                {
+                    value = this[key];
+                    var x = IsCDATA(key);
 
-					GetXml(msg, value, key, nullValueHandling, nsPrefix, IsCDATA(key));
-				}
-				msg.AppendFormat("{0}</{1}>", Environment.NewLine, tag);
+                    GetXml(msg, value, key, nullValueHandling, nsPrefix, IsCDATA(key));
+                }
+                msg.AppendFormat("{0}</{1}>", Environment.NewLine, tag);
             }
-			//else if (_list != null && _list.Count > 0)
-			//{
+            //else if (_list != null && _list.Count > 0)
+            //{
    //             msg.AppendFormat(">");
-			//	foreach (var obj in _list)
-			//	{
-			//		if (obj == null) continue;
-			//		GetXml(msg, obj, tag.ToSingular());
-			//	}
-			//	msg.AppendFormat("{0}</{1}>", Environment.NewLine, tag);
-			//}
-			else
+            //	foreach (var obj in _list)
+            //	{
+            //		if (obj == null) continue;
+            //		GetXml(msg, obj, tag.ToSingular());
+            //	}
+            //	msg.AppendFormat("{0}</{1}>", Environment.NewLine, tag);
+            //}
+            else
             {
                 msg.AppendFormat(" />");
             }
@@ -920,43 +920,43 @@ namespace ChoETL
             return msg.ToString();
         }
 
-		private void GetXml(StringBuilder msg, object value, string key, ChoNullValueHandling nullValueHandling, string nsPrefix = null, bool isCDATA = false)
-		{
-			if (value is ChoDynamicObject)
-			{
-				msg.AppendFormat("{0}{1}", Environment.NewLine, ((ChoDynamicObject)value).GetXml(((ChoDynamicObject)value).NName, nullValueHandling, nsPrefix).Indent(1, "  "));
-			}
-			else
-			{
-				if (value != null)
-				{
-					if (value.GetType().IsSimple())
-					{
-						if (isCDATA)
-						{
-							msg.AppendFormat("{0}{1}", Environment.NewLine, "<{0}><![CDATA[{1}]]></{0}>".FormatString(key, value).Indent(1, "  "));
-						}
-						else
-							msg.AppendFormat("{0}{1}", Environment.NewLine, "<{0}>{1}</{0}>".FormatString(key, value).Indent(1, "  "));
-					}
-					else
-					{
-						key = value is IList ? key.ToPlural() != key ? key.ToPlural() : key.Length > 1 && key.EndsWith("s", StringComparison.InvariantCultureIgnoreCase) ? key : "{0}s".FormatString(key) : key;
-						msg.AppendFormat("{0}{1}", Environment.NewLine, "<{0}>".FormatString(key).Indent(1, "  "));
-						if (value is IList)
-						{
-							foreach (var collValue in ((IList)value).OfType<ChoDynamicObject>())
-							{
-								msg.AppendFormat("{0}{1}", Environment.NewLine, collValue.GetXml(collValue.NName == DefaultName ? key.ToSingular() : collValue.NName, nullValueHandling, nsPrefix).Indent(2, "  "));
-							}
-						}
-						else
-							msg.AppendFormat("{0}{1}", Environment.NewLine, ChoUtility.XmlSerialize(value).Indent(2, "  "));
-						msg.AppendFormat("{0}{1}", Environment.NewLine, "</{0}>".FormatString(key).Indent(1, "  "));
-					}
-				}
-				else
-				{
+        private void GetXml(StringBuilder msg, object value, string key, ChoNullValueHandling nullValueHandling, string nsPrefix = null, bool isCDATA = false)
+        {
+            if (value is ChoDynamicObject)
+            {
+                msg.AppendFormat("{0}{1}", Environment.NewLine, ((ChoDynamicObject)value).GetXml(((ChoDynamicObject)value).NName, nullValueHandling, nsPrefix).Indent(1, "  "));
+            }
+            else
+            {
+                if (value != null)
+                {
+                    if (value.GetType().IsSimple())
+                    {
+                        if (isCDATA)
+                        {
+                            msg.AppendFormat("{0}{1}", Environment.NewLine, "<{0}><![CDATA[{1}]]></{0}>".FormatString(key, value).Indent(1, "  "));
+                        }
+                        else
+                            msg.AppendFormat("{0}{1}", Environment.NewLine, "<{0}>{1}</{0}>".FormatString(key, value).Indent(1, "  "));
+                    }
+                    else
+                    {
+                        key = value is IList ? key.ToPlural() != key ? key.ToPlural() : key.Length > 1 && key.EndsWith("s", StringComparison.InvariantCultureIgnoreCase) ? key : "{0}s".FormatString(key) : key;
+                        msg.AppendFormat("{0}{1}", Environment.NewLine, "<{0}>".FormatString(key).Indent(1, "  "));
+                        if (value is IList)
+                        {
+                            foreach (var collValue in ((IList)value).OfType<ChoDynamicObject>())
+                            {
+                                msg.AppendFormat("{0}{1}", Environment.NewLine, collValue.GetXml(collValue.NName == DefaultName ? key.ToSingular() : collValue.NName, nullValueHandling, nsPrefix).Indent(2, "  "));
+                            }
+                        }
+                        else
+                            msg.AppendFormat("{0}{1}", Environment.NewLine, ChoUtility.XmlSerialize(value).Indent(2, "  "));
+                        msg.AppendFormat("{0}{1}", Environment.NewLine, "</{0}>".FormatString(key).Indent(1, "  "));
+                    }
+                }
+                else
+                {
                     switch (nullValueHandling)
                     {
                         case ChoNullValueHandling.Empty:
@@ -970,9 +970,9 @@ namespace ChoETL
                     }
                 }
             }
-		}
+        }
 
-		public virtual void WriteXml(XmlWriter writer)
+        public virtual void WriteXml(XmlWriter writer)
         {
             writer.WriteStartElement(DefaultName);
 
@@ -1018,245 +1018,245 @@ namespace ChoETL
         {
             return ContainsKey(ValueToken) ? this[ValueToken] : null;
         }
-		public void SetText(object value)
-		{
-			if (ContainsKey(ValueToken))
-				this[ValueToken] = value;
-			else
-				Add(ValueToken, value);
-		}
-
-		private HashSet<string> _attributes = new HashSet<string>();
-		public object GetAttribute(string attrName)
+        public void SetText(object value)
         {
-			if (_attributes.Contains(attrName))
-				return this[attrName];
-			else
-				return null;
+            if (ContainsKey(ValueToken))
+                this[ValueToken] = value;
+            else
+                Add(ValueToken, value);
+        }
+
+        private HashSet<string> _attributes = new HashSet<string>();
+        public object GetAttribute(string attrName)
+        {
+            if (_attributes.Contains(attrName))
+                return this[attrName];
+            else
+                return null;
         }
 
         public void SetAttribute(string attrName, object value)
         {
-			if (!_attributes.Contains(attrName))
-				_attributes.Add(attrName);
+            if (!_attributes.Contains(attrName))
+                _attributes.Add(attrName);
 
-			SetPropertyValue(attrName, value);
+            SetPropertyValue(attrName, value);
         }
         public bool IsAttribute(string attrName)
         {
-			return _attributes.Contains(attrName) || attrName.StartsWith("@");
-		}
+            return _attributes.Contains(attrName) || attrName.StartsWith("@");
+        }
 
-		private HashSet<string> _cDatas = new HashSet<string>();
-		public void SetElement(string elementName, object value, bool isCDATA = false)
-		{
-			if (isCDATA)
-			{
-				if (!_cDatas.Contains(elementName))
-					_cDatas.Add(elementName);
+        private HashSet<string> _cDatas = new HashSet<string>();
+        public void SetElement(string elementName, object value, bool isCDATA = false)
+        {
+            if (isCDATA)
+            {
+                if (!_cDatas.Contains(elementName))
+                    _cDatas.Add(elementName);
 
-				SetPropertyValue(elementName, value);
-			}
-			else
-			{
-				if (_cDatas.Contains(elementName))
-					_cDatas.Remove(elementName);
+                SetPropertyValue(elementName, value);
+            }
+            else
+            {
+                if (_cDatas.Contains(elementName))
+                    _cDatas.Remove(elementName);
 
-				SetPropertyValue(elementName, value);
-			}
-		}
-		public bool IsCDATA(string elementName)
-		{
-			return _cDatas.Contains(elementName);
-		}
-		//public int IndexOf(object item)
-		//{
-		//	return _list.IndexOf(item);
-		//}
+                SetPropertyValue(elementName, value);
+            }
+        }
+        public bool IsCDATA(string elementName)
+        {
+            return _cDatas.Contains(elementName);
+        }
+        //public int IndexOf(object item)
+        //{
+        //	return _list.IndexOf(item);
+        //}
 
-		//public void Insert(int index, object item)
-		//{
-		//	_list.Insert(index, item);
-		//}
+        //public void Insert(int index, object item)
+        //{
+        //	_list.Insert(index, item);
+        //}
 
-		//public void RemoveAt(int index)
-		//{
-		//	_list.RemoveAt(index);
-		//}
+        //public void RemoveAt(int index)
+        //{
+        //	_list.RemoveAt(index);
+        //}
 
-		//public void Add(object item)
-		//{
-		//	_list.Add(item);
-		//}
+        //public void Add(object item)
+        //{
+        //	_list.Add(item);
+        //}
 
-		//public bool Contains(object item)
-		//{
-		//	return _list.Contains(item);
-		//}
+        //public bool Contains(object item)
+        //{
+        //	return _list.Contains(item);
+        //}
 
-		//public void CopyTo(object[] array, int arrayIndex)
-		//{
-		//	_list.CopyTo(array, arrayIndex);
-		//}
+        //public void CopyTo(object[] array, int arrayIndex)
+        //{
+        //	_list.CopyTo(array, arrayIndex);
+        //}
 
-		//public bool Remove(object item)
-		//{
-		//	return _list.Remove(item);
-		//}
-		//List<object> _list = new List<object>();
-		//IEnumerator<object> IEnumerable<object>.GetEnumerator()
-		//{
-		//	return _list.GetEnumerator();
-		//}
+        //public bool Remove(object item)
+        //{
+        //	return _list.Remove(item);
+        //}
+        //List<object> _list = new List<object>();
+        //IEnumerator<object> IEnumerable<object>.GetEnumerator()
+        //{
+        //	return _list.GetEnumerator();
+        //}
 
-		//int IList.Add(object value)
-		//{
-		//	return ((IList)_list).Add(value);
-		//}
+        //int IList.Add(object value)
+        //{
+        //	return ((IList)_list).Add(value);
+        //}
 
-		//void IList.Remove(object value)
-		//{
-		//	_list.Remove(value);
-		//}
+        //void IList.Remove(object value)
+        //{
+        //	_list.Remove(value);
+        //}
 
-		//public void CopyTo(Array array, int index)
-		//{
-		//	_list.CopyTo(array.Cast<object>().ToArray(), index);
-		//}
-		//public int ListCount
-		//{
-		//	get { return _list.Count;  }
-		//}
-		//public object GetListItemAt(int index)
-		//{
-		//	return _list[index];
-		//}
+        //public void CopyTo(Array array, int index)
+        //{
+        //	_list.CopyTo(array.Cast<object>().ToArray(), index);
+        //}
+        //public int ListCount
+        //{
+        //	get { return _list.Count;  }
+        //}
+        //public object GetListItemAt(int index)
+        //{
+        //	return _list[index];
+        //}
 
-		public static ChoDynamicObject FromDictionary(IDictionary kvpDict)
-		{
-			ChoDynamicObject obj = new ChoDynamicObject();
-			if (kvpDict != null)
-			{
-				foreach (var key in kvpDict.Keys)
-					obj.AddOrUpdate(key.ToNString(), kvpDict[key]);
-			}
+        public static ChoDynamicObject FromDictionary(IDictionary kvpDict)
+        {
+            ChoDynamicObject obj = new ChoDynamicObject();
+            if (kvpDict != null)
+            {
+                foreach (var key in kvpDict.Keys)
+                    obj.AddOrUpdate(key.ToNString(), kvpDict[key]);
+            }
 
-			return obj;
-		}
+            return obj;
+        }
 
-		public static ChoDynamicObject FromKeyValuePairs(IEnumerable<KeyValuePair<string, object>> kvps, string name = null)
-		{
-			ChoDynamicObject obj = new ChoDynamicObject(name);
-			if (kvps != null)
-			{
-				foreach (var kvp in kvps)
-				{
-					obj.AddOrUpdate(kvp.Key.ToNString(), kvp.Value);
-				}
-			}
+        public static ChoDynamicObject FromKeyValuePairs(IEnumerable<KeyValuePair<string, object>> kvps, string name = null)
+        {
+            ChoDynamicObject obj = new ChoDynamicObject(name);
+            if (kvps != null)
+            {
+                foreach (var kvp in kvps)
+                {
+                    obj.AddOrUpdate(kvp.Key.ToNString(), kvp.Value);
+                }
+            }
 
-			return obj;
-		}
+            return obj;
+        }
 
-		public static ChoDynamicObject From(IEnumerable<KeyValuePair<string, object>> kvps, string name = null)
-		{
-			ChoDynamicObject obj = new ChoDynamicObject(name);
-			if (kvps != null)
-			{
-				foreach (var kvp in kvps)
-				{
-					obj.AddOrUpdate(kvp.Key.ToNString(), kvp.Value);
-				}
-			}
+        public static ChoDynamicObject From(IEnumerable<KeyValuePair<string, object>> kvps, string name = null)
+        {
+            ChoDynamicObject obj = new ChoDynamicObject(name);
+            if (kvps != null)
+            {
+                foreach (var kvp in kvps)
+                {
+                    obj.AddOrUpdate(kvp.Key.ToNString(), kvp.Value);
+                }
+            }
 
-			return obj;
-		}
+            return obj;
+        }
 
-		private string _prefix = null;
-		public ChoDynamicObject AddNamespace(string prefix, string uri)
-		{
-			ChoGuard.ArgumentNotNullOrEmpty(prefix, nameof(prefix));
-			ChoGuard.ArgumentNotNullOrEmpty(uri, nameof(uri));
+        private string _prefix = null;
+        public ChoDynamicObject AddNamespace(string prefix, string uri)
+        {
+            ChoGuard.ArgumentNotNullOrEmpty(prefix, nameof(prefix));
+            ChoGuard.ArgumentNotNullOrEmpty(uri, nameof(uri));
 
-			SetAttribute("@xmlns:{0}".FormatString(prefix), uri);
-			AddPrefixNS(prefix);
-			return this;
-		}
+            SetAttribute("@xmlns:{0}".FormatString(prefix), uri);
+            AddPrefixNS(prefix);
+            return this;
+        }
 
-		private void AddPrefixNS(string prefix)
-		{
-			_prefix = prefix;
-			_kvpDict = PrefixNS(prefix, _kvpDict);
-			if (!_prefix.IsNullOrWhiteSpace())
-				DynamicObjectName = "{0}:{1}".FormatString(prefix, DynamicObjectName.IndexOf(":") > 0 ? DynamicObjectName.Substring(DynamicObjectName.IndexOf(":") + 1) : DynamicObjectName);
-		}
+        private void AddPrefixNS(string prefix)
+        {
+            _prefix = prefix;
+            _kvpDict = PrefixNS(prefix, _kvpDict);
+            if (!_prefix.IsNullOrWhiteSpace())
+                DynamicObjectName = "{0}:{1}".FormatString(prefix, DynamicObjectName.IndexOf(":") > 0 ? DynamicObjectName.Substring(DynamicObjectName.IndexOf(":") + 1) : DynamicObjectName);
+        }
 
-		private object PrefixNS(string prefix, object value)
-		{
-			if (value == null)
-				return value;
+        private object PrefixNS(string prefix, object value)
+        {
+            if (value == null)
+                return value;
 
-			if (value is ChoDynamicObject)
-			{
-				((ChoDynamicObject)value).AddPrefixNS(prefix);
-				return value;
-			}
-			else if (value is IDictionary<string, object>)
-			{
-				return PrefixNS(prefix, value as IDictionary<string, object>);
-			}
-			else if (value is IList)
-			{
-				var ret = ((IList)value).OfType<object>().Select(value1 =>
-				{
-					if (value1 is ChoDynamicObject)
-					{
-						((ChoDynamicObject)value1).AddPrefixNS(prefix);
-						return value1;
-					}
-					else if (value1 is IDictionary<string, object>)
-					{
-						return PrefixNS(prefix, value1 as IDictionary<string, object>);
-					}
-					else
-					{
-						return PrefixNS(prefix, value1);
-					}
-				});
+            if (value is ChoDynamicObject)
+            {
+                ((ChoDynamicObject)value).AddPrefixNS(prefix);
+                return value;
+            }
+            else if (value is IDictionary<string, object>)
+            {
+                return PrefixNS(prefix, value as IDictionary<string, object>);
+            }
+            else if (value is IList)
+            {
+                var ret = ((IList)value).OfType<object>().Select(value1 =>
+                {
+                    if (value1 is ChoDynamicObject)
+                    {
+                        ((ChoDynamicObject)value1).AddPrefixNS(prefix);
+                        return value1;
+                    }
+                    else if (value1 is IDictionary<string, object>)
+                    {
+                        return PrefixNS(prefix, value1 as IDictionary<string, object>);
+                    }
+                    else
+                    {
+                        return PrefixNS(prefix, value1);
+                    }
+                });
 
-				return value is Array ? (object)ret.ToArray() : (object)ret.ToList();
-			}
-			else
-			{
-				return value;
-			}
-		}
+                return value is Array ? (object)ret.ToArray() : (object)ret.ToList();
+            }
+            else
+            {
+                return value;
+            }
+        }
 
-		private IDictionary<string, object> PrefixNS(string prefix, IDictionary<string, object> kvpDict)
-		{
-			if (kvpDict == null)
-				return kvpDict;
+        private IDictionary<string, object> PrefixNS(string prefix, IDictionary<string, object> kvpDict)
+        {
+            if (kvpDict == null)
+                return kvpDict;
 
-			return kvpDict.ToDictionary(kvp => kvp.Key.StartsWith("@xmlns", StringComparison.InvariantCultureIgnoreCase) ? kvp.Key : "{0}:{1}".FormatString(prefix, kvp.Key.IndexOf(":") > 0 ? kvp.Key.Substring(kvp.Key.IndexOf(":") + 1) : kvp.Key),
-				kvp => PrefixNS(prefix, kvp.Value));
-		}
-	}
+            return kvpDict.ToDictionary(kvp => kvp.Key.StartsWith("@xmlns", StringComparison.InvariantCultureIgnoreCase) ? kvp.Key : "{0}:{1}".FormatString(prefix, kvp.Key.IndexOf(":") > 0 ? kvp.Key.Substring(kvp.Key.IndexOf(":") + 1) : kvp.Key),
+                kvp => PrefixNS(prefix, kvp.Value));
+        }
+    }
 
-	[AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
     public class ChoPropertyAttribute : Attribute
     {
         public string Name { get; set; }
         public ChoPropertyValueTrimOption TrimOption { get; set; }
     }
 
-	public static class ChoDynamicObjectEx
-	{
-		public static T ToObject<T>(this ChoDynamicObject obj)
-			where T : class, new()
-		{
-			T ret = ((IDictionary<string, object>)obj).ToObject<T>();
+    public static class ChoDynamicObjectEx
+    {
+        public static T ToObject<T>(this ChoDynamicObject obj)
+            where T : class, new()
+        {
+            T ret = ((IDictionary<string, object>)obj).ToObject<T>();
 
-			return ret;
-		}
-	}
+            return ret;
+        }
+    }
 }

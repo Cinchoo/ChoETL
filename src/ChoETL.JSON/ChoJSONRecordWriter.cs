@@ -20,7 +20,7 @@ namespace ChoETL
         private IChoNotifyRecordWrite _callbackRecord;
         private IChoNotifyRecordFieldWrite _callbackFieldRecord;
         private IChoSerializable _callbackRecordSeriablizable;
-		private long _index = 0;
+        private long _index = 0;
         bool isFirstRec = true;
         internal ChoWriter Writer = null;
         internal Type ElementType = null;
@@ -38,13 +38,13 @@ namespace ChoETL
             Configuration = configuration;
 
             _callbackRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordWrite>(recordType);
-			_callbackFieldRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordFieldWrite>(recordType);
-			if (_callbackFieldRecord == null)
-				_callbackFieldRecord = _callbackRecord;
-			_callbackRecordSeriablizable = ChoMetadataObjectCache.CreateMetadataObject<IChoSerializable>(recordType);
-			if (_callbackRecordSeriablizable == null)
-				_callbackRecordSeriablizable = _callbackRecord as IChoSerializable;
-			_recBuffer = new Lazy<List<object>>(() =>
+            _callbackFieldRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordFieldWrite>(recordType);
+            if (_callbackFieldRecord == null)
+                _callbackFieldRecord = _callbackRecord;
+            _callbackRecordSeriablizable = ChoMetadataObjectCache.CreateMetadataObject<IChoSerializable>(recordType);
+            if (_callbackRecordSeriablizable == null)
+                _callbackRecordSeriablizable = _callbackRecord as IChoSerializable;
+            _recBuffer = new Lazy<List<object>>(() =>
             {
                 var b = Writer.Context.RecBuffer;
                 if (b == null)
@@ -69,22 +69,22 @@ namespace ChoETL
             {
                 if (Configuration.IsInitialized)
                 {
-					if (!SupportMultipleContent)
-					{
-						if (Configuration.IgnoreRootName || Configuration.RootName.IsNullOrWhiteSpace())
-							sw.Write(String.Format("{0}]", Configuration.EOLDelimiter));
-						else
-						{
-							sw.Write(String.Format("{0}]}}", Configuration.EOLDelimiter));
-						}
-					}
-					else
-					{
-						if (!Configuration.SingleElement)
-							sw.Write(String.Format("{0}}}", Configuration.EOLDelimiter));
-					}
-				}
-			}
+                    if (!SupportMultipleContent)
+                    {
+                        if (Configuration.IgnoreRootName || Configuration.RootName.IsNullOrWhiteSpace())
+                            sw.Write(String.Format("{0}]", Configuration.EOLDelimiter));
+                        else
+                        {
+                            sw.Write(String.Format("{0}]}}", Configuration.EOLDelimiter));
+                        }
+                    }
+                    else
+                    {
+                        if (!Configuration.SingleElement)
+                            sw.Write(String.Format("{0}}}", Configuration.EOLDelimiter));
+                    }
+                }
+            }
             catch { }
 
             RaiseEndWrite(sw);
@@ -139,39 +139,39 @@ namespace ChoETL
                             Configuration.IsDynamicObject = recordType.IsDynamicType();
                             if (!Configuration.IsDynamicObject)
                             {
-								if (!Configuration.SingleElement)
-								{
-									if (Configuration.RootName.IsNullOrWhiteSpace())
-									{
-										var root = Configuration.RecordType.GetCustomAttribute<ChoJSONNRootNameAttribute>();
-										if (root != null)
-										{
-											Configuration.RootName = root.Name;
-										}
-									}
+                                if (!Configuration.SingleElement)
+                                {
+                                    if (Configuration.RootName.IsNullOrWhiteSpace())
+                                    {
+                                        var root = Configuration.RecordType.GetCustomAttribute<ChoJSONNRootNameAttribute>();
+                                        if (root != null)
+                                        {
+                                            Configuration.RootName = root.Name;
+                                        }
+                                    }
 
-									if (Configuration.NodeName.IsNullOrWhiteSpace())
-									{
-										var root = Configuration.RecordType.GetCustomAttribute<ChoJSONNRootNameAttribute>();
-										if (root != null)
-										{
-											Configuration.NodeName = root.Name;
-										}
-										else
-										{
-											var xmlRoot = Configuration.RecordType.GetCustomAttribute<XmlRootAttribute>();
-											if (xmlRoot != null)
-											{
-												Configuration.NodeName = xmlRoot.ElementName;
-											}
-											else
-												Configuration.NodeName = Configuration.RecordType.Name;
+                                    if (Configuration.NodeName.IsNullOrWhiteSpace())
+                                    {
+                                        var root = Configuration.RecordType.GetCustomAttribute<ChoJSONNRootNameAttribute>();
+                                        if (root != null)
+                                        {
+                                            Configuration.NodeName = root.Name;
+                                        }
+                                        else
+                                        {
+                                            var xmlRoot = Configuration.RecordType.GetCustomAttribute<XmlRootAttribute>();
+                                            if (xmlRoot != null)
+                                            {
+                                                Configuration.NodeName = xmlRoot.ElementName;
+                                            }
+                                            else
+                                                Configuration.NodeName = Configuration.RecordType.Name;
 
-										}
-									}
-								}
+                                        }
+                                    }
+                                }
 
-								if (Configuration.JSONRecordFieldConfigurations.Count == 0)
+                                if (Configuration.JSONRecordFieldConfigurations.Count == 0)
                                     Configuration.MapRecordFields(Configuration.RecordType);
                             }
 
@@ -191,26 +191,26 @@ namespace ChoETL
 
                             Configuration.Validate(fieldNames);
 
-							Configuration.IsInitialized = true;
+                            Configuration.IsInitialized = true;
 
                             if (!RaiseBeginWrite(sw))
                                 yield break;
 
-							if (!SupportMultipleContent)
-							{
-								if (Configuration.IgnoreRootName || Configuration.RootName.IsNullOrWhiteSpace())
-									sw.Write("[");
-								else
-								{
-									sw.Write(@"{{""{0}"": [".FormatString(Configuration.RootName.NTrim()));
-								}
-							}
-							else
-							{
-								if (!Configuration.SingleElement)
-									sw.Write(String.Format("{{{0}", Configuration.EOLDelimiter));
-							}
-						}
+                            if (!SupportMultipleContent)
+                            {
+                                if (Configuration.IgnoreRootName || Configuration.RootName.IsNullOrWhiteSpace())
+                                    sw.Write("[");
+                                else
+                                {
+                                    sw.Write(@"{{""{0}"": [".FormatString(Configuration.RootName.NTrim()));
+                                }
+                            }
+                            else
+                            {
+                                if (!Configuration.SingleElement)
+                                    sw.Write(String.Format("{{{0}", Configuration.EOLDelimiter));
+                            }
+                        }
 
                         if (!RaiseBeforeRecordWrite(record, _index, ref recText))
                             yield break;
@@ -233,17 +233,17 @@ namespace ChoETL
                                             sw.Write("{1}{0}", Configuration.Formatting == Formatting.Indented ? recText.Indent(1, " ") : recText, Configuration.EOLDelimiter);
                                         else
                                         {
-											if (Configuration.SingleElement)
-											{
-												sw.Write(recText);
-											}
-											else
-											{
-												if (_index == 1)
-													sw.Write("{0}", recText.Indent(1, " "));
-												else
-													sw.Write("{1}{0}", recText.Indent(1, " "), Configuration.EOLDelimiter);
-											}
+                                            if (Configuration.SingleElement)
+                                            {
+                                                sw.Write(recText);
+                                            }
+                                            else
+                                            {
+                                                if (_index == 1)
+                                                    sw.Write("{0}", recText.Indent(1, " "));
+                                                else
+                                                    sw.Write("{1}{0}", recText.Indent(1, " "), Configuration.EOLDelimiter);
+                                            }
                                         }
 
                                         if (!RaiseAfterRecordWrite(record, _index, recText))
@@ -368,22 +368,22 @@ namespace ChoETL
                 if (Configuration.SupportMultipleContent == null || !Configuration.SupportMultipleContent.Value)
                     Configuration.IgnoreNodeName = true;
             }
-			if (!Configuration.IgnoreNodeName)
-			{
-				if (Configuration.NodeName.IsNullOrWhiteSpace())
-				{
-					if (Configuration.IsDynamicObject && rec is ChoDynamicObject && ((ChoDynamicObject)rec).DynamicObjectName != ChoDynamicObject.DefaultName)
-						msg.AppendFormat(@"""{1}"": {{{0}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, ((ChoDynamicObject)rec).DynamicObjectName);
-					else
-						msg.AppendFormat("{{{0}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
-				}
-				else
-					msg.AppendFormat(@"""{1}"": {{{0}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, Configuration.NodeName);
-			}
-			else
-				msg.AppendFormat("{{{0}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
+            if (!Configuration.IgnoreNodeName)
+            {
+                if (Configuration.NodeName.IsNullOrWhiteSpace())
+                {
+                    if (Configuration.IsDynamicObject && rec is ChoDynamicObject && ((ChoDynamicObject)rec).DynamicObjectName != ChoDynamicObject.DefaultName)
+                        msg.AppendFormat(@"""{1}"": {{{0}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, ((ChoDynamicObject)rec).DynamicObjectName);
+                    else
+                        msg.AppendFormat("{{{0}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
+                }
+                else
+                    msg.AppendFormat(@"""{1}"": {{{0}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, Configuration.NodeName);
+            }
+            else
+                msg.AppendFormat("{{{0}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
 
-			foreach (KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
+            foreach (KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
                 fieldConfig = kvp.Value;
                 fieldValue = null;
@@ -416,7 +416,7 @@ namespace ChoETL
                         if (kvp.Value.FieldType == null)
                         {
                             kvp.Value.FieldType = typeof(object);
-							//if (fieldValue == null)
+                            //if (fieldValue == null)
        //                         kvp.Value.FieldType = typeof(string);
        //                     else
        //                         kvp.Value.FieldType = fieldValue.GetType();
@@ -583,7 +583,7 @@ namespace ChoETL
                 }
                 isFirst = false;
             }
-			msg.AppendFormat("{0}}}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
+            msg.AppendFormat("{0}}}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
 
             recText = Configuration.IgnoreNodeName ? msg.ToString().Unindent(1, " ")  : msg.ToString();
             return true;
@@ -645,87 +645,87 @@ namespace ChoETL
   //          foreach (var item in source)
   //              return MapToDictionary(item);
 
-		//	return Enumerable.Empty<IDictionary<string, object>>();
-		//}
+        //	return Enumerable.Empty<IDictionary<string, object>>();
+        //}
 
         public object MapToDictionary(object source)
         {
             IDictionary<string, object> dict = null;
-			if (source != null && source.GetType().IsDynamicType())
-			{
-				if (source is IDictionary<string, object>)
-					dict = source as IDictionary<string, object>;
-				else
-					return source;
-			}
-			else
-			{
-				var dictionary = new Dictionary<string, object>();
-				MapToDictionaryInternal(dictionary, source);
-				dict = dictionary;
-			}
+            if (source != null && source.GetType().IsDynamicType())
+            {
+                if (source is IDictionary<string, object>)
+                    dict = source as IDictionary<string, object>;
+                else
+                    return source;
+            }
+            else
+            {
+                var dictionary = new Dictionary<string, object>();
+                MapToDictionaryInternal(dictionary, source);
+                dict = dictionary;
+            }
 
-			if (dict is ChoDynamicObject && dict.Keys.Count == 1 && ((ChoDynamicObject)dict).DynamicObjectName == dict.Keys.First().ToPlural())
-			{
-				object x = dict[dict.Keys.First()];
-				if (!(x is IList))
-					return FixArray(x as IDictionary<string, object>);
-				else
-				{
-					return ((IList)x).Cast<object>().Select(i => FixArray(i as IDictionary<string, object>)).ToArray();
-				}
-			}
-			else
-			{
-				return FixArray(dict);
-			}
+            if (dict is ChoDynamicObject && dict.Keys.Count == 1 && ((ChoDynamicObject)dict).DynamicObjectName == dict.Keys.First().ToPlural())
+            {
+                object x = dict[dict.Keys.First()];
+                if (!(x is IList))
+                    return FixArray(x as IDictionary<string, object>);
+                else
+                {
+                    return ((IList)x).Cast<object>().Select(i => FixArray(i as IDictionary<string, object>)).ToArray();
+                }
+            }
+            else
+            {
+                return FixArray(dict);
+            }
         }
 
-		private IDictionary<string, object> FixArray(IDictionary<string, object> dict)
-		{
-			if (dict == null)
-				return dict;
+        private IDictionary<string, object> FixArray(IDictionary<string, object> dict)
+        {
+            if (dict == null)
+                return dict;
 
-			foreach (var key in dict.Keys.ToArray())
-			{
-				object value = dict[key];
-				if (value is IList && ((IList)value).Cast<object>().All(i => i is ChoDynamicObject))
-				{
-					if (((IList)value).Cast<ChoDynamicObject>().All(i => i.Count == 1 && i.HasText()))
-					{
-						dict[key] = ((IList)value).Cast<ChoDynamicObject>().Select(i => i.GetText()).ToArray();
-					}
-				}
-				else if (value is IDictionary<string, object>)
-				{
-					dict[key] = MapToDictionary(value as IDictionary<string, object>);
-					//if (!(value1 is IList))
-					//	dict[key] = MapToDictionary(value as IDictionary<string, object>);
-					//else
-					//	dict[key] = MapToDictionary(value as IDictionary<string, object>).ToArray();
-				}
-				else if (value is IList)
-				{
-					List<object> list = new List<object>();
-					foreach (var obj in (IList)value)
-					{
-						if (obj is IDictionary<string, object>)
-						{
-							object value1 = MapToDictionary(obj as IDictionary<string, object>);
-							if (value1 is IList)
-								list.AddRange(((IList)value1).Cast<object>().ToArray());
-							else
-								list.Add(value1);
-						}
-						else
-							list.Add(obj);
-					}
+            foreach (var key in dict.Keys.ToArray())
+            {
+                object value = dict[key];
+                if (value is IList && ((IList)value).Cast<object>().All(i => i is ChoDynamicObject))
+                {
+                    if (((IList)value).Cast<ChoDynamicObject>().All(i => i.Count == 1 && i.HasText()))
+                    {
+                        dict[key] = ((IList)value).Cast<ChoDynamicObject>().Select(i => i.GetText()).ToArray();
+                    }
+                }
+                else if (value is IDictionary<string, object>)
+                {
+                    dict[key] = MapToDictionary(value as IDictionary<string, object>);
+                    //if (!(value1 is IList))
+                    //	dict[key] = MapToDictionary(value as IDictionary<string, object>);
+                    //else
+                    //	dict[key] = MapToDictionary(value as IDictionary<string, object>).ToArray();
+                }
+                else if (value is IList)
+                {
+                    List<object> list = new List<object>();
+                    foreach (var obj in (IList)value)
+                    {
+                        if (obj is IDictionary<string, object>)
+                        {
+                            object value1 = MapToDictionary(obj as IDictionary<string, object>);
+                            if (value1 is IList)
+                                list.AddRange(((IList)value1).Cast<object>().ToArray());
+                            else
+                                list.Add(value1);
+                        }
+                        else
+                            list.Add(obj);
+                    }
 
-					dict[key] = list.ToArray();
-				}
-			}
-			return dict;
-		}
+                    dict[key] = list.ToArray();
+                }
+            }
+            return dict;
+        }
 
         private object SimpleTypeValue(object source)
         {
@@ -793,14 +793,14 @@ namespace ChoETL
                     dictionary[kvp.Key.ToNString()] = MapToDictionary(value);
                 return;
             }
-			if (source is IDictionary<string, object>)
-			{
-				foreach (string key in (source as IDictionary<string, object>).Keys)
-				{
-					dictionary.Add(key, ((IDictionary<string, object>)source)[key]);
-				}
-				return;
-			}
+            if (source is IDictionary<string, object>)
+            {
+                foreach (string key in (source as IDictionary<string, object>).Keys)
+                {
+                    dictionary.Add(key, ((IDictionary<string, object>)source)[key]);
+                }
+                return;
+            }
 
             var properties = ChoType.GetProperties(source.GetType()); // source.GetType().GetProperties();
             foreach (var p in properties)

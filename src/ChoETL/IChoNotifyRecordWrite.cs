@@ -6,15 +6,15 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-	public interface IChoNotifyRecordFieldWrite
-	{
-		bool BeforeRecordFieldWrite(object target, long index, string propName, ref object value);
-		bool AfterRecordFieldWrite(object target, long index, string propName, object value);
-		bool RecordFieldWriteError(object target, long index, string propName, object value, Exception ex);
-	}
+    public interface IChoNotifyRecordFieldWrite
+    {
+        bool BeforeRecordFieldWrite(object target, long index, string propName, ref object value);
+        bool AfterRecordFieldWrite(object target, long index, string propName, object value);
+        bool RecordFieldWriteError(object target, long index, string propName, object value, Exception ex);
+    }
 
-	public interface IChoNotifyRecordWrite : IChoNotifyRecordFieldWrite
-	{
+    public interface IChoNotifyRecordWrite : IChoNotifyRecordFieldWrite
+    {
         bool BeginWrite(object source);
         void EndWrite(object source);
 

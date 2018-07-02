@@ -13,8 +13,8 @@ namespace ChoETL
     internal class ChoCSVRecordWriter : ChoRecordWriter
     {
         private IChoNotifyRecordWrite _callbackRecord;
-		private IChoNotifyRecordFieldWrite _callbackFieldRecord;
-		private bool _configCheckDone = false;
+        private IChoNotifyRecordFieldWrite _callbackFieldRecord;
+        private bool _configCheckDone = false;
         private long _index = 0;
         private bool _hadHeaderWritten = false;
         internal ChoWriter Writer = null;
@@ -33,10 +33,10 @@ namespace ChoETL
             Configuration = configuration;
 
             _callbackRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordWrite>(recordType);
-			_callbackFieldRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordFieldWrite>(recordType);
-			if (_callbackFieldRecord == null)
-				_callbackFieldRecord = _callbackRecord;
-			_recBuffer = new Lazy<List<object>>(() =>
+            _callbackFieldRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordFieldWrite>(recordType);
+            if (_callbackFieldRecord == null)
+                _callbackFieldRecord = _callbackRecord;
+            _recBuffer = new Lazy<List<object>>(() =>
             {
                 if (Writer != null)
                 {
