@@ -106,7 +106,7 @@ namespace ChoETL
                 }
             }
         }
-        protected void LoadNCacheMembers(IEnumerable<ChoRecordFieldConfiguration> fcs)
+        protected virtual void LoadNCacheMembers(IEnumerable<ChoRecordFieldConfiguration> fcs)
         {
             if (!IsDynamicObject)
             {

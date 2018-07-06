@@ -322,6 +322,10 @@ namespace ChoETL
                 {
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                     {
+                        XmlIgnoreAttribute xiAttr = pd.Attributes.OfType<XmlIgnoreAttribute>().FirstOrDefault();
+                        if (xiAttr != null)
+                            continue;
+
                         pt = pd.PropertyType.GetUnderlyingType();
                         if (false) //pt != typeof(object) && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
                         {
@@ -336,13 +340,30 @@ namespace ChoETL
                             StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
                             if (slAttr != null && slAttr.MaximumLength > 0)
                                 obj.Size = slAttr.MaximumLength;
-                            DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
-                            if (dpAttr != null)
+
+                            XmlElementAttribute xAttr = pd.Attributes.OfType<XmlElementAttribute>().FirstOrDefault();
+                            if (xAttr != null && !xAttr.ElementName.IsNullOrWhiteSpace())
                             {
-                                if (!dpAttr.ShortName.IsNullOrWhiteSpace())
-                                    obj.FieldName = dpAttr.ShortName;
-                                else if (!dpAttr.Name.IsNullOrWhiteSpace())
-                                    obj.FieldName = dpAttr.Name;
+                                obj.FieldName = xAttr.ElementName;
+                            }
+                            else
+                            {
+                                XmlAttributeAttribute xaAttr = pd.Attributes.OfType<XmlAttributeAttribute>().FirstOrDefault();
+                                if (xAttr != null && !xaAttr.AttributeName.IsNullOrWhiteSpace())
+                                {
+                                    obj.FieldName = xaAttr.AttributeName;
+                                }
+                                else
+                                {
+                                    DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
+                                    if (dpAttr != null)
+                                    {
+                                        if (!dpAttr.ShortName.IsNullOrWhiteSpace())
+                                            obj.FieldName = dpAttr.ShortName;
+                                        else if (!dpAttr.Name.IsNullOrWhiteSpace())
+                                            obj.FieldName = dpAttr.Name;
+                                    }
+                                }
                             }
                             DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();
                             if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())

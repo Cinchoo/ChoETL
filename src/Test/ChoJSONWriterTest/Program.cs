@@ -92,7 +92,7 @@ public class ToTextConverter : IChoValueConverter
 
         static void Main(string[] args)
         {
-            CustomFormat2();
+            DataReaderTest();
         }
 
         static void CustomFormat2()
@@ -706,14 +706,18 @@ public class ToTextConverter : IChoValueConverter
 
         static void DataReaderTest()
         {
-            string connectionstring = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True";
+            //string connectionstring = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True";
+            string connectionstring = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=Northwind;Integrated Security=True";
+            StringBuilder sb = new StringBuilder();
             using (var conn = new SqlConnection(connectionstring))
             {
                 conn.Open();
-                var comm = new SqlCommand("SELECT * FROM Customers", conn);
-                using (var parser = new ChoJSONWriter("customers.json"))
+                var comm = new SqlCommand("SELECT top 2 * FROM Customers", conn);
+                using (var parser = new ChoJSONWriter(sb))
                     parser.Write(comm.ExecuteReader());
             }
+
+            Console.WriteLine(sb.ToString());
         }
 
         static void POCOTest()

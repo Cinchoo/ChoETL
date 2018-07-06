@@ -1,5 +1,6 @@
 ﻿using ChoETL;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
@@ -677,6 +678,7 @@ namespace ChoJSONReaderTest
             public float PercentageSurveysCompleted { get; set; }
         }
 
+        public enum Gender { Male, Female }
         public class SessionPerformanceStats
         {
             [JsonProperty(PropertyName = "attendance")]
@@ -684,6 +686,9 @@ namespace ChoJSONReaderTest
 
             [JsonProperty(PropertyName = "pollsAndSurveys")]
             public PollsAndSurveysStatistics PollsAndSurveys { get; set; }
+
+            [JsonConverter(typeof(StringEnumConverter))]
+            public Gender Gender { get; set; }
         }
 
         static void Sample100()
@@ -701,7 +706,8 @@ namespace ChoJSONReaderTest
         ""averageInterestRating"":0,
         ""averageAttentiveness"":0,
         ""registrantCount"":1,
-        ""percentageAttendance"":100}
+        ""percentageAttendance"":100},
+    ""gender"":""1""
     },
     ""5235291"":{
     ""pollsAndSurveys"":{

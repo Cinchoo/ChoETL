@@ -232,6 +232,10 @@ namespace ChoETL
                 {
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                     {
+                        JsonIgnoreAttribute jiAttr = pd.Attributes.OfType<JsonIgnoreAttribute>().FirstOrDefault();
+                        if (jiAttr != null)
+                            continue;
+
                         pt = pd.PropertyType.GetUnderlyingType();
                         if (pt != typeof(object) && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt) && FlatToNestedObjectSupport)
                         {
@@ -249,13 +253,22 @@ namespace ChoETL
                             ChoUseJSONSerializationAttribute sAttr = pd.Attributes.OfType<ChoUseJSONSerializationAttribute>().FirstOrDefault();
                             if (sAttr != null)
                                 obj.UseJSONSerialization = true;
-                            DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
-                            if (dpAttr != null)
+
+                            JsonPropertyAttribute jAttr = pd.Attributes.OfType<JsonPropertyAttribute>().FirstOrDefault();
+                            if (jAttr != null && !jAttr.PropertyName.IsNullOrWhiteSpace())
                             {
-                                if (!dpAttr.ShortName.IsNullOrWhiteSpace())
-                                    obj.FieldName = dpAttr.ShortName;
-                                else if (!dpAttr.Name.IsNullOrWhiteSpace())
-                                    obj.FieldName = dpAttr.Name;
+                                obj.FieldName = jAttr.PropertyName;
+                            }
+                            else
+                            {
+                                DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
+                                if (dpAttr != null)
+                                {
+                                    if (!dpAttr.ShortName.IsNullOrWhiteSpace())
+                                        obj.FieldName = dpAttr.ShortName;
+                                    else if (!dpAttr.Name.IsNullOrWhiteSpace())
+                                        obj.FieldName = dpAttr.Name;
+                                }
                             }
                             DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();
                             if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
@@ -373,5 +386,27 @@ namespace ChoETL
 
             return this;
         }
+
+        //protected override void LoadNCacheMembers(IEnumerable<ChoRecordFieldConfiguration> fcs)
+        //{
+        //    base.LoadNCacheMembers(fcs);
+
+        //    if (!IsDynamicObject)
+        //    {
+        //        foreach (var fc in fcs.OfType<ChoJSONRecordFieldConfiguration>())
+        //        {
+        //            if (!PDDict.ContainsKey(fc.Name))
+        //                continue;
+
+        //            var attr = ChoType.GetMemberAttribute<JsonConverterAttribute>(PIDict[fc.Name]);
+        //            if (attr != null && attr.ConverterType != null)
+        //            {
+        //                fc.JSONPropConverters = new object[] { Activator.CreateInstance(attr.ConverterType) };
+        //                fc.JSONPropConverterParams = new object[] { attr.ConverterParameters };
+        //            }
+        //        }
+        //    }
+        //}
+
     }
 }
