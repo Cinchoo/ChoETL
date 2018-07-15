@@ -189,6 +189,7 @@ namespace ChoETL
                 Configuration.RecordType = typeof(T);
 
             Configuration.RecordType = ResolveRecordType(Configuration.RecordType);
+            Configuration.IsDynamicObject = Configuration.RecordType.IsDynamicType();
             if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
             {
                 _prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;

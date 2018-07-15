@@ -67,6 +67,11 @@ namespace ChoETL
             get;
             set;
         }
+        public Func<object, object> CustomSerializer
+        {
+            get;
+            set;
+        }
         public Func<object, object> ItemConverter
         {
             get;

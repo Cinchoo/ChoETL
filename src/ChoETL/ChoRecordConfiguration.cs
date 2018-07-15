@@ -54,7 +54,7 @@ namespace ChoETL
         public long NotifyAfter { get; set; }
 
         private bool _isDynamicObject = true;
-        public virtual bool IsDynamicObject
+        internal virtual bool IsDynamicObject
         {
             get { return _isDynamicObject; }
             set { _isDynamicObject = value; }

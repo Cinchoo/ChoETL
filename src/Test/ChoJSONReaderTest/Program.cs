@@ -635,11 +635,128 @@ namespace ChoJSONReaderTest
             }
         }
 
+        public class JSObject
+        {
+            [JsonProperty("name")]
+            public string name { get; set; }
+            [JsonProperty("width")]
+            public int width { get; set; }
+            [JsonProperty("height")]
+            public int height { get; set; }
+        }
+        static void ArrayTest()
+        {
+            string json = @"[{""name"":""1.jpg"",""height"":300,""width"":211}, 
+{ ""width"":211,""height"":300,""name"":""157.jpg""}, 
+{ ""width"":211,""height"":300,""name"":""158.jpg""}, 
+{ ""height"":211,""name"":""159.jpg"",""width"":300}, 
+{ ""name"":""160.jpg"",""height"":211,""width"":300}, 
+{ ""width"":300,""height"":211,""name"":""161.jpg""}, 
+{ ""width"":300,""height"":211,""name"":""162.jpg""}, 
+{ ""name"":""163.jpg"",""height"":211,""width"":300}, 
+{ ""width"":300,""height"":211,""name"":""164.jpg""}, 
+{ ""height"":211,""name"":""165.jpg"",""width"":300}, 
+{ ""height"":211,""name"":""166.jpg"",""width"":300}
+            ";
 
+            using (var p = ChoJSONReader< JSObject>.LoadText(json))
+            {
+                foreach (var rec in p.Where(r => r.name.Contains("4")))
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void JSONToXmlTest()
+        {
+            string json = @" {
+  'Email': 'james@example.com',
+  'Active': true,
+  'CreatedDate': '2013-01-20T00:00:00Z',
+  'Roles': [
+    'User',
+    'Admin'
+  ]
+ }";
+            using (var p = ChoJSONReader.LoadText(json)
+                .WithField("Email")
+                .WithField("Roles", customSerializer: ((o) =>
+                {
+                return ((JArray)o).Select(i =>
+                {
+                    var x = new ChoDynamicObject("role"); x.SetText(i.ToString());
+                    return x;
+                }).ToArray();
+                }))
+                .Configure(c => c.SupportMultipleContent = true)
+                )
+            {
+                Console.WriteLine(ChoXmlWriter.ToText(p.First()));
+            }
+
+
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Sample100();
+            JSONToXmlTest();
+        }
+
+        public class Detail
+        {
+            public string Name { get; set; }
+            public string Job { get; set; }
+        }
+
+        static void Test1()
+        {
+            string json = @"{ user: [{
+     serialNo: 1,
+     details: [{ name: ""John"",
+             job: ""Receptionist"" }]
+ },
+ {
+     serialNo: 2,
+     details: [{
+             name: ""Alan"",
+             job: ""Salesman""
+          }]
+  }
+]}";
+            using (var p = ChoJSONReader.LoadText(json)
+                .Configure(c => c.SupportMultipleContent = true)
+                )
+            {
+                dynamic x = p.FirstOrDefault();
+                dynamic y = x.user[0].details[0];
+                var z = y.ConvertToObject<Detail>();
+            }
+        }
+
+        static void CountNodes()
+        {
+            string json = @"{
+""package1"": {
+    ""type"": ""envelope"",
+    ""quantity"": 1,
+    ""length"": 6,
+    ""width"": 1,
+    ""height"": 4
+},
+""package2"": {
+    ""type"": ""box"",
+    ""quantity"": 2,
+    ""length"": 9,
+    ""width"": 9,
+    ""height"": 9
+}
+}";
+
+            using (var p = ChoJSONReader.LoadText(json).WithJSONPath("$.*"))
+            {
+                Console.WriteLine(p.Count());
+                //foreach (var rec in p)
+                //    Console.WriteLine(rec.Dump());
+            }
         }
 
         public class AttendanceStatistics

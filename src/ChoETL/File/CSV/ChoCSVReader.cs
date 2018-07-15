@@ -189,6 +189,7 @@ namespace ChoETL
             else
                 Configuration.RecordType = typeof(T);
             Configuration.RecordType = ResolveRecordType(Configuration.RecordType);
+            Configuration.IsDynamicObject = Configuration.RecordType.IsDynamicType();
 
             if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
             {
@@ -525,6 +526,16 @@ namespace ChoETL
                 return this;
 
             return WithField(field.GetMemberName(), null, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames,
+                field.GetFullyQualifiedMemberName(), formatText);
+        }
+
+        public ChoCSVReader<T> WithField<TField>(Expression<Func<T, TField>> field, int? position, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null)
+        {
+            if (field == null)
+                return this;
+
+            return WithField(field.GetMemberName(), position, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames,
                 field.GetFullyQualifiedMemberName(), formatText);
         }
 

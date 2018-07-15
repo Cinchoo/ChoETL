@@ -214,6 +214,7 @@ namespace ChoETL
                 Configuration.RecordType = typeof(T);
 
             Configuration.RecordType = ResolveRecordType(Configuration.RecordType);
+            Configuration.IsDynamicObject = Configuration.RecordType.IsDynamicType();
             _prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
         }
@@ -503,27 +504,31 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONReader<T> WithField<TField>(Expression<Func<T, TField>> field, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
-            Func<object, object> itemConverter = null, 
+        public ChoJSONReader<T> WithField<TField>(Expression<Func<T, TField>> field, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, 
+            Func<object, object> valueConverter = null,
+            Func<object, object> itemConverter = null,
+            Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null)
         {
             if (field == null)
                 return this;
 
             return WithField(field.GetMemberName(), jsonPath, fieldType, fieldValueTrimOption, isJSONAttribute, fieldName, valueConverter, itemConverter,
-                defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText);
+                customSerializer, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText);
         }
 
         public ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
+            Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null, bool isArray = false)
         {
             return WithField(name, jsonPath, fieldType, fieldValueTrimOption, isJSONAttribute, fieldName, valueConverter, itemConverter,
-                defaultValue, fallbackValue, null, formatText, isArray);
+                customSerializer, defaultValue, fallbackValue, null, formatText, isArray);
         }
 
         private ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
+            Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null, 
             string formatText = null, bool isArray = false)
         {
@@ -552,6 +557,7 @@ namespace ChoETL
                     FieldValueTrimOption = fieldValueTrimOption,
                     FieldName = fieldName,
                     ValueConverter = valueConverter,
+                    CustomSerializer = customSerializer,
                     DefaultValue = defaultValue,
                     FallbackValue = fallbackValue,
                     FormatText = formatText,

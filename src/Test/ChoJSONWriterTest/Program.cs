@@ -92,7 +92,27 @@ public class ToTextConverter : IChoValueConverter
 
         static void Main(string[] args)
         {
-            DataReaderTest();
+            ListTest();
+        }
+
+        public class data
+        {
+            public int Id { get; set; }
+            public int SSN { get; set; }
+            public string Message { get; set; }
+
+        }
+        static void ListTest()
+        {
+            List<data> _data = new List<data>();
+            _data.Add(new data()
+            {
+                Id = 1,
+                SSN = 2,
+                Message = "A Message"
+            });
+
+            Console.WriteLine(ChoJSONWriter.ToTextAll<data>(_data));
         }
 
         static void CustomFormat2()

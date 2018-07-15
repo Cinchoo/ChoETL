@@ -36,8 +36,8 @@ namespace ChoETL
             set;
         }
 
-        internal object[] JSONPropConverters;
-        internal object[] JSONPropConverterParams;
+        //internal object[] JSONPropConverters;
+        //internal object[] JSONPropConverterParams;
 
         public ChoJSONRecordFieldConfiguration(string name, string jsonPath = null) : this(name, (ChoJSONRecordFieldAttribute)null)
         {

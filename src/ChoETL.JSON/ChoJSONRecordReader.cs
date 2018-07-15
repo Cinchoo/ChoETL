@@ -459,8 +459,8 @@ namespace ChoETL
                 }
 
 
-                if (fieldConfig.ValueConverter != null)
-                    fieldValue = fieldConfig.ValueConverter(fieldValue);
+                if (fieldConfig.CustomSerializer != null)
+                    fieldValue = fieldConfig.CustomSerializer(fieldValue);
                 else
                 {
                     if (fieldConfig.FieldType == null)
@@ -1147,7 +1147,7 @@ namespace ChoETL
                     }
                     else
                         return kvp;
-                }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+                }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.InvariantCultureIgnoreCase);
                 return new ChoDynamicObject(dict);
                     case JTokenType.Uri:
                         return (Uri)jToken;
@@ -1177,8 +1177,8 @@ namespace ChoETL
                 List<object> list = new List<object>();
                 foreach (var jt in jTokens)
                 {
-                    if (fieldConfig.ValueConverter != null)
-                        list.Add(fieldConfig.ValueConverter(jt));
+                    if (fieldConfig.CustomSerializer != null)
+                        list.Add(fieldConfig.CustomSerializer(jt));
                     else
                     {
                         list.Add(ToObject(jt, kvp.Value.FieldType, kvp.Value.UseJSONSerialization));

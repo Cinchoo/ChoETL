@@ -92,18 +92,26 @@ namespace ChoETL
             get;
             set;
         }
-        public override bool IsDynamicObject
-        {
-            get
-            {
-                return base.IsDynamicObject; // && !UseJSONSerialization;
-            }
 
-            set
-            {
-                base.IsDynamicObject = value;
-            }
+        private bool _isDynamicObject = true;
+        internal virtual bool IsDynamicObject
+        {
+            get { return _isDynamicObject; }
+            set { _isDynamicObject = value; }
         }
+
+        //public override bool IsDynamicObject
+        //{
+        //    get
+        //    {
+        //        return base.IsDynamicObject; // && !UseJSONSerialization;
+        //    }
+
+        //    set
+        //    {
+        //        base.IsDynamicObject = value;
+        //    }
+        //}
         internal Dictionary<string, ChoJSONRecordFieldConfiguration> RecordFieldConfigurationsDict
         {
             get;

@@ -28,7 +28,7 @@ namespace ChoETL
         #region Instance Members
 
         private readonly object _padLock = new object();
-        private IDictionary<string, object> _kvpDict = new Dictionary<string, object>();
+        private IDictionary<string, object> _kvpDict = new Dictionary<string, object>(StringComparer.CurrentCultureIgnoreCase);
         [IgnoreDataMember]
         private Func<IDictionary<string, object>> _func = null;
         private bool _watchChange = false;
@@ -830,9 +830,10 @@ namespace ChoETL
             return Keys;
         }
 
-        public ChoDynamicObject Flatten()
+        public ChoDynamicObject Flatten(StringComparer cmp = null)
         {
-            _kvpDict = _kvpDict.Flatten().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            _kvpDict = _kvpDict.Flatten().GroupBy(kvp => kvp.Key).ToDictionary(kvp => kvp.Key, kvp => kvp.First().Value,
+                cmp == null ? StringComparer.InvariantCultureIgnoreCase : cmp);
             return this;
         }
 
@@ -1239,6 +1240,17 @@ namespace ChoETL
 
             return kvpDict.ToDictionary(kvp => kvp.Key.StartsWith("@xmlns", StringComparison.InvariantCultureIgnoreCase) ? kvp.Key : "{0}:{1}".FormatString(prefix, kvp.Key.IndexOf(":") > 0 ? kvp.Key.Substring(kvp.Key.IndexOf(":") + 1) : kvp.Key),
                 kvp => PrefixNS(prefix, kvp.Value));
+        }
+
+        public object ConvertToObject<T>()
+            where T : class, new()
+        {
+            return ChoObjectEx.ConvertToObject<T>(this);
+        }
+
+        public object ConvertToObject(Type type)
+        {
+            return ChoObjectEx.ConvertToObject(this, type);
         }
     }
 
