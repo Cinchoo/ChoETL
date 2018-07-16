@@ -287,7 +287,7 @@ namespace ChoETL
                     && KVPRecordFieldConfigurations.Count == 0)
                 {
                     AutoDiscoveredColumns = true;
-                    if (headers != null)
+                    if (headers != null && IsDynamicObject)
                     {
                         KVPRecordFieldConfigurations = (from header in headers
                                                         select new ChoKVPRecordFieldConfiguration(header)).ToList();

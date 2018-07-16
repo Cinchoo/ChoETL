@@ -327,7 +327,7 @@ namespace ChoETL
             if (AutoDiscoverColumns
                 && CSVRecordFieldConfigurations.Count == 0)
             {
-                if (headers != null)
+                if (headers != null && IsDynamicObject)
                 {
                     int index = 0;
                     CSVRecordFieldConfigurations = (from header in headers
