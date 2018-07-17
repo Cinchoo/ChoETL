@@ -705,11 +705,10 @@ namespace ChoJSONReaderTest
         {
             var x = ChoJSONReader.Deserialize("sample21.json", 
                 new ChoJSONRecordConfiguration()
-                .Configure(c => c.SupportMultipleContent = true)
-                .Configure(c => c.JSONPath = "$..quotes")
-                ).First();
+                .Configure(c => c.JSONPath = "$..quotes.USDEUR")
+                ).First().Value;
 
-            Console.WriteLine(x.USDEUR);
+            Console.WriteLine(x);
         }
 
         public class Detail
