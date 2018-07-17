@@ -20,8 +20,8 @@ namespace ChoETL
     internal class ChoKVPRecordReader : ChoRecordReader
     {
         private IChoNotifyRecordRead _callbackRecord;
-		private IChoNotifyRecordFieldRead _callbackFieldRecord;
-		private IChoNotifyKVPRecordRead _customKVPRecord;
+        private IChoNotifyRecordFieldRead _callbackFieldRecord;
+        private IChoNotifyKVPRecordRead _customKVPRecord;
         private string[] _fieldNames = new string[] { };
         private bool _configCheckDone = false;
         private Dictionary<string, bool> _propInit = new Dictionary<string, bool>();
@@ -38,10 +38,10 @@ namespace ChoETL
             ChoGuard.ArgumentNotNull(configuration, "Configuration");
             Configuration = configuration;
             _callbackRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordRead>(recordType);
-			_callbackFieldRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordFieldRead>(recordType);
-			if (_callbackFieldRecord == null)
-				_callbackFieldRecord = _callbackRecord;
-			_customKVPRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyKVPRecordRead>(recordType);
+            _callbackFieldRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordFieldRead>(recordType);
+            if (_callbackFieldRecord == null)
+                _callbackFieldRecord = _callbackRecord;
+            _customKVPRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyKVPRecordRead>(recordType);
             //Configuration.Validate();
         }
 
@@ -570,9 +570,9 @@ namespace ChoETL
         {
             if (fieldValue == null) return fieldValue;
 
-			ChoFieldValueTrimOption fieldValueTrimOption = config.GetFieldValueTrimOptionForRead(fieldType);
+            ChoFieldValueTrimOption fieldValueTrimOption = config.GetFieldValueTrimOptionForRead(fieldType);
 
-			switch (fieldValueTrimOption)
+            switch (fieldValueTrimOption)
             {
                 case ChoFieldValueTrimOption.Trim:
                     fieldValue = fieldValue.Trim();
@@ -592,14 +592,14 @@ namespace ChoETL
                     if (!config.Truncate)
                         throw new ChoParserException("Incorrect field value length found for '{0}' member [Expected: {1}, Actual: {2}].".FormatString(config.FieldName, config.Size.Value, fieldValue.Length));
                     else
-					{
-						if (fieldValueTrimOption == ChoFieldValueTrimOption.TrimStart)
-							fieldValue = fieldValue.Right(config.Size.Value);
-						else
-							fieldValue = fieldValue.Substring(0, config.Size.Value);
-					}
-				}
-			}
+                    {
+                        if (fieldValueTrimOption == ChoFieldValueTrimOption.TrimStart)
+                            fieldValue = fieldValue.Right(config.Size.Value);
+                        else
+                            fieldValue = fieldValue.Substring(0, config.Size.Value);
+                    }
+                }
+            }
 
             char startChar;
             char endChar;
@@ -951,17 +951,17 @@ namespace ChoETL
 
                 return retValue;
             }
-			else if (target is IChoNotifyRecordFieldRead)
-			{
-				object state = value;
-				bool retValue = ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordFieldRead)target).BeforeRecordFieldLoad(target, index, propName, ref state), true);
+            else if (target is IChoNotifyRecordFieldRead)
+            {
+                object state = value;
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordFieldRead)target).BeforeRecordFieldLoad(target, index, propName, ref state), true);
 
-				if (retValue)
-					value = state;
+                if (retValue)
+                    value = state;
 
-				return retValue;
-			}
-			else if (Reader != null)
+                return retValue;
+            }
+            else if (Reader != null)
             {
                 object state = value;
                 bool retValue = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseBeforeRecordFieldLoad(target, index, propName, ref state), true);
@@ -980,11 +980,11 @@ namespace ChoETL
             {
                 return ChoFuncEx.RunWithIgnoreError(() => _callbackFieldRecord.AfterRecordFieldLoad(target, index, propName, value), true);
             }
-			else if (target is IChoNotifyRecordFieldRead)
-			{
-				return ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordFieldRead)target).AfterRecordFieldLoad(target, index, propName, value), true);
-			}
-			else if (Reader != null)
+            else if (target is IChoNotifyRecordFieldRead)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordFieldRead)target).AfterRecordFieldLoad(target, index, propName, value), true);
+            }
+            else if (Reader != null)
             {
                 return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseAfterRecordFieldLoad(target, index, propName, value), true);
             }
@@ -997,11 +997,11 @@ namespace ChoETL
             {
                 return ChoFuncEx.RunWithIgnoreError(() => _callbackFieldRecord.RecordFieldLoadError(target, index, propName, value, ex), false);
             }
-			else if (target is IChoNotifyRecordFieldRead)
-			{
-				return ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordFieldRead)target).RecordFieldLoadError(target, index, propName, value, ex), false);
-			}
-			else if (Reader != null)
+            else if (target is IChoNotifyRecordFieldRead)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordFieldRead)target).RecordFieldLoadError(target, index, propName, value, ex), false);
+            }
+            else if (Reader != null)
             {
                 return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseRecordFieldLoadError(target, index, propName, value, ex), false);
             }

@@ -213,35 +213,23 @@ namespace ChoETL
             return r;
         }
 
-        public IEnumerable<T> DeserializeText(string inputText, Encoding encoding = null, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static IEnumerable<T> DeserializeText(string inputText, Encoding encoding = null, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            if (configuration == null)
-                configuration = Configuration;
-
             return new ChoFixedLengthReader<T>(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
         }
 
-        public IEnumerable<T> Deserialize(string filePath, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static IEnumerable<T> Deserialize(string filePath, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            if (configuration == null)
-                configuration = Configuration;
-
             return new ChoFixedLengthReader<T>(filePath, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
         }
 
-        public IEnumerable<T> Deserialize(TextReader textReader, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static IEnumerable<T> Deserialize(TextReader textReader, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            if (configuration == null)
-                configuration = Configuration;
-
             return new ChoFixedLengthReader<T>(textReader, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
         }
 
-        public IEnumerable<T> Deserialize(Stream inStream, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static IEnumerable<T> Deserialize(Stream inStream, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            if (configuration == null)
-                configuration = Configuration;
-
             return new ChoFixedLengthReader<T>(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
         }
 

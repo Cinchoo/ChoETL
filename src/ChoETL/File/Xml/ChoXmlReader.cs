@@ -272,51 +272,33 @@ namespace ChoETL
             return r;
         }
 
-        public IEnumerable<T> DeserializeText(string inputText, Encoding encoding = null, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static IEnumerable<T> DeserializeText(string inputText, Encoding encoding = null, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            if (configuration == null)
-                configuration = Configuration;
-
             return new ChoXmlReader<T>(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
         }
 
-        public IEnumerable<T> Deserialize(string filePath, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static IEnumerable<T> Deserialize(string filePath, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            if (configuration == null)
-                configuration = Configuration;
-
             return new ChoXmlReader<T>(filePath, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
         }
 
-        public IEnumerable<T> Deserialize(TextReader textReader, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static IEnumerable<T> Deserialize(TextReader textReader, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            if (configuration == null)
-                configuration = Configuration;
-
             return new ChoXmlReader<T>(textReader, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
         }
 
-        public IEnumerable<T> Deserialize(Stream inStream, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static IEnumerable<T> Deserialize(Stream inStream, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            if (configuration == null)
-                configuration = Configuration;
-
             return new ChoXmlReader<T>(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
         }
 
-        public IEnumerable<T> Deserialize(IEnumerable<XElement> xElements, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static IEnumerable<T> Deserialize(IEnumerable<XElement> xElements, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            if (configuration == null)
-                configuration = Configuration;
-
             return new ChoXmlReader<T>(xElements, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
         }
 
-        public T Deserialize(XElement xElement, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static T Deserialize(XElement xElement, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            if (configuration == null)
-                configuration = Configuration;
-
             return new ChoXmlReader<T>(new XElement[] { xElement }, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
         }
 

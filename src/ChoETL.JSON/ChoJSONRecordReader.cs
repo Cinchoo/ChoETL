@@ -180,7 +180,7 @@ namespace ChoETL
                 else if (t is JObject)
                     yield return t.ToObject<JObject>();
                 else if (t is JValue)
-                    yield return new JObject(((JValue)t).Value);
+                    yield return new JObject(new JProperty("Value", ((JValue)t).Value));
             }
 
         }

@@ -1430,7 +1430,7 @@ A5;B5;C5;D5;E5
 2;Clarice";
 
             var r1 = new ChoCSVReader<People>().WithFirstLineHeader().WithDelimiter(";");
-            var x1 = r1.DeserializeText(txt1).FirstOrDefault();
+            //var x1 = r1.DeserializeText(txt1).FirstOrDefault();
             string[] h = r1.Context.Headers;
             Console.WriteLine(String.Join(",", h));
             return;

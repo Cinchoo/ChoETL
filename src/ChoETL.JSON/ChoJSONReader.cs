@@ -219,51 +219,33 @@ namespace ChoETL
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
         }
 
-        public IEnumerable<T> DeserializeText(string inputText, Encoding encoding = null, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static IEnumerable<T> DeserializeText(string inputText, Encoding encoding = null, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            if (configuration == null)
-                configuration = Configuration;
-
             return new ChoJSONReader<T>(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
         }
 
-        public IEnumerable<T> Deserialize(string filePath, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static IEnumerable<T> Deserialize(string filePath, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            if (configuration == null)
-                configuration = Configuration;
-
             return new ChoJSONReader<T>(filePath, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
         }
 
-        public IEnumerable<T> Deserialize(TextReader textReader, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static IEnumerable<T> Deserialize(TextReader textReader, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            if (configuration == null)
-                configuration = Configuration;
-
             return new ChoJSONReader<T>(textReader, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
         }
 
-        public IEnumerable<T> Deserialize(Stream inStream, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static IEnumerable<T> Deserialize(Stream inStream, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            if (configuration == null)
-                configuration = Configuration;
-
             return new ChoJSONReader<T>(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
         }
 
-        public IEnumerable<T> Deserialize(IEnumerable<JToken> jObjects, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static IEnumerable<T> Deserialize(IEnumerable<JToken> jObjects, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            if (configuration == null)
-                configuration = Configuration;
-
             return new ChoJSONReader<T>(jObjects, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
         }
 
-        public T Deserialize(JToken jObject, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static T Deserialize(JToken jObject, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            if (configuration == null)
-                configuration = Configuration;
-
             return new ChoJSONReader<T>(jObject, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
         }
 

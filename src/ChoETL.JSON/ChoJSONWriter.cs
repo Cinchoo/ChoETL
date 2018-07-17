@@ -146,19 +146,13 @@ namespace ChoETL
                 _writer.WriteTo(_textWriter, new T[] { record }).Loop();
         }
 
-        public string SerializeAll(IEnumerable<T> records, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static string SerializeAll(IEnumerable<T> records, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            if (configuration == null)
-                configuration = Configuration;
-
             return ToTextAll<T>(records, configuration, traceSwitch);
         }
 
-        public string Serialize(T record, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static string Serialize(T record, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            if (configuration == null)
-                configuration = Configuration;
-
             return ToText<T>(record, configuration, traceSwitch);
         }
 

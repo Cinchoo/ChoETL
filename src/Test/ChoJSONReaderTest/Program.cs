@@ -698,7 +698,18 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            JSONToXmlTest();
+            GetUSDEURTest();
+        }
+
+        static void GetUSDEURTest()
+        {
+            var x = ChoJSONReader.Deserialize("sample21.json", 
+                new ChoJSONRecordConfiguration()
+                .Configure(c => c.SupportMultipleContent = true)
+                .Configure(c => c.JSONPath = "$..quotes")
+                ).First();
+
+            Console.WriteLine(x.USDEUR);
         }
 
         public class Detail

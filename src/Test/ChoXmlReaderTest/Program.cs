@@ -84,9 +84,21 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Sample22Test();
+            XmlToJSONNumberTest();
         }
 
+        static void XmlToJSONNumberTest()
+        {
+            string xml = @"<Report xmlns:json=""http://james.newtonking.com/projects/json"">
+<ReportItem>
+    <Name>MyObjectName</Name>
+    <Revenue>99999.45</Revenue>
+</ReportItem>
+</Report>";
+
+            var x = ChoXmlReader.LoadText(xml).FirstOrDefault();
+            Console.WriteLine(x.DumpAsJson());
+        }
         static void Sample22Test()
         {
             string xml = @"<Response>
