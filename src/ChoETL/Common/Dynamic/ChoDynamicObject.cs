@@ -1240,9 +1240,14 @@ namespace ChoETL
 			return kvpDict.ToDictionary(kvp => kvp.Key.StartsWith("@xmlns", StringComparison.InvariantCultureIgnoreCase) ? kvp.Key : "{0}:{1}".FormatString(prefix, kvp.Key.IndexOf(":") > 0 ? kvp.Key.Substring(kvp.Key.IndexOf(":") + 1) : kvp.Key),
 				kvp => PrefixNS(prefix, kvp.Value));
 		}
-	}
 
-	[AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
+        public ChoDynamicObject Transpose(bool treatFirstItemAsHeader = false)
+        {
+            return new ChoDynamicObject(ChoUtility.Transpose(_kvpDict, treatFirstItemAsHeader).GroupBy(g => g.Key.ToNString(), StringComparer.OrdinalIgnoreCase).ToDictionary(kvp => kvp.Key.ToNString(), kvp => (object)kvp.Last(), StringComparer.OrdinalIgnoreCase));
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = false)]
     public class ChoPropertyAttribute : Attribute
     {
         public string Name { get; set; }
