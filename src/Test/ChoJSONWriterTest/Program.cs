@@ -68,7 +68,7 @@ public class ToTextConverter : IChoValueConverter
 
         static void Main(string[] args)
         {
-			Nested2NestedObjectTest();
+            CombineJSONTest();
         }
 
 		#region Sample50
@@ -354,7 +354,7 @@ public class ToTextConverter : IChoValueConverter
 					r.First().regionCode,
 					offerDetails = new
 					{
-						((Array)r.First().offerDetails).OfType<dynamic>().First().startPeriod,
+						(r.First().offerDetails).OfType<dynamic>().First().startPeriod,
 						((Array)r.First().offerDetails).OfType<dynamic>().First().duration,
 						offerPrices = r.Select(r1 => ((Array)r1.offerDetails[0].offerPrices).OfType<object>().First()).ToArray()
 					}

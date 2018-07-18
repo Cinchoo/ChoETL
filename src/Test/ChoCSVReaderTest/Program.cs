@@ -1248,9 +1248,28 @@ a,0,1,2-Data";
 			}
 		}
 
+        static void TransposeTest()
+        {
+            string csv = @"a1,b1,c1,d1,e1
+a2,b2,c2,d2,e2
+a3,b3,c3,d3,e3
+a4,b4,c4,d4,e4
+a5,b5,c5,d5,e5
+a7,b7,c7,d7,e7
+";
+
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoCSVReader.LoadText(csv))
+            {
+                using (var w = new ChoCSVWriter(sb))
+                    w.Write(p.Select(r => r.Transpose()));
+            }
+            Console.WriteLine(sb.ToString());
+        }
+
         static void Main(string[] args)
         {
-			DoubleQuotesFix();
+            TransposeTest();
             return;
 
 			CSV2XmlTest();
