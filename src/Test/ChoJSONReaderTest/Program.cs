@@ -698,7 +698,72 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            GetUSDEURTest();
+            Test2();
+        }
+
+        class Row
+        {
+            public string Foo { get; set; }
+            public string Bar { get; set; }
+        }
+
+        static void Test2()
+        {
+            string json = @"{
+   ""root"":[
+      {
+         ""row"":[
+            {
+               ""name"":""Foo"",
+               ""value"":""Some value""
+            },
+            {
+               ""name"":""Bar"",
+               ""value"":""Some other value""
+            }
+         ]
+      },
+      {
+         ""row"":[
+            {
+               ""name"":""Foo"",
+               ""value"":""Lorem""
+            },
+            {
+               ""name"":""Bar"",
+               ""value"":""Ipsum""
+            }
+         ]
+      },
+   ]
+}";
+            using (var p = ChoJSONReader<Row>.LoadText(json)
+                .WithJSONPath("$..root")
+                .WithField(x => x.Foo, customSerializer: (o) =>
+                {
+                    return ((JArray)((JObject)o)["row"]).Where(x => (string)x["name"] == "Foo").First()["value"];
+                })
+                .WithField(x => x.Bar, customSerializer: (o) =>
+                {
+                    return ((JArray)((JObject)o)["row"]).Where(x => (string)x["name"] == "Bar").First()["value"];
+                }
+                ))
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
+
+            //using (var p = ChoJSONReader.LoadText(json)
+            //    .WithJSONPath("$..root")
+            //    )
+            //{
+            //    foreach (var rec in p.Select(r => new Row
+            //    {
+            //        Foo = ((Array)r.Row).OfType<dynamic>().Where(x => x.name == "Foo").First().value,
+            //        Bar = ((Array)r.Row).OfType<dynamic>().Where(x => x.name == "Bar").First().value,
+            //    }))
+            //        Console.WriteLine(rec.Dump());
+            //}
         }
 
         public class Quotes
