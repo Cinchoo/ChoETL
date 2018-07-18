@@ -1343,7 +1343,7 @@ A5;B5;C5;D5;E5
             Console.WriteLine(sb.ToString());
         }
 
-        static void TransposeTest()
+        static void TransposeTest1()
         {
             string csv = @"a1,b1,c1,d1,e1
 a2,b2,c2,d2,e2
@@ -1364,7 +1364,7 @@ a7,b7,c7,d7,e7
 
         static void Main(string[] args)
         {
-            TransposeTest();
+            TransposeTest1();
             return;
 
             TransposeTest();

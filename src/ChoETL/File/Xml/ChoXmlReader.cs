@@ -134,6 +134,15 @@ namespace ChoETL
             _xElements = xElements;
         }
 
+        public ChoXmlReader(XElement xElement, ChoXmlRecordConfiguration configuration = null)
+        {
+            ChoGuard.ArgumentNotNull(xElement, "XmlElement");
+
+            Configuration = configuration;
+            Init();
+            _xElements = new XElement[] { xElement };
+        }
+
         public ChoXmlReader<T> Load(string filePath)
         {
             ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
@@ -270,36 +279,6 @@ namespace ChoETL
         {
             var r = new ChoXmlReader<T>(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
             return r;
-        }
-
-        public static IEnumerable<T> DeserializeText(string inputText, Encoding encoding = null, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-        {
-            return new ChoXmlReader<T>(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
-        }
-
-        public static IEnumerable<T> Deserialize(string filePath, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-        {
-            return new ChoXmlReader<T>(filePath, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
-        }
-
-        public static IEnumerable<T> Deserialize(TextReader textReader, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-        {
-            return new ChoXmlReader<T>(textReader, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
-        }
-
-        public static IEnumerable<T> Deserialize(Stream inStream, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-        {
-            return new ChoXmlReader<T>(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
-        }
-
-        public static IEnumerable<T> Deserialize(IEnumerable<XElement> xElements, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-        {
-            return new ChoXmlReader<T>(xElements, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
-        }
-
-        public static T Deserialize(XElement xElement, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-        {
-            return new ChoXmlReader<T>(new XElement[] { xElement }, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
         }
 
         //internal static IEnumerator<object> LoadText(Type recType, string inputText, ChoXmlRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null)
@@ -783,6 +762,147 @@ namespace ChoETL
         public ChoXmlReader(Stream inStream, ChoXmlRecordConfiguration configuration = null)
             : base(inStream, configuration)
         {
+        }
+
+        public ChoXmlReader(IEnumerable<XElement> xElements, ChoXmlRecordConfiguration configuration = null)
+            : base(xElements, configuration)
+        {
+        }
+
+        public ChoXmlReader(XElement xElement, ChoXmlRecordConfiguration configuration = null)
+            : base(xElement, configuration)
+        {
+        }
+
+
+        public static dynamic DeserializeText(string inputText, Encoding encoding = null, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            if (configuration == null)
+                configuration = new ChoXmlRecordConfiguration();
+
+            if (configuration != null)
+            {
+                if (!configuration.XPath.IsNullOrWhiteSpace())
+                    configuration.XPath = "//";
+            }
+            return new ChoXmlReader(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static T DeserializeText<T>(string inputText, Encoding encoding = null, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+            where T : class, new()
+        {
+            if (configuration == null)
+                configuration = new ChoXmlRecordConfiguration(typeof(T));
+
+            if (configuration != null)
+            {
+                if (!configuration.XPath.IsNullOrWhiteSpace())
+                    configuration.XPath = "//";
+            }
+            return new ChoXmlReader<T>(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static dynamic Deserialize(string filePath, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            if (configuration == null)
+                configuration = new ChoXmlRecordConfiguration();
+
+            if (configuration != null)
+            {
+                if (!configuration.XPath.IsNullOrWhiteSpace())
+                    configuration.XPath = "//";
+            }
+            return new ChoXmlReader(filePath, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static T Deserialize<T>(string filePath, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+            where T : class, new()
+        {
+            if (configuration == null)
+                configuration = new ChoXmlRecordConfiguration(typeof(T));
+
+            if (configuration != null)
+            {
+                if (!configuration.XPath.IsNullOrWhiteSpace())
+                    configuration.XPath = "//";
+            }
+            return new ChoXmlReader<T>(filePath, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static dynamic Deserialize(TextReader textReader, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            if (configuration == null)
+                configuration = new ChoXmlRecordConfiguration();
+
+            if (configuration != null)
+            {
+                if (!configuration.XPath.IsNullOrWhiteSpace())
+                    configuration.XPath = "//";
+            }
+            return new ChoXmlReader(textReader, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static T Deserialize<T>(TextReader textReader, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+            where T : class, new()
+        {
+            if (configuration == null)
+                configuration = new ChoXmlRecordConfiguration(typeof(T));
+
+            if (configuration != null)
+            {
+                if (!configuration.XPath.IsNullOrWhiteSpace())
+                    configuration.XPath = "//";
+            }
+            return new ChoXmlReader<T>(textReader, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static dynamic Deserialize(Stream inStream, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            if (configuration == null)
+                configuration = new ChoXmlRecordConfiguration();
+
+            if (configuration != null)
+            {
+                if (!configuration.XPath.IsNullOrWhiteSpace())
+                    configuration.XPath = "//";
+            }
+            return new ChoXmlReader(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static T Deserialize<T>(Stream inStream, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+            where T : class, new()
+        {
+            if (configuration == null)
+                configuration = new ChoXmlRecordConfiguration(typeof(T));
+
+            if (configuration != null)
+            {
+                if (!configuration.XPath.IsNullOrWhiteSpace())
+                    configuration.XPath = "//";
+            }
+            return new ChoXmlReader<T>(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static IEnumerable<dynamic> Deserialize(IEnumerable<XElement> xElements, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            return new ChoXmlReader(xElements, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.ToArray();
+        }
+
+        public static IEnumerable<T> Deserialize<T>(IEnumerable<XElement> xElements, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+            where T : class, new()
+        {
+            return new ChoXmlReader<T>(xElements, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.ToArray();
+        }
+
+        public static dynamic Deserialize(XElement xElement, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            return new ChoXmlReader(xElement, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static T Deserialize<T>(XElement xElement, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+            where T : class, new()
+        {
+            return new ChoXmlReader<T>(xElement, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
         }
     }
 }

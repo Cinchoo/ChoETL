@@ -96,7 +96,7 @@ namespace ChoXmlReaderTest
 </ReportItem>
 </Report>";
 
-            var x = ChoXmlReader.DeserializeText(xml).First();
+            var x = ChoXmlReader.DeserializeText(xml);
             Console.WriteLine(x.DumpAsJson());
         }
         static void Sample22Test()
