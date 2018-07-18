@@ -90,11 +90,11 @@ namespace ChoETL
                     else if (!dpAttr.Name.IsNullOrWhiteSpace())
                         FieldName = dpAttr.Name;
                 }
-				DisplayFormatAttribute dfAttr = otherAttrs.OfType<DisplayFormatAttribute>().FirstOrDefault();
-				if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
-				{
-					FormatText = dfAttr.DataFormatString;
-				}
+                DisplayFormatAttribute dfAttr = otherAttrs.OfType<DisplayFormatAttribute>().FirstOrDefault();
+                if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
+                {
+                    FormatText = dfAttr.DataFormatString;
+                }
                 if (dfAttr != null && !dfAttr.NullDisplayText.IsNullOrWhiteSpace())
                 {
                     NullValue = dfAttr.NullDisplayText;
@@ -106,42 +106,42 @@ namespace ChoETL
             }
         }
 
-		public ChoFieldValueTrimOption GetFieldValueTrimOptionForRead(Type fieldType)
-		{
-			ChoFieldValueTrimOption? fieldValueTrimOption = FieldValueTrimOption;
+        public ChoFieldValueTrimOption GetFieldValueTrimOptionForRead(Type fieldType)
+        {
+            ChoFieldValueTrimOption? fieldValueTrimOption = FieldValueTrimOption;
 
-			if (fieldValueTrimOption != null)
-				return fieldValueTrimOption.Value;
-			else
-				return ChoFieldValueTrimOption.Trim;
-		}
+            if (fieldValueTrimOption != null)
+                return fieldValueTrimOption.Value;
+            else
+                return ChoFieldValueTrimOption.Trim;
+        }
 
-		public ChoFieldValueTrimOption GetFieldValueTrimOption(Type fieldType)
-		{
-			ChoFieldValueTrimOption? fieldValueTrimOption = FieldValueTrimOption;
+        public ChoFieldValueTrimOption GetFieldValueTrimOption(Type fieldType)
+        {
+            ChoFieldValueTrimOption? fieldValueTrimOption = FieldValueTrimOption;
 
-			if (fieldValueTrimOption != null)
-				return fieldValueTrimOption.Value;
+            if (fieldValueTrimOption != null)
+                return fieldValueTrimOption.Value;
 
-			if (fieldType == typeof(int)
-			  || fieldType == typeof(uint)
-			  || fieldType == typeof(long)
-			  || fieldType == typeof(ulong)
-			  || fieldType == typeof(short)
-			  || fieldType == typeof(ushort)
-			  || fieldType == typeof(byte)
-			  || fieldType == typeof(sbyte)
-			  || fieldType == typeof(float)
-			  || fieldType == typeof(double)
-			  || fieldType == typeof(decimal)
-			  || fieldType == typeof(Single)
-			  )
-			{
-				return ChoFieldValueTrimOption.TrimStart;
-			}
-			else
-				return ChoFieldValueTrimOption.TrimEnd;
-		}
+            if (fieldType == typeof(int)
+              || fieldType == typeof(uint)
+              || fieldType == typeof(long)
+              || fieldType == typeof(ulong)
+              || fieldType == typeof(short)
+              || fieldType == typeof(ushort)
+              || fieldType == typeof(byte)
+              || fieldType == typeof(sbyte)
+              || fieldType == typeof(float)
+              || fieldType == typeof(double)
+              || fieldType == typeof(decimal)
+              || fieldType == typeof(Single)
+              )
+            {
+                return ChoFieldValueTrimOption.TrimStart;
+            }
+            else
+                return ChoFieldValueTrimOption.TrimEnd;
+        }
 
-	}
+    }
 }

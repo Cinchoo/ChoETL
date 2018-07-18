@@ -70,7 +70,7 @@ namespace ChoETL
             if (list != null)
             {
                 int index = 0;
-                _kvpDict = list.ToDictionary(x => String.Format("Field{0}", ++index), v => v);
+                _kvpDict = list.ToDictionary(x => String.Format("Field{0}", ++index), v => v, StringComparer.InvariantCultureIgnoreCase);
             }
         }
 

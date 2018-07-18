@@ -101,7 +101,7 @@ namespace ChoETL
 		public ChoStdDeferedObjectMemberDiscoverer(IEnumerable collection)
 		{
 			_collection = collection;
-			_enumerator = new ChoPeekEnumerator<object>(_collection.OfType<object>());
+			_enumerator = new ChoPeekEnumerator<object>(_collection.OfType<object>(), (Func<object, bool?>)null);
 			_enumerator.MembersDiscovered += (o, e) => MembersDiscovered.Raise(o, e);
 		}
 

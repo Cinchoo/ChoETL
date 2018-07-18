@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ArrayOfResultstring xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<Resultstring>
+		<Key>Key1</Key>
+		<Values>
+			<string>79,0441326460292</string>
+			<string>76,0959542079328</string>
+			<string>74,3061819154758</string>
+			<string>78,687039788779</string>
+		</Values>
+		<Type>list</Type>
+	</Resultstring>
+
+	<Resultstring>
+		<Key>Key2</Key>
+		<Values>
+			<string>87,7110395931923</string>
+		</Values>
+		<Type>double</Type>
+	</Resultstring>
+</ArrayOfResultstring>

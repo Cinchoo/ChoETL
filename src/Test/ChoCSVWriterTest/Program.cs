@@ -197,19 +197,19 @@ namespace ChoCSVWriterTest
                 .WithFirstLineHeader()
                 )
             {
-                List<string> l = new List<string>();
-                l.Add("1");
-                l.Add("Tom");
-                l.Add("Mark");
+                List<ChoCurrency> l1 = new List<ChoCurrency>();
+                l1.Add(new ChoCurrency(1));
+                //l1.Add(2);
+                //l1.Add(3);
 
-                w.Write(l);
+                w.Write(l1);
 
-                l = new List<string>();
-                l.Add("2");
-                l.Add("Tom1");
-                l.Add("Mark1");
+                //List<string> l = new List<string>();
+                //l.Add("2");
+                //l.Add("Tom1");
+                //l.Add("Mark1");
 
-                w.Write(l);
+                //w.Write(l);
             }
 
             Console.WriteLine(sb.ToString());
@@ -368,7 +368,7 @@ namespace ChoCSVWriterTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            TestDictionary();
+            ListTest();
             return;
 
             WriteSpecificColumns();

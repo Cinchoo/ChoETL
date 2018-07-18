@@ -17,26 +17,26 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-	public class ChoJSONReader<T> : ChoReader, IDisposable, IEnumerable<T>
-		where T : class
-	{
-		private TextReader _textReader;
-		private JsonTextReader _JSONReader;
-		private IEnumerable<JToken> _jObjects;
-		private bool _closeStreamOnDispose = false;
-		private Lazy<IEnumerator<T>> _enumerator = null;
-		private CultureInfo _prevCultureInfo = null;
-		private bool _clearFields = false;
-		public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
-		public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
-		public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
+    public class ChoJSONReader<T> : ChoReader, IDisposable, IEnumerable<T>
+        where T : class
+    {
+        private TextReader _textReader;
+        private JsonTextReader _JSONReader;
+        private IEnumerable<JToken> _jObjects;
+        private bool _closeStreamOnDispose = false;
+        private Lazy<IEnumerator<T>> _enumerator = null;
+        private CultureInfo _prevCultureInfo = null;
+        private bool _clearFields = false;
+        public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
+        public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
+        public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
         private bool _isDisposed = false;
 
         public ChoJSONRecordConfiguration Configuration
-		{
-			get;
-			private set;
-		}
+        {
+            get;
+            private set;
+        }
 
         public ChoJSONReader(StringBuilder sb, ChoJSONRecordConfiguration configuration = null) : this(new StringReader(sb.ToString()), configuration)
         {
@@ -44,533 +44,509 @@ namespace ChoETL
         }
 
         public ChoJSONReader(ChoJSONRecordConfiguration configuration = null)
-		{
-			Configuration = configuration;
-			Init();
-		}
+        {
+            Configuration = configuration;
+            Init();
+        }
 
-		public ChoJSONReader(string filePath, ChoJSONRecordConfiguration configuration = null)
-		{
-			ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
+        public ChoJSONReader(string filePath, ChoJSONRecordConfiguration configuration = null)
+        {
+            ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
 
-			Configuration = configuration;
+            Configuration = configuration;
 
-			Init();
+            Init();
 
-			_JSONReader = new JsonTextReader(new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
-			_closeStreamOnDispose = true;
-		}
+            _JSONReader = new JsonTextReader(new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
+            _closeStreamOnDispose = true;
+        }
 
-		public ChoJSONReader(TextReader textReader, ChoJSONRecordConfiguration configuration = null)
-		{
-			ChoGuard.ArgumentNotNull(textReader, "TextReader");
+        public ChoJSONReader(TextReader textReader, ChoJSONRecordConfiguration configuration = null)
+        {
+            ChoGuard.ArgumentNotNull(textReader, "TextReader");
 
-			Configuration = configuration;
-			Init();
+            Configuration = configuration;
+            Init();
 
-			_textReader = textReader;
-		}
+            _textReader = textReader;
+        }
 
-		public ChoJSONReader(JsonTextReader JSONReader, ChoJSONRecordConfiguration configuration = null)
-		{
-			ChoGuard.ArgumentNotNull(JSONReader, "JSONReader");
+        public ChoJSONReader(JsonTextReader JSONReader, ChoJSONRecordConfiguration configuration = null)
+        {
+            ChoGuard.ArgumentNotNull(JSONReader, "JSONReader");
 
-			Configuration = configuration;
-			Init();
+            Configuration = configuration;
+            Init();
 
-			_JSONReader = JSONReader;
-		}
+            _JSONReader = JSONReader;
+        }
 
-		public ChoJSONReader(Stream inStream, ChoJSONRecordConfiguration configuration = null)
-		{
-			ChoGuard.ArgumentNotNull(inStream, "Stream");
+        public ChoJSONReader(Stream inStream, ChoJSONRecordConfiguration configuration = null)
+        {
+            ChoGuard.ArgumentNotNull(inStream, "Stream");
 
-			Configuration = configuration;
-			Init();
+            Configuration = configuration;
+            Init();
 
-			if (inStream is MemoryStream)
-				_textReader = new StreamReader(inStream);
-			else
-				_textReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
-			_closeStreamOnDispose = true;
-		}
+            if (inStream is MemoryStream)
+                _textReader = new StreamReader(inStream);
+            else
+                _textReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+            _closeStreamOnDispose = true;
+        }
 
-		public ChoJSONReader(IEnumerable<JToken> jObjects, ChoJSONRecordConfiguration configuration = null)
-		{
-			ChoGuard.ArgumentNotNull(jObjects, "JObjects");
+        public ChoJSONReader(IEnumerable<JToken> jObjects, ChoJSONRecordConfiguration configuration = null)
+        {
+            ChoGuard.ArgumentNotNull(jObjects, "JObjects");
 
-			Configuration = configuration;
-			Init();
-			_jObjects = jObjects;
-		}
+            Configuration = configuration;
+            Init();
+            _jObjects = jObjects;
+        }
 
-		public ChoJSONReader<T> Load(string filePath)
-		{
-			ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
+        public ChoJSONReader(JToken jObject, ChoJSONRecordConfiguration configuration = null)
+        {
+            ChoGuard.ArgumentNotNull(jObject, "jObject");
 
-			Close();
-			Init();
-			_JSONReader = new JsonTextReader(new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
-			_closeStreamOnDispose = true;
+            Configuration = configuration;
+            Init();
+            _jObjects = new JToken[] { jObject };
+        }
 
-			return this;
-		}
+        public ChoJSONReader<T> Load(string filePath)
+        {
+            ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
 
-		public ChoJSONReader<T> Load(TextReader textReader)
-		{
-			ChoGuard.ArgumentNotNull(textReader, "TextReader");
+            Close();
+            Init();
+            _JSONReader = new JsonTextReader(new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
+            _closeStreamOnDispose = true;
 
-			Close();
-			Init();
-			_textReader = textReader;
-			_closeStreamOnDispose = false;
+            return this;
+        }
 
-			return this;
-		}
+        public ChoJSONReader<T> Load(TextReader textReader)
+        {
+            ChoGuard.ArgumentNotNull(textReader, "TextReader");
 
-		public ChoJSONReader<T> Load(JsonTextReader JSONReader)
-		{
-			ChoGuard.ArgumentNotNull(JSONReader, "JSONReader");
+            Close();
+            Init();
+            _textReader = textReader;
+            _closeStreamOnDispose = false;
 
-			Close();
-			Init();
-			_JSONReader = JSONReader;
-			_closeStreamOnDispose = false;
+            return this;
+        }
 
-			return this;
-		}
+        public ChoJSONReader<T> Load(JsonTextReader JSONReader)
+        {
+            ChoGuard.ArgumentNotNull(JSONReader, "JSONReader");
 
-		public ChoJSONReader<T> Load(Stream inStream)
-		{
-			ChoGuard.ArgumentNotNull(inStream, "Stream");
+            Close();
+            Init();
+            _JSONReader = JSONReader;
+            _closeStreamOnDispose = false;
 
-			Close();
-			Init();
-			if (inStream is MemoryStream)
-				_textReader = new StreamReader(inStream);
-			else
-				_textReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
-			_closeStreamOnDispose = true;
+            return this;
+        }
 
-			return this;
-		}
+        public ChoJSONReader<T> Load(Stream inStream)
+        {
+            ChoGuard.ArgumentNotNull(inStream, "Stream");
 
-		public ChoJSONReader<T> Load(IEnumerable<JToken> jObjects)
-		{
-			ChoGuard.ArgumentNotNull(jObjects, "JObjects");
+            Close();
+            Init();
+            if (inStream is MemoryStream)
+                _textReader = new StreamReader(inStream);
+            else
+                _textReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+            _closeStreamOnDispose = true;
 
-			Init();
-			_jObjects = jObjects;
-			return this;
-		}
+            return this;
+        }
 
-		public void Close()
-		{
-			Dispose();
-		}
+        public ChoJSONReader<T> Load(IEnumerable<JToken> jObjects)
+        {
+            ChoGuard.ArgumentNotNull(jObjects, "JObjects");
 
-		public T Read()
-		{
-			if (_enumerator.Value.MoveNext())
-				return _enumerator.Value.Current;
-			else
-				return default(T);
-		}
+            Init();
+            _jObjects = jObjects;
+            return this;
+        }
 
-		public void Dispose()
-		{
+        public void Close()
+        {
+            Dispose();
+        }
+
+        public T Read()
+        {
+            if (_enumerator.Value.MoveNext())
+                return _enumerator.Value.Current;
+            else
+                return default(T);
+        }
+
+        public void Dispose()
+        {
+            Dispose(false);
+        }
+
+        protected virtual void Dispose(bool finalize)
+        {
             if (_isDisposed)
                 return;
 
             _isDisposed = true;
             if (_closeStreamOnDispose)
-			{
-				if (_textReader != null)
-					_textReader.Dispose();
-				if (_JSONReader != null)
-					_JSONReader.Close();
-			}
+            {
+                if (_textReader != null)
+                    _textReader.Dispose();
+                if (_JSONReader != null)
+                    _JSONReader.Close();
+            }
 
-			if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
-				System.Threading.Thread.CurrentThread.CurrentCulture = _prevCultureInfo;
+            if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
+                System.Threading.Thread.CurrentThread.CurrentCulture = _prevCultureInfo;
 
-			_closeStreamOnDispose = false;
-		}
+            _closeStreamOnDispose = false;
 
-		private void Init()
-		{
-			_enumerator = new Lazy<IEnumerator<T>>(() => GetEnumerator());
-			if (Configuration == null)
-				Configuration = new ChoJSONRecordConfiguration(typeof(T));
-			else
-				Configuration.RecordType = typeof(T);
+            if (!finalize)
+                GC.SuppressFinalize(this);
+        }
 
-			Configuration.RecordType = ResolveRecordType(Configuration.RecordType);
-			_prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
-			System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
-		}
+        private void Init()
+        {
+            _enumerator = new Lazy<IEnumerator<T>>(() => GetEnumerator());
+            if (Configuration == null)
+                Configuration = new ChoJSONRecordConfiguration(typeof(T));
+            else
+                Configuration.RecordType = typeof(T);
 
-		public IEnumerable<T> DeserializeText(string inputText, Encoding encoding = null, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-		{
-			if (configuration == null)
-				configuration = Configuration;
+            Configuration.RecordType = ResolveRecordType(Configuration.RecordType);
+            Configuration.IsDynamicObject = Configuration.RecordType.IsDynamicType();
+            _prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
+            System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
+        }
 
-			return new ChoJSONReader<T>(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
-		}
+        public static ChoJSONReader<T> LoadText(string inputText, Encoding encoding = null, ChoJSONRecordConfiguration configuration = null)
+        {
+            var r = new ChoJSONReader<T>(inputText.ToStream(encoding), configuration);
+            r._closeStreamOnDispose = true;
 
-		public IEnumerable<T> Deserialize(string filePath, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-		{
-			if (configuration == null)
-				configuration = Configuration;
+            return r;
+        }
 
-			return new ChoJSONReader<T>(filePath, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
-		}
+        public static ChoJSONReader<T> LoadJTokens(IEnumerable<JToken> jObjects, ChoJSONRecordConfiguration configuration = null)
+        {
+            var r = new ChoJSONReader<T>(jObjects, configuration);
+            return r;
+        }
 
-		public IEnumerable<T> Deserialize(TextReader textReader, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-		{
-			if (configuration == null)
-				configuration = Configuration;
+        public static T LoadJToken(JToken jObject, ChoJSONRecordConfiguration configuration = null)
+        {
+            if (jObject == null) return default(T);
 
-			return new ChoJSONReader<T>(textReader, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
-		}
+            return LoadJTokens(new JToken[] { jObject }, configuration).FirstOrDefault();
+        }
 
-		public IEnumerable<T> Deserialize(Stream inStream, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-		{
-			if (configuration == null)
-				configuration = Configuration;
+        //internal static IEnumerator<object> LoadText(Type recType, string inputText, ChoJSONRecordConfiguration configuration, Encoding encoding, int bufferSize)
+        //{
+        //    ChoJSONRecordReader rr = new ChoJSONRecordReader(recType, configuration);
+        //    rr.TraceSwitch = ChoETLFramework.TraceSwitchOff;
+        //    return rr.AsEnumerable(new StreamReader(inputText.ToStream(), encoding, false, bufferSize)).GetEnumerator();
+        //}
 
-			return new ChoJSONReader<T>(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
-		}
+        public IEnumerator<T> GetEnumerator()
+        {
+            if (_jObjects == null)
+            {
+                ChoJSONRecordReader rr = new ChoJSONRecordReader(typeof(T), Configuration);
+                if (_textReader != null)
+                    _JSONReader = new JsonTextReader(_textReader);
 
-		public IEnumerable<T> Deserialize(IEnumerable<JToken> jObjects, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-		{
-			if (configuration == null)
-				configuration = Configuration;
+                rr.Reader = this;
+                rr.TraceSwitch = TraceSwitch;
+                rr.RowsLoaded += NotifyRowsLoaded;
+                rr.MembersDiscovered += MembersDiscovered;
+                var e = rr.AsEnumerable(_JSONReader).GetEnumerator();
+                return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
+            }
+            else
+            {
+                ChoJSONRecordReader rr = new ChoJSONRecordReader(typeof(T), Configuration);
 
-			return new ChoJSONReader<T>(jObjects, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
-		}
+                rr.Reader = this;
+                rr.TraceSwitch = TraceSwitch;
+                rr.RowsLoaded += NotifyRowsLoaded;
+                rr.MembersDiscovered += MembersDiscovered;
+                var e = rr.AsEnumerable(_jObjects).GetEnumerator();
+                return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
+            }
+        }
 
-		public T Deserialize(JToken jObject, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-		{
-			if (configuration == null)
-				configuration = Configuration;
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
 
-			return new ChoJSONReader<T>(jObject, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
-		}
+        public IDataReader AsDataReader()
+        {
+            if (_jObjects == null)
+            {
+                ChoJSONRecordReader rr = new ChoJSONRecordReader(typeof(T), Configuration);
+                if (_textReader != null)
+                    _JSONReader = new JsonTextReader(_textReader);
+                rr.Reader = this;
+                rr.TraceSwitch = TraceSwitch;
+                rr.RowsLoaded += NotifyRowsLoaded;
+                rr.MembersDiscovered += MembersDiscovered;
+                var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_JSONReader), rr);
+                return dr;
+            }
+            else
+            {
+                ChoJSONRecordReader rr = new ChoJSONRecordReader(typeof(T), Configuration);
+                rr.Reader = this;
+                rr.TraceSwitch = TraceSwitch;
+                rr.RowsLoaded += NotifyRowsLoaded;
+                rr.MembersDiscovered += MembersDiscovered;
+                var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_jObjects), rr);
+                return dr;
+            }
+        }
 
-		public static ChoJSONReader<T> LoadText(string inputText, Encoding encoding = null, ChoJSONRecordConfiguration configuration = null)
-		{
-			var r = new ChoJSONReader<T>(inputText.ToStream(encoding), configuration);
-			r._closeStreamOnDispose = true;
+        public DataTable AsDataTable(string tableName = null)
+        {
+            DataTable dt = tableName.IsNullOrWhiteSpace() ? new DataTable() : new DataTable(tableName);
+            dt.Locale = Configuration.Culture;
+            dt.Load(AsDataReader());
+            return dt;
+        }
 
-			return r;
-		}
+        public void Fill(DataTable dt)
+        {
+            if (dt == null)
+                throw new ArgumentException("Missing datatable.");
+            dt.Load(AsDataReader());
+        }
 
-		public static ChoJSONReader<T> LoadJTokens(IEnumerable<JToken> jObjects, ChoJSONRecordConfiguration configuration = null)
-		{
-			var r = new ChoJSONReader<T>(jObjects, configuration);
-			return r;
-		}
+        private void NotifyRowsLoaded(object sender, ChoRowsLoadedEventArgs e)
+        {
+            EventHandler<ChoRowsLoadedEventArgs> rowsLoadedEvent = RowsLoaded;
+            if (rowsLoadedEvent == null)
+            {
+                if (!e.IsFinal)
+                    ChoETLLog.Info(e.RowsLoaded.ToString("#,##0") + " records loaded.");
+                else
+                    ChoETLLog.Info("Total " + e.RowsLoaded.ToString("#,##0") + " records loaded.");
+            }
+            else
+                rowsLoadedEvent(this, e);
+        }
 
-		public static T LoadJToken(JToken jObject, ChoJSONRecordConfiguration configuration = null)
-		{
-			if (jObject == null) return default(T);
+        public override bool TryValidate(object target, ICollection<ValidationResult> validationResults)
+        {
+            ChoObjectValidationMode prevObjValidationMode = Configuration.ObjectValidationMode;
 
-			return LoadJTokens(new JToken[] { jObject }, configuration).FirstOrDefault();
-		}
+            if (Configuration.ObjectValidationMode == ChoObjectValidationMode.Off)
+                Configuration.ObjectValidationMode = ChoObjectValidationMode.ObjectLevel;
 
-		//internal static IEnumerator<object> LoadText(Type recType, string inputText, ChoJSONRecordConfiguration configuration, Encoding encoding, int bufferSize)
-		//{
-		//    ChoJSONRecordReader rr = new ChoJSONRecordReader(recType, configuration);
-		//    rr.TraceSwitch = ChoETLFramework.TraceSwitchOff;
-		//    return rr.AsEnumerable(new StreamReader(inputText.ToStream(), encoding, false, bufferSize)).GetEnumerator();
-		//}
+            try
+            {
+                T rec = default(T);
+                while ((rec = Read()) != null)
+                {
 
-		public IEnumerator<T> GetEnumerator()
-		{
-			if (_jObjects == null)
-			{
-				ChoJSONRecordReader rr = new ChoJSONRecordReader(typeof(T), Configuration);
-				if (_textReader != null)
-					_JSONReader = new JsonTextReader(_textReader);
+                }
+                return IsValid;
+            }
+            finally
+            {
+                Configuration.ObjectValidationMode = prevObjValidationMode;
+            }
+        }
 
-				rr.Reader = this;
-				rr.TraceSwitch = TraceSwitch;
-				rr.RowsLoaded += NotifyRowsLoaded;
-				rr.MembersDiscovered += MembersDiscovered;
-				var e = rr.AsEnumerable(_JSONReader).GetEnumerator();
-				return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
-			}
-			else
-			{
-				ChoJSONRecordReader rr = new ChoJSONRecordReader(typeof(T), Configuration);
+        #region Fluent API
 
-				rr.Reader = this;
-				rr.TraceSwitch = TraceSwitch;
-				rr.RowsLoaded += NotifyRowsLoaded;
-				rr.MembersDiscovered += MembersDiscovered;
-				var e = rr.AsEnumerable(_jObjects).GetEnumerator();
-				return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
-			}
-		}
+        public ChoJSONReader<T> NotifyAfter(long rowsLoaded)
+        {
+            Configuration.NotifyAfter = rowsLoaded;
+            return this;
+        }
 
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
+        public ChoJSONReader<T> WithJSONPath(string jsonPath)
+        {
+            Configuration.JSONPath = jsonPath;
+            return this;
+        }
 
-		public IDataReader AsDataReader()
-		{
-			if (_jObjects == null)
-			{
-				ChoJSONRecordReader rr = new ChoJSONRecordReader(typeof(T), Configuration);
-				if (_textReader != null)
-					_JSONReader = new JsonTextReader(_textReader);
-				rr.Reader = this;
-				rr.TraceSwitch = TraceSwitch;
-				rr.RowsLoaded += NotifyRowsLoaded;
-				rr.MembersDiscovered += MembersDiscovered;
-				var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_JSONReader), rr);
-				return dr;
-			}
-			else
-			{
-				ChoJSONRecordReader rr = new ChoJSONRecordReader(typeof(T), Configuration);
-				rr.Reader = this;
-				rr.TraceSwitch = TraceSwitch;
-				rr.RowsLoaded += NotifyRowsLoaded;
-				rr.MembersDiscovered += MembersDiscovered;
-				var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_jObjects), rr);
-				return dr;
-			}
-		}
+        public ChoJSONReader<T> ClearFields()
+        {
+            Configuration.JSONRecordFieldConfigurations.Clear();
+            _clearFields = true;
+            return this;
+        }
 
-		public DataTable AsDataTable(string tableName = null)
-		{
-			DataTable dt = tableName.IsNullOrWhiteSpace() ? new DataTable() : new DataTable(tableName);
-			dt.Load(AsDataReader());
-			return dt;
-		}
+        public ChoJSONReader<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
+        {
+            if (field != null)
+                return IgnoreField(field.GetMemberName());
+            else
+                return this;
+        }
 
-		public void Fill(DataTable dt)
-		{
-			if (dt == null)
-				throw new ArgumentException("Missing datatable.");
-			dt.Load(AsDataReader());
-		}
+        public ChoJSONReader<T> IgnoreField(string fieldName)
+        {
+            if (!fieldName.IsNullOrWhiteSpace())
+            {
+                string fnTrim = null;
+                if (!_clearFields)
+                {
+                    ClearFields();
+                    Configuration.MapRecordFields(Configuration.RecordType);
+                }
+                fnTrim = fieldName.NTrim();
+                if (Configuration.JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                    Configuration.JSONRecordFieldConfigurations.Remove(Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+            }
 
-		private void NotifyRowsLoaded(object sender, ChoRowsLoadedEventArgs e)
-		{
-			EventHandler<ChoRowsLoadedEventArgs> rowsLoadedEvent = RowsLoaded;
-			if (rowsLoadedEvent == null)
-			{
-				if (!e.IsFinal)
-					ChoETLLog.Info(e.RowsLoaded.ToString("#,##0") + " records loaded.");
-				else
-					ChoETLLog.Info("Total " + e.RowsLoaded.ToString("#,##0") + " records loaded.");
-			}
-			else
-				rowsLoadedEvent(this, e);
-		}
+            return this;
+        }
 
-		public override bool TryValidate(object target, ICollection<ValidationResult> validationResults)
-		{
-			ChoObjectValidationMode prevObjValidationMode = Configuration.ObjectValidationMode;
+        public ChoJSONReader<T> WithFields<TField>(params Expression<Func<T, TField>>[] fields)
+        {
+            if (fields != null)
+            {
+                foreach (var field in fields)
+                    return WithField(field);
+            }
+            return this;
+        }
 
-			if (Configuration.ObjectValidationMode == ChoObjectValidationMode.Off)
-				Configuration.ObjectValidationMode = ChoObjectValidationMode.ObjectLevel;
+        public ChoJSONReader<T> WithFields(params string[] fieldsNames)
+        {
+            string fnTrim = null;
+            if (!fieldsNames.IsNullOrEmpty())
+            {
+                PropertyDescriptor pd = null;
+                ChoJSONRecordFieldConfiguration fc = null;
+                foreach (string fn in fieldsNames)
+                {
+                    if (fn.IsNullOrEmpty())
+                        continue;
+                    if (!_clearFields)
+                    {
+                        ClearFields();
+                        Configuration.MapRecordFields(Configuration.RecordType);
+                    }
 
-			try
-			{
-				T rec = default(T);
-				while ((rec = Read()) != null)
-				{
+                    fnTrim = fn.NTrim();
+                    if (Configuration.JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                    {
+                        fc = Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+                        Configuration.JSONRecordFieldConfigurations.Remove(Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+                    }
+                    else
+                        pd = ChoTypeDescriptor.GetProperty(typeof(T), fn);
 
-				}
-				return IsValid;
-			}
-			finally
-			{
-				Configuration.ObjectValidationMode = prevObjValidationMode;
-			}
-		}
+                    var nfc = new ChoJSONRecordFieldConfiguration(fnTrim, (string)null);
+                    nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
+                    nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
+                    if (pd != null)
+                    {
+                        if (nfc.FieldType == null)
+                            nfc.FieldType = pd.PropertyType;
+                    }
 
-		#region Fluent API
+                    Configuration.JSONRecordFieldConfigurations.Add(nfc);
+                }
+            }
 
-		public ChoJSONReader<T> NotifyAfter(long rowsLoaded)
-		{
-			Configuration.NotifyAfter = rowsLoaded;
-			return this;
-		}
+            return this;
+        }
 
-		public ChoJSONReader<T> WithJSONPath(string jsonPath)
-		{
-			Configuration.JSONPath = jsonPath;
-			return this;
-		}
+        public ChoJSONReader<T> WithField<TField>(Expression<Func<T, TField>> field, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, 
+            Func<object, object> valueConverter = null,
+            Func<object, object> itemConverter = null,
+            Func<object, object> customSerializer = null,
+            object defaultValue = null, object fallbackValue = null, string formatText = null)
+        {
+            if (field == null)
+                return this;
 
-		public ChoJSONReader<T> ClearFields()
-		{
-			Configuration.JSONRecordFieldConfigurations.Clear();
-			_clearFields = true;
-			return this;
-		}
+            return WithField(field.GetMemberName(), jsonPath, fieldType, fieldValueTrimOption, isJSONAttribute, fieldName, valueConverter, itemConverter,
+                customSerializer, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText);
+        }
 
-		public ChoJSONReader<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
-		{
-			if (field != null)
-				return IgnoreField(field.GetMemberName());
-			else
-				return this;
-		}
+        public ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
+            Func<object, object> itemConverter = null,
+            Func<object, object> customSerializer = null,
+            object defaultValue = null, object fallbackValue = null, string formatText = null, bool isArray = false)
+        {
+            return WithField(name, jsonPath, fieldType, fieldValueTrimOption, isJSONAttribute, fieldName, valueConverter, itemConverter,
+                customSerializer, defaultValue, fallbackValue, null, formatText, isArray);
+        }
 
-		public ChoJSONReader<T> IgnoreField(string fieldName)
-		{
-			if (!fieldName.IsNullOrWhiteSpace())
-			{
-				string fnTrim = null;
-				if (!_clearFields)
-				{
-					ClearFields();
-					Configuration.MapRecordFields(Configuration.RecordType);
-				}
-				fnTrim = fieldName.NTrim();
-				if (Configuration.JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-					Configuration.JSONRecordFieldConfigurations.Remove(Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
-			}
+        private ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
+            Func<object, object> itemConverter = null,
+            Func<object, object> customSerializer = null,
+            object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null, 
+            string formatText = null, bool isArray = false)
+        {
+            if (!name.IsNullOrEmpty())
+            {
+                if (!_clearFields)
+                {
+                    ClearFields();
+                    Configuration.MapRecordFields(Configuration.RecordType);
+                }
 
-			return this;
-		}
+                string fnTrim = name.NTrim();
+                ChoJSONRecordFieldConfiguration fc = null;
+                PropertyDescriptor pd = null;
+                if (Configuration.JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                {
+                    fc = Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+                    Configuration.JSONRecordFieldConfigurations.Remove(fc);
+                }
+                else
+                    pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
 
-		public ChoJSONReader<T> WithFields<TField>(params Expression<Func<T, TField>>[] fields)
-		{
-			if (fields != null)
-			{
-				foreach (var field in fields)
-					return WithField(field);
-			}
-			return this;
-		}
-
-		public ChoJSONReader<T> WithFields(params string[] fieldsNames)
-		{
-			string fnTrim = null;
-			if (!fieldsNames.IsNullOrEmpty())
-			{
-				PropertyDescriptor pd = null;
-				ChoJSONRecordFieldConfiguration fc = null;
-				foreach (string fn in fieldsNames)
-				{
-					if (fn.IsNullOrEmpty())
-						continue;
-					if (!_clearFields)
-					{
-						ClearFields();
-						Configuration.MapRecordFields(Configuration.RecordType);
-					}
-
-					fnTrim = fn.NTrim();
-					if (Configuration.JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-					{
-						fc = Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
-						Configuration.JSONRecordFieldConfigurations.Remove(Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
-					}
-					else
-						pd = ChoTypeDescriptor.GetProperty(typeof(T), fn);
-
-					var nfc = new ChoJSONRecordFieldConfiguration(fnTrim, (string)null);
-					nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
-					nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
-					if (pd != null)
-					{
-						if (nfc.FieldType == null)
-							nfc.FieldType = pd.PropertyType;
-					}
-
-					Configuration.JSONRecordFieldConfigurations.Add(nfc);
-				}
-			}
-
-			return this;
-		}
-
-		public ChoJSONReader<T> WithField<TField>(Expression<Func<T, TField>> field, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
-			Func<object, object> itemConverter = null, 
-			object defaultValue = null, object fallbackValue = null, string formatText = null)
-		{
-			if (field == null)
-				return this;
-
-			return WithField(field.GetMemberName(), jsonPath, fieldType, fieldValueTrimOption, isJSONAttribute, fieldName, valueConverter, itemConverter,
-				defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText);
-		}
-
-		public ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
-			Func<object, object> itemConverter = null,
-			object defaultValue = null, object fallbackValue = null, string formatText = null, bool isArray = false)
-		{
-			return WithField(name, jsonPath, fieldType, fieldValueTrimOption, isJSONAttribute, fieldName, valueConverter, itemConverter,
-				defaultValue, fallbackValue, null, formatText, isArray);
-		}
-
-		private ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
-			Func<object, object> itemConverter = null,
-			object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null, 
-			string formatText = null, bool isArray = false)
-		{
-			if (!name.IsNullOrEmpty())
-			{
-				if (!_clearFields)
-				{
-					ClearFields();
-					Configuration.MapRecordFields(Configuration.RecordType);
-				}
-
-				string fnTrim = name.NTrim();
-				ChoJSONRecordFieldConfiguration fc = null;
-				PropertyDescriptor pd = null;
-				if (Configuration.JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-				{
-					fc = Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
-					Configuration.JSONRecordFieldConfigurations.Remove(fc);
-				}
-				else
-					pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
-
-				var nfc = new ChoJSONRecordFieldConfiguration(fnTrim, jsonPath)
-				{
-					FieldType = fieldType,
-					FieldValueTrimOption = fieldValueTrimOption,
-					FieldName = fieldName,
-					ValueConverter = valueConverter,
-					DefaultValue = defaultValue,
-					FallbackValue = fallbackValue,
+                var nfc = new ChoJSONRecordFieldConfiguration(fnTrim, jsonPath)
+                {
+                    FieldType = fieldType,
+                    FieldValueTrimOption = fieldValueTrimOption,
+                    FieldName = fieldName,
+                    ValueConverter = valueConverter,
+                    CustomSerializer = customSerializer,
+                    DefaultValue = defaultValue,
+                    FallbackValue = fallbackValue,
                     FormatText = formatText,
-					ItemConverter = itemConverter,
-					IsArray = isArray
-				};
-				if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
-				{
-					nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
-					nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
-				}
-				else
-				{
-					pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
-					nfc.PropertyDescriptor = pd;
-					nfc.DeclaringMember = fullyQualifiedMemberName;
-				}
-				if (pd != null)
-				{
-					if (nfc.FieldType == null)
-						nfc.FieldType = pd.PropertyType;
-				}
+                    ItemConverter = itemConverter,
+                    IsArray = isArray
+                };
+                if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
+                {
+                    nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
+                    nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
+                }
+                else
+                {
+                    pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
+                    nfc.PropertyDescriptor = pd;
+                    nfc.DeclaringMember = fullyQualifiedMemberName;
+                }
+                if (pd != null)
+                {
+                    if (nfc.FieldType == null)
+                        nfc.FieldType = pd.PropertyType;
+                }
 
-				Configuration.JSONRecordFieldConfigurations.Add(nfc);
-			}
+                Configuration.JSONRecordFieldConfigurations.Add(nfc);
+            }
 
-			return this;
-		}
+            return this;
+        }
 
         public ChoJSONReader<T> WithFlatToNestedObjectSupport(bool flatToNestedObjectSupport = true)
         {
@@ -581,34 +557,34 @@ namespace ChoETL
         }
 
         public ChoJSONReader<T> ColumnCountStrict()
-		{
-			Configuration.ColumnCountStrict = true;
-			return this;
-		}
+        {
+            Configuration.ColumnCountStrict = true;
+            return this;
+        }
 
-		public ChoJSONReader<T> Configure(Action<ChoJSONRecordConfiguration> action)
-		{
-			if (action != null)
-				action(Configuration);
+        public ChoJSONReader<T> Configure(Action<ChoJSONRecordConfiguration> action)
+        {
+            if (action != null)
+                action(Configuration);
 
-			return this;
-		}
+            return this;
+        }
 
-		public ChoJSONReader<T> Setup(Action<ChoJSONReader<T>> action)
-		{
-			if (action != null)
-				action(this);
+        public ChoJSONReader<T> Setup(Action<ChoJSONReader<T>> action)
+        {
+            if (action != null)
+                action(this);
 
-			return this;
-		}
+            return this;
+        }
 
-		#endregion Fluent API
+        #endregion Fluent API
 
-		~ChoJSONReader()
-		{
-			Dispose();
-		}
-	}
+        ~ChoJSONReader()
+        {
+            Dispose(true);
+        }
+    }
 
     public class ChoJSONReader : ChoJSONReader<dynamic>
     {
@@ -635,5 +611,135 @@ namespace ChoETL
             : base(inStream, configuration)
         {
         }
-    }
+        public ChoJSONReader(IEnumerable<JToken> jObjects, ChoJSONRecordConfiguration configuration = null)
+            : base(jObjects, configuration)
+        {
+        }
+        public ChoJSONReader(JToken jObject, ChoJSONRecordConfiguration configuration = null)
+            : base(jObject, configuration)
+        {
+        }
+
+        public static dynamic DeserializeText(string inputText, Encoding encoding = null, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            if (configuration != null)
+            {
+                if (configuration.SupportMultipleContent == null)
+                    configuration.SupportMultipleContent = true;
+                if (!configuration.JSONPath.IsNullOrWhiteSpace())
+                    configuration.JSONPath = "$..";
+            }
+            return new ChoJSONReader(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static T DeserializeText<T>(string inputText, Encoding encoding = null, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+            where T : class, new()
+        {
+            if (configuration != null)
+            {
+                if (configuration.SupportMultipleContent == null)
+                    configuration.SupportMultipleContent = true;
+                if (!configuration.JSONPath.IsNullOrWhiteSpace())
+                    configuration.JSONPath = "$..";
+            }
+            return new ChoJSONReader<T>(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static dynamic Deserialize(string filePath, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            if (configuration != null)
+            {
+                if (configuration.SupportMultipleContent == null)
+                    configuration.SupportMultipleContent = true;
+                if (!configuration.JSONPath.IsNullOrWhiteSpace())
+                    configuration.JSONPath = "$..";
+            }
+            return new ChoJSONReader(filePath, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static T Deserialize<T>(string filePath, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+            where T : class, new()
+        {
+            if (configuration != null)
+            {
+                if (configuration.SupportMultipleContent == null)
+                    configuration.SupportMultipleContent = true;
+                if (!configuration.JSONPath.IsNullOrWhiteSpace())
+                    configuration.JSONPath = "$..";
+            }
+            return new ChoJSONReader<T>(filePath, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static dynamic Deserialize(TextReader textReader, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            if (configuration != null)
+            {
+                if (configuration.SupportMultipleContent == null)
+                    configuration.SupportMultipleContent = true;
+                if (!configuration.JSONPath.IsNullOrWhiteSpace())
+                    configuration.JSONPath = "$..";
+            }
+            return new ChoJSONReader(textReader, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static T Deserialize<T>(TextReader textReader, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+            where T : class, new()
+        {
+            if (configuration != null)
+            {
+                if (configuration.SupportMultipleContent == null)
+                    configuration.SupportMultipleContent = true;
+                if (!configuration.JSONPath.IsNullOrWhiteSpace())
+                    configuration.JSONPath = "$..";
+            }
+            return new ChoJSONReader<T>(textReader, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static dynamic Deserialize(Stream inStream, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            if (configuration != null)
+            {
+                if (configuration.SupportMultipleContent == null)
+                    configuration.SupportMultipleContent = true;
+                if (!configuration.JSONPath.IsNullOrWhiteSpace())
+                    configuration.JSONPath = "$..";
+            }
+            return new ChoJSONReader(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static T Deserialize<T>(Stream inStream, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+            where T : class, new()
+        {
+            if (configuration != null)
+            {
+                if (configuration.SupportMultipleContent == null)
+                    configuration.SupportMultipleContent = true;
+                if (!configuration.JSONPath.IsNullOrWhiteSpace())
+                    configuration.JSONPath = "$..";
+            }
+            return new ChoJSONReader<T>(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static IEnumerable<dynamic> Deserialize(IEnumerable<JToken> jObjects, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            return new ChoJSONReader(jObjects, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.ToArray();
+        }
+
+        public static IEnumerable<T> Deserialize<T>(IEnumerable<JToken> jObjects, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+            where T : class, new()
+        {
+            return new ChoJSONReader<T>(jObjects, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.ToArray();
+        }
+
+        public static dynamic Deserialize(JToken jObject, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            return new ChoJSONReader(jObject, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static T Deserialize<T>(JToken jObject, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+            where T : class, new()
+        {
+            return new ChoJSONReader<T>(jObject, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+ }
 }

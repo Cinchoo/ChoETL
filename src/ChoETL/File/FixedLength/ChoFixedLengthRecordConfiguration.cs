@@ -91,8 +91,8 @@ namespace ChoETL
 
             RecordSelector = new Func<object, Type>((value) =>
             {
-				Tuple<long, string> kvp = value as Tuple<long, string>;
-				string line = kvp.Item2;
+                Tuple<long, string> kvp = value as Tuple<long, string>;
+                string line = kvp.Item2;
                 if (line.IsNullOrEmpty()) return RecordTypeConfiguration.DefaultRecordType;
 
                 if (RecordTypeCodeExtractor != null)
@@ -127,7 +127,8 @@ namespace ChoETL
                 RecordLength = recObjAttr.RecordLength;
             }
 
-            DiscoverRecordFields(recordType);
+            if (FixedLengthRecordFieldConfigurations.Count == 0)
+                DiscoverRecordFields(recordType);
         }
         internal bool AreAllFieldTypesNull
         {
@@ -137,8 +138,8 @@ namespace ChoETL
 
         internal void UpdateFieldTypesIfAny(IDictionary<string, Type> dict)
         {
-			if (dict == null || RecordFieldConfigurationsDict == null)
-				return;
+            if (dict == null || RecordFieldConfigurationsDict == null)
+                return;
 
             foreach (var key in dict.Keys)
             {
@@ -180,9 +181,9 @@ namespace ChoETL
 
         private void DiscoverRecordFields(Type recordType, string declaringMember, bool optIn = false)
         {
-			if (!recordType.IsDynamicType())
-			{
-				Type pt = null;
+            if (!recordType.IsDynamicType())
+            {
+                Type pt = null;
                 int startIndex = 0;
                 int size = 0;
 
@@ -233,11 +234,11 @@ namespace ChoETL
                                 else if (!dpAttr.Name.IsNullOrWhiteSpace())
                                     obj.FieldName = dpAttr.Name;
                             }
-							DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();
-							if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
-							{
-								obj.FormatText = dfAttr.DataFormatString;
-							}
+                            DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();
+                            if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
+                            {
+                                obj.FormatText = dfAttr.DataFormatString;
+                            }
                             if (dfAttr != null && !dfAttr.NullDisplayText.IsNullOrWhiteSpace())
                             {
                                 obj.NullValue = dfAttr.NullDisplayText;

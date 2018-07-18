@@ -11,51 +11,51 @@ namespace ChoETL
 {
     public static class ChoDictionaryEx
     {
-		public static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict, bool useNestedKeyFormat = true)
-		{
-			return Flatten(dict, null, useNestedKeyFormat);
-		}
+        public static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict, bool useNestedKeyFormat = true)
+        {
+            return Flatten(dict, null, useNestedKeyFormat);
+        }
 
-		private static IEnumerable<KeyValuePair<string, object>> Flatten(this IList list, string key, bool useNestedKeyFormat = true)
-		{
-			int index = 0;
-			foreach (var item in list)
-			{
-				if (item is IDictionary<string, object>)
-				{
-					foreach (var kvp1 in Flatten(item as IDictionary<string, object>, "{0}_{1}".FormatString(key, index++)))
-						yield return kvp1;
-				}
-				else if (item is IList)
-				{
-					foreach (var kvp1 in Flatten(item as IList, "{0}_{1}".FormatString(key, index++)))
-						yield return kvp1;
-				}
-				else
-					yield return new KeyValuePair<string, object>("{0}_{1}".FormatString(key, index++), item);
-			}
+        private static IEnumerable<KeyValuePair<string, object>> Flatten(this IList list, string key, bool useNestedKeyFormat = true)
+        {
+            int index = 0;
+            foreach (var item in list)
+            {
+                if (item is IDictionary<string, object>)
+                {
+                    foreach (var kvp1 in Flatten(item as IDictionary<string, object>, "{0}_{1}".FormatString(key, index++)))
+                        yield return kvp1;
+                }
+                else if (item is IList)
+                {
+                    foreach (var kvp1 in Flatten(item as IList, "{0}_{1}".FormatString(key, index++)))
+                        yield return kvp1;
+                }
+                else
+                    yield return new KeyValuePair<string, object>("{0}_{1}".FormatString(key, index++), item);
+            }
 
-		}
-		private static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict, string key = null, bool useNestedKeyFormat = true)
-		{
-			foreach (var kvp in dict)
-			{
-				if (kvp.Value is IDictionary<string, object>)
-				{
-					foreach (var tuple in Flatten(kvp.Value as IDictionary<string, object>, key == null ? kvp.Key : useNestedKeyFormat ? "{0}_{1}".FormatString(key, kvp.Key) : kvp.Key, useNestedKeyFormat))
-						yield return tuple;
-				}
-				else if (kvp.Value is IList)
-				{
-					foreach (var tuple in Flatten(kvp.Value as IList, key == null ? kvp.Key : useNestedKeyFormat ? "{0}_{1}".FormatString(key, kvp.Key) : kvp.Key, useNestedKeyFormat))
-						yield return tuple;
-				}
-				else
-					yield return new KeyValuePair<string, object>(key == null ? kvp.Key.ToString() : useNestedKeyFormat ? "{0}_{1}".FormatString(key, kvp.Key.ToString()) : kvp.Key.ToString(), kvp.Value);
-			}
-		}
+        }
+        private static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict, string key = null, bool useNestedKeyFormat = true)
+        {
+            foreach (var kvp in dict)
+            {
+                if (kvp.Value is IDictionary<string, object>)
+                {
+                    foreach (var tuple in Flatten(kvp.Value as IDictionary<string, object>, key == null ? kvp.Key : useNestedKeyFormat ? "{0}_{1}".FormatString(key, kvp.Key) : kvp.Key, useNestedKeyFormat))
+                        yield return tuple;
+                }
+                else if (kvp.Value is IList)
+                {
+                    foreach (var tuple in Flatten(kvp.Value as IList, key == null ? kvp.Key : useNestedKeyFormat ? "{0}_{1}".FormatString(key, kvp.Key) : kvp.Key, useNestedKeyFormat))
+                        yield return tuple;
+                }
+                else
+                    yield return new KeyValuePair<string, object>(key == null ? kvp.Key.ToString() : useNestedKeyFormat ? "{0}_{1}".FormatString(key, kvp.Key.ToString()) : kvp.Key.ToString(), kvp.Value);
+            }
+        }
 
-		public static void AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key, TValue value)
+        public static void AddOrUpdate<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key, TValue value)
         {
             ChoGuard.ArgumentNotNull(dict, "Dictionary");
 

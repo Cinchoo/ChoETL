@@ -15,7 +15,7 @@ namespace ChoETL
     {
         private IChoNotifyRecordRead _callbackRecord;
         private IChoNotifyRecordFieldRead _callbackFieldRecord;
-		private IChoCustomColumnMappable _customColumnMappableRecord;
+        private IChoCustomColumnMappable _customColumnMappableRecord;
         private IChoEmptyLineReportable _emptyLineReportableRecord;
         private bool _headerFound = false;
         private string[] _fieldNames = new string[] { };
@@ -34,10 +34,10 @@ namespace ChoETL
             Configuration = configuration;
 
             _callbackRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordRead>(recordType);
-			_callbackFieldRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordFieldRead>(recordType);
-			if (_callbackFieldRecord == null)
-				_callbackFieldRecord = _callbackRecord;
-			_customColumnMappableRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoCustomColumnMappable>(recordType);
+            _callbackFieldRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordFieldRead>(recordType);
+            if (_callbackFieldRecord == null)
+                _callbackFieldRecord = _callbackRecord;
+            _customColumnMappableRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoCustomColumnMappable>(recordType);
             _emptyLineReportableRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoEmptyLineReportable>(recordType);
             //Configuration.Validate();
         }
@@ -52,12 +52,13 @@ namespace ChoETL
             TraceSwitch = traceSwitch;
 
             TextReader sr = source as TextReader;
-            ChoGuard.ArgumentNotNull(sr, "TextReader");
+            if (!(source is IEnumerable<string>))
+                ChoGuard.ArgumentNotNull(sr, "TextReader");
 
             if (sr is StreamReader)
                 ((StreamReader)sr).Seek(0, SeekOrigin.Begin);
 
-            if (!RaiseBeginLoad(sr))
+            if (!RaiseBeginLoad(source))
                 yield break;
 
             string[] commentTokens = Configuration.Comments;
@@ -72,7 +73,8 @@ namespace ChoETL
             bool? doWhile = true;
 
             using (ChoPeekEnumerator<Tuple<long, string>> e = new ChoPeekEnumerator<Tuple<long, string>>(
-                new ChoIndexedEnumerator<string>(sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, false /*Configuration.MayContainEOLInData*/)).ToEnumerable(),
+                new ChoIndexedEnumerator<string>(source is IEnumerable<string> ? (IEnumerable<string>)source : 
+                sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, false /*Configuration.MayContainEOLInData*/)).ToEnumerable(),
                 (pair) =>
                 {
                     //bool isStateAvail = IsStateAvail();
@@ -123,7 +125,7 @@ namespace ChoETL
                     }
 
                     if (skip.Value)
-                        return skip;
+                        return new Tuple<bool?, Tuple<long, string>>(skip, pair);
 
                     //if (!(sr.BaseStream is MemoryStream))
                     //    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, ChoETLFramework.Switch.TraceVerbose, "Loading line [{0}]...".FormatString(item.Item1));
@@ -139,7 +141,7 @@ namespace ChoETL
                         {
                             if (TraceSwitch.TraceVerbose)
                                 ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring empty line found at [{0}].".FormatString(pair.Item1));
-                            return true;
+                            return new Tuple<bool?, Tuple<long, string>>(true, pair);
                         }
                     }
 
@@ -151,7 +153,7 @@ namespace ChoETL
                             {
                                 if (TraceSwitch.TraceVerbose)
                                     ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Comment line found at [{0}]...".FormatString(pair.Item1));
-                                return true;
+                                return new Tuple<bool?, Tuple<long, string>>(true, pair);
                             }
                         }
                     }
@@ -162,17 +164,22 @@ namespace ChoETL
                         {
                             if (TraceSwitch.TraceVerbose)
                                 ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Header line at {1}. Skipping [{0}] line...".FormatString(pair.Item1, Configuration.FileHeaderConfiguration.HeaderLineAt));
-                            return true;
+                            return new Tuple<bool?, Tuple<long, string>>(true, pair);
                         }
+                    }
+
+                    if (Reader is IChoSanitizableReader)
+                    {
+                        pair = new Tuple<long, string>(pair.Item1, ((IChoSanitizableReader)Reader).RaiseSanitizeLine(pair.Item1, pair.Item2));
                     }
 
                     if (!_configCheckDone)
                     {
-						if (Configuration.SupportsMultiRecordTypes && Configuration.RecordSelector != null && !Configuration.RecordTypeMapped)
-						{
-						}
-						else
-							Configuration.Validate(pair); // GetHeaders(pair.Item2));
+                        if (Configuration.SupportsMultiRecordTypes && Configuration.RecordSelector != null && !Configuration.RecordTypeMapped)
+                        {
+                        }
+                        else
+                            Configuration.Validate(pair); // GetHeaders(pair.Item2));
                         var dict = recFieldTypes = Configuration.FixedLengthRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
                         RaiseMembersDiscovered(dict);
                         Configuration.UpdateFieldTypesIfAny(dict);
@@ -197,11 +204,10 @@ namespace ChoETL
                             headerLineLoaded = true;
                             LoadHeaderLine(pair);
                         }
-                        _headerFound = true;
-                        return true;
+                        return new Tuple<bool?, Tuple<long, string>>(true, pair);
                     }
 
-                    return false;
+                    return new Tuple<bool?, Tuple<long, string>>(false, pair);
                 }))
             {
                 while (true)
@@ -213,7 +219,7 @@ namespace ChoETL
                         if (!abortRequested)
                             RaisedRowsLoaded(runningCount);
 
-                        RaiseEndLoad(sr);
+                        RaiseEndLoad(source);
                         yield break;
                     }
                     runningCount = pair.Item1;
@@ -227,20 +233,20 @@ namespace ChoETL
                             if (Configuration.IgnoreIfNoRecordTypeFound)
                             {
                                 ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, $"No record type found for [{pair.Item1}] line to parse.");
-								e.MoveNext();
-								continue;
+                                e.MoveNext();
+                                continue;
                             }
                             else
                                 throw new ChoParserException($"No record type found for [{pair.Item1}] line to parse.");
                         }
 
-						if (!Configuration.RecordTypeMapped)
-						{
-							Configuration.MapRecordFields(recType);
-							Configuration.Validate(null);
-						}
+                        if (!Configuration.RecordTypeMapped)
+                        {
+                            Configuration.MapRecordFields(recType);
+                            Configuration.Validate(null);
+                        }
 
-						rec = recType.IsDynamicType() ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer))
+                        rec = recType.IsDynamicType() ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer))
                         {
                             ThrowExceptionIfPropNotExists = true,
                             AlternativeKeys = Configuration.AlternativeKeys
@@ -266,9 +272,9 @@ namespace ChoETL
                     if (rec == null)
                         continue;
 
-					if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
-					{
-						if (Configuration.AreAllFieldTypesNull && Configuration.AutoDiscoverFieldTypes && Configuration.MaxScanRows > 0 && recCount <= Configuration.MaxScanRows)
+                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                    {
+                        if (Configuration.AreAllFieldTypesNull && Configuration.AutoDiscoverFieldTypes && Configuration.MaxScanRows > 0 && recCount <= Configuration.MaxScanRows)
                         {
                             buffer.Add(rec);
                             RaiseRecordFieldTypeAssessment(recFieldTypes, (IDictionary<string, object>)rec, recCount == Configuration.MaxScanRows);
@@ -431,9 +437,9 @@ namespace ChoETL
                     else
                         fieldValue = line.Substring(fieldConfig.StartIndex, fieldConfig.Size.Value);
 
-					if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
-					{
-						if (kvp.Value.FieldType == null)
+                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                    {
+                        if (kvp.Value.FieldType == null)
                             kvp.Value.FieldType = Configuration.MaxScanRows == -1 ? DiscoverFieldType(fieldValue as string, Configuration) : typeof(string);
                     }
                     else
@@ -453,9 +459,9 @@ namespace ChoETL
                     if (ignoreFieldValue)
                         fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
 
-					if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
-					{
-						var dict = rec as IDictionary<string, Object>;
+                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                    {
+                        var dict = rec as IDictionary<string, Object>;
 
                         dict.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
 
@@ -468,11 +474,11 @@ namespace ChoETL
                         {
                             ChoType.TryGetProperty(rec.GetType(), kvp.Key, out pi);
                             fieldConfig.PI = pi;
-							fieldConfig.PropConverters = ChoTypeDescriptor.GetTypeConverters(fieldConfig.PI);
-							fieldConfig.PropConverterParams = ChoTypeDescriptor.GetTypeConverterParams(fieldConfig.PI);
-						}
+                            fieldConfig.PropConverters = ChoTypeDescriptor.GetTypeConverters(fieldConfig.PI);
+                            fieldConfig.PropConverterParams = ChoTypeDescriptor.GetTypeConverterParams(fieldConfig.PI);
+                        }
 
-						if (pi != null)
+                        if (pi != null)
                             rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
                         else if (!Configuration.SupportsMultiRecordTypes)
                             throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(kvp.Key, ChoType.GetTypeName(rec)));
@@ -566,9 +572,9 @@ namespace ChoETL
         {
             if (fieldValue == null) return fieldValue;
 
-			ChoFieldValueTrimOption fieldValueTrimOption = config.GetFieldValueTrimOptionForRead(fieldType);
+            ChoFieldValueTrimOption fieldValueTrimOption = config.GetFieldValueTrimOptionForRead(fieldType);
 
-			switch (fieldValueTrimOption)
+            switch (fieldValueTrimOption)
             {
                 case ChoFieldValueTrimOption.Trim:
                     fieldValue = fieldValue.Trim();
@@ -598,16 +604,16 @@ namespace ChoETL
             {
                 if (fieldValue.Length > config.Size.Value)
                 {
-					if (!config.Truncate)
-						throw new ChoParserException("Incorrect field value length found for '{0}' member [Expected: {1}, Actual: {2}].".FormatString(config.FieldName, config.Size.Value, fieldValue.Length));
-					else
-					{
-						if (fieldValueTrimOption == ChoFieldValueTrimOption.TrimStart)
-							fieldValue = fieldValue.Right(config.Size.Value);
-						else
-							fieldValue = fieldValue.Substring(0, config.Size.Value);
-					}
-				}
+                    if (!config.Truncate)
+                        throw new ChoParserException("Incorrect field value length found for '{0}' member [Expected: {1}, Actual: {2}].".FormatString(config.FieldName, config.Size.Value, fieldValue.Length));
+                    else
+                    {
+                        if (fieldValueTrimOption == ChoFieldValueTrimOption.TrimStart)
+                            fieldValue = fieldValue.Right(config.Size.Value);
+                        else
+                            fieldValue = fieldValue.Substring(0, config.Size.Value);
+                    }
+                }
             }
 
             if (config.NullValue != null)
@@ -837,18 +843,18 @@ namespace ChoETL
 
                 return retValue;
             }
-			else if (target is IChoNotifyRecordRead)
-			{
-				long index = pair.Item1;
-				object state = pair.Item2;
-				bool retValue = ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordRead)target).BeforeRecordLoad(target, index, ref state), true);
+            else if (target is IChoNotifyRecordRead)
+            {
+                long index = pair.Item1;
+                object state = pair.Item2;
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordRead)target).BeforeRecordLoad(target, index, ref state), true);
 
-				if (retValue)
-					pair = new Tuple<long, string>(index, state as string);
+                if (retValue)
+                    pair = new Tuple<long, string>(index, state as string);
 
-				return retValue;
-			}
-			else if (Reader != null)
+                return retValue;
+            }
+            else if (Reader != null)
             {
                 long index = pair.Item1;
                 object state = pair.Item2;
@@ -870,11 +876,11 @@ namespace ChoETL
             {
                 ret = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordLoad(target, pair.Item1, pair.Item2, ref sp), true);
             }
-			else if (target is IChoNotifyRecordRead)
-			{
-				ret = ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordRead)target).AfterRecordLoad(target, pair.Item1, pair.Item2, ref sp), true);
-			}
-			else if (Reader != null)
+            else if (target is IChoNotifyRecordRead)
+            {
+                ret = ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordRead)target).AfterRecordLoad(target, pair.Item1, pair.Item2, ref sp), true);
+            }
+            else if (Reader != null)
             {
                 ret = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseAfterRecordLoad(target, pair.Item1, pair.Item2, ref sp), true);
             }
@@ -888,11 +894,11 @@ namespace ChoETL
             {
                 return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordLoadError(target, pair.Item1, pair.Item2, ex), false);
             }
-			else if (target is IChoNotifyRecordRead)
-			{
-				return ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordRead)target).RecordLoadError(target, pair.Item1, pair.Item2, ex), false);
-			}
-			else if (Reader != null)
+            else if (target is IChoNotifyRecordRead)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordRead)target).RecordLoadError(target, pair.Item1, pair.Item2, ex), false);
+            }
+            else if (Reader != null)
             {
                 return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseRecordLoadError(target, pair.Item1, pair.Item2, ex), false);
             }
@@ -911,17 +917,17 @@ namespace ChoETL
 
                 return retValue;
             }
-			else if (target is IChoNotifyRecordFieldRead)
-			{
-				object state = value;
-				bool retValue = ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordFieldRead)target).BeforeRecordFieldLoad(target, index, propName, ref state), true);
+            else if (target is IChoNotifyRecordFieldRead)
+            {
+                object state = value;
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordFieldRead)target).BeforeRecordFieldLoad(target, index, propName, ref state), true);
 
-				if (retValue)
-					value = state;
+                if (retValue)
+                    value = state;
 
-				return retValue;
-			}
-			else if (Reader != null)
+                return retValue;
+            }
+            else if (Reader != null)
             {
                 object state = value;
                 bool retValue = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseBeforeRecordFieldLoad(target, index, propName, ref state), true);
@@ -940,11 +946,11 @@ namespace ChoETL
             {
                 return ChoFuncEx.RunWithIgnoreError(() => _callbackFieldRecord.AfterRecordFieldLoad(target, index, propName, value), true);
             }
-			else if (target is IChoNotifyRecordFieldRead)
-			{
+            else if (target is IChoNotifyRecordFieldRead)
+            {
                 return ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordFieldRead)target).AfterRecordFieldLoad(target, index, propName, value), true);
-			}
-			else if (Reader != null)
+            }
+            else if (Reader != null)
             {
                 return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseAfterRecordFieldLoad(target, index, propName, value), true);
             }
@@ -957,11 +963,11 @@ namespace ChoETL
             {
                 return ChoFuncEx.RunWithIgnoreError(() => _callbackFieldRecord.RecordFieldLoadError(target, index, propName, value, ex), false);
             }
-			else if (target is IChoNotifyRecordFieldRead)
-			{
+            else if (target is IChoNotifyRecordFieldRead)
+            {
                 return ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordFieldRead)target).RecordFieldLoadError(target, index, propName, value, ex), false);
-			}
-			else if (Reader != null)
+            }
+            else if (Reader != null)
             {
                 return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseRecordFieldLoadError(target, index, propName, value, ex), false);
             }

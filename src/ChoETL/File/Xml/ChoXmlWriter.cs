@@ -86,6 +86,11 @@ namespace ChoETL
 
         public void Dispose()
         {
+            Dispose(false);
+        }
+
+        protected virtual void Dispose(bool finalize)
+        {
             if (_isDisposed)
                 return;
 
@@ -97,6 +102,9 @@ namespace ChoETL
                 if (_textWriter != null)
                     _textWriter.Dispose();
             }
+
+            if (!finalize)
+                GC.SuppressFinalize(this);
         }
         public void Close()
         {
@@ -138,19 +146,13 @@ namespace ChoETL
                 _writer.WriteTo(_textWriter, new T[] { record }).Loop();
         }
 
-        public string SerializeAll(IEnumerable<T> records, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static string SerializeAll(IEnumerable<T> records, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            if (configuration == null)
-                configuration = Configuration;
-
             return ToTextAll<T>(records, configuration, traceSwitch);
         }
 
-        public string Serialize(T record, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static string Serialize(T record, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            if (configuration == null)
-                configuration = Configuration;
-
             return ToText<T>(record, configuration, traceSwitch);
         }
 
@@ -234,21 +236,21 @@ namespace ChoETL
             return this;
         }
 
-		public ChoXmlWriter<T> WithDefaultXmlNamespace(string prefix, string uri)
-		{
-			WithXmlNamespace(prefix, uri);
-			WithDefaultNamespacePrefix(prefix);
-			return this;
-		}
+        public ChoXmlWriter<T> WithDefaultXmlNamespace(string prefix, string uri)
+        {
+            WithXmlNamespace(prefix, uri);
+            WithDefaultNamespacePrefix(prefix);
+            return this;
+        }
 
-		public ChoXmlWriter<T> WithDefaultNamespacePrefix(string prefix)
-		{
-			Configuration.DefaultNamespacePrefix = prefix;
+        public ChoXmlWriter<T> WithDefaultNamespacePrefix(string prefix)
+        {
+            Configuration.DefaultNamespacePrefix = prefix;
 
-			return this;
-		}
+            return this;
+        }
 
-		public ChoXmlWriter<T> WithXPath(string xPath)
+        public ChoXmlWriter<T> WithXPath(string xPath)
         {
             Configuration.XPath = xPath;
             return this;
@@ -322,7 +324,7 @@ namespace ChoETL
                     else
                         pd = ChoTypeDescriptor.GetProperty(typeof(T), fn);
 
-                    var nfc = new ChoXmlRecordFieldConfiguration(fnTrim, $"//{fnTrim}");
+                    var nfc = new ChoXmlRecordFieldConfiguration(fnTrim, $"/{fnTrim}");
                     nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
                     nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
 
@@ -359,7 +361,7 @@ namespace ChoETL
             object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string fullyQualifiedMemberName = null, string formatText = null)
         {
             string fnTrim = name.NTrim();
-            string xPath = $"//{fnTrim}";
+            string xPath = $"/{fnTrim}";
             return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, false, false, fieldName, valueConverter, isNullable, defaultValue, fallbackValue, 
                 encodeValue, fullyQualifiedMemberName, formatText);
         }
@@ -387,7 +389,7 @@ namespace ChoETL
             object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string fullyQualifiedMemberName = null, string formatText = null)
         {
             string fnTrim = name.NTrim();
-            string xPath = $"//@{fnTrim}";
+            string xPath = $"/@{fnTrim}";
             return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, true, false, fieldName, valueConverter, isNullable, defaultValue, fallbackValue, 
                 encodeValue, fullyQualifiedMemberName, formatText);
         }
@@ -414,7 +416,7 @@ namespace ChoETL
         }
 
         private ChoXmlWriter<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
-			bool isXmlAttribute = false, bool isAnyXmlNode = false, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
+            bool isXmlAttribute = false, bool isAnyXmlNode = false, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string fullyQualifiedMemberName = null, string formatText = null)
         {
             if (!name.IsNullOrEmpty())
@@ -428,7 +430,7 @@ namespace ChoETL
                 string fnTrim = name.NTrim();
                 ChoXmlRecordFieldConfiguration fc = null;
                 PropertyDescriptor pd = null;
-                xPath = xPath.IsNullOrWhiteSpace() ? $"//{fnTrim}" : xPath;
+                xPath = xPath.IsNullOrWhiteSpace() ? $"/{fnTrim}" : xPath;
 
                 if (Configuration.XmlRecordFieldConfigurations.Any(o => o.Name == fnTrim))
                 {
@@ -450,7 +452,7 @@ namespace ChoETL
                     FallbackValue = fallbackValue,
                     EncodeValue = encodeValue,
                     FormatText = formatText,
-					IsAnyXmlNode = isAnyXmlNode
+                    IsAnyXmlNode = isAnyXmlNode
                 };
 
                 if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
@@ -602,7 +604,7 @@ namespace ChoETL
 
         ~ChoXmlWriter()
         {
-            Dispose();
+            Dispose(true);
         }
     }
 

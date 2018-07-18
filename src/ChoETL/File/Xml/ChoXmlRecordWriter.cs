@@ -20,12 +20,14 @@ namespace ChoETL
     internal class ChoXmlRecordWriter : ChoRecordWriter
     {
         private IChoNotifyRecordWrite _callbackRecord;
+        private IChoNotifyRecordFieldWrite _callbackFieldRecord;
+        private IChoSerializable _callbackRecordSeriablizable;
         private bool _configCheckDone = false;
         private long _index = 0;
         private Lazy<XmlSerializer> _se = null;
         private readonly Regex _beginNSTagRegex = new Regex(@"^(<\w+\:\w+)(.*)", RegexOptions.Compiled | RegexOptions.Multiline);
-		private readonly Regex _beginTagRegex = new Regex(@"^(<\w+)(.*)", RegexOptions.Compiled | RegexOptions.Multiline);
-		private readonly Regex _endTagRegex = new Regex("</.*>$");
+        private readonly Regex _beginTagRegex = new Regex(@"^(<\w+)(.*)", RegexOptions.Compiled | RegexOptions.Multiline);
+        private readonly Regex _endTagRegex = new Regex("</.*>$");
         internal ChoWriter Writer = null;
         internal Type ElementType = null;
         private Lazy<List<object>> _recBuffer = null;
@@ -42,6 +44,12 @@ namespace ChoETL
             Configuration = configuration;
 
             _callbackRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordWrite>(recordType);
+            _callbackFieldRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordFieldWrite>(recordType);
+            if (_callbackFieldRecord == null)
+                _callbackFieldRecord = _callbackRecord;
+            _callbackRecordSeriablizable = ChoMetadataObjectCache.CreateMetadataObject<IChoSerializable>(recordType);
+            if (_callbackRecordSeriablizable == null)
+                _callbackRecordSeriablizable = _callbackRecord as IChoSerializable;
             _recBuffer = new Lazy<List<object>>(() =>
             {
                 var b = Writer.Context.RecBuffer;
@@ -375,9 +383,9 @@ namespace ChoETL
 
             Dictionary<string, object> attrs = new Dictionary<string, object>();
             Dictionary<string, object> elems = new Dictionary<string, object>();
-			HashSet<string> CDATAs = new HashSet<string>();
+            HashSet<string> CDATAs = new HashSet<string>();
 
-			foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in GetOrderedKVP(config))
+            foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in GetOrderedKVP(config))
             {
                 fieldConfig = kvp.Value;
                 fieldValue = null;
@@ -412,9 +420,9 @@ namespace ChoETL
                         {
                             if (ElementType == null)
                             {
-								kvp.Value.FieldType = typeof(object);
+                                kvp.Value.FieldType = typeof(object);
 
-								//if (fieldValue == null)
+                                //if (fieldValue == null)
         //                            kvp.Value.FieldType = typeof(object);
         //                        else
         //                            kvp.Value.FieldType = fieldValue.GetType();
@@ -448,7 +456,7 @@ namespace ChoETL
                     if (fieldConfig.ValueConverter != null)
                         fieldValue = fieldConfig.ValueConverter(fieldValue);
                     else
-                        rec.GetNConvertMemberValue(kvp.Key, kvp.Value, config.Culture, ref fieldValue, true);
+                        rec.GetNConvertMemberValue(kvp.Key, kvp.Value, config.Culture, ref fieldValue);
 
                     if ((config.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.MemberLevel)
                         rec.DoMemberLevelValidation(kvp.Key, kvp.Value, config.ObjectValidationMode, fieldValue);
@@ -532,30 +540,30 @@ namespace ChoETL
 
                 RaiseRecordFieldSerialize(rec, index, kvp.Key, ref fieldValue);
 
-				if (!fieldConfig.IsAnyXmlNode)
-				{
-					if (fieldConfig.IsXmlAttribute)
-					{
-						attrs.Add(fieldConfig.FieldName, fieldValue);
-					}
-					else
-					{
-						elems.Add(fieldConfig.FieldName, fieldValue);
+                if (!fieldConfig.IsAnyXmlNode)
+                {
+                    if (fieldConfig.IsXmlAttribute)
+                    {
+                        attrs.Add(fieldConfig.FieldName, fieldValue);
+                    }
+                    else
+                    {
+                        elems.Add(fieldConfig.FieldName, fieldValue);
 
-						if (fieldConfig.IsXmlCDATA)
-							CDATAs.Add(fieldConfig.FieldName);
-					}
-				}
-				else
-				{
-					if (fieldValue == null || fieldValue.GetType().IsSimple())
-						attrs.Add(fieldConfig.FieldName, fieldValue);
-					else
-						elems.Add(fieldConfig.FieldName, fieldValue);
+                        if (fieldConfig.IsXmlCDATA)
+                            CDATAs.Add(fieldConfig.FieldName);
+                    }
+                }
+                else
+                {
+                    if (fieldValue == null || fieldValue.GetType().IsSimple())
+                        attrs.Add(fieldConfig.FieldName, fieldValue);
+                    else
+                        elems.Add(fieldConfig.FieldName, fieldValue);
 
-					if (fieldConfig.IsXmlCDATA)
-						CDATAs.Add(fieldConfig.FieldName);
-				}
+                    if (fieldConfig.IsXmlCDATA)
+                        CDATAs.Add(fieldConfig.FieldName);
+                }
             }
 
             string nodeName = config.NodeName;
@@ -565,29 +573,29 @@ namespace ChoETL
                 nodeName = dobj.DynamicObjectName;
             }
 
-			XNamespace ns = Configuration.NS;
-			XElement ele = NewXElement(nodeName, Configuration.DefaultNamespacePrefix, ns);
-			string innerXml1 = null;
+            XNamespace ns = Configuration.NS;
+            XElement ele = NewXElement(nodeName, Configuration.DefaultNamespacePrefix, ns);
+            string innerXml1 = null;
             if (typeof(IChoScalarObject).IsAssignableFrom(config.RecordType))
             {
-				ele = NewXElement(nodeName, Configuration.DefaultNamespacePrefix, ns, elems.First().Value);
+                ele = NewXElement(nodeName, Configuration.DefaultNamespacePrefix, ns, elems.First().Value);
             }
             else
             {
-				ele = NewXElement(nodeName, Configuration.DefaultNamespacePrefix, ns);
-				foreach (var kvp in attrs)
-				{
-					object value = kvp.Value;
-					if (value == null)
-					{
-						if (config.NullValueHandling == ChoNullValueHandling.Ignore)
-							continue;
-						else
-							value = String.Empty;
-					}
+                ele = NewXElement(nodeName, Configuration.DefaultNamespacePrefix, ns);
+                foreach (var kvp in attrs)
+                {
+                    object value = kvp.Value;
+                    if (value == null)
+                    {
+                        if (config.NullValueHandling == ChoNullValueHandling.Ignore)
+                            continue;
+                        else
+                            value = String.Empty;
+                    }
 
-					ele.Add(new XAttribute(kvp.Key, value));
-				}
+                    ele.Add(new XAttribute(kvp.Key, value));
+                }
                 foreach (var kvp in elems)
                 {
                     if (kvp.Value == null)
@@ -601,21 +609,21 @@ namespace ChoETL
                         {
                             rec = ChoActivator.CreateInstance(config.RecordType);
                             innerXml = ChoUtility.XmlSerialize(rec, null, Configuration.EOLDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix);
-							if (_beginNSTagRegex.Match(innerXml1).Success)
-							{
-								innerXml = _beginNSTagRegex.Replace(innerXml, delegate (Match m)
-								{
-									return "<" + XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
-								});
-							}
-							else
-							{
-								innerXml = _beginTagRegex.Replace(innerXml, delegate (Match m)
-								{
-									return "<" + XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
-								});
-							}
-							innerXml = _endTagRegex.Replace(innerXml, delegate (Match thisMatch)
+                            if (_beginNSTagRegex.Match(innerXml1).Success)
+                            {
+                                innerXml = _beginNSTagRegex.Replace(innerXml, delegate (Match m)
+                                {
+                                    return "<" + XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
+                                });
+                            }
+                            else
+                            {
+                                innerXml = _beginTagRegex.Replace(innerXml, delegate (Match m)
+                                {
+                                    return "<" + XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
+                                });
+                            }
+                            innerXml = _endTagRegex.Replace(innerXml, delegate (Match thisMatch)
                             {
                                 return "</{0}>".FormatString(XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix));
                             });
@@ -633,22 +641,22 @@ namespace ChoETL
                     }
                     else if (kvp.Value.GetType().IsSimple())
                     {
-						var isCDATA = CDATAs.Contains(kvp.Key);
+                        var isCDATA = CDATAs.Contains(kvp.Key);
 
-						if (ElementType == null)
+                        if (ElementType == null)
                         {
                             if (kvp.Value is ChoCDATA)
                                 ele.Add(ns != null ? new XElement(ns + kvp.Key, new XCData(((ChoCDATA)kvp.Value).Value)) : new XElement(kvp.Key, new XCData(((ChoCDATA)kvp.Value).Value)));
-							else if (isCDATA)
-								ele.Add(ns != null ? new XElement(ns + kvp.Key, new XCData(kvp.Value.ToNString())) : new XElement(kvp.Key, new XCData(kvp.Value.ToNString())));
-							else
-								ele.Add(ns != null ? new XElement(ns + kvp.Key, kvp.Value) : new XElement(kvp.Key, kvp.Value));
+                            else if (isCDATA)
+                                ele.Add(ns != null ? new XElement(ns + kvp.Key, new XCData(kvp.Value.ToNString())) : new XElement(kvp.Key, new XCData(kvp.Value.ToNString())));
+                            else
+                                ele.Add(ns != null ? new XElement(ns + kvp.Key, kvp.Value) : new XElement(kvp.Key, kvp.Value));
                         }
                         else if (isCDATA)
-						{
-							ele.Add(new XCData(kvp.Value.ToNString()));
-						}
-						else
+                        {
+                            ele.Add(new XCData(kvp.Value.ToNString()));
+                        }
+                        else
                             ele.Value = kvp.Value.ToNString();
                     }
                     else
@@ -656,20 +664,20 @@ namespace ChoETL
                         innerXml1 = ChoUtility.XmlSerialize(kvp.Value, null, Configuration.EOLDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix);
                         if (!kvp.Value.GetType().IsArray)
                         {
-							if (_beginNSTagRegex.Match(innerXml1).Success)
-							{
-								innerXml1 = _beginNSTagRegex.Replace(innerXml1, delegate (Match m)
-								{
-									return "<" + XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
-								});
-							}
-							else
-							{
-								innerXml1 = _beginTagRegex.Replace(innerXml1, delegate (Match m)
-								{
-									return "<" + XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
-								});
-							}
+                            if (_beginNSTagRegex.Match(innerXml1).Success)
+                            {
+                                innerXml1 = _beginNSTagRegex.Replace(innerXml1, delegate (Match m)
+                                {
+                                    return "<" + XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
+                                });
+                            }
+                            else
+                            {
+                                innerXml1 = _beginTagRegex.Replace(innerXml1, delegate (Match m)
+                                {
+                                    return "<" + XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
+                                });
+                            }
                             innerXml1 = _endTagRegex.Replace(innerXml1, delegate (Match thisMatch)
                             {
                                 return "</{0}>".FormatString(XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix));
@@ -695,22 +703,22 @@ namespace ChoETL
             innerXml1 = ele.ToString(SaveOptions.OmitDuplicateNamespaces);
             if (config.IgnoreNodeName)
             {
-				if (_beginNSTagRegex.Match(innerXml1).Success)
-				{
-					innerXml1 = _beginNSTagRegex.Replace(innerXml1, delegate (Match m)
-					{
-						return null;
-					});
-				}
-				else
-				{
-					innerXml1 = _beginTagRegex.Replace(innerXml1, delegate (Match m)
-					{
-						return null;
-					});
-				}
+                if (_beginNSTagRegex.Match(innerXml1).Success)
+                {
+                    innerXml1 = _beginNSTagRegex.Replace(innerXml1, delegate (Match m)
+                    {
+                        return null;
+                    });
+                }
+                else
+                {
+                    innerXml1 = _beginTagRegex.Replace(innerXml1, delegate (Match m)
+                    {
+                        return null;
+                    });
+                }
 
-				innerXml1 = _endTagRegex.Replace(innerXml1, delegate (Match thisMatch)
+                innerXml1 = _endTagRegex.Replace(innerXml1, delegate (Match thisMatch)
                 {
                     return null;
                 });
@@ -722,87 +730,87 @@ namespace ChoETL
             return true;
         }
 
-		private string XmlNamespaceElementName(string name, string nsPrefix = null, XNamespace xs = null)
-		{
-			if (xs == null)
-			{
-				return "{0}".FormatString(name);
-			}
-			else
-			{
-				return "{0}".FormatString(name);
-			}
-		}
+        private string XmlNamespaceElementName(string name, string nsPrefix = null, XNamespace xs = null)
+        {
+            if (xs == null)
+            {
+                return "{0}".FormatString(name);
+            }
+            else
+            {
+                return "{0}".FormatString(name);
+            }
+        }
 
-		private string XmlNamespaceEndElementText(string name, string nsPrefix = null, XNamespace xs = null)
-		{
-			if (xs == null)
-			{
-				return "</{0}>".FormatString(name);
-			}
-			else
-			{
-				return "</{0}:{1}>".FormatString(nsPrefix, name);
-			}
-		}
+        private string XmlNamespaceEndElementText(string name, string nsPrefix = null, XNamespace xs = null)
+        {
+            if (xs == null)
+            {
+                return "</{0}>".FormatString(name);
+            }
+            else
+            {
+                return "</{0}:{1}>".FormatString(nsPrefix, name);
+            }
+        }
 
-		private string XmlNamespaceStartElementText(string name, string nsPrefix = null, XNamespace xs = null)
-		{
-			if (xs == null)
-			{
-				return "<{0}>".FormatString(name);
-			}
-			else
-			{
-				return @"<{0}:{1} xmlns:{0}=""{2}"">".FormatString(nsPrefix, name, xs.ToString());
-			}
-		}
+        private string XmlNamespaceStartElementText(string name, string nsPrefix = null, XNamespace xs = null)
+        {
+            if (xs == null)
+            {
+                return "<{0}>".FormatString(name);
+            }
+            else
+            {
+                return @"<{0}:{1} xmlns:{0}=""{2}"">".FormatString(nsPrefix, name, xs.ToString());
+            }
+        }
 
-		private string XmlNamespaceElementName(string name, string nsPrefix = null)
-		{
-			if (nsPrefix.IsNullOrWhiteSpace())
-			{
-				return name;
-			}
-			else
-			{
-				return @"{0}:{1}".FormatString(nsPrefix, name);
-			}
+        private string XmlNamespaceElementName(string name, string nsPrefix = null)
+        {
+            if (nsPrefix.IsNullOrWhiteSpace())
+            {
+                return name;
+            }
+            else
+            {
+                return @"{0}:{1}".FormatString(nsPrefix, name);
+            }
 
-		}
+        }
 
-		private XElement NewXElement(string name, string nsPrefix = null, XNamespace xs = null, object value = null)
-		{
-			var e = value == null ? new XElement(name) : new XElement(name, value);
+        private XElement NewXElement(string name, string nsPrefix = null, XNamespace xs = null, object value = null)
+        {
+            var e = value == null ? new XElement(name) : new XElement(name, value);
 
-			if (xs != null)
-			{
-				var nsAttr = new XAttribute(XNamespace.Xmlns + nsPrefix, xs);
-				e.Add(nsAttr);
-				e.Name = xs + e.Name.LocalName;
-			}
-			return e;
-		}
+            if (xs != null)
+            {
+                var nsAttr = new XAttribute(XNamespace.Xmlns + nsPrefix, xs);
+                e.Add(nsAttr);
+                e.Name = xs + e.Name.LocalName;
+            }
+            return e;
+        }
 
-		private XElement ParseElement(string strXml, XmlNamespaceManager mngr, string nsPrefix = null, XNamespace xs = null)
-		{
-			XmlParserContext parserContext = new XmlParserContext(null, mngr, null, XmlSpace.None);
-			XmlTextReader txtReader = new XmlTextReader(strXml, XmlNodeType.Element, parserContext);
-			var e = XElement.Load(txtReader);
-			if (xs != null)
-			{
-				var nsAttr = new XAttribute(XNamespace.Xmlns + nsPrefix, xs);
-				e.Add(nsAttr);
-				foreach (XElement ce in e.DescendantsAndSelf())
-					ce.Name = xs + ce.Name.LocalName;
-				//if (!Configuration.IgnoreRootName)
-				//{
-				//	e.Attribute(XNamespace.Xmlns + nsPrefix).Remove();
-				//}
-			}
-			return e;
-		}
-		private string SerializeObject(string propName, object value, Attribute[] attrs)
+        private XElement ParseElement(string strXml, XmlNamespaceManager mngr, string nsPrefix = null, XNamespace xs = null)
+        {
+            XmlParserContext parserContext = new XmlParserContext(null, mngr, null, XmlSpace.None);
+            XmlTextReader txtReader = new XmlTextReader(strXml, XmlNodeType.Element, parserContext);
+            var e = XElement.Load(txtReader);
+            if (xs != null)
+            {
+                var nsAttr = new XAttribute(XNamespace.Xmlns + nsPrefix, xs);
+                e.Add(nsAttr);
+                foreach (XElement ce in e.DescendantsAndSelf())
+                    ce.Name = xs + ce.Name.LocalName;
+                //if (!Configuration.IgnoreRootName)
+                //{
+                //	e.Attribute(XNamespace.Xmlns + nsPrefix).Remove();
+                //}
+            }
+            return e;
+        }
+        private string SerializeObject(string propName, object value, Attribute[] attrs)
         {
             ChoXmlRecordConfiguration config = null;
 
@@ -1106,10 +1114,10 @@ namespace ChoETL
 
         private bool RaiseBeforeRecordFieldWrite(object target, long index, string propName, ref object value)
         {
-            if (_callbackRecord != null)
+            if (_callbackFieldRecord != null)
             {
                 object state = value;
-                bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeforeRecordFieldWrite(target, index, propName, ref state), true);
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackFieldRecord.BeforeRecordFieldWrite(target, index, propName, ref state), true);
 
                 if (retValue)
                     value = state;
@@ -1131,9 +1139,9 @@ namespace ChoETL
 
         private bool RaiseAfterRecordFieldWrite(object target, long index, string propName, object value)
         {
-            if (_callbackRecord != null)
+            if (_callbackFieldRecord != null)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordFieldWrite(target, index, propName, value), true);
+                return ChoFuncEx.RunWithIgnoreError(() => _callbackFieldRecord.AfterRecordFieldWrite(target, index, propName, value), true);
             }
             else if (Writer != null)
             {
@@ -1144,9 +1152,9 @@ namespace ChoETL
 
         private bool RaiseRecordFieldWriteError(object target, long index, string propName, object value, Exception ex)
         {
-            if (_callbackRecord != null)
+            if (_callbackFieldRecord != null)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordFieldWriteError(target, index, propName, value, ex), true);
+                return ChoFuncEx.RunWithIgnoreError(() => _callbackFieldRecord.RecordFieldWriteError(target, index, propName, value, ex), true);
             }
             else if (Writer != null)
             {
@@ -1157,9 +1165,9 @@ namespace ChoETL
 
         private bool RaiseRecordFieldSerialize(object target, long index, string propName, ref object value)
         {
-            if (_callbackRecord is IChoSerializable)
+            if (_callbackRecordSeriablizable is IChoSerializable)
             {
-                IChoSerializable rec = _callbackRecord as IChoSerializable;
+                IChoSerializable rec = _callbackRecordSeriablizable as IChoSerializable;
                 object state = value;
                 bool retValue = ChoFuncEx.RunWithIgnoreError(() => rec.RecordFieldSerialize(target, index, propName, ref state), true);
 

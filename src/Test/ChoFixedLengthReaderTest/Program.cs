@@ -53,147 +53,147 @@ namespace ChoFixedLengthReaderTest
     }
 
     //[ChoFixedLengthRecordObject(recordLength: 25)]
-	public abstract class AABillingRecord
-	{
-
-	}
-
-	[ChoRecordTypeCode("H")]
-	public class AABillingHeaderRecord : AABillingRecord //, IChoNotifyRecordRead
-	{
-		[ChoFixedLengthRecordField(1, 8)]
-		[ChoTypeConverter(typeof(ChoDateTimeConverter), Parameters = "yyyyMMdd")]
-		public DateTime BusinessDate { get; set; }
-		[ChoFixedLengthRecordField(9, 16)]
-		public string Description { get; set; }
-
-		public bool BeginLoad(object source)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void EndLoad(object source)
-		{
-			throw new NotImplementedException();
-		}
-
-		public bool SkipUntil(long index, object source)
-		{
-			throw new NotImplementedException();
-		}
-
-		public bool DoWhile(long index, object source)
-		{
-			throw new NotImplementedException();
-		}
-
-		public bool BeforeRecordLoad(object target, long index, ref object source)
-		{
-			throw new NotImplementedException();
-		}
-
-		public bool AfterRecordLoad(object target, long index, object source, ref bool skip)
-		{
-			throw new NotImplementedException();
-		}
-
-		public bool RecordLoadError(object target, long index, object source, Exception ex)
-		{
-			throw new NotImplementedException();
-		}
-
-		public bool BeforeRecordFieldLoad(object target, long index, string propName, ref object value)
-		{
-			if (propName == "BusinessDate")
-				value = DateTime.ParseExact(value.ToNString(), "yyyyMMdd", null);
-
-			return true;
-		}
-
-		public bool AfterRecordFieldLoad(object target, long index, string propName, object value)
-		{
-			throw new NotImplementedException();
-		}
-
-		public bool RecordFieldLoadError(object target, long index, string propName, object value, Exception ex)
-		{
-			throw new NotImplementedException();
-		}
-	}
-
-	public class AABillingDetailRecord : AABillingRecord
-	{
-		[ChoFixedLengthRecordField(0, 10)]
-		public int ClientID { get; set; }
-		[ChoFixedLengthRecordField(10, 15)]
-		public string ClientName { get; set; }
-	}
-
-	[ChoRecordTypeCode("T")]
-	public class AABillingTrailerRecord : AABillingRecord
-	{
-		[ChoFixedLengthRecordField(1, 24)]
-		public int RecordCount { get; set; }
-	}
-
-	class Program
+    public abstract class AABillingRecord
     {
-		public static void AABillingTest()
-		{
-			using (var p = new ChoFixedLengthReader("AABilling.txt")
-				.WithRecordSelector(0, 1, null, typeof(AABillingDetailRecord), typeof(AABillingTrailerRecord), typeof(AABillingHeaderRecord))
-				//.WithCustomRecordSelector((l) =>
-				//{
-				//	Tuple<long, string> kvp = l as Tuple<long, string>;
-				//	if (kvp.Item2.StartsWith("H"))
-				//		return typeof(AABillingHeaderRecord);
-				//	else if (kvp.Item2.StartsWith("T"))
-				//		return typeof(AABillingTrailerRecord);
-				//	else
-				//		return typeof(AABillingDetailRecord);
-				//})
-				)
-			{
-				foreach (var rec in p)
-					Console.WriteLine(ChoUtility.Dump(rec));
-			}
-		}
 
-		static void Main(string[] args)
+    }
+
+    [ChoRecordTypeCode("H")]
+    public class AABillingHeaderRecord : AABillingRecord //, IChoNotifyRecordRead
+    {
+        [ChoFixedLengthRecordField(1, 8)]
+        [ChoTypeConverter(typeof(ChoDateTimeConverter), Parameters = "yyyyMMdd")]
+        public DateTime BusinessDate { get; set; }
+        [ChoFixedLengthRecordField(9, 16)]
+        public string Description { get; set; }
+
+        public bool BeginLoad(object source)
         {
-			AABillingTest();
-			return;
-			//QuickLoad();
-			//return;
-			//foreach (dynamic rec in new ChoFixedLengthReader("emp.txt").WithFirstLineHeader()
-			//    .Configure(c => c.FileHeaderConfiguration.IgnoreCase = false)
-			//    .Configure(c => c.FileHeaderConfiguration.TrimOption = ChoFieldValueTrimOption.None)
-			//    .Configure(c => c.ThrowAndStopOnMissingField = true)
-			//    //.Configure(c => c.ColumnOrderStrict = false)
-			//    )
-			//{
-			//    Console.WriteLine(rec.id);
-			//    //Console.WriteLine(rec[" id "]);
-			//}
-			//return;
-			//foreach (var rec in new ChoFixedLengthReader<EmployeeRec>("emp.txt")
-			//    .WithFirstLineHeader()
-			//    //.Configure(c => c.FileHeaderConfiguration.IgnoreCase = false)
-			//    //.Configure(c => c.ThrowAndStopOnMissingField = true)
-			//    //.Setup(r => r.BeforeRecordLoad += (o, e) =>
-			//    //{
-			//    //    if (e.Source != null)
-			//    //    {
-			//    //        e.Skip = ((string)e.Source).StartsWith("#");
-			//    //    }
-			//    //})
-			//    )
-			//{
-			//    Console.WriteLine(rec.Id);
-			//}
+            throw new NotImplementedException();
+        }
 
-			//return;
-			foreach (dynamic rec in new ChoFixedLengthReader("emp.txt").WithFirstLineHeader()
+        public void EndLoad(object source)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool SkipUntil(long index, object source)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool DoWhile(long index, object source)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool BeforeRecordLoad(object target, long index, ref object source)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool AfterRecordLoad(object target, long index, object source, ref bool skip)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool RecordLoadError(object target, long index, object source, Exception ex)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool BeforeRecordFieldLoad(object target, long index, string propName, ref object value)
+        {
+            if (propName == "BusinessDate")
+                value = DateTime.ParseExact(value.ToNString(), "yyyyMMdd", null);
+
+            return true;
+        }
+
+        public bool AfterRecordFieldLoad(object target, long index, string propName, object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool RecordFieldLoadError(object target, long index, string propName, object value, Exception ex)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class AABillingDetailRecord : AABillingRecord
+    {
+        [ChoFixedLengthRecordField(0, 10)]
+        public int ClientID { get; set; }
+        [ChoFixedLengthRecordField(10, 15)]
+        public string ClientName { get; set; }
+    }
+
+    [ChoRecordTypeCode("T")]
+    public class AABillingTrailerRecord : AABillingRecord
+    {
+        [ChoFixedLengthRecordField(1, 24)]
+        public int RecordCount { get; set; }
+    }
+
+    class Program
+    {
+        public static void AABillingTest()
+        {
+            using (var p = new ChoFixedLengthReader("AABilling.txt")
+                .WithRecordSelector(0, 1, null, typeof(AABillingDetailRecord), typeof(AABillingTrailerRecord), typeof(AABillingHeaderRecord))
+                //.WithCustomRecordSelector((l) =>
+                //{
+                //	Tuple<long, string> kvp = l as Tuple<long, string>;
+                //	if (kvp.Item2.StartsWith("H"))
+                //		return typeof(AABillingHeaderRecord);
+                //	else if (kvp.Item2.StartsWith("T"))
+                //		return typeof(AABillingTrailerRecord);
+                //	else
+                //		return typeof(AABillingDetailRecord);
+                //})
+                )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(ChoUtility.Dump(rec));
+            }
+        }
+
+        static void Main(string[] args)
+        {
+            AABillingTest();
+            return;
+            //QuickLoad();
+            //return;
+            //foreach (dynamic rec in new ChoFixedLengthReader("emp.txt").WithFirstLineHeader()
+            //    .Configure(c => c.FileHeaderConfiguration.IgnoreCase = false)
+            //    .Configure(c => c.FileHeaderConfiguration.TrimOption = ChoFieldValueTrimOption.None)
+            //    .Configure(c => c.ThrowAndStopOnMissingField = true)
+            //    //.Configure(c => c.ColumnOrderStrict = false)
+            //    )
+            //{
+            //    Console.WriteLine(rec.id);
+            //    //Console.WriteLine(rec[" id "]);
+            //}
+            //return;
+            //foreach (var rec in new ChoFixedLengthReader<EmployeeRec>("emp.txt")
+            //    .WithFirstLineHeader()
+            //    //.Configure(c => c.FileHeaderConfiguration.IgnoreCase = false)
+            //    //.Configure(c => c.ThrowAndStopOnMissingField = true)
+            //    //.Setup(r => r.BeforeRecordLoad += (o, e) =>
+            //    //{
+            //    //    if (e.Source != null)
+            //    //    {
+            //    //        e.Skip = ((string)e.Source).StartsWith("#");
+            //    //    }
+            //    //})
+            //    )
+            //{
+            //    Console.WriteLine(rec.Id);
+            //}
+
+            //return;
+            foreach (dynamic rec in new ChoFixedLengthReader("emp.txt").WithFirstLineHeader()
                 .Configure(c => c.MayContainEOLInData = true)
                 .Configure(c => c.FileHeaderConfiguration.IgnoreCase = true)
                 .Configure(c => c.FileHeaderConfiguration.TrimOption = ChoFieldValueTrimOption.None))

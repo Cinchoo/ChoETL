@@ -88,6 +88,11 @@ namespace ChoETL
 
         public void Dispose()
         {
+            Dispose(false);
+        }
+
+        protected virtual void Dispose(bool finalize)
+        {
             if (_isDisposed)
                 return;
 
@@ -97,6 +102,9 @@ namespace ChoETL
                 if (_textWriter != null)
                     _textWriter.Dispose();
             }
+
+            if (!finalize)
+                GC.SuppressFinalize(this);
         }
 
         private void Init()
@@ -134,19 +142,13 @@ namespace ChoETL
                 _writer.WriteTo(_textWriter, new T[] { record } ).Loop();
         }
 
-        public string SerializeAll(IEnumerable<T> records, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static string SerializeAll(IEnumerable<T> records, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            if (configuration == null)
-                configuration = Configuration;
-
             return ToTextAll<T>(records, configuration, traceSwitch);
         }
 
-        public string Serialize(T record, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static string Serialize(T record, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            if (configuration == null)
-                configuration = Configuration;
-
             return ToText<T>(record, configuration, traceSwitch);
         }
 
@@ -458,7 +460,7 @@ namespace ChoETL
 
         ~ChoFixedLengthWriter()
         {
-            Dispose();
+            Dispose(true);
         }
     }
 

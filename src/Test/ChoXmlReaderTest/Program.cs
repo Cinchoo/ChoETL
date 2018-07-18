@@ -73,23 +73,124 @@ namespace ChoXmlReaderTest
         public string Color { get; set; }
     }
 
-	public class Emp
-	{
-		public string First_Name { get; set; }
-		public string Last_Name { get; set; }
-	}
+    public class Emp
+    {
+        public string First_Name { get; set; }
+        public string Last_Name { get; set; }
+    }
 
     public class Program
     {
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-			NSTest();
+            XmlToJSONNumberTest();
         }
 
-		static void NSTest()
-		{
-			string xml = @"<ns3:Test_Service xmlns:ns3=""http://www.CCKS.org/XRT/Form"">
+        static void XmlToJSONNumberTest()
+        {
+            string xml = @"<Report xmlns:json=""http://james.newtonking.com/projects/json"">
+<ReportItem>
+    <Name>MyObjectName</Name>
+    <Revenue>99999.45</Revenue>
+</ReportItem>
+</Report>";
+
+            var x = ChoXmlReader.DeserializeText(xml).First();
+            Console.WriteLine(x.DumpAsJson());
+        }
+        static void Sample22Test()
+        {
+            string xml = @"<Response>
+    <MemberSummary>
+      <Age>39</Age>      
+      <DateOfBirth>06:07:1985:00:00</DateOfBirth>
+      <EmailAddress>abc@rentacar3.com</EmailAddress>      
+      <MobilePhone>
+        <CountryCode>1</CountryCode>        
+        <Number>2049515487</Number>
+      </MobilePhone>      
+      <WorkPhone>
+        <CountryCode>93</CountryCode>        
+        <Number>1921525542</Number>
+      </WorkPhone>      
+    </MemberSummary>
+
+    <MemberSummary>
+      <Age>29</Age>      
+      <DateOfBirth>06:07:1989:00:00</DateOfBirth>
+      <EmailAddress>abc@rentacar2.com</EmailAddress>      
+      <MobilePhone>
+        <CountryCode>1</CountryCode>        
+        <Number>2049515949</Number>
+      </MobilePhone>      
+      <WorkPhone>
+        <CountryCode>93</CountryCode>        
+        <Number>1921525125</Number>
+      </WorkPhone> 
+      <HomePhone>
+        <CountryCode>213</CountryCode>       
+        <Number>8182879870</Number>
+      </HomePhone>      
+    </MemberSummary>
+</Response>";
+
+            using (var p = ChoXmlReader.LoadText(xml))
+            {
+                var dt = p.Select(e => e.Flatten()).AsDataTable();
+            }
+        }
+
+        static void Sample21Test()
+        {
+            using (var p = new ChoXmlReader("sample21.xml")
+                .WithField("Key")
+                .WithField("Value", xPath: "/Values/string")
+                )
+            {
+                var dt = p.SelectMany(r => ((Array)r.Value).OfType<string>().Select(r1 => new { Key = r.Key, Value = r1})).AsDataTable();
+            }
+        }
+
+        public class Naptan
+        {
+            [ChoXmlNodeRecordField(XPath = "/z:AtcoCode")]
+            public string AtcoCode { get; set; }
+            [ChoXmlNodeRecordField(XPath = "/z:NaptanCode")]
+            public string NaptanCode { get; set; }
+            [ChoXmlNodeRecordField(XPath = "/z:Place/z:Location/z:Translation/z:Longitude")]
+            public double Latitude { get; set; }
+            [ChoXmlNodeRecordField(XPath = "/z:Place/z:Location/z:Translation/z:Longitude")]
+            public double Longitude { get; set; }
+            [ChoXmlNodeRecordField(XPath = "/z:StopClassification/z:OnStreet/z:Bus/z:TimingStatus")]
+            public string TimmingStatus { get; set; }
+            [ChoXmlNodeRecordField(XPath = "/z:StopClassification/z:OnStreet/z:Bus/z:BusStopType")]
+            public string BusStopType { get; set; }
+            [ChoXmlNodeRecordField(XPath = "/z:Descriptor/z:CommonName")]
+            public string CommonName { get; set; }
+            [ChoXmlNodeRecordField(XPath = "/z:Descriptor/z:Landmark")]
+            public string Landmark { get; set; }
+            [ChoXmlNodeRecordField(XPath = "/z:Descriptor/z:Street")]
+            public string Street { get; set; }
+            [ChoXmlNodeRecordField(XPath = "/z:Descriptor/z:Indicator")]
+            public string Indicator { get; set; }
+        }
+
+        static void Sample20()
+        {
+            using (var p = new ChoXmlReader<Naptan>("sample20.xml")
+                .WithXPath("//NaPTAN/StopPoints/StopPoint")
+                .WithXmlNamespace("z", "http://www.naptan.org.uk/")
+                )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void NSTest()
+        {
+            string xml = @"<ns3:Test_Service xmlns:ns3=""http://www.CCKS.org/XRT/Form"">
   <ns3:fname>mark</ns3:fname>
   <ns3:lname>joye</ns3:lname>
   <ns3:CarCompany>saab</ns3:CarCompany>
@@ -129,40 +230,40 @@ namespace ChoXmlReaderTest
   </ns3:collections>
 </ns3:Test_Service>";
 
-			StringBuilder sb = new StringBuilder();
-			using (var p = ChoXmlReader.LoadText(xml).WithXPath("//")
-				.WithXmlNamespace("ns3", "http://www.CCKS.org/XRT/Form")
-				)
-			{
-				using (var w = new ChoJSONWriter(sb)
-					.Configure(c => c.SupportMultipleContent = true)
-					)
-				{
-					w.Write(p.Select(e => e.AddNamespace("ns3", "http://www.CCKS.org/XRT/Form")));
-				}
-			}
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoXmlReader.LoadText(xml).WithXPath("//")
+                .WithXmlNamespace("ns3", "http://www.CCKS.org/XRT/Form")
+                )
+            {
+                using (var w = new ChoJSONWriter(sb)
+                    .Configure(c => c.SupportMultipleContent = true)
+                    )
+                {
+                    w.Write(p.Select(e => e.AddNamespace("ns3", "http://www.CCKS.org/XRT/Form")));
+                }
+            }
 
-			Console.WriteLine(sb.ToString());
-		}
+            Console.WriteLine(sb.ToString());
+        }
 
-		static void CDATATest()
-		{
-			string ID = null;
+        static void CDATATest()
+        {
+            string ID = null;
 
-			string xml = @"<CUST><First_Name>Luke</First_Name> <Last_Name>Skywalker</Last_Name> <ID ID1=""1""><Name><![CDATA[1234]]></Name></ID> </CUST>";
+            string xml = @"<CUST><First_Name>Luke</First_Name> <Last_Name>Skywalker</Last_Name> <ID ID1=""1""><Name><![CDATA[1234]]></Name></ID> </CUST>";
 
-			using (var p = new ChoXmlReader(new StringReader(xml))
-				.Configure(c => c.ThrowAndStopOnMissingField = false)
-				//.Configure(c => c.RetainXmlAttributesAsNative = true)
-				.WithXPath("/")
-				)
-			{
-				Console.WriteLine(ChoJSONWriter.ToTextAll(p));
-				//foreach (var rec in p)
-				//	Console.WriteLine(rec.Dump());
-			}
-		}
-		static void Sample46()
+            using (var p = new ChoXmlReader(new StringReader(xml))
+                .Configure(c => c.ThrowAndStopOnMissingField = false)
+                //.Configure(c => c.RetainXmlAttributesAsNative = true)
+                .WithXPath("/")
+                )
+            {
+                Console.WriteLine(ChoJSONWriter.ToTextAll(p));
+                //foreach (var rec in p)
+                //	Console.WriteLine(rec.Dump());
+            }
+        }
+        static void Sample46()
         {
             string xml = @"<session
     beginTime=""2018-05-11T10:37:30""
@@ -225,7 +326,7 @@ namespace ChoXmlReaderTest
             {
                 using (var w = new ChoCSVWriter(sb)
                     .WithFirstLineHeader()
-					.Configure(c => c.UseNestedKeyFormat = false)
+                    .Configure(c => c.UseNestedKeyFormat = false)
                     )
                     w.Write(p.SelectMany(r => ((dynamic[])r.appliance.test_sets).Select(r1 => new { r.appliance.overallResult, test = r1.test })));
 
@@ -376,7 +477,7 @@ namespace ChoXmlReaderTest
   </type>
 </XslMapper>";
 
-			StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
             using (var p = ChoXmlReader.LoadText(xml)
                 .Configure(c => c.NullValueHandling = ChoNullValueHandling.Ignore)
                 .Setup(s => s.MembersDiscovered += (o, e) => e.Value.AddOrUpdate("category", typeof(Object[])))
@@ -388,126 +489,126 @@ namespace ChoXmlReaderTest
                 }
 
             }
-			Console.WriteLine(sb.ToString());
+            Console.WriteLine(sb.ToString());
         }
         static void Sample42()
-		{
-			string xml = @"<custs><CUST><First_Name>Luke</First_Name> <Last_Name>Skywalker</Last_Name> <ID><![CDATA[1234]]></ID> </CUST><CUST><First_Name>Luke</First_Name> <Last_Name>Skywalker</Last_Name> <ID><![CDATA[1234]]></ID> </CUST></custs>";
-			StringBuilder sb = new StringBuilder();
-			using (var p = ChoXmlReader<Emp>.LoadText(xml)/*.WithXPath("/")*/
-				.Configure(c => c.EmptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Empty)
-				)
-			{
-				using (var w = new ChoJSONWriter<Emp>(sb)
-					//.Configure(c => c.SupportMultipleContent = true)
-					//.Configure(c => c.RootName = "Emp")
-					//.Configure(c => c.IgnoreNodeName = true)
-					)
-					w.Write(p);
-			}
+        {
+            string xml = @"<custs><CUST><First_Name>Luke</First_Name> <Last_Name>Skywalker</Last_Name> <ID><![CDATA[1234]]></ID> </CUST><CUST><First_Name>Luke</First_Name> <Last_Name>Skywalker</Last_Name> <ID><![CDATA[1234]]></ID> </CUST></custs>";
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoXmlReader<Emp>.LoadText(xml)/*.WithXPath("/")*/
+                .Configure(c => c.EmptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Empty)
+                )
+            {
+                using (var w = new ChoJSONWriter<Emp>(sb)
+                    //.Configure(c => c.SupportMultipleContent = true)
+                    //.Configure(c => c.RootName = "Emp")
+                    //.Configure(c => c.IgnoreNodeName = true)
+                    )
+                    w.Write(p);
+            }
 
-			Console.WriteLine(sb.ToString());
-		}
+            Console.WriteLine(sb.ToString());
+        }
 
-		static void Sample41()
-		{
-			string xml = @"<GetItemRequest>
+        static void Sample41()
+        {
+            string xml = @"<GetItemRequest>
     <ApplicationCrediential>
         <ConsumerKey></ConsumerKey>
         <ConsumerSecret></ConsumerSecret>
     </ApplicationCrediential>
 </GetItemRequest>
-			";
+            ";
 
-			StringBuilder sb = new StringBuilder();
-			using (var p = ChoXmlReader.LoadText(xml).WithXPath("/")
-				.Configure(c => c.EmptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Empty)
-				)
-			{
-				using (var w = new ChoJSONWriter(sb)
-					.Configure(c => c.SupportMultipleContent = true)
-					)
-					w.Write(p);
-			}
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoXmlReader.LoadText(xml).WithXPath("/")
+                .Configure(c => c.EmptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Empty)
+                )
+            {
+                using (var w = new ChoJSONWriter(sb)
+                    .Configure(c => c.SupportMultipleContent = true)
+                    )
+                    w.Write(p);
+            }
 
-			Console.WriteLine(sb.ToString());
-		}
+            Console.WriteLine(sb.ToString());
+        }
 
-		static void Sample40()
-		{
-			string xml = @"<Employees xmlns:x1=""http://company.com/schemas"">
-				<Employee>
-					<FirstName>name1</FirstName>
-					<LastName>surname1</LastName>
-				</Employee>
-				<Employee>
-					<FirstName>name2</FirstName>
-					<LastName>surname2</LastName>
-				</Employee>
-				<Employee>
-					<FirstName>name3</FirstName>
-					<LastName>surname3</LastName>
-				</Employee>
-			</Employees>
-			";
+        static void Sample40()
+        {
+            string xml = @"<Employees xmlns:x1=""http://company.com/schemas"">
+                <Employee>
+                    <FirstName>name1</FirstName>
+                    <LastName>surname1</LastName>
+                </Employee>
+                <Employee>
+                    <FirstName>name2</FirstName>
+                    <LastName>surname2</LastName>
+                </Employee>
+                <Employee>
+                    <FirstName>name3</FirstName>
+                    <LastName>surname3</LastName>
+                </Employee>
+            </Employees>
+            ";
 
-			StringBuilder sb = new StringBuilder();
-			using (var p = ChoXmlReader.LoadText(xml)
-				.WithXmlNamespace("x1", "http://company.com/schemas")
-				)
-			{
-				using (var w = new ChoJSONWriter(sb)
-					.Configure(c => c.SupportMultipleContent = false)
-					)
-					w.Write(p);
-			}
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoXmlReader.LoadText(xml)
+                .WithXmlNamespace("x1", "http://company.com/schemas")
+                )
+            {
+                using (var w = new ChoJSONWriter(sb)
+                    .Configure(c => c.SupportMultipleContent = false)
+                    )
+                    w.Write(p);
+            }
 
-			Console.WriteLine(sb.ToString());
+            Console.WriteLine(sb.ToString());
 
-		}
+        }
 
-		static void Sample39()
-		{
-			string xml = @"<weather>
-	<current_conditions>
-		<condition data=""Mostly Cloudy"" />
-		<temp_f data=""48"" />
-		<temp_c data=""9"" />
-		<humidity data=""Humidity: 71%"" />
-		<icon data=""/ig/images/weather/mostly_cloudy.gif"" />
-		<wind_condition data=""Wind: W at 17 mph"" />
-	</current_conditions>
-	<forecast_conditions>
-		<day_of_week data=""Sun"" />
-		<low data=""34"" />
-		<high data=""48"" />
-		<icon data=""/ig/images/weather/mostly_sunny.gif"" />
-		<condition data=""Partly Sunny"" />
-	</forecast_conditions>
-	<forecast_conditions>
-		<day_of_week data=""Mon"" />
-		<low data=""32"" />
-		<high data=""45"" />
-		<icon data=""/ig/images/weather/sunny.gif"" />
-		<condition data=""Clear"" />
-	</forecast_conditions>
+        static void Sample39()
+        {
+            string xml = @"<weather>
+    <current_conditions>
+        <condition data=""Mostly Cloudy"" />
+        <temp_f data=""48"" />
+        <temp_c data=""9"" />
+        <humidity data=""Humidity: 71%"" />
+        <icon data=""/ig/images/weather/mostly_cloudy.gif"" />
+        <wind_condition data=""Wind: W at 17 mph"" />
+    </current_conditions>
+    <forecast_conditions>
+        <day_of_week data=""Sun"" />
+        <low data=""34"" />
+        <high data=""48"" />
+        <icon data=""/ig/images/weather/mostly_sunny.gif"" />
+        <condition data=""Partly Sunny"" />
+    </forecast_conditions>
+    <forecast_conditions>
+        <day_of_week data=""Mon"" />
+        <low data=""32"" />
+        <high data=""45"" />
+        <icon data=""/ig/images/weather/sunny.gif"" />
+        <condition data=""Clear"" />
+    </forecast_conditions>
 </weather>";
 
-			StringBuilder sb = new StringBuilder();
-			using (var p = ChoXmlReader.LoadText(xml).WithXPath("/forecast_conditions"))
-			{
-				using (var w = new ChoCSVWriter(sb)
-					.WithFirstLineHeader()
-					)
-					w.Write(p);
-			}
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoXmlReader.LoadText(xml).WithXPath("/forecast_conditions"))
+            {
+                using (var w = new ChoCSVWriter(sb)
+                    .WithFirstLineHeader()
+                    )
+                    w.Write(p);
+            }
 
-			Console.WriteLine(sb.ToString());
-		}
+            Console.WriteLine(sb.ToString());
+        }
 
-		static void Sample38()
-		{
-			string xml = @"<?xml version=""1.0""?>
+        static void Sample38()
+        {
+            string xml = @"<?xml version=""1.0""?>
             <results>
                 <results>
                         <field>2</field>
@@ -531,19 +632,19 @@ namespace ChoXmlReaderTest
                 </results>
             </results>";
 
-			StringBuilder sb = new StringBuilder();
-			using (var p = ChoXmlReader.LoadText(xml))
-			{
-				using (var w = new ChoCSVWriter(sb)
-					.WithFirstLineHeader()
-					)
-					w.Write(p);
-			}
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoXmlReader.LoadText(xml))
+            {
+                using (var w = new ChoCSVWriter(sb)
+                    .WithFirstLineHeader()
+                    )
+                    w.Write(p);
+            }
 
-			Console.WriteLine(sb.ToString());
-		}
+            Console.WriteLine(sb.ToString());
+        }
 
-		static void Sample37()
+        static void Sample37()
         {
             string xml = @"<Products>
   <Product ProductCode=""C1010"" CategoryName=""Coins"" />
@@ -724,25 +825,25 @@ namespace ChoXmlReaderTest
                 .Configure(c => c.EmptyXmlNodeValueHandling =  ChoEmptyXmlNodeValueHandling.Ignore)
                 )
             {
-				using (var w = new ChoJSONWriter(msg)
-					.Configure(c => c.SupportMultipleContent = true)
-					.Configure(c => c.IgnoreRootName = true)
-					.Configure(c => c.IgnoreNodeName = true)
-					)
-				{
-					w.Write(p);
-				}
-				//using (var w = new ChoXmlWriter(new StringWriter(msg))
-				//	.Configure(c => c.NullValueHandling = ChoNullValueHandling.Empty)
-				//	//.Configure(c => c.SupportMultipleContent = true)
-				//	//.WithFirstLineHeader()
-				//	.Configure(c => c.RootName = String.Empty)
-				//	.Configure(c => c.IgnoreRootName = true)
-				//	.Configure(c => c.IgnoreNodeName = true)
-				//	)
-				//{
-				//	w.Write(p);
-				//}
+                using (var w = new ChoJSONWriter(msg)
+                    .Configure(c => c.SupportMultipleContent = true)
+                    .Configure(c => c.IgnoreRootName = true)
+                    .Configure(c => c.IgnoreNodeName = true)
+                    )
+                {
+                    w.Write(p);
+                }
+                //using (var w = new ChoXmlWriter(new StringWriter(msg))
+                //	.Configure(c => c.NullValueHandling = ChoNullValueHandling.Empty)
+                //	//.Configure(c => c.SupportMultipleContent = true)
+                //	//.WithFirstLineHeader()
+                //	.Configure(c => c.RootName = String.Empty)
+                //	.Configure(c => c.IgnoreRootName = true)
+                //	.Configure(c => c.IgnoreNodeName = true)
+                //	)
+                //{
+                //	w.Write(p);
+                //}
             }
             Console.WriteLine(msg.ToString());
         }
@@ -811,7 +912,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
             }
         }
 
-        static void Sample20()
+        static void Sample20Test()
         {
             string xml = @"<GetItemRequest xmlns:xsi=""http://www.w3.org/2001/XMLSchema"">
     <ApplicationCrediential>
@@ -1242,7 +1343,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
 
         static void Sample9Test()
         {
-			StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
             //using (var parser = new ChoXmlReader("sample9.xml", "abc.com/api").WithXPath("/")
             //    )
             //{
@@ -1285,7 +1386,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
                 }
             }
 
-			Console.WriteLine(sb.ToString());
+            Console.WriteLine(sb.ToString());
         }
 
         static void Sample10Test()
@@ -1328,7 +1429,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
 
         static void xMain1(string[] args)
         {
-			Sample43();
+            Sample43();
             return;
             //dynamic p = new ChoPropertyBag();
             //p.Name = "Raj";

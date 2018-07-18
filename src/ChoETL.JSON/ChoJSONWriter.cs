@@ -85,6 +85,11 @@ namespace ChoETL
 
         public void Dispose()
         {
+            Dispose(false);
+        }
+
+        protected virtual void Dispose(bool finalize)
+        {
             if (_isDisposed)
                 return;
 
@@ -97,6 +102,9 @@ namespace ChoETL
                 if (_textWriter != null)
                     _textWriter.Dispose();
             }
+
+            if (!finalize)
+                GC.SuppressFinalize(this);
         }
         public void Close()
         {
@@ -138,29 +146,13 @@ namespace ChoETL
                 _writer.WriteTo(_textWriter, new T[] { record }).Loop();
         }
 
-        public string SerializeAll(IEnumerable<T> records, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-        {
-            if (configuration == null)
-                configuration = Configuration;
-
-            return ToTextAll<T>(records, configuration, traceSwitch);
-        }
-
-        public string Serialize(T record, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-        {
-            if (configuration == null)
-                configuration = Configuration;
-
-            return ToText<T>(record, configuration, traceSwitch);
-        }
-
         public static string ToText<TRec>(TRec record, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string jsonPath = null)
             where TRec : class
         {
-			configuration.IgnoreRootName = true;
-			configuration.RootName = null;
-			configuration.SingleElement = true;
-			return ToTextAll(ChoEnumerable.AsEnumerable<TRec>(record), configuration, traceSwitch, jsonPath);
+            configuration.IgnoreRootName = true;
+            configuration.RootName = null;
+            configuration.SingleElement = true;
+            return ToTextAll(ChoEnumerable.AsEnumerable<TRec>(record), configuration, traceSwitch, jsonPath);
         }
 
 
@@ -485,9 +477,9 @@ namespace ChoETL
                     startIndex += fieldLength;
                 }
             }
-			Configuration.RootName = dt.TableName.IsNullOrWhiteSpace() ? null : dt.TableName;
+            Configuration.RootName = dt.TableName.IsNullOrWhiteSpace() ? null : dt.TableName;
 
-			foreach (DataRow row in dt.Rows)
+            foreach (DataRow row in dt.Rows)
             {
                 expandoDic.Clear();
 
@@ -500,21 +492,21 @@ namespace ChoETL
             }
         }
 
-		public void Write(DataSet ds)
-		{
-			ChoGuard.ArgumentNotNull(ds, "DataSet");
-
-			foreach (DataTable dt in ds.Tables)
-			{
-				Configuration.Reset();
-				Configuration.RootName = ds.DataSetName.IsNullOrWhiteSpace() ? "Root" : ds.DataSetName;
-				Write(dt);
-			}
-		}
-
-		~ChoJSONWriter()
+        public void Write(DataSet ds)
         {
-            Dispose();
+            ChoGuard.ArgumentNotNull(ds, "DataSet");
+
+            foreach (DataTable dt in ds.Tables)
+            {
+                Configuration.Reset();
+                Configuration.RootName = ds.DataSetName.IsNullOrWhiteSpace() ? "Root" : ds.DataSetName;
+                Write(dt);
+            }
+        }
+
+        ~ChoJSONWriter()
+        {
+            Dispose(true);
         }
     }
 
@@ -537,6 +529,28 @@ namespace ChoETL
         public ChoJSONWriter(Stream inStream, ChoJSONRecordConfiguration configuration = null)
             : base(inStream, configuration)
         {
+        }
+
+        public static string SerializeAll(IEnumerable<dynamic> records, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            return ToTextAll(records, configuration, traceSwitch);
+        }
+
+        public static string SerializeAll<T>(IEnumerable<T> records, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+            where T : class
+        {
+            return ToTextAll<T>(records, configuration, traceSwitch);
+        }
+
+        public static string Serialize(dynamic record, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            return ToText(record, configuration, traceSwitch);
+        }
+
+        public static string Serialize<T>(T record, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+            where T : class
+        {
+            return ToText<T>(record, configuration, traceSwitch);
         }
     }
 }

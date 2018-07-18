@@ -1,0 +1,47 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<NaPTAN CreationDateTime="2018-03-22T08:59:00" ModificationDateTime="2018-03-22T08:59:00" Modification="new" RevisionNumber="0" FileName="NaPTAN030.xml" SchemaVersion="2.1"
+				 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.naptan.org.uk/" xsi:schemaLocation="http://www.naptan.org.uk/ http://www.naptan.org.uk/schema/2.1/NaPTAN.xsd">
+  <StopPoints>
+    <StopPoint CreationDateTime="2009-07-01T16:36:00" ModificationDateTime="2015-11-03T16:19:00" Modification="revise" RevisionNumber="3" Status="active">
+      <AtcoCode>030028280001</AtcoCode>
+      <NaptanCode>brkpjmt</NaptanCode>
+      <Descriptor>
+        <CommonName>Tinkers Corner</CommonName>
+        <Landmark>adj Forbury Lane</Landmark>
+        <Street>Holt Lane</Street>
+        <Indicator>opp</Indicator>
+      </Descriptor>
+      <Place>
+        <NptgLocalityRef>E0053849</NptgLocalityRef>
+        <LocalityCentre>0</LocalityCentre>
+        <Location>
+          <Translation>
+            <GridType>UKOS</GridType>
+            <Easting>439773</Easting>
+            <Northing>165685</Northing>
+            <Longitude>-1.42979961186</Longitude>
+            <Latitude>51.38882190967</Latitude>
+          </Translation>
+        </Location>
+      </Place>
+      <StopClassification>
+        <StopType>BCT</StopType>
+        <OnStreet>
+          <Bus>
+            <BusStopType>CUS</BusStopType>
+            <TimingStatus>OTH</TimingStatus>
+            <UnmarkedPoint>
+              <Bearing>
+                <CompassPoint>NW</CompassPoint>
+              </Bearing>
+            </UnmarkedPoint>
+          </Bus>
+        </OnStreet>
+      </StopClassification>
+      <StopAreas>
+        <StopAreaRef CreationDateTime="2009-07-01T16:46:00" ModificationDateTime="2009-07-01T16:46:00" Modification="new" RevisionNumber="0" Status="active">030G58280001</StopAreaRef>
+      </StopAreas>
+      <AdministrativeAreaRef>064</AdministrativeAreaRef>
+    </StopPoint>
+  </StopPoints>
+</NaPTAN>

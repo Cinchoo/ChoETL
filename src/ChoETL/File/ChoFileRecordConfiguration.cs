@@ -38,12 +38,12 @@ namespace ChoETL
             get;
             set;
         }
-		public bool AutoDiscoverFieldTypes
-		{
-			get;
-			set;
-		}
-		[DataMember]
+        public bool AutoDiscoverFieldTypes
+        {
+            get;
+            set;
+        }
+        [DataMember]
         public int BufferSize
         {
             get;
@@ -137,14 +137,14 @@ namespace ChoETL
             get;
             set;
         }
-		public bool RecordTypeMapped
-		{
-			get;
-			set;
-		}
-		public bool UseNestedKeyFormat { get; set; }
+        public bool RecordTypeMapped
+        {
+            get;
+            set;
+        }
+        public bool UseNestedKeyFormat { get; set; }
 
-		internal string BackslashQuote = @"\""";
+        internal string BackslashQuote = @"\""";
         internal string DoubleQuoteChar = @"""""";
         private char _quoteChar = '"';
         [DataMember]
@@ -198,12 +198,12 @@ namespace ChoETL
 
         protected ChoFileRecordConfiguration(Type recordType = null) : base(recordType)
         {
-			UseNestedKeyFormat = true;
-			AutoDiscoverFieldTypes = true;
-			MaxScanRows = 0;
+            UseNestedKeyFormat = true;
+            AutoDiscoverFieldTypes = true;
+            MaxScanRows = 0;
             IgnoreDuplicateFields = false;
-			IgnoreIfNoRecordTypeFound = true;
-			BufferSize = 4096;
+            IgnoreIfNoRecordTypeFound = true;
+            BufferSize = 4096;
             Comments = null; // new string[] { "#", "//" };
             Culture = CultureInfo.CurrentCulture;
             EOLDelimiter = Environment.NewLine;
@@ -227,8 +227,8 @@ namespace ChoETL
             ChoFileRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoFileRecordObjectAttribute>(recordType);
             if (recObjAttr != null)
             {
-				AutoDiscoverFieldTypes = true;
-				MaxScanRows = 0;
+                AutoDiscoverFieldTypes = true;
+                MaxScanRows = 0;
                 if (recObjAttr.BufferSize > 0)
                     BufferSize = recObjAttr.BufferSize;
                 if (recObjAttr.Comments.IsNullOrWhiteSpace())

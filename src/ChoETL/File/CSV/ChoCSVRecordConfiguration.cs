@@ -92,7 +92,7 @@ namespace ChoETL
             private set;
         }
 
-		public ChoCSVRecordConfiguration Configure(Action<ChoCSVRecordConfiguration> action)
+        public ChoCSVRecordConfiguration Configure(Action<ChoCSVRecordConfiguration> action)
         {
             if (action != null)
                 action(this);
@@ -143,9 +143,9 @@ namespace ChoETL
 
             RecordSelector = new Func<object, Type>((value) =>
             {
-				Tuple<long, string> kvp = value as Tuple<long, string>;
-				string line = kvp.Item2;
-				if (line.IsNullOrEmpty()) return RecordTypeConfiguration.DefaultRecordType;
+                Tuple<long, string> kvp = value as Tuple<long, string>;
+                string line = kvp.Item2;
+                if (line.IsNullOrEmpty()) return RecordTypeConfiguration.DefaultRecordType;
 
                 if (RecordTypeCodeExtractor != null)
                 {
@@ -180,7 +180,8 @@ namespace ChoETL
                 HasExcelSeparator = recObjAttr.HasExcelSeparatorInternal;
             }
 
-            DiscoverRecordFields(recordType);
+            if (CSVRecordFieldConfigurations.Count == 0)
+                DiscoverRecordFields(recordType);
         }
 
         public override void MapRecordFields<T>()
@@ -283,11 +284,11 @@ namespace ChoETL
                                 else if (!dpAttr.Name.IsNullOrWhiteSpace())
                                     obj.FieldName = dpAttr.Name;
                             }
-							DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();
-							if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
-							{
-								obj.FormatText = dfAttr.DataFormatString;
-							}
+                            DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();
+                            if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
+                            {
+                                obj.FormatText = dfAttr.DataFormatString;
+                            }
                             if (dfAttr != null && !dfAttr.NullDisplayText.IsNullOrWhiteSpace())
                             {
                                 obj.NullValue = dfAttr.NullDisplayText;
@@ -326,7 +327,7 @@ namespace ChoETL
             if (AutoDiscoverColumns
                 && CSVRecordFieldConfigurations.Count == 0)
             {
-                if (headers != null)
+                if (headers != null && IsDynamicObject)
                 {
                     int index = 0;
                     CSVRecordFieldConfigurations = (from header in headers

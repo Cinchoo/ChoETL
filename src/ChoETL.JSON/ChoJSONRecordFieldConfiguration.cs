@@ -36,19 +36,22 @@ namespace ChoETL
             set;
         }
 
+        //internal object[] JSONPropConverters;
+        //internal object[] JSONPropConverterParams;
+
         public ChoJSONRecordFieldConfiguration(string name, string jsonPath = null) : this(name, (ChoJSONRecordFieldAttribute)null)
         {
             JSONPath = jsonPath;
         }
 
         internal ChoJSONRecordFieldConfiguration(string name, ChoJSONRecordFieldAttribute attr = null, Attribute[] otherAttrs = null) : base(name, attr, otherAttrs)
-		{
+        {
             FieldName = name;
             if (attr != null)
             {
                 JSONPath = attr.JSONPath;
                 UseJSONSerialization = attr.UseJSONSerializationInternal;
-				FieldName = attr.FieldName.IsNullOrWhiteSpace() ? Name.NTrim() : attr.FieldName.NTrim();
+                FieldName = attr.FieldName.IsNullOrWhiteSpace() ? Name.NTrim() : attr.FieldName.NTrim();
             }
         }
 
@@ -95,6 +98,5 @@ namespace ChoETL
 
             return false;
         }
-
     }
 }
