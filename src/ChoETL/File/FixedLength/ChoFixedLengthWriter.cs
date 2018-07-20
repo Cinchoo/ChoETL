@@ -142,16 +142,6 @@ namespace ChoETL
                 _writer.WriteTo(_textWriter, new T[] { record } ).Loop();
         }
 
-        public static string SerializeAll(IEnumerable<T> records, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-        {
-            return ToTextAll<T>(records, configuration, traceSwitch);
-        }
-
-        public static string Serialize(T record, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-        {
-            return ToText<T>(record, configuration, traceSwitch);
-        }
-
         public static string ToText<TRec>(TRec record, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
             where TRec : class
         {
@@ -488,6 +478,18 @@ namespace ChoETL
         public ChoFixedLengthWriter(Stream inStream, ChoFixedLengthRecordConfiguration configuration = null)
             : base(inStream, configuration)
         {
+        }
+
+        public static string SerializeAll<T>(IEnumerable<T> records, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+            where T : class
+        {
+            return ToTextAll<T>(records, configuration, traceSwitch);
+        }
+
+        public static string Serialize<T>(T record, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+            where T : class
+        {
+            return ToText<T>(record, configuration, traceSwitch);
         }
 
     }

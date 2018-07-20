@@ -698,7 +698,41 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            GetUSDEURTest();
+            Json2XmlAndViceVersa();
+        }
+
+        public class Plan
+        {
+            public string Source { get; set; }
+            public int CodePlan { get; set; }
+            public string PlanSelection { get; set; }
+            public string PlanAmount { get; set; }
+            public int PlanLimitCount { get; set; }
+            public string PlanLimitAmount { get; set; }
+            public bool Visible { get; set; }
+            public int? Count { get; set; }
+
+        }
+
+        static void Json2XmlAndViceVersa()
+        {
+            string json = @" {
+        ""Source"": ""WEB"",
+        ""CodePlan"": 5,
+        ""PlanSelection"": ""1"",
+        ""PlanAmount"": ""500.01"",
+        ""PlanLimitCount"": 31,
+        ""PlanLimitAmount"": ""3000.01"",
+        ""Visible"": false,
+        ""Count"": null
+     }";
+
+            var p1 = ChoJSONReader.DeserializeText<Plan>(json);
+            string xml = ChoXmlWriter.Serialize(p1);
+            Console.WriteLine(ChoXmlWriter.Serialize(p1));
+            //Console.WriteLine(ChoXmlWriter.SerializeAll(new Plan[] { p1, p1}));
+
+            Console.WriteLine(ChoXmlReader.DeserializeText<Plan>(xml));
         }
 
         public class Quotes

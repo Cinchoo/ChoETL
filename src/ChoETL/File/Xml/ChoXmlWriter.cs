@@ -146,38 +146,96 @@ namespace ChoETL
                 _writer.WriteTo(_textWriter, new T[] { record }).Loop();
         }
 
-        public static string SerializeAll(IEnumerable<T> records, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-        {
-            return ToTextAll<T>(records, configuration, traceSwitch);
-        }
-
-        public static string Serialize(T record, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-        {
-            return ToText<T>(record, configuration, traceSwitch);
-        }
-
         public static string ToText<TRec>(TRec record, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string xpath = null)
             where TRec : class
         {
-            XmlRootAttribute root = ChoType.GetCustomAttribute<XmlRootAttribute>(typeof(TRec), false);
-            string xPath = null;
-            if (record != null && !record.GetType().IsDynamicType())
-                xPath = root != null ? root.ElementName : typeof(TRec).Name;
-            return ToTextAll(ChoEnumerable.AsEnumerable<TRec>(record), configuration, traceSwitch, xPath);
+            if (configuration == null)
+            {
+                configuration = new ChoXmlRecordConfiguration();
+                configuration.IgnoreRootName = true;
+                configuration.RootName = null;
+            }
+
+            if (record != null)
+            {
+                if (configuration.NodeName.IsNullOrWhiteSpace())
+                {
+                    XmlRootAttribute root = ChoType.GetCustomAttribute<XmlRootAttribute>(record.GetType(), false);
+                    string nodeName = "XElement";
+                    if (root != null && !root.ElementName.IsNullOrWhiteSpace())
+                        nodeName = root.ElementName.Trim();
+                    else
+                        nodeName = record.GetType().Name;
+
+                    configuration.NodeName = nodeName;
+                }
+            }
+
+            using (var stream = new MemoryStream())
+            using (var reader = new StreamReader(stream))
+            using (var writer = new StreamWriter(stream))
+            using (var parser = new ChoXmlWriter<TRec>(writer, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch })
+            {
+                //parser.Configuration.XPath = xpath;
+
+                if (record != null)
+                    parser.Write(ChoEnumerable.AsEnumerable<TRec>(record));
+
+                parser.Close();
+
+                writer.Flush();
+                stream.Position = 0;
+
+                return reader.ReadToEnd();
+            }
         }
 
 
         public static string ToTextAll<TRec>(IEnumerable<TRec> records, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string xpath = null)
             where TRec : class
         {
+            if (records == null) return null;
+
+            var pe = new ChoPeekEnumerator<TRec>(records, (Func<TRec, bool?>)null);
+            if (configuration == null)
+            {
+                configuration = new ChoXmlRecordConfiguration();
+                configuration.IgnoreRootName = false;
+            }
+
+            TRec record = pe.Peek;
+
+            if (record != null)
+            {
+                if (configuration.NodeName.IsNullOrWhiteSpace())
+                {
+                    XmlRootAttribute root = ChoType.GetCustomAttribute<XmlRootAttribute>(record.GetType(), false);
+                    string nodeName = "XElement";
+                    if (root != null && !root.ElementName.IsNullOrWhiteSpace())
+                        nodeName = root.ElementName.Trim();
+                    else
+                        nodeName = record.GetType().Name;
+
+                    if (configuration.RootName.IsNullOrWhiteSpace())
+                        configuration.RootName = nodeName.ToPlural();
+                    configuration.NodeName = nodeName;
+                }
+            }
+            else
+            {
+                if (configuration.RootName.IsNullOrWhiteSpace())
+                    configuration.RootName = "Root";
+            }
+
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
             using (var parser = new ChoXmlWriter<TRec>(writer, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch })
             {
-                parser.Configuration.XPath = xpath;
+                //parser.Configuration.XPath = xpath;
 
-                parser.Write(records);
+                parser.Write(pe.ToEnumerable());
+
                 parser.Close();
 
                 writer.Flush();
@@ -632,6 +690,18 @@ namespace ChoETL
         public ChoXmlWriter(Stream inStream, ChoXmlRecordConfiguration configuration = null)
             : base(inStream, configuration)
         {
+        }
+
+        public static string SerializeAll<T>(IEnumerable<T> records, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+            where T : class
+        {
+            return ToTextAll<T>(records, configuration, traceSwitch);
+        }
+
+        public static string Serialize<T>(T record, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+            where T : class
+        {
+            return ToText<T>(record, configuration, traceSwitch);
         }
 
     }

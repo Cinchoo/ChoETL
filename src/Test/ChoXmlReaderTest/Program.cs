@@ -84,7 +84,30 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            XmlToJSONNumberTest();
+            XmlNSTest();
+        }
+
+        static void XmlNSTest()
+        {
+            string xml = @"<?xml version=""1.0"" encoding=""UTF-8""?>
+  <archimate:model xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" 
+     xmlns:archimate=""http://www.archimatetool.com/archimate"" name=""ACME"" 
+     id=""38f940a6-9fc7-4619-9806-fd4d48397af7"" version=""4.0.0"">
+    <folder name=""Strategy"" id=""ffc905fd-a78c-4311-b2f6-a188c00ed10a"" type=""strategy""/>
+    <folder name=""Business"" id=""0d806081-438f-4ae5-86d9-8ff5ee4e9f1a"" type=""business""/>
+    <folder name=""Application"" id=""3566e95c-c070-46bb-bde3-f6017ae49dc1"" type=""application""/>
+    <folder name=""Technology &amp; Physical"" id=""4fabc4fa-a882-4843-ae69-170b66df7685"" type=""technology""/>
+    <folder name=""Motivation"" id=""ce5e0874-1c06-41c1-9b95-eec6558afa89"" type=""motivation"">
+      <element xsi:type=""archimate:Principle"" name=""Secure the Whole"" id=""9546e727-f9f7-402a-a4a2-50519d697d75""/>
+    </folder>
+ </archimate:model>";
+
+            using (var p = ChoXmlReader.LoadText(xml)
+                )
+            {
+                foreach (var x in p)
+                    Console.WriteLine(x.Dump());
+            }
         }
 
         static void XmlToJSONNumberTest()

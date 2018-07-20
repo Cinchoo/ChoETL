@@ -399,7 +399,7 @@ namespace ChoETL
                 else if (!IsDynamicObject && !typeof(IChoScalarObject).IsAssignableFrom(RecordType))
                 {
                     NodeName = NodeName.IsNullOrWhiteSpace() ? RecordType.Name : NodeName;
-                    RootName = RootName.IsNullOrWhiteSpace() ? NodeName.ToPlural() : NodeName;
+                    RootName = RootName.IsNullOrWhiteSpace() ? NodeName.ToPlural() : RootName;
                 }
             }
             else

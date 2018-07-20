@@ -91,30 +91,30 @@ namespace ChoETL
                 .ToDictionary(x => x.Value, x => x.Key);
         }
 
-		public static IEnumerable<dynamic> ToDynamic(this IDictionary source)
-		{
-			yield return ChoDynamicObject.FromDictionary(source);
-		}
+        public static IEnumerable<dynamic> ToDynamic(this IDictionary source)
+        {
+            yield return ChoDynamicObject.FromDictionary(source);
+        }
 
-		//public static IEnumerable<object[]> Transpose<K, V>(this IDictionary<K, V> dict)
-		//{
-		//    yield return dict.Keys.Cast<object>().ToArray();
-		//    yield return dict.Values.Cast<object>().ToArray();
-		//}
-		//public static IEnumerable<object[]> Transpose<K, V>(this IEnumerable<IDictionary<K, V>> dicts)
-		//{
-		//    bool first = true;
-		//    foreach (var dict in dicts)
-		//    {
-		//        if (first)
-		//        {
-		//            first = false;
-		//            yield return dict.Keys.Cast<object>().ToArray();
-		//        }
-		//        yield return dict.Values.Cast<object>().ToArray();
-		//    }
-		//}
-		public static ChoDynamicObject Transpose(this ChoDynamicObject dict)
+        //public static IEnumerable<object[]> Transpose<K, V>(this IDictionary<K, V> dict)
+        //{
+        //    yield return dict.Keys.Cast<object>().ToArray();
+        //    yield return dict.Values.Cast<object>().ToArray();
+        //}
+        //public static IEnumerable<object[]> Transpose<K, V>(this IEnumerable<IDictionary<K, V>> dicts)
+        //{
+        //    bool first = true;
+        //    foreach (var dict in dicts)
+        //    {
+        //        if (first)
+        //        {
+        //            first = false;
+        //            yield return dict.Keys.Cast<object>().ToArray();
+        //        }
+        //        yield return dict.Values.Cast<object>().ToArray();
+        //    }
+        //}
+        public static ChoDynamicObject Transpose(this ChoDynamicObject dict)
         {
             return new ChoDynamicObject(Transpose((IDictionary<string, object>)dict).GroupBy(g => g.Key.ToNString(), StringComparer.OrdinalIgnoreCase).ToDictionary(kvp => kvp.Key.ToNString(), kvp => (object)kvp.Last(), StringComparer.OrdinalIgnoreCase));
         }
@@ -958,7 +958,7 @@ namespace ChoETL
         }
 
         public static string XmlSerialize(object target, XmlWriterSettings xws = null, string separator = null, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore,
-			string nsPrefix = null)
+            string nsPrefix = null)
         {
             //ChoGuard.ArgumentNotNull(target, "Target");
             if (target == null)
@@ -1833,54 +1833,54 @@ namespace ChoETL
             return list1;
         }
 
-		public static IList Cast(this IList list, Func<object, object> itemConverter)
-		{
-			if (itemConverter == null)
-				return list;
+        public static IList Cast(this IList list, Func<object, object> itemConverter)
+        {
+            if (itemConverter == null)
+                return list;
 
-			var oldList = new ArrayList();
-			foreach (object t in list)
-				oldList.Add(t);
+            var oldList = new ArrayList();
+            foreach (object t in list)
+                oldList.Add(t);
 
-			list.Clear();
+            list.Clear();
 
-			if (list is Array)
-			{
-				ArrayList l = new ArrayList();
-				foreach (object t in oldList)
-					l.Add(itemConverter(t));
+            if (list is Array)
+            {
+                ArrayList l = new ArrayList();
+                foreach (object t in oldList)
+                    l.Add(itemConverter(t));
 
-				list = l.ToArray();
-			}
-			else
-			{
-				foreach (object t in oldList)
-					list.Add(itemConverter(t));
-			}
+                list = l.ToArray();
+            }
+            else
+            {
+                foreach (object t in oldList)
+                    list.Add(itemConverter(t));
+            }
 
-			return list;
-		}
+            return list;
+        }
 
-		public static IDictionary Cast(this IDictionary dict, Func<KeyValuePair<object, object>, KeyValuePair<object, object>> itemConverter)
-		{
-			if (itemConverter == null)
-				return dict;
+        public static IDictionary Cast(this IDictionary dict, Func<KeyValuePair<object, object>, KeyValuePair<object, object>> itemConverter)
+        {
+            if (itemConverter == null)
+                return dict;
 
-			var oldDict = new Hashtable();
-			foreach (var t in dict.Keys)
-				oldDict.Add(t, dict[t]);
+            var oldDict = new Hashtable();
+            foreach (var t in dict.Keys)
+                oldDict.Add(t, dict[t]);
 
-			dict.Clear();
+            dict.Clear();
 
-			foreach (var t in oldDict)
-			{
-				var kvp = itemConverter(new KeyValuePair<object, object>(t, oldDict[t]));
-				dict.Add(kvp.Key, kvp.Value);
-			}
+            foreach (var t in oldDict)
+            {
+                var kvp = itemConverter(new KeyValuePair<object, object>(t, oldDict[t]));
+                dict.Add(kvp.Key, kvp.Value);
+            }
 
-			return dict;
-		}
-		public static IEnumerable<T> ToEnumerable<T>(this IEnumerator<T> enumerator)
+            return dict;
+        }
+        public static IEnumerable<T> ToEnumerable<T>(this IEnumerator<T> enumerator)
         {
             while (enumerator.MoveNext())
             {
