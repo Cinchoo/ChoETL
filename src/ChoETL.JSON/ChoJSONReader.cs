@@ -465,7 +465,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONReader<T> WithField<TField>(Expression<Func<T, TField>> field, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, 
+        public ChoJSONReader<T> WithField<TField>(Expression<Func<T, TField>> field, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null,
             Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
@@ -490,7 +490,7 @@ namespace ChoETL
         private ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
-            object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null, 
+            object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null,
             string formatText = null, bool isArray = false)
         {
             if (!name.IsNullOrEmpty())
@@ -622,10 +622,13 @@ namespace ChoETL
 
         public static dynamic DeserializeText(string inputText, Encoding encoding = null, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
+            if (configuration == null)
+                configuration = new ChoJSONRecordConfiguration();
+
             if (configuration != null)
             {
                 if (configuration.SupportMultipleContent == null)
-                    configuration.SupportMultipleContent = true;
+                    configuration.SupportMultipleContent = false;
                 if (!configuration.JSONPath.IsNullOrWhiteSpace())
                     configuration.JSONPath = "$..";
             }
@@ -635,10 +638,13 @@ namespace ChoETL
         public static T DeserializeText<T>(string inputText, Encoding encoding = null, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
             where T : class, new()
         {
+            if (configuration == null)
+                configuration = new ChoJSONRecordConfiguration(typeof(T));
+
             if (configuration != null)
             {
                 if (configuration.SupportMultipleContent == null)
-                    configuration.SupportMultipleContent = true;
+                    configuration.SupportMultipleContent = false;
                 if (!configuration.JSONPath.IsNullOrWhiteSpace())
                     configuration.JSONPath = "$..";
             }
@@ -647,10 +653,13 @@ namespace ChoETL
 
         public static dynamic Deserialize(string filePath, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
+            if (configuration == null)
+                configuration = new ChoJSONRecordConfiguration();
+
             if (configuration != null)
             {
                 if (configuration.SupportMultipleContent == null)
-                    configuration.SupportMultipleContent = true;
+                    configuration.SupportMultipleContent = false;
                 if (!configuration.JSONPath.IsNullOrWhiteSpace())
                     configuration.JSONPath = "$..";
             }
@@ -660,10 +669,13 @@ namespace ChoETL
         public static T Deserialize<T>(string filePath, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
             where T : class, new()
         {
+            if (configuration == null)
+                configuration = new ChoJSONRecordConfiguration(typeof(T));
+
             if (configuration != null)
             {
                 if (configuration.SupportMultipleContent == null)
-                    configuration.SupportMultipleContent = true;
+                    configuration.SupportMultipleContent = false;
                 if (!configuration.JSONPath.IsNullOrWhiteSpace())
                     configuration.JSONPath = "$..";
             }
@@ -672,10 +684,13 @@ namespace ChoETL
 
         public static dynamic Deserialize(TextReader textReader, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
+            if (configuration == null)
+                configuration = new ChoJSONRecordConfiguration();
+
             if (configuration != null)
             {
                 if (configuration.SupportMultipleContent == null)
-                    configuration.SupportMultipleContent = true;
+                    configuration.SupportMultipleContent = false;
                 if (!configuration.JSONPath.IsNullOrWhiteSpace())
                     configuration.JSONPath = "$..";
             }
@@ -685,10 +700,13 @@ namespace ChoETL
         public static T Deserialize<T>(TextReader textReader, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
             where T : class, new()
         {
+            if (configuration == null)
+                configuration = new ChoJSONRecordConfiguration(typeof(T));
+
             if (configuration != null)
             {
                 if (configuration.SupportMultipleContent == null)
-                    configuration.SupportMultipleContent = true;
+                    configuration.SupportMultipleContent = false;
                 if (!configuration.JSONPath.IsNullOrWhiteSpace())
                     configuration.JSONPath = "$..";
             }
@@ -697,10 +715,13 @@ namespace ChoETL
 
         public static dynamic Deserialize(Stream inStream, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
+            if (configuration == null)
+                configuration = new ChoJSONRecordConfiguration();
+
             if (configuration != null)
             {
                 if (configuration.SupportMultipleContent == null)
-                    configuration.SupportMultipleContent = true;
+                    configuration.SupportMultipleContent = false;
                 if (!configuration.JSONPath.IsNullOrWhiteSpace())
                     configuration.JSONPath = "$..";
             }
@@ -710,10 +731,13 @@ namespace ChoETL
         public static T Deserialize<T>(Stream inStream, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
             where T : class, new()
         {
+            if (configuration == null)
+                configuration = new ChoJSONRecordConfiguration(typeof(T));
+
             if (configuration != null)
             {
                 if (configuration.SupportMultipleContent == null)
-                    configuration.SupportMultipleContent = true;
+                    configuration.SupportMultipleContent = false;
                 if (!configuration.JSONPath.IsNullOrWhiteSpace())
                     configuration.JSONPath = "$..";
             }
@@ -741,5 +765,5 @@ namespace ChoETL
         {
             return new ChoJSONReader<T>(jObject, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
         }
- }
+    }
 }

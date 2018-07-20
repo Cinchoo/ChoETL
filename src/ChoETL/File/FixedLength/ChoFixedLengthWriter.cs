@@ -480,10 +480,20 @@ namespace ChoETL
         {
         }
 
+        public static string SerializeAll(IEnumerable<dynamic> records, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            return ToTextAll<dynamic>(records, configuration, traceSwitch);
+        }
+
         public static string SerializeAll<T>(IEnumerable<T> records, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
             where T : class
         {
             return ToTextAll<T>(records, configuration, traceSwitch);
+        }
+
+        public static string Serialize(dynamic record, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            return ToText<dynamic>(record, configuration, traceSwitch);
         }
 
         public static string Serialize<T>(T record, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
@@ -491,6 +501,5 @@ namespace ChoETL
         {
             return ToText<T>(record, configuration, traceSwitch);
         }
-
     }
 }

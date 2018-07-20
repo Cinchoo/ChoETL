@@ -392,7 +392,7 @@ namespace ChoETL
                         if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, key, ref value))
                             continue;
                         if (fieldConfig.CustomSerializer != null)
-                            value = Normalize(fieldConfig.CustomSerializer(value));
+                            value = Normalize(fieldConfig.CustomSerializer(node));
 
                         if (value is XElement)
                         {
@@ -423,7 +423,7 @@ namespace ChoETL
                             continue;
 
                         if (fieldConfig.CustomSerializer != null)
-                            fieldValue = Normalize(fieldConfig.CustomSerializer(value));
+                            fieldValue = Normalize(fieldConfig.CustomSerializer(xNodes));
                         else
                         {
                             //object[] xNodes = ((IEnumerable)node.XPathEvaluate(fieldConfig.XPath, Configuration.NamespaceManager)).OfType<object>().ToArray();

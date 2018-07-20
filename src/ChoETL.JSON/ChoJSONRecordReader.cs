@@ -460,7 +460,7 @@ namespace ChoETL
 
 
                 if (fieldConfig.CustomSerializer != null)
-                    fieldValue = fieldConfig.CustomSerializer(fieldValue);
+                    fieldValue = fieldConfig.CustomSerializer(!jTokens.IsNullOrEmpty() ? (object)jTokens : jToken == null ? node : jToken);
                 else
                 {
                     if (fieldConfig.FieldType == null)

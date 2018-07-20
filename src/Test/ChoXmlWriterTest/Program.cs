@@ -33,13 +33,13 @@ namespace ChoXmlWriterTest
     {
         static void Main(string[] args)
         {
-            QuickDynamicTest();
+            CustomMemberSerialization();
         }
 
         static void CustomMemberSerialization()
         {
             var sb = new StringBuilder();
-            using (var p = new ChoXmlWriter<Choice>()
+            using (var p = new ChoXmlWriter<Choice>(sb)
                 .WithField("Options", valueConverter: o => String.Join(",", o as string[]))
                 )
             {
@@ -62,9 +62,9 @@ namespace ChoXmlWriterTest
                     Ids = new List<int> { 1, 2, 3}
                 }
                 };
-                Console.WriteLine(p.SerializeAll(l));
+                p.Write(l);
             }
-            //Console.WriteLine(sb.ToString());
+            Console.WriteLine(sb.ToString());
             //Console.WriteLine(ChoXmlWriter.ToText<Choice>(new Choice { Options = new[] { "op 1", "op 2" } }));
         }
 

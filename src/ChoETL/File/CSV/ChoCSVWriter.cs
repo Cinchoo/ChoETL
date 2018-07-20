@@ -537,10 +537,20 @@ namespace ChoETL
         {
         }
 
+        public static string SerializeAll(IEnumerable<dynamic> records, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            return ToTextAll<dynamic>(records, configuration, traceSwitch);
+        }
+
         public static string SerializeAll<T>(IEnumerable<T> records, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
             where T : class
         {
             return ToTextAll<T>(records, configuration, traceSwitch);
+        }
+
+        public static string Serialize(dynamic record, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            return ToText<dynamic>(record, configuration, traceSwitch);
         }
 
         public static string Serialize<T>(T record, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
