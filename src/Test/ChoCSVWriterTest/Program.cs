@@ -364,11 +364,32 @@ namespace ChoCSVWriterTest
             Console.WriteLine(sb.ToString());
         }
 
+        public class Person
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+        }
+
+        public class Emp : Person
+        {
+            public string Role { get; set; }
+            public string City { get; set; }
+        }
+
+        static void HierTest()
+        {
+            var e1 = new Emp { Id = 1, Name = "Tom", City = "Edison", Role = "Developer" };
+            var e2 = new Emp { Id = 2, Name = "Mark", City = "Princeton", Role = "Analyst" };
+
+            var csv = ChoCSVWriter<Emp>.ToTextAll(new Emp[] { e1, e2 },
+                new ChoCSVRecordConfiguration().Configure(c => c.FileHeaderConfiguration.HasHeaderRecord = true));
+            Console.WriteLine(csv);
+        }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            ListTest();
+            HierTest();
             return;
 
             WriteSpecificColumns();

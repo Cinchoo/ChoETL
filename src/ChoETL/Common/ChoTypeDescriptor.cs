@@ -46,8 +46,25 @@
         {
             if (!_pdDict.ContainsKey(type))
             {
-                _pdDict.Add(type, TypeDescriptor.GetProperties(type).AsTypedEnumerable<PropertyDescriptor>().Where(pd => !pd.Attributes.OfType<ChoIgnoreMemberAttribute>().Any()).ToArray());
+                _pdDict.Add(type, GetBasePropertiesFirst(type).AsTypedEnumerable<PropertyDescriptor>().Where(pd => !pd.Attributes.OfType<ChoIgnoreMemberAttribute>().Any()).ToArray());
             }
+        }
+
+        private static PropertyDescriptorCollection GetBasePropertiesFirst(Type type)
+        {
+            var orderList = new List<Type>();
+            var iteratingType = type;
+            do
+            {
+                orderList.Insert(0, iteratingType);
+                iteratingType = iteratingType.BaseType;
+            } while (iteratingType != null);
+
+            var props = TypeDescriptor.GetProperties(type).AsTypedEnumerable<PropertyDescriptor>()
+                .OrderBy(x => orderList.IndexOf(x.ComponentType))
+                .ToArray();
+
+            return new PropertyDescriptorCollection(props);
         }
 
         public static IEnumerable<PropertyDescriptor> GetProperties<T>(Type type)
@@ -98,24 +115,24 @@
             //    pd.Name == propName).FirstOrDefault();
         }
 
-		public static PropertyDescriptor GetNestedProperty(Type recType, string pn)
-		{
-			if (pn.IsNullOrWhiteSpace()) return null;
+        public static PropertyDescriptor GetNestedProperty(Type recType, string pn)
+        {
+            if (pn.IsNullOrWhiteSpace()) return null;
 
-			string[] pnTokens = pn.SplitNTrim(".");
-			PropertyDescriptor pd = null;
-			for (int index = 0; index < pnTokens.Length - 1; index++)
-			{
-				pd = ChoTypeDescriptor.GetProperty(recType, pnTokens[index]);
-				if (pd == null) return null;
+            string[] pnTokens = pn.SplitNTrim(".");
+            PropertyDescriptor pd = null;
+            for (int index = 0; index < pnTokens.Length - 1; index++)
+            {
+                pd = ChoTypeDescriptor.GetProperty(recType, pnTokens[index]);
+                if (pd == null) return null;
 
-				recType = pd.PropertyType;
-			}
+                recType = pd.PropertyType;
+            }
 
-			return ChoTypeDescriptor.GetProperty(recType, pnTokens.Last());
-		}
+            return ChoTypeDescriptor.GetProperty(recType, pnTokens.Last());
+        }
 
-		public static T GetPropetyAttribute<T>(PropertyDescriptor pd)
+        public static T GetPropetyAttribute<T>(PropertyDescriptor pd)
                    where T : Attribute
         {
             if (pd == null)

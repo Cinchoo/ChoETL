@@ -717,12 +717,12 @@ namespace ChoETL
             return nil != null;
         }
 
-		public static bool IsCDATANode(this XElement element)
-		{
-			return element.FirstNode != null ? element.FirstNode.NodeType == XmlNodeType.CDATA : false;
-		}
+        public static bool IsCDATANode(this XElement element)
+        {
+            return element.FirstNode != null ? element.FirstNode.NodeType == XmlNodeType.CDATA : false;
+        }
 
-		public static string NilAwareValue(this XElement element, string xmlSchemaNS = null)
+        public static string NilAwareValue(this XElement element, string xmlSchemaNS = null)
         {
             XNamespace ns = xmlSchemaNS.IsNullOrWhiteSpace() ? ChoXmlSettings.XmlSchemaInstanceNamespace : xmlSchemaNS;
 
@@ -774,8 +774,8 @@ namespace ChoETL
                     continue;
                 if (!ns.IsNullOrEmpty() && ChoXmlSettings.XmlNamespace.EndsWith(ns, StringComparison.InvariantCultureIgnoreCase))
                     continue;
-				if (ns.IsNullOrWhiteSpace() && attribute.Name == "xmlns")
-					continue;
+                if (ns.IsNullOrWhiteSpace() && attribute.Name == "xmlns")
+                    continue;
 
                 hasAttr = true;
             }
@@ -786,9 +786,9 @@ namespace ChoETL
         public static dynamic ToDynamic(this XElement element, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null,
             bool retainXmlAttributesAsNative = true, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore)
         {
-			// loop through child elements
-			// define an Expando Dynamic
-			ChoDynamicObject obj = new ChoDynamicObject(element.Name.LocalName);
+            // loop through child elements
+            // define an Expando Dynamic
+            ChoDynamicObject obj = new ChoDynamicObject(element.Name.LocalName);
 
             bool hasAttr = false;
             // cater for attributes as properties
@@ -800,7 +800,7 @@ namespace ChoETL
                         continue;
 
                     hasAttr = true;
-					obj.SetAttribute(attribute.Name.LocalName, System.Net.WebUtility.HtmlDecode(attribute.Value));
+                    obj.SetAttribute(attribute.Name.LocalName, System.Net.WebUtility.HtmlDecode(attribute.Value));
                 }
             }
 
@@ -873,13 +873,13 @@ namespace ChoETL
                                     continue;
 
                                 object dobj = ToDynamic(subElement, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling);
-								if (dobj != null || (dobj == null && emptyXmlNodeValueHandling != ChoEmptyXmlNodeValueHandling.Ignore))
-								{
-									if (dobj is IList && ((IList)dobj).OfType<ChoDynamicObject>().Count() == ((IList)dobj).Count)
-										list.AddRange(((IList)dobj).Cast<object>());
-									else
-										list.Add(dobj);
-								}
+                                if (dobj != null || (dobj == null && emptyXmlNodeValueHandling != ChoEmptyXmlNodeValueHandling.Ignore))
+                                {
+                                    if (dobj is IList && ((IList)dobj).OfType<ChoDynamicObject>().Count() == ((IList)dobj).Count)
+                                        list.AddRange(((IList)dobj).Cast<object>());
+                                    else
+                                        list.Add(dobj);
+                                }
 
                                 keyName = subElement.Name.LocalName + "s";
                             }
