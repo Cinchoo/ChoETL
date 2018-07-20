@@ -149,6 +149,9 @@ namespace ChoETL
         public static string ToText<TRec>(TRec record, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string jsonPath = null)
             where TRec : class
         {
+            if (configuration == null)
+                configuration = new ChoJSONRecordConfiguration();
+
             configuration.IgnoreRootName = true;
             configuration.RootName = null;
             configuration.SingleElement = true;

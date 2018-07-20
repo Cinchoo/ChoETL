@@ -782,7 +782,7 @@ namespace ChoETL
 
             if (configuration != null)
             {
-                if (!configuration.XPath.IsNullOrWhiteSpace())
+                if (configuration.XPath.IsNullOrWhiteSpace())
                     configuration.XPath = "//";
             }
             return new ChoXmlReader(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
@@ -796,7 +796,7 @@ namespace ChoETL
 
             if (configuration != null)
             {
-                if (!configuration.XPath.IsNullOrWhiteSpace())
+                if (configuration.XPath.IsNullOrWhiteSpace())
                     configuration.XPath = "//";
             }
             return new ChoXmlReader<T>(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
@@ -809,7 +809,7 @@ namespace ChoETL
 
             if (configuration != null)
             {
-                if (!configuration.XPath.IsNullOrWhiteSpace())
+                if (configuration.XPath.IsNullOrWhiteSpace())
                     configuration.XPath = "//";
             }
             return new ChoXmlReader(filePath, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
@@ -823,7 +823,7 @@ namespace ChoETL
 
             if (configuration != null)
             {
-                if (!configuration.XPath.IsNullOrWhiteSpace())
+                if (configuration.XPath.IsNullOrWhiteSpace())
                     configuration.XPath = "//";
             }
             return new ChoXmlReader<T>(filePath, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
@@ -836,7 +836,7 @@ namespace ChoETL
 
             if (configuration != null)
             {
-                if (!configuration.XPath.IsNullOrWhiteSpace())
+                if (configuration.XPath.IsNullOrWhiteSpace())
                     configuration.XPath = "//";
             }
             return new ChoXmlReader(textReader, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
@@ -850,7 +850,7 @@ namespace ChoETL
 
             if (configuration != null)
             {
-                if (!configuration.XPath.IsNullOrWhiteSpace())
+                if (configuration.XPath.IsNullOrWhiteSpace())
                     configuration.XPath = "//";
             }
             return new ChoXmlReader<T>(textReader, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
@@ -863,7 +863,7 @@ namespace ChoETL
 
             if (configuration != null)
             {
-                if (!configuration.XPath.IsNullOrWhiteSpace())
+                if (configuration.XPath.IsNullOrWhiteSpace())
                     configuration.XPath = "//";
             }
             return new ChoXmlReader(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
@@ -877,7 +877,7 @@ namespace ChoETL
 
             if (configuration != null)
             {
-                if (!configuration.XPath.IsNullOrWhiteSpace())
+                if (configuration.XPath.IsNullOrWhiteSpace())
                     configuration.XPath = "//";
             }
             return new ChoXmlReader<T>(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
