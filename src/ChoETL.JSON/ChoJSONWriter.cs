@@ -155,6 +155,8 @@ namespace ChoETL
             configuration.IgnoreRootName = true;
             configuration.RootName = null;
             configuration.SingleElement = true;
+            configuration.SupportMultipleContent = true;
+
             return ToTextAll(ChoEnumerable.AsEnumerable<TRec>(record), configuration, traceSwitch, jsonPath);
         }
 

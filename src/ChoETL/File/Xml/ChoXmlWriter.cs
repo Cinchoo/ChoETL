@@ -160,14 +160,30 @@ namespace ChoETL
             {
                 if (configuration.NodeName.IsNullOrWhiteSpace())
                 {
-                    XmlRootAttribute root = ChoType.GetCustomAttribute<XmlRootAttribute>(record.GetType(), false);
-                    string nodeName = "XElement";
-                    if (root != null && !root.ElementName.IsNullOrWhiteSpace())
-                        nodeName = root.ElementName.Trim();
+                    ChoDynamicObject rec1 = record as ChoDynamicObject;
+                    if (rec1 != null)
+                    {
+                        if (rec1.DynamicObjectName != ChoDynamicObject.DefaultName)
+                        {
+                            configuration.NodeName = rec1.DynamicObjectName;
+                        }
+                        else
+                        {
+                            configuration.IgnoreNodeName = true;
+                            configuration.NodeName = null;
+                        }
+                    }
                     else
-                        nodeName = record.GetType().Name;
+                    {
+                        XmlRootAttribute root = ChoType.GetCustomAttribute<XmlRootAttribute>(record.GetType(), false);
+                        string nodeName = "XElement";
+                        if (root != null && !root.ElementName.IsNullOrWhiteSpace())
+                            nodeName = root.ElementName.Trim();
+                        else
+                            nodeName = record.GetType().Name;
 
-                    configuration.NodeName = nodeName;
+                        configuration.NodeName = nodeName;
+                    }
                 }
             }
 
@@ -209,16 +225,26 @@ namespace ChoETL
             {
                 if (configuration.NodeName.IsNullOrWhiteSpace())
                 {
-                    XmlRootAttribute root = ChoType.GetCustomAttribute<XmlRootAttribute>(record.GetType(), false);
-                    string nodeName = "XElement";
-                    if (root != null && !root.ElementName.IsNullOrWhiteSpace())
-                        nodeName = root.ElementName.Trim();
+                    ChoDynamicObject rec1 = record as ChoDynamicObject;
+                    if (rec1 != null)
+                    {
+                        configuration.NodeName = rec1.DynamicObjectName;
+                        if (configuration.RootName.IsNullOrWhiteSpace())
+                            configuration.RootName = configuration.NodeName.ToPlural();
+                    }
                     else
-                        nodeName = record.GetType().Name;
+                    {
+                        XmlRootAttribute root = ChoType.GetCustomAttribute<XmlRootAttribute>(record.GetType(), false);
+                        string nodeName = "XElement";
+                        if (root != null && !root.ElementName.IsNullOrWhiteSpace())
+                            nodeName = root.ElementName.Trim();
+                        else
+                            nodeName = record.GetType().Name;
 
-                    if (configuration.RootName.IsNullOrWhiteSpace())
-                        configuration.RootName = nodeName.ToPlural();
-                    configuration.NodeName = nodeName;
+                        if (configuration.RootName.IsNullOrWhiteSpace())
+                            configuration.RootName = nodeName.ToPlural();
+                        configuration.NodeName = nodeName;
+                    }
                 }
             }
             else
