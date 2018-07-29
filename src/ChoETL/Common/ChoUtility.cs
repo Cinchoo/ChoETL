@@ -238,8 +238,29 @@ namespace ChoETL
                     else
                         isSourceDynamic = false;
 
+                    if (fieldMap == null)
+                    {
+                        fieldMap = new Func<string, string>(fn =>
+                        {
+                            if (item is Dictionary<string, object>)
+                                return fn;
+                            else
+                            {
+                                IDictionary<string, string> dictx = ChoTypeDescriptor.GetProperties(typeof(T)).ToDictionary(pi => pi.Name, pi =>
+                                {
+                                    var fm = pi.Attributes.OfType<ChoFieldMapAttribute>().FirstOrDefault();
+                                    if (fm == null || fm.Name.IsNullOrWhiteSpace())
+                                        return pi.Name;
+                                    else
+                                        return fm.Name;
+                                });
+                                return dictx.ContainsKey(fn) ? dictx[fn] : fn;
+                            }
+                        });
+                    }
+                    
                     if (!typeof(IDictionary<string, object>).IsAssignableFrom(typeof(T)))
-                        pds = ChoTypeDescriptor.GetProperties(typeof(T)).ToDictionary(kvp => fieldMap == null ? kvp.Name : fieldMap(kvp.Name), StringComparer.CurrentCultureIgnoreCase);
+                        pds = ChoTypeDescriptor.GetProperties(typeof(T)).ToDictionary(kvp => fieldMap(kvp.Name), StringComparer.CurrentCultureIgnoreCase);
 
                     if (isSourceDynamic)
                     {
