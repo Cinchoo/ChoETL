@@ -14,6 +14,7 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Runtime.Serialization.Json;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -114,14 +115,16 @@ namespace ChoETL
         //        yield return dict.Values.Cast<object>().ToArray();
         //    }
         //}
+
+
         public static ChoDynamicObject Transpose(this ChoDynamicObject dict)
         {
             return new ChoDynamicObject(Transpose((IDictionary<string, object>)dict).GroupBy(g => g.Key.ToNString(), StringComparer.OrdinalIgnoreCase).ToDictionary(kvp => kvp.Key.ToNString(), kvp => (object)kvp.Last(), StringComparer.OrdinalIgnoreCase));
         }
 
-        public static IEnumerable<ChoDynamicObject> Transpose(this IEnumerable<ChoDynamicObject> dicts, bool treatFirstItemAsHeader = true)
+        public static IEnumerable<ChoDynamicObject> Transpose(this IEnumerable<object> dicts, bool treatFirstItemAsHeader = true)
         {
-            return Transpose(dicts.Cast<IDictionary<string, object>>(), treatFirstItemAsHeader).Select(d => new ChoDynamicObject(d));
+            return Transpose(dicts.OfType<IDictionary<string, object>>(), treatFirstItemAsHeader).Select(d => new ChoDynamicObject(d));
 
             //var dictsArray = dicts.ToArray();
 
@@ -204,6 +207,128 @@ namespace ChoETL
 
             }
             return ret;
+        }
+
+        public static IEnumerable<ChoDynamicObject> ExpandToObjects(this IEnumerable<object> list, Func<string, string> fieldMap = null, Func<string, object, object> converter = null)
+        {
+            return ExpandToObjects<ChoDynamicObject>(list, fieldMap, converter);
+        }
+        public static IEnumerable<T> ExpandToObjects<T>(this IEnumerable<object> list, Func<string, string> fieldMap = null)
+            where T : class, new()
+        {
+            return ExpandToObjects<T>(list, fieldMap, null);
+        }
+
+        private static IEnumerable<T> ExpandToObjects<T>(IEnumerable<object> list, Func<string, string> fieldMap = null, Func<string, object, object> converter = null)
+        {
+            bool firstItem = true;
+            string[] keys = null;
+            Dictionary<string, PropertyDescriptor> pds = new Dictionary<string, PropertyDescriptor>();
+            PropertyDescriptor pd = null;
+            int count = 1;
+            bool isSourceDynamic = true;
+            IDictionary<string, object> dict = null;
+            foreach (var item in list) //.OfType<IDictionary<string, object>>())
+            {
+                dict = item as IDictionary<string, object>;
+                if (firstItem)
+                {
+                    if (item is IDictionary<string, object>)
+                        isSourceDynamic = true;
+                    else
+                        isSourceDynamic = false;
+
+                    if (!typeof(IDictionary<string, object>).IsAssignableFrom(typeof(T)))
+                        pds = ChoTypeDescriptor.GetProperties(typeof(T)).ToDictionary(kvp => fieldMap == null ? kvp.Name : fieldMap(kvp.Name), StringComparer.CurrentCultureIgnoreCase);
+
+                    if (isSourceDynamic)
+                    {
+                        keys = dict.Keys.ToArray();
+                        firstItem = false;
+
+                        count = dict.Values.Where(i => i is IList).Select(i => ((IList)i).Count).Max();
+                        if (count <= 0) count = 1;
+                    }
+                    else
+                    {
+                        keys = ChoTypeDescriptor.GetProperties(item.GetType()).Select(pi => pi.Name).ToArray();
+                        firstItem = false;
+
+                        count = keys.Select(pn => ChoType.GetPropertyValue(item, pn)).Where(i => i is IList).Select(i => ((IList)i).Count).Max();
+                        if (count <= 0) count = 1;
+                    }
+                }
+
+                object value = null;
+                T rec = Activator.CreateInstance<T>();
+                int index = 0;
+
+                while (index < count)
+                {
+                    foreach (var key in keys)
+                    {
+                        if (isSourceDynamic)
+                        {
+                            if (!dict.ContainsKey(key, true, Thread.CurrentThread.CurrentCulture))
+                                continue;
+                            value = dict[key];
+                        }
+                        else
+                        {
+                            value = ChoType.GetPropertyValue(item, key);
+                        }
+
+                        if (value == null)
+                            continue;
+
+                        if (rec is IDictionary<string, object>)
+                        {
+                            var destdict = rec as IDictionary<string, object>;
+                            if (value is IList)
+                            {
+                                var list1 = value as IList;
+                                if (index < list1.Count)
+                                {
+                                    if (!destdict.ContainsKey(key))
+                                        destdict.Add(key, list1[index]);
+                                    else
+                                        destdict[key] = list1[index];
+                                }
+                            }
+                            else
+                            {
+                                if (!destdict.ContainsKey(key))
+                                    destdict.Add(key, value);
+                                else
+                                    destdict[key] = value;
+                            }
+
+                            destdict[key] = converter != null ? converter(key, destdict[key]) : destdict[key];
+                        }
+                        else
+                        {
+                            if (!pds.ContainsKey(key))
+                                continue;
+                            pd = pds[key];
+
+                            if (value is IList)
+                            {
+                                var list1 = value as IList;
+                                if (index < list1.Count)
+                                {
+                                    ChoType.ConvertNSetPropertyValue(rec, pd.Name, list1[index]);
+                                }
+                            }
+                            else
+                            {
+                                ChoType.SetPropertyValue(rec, pd.Name, value);
+                            }
+                        }
+                    }
+                    yield return rec;
+                    index++;
+                }
+            }
         }
 
         public static T FirstOrDefault<T>(this object value, T defaultValue = default(T))

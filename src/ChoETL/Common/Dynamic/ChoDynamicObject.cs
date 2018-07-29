@@ -118,6 +118,11 @@ namespace ChoETL
             _intrinsicTypes.Add("dynamic", typeof(ChoDynamicObject));
         }
 
+        public ChoDynamicObject() : this(false)
+        {
+            DynamicObjectName = DefaultName;
+        }
+
         public ChoDynamicObject(string name) : this(false)
         {
             DynamicObjectName = name.IsNullOrWhiteSpace() ? DefaultName : name.Trim();

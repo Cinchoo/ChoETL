@@ -15,12 +15,12 @@ namespace ChoETL
         private const string ImplicitOperatorMethodName = "op_Implicit";
         private const string ExplicitOperatorMethodName = "op_Explicit";
 
-        public static bool TryConvertTo(object value, Type targetType, CultureInfo culture, out object output)
+        public static bool TryConvertTo(object value, Type targetType, CultureInfo culture, out object output, string propName = null)
         {
             output = (object)null;
             try
             {
-                output = ChoConvert.ConvertTo(value, targetType, culture);
+                output = ChoConvert.ConvertTo(value, targetType, culture, propName);
                 return true;
             }
             catch
@@ -29,17 +29,17 @@ namespace ChoETL
             }
         }
 
-        public static object ConvertTo(object value, Type targetType, CultureInfo culture = null)
+        public static object ConvertTo(object value, Type targetType, CultureInfo culture = null, string propName = null)
         {
             if (value == null)
-                return ChoConvert.ConvertTo(value, targetType, value, (object[])null, (object[])null, culture);
+                return ChoConvert.ConvertTo(value, targetType, value, (object[])null, (object[])null, culture, propName);
 
             Type origType = targetType;
             Type type = value == null ? typeof(object) : value.GetType();
             if (type == origType)
                 return value;
 
-            return ChoConvert.ConvertTo(value, targetType, value, ChoTypeDescriptor.GetTypeConvertersForType(type), null, culture);
+            return ChoConvert.ConvertTo(value, targetType, value, ChoTypeDescriptor.GetTypeConvertersForType(type), null, culture, propName);
         }
 
         public static bool TryConvertFrom(object value, MemberInfo memberInfo, object sourceObject, CultureInfo culture, out object output)
@@ -60,16 +60,16 @@ namespace ChoETL
         public static object ConvertFrom(object value, MemberInfo memberInfo, object sourceObject = null, CultureInfo culture = null)
         {
             ChoGuard.ArgumentNotNull(memberInfo, "MemberInfo");
-            return ChoConvert.ConvertFrom(value, ChoType.GetMemberType(memberInfo), sourceObject, ChoTypeDescriptor.GetTypeConverters(memberInfo), ChoTypeDescriptor.GetTypeConverterParams(memberInfo), culture);
+            return ChoConvert.ConvertFrom(value, ChoType.GetMemberType(memberInfo), sourceObject, ChoTypeDescriptor.GetTypeConverters(memberInfo), ChoTypeDescriptor.GetTypeConverterParams(memberInfo), culture, memberInfo.Name);
         }
 
         public static object ConvertFrom(object value, PropertyInfo propertyInfo, object sourceObject = null, CultureInfo culture = null)
         {
             ChoGuard.ArgumentNotNull(propertyInfo, "PropertyInfo");
-            return ChoConvert.ConvertFrom(value, propertyInfo.PropertyType, sourceObject, ChoTypeDescriptor.GetTypeConverters(propertyInfo), ChoTypeDescriptor.GetTypeConverterParams(propertyInfo), culture);
+            return ChoConvert.ConvertFrom(value, propertyInfo.PropertyType, sourceObject, ChoTypeDescriptor.GetTypeConverters(propertyInfo), ChoTypeDescriptor.GetTypeConverterParams(propertyInfo), culture, propertyInfo.Name);
         }
 
-        public static object ConvertFrom(object value, Type targetType, object sourceObject = null, object[] converters = null, object[] parameters = null, CultureInfo culture = null)
+        public static object ConvertFrom(object value, Type targetType, object sourceObject = null, object[] converters = null, object[] parameters = null, CultureInfo culture = null, string propName = null)
         {
             Type origType = targetType;
             targetType = targetType.IsNullableType() ? targetType.GetUnderlyingType() : targetType;
@@ -80,6 +80,14 @@ namespace ChoETL
                 return value;
             if (culture == null)
                 culture = ChoConvert.DefaultCulture;
+
+            if (sourceObject is IChoConvertible && !propName.IsNullOrWhiteSpace())
+            {
+                var convObject = sourceObject as IChoConvertible;
+                object convPropValue = null;
+                if (convObject.Convert(propName, value, culture, out convPropValue))
+                    return convPropValue;
+            }
 
             if (value is ICollection && !typeof(ICollection).IsAssignableFrom(targetType))
             {
@@ -135,7 +143,7 @@ namespace ChoETL
                     {
                     }
                 }
-                if (ChoConvert.TryConvertXPlicit(value, targetType, "op_Explicit", ref value) 
+                if (ChoConvert.TryConvertXPlicit(value, targetType, "op_Explicit", ref value)
                     || ChoConvert.TryConvertXPlicit(value, targetType, "op_Implicit", ref value))
                     return value;
 
@@ -282,7 +290,7 @@ namespace ChoETL
             ChoGuard.ArgumentNotNull((object)memberInfo, "MemberInfo");
             try
             {
-                output = ChoConvert.ConvertTo(value, targetType, sourceObject, ChoTypeDescriptor.GetTypeConverters(memberInfo), ChoTypeDescriptor.GetTypeConverterParams(memberInfo), culture);
+                output = ChoConvert.ConvertTo(value, targetType, sourceObject, ChoTypeDescriptor.GetTypeConverters(memberInfo), ChoTypeDescriptor.GetTypeConverterParams(memberInfo), culture, memberInfo.Name);
                 return true;
             }
             catch
@@ -294,10 +302,12 @@ namespace ChoETL
         public static object ConvertTo(object value, MemberInfo memberInfo, Type targetType, object sourceObject = null, CultureInfo culture = null)
         {
             ChoGuard.ArgumentNotNull((object)memberInfo, "MemberInfo");
-            return ChoConvert.ConvertTo(value, targetType, sourceObject, ChoTypeDescriptor.GetTypeConverters(memberInfo), ChoTypeDescriptor.GetTypeConverterParams(memberInfo), culture);
+            return ChoConvert.ConvertTo(value, targetType, sourceObject, ChoTypeDescriptor.GetTypeConverters(memberInfo), ChoTypeDescriptor.GetTypeConverterParams(memberInfo), culture,
+                memberInfo.Name);
         }
 
-        public static object ConvertTo(object value, Type targetType, object sourceObject, object[] converters, object[] parameters, CultureInfo culture)
+        public static object ConvertTo(object value, Type targetType, object sourceObject, object[] converters, object[] parameters, CultureInfo culture,
+            string propName = null)
         {
             Type origType = targetType;
             targetType = targetType.IsNullableType() ? targetType.GetUnderlyingType() : targetType;
@@ -312,6 +322,14 @@ namespace ChoETL
 
             try
             {
+                if (sourceObject is IChoConvertible && !propName.IsNullOrWhiteSpace())
+                {
+                    var convObject = sourceObject as IChoConvertible;
+                    object convPropValue = null;
+                    if (convObject.ConvertBack(propName, value, targetType, culture, out convPropValue))
+                        return convPropValue;
+                }
+
                 object[] objArray = (object[])null;
                 if (converters.IsNullOrEmpty())
                     converters = ChoTypeDescriptor.GetTypeConvertersForType(type);
@@ -355,7 +373,7 @@ namespace ChoETL
                     {
                     }
                 }
-                if (ChoConvert.TryConvertXPlicit(value, targetType, "op_Explicit", ref value) 
+                if (ChoConvert.TryConvertXPlicit(value, targetType, "op_Explicit", ref value)
                     || ChoConvert.TryConvertXPlicit(value, targetType, "op_Implicit", ref value))
                     //|| (!origType.IsNullableType() && ChoConvert.TryConvertToSpecialValues(value, targetType, culture, out value)))
                     //  || ChoConvert.TryConvertToSpecialValues(value, targetType, culture, out value))
@@ -374,7 +392,7 @@ namespace ChoETL
                     return null;
                 else if (ChoConvert.TryConvertToSpecialValues(value, targetType, culture, out result))
                     return result;
-                
+
                 throw new ApplicationException("Object conversion failed.");
             }
             catch (Exception ex)
