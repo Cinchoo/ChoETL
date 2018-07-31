@@ -620,6 +620,13 @@ namespace ChoETL
         {
         }
 
+        public static dynamic DeserializeText(string inputText, string jsonPath, Encoding encoding = null, TraceSwitch traceSwitch = null)
+        {
+            var configuration = new ChoJSONRecordConfiguration();
+            configuration.JSONPath = jsonPath;
+            return DeserializeText(inputText, encoding, configuration, traceSwitch);
+        }
+
         public static dynamic DeserializeText(string inputText, Encoding encoding = null, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
             if (configuration == null)
@@ -633,6 +640,14 @@ namespace ChoETL
                     configuration.JSONPath = "$";
             }
             return new ChoJSONReader(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static T DeserializeText<T>(string inputText, string jsonPath, Encoding encoding = null, TraceSwitch traceSwitch = null)
+            where T : class, new()
+        {
+            var configuration = new ChoJSONRecordConfiguration();
+            configuration.JSONPath = jsonPath;
+            return DeserializeText<T>(inputText, encoding, configuration, traceSwitch);
         }
 
         public static T DeserializeText<T>(string inputText, Encoding encoding = null, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
@@ -651,6 +666,13 @@ namespace ChoETL
             return new ChoJSONReader<T>(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
         }
 
+        public static dynamic Deserialize(string filePath, string jsonPath, TraceSwitch traceSwitch = null)
+        {
+            var configuration = new ChoJSONRecordConfiguration();
+            configuration.JSONPath = jsonPath;
+            return Deserialize(filePath, configuration, traceSwitch);
+        }
+
         public static dynamic Deserialize(string filePath, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
             if (configuration == null)
@@ -664,6 +686,14 @@ namespace ChoETL
                     configuration.JSONPath = "$";
             }
             return new ChoJSONReader(filePath, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static T Deserialize<T>(string filePath, string jsonPath, TraceSwitch traceSwitch = null)
+            where T : class, new()
+        {
+            var configuration = new ChoJSONRecordConfiguration();
+            configuration.JSONPath = jsonPath;
+            return Deserialize<T>(filePath, configuration, traceSwitch);
         }
 
         public static T Deserialize<T>(string filePath, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
@@ -682,6 +712,13 @@ namespace ChoETL
             return new ChoJSONReader<T>(filePath, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
         }
 
+        public static dynamic Deserialize(TextReader textReader, string jsonPath, TraceSwitch traceSwitch = null)
+        {
+            var configuration = new ChoJSONRecordConfiguration();
+            configuration.JSONPath = jsonPath;
+            return Deserialize(textReader, configuration, traceSwitch);
+        }
+
         public static dynamic Deserialize(TextReader textReader, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
             if (configuration == null)
@@ -695,6 +732,14 @@ namespace ChoETL
                     configuration.JSONPath = "$";
             }
             return new ChoJSONReader(textReader, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static dynamic Deserialize<T>(TextReader textReader, string jsonPath, TraceSwitch traceSwitch = null)
+            where T : class, new()
+        {
+            var configuration = new ChoJSONRecordConfiguration();
+            configuration.JSONPath = jsonPath;
+            return Deserialize<T>(textReader, configuration, traceSwitch);
         }
 
         public static T Deserialize<T>(TextReader textReader, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
@@ -713,6 +758,13 @@ namespace ChoETL
             return new ChoJSONReader<T>(textReader, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
         }
 
+        public static dynamic Deserialize(Stream inStream, string jsonPath, TraceSwitch traceSwitch = null)
+        {
+            var configuration = new ChoJSONRecordConfiguration();
+            configuration.JSONPath = jsonPath;
+            return Deserialize(inStream, configuration, traceSwitch);
+        }
+
         public static dynamic Deserialize(Stream inStream, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
             if (configuration == null)
@@ -726,6 +778,14 @@ namespace ChoETL
                     configuration.JSONPath = "$";
             }
             return new ChoJSONReader(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static T Deserialize<T>(Stream inStream, string jsonPath, TraceSwitch traceSwitch = null)
+            where T : class, new()
+        {
+            var configuration = new ChoJSONRecordConfiguration();
+            configuration.JSONPath = jsonPath;
+            return Deserialize<T>(inStream, configuration, traceSwitch);
         }
 
         public static T Deserialize<T>(Stream inStream, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
