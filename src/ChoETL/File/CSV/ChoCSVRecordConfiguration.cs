@@ -440,4 +440,14 @@ namespace ChoETL
                 throw new ChoRecordConfigurationException("One of the Comments contains {0}. Not allowed.".FormatString(name));
         }
     }
+
+    public class ChoCSVRecordConfigurationMap<T>
+    {
+        private readonly ChoCSVRecordFieldConfiguration _config;
+
+        internal ChoCSVRecordConfigurationMap(ChoCSVRecordFieldConfiguration config)
+        {
+            _config = config;
+        }
+    }
 }

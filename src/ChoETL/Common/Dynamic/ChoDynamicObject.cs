@@ -835,9 +835,9 @@ namespace ChoETL
             return Keys;
         }
 
-        public ChoDynamicObject Flatten(StringComparer cmp = null)
+        public ChoDynamicObject Flatten(Func<string, string> columnMap = null, StringComparer cmp = null)
         {
-            _kvpDict = _kvpDict.Flatten().GroupBy(kvp => kvp.Key).ToDictionary(kvp => kvp.Key, kvp => kvp.First().Value,
+            _kvpDict = _kvpDict.Flatten().GroupBy(kvp => columnMap == null || columnMap(kvp.Key).IsNullOrWhiteSpace() ? kvp.Key : columnMap(kvp.Key)).ToDictionary(kvp => columnMap == null || columnMap(kvp.Key).IsNullOrWhiteSpace() ? kvp.Key : columnMap(kvp.Key), kvp => kvp.First().Value,
                 cmp == null ? StringComparer.InvariantCultureIgnoreCase : cmp);
             return this;
         }

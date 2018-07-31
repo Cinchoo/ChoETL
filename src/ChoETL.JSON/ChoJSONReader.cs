@@ -636,8 +636,8 @@ namespace ChoETL
             {
                 if (configuration.SupportMultipleContent == null)
                     configuration.SupportMultipleContent = false;
-                if (configuration.JSONPath.IsNullOrWhiteSpace())
-                    configuration.JSONPath = "$";
+                //if (configuration.JSONPath.IsNullOrWhiteSpace())
+                //    configuration.JSONPath = "$";
             }
             return new ChoJSONReader(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
         }
@@ -660,8 +660,8 @@ namespace ChoETL
             {
                 if (configuration.SupportMultipleContent == null)
                     configuration.SupportMultipleContent = false;
-                if (configuration.JSONPath.IsNullOrWhiteSpace())
-                    configuration.JSONPath = "$";
+                //if (configuration.JSONPath.IsNullOrWhiteSpace())
+                //    configuration.JSONPath = "$";
             }
             return new ChoJSONReader<T>(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
         }
@@ -682,8 +682,8 @@ namespace ChoETL
             {
                 if (configuration.SupportMultipleContent == null)
                     configuration.SupportMultipleContent = false;
-                if (configuration.JSONPath.IsNullOrWhiteSpace())
-                    configuration.JSONPath = "$";
+                //if (configuration.JSONPath.IsNullOrWhiteSpace())
+                //    configuration.JSONPath = "$";
             }
             return new ChoJSONReader(filePath, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
         }
@@ -706,8 +706,8 @@ namespace ChoETL
             {
                 if (configuration.SupportMultipleContent == null)
                     configuration.SupportMultipleContent = false;
-                if (configuration.JSONPath.IsNullOrWhiteSpace())
-                    configuration.JSONPath = "$";
+                //if (configuration.JSONPath.IsNullOrWhiteSpace())
+                //    configuration.JSONPath = "$";
             }
             return new ChoJSONReader<T>(filePath, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
         }
@@ -728,8 +728,8 @@ namespace ChoETL
             {
                 if (configuration.SupportMultipleContent == null)
                     configuration.SupportMultipleContent = false;
-                if (configuration.JSONPath.IsNullOrWhiteSpace())
-                    configuration.JSONPath = "$";
+                //if (configuration.JSONPath.IsNullOrWhiteSpace())
+                //    configuration.JSONPath = "$";
             }
             return new ChoJSONReader(textReader, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
         }
@@ -752,8 +752,8 @@ namespace ChoETL
             {
                 if (configuration.SupportMultipleContent == null)
                     configuration.SupportMultipleContent = false;
-                if (configuration.JSONPath.IsNullOrWhiteSpace())
-                    configuration.JSONPath = "$";
+                //if (configuration.JSONPath.IsNullOrWhiteSpace())
+                //    configuration.JSONPath = "$";
             }
             return new ChoJSONReader<T>(textReader, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
         }
@@ -774,8 +774,8 @@ namespace ChoETL
             {
                 if (configuration.SupportMultipleContent == null)
                     configuration.SupportMultipleContent = false;
-                if (configuration.JSONPath.IsNullOrWhiteSpace())
-                    configuration.JSONPath = "$";
+                //if (configuration.JSONPath.IsNullOrWhiteSpace())
+                //    configuration.JSONPath = "$";
             }
             return new ChoJSONReader(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
         }
@@ -798,8 +798,8 @@ namespace ChoETL
             {
                 if (configuration.SupportMultipleContent == null)
                     configuration.SupportMultipleContent = false;
-                if (configuration.JSONPath.IsNullOrWhiteSpace())
-                    configuration.JSONPath = "$";
+                //if (configuration.JSONPath.IsNullOrWhiteSpace())
+                //    configuration.JSONPath = "$";
             }
             return new ChoJSONReader<T>(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
         }
