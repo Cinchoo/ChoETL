@@ -538,7 +538,19 @@ namespace ChoETL
                     }
                 }
 
-                RaiseRecordFieldSerialize(rec, index, kvp.Key, ref fieldValue);
+                if (fieldConfig.CustomSerializer != null)
+                {
+                    recText = fieldConfig.CustomSerializer(fieldValue) as string;
+                    recText = recText.Indent(2, Configuration.IndentChar.ToString());
+                    return true;
+                }
+
+                if (RaiseRecordFieldSerialize(rec, index, kvp.Key, ref fieldValue) && fieldValue is string)
+                {
+                    recText = fieldValue as string;
+                    recText = recText.Indent(2, Configuration.IndentChar.ToString());
+                    return true;
+                }
 
                 if (!fieldConfig.IsAnyXmlNode)
                 {
@@ -1169,7 +1181,7 @@ namespace ChoETL
             {
                 IChoSerializable rec = _callbackRecordSeriablizable as IChoSerializable;
                 object state = value;
-                bool retValue = ChoFuncEx.RunWithIgnoreError(() => rec.RecordFieldSerialize(target, index, propName, ref state), true);
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => rec.RecordFieldSerialize(target, index, propName, ref state), false);
 
                 value = state;
 
@@ -1184,7 +1196,7 @@ namespace ChoETL
 
                 return retValue;
             }
-            return true;
+            return false;
         }
     }
 }

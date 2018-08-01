@@ -420,87 +420,107 @@ namespace ChoETL
         }
 
         public ChoXmlWriter<T> WithXmlElementField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
-            Func<object, object> valueConverter = null, bool isNullable = false,
+            Func<object, object> valueConverter = null, 
+            Func<object, object> customSerializer = null,
+            bool isNullable = false,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string formatText = null)
         {
             if (field == null)
                 return this;
 
             return WithXmlElementField(field.GetMemberName(), fieldType, fieldValueTrimOption, fieldName,
-                valueConverter, isNullable,
+                valueConverter, customSerializer, isNullable,
                 defaultValue, fallbackValue, encodeValue, field.GetFullyQualifiedMemberName(), formatText);
         }
 
         public ChoXmlWriter<T> WithXmlElementField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
-            string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
+            string fieldName = null, Func<object, object> valueConverter = null, 
+            Func<object, object> customSerializer = null,
+            bool isNullable = false,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string formatText = null)
         {
             return WithXmlElementField(name, fieldType, fieldValueTrimOption,
-                fieldName, valueConverter, isNullable,
+                fieldName, valueConverter, customSerializer, isNullable,
                 defaultValue, fallbackValue, encodeValue, null, formatText);
         }
 
         private ChoXmlWriter<T> WithXmlElementField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
-            string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
+            string fieldName = null, Func<object, object> valueConverter = null, 
+            Func<object, object> customSerializer = null,
+            bool isNullable = false,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string fullyQualifiedMemberName = null, string formatText = null)
         {
             string fnTrim = name.NTrim();
             string xPath = $"/{fnTrim}";
-            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, false, false, fieldName, valueConverter, isNullable, defaultValue, fallbackValue, 
+            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, false, false, fieldName, valueConverter, customSerializer, isNullable, defaultValue, fallbackValue, 
                 encodeValue, fullyQualifiedMemberName, formatText);
         }
 
         public ChoXmlWriter<T> WithXmlAttributeField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
-            Func<object, object> valueConverter = null, bool isNullable = false,
+            Func<object, object> valueConverter = null, 
+            Func<object, object> customSerializer = null,
+            bool isNullable = false,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string formatText = null)
         {
             if (field == null)
                 return this;
 
             return WithXmlAttributeField(field.GetMemberName(), fieldType, fieldValueTrimOption, fieldName,
-                valueConverter, isNullable,
+                valueConverter, customSerializer, isNullable,
                 defaultValue, fallbackValue, encodeValue, field.GetFullyQualifiedMemberName(), formatText);
         }
 
-        public ChoXmlWriter<T> WithXmlAttributeField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
+        public ChoXmlWriter<T> WithXmlAttributeField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
+            string fieldName = null, Func<object, object> valueConverter = null, 
+            Func<object, object> customSerializer = null,
+            bool isNullable = false,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string formatText = null)
         {
-            return WithXmlAttributeField(name, fieldType, fieldValueTrimOption, fieldName, valueConverter, isNullable,
+            return WithXmlAttributeField(name, fieldType, fieldValueTrimOption, fieldName, valueConverter, customSerializer, isNullable,
                 defaultValue, fallbackValue, encodeValue, null, formatText);
         }
 
-        private ChoXmlWriter<T> WithXmlAttributeField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
+        private ChoXmlWriter<T> WithXmlAttributeField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
+            string fieldName = null, Func<object, object> valueConverter = null, 
+            Func<object, object> customSerializer = null,
+            bool isNullable = false,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string fullyQualifiedMemberName = null, string formatText = null)
         {
             string fnTrim = name.NTrim();
             string xPath = $"/@{fnTrim}";
-            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, true, false, fieldName, valueConverter, isNullable, defaultValue, fallbackValue, 
+            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, true, false, fieldName, valueConverter, customSerializer, isNullable, defaultValue, fallbackValue, 
                 encodeValue, fullyQualifiedMemberName, formatText);
         }
 
         public ChoXmlWriter<T> WithField<TField>(Expression<Func<T, TField>> field, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
             bool isXmlAttribute = false, bool isAnyXmlNode = false, string fieldName = null,
-            Func<object, object> valueConverter = null, bool isNullable = false,
+            Func<object, object> valueConverter = null, 
+            Func<object, object> customSerializer = null,
+            bool isNullable = false,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string formatText = null)
         {
             if (field == null)
                 return this;
 
             return WithField(field.GetMemberName(), xPath, fieldType, fieldValueTrimOption, isXmlAttribute, isAnyXmlNode, fieldName,
-                valueConverter, isNullable,
+                valueConverter, customSerializer, isNullable,
                 defaultValue, fallbackValue, encodeValue, field.GetFullyQualifiedMemberName(), formatText);
         }
 
         public ChoXmlWriter<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
-            bool isXmlAttribute = false, bool isAnyXmlNode = false, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
+            bool isXmlAttribute = false, bool isAnyXmlNode = false, string fieldName = null, Func<object, object> valueConverter = null, 
+            Func<object, object> customSerializer = null,
+            bool isNullable = false,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string formatText = null)
         {
-            return WithField(name, xPath, fieldType, fieldValueTrimOption, isXmlAttribute, isAnyXmlNode, fieldName, valueConverter, isNullable,
+            return WithField(name, xPath, fieldType, fieldValueTrimOption, isXmlAttribute, isAnyXmlNode, fieldName, valueConverter, customSerializer, isNullable,
                 defaultValue, fallbackValue, encodeValue, null, formatText);
         }
 
         private ChoXmlWriter<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
-            bool isXmlAttribute = false, bool isAnyXmlNode = false, string fieldName = null, Func<object, object> valueConverter = null, bool isNullable = false,
+            bool isXmlAttribute = false, bool isAnyXmlNode = false, string fieldName = null, Func<object, object> valueConverter = null, 
+            Func<object, object> customSerializer = null,
+            bool isNullable = false,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string fullyQualifiedMemberName = null, string formatText = null)
         {
             if (!name.IsNullOrEmpty())
@@ -531,6 +551,7 @@ namespace ChoETL
                     IsXmlAttribute = isXmlAttribute,
                     FieldName = fieldName,
                     ValueConverter = valueConverter,
+                    CustomSerializer = customSerializer,
                     IsNullable = isNullable,
                     DefaultValue = defaultValue,
                     FallbackValue = fallbackValue,

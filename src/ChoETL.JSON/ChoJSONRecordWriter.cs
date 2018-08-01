@@ -531,19 +531,13 @@ namespace ChoETL
 
                 bool isSimple = true;
 
-                if (RaiseRecordFieldSerialize(rec, index, kvp.Key, ref fieldValue))
+                if (fieldConfig.CustomSerializer != null)
                 {
-                    if (isFirst)
-                    {
-                        msg.AppendFormat("{1}{0}", fieldValue.ToNString(),
-                            Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
-                    }
-                    else
-                    {
-                        msg.AppendFormat(",{1}{2}{0}", fieldValue.ToNString(),
-                            Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, 
-                            Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
-                    }
+                    recText = fieldConfig.CustomSerializer(fieldValue) as string;
+                }
+                else if (RaiseRecordFieldSerialize(rec, index, kvp.Key, ref fieldValue))
+                {
+                    recText = fieldValue as string;
                 }
                 else
                 {
@@ -582,10 +576,10 @@ namespace ChoETL
                     }
                 }
                 isFirst = false;
+                msg.AppendFormat("{0}}}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
+                recText = Configuration.IgnoreNodeName ? msg.ToString().Unindent(1, " ")  : msg.ToString();
             }
-            msg.AppendFormat("{0}}}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
 
-            recText = Configuration.IgnoreNodeName ? msg.ToString().Unindent(1, " ")  : msg.ToString();
             return true;
         }
 
@@ -1099,7 +1093,7 @@ namespace ChoETL
             {
                 IChoSerializable rec = _callbackRecordSeriablizable;
                 object state = value;
-                bool retValue = ChoFuncEx.RunWithIgnoreError(() => rec.RecordFieldSerialize(target, index, propName, ref state), true);
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => rec.RecordFieldSerialize(target, index, propName, ref state), false);
 
                 value = state;
 
@@ -1114,7 +1108,7 @@ namespace ChoETL
 
                 return retValue;
             }
-            return true;
+            return false;
         }
     }
 }
