@@ -541,10 +541,19 @@ namespace ChoETL
                 }
                 else
                 {
-
                     Type ft = fieldValue == null ? typeof(object) : fieldValue.GetType();
                     if (fieldValue == null)
-                        fieldText = "null";
+                    {
+                        if (fieldConfig.FieldType == null || fieldConfig.FieldType == typeof(object))
+                        {
+
+                            fieldText = !fieldConfig.IsArray ? "null" : "[]";
+                        }
+                        else if (Configuration.NullValueHandling == ChoNullValueHandling.Ignore)
+                            fieldText = null;
+                        else if (Configuration.NullValueHandling == ChoNullValueHandling.Default)
+                            fieldText = JsonConvert.SerializeObject(ChoActivator.CreateInstance(fieldConfig.FieldType));
+                    }
                     else if (ft == typeof(string) || ft == typeof(char))
                         fieldText = JsonConvert.SerializeObject(NormalizeFieldValue(kvp.Key, fieldValue.ToString(), kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType)));
                     else if (ft == typeof(DateTime))
@@ -562,23 +571,26 @@ namespace ChoETL
                     else
                         isSimple = false;
 
-                    if (isFirst)
+                    if (fieldText != null)
                     {
-                        msg.AppendFormat("{2}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? " {0}".FormatString(fieldText) :
-                            Configuration.Formatting == Formatting.Indented ? SerializeObject(fieldValue, fieldConfig.UseJSONSerialization).Indent(1, " ") : SerializeObject(fieldValue, fieldConfig.UseJSONSerialization),
-                            Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
-                    }
-                    else
-                    {
-                        msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? " {0}".FormatString(fieldText) :
-                            Configuration.Formatting == Formatting.Indented ? SerializeObject(fieldValue, fieldConfig.UseJSONSerialization).Indent(1, " ") : SerializeObject(fieldValue, fieldConfig.UseJSONSerialization),
-                            Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
+                        if (isFirst)
+                        {
+                            msg.AppendFormat("{2}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? " {0}".FormatString(fieldText) :
+                                Configuration.Formatting == Formatting.Indented ? SerializeObject(fieldValue, fieldConfig.UseJSONSerialization).Indent(1, " ") : SerializeObject(fieldValue, fieldConfig.UseJSONSerialization),
+                                Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
+                        }
+                        else
+                        {
+                            msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? " {0}".FormatString(fieldText) :
+                                Configuration.Formatting == Formatting.Indented ? SerializeObject(fieldValue, fieldConfig.UseJSONSerialization).Indent(1, " ") : SerializeObject(fieldValue, fieldConfig.UseJSONSerialization),
+                                Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
+                        }
                     }
                 }
                 isFirst = false;
-                msg.AppendFormat("{0}}}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
-                recText = Configuration.IgnoreNodeName ? msg.ToString().Unindent(1, " ")  : msg.ToString();
             }
+            msg.AppendFormat("{0}}}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
+            recText = Configuration.IgnoreNodeName ? msg.ToString().Unindent(1, " ") : msg.ToString();
 
             return true;
         }

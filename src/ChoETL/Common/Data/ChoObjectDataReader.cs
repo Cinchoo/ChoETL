@@ -83,7 +83,7 @@ namespace ChoETL
 
         public int FieldCount
         {
-            get { return Fields.Count; }
+            get { return Fields != null ? Fields.Count : 0; }
         }
 
         public virtual int GetOrdinal(string name)
@@ -379,7 +379,13 @@ namespace ChoETL
                     if (dict.ContainsKey(MemberName))
                         return ((IDictionary<string, object>)target)[MemberName];
                     else
+                    {
+                        if (target is ChoDynamicObject && ((ChoDynamicObject)target).DynamicObjectName == MemberName)
+                        {
+                            return ((ChoDynamicObject)target).GetText();
+                        }
                         throw new ApplicationException("Can't find '{0}' member in dynamic object.".FormatString(MemberName));
+                    }
                 }
                 else
                     return ChoConvert.ConvertTo(ChoType.GetMemberValue(target, MemberName), ProperyType);
