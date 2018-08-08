@@ -32,7 +32,7 @@ namespace ChoETL
             private set;
         }
 
-        public ChoJSONRecordWriter(Type recordType, ChoJSONRecordConfiguration configuration) : base(recordType)
+        public ChoJSONRecordWriter(Type recordType, ChoJSONRecordConfiguration configuration) : base(recordType, true)
         {
             ChoGuard.ArgumentNotNull(configuration, "Configuration");
             Configuration = configuration;
@@ -135,8 +135,12 @@ namespace ChoETL
 
                             string[] fieldNames = null;
                             Type recordType = ElementType == null ? record.GetType() : ElementType;
-                            Configuration.RecordType = recordType.ResolveType();
+                            Configuration.RecordType = recordType; //.ResolveType();
                             Configuration.IsDynamicObject = recordType.IsDynamicType();
+                            if (typeof(IDictionary).IsAssignableFrom(Configuration.RecordType)
+                                || typeof(IList).IsAssignableFrom(Configuration.RecordType))
+                                Configuration.UseJSONSerialization = true;
+
                             if (!Configuration.IsDynamicObject)
                             {
                                 if (!Configuration.SingleElement)

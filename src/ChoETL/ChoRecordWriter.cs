@@ -19,12 +19,15 @@ namespace ChoETL
             ChoETLFramework.Initialize();
         }
 
-        public ChoRecordWriter(Type recordType)
+        protected ChoRecordWriter(Type recordType, bool allowCollection = false)
         {
             ChoGuard.ArgumentNotNull(recordType, "RecordType");
 
-            if (!recordType.IsDynamicType() && typeof(ICollection).IsAssignableFrom(recordType))
-                throw new ChoReaderException("Invalid recordtype passed.");
+            if (!allowCollection)
+            {
+                if (!recordType.IsDynamicType() && typeof(ICollection).IsAssignableFrom(recordType))
+                    throw new ChoReaderException("Invalid recordtype passed.");
+            }
 
             RecordType = recordType;
             TraceSwitch = ChoETLFramework.TraceSwitch;
@@ -43,9 +46,9 @@ namespace ChoETL
 
         public abstract IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null);
 
-		protected object GetDeclaringRecord(string declaringMember, object rec)
-		{
-			return ChoType.GetDeclaringRecord(declaringMember, rec);
-		}
-	}
+        protected object GetDeclaringRecord(string declaringMember, object rec)
+        {
+            return ChoType.GetDeclaringRecord(declaringMember, rec);
+        }
+    }
 }

@@ -1,0 +1,24 @@
+<Contour>
+    <Elements>
+        <Element Type="Point" Indice="859">
+            Route marseille
+            <Limites>
+                <Haut>26.5</Haut>
+                <Bas>43.2</Bas>
+            </Limites>
+            <Point id="01"    X="45"  Y="44" >12</Point>
+            <Point id="02"    X="5"   Y="41" >5</Point>
+            <Point id="03"    X="4"   Y="464" >3</Point>
+        </Element>
+        <Element Type="Point" Indice="256">
+            Route Bordeaux
+            <Limites>
+                <Haut>16.5</Haut>
+                <Bas>12.2</Bas>
+            </Limites>
+            <Point id="05"    X="6.5" Y="22" >5</Point>
+            <Point id="06"    X="58"  Y="46.5">5</Point>
+            <Point id="07"    X="98"  Y="4.5" >6</Point>
+        </Element>
+    </Elements>
+</Contour>

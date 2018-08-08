@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CarCollection>
+<Cars>
+ <Car>
+    <StockNumber>1020</StockNumber>
+    <Make>Renault</Make>
+    <Models>
+       <model>
+          <modelName>Kwid</modelName>
+          <modelType>Basic</modelType>
+          <price>5 Lakhs</price>
+          <preOrderNeeded>No</preOrderNeeded>
+       </model>
+       <model>
+          <modelName>Kwid</modelName>
+          <modelType>Compact Model with all upgrades</modelType>
+          <price>7.25 Lakhs</price>
+          <preOrderNeeded>Yes</preOrderNeeded>
+       </model>
+    </Models>
+  </Car>
+    <Car>
+        <StockNumber>1010</StockNumber>
+        <Make>Toyota</Make>
+
+    </Car>
+</Cars>
+</CarCollection>

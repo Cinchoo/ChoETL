@@ -33,7 +33,35 @@ namespace ChoXmlWriterTest
     {
         static void Main(string[] args)
         {
-            CustomMemberSerialization();
+            CustomStringArrayTest();
+        }
+
+        static void CustomStringArrayTest()
+        {
+            List<string> s = new List<string>();
+            s.Add("Monday");
+            s.Add("Tuesday");
+            s.Add("Wed");
+
+            StringBuilder sb = new StringBuilder();
+            using (var w = new ChoXmlWriter(sb)
+                .Configure(c => c.IgnoreNodeName = true)
+                .WithField("Days", customSerializer: (v) =>
+                {
+                    StringBuilder sb1 = new StringBuilder();
+                    sb1.AppendLine("<Days>");
+                    foreach (var r in (IList)v)
+                        sb1.AppendLine("<{0} />".FormatString(r).Indent(2, " "));
+                    sb1.Append("</Days>");
+
+                    return sb1.ToString();
+                })
+                )
+                w.Write(new { Days = s });
+            Console.WriteLine(sb.ToString());
+            return;
+                Console.WriteLine(ChoXmlWriter.ToTextAll(s,
+                    new ChoXmlRecordConfiguration() { RootName = "Root" }));
         }
 
         static void CustomMemberSerialization()

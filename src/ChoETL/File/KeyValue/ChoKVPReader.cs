@@ -401,24 +401,27 @@ namespace ChoETL
         }
 
         public ChoKVPReader<T> WithField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
-            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null)
+            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
+            string nullValue = null)
         {
             if (field == null)
                 return this;
 
             return WithField(field.GetMemberName(), fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames,
-                field.GetFullyQualifiedMemberName(), formatText);
+                field.GetFullyQualifiedMemberName(), formatText, nullValue);
         }
 
         public ChoKVPReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
-            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null)
+            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
+            string nullValue = null)
         {
             return WithField(name, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter,
-                defaultValue, fallbackValue, altFieldNames, null, formatText);
+                defaultValue, fallbackValue, altFieldNames, null, formatText, nullValue);
         }
 
         private ChoKVPReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
-            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string fullyQualifiedMemberName = null, string formatText = null)
+            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string fullyQualifiedMemberName = null, string formatText = null,
+            string nullValue = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -450,7 +453,8 @@ namespace ChoETL
                     ValueConverter = valueConverter,
                     DefaultValue = defaultValue,
                     FallbackValue = fallbackValue,
-                    FormatText = formatText
+                    FormatText = formatText,
+                    NullValue = nullValue
                 };
                 if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
                 {

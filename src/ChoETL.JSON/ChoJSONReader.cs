@@ -469,29 +469,31 @@ namespace ChoETL
             Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
-            object defaultValue = null, object fallbackValue = null, string formatText = null)
+            object defaultValue = null, object fallbackValue = null, string formatText = null,
+            string nullValue = null)
         {
             if (field == null)
                 return this;
 
             return WithField(field.GetMemberName(), jsonPath, fieldType, fieldValueTrimOption, isJSONAttribute, fieldName, valueConverter, itemConverter,
-                customSerializer, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText);
+                customSerializer, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, true, nullValue);
         }
 
         public ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
-            object defaultValue = null, object fallbackValue = null, string formatText = null, bool isArray = true)
+            object defaultValue = null, object fallbackValue = null, string formatText = null, bool isArray = true,
+            string nullValue = null)
         {
             return WithField(name, jsonPath, fieldType, fieldValueTrimOption, isJSONAttribute, fieldName, valueConverter, itemConverter,
-                customSerializer, defaultValue, fallbackValue, null, formatText, isArray);
+                customSerializer, defaultValue, fallbackValue, null, formatText, isArray, nullValue);
         }
 
         private ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null,
-            string formatText = null, bool isArray = true)
+            string formatText = null, bool isArray = true, string nullValue = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -523,7 +525,8 @@ namespace ChoETL
                     FallbackValue = fallbackValue,
                     FormatText = formatText,
                     ItemConverter = itemConverter,
-                    IsArray = isArray
+                    IsArray = isArray,
+                    NullValue = nullValue
                 };
                 if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
                 {

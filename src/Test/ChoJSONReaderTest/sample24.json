@@ -1,0 +1,59 @@
+﻿[
+    {
+        "Solution": {
+            "Value": {
+                "PreserveMvDurConv": false,
+                "SaveCpInstrumentResults": false,
+                "SimID": "Hira",
+                "SimPdCount": 13,
+                "SimForecast": 0,
+                "FtpPreferences": {
+                    "FtpSimComponents": 0,
+                    "FtpRecentStartDate": {
+                        "PackedHexDateValue": 0,
+                        "Year": 0,
+                        "Month": 0,
+                        "MonthNum": -24000,
+                        "Day": 0,
+                        "RawDay": 0,
+                        "DaysLeftInMonth": 31,
+                        "DaysInThisYear": 366,
+                        "DayOfYear": -30,
+                        "DateValue": -90,
+                        "PackedIntDateValue": 0,
+                        "IsEndOfMonth": false,
+                        "IsLastDayOfFebruary": false,
+                        "DaysInThisMonth": 30,
+                        "IsEmpty": true,
+                        "IsValid": false
+                    },
+                    "FtpRecentMonthCount": 0,
+                    "FtpReportMissingXferRates": true,
+                    "FtpCalculateMissingXferRates": false,
+                    "FtpInProcessAllowanceDays": 0
+                },
+                "WgtAvgLifeCalcSetting": 0,
+                "FairValueFrequency": 0,
+                "MarketValueFrequency": 0,
+                "DurConvexFrequency": 0,
+                "ActivateFTP": true,
+                "ActivateWAL": false,
+                "ActivateYld": false,
+                "ShockBPS": 0,
+                "ShockDecimal": 0.0,
+                "SimSecurities": 1,
+                "SimOverrideOAS": 0,
+                "SimSkipBalance": 1,
+                "SimResults": 1,
+                "SimSkipFairValue": 1,
+                "SimBuildFwdCP": 0,
+                "SimRunGapSwitches": 0,
+                "IncludeGapInSim": 0,
+                "CalculateFairValue": false
+            },
+            "Name": "Solution Set 1",
+            "Context": "SingleSim"
+        },
+        "Scenario": "Shock: Parallel Up200Bps, 1115, ALM_Base:RS_U200_FLAT, , "
+    }
+]

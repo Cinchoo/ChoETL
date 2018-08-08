@@ -38,7 +38,7 @@ namespace ChoETL
             private set;
         }
 
-        public ChoXmlRecordWriter(Type recordType, ChoXmlRecordConfiguration configuration) : base(recordType)
+        public ChoXmlRecordWriter(Type recordType, ChoXmlRecordConfiguration configuration) : base(recordType, true)
         {
             ChoGuard.ArgumentNotNull(configuration, "Configuration");
             Configuration = configuration;
@@ -159,8 +159,11 @@ namespace ChoETL
                             {
                                 string[] fieldNames = null;
                                 Type recordType = ElementType == null ? notNullRecord.GetType() : ElementType;
-                                Configuration.RecordType = recordType.ResolveType();
+                                Configuration.RecordType = recordType; //.ResolveType();
                                 Configuration.IsDynamicObject = recordType.IsDynamicType();
+                                if (typeof(IDictionary).IsAssignableFrom(Configuration.RecordType)
+                                    || typeof(IList).IsAssignableFrom(Configuration.RecordType))
+                                    Configuration.UseXmlSerialization = true;
                                 if (!Configuration.IsDynamicObject)
                                 {
                                     if (Configuration.XmlRecordFieldConfigurations.Count == 0)
@@ -207,7 +210,7 @@ namespace ChoETL
                             }
                             else
                             {
-                                if (rt != Configuration.RecordType)
+                                if (rt != Configuration.RecordType && !Configuration.UseXmlSerialization)
                                     throw new ChoWriterException("Invalid record found.");
                             }
                         }

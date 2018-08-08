@@ -1,0 +1,118 @@
+﻿{
+    "soap:Envelope": {
+        "@xmlns:soap": "http://schemas.xmlsoap.org/soap/envelope/",
+        "soap:Body": {
+            "ns2:processPayment": {
+                "@xmlns:ns2": "http://ws.cwt.ru/",
+                "Status": "SUCCESS",
+                "StatusCode": "000",
+                "StatusMessage": "SUCCESS",
+                "Payments": {
+                    "Payment": {
+                        "InPaymentParameters": {
+                            "entry": [
+                                {
+                                    "key": "FEE_AMOUNT",
+                                    "value": "100"
+                                },
+                                {
+                                    "key": "SOURCE_AMOUNT",
+                                    "value": "80000"
+                                },
+                                {
+                                    "key": "SOURCE_ACCOUNT_NUMBER",
+                                    "value": "888117823"
+                                },
+                                {
+                                    "key": "DESTINATION_BANK_CB_ID",
+                                    "value": "BANK OF AMERICA"
+                                },
+                                {
+                                    "key": "DESCRIPTION",
+                                    "value": "chama"
+                                },
+                                {
+                                    "key": "merchantId",
+                                    "value": "1321"
+                                },
+                                {
+                                    "key": "MERCHANT_ACQUIRER_CONTRACT_ID",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "DESTINATION_ACCOUNT",
+                                    "value": "01116132194100"
+                                },
+                                {
+                                    "key": "MERCHANT_ID",
+                                    "value": "admin"
+                                },
+                                {
+                                    "key": "REMOTE_TRANSACTION_ID",
+                                    "value": "000000086814933"
+                                },
+                                {
+                                    "key": "DESTINATION_CONNECTION_ID",
+                                    "value": "243"
+                                },
+                                {
+                                    "key": "FINANCE_OPERATION_TYPE",
+                                    "value": "WITHDRAWAL"
+                                },
+                                {
+                                    "key": "ISO8583_CARD_ACCEPTOR_ID",
+                                    "value": "000000000105817"
+                                },
+                                {
+                                    "key": "SOURCE_CONNECTION_ID",
+                                    "value": "243"
+                                },
+                                {
+                                    "key": "MESSAGE_ID",
+                                    "value": "139096"
+                                },
+                                {
+                                    "key": "ISO8583_CARD_ACCEPTOR_TERMINAL_ID",
+                                    "value": "POS00002"
+                                },
+                                {
+                                    "key": "OPERATION_ID",
+                                    "value": "756033604"
+                                },
+                                { "key": "OPERATION_STATUS_MESSAGE" },
+                                {
+                                    "key": "OPERATION_STATUS",
+                                    "value": "SUCCESS"
+                                },
+                                { "key": "SERVICE_NAME" },
+                                {
+                                    "key": "AUTHORIZATION_PASS",
+                                    "value": "admin"
+                                },
+                                {
+                                    "key": "AUTHORIZATION_LOGIN",
+                                    "value": "admin"
+                                },
+                                {
+                                    "key": "ISO8583_APPROVAL_CODE",
+                                    "value": "122127"
+                                },
+                                { "key": "SOURCE_CARD_PAN" },
+                                {
+                                    "key": "SERVICE_TYPE",
+                                    "value": "FINANCE"
+                                },
+                                {
+                                    "key": "TRANSACTION_ID",
+                                    "value": "184139327"
+                                }
+                            ]
+                        },
+                        "OutPaymentParameters": null,
+                        "ServiceFields": null
+                    }
+                }
+            }
+        }
+    }
+} 

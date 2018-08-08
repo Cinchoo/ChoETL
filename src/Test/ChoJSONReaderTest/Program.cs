@@ -8,10 +8,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Dynamic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
@@ -698,7 +700,125 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            JSON2XmlAndViceVersa();
+            Sample24Test();
+        }
+
+        static void JSONToDataset()
+        {
+            string json = @"{
+""Data"": [
+    {
+       ""Code"": ""DEMO"",
+       ""Name"": ""DEMO"",
+       ""UserId"": ""B27A68AD-7C21-4DDB-8A1D-8932459CF53B"",
+       ""RoleDetails"": [{
+            ""ViewId"": ""B27A68AD-7C21-4DDB-8A1D-8932459CF53B"",
+            ""IsAddAllowed"": true,
+            ""IsEditAllowed"": true,
+            ""IsDeleteAllowed"": true
+        }],
+        ""RoleDetails1"":[ {
+            ""ViewId"": ""Z27A68AD-7C21-4DDB-8A1D-8932459CF53B"",
+            ""IsAddAllowed"": true,
+            ""IsEditAllowed"": true,
+            ""IsDeleteAllowed"": true
+          }]
+
+    }
+]
+}";
+            var dt1 = ChoJSONReader.DeserializeText(json, "$.Data[0].RoleDetails").AsDataTable();
+            var dt2 = ChoJSONReader.DeserializeText(json, "$.Data[0].RoleDetails1").AsDataTable();
+            DataSet ds = new DataSet();
+            ds.Tables.Add(dt1);
+            ds.Tables.Add(dt2);
+        }
+
+        static void Sample24Test()
+        {
+            //var rec = ChoJSONReader.Deserialize("sample24.json");
+            //Console.WriteLine(rec.Dump());
+
+            //DataTable dt = new ChoJSONReader("sample24.json").Select(i => i.Flatten(new Func<string, string>(cn =>
+            //{
+            //    if (cn == "Scenario")
+            //        return "1Scenario1";
+            //    return cn;
+            //}), null)).AsDataTable();
+
+            DataTable dt = new ChoJSONReader("sample24.json").AsDataTable();
+        }
+        public class StockQuotes
+        {
+            [ChoJSONRecordField(JSONPath = "$..timestamp[*]")]
+            public int[] Timestamps { get; set; }
+            [ChoJSONRecordField(JSONPath = "$..indicators.quote[0].open[*]")]
+            public double[] Opens { get; set; }
+        }
+
+        public class StockQuote1 : IChoConvertible
+        {
+            [ChoFieldMap("Timestamps")]
+            public DateTime Timestamp { get; set; }
+            [ChoFieldMap("Opens")]
+            public double Open { get; set; }
+
+            public bool Convert(string propName, object propValue, CultureInfo culture, out object convPropValue)
+            {
+                convPropValue = null;
+                if (propName == nameof(Timestamp))
+                {
+                    convPropValue = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddSeconds((int)propValue).ToUniversalTime();
+                    return true;
+                }
+
+                return false;
+            }
+
+            public bool ConvertBack(string propName, object propValue, Type targetType, CultureInfo culture, out object convPropValue)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        static void MSFTQuooteToCSV()
+        {
+            using (var p = new ChoJSONReader<StockQuotes>("sample23.json")
+                )
+            {
+                foreach (var rec in p.ExpandToObjects<StockQuote1>())
+                    Console.WriteLine(rec.Dump());
+            }
+
+            //using (var p = new ChoJSONReader("sample23.json")
+            //    .WithField("timestamp", jsonPath: "$..timestamp[*]")
+            //    .WithField("open", jsonPath: "$..indicators.quote[0].open[*]")
+            //    )
+            //{
+            //    foreach (var rec in p.ExpandToObjects((pn, v) =>
+            //    {
+            //        if (pn == "timestamp")
+            //            return new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddSeconds((int)v).ToUniversalTime();
+            //        else
+            //            return v;
+            //    })) //.SelectMany(r => ((IList)r.timestamps).OfType<dynamic>().Select((r1, index) => new StockQuote1 { Timestamp = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddSeconds(r1).ToUniversalTime(), Open = r.open[index]  })))
+            //        Console.WriteLine(rec.Dump());
+            //}
+        }
+
+
+        static void JsonToXmlSoap()
+        {
+            using (var p = new ChoJSONReader("sample22.json"))
+            {
+                var e = p.First();
+
+                var xml = ChoXmlWriter.Serialize(e);
+                Console.WriteLine(xml);
+
+                var json = ChoJSONWriter.Serialize(e);
+                Console.WriteLine(json);
+            }
         }
 
         public class Plan

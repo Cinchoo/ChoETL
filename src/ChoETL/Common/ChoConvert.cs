@@ -93,7 +93,7 @@ namespace ChoETL
             {
                 value = ((IEnumerable)value).FirstOrDefault<object>();
             }
-            if (typeof(IList).IsAssignableFrom(targetType) && !(value is IList))
+            if (value != null && typeof(IList).IsAssignableFrom(targetType) && !(value is IList))
             {
                 value = new object[] { value };
             }

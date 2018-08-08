@@ -300,24 +300,25 @@ namespace ChoETL
         }
 
         public ChoJSONWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
-            object defaultValue = null, object fallbackValue = null, string formatText = null)
+            object defaultValue = null, object fallbackValue = null, string formatText = null, string nullValue = null)
         {
             if (field == null)
                 return this;
 
             return WithField(field.GetMemberName(), fieldType, fieldValueTrimOption, fieldName, valueConverter,
-                defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText);
+                defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, nullValue);
         }
 
         public ChoJSONWriter<T> WithField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
-            object defaultValue = null, object fallbackValue = null, string formatText = null)
+            object defaultValue = null, object fallbackValue = null, string formatText = null, string nullValue = null)
         {
             return WithField(name, fieldType, fieldValueTrimOption, fieldName, valueConverter,
-                defaultValue, fallbackValue, null, formatText);
+                defaultValue, fallbackValue, null, formatText, nullValue);
         }
 
         private ChoJSONWriter<T> WithField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
-            object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null, string formatText = null)
+            object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null, string formatText = null,
+            string nullValue = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -346,7 +347,8 @@ namespace ChoETL
                     ValueConverter = valueConverter,
                     DefaultValue = defaultValue,
                     FallbackValue = fallbackValue,
-                    FormatText = formatText
+                    FormatText = formatText,
+                    NullValue = nullValue
                 };
                 if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
                 {

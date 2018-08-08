@@ -84,7 +84,67 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            XmlNSTest();
+            XmlToJSONKVP();
+        }
+
+        static void XmlToJSONKVP()
+        {
+            string xml = @"<jobs><job>
+           <properties>
+              <name>jobid</name>
+              <value>81963</value>
+           </properties>
+           <properties>
+              <name>status</name>
+              <value>complete</value>
+           </properties>
+           <properties>
+              <name>date</name>
+              <value>2018-07-30</value>
+           </properties>
+        </job>
+        <job>
+           <properties>
+              <name>jobid</name>
+              <value>81194</value>
+           </properties>
+           <properties>
+              <name>status</name>
+              <value>complete</value>
+           </properties>
+           <properties>
+              <name>date</name>
+              <value>2018-07-30</value>
+           </properties>
+        </job></jobs>";
+
+
+            using (var p = ChoXmlReader.LoadText(xml))
+            {
+                //Console.WriteLine(ChoJSONWriter.ToTextAll(p.Select(r => ((IList<dynamic>)r.propertiess).ToDictionary(r1 => r1.name, r1 => r1.value))));
+                //Console.WriteLine(ChoJSONWriter.ToTextAll(p.Select(r => ((IList<dynamic>)r.propertiess).Select(r1 => r1.value).ToList())));
+
+                Console.WriteLine(ChoXmlWriter.ToTextAll(p.Select(r => ((IList<dynamic>)r.propertiess).Select(r1 => r1.value).ToList())));
+
+            }
+        }
+
+        static void Sample49Test()
+        {
+            using (var r = new ChoXmlReader("Sample49.xml")
+                .WithXPath("/CarCollection/Cars/Car")
+                )
+            {
+                Console.WriteLine(ChoJSONWriter.ToTextAll(r, new ChoJSONRecordConfiguration()));
+            }
+        }
+
+        static void Sample48Test()
+        {
+            var dt = new ChoXmlReader("sample48.xml")
+                .WithXPath("//Contour/Elements/Element")
+                .Select(i => i.Flatten())
+                .AsDataTable();
         }
 
         static void XmlNSTest()
