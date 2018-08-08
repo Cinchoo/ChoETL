@@ -419,7 +419,14 @@ namespace ChoETL
                         fieldValue = dict[kvp.Key]; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
                         if (kvp.Value.FieldType == null)
                         {
-                            kvp.Value.FieldType = typeof(object);
+                            if (rec is ChoDynamicObject)
+                            {
+                                var dobj = rec as ChoDynamicObject;
+                                kvp.Value.FieldType = dobj.GetMemberType(kvp.Key);
+                            }
+
+                            if (kvp.Value.FieldType == null)
+                                kvp.Value.FieldType = typeof(object);
                             //if (fieldValue == null)
        //                         kvp.Value.FieldType = typeof(string);
        //                     else
@@ -550,13 +557,22 @@ namespace ChoETL
                     {
                         if (fieldConfig.FieldType == null || fieldConfig.FieldType == typeof(object))
                         {
-
-                            fieldText = !fieldConfig.IsArray ? "null" : "[]";
+                            if (fieldConfig.NullValue == null)
+                                fieldText = !fieldConfig.IsArray ? "null" : "[]";
+                            else
+                                fieldText = fieldConfig.NullValue;
                         }
                         else if (Configuration.NullValueHandling == ChoNullValueHandling.Ignore)
                             fieldText = null;
                         else if (Configuration.NullValueHandling == ChoNullValueHandling.Default)
                             fieldText = JsonConvert.SerializeObject(ChoActivator.CreateInstance(fieldConfig.FieldType));
+                        else
+                        {
+                            if (fieldConfig.NullValue == null)
+                                fieldText = !typeof(IList).IsAssignableFrom(fieldConfig.FieldType) ? "null" : "[]";
+                            else
+                                fieldText = fieldConfig.NullValue;
+                        }
                     }
                     else if (ft == typeof(string) || ft == typeof(char))
                         fieldText = JsonConvert.SerializeObject(NormalizeFieldValue(kvp.Key, fieldValue.ToString(), kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType)));

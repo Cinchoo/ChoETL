@@ -32,6 +32,13 @@ namespace ChoETL
             }
 
             dict.AddOrUpdate(fn, fieldValue);
+
+            if (dict is ChoDynamicObject && fieldValue == null && fieldConfig.FieldType != null)
+            {
+                var dobj = dict as ChoDynamicObject;
+                dobj.SetMemberType(fn, fieldConfig.FieldType);
+            }
+
         }
 
         public static void ConvertNSetMemberValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, ref object fieldValue, CultureInfo culture)

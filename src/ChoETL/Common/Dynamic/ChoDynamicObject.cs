@@ -54,6 +54,27 @@ namespace ChoETL
             get;
             set;
         }
+
+        private Dictionary<string, Type> _memberTypes = new Dictionary<string, Type>(StringComparer.CurrentCultureIgnoreCase);
+        public void SetMemberType(string fn, Type fieldType)
+        {
+            if (fn.IsNullOrWhiteSpace())
+                return;
+
+            if (_memberTypes.ContainsKey(fn))
+                _memberTypes[fn] = fieldType;
+            else
+                _memberTypes.Add(fn, fieldType);
+        }
+
+        public Type GetMemberType(string fn)
+        {
+            if (fn.IsNullOrWhiteSpace())
+                return null;
+
+            return _memberTypes.ContainsKey(fn) ? _memberTypes[fn] : null;
+        }
+
         [ChoIgnoreMember]
         public bool IsFixed
         {

@@ -1419,7 +1419,7 @@ D,World Name , LLC,2018-01-20,BUY";
                 .WithFirstLineHeader()
                 .WithField("text")
                 .WithField("intentName")
-                .WithField("entityLabels", nullValue: "null")
+                .WithField("entityLabels", fieldType: typeof(int[]), nullValue: "null")
                 )
             {
                 using (var w = new ChoJSONWriter(sb)

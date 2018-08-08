@@ -555,6 +555,9 @@ namespace ChoETL
                     return true;
                 }
 
+                if (fieldValue == null && fieldConfig.NullValue != null)
+                    fieldValue = fieldConfig.NullValue;
+
                 if (!fieldConfig.IsAnyXmlNode)
                 {
                     if (fieldConfig.IsXmlAttribute)
