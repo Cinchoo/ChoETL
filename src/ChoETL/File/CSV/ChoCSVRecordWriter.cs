@@ -361,6 +361,11 @@ namespace ChoETL
                     if (Configuration.IsDynamicObject)
                     {
                         fieldValue = dict.ContainsKey(kvp.Key) ? dict[kvp.Key] : dict[dict.Keys.ElementAt(fieldConfig.FieldPosition - 1)]; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
+                        if (rec is ChoDynamicObject)
+                        {
+                            var dobj = rec as ChoDynamicObject;
+                            kvp.Value.FieldType = dobj.GetMemberType(kvp.Key);
+                        }
                         if (kvp.Value.FieldType == null)
                         {
                             if (fieldValue == null)

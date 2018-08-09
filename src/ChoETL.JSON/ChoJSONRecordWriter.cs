@@ -424,13 +424,13 @@ namespace ChoETL
                                 var dobj = rec as ChoDynamicObject;
                                 kvp.Value.FieldType = dobj.GetMemberType(kvp.Key);
                             }
-
                             if (kvp.Value.FieldType == null)
-                                kvp.Value.FieldType = typeof(object);
-                            //if (fieldValue == null)
-       //                         kvp.Value.FieldType = typeof(string);
-       //                     else
-       //                         kvp.Value.FieldType = fieldValue.GetType();
+                            {
+                                if (ElementType == null)
+                                    kvp.Value.FieldType = typeof(object);
+                                else
+                                    kvp.Value.FieldType = ElementType;
+                            }
                         }
                     }
                     else

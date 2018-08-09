@@ -421,17 +421,19 @@ namespace ChoETL
                         fieldValue = dict[kvp.Key]; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
                         if (kvp.Value.FieldType == null)
                         {
-                            if (ElementType == null)
+                            if (rec is ChoDynamicObject)
                             {
-                                kvp.Value.FieldType = typeof(object);
-
-                                //if (fieldValue == null)
-        //                            kvp.Value.FieldType = typeof(object);
-        //                        else
-        //                            kvp.Value.FieldType = fieldValue.GetType();
+                                var dobj = rec as ChoDynamicObject;
+                                kvp.Value.FieldType = dobj.GetMemberType(kvp.Key);
                             }
-                            else
-                                kvp.Value.FieldType = ElementType;
+
+                            if (kvp.Value.FieldType == null)
+                            {
+                                if (ElementType == null)
+                                    kvp.Value.FieldType = typeof(object);
+                                else
+                                    kvp.Value.FieldType = ElementType;
+                            }
                         }
                     }
                     else
