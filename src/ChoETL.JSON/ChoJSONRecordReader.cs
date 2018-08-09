@@ -1029,6 +1029,15 @@ namespace ChoETL
                         else
                             return jToken.ToObject(type, _se.Value);
                     }
+                    else if (typeof(IDictionary).IsAssignableFrom(type.GetUnderlyingType())
+                        || typeof(IList).IsAssignableFrom(type.GetUnderlyingType())
+                        )
+                    {
+                        if (_se == null || _se.Value == null)
+                            return jToken.ToObject(type);
+                        else
+                            return jToken.ToObject(type, _se.Value);
+                    }
                     else
                         return DeserializeToObject(type, jToken);
                 }

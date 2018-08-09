@@ -2018,7 +2018,7 @@ namespace ChoETL
 
             dict.Clear();
 
-            foreach (var t in oldDict)
+            foreach (var t in oldDict.Keys)
             {
                 var kvp = itemConverter(new KeyValuePair<object, object>(t, oldDict[t]));
                 dict.Add(kvp.Key, kvp.Value);

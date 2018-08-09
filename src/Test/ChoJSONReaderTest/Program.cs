@@ -700,9 +700,74 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Sample24Test();
+            StringNodeTest();
         }
 
+        public class RootObject2
+        {
+            public string name { get; set; }
+            public Dictionary<string, object> settings { get; set; }
+        }
+        static void StringNodeTest()
+        {
+            string json = @"{
+  ""name"": ""foo"",
+  ""settings"": {
+    ""setting1"": true,
+    ""setting2"": 1
+  }
+}";
+
+            using (var p = ChoJSONReader<RootObject2>.LoadText(json)
+                )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        public class Error1
+        {
+            public int Code { get; set; }
+            public Error1Message[] Msg { get; set; }
+        }
+        public class Error1Message
+        {
+            public string Message { get; set; }
+            public int? Code { get; set; }
+        }
+        static void VarySchemas()
+        {
+            string json = @"{
+    ""Code"": 10,
+    ""Msg"": [
+        ""A single string"",
+        { ""Message"": ""An object with a message"" },
+        { ""Message"": ""An object with a message and a code"", ""Code"": 5 },
+        { ""Code"": 5 }
+    ]
+}";
+
+            using (var p = ChoJSONReader<Error1>.LoadText(json)
+                .WithField(m => m.Msg, customSerializer: (o) =>
+                {
+                    List<Error1Message> msg = new List<Error1Message>();
+                    foreach (var e in (JArray)o)
+                    {
+                        if (e is JValue)
+                            msg.Add(new Error1Message { Message = ((JValue)e).Value as string });
+                        else if (e is JObject)
+                            msg.Add(((JObject)e).ToObject<Error1Message>());
+                    }
+                    return msg.ToArray();
+                }
+                )
+                )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
         static void JSONToDataset()
         {
             string json = @"{
