@@ -736,6 +736,13 @@ namespace ChoETL
             return this;
         }
 
+        public ChoXmlReader<T> WithMaxScanRows(int value)
+        {
+            if (value > 0)
+                Configuration.MaxScanRows = value;
+            return this;
+        }
+
         #endregion Fluent API
 
         ~ChoXmlReader()

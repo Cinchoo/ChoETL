@@ -453,106 +453,7 @@ namespace ChoETL
                 }
                 else if (xpr != null)
                 {
-                    IsComplexXPathUsed = false;
-                    ChoXmlNamespaceManager nsMgr = new ChoXmlNamespaceManager(NamespaceManager);
-
-                    Dictionary<string, ChoXmlRecordFieldConfiguration> dict = new Dictionary<string, ChoXmlRecordFieldConfiguration>(StringComparer.CurrentCultureIgnoreCase);
-                    string name = null;
-                    foreach (var attr in xpr.Attributes())
-                    {
-                        if (!attr.IsValidAttribute(XmlSchemaNamespace, JSONSchemaNamespace))
-                            continue;
-
-                        if (!IsInNamespace(xpr.Name, attr.Name))
-                            continue;
-                        //if (!attr.Name.NamespaceName.IsNullOrWhiteSpace()) continue;
-
-                        name = GetNameWithNamespace(xpr.Name, attr.Name);
-
-                        if (!dict.ContainsKey(name))
-                            dict.Add(name, new ChoXmlRecordFieldConfiguration(attr.Name.LocalName, $"/@{name}") { FieldName = name }); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//@{name}" : $"//@{DefaultNamespace}" + ":" + $"{name}") { IsXmlAttribute = true });
-                        else
-                        {
-                            throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
-                        }
-                    }
-
-                    bool hasElements = false;
-                    //var z = xpr.Elements().ToArray();
-                    XElement ele = null;
-                    foreach (var kvp in xpr.Elements().GroupBy(e => e.Name.LocalName).Select(g => new { Name = g.Key, Value = g.ToArray() }))
-                    {
-                        if (kvp.Value.Length == 1)
-                        {
-                            ele = kvp.Value.First();
-                            if (!IsInNamespace(ele.Name))
-                                continue;
-
-                            name = GetNameWithNamespace(ele.Name);
-
-                            hasElements = true;
-                            if (!dict.ContainsKey(name))
-                                dict.Add(name, new ChoXmlRecordFieldConfiguration(ele.Name.LocalName, $"/{name}") { FieldName = name }); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//{name}" : $"//{DefaultNamespace}" + ":" + $"{name}"));
-                            else
-                            {
-                                if (dict[name].IsXmlAttribute)
-                                    throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
-
-                                dict[name].IsArray = true;
-                            }
-                        }
-                        else if (kvp.Value.Length > 1)
-                        {
-                            ele = kvp.Value.First();
-                            if (!IsInNamespace(ele.Name))
-                                continue;
-
-                            name = GetNameWithNamespace(ele.Name);
-
-                            hasElements = true;
-                            if (!dict.ContainsKey(name))
-                                dict.Add(name, new ChoXmlRecordFieldConfiguration(xpr.Name.LocalName, $"/{name}") { FieldName = name }); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//{name}" : $"//{DefaultNamespace}" + ":" + $"{name}"));
-                            else
-                            {
-                                if (dict[name].IsXmlAttribute)
-                                    throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
-
-                                dict[name].IsArray = true;
-                            }
-                        }
-                    }
-
-                    //foreach (var ele in xpr.Elements())
-                    //{
-                    //    if (!IsInNamespace(ele.Name))
-                    //        continue;
-
-                    //    name = GetNameWithNamespace(ele.Name);
-
-                    //    hasElements = true;
-                    //    if (!dict.ContainsKey(name))
-                    //        dict.Add(name, new ChoXmlRecordFieldConfiguration(ele.Name.LocalName, $"/{name}") { FieldName = name }); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//{name}" : $"//{DefaultNamespace}" + ":" + $"{name}"));
-                    //    else
-                    //    {
-                    //        if (dict[name].IsXmlAttribute)
-                    //            throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
-
-                    //        dict[name].IsArray = true;
-                    //    }
-                    //}
-
-                    if (!hasElements)
-                    {
-                        if (IsInNamespace(xpr.Name))
-                        {
-                            //name = xpr.Name.LocalName;
-                            name = GetNameWithNamespace(xpr.Name);
-                            dict.Add(name, new ChoXmlRecordFieldConfiguration(name, "text()") { FieldName = name });
-                        }
-                    }
-
-                    foreach (ChoXmlRecordFieldConfiguration obj in dict.Values)
-                        XmlRecordFieldConfigurations.Add(obj);
+                    XmlRecordFieldConfigurations.AddRange(DiscoverRecordFieldsFromXElement(xpr));
                 }
                 else if (!fieldNames.IsNullOrEmpty())
                 {
@@ -657,6 +558,109 @@ namespace ChoETL
             }
 
             LoadNCacheMembers(XmlRecordFieldConfigurations);
+        }
+
+        internal ChoXmlRecordFieldConfiguration[] DiscoverRecordFieldsFromXElement(XElement xpr)
+        {
+            IsComplexXPathUsed = false;
+            ChoXmlNamespaceManager nsMgr = new ChoXmlNamespaceManager(NamespaceManager);
+
+            Dictionary<string, ChoXmlRecordFieldConfiguration> dict = new Dictionary<string, ChoXmlRecordFieldConfiguration>(StringComparer.CurrentCultureIgnoreCase);
+            string name = null;
+            foreach (var attr in xpr.Attributes())
+            {
+                if (!attr.IsValidAttribute(XmlSchemaNamespace, JSONSchemaNamespace))
+                    continue;
+
+                if (!IsInNamespace(xpr.Name, attr.Name))
+                    continue;
+                //if (!attr.Name.NamespaceName.IsNullOrWhiteSpace()) continue;
+
+                name = GetNameWithNamespace(xpr.Name, attr.Name);
+
+                if (!dict.ContainsKey(name))
+                    dict.Add(name, new ChoXmlRecordFieldConfiguration(attr.Name.LocalName, $"/@{name}") { FieldName = name }); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//@{name}" : $"//@{DefaultNamespace}" + ":" + $"{name}") { IsXmlAttribute = true });
+                else
+                {
+                    throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
+                }
+            }
+
+            bool hasElements = false;
+            //var z = xpr.Elements().ToArray();
+            XElement ele = null;
+            foreach (var kvp in xpr.Elements().GroupBy(e => e.Name.LocalName).Select(g => new { Name = g.Key, Value = g.ToArray() }))
+            {
+                if (kvp.Value.Length == 1)
+                {
+                    ele = kvp.Value.First();
+                    if (!IsInNamespace(ele.Name))
+                        continue;
+
+                    name = GetNameWithNamespace(ele.Name);
+
+                    hasElements = true;
+                    if (!dict.ContainsKey(name))
+                        dict.Add(name, new ChoXmlRecordFieldConfiguration(ele.Name.LocalName, $"/{name}") { FieldName = name }); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//{name}" : $"//{DefaultNamespace}" + ":" + $"{name}"));
+                    else
+                    {
+                        if (dict[name].IsXmlAttribute)
+                            throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
+
+                        dict[name].IsArray = true;
+                    }
+                }
+                else if (kvp.Value.Length > 1)
+                {
+                    ele = kvp.Value.First();
+                    if (!IsInNamespace(ele.Name))
+                        continue;
+
+                    name = GetNameWithNamespace(ele.Name);
+
+                    hasElements = true;
+                    if (!dict.ContainsKey(name))
+                        dict.Add(name, new ChoXmlRecordFieldConfiguration(xpr.Name.LocalName, $"/{name}") { FieldName = name }); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//{name}" : $"//{DefaultNamespace}" + ":" + $"{name}"));
+                    else
+                    {
+                        if (dict[name].IsXmlAttribute)
+                            throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
+
+                        dict[name].IsArray = true;
+                    }
+                }
+            }
+
+            //foreach (var ele in xpr.Elements())
+            //{
+            //    if (!IsInNamespace(ele.Name))
+            //        continue;
+
+            //    name = GetNameWithNamespace(ele.Name);
+
+            //    hasElements = true;
+            //    if (!dict.ContainsKey(name))
+            //        dict.Add(name, new ChoXmlRecordFieldConfiguration(ele.Name.LocalName, $"/{name}") { FieldName = name }); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//{name}" : $"//{DefaultNamespace}" + ":" + $"{name}"));
+            //    else
+            //    {
+            //        if (dict[name].IsXmlAttribute)
+            //            throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
+
+            //        dict[name].IsArray = true;
+            //    }
+            //}
+
+            if (!hasElements)
+            {
+                if (IsInNamespace(xpr.Name))
+                {
+                    //name = xpr.Name.LocalName;
+                    name = GetNameWithNamespace(xpr.Name);
+                    dict.Add(name, new ChoXmlRecordFieldConfiguration(name, "text()") { FieldName = name });
+                }
+            }
+
+            return dict.Values.ToArray();
         }
 
         internal bool IsInNamespace(XName name)

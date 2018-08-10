@@ -43,6 +43,14 @@ namespace ChoETL
                 _callbackFieldRecord = _callbackRecord;
 
             //Configuration.Validate();
+            _recBuffer = new Lazy<List<XElement>>(() =>
+            {
+                var b = Reader.Context.RecBuffer;
+                if (b == null)
+                    Reader.Context.RecBuffer = new List<XElement>();
+
+                return Reader.Context.RecBuffer;
+            });
         }
 
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
@@ -69,6 +77,61 @@ namespace ChoETL
             }
         }
 
+        private void CalcFieldMaxCountIfApplicable(IEnumerator<XElement> nodes)
+        {
+            if (Configuration.MaxScanRows <= 0)
+                return;
+
+            if (Configuration.AutoDiscoverColumns
+                && Configuration.XmlRecordFieldConfigurations.Count == 0)
+            {
+                if (Configuration.IsDynamicObject)
+                {
+                    long recCount = 0;
+                    _configCheckDone = true;
+                    while (nodes.MoveNext())
+                    {
+                        _recBuffer.Value.Add(nodes.Current);
+                        recCount++;
+
+                        XElement ele = nodes.Current;
+                        if (ele != null)
+                        {
+                            var fcs = Configuration.DiscoverRecordFieldsFromXElement(ele);
+                            var diff = fcs.Where(fc => !Configuration.XmlRecordFieldConfigurations.Any(fc1 => fc1.Name == fc.Name)).ToArray();
+                            Configuration.XmlRecordFieldConfigurations.AddRange(diff);
+                        }
+
+                        if (Configuration.MaxScanRows == recCount)
+                            break;
+                    }
+
+                    Configuration.Validate(null);
+                    var dict = Configuration.XmlRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
+                    RaiseMembersDiscovered(dict);
+                    Configuration.UpdateFieldTypesIfAny(dict);
+
+                }
+            }
+        }
+
+        private Lazy<List<XElement>> _recBuffer = null;
+        private IEnumerable<XElement> ReadNodes(IEnumerable<XElement> nodes)
+        {
+            CalcFieldMaxCountIfApplicable(nodes.GetEnumerator());
+
+            object x = Reader.Context.RecBuffer;
+            var arr = _recBuffer.Value.ToArray();
+            _recBuffer.Value.Clear();
+
+            foreach (var rec in arr)
+                yield return rec;
+
+            foreach (var rec in nodes)
+                yield return rec;
+
+        }
+
         bool _nsInitialized = false;
         private IEnumerable<object> AsEnumerable(IEnumerable<XElement> xElements, TraceSwitch traceSwitch, Func<object, bool?> filterFunc = null)
         {
@@ -87,7 +150,7 @@ namespace ChoETL
                 Configuration.NamespaceManager.AddNamespace("x", Configuration.NamespaceManager.DefaultNamespace);
             }
 
-            foreach (XElement el in xElements)
+            foreach (XElement el in ReadNodes(xElements))
             {
                 if (!_nsInitialized)
                 {

@@ -84,7 +84,7 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            XmlToJSONKVP();
+            Sample49Test();
         }
 
         static void XmlToJSONKVP()
@@ -133,6 +133,8 @@ namespace ChoXmlReaderTest
         {
             using (var r = new ChoXmlReader("Sample49.xml")
                 .WithXPath("/CarCollection/Cars/Car")
+                .WithMaxScanRows(10)
+                //.Configure(c => c.MaxScanRows = 10)
                 )
             {
                 Console.WriteLine(ChoJSONWriter.ToTextAll(r, new ChoJSONRecordConfiguration()));
