@@ -71,5 +71,5 @@ https://github.com/Cinchoo/ChoETL/wiki
 
 + [Nuget (.NET Framework)](https://www.nuget.org/packages/ChoETL/)
 + [Nuget (.NET Standard)](https://www.nuget.org/packages/ChoETL.NETStandard/)
-+ [GitHub](https://github.com/Cinchoo/ChoETL/releases)
+
 
