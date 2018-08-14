@@ -80,8 +80,11 @@ namespace ChoCSVWriterTest
             public string EndDate { get; set; }
             public string Volume { get; set; }
         }
+
         private static void NestedObjects()
         {
+            ChoETLFrxBootstrap.IsSandboxEnvironment = true;
+            StringBuilder sb = new StringBuilder();
             TRoot root = new TRoot() { Client = "ABC", Deals = new List<TDeal>() };
             root.Deals.Add(new TDeal
             {
@@ -93,11 +96,11 @@ namespace ChoCSVWriterTest
             }
             });
 
-            using (var w = new ChoCSVWriter("nestedObjects.csv").WithFirstLineHeader())
+            using (var w = new ChoCSVWriter(sb).WithFirstLineHeader())
             {
                 w.Write(root.Deals.SelectMany(d => d.TShape.Select(s => new { ClientName = root.Client, DealNo = d.DealName, StartDate = s.StartDate, EndDate = s.EndDate, Volume = s.Volume })));
             }
-
+            Console.WriteLine(sb.ToString());
         }
 
         public class Employee
@@ -389,7 +392,7 @@ namespace ChoCSVWriterTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            HierTest();
+            NestedObjects();
             return;
 
             WriteSpecificColumns();

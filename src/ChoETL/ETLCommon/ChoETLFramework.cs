@@ -264,7 +264,8 @@ namespace ChoETL
                 }
                 GlobalProfile = new ChoProfile(ChoETLFramework.TraceSwitch.TraceVerbose, "Time taken to run the application...");
 
-                ChoETLLog.Info("Configuration File Path: " + ChoAppSettings.Configuation.FilePath);
+                if (ChoAppSettings.Configuation != null)
+                    ChoETLLog.Info("Configuration File Path: " + ChoAppSettings.Configuation.FilePath);
             }
             catch (Exception ex)
             {
