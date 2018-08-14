@@ -169,8 +169,8 @@ namespace ChoETL
                         }
                         else
                         {
-                            configuration.IgnoreNodeName = true;
-                            configuration.NodeName = null;
+                            //configuration.IgnoreNodeName = true;
+                            //configuration.NodeName = null;
                         }
                     }
                     else

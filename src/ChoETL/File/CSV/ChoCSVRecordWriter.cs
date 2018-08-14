@@ -396,10 +396,17 @@ namespace ChoETL
                     if (!RaiseBeforeRecordFieldWrite(rec, index, kvp.Key, ref fieldValue))
                         return false;
 
-                    if (fieldConfig.ValueConverter != null)
-                        fieldValue = fieldConfig.ValueConverter(fieldValue);
+                    if (fieldConfig.ValueSelector == null)
+                    {
+                        if (fieldConfig.ValueConverter != null)
+                            fieldValue = fieldConfig.ValueConverter(fieldValue);
+                        else
+                            rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue);
+                    }
                     else
-                        rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue);
+                    {
+                        fieldValue = fieldConfig.ValueSelector(fieldValue);
+                    }
 
                     if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.MemberLevel)
                         rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
@@ -488,12 +495,12 @@ namespace ChoETL
                 {
                     msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, 
                         GetFieldValueJustification(kvp.Value.FieldValueJustification), GetFillChar(kvp.Value.FillChar), 
-                        false, kvp.Value.NullValue, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType)));
+                        false, kvp.Value.NullValue, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType), fieldConfig));
                     firstColumn = false;
                 }
                 else
                     msg.AppendFormat("{0}{1}", Configuration.Delimiter, NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification),
-                        GetFillChar(kvp.Value.FillChar), false, kvp.Value.NullValue, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType)));
+                        GetFillChar(kvp.Value.FillChar), false, kvp.Value.NullValue, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType), fieldConfig));
             }
 
             recText = msg.ToString();
@@ -575,7 +582,7 @@ namespace ChoETL
                         null, 
                         Configuration.FileHeaderConfiguration.Justification == null ? ChoFieldValueJustification.None : Configuration.FileHeaderConfiguration.Justification.Value,
                         Configuration.FileHeaderConfiguration.FillChar == null ? ' ' : Configuration.FileHeaderConfiguration.FillChar.Value, 
-                        true);
+                        true, null, null, member);
 
                 if (msg.Length == 0)
                     msg.Append(value);
@@ -590,7 +597,7 @@ namespace ChoETL
         bool quoteValue = false;
         private string NormalizeFieldValue(string fieldName, string fieldValue, int? size, bool truncate, bool? quoteField,
             ChoFieldValueJustification fieldValueJustification, char fillChar, bool isHeader = false, string nullValue = null,
-            ChoFieldValueTrimOption? fieldValueTrimOption = null)
+            ChoFieldValueTrimOption? fieldValueTrimOption = null, ChoCSVRecordFieldConfiguration fieldConfig = null)
         {
             string lFieldValue = fieldValue;
             bool retValue = false;
@@ -631,7 +638,10 @@ namespace ChoETL
                         if (fieldValue.IndexOf(Configuration.Delimiter) >= 0)
                         {
                             if (isHeader)
-                                throw new ChoParserException("Field header '{0}' value contains delimiter character.".FormatString(fieldName));
+                            {
+                                if (fieldConfig == null || fieldConfig.ValueSelector == null)
+                                    throw new ChoParserException("Field header '{0}' value contains delimiter character.".FormatString(fieldName));
+                            }
                             else
                             {
                                 //Fields with embedded commas must be delimited with double-quote characters.
@@ -741,6 +751,9 @@ namespace ChoETL
                     }
                 }
             }
+
+            if (fieldConfig != null && fieldConfig.ValueSelector != null)
+                quoteValue = false;
 
             if (quoteValue)
                 fieldValue = "{1}{0}{1}".FormatString(fieldValue, Configuration.QuoteChar);

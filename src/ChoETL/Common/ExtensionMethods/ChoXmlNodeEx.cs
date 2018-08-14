@@ -709,6 +709,50 @@ namespace ChoETL
             return reader.ReadOuterXml().Trim();
         }
 
+        public static string GetXSType(object value)
+        {
+            string xsType = "object";
+            if (value != null)
+            {
+                Type type = value.GetType();
+                if (type.IsNumeric())
+                    xsType = "number";
+                else if (typeof(bool).IsAssignableFrom(type))
+                    xsType = "boolean";
+                else if (typeof(string).IsAssignableFrom(type))
+                    xsType = "string";
+            }
+
+            return xsType;
+        }
+
+        public static Type GetXSType(this XElement element, string xmlSchemaNS = null)
+        {
+            XNamespace ns = xmlSchemaNS.IsNullOrWhiteSpace() ? ChoXmlSettings.XmlSchemaInstanceNamespace : xmlSchemaNS;
+
+            XAttribute xsType = element.Attribute(ns + "type");
+            if (xsType == null)
+                return null;
+            else
+            {
+                if (String.Compare(xsType.Value, "string", true) == 0)
+                    return typeof(string);
+                else if (String.Compare(xsType.Value, "number", true) == 0)
+                    return typeof(Double);
+            }
+
+            return null;
+        }
+
+        public static void AddXSTypeAttribute(this XElement element, object value, string xmlSchemaNS = null)
+        {
+            XNamespace ns = xmlSchemaNS.IsNullOrWhiteSpace() ? ChoXmlSettings.XmlSchemaInstanceNamespace : xmlSchemaNS;
+
+            XAttribute xsType = new XAttribute(ns + "type", GetXSType(value));
+
+            element.Add(xsType);
+        }
+
         public static bool IsNilElement(this XElement element, string xmlSchemaNS = null)
         {
             XNamespace ns = xmlSchemaNS.IsNullOrWhiteSpace() ? ChoXmlSettings.XmlSchemaInstanceNamespace : xmlSchemaNS;

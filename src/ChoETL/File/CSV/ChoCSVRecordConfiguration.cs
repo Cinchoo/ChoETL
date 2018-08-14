@@ -439,15 +439,21 @@ namespace ChoETL
                  select comm).Any())
                 throw new ChoRecordConfigurationException("One of the Comments contains {0}. Not allowed.".FormatString(name));
         }
-    }
 
-    public class ChoCSVRecordConfigurationMap<T>
-    {
-        private readonly ChoCSVRecordFieldConfiguration _config;
-
-        internal ChoCSVRecordConfigurationMap(ChoCSVRecordFieldConfiguration config)
+        internal void MapRecordField(string fn, Action<ChoCSVRecordFieldConfigurationMap> mapper)
         {
-            _config = config;
+            if (mapper == null)
+                return;
+
+            mapper(new ChoCSVRecordFieldConfigurationMap(GetFieldConfiguration(fn)));
+        }
+
+        internal ChoCSVRecordFieldConfiguration GetFieldConfiguration(string fn)
+        {
+            if (!CSVRecordFieldConfigurations.Any(fc => fc.Name == fn))
+                CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fn));
+
+            return CSVRecordFieldConfigurations.First(fc => fc.Name == fn);
         }
     }
 }

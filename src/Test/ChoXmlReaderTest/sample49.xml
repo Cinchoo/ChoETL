@@ -1,12 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <CarCollection>
 <Cars>
-    <Car>
-        <StockNumber>1010</StockNumber>
-        <Make>Toyota</Make>
-
-    </Car>
-    <Car>
+ <Car>
     <StockNumber>1020</StockNumber>
     <Make>Renault</Make>
     <Models>
@@ -24,5 +19,10 @@
        </model>
     </Models>
   </Car>
+    <Car>
+        <StockNumber>1010</StockNumber>
+        <Make>Toyota</Make>
+
+    </Car>
 </Cars>
 </CarCollection>

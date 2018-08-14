@@ -159,8 +159,62 @@ namespace ChoFixedLengthReaderTest
             }
         }
 
+        public class AccountBalance
+        {
+            public int ID { get; set; }
+            public string Name { get; set; }
+            public List<string> lastTwelveMonths { get; set; }
+        }
+
+        static void NestedObjectTest()
+        {
+            string csv = @"AccountId, Name, Jan, Feb, Mar, Dec
+1, Anne, 1000.00, 400.00, 500.00,200.00
+2, John, 900.00, 500.00, 500.00,1200.00
+3, Brit, 600.00, 600.00, 500.00,2200.00";
+
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoCSVReader<AccountBalance>.LoadText(csv)
+                .WithFirstLineHeader(true)
+                .WithField(m => m.lastTwelveMonths, valueSelector: v =>
+                {
+                    List<string> list = new List<string>();
+                    //list.Add(v.Column5);
+                    list.Add(v.Jan);
+                    list.Add(v.Feb);
+                    list.Add(v.Mar);
+                    list.Add(v.Dec);
+                    return list;
+                })
+                )
+            {
+                var x = p.ToArray();
+
+                using (var w = new ChoFixedLengthWriter<AccountBalance>(sb)
+                    .WithFirstLineHeader()
+                    .WithField("ID", 1, 5)
+                    .WithField("Name", 6, 5)
+                    .WithField(f => f.lastTwelveMonths, 10, 5, fieldName: "Mon,Tue", valueSelector: v =>
+                    {
+                        return "1,2";
+                    })
+                    )
+                {
+                    w.Write(p);
+                }
+
+                //foreach (var rec in p)
+                //    Console.WriteLine(rec.Dump());
+            }
+
+            Console.WriteLine(sb.ToString());
+        }
+
         static void Main(string[] args)
         {
+            NestedObjectTest();
+            return;
+
             AABillingTest();
             return;
             //QuickLoad();

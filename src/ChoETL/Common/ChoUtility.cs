@@ -1104,7 +1104,7 @@ namespace ChoETL
         }
 
         public static string XmlSerialize(object target, XmlWriterSettings xws = null, string separator = null, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore,
-            string nsPrefix = null)
+            string nsPrefix = null, bool emitDataType = false)
         {
             //ChoGuard.ArgumentNotNull(target, "Target");
             if (target == null)
@@ -1115,7 +1115,7 @@ namespace ChoETL
             if (target.GetType().IsArray)
             {
                 if (((object[])target).Length > 0)
-                    return ((object[])target).Select(o => XmlSerialize(o, xws, separator, nullValueHandling)).Aggregate((current, next) => "{0}{1}{2}".FormatString(current, separator, next));
+                    return ((object[])target).Select(o => XmlSerialize(o, xws, separator, nullValueHandling, nsPrefix, emitDataType)).Aggregate((current, next) => "{0}{1}{2}".FormatString(current, separator, next));
                 else
                     return String.Empty;
             }
@@ -1124,7 +1124,7 @@ namespace ChoETL
             {
                 if (target is ChoDynamicObject)
                 {
-                    xtw.WriteRaw(((ChoDynamicObject)target).GetXml(null, nullValueHandling, nsPrefix));
+                    xtw.WriteRaw(((ChoDynamicObject)target).GetXml(null, nullValueHandling, nsPrefix, emitDataType));
                 }
                 else
                 {
@@ -1866,22 +1866,28 @@ namespace ChoETL
                     int count = 0;
                     foreach (object item in (IEnumerable)target)
                     {
-                        Type valueType = item.GetType();
-                        if (valueType.IsGenericType)
+                        if (item != null)
                         {
-                            Type baseType = valueType.GetGenericTypeDefinition();
-                            if (baseType == typeof(KeyValuePair<,>))
+                            Type valueType = item.GetType();
+                            if (valueType.IsGenericType)
                             {
-                                object kvpKey = valueType.GetProperty("Key").GetValue(item, null);
-                                object kvpValue = valueType.GetProperty("Value").GetValue(item, null);
-                                arrMsg.AppendFormat("Key: {0} [Type: {2}]{1}", ToStringEx(kvpKey), Environment.NewLine, kvpValue == null ? "UNKNOWN" : kvpValue.GetType().Name);
-                                arrMsg.AppendFormat("Value: {0}{1}", ToStringEx(kvpValue), Environment.NewLine);
-                                count++;
-                                continue;
+                                Type baseType = valueType.GetGenericTypeDefinition();
+                                if (baseType == typeof(KeyValuePair<,>))
+                                {
+                                    object kvpKey = valueType.GetProperty("Key").GetValue(item, null);
+                                    object kvpValue = valueType.GetProperty("Value").GetValue(item, null);
+                                    arrMsg.AppendFormat("Key: {0} [Type: {2}]{1}", ToStringEx(kvpKey), Environment.NewLine, kvpValue == null ? "UNKNOWN" : kvpValue.GetType().Name);
+                                    arrMsg.AppendFormat("Value: {0}{1}", ToStringEx(kvpValue), Environment.NewLine);
+                                    count++;
+                                    continue;
+                                }
                             }
+                            arrMsg.AppendFormat("{0}{1}", ToStringEx(item), Environment.NewLine);
                         }
+                        else
+                            arrMsg.AppendFormat("{0}{1}", "NULL", Environment.NewLine);
+
                         count++;
-                        arrMsg.AppendFormat("{0}{1}", ToStringEx(item), Environment.NewLine);
                     }
 
                     return "[Count: {0}]{1}{2}".FormatString(count, Environment.NewLine, arrMsg.ToString());

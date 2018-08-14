@@ -7,6 +7,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Data.SqlClient;
 using System.Dynamic;
 using System.Globalization;
 using System.IO;
@@ -700,7 +701,50 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            StringNodeTest();
+        }
+
+        static void Bcp()
+        {
+            string connectionString = "*** DB Connection String ***";
+            using (var p = new ChoCSVReader<EmployeeRec>("sample17.xml")
+                .WithFirstLineHeader()
+                )
+            {
+                using (SqlBulkCopy bcp = new SqlBulkCopy(connectionString))
+                {
+                    bcp.DestinationTableName = "dbo.EMPLOYEE";
+                    bcp.EnableStreaming = true;
+                    bcp.BatchSize = 10000;
+                    bcp.BulkCopyTimeout = 0;
+                    bcp.NotifyAfter = 10;
+                    bcp.SqlRowsCopied += delegate (object sender, SqlRowsCopiedEventArgs e)
+                    {
+                        Console.WriteLine(e.RowsCopied.ToString("#,##0") + " rows copied.");
+                    };
+                    bcp.WriteToServer(p.AsDataReader());
+                }
+            }
+        }
+
+        static void XmlTypeTest()
+        {
+            string json = @" {
+        ""Source"": ""WEB"",
+        ""CodePlan"": 5,
+        ""PlanSelection"": ""1"",
+        ""PlanAmount"": ""500.01"",
+        ""PlanLimitCount"": 31,
+        ""PlanLimitAmount"": ""3000.01"",
+        ""Visible"": false,
+        ""Count"": null
+     }";
+
+            var r = ChoJSONReader.DeserializeText(json);
+
+            string xml = ChoXmlWriter.ToText(r.First(), new ChoXmlRecordConfiguration { EmitDataType = false });
+            Console.WriteLine(xml);
+            var r1 = ChoXmlReader.LoadText(xml).First();
+            Console.WriteLine(r1.Dump());
         }
 
         public class RootObject2

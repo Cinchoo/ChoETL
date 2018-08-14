@@ -431,26 +431,33 @@ namespace ChoETL
         }
 
         public ChoFixedLengthReader<T> WithField<TField>(Expression<Func<T, TField>> field, int startIndex, int size, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
-            string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
+            string fieldName = null, Func<object, object> valueConverter = null, 
+            Func<dynamic, object> valueSelector = null,
+            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, 
+            string formatText = null,
             string nullValue = null)
         {
             if (field == null)
                 return this;
 
             return WithField(field.GetMemberName(), startIndex, size, fieldType, quoteField, fieldValueTrimOption,
-                fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames, field.GetFullyQualifiedMemberName(), formatText, nullValue);
+                fieldName, valueConverter, valueSelector, defaultValue, fallbackValue, altFieldNames, field.GetFullyQualifiedMemberName(), formatText, nullValue);
         }
 
         public ChoFixedLengthReader<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
-            string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
+            string fieldName = null, Func<object, object> valueConverter = null, 
+            Func<dynamic, object> valueSelector = null,
+            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
             string nullValue = null)
         {
             return WithField(name, startIndex, size, fieldType, quoteField, fieldValueTrimOption,
-                fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames, null, formatText, nullValue);
+                fieldName, valueConverter, valueSelector, defaultValue, fallbackValue, altFieldNames, null, formatText, nullValue);
         }
 
         private ChoFixedLengthReader<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
-            string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string altFieldNames = null,
+            string fieldName = null, Func<object, object> valueConverter = null, 
+            Func<dynamic, object> valueSelector = null,
+            object defaultValue = null, object fallbackValue = null, string altFieldNames = null,
             string fullyQualifiedMemberName = null, string formatText = null, string nullValue = null)
         {
             if (!name.IsNullOrEmpty())
@@ -481,6 +488,7 @@ namespace ChoETL
                     FieldValueTrimOption = fieldValueTrimOption,
                     FieldName = fieldName,
                     ValueConverter = valueConverter,
+                    ValueSelector = valueSelector,
                     DefaultValue = defaultValue,
                     FallbackValue = fallbackValue,
                     AltFieldNames = altFieldNames,
@@ -507,6 +515,19 @@ namespace ChoETL
                 Configuration.FixedLengthRecordFieldConfigurations.Add(nfc);
             }
 
+            return this;
+        }
+
+        public ChoFixedLengthReader<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoFixedLengthRecordFieldConfigurationMap> setup)
+        {
+            Configuration.MapRecordField(field.GetMemberName(), setup);
+            return this;
+        }
+
+        public ChoFixedLengthReader<T> WithField(string name, Action<ChoFixedLengthRecordFieldConfigurationMap> mapper)
+        {
+            if (!name.IsNullOrWhiteSpace())
+                Configuration.MapRecordField(name, mapper);
             return this;
         }
 
@@ -622,6 +643,14 @@ namespace ChoETL
         {
             if (value > 0)
                 Configuration.MaxScanRows = value;
+            return this;
+        }
+
+        public ChoFixedLengthReader<T> ConfigureHeader(Action<ChoFixedLengthFileHeaderConfiguration> action)
+        {
+            if (action != null)
+                action(Configuration.FileHeaderConfiguration);
+
             return this;
         }
 

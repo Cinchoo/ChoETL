@@ -38,6 +38,7 @@ namespace ChoETL
             _dataTypeSize.Add(typeof(String), 25);
             _dataTypeSize.Add(typeof(DateTime), 10);
             _dataTypeSize.Add(typeof(ChoCurrency), 30);
+            _dataTypeSize.Add(typeof(Object), 30);
         }
 
         public int GetSize(Type type)
@@ -45,7 +46,8 @@ namespace ChoETL
             ChoGuard.ArgumentNotNull(type, "Type");
 
             if (!_dataTypeSize.ContainsKey(type))
-                throw new ArgumentException("Can't find size for '{0}' type.".FormatString(type.Name));
+                return _dataTypeSize[typeof(Object)];
+                //throw new ArgumentException("Can't find size for '{0}' type.".FormatString(type.Name));
 
             return _dataTypeSize[type];
         }

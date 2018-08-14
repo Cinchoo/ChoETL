@@ -218,6 +218,20 @@ namespace ChoETL
             return this;
         }
 
+        public ChoCSVWriter<T> HasExcelSeparator(bool? value)
+        {
+            Configuration.HasExcelSeparator = value;
+            return this;
+        }
+
+        public ChoCSVWriter<T> ConfigureHeader(Action<ChoCSVFileHeaderConfiguration> action)
+        {
+            if (action != null)
+                action(Configuration.FileHeaderConfiguration);
+
+            return this;
+        }
+
         public ChoCSVWriter<T> ClearFields()
         {
             Configuration.CSVRecordFieldConfigurations.Clear();
@@ -304,27 +318,53 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
-            bool truncate = true, string fieldName = null, int? fieldPosition = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string formatText = null,
-            string nullValue = null)
+        public ChoCSVWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoCSVRecordFieldConfigurationMap> setup)
+        {
+            Configuration.MapRecordField(field.GetMemberName(), setup);
+            return this;
+        }
+
+        public ChoCSVWriter<T> WithField(string name, Action<ChoCSVRecordFieldConfigurationMap> mapper)
+        {
+            if (!name.IsNullOrWhiteSpace())
+                Configuration.MapRecordField(name, mapper);
+            return this;
+        }
+
+        public ChoCSVWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, bool? quoteField = null, 
+            char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
+            bool truncate = true, string fieldName = null, int? fieldPosition = null, 
+            Func<object, object> valueConverter = null, 
+            Func<dynamic, object> valueSelector = null,
+            object defaultValue = null, object fallbackValue = null, 
+            string formatText = null, string nullValue = null)
         {
             if (field == null)
                 return this;
 
-            return WithField(field.GetMemberName(), fieldType, quoteField, fillChar, fieldValueJustification, truncate, fieldName, fieldPosition, valueConverter, defaultValue, fallbackValue,
+            return WithField(field.GetMemberName(), fieldType, quoteField, fillChar, fieldValueJustification, truncate, 
+                fieldName, fieldPosition, valueConverter, valueSelector, defaultValue, fallbackValue,
                 field.GetFullyQualifiedMemberName(), formatText, nullValue);
         }
 
-        public ChoCSVWriter<T> WithField(string name, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
-            bool truncate = true, string fieldName = null, int? fieldPosition = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string formatText = null,
-            string nullValue = null)
+        public ChoCSVWriter<T> WithField(string name, Type fieldType = null, bool? quoteField = null, char? fillChar = null, 
+            ChoFieldValueJustification? fieldValueJustification = null,
+            bool truncate = true, string fieldName = null, int? fieldPosition = null, 
+            Func<object, object> valueConverter = null, 
+            Func<dynamic, object> valueSelector = null,
+            object defaultValue = null, object fallbackValue = null, 
+            string formatText = null, string nullValue = null)
         {
             return WithField(name, fieldType, quoteField, fillChar, fieldValueJustification,
-                truncate, fieldName, fieldPosition, valueConverter, defaultValue, fallbackValue, null, formatText, nullValue);
+                truncate, fieldName, fieldPosition, valueConverter, valueSelector, defaultValue, fallbackValue, null, formatText, nullValue);
         }
 
-        private ChoCSVWriter<T> WithField(string name, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
-            bool truncate = true, string fieldName = null, int? fieldPosition = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null,
+        private ChoCSVWriter<T> WithField(string name, Type fieldType = null, bool? quoteField = null, char? fillChar = null,
+            ChoFieldValueJustification? fieldValueJustification = null,
+            bool truncate = true, string fieldName = null, int? fieldPosition = null, 
+            Func<object, object> valueConverter = null, 
+            Func<dynamic, object> valueSelector = null,
+            object defaultValue = null, object fallbackValue = null,
             string fullyQualifiedMemberName = null, string formatText = null, string nullValue = null)
         {
             if (!name.IsNullOrEmpty())
@@ -364,6 +404,7 @@ namespace ChoETL
                     Truncate = truncate,
                     FieldName = fieldName,
                     ValueConverter = valueConverter,
+                    ValueSelector = valueSelector,
                     DefaultValue = defaultValue,
                     FallbackValue = fallbackValue,
                     FormatText = formatText,

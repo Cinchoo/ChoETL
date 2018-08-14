@@ -22,7 +22,8 @@ namespace ChoETL
         private bool _excelSeparatorFound = false;
         private string[] _fieldNames = null;
         private bool _configCheckDone = false;
-        private Dictionary<string, string> fieldNameValues = null;
+        private Dictionary<string, object> fieldNameValues = null;
+        private Dictionary<string, object> fieldNameValuesEx = null;
         internal ChoReader Reader = null;
 
         public ChoCSVRecordConfiguration Configuration
@@ -274,6 +275,7 @@ namespace ChoETL
                         || Configuration.FileHeaderConfiguration.HeaderLineAt > 0)
                         && !_headerFound)
                     {
+                        LoadHeaderLine(pair);
                         if (Configuration.FileHeaderConfiguration.IgnoreHeader)
                         {
                             if (TraceSwitch.TraceVerbose)
@@ -285,7 +287,6 @@ namespace ChoETL
                                 ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Loading header line at [{0}]...".FormatString(pair.Item1));
 
                             headerLineLoaded = true;
-                            LoadHeaderLine(pair);
                         }
                         _headerFound = true;
                         return new Tuple<bool?, Tuple<long, string>>(true, pair);
@@ -487,12 +488,12 @@ namespace ChoETL
             return true;
         }
 
-        private Dictionary<string, string> InitFieldNameValuesDict()
+        private Dictionary<string, object> InitFieldNameValuesDict()
         {
             if (_fieldNames == null)
                 return null;
 
-            Dictionary<string, string> fnv = new Dictionary<string, string>(Configuration.FileHeaderConfiguration.StringComparer);
+            Dictionary<string, object> fnv = new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer);
             foreach (var name in _fieldNames)
             {
                 if (fnv.ContainsKey(name))
@@ -503,7 +504,7 @@ namespace ChoETL
             return fnv;
         }
 
-        private void ToFieldNameValues(Dictionary<string, string> fnv, string[] fieldValues)
+        private void ToFieldNameValues(Dictionary<string, object> fnv, string[] fieldValues)
         {
             if (_fieldNames == null)
                 return;
@@ -535,7 +536,8 @@ namespace ChoETL
                     throw new ChoParserException("Incorrect number of field values found at line [{2}]. Expected [{0}] field values. Found [{1}] field values.".FormatString(Configuration.CSVRecordFieldConfigurations.Count, fieldValues.Length, pair.Item1));
             }
 
-            if (_fieldNames != null) //Configuration.FileHeaderConfiguration.HasHeaderRecord && Configuration.ColumnOrderStrict)
+            //if (_fieldNames != null) //Configuration.FileHeaderConfiguration.HasHeaderRecord && Configuration.ColumnOrderStrict)
+            if (Configuration.FileHeaderConfiguration.HasHeaderRecord && !Configuration.FileHeaderConfiguration.IgnoreHeader)
             {
                 if (this.fieldNameValues == null)
                     this.fieldNameValues = InitFieldNameValuesDict();
@@ -560,22 +562,44 @@ namespace ChoETL
                 {
                     if (fieldNameValues != null)
                     {
-                        if (fieldNameValues.ContainsKey(fieldConfig.FieldName))
-                            fieldValue = fieldNameValues[fieldConfig.FieldName];
-                        else if (Configuration.ThrowAndStopOnMissingField)
+                        if (fieldConfig.ValueSelector == null)
                         {
-                            throw new ChoMissingRecordFieldException("Missing '{0}' field in CSV file.".FormatString(fieldConfig.FieldName));
+                            if (fieldNameValues.ContainsKey(fieldConfig.FieldName))
+                                fieldValue = fieldNameValues[fieldConfig.FieldName];
+                            else if (Configuration.ThrowAndStopOnMissingField)
+                            {
+                                throw new ChoMissingRecordFieldException("Missing '{0}' field in CSV file.".FormatString(fieldConfig.FieldName));
 
-                            //if (Configuration.ColumnOrderStrict)
-                            //    throw new ChoParserException("No matching '{0}' field header found.".FormatString(fieldConfig.FieldName));
+                                //if (Configuration.ColumnOrderStrict)
+                                //    throw new ChoParserException("No matching '{0}' field header found.".FormatString(fieldConfig.FieldName));
+                            }
+                        }
+                        else
+                        {
+                            fieldValue = fieldConfig.ValueSelector(new ChoDynamicObject(fieldNameValues));
                         }
                     }
                     else
                     {
-                        if (fieldConfig.FieldPosition - 1 < fieldValues.Length)
-                            fieldValue = fieldValues[fieldConfig.FieldPosition - 1];
-                        else if (Configuration.ThrowAndStopOnMissingField)
-                            throw new ChoMissingRecordFieldException("Missing field value at [Position: {1}] in CSV file.".FormatString(fieldConfig.FieldName, fieldConfig.FieldPosition));
+                        if (fieldConfig.ValueSelector == null)
+                        {
+                            if (fieldConfig.FieldPosition - 1 < fieldValues.Length)
+                                fieldValue = fieldValues[fieldConfig.FieldPosition - 1];
+                            else if (Configuration.ThrowAndStopOnMissingField)
+                                throw new ChoMissingRecordFieldException("Missing field value at [Position: {1}] in CSV file.".FormatString(fieldConfig.FieldName, fieldConfig.FieldPosition));
+                        }
+                        else
+                        {
+                            if (Configuration.FileHeaderConfiguration.HasHeaderRecord)
+                            {
+                                if (fieldNameValuesEx == null)
+                                    fieldNameValuesEx = InitFieldNameValuesDict();
+                                ToFieldNameValues(fieldNameValuesEx, fieldValues);
+                                fieldValue = fieldConfig.ValueSelector(new ChoDynamicObject(fieldNameValuesEx));
+                            }
+                            else
+                                fieldValue = fieldConfig.ValueSelector(new ChoDynamicObject(fieldValues));
+                        }
                     }
 
                     //if (Configuration.FileHeaderConfiguration.HasHeaderRecord && Configuration.ColumnOrderStrict)
@@ -606,7 +630,7 @@ namespace ChoETL
                             kvp.Value.FieldType = typeof(string);
                     }
 
-                    fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue as string);
+                    fieldValue = fieldValue is string ? CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue as string) : fieldValue;
 
                     if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
                         continue;
@@ -832,7 +856,7 @@ namespace ChoETL
 
         private string[] GetHeaders(string line)
         {
-            if (Configuration.FileHeaderConfiguration.HasHeaderRecord && !Configuration.FileHeaderConfiguration.IgnoreHeader)
+            if (true) //Configuration.FileHeaderConfiguration.HasHeaderRecord && !Configuration.FileHeaderConfiguration.IgnoreHeader)
             {
                 string[] headers = null;
                 headers = (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)

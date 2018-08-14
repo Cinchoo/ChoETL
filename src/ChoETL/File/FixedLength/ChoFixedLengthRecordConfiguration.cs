@@ -466,5 +466,21 @@ namespace ChoETL
 
             return this;
         }
+
+        internal void MapRecordField(string fn, Action<ChoFixedLengthRecordFieldConfigurationMap> mapper)
+        {
+            if (mapper == null)
+                return;
+
+            mapper(new ChoFixedLengthRecordFieldConfigurationMap(GetFieldConfiguration(fn)));
+        }
+
+        internal ChoFixedLengthRecordFieldConfiguration GetFieldConfiguration(string fn)
+        {
+            if (!FixedLengthRecordFieldConfigurations.Any(fc => fc.Name == fn))
+                FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(fn));
+
+            return FixedLengthRecordFieldConfigurations.First(fc => fc.Name == fn);
+        }
     }
 }

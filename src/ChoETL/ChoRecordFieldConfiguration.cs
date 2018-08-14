@@ -67,6 +67,11 @@ namespace ChoETL
             get;
             set;
         }
+        public Func<dynamic, object> ValueSelector
+        {
+            get;
+            set;
+        }
         public Func<object, object> CustomSerializer
         {
             get;
@@ -79,7 +84,11 @@ namespace ChoETL
         }
 
         [IgnoreDataMember]
-        public bool IsDefaultValueSpecified;
+        public bool IsDefaultValueSpecified
+        {
+            get;
+            internal set;
+        }
 
         private object _defaultValue;
         public object DefaultValue
@@ -93,7 +102,11 @@ namespace ChoETL
         }
 
         [IgnoreDataMember]
-        public bool IsFallbackValueSpecified;
+        public bool IsFallbackValueSpecified
+        {
+            get;
+            internal set;
+        }
 
         private object _fallbackValue;
         public object FallbackValue
@@ -106,12 +119,12 @@ namespace ChoETL
             }
         }
 
-        public string DeclaringMember
+        internal string DeclaringMember
         {
             get;
             set;
         }
-        public PropertyDescriptor PropertyDescriptor
+        internal PropertyDescriptor PropertyDescriptor
         {
             get;
             set;
@@ -120,8 +133,8 @@ namespace ChoETL
         internal readonly List<object> Converters = new List<object>();
         internal PropertyInfo PI;
         internal PropertyDescriptor PD;
-        public object[] PropConverters;
-        public object[] PropConverterParams;
+        internal object[] PropConverters;
+        internal object[] PropConverterParams;
 
         public ChoRecordFieldConfiguration(string name, ChoRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)
         {

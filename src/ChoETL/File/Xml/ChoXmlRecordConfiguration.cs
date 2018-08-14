@@ -47,7 +47,11 @@ namespace ChoETL
             get;
             set;
         }
-
+        public bool EmitDataType
+        {
+            get;
+            set;
+        }
         public XmlSerializer XmlSerializer
         {
             get;

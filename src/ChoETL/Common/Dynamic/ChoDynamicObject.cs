@@ -159,6 +159,12 @@ namespace ChoETL
             _kvpDict = kvpDict;
         }
 
+        public ChoDynamicObject(IList<object> list) : this(null, false)
+        {
+            _kvpDict = list.Select((item, index) => new KeyValuePair<string, object>("Column{0}".FormatString(index), item)).
+                ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        }
+
         public ChoDynamicObject(ExpandoObject kvpDict) : this(null, false)
         {
             _kvpDict = (IDictionary<string, object>)kvpDict;
@@ -885,7 +891,8 @@ namespace ChoETL
                 return Type.GetType(typeName);
         }
 
-        public string GetXml(string tag = null, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Empty, string nsPrefix = null)
+        public string GetXml(string tag = null, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Empty, string nsPrefix = null,
+            bool emitDataType = false)
         {
             if (nsPrefix.IsNullOrWhiteSpace())
                 nsPrefix = String.Empty;
@@ -911,8 +918,15 @@ namespace ChoETL
                 }
                 else
                 {
+                    object value = this[ValueToken];
+
+                    if (emitDataType)
+                    {
+
+                    }
+
                     msg.AppendFormat(">");
-                    msg.AppendFormat("{0}", this[ValueToken].ToNString());
+                    msg.AppendFormat("{0}", value.ToNString());
                     msg.AppendFormat("</{0}>", tag);
                 }
             }
@@ -925,7 +939,7 @@ namespace ChoETL
                     value = this[key];
                     var x = IsCDATA(key);
 
-                    GetXml(msg, value, key, nullValueHandling, nsPrefix, IsCDATA(key));
+                    GetXml(msg, value, key, nullValueHandling, nsPrefix, IsCDATA(key), emitDataType);
                 }
                 msg.AppendFormat("{0}</{1}>", Environment.NewLine, tag);
             }
@@ -947,7 +961,7 @@ namespace ChoETL
             return msg.ToString();
         }
 
-        private void GetXml(StringBuilder msg, object value, string key, ChoNullValueHandling nullValueHandling, string nsPrefix = null, bool isCDATA = false)
+        private void GetXml(StringBuilder msg, object value, string key, ChoNullValueHandling nullValueHandling, string nsPrefix = null, bool isCDATA = false, bool emitDataType = false)
         {
             if (value is ChoDynamicObject)
             {

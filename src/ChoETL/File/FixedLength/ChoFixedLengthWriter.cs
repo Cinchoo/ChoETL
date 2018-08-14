@@ -251,27 +251,46 @@ namespace ChoETL
             return this;
         }
 
+        public ChoFixedLengthWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoFixedLengthRecordFieldConfigurationMap> setup)
+        {
+            Configuration.MapRecordField(field.GetMemberName(), setup);
+            return this;
+        }
+
+        public ChoFixedLengthWriter<T> WithField(string name, Action<ChoFixedLengthRecordFieldConfigurationMap> mapper)
+        {
+            if (!name.IsNullOrWhiteSpace())
+                Configuration.MapRecordField(name, mapper);
+            return this;
+        }
+
         public ChoFixedLengthWriter<T> WithField<TField>(Expression<Func<T, TField>> field, int startIndex, int size, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
-            bool truncate = true, string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string formatText = null,
+            bool truncate = true, string fieldName = null, Func<object, object> valueConverter = null, 
+            Func<dynamic, object> valueSelector = null,
+            object defaultValue = null, object fallbackValue = null, string formatText = null,
             string nullValue = null)
         {
             if (field == null)
                 return this;
 
             return WithField(field.GetMemberName(), startIndex, size, fieldType, quoteField, fillChar, fieldValueJustification,
-                    truncate, fieldName, valueConverter, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, nullValue);
+                    truncate, fieldName, valueConverter, valueSelector, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, nullValue);
         }
 
         public ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
-            bool truncate = true, string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null, string formatText = null,
+            bool truncate = true, string fieldName = null, Func<object, object> valueConverter = null, 
+            Func<dynamic, object> valueSelector = null,
+            object defaultValue = null, object fallbackValue = null, string formatText = null,
             string nullValue = null)
         {
             return WithField(name, startIndex, size, fieldType, quoteField, fillChar, fieldValueJustification,
-                truncate, fieldName, valueConverter, defaultValue, fallbackValue, null, formatText, nullValue);
+                truncate, fieldName, valueConverter, valueSelector, defaultValue, fallbackValue, null, formatText, nullValue);
         }
 
         private ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
-            bool truncate = true, string fieldName = null, Func<object, object> valueConverter = null, object defaultValue = null, object fallbackValue = null,
+            bool truncate = true, string fieldName = null, Func<object, object> valueConverter = null, 
+            Func<dynamic, object> valueSelector = null,
+            object defaultValue = null, object fallbackValue = null,
             string fullyQualifiedMemberName = null, string formatText = null, string nullValue = null)
         {
             if (!name.IsNullOrEmpty())
@@ -304,6 +323,7 @@ namespace ChoETL
                     Truncate = truncate,
                     FieldName = fieldName.IsNullOrWhiteSpace() ? name : fieldName,
                     ValueConverter = valueConverter,
+                    ValueSelector = valueSelector,
                     DefaultValue = defaultValue,
                     FallbackValue = fallbackValue,
                     FormatText = formatText,
@@ -329,6 +349,14 @@ namespace ChoETL
 
                 Configuration.FixedLengthRecordFieldConfigurations.Add(nfc);
             }
+
+            return this;
+        }
+
+        public ChoFixedLengthWriter<T> ConfigureHeader(Action<ChoFixedLengthFileHeaderConfiguration> action)
+        {
+            if (action != null)
+                action(Configuration.FileHeaderConfiguration);
 
             return this;
         }

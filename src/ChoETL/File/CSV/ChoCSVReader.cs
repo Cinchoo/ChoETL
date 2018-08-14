@@ -362,9 +362,21 @@ namespace ChoETL
             return this;
         }
 
+        public ChoCSVReader<T> HasExcelSeparator(bool? value)
+        {
+            Configuration.HasExcelSeparator = value;
+            return this;
+        }
+
         public ChoCSVReader<T> WithEOLDelimiter(string delimiter)
         {
             Configuration.EOLDelimiter = delimiter;
+            return this;
+        }
+
+        public ChoCSVReader<T> MayContainEOLInData(bool value)
+        {
+            Configuration.MayContainEOLInData = value;
             return this;
         }
 
@@ -487,44 +499,77 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVReader<T> WithField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+        public ChoCSVReader<T> WithField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, 
+            bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
+            string fieldName = null, Func<object, object> valueConverter = null,
+            Func<dynamic, object> valueSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
             string nullValue = null)
         {
             if (field == null)
                 return this;
 
-            return WithField(field.GetMemberName(), null, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames,
+            return WithField(field.GetMemberName(), null, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter,
+                valueSelector, defaultValue, fallbackValue, altFieldNames,
                 field.GetFullyQualifiedMemberName(), formatText, nullValue);
         }
 
-        public ChoCSVReader<T> WithField<TField>(Expression<Func<T, TField>> field, int? position, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+        public ChoCSVReader<T> WithField<TField>(Expression<Func<T, TField>> field, int? position, Type fieldType = null, 
+            bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
+            string fieldName = null, Func<object, object> valueConverter = null,
+            Func<dynamic, object> valueSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null)
         {
             if (field == null)
                 return this;
 
-            return WithField(field.GetMemberName(), position, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames,
+            return WithField(field.GetMemberName(), position, fieldType, quoteField, fieldValueTrimOption, fieldName, 
+                valueConverter, valueSelector, defaultValue, fallbackValue, altFieldNames,
                 field.GetFullyQualifiedMemberName(), formatText);
         }
 
-        public ChoCSVReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
-            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
-            string nullValue = null)
+        public ChoCSVReader<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoCSVRecordFieldConfigurationMap> setup)
         {
-            return WithField(name, null, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, defaultValue, fallbackValue, altFieldNames, formatText, nullValue);
+            Configuration.MapRecordField(field.GetMemberName(), setup);
+            return this;
         }
 
-        public ChoCSVReader<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+        public ChoCSVReader<T> WithField(string name, Action<ChoCSVRecordFieldConfigurationMap> mapper)
+        {
+            if (!name.IsNullOrWhiteSpace())
+                Configuration.MapRecordField(name, mapper);
+            return this;
+        }
+
+        public ChoCSVReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null, 
+            ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, 
+            Func<object, object> valueConverter = null,
+            Func<dynamic, object> valueSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
             string nullValue = null)
         {
-            return WithField(name, position, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter,
+            return WithField(name, null, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, 
+                valueSelector,
+                defaultValue, fallbackValue, altFieldNames, formatText, nullValue);
+        }
+
+        public ChoCSVReader<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null, 
+            ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, 
+            Func<object, object> valueConverter = null,
+            Func<dynamic, object> valueSelector = null,
+            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
+            string nullValue = null)
+        {
+            return WithField(name, position, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, valueSelector,
                 defaultValue, fallbackValue, altFieldNames, null, formatText, nullValue);
         }
 
-        private ChoCSVReader<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
-            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string fullyQualifiedMemberName = null, string formatText = null,
+        private ChoCSVReader<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null, 
+            ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, 
+            Func<object, object> valueConverter = null,
+            Func<dynamic, object> valueSelector = null,
+            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, 
+            string fullyQualifiedMemberName = null, string formatText = null,
             string nullValue = null)
         {
             if (!name.IsNullOrEmpty())
@@ -562,6 +607,7 @@ namespace ChoETL
                     FieldValueTrimOption = fieldValueTrimOption,
                     FieldName = fieldName,
                     ValueConverter = valueConverter,
+                    ValueSelector = valueSelector,
                     DefaultValue = defaultValue,
                     FallbackValue = fallbackValue,
                     AltFieldNames = altFieldNames,
@@ -588,6 +634,12 @@ namespace ChoETL
                 Configuration.CSVRecordFieldConfigurations.Add(nfc);
             }
 
+            return this;
+        }
+
+        public ChoCSVReader<T> IgnoreEmptyLine(bool flag = true)
+        {
+            Configuration.IgnoreEmptyLine = flag;
             return this;
         }
 
@@ -709,6 +761,32 @@ namespace ChoETL
         {
             if (value > 0)
                 Configuration.MaxScanRows = value;
+            return this;
+        }
+
+        public ChoCSVReader<T> WithComments(params string[] comments)
+        {
+            Configuration.Comments = comments;
+            return this;
+        }
+
+        public ChoCSVReader<T> ConfigureHeader(Action<ChoCSVFileHeaderConfiguration> action)
+        {
+            if (action != null)
+                action(Configuration.FileHeaderConfiguration);
+
+            return this;
+        }
+
+        public ChoCSVReader<T> HeaderLineAt(long value)
+        {
+            Configuration.FileHeaderConfiguration.HeaderLineAt = value;
+            return this;
+        }
+
+        public ChoCSVReader<T> IgnoreCase(bool value)
+        {
+            Configuration.FileHeaderConfiguration.IgnoreCase = value;
             return this;
         }
 

@@ -428,14 +428,20 @@ namespace ChoETL
                 rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
                 try
                 {
-
-                    if (fieldConfig.StartIndex + fieldConfig.Size > line.Length)
+                    if (fieldConfig.ValueSelector == null)
                     {
-                        if (Configuration.ColumnCountStrict)
-                            throw new ChoParserException("Missing '{0}' field value.".FormatString(kvp.Key));
+                        if (fieldConfig.StartIndex + fieldConfig.Size > line.Length)
+                        {
+                            if (Configuration.ColumnCountStrict)
+                                throw new ChoParserException("Missing '{0}' field value.".FormatString(kvp.Key));
+                        }
+                        else
+                            fieldValue = line.Substring(fieldConfig.StartIndex, fieldConfig.Size.Value);
                     }
                     else
-                        fieldValue = line.Substring(fieldConfig.StartIndex, fieldConfig.Size.Value);
+                    {
+                        fieldValue = fieldConfig.ValueSelector(new ChoDynamicObject(new Dictionary<string, object>() { { "Line", line } }));
+                    }
 
                     if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
                     {
@@ -450,7 +456,7 @@ namespace ChoETL
                             kvp.Value.FieldType = typeof(string);
                     }
 
-                    fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue as string);
+                    fieldValue = fieldValue is string ? CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue as string) : fieldValue;
 
                     if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
                         continue;

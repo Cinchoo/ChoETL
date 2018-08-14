@@ -131,14 +131,14 @@ namespace ChoXmlReaderTest
 
         static void Sample49Test()
         {
-            using (var r = new ChoXmlReader("Sample49.xml")
-                .WithXPath("/CarCollection/Cars/Car")
-                .WithMaxScanRows(10)
-                //.Configure(c => c.MaxScanRows = 10)
-                )
-            {
-                Console.WriteLine(ChoJSONWriter.ToTextAll(r, new ChoJSONRecordConfiguration()));
-            }
+using (var r = new ChoXmlReader("Sample49.xml")
+    .WithXPath("/CarCollection/Cars/Car")
+    .WithMaxScanRows(10)
+    //.Configure(c => c.MaxScanRows = 10)
+    )
+{
+    Console.WriteLine(ChoJSONWriter.ToTextAll(r));
+}
         }
 
         static void Sample48Test()

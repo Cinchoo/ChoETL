@@ -670,7 +670,11 @@ namespace ChoETL
                             else if (isCDATA)
                                 ele.Add(ns != null ? new XElement(ns + kvp.Key, new XCData(kvp.Value.ToNString())) : new XElement(kvp.Key, new XCData(kvp.Value.ToNString())));
                             else
-                                ele.Add(ns != null ? new XElement(ns + kvp.Key, kvp.Value) : new XElement(kvp.Key, kvp.Value));
+                            {
+                                XElement e = NewXElement(kvp.Key, Configuration.DefaultNamespacePrefix, ns, kvp.Value, Configuration.EmitDataType);
+                                //var e = ns != null ? new XElement(ns + kvp.Key, kvp.Value) : new XElement(kvp.Key, kvp.Value);
+                                ele.Add(e);
+                            }
                         }
                         else if (isCDATA)
                         {
@@ -681,7 +685,7 @@ namespace ChoETL
                     }
                     else
                     {
-                        innerXml1 = ChoUtility.XmlSerialize(kvp.Value, null, Configuration.EOLDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix);
+                        innerXml1 = ChoUtility.XmlSerialize(kvp.Value, null, Configuration.EOLDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix, Configuration.EmitDataType);
                         if (!kvp.Value.GetType().IsArray)
                         {
                             if (_beginNSTagRegex.Match(innerXml1).Success)
@@ -799,7 +803,7 @@ namespace ChoETL
 
         }
 
-        private XElement NewXElement(string name, string nsPrefix = null, XNamespace xs = null, object value = null)
+        private XElement NewXElement(string name, string nsPrefix = null, XNamespace xs = null, object value = null, bool emitType = false)
         {
             var e = value == null ? new XElement(name) : new XElement(name, value);
 
@@ -809,6 +813,12 @@ namespace ChoETL
                 e.Add(nsAttr);
                 e.Name = xs + e.Name.LocalName;
             }
+
+            if (emitType && value != null && value.GetType().IsSimple())
+            {
+                e.AddXSTypeAttribute(value, Configuration.XmlSchemaNamespace);
+            }
+
             return e;
         }
 
