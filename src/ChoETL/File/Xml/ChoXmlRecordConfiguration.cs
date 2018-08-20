@@ -740,6 +740,23 @@ namespace ChoETL
 
             return this;
         }
+
+        internal void MapRecordField(string fn, Action<ChoXmlRecordFieldConfigurationMap> mapper)
+        {
+            if (mapper == null)
+                return;
+
+            mapper(new ChoXmlRecordFieldConfigurationMap(GetFieldConfiguration(fn)));
+        }
+
+        internal ChoXmlRecordFieldConfiguration GetFieldConfiguration(string fn)
+        {
+            fn = fn.NTrim();
+            if (!XmlRecordFieldConfigurations.Any(fc => fc.Name == fn))
+                XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(fn, $"/{fn}"));
+
+            return XmlRecordFieldConfigurations.First(fc => fc.Name == fn);
+        }
     }
 
     public class ChoXmlNamespaceManager

@@ -465,6 +465,19 @@ namespace ChoETL
             return this;
         }
 
+        public ChoJSONReader<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoJSONRecordFieldConfigurationMap> setup)
+        {
+            Configuration.MapRecordField(field.GetMemberName(), setup);
+            return this;
+        }
+
+        public ChoJSONReader<T> WithField(string name, Action<ChoJSONRecordFieldConfigurationMap> mapper)
+        {
+            if (!name.IsNullOrWhiteSpace())
+                Configuration.MapRecordField(name, mapper);
+            return this;
+        }
+
         public ChoJSONReader<T> WithField<TField>(Expression<Func<T, TField>> field, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null,
             Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,

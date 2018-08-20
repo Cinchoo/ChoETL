@@ -59,6 +59,7 @@
     <Compile Include="ChoJSONRecordReader.cs" />
     <Compile Include="ChoJSONRecordWriter.cs" />
     <Compile Include="ChoJSONWriter.cs" />
+    <Compile Include="ChoJSONRecordConfigurationMap.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

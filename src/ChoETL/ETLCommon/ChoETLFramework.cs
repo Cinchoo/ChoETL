@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -115,6 +116,8 @@ namespace ChoETL
                 _logFolder = value;
             }
         }
+
+        public static Configuration Configuration { get; set; }
     }
 
     public static class ChoETLFramework
@@ -264,8 +267,8 @@ namespace ChoETL
                 }
                 GlobalProfile = new ChoProfile(ChoETLFramework.TraceSwitch.TraceVerbose, "Time taken to run the application...");
 
-                if (ChoAppSettings.Configuation != null)
-                    ChoETLLog.Info("Configuration File Path: " + ChoAppSettings.Configuation.FilePath);
+                if (ChoAppSettings.Configuration != null)
+                    ChoETLLog.Info("Configuration File Path: " + ChoAppSettings.Configuration.FilePath);
             }
             catch (Exception ex)
             {

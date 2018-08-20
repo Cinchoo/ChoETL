@@ -500,6 +500,19 @@ namespace ChoETL
                 encodeValue, fullyQualifiedMemberName, formatText, nullValue);
         }
 
+        public ChoXmlWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoXmlRecordFieldConfigurationMap> setup)
+        {
+            Configuration.MapRecordField(field.GetMemberName(), setup);
+            return this;
+        }
+
+        public ChoXmlWriter<T> WithField(string name, Action<ChoXmlRecordFieldConfigurationMap> mapper)
+        {
+            if (!name.IsNullOrWhiteSpace())
+                Configuration.MapRecordField(name, mapper);
+            return this;
+        }
+
         public ChoXmlWriter<T> WithField<TField>(Expression<Func<T, TField>> field, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
             bool isXmlAttribute = false, bool isAnyXmlNode = false, string fieldName = null,
             Func<object, object> valueConverter = null, 

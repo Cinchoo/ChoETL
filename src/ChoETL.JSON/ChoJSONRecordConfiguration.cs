@@ -12,9 +12,6 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml;
-using System.Xml.Linq;
-using System.Xml.Serialization;
 
 namespace ChoETL
 {
@@ -393,6 +390,23 @@ namespace ChoETL
                 action(this);
 
             return this;
+        }
+
+        internal void MapRecordField(string fn, Action<ChoJSONRecordFieldConfigurationMap> mapper)
+        {
+            if (mapper == null)
+                return;
+
+            mapper(new ChoJSONRecordFieldConfigurationMap(GetFieldConfiguration(fn)));
+        }
+
+        internal ChoJSONRecordFieldConfiguration GetFieldConfiguration(string fn)
+        {
+            fn = fn.NTrim();
+            if (!JSONRecordFieldConfigurations.Any(fc => fc.Name == fn))
+                JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration(fn, (string)null));
+
+            return JSONRecordFieldConfigurations.First(fc => fc.Name == fn);
         }
 
         //protected override void LoadNCacheMembers(IEnumerable<ChoRecordFieldConfiguration> fcs)

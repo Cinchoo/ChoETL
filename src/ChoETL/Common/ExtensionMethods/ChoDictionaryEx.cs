@@ -11,6 +11,21 @@ namespace ChoETL
 {
     public static class ChoDictionaryEx
     {
+        //public static IEnumerable<KeyValuePair<string, object>> Flatten(this object target, bool useNestedKeyFormat = true)
+        //{
+        //    if (target == null)
+        //        return null;
+
+        //    if (target is IList)
+        //        return target;
+
+        //    Type type = target.GetType();
+        //    foreach (var pd in ChoTypeDescriptor.GetProperties(type))
+        //    {
+
+        //    }
+        //}
+
         public static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict, bool useNestedKeyFormat = true)
         {
             return Flatten(dict, null, useNestedKeyFormat);
@@ -38,6 +53,9 @@ namespace ChoETL
         }
         private static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict, string key = null, bool useNestedKeyFormat = true)
         {
+            if (dict == null)
+                yield break;
+
             foreach (var kvp in dict)
             {
                 if (kvp.Value is IDictionary<string, object>)

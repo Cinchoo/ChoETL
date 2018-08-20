@@ -109,6 +109,7 @@
     <Compile Include="File\FixedLength\ChoFixedLengthRecordConfigurationMap.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthRecordTypeConfiguration.cs" />
     <Compile Include="File\Manifold\ChoManifoldRecordTypeConfiguration.cs" />
+    <Compile Include="File\Xml\ChoXmlRecordConfigurationMap.cs" />
     <Compile Include="IChoEmptyLineReportable.cs" />
     <Compile Include="IChoCustomColumnMappable.cs" />
     <Compile Include="IChoCustomSerializable.cs" />

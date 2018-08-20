@@ -609,6 +609,19 @@ namespace ChoETL
             return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, true, fieldName, false, valueConverter, 
                 itemConverter, customSerializer, defaultValue, fallbackValue, encodeValue, formatText, nullValue);
         }
+        
+        public ChoXmlReader<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoXmlRecordFieldConfigurationMap> setup)
+        {
+            Configuration.MapRecordField(field.GetMemberName(), setup);
+            return this;
+        }
+
+        public ChoXmlReader<T> WithField(string name, Action<ChoXmlRecordFieldConfigurationMap> mapper)
+        {
+            if (!name.IsNullOrWhiteSpace())
+                Configuration.MapRecordField(name, mapper);
+            return this;
+        }
 
         public ChoXmlReader<T> WithField<TField>(Expression<Func<T, TField>> field, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
             bool isXmlAttribute = false, string fieldName = null, bool isArray = false, 

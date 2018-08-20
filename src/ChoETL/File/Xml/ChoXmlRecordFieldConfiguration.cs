@@ -18,25 +18,25 @@ namespace ChoETL
             get;
             set;
         }
-		[DataMember]
-		public bool IsAnyXmlNode
-		{
-			get;
-			set;
-		}
-		[DataMember]
+        [DataMember]
+        public bool IsAnyXmlNode
+        {
+            get;
+            set;
+        }
+        [DataMember]
         public bool IsXmlAttribute
         {
             get;
             set;
         }
-		[DataMember]
-		public bool IsXmlCDATA
-		{
-			get;
-			set;
-		}
-		[DataMember]
+        [DataMember]
+        public bool IsXmlCDATA
+        {
+            get;
+            set;
+        }
+        [DataMember]
         public bool? EncodeValue
         {
             get;
@@ -66,7 +66,7 @@ namespace ChoETL
         }
 
         internal ChoXmlRecordFieldConfiguration(string name, ChoXmlNodeRecordFieldAttribute attr = null, Attribute[] otherAttrs = null) : base(name, attr, otherAttrs)
-		{
+        {
             EncodeValue = true;
             FieldName = name;
             UseCache = true;
