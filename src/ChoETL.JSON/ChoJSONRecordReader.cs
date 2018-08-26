@@ -334,15 +334,6 @@ namespace ChoETL
             {
                 Reader.IsValid = false;
                 if (ex is ChoMissingRecordFieldException && Configuration.ThrowAndStopOnMissingField)
-                    throw;
-
-                ChoETLFramework.HandleException(ref ex);
-                if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
-                {
-                    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
-                    rec = null;
-                }
-                else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
                 {
                     if (!RaiseRecordLoadError(rec, pair, ex))
                         throw;
@@ -353,7 +344,26 @@ namespace ChoETL
                     }
                 }
                 else
-                    throw;
+                {
+                    ChoETLFramework.HandleException(ref ex);
+                    if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
+                    {
+                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                        rec = null;
+                    }
+                    else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
+                    {
+                        if (!RaiseRecordLoadError(rec, pair, ex))
+                            throw;
+                        else
+                        {
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                            rec = null;
+                        }
+                    }
+                    else
+                        throw;
+                }
 
                 return true;
             }

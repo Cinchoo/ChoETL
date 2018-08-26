@@ -461,15 +461,6 @@ namespace ChoETL
                 Reader.IsValid = false;
 
                 if (ex is ChoMissingRecordFieldException && Configuration.ThrowAndStopOnMissingField)
-                    throw;
-
-                ChoETLFramework.HandleException(ref ex);
-                if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
-                {
-                    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
-                    rec = null;
-                }
-                else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
                 {
                     if (!RaiseRecordLoadError(rec, pair, ex))
                         throw;
@@ -480,8 +471,26 @@ namespace ChoETL
                     }
                 }
                 else
-                    throw;
-
+                {
+                    ChoETLFramework.HandleException(ref ex);
+                    if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
+                    {
+                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                        rec = null;
+                    }
+                    else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
+                    {
+                        if (!RaiseRecordLoadError(rec, pair, ex))
+                            throw;
+                        else
+                        {
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                            rec = null;
+                        }
+                    }
+                    else
+                        throw;
+                }
                 return true;
             }
 
@@ -499,7 +508,7 @@ namespace ChoETL
                 if (fnv.ContainsKey(name))
                     throw new ChoParserException($"Duplicate '{name}' field found.");
 
-                fnv.Add(name, String.Empty);
+                fnv.Add(name, null); // String.Empty);
             }
             return fnv;
         }
@@ -514,8 +523,8 @@ namespace ChoETL
             {
                 if (index - 1 < fieldValues.Length)
                     fnv[name] = fieldValues[index - 1];
-                else
-                    fnv[name] = String.Empty;
+                //else
+                //    fnv[name] = String.Empty;
 
                 index++;
             }
@@ -565,8 +574,11 @@ namespace ChoETL
                         if (fieldConfig.ValueSelector == null)
                         {
                             if (fieldNameValues.ContainsKey(fieldConfig.FieldName))
+                            {
                                 fieldValue = fieldNameValues[fieldConfig.FieldName];
-                            else if (Configuration.ThrowAndStopOnMissingField)
+                            }
+
+                            if (fieldValue == null && Configuration.ThrowAndStopOnMissingField)
                             {
                                 throw new ChoMissingRecordFieldException("Missing '{0}' field in CSV file.".FormatString(fieldConfig.FieldName));
 

@@ -489,7 +489,26 @@ namespace ChoETL
                 if (fieldValue == null)
                     fieldText = String.Empty;
                 else
-                    fieldText = fieldValue.ToString();
+                {
+                    if (fieldValue is IList)
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        bool first = true;
+                        foreach (var item in (IList)fieldValue)
+                        {
+                            if (first)
+                            {
+                                sb.Append(NormalizeFieldValue(kvp.Key, item.ToNString(), null, false, null, ChoFieldValueJustification.None, GetFillChar(kvp.Value.FillChar)));
+                                first = false;
+                            }
+                            else
+                                sb.AppendFormat("{0}{1}", Configuration.Delimiter, NormalizeFieldValue(kvp.Key, item.ToNString(), null, false, null, ChoFieldValueJustification.None, GetFillChar(kvp.Value.FillChar)));
+                        }
+                        fieldText = sb.ToString();
+                    }
+                    else
+                        fieldText = fieldValue.ToString();
+                }
 
                 if (firstColumn)
                 {

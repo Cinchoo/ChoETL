@@ -1470,7 +1470,8 @@ D,World Name , LLC,2018-01-20,BUY";
                     .WithFirstLineHeader()
                     .WithField(f => f.lastTwelveMonths, fieldName: "Mon,Tue", valueSelector: v =>
                     {
-                        return "1,2";
+                        System.Collections.IList array = v as System.Collections.IList;
+                        return new object[] { array[0], array[1]};
                     })
                     )
                 {
@@ -1484,9 +1485,43 @@ D,World Name , LLC,2018-01-20,BUY";
             Console.WriteLine(sb.ToString());
         }
 
+        static void CaptureError()
+        {
+            string csv = @"FirstName, LastName
+JaneDoe
+Jo""hn"",Doe
+Jane,Doe
+";
+
+            foreach (var rec in ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .Setup(s => s.RecordLoadError += (o, e) => { Console.WriteLine(e.Source.ToNString()); e.Handled = true; })
+                )
+                Console.WriteLine(rec.Dump());
+        }
+
+        static void ColumnCountStrictTest()
+        {
+            string csv = @"FirstName,LastName,City
+Jane,Doe,Edison
+Tom,Mark,NewYork
+";
+
+            foreach (var rec in ChoCSVReader.LoadText(csv)
+                .WithFields("FirstName", "LastName")
+                .WithFirstLineHeader()
+                .ColumnCountStrict()
+                )
+                Console.WriteLine(rec.Dump());
+        }
+
         static void Main(string[] args)
         {
+
             NestedObjectTest();
+            return;
+
+            ColumnCountStrictTest();
             return;
 
             CSV2JSONWithEmptyArray();

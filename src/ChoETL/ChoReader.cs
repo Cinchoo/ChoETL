@@ -105,7 +105,7 @@ namespace ChoETL
         {
             EventHandler<ChoRecordLoadErrorEventArgs> eh = RecordLoadError;
             if (eh == null)
-                return true;
+                return false;
 
             ChoRecordLoadErrorEventArgs e = new ChoRecordLoadErrorEventArgs() { Record = record, Index = index, Source = source, Exception = ex };
             eh(this, e);
