@@ -698,9 +698,239 @@ namespace ChoJSONReaderTest
 
 
         }
+
+        public enum CoubType
+        {
+            [Description("Coub::Simple")]
+            Simple = 1,
+            [Description("Coub::Temp")]
+            Temp = 2,
+            [Description("Coub::Recoub")]
+            Recoub = 3
+        }
+        public partial class CoubBig
+        {
+            [JsonProperty("id")]
+            public int Id { get; set; }
+
+            [JsonProperty("type")]
+            [ChoTypeConverter(typeof(ChoEnumConverter), Parameters = "Description")]
+            public CoubType Type { get; set; }
+
+            [JsonProperty("permalink")]
+            public string Permalink { get; set; }
+
+            [JsonProperty("title")]
+            public string Title { get; set; }
+
+            [JsonProperty("channel_id")]
+            public int ChannelId { get; set; }
+
+            [JsonProperty("created_at")]
+            public DateTimeOffset CreatedAt { get; set; }
+
+            [JsonProperty("updated_at")]
+            public DateTimeOffset UpdatedAt { get; set; }
+
+            [JsonProperty("is_done")]
+            public bool IsDone { get; set; }
+
+            [JsonProperty("views_count")]
+            public int ViewsCount { get; set; }
+
+            [JsonProperty("cotd")]
+            public bool Cotd { get; set; }
+
+            [JsonProperty("cotd_at")]
+            public object CotdAt { get; set; }
+
+            [JsonProperty("original_sound")]
+            public bool OriginalSound { get; set; }
+
+            [JsonProperty("has_sound")]
+            public bool HasSound { get; set; }
+
+            [JsonProperty("recoub_to")]
+            public int RecoubTo { get; set; }
+
+            [JsonProperty("age_restricted")]
+            public bool AgeRestricted { get; set; }
+
+            [JsonProperty("allow_reuse")]
+            public bool AllowReuse { get; set; }
+
+            [JsonProperty("banned")]
+            public bool Banned { get; set; }
+
+            [JsonProperty("percent_done")]
+            public long PercentDone { get; set; }
+
+            [JsonProperty("recoubs_count")]
+            public long RecoubsCount { get; set; }
+
+            [JsonProperty("likes_count")]
+            public long LikesCount { get; set; }
+
+            [JsonProperty("raw_video_id")]
+            public long RawVideoId { get; set; }
+
+            [JsonProperty("raw_video_thumbnail_url")]
+            public Uri RawVideoThumbnailUrl { get; set; }
+
+            [JsonProperty("raw_video_title")]
+            public string RawVideoTitle { get; set; }
+
+            [JsonProperty("video_block_banned")]
+            public bool VideoBlockBanned { get; set; }
+
+            [JsonProperty("duration")]
+            public float Duration { get; set; }
+        }
+
+        public static void Sample25Test()
+        {
+            //using (var p = new ChoJSONReader("sample26.json"))
+            //{
+            //    foreach (var rec in p)
+            //        Console.WriteLine(rec.Dump());
+            //}
+
+            //ChoTypeConverterFormatSpec.Instance.EnumFormat = ChoEnumFormatSpec.Description;
+            var o = ChoJSONReader.Deserialize<CoubBig>("sample25.json", new ChoJSONRecordConfiguration() { SupportMultipleContent = true });
+            Console.WriteLine(o.Dump());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
+
+            Sample25Test();
+        }
+
+        static void TestCountToppings()
+        {
+            using (var p = new ChoJSONReader("sample100.json")
+                .WithJSONPath("$[*].toppings[*]")
+                )
+            {
+                foreach (var rec in p.GroupBy(g => ((dynamic)g).Value).Select(g => new { g.Key, Count = g.Count() }))
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        public class ActionMessage
+        {
+            public string Action { get; set; }
+            public DateTime Timestamp { get; set; }
+            public string Url { get; set; }
+            public string IP { get; set; }
+
+        }
+        static void LoadChildren()
+        {
+string json = @"{
+    ""test1@gmail.com"": [
+        {
+            ""action"": ""open"",
+            ""timestamp"": ""2018-09-05 20:46:00"",
+            ""url"": ""http://www.google.com"",
+            ""ip"": ""66.102.6.98""
+        }
+    ]
+}";
+using (var p = ChoJSONReader<ActionMessage>.LoadText(json)
+    .WithJSONPath("$.*")
+    )
+{
+    foreach (var rec in p)
+    {
+        Console.WriteLine("action: " + rec.Action);
+        Console.WriteLine("timestamp: " + rec.Timestamp);
+        Console.WriteLine("url: " + rec.Url);
+        Console.WriteLine("ip: " + rec.IP);
+    }
+}
+        }
+
+        public class Project : IChoRecordFieldSerializable
+        {
+            public Guid CustID { get; set; }
+            public string Title { get; set; }
+            public string CalendarID { get; set; }
+
+            public bool RecordFieldDeserialize(object record, long index, string propName, ref object source)
+            {
+                return true;
+            }
+
+            public bool RecordFieldSerialize(object record, long index, string propName, ref object source)
+            {
+                return true;
+            }
+        }
+
+        static void GuidTest()
+        {
+            string json = @" [{
+        ""CustID"": ""3d49a71b-0913-4eab-8c1d-ec8ddea1fbe3"",
+        ""Title"": ""Timesheet"",
+        ""CalendarID"": ""AAMkADE5ZDViNmIyLWU3N2.....pVolcdmAABY3IuJAAA="",
+        ""PartitionKey"": ""Project"",
+        ""RowKey"": ""94a6.....29a4f34"",
+        ""Timestamp"": ""2018-09-02T11:24:57.1838388+03:00"",
+        ""ETag"": ""W/\""datetime'2018-09-02T08%3A24%3A57.1838388Z'\""""
+    }, {
+        ""CustID"": ""3d49a71b-0913-4eab-8c1d-ec8ddea1fbe3"",
+        ""Title"": ""Galaxy"",
+        ""CalendarID"": ""AAMkADE5Z.......boA_pVolcdmAABZ8biCAAA="",
+        ""PartitionKey"": ""Project"",
+        ""RowKey"": ""f5cc....86a4b"",
+        ""Timestamp"": ""2018-09-03T13:02:27.642082+03:00"",
+        ""ETag"": ""W/\""datetime'2018-09-03T10%3A02%3A27.642082Z'\""""
+    }]";
+
+            using (var p = ChoJSONReader<Project>.LoadText(json)
+                .WithField(m => m.CustID)
+                )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void ReformatJSON()
+        {
+            string json = @"{
+    ""contactName"": ""Company"",
+    ""lineItems"": [
+     {
+        ""quantity"": 7.0,
+        ""description"": ""Beer No* 45.5 DIN KEG""
+     },
+     {
+        ""quantity"": 2.0,
+        ""description"": ""Beer Old 49.5 DIN KEG""
+     }
+     ],
+    ""invoiceNumber"": ""C6188372""
+}";
+
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoJSONReader.LoadText(json))
+            {
+                using (var w = new ChoCSVWriter(sb)
+                    .WithFirstLineHeader()
+                    )
+                    w.Write(p
+                        .SelectMany(r1 => ((dynamic[])r1.lineItems).Select(r2 => new
+                        {
+                            r1.contactName,
+                            r2.quantity,
+                            r2.description,
+                            r1.invoiceNumber
+                        })));
+            }
+            Console.WriteLine(sb.ToString());
         }
 
         static void Bcp()

@@ -1,0 +1,228 @@
+﻿    {
+        "flag": null,
+        "abuses": null,
+        "recoubs_by_users_channels": null,
+        "favourite": false,
+        "recoub": null,
+        "like": null,
+        "in_my_best2015": false,
+        "id": 4951721,
+        "type": "Coub::Simple",
+        "permalink": "2hzea",
+        "title": "Dustin Hoffman's favorite band.",
+        "visibility_type": "public",
+        "original_visibility_type": "public",
+        "channel_id": 53881,
+        "created_at": "2014-07-16T12:49:31Z",
+        "updated_at": "2018-09-29T14:17:00Z",
+        "is_done": true,
+        "views_count": 25747,
+        "cotd": null,
+        "cotd_at": null,
+        "published": true,
+        "published_at": "2014-07-16T12:49:31Z",
+        "reversed": false,
+        "from_editor_v2": true,
+        "is_editable": true,
+        "original_sound": false,
+        "has_sound": false,
+        "recoub_to": null,
+        "file_versions": {
+            "html5": {
+                "video": {
+                    "med": {
+                        "url": "http://s1.storage.akamai.coub.com/get/b11/p/coub/simple/cw_file/6d3cb163027/54fbb3cd4f7f9e3555f16/muted_mp4_med_size_1405515001_muted_med.mp4",
+                        "size": 645538
+                    }
+                },
+                "audio": {
+                    "high": {
+                        "url": "http://s1.storage.akamai.coub.com/get/b40/p/coub/simple/cw_looped_audio/b657d2b2684/2413ed5527ee699ac0838/high_1445994936_high.mp3",
+                        "size": 6644923
+                    },
+                    "med": {
+                        "url": "http://s1.storage.akamai.coub.com/get/b40/p/coub/simple/cw_looped_audio/b657d2b2684/2413ed5527ee699ac0838/high_1445994936_high.mp3",
+                        "size": 6644923
+                    }
+                }
+            },
+            "mobile": {
+                "gifv": "Ahr0CdOVl3mUC3rVCMfNzs5HA2fTywKUy291yI5JB20Vz2v0l2iXms9Wl2nVDwiVC2LTCgXLl2n3x2zPBguVnMqZy2iXnJmWmJCVntrMyMiZy2q0zJDMowuZntu1zJe2l2DPzNzFmtqWntuXntaWmv9NAwz2lM1Wna==",
+                "audio": [ "http://s1.storage.akamai.coub.com/get/b40/p/coub/simple/cw_looped_audio/b657d2b2684/2413ed5527ee699ac0838/high_1445994936_high.mp3" ]
+            }
+        },
+        "audio_versions": {
+            "template": "http://s4.storage.akamai.coub.com/get/b40/p/coub/simple/cw_audio/6d3cb163027/54fbb3cd4f7f9e3555f16/mid_1405515030_out.mp3",
+            "versions": [ "mid", "low" ],
+            "chunks": {
+                "template": "http://s4.storage.akamai.coub.com/get/b40/p/coub/simple/cw_audio/6d3cb163027/54fbb3cd4f7f9e3555f16/mp3_%{version}_c%{chunk}_1405515030_out.mp3",
+                "versions": [ "mid", "low" ],
+                "chunks": [ 1, 2, 3, 4 ]
+            }
+        },
+        "image_versions": {
+            "template": "http://s2.storage.akamai.coub.com/get/b54/p/coub/simple/cw_image/6d3cb163027/54fbb3cd4f7f9e3555f16/%{version}_1405515031_00030.jpg",
+            "versions": [ "micro", "tiny", "age_restricted", "ios_large", "ios_mosaic", "big", "med", "small", "pinterest" ]
+        },
+        "first_frame_versions": {
+            "template": "http://s2.storage.akamai.coub.com/get/b27/p/coub/simple/cw_timeline_pic/6d3cb163027/54fbb3cd4f7f9e3555f16/%{version}_1405515030_image.jpg",
+            "versions": [ "big", "med", "small", "ios_large" ]
+        },
+        "dimensions": {
+            "big": [ 640, 328 ],
+            "med": [ 640, 328 ]
+        },
+        "site_w_h": [ 640, 328 ],
+        "page_w_h": [ 640, 328 ],
+        "site_w_h_small": [ 310, 159 ],
+        "age_restricted": false,
+        "age_restricted_by_admin": false,
+        "not_safe_for_work": null,
+        "allow_reuse": false,
+        "dont_crop": false,
+        "banned": false,
+        "global_safe": true,
+        "audio_file_url": "http://s3.storage.akamai.coub.com/get/b40/p/coub/simple/cw_audio/6d3cb163027/54fbb3cd4f7f9e3555f16/low_1405515030_out.mp3",
+        "external_download": {
+            "type": "Youtube",
+            "service_name": "YouTube",
+            "url": "http://www.youtube.com/watch?v=n6Dkmw_Pajw",
+            "has_embed": true
+        },
+        "application": null,
+        "channel": {
+            "id": 53881,
+            "permalink": "d98e1ef7fa16f94c41ff4e6b43f8faf3",
+            "title": "Rusty Shackleford",
+            "description": null,
+            "followers_count": 3829,
+            "following_count": 2543,
+            "avatar_versions": {
+                "template": "http://s.storage.akamai.coub.com/get/b133/p/channel/cw_avatar/9ef29cdf127/750eb51781c6836744447/%{version}_1474483062_Planet_Of_The_Apes_003.jpg",
+                "versions": [ "medium", "medium_2x", "profile_pic", "profile_pic_new", "profile_pic_new_2x", "tiny", "tiny_2x", "small", "small_2x", "ios_large", "ios_small" ]
+            },
+            "background_image": "http://s.storage.akamai.coub.com/get/b70/p/background/cw_banner_image/02c2f5fd33d/2aed83a716d3df1dc5616/big_channel_1471641804_1428725688_00059.jpg",
+            "coubs_count": 440,
+            "recoubs_count": 1005
+        },
+        "file": null,
+        "picture": "http://s4.storage.akamai.coub.com/get/b54/p/coub/simple/cw_image/6d3cb163027/54fbb3cd4f7f9e3555f16/med_1405515031_00030.jpg",
+        "timeline_picture": "http://s.storage.akamai.coub.com/get/b27/p/coub/simple/cw_timeline_pic/6d3cb163027/54fbb3cd4f7f9e3555f16/ios_large_1405515030_image.jpg",
+        "small_picture": "http://s1.storage.akamai.coub.com/get/b54/p/coub/simple/cw_image/6d3cb163027/54fbb3cd4f7f9e3555f16/ios_mosaic_1405515031_00030.jpg",
+        "sharing_picture": null,
+        "percent_done": 100,
+        "tags": [
+            {
+                "id": 445587,
+                "title": "alfa romeo spider the graduate",
+                "value": "alfa%20romeo%20spider%20the%20graduate"
+            },
+            {
+                "id": 445589,
+                "title": "1600 duetto",
+                "value": "1600%20duetto"
+            },
+            {
+                "id": 89773,
+                "title": "dustin hoffman",
+                "value": "dustin%20hoffman"
+            },
+            {
+                "id": 365926,
+                "title": "simon & garfunkel",
+                "value": "simon%20&%20garfunkel"
+            },
+            {
+                "id": 102141,
+                "title": "mrs. robinson",
+                "value": "mrs.%20robinson"
+            }
+        ],
+        "categories": [
+            {
+                "id": 9,
+                "title": "Nature & Travel",
+                "permalink": "nature-travel",
+                "visible": true
+            }
+        ],
+        "recoubs_count": 151,
+        "remixes_count": 0,
+        "likes_count": 450,
+        "raw_video_id": 110290,
+        "uploaded_by_ios_app": false,
+        "uploaded_by_android_app": false,
+        "media_blocks": {
+            "uploaded_raw_videos": [],
+            "external_raw_videos": [
+                {
+                    "id": 10983915,
+                    "title": "Alfa Romeo Spider 1600 Duetto - The graduate",
+                    "url": "http://www.youtube.com/watch?v=n6Dkmw_Pajw",
+                    "image": "http://s.storage.akamai.coub.com/get/b15/p/media_block/cw_image/9bb718c9463/da97f8de242978704c289/video_1492449681_1407439655_1395321764_1jj19v4_att-url-download.jpg",
+                    "image_retina": "http://s3.storage.akamai.coub.com/get/b15/p/media_block/cw_image/9bb718c9463/da97f8de242978704c289/video_retina_1492449681_1407439655_1395321764_1jj19v4_att-url-download.jpg",
+                    "meta": {
+                        "service": "Youtube",
+                        "duration": "44.96"
+                    },
+                    "duration": 44.96,
+                    "raw_video_id": 110290,
+                    "has_embed": true
+                }
+            ],
+            "remixed_from_coubs": [],
+            "external_video": {
+                "id": 10983915,
+                "title": "Alfa Romeo Spider 1600 Duetto - The graduate",
+                "url": "http://www.youtube.com/watch?v=n6Dkmw_Pajw",
+                "image": "http://s.storage.akamai.coub.com/get/b15/p/media_block/cw_image/9bb718c9463/da97f8de242978704c289/video_1492449681_1407439655_1395321764_1jj19v4_att-url-download.jpg",
+                "image_retina": "http://s3.storage.akamai.coub.com/get/b15/p/media_block/cw_image/9bb718c9463/da97f8de242978704c289/video_retina_1492449681_1407439655_1395321764_1jj19v4_att-url-download.jpg",
+                "meta": {
+                    "service": "Youtube",
+                    "duration": "44.96"
+                },
+                "duration": 44.96,
+                "raw_video_id": 110290,
+                "has_embed": true
+            },
+            "audio_track": {
+                "id": 19333158,
+                "title": "Graceless",
+                "url": "https://geo.itunes.apple.com/us/album/graceless/id626872826?i=626873231&uo=4&at=10l5bB&app=music&at=10l5bB&app=music",
+                "image": "http://s.storage.akamai.coub.com/get/b26/p/media_block/cw_image/281cc8cbc28/d638cfed4ac64a67834f1/audio_1492073329_1471268911_135rvkv_att-url-download.jpg",
+                "image_retina": "http://s3.storage.akamai.coub.com/get/b26/p/media_block/cw_image/281cc8cbc28/d638cfed4ac64a67834f1/audio_retina_1492073329_1471268911_135rvkv_att-url-download.jpg",
+                "meta": {
+                    "year": null,
+                    "album": null,
+                    "title": "Graceless",
+                    "artist": "The National",
+                    "echonest_id": null
+                },
+                "duration": null,
+                "amazon_url": null,
+                "google_play_url": null,
+                "bandcamp_url": null,
+                "soundcloud_url": null,
+                "track_name": null,
+                "track_artist": null,
+                "track_album": null,
+                "itunes_url": "https://geo.itunes.apple.com/us/album/graceless/id626872826?i=626873231&uo=4&at=10l5bB&app=music&at=10l5bB&app=music"
+            }
+        },
+        "raw_video_thumbnail_url": "http://s1.storage.akamai.coub.com/get/b75/p/raw_video/cw_image/77c50c2aa78/dd9863648e6d929ed30ed/coub_media_1470510743_8ljhm_att-url-download.jpg",
+        "raw_video_title": "Alfa Romeo Spider 1600 Duetto - The graduate",
+        "video_block_banned": false,
+        "duration": 9.56,
+        "promo_winner": false,
+        "promo_winner_recoubers": null,
+        "editorial_info": {},
+        "promo_hint": null,
+        "beeline_best_2014": null,
+        "from_web_editor": true,
+        "normalize_sound": true,
+        "best2015_addable": false,
+        "ahmad_promo": null,
+        "promo_data": null,
+        "audio_copyright_claim": null,
+        "ads_disabled": null
+    }

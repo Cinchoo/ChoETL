@@ -48,6 +48,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="sample100.json" />
+    <None Include="sample25.json" />
     <None Include="sample24.json" />
     <None Include="sample23.json" />
     <None Include="sample22.json" />

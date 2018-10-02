@@ -19,7 +19,7 @@ namespace ChoETL
     {
         private IChoNotifyRecordWrite _callbackRecord;
         private IChoNotifyRecordFieldWrite _callbackFieldRecord;
-        private IChoSerializable _callbackRecordSeriablizable;
+        private IChoRecordFieldSerializable _callbackRecordSeriablizable;
         private long _index = 0;
         bool isFirstRec = true;
         internal ChoWriter Writer = null;
@@ -41,9 +41,9 @@ namespace ChoETL
             _callbackFieldRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordFieldWrite>(recordType);
             if (_callbackFieldRecord == null)
                 _callbackFieldRecord = _callbackRecord;
-            _callbackRecordSeriablizable = ChoMetadataObjectCache.CreateMetadataObject<IChoSerializable>(recordType);
+            _callbackRecordSeriablizable = ChoMetadataObjectCache.CreateMetadataObject<IChoRecordFieldSerializable>(recordType);
             if (_callbackRecordSeriablizable == null)
-                _callbackRecordSeriablizable = _callbackRecord as IChoSerializable;
+                _callbackRecordSeriablizable = _callbackRecord as IChoRecordFieldSerializable;
             _recBuffer = new Lazy<List<object>>(() =>
             {
                 var b = Writer.Context.RecBuffer;
@@ -1123,7 +1123,7 @@ namespace ChoETL
         {
             if (_callbackRecordSeriablizable != null)
             {
-                IChoSerializable rec = _callbackRecordSeriablizable;
+                IChoRecordFieldSerializable rec = _callbackRecordSeriablizable;
                 object state = value;
                 bool retValue = ChoFuncEx.RunWithIgnoreError(() => rec.RecordFieldSerialize(target, index, propName, ref state), false);
 

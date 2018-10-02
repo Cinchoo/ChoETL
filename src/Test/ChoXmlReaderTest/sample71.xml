@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<root>
+    <managedObject class="JTS" version="BSC17" distName="PLMN-PLMN/BSC-404500">
+        <p name="name">VM_25261_G1_A</p>
+        <p name="cellBarQualify">0</p>
+        <p name="cellBarred">0</p>
+        <p name="cId">25261</p>
+        <p name="hoppingMode">1</p>
+        <p name="hoppingSequenceNumber1">54</p>
+    </managedObject>
+    <managedObject class="CCF" version="BSC17" distName="PLMN-PLMN/BSC-404500">
+        <p name="name">ET_AR_G_0267_GHABATGHAYATI</p>
+        <p name="SBTSId">10267</p>
+        <p name="abisInterfaceConnectionType">2</p>
+        <p name="adminState">1</p>
+    </managedObject>
+
+    <managedObject class="POC" version="BSC17" distName="PLMN-PLMN/BSC-404500">
+        <p name="alpha">0</p>
+        <p name="bepPeriod">10</p>
+        <p name="bsTxPwrMax">0</p>
+        <p name="bsTxPwrMax1x00">0</p>
+    </managedObject>
+</root>

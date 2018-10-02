@@ -17,7 +17,7 @@ using System.Xml.Linq;
 
 namespace ChoETL
 {
-    public class ChoXmlReader<T> : ChoReader, IDisposable, IEnumerable<T>
+    public class ChoXmlReader<T> : ChoReader, IDisposable, IEnumerable<T>, IChoSerializableReader
         where T : class
     {
         //private TextReader _textReader;
@@ -749,10 +749,17 @@ namespace ChoETL
             return this;
         }
 
-        public ChoXmlReader<T> WithMaxScanRows(int value)
+        public ChoXmlReader<T> WithMaxScanNodes(int value)
         {
             if (value > 0)
                 Configuration.MaxScanRows = value;
+            return this;
+        }
+
+        public ChoXmlReader<T> WithCustomRecordSelector(Func<object, Type> recordSelector)
+        {
+            Configuration.SupportsMultiRecordTypes = true;
+            Configuration.RecordSelector = recordSelector;
             return this;
         }
 

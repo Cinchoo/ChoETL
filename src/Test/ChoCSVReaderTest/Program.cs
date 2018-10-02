@@ -1515,10 +1515,38 @@ Tom,Mark,NewYork
                 Console.WriteLine(rec.Dump());
         }
 
+        static void CSVTest1()
+        {
+            string csv = @"Header 1,Header 2,Header 3,Header 4,Header 5
+Value 1,""Value2 a, Value 2b"",""Value3 a, Value 3b"",Value 4,Value 5";
+
+            foreach (var rec in ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                )
+            {
+                Console.WriteLine(rec["Header 1"]);
+                Console.WriteLine(rec["Header 2"]);
+                Console.WriteLine(rec["Header 3"]);
+                Console.WriteLine(rec["Header 4"]);
+                Console.WriteLine(rec["Header 5"]);
+            }
+        }
+
+        static void OddTest1()
+        {
+            string csv = @"AccountOwnerEmail,  PartnerName, EnrollmentID, Customer, LicensingProgram, Country, Culture, Issue
+v-dakash@catalysis.com,""HEY""? Tester, 12345789,""Catalysis"", LLC., Enterprise 6 TEST, etc,etc ,etc";
+
+            foreach (dynamic rec in ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                )
+                Console.WriteLine(rec.Dump());
+        }
+
         static void Main(string[] args)
         {
 
-            NestedObjectTest();
+            OddTest1();
             return;
 
             ColumnCountStrictTest();

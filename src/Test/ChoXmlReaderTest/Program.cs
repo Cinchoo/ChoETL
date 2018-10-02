@@ -79,12 +79,86 @@ namespace ChoXmlReaderTest
         public string Last_Name { get; set; }
     }
 
+
     public class Program
     {
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Sample49Test();
+            Test71();
+        }
+
+        public class ManagedObject
+        {
+
+        }
+        public class ManagedObjectJTS : ManagedObject
+        {
+            [ChoXmlNodeRecordField(XPath = @"/p[@name=""name""]")]
+            public string Name { get; set; }
+            [ChoXmlNodeRecordField(XPath = @"/p[@name=""cellBarQualify""]")]
+            public int CellBarQualify { get; set; }
+        }
+        public class ManagedObjectCCF : ManagedObject
+        {
+            [ChoXmlNodeRecordField(XPath = @"/p[@name=""name""]")]
+            public string Name { get; set; }
+            [ChoXmlNodeRecordField(XPath = @"/p[@name=""SBTSId""]")]
+            public int SBTSId { get; set; }
+        }
+        public class ManagedObjectPOC : ManagedObject
+        {
+            [ChoXmlNodeRecordField(XPath = @"/p[@name=""alpha""]")]
+            public string Alpha { get; set; }
+            [ChoXmlNodeRecordField(XPath = @"/p[@name=""bepPeriod""]")]
+            public int BepPeriod { get; set; }
+        }
+
+        private static void Test71()
+        {
+            using (var p = new ChoXmlReader<ManagedObject>("sample71.xml")
+                .WithCustomRecordSelector(ele =>
+                {
+                    var classValue = ((Tuple<long, XElement>)ele).Item2.Attributes("class").FirstOrDefault().Value;
+                    if (classValue == "JTS")
+                        return typeof(ManagedObjectJTS);
+                    else if (classValue == "CCF")
+                        return typeof(ManagedObjectCCF);
+                    else if (classValue == "POC")
+                        return typeof(ManagedObjectPOC);
+                    else
+                        throw new NullReferenceException();
+                })
+                )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
+
+        }
+
+        public class TestPlan
+        {
+            [ChoXmlNodeRecordField(XPath = @"/ThreadGroup/stringProp[@name=""ThreadGroup.on_sample_error""]")]
+            public string NumThreads { get; set; }
+            [ChoXmlNodeRecordField(XPath = @"/ThreadGroup/stringProp[@name=""ThreadGroup.ramp_time""]")]
+            public int RampTime { get; set; }
+
+            [ChoXmlNodeRecordField(XPath = @"/hashTree/hashTree/HTTPSamplerProxy/stringProp[@name=""HTTPSampler.path""]")]
+            public string Path { get; set; }
+            [ChoXmlNodeRecordField(XPath = @"/hashTree/hashTree/HTTPSamplerProxy/stringProp[@name=""HTTPSampler.domain""]")]
+            public string Domain { get; set; }
+        }
+
+        static void TestPlanTest()
+        {
+            using (var p = new ChoXmlReader<TestPlan>("sample70.xml")
+                .WithXPath("/TestPlan/hashTree/hashTree")
+                )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
         }
 
         static void XmlToJSONKVP()
@@ -133,7 +207,7 @@ namespace ChoXmlReaderTest
         {
 using (var r = new ChoXmlReader("Sample49.xml")
     .WithXPath("/CarCollection/Cars/Car")
-    .WithMaxScanRows(10)
+    .WithMaxScanNodes(10)
     //.Configure(c => c.MaxScanRows = 10)
     )
 {

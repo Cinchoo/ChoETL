@@ -235,7 +235,7 @@ namespace ChoETL
 
         internal void UpdateFieldTypesIfAny(Dictionary<string, Type> dict)
         {
-            if (dict == null)
+            if (dict == null || RecordFieldConfigurationsDict == null)
                 return;
 
             foreach (var key in dict.Keys)

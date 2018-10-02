@@ -78,6 +78,12 @@
     <Content Include="sample20.xml">
       <SubType>Designer</SubType>
     </Content>
+    <Content Include="sample71.xml">
+      <SubType>Designer</SubType>
+    </Content>
+    <Content Include="sample70.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="sample49.xml">
       <SubType>Designer</SubType>
     </Content>

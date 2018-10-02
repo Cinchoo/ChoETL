@@ -26,6 +26,8 @@ namespace ChoETL
         public event EventHandler<ChoAfterRecordFieldLoadEventArgs> AfterRecordFieldLoad;
         public event EventHandler<ChoRecordFieldLoadErrorEventArgs> RecordFieldLoadError;
 
+        public event EventHandler<ChoRecordFieldSerializeEventArgs> RecordFieldDeserialize;
+
         protected Type ResolveRecordType(Type recordType)
         {
             if (typeof(ICollection).IsAssignableFrom(recordType)
@@ -167,6 +169,18 @@ namespace ChoETL
         public virtual bool TryValidateFor(object target, string memberName, ICollection<ValidationResult> validationResults)
         {
             throw new NotSupportedException();
+        }
+
+        public bool RaiseRecordFieldDeserialize(object record, long index, string propName, ref object source)
+        {
+            EventHandler<ChoRecordFieldSerializeEventArgs> eh = RecordFieldDeserialize;
+            if (eh == null)
+                return false;
+
+            ChoRecordFieldSerializeEventArgs e = new ChoRecordFieldSerializeEventArgs() { Record = record, Index = index, PropertyName = propName, Source = source };
+            eh(this, e);
+            source = e.Source;
+            return e.Handled;
         }
     }
 }

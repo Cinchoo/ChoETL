@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public class ChoJSONReader<T> : ChoReader, IDisposable, IEnumerable<T>
+    public class ChoJSONReader<T> : ChoReader, IDisposable, IEnumerable<T>, IChoSerializableReader
         where T : class
     {
         private TextReader _textReader;
@@ -591,6 +591,20 @@ namespace ChoETL
             if (action != null)
                 action(this);
 
+            return this;
+        }
+
+        public ChoJSONReader<T> WithMaxScanNodes(int value)
+        {
+            if (value > 0)
+                Configuration.MaxScanRows = value;
+            return this;
+        }
+
+        public ChoJSONReader<T> WithCustomRecordSelector(Func<object, Type> recordSelector)
+        {
+            Configuration.SupportsMultiRecordTypes = true;
+            Configuration.RecordSelector = recordSelector;
             return this;
         }
 

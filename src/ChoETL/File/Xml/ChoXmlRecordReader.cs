@@ -22,6 +22,7 @@ namespace ChoETL
     {
         private IChoNotifyRecordRead _callbackRecord;
         private IChoNotifyRecordFieldRead _callbackFieldRecord;
+        private IChoRecordFieldSerializable _callbackRecordSeriablizable;
         private bool _configCheckDone = false;
         private Lazy<XmlSerializer> _se = null;
         internal ChoReader Reader = null;
@@ -41,6 +42,9 @@ namespace ChoETL
             _callbackFieldRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordFieldRead>(recordType);
             if (_callbackFieldRecord == null)
                 _callbackFieldRecord = _callbackRecord;
+            _callbackRecordSeriablizable = ChoMetadataObjectCache.CreateMetadataObject<IChoRecordFieldSerializable>(recordType);
+            if (_callbackRecordSeriablizable == null)
+                _callbackRecordSeriablizable = _callbackRecord as IChoRecordFieldSerializable;
 
             //Configuration.Validate();
             _recBuffer = new Lazy<List<XElement>>(() =>
@@ -85,7 +89,7 @@ namespace ChoETL
             if (Configuration.AutoDiscoverColumns
                 && Configuration.XmlRecordFieldConfigurations.Count == 0)
             {
-                if (Configuration.IsDynamicObject)
+                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
                 {
                     long recCount = 0;
                     _configCheckDone = true;
@@ -190,7 +194,11 @@ namespace ChoETL
 
                 if (!_configCheckDone)
                 {
-                    Configuration.Validate(pair);
+                    if (Configuration.SupportsMultiRecordTypes && Configuration.RecordSelector != null && !Configuration.RecordTypeMapped)
+                    {
+                    }
+                    else
+                        Configuration.Validate(pair);
                     var dict = Configuration.XmlRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
                     RaiseMembersDiscovered(dict);
                     Configuration.UpdateFieldTypesIfAny(dict);
@@ -286,7 +294,29 @@ namespace ChoETL
 
         private bool LoadNode(Tuple<long, XElement> pair, ref object rec)
         {
-            if (!Configuration.UseXmlSerialization || Configuration.IsDynamicObject)
+            if (Configuration.SupportsMultiRecordTypes && Configuration.RecordSelector != null)
+            {
+                Type recType = Configuration.RecordSelector(pair);
+                if (recType == null)
+                {
+                    if (Configuration.IgnoreIfNoRecordTypeFound)
+                    {
+                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, $"No record type found for [{pair.Item1}] line to parse.");
+                        return true;
+                    }
+                    else
+                        throw new ChoParserException($"No record type found for [{pair.Item1}] line to parse.");
+                }
+
+                if (!Configuration.RecordTypeMapped)
+                {
+                    Configuration.MapRecordFields(recType);
+                    Configuration.Validate(null);
+                }
+
+                rec = recType.IsDynamicType() ? new ChoDynamicObject() { ThrowExceptionIfPropNotExists = true } : ChoActivator.CreateInstance(recType);
+            }
+            else if (!Configuration.UseXmlSerialization || Configuration.IsDynamicObject)
                 rec = Configuration.IsDynamicObject ? new ChoDynamicObject() { ThrowExceptionIfPropNotExists = true } : ChoActivator.CreateInstance(RecordType);
 
             try
@@ -315,7 +345,8 @@ namespace ChoETL
                 }
                 else
                 {
-                    if (Configuration.IsDynamicObject)
+                    //if (Configuration.IsDynamicObject)
+                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
                         Parse(rec, pair.Item2);
                     else
                     {
@@ -466,6 +497,8 @@ namespace ChoETL
                             continue;
                         if (fieldConfig.CustomSerializer != null)
                             value = Normalize(fieldConfig.CustomSerializer(node));
+                        else if (RaiseRecordFieldDeserialize(rec, pair.Item1, kvp.Key, ref value))
+                            value = Normalize(value);
 
                         if (value is XElement)
                         {
@@ -497,6 +530,8 @@ namespace ChoETL
 
                         if (fieldConfig.CustomSerializer != null)
                             fieldValue = Normalize(fieldConfig.CustomSerializer(xNodes));
+                        else if (RaiseRecordFieldDeserialize(rec, pair.Item1, kvp.Key, ref value))
+                            fieldValue = Normalize(value);
                         else
                         {
                             //object[] xNodes = ((IEnumerable)node.XPathEvaluate(fieldConfig.XPath, Configuration.NamespaceManager)).OfType<object>().ToArray();
@@ -793,7 +828,9 @@ namespace ChoETL
                     }
                 }
 
-                if (Configuration.IsDynamicObject)
+                //if (Configuration.IsDynamicObject)
+
+                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
                 {
                     if (fieldValue != null && kvp.Value.FieldType == null && lineNo == 1)
                         kvp.Value.FieldType = fieldValue is ICollection ? fieldValue.GetType() : fieldValue.GetType().IsSimple() ? DiscoverFieldType(fieldValue as string, Configuration) : null;
@@ -817,7 +854,7 @@ namespace ChoETL
                     if (ignoreFieldValue)
                         fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
 
-                    if (Configuration.IsDynamicObject)
+                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
                     {
                         var dict = rec as IDictionary<string, Object>;
 
@@ -862,9 +899,17 @@ namespace ChoETL
                     }
                     else
                     {
+                        if (Configuration.SupportsMultiRecordTypes)
+                        {
+                            ChoType.TryGetProperty(rec.GetType(), kvp.Key, out pi);
+                            fieldConfig.PI = pi;
+                            fieldConfig.PropConverters = ChoTypeDescriptor.GetTypeConverters(fieldConfig.PI);
+                            fieldConfig.PropConverterParams = ChoTypeDescriptor.GetTypeConverterParams(fieldConfig.PI);
+                        }
+
                         if (pi != null)
                             rec.ConvertNSetMemberValue(key, kvp.Value, ref fieldValue, Configuration.Culture);
-                        else
+                        else if (!Configuration.SupportsMultiRecordTypes)
                             throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(key, ChoType.GetTypeName(rec)));
 
                         if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
@@ -895,7 +940,7 @@ namespace ChoETL
 
                     try
                     {
-                        if (Configuration.IsDynamicObject)
+                        if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
                         {
                             var dict = rec as IDictionary<string, Object>;
 
@@ -950,7 +995,12 @@ namespace ChoETL
             }
 
             //Find any object members and serialize them
-            if (!Configuration.IsDynamicObject) //rec is ExpandoObject)
+            //if (!Configuration.IsDynamicObject) //rec is ExpandoObject)
+            if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+            {
+
+            }
+            else
             {
                 rec = SerializeObjectMembers(rec);
             }
@@ -1319,6 +1369,30 @@ namespace ChoETL
                 return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseRecordFieldLoadError(target, index, propName, value, ex), false);
             }
             return true;
+        }
+
+        private bool RaiseRecordFieldDeserialize(object target, long index, string propName, ref object value)
+        {
+            if (_callbackRecordSeriablizable is IChoRecordFieldSerializable)
+            {
+                IChoRecordFieldSerializable rec = _callbackRecordSeriablizable as IChoRecordFieldSerializable;
+                object state = value;
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => rec.RecordFieldDeserialize(target, index, propName, ref state), false);
+
+                value = state;
+
+                return retValue;
+            }
+            else if (Reader != null && Reader is IChoSerializableWriter)
+            {
+                object state = value;
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => ((IChoSerializableReader)Reader).RaiseRecordFieldDeserialize(target, index, propName, ref state), false);
+
+                value = state;
+
+                return retValue;
+            }
+            return false;
         }
 
         #endregion Event Raisers

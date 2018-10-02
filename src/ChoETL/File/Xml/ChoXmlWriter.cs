@@ -788,15 +788,22 @@ namespace ChoETL
         }
     }
 
-    public interface IChoSerializable
+    public interface IChoRecordFieldSerializable
     {
         bool RecordFieldSerialize(object record, long index, string propName, ref object source);
+        bool RecordFieldDeserialize(object record, long index, string propName, ref object source);
     }
 
     public interface IChoSerializableWriter
     {
         event EventHandler<ChoRecordFieldSerializeEventArgs> RecordFieldSerialize;
         bool RaiseRecordFieldSerialize(object record, long index, string propName, ref object source);
+    }
+
+    public interface IChoSerializableReader
+    {
+        event EventHandler<ChoRecordFieldSerializeEventArgs> RecordFieldDeserialize;
+        bool RaiseRecordFieldDeserialize(object record, long index, string propName, ref object source);
     }
 
     public class ChoRecordFieldSerializeEventArgs

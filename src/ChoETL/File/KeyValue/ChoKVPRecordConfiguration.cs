@@ -127,7 +127,7 @@ namespace ChoETL
 
         internal void UpdateFieldTypesIfAny(Dictionary<string, Type> dict)
         {
-            if (dict == null)
+            if (dict == null || RecordFieldConfigurationsDict == null)
                 return;
 
             foreach (var key in dict.Keys)
@@ -333,7 +333,17 @@ namespace ChoETL
 
                 RecordFieldConfigurationsDict = KVPRecordFieldConfigurations.Where(i => !i.Name.IsNullOrWhiteSpace()).GroupBy(i => i.Name).Select(g => g.First()).ToDictionary(i => i.Name, FileHeaderConfiguration.StringComparer);
                 RecordFieldConfigurationsDict2 = KVPRecordFieldConfigurations.Where(i => !i.FieldName.IsNullOrWhiteSpace()).GroupBy(i => i.Name).Select(g => g.First()).ToDictionary(i => i.FieldName, FileHeaderConfiguration.StringComparer);
-                AlternativeKeys = RecordFieldConfigurationsDict2.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Name, FileHeaderConfiguration.StringComparer);
+                if (IsDynamicObject)
+                    AlternativeKeys = RecordFieldConfigurationsDict2.ToDictionary(kvp => kvp.Key, kvp =>
+                    {
+                        if (kvp.Key == kvp.Value.Name)
+                            return kvp.Value.Name.ToValidVariableName();
+                        else
+                            return kvp.Value.Name;
+                    }, FileHeaderConfiguration.StringComparer);
+                else
+                    AlternativeKeys = RecordFieldConfigurationsDict2.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Name, FileHeaderConfiguration.StringComparer);
+
                 FCArray = RecordFieldConfigurationsDict.ToArray();
 
                 LoadNCacheMembers(KVPRecordFieldConfigurations);

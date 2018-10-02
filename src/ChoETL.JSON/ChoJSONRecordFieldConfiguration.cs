@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
@@ -48,8 +49,9 @@ namespace ChoETL
             set;
         }
 
-        //internal object[] JSONPropConverters;
-        //internal object[] JSONPropConverterParams;
+        internal PropertyInfo PI;
+        internal object[] PropConverters;
+        internal object[] PropConverterParams;
 
         public ChoJSONRecordFieldConfiguration(string name, string jsonPath = null) : this(name, (ChoJSONRecordFieldAttribute)null)
         {
