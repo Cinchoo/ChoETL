@@ -64,7 +64,7 @@ namespace ChoETL
         public ChoFileRecordFieldConfiguration(string name, ChoFileRecordFieldAttribute attr = null, Attribute[] otherAttrs = null) : base(name, attr, otherAttrs)
         {
             Truncate = true;
-            IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any;
+            //IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any;
 
             if (attr != null)
             {
