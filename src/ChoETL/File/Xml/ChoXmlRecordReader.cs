@@ -462,6 +462,7 @@ namespace ChoETL
             long lineNo;
             XElement node;
             string key = null;
+            bool isXmlAttribute = false;
 
             lineNo = pair.Item1;
             node = pair.Item2;
@@ -480,7 +481,7 @@ namespace ChoETL
             foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
                 key = kvp.Key;
-
+                isXmlAttribute = false;
                 fieldValue = null;
                 fieldConfig = kvp.Value;
                 if (Configuration.PIDict != null)
@@ -815,6 +816,8 @@ namespace ChoETL
                     }
                     else
                     {
+                        isXmlAttribute = true;
+
                         if (xDict[fieldConfig.FieldName].Count == 1)
                             fieldValue = xDict[fieldConfig.FieldName][0];
                         else
@@ -893,6 +896,12 @@ namespace ChoETL
                         }
                         else
                             dict[key] = fieldValue;
+
+                        if (isXmlAttribute)
+                        {
+                            if (dict is ChoDynamicObject)
+                                ((ChoDynamicObject)dict).SetAttribute(key, fieldValue);
+                        }
 
                         if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
                             dict.DoMemberLevelValidation(key, kvp.Value, Configuration.ObjectValidationMode);

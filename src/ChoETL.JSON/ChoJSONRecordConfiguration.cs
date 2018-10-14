@@ -89,6 +89,7 @@ namespace ChoETL
             get;
             set;
         }
+        public bool EnableXmlAttributePrefix { get; set; }
 
         //private bool _isDynamicObject = true;
         //internal virtual bool IsDynamicObject

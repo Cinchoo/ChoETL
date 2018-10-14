@@ -616,7 +616,20 @@ namespace ChoETL
 
                     ele.Add(new XAttribute(kvp.Key, value));
                 }
-                foreach (var kvp in elems)
+                foreach (var kvp in elems.Where(e => e.Key.StartsWith("@")))
+                {
+                    object value = kvp.Value;
+                    if (value == null)
+                    {
+                        if (config.NullValueHandling == ChoNullValueHandling.Ignore)
+                            continue;
+                        else
+                            value = String.Empty;
+                    }
+
+                    ele.Add(new XAttribute(kvp.Key.Replace("@", ""), value));
+                }
+                foreach (var kvp in elems.Where(e => !e.Key.StartsWith("@")))
                 {
                     if (kvp.Value == null)
                     {

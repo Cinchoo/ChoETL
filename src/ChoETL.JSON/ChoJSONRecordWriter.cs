@@ -358,6 +358,7 @@ namespace ChoETL
             object fieldValue = null;
             string fieldText = null;
             ChoJSONRecordFieldConfiguration fieldConfig = null;
+            string fieldName = null;
 
             if (Configuration.ColumnCountStrict)
                 CheckColumnsStrict(rec);
@@ -390,6 +391,7 @@ namespace ChoETL
             foreach (KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
                 fieldConfig = kvp.Value;
+                fieldName = fieldConfig.FieldName;
                 fieldValue = null;
                 fieldText = String.Empty;
                 if (Configuration.PIDict != null)
@@ -417,6 +419,13 @@ namespace ChoETL
                     {
                         IDictionary<string, Object> dict = rec.ToDynamicObject() as IDictionary<string, Object>;
                         fieldValue = dict[kvp.Key]; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
+                        if (rec is ChoDynamicObject)
+                        {
+                            if (((ChoDynamicObject)rec).IsAttribute(fieldName)
+                                && Configuration.EnableXmlAttributePrefix)
+                                fieldName = "@{0}".FormatString(fieldName);
+                        }
+
                         if (kvp.Value.FieldType == null)
                         {
                             if (rec is ChoDynamicObject)
@@ -595,13 +604,13 @@ namespace ChoETL
                     {
                         if (isFirst)
                         {
-                            msg.AppendFormat("{2}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? " {0}".FormatString(fieldText) :
+                            msg.AppendFormat("{2}\"{0}\":{1}", fieldName, isSimple ? " {0}".FormatString(fieldText) :
                                 Configuration.Formatting == Formatting.Indented ? SerializeObject(fieldValue, fieldConfig.UseJSONSerialization).Indent(1, " ") : SerializeObject(fieldValue, fieldConfig.UseJSONSerialization),
                                 Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
                         }
                         else
                         {
-                            msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldConfig.FieldName, isSimple ? " {0}".FormatString(fieldText) :
+                            msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldName, isSimple ? " {0}".FormatString(fieldText) :
                                 Configuration.Formatting == Formatting.Indented ? SerializeObject(fieldValue, fieldConfig.UseJSONSerialization).Indent(1, " ") : SerializeObject(fieldValue, fieldConfig.UseJSONSerialization),
                                 Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
                         }
@@ -679,7 +688,20 @@ namespace ChoETL
             IDictionary<string, object> dict = null;
             if (source != null && source.GetType().IsDynamicType())
             {
-                if (source is IDictionary<string, object>)
+                if (source is ChoDynamicObject)
+                {
+                    ChoDynamicObject dobj = source as ChoDynamicObject;
+
+                    dict = new Dictionary<string, object>();
+                    foreach (var kvp in dobj)
+                    {
+                        if (dobj.IsAttribute(kvp.Key) && Configuration.EnableXmlAttributePrefix)
+                            dict.Add("@{0}".FormatString(kvp.Key), kvp.Value);
+                        else
+                            dict.Add(kvp.Key, kvp.Value);
+                    }
+                }
+                else if (source is IDictionary<string, object>)
                     dict = source as IDictionary<string, object>;
                 else
                     return source;
