@@ -44,10 +44,11 @@ namespace ChoETL
             get;
             set;
         }
+        internal bool? QuoteAllFieldsInternal = null;
         public bool QuoteAllFields
         {
-            get;
-            set;
+            get { return QuoteAllFieldsInternal == null ? false : QuoteAllFieldsInternal.Value; }
+            set { QuoteAllFieldsInternal = value; }
         }
         public ChoStringSplitOptions StringSplitOptions
         {
@@ -92,7 +93,6 @@ namespace ChoETL
             ColumnCountStrict = false;
             ColumnOrderStrict = false;
             QuoteChar = '"';
-            QuoteAllFields = false;
             StringSplitOptions = ChoStringSplitOptions.None;
             Encoding = "UTF-8";
             TreatCurrencyAsDecimal = true;

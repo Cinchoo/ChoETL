@@ -241,7 +241,7 @@ namespace ChoETL
                 ColumnCountStrict = recObjAttr.ColumnCountStrict;
                 ColumnOrderStrict = recObjAttr.ColumnOrderStrict;
                 QuoteChar = recObjAttr.QuoteChar;
-                QuoteAllFields = recObjAttr.QuoteAllFields;
+                QuoteAllFields = recObjAttr.QuoteAllFieldsInternal;
                 StringSplitOptions = recObjAttr.StringSplitOptions;
                 if (!recObjAttr.Encoding.IsNullOrWhiteSpace())
                     Encoding = Encoding.GetEncoding(recObjAttr.Encoding);
