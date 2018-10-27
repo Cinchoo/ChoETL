@@ -554,18 +554,22 @@ namespace ChoETL
 
         #region ToObjectFromXml Overloads
 
-        public static T ToObjectFromXml<T>(this string xml, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null, bool retainXmlAttributesAsNative = true, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore)
+        public static T ToObjectFromXml<T>(this string xml, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null, 
+            ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null, 
+            bool retainXmlAttributesAsNative = true, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore,
+            string NS = null)
         {
             return (T)ToObjectFromXml(xml, typeof(T), overrides, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling);
         }
 
-        public static T ToObjectFromXml<T>(this XElement element, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null, bool retainXmlAttributesAsNative = true, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore)
+        public static T ToObjectFromXml<T>(this XElement element, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null, bool retainXmlAttributesAsNative = true, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore,
+            string NS = null)
         {
-            return (T)ToObjectFromXml(element, typeof(T), overrides, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling);
+            return (T)ToObjectFromXml(element, typeof(T), overrides, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling, NS);
         }
 
         public static object ToObjectFromXml(this XElement element, Type type, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null, bool retainXmlAttributesAsNative = true,
-            ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore)
+            ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore, string NS = null)
         {
             if (element == null)
                 return null;
@@ -590,6 +594,19 @@ namespace ChoETL
                             overrides = new XmlAttributeOverrides();
                             overrides.Add(type, xattribs);
                         }
+                        else if (NS != null)
+                        {
+                            var rootAttr = ChoType.GetAttribute<XmlRootAttribute>(type);
+                            if (rootAttr.Namespace.IsNullOrWhiteSpace())
+                            {
+                                var xattribs = new XmlAttributes();
+                                var xroot = new XmlRootAttribute(rootAttr.ElementName); // type.Name);
+                                xroot.Namespace = NS;
+                                xattribs.XmlRoot = xroot;
+                                overrides = new XmlAttributeOverrides();
+                                overrides.Add(type, xattribs);
+                            }
+                        }
                     }
                     XmlSerializer serializer = overrides != null ? new XmlSerializer(type, overrides) : new XmlSerializer(type);
                     return serializer.Deserialize(reader);
@@ -598,13 +615,13 @@ namespace ChoETL
         }
 
         public static object ToObjectFromXml(this string xml, Type type, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null, bool retainXmlAttributesAsNative = true,
-            ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore)
+            ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore, string NS = null)
         {
             if (xml.IsNullOrWhiteSpace())
                 return null;
             if (type == null)
                 throw new ArgumentNullException("Missing type.");
-            return ToObjectFromXml(XElement.Parse(xml), type, overrides, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling);
+            return ToObjectFromXml(XElement.Parse(xml), type, overrides, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling, NS);
         }
 
         public static object ToDynamic(XElement element, bool topLevel = true, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null,

@@ -79,6 +79,32 @@ namespace ChoXmlReaderTest
         public string Last_Name { get; set; }
     }
 
+    public class MyMyfields
+    {
+        [ChoXmlNodeRecordField(XPath = "my:Admin")]
+        public MyAdmin Admin { get; set; }
+        [ChoXmlNodeRecordField(XPath = "my:Request_Status")]
+        public string Request_Status { get; set; }
+        [ChoXmlNodeRecordField(XPath = "my:Request_Type")]
+        public string Request_Type { get; set; }
+    }
+
+    [XmlRoot(ElementName = "Admin", Namespace = "http://schemas.microsoft.com/office/infopath/2003/myXSD/2017-05-05T14:19:13")]
+    public class MyAdmin
+    {
+        public MyRouting_Order Routing_Order { get; set; }
+    }
+
+    [XmlRoot(ElementName = "Routing_Order", Namespace = "http://schemas.microsoft.com/office/infopath/2003/myXSD/2017-05-05T14:19:13")]
+    public class MyRouting_Order
+    {
+        [XmlElement("Approver-1_Order")]
+        public string Approver1_Order { get; set; }
+        [XmlElement("Approver-2_Order")]
+        public string Approver2_Order { get; set; }
+        [XmlElement("Approver-3_Order")]
+        public string Approver3_Order { get; set; }
+    }
 
     public class Program
     {
@@ -107,10 +133,10 @@ namespace ChoXmlReaderTest
 </my:myFields>";
 
 
-            foreach (var rec in ChoXmlReader.LoadText(xml)
+            foreach (var rec in ChoXmlReader< MyMyfields>.LoadText(xml)
                 .WithXPath("/my:myFields")
                 .WithXmlNamespace("my", "http://schemas.microsoft.com/office/infopath/2003/myXSD/2017-05-05T14:19:13")
-                .IgnoreField("lang")
+                //.IgnoreField("lang")
                 )
                 Console.WriteLine(ChoJSONWriter.ToText(rec));
         }

@@ -734,7 +734,9 @@ namespace ChoETL
                                                     fieldValue = Normalize(fieldConfig.ItemConverter(fXElement));
                                                 else
                                                 {
-                                                    fieldValue = Normalize(fXElement.ToObjectFromXml(fieldConfig.FieldType, GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative));
+                                                    fieldValue = Normalize(fXElement.ToObjectFromXml(fieldConfig.FieldType, GetXmlOverrides(fieldConfig), 
+                                                        Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, 
+                                                        Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative, ChoNullValueHandling.Ignore, new ChoXmlNamespaceManager(Configuration.NamespaceManager).GetFirstDefaultNamespace()));
                                                 }
                                             }
                                         }

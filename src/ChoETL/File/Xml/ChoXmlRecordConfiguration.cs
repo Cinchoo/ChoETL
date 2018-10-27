@@ -781,5 +781,10 @@ namespace ChoETL
             else
                 return null;
         }
+
+        public string GetFirstDefaultNamespace()
+        {
+            return NSDict.Where(kvp => kvp.Key != "xml").Select(kvp => kvp.Value).FirstOrDefault();
+        }
     }
 }
