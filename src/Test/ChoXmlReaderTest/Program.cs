@@ -85,7 +85,194 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Test71();
+            XmlToJSON2();
+        }
+
+        static void XmlToJSON2()
+        {
+            string xml = @"<?xml version=""1.0"" encoding=""utf-8""?>
+<?mso-infoPathSolution name=""urn:schemas-microsoft-com:office:infopath:myProject:-myXSD-2017-05-05T14-19-13"" solutionVersion=""1.0.0.2046"" productVersion=""16.0.0.0"" PIVersion=""1.0.0.0"" href=""https://myportal.sharepoint.com/sites/mySite/myProject/Forms/template.xsn""?>
+<?mso-application progid=""InfoPath.Document"" versionProgid=""InfoPath.Document.4""?>
+<?mso-infoPath-file-attachment-present?>
+<my:myFields xmlns:my=""http://schemas.microsoft.com/office/infopath/2003/myXSD/2017-05-05T14:19:13"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xhtml=""http://www.w3.org/1999/xhtml"" xmlns:pc=""http://schemas.microsoft.com/office/infopath/2007/PartnerControls"" xmlns:ma=""http://schemas.microsoft.com/office/2009/metadata/properties/metaAttributes"" xmlns:d=""http://schemas.microsoft.com/office/infopath/2009/WSSList/dataFields"" xmlns:q=""http://schemas.microsoft.com/office/infopath/2009/WSSList/queryFields"" xmlns:dfs=""http://schemas.microsoft.com/office/infopath/2003/dataFormSolution"" xmlns:dms=""http://schemas.microsoft.com/office/2009/documentManagement/types"" xmlns:tns=""http://microsoft.com/webservices/SharePointPortalServer/UserProfileService"" xmlns:s1=""http://microsoft.com/wsdl/types/"" xmlns:http=""http://schemas.xmlsoap.org/wsdl/http/"" xmlns:tm=""http://microsoft.com/wsdl/mime/textMatching/"" xmlns:soap=""http://schemas.xmlsoap.org/wsdl/soap/"" xmlns:soapenc=""http://schemas.xmlsoap.org/soap/encoding/"" xmlns:mime=""http://schemas.xmlsoap.org/wsdl/mime/"" xmlns:soap12=""http://schemas.xmlsoap.org/wsdl/soap12/"" xmlns:wsdl=""http://schemas.xmlsoap.org/wsdl/"" xmlns:xd=""http://schemas.microsoft.com/office/infopath/2003"" xml:lang=""en-US"">
+    <my:Admin>
+        <my:Routing_Order>
+            <my:Approver-1_Order>1</my:Approver-1_Order>
+            <my:Approver-2_Order>5</my:Approver-2_Order>
+            <my:Approver-3_Order>4</my:Approver-3_Order>
+        </my:Routing_Order>
+    </my:Admin>
+    <my:Request_Status>Save as Draft</my:Request_Status>
+    <my:Request_Type>CAPEX</my:Request_Type>
+</my:myFields>";
+
+
+            foreach (var rec in ChoXmlReader.LoadText(xml)
+                .WithXPath("/my:myFields")
+                .WithXmlNamespace("my", "http://schemas.microsoft.com/office/infopath/2003/myXSD/2017-05-05T14:19:13")
+                .IgnoreField("lang")
+                )
+                Console.WriteLine(ChoJSONWriter.ToText(rec));
+        }
+
+        static void CSVToXmlTest()
+        {
+string csv = @"Id, Name, City
+1, Tom, NY
+2, Mark, NJ
+3, Lou, FL
+4, Smith, PA
+5, Raj, DC
+";
+
+StringBuilder sb = new StringBuilder();
+using (var p = ChoCSVReader.LoadText(csv)
+    .WithFirstLineHeader()
+    )
+{
+    using (var w = new ChoXmlWriter(sb)
+        .Configure(c => c.RootName = "Employees")
+        .Configure(c => c.NodeName = "Employee")
+        )
+        w.Write(p);
+}
+
+Console.WriteLine(sb.ToString());
+        }
+
+        static void MultipleXmlNS()
+        {
+            string xml = @"<gpx xmlns=""http://www.topografix.com/GPX/1/1"" xmlns:gpxx=""http://www.garmin.com/xmlschemas/GpxExtensions/v3"" xmlns:gpxtrkx=""http://www.garmin.com/xmlschemas/TrackStatsExtension/v1"" xmlns:wptx1=""http://www.garmin.com/xmlschemas/WaypointExtension/v1"" xmlns:gpxtpx=""http://www.garmin.com/xmlschemas/TrackPointExtension/v1"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" creator=""GPSMAP 64ST TWN"" version=""1.1"" xsi:schemaLocation=""http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www8.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackStatsExtension/v1 http://www8.garmin.com/xmlschemas/TrackStatsExtension.xsd http://www.garmin.com/xmlschemas/WaypointExtension/v1 http://www8.garmin.com/xmlschemas/WaypointExtensionv1.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd"">
+  <metadata>
+    <link href=""http://www.garmin.com"">
+      <text>Garmin International</text>
+    </link>
+    <time>2018-10-05T09:21:31Z</time>
+  </metadata>
+  <trk>
+    <name>2018-10-05 17:21:26</name>
+    <extensions>
+      <gpxx:TrackExtension>
+        <gpxx:DisplayColor>Cyan</gpxx:DisplayColor>
+      </gpxx:TrackExtension>
+      <gpxtrkx:TrackStatsExtension>
+        <gpxtrkx:Distance>1033</gpxtrkx:Distance>
+        <gpxtrkx:TotalElapsedTime>996</gpxtrkx:TotalElapsedTime>
+        <gpxtrkx:MovingTime>870</gpxtrkx:MovingTime>
+        <gpxtrkx:StoppedTime>86</gpxtrkx:StoppedTime>
+        <gpxtrkx:MovingSpeed>1</gpxtrkx:MovingSpeed>
+        <gpxtrkx:MaxSpeed>2</gpxtrkx:MaxSpeed>
+        <gpxtrkx:MaxElevation>207</gpxtrkx:MaxElevation>
+        <gpxtrkx:MinElevation>189</gpxtrkx:MinElevation>
+        <gpxtrkx:Ascent>17</gpxtrkx:Ascent>
+        <gpxtrkx:Descent>5</gpxtrkx:Descent>
+        <gpxtrkx:AvgAscentRate>0</gpxtrkx:AvgAscentRate>
+        <gpxtrkx:MaxAscentRate>0</gpxtrkx:MaxAscentRate>
+        <gpxtrkx:AvgDescentRate>0</gpxtrkx:AvgDescentRate>
+        <gpxtrkx:MaxDescentRate>-0</gpxtrkx:MaxDescentRate>
+        </gpxtrkx:TrackStatsExtension>
+      </extensions>
+      <trkseg>
+        <trkpt lat=""25.0312615000"" lon=""121.3505846635"">
+        <ele>189.04</ele>
+        <time>2018-10-05T09:04:55Z</time>
+      </trkpt>
+      <trkpt lat=""25.0312520284"" lon=""121.3505897764"">
+        <ele>189.04</ele>
+        <time>2018-10-05T09:04:57Z</time>
+        </trkpt>
+      <trkpt lat=""25.0312457420"" lon=""121.3506018464"">
+        <ele>196.43</ele>
+        <time>2018-10-05T09:04:59Z</time>
+      </trkpt>
+      <trkpt lat=""25.0312426407"" lon=""121.3506035227"">
+        <ele>196.42</ele>
+        <time>2018-10-05T09:05:01Z</time>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>";
+
+            foreach (var rec in ChoXmlReader.LoadText(xml)
+                .WithXPath("./trk/trkseg/trkpt")
+                .WithField("lat")
+                .WithField("lon")
+                )
+                Console.WriteLine(rec.Dump());
+        }
+
+        static void XmlToJSON1()
+        {
+            string xml = @"<?xml version=""1.0"" encoding=""UTF-8""?>
+<ContrastDoseReport xmlns=""http://www.medrad.com/ContrastDoseReport"" xsi:schemaLocation=""MEDRAD_Injection_Report.XSD"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"">
+    <Patient id=""1"">
+        <Name>Mark</Name>
+        <Age>35</Age>
+        <Gender>Male</Gender>
+        <DateOfBirth>05-30-1980</DateOfBirth>
+        <Height units=""cm"">30</Height>
+        <Weight units=""kg"">10</Weight>
+    </Patient>
+    <Patient id=""2"">
+        <Name>Tom</Name>
+        <Age>21</Age>
+        <Gender>Female</Gender>
+        <DateOfBirth>01-01-2000</DateOfBirth>
+        <Height units=""cm"">10</Height>
+        <Weight units=""kg"">20</Weight>
+    </Patient>
+</ContrastDoseReport>";
+
+            string json = ChoJSONWriter.ToTextAll(ChoXmlReader.LoadText(xml),
+                new ChoJSONRecordConfiguration().Configure(c => c.EnableXmlAttributePrefix = true));
+            Console.WriteLine(json);
+
+            foreach (var rec in ChoJSONReader.LoadText(json))
+                Console.WriteLine(rec.Dump());
+
+            Console.WriteLine(ChoXmlWriter.ToTextAll(ChoJSONReader.LoadText(json), new ChoXmlRecordConfiguration().Configure(c => c.RootName = "ContrastDoseReport").Configure(c => c.NodeName = "Patient")));
+
+            return;
+
+            foreach (var rec in ChoXmlReader.LoadText(xml))
+            {
+                Console.WriteLine(rec.Dump());
+            }
+        }
+
+        public class Name
+        {
+            public string Part { get; set; }
+            public string Value
+            {
+                get; set;
+            }
+        }
+
+        public static void ComplexTest1()
+        {
+            string xml = @"<SalesLead>
+    <Customer>
+         <Name part=""first"">Foo</Name>
+         <Name part=""last"">Bar</Name>
+    </Customer>
+    <Customer>
+         <Name part=""first"">Foo1</Name>
+         <Name part=""last"">Bar1</Name>
+    </Customer>
+</SalesLead>";
+
+            using (var x = ChoXmlReader.LoadText(xml)
+                )
+            {
+                foreach (var rec in x.OfType<dynamic>().SelectMany(r =>
+                    ((object[])r.Names).OfType<dynamic>().Select(r1 =>
+                        new Name { Part = r1.part, Value = r1.GetText() }
+                    )
+                    )
+                    )
+                    Console.WriteLine(rec.Dump());
+            }
         }
 
         public class ManagedObject

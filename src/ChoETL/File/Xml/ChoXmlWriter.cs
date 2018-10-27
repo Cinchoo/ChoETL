@@ -368,6 +368,8 @@ namespace ChoETL
                 fnTrim = fieldName.NTrim();
                 if (Configuration.XmlRecordFieldConfigurations.Any(o => o.Name == fnTrim))
                     Configuration.XmlRecordFieldConfigurations.Remove(Configuration.XmlRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+                else
+                    Configuration.IgnoredFields.Add(fieldName);
             }
 
             return this;

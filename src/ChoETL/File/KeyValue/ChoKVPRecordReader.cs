@@ -678,6 +678,12 @@ namespace ChoETL
             ChoKVPRecordFieldConfiguration fieldConfig = Configuration.RecordFieldConfigurationsDict[key];
             PropertyInfo pi = null;
 
+            if (Configuration.IsDynamicObject)
+            {
+                if (Configuration.IgnoredFields.Contains(key))
+                    return true;
+            }
+
             try
             {
                 if (_propInit.ContainsKey(key))

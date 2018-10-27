@@ -340,6 +340,8 @@ namespace ChoETL
                 fnTrim = fieldName.NTrim();
                 if (Configuration.KVPRecordFieldConfigurations.Any(o => o.Name == fnTrim))
                     Configuration.KVPRecordFieldConfigurations.Remove(Configuration.KVPRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+                else
+                    Configuration.IgnoredFields.Add(fieldName);
             }
 
             return this;

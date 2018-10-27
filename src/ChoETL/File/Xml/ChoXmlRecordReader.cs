@@ -480,6 +480,12 @@ namespace ChoETL
                 ((ChoDynamicObject)rec).DynamicObjectName = node.Name.LocalName;
             foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
+                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                {
+                    if (Configuration.IgnoredFields.Contains(kvp.Key))
+                        continue;
+                }
+
                 key = kvp.Key;
                 isXmlAttribute = false;
                 fieldValue = null;

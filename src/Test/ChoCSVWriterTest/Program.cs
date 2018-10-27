@@ -389,10 +389,75 @@ namespace ChoCSVWriterTest
             Console.WriteLine(csv);
         }
 
+
+        static void SelectiveFieldPOCOTest()
+        {
+            List<EmployeeRecWithCurrency> objs = new List<EmployeeRecWithCurrency>();
+            EmployeeRecWithCurrency rec1 = new EmployeeRecWithCurrency();
+            rec1.Id = 10;
+            rec1.Name = "Mark";
+            rec1.Salary = new ChoCurrency(100000);
+            objs.Add(rec1);
+
+            EmployeeRecWithCurrency rec2 = new EmployeeRecWithCurrency();
+            rec2.Id = 200;
+            rec2.Name = "Lou";
+            rec2.Salary = new ChoCurrency(150000);
+            objs.Add(rec2);
+
+            StringBuilder msg = new StringBuilder();
+
+            string[] f = new string[] { "Id", "Name" };
+
+            using (var w = new ChoCSVWriter(msg)
+                .WithFields(f)
+                .WithFirstLineHeader()
+                )
+            {
+                w.Write(objs);
+            }
+
+            Console.WriteLine(msg.ToString());
+        }
+
+        public class EmployeeRecSimple
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+        }
+        [ChoCSVFileHeader()]
+        [ChoCSVRecordObject(",")]
+        public partial class EmployeeRecSimple1
+        {
+            [ChoCSVRecordField(1)] public int Id { get; set; }
+            [ChoCSVRecordField(2)] public string Name { get; set; }
+        }
+
+        static void QuotesIssue()
+        {
+            List<EmployeeRecSimple1> objs = new List<EmployeeRecSimple1>()
+            {
+                new EmployeeRecSimple1() { Id = 20, Name = "John Smith" },
+                new EmployeeRecSimple1() { Id = 21, Name = "Jack in ,Da Box" }
+            };
+            Console.WriteLine(ChoCSVWriter<EmployeeRecSimple1>.ToTextAll(objs));
+        }
+
+        static void QuotesIssue1()
+        {
+
+            List<EmployeeRecSimple> objs = new List<EmployeeRecSimple>()
+            {
+                new EmployeeRecSimple() { Id = 20, Name = "John Smith" },
+                new EmployeeRecSimple() { Id = 21, Name = @"Jack in ""Da Box" }
+            };
+            Console.WriteLine(ChoCSVWriter<EmployeeRecSimple>.ToTextAll(objs));
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            NestedObjects();
+            QuotesIssue();
             return;
 
             WriteSpecificColumns();

@@ -390,6 +390,12 @@ namespace ChoETL
 
             foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in GetOrderedKVP(config))
             {
+                if (config.IsDynamicObject)
+                {
+                    if (Configuration.IgnoredFields.Contains(kvp.Key))
+                        continue;
+                }
+
                 fieldConfig = kvp.Value;
                 fieldValue = null;
                 fieldText = String.Empty;

@@ -472,6 +472,12 @@ namespace ChoETL
             object rootRec = rec;
             foreach (KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
+                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                {
+                    if (Configuration.IgnoredFields.Contains(kvp.Key))
+                        continue;
+                }
+
                 fieldValue = null;
                 fieldConfig = kvp.Value;
                 if (Configuration.PIDict != null)

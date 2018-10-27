@@ -560,6 +560,12 @@ namespace ChoETL
             object rootRec = rec;
             foreach (KeyValuePair<string, ChoCSVRecordFieldConfiguration> kvp in Configuration.FCArray)
             {
+                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                {
+                    if (Configuration.IgnoredFields.Contains(kvp.Key))
+                        continue;
+                }
+
                 fieldValue = null;
                 fieldConfig = kvp.Value;
                 if (Configuration.PIDict != null)

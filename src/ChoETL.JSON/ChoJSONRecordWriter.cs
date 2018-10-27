@@ -390,6 +390,12 @@ namespace ChoETL
 
             foreach (KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
+                if (Configuration.IsDynamicObject)
+                {
+                    if (Configuration.IgnoredFields.Contains(kvp.Key))
+                        continue;
+                }
+
                 fieldConfig = kvp.Value;
                 fieldName = fieldConfig.FieldName;
                 fieldValue = null;

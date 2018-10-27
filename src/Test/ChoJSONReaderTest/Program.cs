@@ -800,11 +800,17 @@ namespace ChoJSONReaderTest
             Console.WriteLine(o.Dump());
         }
 
+        static void LoadTest1()
+        {
+            var x = new ChoJSONReader(@"C:\Users\nraj39\Downloads\ratings.json").First();
+            Console.WriteLine(x.Dump());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            Sample25Test();
+            LoadTest1();
         }
 
         static void TestCountToppings()

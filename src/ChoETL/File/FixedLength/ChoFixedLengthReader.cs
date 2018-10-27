@@ -425,6 +425,8 @@ namespace ChoETL
                 fnTrim = fieldName.NTrim();
                 if (Configuration.FixedLengthRecordFieldConfigurations.Any(o => o.Name == fnTrim))
                     Configuration.FixedLengthRecordFieldConfigurations.Remove(Configuration.FixedLengthRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+                else
+                    Configuration.IgnoredFields.Add(fieldName);
             }
 
             return this;

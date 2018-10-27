@@ -158,6 +158,7 @@ namespace ChoETL
             get;
             set;
         }
+
         public readonly dynamic Context = new ChoDynamicObject();
 
         internal bool IsComplexXPathUsed = true;

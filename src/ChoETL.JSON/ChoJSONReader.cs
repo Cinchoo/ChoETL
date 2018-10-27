@@ -408,6 +408,8 @@ namespace ChoETL
                 fnTrim = fieldName.NTrim();
                 if (Configuration.JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
                     Configuration.JSONRecordFieldConfigurations.Remove(Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+                else
+                    Configuration.IgnoredFields.Add(fieldName);
             }
 
             return this;
