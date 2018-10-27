@@ -590,6 +590,8 @@ namespace ChoETL
                         {
                             var xattribs = new XmlAttributes();
                             var xroot = new XmlRootAttribute(element.Name.LocalName); // type.Name);
+                            if (!NS.IsNullOrWhiteSpace())
+                                xroot.Namespace = NS;
                             xattribs.XmlRoot = xroot;
                             overrides = new XmlAttributeOverrides();
                             overrides.Add(type, xattribs);
@@ -1616,38 +1618,38 @@ namespace ChoETL
 
         private static CodeDomProvider _csharpProvider = Microsoft.CSharp.CSharpCodeProvider.CreateProvider("C#");
 
-		public static string ToValidVariableName(this string text)
-		{
-			if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
-				text = _csharpProvider.CreateValidIdentifier(text);
-			text = text.Replace("-", "_");
-			StringBuilder identifier = new StringBuilder(text);
-			if (Char.IsDigit(identifier[0]))
-				identifier = new StringBuilder("_" + identifier.ToString());
-			//else if (identifier[0] == '@')
-			//{
-			//    if (identifier.Length == 1)
-			//        throw new ApplicationException("Invalid identifier found.");
-			//    else if (Char.IsDigit(identifier[1]))
-			//    {
-			//        if (identifier.Length == 2)
-			//            throw new ApplicationException("Invalid identifier found.");
-			//        else
-			//            identifier[1] = '_';
-			//    }
-			//}
-			string final = Regex.Replace(identifier.ToString(), @"\s+", "_");
-			final = Regex.Replace(final, @"[^a-zA-Z0-9 -]", "_");
-			return final;
-			//if (!final.StartsWith("@"))
-			//return Regex.Replace(final, @"[^a-zA-Z0-9 -]", "_");
-			//else
-			//return "@" + Regex.Replace(final.Substring(1), @"[^a-zA-Z0-9 -]", "_");
-		}
-
-		public static string FixName(this string text)
+        public static string ToValidVariableName(this string text)
         {
-			return text;
+            if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
+                text = _csharpProvider.CreateValidIdentifier(text);
+            text = text.Replace("-", "_");
+            StringBuilder identifier = new StringBuilder(text);
+            if (Char.IsDigit(identifier[0]))
+                identifier = new StringBuilder("_" + identifier.ToString());
+            //else if (identifier[0] == '@')
+            //{
+            //    if (identifier.Length == 1)
+            //        throw new ApplicationException("Invalid identifier found.");
+            //    else if (Char.IsDigit(identifier[1]))
+            //    {
+            //        if (identifier.Length == 2)
+            //            throw new ApplicationException("Invalid identifier found.");
+            //        else
+            //            identifier[1] = '_';
+            //    }
+            //}
+            string final = Regex.Replace(identifier.ToString(), @"\s+", "_");
+            final = Regex.Replace(final, @"[^a-zA-Z0-9 -]", "_");
+            return final;
+            //if (!final.StartsWith("@"))
+            //return Regex.Replace(final, @"[^a-zA-Z0-9 -]", "_");
+            //else
+            //return "@" + Regex.Replace(final.Substring(1), @"[^a-zA-Z0-9 -]", "_");
+        }
+
+        public static string FixName(this string text)
+        {
+            return text;
         }
 
     }

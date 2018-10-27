@@ -89,13 +89,11 @@ namespace ChoXmlReaderTest
         public string Request_Type { get; set; }
     }
 
-    [XmlRoot(ElementName = "Admin", Namespace = "http://schemas.microsoft.com/office/infopath/2003/myXSD/2017-05-05T14:19:13")]
     public class MyAdmin
     {
         public MyRouting_Order Routing_Order { get; set; }
     }
 
-    [XmlRoot(ElementName = "Routing_Order", Namespace = "http://schemas.microsoft.com/office/infopath/2003/myXSD/2017-05-05T14:19:13")]
     public class MyRouting_Order
     {
         [XmlElement("Approver-1_Order")]
@@ -133,7 +131,7 @@ namespace ChoXmlReaderTest
 </my:myFields>";
 
 
-            foreach (var rec in ChoXmlReader< MyMyfields>.LoadText(xml)
+            foreach (var rec in ChoXmlReader<MyMyfields>.LoadText(xml)
                 .WithXPath("/my:myFields")
                 .WithXmlNamespace("my", "http://schemas.microsoft.com/office/infopath/2003/myXSD/2017-05-05T14:19:13")
                 //.IgnoreField("lang")
