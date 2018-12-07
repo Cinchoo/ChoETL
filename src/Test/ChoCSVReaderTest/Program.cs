@@ -1543,10 +1543,46 @@ v-dakash@catalysis.com,""HEY""? Tester, 12345789,""Catalysis"", LLC., Enterprise
                 Console.WriteLine(rec.Dump());
         }
 
+        public class EmployeeX
+        {
+            public string DepartmentPosition { get; set; }
+            public string ParentDepartmentPosition { get; set; }
+            public string JobTitle { get; set; }
+            public string Role { get; set; }
+            public string Location { get; set; }
+            public string NameLocation { get; set; }
+            public string EmployeeStatus { get; set; }
+        }
+
+        static void TestX()
+        {
+            string csv = @"50382018,50319368,eBusiness Manager,IT02,3350_FIB4,IT,2480
+50370383,50373053,CRM Manager,IT01,3200_FIB3,xyz,2480
+50320067,50341107,""VP, Business Information Officer"",IT03,3200_FI89,xyz,2480
+50299061,50350088,Project Expert, IT02,8118_FI09,abc,2480";
+
+            foreach (var rec in ChoCSVReader<EmployeeX>.LoadText(csv))
+                Console.WriteLine(rec.Dump());
+        }
+
+        static void Issue21()
+        {
+            string csv = @"Col1|Col2|Col3
+Col11|Col21|Col31
+Some1||23213
+Some2||234324";
+
+            foreach (var rec in ChoCSVReader.LoadText(csv)
+                .WithDelimiter("|")
+                .WithFirstLineHeader(true)
+                //.WithHeaderLineAt(2, false)
+                )
+                Console.WriteLine(rec.Dump());
+        }
         static void Main(string[] args)
         {
 
-            OddTest1();
+            Issue21();
             return;
 
             ColumnCountStrictTest();

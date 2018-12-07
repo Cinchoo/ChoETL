@@ -503,6 +503,8 @@ namespace ChoETL
                     {
                         if (Configuration.ColumnCountStrict)
                             throw new ChoParserException("No matching '{0}' field found.".FormatString(fieldConfig.FieldName));
+                        else
+                            continue;
                     }
                 }
 
@@ -624,7 +626,10 @@ namespace ChoETL
                     else
                     {
                         List<object> list = new List<object>();
-                        Type itemType = fieldConfig.FieldType.GetUnderlyingType(); //.GetItemType().GetUnderlyingType();
+                        Type itemType = fieldConfig.FieldType.GetUnderlyingType();
+                        
+                        //if (itemType.IsCollectionType())
+                        //    itemType = itemType.GetItemType().GetUnderlyingType();
 
                         if (fieldValue is JToken)
                         {
@@ -658,7 +663,9 @@ namespace ChoETL
                             itemType = fieldConfig.FieldType.GetUnderlyingType().GetItemType().GetUnderlyingType();
                             if (fieldConfig.FieldType.GetUnderlyingType().IsCollection())
                             {
-                                foreach (var ele in (JToken[])fieldValue)
+                                var isJArray = ((JToken[])fieldValue).Length == 1 && ((JToken[])fieldValue)[0] is JArray;
+                                var array = isJArray ? ((JArray)((JToken[])fieldValue)[0]).ToArray() : (JToken[])fieldValue;
+                                foreach (var ele in array)
                                 {
                                     object fv = ToObject(ele, itemType, fieldConfig.UseJSONSerialization);
                                     if (fieldConfig.ItemConverter != null)
@@ -1152,6 +1159,8 @@ namespace ChoETL
             IEnumerable<PropertyDescriptor> pds = null;
             if (ChoTypeDescriptor.GetProperties(type).Where(pd1 => pd1.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any()).Any())
                 pds = ChoTypeDescriptor.GetProperties(type).Where(pd1 => pd1.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any());
+            else if (ChoTypeDescriptor.GetProperties(type).Where(pd1 => pd1.Attributes.OfType<JsonPropertyAttribute>().Any()).Any())
+                pds = ChoTypeDescriptor.GetProperties(type).Where(pd1 => pd1.Attributes.OfType<JsonPropertyAttribute>().Any());
             else
                 pds = ChoTypeDescriptor.GetProperties(type);
 
@@ -1167,9 +1176,26 @@ namespace ChoETL
                 var fa = pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().FirstOrDefault();
                 if (fa != null)
                 {
+                    if (!fa.FieldName.IsNullOrWhiteSpace())
+                        jsonPropName = fa.FieldName;
                     if (!fa.JSONPath.IsNullOrWhiteSpace())
                         jsonPath = fa.JSONPath;
                     useJsonSerialization = fa.UseJSONSerializationInternal;
+                }
+                else
+                {
+                    var fa1 = pd.Attributes.OfType<JsonPropertyAttribute>().FirstOrDefault();
+                    if (fa1 != null)
+                    {
+                        if (!fa1.PropertyName.IsNullOrWhiteSpace())
+                            jsonPropName = fa1.PropertyName;
+                        var jp = pd.Attributes.OfType<ChoJSONPathAttribute>().FirstOrDefault();
+                        if (jp != null)
+                            jsonPath = jp.JSONPath;
+                        var us = pd.Attributes.OfType<ChoUseJSONSerializationAttribute>().FirstOrDefault();
+                        if (us != null)
+                            useJsonSerialization = true;
+                    }
                 }
                 if (useJsonSerialization == null)
                 {

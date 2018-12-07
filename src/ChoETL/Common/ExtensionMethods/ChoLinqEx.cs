@@ -16,60 +16,65 @@ namespace ChoETL
             return new HashSet<T>(source);
         }
 
-		public static string GetMemberName<TClass, TField>(this Expression<Func<TClass, TField>> field)
-		{
-			return (field.Body as MemberExpression ?? ((UnaryExpression)field.Body).Operand as MemberExpression).Member.Name;
-		}
+        public static string GetMemberName<T>(this Expression<Func<T, object>> field)
+        {
+            return (field.Body as MemberExpression ?? ((UnaryExpression)field.Body).Operand as MemberExpression).Member.Name;
+        }
 
-		public static string GetFullyQualifiedMemberName<TClass, TField>(this Expression<Func<TClass, TField>> field)
-		{
-			MemberExpression memberExp;
-			if (!TryFindMemberExpression(field.Body, out memberExp))
-				return string.Empty;
+        public static string GetMemberName<TClass, TField>(this Expression<Func<TClass, TField>> field)
+        {
+            return (field.Body as MemberExpression ?? ((UnaryExpression)field.Body).Operand as MemberExpression).Member.Name;
+        }
 
-			var memberNames = new Stack<string>();
-			do
-			{
-				memberNames.Push(memberExp.Member.Name);
-			}
-			while (TryFindMemberExpression(memberExp.Expression, out memberExp));
+        public static string GetFullyQualifiedMemberName<TClass, TField>(this Expression<Func<TClass, TField>> field)
+        {
+            MemberExpression memberExp;
+            if (!TryFindMemberExpression(field.Body, out memberExp))
+                return string.Empty;
 
-			return string.Join(".", memberNames.ToArray());
-		}
+            var memberNames = new Stack<string>();
+            do
+            {
+                memberNames.Push(memberExp.Member.Name);
+            }
+            while (TryFindMemberExpression(memberExp.Expression, out memberExp));
 
-		private static bool TryFindMemberExpression(Expression exp, out MemberExpression memberExp)
-		{
-			memberExp = exp as MemberExpression;
-			if (memberExp != null)
-			{
-				// heyo! that was easy enough
-				return true;
-			}
+            return string.Join(".", memberNames.ToArray());
+        }
 
-			// if the compiler created an automatic conversion,
-			// it'll look something like...
-			// obj => Convert(obj.Property) [e.g., int -> object]
-			// OR:
-			// obj => ConvertChecked(obj.Property) [e.g., int -> long]
-			// ...which are the cases checked in IsConversion
-			if (IsConversion(exp) && exp is UnaryExpression)
-			{
-				memberExp = ((UnaryExpression)exp).Operand as MemberExpression;
-				if (memberExp != null)
-				{
-					return true;
-				}
-			}
+        private static bool TryFindMemberExpression(Expression exp, out MemberExpression memberExp)
+        {
+            memberExp = exp as MemberExpression;
+            if (memberExp != null)
+            {
+                // heyo! that was easy enough
+                return true;
+            }
 
-			return false;
-		}
+            // if the compiler created an automatic conversion,
+            // it'll look something like...
+            // obj => Convert(obj.Property) [e.g., int -> object]
+            // OR:
+            // obj => ConvertChecked(obj.Property) [e.g., int -> long]
+            // ...which are the cases checked in IsConversion
+            if (IsConversion(exp) && exp is UnaryExpression)
+            {
+                memberExp = ((UnaryExpression)exp).Operand as MemberExpression;
+                if (memberExp != null)
+                {
+                    return true;
+                }
+            }
 
-		private static bool IsConversion(Expression exp)
-		{
-			return (
-				exp.NodeType == ExpressionType.Convert ||
-				exp.NodeType == ExpressionType.ConvertChecked
-			);
-		}
-	}
+            return false;
+        }
+
+        private static bool IsConversion(Expression exp)
+        {
+            return (
+                exp.NodeType == ExpressionType.Convert ||
+                exp.NodeType == ExpressionType.ConvertChecked
+            );
+        }
+    }
 }

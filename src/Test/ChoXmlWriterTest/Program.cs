@@ -34,6 +34,14 @@ namespace ChoXmlWriterTest
         static void Main(string[] args)
         {
             CustomStringArrayTest();
+
+            using (var file = new FileStream("t.json", FileMode.Append))
+            {
+                using (var w = new ChoJSONWriter(file))
+                {
+
+                }
+            }
         }
 
         static void CustomStringArrayTest()

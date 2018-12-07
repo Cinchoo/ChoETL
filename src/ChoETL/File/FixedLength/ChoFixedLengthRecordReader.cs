@@ -173,24 +173,24 @@ namespace ChoETL
                         pair = new Tuple<long, string>(pair.Item1, ((IChoSanitizableReader)Reader).RaiseSanitizeLine(pair.Item1, pair.Item2));
                     }
 
-                    if (!_configCheckDone)
-                    {
-                        if (Configuration.SupportsMultiRecordTypes && Configuration.RecordSelector != null && !Configuration.RecordTypeMapped)
-                        {
-                        }
-                        else
-                            Configuration.Validate(pair); // GetHeaders(pair.Item2));
-                        var dict = recFieldTypes = Configuration.FixedLengthRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
-                        RaiseMembersDiscovered(dict);
-                        Configuration.UpdateFieldTypesIfAny(dict);
-                        _configCheckDone = true;
-                    }
-
                     //LoadHeader if any
                     if ((Configuration.FileHeaderConfiguration.HasHeaderRecord
                         || Configuration.FileHeaderConfiguration.HeaderLineAt > 0)
                         && !_headerFound)
                     {
+                        if (!_configCheckDone)
+                        {
+                            if (Configuration.SupportsMultiRecordTypes && Configuration.RecordSelector != null && !Configuration.RecordTypeMapped)
+                            {
+                            }
+                            else
+                                Configuration.Validate(GetHeaders(pair.Item2));
+                            var dict = recFieldTypes = Configuration.FixedLengthRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
+                            RaiseMembersDiscovered(dict);
+                            Configuration.UpdateFieldTypesIfAny(dict);
+                            _configCheckDone = true;
+                        }
+
                         if (Configuration.FileHeaderConfiguration.IgnoreHeader)
                         {
                             if (TraceSwitch.TraceVerbose)
@@ -202,11 +202,26 @@ namespace ChoETL
                                 ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Loading header line at [{0}]...".FormatString(pair.Item1));
 
                             headerLineLoaded = true;
-                            LoadHeaderLine(pair);
                         }
+                        _headerFound = true;
+                        LoadHeaderLine(pair);
                         return new Tuple<bool?, Tuple<long, string>>(true, pair);
                     }
-
+                    else
+                    {
+                        if (!_configCheckDone)
+                        {
+                            if (Configuration.SupportsMultiRecordTypes && Configuration.RecordSelector != null && !Configuration.RecordTypeMapped)
+                            {
+                            }
+                            else
+                                Configuration.Validate(GetHeaders(pair.Item2));
+                            var dict = recFieldTypes = Configuration.FixedLengthRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
+                            RaiseMembersDiscovered(dict);
+                            Configuration.UpdateFieldTypesIfAny(dict);
+                            _configCheckDone = true;
+                        }
+                    }
                     return new Tuple<bool?, Tuple<long, string>>(false, pair);
                 }))
             {
@@ -646,13 +661,13 @@ namespace ChoETL
             return fieldValue;
         }
 
-        private string[] GetHeaders(string line)
+        private string[] GetHeaders(string line, bool force = false)
         {
             string[] headers = null;
-            if (Configuration.FileHeaderConfiguration.HasHeaderRecord && !Configuration.FileHeaderConfiguration.IgnoreHeader)
+            if (force || (Configuration.FileHeaderConfiguration.HasHeaderRecord && !Configuration.FileHeaderConfiguration.IgnoreHeader))
             {
                 //Fields are specified, load them
-                if (Configuration.RecordFieldConfigurationsDict.Count > 0)
+                if (Configuration.RecordFieldConfigurationsDict != null && Configuration.RecordFieldConfigurationsDict.Count > 0)
                 {
                     List<string> headersList = new List<string>();
                     string fieldValue = null;
@@ -730,9 +745,9 @@ namespace ChoETL
             string line = pair.Item2;
 
             //Validate header
-            _fieldNames = GetHeaders(line);
+            _fieldNames = GetHeaders(line, true);
             
-            if (_fieldNames.Length == 0)
+            if (_fieldNames == null || _fieldNames.Length == 0)
                 throw new ChoParserException("No headers found.");
 
             //Check any header value empty

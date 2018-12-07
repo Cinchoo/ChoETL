@@ -58,6 +58,13 @@ namespace ChoETL
             set;
         }
 
+        internal bool? QuoteAllInternal;
+        public bool QuoteAll
+        {
+            get { throw new NotSupportedException(); }
+            set { QuoteAllInternal = value; }
+        }
+
         public ChoFileHeaderAttribute()
         {
             IgnoreCase = true;

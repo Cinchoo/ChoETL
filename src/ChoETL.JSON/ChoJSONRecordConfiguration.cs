@@ -18,6 +18,8 @@ namespace ChoETL
     [DataContract]
     public class ChoJSONRecordConfiguration : ChoFileRecordConfiguration
     {
+        internal Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>> JSONRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>>();
+
         [DataMember]
         public List<ChoJSONRecordFieldConfiguration> JSONRecordFieldConfigurations
         {
@@ -151,6 +153,33 @@ namespace ChoETL
             }
         }
 
+        internal void Add(Type rt, ChoJSONRecordFieldConfiguration rc)
+        {
+            if (rt == null || rc == null)
+                return;
+
+            if (!JSONRecordFieldConfigurationsForType.ContainsKey(rt))
+                JSONRecordFieldConfigurationsForType.Add(rt, new Dictionary<string, ChoJSONRecordFieldConfiguration>(StringComparer.InvariantCultureIgnoreCase));
+
+            if (JSONRecordFieldConfigurationsForType[rt].ContainsKey(rc.Name))
+                JSONRecordFieldConfigurationsForType[rt][rc.Name] = rc;
+            else
+                JSONRecordFieldConfigurationsForType[rt].Add(rc.Name, rc);
+        }
+
+        internal bool ContainsRecordConfigForType(Type rt)
+        {
+            return JSONRecordFieldConfigurationsForType.ContainsKey(rt);
+        }
+
+        internal ChoJSONRecordFieldConfiguration[] GetRecordConfigForType(Type rt)
+        {
+            if (ContainsRecordConfigForType(rt))
+                return JSONRecordFieldConfigurationsForType[rt].Values.ToArray();
+            else
+                return null;
+        }
+
         protected override void Init(Type recordType)
         {
             base.Init(recordType);
@@ -259,6 +288,9 @@ namespace ChoETL
                             ChoUseJSONSerializationAttribute sAttr = pd.Attributes.OfType<ChoUseJSONSerializationAttribute>().FirstOrDefault();
                             if (sAttr != null)
                                 obj.UseJSONSerialization = true;
+                            ChoJSONPathAttribute jpAttr = pd.Attributes.OfType<ChoJSONPathAttribute>().FirstOrDefault();
+                            if (jpAttr != null)
+                                obj.JSONPath = jpAttr.JSONPath;
 
                             JsonPropertyAttribute jAttr = pd.Attributes.OfType<JsonPropertyAttribute>().FirstOrDefault();
                             if (jAttr != null && !jAttr.PropertyName.IsNullOrWhiteSpace())

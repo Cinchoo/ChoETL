@@ -35,7 +35,11 @@ namespace ChoETL
             get;
             set;
         }
-
+        public bool? QuoteAllHeaders
+        {
+            get;
+            set;
+        }
         private bool _ignoreCase = true;
         [DataMember]
         public bool IgnoreCase
@@ -108,6 +112,7 @@ namespace ChoETL
                 HeaderLineAt = recObjAttr.HeaderLineAt;
                 FillChar = recObjAttr.FillCharInternal;
                 Justification = recObjAttr.JustificationInternal;
+                QuoteAllHeaders = recObjAttr.QuoteAllInternal;
                 if (recObjAttr.TrimOptionInternal != null) TrimOption = recObjAttr.TrimOptionInternal.Value;
                 Truncate = recObjAttr.TruncateInternal;
             }

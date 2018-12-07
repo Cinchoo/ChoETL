@@ -806,11 +806,93 @@ namespace ChoJSONReaderTest
             Console.WriteLine(x.Dump());
         }
 
+        public class Event
+        {
+            //[ChoJSONRecordField(FieldName = "event_id")]
+            //[JsonProperty("event_id")]
+            public int EventId { get; set; }
+            //[JsonProperty("event_name")]
+            public string EventName { get; set; }
+            //[JsonProperty("start_date")]
+            public DateTime StartDate { get; set; }
+            //[JsonProperty("end_date")]
+            public DateTime EndDate { get; set; }
+            //[ChoJSONRecordField(JSONPath = "$..guests[*]")]
+            //[ChoJSONPath("$..guests[*]")]
+            //[ChoUseJSONSerialization()]
+            public List<Guest> Guests { get; set; }
+        }
+
+        public class Guest
+        {
+            //[JsonProperty("guest_id")]
+            public string GuestId { get; set; }
+            //[JsonProperty("first_name")]
+            public string FirstName { get; set; }
+            //[JsonProperty("last_name")]
+            public string LastName { get; set; }
+            //[JsonProperty("telephone")]
+            public string Email { get; set; }
+        }
+
+        static void Test3()
+        {
+            string json = @"{
+    ""event_id"": 123,
+    ""event_name"": ""event1"",
+    ""start_date"": ""2018-11-30"",
+    ""end_date"": ""2018-12-04"",
+    ""participants"": {
+        ""guests"": [
+            {
+                ""guest_id"": 143,
+                ""first_name"": ""John"",
+                ""last_name"": ""Smith"",               
+            },
+            {
+                ""guest_id"": 189,
+                ""first_name"": ""Bob"",
+                ""last_name"": ""Duke"",    
+            }
+        ]
+    }
+}";
+
+            using (var p = ChoJSONReader<Event>.LoadText(json)
+                .WithField(m => m.EventId, fieldName: "event_id")
+                .WithField(m => m.Guests, jsonPath: "$..guests")
+                .WithFieldForType<Guest>(m => m.GuestId)
+                )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            LoadTest1();
+            Test3();
+        }
+
+        static void PartialJSONFileTest()
+        {
+            string json = @"{
+    ""property1"": 1,
+    ""property2"": 2,
+    ""property3"": 3,
+    ""property4"": 4,
+    ""array"": {
+        ""amount"": 9999,
+        ""array"": [
+}";
+            using (var rec = ChoJSONReader.LoadText(json)
+                .Configure(c => c.ErrorMode = ChoErrorMode.IgnoreAndContinue)
+                )
+            {
+                Console.WriteLine(rec.Dump());
+            }
         }
 
         static void TestCountToppings()

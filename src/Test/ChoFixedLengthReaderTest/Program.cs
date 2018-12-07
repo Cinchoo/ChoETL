@@ -209,10 +209,74 @@ namespace ChoFixedLengthReaderTest
 
             Console.WriteLine(sb.ToString());
         }
+        public class AABillingDetailRecord : AABillingRecord
+        {
+            [ChoFixedLengthRecordField(0, 10)]
+            public int ClientID { get; set; }
+            [ChoFixedLengthRecordField(10, 15)]
+            public string ClientName { get; set; }
+        }
+
+        public class Person
+        {
+            [ChoFixedLengthRecordField(0, 9)]
+            public String Name { get; set; }
+
+            [ChoFixedLengthRecordField(9, 13)]
+            public String Surname { get; set; }
+
+            [ChoFixedLengthRecordField(22, 6)]
+            public String Gender { get; set; }
+
+            [ChoFixedLengthRecordField(28, 2)]
+            public Int32 OrderNum { get; set; }
+
+            [ChoFixedLengthRecordField(30, 10, FormatText = "dd-MM-yyyy")]
+            public DateTime BirthDate { get; set; }
+        }
+
+        static void Test1()
+        {
+            string txt = @"Filip    Malýn        Male  1218-02-1994
+Božena   Němcová      Female1804-02-1820
+Jan      Žižka        Male  0719-09-1360
+Che      Guevara      Male  2714-06-1928
+AntoinedeSaint-ExupéryMale  1529-06-1900";
+
+            foreach (var rec in ChoFixedLengthReader<Person>.LoadText(txt))
+                Console.WriteLine(rec.Dump());
+
+        }
+
+        public class Emp1
+        {
+            [ChoFixedLengthRecordField(0, 5)]
+            public String ID { get; set; }
+
+            [ChoFixedLengthRecordField(5, 10)]
+            public String Name1 { get; set; }
+        }
+
+        static void Test2()
+        {
+            string txt = @"ID   Name      
+1    Mark      
+2    Tom       ";
+
+            foreach (var rec in ChoFixedLengthReader<Emp1>.LoadText(txt)
+                //.WithRecordLength(15)
+                //.WithField("ID", startIndex: 0, size: 5)
+                //.WithField("Name1", startIndex: 5, size: 10)
+                .WithFirstLineHeader(true)
+                //.WithHeaderLineAt(2, false)
+                )
+                Console.WriteLine(rec.Dump());
+
+        }
 
         static void Main(string[] args)
         {
-            NestedObjectTest();
+            Test2();
             return;
 
             AABillingTest();

@@ -28,7 +28,9 @@ namespace ChoCSVWriterTest
         }
         static void CSVWithQuotes()
         {
-            using (var writer = new ChoCSVWriter<CustomType>("CSVWithQuotes.csv").WithFirstLineHeader()
+            StringBuilder msg = new StringBuilder();
+            using (var writer = new ChoCSVWriter<CustomType>(msg).WithFirstLineHeader()
+                .Configure(c => c.FileHeaderConfiguration.QuoteAllHeaders = true)
                 .Configure(c => c.QuoteAllFields = true)
                 .Configure(c => c.Culture = new CultureInfo("en-CA"))
                 )
@@ -37,6 +39,7 @@ namespace ChoCSVWriterTest
                 writer.Write(x1);
             }
 
+            Console.WriteLine(msg.ToString());
         }
 
         static void IntArrayTest()
@@ -457,7 +460,7 @@ namespace ChoCSVWriterTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            QuotesIssue();
+            CSVWithQuotes();
             return;
 
             WriteSpecificColumns();

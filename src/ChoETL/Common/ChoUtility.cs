@@ -1365,6 +1365,26 @@ namespace ChoETL
             }
         }
 
+        public static bool IsCollectionType(this Type type)
+        {
+            if (type == null)
+                throw new ArgumentNullException("type");
+            if (type.IsArray)
+                return true;
+
+            foreach (Type @interface in type.GetInterfaces())
+            {
+                if (@interface.IsGenericType)
+                {
+                    if (@interface.GetGenericTypeDefinition() == typeof(ICollection<>) && type.GetGenericArguments().Length > 0)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         public static Type GetItemType(this Type type)
         {
             if (type == null)

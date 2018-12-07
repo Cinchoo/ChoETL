@@ -425,6 +425,16 @@ namespace ChoETL
             return this;
         }
 
+        //public ChoJSONReader<T> WithFields<TClass, TField>(params Expression<Func<TClass, TField>>[] fields)
+        //{
+        //    if (fields != null)
+        //    {
+        //        foreach (var field in fields)
+        //            return WithField<TClass>(field);
+        //    }
+        //    return this;
+        //}
+
         public ChoJSONReader<T> WithFields(params string[] fieldsNames)
         {
             string fnTrim = null;
@@ -467,17 +477,41 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONReader<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoJSONRecordFieldConfigurationMap> setup)
-        {
-            Configuration.MapRecordField(field.GetMemberName(), setup);
-            return this;
-        }
+        //public ChoJSONReader<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoJSONRecordFieldConfigurationMap> setup)
+        //{
+        //    Configuration.MapRecordField(field.GetMemberName(), setup);
+        //    return this;
+        //}
+
+        //public ChoJSONReader<T> WithField<TClass, TField>(Expression<Func<TClass, TField>> field, Action<ChoJSONRecordFieldConfigurationMap> setup)
+        //{
+        //    Configuration.MapRecordField(field.GetMemberName(), setup);
+        //    return this;
+        //}
 
         public ChoJSONReader<T> WithField(string name, Action<ChoJSONRecordFieldConfigurationMap> mapper)
         {
             if (!name.IsNullOrWhiteSpace())
                 Configuration.MapRecordField(name, mapper);
             return this;
+        }
+
+        public ChoJSONReader<T> WithFieldForType<TClass>(Expression<Func<TClass, object>> field,
+            string jsonPath = null, Type fieldType = null,
+            ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
+            bool isJSONAttribute = false, string fieldName = null,
+            Func<object, object> valueConverter = null,
+            Func<object, object> itemConverter = null,
+            Func<object, object> customSerializer = null,
+            object defaultValue = null, object fallbackValue = null, string formatText = null,
+            string nullValue = null)
+            where TClass : class
+        {
+            if (field == null)
+                return this;
+
+            return WithField(field.GetMemberName(), jsonPath, fieldType, fieldValueTrimOption, isJSONAttribute, fieldName, valueConverter, itemConverter,
+                customSerializer, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, true, nullValue, typeof(TClass));
         }
 
         public ChoJSONReader<T> WithField<TField>(Expression<Func<T, TField>> field, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null,
@@ -508,7 +542,8 @@ namespace ChoETL
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null,
-            string formatText = null, bool isArray = true, string nullValue = null)
+            string formatText = null, bool isArray = true, string nullValue = null,
+            Type recordType = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -550,7 +585,11 @@ namespace ChoETL
                 }
                 else
                 {
-                    pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
+                    if (recordType == null)
+                        pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
+                    else
+                        pd = ChoTypeDescriptor.GetNestedProperty(recordType, fullyQualifiedMemberName);
+
                     nfc.PropertyDescriptor = pd;
                     nfc.DeclaringMember = fullyQualifiedMemberName;
                 }
@@ -560,7 +599,10 @@ namespace ChoETL
                         nfc.FieldType = pd.PropertyType;
                 }
 
-                Configuration.JSONRecordFieldConfigurations.Add(nfc);
+                if (recordType == null)
+                    Configuration.JSONRecordFieldConfigurations.Add(nfc);
+                else
+                    Configuration.Add(recordType, nfc);
             }
 
             return this;
