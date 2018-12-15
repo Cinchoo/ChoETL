@@ -2354,9 +2354,13 @@
                     types.Add(type);
                 }
             }
+            catch (ReflectionTypeLoadException ex)
+            {
+                // do nothing 
+            }
             catch (Exception ex)
             {
-                ChoETLLog.Error(ex.ToString());
+                ChoETLLog.Info(ex.ToString());
             }
         }
         #endregion GetTypes (By Attribute) Overloads

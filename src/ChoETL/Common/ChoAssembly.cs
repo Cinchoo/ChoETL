@@ -133,20 +133,29 @@ namespace ChoETL
                     return String.Empty;
                 }).ToArray();
 
-            var referencedPaths = Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll");
-            var toLoad = referencedPaths.Where(r => !loadedPaths.Contains(r, StringComparer.InvariantCultureIgnoreCase)).ToList();
-            toLoad.ForEach(path =>
+            if (ChoETLFrxBootstrap.EnableLoadingReferencedAssemblies)
             {
-                try
+                var referencedPaths = Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll");
+                var toLoad = referencedPaths.Where(r => !loadedPaths.Contains(r, StringComparer.InvariantCultureIgnoreCase)).ToList();
+                toLoad.ForEach(path =>
                 {
-                    loadedAssemblies.Add(AppDomain.CurrentDomain.Load(AssemblyName.GetAssemblyName(path)));
-                }
-                catch
-                {
+                    try
+                    {
+                        if (ChoETLFrxBootstrap.IgnoreLoadingAssemblies.Contains(path)
+                            || ChoETLFrxBootstrap.IgnoreLoadingAssemblies.Contains(Path.GetFileName(path)))
+                        {
 
+                        }
+                        else
+                            loadedAssemblies.Add(AppDomain.CurrentDomain.Load(AssemblyName.GetAssemblyName(path)));
+                    }
+                    catch
+                    {
+
+                    }
                 }
+                );
             }
-            );
         }
 
         private static void DiscoverNLoadAssemblies(Assembly assembly, List<Assembly> assemblies)

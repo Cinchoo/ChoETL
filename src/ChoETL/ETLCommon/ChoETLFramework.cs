@@ -117,6 +117,9 @@ namespace ChoETL
             }
         }
 
+        public static bool EnableLoadingReferencedAssemblies { get; set; }
+        public static readonly HashSet<string> IgnoreLoadingAssemblies = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
         public static Configuration Configuration { get; set; }
     }
 
