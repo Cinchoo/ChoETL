@@ -144,6 +144,7 @@ namespace ChoETL
             return Split(text, value, ChoStringSplitOptions.All);
         }
 
+#if !NETSTANDARD2_0
         /// <summary>
         /// Split the string into multiple strings by the Separators.
         /// </summary>
@@ -163,7 +164,7 @@ namespace ChoETL
             {
                 fixed (char* lpText = sText)
                 {
-                    #region Fast array estimatation
+        #region Fast array estimatation
 
                     char* lpCurrent = lpText;
                     int nEstimatedSize = 0;
@@ -181,9 +182,9 @@ namespace ChoETL
                     nEstimatedSize++; // Add EOL char(s)
                     string[] oEstimatedTokens = new string[nEstimatedSize];
 
-                    #endregion
+        #endregion
 
-                    #region Parsing
+        #region Parsing
 
                     char[] oBuffer = new char[sText.Length];
                     int nIndex = 0;
@@ -251,7 +252,7 @@ namespace ChoETL
                         Array.Copy(oEstimatedTokens, 0, oTokens, 0, nTokens);
                     }
 
-                    #endregion
+        #endregion
                 }
             }
 
@@ -259,7 +260,7 @@ namespace ChoETL
 
             return oTokens;
         }
-
+#endif
         public static string[] Split(this string text, string value, ChoStringSplitOptions stringSplitOptions, char quoteChar = '\0')
         {
             return Split(text, (object)value, stringSplitOptions, quoteChar);
@@ -285,9 +286,10 @@ namespace ChoETL
                 else
                     throw new NotSupportedException();
             }
+#if !NETSTANDARD2_0
             else if (separators is char[] && ((char[])separators).Length == 1)
                 return text.FastSplit(((char[])separators)[0], quoteChar);
-
+#endif
             List<string> splitStrings = new List<string>();
 
             if (separators is char[] && Array.IndexOf(((char[])separators), quoteChar) >= 0)
@@ -310,7 +312,7 @@ namespace ChoETL
                     /*&& i + 1 < text.Length && Contains(text, ++i, separators)*/)
                 //hasChar = true;
                 {
-                i++;
+                    i++;
                 }
                 else if (Contains(text, i, separators) &&
                     ((quotes > 0 && quotes % 2 == 0) || (singleQuotes > 0 && singleQuotes % 2 == 0))
@@ -337,16 +339,16 @@ namespace ChoETL
                         //    splitStrings.Add(subString);
                         //else
                         //{
-                            word = NormalizeString(subString, quoteChar);
-                            if (String.IsNullOrEmpty(word))
-                            {
-                                if (stringSplitOptions != ChoStringSplitOptions.RemoveEmptyEntries)
-                                    splitStrings.Add(word);
-                            }
-                            else
+                        word = NormalizeString(subString, quoteChar);
+                        if (String.IsNullOrEmpty(word))
+                        {
+                            if (stringSplitOptions != ChoStringSplitOptions.RemoveEmptyEntries)
                                 splitStrings.Add(word);
+                        }
+                        else
+                            splitStrings.Add(word);
                         //}
-                        i = i + len ;
+                        i = i + len;
 
                     }
 
@@ -356,7 +358,7 @@ namespace ChoETL
             }
 
             if (offset <= text.Length)
-                splitStrings.Add(hasChar ? NormalizeString(text.Substring(offset).Replace("\\", String.Empty), quoteChar) : 
+                splitStrings.Add(hasChar ? NormalizeString(text.Substring(offset).Replace("\\", String.Empty), quoteChar) :
                     NormalizeString(text.Substring(offset), quoteChar));
 
             return splitStrings.ToArray();
@@ -856,11 +858,11 @@ namespace ChoETL
         {
             CheckTypeIsNotNull(type);
             type = type.GetUnderlyingType();
-            return type.IsPrimitive 
-                || typeof(string) == type 
-                || type.IsEnum 
-                || typeof(DateTime) == type 
-                || typeof(BigInteger) == type 
+            return type.IsPrimitive
+                || typeof(string) == type
+                || type.IsEnum
+                || typeof(DateTime) == type
+                || typeof(BigInteger) == type
                 || typeof(ChoCurrency) == type
                 || typeof(Decimal) == type
                 || typeof(ChoCDATA) == type

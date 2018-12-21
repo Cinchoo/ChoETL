@@ -5,7 +5,9 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+#if !NETSTANDARD2_0
 using System.Windows.Data;
+#endif
 
 namespace ChoETL
 {
@@ -118,8 +120,10 @@ namespace ChoETL
                             if (typeConverter.CanConvertFrom(type))
                                 value = typeConverter.ConvertFrom((ITypeDescriptorContext)null, culture, value);
                         }
+#if !NETSTANDARD2_0
                         else if (obj2 is IValueConverter)
                             value = ((IValueConverter)obj2).Convert(value, targetType, (object)objArray, culture);
+#endif
                         else if (obj2 is IChoValueConverter)
                             value = ((IChoValueConverter)obj2).Convert(value, targetType, (object)objArray, culture);
                     }
@@ -347,8 +351,10 @@ namespace ChoETL
                             if (typeConverter.CanConvertTo(targetType))
                                 value = typeConverter.ConvertTo((ITypeDescriptorContext)null, culture, value, targetType);
                         }
+#if !NETSTANDARD2_0
                         else if (obj2 is IValueConverter)
                             value = ((IValueConverter)obj2).ConvertBack(value, targetType, (object)objArray, culture);
+#endif
                         else if (obj2 is IChoValueConverter)
                             value = ((IChoValueConverter)obj2).ConvertBack(value, targetType, (object)objArray, culture);
                     }

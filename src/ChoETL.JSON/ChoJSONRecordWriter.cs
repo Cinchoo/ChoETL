@@ -568,23 +568,30 @@ namespace ChoETL
                 else
                 {
                     Type ft = fieldValue == null ? typeof(object) : fieldValue.GetType();
-                    if (fieldValue == null)
+                    if (fieldConfig.IgnoreFieldValue(fieldValue))
+                        fieldText = null;
+                    else if (fieldValue == null)
                     {
-                        if (fieldConfig.FieldType == null || fieldConfig.FieldType == typeof(object))
-                        {
-                            if (fieldConfig.NullValue == null)
-                                fieldText = !fieldConfig.IsArray ? "null" : "[]";
-                            else
-                                fieldText = fieldConfig.NullValue;
-                        }
-                        else if (Configuration.NullValueHandling == ChoNullValueHandling.Ignore)
+                        //if (fieldConfig.FieldType == null || fieldConfig.FieldType == typeof(object))
+                        //{
+                        //    if (fieldConfig.NullValue == null)
+                        //        fieldText = !fieldConfig.IsArray ? "null" : "[]";
+                        //    else
+                        //        fieldText = fieldConfig.NullValue;
+                        //}
+                        if (Configuration.NullValueHandling == ChoNullValueHandling.Ignore)
                             fieldText = null;
                         else if (Configuration.NullValueHandling == ChoNullValueHandling.Default)
                             fieldText = JsonConvert.SerializeObject(ChoActivator.CreateInstance(fieldConfig.FieldType));
                         else
                         {
                             if (fieldConfig.NullValue == null)
-                                fieldText = !typeof(IList).IsAssignableFrom(fieldConfig.FieldType) ? "null" : "[]";
+                            {
+                                if (fieldConfig.FieldType == null || fieldConfig.FieldType == typeof(object))
+                                    fieldText = !fieldConfig.IsArray ? "null" : "[]";
+                                else
+                                    fieldText = !typeof(IList).IsAssignableFrom(fieldConfig.FieldType) ? "null" : "[]";
+                            }
                             else
                                 fieldText = fieldConfig.NullValue;
                         }
@@ -620,9 +627,9 @@ namespace ChoETL
                                 Configuration.Formatting == Formatting.Indented ? SerializeObject(fieldValue, fieldConfig.UseJSONSerialization).Indent(1, " ") : SerializeObject(fieldValue, fieldConfig.UseJSONSerialization),
                                 Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
                         }
+                        isFirst = false;
                     }
                 }
-                isFirst = false;
             }
             msg.AppendFormat("{0}}}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
             recText = Configuration.IgnoreNodeName ? msg.ToString().Unindent(1, " ") : msg.ToString();

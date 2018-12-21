@@ -92,7 +92,37 @@ public class ToTextConverter : IChoValueConverter
 
         static void Main(string[] args)
         {
-            ListTest();
+            CSVToJSON1();
+        }
+
+        static void CSVToJSON1()
+        {
+            string csv = @"""""|""Rep Employee Name""|""Ship To Customer Number""|""""|""Ship To Customer Name""|""Patient Last Name""|""Patient First Name""|""Patient Location""|""""|""""|""""|""""|""Serial Number""|""Product Description -Used""
+"""" | ""CHRISTMAN, AMY"" | ""580788"" | ""4543"" | ""dfgfdgfdgdfgdfsgfdgdfg"" | """" | """" | """" | ""6025"" | ""5/13/2002 12:45:00 PM"" | ""5/13/2002 2:59:00 PM"" | ""7/2/2002 10:15:44 AM"" | """" | ""VAC""
+""34534534634"" | ""NAGORNY, WILLIAM"" | ""3453"" | ""363463"" | ""345435435"" | """" | """" | """" | ""6079"" | ""5/15/2002 7:39:51 AM"" | ""3/20/2002 11:00:00 AM"" | ""9/25/2002 8:18:32 AM"" | """" | ""VAC""
+""34634643634"" | ""MOORE, NICHOLAS (NICHO"" | ""654287"" | ""98188"" | ""asdfdsfdfasasdf"" | """" | """" | """" | ""6007"" | ""5/31/2002 2:45:16 PM"" | ""5/31/2002 3:51:00 PM"" | ""9/10/2002 10:51:55 AM"" | """" | ""VAC""";
+
+            StringBuilder json = new StringBuilder();   
+            using (var p = ChoCSVReader.LoadText(csv)
+                .WithDelimiter("|")
+                .WithFirstLineHeader()
+                .Configure(c => c.FileHeaderConfiguration.IgnoreColumnsWithEmptyHeader = true)
+                .Configure(c => c.QuoteAllFields = true)
+                //.Configure(c => c.NullValue = "")
+                )
+            {
+                //foreach (var rec in p)
+                //    Console.WriteLine(rec.Dump());
+                using (var w = new ChoJSONWriter(json)
+                    .Configure(c => c.IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Empty)
+                    //.Configure(c => c.NullValueHandling = ChoNullValueHandling.Ignore)
+                    )
+                {
+                    w.Write(p);
+                }
+            }
+
+            Console.WriteLine(json.ToString());
         }
 
         public class data

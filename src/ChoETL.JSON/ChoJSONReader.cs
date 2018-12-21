@@ -552,6 +552,8 @@ namespace ChoETL
                     ClearFields();
                     Configuration.MapRecordFields(Configuration.RecordType);
                 }
+                if (recordType != null)
+                    Configuration.MapRecordFieldsForType(recordType);
 
                 string fnTrim = name.NTrim();
                 ChoJSONRecordFieldConfiguration fc = null;
@@ -561,6 +563,8 @@ namespace ChoETL
                     fc = Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
                     Configuration.JSONRecordFieldConfigurations.Remove(fc);
                 }
+                else if (recordType != null)
+                    pd = ChoTypeDescriptor.GetNestedProperty(recordType, fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
                 else
                     pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
 

@@ -40,7 +40,11 @@ namespace ChoETL
         public Type CreateDynamicType<T>(string name, Dictionary<string, Type> properties, string[] keys = null)
         {
             var tb = CreateDynamicTypeBuilder<T>(name, properties, keys);
+#if !NETSTANDARD2_0
             return tb.CreateType();
+#else
+            return tb.CreateTypeInfo();
+#endif
         }
 
         /// <summary>
@@ -53,8 +57,15 @@ namespace ChoETL
         public TypeBuilder CreateDynamicTypeBuilder<T>(string name, Dictionary<string, Type> properties, string[] keys = null)
         {
             if (_assemblyBuilder == null)
+            {
+#if !NETSTANDARD2_0
                 _assemblyBuilder = _appDomain.DefineDynamicAssembly(new AssemblyName(_assemblyName),
                     AssemblyBuilderAccess.RunAndSave);
+#else
+                _assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(_assemblyName),
+                    AssemblyBuilderAccess.Run);
+#endif
+            }
             //vital to ensure the namespace of the assembly is the same as the module name, else IL inspectors will fail
             if (_moduleBuilder == null)
                 _moduleBuilder = _assemblyBuilder.DefineDynamicModule(_assemblyName + ".dll");
@@ -186,9 +197,11 @@ namespace ChoETL
             return setMethodBuilder;
         }
 
+#if !NETSTANDARD2_0
         public void SaveAssembly()
         {
             _assemblyBuilder.Save(_assemblyBuilder.GetName().Name + ".dll");
         }
+#endif
     }
 }

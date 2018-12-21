@@ -2,6 +2,283 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>ChoETL.NETStandard</PackageId>
+    <Authors>Cinchoo</Authors>
+    <Company>Cinchoo Inc.</Company>
+    <Product>ChoETL.NETStandard</Product>
+    <Description>ETL Framework for .NET</Description>
+    <Copyright>Copyright Cinchoo Inc.</Copyright>
+    <PackageIconUrl>http://www.gravatar.com/avatar/6ebc114acdd1d9f7ec5028a165a819b1.png</PackageIconUrl>
+    <PackageProjectUrl>https://github.com/Cinchoo/ChoETL</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/Cinchoo/ChoETL/blob/master/LICENSE</PackageLicenseUrl>
+    <RepositoryUrl>https://github.com/Cinchoo/ChoETL</RepositoryUrl>
+    <RepositoryType>GitHub</RepositoryType>
+    <PackageTags>ETL c# .NET CSV Xml JSON Flat</PackageTags>
+    <PackageReleaseNotes>.NET Standard version</PackageReleaseNotes>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <Version>1.0.8.8</Version>
+    <AssemblyName>ChoETL.Core</AssemblyName>
+    <RootNamespace>ChoETL</RootNamespace>
   </PropertyGroup>
-
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CSharp" Version="4.4.1" />
+    <PackageReference Include="System.CodeDom" Version="4.4.0" />
+    <PackageReference Include="System.ComponentModel.Annotations" Version="4.4.1" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.4.1" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.4.3" />
+    <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\ChoETL\Common\Attributes\ChoDataTableColumnTypeAttribute.cs" Link="Common\Attributes\ChoDataTableColumnTypeAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\Attributes\ChoMetadataRefTypeAttribute.cs" Link="Common\Attributes\ChoMetadataRefTypeAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\Attributes\ChoFieldMapAttribute.cs" Link="Common\Attributes\ChoFieldMapAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\Collections\ChoSerializableDictionary.cs" Link="Common\Collections\ChoSerializableDictionary.cs" />
+    <Compile Include="..\ChoETL\Common\Converters\ChoCDATAToStringConverter.cs" Link="Common\Converters\ChoCDATAToStringConverter.cs" />
+    <Compile Include="..\ChoETL\Common\ExtensionMethods\ChoEnumerableEx.cs" Link="Common\ExtensionMethods\ChoEnumerableEx.cs" />
+    <Compile Include="..\ChoETL\Common\ExtensionMethods\Linq\ChoLeftJoin.cs" Link="Common\ExtensionMethods\Linq\ChoLeftJoin.cs" />
+    <Compile Include="..\ChoETL\Common\IChoConvertible.cs" Link="Common\IChoConvertible.cs" />
+    <Compile Include="..\ChoETL\File\CSV\ChoCSVRecordFieldConfigurationMap.cs" Link="File\CSV\ChoCSVRecordFieldConfigurationMap.cs" />
+    <Compile Include="..\ChoETL\File\CSV\ChoCSVRecordTypeConfiguration.cs" Link="File\CSV\ChoCSVRecordTypeConfiguration.cs" />
+    <Compile Include="..\ChoETL\File\FixedLength\ChoFixedLengthRecordConfigurationMap.cs" Link="File\FixedLength\ChoFixedLengthRecordConfigurationMap.cs" />
+    <Compile Include="..\ChoETL\File\FixedLength\ChoFixedLengthRecordTypeConfiguration.cs" Link="File\FixedLength\ChoFixedLengthRecordTypeConfiguration.cs" />
+    <Compile Include="..\ChoETL\File\Manifold\ChoManifoldRecordTypeConfiguration.cs" Link="File\Manifold\ChoManifoldRecordTypeConfiguration.cs" />
+    <Compile Include="..\ChoETL\File\Xml\ChoXmlRecordConfigurationMap.cs" Link="File\Xml\ChoXmlRecordConfigurationMap.cs" />
+    <Compile Include="..\ChoETL\IChoEmptyLineReportable.cs" Link="IChoEmptyLineReportable.cs" />
+    <Compile Include="..\ChoETL\IChoCustomColumnMappable.cs" Link="IChoCustomColumnMappable.cs" />
+    <Compile Include="..\ChoETL\IChoCustomSerializable.cs" Link="IChoCustomSerializable.cs" />
+    <Compile Include="..\ChoETL\IChoKeyValueType.cs" Link="IChoKeyValueType.cs" />
+    <Compile Include="..\ChoETL\ChoScalarObject.cs" Link="ChoScalarObject.cs" />
+    <Compile Include="..\ChoETL\ChoEnums.cs" Link="ChoEnums.cs" />
+    <Compile Include="..\ChoETL\ChoWriter.cs" Link="ChoWriter.cs" />
+    <Compile Include="..\ChoETL\ChoTextFileExternalSorter.cs" Link="ChoTextFileExternalSorter.cs" />
+    <Compile Include="..\ChoETL\Common\Attributes\ChoDefaultValueAttribute.cs" Link="Common\Attributes\ChoDefaultValueAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\Attributes\ChoKeyValueTypeAttribute.cs" Link="Common\Attributes\ChoKeyValueTypeAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\ChoDisposable.cs" Link="Common\ChoDisposable.cs" />
+    <Compile Include="..\ChoETL\Common\ChoEnum.cs" Link="Common\ChoEnum.cs" />
+    <Compile Include="..\ChoETL\Common\ChoEnumTypeCache.cs" Link="Common\ChoEnumTypeCache.cs" />
+    <Compile Include="..\ChoETL\Common\ChoExternalSorter.cs" Link="Common\ChoExternalSorter.cs" />
+    <Compile Include="..\ChoETL\Common\Compiler\ChoCodeDomProvider.cs" Link="Common\Compiler\ChoCodeDomProvider.cs" />
+    <Compile Include="..\ChoETL\Common\ComponentModel\ChoCustomTypeDescriptor.cs" Link="Common\ComponentModel\ChoCustomTypeDescriptor.cs" />
+    <Compile Include="..\ChoETL\Common\ComponentModel\ChoTypeDescriptionProvider.cs" Link="Common\ComponentModel\ChoTypeDescriptionProvider.cs" />
+    <Compile Include="..\ChoETL\Common\Data\Entity\ChoEntityEx.cs" Link="Common\Data\Entity\ChoEntityEx.cs" />
+    <Compile Include="..\ChoETL\Common\Converters\ChoCustomCodeConverter.cs" Link="Common\Converters\ChoCustomCodeConverter.cs" />
+    <Compile Include="..\ChoETL\Common\Converters\ChoLowerCaseConverter.cs" Link="Common\Converters\ChoLowerCaseConverter.cs" />
+    <Compile Include="..\ChoETL\Common\Converters\ChoUShortConverter.cs" Link="Common\Converters\ChoUShortConverter.cs" />
+    <Compile Include="..\ChoETL\Common\Converters\ChoShortConverter.cs" Link="Common\Converters\ChoShortConverter.cs" />
+    <Compile Include="..\ChoETL\Common\Converters\ChoULongConverter.cs" Link="Common\Converters\ChoULongConverter.cs" />
+    <Compile Include="..\ChoETL\Common\Converters\ChoLongConverter.cs" Link="Common\Converters\ChoLongConverter.cs" />
+    <Compile Include="..\ChoETL\Common\Converters\ChoUIntConverter.cs" Link="Common\Converters\ChoUIntConverter.cs" />
+    <Compile Include="..\ChoETL\Common\Converters\ChoIntConverter.cs" Link="Common\Converters\ChoIntConverter.cs" />
+    <Compile Include="..\ChoETL\Common\Converters\ChoFloatConverter.cs" Link="Common\Converters\ChoFloatConverter.cs" />
+    <Compile Include="..\ChoETL\Common\Converters\ChoDoubleConverter.cs" Link="Common\Converters\ChoDoubleConverter.cs" />
+    <Compile Include="..\ChoETL\Common\Converters\ChoDecimalConverter.cs" Link="Common\Converters\ChoDecimalConverter.cs" />
+    <Compile Include="..\ChoETL\Common\Converters\ChoSByteConverter.cs" Link="Common\Converters\ChoSByteConverter.cs" />
+    <Compile Include="..\ChoETL\Common\Converters\ChoByteConverter.cs" Link="Common\Converters\ChoByteConverter.cs" />
+    <Compile Include="..\ChoETL\Common\Converters\ChoBooleanConverter.cs" Link="Common\Converters\ChoBooleanConverter.cs" />
+    <Compile Include="..\ChoETL\Common\Converters\ChoBigIntegerConverter.cs" Link="Common\Converters\ChoBigIntegerConverter.cs" />
+    <Compile Include="..\ChoETL\Common\Converters\ChoEnumConverter.cs" Link="Common\Converters\ChoEnumConverter.cs" />
+    <Compile Include="..\ChoETL\Common\Data\ChoSqlTableHelper.cs" Link="Common\Data\ChoSqlTableHelper.cs" />
+    <Compile Include="..\ChoETL\Common\Dynamic\ChoDynamicClassFactory.cs" Link="Common\Dynamic\ChoDynamicClassFactory.cs" />
+    <Compile Include="..\ChoETL\Common\Dynamic\ChoExpandoObjectEx.cs" Link="Common\Dynamic\ChoExpandoObjectEx.cs" />
+    <Compile Include="..\ChoETL\Common\Dynamic\ChoDynamicObject.cs" Link="Common\Dynamic\ChoDynamicObject.cs" />
+    <Compile Include="..\ChoETL\Common\Dynamic\ChoDynamicObjectEqualityComparer.cs" Link="Common\Dynamic\ChoDynamicObjectEqualityComparer.cs" />
+    <Compile Include="..\ChoETL\Common\ExtensionMethods\ChoBoolean.cs" Link="Common\ExtensionMethods\ChoBoolean.cs" />
+    <Compile Include="..\ChoETL\Common\ExtensionMethods\ChoLinqEx.cs" Link="Common\ExtensionMethods\ChoLinqEx.cs" />
+    <Compile Include="..\ChoETL\Common\Reflection\ChoFieldInfoEx.cs" Link="Common\Reflection\ChoFieldInfoEx.cs" />
+    <Compile Include="..\ChoETL\Common\Reflection\ChoMemberInfoEx.cs" Link="Common\Reflection\ChoMemberInfoEx.cs" />
+    <Compile Include="..\ChoETL\Common\Reflection\ChoPropertyInfoEx.cs" Link="Common\Reflection\ChoPropertyInfoEx.cs" />
+    <Compile Include="..\ChoETL\Common\Reflection\Emit\ChoEmitHelper.cs" Link="Common\Reflection\Emit\ChoEmitHelper.cs" />
+    <Compile Include="..\ChoETL\Common\Reflection\Emit\ChoILGeneratorEx.cs" Link="Common\Reflection\Emit\ChoILGeneratorEx.cs" />
+    <Compile Include="..\ChoETL\Common\Serialization\ChoKeyValuePair.cs" Link="Common\Serialization\ChoKeyValuePair.cs" />
+    <Compile Include="..\ChoETL\Common\Text\RegularExpressions\ChoWildcard.cs" Link="Common\Text\RegularExpressions\ChoWildcard.cs" />
+    <Compile Include="..\ChoETL\Common\Validators\ChoCustomCodeValidatorAttribute.cs" Link="Common\Validators\ChoCustomCodeValidatorAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\Validators\ChoCustomExprValidatorAttribute.cs" Link="Common\Validators\ChoCustomExprValidatorAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\Xml\ChoCDATA.cs" Link="Common\Xml\ChoCDATA.cs" />
+    <Compile Include="..\ChoETL\ETLCommon\IChoETLNameableObject.cs" Link="ETLCommon\IChoETLNameableObject.cs" />
+    <Compile Include="..\ChoETL\File\ChoRecordFieldTypeAssessmentEventArgs.cs" Link="File\ChoRecordFieldTypeAssessmentEventArgs.cs" />
+    <Compile Include="..\ChoETL\File\ChoRowsWrittenEventArgs.cs" Link="File\ChoRowsWrittenEventArgs.cs" />
+    <Compile Include="..\ChoETL\File\ChoRowsLoadedEventArgs.cs" Link="File\ChoRowsLoadedEventArgs.cs" />
+    <Compile Include="..\ChoETL\File\CSV\ChoCSVFluentPlugIn.cs" Link="File\CSV\ChoCSVFluentPlugIn.cs" />
+    <Compile Include="..\ChoETL\ChoReader.cs" Link="ChoReader.cs" />
+    <Compile Include="..\ChoETL\IChoWriter.cs" Link="IChoWriter.cs" />
+    <Compile Include="..\ChoETL\IChoReader.cs" Link="IChoReader.cs" />
+    <Compile Include="..\ChoETL\File\FixedLength\ChoFixedLengthFileHeaderConfiguration.cs" Link="File\FixedLength\ChoFixedLengthFileHeaderConfiguration.cs" />
+    <Compile Include="..\ChoETL\File\FixedLength\ChoFixedLengthRecordWriter.cs" Link="File\FixedLength\ChoFixedLengthRecordWriter.cs" />
+    <Compile Include="..\ChoETL\File\FixedLength\ChoFixedLengthWriter.cs" Link="File\FixedLength\ChoFixedLengthWriter.cs" />
+    <Compile Include="..\ChoETL\File\FixedLength\ChoFixedLengthFileHeaderAttribute.cs" Link="File\FixedLength\ChoFixedLengthFileHeaderAttribute.cs" />
+    <Compile Include="..\ChoETL\File\FixedLength\ChoFixedLengthFieldDefaultSizeConfiguation.cs" Link="File\FixedLength\ChoFixedLengthFieldDefaultSizeConfiguation.cs" />
+    <Compile Include="..\ChoETL\Common\Converters\ChoTypeConverterFormatSpec.cs" Link="Common\Converters\ChoTypeConverterFormatSpec.cs" />
+    <Compile Include="..\ChoETL\ChoRecordWriter.cs" Link="ChoRecordWriter.cs" />
+    <Compile Include="..\ChoETL\ChoRecordReader.cs" Link="ChoRecordReader.cs" />
+    <Compile Include="..\ChoETL\ChoRecordFieldConfiguration.cs" Link="ChoRecordFieldConfiguration.cs" />
+    <Compile Include="..\ChoETL\ChoRecordConfiguration.cs" Link="ChoRecordConfiguration.cs" />
+    <Compile Include="..\ChoETL\ChoObjectAttribute.cs" Link="ChoObjectAttribute.cs" />
+    <Compile Include="..\ChoETL\ChoTypeConverter.cs" Link="ChoTypeConverter.cs" />
+    <Compile Include="..\ChoETL\Common\Attributes\ChoFallbackValue.cs" Link="Common\Attributes\ChoFallbackValue.cs" />
+    <Compile Include="..\ChoETL\Common\Attributes\ChoMemberAttribute.cs" Link="Common\Attributes\ChoMemberAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\Attributes\ChoMemberValueSourceAttribute.cs" Link="Common\Attributes\ChoMemberValueSourceAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\Attributes\ChoOrderedAttribute.cs" Link="Common\Attributes\ChoOrderedAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\Attributes\ChoSequenceGeneratorAttribute.cs" Link="Common\Attributes\ChoSequenceGeneratorAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\Attributes\ChoTypeConverterAttribute.cs" Link="Common\Attributes\ChoTypeConverterAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\Attributes\ChoValidatorAttribute.cs" Link="Common\Attributes\ChoValidatorAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\Attributes\MetadataTypeAttribute.cs" Link="Common\Attributes\MetadataTypeAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\ChoCurrency.cs" Link="Common\ChoCurrency.cs" />
+    <Compile Include="..\ChoETL\Common\ChoFuncEx.cs" Link="Common\ChoFuncEx.cs" />
+    <Compile Include="..\ChoETL\Common\ChoActionEx.cs" Link="Common\ChoActionEx.cs" />
+    <Compile Include="..\ChoETL\Common\ChoActivator.cs" Link="Common\ChoActivator.cs" />
+    <Compile Include="..\ChoETL\Common\ChoAppSettings.cs" Link="Common\ChoAppSettings.cs" />
+    <Compile Include="..\ChoETL\Common\ChoArray.cs" Link="Common\ChoArray.cs" />
+    <Compile Include="..\ChoETL\Common\ChoAssembly.cs" Link="Common\ChoAssembly.cs" />
+    <Compile Include="..\ChoETL\Common\ChoAssemblyResolver.cs" Link="Common\ChoAssemblyResolver.cs" />
+    <Compile Include="..\ChoETL\Common\ChoBaseProfile.cs" Link="Common\ChoBaseProfile.cs" />
+    <Compile Include="..\ChoETL\Common\ChoBinaryHeap.cs" Link="Common\ChoBinaryHeap.cs" />
+    <Compile Include="..\ChoETL\Common\ChoBufferProfile.cs" Link="Common\ChoBufferProfile.cs" />
+    <Compile Include="..\ChoETL\Common\ChoCharEx.cs" Link="Common\ChoCharEx.cs" />
+    <Compile Include="..\ChoETL\Common\ChoChunkedEnumerableEx.cs" Link="Common\ChoChunkedEnumerableEx.cs" />
+    <Compile Include="..\ChoETL\Common\ChoConvert.cs" Link="Common\ChoConvert.cs" />
+    <Compile Include="..\ChoETL\Common\ChoDataReaderExtension.cs" Link="Common\ChoDataReaderExtension.cs" />
+    <Compile Include="..\ChoETL\Common\ChoDecimalSequenceService.cs" Link="Common\ChoDecimalSequenceService.cs" />
+    <Compile Include="..\ChoETL\Common\ChoDirectory.cs" Link="Common\ChoDirectory.cs" />
+    <Compile Include="..\ChoETL\Common\ChoDoubleSequenceService.cs" Link="Common\ChoDoubleSequenceService.cs" />
+    <Compile Include="..\ChoETL\Common\ChoEnumerable.cs" Link="Common\ChoEnumerable.cs" />
+    <Compile Include="..\ChoETL\Common\ChoEnumeratorWrapper.cs" Link="Common\ChoEnumeratorWrapper.cs" />
+    <Compile Include="..\ChoETL\Common\ChoEnvironment.cs" Link="Common\ChoEnvironment.cs" />
+    <Compile Include="..\ChoETL\Common\ChoEnvironmentVariablePropertyReplacer.cs" Link="Common\ChoEnvironmentVariablePropertyReplacer.cs" />
+    <Compile Include="..\ChoETL\ETLCommon\ChoETLFramework.cs" Link="ETLCommon\ChoETLFramework.cs" />
+    <Compile Include="..\ChoETL\ETLCommon\ChoETLLog.cs" Link="ETLCommon\ChoETLLog.cs" />
+    <Compile Include="..\ChoETL\Common\ChoEventArgs.cs" Link="Common\ChoEventArgs.cs" />
+    <Compile Include="..\ChoETL\Common\ChoException.cs" Link="Common\ChoException.cs" />
+    <Compile Include="..\ChoETL\Common\ChoExtensions.cs" Link="Common\ChoExtensions.cs" />
+    <Compile Include="..\ChoETL\Common\ChoFile.cs" Link="Common\ChoFile.cs" />
+    <Compile Include="..\ChoETL\Common\ChoFileStreamWithBackup.cs" Link="Common\ChoFileStreamWithBackup.cs" />
+    <Compile Include="..\ChoETL\Common\ChoGlobalDictionaryPropertyReplacer.cs" Link="Common\ChoGlobalDictionaryPropertyReplacer.cs" />
+    <Compile Include="..\ChoETL\Common\ChoGuard.cs" Link="Common\ChoGuard.cs" />
+    <Compile Include="..\ChoETL\Common\ChoIndexedEnumerator.cs" Link="Common\ChoIndexedEnumerator.cs" />
+    <Compile Include="..\ChoETL\Common\ChoIniFile.cs" Link="Common\ChoIniFile.cs" />
+    <Compile Include="..\ChoETL\Common\ChoIntSequenceService.cs" Link="Common\ChoIntSequenceService.cs" />
+    <Compile Include="..\ChoETL\Common\ChoIterator.cs" Link="Common\ChoIterator.cs" />
+    <Compile Include="..\ChoETL\Common\ChoMapReduce.cs" Link="Common\ChoMapReduce.cs" />
+    <Compile Include="..\ChoETL\Common\ChoMomentoObject.cs" Link="Common\ChoMomentoObject.cs" />
+    <Compile Include="..\ChoETL\Common\ChoPath.cs" Link="Common\ChoPath.cs" />
+    <Compile Include="..\ChoETL\Common\ChoPeekEnumerator.cs" Link="Common\ChoPeekEnumerator.cs" />
+    <Compile Include="..\ChoETL\Common\ChoPriorityQueue.cs" Link="Common\ChoPriorityQueue.cs" />
+    <Compile Include="..\ChoETL\Common\ChoProcess.cs" Link="Common\ChoProcess.cs" />
+    <Compile Include="..\ChoETL\Common\ChoPropertyBag.cs" Link="Common\ChoPropertyBag.cs" />
+    <Compile Include="..\ChoETL\Common\ChoPropertyReplacer.cs" Link="Common\ChoPropertyReplacer.cs" />
+    <Compile Include="..\ChoETL\Common\ChoQueuedTaskScheduler.cs" Link="Common\ChoQueuedTaskScheduler.cs" />
+    <Compile Include="..\ChoETL\Common\ChoStringMsgBuilder.cs" Link="Common\ChoStringMsgBuilder.cs" />
+    <Compile Include="..\ChoETL\Common\ChoMetadataObjectCache.cs" Link="Common\ChoMetadataObjectCache.cs" />
+    <Compile Include="..\ChoETL\Common\ChoTextWriterTraceListener.cs" Link="Common\ChoTextWriterTraceListener.cs" />
+    <Compile Include="..\ChoETL\Common\ChoTraceSwitch.cs" Link="Common\ChoTraceSwitch.cs" />
+    <Compile Include="..\ChoETL\Common\ChoType.cs" Link="Common\ChoType.cs" />
+    <Compile Include="..\ChoETL\Common\ChoTypeDescriptor.cs" Link="Common\ChoTypeDescriptor.cs" />
+    <Compile Include="..\ChoETL\Common\ChoUtility.cs" Link="Common\ChoUtility.cs" />
+    <Compile Include="..\ChoETL\Common\ChoWin32Exception.cs" Link="Common\ChoWin32Exception.cs" />
+    <Compile Include="..\ChoETL\Common\Converters\ChoCurrencyConverter.cs" Link="Common\Converters\ChoCurrencyConverter.cs" />
+    <Compile Include="..\ChoETL\Common\Converters\ChoDateTimeConverter.cs" Link="Common\Converters\ChoDateTimeConverter.cs" />
+    <Compile Include="..\ChoETL\Common\Converters\ChoNumericValidator.cs" Link="Common\Converters\ChoNumericValidator.cs" />
+    <Compile Include="..\ChoETL\Common\Converters\ChoSeqNoGeneratorConvertor.cs" Link="Common\Converters\ChoSeqNoGeneratorConvertor.cs" />
+    <Compile Include="..\ChoETL\Common\Converters\ChoUpperCaseConverter.cs" Link="Common\Converters\ChoUpperCaseConverter.cs" />
+    <Compile Include="..\ChoETL\Common\Converters\ChoCustomExprConverter.cs" Link="Common\Converters\ChoCustomExprConverter.cs" />
+    <Compile Include="..\ChoETL\Common\Data\ChoEnumerableDataReader.cs" Link="Common\Data\ChoEnumerableDataReader.cs" />
+    <Compile Include="..\ChoETL\Common\Data\ChoObjectDataReader.cs" Link="Common\Data\ChoObjectDataReader.cs" />
+    <Compile Include="..\ChoETL\Common\Data\ChoSqlHelper.cs" Link="Common\Data\ChoSqlHelper.cs" />
+    <Compile Include="..\ChoETL\Common\Dynamic\ChoExpandoObjectTypeDescriptionProvider.cs" Link="Common\Dynamic\ChoExpandoObjectTypeDescriptionProvider.cs" />
+    <Compile Include="..\ChoETL\Common\Dynamic\ChoExpandoObjectTypeDescriptor.cs" Link="Common\Dynamic\ChoExpandoObjectTypeDescriptor.cs" />
+    <Compile Include="..\ChoETL\Common\Dynamic\ChoMetadataTypesRegister.cs" Link="Common\Dynamic\ChoMetadataTypesRegister.cs" />
+    <Compile Include="..\ChoETL\Common\Dynamic\ChoDynamicQueryable.cs" Link="Common\Dynamic\ChoDynamicQueryable.cs" />
+    <Compile Include="..\ChoETL\Common\Exceptions\ChoConsoleCtrlException.cs" Link="Common\Exceptions\ChoConsoleCtrlException.cs" />
+    <Compile Include="..\ChoETL\Common\Exceptions\ChoFatalApplicationException.cs" Link="Common\Exceptions\ChoFatalApplicationException.cs" />
+    <Compile Include="..\ChoETL\Common\ExtensionMethods\ChoDictionaryEx.cs" Link="Common\ExtensionMethods\ChoDictionaryEx.cs" />
+    <Compile Include="..\ChoETL\Common\ExtensionMethods\ChoIniFileEx.cs" Link="Common\ExtensionMethods\ChoIniFileEx.cs" />
+    <Compile Include="..\ChoETL\Common\ExtensionMethods\ChoObjectEx.cs" Link="Common\ExtensionMethods\ChoObjectEx.cs" />
+    <Compile Include="..\ChoETL\Common\ExtensionMethods\ChoStringEx.cs" Link="Common\ExtensionMethods\ChoStringEx.cs" />
+    <Compile Include="..\ChoETL\Common\ExtensionMethods\ChoXmlNodeEx.cs" Link="Common\ExtensionMethods\ChoXmlNodeEx.cs" />
+    <Compile Include="..\ChoETL\Common\IChoInitializable.cs" Link="Common\IChoInitializable.cs" />
+    <Compile Include="..\ChoETL\Common\IChoValueConverter.cs" Link="Common\IChoValueConverter.cs" />
+    <Compile Include="..\ChoETL\Common\RandomGenerator\Attributes\ChoAlphaNumericRandomAttribute.cs" Link="Common\RandomGenerator\Attributes\ChoAlphaNumericRandomAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\RandomGenerator\Attributes\ChoAlphaRandomAttribute.cs" Link="Common\RandomGenerator\Attributes\ChoAlphaRandomAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\RandomGenerator\Attributes\ChoCharRandomAttribute.cs" Link="Common\RandomGenerator\Attributes\ChoCharRandomAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\RandomGenerator\Attributes\ChoCurrencyRandomAttribute.cs" Link="Common\RandomGenerator\Attributes\ChoCurrencyRandomAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\RandomGenerator\Attributes\ChoDateTimeRandomAttribute.cs" Link="Common\RandomGenerator\Attributes\ChoDateTimeRandomAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\RandomGenerator\Attributes\ChoDoubleRandomAttribute.cs" Link="Common\RandomGenerator\Attributes\ChoDoubleRandomAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\RandomGenerator\Attributes\ChoIntRandomAttribute.cs" Link="Common\RandomGenerator\Attributes\ChoIntRandomAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\RandomGenerator\Attributes\ChoNumericRandomAttribute.cs" Link="Common\RandomGenerator\Attributes\ChoNumericRandomAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\RandomGenerator\Attributes\ChoRandomAttribute.cs" Link="Common\RandomGenerator\Attributes\ChoRandomAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\RandomGenerator\Attributes\ChoStringRandomAttribute.cs" Link="Common\RandomGenerator\Attributes\ChoStringRandomAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\RandomGenerator\ChoAlphaNumericRandom.cs" Link="Common\RandomGenerator\ChoAlphaNumericRandom.cs" />
+    <Compile Include="..\ChoETL\Common\RandomGenerator\ChoAlphaRandom.cs" Link="Common\RandomGenerator\ChoAlphaRandom.cs" />
+    <Compile Include="..\ChoETL\Common\RandomGenerator\ChoCharRandom.cs" Link="Common\RandomGenerator\ChoCharRandom.cs" />
+    <Compile Include="..\ChoETL\Common\RandomGenerator\ChoCryptoRandom.cs" Link="Common\RandomGenerator\ChoCryptoRandom.cs" />
+    <Compile Include="..\ChoETL\Common\RandomGenerator\ChoCurrencyRandom.cs" Link="Common\RandomGenerator\ChoCurrencyRandom.cs" />
+    <Compile Include="..\ChoETL\Common\RandomGenerator\ChoDateTimeRandom.cs" Link="Common\RandomGenerator\ChoDateTimeRandom.cs" />
+    <Compile Include="..\ChoETL\Common\RandomGenerator\ChoDoubleRandom.cs" Link="Common\RandomGenerator\ChoDoubleRandom.cs" />
+    <Compile Include="..\ChoETL\Common\RandomGenerator\ChoIntRandom.cs" Link="Common\RandomGenerator\ChoIntRandom.cs" />
+    <Compile Include="..\ChoETL\Common\RandomGenerator\ChoNumericRandom.cs" Link="Common\RandomGenerator\ChoNumericRandom.cs" />
+    <Compile Include="..\ChoETL\Common\RandomGenerator\ChoStringRandom.cs" Link="Common\RandomGenerator\ChoStringRandom.cs" />
+    <Compile Include="..\ChoETL\Common\Validators\ChoValidateObjectAttribute.cs" Link="Common\Validators\ChoValidateObjectAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\Validators\ChoValidator.cs" Link="Common\Validators\ChoValidator.cs" />
+    <Compile Include="..\ChoETL\Common\Validators\IChoValidatable.cs" Link="Common\Validators\IChoValidatable.cs" />
+    <Compile Include="..\ChoETL\ChoRecordObjectAttribute.cs" Link="ChoRecordObjectAttribute.cs" />
+    <Compile Include="..\ChoETL\ChoRecordFieldAttribute.cs" Link="ChoRecordFieldAttribute.cs" />
+    <Compile Include="..\ChoETL\ETLCommon\ChoETLRecordHelper.cs" Link="ETLCommon\ChoETLRecordHelper.cs" />
+    <Compile Include="..\ChoETL\Exception\ChoMissingRecordFieldException.cs" Link="Exception\ChoMissingRecordFieldException.cs" />
+    <Compile Include="..\ChoETL\Exception\ChoParserException.cs" Link="Exception\ChoParserException.cs" />
+    <Compile Include="..\ChoETL\Exception\ChoReaderException.cs" Link="Exception\ChoReaderException.cs" />
+    <Compile Include="..\ChoETL\Exception\ChoRecordConfigurationException.cs" Link="Exception\ChoRecordConfigurationException.cs" />
+    <Compile Include="..\ChoETL\File\ChoFileRecordConfiguration.cs" Link="File\ChoFileRecordConfiguration.cs" />
+    <Compile Include="..\ChoETL\File\ChoFileHeaderAttribute.cs" Link="File\ChoFileHeaderAttribute.cs" />
+    <Compile Include="..\ChoETL\File\ChoFileRecordFieldConfiguration.cs" Link="File\ChoFileRecordFieldConfiguration.cs" />
+    <Compile Include="..\ChoETL\File\CSV\ChoCSVWriter.cs" Link="File\CSV\ChoCSVWriter.cs" />
+    <Compile Include="..\ChoETL\File\CSV\ChoCSVReader.cs" Link="File\CSV\ChoCSVReader.cs" />
+    <Compile Include="..\ChoETL\File\CSV\ChoCSVRecordReader.cs" Link="File\CSV\ChoCSVRecordReader.cs" />
+    <Compile Include="..\ChoETL\File\ChoFileHeaderConfiguration.cs" Link="File\ChoFileHeaderConfiguration.cs" />
+    <Compile Include="..\ChoETL\File\CSV\ChoCSVRecordConfiguration.cs" Link="File\CSV\ChoCSVRecordConfiguration.cs" />
+    <Compile Include="..\ChoETL\File\CSV\ChoCSVRecordFieldConfiguration.cs" Link="File\CSV\ChoCSVRecordFieldConfiguration.cs" />
+    <Compile Include="..\ChoETL\File\CSV\ChoCSVRecordObjectAttribute.cs" Link="File\CSV\ChoCSVRecordObjectAttribute.cs" />
+    <Compile Include="..\ChoETL\File\ChoFileRecordObjectAttribute.cs" Link="File\ChoFileRecordObjectAttribute.cs" />
+    <Compile Include="..\ChoETL\File\ChoFileRecordFieldAttribute.cs" Link="File\ChoFileRecordFieldAttribute.cs" />
+    <Compile Include="..\ChoETL\File\CSV\ChoCSVRecordFieldAttribute.cs" Link="File\CSV\ChoCSVRecordFieldAttribute.cs" />
+    <Compile Include="..\ChoETL\File\CSV\ChoCSVFileHeaderConfiguration.cs" Link="File\CSV\ChoCSVFileHeaderConfiguration.cs" />
+    <Compile Include="..\ChoETL\File\CSV\ChoCSVFileHeaderAttribute.cs" Link="File\CSV\ChoCSVFileHeaderAttribute.cs" />
+    <Compile Include="..\ChoETL\File\CSV\ChoCSVRecordWriter.cs" Link="File\CSV\ChoCSVRecordWriter.cs" />
+    <Compile Include="..\ChoETL\File\FixedLength\ChoFixedLengthRecordReader.cs" Link="File\FixedLength\ChoFixedLengthRecordReader.cs" />
+    <Compile Include="..\ChoETL\File\KeyValue\ChoKVPFileHeaderConfiguration.cs" Link="File\KeyValue\ChoKVPFileHeaderConfiguration.cs" />
+    <Compile Include="..\ChoETL\File\KeyValue\ChoKVPRecordFieldAttribute.cs" Link="File\KeyValue\ChoKVPRecordFieldAttribute.cs" />
+    <Compile Include="..\ChoETL\File\KeyValue\ChoKVPRecordObjectAttribute.cs" Link="File\KeyValue\ChoKVPRecordObjectAttribute.cs" />
+    <Compile Include="..\ChoETL\File\KeyValue\ChoKVPRecordFieldConfiguration.cs" Link="File\KeyValue\ChoKVPRecordFieldConfiguration.cs" />
+    <Compile Include="..\ChoETL\File\KeyValue\ChoKVPRecordConfiguration.cs" Link="File\KeyValue\ChoKVPRecordConfiguration.cs" />
+    <Compile Include="..\ChoETL\File\KeyValue\ChoKVPRecordReader.cs" Link="File\KeyValue\ChoKVPRecordReader.cs" />
+    <Compile Include="..\ChoETL\File\KeyValue\ChoKVPReader.cs" Link="File\KeyValue\ChoKVPReader.cs" />
+    <Compile Include="..\ChoETL\File\Manifold\ChoRecordTypeCodeAttribute.cs" Link="File\Manifold\ChoRecordTypeCodeAttribute.cs" />
+    <Compile Include="..\ChoETL\File\ChoRecordTypeConfiguration.cs" Link="File\ChoRecordTypeConfiguration.cs" />
+    <Compile Include="..\ChoETL\File\Manifold\ChoManifoldRecordWriter.cs" Link="File\Manifold\ChoManifoldRecordWriter.cs" />
+    <Compile Include="..\ChoETL\File\Manifold\ChoManifoldWriter.cs" Link="File\Manifold\ChoManifoldWriter.cs" />
+    <Compile Include="..\ChoETL\File\Manifold\ChoManifoldFileHeaderAttribute.cs" Link="File\Manifold\ChoManifoldFileHeaderAttribute.cs" />
+    <Compile Include="..\ChoETL\File\Manifold\ChoManifoldFileHeaderConfiguration.cs" Link="File\Manifold\ChoManifoldFileHeaderConfiguration.cs" />
+    <Compile Include="..\ChoETL\File\FixedLength\ChoFixedLengthRecordObjectAttribute.cs" Link="File\FixedLength\ChoFixedLengthRecordObjectAttribute.cs" />
+    <Compile Include="..\ChoETL\File\FixedLength\ChoFixedLengthRecordFieldAttribute.cs" Link="File\FixedLength\ChoFixedLengthRecordFieldAttribute.cs" />
+    <Compile Include="..\ChoETL\File\FixedLength\ChoFixedLengthRecordFieldConfiguration.cs" Link="File\FixedLength\ChoFixedLengthRecordFieldConfiguration.cs" />
+    <Compile Include="..\ChoETL\File\FixedLength\ChoFixedLengthRecordConfiguration.cs" Link="File\FixedLength\ChoFixedLengthRecordConfiguration.cs" />
+    <Compile Include="..\ChoETL\File\FixedLength\ChoFixedLengthReader.cs" Link="File\FixedLength\ChoFixedLengthReader.cs" />
+    <Compile Include="..\ChoETL\File\Manifold\ChoManifoldRecordReader.cs" Link="File\Manifold\ChoManifoldRecordReader.cs" />
+    <Compile Include="..\ChoETL\File\Manifold\ChoManifoldRecordConfiguration.cs" Link="File\Manifold\ChoManifoldRecordConfiguration.cs" />
+    <Compile Include="..\ChoETL\File\Manifold\ChoManifoldReader.cs" Link="File\Manifold\ChoManifoldReader.cs" />
+    <Compile Include="..\ChoETL\File\Xml\ChoXmlDocumentRootAttribute.cs" Link="File\Xml\ChoXmlDocumentRootAttribute.cs" />
+    <Compile Include="..\ChoETL\File\Xml\ChoXmlRecordWriter.cs" Link="File\Xml\ChoXmlRecordWriter.cs" />
+    <Compile Include="..\ChoETL\File\Xml\ChoXmlWriter.cs" Link="File\Xml\ChoXmlWriter.cs" />
+    <Compile Include="..\ChoETL\File\Xml\ChoXmlAttributeRecordFieldAttribute.cs" Link="File\Xml\ChoXmlAttributeRecordFieldAttribute.cs" />
+    <Compile Include="..\ChoETL\File\Xml\ChoXmlElementRecordFieldAttribute.cs" Link="File\Xml\ChoXmlElementRecordFieldAttribute.cs" />
+    <Compile Include="..\ChoETL\File\Xml\ChoXmlRecordObjectAttribute.cs" Link="File\Xml\ChoXmlRecordObjectAttribute.cs" />
+    <Compile Include="..\ChoETL\File\Xml\ChoXmlNodeRecordFieldAttribute.cs" Link="File\Xml\ChoXmlNodeRecordFieldAttribute.cs" />
+    <Compile Include="..\ChoETL\File\Xml\ChoXmlRecordFieldConfiguration.cs" Link="File\Xml\ChoXmlRecordFieldConfiguration.cs" />
+    <Compile Include="..\ChoETL\File\Xml\ChoXmlRecordConfiguration.cs" Link="File\Xml\ChoXmlRecordConfiguration.cs" />
+    <Compile Include="..\ChoETL\File\Xml\ChoXmlRecordReader.cs" Link="File\Xml\ChoXmlRecordReader.cs" />
+    <Compile Include="..\ChoETL\File\Xml\ChoXmlReader.cs" Link="File\Xml\ChoXmlReader.cs" />
+    <Compile Include="..\ChoETL\IChoNotifyRecordWrite.cs" Link="IChoNotifyRecordWrite.cs" />
+    <Compile Include="..\ChoETL\IChoNotifyRecordRead.cs" Link="IChoNotifyRecordRead.cs" />
+  </ItemGroup>
+  
 </Project>

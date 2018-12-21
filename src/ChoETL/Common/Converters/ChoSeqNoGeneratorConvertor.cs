@@ -3,11 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+#if !NETSTANDARD2_0
 using System.Windows.Data;
+#endif
 
 namespace ChoETL
 {
+#if !NETSTANDARD2_0
     public class ChoSequenceNoGenerator : IValueConverter
+#else
+    public class ChoSequenceNoGenerator : IChoValueConverter
+#endif
     {
         private string _seqName;
         private int _seed = 1;

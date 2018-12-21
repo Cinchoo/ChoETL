@@ -4,7 +4,9 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+#if !NETSTANDARD2_0
 using System.Windows.Data;
+#endif
 
 namespace ChoETL
 {
@@ -53,6 +55,7 @@ namespace ChoETL
             }
         }
 
+#if !NETSTANDARD2_0
         public void Add(Type type, IValueConverter converter)
         {
             ChoGuard.ArgumentNotNull(type, "Type");
@@ -64,20 +67,21 @@ namespace ChoETL
                 _defaultTypeConverters.Add(type, converter);
             }
         }
+#endif
 
-		public void Add(Type type, IChoValueConverter converter)
-		{
-			ChoGuard.ArgumentNotNull(type, "Type");
-			ChoGuard.ArgumentNotNull(converter, "Converter");
+        public void Add(Type type, IChoValueConverter converter)
+        {
+            ChoGuard.ArgumentNotNull(type, "Type");
+            ChoGuard.ArgumentNotNull(converter, "Converter");
 
-			lock (_padLock)
-			{
-				Remove(type);
-				_defaultTypeConverters.Add(type, converter);
-			}
-		}
+            lock (_padLock)
+            {
+                Remove(type);
+                _defaultTypeConverters.Add(type, converter);
+            }
+        }
 
-		public KeyValuePair<Type, object>[] GetAll()
+        public KeyValuePair<Type, object>[] GetAll()
         {
             lock (_padLock)
             {

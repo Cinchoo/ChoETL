@@ -542,7 +542,9 @@ namespace ChoETL
                     else
                         errMsg = ioEx.ToString();
 
+#if !NETSTANDARD2_0
                     ChoETLFramework.WriteToEventLog(errMsg, EventLogEntryType.Error);
+#endif
                     //Environment.Exit(-100);
                 }
                 catch (Exception ex)
@@ -554,23 +556,25 @@ namespace ChoETL
                     else
                         errMsg = ex.ToString();
 
+#if !NETSTANDARD2_0
                     ChoETLFramework.WriteToEventLog(errMsg, EventLogEntryType.Error);
+#endif
                 }
             }
         }
 
-        #endregion
+#endregion
 
-        #region Instance Properties (Public)
+#region Instance Properties (Public)
 
         public string FilePath
         {
             get { return Path.Combine(_directoryName, BaseFileName); }
         }
 
-        #endregion
+#endregion
 
-        #region Instance Properties (Private)
+#region Instance Properties (Private)
 
         /// <summary>
         /// Property tells you the whether the message is eligible to write to log file or not.
@@ -624,9 +628,9 @@ namespace ChoETL
             }
         }
 
-        #endregion
+#endregion
 
-        #region Events
+#region Events
 
         public event Func<string> OnGetCustomLogFileName
         {
@@ -646,9 +650,9 @@ namespace ChoETL
             }
         }
 
-        #endregion
+#endregion
 
-        #region Instance Members (Public)
+#region Instance Members (Public)
 
         public override void Flush()
         {
@@ -662,9 +666,9 @@ namespace ChoETL
             base.Flush();
         }
 
-        #endregion
+#endregion
 
-        #region Shared Members (Public)
+#region Shared Members (Public)
 
         public static ChoTextWriterTraceListener GetFirst()
         {
@@ -698,7 +702,7 @@ namespace ChoETL
             return traceListeners.ToArray(typeof(ChoTextWriterTraceListener)) as ChoTextWriterTraceListener[];
         }
 
-        #endregion
+#endregion
 
         private bool _isDisposed = false;
         protected override void Dispose(bool disposing)
@@ -710,22 +714,22 @@ namespace ChoETL
 
     public static class ChoStorageScale
     {
-        #region Constants
+#region Constants
 
         public const long KB = 1024;
         public const long MB = KB * KB;
         public const long GB = MB * KB;
         public const long TB = GB * KB;
 
-        #endregion
+#endregion
 
-        #region Shared Data Memebers (Private)
+#region Shared Data Memebers (Private)
 
         private static Regex _sizeRegEx = new Regex("(?<Size>\\d+)(?<Scale>[KMGT]B)*", RegexOptions.Compiled);
 
-        #endregion
+#endregion
 
-        #region Shated Member Functions (Public)
+#region Shated Member Functions (Public)
 
 
         /// <summary>
@@ -804,6 +808,6 @@ namespace ChoETL
             }
         }
 
-        #endregion
+#endregion
     }
 }

@@ -5,12 +5,18 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+#if !NETSTANDARD2_0
 using System.Windows.Data;
+#endif
 
 namespace ChoETL
 {
     [ChoTypeConverter(typeof(long))]
+#if !NETSTANDARD2_0
     public class ChoLongConverter : IValueConverter
+#else
+    public class ChoLongConverter : IChoValueConverter
+#endif
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {

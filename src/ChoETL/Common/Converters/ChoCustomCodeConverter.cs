@@ -4,11 +4,17 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+#if !NETSTANDARD2_0
 using System.Windows.Data;
+#endif
 
 namespace ChoETL
 {
+#if !NETSTANDARD2_0
     public class ChoCustomCodeConverter : IValueConverter
+#else
+    public class ChoCustomCodeConverter : IChoValueConverter
+#endif
     {
         public ChoCodeDomProvider ConvertOperation { get; private set; }
         public string ConvertCode { get; set; }

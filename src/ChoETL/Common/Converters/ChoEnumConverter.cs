@@ -3,12 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+#if !NETSTANDARD2_0
 using System.Windows.Data;
+#endif
 
 namespace ChoETL
 {
     [ChoTypeConverter(typeof(Enum))]
+#if !NETSTANDARD2_0
     public class ChoEnumConverter : IValueConverter
+#else
+    public class ChoEnumConverter : IChoValueConverter
+#endif
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {

@@ -9,16 +9,23 @@ using System.Runtime.InteropServices;
 
 namespace ChoETL
 {
+#if !NETSTANDARD2_0
     [Serializable, SuppressUnmanagedCodeSecurity, HostProtection(SecurityAction.LinkDemand, SharedState = true)]
+#else
+    [Serializable, SuppressUnmanagedCodeSecurity]
+#endif
     public class ChoWin32Exception : ExternalException, ISerializable
     {
         private const string Kernel32DllName = "kernel32.dll";
 
+#if !NETSTANDARD2_0
         [DllImport(Kernel32DllName, CharSet = CharSet.Auto, SetLastError = true)]
         public static extern int FormatMessage(int dwFlags, HandleRef lpSource, int dwMessageId, int dwLanguageId, StringBuilder lpBuffer, int nSize, IntPtr arguments);
+#endif
 
         #region ChoIntSecurity Class
 
+#if !NETSTANDARD2_0
         [HostProtection(SecurityAction.LinkDemand, SharedState = true)]
         private static class ChoIntSecurity
         {
@@ -42,7 +49,7 @@ namespace ChoETL
                 return fullPath;
             }
         }
-
+#endif
         #endregion ChoIntSecurity Class
 
         // Fields
@@ -91,7 +98,9 @@ namespace ChoETL
         protected ChoWin32Exception(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
+#if !NETSTANDARD2_0
             ChoIntSecurity.UnmanagedCode.Demand();
+#endif
             this.nativeErrorCode = info.GetInt32("NativeErrorCode");
         }
 
@@ -109,7 +118,9 @@ namespace ChoETL
             try
             {
                 StringBuilder lpBuffer = new StringBuilder(0x100);
+#if !NETSTANDARD2_0
                 if (FormatMessage(0x3200, Win32Common.NullHandleRef, error, 0, lpBuffer, lpBuffer.Capacity + 1, IntPtr.Zero) == 0)
+#endif
                     lastErrMsg = "Unknown error (0x" + Convert.ToString(error, 0x10) + ")";
 
                 int length = lpBuffer.Length;

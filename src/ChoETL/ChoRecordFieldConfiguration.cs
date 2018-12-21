@@ -7,7 +7,10 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+
+#if !NETSTANDARD2_0
 using System.Windows.Data;
+#endif
 
 namespace ChoETL
 {
@@ -160,12 +163,13 @@ namespace ChoETL
             Name = Name.NTrim().FixName();
         }
 
+#if !NETSTANDARD2_0
         public void AddConverter(IValueConverter converter)
         {
             if (converter == null) return;
             Converters.Add(converter);
         }
-
+#endif
         public void AddConverter(IChoValueConverter converter)
         {
             if (converter == null) return;
@@ -185,14 +189,14 @@ namespace ChoETL
                 Converters.Remove(converter);
         }
 
-
+#if !NETSTANDARD2_0
         public void RemoveConverter(IValueConverter converter)
         {
             if (converter == null) return;
             if (Converters.Contains(converter))
                 Converters.Remove(converter);
         }
-
+#endif
         public void RemoveConverter(TypeConverter converter)
         {
             if (converter == null) return;

@@ -4,13 +4,19 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Data;
 using System.Xml.Linq;
+#if !NETSTANDARD2_0
+using System.Windows.Data;
+#endif
 
 namespace ChoETL
 {
     [ChoTypeConverter(typeof(ChoCurrency))]
+#if !NETSTANDARD2_0
     public class ChoCurrencyConverter : IValueConverter
+#else
+    public class ChoCurrencyConverter : IChoValueConverter
+#endif
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
@@ -44,7 +50,11 @@ namespace ChoETL
     }
 
     [ChoTypeConverter(typeof(XElement))]
+#if !NETSTANDARD2_0
     public class ChoXElementConverter : IValueConverter
+#else
+    public class ChoXElementConverter : IChoValueConverter
+#endif
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {

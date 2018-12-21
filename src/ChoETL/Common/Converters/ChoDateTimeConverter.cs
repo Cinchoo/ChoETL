@@ -3,12 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+#if !NETSTANDARD2_0
 using System.Windows.Data;
+#endif
 
 namespace ChoETL
 {
     [ChoTypeConverter(typeof(DateTime))]
+#if !NETSTANDARD2_0
     public class ChoDateTimeConverter : IValueConverter
+#else
+    public class ChoDateTimeConverter : IChoValueConverter
+#endif
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {

@@ -30,15 +30,15 @@ namespace ChoETL
 
         private static readonly object _entryAssemblyLock = new object();
         private static Assembly _entryAssembly;
-		public static Assembly EntryAssembly
-		{
-			get { return _entryAssembly; }
-			set
-			{
-				if (value != null)
-					_entryAssembly = value;
-			}
-		}
+        public static Assembly EntryAssembly
+        {
+            get { return _entryAssembly; }
+            set
+            {
+                if (value != null)
+                    _entryAssembly = value;
+            }
+        }
         public static Assembly GetEntryAssembly()
         {
             if (_entryAssembly != null)
@@ -52,11 +52,12 @@ namespace ChoETL
                 // Try the EntryAssembly, this doesn't work for ASP.NET classic pipeline (untested on integrated)
                 Assembly assembly = Assembly.GetEntryAssembly();
 
+#if !NETSTANDARD2_0
                 // Look for web application assembly
                 HttpContext ctx = HttpContext.Current;
                 if (ctx != null)
                     assembly = GetWebApplicationAssembly(ctx);
-
+#endif
                 // Fallback to executing assembly
                 _entryAssembly = assembly ?? (Assembly.GetExecutingAssembly());
                 return _entryAssembly;
@@ -326,6 +327,8 @@ namespace ChoETL
 
         #region Shared Members (Private)
 
+#if !NETSTANDARD2_0
+
         private static Assembly GetWebApplicationAssembly(HttpContext context)
         {
             ChoGuard.ArgumentNotNull(context, "context");
@@ -340,6 +343,9 @@ namespace ChoETL
 
             return type.Assembly;
         }
+
+#endif
+
         #endregion Shared Members (Private)
     }
 }

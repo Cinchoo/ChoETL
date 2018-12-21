@@ -5,12 +5,18 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+#if !NETSTANDARD2_0
 using System.Windows.Data;
+#endif
 
 namespace ChoETL
 {
     [ChoTypeConverter(typeof(sbyte))]
+#if !NETSTANDARD2_0
     public class ChoSByteConverter : IValueConverter
+#else
+    public class ChoSByteConverter : IChoValueConverter
+#endif
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {

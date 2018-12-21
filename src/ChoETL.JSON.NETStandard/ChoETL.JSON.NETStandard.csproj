@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>ChoETL.JSON.Core</AssemblyName>
+    <RootNamespace>ChoETL.JSON</RootNamespace>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <Description>JSON extension to Cinchoo ETL framework</Description>
+    <Copyright>Copyright Cinchoo Inc.</Copyright>
+    <PackageLicenseUrl>https://github.com/Cinchoo/ChoETL/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/Cinchoo/ChoETL</PackageProjectUrl>
+    <PackageIconUrl>http://www.gravatar.com/avatar/6ebc114acdd1d9f7ec5028a165a819b1.png</PackageIconUrl>
+    <RepositoryUrl>https://github.com/Cinchoo/ChoETL</RepositoryUrl>
+    <RepositoryType>GitHub</RepositoryType>
+    <PackageTags>ETL c# .NET CSV Xml JSON Flat</PackageTags>
+    <PackageReleaseNotes>.NET Standard version</PackageReleaseNotes>
+    <PackageId>ChoETL.JSON.NETStandard</PackageId>
+    <Authors>Cinchoo</Authors>
+    <Company>Cinchoo Inc.</Company>
+    <Product>ChoETL.JSON.NETStandard</Product>
+    <Version>1.0.6.1</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\ChoETL.JSON\ChoJSONExtensions.cs" Link="ChoJSONExtensions.cs" />
+    <Compile Include="..\ChoETL.JSON\ChoJSONNodeNameAttribute.cs" Link="ChoJSONNodeNameAttribute.cs" />
+    <Compile Include="..\ChoETL.JSON\ChoJSONPathAttribute.cs" Link="ChoJSONPathAttribute.cs" />
+    <Compile Include="..\ChoETL.JSON\ChoJSONReader.cs" Link="ChoJSONReader.cs" />
+    <Compile Include="..\ChoETL.JSON\ChoJSONRecordConfiguration.cs" Link="ChoJSONRecordConfiguration.cs" />
+    <Compile Include="..\ChoETL.JSON\ChoJSONRecordConfigurationMap.cs" Link="ChoJSONRecordConfigurationMap.cs" />
+    <Compile Include="..\ChoETL.JSON\ChoJSONRecordFieldAttribute.cs" Link="ChoJSONRecordFieldAttribute.cs" />
+    <Compile Include="..\ChoETL.JSON\ChoJSONRecordFieldConfiguration.cs" Link="ChoJSONRecordFieldConfiguration.cs" />
+    <Compile Include="..\ChoETL.JSON\ChoJSONRecordObjectAttribute.cs" Link="ChoJSONRecordObjectAttribute.cs" />
+    <Compile Include="..\ChoETL.JSON\ChoJSONRecordReader.cs" Link="ChoJSONRecordReader.cs" />
+    <Compile Include="..\ChoETL.JSON\ChoJSONRecordWriter.cs" Link="ChoJSONRecordWriter.cs" />
+    <Compile Include="..\ChoETL.JSON\ChoJSONRootNameAttribute.cs" Link="ChoJSONRootNameAttribute.cs" />
+    <Compile Include="..\ChoETL.JSON\ChoJSONWriter.cs" Link="ChoJSONWriter.cs" />
+    <Compile Include="..\ChoETL.JSON\ChoUseJSONSerializationAttribute.cs" Link="ChoUseJSONSerializationAttribute.cs" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.json" Version="11.0.1" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\ChoETL.NETStandard\ChoETL.NETStandard.csproj" />
+  </ItemGroup>
+
+</Project>

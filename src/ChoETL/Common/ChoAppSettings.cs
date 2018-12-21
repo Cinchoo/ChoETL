@@ -28,10 +28,14 @@ namespace ChoETL
             {
                 if (ChoETLFrxBootstrap.Configuration == null)
                 {
+#if !NETSTANDARD2_0
                     if (HttpContext.Current == null)
+#endif
                         Configuration = ConfigurationManager.OpenExeConfiguration(null);
+#if !NETSTANDARD2_0
                     else
                         Configuration = System.Web.Configuration.WebConfigurationManager.OpenWebConfiguration("~/");
+#endif
                 }
                 else
                     Configuration = ChoETLFrxBootstrap.Configuration;

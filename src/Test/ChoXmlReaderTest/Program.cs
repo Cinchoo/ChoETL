@@ -104,12 +104,83 @@ namespace ChoXmlReaderTest
         public string Approver3_Order { get; set; }
     }
 
+    public class EmployeeRec1
+    {
+        [ChoXmlNodeRecordField(XPath = "@Id")]
+        public int Id { get; set; }
+        [ChoXmlNodeRecordField(XPath = "Name")]
+        public string Name { get; set; }
+        [ChoXmlNodeRecordField(XPath = "/Address")]
+        public AddressRec Address { get; set; }
+    }
+
+    public partial class AddressRec
+    {
+        [XmlElement(ElementName = "AddressLine")]
+        public AddressLineRec[] AddressLines { get; set; }
+        [XmlElement(ElementName = "Country")]
+        public string Country { get; set; }
+    }
+
+    public partial class AddressLineRec
+    {
+        [XmlAttribute(AttributeName = "Id")]
+        public int Id { get; set; }
+        [XmlText]
+        public string AddressLine { get; set; }
+    }
+
+    public class SyncInvoice
+    {
+        public string languageCode { get; set; }
+    }
+
     public class Program
     {
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            XmlToJSON2();
+            DefaultNSTest();
+        }
+
+        static void DefaultNSTest()
+        {
+            string xml = @"<SyncInvoice xmlns=""http://schema.infor.com/InforOAGIS/2"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xsi:schemaLocation=""SyncInvoice.xsd"" languageCode=""IT"" />";
+
+            using (var parser = ChoXmlReader<SyncInvoice>.LoadText(xml)
+                           .WithXPath("SyncInvoice")
+                      )
+            {
+                foreach (var rec in parser)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void TestXml1()
+        {
+            string xml = @"<Employees>
+    <Employee Id='1'>
+        <Name>Tom</Name>
+        <Address>
+            <AddressLine Id='1'>XYZ road</AddressLine>
+            <AddressLine Id='2'>MiceTown</AddressLine>
+        </Address>
+    </Employee>
+    <Employee Id='2'>
+        <Name>Mark</Name>
+        <Address>
+            <AddressLine Id='1'>123 street</AddressLine>
+            <AddressLine Id='2'>TigerCity</AddressLine>
+            <Country>United States</Country>
+        </Address>
+    </Employee>
+</Employees>
+";
+
+            foreach (var rec in ChoXmlReader<EmployeeRec1>.LoadText(xml))
+            {
+                Console.WriteLine(rec.Dump());
+            }
         }
 
         static void XmlToJSON2()
@@ -141,7 +212,7 @@ namespace ChoXmlReaderTest
 
         static void CSVToXmlTest()
         {
-string csv = @"Id, Name, City
+            string csv = @"Id, Name, City
 1, Tom, NY
 2, Mark, NJ
 3, Lou, FL
@@ -149,19 +220,19 @@ string csv = @"Id, Name, City
 5, Raj, DC
 ";
 
-StringBuilder sb = new StringBuilder();
-using (var p = ChoCSVReader.LoadText(csv)
-    .WithFirstLineHeader()
-    )
-{
-    using (var w = new ChoXmlWriter(sb)
-        .Configure(c => c.RootName = "Employees")
-        .Configure(c => c.NodeName = "Employee")
-        )
-        w.Write(p);
-}
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                )
+            {
+                using (var w = new ChoXmlWriter(sb)
+                    .Configure(c => c.RootName = "Employees")
+                    .Configure(c => c.NodeName = "Employee")
+                    )
+                    w.Write(p);
+            }
 
-Console.WriteLine(sb.ToString());
+            Console.WriteLine(sb.ToString());
         }
 
         static void MultipleXmlNS()
@@ -416,14 +487,14 @@ Console.WriteLine(sb.ToString());
 
         static void Sample49Test()
         {
-using (var r = new ChoXmlReader("Sample49.xml")
-    .WithXPath("/CarCollection/Cars/Car")
-    .WithMaxScanNodes(10)
-    //.Configure(c => c.MaxScanRows = 10)
-    )
-{
-    Console.WriteLine(ChoJSONWriter.ToTextAll(r));
-}
+            using (var r = new ChoXmlReader("Sample49.xml")
+                .WithXPath("/CarCollection/Cars/Car")
+                .WithMaxScanNodes(10)
+                //.Configure(c => c.MaxScanRows = 10)
+                )
+            {
+                Console.WriteLine(ChoJSONWriter.ToTextAll(r));
+            }
         }
 
         static void Sample48Test()
@@ -518,7 +589,7 @@ using (var r = new ChoXmlReader("Sample49.xml")
                 .WithField("Value", xPath: "/Values/string")
                 )
             {
-                var dt = p.SelectMany(r => ((Array)r.Value).OfType<string>().Select(r1 => new { Key = r.Key, Value = r1})).AsDataTable();
+                var dt = p.SelectMany(r => ((Array)r.Value).OfType<string>().Select(r1 => new { Key = r.Key, Value = r1 })).AsDataTable();
             }
         }
 
@@ -1192,7 +1263,7 @@ using (var r = new ChoXmlReader("Sample49.xml")
             using (var p = new ChoXmlReader("sample30.xml")
                 .WithXPath("/")
                 //.WithField("packages", fieldName: "Package")
-                .Configure(c => c.EmptyXmlNodeValueHandling =  ChoEmptyXmlNodeValueHandling.Ignore)
+                .Configure(c => c.EmptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Ignore)
                 )
             {
                 using (var w = new ChoJSONWriter(msg)
@@ -1242,9 +1313,9 @@ using (var r = new ChoXmlReader("Sample49.xml")
                 foreach (var rec in p)
                     Console.WriteLine(ChoJSONWriter.ToText(rec));
 
-                    //var x = p.First();
-                    //Console.WriteLine(ChoJSONWriter.ToText(x));
-                    //Console.WriteLine(ChoXmlWriter.ToText(x));
+                //var x = p.First();
+                //Console.WriteLine(ChoJSONWriter.ToText(x));
+                //Console.WriteLine(ChoXmlWriter.ToText(x));
             }
 
             Console.WriteLine(msg.ToString());
@@ -1609,7 +1680,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
                 .WithField("Value")
             )
             {
-                Console.WriteLine(ChoCSVWriter.ToTextAll(parser.Cast<ChoDynamicObject>().Transpose(false), 
+                Console.WriteLine(ChoCSVWriter.ToTextAll(parser.Cast<ChoDynamicObject>().Transpose(false),
                     new ChoCSVRecordConfiguration().Configure(c => c.FileHeaderConfiguration.HasHeaderRecord = true)));
             }
         }
@@ -1790,7 +1861,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
         {
             using (var parser = new ChoXmlReader("sample11.xml").WithXPath("/members/father")
                 .WithField("id")
-                .WithField("sons" )
+                .WithField("sons")
             )
             {
                 Console.WriteLine(ChoJSONWriter.ToTextAll(parser));
@@ -1799,7 +1870,6 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
 
         static void xMain1(string[] args)
         {
-            Sample43();
             return;
             //dynamic p = new ChoPropertyBag();
             //p.Name = "Raj";
@@ -2168,7 +2238,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
         public class EmployeeRec
         {
             [XmlAttribute]
-            [ChoXmlNodeRecordField(XPath = "//@Id" )]
+            [ChoXmlNodeRecordField(XPath = "//@Id")]
             [Required]
             public int Id
             {

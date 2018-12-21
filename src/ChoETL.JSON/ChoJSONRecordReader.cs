@@ -1147,16 +1147,33 @@ namespace ChoETL
             if (token == null)
                 return null;
 
-            object obj = Activator.CreateInstance(type);
+            object obj = ChoActivator.CreateInstance(type);
             Dictionary<string, string> dict = null;
 
             dict = new Dictionary<string, string>(token.ToObject<IDictionary<string, object>>().ToDictionary(kvp => kvp.Key, kvp => kvp.Key), StringComparer.CurrentCultureIgnoreCase);
+
+            //if (!Configuration.ContainsRecordConfigForType(type))
+            //    Configuration.MapRecordFieldsForType(type);
+
+            //string pn = null;
+            //Type propertyType = null;
+            //foreach (var cf in Configuration.GetRecordConfigForType(type))
+            //{
+            //    pn = cf.FieldName.IsNullOrWhiteSpace() ? cf.Name : cf.FieldName;
+            //    if (!dict.ContainsKey(pn)) continue;
+
+            //    propertyType = cf.PropertyDescriptor.PropertyType.GetUnderlyingType();
+
+            //}
+
+            //return obj
 
             string jsonPath = null;
             string jsonPropName = null;
             Type propertyType = null;
             bool? useJsonSerialization = null;
             IEnumerable<PropertyDescriptor> pds = null;
+
             if (ChoTypeDescriptor.GetProperties(type).Where(pd1 => pd1.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any()).Any())
                 pds = ChoTypeDescriptor.GetProperties(type).Where(pd1 => pd1.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any());
             else if (ChoTypeDescriptor.GetProperties(type).Where(pd1 => pd1.Attributes.OfType<JsonPropertyAttribute>().Any()).Any())

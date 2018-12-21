@@ -163,7 +163,9 @@ namespace ChoETL
             private set;
         }
 
+#if !NETSTANDARD2_0
         private static EventLog _elApplicationEventLog;
+#endif
         private readonly static Action<string> _defaultLog = (msg) =>
         {
             if (GlobalProfile == null)
@@ -232,6 +234,9 @@ namespace ChoETL
                 AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
                 if (GetConfigValue<bool>("TurnOnConsoleCtrlHandler", true))
                     RegisterConsoleControlHandler();
+
+#if !NETSTANDARD2_0
+
                 try
                 {
                     _elApplicationEventLog = new EventLog("Application", Environment.MachineName, ChoETLFrxBootstrap.ApplicationName);
@@ -242,6 +247,7 @@ namespace ChoETL
                 {
                     WriteLog(ChoETLFramework.TraceSwitch.TraceError, ex.ToString());
                 }
+#endif
 
                 if (_traceLevel == null)
                 {
@@ -288,6 +294,7 @@ namespace ChoETL
             ObjectInitialize.Raise(null, new ChoEventArgs<object>(value));
         }
 
+#if !NETSTANDARD2_0
         public static void WriteToEventLog(string message, EventLogEntryType type)
         {
             CheckInitCalled();
@@ -315,7 +322,7 @@ namespace ChoETL
             }
             catch { } //If the event log is full or any other errors while writing to event log, we dont need to let the service to stop working or die
         }
-
+#endif
         public static void WriteLog(string msg)
         {
             if (Log == null) return;

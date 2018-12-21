@@ -817,25 +817,24 @@ namespace ChoETL
             char startChar;
             char endChar;
 
-            //quotes are quoted and doubled (excel) i.e. 15" -> field1,"15""",field3
-            if (fieldValue.Contains(Configuration.DoubleQuoteChar))
-                fieldValue = fieldValue.Replace(Configuration.DoubleQuoteChar, Configuration.QuoteChar.ToString());
-            if (fieldValue.Contains(Configuration.BackslashQuote))
-                fieldValue = fieldValue.Replace(Configuration.BackslashQuote, Configuration.QuoteChar.ToString());
-
             if (fieldValue.Length >= 2)
             {
                 startChar = fieldValue[0];
                 endChar = fieldValue[fieldValue.Length - 1];
 
                 if (config.QuoteField != null && config.QuoteField.Value && startChar == Configuration.QuoteChar && endChar == Configuration.QuoteChar)
-                    return fieldValue.Substring(1, fieldValue.Length - 2);
+                    fieldValue = fieldValue.Substring(1, fieldValue.Length - 2);
                 else if (startChar == Configuration.QuoteChar && endChar == Configuration.QuoteChar &&
                     (fieldValue.Contains(Configuration.Delimiter)
                     || fieldValue.Contains(Configuration.EOLDelimiter)))
-                    return fieldValue.Substring(1, fieldValue.Length - 2);
-
+                    fieldValue = fieldValue.Substring(1, fieldValue.Length - 2);
             }
+
+            //quotes are quoted and doubled (excel) i.e. 15" -> field1,"15""",field3
+            if (fieldValue.Contains(Configuration.DoubleQuoteChar))
+                fieldValue = fieldValue.Replace(Configuration.DoubleQuoteChar, Configuration.QuoteChar.ToString());
+            if (fieldValue.Contains(Configuration.BackslashQuote))
+                fieldValue = fieldValue.Replace(Configuration.BackslashQuote, Configuration.QuoteChar.ToString());
 
             if (config.Size != null)
             {

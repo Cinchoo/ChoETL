@@ -9,7 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Data;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -18,6 +17,9 @@ using System.Threading;
 using System.Security;
 using Microsoft.VisualBasic.FileIO;
 using Newtonsoft.Json;
+#if !NETSTANDARD2_0
+using System.Windows.Data;
+#endif
 
 namespace ChoCSVReaderTest
 {
@@ -1579,10 +1581,94 @@ Some2||234324";
                 )
                 Console.WriteLine(rec.Dump());
         }
+
+        static void MaxScanRowsAfterHeaderRowAt()
+        {
+            string csv = @"#sdfdsfsdfsdfdsf
+#fdsfdsfsdfsdf
+#sdfdsfdsfdsff
+ID, Name
+1s, Raj
+2, Mark
+3, Tom";
+
+            foreach (var rec in ChoCSVReader.LoadText(csv)
+                .WithHeaderLineAt(4)
+                .WithMaxScanRows(2)
+                )
+            {
+                Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void RenameCol()
+        {
+            StringBuilder csvIn = new StringBuilder(@"ID,Name
+1, David
+2, Bob");
+
+            StringBuilder csvOut = new StringBuilder();
+
+            using (var r = new ChoCSVReader(csvIn)
+                .WithFirstLineHeader()
+                )
+            {
+                using (var w = new ChoCSVWriter(csvOut)
+                    .WithFirstLineHeader()
+                    )
+                    w.Write(r.Select(r1 => new { Test1 = r1.ID, Test2 = r1.Name }));
+            }
+
+            Console.WriteLine(csvOut.ToString());
+        }
+
+        static void RenameCol1()
+        {
+            StringBuilder csvIn = new StringBuilder(@"ID,Name
+1, David
+2, Bob");
+
+            StringBuilder csvOut = new StringBuilder();
+
+            using (var r = new ChoCSVReader(csvIn)
+                .WithFirstLineHeader()
+                )
+            {
+                using (var w = new ChoCSVWriter(csvOut)
+                    .WithFirstLineHeader()
+                    .Setup(s => s.FileHeaderWrite += (o, e) =>
+                    {
+                        e.HeaderText = "Test,Test2";
+                    })
+                    )
+                    w.Write(r);
+            }
+
+            Console.WriteLine(csvOut.ToString());
+        }
+
+        static void ToList()
+        {
+StringBuilder csvIn = new StringBuilder(@"ID,Name,Date
+1, David, 1/1/2018
+2, Bob, 2/12/2019");
+
+using (var r = new ChoCSVReader(csvIn)
+    .WithFirstLineHeader()
+    .WithMaxScanRows(2)
+    )
+{
+    foreach (IDictionary<string, object> rec in r.Take(1))
+    {
+        foreach (var kvp in rec)
+            Console.WriteLine($"{kvp.Key} - {r.Configuration[kvp.Key].FieldType}");
+    }
+}
+        }
+
         static void Main(string[] args)
         {
-
-            Issue21();
+            ToList();
             return;
 
             ColumnCountStrictTest();
