@@ -246,6 +246,9 @@ namespace ChoETL
         private void DiscoverRecordFields(Type recordType, bool clear = true,
             List<ChoJSONRecordFieldConfiguration> recordFieldConfigurations = null)
         {
+            if (recordFieldConfigurations == null)
+                recordFieldConfigurations = JSONRecordFieldConfigurations;
+
             if (clear && recordFieldConfigurations != null)
                 recordFieldConfigurations.Clear();
             DiscoverRecordFields(recordType, null,

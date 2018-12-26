@@ -32,7 +32,7 @@ namespace ChoETL
             private set;
         }
 
-        public ChoJSONRecordReader(Type recordType, ChoJSONRecordConfiguration configuration) : base(recordType)
+        public ChoJSONRecordReader(Type recordType, ChoJSONRecordConfiguration configuration) : base(recordType, false)
         {
             ChoGuard.ArgumentNotNull(configuration, "Configuration");
             Configuration = configuration;
@@ -329,7 +329,8 @@ namespace ChoETL
                     return true;
                 }
 
-                if (!Configuration.UseJSONSerialization)
+                if (!Configuration.UseJSONSerialization
+                    && !typeof(ICollection).IsAssignableFrom(Configuration.RecordType))
                 {
                     if (!FillRecord(rec, pair))
                         return false;
@@ -1099,7 +1100,7 @@ namespace ChoETL
                 }
 
                 bool lUseJSONSerialization = useJSONSerialization == null ? Configuration.UseJSONSerialization : useJSONSerialization.Value;
-                if (lUseJSONSerialization)
+                if (true) //lUseJSONSerialization)
                 {
                     if (_se == null || _se.Value == null)
                         return jToken.ToObject(type);

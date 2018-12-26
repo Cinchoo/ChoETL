@@ -222,7 +222,7 @@ namespace ChoETL
             else
                 Configuration.RecordType = typeof(T);
 
-            Configuration.RecordType = ResolveRecordType(Configuration.RecordType);
+            Configuration.RecordType = Configuration.RecordType.GetUnderlyingType();
             Configuration.IsDynamicObject = Configuration.RecordType.IsDynamicType();
             _prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;

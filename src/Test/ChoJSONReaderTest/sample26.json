@@ -1,0 +1,12 @@
+﻿[
+    {
+        "EnrityList": "Attribute",
+        "KeyName": "AkeyName",
+        "Value": "Avalue"
+    },
+    {
+        "EnrityList": "BusinessKey",
+        "KeyName": "AkeyName",
+        "Value": "Avalue"
+    }
+]

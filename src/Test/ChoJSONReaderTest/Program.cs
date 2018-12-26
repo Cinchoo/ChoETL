@@ -873,7 +873,97 @@ namespace ChoJSONReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            Test3();
+            Sample27_1();
+        }
+
+        public class Result
+        {
+            public int Id { get; set; }
+            public int SportId { get; set; }
+        }
+
+        static void Sample27_1()
+        {
+            foreach (var rec in new ChoJSONReader<Result>("sample27.json")
+                .WithJSONPath("results[*]")
+                )
+            {
+                Console.WriteLine(rec.Dump());
+            }
+        }
+
+        public class MyType
+        {
+            public string EnrityList { get; set; }
+            public string KeyName { get; set; }
+            public string Value { get; set; }
+        }
+        static void Sample26_2()
+        {
+            string json = @"[
+    {
+        ""EnrityList"": ""Attribute"",
+        ""KeyName"": ""AkeyName"",
+        ""Value"": ""Avalue""
+    },
+    {
+        ""EnrityList"": ""BusinessKey"",
+        ""KeyName"": ""AkeyName"",
+        ""Value"": ""Avalue""
+    }
+]";
+
+            foreach (var rec in ChoJSONReader<MyType>.LoadText(json)
+                .WithJSONPath("$[*]")
+                )
+            {
+                Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void Sample26_1()
+        {
+            foreach (var rec in new ChoJSONReader("sample26.json")
+                .WithJSONPath("..stationmeasurements")
+                .WithField("regio", jsonPath: "regio", fieldType: typeof(string))
+                .WithField("temperatureMin", jsonPath: "dayhistory.temperatureMin", fieldType: typeof(double))
+                .WithField("temperatureMax", jsonPath: "dayhistory.temperatureMax", fieldType: typeof(double))
+                .Where(r => r.regio == "Hoogeveen")
+                )
+                Console.WriteLine(rec.Dump());
+        }
+
+        public struct LevelBonus
+        {
+            public int Power;
+            public int Mana;
+            public int Strenght;
+            public int Armor;
+            public int Health;
+        }
+
+        static void DictTest()
+        {
+            string json = @"{
+  ""0"": {
+    ""Armor"": 1,
+    ""Strenght"": 1,
+    ""Mana"": 2,
+    ""Power"": 1,
+    ""Health"": 1
+  },
+  ""1"": {
+    ""Armor"": 1,
+    ""Strenght"": 1
+  }
+}";
+
+            using (var p = ChoJSONReader<Dictionary<string, LevelBonus>>.LoadText(json)
+                )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
         }
 
         static void PartialJSONFileTest()

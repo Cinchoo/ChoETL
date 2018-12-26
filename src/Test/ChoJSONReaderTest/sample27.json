@@ -1,0 +1,38 @@
+﻿{
+    "success": 1,
+    "pager": {
+        "page": 1,
+        "per_page": 250,
+        "total": 1269
+    },
+    "results": [
+        {
+            "Id": 8033583,
+            "SportId": 18,
+            "RegionId": 33,
+            "LeagueId": 9198,
+            "LeagueName": "Superliga - Women",
+            "HomeTeam": "Barueri",
+            "AwayTeam": "Curitiba",
+            "BetRadarId": 16246174,
+            "our_event_id": 1075671,
+            "Date": "2018-12-21 21:30:00",
+            "updated_at": "1545427271",
+            "RegionName": "Brazil"
+        },
+        {
+            "Id": 8033584,
+            "SportId": 18,
+            "RegionId": 33,
+            "LeagueId": 9198,
+            "LeagueName": "Superliga - Women",
+            "HomeTeam": "Volei Bauru",
+            "AwayTeam": "Balneario Camboriu",
+            "BetRadarId": 0,
+            "our_event_id": 1367363,
+            "Date": "2018-12-21 21:30:00",
+            "updated_at": "1545427263",
+            "RegionName": "Brazil"
+        }
+    ]
+}

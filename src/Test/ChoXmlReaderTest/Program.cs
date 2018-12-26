@@ -132,15 +132,96 @@ namespace ChoXmlReaderTest
 
     public class SyncInvoice
     {
-        public string languageCode { get; set; }
+        [ChoXmlNodeRecordField(XPath = "@languageCode")]
+        public string LanguageCode { get; set; }
+        [ChoXmlNodeRecordField(XPath = "/x:ApplicationArea")]
+        public ApplicationArea ApplicationArea { get; set; }
+
     }
 
+    public class ApplicationArea
+    {
+        public Sender Sender { get; set; }
+        public DateTime CreationDateTime { get; set; }
+        public string BODID { get; set; }
+    }
+
+    public class Sender
+    {
+        public string LogicalID { get; set; }
+        public string ComponentID { get; set; }
+        public string ConfirmationCode { get; set; }
+    }
+
+    
     public class Program
     {
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            DefaultNSTest();
+
+            SoapMsgTest();
+        }
+
+        public class SoapBody
+        {
+            [ChoXmlNodeRecordField(XPath = "/x:UserName")]
+            public string UserName { get; set; }
+            [ChoXmlNodeRecordField(XPath = "/x:Password")]
+            public string Password { get; set; }
+        }
+
+        static void SoapMsgTest()
+        {
+            string soap = @"<s:Envelope xmlns:s=""http://schemas.xmlsoap.org/soap/envelope/"">
+<s:Body>
+<Exit xmlns=""http://tempuri.org/"">
+<UserName>daniel@xxx.com</UserName>
+<Password>123456</Password>
+<parkingLotId>21</parkingLotId>
+<gateNumber>EX 41</gateNumber>
+<ticketNumber>123123123123123123123</ticketNumber>
+<plateNumber>12211221</plateNumber>
+<paymentSum>10.0</paymentSum>
+<ExitDateTime>2018-12-23T09:56:10</ExitDateTime>
+<referenceId>987462187346238746263</referenceId>
+</Exit>
+</s:Body>
+</s:Envelope>";
+
+            foreach (var rec in ChoXmlReader<SoapBody>.LoadText(soap)
+                .WithXPath("//Exit")
+                .WithXmlNamespace("x", "http://tempuri.org/")
+                )
+                Console.WriteLine(rec.Dump());
+        }
+
+        static void DefaultNSTest1()
+        {
+            string xml = @"<?xml version=""1.0"" encoding=""UTF-8""?>
+<SyncInvoice xmlns=""http://schema.infor.com/InforOAGIS/2"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xsi:schemaLocation=""SyncInvoice.xsd"" releaseID=""9.2"" versionID=""2.13.0"" systemEnvironmentCode=""Production"" languageCode=""GB"">
+<ApplicationArea>
+    <Sender>
+        <LogicalID>lid://infor.m3be.m3be </LogicalID>
+        <ComponentID>M3BE</ComponentID>
+        <ConfirmationCode>OnError</ConfirmationCode>
+    </Sender>
+    <CreationDateTime>2018-12-13T18:19:03.000Z</CreationDateTime>
+    <BODID>05a1ef3c-67c0-4d38-83ea-b4691a3c4fe0</BODID>
+</ApplicationArea>
+</SyncInvoice>";
+
+
+            // SyncInvoice.ApplicationArea is null
+            using (var parser = ChoXmlReader<SyncInvoice>.LoadText(xml).WithXPath("SyncInvoice")
+                .WithXmlNamespace("x", "http://schema.infor.com/InforOAGIS/2")
+                )
+            {
+                foreach (dynamic rec in parser)
+                {
+                    Console.WriteLine(ChoUtility.Dump(rec));
+                }
+            }
         }
 
         static void DefaultNSTest()

@@ -189,7 +189,7 @@ namespace ChoCSVReaderTest
                 {
                     //e.Value["rowid"] = typeof(long);
                 })
-                .Setup(r => r.RecordLoadError += (o,e) =>
+                .Setup(r => r.RecordLoadError += (o, e) =>
                 {
                     Console.WriteLine("@@" + e.Source.ToNString());
                     e.Handled = true;
@@ -572,7 +572,7 @@ somethingdownhere,thisisthelastuser,andthisisthelastpassword
 2011.01.07,10:09,1.2979,1.2985,1.2979,1.2980,63";
 
             foreach (var rec in ChoCSVReader.LoadText(csv)
-                .Setup(s => s.AfterRecordFieldLoad += (o,e) =>
+                .Setup(s => s.AfterRecordFieldLoad += (o, e) =>
                 {
                     if (e.PropertyName == "Column2")
                     {
@@ -992,11 +992,11 @@ Date,Count
                 int rowIndex = 0;
 
                 var dr = new ChoEnumerableDataReader(p.Select(r => new ImportRow
-                    {
-                        ImportId = 42,
-                        RowIndex = rowIndex++,
-                        fields = JsonConvert.SerializeObject(((ChoDynamicObject)r).Values.Select(r1 => new ValueObject { value = r1.ToNString() }))
-                    }
+                {
+                    ImportId = 42,
+                    RowIndex = rowIndex++,
+                    fields = JsonConvert.SerializeObject(((ChoDynamicObject)r).Values.Select(r1 => new ValueObject { value = r1.ToNString() }))
+                }
                 ));
                 DataTable dt = new DataTable();
                 dt.Load(dr);
@@ -1473,7 +1473,7 @@ D,World Name , LLC,2018-01-20,BUY";
                     .WithField(f => f.lastTwelveMonths, fieldName: "Mon,Tue", valueSelector: v =>
                     {
                         System.Collections.IList array = v as System.Collections.IList;
-                        return new object[] { array[0], array[1]};
+                        return new object[] { array[0], array[1] };
                     })
                     )
                 {
@@ -1649,26 +1649,61 @@ ID, Name
 
         static void ToList()
         {
-StringBuilder csvIn = new StringBuilder(@"ID,Name,Date
+            StringBuilder csvIn = new StringBuilder(@"ID,Name,Date
 1, David, 1/1/2018
 2, Bob, 2/12/2019");
 
-using (var r = new ChoCSVReader(csvIn)
-    .WithFirstLineHeader()
-    .WithMaxScanRows(2)
-    )
-{
-    foreach (IDictionary<string, object> rec in r.Take(1))
-    {
-        foreach (var kvp in rec)
-            Console.WriteLine($"{kvp.Key} - {r.Configuration[kvp.Key].FieldType}");
-    }
-}
+            using (var r = new ChoCSVReader(csvIn)
+                .WithFirstLineHeader()
+                .WithMaxScanRows(2)
+                )
+            {
+                foreach (IDictionary<string, object> rec in r.Take(1))
+                {
+                    foreach (var kvp in rec)
+                        Console.WriteLine($"{kvp.Key} - {r.Configuration[kvp.Key].FieldType}");
+                }
+            }
+        }
+
+        static void Tab1Test()
+        {
+            ChoETLFrxBootstrap.Log = (s) => Trace.WriteLine(s);
+
+            string csv = @"* Select	d  : 02:02:12 20 MAR 2017						
+* Shippi	g Date >= 01/20/2017 ; Shipping Dat	<= 03/20/2017	; Shipping	Branch = 2	9,15,19,21,22,	5,26,27,2	,29,30,31,
+********	***********************************	**************	**********	**********	**************	*********	**********
+							
+CUSTOMER	CUSTOMER NAME	INVOICE ID	PURCHASE	PRODUCT ID	PURCHASED	PURCHASED	LOCATION
+ID			DATE		AMOUNT	QUANTITY	ID
+22160	MANSFIELD BROTHERS HEATING & AIR	sss.001	02/08/2017	193792	69.374	2	30
+27849	OWSLEY SUPPLY LLC  - EQUIPMENT	sss.001	03/14/2017	123906	70.409	1	2
+27849	OWSLEY SUPPLY LLC  - EQUIPMENT	sss.001	03/14/2017	40961	10.000	1	2
+16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	116511	63.016	1	15
+16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	116511	-63.016	-1	15
+16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	122636	30.748	1	15
+16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	137661	432.976	1	15
+16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	137661	-432.976	-1	15";
+
+            foreach (var rec in ChoCSVReader.LoadText(csv)
+                .HeaderLineAt(6)
+                .WithDelimiter("\t")
+                .WithMaxScanRows(3)
+                .WithField("CustomerId")
+                .WithField("CustomerName")
+                .WithField("InvoiceId")
+                .WithField("PurchaseDate")
+                .WithField("ProductId")
+                .WithField("PurchasedAmount")
+                .WithField("PurchasedQuantity")
+                .WithField("LocationId")
+                )
+                Console.WriteLine(rec.Dump());
         }
 
         static void Main(string[] args)
         {
-            ToList();
+            Tab1Test();
             return;
 
             ColumnCountStrictTest();
