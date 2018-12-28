@@ -140,7 +140,7 @@ namespace ChoETL
             }
             else if (record != null && (!record.GetType().IsDynamicType() && record is IDictionary))
             {
-                _writer.WriteTo(_textWriter, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
+                _writer.WriteTo(_textWriter, new T[] { record }).Loop();
             }
             else
                 _writer.WriteTo(_textWriter, new T[] { record }).Loop();

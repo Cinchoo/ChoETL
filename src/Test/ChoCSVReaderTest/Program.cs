@@ -1701,9 +1701,33 @@ ID			DATE		AMOUNT	QUANTITY	ID
                 Console.WriteLine(rec.Dump());
         }
 
+        public partial class EmployeeRec
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+        }
+        static void SimpleCSVTest()
+        {
+            string csv = @"Id, Name
+1, Carl
+2, Tom
+3, Mark";
+
+            using (var p = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                )
+            {
+                foreach (var rec in p)
+                {
+                    Console.WriteLine($"Id: {rec.Id}");
+                    Console.WriteLine($"Name: {rec.Name}");
+                }
+            }
+        }
+
         static void Main(string[] args)
         {
-            Tab1Test();
+            SimpleCSVTest();
             return;
 
             ColumnCountStrictTest();
@@ -2603,29 +2627,6 @@ ID			DATE		AMOUNT	QUANTITY	ID
             //    Console.WriteLine(i.Id);
 
             ChoETLFramework.Initialize();
-            using (var stream = new MemoryStream())
-            using (var reader = new StreamReader(stream))
-            using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoCSVReader<EmployeeRec>(reader))
-            {
-                writer.WriteLine("Id,Name");
-                writer.WriteLine("1,Carl");
-                writer.WriteLine("2,Mark");
-                writer.Flush();
-                stream.Position = 0;
-                //var dr = parser.AsDataReader();
-                //while (dr.Read())
-                //{
-                //    Console.WriteLine(dr[0]);
-                //}
-                object row1 = null;
-
-                //parser.Configuration.ColumnCountStrict = true;
-                while ((row1 = parser.Read()) != null)
-                {
-                    Console.WriteLine(row1.ToStringEx());
-                }
-            }
         }
     }
     public class IntConverter : IValueConverter

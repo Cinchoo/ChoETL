@@ -194,8 +194,10 @@ namespace ChoETL
             set { _iniFile = value; }
         }
 
+#if !NETSTANDARD2_0
         [DllImport("kernel32.dll", SetLastError = true)]
         internal static extern bool SetConsoleCtrlHandler(ConsoleCtrlMessageHandler consoleCtrlRoutine, bool Add);
+#endif
 
         static ChoETLFramework()
         {
@@ -365,9 +367,11 @@ namespace ChoETL
 
         private static void RegisterConsoleControlHandler()
         {
+#if !NETSTANDARD2_0
             _consoleCtrlHandler = new ConsoleCtrlMessageHandler(ConsoleCtrlHandler);
             GC.KeepAlive((object)_consoleCtrlHandler);
             SetConsoleCtrlHandler(_consoleCtrlHandler, true);
+#endif
         }
 
         internal static bool ConsoleCtrlHandler(CtrlTypes ctrlType)

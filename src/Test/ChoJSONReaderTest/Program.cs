@@ -873,7 +873,23 @@ namespace ChoJSONReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            Sample27_1();
+            Sample28_1();
+        }
+
+        public class ArmorPOCO
+        {
+            public int Armor { get; set; }
+            public int Strenght { get; set; }
+        }
+
+
+        static void Sample28_1()
+        {
+            foreach (var rec in new ChoJSONReader<Dictionary<string, ArmorPOCO>>("sample28.json")
+                )
+            {
+                Console.WriteLine(rec.Dump());
+            }
         }
 
         public class Result

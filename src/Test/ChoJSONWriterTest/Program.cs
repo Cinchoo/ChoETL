@@ -92,7 +92,34 @@ public class ToTextConverter : IChoValueConverter
 
         static void Main(string[] args)
         {
-            CSVToJSON1();
+            DictionaryTest();
+        }
+
+        public class ArmorPOCO
+        {
+            public int Armor { get; set; }
+            public int Strenght { get; set; }
+        }
+
+        static void DictionaryTest()
+        {
+            StringBuilder msg = new StringBuilder();
+
+            Dictionary<int, ArmorPOCO> dict = new Dictionary<int, ArmorPOCO>();
+            dict.Add(1, new ArmorPOCO { Armor = 1, Strenght = 1 });
+            dict.Add(2, new ArmorPOCO { Armor = 2, Strenght = 2 });
+
+            List<ArmorPOCO> list = new List<ArmorPOCO>();
+            list.Add(new ArmorPOCO { Armor = 1, Strenght = 1 });
+            list.Add(new ArmorPOCO { Armor = 2, Strenght = 2 });
+
+            using (var w = new ChoJSONWriter<ArmorPOCO>(msg)
+                )
+            {
+                w.Write(list);
+            }
+
+            Console.WriteLine(msg.ToString());
         }
 
         static void CSVToJSON1()

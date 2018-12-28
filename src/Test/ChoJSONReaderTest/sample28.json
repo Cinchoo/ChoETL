@@ -1,0 +1,13 @@
+﻿{
+    "1": {
+        "Armor": 1,
+        "Strenght": 1
+    },
+    "0": {
+        "Armor": 1,
+        "Mana": 2,
+        "Strenght": 1,
+        "Health": 1,
+        "Power": 1
+    }
+}
