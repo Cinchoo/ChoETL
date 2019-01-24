@@ -357,7 +357,7 @@ namespace ChoETL
 
                 MemberName = memberName;
                 ProperyType = memberType == null ? typeof(string) : memberType.GetUnderlyingType();
-                IsNullable = memberType.IsNullableType();
+                IsNullable = memberType == null ? true : memberType.IsNullableType() || memberType == typeof(string);
                 ChoDataTableColumnTypeAttribute dtColumnType = ChoType.GetAttribute<ChoDataTableColumnTypeAttribute>(ProperyType);
                 if (dtColumnType != null && dtColumnType.Type != null)
                     ProperyType = dtColumnType.Type;
@@ -374,7 +374,10 @@ namespace ChoETL
             public bool AllowDBNull()
             {
                 if (MemberInfo != null)
-                    return ChoType.GetMemberType(MemberInfo).IsNullableType();
+                {
+                    var t = ChoType.GetMemberType(MemberInfo);
+                    return t.IsNullableType() || t == typeof(string);
+                }
                 else
                     return IsNullable;
             }
@@ -399,7 +402,7 @@ namespace ChoETL
                     }
                 }
                 else
-                    return ChoConvert.ConvertTo(ChoType.GetMemberValue(target, MemberName), ProperyType);
+                    return ChoType.GetMemberValue(target, MemberName); // ChoConvert.ConvertTo(ChoType.GetMemberValue(target, MemberName), ProperyType);
             }
 
             public string GetName()

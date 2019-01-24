@@ -1737,10 +1737,11 @@ ID			DATE		AMOUNT	QUANTITY	ID
 ,
 1, Tom";
 
-            var dt = ChoCSVReader.LoadText(csv)
+            var dt = ChoCSVReader<EmpNull>.LoadText(csv)
                 .WithFirstLineHeader()
                 .Configure(c => c.NullValue = "")
-                .WithField("Id", fieldType: typeof(int))
+                //.WithField("Id", fieldType: typeof(int?))
+                //.WithField("Name", fieldType: typeof(string))
                 .AsDataReader();
 
             var x = dt.GetSchemaTable();
