@@ -92,7 +92,12 @@ public class ToTextConverter : IChoValueConverter
 
         static void Main(string[] args)
         {
-            DictionaryTest();
+            string[] tt = new string[] { "1", "", "3", "" };
+
+            var c = tt.Select((t, i) => String.IsNullOrWhiteSpace(t) ? (int?)i + 1 : null).Where(t => t != null).ToArray();
+            Console.WriteLine(String.Join(",", c));
+            return;
+            DataTableTest();
         }
 
         public class ArmorPOCO
@@ -772,7 +777,9 @@ Console.WriteLine(json.ToString());
                 DataTable dt = new DataTable("Customer");
                 adap.Fill(dt);
 
-                using (var parser = new ChoJSONWriter(sb))
+                using (var parser = new ChoJSONWriter(sb)
+                    .Configure(c => c.IgnoreRootName = true)
+                    )
                     parser.Write(dt);
             }
 

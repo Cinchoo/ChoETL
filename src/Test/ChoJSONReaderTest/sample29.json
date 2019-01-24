@@ -1,0 +1,50 @@
+﻿{
+  "root": {
+    "_type": "_container",
+    "Class": ".key.PModel",
+    "Elements": {
+      "_type": "array<element>",
+      "_data": [
+        {
+          "_type": "element",
+          "Class": ".key.PElement",
+          "Id": {
+            "_type": "testId",
+            "Class": ".key.PModel",
+            "RollId": ".key.7157"
+          },
+          "Data": {
+            "_type": "p_model",
+            "Class": ".key.Unsupported",
+            "MType": ".TestMType",
+            "Version": {
+              "_type": "test__version",
+              "Class": ".key.TestVersion"
+
+            }
+          }
+        },
+        {
+          "_type": "element",
+          "Class": ".key.PElement",
+          "Id": {
+            "_type": "TestId",
+            "Class": ".key.PModel",
+            "RollId": ".key.11261"
+          },
+          "Data": ".ref.root.Elements.0.Data"
+        },
+        {
+          "_type": "element",
+          "Class": ".key.PElement",
+          "Id": {
+            "_type": "TestId",
+            "Class": ".key.PModel",
+            "RollId": ".key.7914"
+          },
+          "Data": ".ref.root.Elements.0.Data"
+        }
+      ]
+    }
+  }
+}

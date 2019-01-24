@@ -709,7 +709,10 @@ namespace ChoETL
                     if (headers.Where(h => h.IsNullOrEmpty()).Any())
                     {
                         if (!Configuration.FileHeaderConfiguration.IgnoreColumnsWithEmptyHeader)
-                            throw new ChoParserException("At least one of the field header is empty.");
+                        {
+                            var c = headers.Select((t, i) => String.IsNullOrWhiteSpace(t) ? (int?)i + 1 : null).Where(t => t != null).ToArray();
+                            throw new ChoParserException("Atleast one of the field header is empty. Please check the field headers at [{0}].".FormatString(String.Join(",", c)));
+                        }
                         else
                         {
                             index = 0;
@@ -752,7 +755,10 @@ namespace ChoETL
 
             //Check any header value empty
             if (_fieldNames.Where(i => i.IsNullOrWhiteSpace()).Any())
-                throw new ChoParserException("At least one of the field header is empty.");
+            {
+                var c = _fieldNames.Select((t, i) => String.IsNullOrWhiteSpace(t) ? (int?)i + 1 : null).Where(t => t != null).ToArray();
+                throw new ChoParserException("Atleast one of the field header is empty. Please check the field headers at [{0}].".FormatString(String.Join(",", c)));
+            }
 
             if (Configuration.ColumnCountStrict)
             {

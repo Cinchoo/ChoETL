@@ -1673,7 +1673,7 @@ ID, Name
             string csv = @"* Select	d  : 02:02:12 20 MAR 2017						
 * Shippi	g Date >= 01/20/2017 ; Shipping Dat	<= 03/20/2017	; Shipping	Branch = 2	9,15,19,21,22,	5,26,27,2	,29,30,31,
 ********	***********************************	**************	**********	**********	**************	*********	**********
-							
+                            
 CUSTOMER	CUSTOMER NAME	INVOICE ID	PURCHASE	PRODUCT ID	PURCHASED	PURCHASED	LOCATION
 ID			DATE		AMOUNT	QUANTITY	ID
 22160	MANSFIELD BROTHERS HEATING & AIR	sss.001	02/08/2017	193792	69.374	2	30
@@ -1725,8 +1725,32 @@ ID			DATE		AMOUNT	QUANTITY	ID
             }
         }
 
+        public class EmpNull
+        {
+            public int? Id { get; set; }
+            public string Name { get; set; }
+        }
+
+        static void NullableColumnAsDataTable()
+        {
+            string csv = @"Id, Name
+,
+1, Tom";
+
+            var dt = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .Configure(c => c.NullValue = "")
+                .WithField("Id", fieldType: typeof(int))
+                .AsDataReader();
+
+            var x = dt.GetSchemaTable();
+        }
+
         static void Main(string[] args)
         {
+            NullableColumnAsDataTable();
+            return;
+
             SimpleCSVTest();
             return;
 

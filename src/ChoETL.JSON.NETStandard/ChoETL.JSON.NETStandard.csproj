@@ -19,7 +19,11 @@
     <Authors>Cinchoo</Authors>
     <Company>Cinchoo Inc.</Company>
     <Product>ChoETL.JSON.NETStandard</Product>
-    <Version>1.0.6.2</Version>
+    <Version>1.0.9.0</Version>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;DEBUG;NETSTANDARD2_0,_TEST_</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -38,9 +42,9 @@
     <Compile Include="..\ChoETL.JSON\ChoJSONWriter.cs" Link="ChoJSONWriter.cs" />
     <Compile Include="..\ChoETL.JSON\ChoUseJSONSerializationAttribute.cs" Link="ChoUseJSONSerializationAttribute.cs" />
   </ItemGroup>
-  
+
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.json" Version="11.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
   </ItemGroup>
   
   <ItemGroup>

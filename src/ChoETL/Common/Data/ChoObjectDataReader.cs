@@ -263,6 +263,7 @@ namespace ChoETL
                     row["DataType"] = Fields[i].GetPropertyType();
                     //row["DataTypeName"] = this.GetDataTypeName(i);
                     row["ColumnSize"] = -1;
+                    row["AllowDBNull"] = Fields[i].AllowDBNull();
                     t.Rows.Add(row);
                 }
             }
@@ -342,6 +343,7 @@ namespace ChoETL
             public readonly MemberInfo MemberInfo;
             public readonly Type ProperyType;
             public readonly string MemberName;
+            public readonly bool IsNullable;
 
             public ChoObjectDataReaderProperty(MemberInfo info)
             {
@@ -355,6 +357,7 @@ namespace ChoETL
 
                 MemberName = memberName;
                 ProperyType = memberType == null ? typeof(string) : memberType.GetUnderlyingType();
+                IsNullable = memberType.IsNullableType();
                 ChoDataTableColumnTypeAttribute dtColumnType = ChoType.GetAttribute<ChoDataTableColumnTypeAttribute>(ProperyType);
                 if (dtColumnType != null && dtColumnType.Type != null)
                     ProperyType = dtColumnType.Type;
@@ -363,9 +366,17 @@ namespace ChoETL
             public Type GetPropertyType()
             {
                 if (MemberInfo != null)
-                    return ChoType.GetMemberType(MemberInfo);
+                    return ChoType.GetMemberType(MemberInfo).GetUnderlyingType();
                 else
                     return ProperyType;
+            }
+
+            public bool AllowDBNull()
+            {
+                if (MemberInfo != null)
+                    return ChoType.GetMemberType(MemberInfo).IsNullableType();
+                else
+                    return IsNullable;
             }
 
             public object GetValue(object target)

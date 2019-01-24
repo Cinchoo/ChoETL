@@ -270,7 +270,7 @@ namespace ChoETL
                         else
                         {
                             var obj = new ChoCSVRecordFieldConfiguration(pd.Name, ++position);
-                            obj.FieldType = pt;
+                            obj.FieldType = pd.PropertyType; // pt;
                             obj.PropertyDescriptor = pd;
                             obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
                             StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();

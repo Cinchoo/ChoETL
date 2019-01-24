@@ -1616,12 +1616,56 @@ namespace ChoETL
 
         #endregion ToEnum Overloads
 
-        private static CodeDomProvider _csharpProvider = Microsoft.CSharp.CSharpCodeProvider.CreateProvider("C#");
+        private static MethodInfo _csharpProvider = null; // new Lazy<CodeDomProvider>(() => Microsoft.CSharp.CSharpCodeProvider.CreateProvider("C#"));
+        private static object _cs = null;
+
+        static Dictionary<string, Type> typeCache = new Dictionary<string, Type>();
+        public static bool TryFindType(string typeName, out Type t)
+        {
+            lock (typeCache)
+            {
+                if (!typeCache.TryGetValue(typeName, out t))
+                {
+                    foreach (Assembly a in AppDomain.CurrentDomain.GetAssemblies())
+                    {
+                        t = a.GetType(typeName);
+                        if (t != null)
+                            break;
+                    }
+                    typeCache[typeName] = t; // perhaps null
+                }
+            }
+            return t != null;
+        }
 
         public static string ToValidVariableName(this string text)
         {
             if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
-                text = _csharpProvider.CreateValidIdentifier(text);
+            {
+                if (_csharpProvider == null)
+                {
+                    try
+                    {
+                        //Microsoft.CSharp.CSharpCodeProvider.CreateProvider
+                        Type t = null;
+                        if (TryFindType("System.CodeDom.Compiler.CodeDomProvider", out t))
+                        {
+                            var cs1 = t.GetMethod("CreateProvider", new Type[] { typeof(string) });
+                            _cs = cs1.Invoke(null, new object[] { "C#" });
+
+                            _csharpProvider = _cs.GetType().GetMethod("CreateValidIdentifier");
+                        }
+                    }
+                    catch { }
+                }
+
+                try
+                {
+                    text = _csharpProvider != null ? _csharpProvider.Invoke(_cs, new object[] { text }) as string : text;
+                }
+                catch { }
+            }
+
             text = text.Replace("-", "_");
             StringBuilder identifier = new StringBuilder(text);
             if (Char.IsDigit(identifier[0]))

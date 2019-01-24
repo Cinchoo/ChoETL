@@ -35,14 +35,16 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.VisualBasic" />
-    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\ChoETL.JSON\Libs\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\ChoETL\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -61,6 +63,7 @@
     <None Include="EmpQuoteInQuote.csv" />
     <None Include="IgnoreLineFile1.csv" />
     <None Include="MasterDetail.csv" />
+    <None Include="packages.config" />
     <None Include="planets.csv" />
     <None Include="pontos.csv" />
     <None Include="DoubleQuotesTest.csv" />
@@ -86,6 +89,15 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Dict1.csv" />
+    <None Include="Nested.csv" />
+    <None Include="NestedQuotes.csv" />
+    <None Include="ZipCodes.csv" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="BadFile.csv" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\ChoETL.JSON\ChoETL.JSON.csproj">
       <Project>{ff39c858-da79-4a4b-b0e5-bdf8d8874a15}</Project>
       <Name>ChoETL.JSON</Name>
@@ -94,15 +106,6 @@
       <Project>{0a5062f4-b00a-4998-858d-a3c5d99e2074}</Project>
       <Name>ChoETL</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Dict1.csv" />
-    <None Include="Nested.csv" />
-    <None Include="NestedQuotes.csv" />
-    <None Include="ZipCodes.csv" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="BadFile.csv" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

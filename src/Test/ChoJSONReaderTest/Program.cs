@@ -869,11 +869,29 @@ namespace ChoJSONReaderTest
             }
         }
 
+        static void Sample29_1()
+        {
+            using (var r = new ChoJSONReader("sample29.json")
+                .WithJSONPath("$.._data")
+                .WithField("RollId", jsonPath: "$..Id.RollId", fieldType: typeof(string))
+                .WithField("MType", jsonPath: "$..Data.MType", fieldType: typeof(string))
+                )
+
+            {
+                foreach (var rec in r
+                    )
+                {
+                    Console.WriteLine((string)rec.RollId);
+                    Console.WriteLine((string)rec.MType);
+                }
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            Sample28_1();
+            Sample29_1();
         }
 
         public class ArmorPOCO

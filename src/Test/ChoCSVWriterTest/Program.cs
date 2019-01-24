@@ -457,10 +457,33 @@ namespace ChoCSVWriterTest
             Console.WriteLine(ChoCSVWriter<EmployeeRecSimple>.ToTextAll(objs));
         }
 
+        static void ReadNWrite()
+        {
+            string csv = @"Id, Name
+1, Tom
+2, Mark
+";
+
+            StringBuilder csvOut = new StringBuilder();
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                )
+            {
+                using (var w = new ChoCSVWriter(csvOut))
+                    w.Write(r.Select(r1 => new
+                    {
+                        r1.Id,
+                        r1.Name,
+                        City = "NY"
+                    }));
+            }
+            Console.WriteLine(csvOut.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            CSVWithQuotes();
+            ReadNWrite();
             return;
 
             WriteSpecificColumns();

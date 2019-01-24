@@ -1100,7 +1100,11 @@ namespace ChoETL
                 }
 
                 bool lUseJSONSerialization = useJSONSerialization == null ? Configuration.UseJSONSerialization : useJSONSerialization.Value;
+#if _TEST_
+                if (lUseJSONSerialization)
+#else
                 if (true) //lUseJSONSerialization)
+#endif
                 {
                     if (_se == null || _se.Value == null)
                         return jToken.ToObject(type);
@@ -1382,7 +1386,7 @@ namespace ChoETL
             return System.Net.WebUtility.HtmlDecode(fieldValue);
         }
 
-        #region Event Raisers
+#region Event Raisers
 
         private bool RaiseBeginLoad(object state)
         {
@@ -1600,6 +1604,6 @@ namespace ChoETL
             return false;
         }
 
-        #endregion Event Raisers
+#endregion Event Raisers
     }
 }
