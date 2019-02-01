@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
+using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Dynamic;
 using System.Globalization;
@@ -345,6 +346,12 @@ namespace ChoETL
             {
                 Configuration.ObjectValidationMode = prevObjValidationMode;
             }
+        }
+
+        public void AddBcpColumnMappings(SqlBulkCopy bcp)
+        {
+            foreach (var fn in Configuration.FixedLengthRecordFieldConfigurations.Select(fc => fc.FieldName))
+                bcp.ColumnMappings.Add(new SqlBulkCopyColumnMapping(fn, fn));
         }
 
         #region Fluent API

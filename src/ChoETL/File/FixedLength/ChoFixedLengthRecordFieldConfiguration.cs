@@ -53,7 +53,7 @@ namespace ChoETL
                     FieldName = Name;
                 if (StartIndex < 0)
                     throw new ChoRecordConfigurationException("StartIndex must be > 0.");
-                if (Size == null || Size.Value < 0)
+                if (StartIndex == 0 && (Size == null || Size.Value < 0))
                     throw new ChoRecordConfigurationException("Size must be > 0.");
                 if (FillChar != null)
                 {
@@ -73,7 +73,7 @@ namespace ChoETL
                          select comm).Any())
                         throw new ChoRecordConfigurationException("One of the Comments contains EOLDelimiter. Not allowed.");
                 }
-                if (Size != null && Size.Value <= 0)
+                if (StartIndex == 0 && (Size == null || Size.Value < 0))
                     throw new ChoRecordConfigurationException("Size must be > 0.");
                 if (ErrorMode == null)
                     ErrorMode = config.ErrorMode; // config.ErrorMode;
