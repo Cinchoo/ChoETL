@@ -355,6 +355,34 @@ namespace ChoETL
                 bcp.ColumnMappings.Add(new SqlBulkCopyColumnMapping(fn, fn));
         }
 
+        public void Bcp(string connectionString, string tableName,
+            int batchSize = 0, int notifyAfter = 0, int timeoutInSeconds = 0,
+            Action<object, SqlRowsCopiedEventArgs> rowsCopied = null,
+            Dictionary<string, string> columnMappings = null,
+            SqlBulkCopyOptions copyOptions = SqlBulkCopyOptions.Default)
+        {
+            if (columnMappings == null)
+                columnMappings = Configuration.CSVRecordFieldConfigurations.Select(fc => fc.FieldName)
+                    .ToDictionary(fn => fn, fn => fn);
+
+            AsDataReader().Bcp(connectionString, tableName, batchSize, notifyAfter, timeoutInSeconds,
+                rowsCopied, columnMappings, copyOptions);
+        }
+        public void Bcp(SqlConnection connection, string tableName,
+            int batchSize = 0, int notifyAfter = 0, int timeoutInSeconds = 0,
+            Action<object, SqlRowsCopiedEventArgs> rowsCopied = null,
+            Dictionary<string, string> columnMappings = null,
+            SqlBulkCopyOptions copyOptions = SqlBulkCopyOptions.Default,
+            SqlTransaction transaction = null)
+        {
+            if (columnMappings == null)
+                columnMappings = Configuration.CSVRecordFieldConfigurations.Select(fc => fc.FieldName)
+                    .ToDictionary(fn => fn, fn => fn);
+
+            AsDataReader().Bcp(connection, tableName, batchSize, notifyAfter, timeoutInSeconds,
+                rowsCopied, columnMappings, copyOptions);
+        }
+
         #region Fluent API
 
         public ChoCSVReader<T> NotifyAfter(long rowsLoaded)

@@ -258,7 +258,7 @@ namespace ChoETL
                             }
                         });
                     }
-                    
+
                     if (!typeof(IDictionary<string, object>).IsAssignableFrom(typeof(T)))
                         pds = ChoTypeDescriptor.GetProperties(typeof(T)).ToDictionary(kvp => fieldMap(kvp.Name), StringComparer.CurrentCultureIgnoreCase);
 
@@ -937,7 +937,7 @@ namespace ChoETL
             ChoGuard.ArgumentNotNull(ms, "Stream");
 
             ms.Flush();
-            ms.Position = 0; 
+            ms.Position = 0;
             return new StreamReader(ms).ReadToEnd();
         }
 
@@ -1572,24 +1572,120 @@ namespace ChoETL
             return sb.ToString();
         }
 
-        public static void Bcp(this DataTable table, SqlConnection conn, string tableName = null, int batchSize = 0, Dictionary<string, string> columnMappings = null)
+        public static void Bcp(this DataTable dt, string connectionString, string tableName = null,
+            int batchSize = 0, int notifyAfter = 0, int timeoutInSeconds = 0,
+            Action<object, SqlRowsCopiedEventArgs> rowsCopied = null,
+            Dictionary<string, string> columnMappings = null,
+            SqlBulkCopyOptions copyOptions = SqlBulkCopyOptions.Default)
         {
-            SqlBulkCopy bc = new SqlBulkCopy(conn);
+            SqlBulkCopy bcp = new SqlBulkCopy(connectionString, copyOptions);
+            Bcp(dt, bcp, tableName, batchSize, notifyAfter, timeoutInSeconds, rowsCopied, columnMappings);
+        }
 
-            table.AcceptChanges();
+        public static void Bcp(this DataTable dt, SqlConnection conn, string tableName = null,
+            int batchSize = 0, int notifyAfter = 0, int timeoutInSeconds = 0,
+            Action<object, SqlRowsCopiedEventArgs> rowsCopied = null,
+            Dictionary<string, string> columnMappings = null,
+            SqlBulkCopyOptions copyOptions = SqlBulkCopyOptions.Default,
+            SqlTransaction transaction = null)
+        {
+            SqlBulkCopy bcp = new SqlBulkCopy(conn, copyOptions, transaction);
+            Bcp(dt, bcp, tableName, batchSize, notifyAfter, timeoutInSeconds, rowsCopied, columnMappings);
+        }
 
-            bc.DestinationTableName = !tableName.IsNullOrWhiteSpace() ? tableName : table.TableName;
+        private static void Bcp(this DataTable dt, SqlBulkCopy bcp, string tableName = null,
+            int batchSize = 0, int notifyAfter = 0, int timeoutInSeconds = 0,
+            Action<object, SqlRowsCopiedEventArgs> rowsCopied = null,
+            Dictionary<string, string> columnMappings = null)
+        {
+            dt.AcceptChanges();
+
+            bcp.DestinationTableName = !tableName.IsNullOrWhiteSpace() ? tableName : dt.TableName;
 
             if (batchSize > 0)
-                bc.BatchSize = batchSize;
+                bcp.BatchSize = batchSize;
+            bcp.EnableStreaming = true;
+            if (timeoutInSeconds > 0)
+                bcp.BulkCopyTimeout = timeoutInSeconds;
+            else
+                bcp.BulkCopyTimeout = 0;
+            if (notifyAfter > 0)
+            {
+                bcp.NotifyAfter = notifyAfter;
+                bcp.SqlRowsCopied += delegate (object sender, SqlRowsCopiedEventArgs e)
+                {
+                    if (rowsCopied != null)
+                        rowsCopied(sender, e);
+                    else
+                        Console.WriteLine(e.RowsCopied.ToString("#,##0") + " rows copied.");
+                };
+            }
 
             if (columnMappings != null)
             {
                 foreach (KeyValuePair<string, string> keyValuePair in columnMappings)
-                    bc.ColumnMappings.Add(keyValuePair.Key, keyValuePair.Value);
+                    bcp.ColumnMappings.Add(keyValuePair.Key, keyValuePair.Value);
             }
 
-            bc.WriteToServer(table);
+            bcp.WriteToServer(dt);
+        }
+
+        public static void Bcp(this IDataReader dr, string connectionString, string tableName,
+            int batchSize = 0, int notifyAfter = 0, int timeoutInSeconds = 0,
+            Action<object, SqlRowsCopiedEventArgs> rowsCopied = null,
+            Dictionary<string, string> columnMappings = null,
+            SqlBulkCopyOptions copyOptions = SqlBulkCopyOptions.Default)
+        {
+            SqlBulkCopy bcp = new SqlBulkCopy(connectionString, copyOptions);
+            Bcp(dr, bcp, tableName, batchSize, notifyAfter, timeoutInSeconds, rowsCopied, columnMappings);
+        }
+
+        public static void Bcp(this IDataReader dr, SqlConnection conn, string tableName,
+            int batchSize = 0, int notifyAfter = 0, int timeoutInSeconds = 0,
+            Action<object, SqlRowsCopiedEventArgs> rowsCopied = null,
+            Dictionary<string, string> columnMappings = null,
+            SqlBulkCopyOptions copyOptions = SqlBulkCopyOptions.Default,
+            SqlTransaction transaction = null)
+        {
+            SqlBulkCopy bcp = new SqlBulkCopy(conn, copyOptions, transaction);
+            Bcp(dr, bcp, tableName, batchSize, notifyAfter, timeoutInSeconds, rowsCopied, columnMappings);
+        }
+
+        private static void Bcp(this IDataReader dr, SqlBulkCopy bcp, string tableName,
+            int batchSize = 0, int notifyAfter = 0, int timeoutInSeconds = 0,
+            Action<object, SqlRowsCopiedEventArgs> rowsCopied = null,
+            Dictionary<string, string> columnMappings = null)
+        {
+            ChoGuard.ArgumentNotNullOrEmpty(tableName, nameof(tableName));
+
+            bcp.DestinationTableName = tableName;
+
+            if (batchSize > 0)
+                bcp.BatchSize = batchSize;
+            bcp.EnableStreaming = true;
+            if (timeoutInSeconds > 0)
+                bcp.BulkCopyTimeout = timeoutInSeconds;
+            else
+                bcp.BulkCopyTimeout = 0;
+            if (notifyAfter > 0)
+            {
+                bcp.NotifyAfter = notifyAfter;
+                bcp.SqlRowsCopied += delegate (object sender, SqlRowsCopiedEventArgs e)
+                {
+                    if (rowsCopied != null)
+                        rowsCopied(sender, e);
+                    else
+                        Console.WriteLine(e.RowsCopied.ToString("#,##0") + " rows copied.");
+                };
+            }
+
+            if (columnMappings != null)
+            {
+                foreach (KeyValuePair<string, string> keyValuePair in columnMappings)
+                    bcp.ColumnMappings.Add(keyValuePair.Key, keyValuePair.Value);
+            }
+
+            bcp.WriteToServer(dr);
         }
 
         internal static string Format(string format, object value)
@@ -1741,7 +1837,7 @@ namespace ChoETL
                     message.Append(propertyValue);
                 return true;
             }
-            
+
             if (!String.IsNullOrEmpty(propertyName))
             {
                 foreach (IChoPropertyReplacer propertyReplacer1 in propertyReplacer.Items.ToArray())
@@ -2171,12 +2267,12 @@ namespace ChoETL
         public static Attribute[] GetCustomAttributesEx(this MemberInfo property, Type attributeType)
         {
             if (property == null)
-                return new Attribute[] {};
+                return new Attribute[] { };
 
             if (attributeType != null && property.GetCustomAttributes().Any(a => attributeType.IsAssignableFrom(a.GetType())))
                 return (from x in property.GetCustomAttributes()
                         where attributeType.IsAssignableFrom(x.GetType())
-                       select x).ToArray();
+                        select x).ToArray();
 
             if (property.DeclaringType != null)
             {
@@ -2205,7 +2301,7 @@ namespace ChoETL
 
             if (property.GetCustomAttributes().Any(a => attributeType.IsAssignableFrom(a.GetType())))
                 return (from x in property.GetCustomAttributes()
-                        where attributeType.IsAssignableFrom(x.GetType()) 
+                        where attributeType.IsAssignableFrom(x.GetType())
                         select x).FirstOrDefault();
 
             if (property.DeclaringType != null)
