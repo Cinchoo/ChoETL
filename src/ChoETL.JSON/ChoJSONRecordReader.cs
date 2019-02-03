@@ -120,7 +120,7 @@ namespace ChoETL
                 }
             }
         }
-        
+
         private bool IsKeyValuePairArray(JArray array)
         {
             try
@@ -628,7 +628,7 @@ namespace ChoETL
                     {
                         List<object> list = new List<object>();
                         Type itemType = fieldConfig.FieldType.GetUnderlyingType();
-                        
+
                         //if (itemType.IsCollectionType())
                         //    itemType = itemType.GetItemType().GetUnderlyingType();
 
@@ -1100,11 +1100,12 @@ namespace ChoETL
                 }
 
                 bool lUseJSONSerialization = useJSONSerialization == null ? Configuration.UseJSONSerialization : useJSONSerialization.Value;
-#if _TEST_
-                if (lUseJSONSerialization)
-#else
+//#if _TEST_
+//                if (lUseJSONSerialization)
+//#else
+//                if (true) //lUseJSONSerialization)
+//#endif
                 if (true) //lUseJSONSerialization)
-#endif
                 {
                     if (_se == null || _se.Value == null)
                         return jToken.ToObject(type);
@@ -1284,21 +1285,21 @@ namespace ChoETL
                     case JTokenType.Object:
                     case JTokenType.Undefined:
                     case JTokenType.Raw:
-                Dictionary<string, object> dict = jToken.ToObject(typeof(Dictionary<string, object>)) as Dictionary<string, object>;
+                        Dictionary<string, object> dict = jToken.ToObject(typeof(Dictionary<string, object>)) as Dictionary<string, object>;
 
-                dict = dict.Select(kvp =>
-                {
-                    if (kvp.Value is JToken)
-                    {
-                        var dobj = ToDynamic((JToken)kvp.Value);
-                        if (dobj is ChoDynamicObject)
-                            ((ChoDynamicObject)dobj).DynamicObjectName = kvp.Key;
-                        return new KeyValuePair<string, object>(kvp.Key, dobj);
-                    }
-                    else
-                        return kvp;
-                }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.InvariantCultureIgnoreCase);
-                return new ChoDynamicObject(dict);
+                        dict = dict.Select(kvp =>
+                        {
+                            if (kvp.Value is JToken)
+                            {
+                                var dobj = ToDynamic((JToken)kvp.Value);
+                                if (dobj is ChoDynamicObject)
+                                    ((ChoDynamicObject)dobj).DynamicObjectName = kvp.Key;
+                                return new KeyValuePair<string, object>(kvp.Key, dobj);
+                            }
+                            else
+                                return kvp;
+                        }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.InvariantCultureIgnoreCase);
+                        return new ChoDynamicObject(dict);
                     case JTokenType.Uri:
                         return (Uri)jToken;
                     case JTokenType.Array:
@@ -1386,7 +1387,7 @@ namespace ChoETL
             return System.Net.WebUtility.HtmlDecode(fieldValue);
         }
 
-#region Event Raisers
+        #region Event Raisers
 
         private bool RaiseBeginLoad(object state)
         {
@@ -1604,6 +1605,6 @@ namespace ChoETL
             return false;
         }
 
-#endregion Event Raisers
+        #endregion Event Raisers
     }
 }
