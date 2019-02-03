@@ -1747,8 +1747,22 @@ ID			DATE		AMOUNT	QUANTITY	ID
             var x = dt.GetSchemaTable();
         }
 
+        static void LargeNoOfColumnsTest()
+        {
+            Stopwatch sw = Stopwatch.StartNew();
+            foreach (var rec in new ChoCSVReader(@"C:\Users\nraj39\Downloads\ETLsampletest.csv"))
+            {
+                Console.WriteLine(rec.Dump());
+            }
+            sw.Stop();
+            Console.WriteLine(sw.Elapsed.TotalSeconds);
+        }
+
         static void Main(string[] args)
         {
+            LargeNoOfColumnsTest();
+            return;
+
             NullableColumnAsDataTable();
             return;
 
