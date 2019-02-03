@@ -184,7 +184,10 @@ namespace ChoETL
                             {
                             }
                             else
-                                Configuration.Validate(GetHeaders(pair.Item2));
+                            {
+                                object headers = GetHeaders(pair.Item2);
+                                Configuration.Validate(headers == null ? pair : headers);
+                            }
                             var dict = recFieldTypes = Configuration.FixedLengthRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
                             RaiseMembersDiscovered(dict);
                             Configuration.UpdateFieldTypesIfAny(dict);
@@ -215,7 +218,10 @@ namespace ChoETL
                             {
                             }
                             else
-                                Configuration.Validate(GetHeaders(pair.Item2));
+                            {
+                                object headers = GetHeaders(pair.Item2);
+                                Configuration.Validate(headers == null ? pair : headers);
+                            }
                             var dict = recFieldTypes = Configuration.FixedLengthRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
                             RaiseMembersDiscovered(dict);
                             Configuration.UpdateFieldTypesIfAny(dict);
@@ -430,7 +436,7 @@ namespace ChoETL
         private bool FillRecord(object rec, Tuple<long, string> pair)
         {
             long lineNo;
-            string line;
+            string line = null;
 
             lineNo = pair.Item1;
             line = pair.Item2;
@@ -732,7 +738,7 @@ namespace ChoETL
                 }
                 else
                 {
-                    if (line.Length != Configuration.RecordLength)
+                    if (Configuration.RecordLength != 0 && line.Length != Configuration.RecordLength)
                         throw new ChoParserException("Incorrect header length [Length: {0}] found. Expected header length: {1}".FormatString(line.Length, Configuration.RecordLength));
                 }
             }
