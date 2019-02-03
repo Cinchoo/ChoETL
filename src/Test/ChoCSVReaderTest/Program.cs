@@ -1749,13 +1749,16 @@ ID			DATE		AMOUNT	QUANTITY	ID
 
         static void LargeNoOfColumnsTest()
         {
-            Stopwatch sw = Stopwatch.StartNew();
-            foreach (var rec in new ChoCSVReader(@"C:\Users\nraj39\Downloads\ETLsampletest.csv"))
+            for (int i = 0; i < 5; i++)
             {
-                Console.WriteLine(rec.Dump());
+                Stopwatch sw = Stopwatch.StartNew();
+                foreach (var rec in new ChoCSVReader(@"C:\Users\nraj39\Downloads\ETLsampletest.csv"))
+                {
+                    //Console.WriteLine(rec.Column1);
+                }
+                sw.Stop();
+                Console.WriteLine(sw.Elapsed.TotalSeconds);
             }
-            sw.Stop();
-            Console.WriteLine(sw.Elapsed.TotalSeconds);
         }
 
         static void Main(string[] args)

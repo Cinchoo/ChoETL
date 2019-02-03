@@ -294,13 +294,13 @@ namespace ChoETL
 //                }
 //                else
 //                {
-//                    returnValueList.Add(tempString);
+//                        returnValueList.Add(tempString);
 //                    tempString = "";
 //                }
 
 //                if (characterCount == characters.Length)
 //                {
-//                    returnValueList.Add(tempString);
+//                        returnValueList.Add(tempString);
 //                    tempString = "";
 //                }
 //            }
@@ -309,53 +309,44 @@ namespace ChoETL
 //            return returnValue;
 //        }
 //#endif
-
-        public static string[] FastSplit(this string stringToSplit, char? cSeparator = ',', char? cQuotes = '"')
+        public static string[] FastSplit(this string line, char? cSeparator = ',', char? cQuotes = '"')
         {
-            char[] characters = stringToSplit.ToCharArray();
-            List<string> returnValueList = new List<string>();
-            string tempString = "";
-            bool blockUntilEndQuote = false;
-            int characterCount = 0;
-            foreach (char character in characters)
+            List<string> result = new List<string>();
+            StringBuilder currentStr = new StringBuilder("");
+            bool inQuotes = false;
+            int length = line.Length;
+
+            for (int i = 0; i < line.Length; i++) // For each character
             {
-                characterCount = characterCount + 1;
-
-                if (character == cQuotes)
+                if (!inQuotes && line[i] == cQuotes) // Quotes are closing or opening
+                    inQuotes = !inQuotes;
+                else if (inQuotes && i + 1 < length && line[i + 1] == cSeparator) // Comma
                 {
-                    if (blockUntilEndQuote == false)
+                    if (line[i] == cQuotes) // If not in quotes, end of current string, add it to result
                     {
-                        blockUntilEndQuote = true;
+                        i++;
+                        inQuotes = false;
+                        result.Add(currentStr.ToString());
+                        currentStr.Clear();
                     }
-                    else if (blockUntilEndQuote == true)
+                    else
+                        currentStr.Append(line[i]); // If in quotes, just add it 
+                }
+                else if (line[i] == cSeparator) // Comma
+                {
+                    if (!inQuotes) // If not in quotes, end of current string, add it to result
                     {
-                        blockUntilEndQuote = false;
+                        result.Add(currentStr.ToString());
+                        currentStr.Clear();
                     }
+                    else
+                        currentStr.Append(line[i]); // If in quotes, just add it 
                 }
-
-                if (character != cSeparator)
-                {
-                    tempString = tempString + character;
-                }
-                else if (character == cSeparator && blockUntilEndQuote == true)
-                {
-                    tempString = tempString + character;
-                }
-                else
-                {
-                    returnValueList.Add(tempString);
-                    tempString = "";
-                }
-
-                if (characterCount == characters.Length)
-                {
-                    returnValueList.Add(tempString);
-                    tempString = "";
-                }
+                else // Add any other character to current string
+                    currentStr.Append(line[i]);
             }
-
-            string[] returnValue = returnValueList.ToArray();
-            return returnValue;
+            result.Add(currentStr.ToString());
+            return result.ToArray(); // Return array of all strings
         }
 
         public static string[] Split(this string text, string value, ChoStringSplitOptions stringSplitOptions, char quoteChar = '\0')
