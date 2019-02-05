@@ -1688,6 +1688,39 @@ namespace ChoETL
             bcp.WriteToServer(dr);
         }
 
+        public static void Bcp(this IEnumerable collection, string connectionString, string tableName,
+            int batchSize = 0, int notifyAfter = 0, int timeoutInSeconds = 0,
+            Action<object, SqlRowsCopiedEventArgs> rowsCopied = null,
+            Dictionary<string, string> columnMappings = null,
+            SqlBulkCopyOptions copyOptions = SqlBulkCopyOptions.Default)
+        {
+            SqlBulkCopy bcp = new SqlBulkCopy(connectionString, copyOptions);
+            Bcp(collection, bcp, tableName, batchSize, notifyAfter, timeoutInSeconds, rowsCopied, columnMappings);
+        }
+
+        public static void Bcp(this IEnumerable collection, SqlConnection conn, string tableName,
+            int batchSize = 0, int notifyAfter = 0, int timeoutInSeconds = 0,
+            Action<object, SqlRowsCopiedEventArgs> rowsCopied = null,
+            Dictionary<string, string> columnMappings = null,
+            SqlBulkCopyOptions copyOptions = SqlBulkCopyOptions.Default,
+            SqlTransaction transaction = null)
+        {
+            SqlBulkCopy bcp = new SqlBulkCopy(conn, copyOptions, transaction);
+            Bcp(collection, bcp, tableName, batchSize, notifyAfter, timeoutInSeconds, rowsCopied, columnMappings);
+        }
+
+        private static void Bcp(this IEnumerable collection, SqlBulkCopy bcp, string tableName,
+            int batchSize = 0, int notifyAfter = 0, int timeoutInSeconds = 0,
+            Action<object, SqlRowsCopiedEventArgs> rowsCopied = null,
+            Dictionary<string, string> columnMappings = null)
+        {
+            ERPSGuard.ArgumentNotNullOrEmpty(collection, nameof(collection));
+            ERPSGuard.ArgumentNotNullOrEmpty(tableName, nameof(tableName));
+
+            Bcp(collection.AsDataReader(), bcp, tableName, batchSize, notifyAfter, timeoutInSeconds,
+                rowsCopied, columnMappings);
+        }
+
         internal static string Format(string format, object value)
         {
             if (value == null) return null;
