@@ -12,10 +12,17 @@ namespace ChoETL
 {
 	public static class ChoEnumrableEx
     {
-		public static IDataReader AsDataReader(this IEnumerable collection)
+		public static IDataReader AsDataReader(this IEnumerable collection, Action<IDictionary<string, Type>> membersDiscovered = null)
 		{
 			var e = new ChoStdDeferedObjectMemberDiscoverer(collection);
-			var dr = new ChoEnumerableDataReader(e.AsEnumerable(), e);
+            if (membersDiscovered != null)
+            {
+                e.MembersDiscovered += (o, e1) =>
+                {
+                    membersDiscovered(e1.Value);
+                };
+            }
+            var dr = new ChoEnumerableDataReader(e.AsEnumerable(), e);
 			return dr;
 		}
 
