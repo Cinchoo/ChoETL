@@ -88,15 +88,20 @@ namespace ChoETL
 
         public virtual int GetOrdinal(string name)
         {
-            for (int i = 0; i < Fields.Count; i++)
+            if (Fields != null)
             {
-                if (String.Compare(Fields[i].GetName(), name, true) == 0)
+                for (int i = 0; i < Fields.Count; i++)
                 {
-                    return i;
+                    if (String.Compare(Fields[i].GetName(), name, true) == 0)
+                    {
+                        return i;
+                    }
                 }
-            }
 
-            throw new IndexOutOfRangeException("name");
+                throw new IndexOutOfRangeException("name");
+            }
+            else
+                return 0;
         }
 
         object IDataRecord.this[int i]

@@ -376,7 +376,7 @@ namespace ChoETL
         public void Bcp(string connectionString, string tableName,
             int batchSize = 0, int notifyAfter = 0, int timeoutInSeconds = 0,
             Action<object, SqlRowsCopiedEventArgs> rowsCopied = null,
-            Dictionary<string, string> columnMappings = null,
+            IDictionary<string, string> columnMappings = null,
             SqlBulkCopyOptions copyOptions = SqlBulkCopyOptions.Default)
         {
             if (columnMappings == null)
@@ -389,7 +389,7 @@ namespace ChoETL
         public void Bcp(SqlConnection connection, string tableName,
             int batchSize = 0, int notifyAfter = 0, int timeoutInSeconds = 0,
             Action<object, SqlRowsCopiedEventArgs> rowsCopied = null,
-            Dictionary<string, string> columnMappings = null,
+            IDictionary<string, string> columnMappings = null,
             SqlBulkCopyOptions copyOptions = SqlBulkCopyOptions.Default,
             SqlTransaction transaction = null)
         {
