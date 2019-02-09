@@ -1754,13 +1754,12 @@ ID			DATE		AMOUNT	QUANTITY	ID
                 Stopwatch sw = Stopwatch.StartNew();
                 foreach (var rec in new ChoCSVReader(@"C:\Users\nraj39\Downloads\ETLsampletest.csv"))
                 {
-                    //Console.WriteLine(rec.Column1);
+                    Console.WriteLine(rec.Column1);
                 }
                 sw.Stop();
                 Console.WriteLine(sw.Elapsed.TotalSeconds);
             }
         }
-
         static void Main(string[] args)
         {
             LargeNoOfColumnsTest();

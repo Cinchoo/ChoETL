@@ -482,6 +482,9 @@ namespace ChoCSVWriterTest
 
         static void Main(string[] args)
         {
+            ConfigFirstApproachWriteDynamicRecordsToFile();
+            return;
+
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
             ReadNWrite();
             return;
@@ -993,6 +996,7 @@ namespace ChoCSVWriterTest
             config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id", 1) { Validators = new ValidationAttribute[] { new RangeAttribute(3, 100) } });
             config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name", 2));
             config.ObjectValidationMode = ChoObjectValidationMode.Off;
+            config.Encoding = new UTF8Encoding(false);
 
             List<ExpandoObject> objs = new List<ExpandoObject>();
             dynamic rec1 = new ExpandoObject();
