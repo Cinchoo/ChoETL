@@ -31,12 +31,16 @@ namespace ChoETL
             return Flatten(dict, null, nestedKeySeparator);
         }
 
-        private static IEnumerable<KeyValuePair<string, object>> Flatten(this IList list, string key, char? nestedKeySeparator = null)
+        private static IEnumerable<KeyValuePair<string, object>> Flatten(this IList list, string pkey, char? nestedKeySeparator = null)
         {
             nestedKeySeparator = nestedKeySeparator == null ? '_' : nestedKeySeparator;
             int index = 0;
+            string key = null;
+
             foreach (var item in list)
             {
+                key = pkey;
+
                 if (item is ChoDynamicObject && ((ChoDynamicObject)item).DynamicObjectName != ChoDynamicObject.DefaultName)
                 {
                     key = "{0}{2}{1}".FormatString(key, ((ChoDynamicObject)item).DynamicObjectName, nestedKeySeparator);

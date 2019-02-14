@@ -342,8 +342,8 @@ namespace ChoETL
                 rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
 
                 dict = rec.ToDynamicObject() as IDictionary<string, Object>;
-                if (Configuration.IsDynamicObject)
-                    dict = dict.Flatten().ToDictionary();
+                if (Configuration.IsDynamicObject && Configuration.UseNestedKeyFormat)
+                    dict = dict.Flatten(Configuration.NestedColumnSeparator).ToDictionary();
 
                 if (Configuration.ThrowAndStopOnMissingField)
                 {
