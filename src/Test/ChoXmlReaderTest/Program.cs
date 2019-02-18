@@ -160,7 +160,26 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            SoapMsgTest();
+        }
+
+        static void Sample50Test()
+        {
+            StringBuilder msg = new StringBuilder();
+            using (var p = new ChoXmlReader("sample50.xml")
+                .WithXPath("//targetMarketAttributes")
+                .WithMaxScanNodes(10)
+                )
+            {
+                using (var w = new ChoCSVWriter(msg)
+                    .WithFirstLineHeader()
+                    .Configure(c => c.UseNestedKeyFormat = true)
+                    .Configure(c => c.NestedColumnSeparator = '/')
+                    .Configure(c => c.ThrowAndStopOnMissingField = false)
+                    )
+                    w.Write(p);
+            }
+
+            Console.WriteLine(msg.ToString());
         }
 
         public class SoapBody

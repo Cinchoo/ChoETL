@@ -19,7 +19,7 @@
     <Authors>Cinchoo</Authors>
     <Company>Cinchoo Inc.</Company>
     <Product>ChoETL.JSON.NETStandard</Product>
-    <Version>1.0.9.5</Version>
+    <Version>1.0.9.6</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

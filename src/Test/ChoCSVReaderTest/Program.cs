@@ -1760,9 +1760,38 @@ ID			DATE		AMOUNT	QUANTITY	ID
                 Console.WriteLine(sw.Elapsed.TotalSeconds);
             }
         }
+
+        static void BoolIssue()
+        {
+            string csvIn = @"C:\Users\nraj39\Downloads\SampleData.csv";
+
+            using (var r = new ChoCSVReader(csvIn)
+                .WithFirstLineHeader()
+                .WithMaxScanRows(10)
+                )
+            {
+                foreach (IDictionary<string, object> rec in r.Take(1))
+                {
+                    foreach (var kvp in rec)
+                        Console.WriteLine($"{kvp.Key} - {r.Configuration[kvp.Key].FieldType}");
+                }
+            }
+        }
+
+        static void BcpTest()
+        {
+            string connectionString = @"Data Source=(LocalDB)\MSSQLLocalDb;Initial Catalog=EFSample.SchoolContext;Integrated Security=True";
+
+            string csv = @"TeacherId, TeacherName
+1, Tom
+2, Mark";
+
+            using (var p = ChoCSVReader.LoadText(csv))
+                p.Bcp(connectionString, "Teachers");
+        }
         static void Main(string[] args)
         {
-            LargeNoOfColumnsTest();
+            BcpTest();
             return;
 
             NullableColumnAsDataTable();
