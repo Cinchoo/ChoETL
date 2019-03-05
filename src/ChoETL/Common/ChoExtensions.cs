@@ -144,193 +144,221 @@ namespace ChoETL
             return Split(text, value, ChoStringSplitOptions.All);
         }
 
-//#if !NETSTANDARD2_0
-//        /// <summary>
-//        /// Split the string into multiple strings by the Separators.
-//        /// </summary>
-//        /// <param name="text">A string value to be split.</param>
-//        /// <param name="Separators">List of Separators used to split the string.</param>
-//        /// <param name="ignoreEmptyWord">true, to ignore the empry words in the output list</param>
-//        /// <returns>A string array contains splitted values, if the input text is null/empty, an empty array will be returned.</returns>
-//        //public static string[] Split(this string text, char[] Separators, ChoStringSplitOptions stringSplitOptions, char quoteChar = '\0')
-//        //{
-//        //    return Split(text, (object)Separators, stringSplitOptions, quoteChar);
-//        //}
-//        public static string[] FastSplit(this string sText, char? cSeparator = ',', char? cQuotes = '"')
-//        {
-//            string[] oTokens;
+        //#if !NETSTANDARD2_0
+        //        /// <summary>
+        //        /// Split the string into multiple strings by the Separators.
+        //        /// </summary>
+        //        /// <param name="text">A string value to be split.</param>
+        //        /// <param name="Separators">List of Separators used to split the string.</param>
+        //        /// <param name="ignoreEmptyWord">true, to ignore the empry words in the output list</param>
+        //        /// <returns>A string array contains splitted values, if the input text is null/empty, an empty array will be returned.</returns>
+        //        //public static string[] Split(this string text, char[] Separators, ChoStringSplitOptions stringSplitOptions, char quoteChar = '\0')
+        //        //{
+        //        //    return Split(text, (object)Separators, stringSplitOptions, quoteChar);
+        //        //}
+        //        public static string[] FastSplit(this string sText, char? cSeparator = ',', char? cQuotes = '"')
+        //        {
+        //            string[] oTokens;
 
-//            unsafe
-//            {
-//                fixed (char* lpText = sText)
-//                {
-//        #region Fast array estimatation
+        //            unsafe
+        //            {
+        //                fixed (char* lpText = sText)
+        //                {
+        //        #region Fast array estimatation
 
-//                    char* lpCurrent = lpText;
-//                    int nEstimatedSize = 0;
+        //                    char* lpCurrent = lpText;
+        //                    int nEstimatedSize = 0;
 
-//                    while (0 != *lpCurrent)
-//                    {
-//                        if (cSeparator == *lpCurrent)
-//                        {
-//                            nEstimatedSize++;
-//                        }
+        //                    while (0 != *lpCurrent)
+        //                    {
+        //                        if (cSeparator == *lpCurrent)
+        //                        {
+        //                            nEstimatedSize++;
+        //                        }
 
-//                        lpCurrent++;
-//                    }
+        //                        lpCurrent++;
+        //                    }
 
-//                    nEstimatedSize++; // Add EOL char(s)
-//                    string[] oEstimatedTokens = new string[nEstimatedSize];
+        //                    nEstimatedSize++; // Add EOL char(s)
+        //                    string[] oEstimatedTokens = new string[nEstimatedSize];
 
-//        #endregion
+        //        #endregion
 
-//        #region Parsing
+        //        #region Parsing
 
-//                    char[] oBuffer = new char[sText.Length];
-//                    int nIndex = 0;
-//                    int nTokens = 0;
+        //                    char[] oBuffer = new char[sText.Length];
+        //                    int nIndex = 0;
+        //                    int nTokens = 0;
 
-//                    lpCurrent = lpText;
+        //                    lpCurrent = lpText;
 
-//                    while (0 != *lpCurrent)
-//                    {
-//                        if (cQuotes == *lpCurrent)
-//                        {
-//                            // Quotes parsing
+        //                    while (0 != *lpCurrent)
+        //                    {
+        //                        if (cQuotes == *lpCurrent)
+        //                        {
+        //                            // Quotes parsing
 
-//                            lpCurrent++; // Skip quote
-//                            nIndex = 0;  // Reset buffer
+        //                            lpCurrent++; // Skip quote
+        //                            nIndex = 0;  // Reset buffer
 
-//                            while (
-//                                   (0 != *lpCurrent)
-//                                && (cQuotes != *lpCurrent)
-//                            )
-//                            {
-//                                oBuffer[nIndex] = *lpCurrent; // Store char
+        //                            while (
+        //                                   (0 != *lpCurrent)
+        //                                && (cQuotes != *lpCurrent)
+        //                            )
+        //                            {
+        //                                oBuffer[nIndex] = *lpCurrent; // Store char
 
-//                                lpCurrent++; // Move source cursor
-//                                nIndex++;    // Move target cursor
-//                            }
+        //                                lpCurrent++; // Move source cursor
+        //                                nIndex++;    // Move target cursor
+        //                            }
 
-//                        }
-//                        else if (cSeparator == *lpCurrent)
-//                        {
-//                            // Separator char parsing
+        //                        }
+        //                        else if (cSeparator == *lpCurrent)
+        //                        {
+        //                            // Separator char parsing
 
-//                            oEstimatedTokens[nTokens++] = new string(oBuffer, 0, nIndex); // Store token
-//                            nIndex = 0;                              // Skip separator and Reset buffer
-//                        }
-//                        else
-//                        {
-//                            // Content parsing
+        //                            oEstimatedTokens[nTokens++] = new string(oBuffer, 0, nIndex); // Store token
+        //                            nIndex = 0;                              // Skip separator and Reset buffer
+        //                        }
+        //                        else
+        //                        {
+        //                            // Content parsing
 
-//                            oBuffer[nIndex] = *lpCurrent; // Store char
-//                            nIndex++;                     // Move target cursor
-//                        }
+        //                            oBuffer[nIndex] = *lpCurrent; // Store char
+        //                            nIndex++;                     // Move target cursor
+        //                        }
 
-//                        lpCurrent++; // Move source cursor
-//                    }
+        //                        lpCurrent++; // Move source cursor
+        //                    }
 
-//                    // Recover pending buffer
+        //                    // Recover pending buffer
 
-//                    if (nIndex > 0)
-//                    {
-//                        // Store token
+        //                    if (nIndex > 0)
+        //                    {
+        //                        // Store token
 
-//                        oEstimatedTokens[nTokens++] = new string(oBuffer, 0, nIndex);
-//                    }
+        //                        oEstimatedTokens[nTokens++] = new string(oBuffer, 0, nIndex);
+        //                    }
 
-//                    // Build final tokens list
+        //                    // Build final tokens list
 
-//                    if (nTokens == nEstimatedSize)
-//                    {
-//                        oTokens = oEstimatedTokens;
-//                    }
-//                    else
-//                    {
-//                        oTokens = new string[nTokens];
-//                        Array.Copy(oEstimatedTokens, 0, oTokens, 0, nTokens);
-//                    }
+        //                    if (nTokens == nEstimatedSize)
+        //                    {
+        //                        oTokens = oEstimatedTokens;
+        //                    }
+        //                    else
+        //                    {
+        //                        oTokens = new string[nTokens];
+        //                        Array.Copy(oEstimatedTokens, 0, oTokens, 0, nTokens);
+        //                    }
 
-//        #endregion
-//                }
-//            }
+        //        #endregion
+        //                }
+        //            }
 
-//            // Epilogue            
+        //            // Epilogue            
 
-//            return oTokens;
-//        }
-//#else
-//        public static string[] FastSplit(this string stringToSplit, char? cSeparator = ',', char? cQuotes = '"')
-//        {
-//            char[] characters = stringToSplit.ToCharArray();
-//            List<string> returnValueList = new List<string>();
-//            string tempString = "";
-//            bool blockUntilEndQuote = false;
-//            int characterCount = 0;
-//            foreach (char character in characters)
-//            {
-//                characterCount = characterCount + 1;
+        //            return oTokens;
+        //        }
+        //#else
+        //        public static string[] FastSplit(this string stringToSplit, char? cSeparator = ',', char? cQuotes = '"')
+        //        {
+        //            char[] characters = stringToSplit.ToCharArray();
+        //            List<string> returnValueList = new List<string>();
+        //            string tempString = "";
+        //            bool blockUntilEndQuote = false;
+        //            int characterCount = 0;
+        //            foreach (char character in characters)
+        //            {
+        //                characterCount = characterCount + 1;
 
-//                if (character == cQuotes)
-//                {
-//                    if (blockUntilEndQuote == false)
-//                    {
-//                        blockUntilEndQuote = true;
-//                    }
-//                    else if (blockUntilEndQuote == true)
-//                    {
-//                        blockUntilEndQuote = false;
-//                    }
-//                }
+        //                if (character == cQuotes)
+        //                {
+        //                    if (blockUntilEndQuote == false)
+        //                    {
+        //                        blockUntilEndQuote = true;
+        //                    }
+        //                    else if (blockUntilEndQuote == true)
+        //                    {
+        //                        blockUntilEndQuote = false;
+        //                    }
+        //                }
 
-//                if (character != cSeparator)
-//                {
-//                    tempString = tempString + character;
-//                }
-//                else if (character == cSeparator && blockUntilEndQuote == true)
-//                {
-//                    tempString = tempString + character;
-//                }
-//                else
-//                {
-//                        returnValueList.Add(tempString);
-//                    tempString = "";
-//                }
+        //                if (character != cSeparator)
+        //                {
+        //                    tempString = tempString + character;
+        //                }
+        //                else if (character == cSeparator && blockUntilEndQuote == true)
+        //                {
+        //                    tempString = tempString + character;
+        //                }
+        //                else
+        //                {
+        //                        returnValueList.Add(tempString);
+        //                    tempString = "";
+        //                }
 
-//                if (characterCount == characters.Length)
-//                {
-//                        returnValueList.Add(tempString);
-//                    tempString = "";
-//                }
-//            }
+        //                if (characterCount == characters.Length)
+        //                {
+        //                        returnValueList.Add(tempString);
+        //                    tempString = "";
+        //                }
+        //            }
 
-//            string[] returnValue = returnValueList.ToArray();
-//            return returnValue;
-//        }
-//#endif
+        //            string[] returnValue = returnValueList.ToArray();
+        //            return returnValue;
+        //        }
+        //#endif
+
         public static string[] FastSplit(this string line, char? cSeparator = ',', char? cQuotes = '"')
         {
             List<string> result = new List<string>();
             StringBuilder currentStr = new StringBuilder("");
             bool inQuotes = false;
             int length = line.Length;
+            bool lineEnded = false;
 
             for (int i = 0; i < line.Length; i++) // For each character
             {
-                if (!inQuotes && line[i] == cQuotes) // Quotes are closing or opening
+                if (!inQuotes && line[i] == ChoCharEx.Backslash && i + 1 < length && line[i + 1] == cQuotes)
+                {
+                    currentStr.Append(line[i + 1]);
+                    i++;
+                }
+                else if (!inQuotes && line[i] == cQuotes)
+                {
+                    if (i == length - 1)
+                        currentStr.Append(line[i]);
                     inQuotes = !inQuotes;
-                else if (inQuotes && i + 1 < length && line[i + 1] == cSeparator) // Comma
+                }
+                else if (inQuotes &&
+                    (
+                        ((i + 1 < length && line[i + 1] == cSeparator) || (i + 1 == length))
+                    )
+                    ) // Comma
                 {
                     if (line[i] == cQuotes) // If not in quotes, end of current string, add it to result
                     {
-                        i++;
                         inQuotes = false;
+                        lineEnded = i + 1 == length;
                         result.Add(currentStr.ToString());
                         currentStr.Clear();
+                        i++;
                     }
                     else
                         currentStr.Append(line[i]); // If in quotes, just add it 
+                }
+                else if (inQuotes && line[i] == cQuotes)
+                {
+                    inQuotes = false;
+                }
+                else if (inQuotes &&
+                       ((line[i] == ChoCharEx.Backslash && i + 1 < length && line[i + 1] == cQuotes))
+                   ) // Comma
+                {
+                    i++;
+                    //inQuotes = false;
+                    currentStr.Append(line[i]);
                 }
                 else if (line[i] == cSeparator) // Comma
                 {
@@ -345,7 +373,10 @@ namespace ChoETL
                 else // Add any other character to current string
                     currentStr.Append(line[i]);
             }
-            result.Add(currentStr.ToString());
+            if (!lineEnded)
+            {
+                result.Add(currentStr.ToString());
+            }
             return result.ToArray(); // Return array of all strings
         }
 
