@@ -1789,9 +1789,28 @@ ID			DATE		AMOUNT	QUANTITY	ID
             using (var p = ChoCSVReader.LoadText(csv))
                 p.Bcp(connectionString, "Teachers");
         }
+
+        static void EscapeQuoteTest()
+        {
+            using (var reader = new ChoCSVReader<dynamic>("QuoteEscape.csv")
+                .WithDelimiter("\t")
+                .WithFirstLineHeader()
+                .Configure(x =>
+                {
+                    //x.QuoteEscapeChar = '\\';
+                    x.MaxScanRows = 0;
+                    x.IgnoreEmptyLine = true;
+                    x.ThrowAndStopOnMissingField = false;
+                }))
+            {
+                foreach (var rec in reader)
+                    Console.WriteLine(rec.Dump());
+            }
+
+        }
         static void Main(string[] args)
         {
-            BcpTest();
+            EscapeQuoteTest();
             return;
 
             NullableColumnAsDataTable();

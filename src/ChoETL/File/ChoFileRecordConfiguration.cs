@@ -160,6 +160,12 @@ namespace ChoETL
                 }
             }
         }
+        public char? QuoteEscapeChar
+        {
+            get;
+            set;
+        }
+
         [DataMember]
         public bool? QuoteAllFields
         {
@@ -216,6 +222,8 @@ namespace ChoETL
             StringSplitOptions = ChoStringSplitOptions.None;
             //Encoding = Encoding.UTF8;
             TreatCurrencyAsDecimal = true;
+            if (QuoteEscapeChar == null)
+                QuoteEscapeChar = QuoteChar;
         }
 
         protected override void Init(Type recordType)

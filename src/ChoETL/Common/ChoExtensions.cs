@@ -61,13 +61,16 @@ namespace ChoETL
             return SplitNTrim(text, separator, ChoStringSplitOptions.All);
         }
 
-        public static string[] SplitNTrim(this string text, string separator, ChoStringSplitOptions stringSplitOptions, char quoteChar = '\0')
+        public static string[] SplitNTrim(this string text, string separator, ChoStringSplitOptions stringSplitOptions, char quoteChar = '\0',
+            char quoteEscapeChar = '\0')
         {
             if (text == null || text.Trim().Length == 0) return new string[] { };
+            if (quoteEscapeChar == '\0')
+                quoteEscapeChar = quoteChar;
 
             string word;
             List<string> tokenList = new List<string>();
-            foreach (string token in Split(text, separator, stringSplitOptions, quoteChar))
+            foreach (string token in Split(text, (object)separator, stringSplitOptions, quoteChar, quoteEscapeChar))
             {
                 word = token != null ? NormalizeString(token.Trim(), quoteChar) : token;
                 if (String.IsNullOrEmpty(word))
@@ -310,8 +313,9 @@ namespace ChoETL
         //        }
         //#endif
 
-        public static string[] FastSplit(this string line, char? cSeparator = ',', char? cQuotes = '"')
+        public static string[] FastSplit(this string line, char? cSeparator = ',', char? cQuotes = '"', char? cQuoteEscape = ChoCharEx.Backslash)
         {
+            char escapeChar = cQuoteEscape == null ? ChoCharEx.Backslash : cQuoteEscape.Value;
             List<string> result = new List<string>();
             StringBuilder currentStr = new StringBuilder("");
             bool inQuotes = false;
@@ -320,7 +324,12 @@ namespace ChoETL
 
             for (int i = 0; i < line.Length; i++) // For each character
             {
-                if (!inQuotes && line[i] == ChoCharEx.Backslash && i + 1 < length && line[i + 1] == cQuotes)
+                if (!inQuotes && line[i] == escapeChar && i + 1 < length && line[i + 1] == escapeChar)
+                {
+                    currentStr.Append(line[i + 1]);
+                    i++;
+                }
+                else if (!inQuotes && line[i] == escapeChar && i + 1 < length && line[i + 1] == cQuotes)
                 {
                     currentStr.Append(line[i + 1]);
                     i++;
@@ -348,17 +357,22 @@ namespace ChoETL
                     else
                         currentStr.Append(line[i]); // If in quotes, just add it 
                 }
-                else if (inQuotes && line[i] == cQuotes)
+                else if (inQuotes && line[i] == escapeChar && i + 1 < length && line[i + 1] == escapeChar)
                 {
-                    inQuotes = false;
+                    currentStr.Append(line[i + 1]);
+                    i++;
                 }
                 else if (inQuotes &&
-                       ((line[i] == ChoCharEx.Backslash && i + 1 < length && line[i + 1] == cQuotes))
+                       ((line[i] == escapeChar && i + 1 < length && line[i + 1] == cQuotes))
                    ) // Comma
                 {
                     i++;
                     //inQuotes = false;
                     currentStr.Append(line[i]);
+                }
+                else if (inQuotes && line[i] == cQuotes)
+                {
+                    inQuotes = false;
                 }
                 else if (line[i] == cSeparator) // Comma
                 {
@@ -380,12 +394,14 @@ namespace ChoETL
             return result.ToArray(); // Return array of all strings
         }
 
-        public static string[] Split(this string text, string value, ChoStringSplitOptions stringSplitOptions, char quoteChar = '\0')
+        public static string[] Split(this string text, string value, ChoStringSplitOptions stringSplitOptions, char? quoteChar = '\0', char? quoteEscape = ChoCharEx.Backslash)
         {
-            return Split(text, (object)value, stringSplitOptions, quoteChar);
+            return Split(text, (object)value, stringSplitOptions, (quoteChar == null ? '\0' : quoteChar.Value), 
+                (quoteEscape == null ? ChoCharEx.Backslash : quoteEscape.Value));
         }
 
-        private static string[] Split(this string text, object separators, ChoStringSplitOptions stringSplitOptions, char quoteChar = '\0')
+        private static string[] Split(this string text, object separators, ChoStringSplitOptions stringSplitOptions, 
+            char quoteChar = '\0', char quoteEscape = ChoCharEx.Backslash)
         {
             if (String.IsNullOrEmpty(text)) return new string[0];
 
@@ -406,9 +422,9 @@ namespace ChoETL
                     throw new NotSupportedException();
             }
             else if (separators is char[] && ((char[])separators).Length == 1)
-                return text.FastSplit(((char[])separators)[0], quoteChar);
+                return text.FastSplit(((char[])separators)[0], quoteChar, quoteEscape);
             else if (separators is string && ((string)separators).Length == 1)
-                return text.FastSplit(((string)separators)[0], quoteChar);
+                return text.FastSplit(((string)separators)[0], quoteChar, quoteEscape);
 
             List<string> splitStrings = new List<string>();
 
@@ -749,6 +765,7 @@ namespace ChoETL
                 }
             }
 
+            char escapeChar = '"';
             bool isPrevEscape = false;
             bool inQuote = false;
             List<char> buffer = new List<char>();
@@ -756,7 +773,7 @@ namespace ChoETL
             CircularBuffer<char> delim_buffer = new CircularBuffer<char>(EOLDelimiter.Length);
             while (reader.Peek() >= 0)
             {
-                isPrevEscape = c == ChoCharEx.Backslash;
+                isPrevEscape = c == escapeChar;
                 c = (char)reader.Read();
                 delim_buffer.Enqueue(c);
                 if (quoteChar != ChoCharEx.NUL && quoteChar == c)

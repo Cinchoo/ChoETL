@@ -76,7 +76,7 @@ namespace ChoETL
                     string line = recEnum.Current;
                     if (!line.IsNullOrWhiteSpace())
                     {
-                        string[] fieldValues = line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar);
+                        string[] fieldValues = line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar, Configuration.QuoteEscapeChar);
                         if (Configuration.MaxFieldPosition < fieldValues.Length)
                             Configuration.MaxFieldPosition = fieldValues.Length;
                     }
@@ -567,7 +567,7 @@ namespace ChoETL
             lineNo = pair.Item1;
             line = pair.Item2;
 
-            string[] fieldValues = line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar);
+            string[] fieldValues = line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar, Configuration.QuoteEscapeChar);
             if (Configuration.ColumnCountStrict)
             {
                 if (fieldValues.Length != Configuration.CSVRecordFieldConfigurations.Count)
@@ -831,10 +831,10 @@ namespace ChoETL
             }
 
             //quotes are quoted and doubled (excel) i.e. 15" -> field1,"15""",field3
-            if (fieldValue.Contains(Configuration.DoubleQuoteChar))
-                fieldValue = fieldValue.Replace(Configuration.DoubleQuoteChar, Configuration.QuoteChar.ToString());
-            if (fieldValue.Contains(Configuration.BackslashQuote))
-                fieldValue = fieldValue.Replace(Configuration.BackslashQuote, Configuration.QuoteChar.ToString());
+            //if (fieldValue.Contains(Configuration.DoubleQuoteChar))
+            //    fieldValue = fieldValue.Replace(Configuration.DoubleQuoteChar, Configuration.QuoteChar.ToString());
+            //if (fieldValue.Contains(Configuration.BackslashQuote))
+            //    fieldValue = fieldValue.Replace(Configuration.BackslashQuote, Configuration.QuoteChar.ToString());
 
             if (config.Size != null)
             {
@@ -905,7 +905,7 @@ namespace ChoETL
             if (Configuration.FileHeaderConfiguration.HasHeaderRecord && !Configuration.FileHeaderConfiguration.IgnoreHeader)
             {
                 string[] headers = null;
-                headers = (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)
+                headers = (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar, Configuration.QuoteEscapeChar)
                            select CleanHeaderValue(x)).ToArray();
 
                 List<string> newHeaders = new List<string>();
@@ -956,7 +956,7 @@ namespace ChoETL
                     if (Configuration.MaxFieldPosition <= 0)
                     {
                         long index = 0;
-                        return (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar)
+                        return (from x in line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar, Configuration.QuoteEscapeChar)
                                 select "Column{0}".FormatString(++index)).ToArray();
                     }
                     else
