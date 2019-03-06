@@ -92,6 +92,7 @@
     <None Include="Dict1.csv" />
     <None Include="Nested.csv" />
     <None Include="NestedQuotes.csv" />
+    <None Include="QuoteEscape.csv" />
     <None Include="ZipCodes.csv" />
   </ItemGroup>
   <ItemGroup>
