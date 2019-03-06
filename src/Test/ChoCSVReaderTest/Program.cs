@@ -1761,9 +1761,23 @@ ID			DATE		AMOUNT	QUANTITY	ID
             }
         }
 
+        static void DataTableTest()
+        {
+            string csv = @"Id,MaxDiscount,Name,Active,AltId
+1,,Foo,1,ABC123
+2,10,Bar,0,DEF345";
+
+            var dt = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader().WithMaxScanRows(2)
+                .AsDataTable();
+
+            //var x = dt.GetSchemaTable();
+
+        }
+
         static void Main(string[] args)
         {
-            LargeNoOfColumnsTest();
+            DataTableTest();
             return;
 
             NullableColumnAsDataTable();
