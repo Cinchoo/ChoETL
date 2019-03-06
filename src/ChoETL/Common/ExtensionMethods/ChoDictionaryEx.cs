@@ -26,50 +26,60 @@ namespace ChoETL
         //    }
         //}
 
-        public static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict, bool useNestedKeyFormat = true)
+        public static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict, char? nestedKeySeparator = null)
         {
-            return Flatten(dict, null, useNestedKeyFormat);
+            return Flatten(dict, null, nestedKeySeparator);
         }
 
-        private static IEnumerable<KeyValuePair<string, object>> Flatten(this IList list, string key, bool useNestedKeyFormat = true)
+        private static IEnumerable<KeyValuePair<string, object>> Flatten(this IList list, string pkey, char? nestedKeySeparator = null)
         {
+            nestedKeySeparator = nestedKeySeparator == null ? '_' : nestedKeySeparator;
             int index = 0;
+            string key = null;
+
             foreach (var item in list)
             {
+                key = pkey;
+
+                if (item is ChoDynamicObject && ((ChoDynamicObject)item).DynamicObjectName != ChoDynamicObject.DefaultName)
+                {
+                    key = "{0}{2}{1}".FormatString(key, ((ChoDynamicObject)item).DynamicObjectName, nestedKeySeparator);
+                }
                 if (item is IDictionary<string, object>)
                 {
-                    foreach (var kvp1 in Flatten(item as IDictionary<string, object>, "{0}_{1}".FormatString(key, index++)))
+                    foreach (var kvp1 in Flatten(item as IDictionary<string, object>, "{0}{2}{1}".FormatString(key, index++, nestedKeySeparator), nestedKeySeparator))
                         yield return kvp1;
                 }
                 else if (item is IList)
                 {
-                    foreach (var kvp1 in Flatten(item as IList, "{0}_{1}".FormatString(key, index++)))
+                    foreach (var kvp1 in Flatten(item as IList, "{0}{2}{1}".FormatString(key, index++, nestedKeySeparator), nestedKeySeparator))
                         yield return kvp1;
                 }
                 else
-                    yield return new KeyValuePair<string, object>("{0}_{1}".FormatString(key, index++), item);
+                    yield return new KeyValuePair<string, object>("{0}{2}{1}".FormatString(key, index++, nestedKeySeparator), item);
             }
 
         }
-        private static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict, string key = null, bool useNestedKeyFormat = true)
+        private static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict, string key = null, char? nestedKeySeparator = null)
         {
             if (dict == null)
                 yield break;
 
+            nestedKeySeparator = nestedKeySeparator == null ? '_' : nestedKeySeparator;
             foreach (var kvp in dict)
             {
                 if (kvp.Value is IDictionary<string, object>)
                 {
-                    foreach (var tuple in Flatten(kvp.Value as IDictionary<string, object>, key == null ? kvp.Key : useNestedKeyFormat ? "{0}_{1}".FormatString(key, kvp.Key) : kvp.Key, useNestedKeyFormat))
+                    foreach (var tuple in Flatten(kvp.Value as IDictionary<string, object>, key == null ? kvp.Key : "{0}{2}{1}".FormatString(key, kvp.Key, nestedKeySeparator), nestedKeySeparator))
                         yield return tuple;
                 }
                 else if (kvp.Value is IList)
                 {
-                    foreach (var tuple in Flatten(kvp.Value as IList, key == null ? kvp.Key : useNestedKeyFormat ? "{0}_{1}".FormatString(key, kvp.Key) : kvp.Key, useNestedKeyFormat))
+                    foreach (var tuple in Flatten(kvp.Value as IList, key == null ? kvp.Key : "{0}{2}{1}".FormatString(key, kvp.Key, nestedKeySeparator), nestedKeySeparator))
                         yield return tuple;
                 }
                 else
-                    yield return new KeyValuePair<string, object>(key == null ? kvp.Key.ToString() : useNestedKeyFormat ? "{0}_{1}".FormatString(key, kvp.Key.ToString()) : kvp.Key.ToString(), kvp.Value);
+                    yield return new KeyValuePair<string, object>(key == null ? kvp.Key.ToString() : "{0}{2}{1}".FormatString(key, kvp.Key.ToString(), nestedKeySeparator), kvp.Value);
             }
         }
 

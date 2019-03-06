@@ -1754,27 +1754,41 @@ ID			DATE		AMOUNT	QUANTITY	ID
                 Stopwatch sw = Stopwatch.StartNew();
                 foreach (var rec in new ChoCSVReader(@"C:\Users\nraj39\Downloads\ETLsampletest.csv"))
                 {
-                    //Console.WriteLine(rec.Column1);
+                    Console.WriteLine(rec.Column1);
                 }
                 sw.Stop();
                 Console.WriteLine(sw.Elapsed.TotalSeconds);
             }
         }
 
-        static void DataTableTest()
+        static void BoolIssue()
         {
-            string csv = @"Id,MaxDiscount,Name,Active,AltId
-1,,Foo,1,ABC123
-2,10,Bar,0,DEF345";
+            string csvIn = @"C:\Users\nraj39\Downloads\SampleData.csv";
 
-            var dt = ChoCSVReader.LoadText(csv)
-                .WithFirstLineHeader().WithMaxScanRows(2)
-                .AsDataTable();
-
-            //var x = dt.GetSchemaTable();
-
+            using (var r = new ChoCSVReader(csvIn)
+                .WithFirstLineHeader()
+                .WithMaxScanRows(10)
+                )
+            {
+                foreach (IDictionary<string, object> rec in r.Take(1))
+                {
+                    foreach (var kvp in rec)
+                        Console.WriteLine($"{kvp.Key} - {r.Configuration[kvp.Key].FieldType}");
+                }
+            }
         }
 
+        static void BcpTest()
+        {
+            string connectionString = @"Data Source=(LocalDB)\MSSQLLocalDb;Initial Catalog=EFSample.SchoolContext;Integrated Security=True";
+
+            string csv = @"TeacherId, TeacherName
+1, Tom
+2, Mark";
+
+            using (var p = ChoCSVReader.LoadText(csv))
+                p.Bcp(connectionString, "Teachers");
+        }
         static void Main(string[] args)
         {
             DataTableTest();

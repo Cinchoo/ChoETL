@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -276,7 +277,7 @@ AntoinedeSaint-ExupéryMale  1529-06-1900";
 
         static void Main(string[] args)
         {
-            Test2();
+            QuickLoad();
             return;
 
             AABillingTest();
@@ -331,21 +332,27 @@ AntoinedeSaint-ExupéryMale  1529-06-1900";
 
         static void QuickLoad()
         {
-            using (var r = new ChoFixedLengthReader("accounts.txt").WithFirstLineHeader()
-                .Configure(c => c.MaxScanRows = 2)
-                )
+            for (int i = 0; i < 5; i++)
             {
-                //r.RecordLoadError += (o, e) =>
-                //{
-                //    Console.WriteLine(e.Exception.Message);
-                //    e.Handled = true;
-                //};
-                foreach (dynamic rec in r)
+                Stopwatch sw = Stopwatch.StartNew();
+                using (var r = new ChoFixedLengthReader("accounts.txt")
+                    //.WithFirstLineHeader()
+                    //.Configure(c => c.MaxScanRows = 2)
+                    )
                 {
-                    Console.WriteLine("{0}", rec.Dump());
+                    //r.RecordLoadError += (o, e) =>
+                    //{
+                    //    Console.WriteLine(e.Exception.Message);
+                    //    e.Handled = true;
+                    //};
+                    foreach (dynamic rec in r)
+                    {
+                        //Console.WriteLine("{0}", rec.Dump());
+                    }
                 }
+                sw.Stop();
+                Console.WriteLine(sw.Elapsed.TotalSeconds);
             }
-
         }
 
         static void QuickDataTableTest()

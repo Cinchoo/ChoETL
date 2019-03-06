@@ -891,7 +891,68 @@ namespace ChoJSONReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            Sample29_1();
+            JSON2CSV();
+        }
+
+        static void JSON2CSV()
+        {
+            string json = @"
+{
+  ""name"":""John"",
+  ""age"":30,
+  ""cars"": {
+        ""car1"":""Ford"",
+        ""car2"":""BMW"",
+        ""car3"":""Fiat"",
+        ""Country"": [
+            ""USA"",
+            ""Mexico""
+    ]
+  }
+ }";
+
+            StringBuilder csv = new StringBuilder();
+            using (var p = ChoJSONReader.LoadText(json)
+                .WithJSONPath("$")
+                )
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    //.Configure(c => c.UseNestedKeyFormat = false)
+                    //.Configure(c => c.NestedColumnSeparator = '/')
+                    //.Configure(c => c.ThrowAndStopOnMissingField = false)
+                    )
+                {
+                    w.Write(p);
+                }
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
+        public static void LargeJSON()
+        {
+            string json = @"[
+  {
+    ""name"": ""foo"",
+    ""id"": 1
+  },
+  {
+    ""name"": ""bar"",
+    ""id"": 2
+  },
+  {
+    ""name"": ""baz"",
+    ""id"": 3
+  }
+]";
+            using (var p = ChoJSONReader.LoadText(json))
+            {
+                foreach (var rec in p)
+                {
+                    Console.WriteLine($"Name: {rec.name}, Id: {rec.id}");
+                }
+            }
         }
 
         public class ArmorPOCO

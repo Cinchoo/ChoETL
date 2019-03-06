@@ -183,10 +183,11 @@ namespace ChoETL
             }
         }
 
+        private Encoding _defaultEncoding = new UTF8Encoding(false);
         private Encoding _encoding;
         public Encoding Encoding
         {
-            get { return _encoding != null ? _encoding : Encoding.UTF8; }
+            get { return _encoding != null ? _encoding : _defaultEncoding; }
             set { _encoding = value; }
         }
         [DataMember]
@@ -290,7 +291,7 @@ namespace ChoETL
                 }
                 catch (Exception ex)
                 {
-                    Encoding = Encoding.UTF8;
+                    Encoding = _defaultEncoding;
                     ChoETLLog.Error("Error finding encoding in file. Default to UTF8.");
                     ChoETLLog.Error(ex.Message);
                 }
@@ -311,7 +312,7 @@ namespace ChoETL
                 }
                 catch (Exception ex)
                 {
-                    Encoding = Encoding.UTF8;
+                    Encoding = _defaultEncoding;
                     ChoETLLog.Error("Error finding encoding in '{0}' file. Default to UTF8.".FormatString(fileName));
                     ChoETLLog.Error(ex.Message);
                 }
