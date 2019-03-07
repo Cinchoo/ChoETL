@@ -378,7 +378,11 @@ namespace ChoETL
                 {
                     if (!inQuotes) // If not in quotes, end of current string, add it to result
                     {
-                        result.Add(currentStr.ToString());
+                        var value = currentStr.ToString();
+                        if (value.Length == 1 && value[0] == cQuoteEscape)
+                            result.Add(String.Empty);
+                        else
+                            result.Add(value);
                         currentStr.Clear();
                     }
                     else
