@@ -223,7 +223,7 @@ namespace ChoETL
             //Encoding = Encoding.UTF8;
             TreatCurrencyAsDecimal = true;
             if (QuoteEscapeChar == null)
-                QuoteEscapeChar = QuoteChar;
+                QuoteEscapeChar = '\0';
         }
 
         protected override void Init(Type recordType)

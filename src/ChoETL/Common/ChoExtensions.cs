@@ -372,13 +372,23 @@ namespace ChoETL
                 }
                 else if (inQuotes && line[i] == cQuotes)
                 {
-                    inQuotes = false;
+                    if (i + 1 < length && line[i + 1] == cQuotes)
+                    {
+                        currentStr.Append(line[i]);
+                        i++;
+                    }
+                    else
+                        inQuotes = false;
                 }
                 else if (line[i] == cSeparator) // Comma
                 {
                     if (!inQuotes) // If not in quotes, end of current string, add it to result
                     {
-                        result.Add(currentStr.ToString());
+                        var value = currentStr.ToString();
+                        if (value.Length == 1 && value[0] == cQuoteEscape)
+                            result.Add(String.Empty);
+                        else
+                            result.Add(value);
                         currentStr.Clear();
                     }
                     else
