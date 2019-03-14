@@ -48,10 +48,14 @@ namespace ChoETL
 				return item.GetType().GetProperties().Select(kvp => new KeyValuePair<string, Type>(kvp.Name, kvp.PropertyType)).ToArray();
 		}
 
-		public static DataTable AsDataTable(this IEnumerable collection, string tableName = null)
+		public static DataTable AsDataTable(this IEnumerable collection, string tableName = null, CultureInfo ci = null)
 		{
 			DataTable dt = tableName.IsNullOrWhiteSpace() ? new DataTable() : new DataTable(tableName);
-			dt.Load(AsDataReader(collection));
+            if (ci != null)
+            {
+                dt.Locale = ci;
+            }
+            dt.Load(AsDataReader(collection));
 			return dt;
 		}
 
