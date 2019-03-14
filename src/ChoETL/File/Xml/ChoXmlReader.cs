@@ -326,6 +326,11 @@ namespace ChoETL
 
         public IDataReader AsDataReader()
         {
+            return AsDataReader(null);
+        }
+
+        private IDataReader AsDataReader(Action<IDictionary<string, Type>> membersDiscovered)
+        {
             if (_xElements == null)
             {
                 InitXml();
@@ -336,7 +341,7 @@ namespace ChoETL
                 rr.Reader = this;
                 rr.TraceSwitch = TraceSwitch;
                 rr.RowsLoaded += NotifyRowsLoaded;
-                rr.MembersDiscovered += MembersDiscovered;
+                rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
                 var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_xmlReader), rr);
                 return dr;
             }
@@ -347,7 +352,7 @@ namespace ChoETL
                 rr.Reader = this;
                 rr.TraceSwitch = TraceSwitch;
                 rr.RowsLoaded += NotifyRowsLoaded;
-                rr.MembersDiscovered += MembersDiscovered;
+                rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
                 var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_xElements), rr);
                 return dr;
             }
@@ -422,7 +427,17 @@ namespace ChoETL
                 columnMappings = Configuration.XmlRecordFieldConfigurations.Select(fc => fc.FieldName)
                     .ToDictionary(fn => fn, fn => fn);
 
-            AsDataReader().Bcp(connectionString, tableName, batchSize, notifyAfter, timeoutInSeconds,
+            AsDataReader((d) =>
+            {
+                if (columnMappings == null || columnMappings.Count == 0)
+                {
+                    columnMappings = new Dictionary<string, string>();
+                    foreach (var key in d.Keys)
+                    {
+                        columnMappings.Add(key, key);
+                    }
+                }
+            }).Bcp(connectionString, tableName, batchSize, notifyAfter, timeoutInSeconds,
                 rowsCopied, columnMappings, copyOptions);
         }
         public void Bcp(SqlConnection connection, string tableName,
@@ -436,7 +451,17 @@ namespace ChoETL
                 columnMappings = Configuration.XmlRecordFieldConfigurations.Select(fc => fc.FieldName)
                     .ToDictionary(fn => fn, fn => fn);
 
-            AsDataReader().Bcp(connection, tableName, batchSize, notifyAfter, timeoutInSeconds,
+            AsDataReader((d) =>
+            {
+                if (columnMappings == null || columnMappings.Count == 0)
+                {
+                    columnMappings = new Dictionary<string, string>();
+                    foreach (var key in d.Keys)
+                    {
+                        columnMappings.Add(key, key);
+                    }
+                }
+            }).Bcp(connection, tableName, batchSize, notifyAfter, timeoutInSeconds,
                 rowsCopied, columnMappings, copyOptions);
         }
 
@@ -591,7 +616,7 @@ namespace ChoETL
                 defaultValue, fallbackValue, encodeValue, null, formatText, nullValue);
         }
 
-        private ChoXmlReader<T> WithXmlElementField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, 
+        private ChoXmlReader<T> WithXmlElementField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
             Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
@@ -600,8 +625,8 @@ namespace ChoETL
         {
             string fnTrim = name.NTrim();
             string xPath = $"/{fnTrim}";
-            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, false, fieldName, false, valueConverter, itemConverter, 
-                customSerializer, defaultValue, 
+            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, false, fieldName, false, valueConverter, itemConverter,
+                customSerializer, defaultValue,
                 fallbackValue, encodeValue, formatText, nullValue);
         }
 
@@ -634,7 +659,7 @@ namespace ChoETL
                         defaultValue, fallbackValue, encodeValue, null, formatText, nullValue);
         }
 
-        private ChoXmlReader<T> WithXmlAttributeField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, 
+        private ChoXmlReader<T> WithXmlAttributeField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
             Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
@@ -643,10 +668,10 @@ namespace ChoETL
         {
             string fnTrim = name.NTrim();
             string xPath = $"/@{fnTrim}";
-            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, true, fieldName, false, valueConverter, 
+            return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, true, fieldName, false, valueConverter,
                 itemConverter, customSerializer, defaultValue, fallbackValue, encodeValue, formatText, nullValue);
         }
-        
+
         public ChoXmlReader<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoXmlRecordFieldConfigurationMap> setup)
         {
             Configuration.MapRecordField(field.GetMemberName(), setup);
@@ -660,8 +685,8 @@ namespace ChoETL
             return this;
         }
 
-        public ChoXmlReader<T> WithField<TField>(Expression<Func<T, TField>> field, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
-            bool isXmlAttribute = false, string fieldName = null, bool isArray = false, 
+        public ChoXmlReader<T> WithField<TField>(Expression<Func<T, TField>> field, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
+            bool isXmlAttribute = false, string fieldName = null, bool isArray = false,
             Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
@@ -692,7 +717,7 @@ namespace ChoETL
                 encodeValue, null, formatText, nullValue);
         }
 
-        private ChoXmlReader<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isXmlAttribute = false, string fieldName = null, bool isArray = false, 
+        private ChoXmlReader<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isXmlAttribute = false, string fieldName = null, bool isArray = false,
             Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
@@ -848,7 +873,7 @@ namespace ChoETL
             : base(xElement, configuration)
         {
         }
-        
+
         public static IEnumerable<dynamic> DeserializeText(string inputText, string xPath, Encoding encoding = null, TraceSwitch traceSwitch = null)
         {
             var configuration = new ChoXmlRecordConfiguration();

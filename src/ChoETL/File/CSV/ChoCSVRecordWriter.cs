@@ -523,12 +523,12 @@ namespace ChoETL
                 {
                     msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, 
                         GetFieldValueJustification(kvp.Value.FieldValueJustification), GetFillChar(kvp.Value.FillChar), 
-                        false, kvp.Value.NullValue, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType), fieldConfig));
+                        false, kvp.Value.NullValue, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType, Configuration.FieldValueTrimOption), fieldConfig));
                     firstColumn = false;
                 }
                 else
                     msg.AppendFormat("{0}{1}", Configuration.Delimiter, NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification),
-                        GetFillChar(kvp.Value.FillChar), false, kvp.Value.NullValue, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType), fieldConfig));
+                        GetFillChar(kvp.Value.FillChar), false, kvp.Value.NullValue, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType, Configuration.FieldValueTrimOption), fieldConfig));
             }
 
             recText = msg.ToString();
@@ -779,6 +779,10 @@ namespace ChoETL
                     }
                 }
             }
+
+            //quotes are quoted and doubled (excel) i.e. 15" -> field1,"15""",field3
+            if (fieldValue.Contains(Configuration.QuoteChar))
+                fieldValue = fieldValue.Replace(Configuration.QuoteChar.ToString(), Configuration.DoubleQuoteChar);
 
             if (fieldConfig != null && fieldConfig.ValueSelector != null)
                 quoteValue = false;

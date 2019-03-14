@@ -190,6 +190,7 @@
     <Compile Include="..\ChoETL\Common\Dynamic\ChoMetadataTypesRegister.cs" Link="Common\Dynamic\ChoMetadataTypesRegister.cs" />
     <Compile Include="..\ChoETL\Common\Dynamic\ChoDynamicQueryable.cs" Link="Common\Dynamic\ChoDynamicQueryable.cs" />
     <Compile Include="..\ChoETL\Common\Exceptions\ChoConsoleCtrlException.cs" Link="Common\Exceptions\ChoConsoleCtrlException.cs" />
+    <Compile Include="..\ChoETL\Common\Exceptions\ChoSqlBulkCopyException.cs" Link="Common\Exceptions\ChoSqlBulkCopyException.cs" />
     <Compile Include="..\ChoETL\Common\Exceptions\ChoFatalApplicationException.cs" Link="Common\Exceptions\ChoFatalApplicationException.cs" />
     <Compile Include="..\ChoETL\Common\ExtensionMethods\ChoDictionaryEx.cs" Link="Common\ExtensionMethods\ChoDictionaryEx.cs" />
     <Compile Include="..\ChoETL\Common\ExtensionMethods\ChoIniFileEx.cs" Link="Common\ExtensionMethods\ChoIniFileEx.cs" />

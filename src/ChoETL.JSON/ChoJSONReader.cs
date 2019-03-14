@@ -292,6 +292,11 @@ namespace ChoETL
 
         public IDataReader AsDataReader()
         {
+            return AsDataReader(null);
+        }
+
+        private IDataReader AsDataReader(Action<IDictionary<string, Type>> membersDiscovered)
+        {
             if (_jObjects == null)
             {
                 ChoJSONRecordReader rr = new ChoJSONRecordReader(typeof(T), Configuration);
@@ -300,7 +305,7 @@ namespace ChoETL
                 rr.Reader = this;
                 rr.TraceSwitch = TraceSwitch;
                 rr.RowsLoaded += NotifyRowsLoaded;
-                rr.MembersDiscovered += MembersDiscovered;
+                rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
                 var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_JSONReader), rr);
                 return dr;
             }
@@ -310,7 +315,7 @@ namespace ChoETL
                 rr.Reader = this;
                 rr.TraceSwitch = TraceSwitch;
                 rr.RowsLoaded += NotifyRowsLoaded;
-                rr.MembersDiscovered += MembersDiscovered;
+                rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
                 var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_jObjects), rr);
                 return dr;
             }
@@ -383,7 +388,17 @@ namespace ChoETL
                 columnMappings = Configuration.JSONRecordFieldConfigurations.Select(fc => fc.FieldName)
                     .ToDictionary(fn => fn, fn => fn);
 
-            AsDataReader().Bcp(connectionString, tableName, batchSize, notifyAfter, timeoutInSeconds,
+            AsDataReader((d) =>
+            {
+                if (columnMappings == null || columnMappings.Count == 0)
+                {
+                    columnMappings = new Dictionary<string, string>();
+                    foreach (var key in d.Keys)
+                    {
+                        columnMappings.Add(key, key);
+                    }
+                }
+            }).Bcp(connectionString, tableName, batchSize, notifyAfter, timeoutInSeconds,
                 rowsCopied, columnMappings, copyOptions);
         }
         public void Bcp(SqlConnection connection, string tableName,
@@ -397,7 +412,17 @@ namespace ChoETL
                 columnMappings = Configuration.JSONRecordFieldConfigurations.Select(fc => fc.FieldName)
                     .ToDictionary(fn => fn, fn => fn);
 
-            AsDataReader().Bcp(connection, tableName, batchSize, notifyAfter, timeoutInSeconds,
+            AsDataReader((d) =>
+            {
+                if (columnMappings == null || columnMappings.Count == 0)
+                {
+                    columnMappings = new Dictionary<string, string>();
+                    foreach (var key in d.Keys)
+                    {
+                        columnMappings.Add(key, key);
+                    }
+                }
+            }).Bcp(connection, tableName, batchSize, notifyAfter, timeoutInSeconds,
                 rowsCopied, columnMappings, copyOptions);
         }
 

@@ -102,6 +102,7 @@
     <Compile Include="Common\Attributes\MetadataTypeAttribute.cs" />
     <Compile Include="Common\Collections\ChoSerializableDictionary.cs" />
     <Compile Include="Common\Converters\ChoCDATAToStringConverter.cs" />
+    <Compile Include="Common\Exceptions\ChoSqlBulkCopyException.cs" />
     <Compile Include="Common\ExtensionMethods\ChoEnumerableEx.cs" />
     <Compile Include="Common\ExtensionMethods\Linq\ChoLeftJoin.cs" />
     <Compile Include="Common\IChoConvertible.cs" />

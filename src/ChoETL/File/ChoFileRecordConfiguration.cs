@@ -202,6 +202,11 @@ namespace ChoETL
             get;
             set;
         }
+        public ChoFieldValueTrimOption? FieldValueTrimOption
+        {
+            get;
+            set;
+        }
 
         protected ChoFileRecordConfiguration(Type recordType = null) : base(recordType)
         {

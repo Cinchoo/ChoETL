@@ -14,6 +14,7 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Runtime.Serialization.Json;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -1627,7 +1628,14 @@ namespace ChoETL
                     bcp.ColumnMappings.Add(keyValuePair.Key, keyValuePair.Value);
             }
 
-            bcp.WriteToServer(dt);
+            try
+            {
+                bcp.WriteToServer(dt);
+            }
+            catch (SqlException ex)
+            {
+                throw ChoSqlBulkCopyException.New(bcp, ex);
+            }
         }
 
         public static void Bcp(this IDataReader dr, string connectionString, string tableName,
@@ -1679,13 +1687,20 @@ namespace ChoETL
                 };
             }
 
-            if (columnMappings != null)
+            if (columnMappings == null || columnMappings.Count == 0)
             {
                 foreach (KeyValuePair<string, string> keyValuePair in columnMappings)
                     bcp.ColumnMappings.Add(keyValuePair.Key, keyValuePair.Value);
             }
 
-            bcp.WriteToServer(dr);
+            try
+            {
+                bcp.WriteToServer(dr);
+            }
+            catch (SqlException ex)
+            {
+                throw ChoSqlBulkCopyException.New(bcp, ex);
+            }
         }
 
         public static void Bcp(this IEnumerable collection, string connectionString, string tableName,
@@ -1719,7 +1734,7 @@ namespace ChoETL
 
             Bcp(collection.AsDataReader((d) =>
             {
-                if (columnMappings == null)
+                if (columnMappings == null || columnMappings.Count == 0)
                 {
                     columnMappings = new Dictionary<string, string>();
                     foreach (var key in d.Keys)

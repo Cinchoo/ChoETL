@@ -240,11 +240,16 @@ namespace ChoETL
 
         public IDataReader AsDataReader()
         {
+            return AsDataReader(null);
+        }
+
+        private IDataReader AsDataReader(Action<IDictionary<string, Type>> membersDiscovered)
+        {
             ChoCSVRecordReader rr = new ChoCSVRecordReader(typeof(T), Configuration);
             rr.Reader = this;
             rr.TraceSwitch = TraceSwitch;
             rr.RowsLoaded += NotifyRowsLoaded;
-            rr.MembersDiscovered += MembersDiscovered;
+            rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
             var dr = new ChoEnumerableDataReader(_lines != null ? rr.AsEnumerable(_lines) : rr.AsEnumerable(_textReader), rr);
             return dr;
         }
@@ -361,11 +366,21 @@ namespace ChoETL
             IDictionary<string, string> columnMappings = null,
             SqlBulkCopyOptions copyOptions = SqlBulkCopyOptions.Default)
         {
-            if (columnMappings == null)
+            if (columnMappings == null || columnMappings.Count == 0)
                 columnMappings = Configuration.CSVRecordFieldConfigurations.Select(fc => fc.FieldName)
                     .ToDictionary(fn => fn, fn => fn);
 
-            AsDataReader().Bcp(connectionString, tableName, batchSize, notifyAfter, timeoutInSeconds,
+            AsDataReader((d) =>
+            {
+                if (columnMappings == null || columnMappings.Count == 0)
+                {
+                    columnMappings = new Dictionary<string, string>();
+                    foreach (var key in d.Keys)
+                    {
+                        columnMappings.Add(key, key);
+                    }
+                }
+            }).Bcp(connectionString, tableName, batchSize, notifyAfter, timeoutInSeconds,
                 rowsCopied, columnMappings, copyOptions);
         }
         public void Bcp(SqlConnection connection, string tableName,
@@ -375,11 +390,21 @@ namespace ChoETL
             SqlBulkCopyOptions copyOptions = SqlBulkCopyOptions.Default,
             SqlTransaction transaction = null)
         {
-            if (columnMappings == null)
+            if (columnMappings == null || columnMappings.Count == 0)
                 columnMappings = Configuration.CSVRecordFieldConfigurations.Select(fc => fc.FieldName)
                     .ToDictionary(fn => fn, fn => fn);
 
-            AsDataReader().Bcp(connection, tableName, batchSize, notifyAfter, timeoutInSeconds,
+            AsDataReader((d) =>
+            {
+                if (columnMappings == null || columnMappings.Count == 0)
+                {
+                    columnMappings = new Dictionary<string, string>();
+                    foreach (var key in d.Keys)
+                    {
+                        columnMappings.Add(key, key);
+                    }
+                }
+            }).Bcp(connection, tableName, batchSize, notifyAfter, timeoutInSeconds,
                 rowsCopied, columnMappings, copyOptions);
         }
 

@@ -488,7 +488,7 @@ namespace ChoETL
                 msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, 
                     GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), 
                     GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false, kvp.Value.NullValue,
-                    kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType)));
+                    kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType, Configuration.FieldValueTrimOption)));
             }
 
             recText = msg.ToString();

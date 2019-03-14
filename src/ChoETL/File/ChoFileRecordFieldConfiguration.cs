@@ -106,22 +106,25 @@ namespace ChoETL
             }
         }
 
-        public ChoFieldValueTrimOption GetFieldValueTrimOptionForRead(Type fieldType)
+        public ChoFieldValueTrimOption GetFieldValueTrimOptionForRead(Type fieldType, ChoFieldValueTrimOption? recordLevelFieldValueTrimOption)
         {
             ChoFieldValueTrimOption? fieldValueTrimOption = FieldValueTrimOption;
 
             if (fieldValueTrimOption != null)
                 return fieldValueTrimOption.Value;
             else
-                return ChoFieldValueTrimOption.Trim;
+                return recordLevelFieldValueTrimOption != null ? recordLevelFieldValueTrimOption.Value : ChoFieldValueTrimOption.Trim;
         }
 
-        public ChoFieldValueTrimOption GetFieldValueTrimOption(Type fieldType)
+        public ChoFieldValueTrimOption GetFieldValueTrimOption(Type fieldType, ChoFieldValueTrimOption? recordLevelFieldValueTrimOption)
         {
             ChoFieldValueTrimOption? fieldValueTrimOption = FieldValueTrimOption;
 
             if (fieldValueTrimOption != null)
                 return fieldValueTrimOption.Value;
+
+            if (recordLevelFieldValueTrimOption != null)
+                return recordLevelFieldValueTrimOption.Value;
 
             if (fieldType == typeof(int)
               || fieldType == typeof(uint)
