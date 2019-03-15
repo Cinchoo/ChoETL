@@ -123,7 +123,7 @@ namespace ChoETL
             else
                 _sr = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
             //InitXml();
-            _closeStreamOnDispose = true;
+            //_closeStreamOnDispose = true;
         }
 
         public ChoXmlReader(IEnumerable<XElement> xElements, ChoXmlRecordConfiguration configuration = null)

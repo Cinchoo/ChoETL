@@ -211,10 +211,10 @@ namespace ChoETL
 
         private void AddNamespaces(string[] namespaces)
         {
-            CodeNamespace ns = new CodeNamespace();
-            ns.Imports.Add(new CodeNamespaceImport("System"));
-            CodeCompileUnit cu = new CodeCompileUnit();
-            cu.Namespaces.Add(ns);
+            //CodeNamespace ns = new CodeNamespace();
+            //ns.Imports.Add(new CodeNamespaceImport("System"));
+            //CodeCompileUnit cu = new CodeCompileUnit();
+            //cu.Namespaces.Add(ns);
 
             if (_language == ChoCodeProviderLanguage.VB)
                 Namespaces.Add("Microsoft.VisualBasic");

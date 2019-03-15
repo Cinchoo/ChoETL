@@ -925,19 +925,21 @@ namespace ChoJSONReaderTest
 }
 ";
             StringBuilder csv = new StringBuilder();
+            var memStream = new MemoryStream();
             using (var p = ChoJSONReader<Facility>.LoadText(json)
                 .WithJSONPath("$..facilities")
                 )
             {
-                using (var w = new ChoCSVWriter<Facility>(csv)
+                using (var w = new ChoCSVWriter<Facility>(memStream)
                     .WithFirstLineHeader()
                     )
                 {
                     w.Write(p);
                 }
             }
+            memStream.Position = 0;
 
-            Console.WriteLine(csv.ToString());
+            Console.WriteLine(Encoding.ASCII.GetString(memStream.ToArray()));
         }
 
         static void Main(string[] args)

@@ -93,7 +93,7 @@ namespace ChoETL
                 _textReader = new StreamReader(inStream);
             else
                 _textReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
-            _closeStreamOnDispose = true;
+            //_closeStreamOnDispose = true;
         }
 
         public ChoJSONReader(IEnumerable<JToken> jObjects, ChoJSONRecordConfiguration configuration = null)

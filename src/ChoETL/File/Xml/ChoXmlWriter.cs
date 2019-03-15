@@ -81,7 +81,7 @@ namespace ChoETL
                 _textWriter = new StreamWriter(inStream);
             else
                 _textWriter = new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize);
-            _closeStreamOnDispose = true;
+            //_closeStreamOnDispose = true;
         }
 
         public void Dispose()
@@ -101,6 +101,11 @@ namespace ChoETL
             {
                 if (_textWriter != null)
                     _textWriter.Dispose();
+            }
+            else
+            {
+                if (_textWriter != null)
+                    _textWriter.Flush();
             }
 
             if (!finalize)
