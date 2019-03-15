@@ -1,3 +1,3 @@
-﻿"Field1"	"Field2"
-"Line 1 Field 1\"	"Line 1 Field 2"
-"Line 2 Field 1"	"Line 2 Field 2"
+﻿"Field1"	"Field2"	"Field3"
+"Line 1 "" Field 1\"	""	"Line 1 Field 3"
+"Line 2 Field 1"	""	"Line 2 Field 3"

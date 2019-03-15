@@ -886,12 +886,65 @@ namespace ChoJSONReaderTest
                 }
             }
         }
+        public class Facility
+        {
+            [ChoJSONRecordField]
+            public int? Id { get; set; }
+            [ChoJSONRecordField]
+            public string Name { get; set; }
+            [ChoIgnoreMember] //Ignore Uuid
+            public string Uuid { get; set; }
+            [ChoJSONRecordField]
+            public string CreatedAt { get; set; }
+            [ChoJSONRecordField]
+            public string UpdatedAt { get; set; }
+            [ChoJSONRecordField]
+            public bool Active { get; set; }
+        }
+        static void Issue42()
+        {
+            string json = @"{
+    ""facilities"": [
+        {
+            ""id"": 39205,
+            ""name"": ""Sample1"",
+            ""uuid"": ""ac2f3464-c425-4063-86ad-163521b1d610"",
+            ""createdAt"": ""2019-03-06T14:25:32Z"",
+            ""updatedAt"": ""2019-03-06T14:29:31Z"",
+            ""active"": true
+        },
+        {
+            ""id"": 35907,
+            ""name"": ""Sample2"",
+            ""uuid"": ""d371debb-f030-4c1e-b198-5eb562ceac0f"",
+            ""createdAt"": ""2019-02-21T09:33:25Z"",
+            ""updatedAt"": ""2019-02-21T09:33:25Z"",
+            ""active"": true
+        }
+    ]
+}
+";
+            StringBuilder csv = new StringBuilder();
+            using (var p = ChoJSONReader<Facility>.LoadText(json)
+                .WithJSONPath("$..facilities")
+                )
+            {
+                using (var w = new ChoCSVWriter<Facility>(csv)
+                    .WithFirstLineHeader()
+                    )
+                {
+                    w.Write(p);
+                }
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            JSON2CSV();
+            Issue42();
         }
 
         static void JSON2CSV()

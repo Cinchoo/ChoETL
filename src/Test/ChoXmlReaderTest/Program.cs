@@ -159,7 +159,7 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-
+            XmlToJSON2();
         }
 
         static void Sample50Test()
@@ -308,6 +308,62 @@ namespace ChoXmlReaderTest
                 //.IgnoreField("lang")
                 )
                 Console.WriteLine(ChoJSONWriter.ToText(rec));
+        }
+
+        static void XmlToJSON3()
+        {
+            string xml = @"<?xml version='1.0' encoding='UTF-8'?>
+<entry>
+    <content>
+        <m:properties xmlns:m=""http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"" xmlns:d=""http://schemas.microsoft.com/ado/2007/08/dataservices"">
+            <d:Guid>fizeofnpj-dzeifjzenf-ezfizef</d:Guid>
+            <d:ObjectId>6000009251</d:ObjectId>
+            <d:ProcessType>ZMIN</d:ProcessType>
+            <d:ProcessTypeTxt>Incident</d:ProcessTypeTxt>
+            <d:Description>Test 2</d:Description>
+            <d:IntroText>Incident (IT Service Management)</d:IntroText>
+            <d:CreatedAtDateFormatted>08.05.18</d:CreatedAtDateFormatted>
+            <d:ChangedAtDateFormatted>08.05.18</d:ChangedAtDateFormatted>
+            <d:PostingDate>2018-05-08T00:00:00</d:PostingDate>
+            <d:ChangedAtDate>2018-05-08T00:00:00</d:ChangedAtDate>
+            <d:Priority>2</d:Priority>
+            <d:PriorityTxt>2: High</d:PriorityTxt>
+            <d:PriorityState>None</d:PriorityState>
+            <d:Concatstatuser>New</d:Concatstatuser>
+            <d:ActionRequired>false</d:ActionRequired>
+            <d:StillOpen>true</d:StillOpen>
+            <d:Icon />
+            <d:SoldToPartyName />
+            <d:ServiceTeamName />
+            <d:PersonRespName />
+            <d:CategoryTxt>Change - Interface - Evolutive Maintenance</d:CategoryTxt>
+            <d:ConfigItemTxt />
+            <d:SAPComponent>BC-BCS-VAS</d:SAPComponent>
+        </m:properties>
+    </content>
+</entry>";
+
+            var nsManager = new XmlNamespaceManager(new NameTable());
+            //register mapping of prefix to namespace uri 
+            nsManager.AddNamespace("m", "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata");
+            nsManager.AddNamespace("d", "http://schemas.microsoft.com/ado/2007/08/dataservices");
+
+            StringBuilder csv = new StringBuilder();
+            using (var p = ChoXmlReader.LoadText(xml)
+                  .WithXPath("//entry/content/m:properties")
+                  .WithXmlNamespaceManager(nsManager)
+                  .WithField("Guid", xPath: "d:Guid")
+                  .WithField("ProcessType", xPath: "d:ProcessType")
+                  .WithField("Description", xPath: "d:Description")
+                )
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    )
+                    w.Write(p);
+            }
+
+            Console.WriteLine(csv);
         }
 
         static void CSVToXmlTest()

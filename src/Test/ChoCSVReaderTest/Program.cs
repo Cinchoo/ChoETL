@@ -17,6 +17,7 @@ using System.Threading;
 using System.Security;
 using Microsoft.VisualBasic.FileIO;
 using Newtonsoft.Json;
+using System.Data.SqlClient;
 #if !NETSTANDARD2_0
 using System.Windows.Data;
 #endif
@@ -1808,9 +1809,47 @@ ID			DATE		AMOUNT	QUANTITY	ID
             }
 
         }
+
+        static void ZipCodeBcpTest()
+        {
+            string connectionString = @"data source=WNPCTDVZKN01\MSZKND01;initial catalog=RS_QA_Safety;integrated security=True;multipleactiveresultsets=True";
+
+            using (var r = new ChoCSVReader("ZipCodesEx.csv")
+                .WithFirstLineHeader()
+                .Configure(c => c.FieldValueTrimOption = ChoFieldValueTrimOption.None)
+                )
+            {
+                //foreach (var rec in r.Take(10))
+                //    Console.WriteLine(rec.Dump());
+
+                r.Bcp(connectionString, "ZipCodes");
+            }
+
+        }
+
+        static void ZipCodeLoadTest()
+        {
+            string connectionString = @"data source=WNPCTDVZKN01\MSZKND01;initial catalog=QA_CentralizedTesting_A;integrated security=True;multipleactiveresultsets=True";
+            using (var conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                using (var cmd = new SqlCommand("SELECT * FROM ZipCodes", conn))
+                {
+                    using (var w = new ChoCSVWriter("ZipCodesEx.csv")
+                        .WithFirstLineHeader()
+                        .QuoteAllFields()
+                        )
+                    {
+                        w.Write(cmd.ExecuteReader());
+                    }
+                }
+            }
+        }
         static void Main(string[] args)
         {
-            EscapeQuoteTest();
+            ChoETLFrxBootstrap.TraceLevel = TraceLevel.Error;
+            //ZipCodeLoadTest();
+            ZipCodeBcpTest();
             return;
 
             NullableColumnAsDataTable();
