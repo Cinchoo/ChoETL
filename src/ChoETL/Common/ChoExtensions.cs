@@ -775,7 +775,6 @@ namespace ChoETL
                 }
             }
 
-            char escapeChar = '"';
             bool isPrevEscape = false;
             bool inQuote = false;
             List<char> buffer = new List<char>();
@@ -783,7 +782,7 @@ namespace ChoETL
             CircularBuffer<char> delim_buffer = new CircularBuffer<char>(EOLDelimiter.Length);
             while (reader.Peek() >= 0)
             {
-                isPrevEscape = c == escapeChar;
+                isPrevEscape = c == ChoCharEx.Backslash;
                 c = (char)reader.Read();
                 delim_buffer.Enqueue(c);
                 if (quoteChar != ChoCharEx.NUL && quoteChar == c)
