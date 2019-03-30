@@ -125,11 +125,14 @@ namespace ChoETL
         {
             try
             {
-                object key = ((JArray)array).FirstOrDefault();
-                object value = ((JArray)array).Skip(1).FirstOrDefault();
+                if (array.Count == 2)
+                {
+                    object key = ((JArray)array).FirstOrDefault();
+                    object value = ((JArray)array).Skip(1).FirstOrDefault();
 
-                if (key is JValue && value != null)
-                    return true;
+                    if (key is JValue && value != null)
+                        return true;
+                }
             }
             catch { }
 
@@ -175,23 +178,27 @@ namespace ChoETL
                     }
                     else
                     {
-                        foreach (JToken item in ((JArray)t))
-                        {
-                            if (item is JObject)
-                                yield return item.ToObject<JObject>();
-                            else if (item is JValue)
-                            {
-                                dynamic x = new JObject();
-                                x.Value = ((JValue)item).Value;
-                                yield return x;
-                            }
-                            else if (item is JArray)
-                            {
-                                dynamic x = new JObject();
-                                x.Value = item;
-                                yield return x;
-                            }
-                        }
+                        dynamic x1 = new JObject();
+                        x1.Value = t;
+                        yield return x1;
+
+                        //foreach (JToken item in ((JArray)t))
+                        //{
+                        //    if (item is JObject)
+                        //        yield return item.ToObject<JObject>();
+                        //    else if (item is JValue)
+                        //    {
+                        //        dynamic x = new JObject();
+                        //        x.Value = ((JValue)item).Value;
+                        //        yield return x;
+                        //    }
+                        //    else if (item is JArray)
+                        //    {
+                        //        dynamic x = new JObject();
+                        //        x.Value = item;
+                        //        yield return x;
+                        //    }
+                        //}
                     }
                 }
                 else if (t is JObject)

@@ -124,37 +124,14 @@ namespace ChoETL
 
         public static IEnumerable<ChoDynamicObject> Transpose(this IEnumerable<object> dicts, bool treatFirstItemAsHeader = true)
         {
-            return Transpose(dicts.OfType<IDictionary<string, object>>(), treatFirstItemAsHeader).Select(d => new ChoDynamicObject(d));
+            return Transpose(dicts.OfType<IDictionary<string, object>>(), treatFirstItemAsHeader).Select(d =>
+            {
+                var dict = new ChoDynamicObject(d);
+                if (d != null && d.Values.First().ToNString() == "#NULL#")
+                    dict.IsHeaderOnlyObject = true;
 
-            //var dictsArray = dicts.ToArray();
-
-            //var first = dictsArray.FirstOrDefault();
-            //if (first == null)
-            //    yield break;
-
-            //int counter = 0;
-            //List<string> keys = new List<string>();
-            //string firstColumn = first[0].Key;
-            //foreach (var x in dictsArray)
-            //{
-            //    if (treatFirstItemAsHeader)
-            //        keys.Add(x.First().Value.ToNString());
-            //    else
-            //        keys.Add("Column{0}".FormatString(++counter));
-            //}
-
-            //int length = first.Count;
-            //int startIndex = treatFirstItemAsHeader ? 1 : 0;
-            //for (int index = startIndex; index < length; index++)
-            //{
-            //    ChoDynamicObject obj = new ChoDynamicObject();
-            //    int keyIndex = 0;
-            //    foreach (var x in dictsArray)
-            //    {
-            //        obj.AddOrUpdate(keys[keyIndex++], x[index].Value);
-            //    }
-            //    yield return obj;
-            //}
+                return dict;
+            });
         }
 
         public static IEnumerable<IDictionary<string, object>> Transpose(this IEnumerable<IDictionary<string, object>> dicts, bool treatFirstItemAsHeader = true)
@@ -178,15 +155,27 @@ namespace ChoETL
 
             int length = first.Count;
             int startIndex = treatFirstItemAsHeader ? 1 : 0;
-            for (int index = startIndex; index < length; index++)
+            if (startIndex >= length)
             {
                 Dictionary<string, object> obj = new Dictionary<string, object>();
-                int keyIndex = 0;
-                foreach (var x in dictsArray)
+                foreach (var x in keys)
                 {
-                    obj.AddOrUpdate(keys[keyIndex++], x.ElementAt(index).Value);
+                    obj.AddOrUpdate(x, "#NULL#");
                 }
                 yield return obj;
+            }
+            else
+            {
+                for (int index = startIndex; index < length; index++)
+                {
+                    Dictionary<string, object> obj = new Dictionary<string, object>();
+                    int keyIndex = 0;
+                    foreach (var x in dictsArray)
+                    {
+                        obj.AddOrUpdate(keys[keyIndex++], x.ElementAt(index).Value);
+                    }
+                    yield return obj;
+                }
             }
         }
 

@@ -55,6 +55,9 @@ namespace ChoETL
 
             _enumerator = collection.GetEnumerator();
             _firstElementExists = _enumerator.MoveNext();
+
+            if (_enumerator.Current is ChoDynamicObject && ((ChoDynamicObject)_enumerator.Current).IsHeaderOnlyObject)
+                _firstElementExists = false;
         }
 
         /// <summary>

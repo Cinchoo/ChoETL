@@ -27,6 +27,8 @@ namespace ChoETL
 
         #region Instance Members
 
+        internal bool IsHeaderOnlyObject = false;
+
         private readonly object _padLock = new object();
         private IDictionary<string, object> _kvpDict = new Dictionary<string, object>(StringComparer.CurrentCultureIgnoreCase);
         [IgnoreDataMember]
