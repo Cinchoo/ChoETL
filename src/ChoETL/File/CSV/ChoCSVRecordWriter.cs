@@ -320,7 +320,9 @@ namespace ChoETL
             msg.Clear();
 
             if (Configuration.ColumnCountStrict)
-                CheckColumnsStrict(rec);
+                CheckColumnCountStrict(rec);
+            if (Configuration.ColumnOrderStrict)
+                CheckColumnOrderStrict(rec);
 
             bool firstColumn = true;
             PropertyInfo pi = null;
@@ -545,7 +547,24 @@ namespace ChoETL
             return fillChar == null ? ' ' : fillChar.Value;
         }
 
-        private void CheckColumnsStrict(object rec)
+        private void CheckColumnOrderStrict(object rec)
+        {
+            if (Configuration.IsDynamicObject)
+            {
+                var eoDict = rec.ToDynamicObject() as IDictionary<string, Object>;
+
+                if (!Enumerable.SequenceEqual(Configuration.CSVRecordFieldConfigurations.OrderBy(v => v.FieldPosition).Select(v => v.Name), eoDict.Keys))
+                    throw new ChoParserException("Incorrect column order found.");
+            }
+            else
+            {
+                PropertyDescriptor[] pds = ChoTypeDescriptor.GetProperties<ChoCSVRecordFieldAttribute>(rec.GetType()).ToArray();
+                if (!Enumerable.SequenceEqual(Configuration.CSVRecordFieldConfigurations.OrderBy(v => v.FieldPosition).Select(v => v.Name), pds.Select(pd => pd.Name)))
+                    throw new ChoParserException("Incorrect column order found.");
+            }
+        }
+
+        private void CheckColumnCountStrict(object rec)
         {
             if (Configuration.IsDynamicObject)
             {

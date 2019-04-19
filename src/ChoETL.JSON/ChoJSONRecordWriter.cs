@@ -80,7 +80,7 @@ namespace ChoETL
                     }
                     else
                     {
-                        if (!Configuration.SingleElement)
+                        if (!Configuration.SingleElement.Value)
                             sw.Write(String.Format("{0}}}", Configuration.EOLDelimiter));
                     }
                 }
@@ -96,6 +96,8 @@ namespace ChoETL
             ChoGuard.ArgumentNotNull(sw, "TextWriter");
 
             if (records == null) yield break;
+            if (Configuration.SingleElement == null)
+                Configuration.SingleElement = false;
 
             CultureInfo prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
@@ -143,7 +145,7 @@ namespace ChoETL
 
                             if (!Configuration.IsDynamicObject)
                             {
-                                if (!Configuration.SingleElement)
+                                if (!Configuration.SingleElement.Value)
                                 {
                                     if (Configuration.RootName.IsNullOrWhiteSpace())
                                     {
@@ -211,7 +213,7 @@ namespace ChoETL
                             }
                             else
                             {
-                                if (!Configuration.SingleElement)
+                                if (!Configuration.SingleElement.Value)
                                     sw.Write(String.Format("{{{0}", Configuration.EOLDelimiter));
                             }
                         }
@@ -237,9 +239,9 @@ namespace ChoETL
                                             sw.Write("{1}{0}", Configuration.Formatting == Formatting.Indented ? recText.Indent(1, " ") : recText, Configuration.EOLDelimiter);
                                         else
                                         {
-                                            if (Configuration.SingleElement)
+                                            if (Configuration.SingleElement.Value)
                                             {
-                                                sw.Write(recText);
+                                                sw.Write(recText.Unindent(1, " "));
                                             }
                                             else
                                             {
@@ -265,10 +267,17 @@ namespace ChoETL
                                     sw.Write("{1}{0}", Configuration.Formatting == Formatting.Indented ? recText.Indent(1, " ") : recText, Configuration.EOLDelimiter);
                                 else
                                 {
-                                    if (_index == 1)
-                                        sw.Write("{0}", recText.Indent(1, " "));
+                                    if (Configuration.SingleElement.Value)
+                                    {
+                                        sw.Write(recText.Unindent(1, " "));
+                                    }
                                     else
-                                        sw.Write("{1}{0}", recText.Indent(1, " "), Configuration.EOLDelimiter);
+                                    {
+                                        if (_index == 1)
+                                            sw.Write("{0}", recText.Indent(1, " "));
+                                        else
+                                            sw.Write("{1}{0}", recText.Indent(1, " "), Configuration.EOLDelimiter);
+                                    }
                                 }
 
                                 if (!RaiseAfterRecordWrite(record, _index, recText))

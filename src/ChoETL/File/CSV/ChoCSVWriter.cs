@@ -401,8 +401,11 @@ namespace ChoETL
                 else
                 {
                     pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
-                    fieldPosition = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-                    fieldPosition++;
+                    if (fieldPosition == null)
+                    {
+                        fieldPosition = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
+                        fieldPosition++;
+                    }
                 }
 
                 var nfc = new ChoCSVRecordFieldConfiguration(fnTrim, fieldPosition.Value)

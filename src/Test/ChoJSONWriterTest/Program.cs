@@ -8,6 +8,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Dynamic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -92,12 +93,84 @@ public class ToTextConverter : IChoValueConverter
 
         static void Main(string[] args)
         {
+//string codfis = "Example1";
+//var codfisValue = new
+//{ // codfis is the name of the variable as you can see
+//    Cognome = "vcgm",
+//    Nome = "vnm",
+//    Sesso = "ss",
+//    LuogoDiNascita = "ldn",
+//    Provincia = "pr",
+//    DataDiNascita = "ddn"
+//};
+//var jsonCF = new Dictionary<string, object>();
+//jsonCF.Add(codfis, codfisValue);
+
+
+//using (StreamWriter file = File.CreateText("CodFisCalcolati.json"))
+//{
+//    JsonSerializer serializer = new JsonSerializer();
+//    serializer.Serialize(file, jsonCF);
+//}
+            //return;
+
+            CustomLabel();
+            return;
+
             string[] tt = new string[] { "1", "", "3", "" };
 
             var c = tt.Select((t, i) => String.IsNullOrWhiteSpace(t) ? (int?)i + 1 : null).Where(t => t != null).ToArray();
             Console.WriteLine(String.Join(",", c));
             return;
             DataTableTest();
+        }
+
+        static void CustomLabel()
+        {
+            string codfis = "Example1";
+            var jsonCF = new
+            {
+                codfis = new
+                { // codfis is the name of the variable as you can see
+                    Cognome = "vcgm",
+                    Nome = "vnm",
+                    Sesso = "ss",
+                    LuogoDiNascita = "ldn",
+                    Provincia = "pr",
+                    DataDiNascita = "ddn"
+                }
+            };
+
+            var jsonCF1 = new Dictionary<string, object>();
+            jsonCF1.Add(codfis, new
+            { // codfis is the name of the variable as you can see
+                Cognome = "vcgm",
+                Nome = "vnm",
+                Sesso = "ss",
+                LuogoDiNascita = "ldn",
+                Provincia = "pr",
+                DataDiNascita = "ddn"
+            });
+            jsonCF1.Add(codfis+"1", new
+            { // codfis is the name of the variable as you can see
+                Cognome = "vcgm",
+                Nome = "vnm",
+                Sesso = "ss",
+                LuogoDiNascita = "ldn",
+                Provincia = "pr",
+                DataDiNascita = "ddn"
+            });
+
+            StringBuilder json = new StringBuilder();
+            using (var w = new ChoJSONWriter(json)
+                .SupportMultipleContent(true)
+                //.Configure(c => c.SingleElement = true)
+                )
+            {
+                w.Write(jsonCF1);
+            }
+
+            Console.WriteLine(json.ToString());
         }
 
         public class ArmorPOCO

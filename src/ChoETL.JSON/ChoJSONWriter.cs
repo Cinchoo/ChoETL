@@ -145,10 +145,15 @@ namespace ChoETL
             }
             else if (record != null && (!record.GetType().IsDynamicType() && record is IDictionary))
             {
+                if (Configuration.SingleElement == null)
+                    Configuration.SingleElement = true;
                 _writer.WriteTo(_textWriter, new T[] { record }).Loop();
             }
             else
+            {
+                if (Configuration.SingleElement == null) Configuration.SingleElement = true;
                 _writer.WriteTo(_textWriter, new T[] { record }).Loop();
+            }
         }
 
         public static string ToText<TRec>(TRec record, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string jsonPath = null)
@@ -159,7 +164,7 @@ namespace ChoETL
 
             configuration.IgnoreRootName = true;
             configuration.RootName = null;
-            configuration.SingleElement = true;
+            if (configuration.SingleElement == null) configuration.SingleElement = true;
             configuration.SupportMultipleContent = true;
 
             return ToTextAll(ChoEnumerable.AsEnumerable<TRec>(record), configuration, traceSwitch, jsonPath);
@@ -213,6 +218,12 @@ namespace ChoETL
         }
 
         #region Fluent API
+
+        public ChoJSONWriter<T> SupportMultipleContent(bool value = false)
+        {
+            Configuration.SupportMultipleContent = value;
+            return this;
+        }
 
         public ChoJSONWriter<T> NotifyAfter(long rowsLoaded)
         {

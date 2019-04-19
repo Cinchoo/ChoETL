@@ -86,7 +86,7 @@ namespace ChoETL
             get;
             set;
         }
-        internal bool SingleElement
+        public bool? SingleElement
         {
             get;
             set;

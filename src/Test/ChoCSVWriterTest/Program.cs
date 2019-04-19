@@ -508,9 +508,36 @@ namespace ChoCSVWriterTest
             Console.WriteLine(msg.ToString());
         }
 
+        static void ValidateSchema()
+        {
+            StringBuilder csv = new StringBuilder();
+
+            var x = new
+            {
+                Id = 1,
+                Name = "Mark",
+                Address = "1 Main St.",
+            };
+
+            using (var w = new ChoCSVWriter(csv)
+                .WithFirstLineHeader()
+                .WithField("Id")
+                .WithField("Name")
+                .WithField("Address")
+                .Configure(c => c.ColumnCountStrict = true)
+                .Configure(c => c.ColumnOrderStrict = true)
+                .Configure(c => c.ErrorMode = ChoErrorMode.ThrowAndStop)
+                )
+            {
+                w.Write(x);
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
         static void Main(string[] args)
         {
-            Issue45();
+            ValidateSchema();
             return;
 
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
