@@ -18,9 +18,9 @@ namespace ChoCSVSqlDbImportSample
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
             ChoETLFramework.Initialize();
-            POCOSortUsingSqlite();
+            //POCOSortUsingSqlite();
 
-            //LoadDataFile();
+            LoadDataFile();
         }
 
         public class Series
@@ -64,34 +64,34 @@ namespace ChoCSVSqlDbImportSample
                 set;
             }
         }
-        public static void POCOSortUsingSqlite()
-        {
-            using (var dr = new ChoCSVReader<Address>(@"Test.txt").WithDelimiter("\t").NotifyAfter(10000))
-            {
-                dr.RowsLoaded += delegate (object sender, ChoRowsLoadedEventArgs e)
-                {
-                    Console.WriteLine();
-                    Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " rows loaded.");
-                };
-                using (var dw = new ChoCSVWriter<Address>(Console.Out))
-                    dw.Write(dr.AsEnumerable().StageOnSQLite().OrderByDescending(x => x.City));
-            }
-        }
+        //public static void POCOSortUsingSqlite()
+        //{
+        //    using (var dr = new ChoCSVReader<Address>(@"Test.txt").WithDelimiter("\t").NotifyAfter(10000))
+        //    {
+        //        dr.RowsLoaded += delegate (object sender, ChoRowsLoadedEventArgs e)
+        //        {
+        //            Console.WriteLine();
+        //            Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " rows loaded.");
+        //        };
+        //        using (var dw = new ChoCSVWriter<Address>(Console.Out))
+        //            dw.Write(dr.AsEnumerable().StageOnSQLite().OrderByDescending(x => x.City));
+        //    }
+        //}
 
-        public static void SortUsingSqlite()
-        {
-            using (var dr = new ChoCSVReader(@"Test.txt").WithDelimiter("\t").NotifyAfter(10000))
-            {
-                dr.RowsLoaded += delegate (object sender, ChoRowsLoadedEventArgs e)
-                {
-                    Console.WriteLine();
-                    Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " rows loaded.");
-                };
-                using (var dw = new ChoCSVWriter(Console.Out))
-                    dw.Write(dr.AsEnumerable().StageOnSQLite("ORDER BY Column4"));
-            }
+        //public static void SortUsingSqlite()
+        //{
+        //    using (var dr = new ChoCSVReader(@"Test.txt").WithDelimiter("\t").NotifyAfter(10000))
+        //    {
+        //        dr.RowsLoaded += delegate (object sender, ChoRowsLoadedEventArgs e)
+        //        {
+        //            Console.WriteLine();
+        //            Console.WriteLine(e.RowsLoaded.ToString("#,##0") + " rows loaded.");
+        //        };
+        //        using (var dw = new ChoCSVWriter(Console.Out))
+        //            dw.Write(dr.AsEnumerable().StageOnSQLite("ORDER BY Column4"));
+        //    }
 
-        }
+        //}
         public static void POCOSortUsingSqlServer()
         {
             using (var dr = new ChoCSVReader<Address>(@"Test.txt").WithDelimiter("\t").NotifyAfter(10000))
@@ -264,7 +264,7 @@ namespace ChoCSVSqlDbImportSample
         {
             string connectionstring = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True";
 
-            using (var db = new NerdDinners (connectionstring))
+            using (var db = new NerdDinners(connectionstring))
             {
                 db.Database.CreateIfNotExists();
                 db.Database.ExecuteSqlCommand("TRUNCATE TABLE Customers");

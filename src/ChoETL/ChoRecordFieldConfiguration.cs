@@ -75,6 +75,11 @@ namespace ChoETL
             get;
             set;
         }
+        public Func<string> HeaderSelector
+        {
+            get;
+            set;
+        }
         public Func<object, object> CustomSerializer
         {
             get;

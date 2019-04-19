@@ -59,10 +59,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\ChoETL.Sqlite\ChoETL.SQLite.csproj">
-      <Project>{3ae70956-bb21-4503-9268-a72c2e8dcc8f}</Project>
-      <Name>ChoETL.SQLite</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\ChoETL.SqlServer\ChoETL.SqlServer.csproj">
       <Project>{4e00e9b1-f938-465d-8b11-9f41dea75f45}</Project>
       <Name>ChoETL.SqlServer</Name>

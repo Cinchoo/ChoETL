@@ -491,5 +491,46 @@ namespace ChoETL
 
             return FixedLengthRecordFieldConfigurations.First(fc => fc.Name == fn);
         }
+
+        #region Fluent API
+
+        public ChoFixedLengthRecordConfiguration IgnoreHeader()
+        {
+            FileHeaderConfiguration.HasHeaderRecord = true;
+            FileHeaderConfiguration.IgnoreHeader = true;
+
+            return this;
+        }
+
+        public ChoFixedLengthRecordConfiguration WithFirstLineHeader(bool ignoreHeader = false)
+        {
+            FileHeaderConfiguration.HasHeaderRecord = true;
+            FileHeaderConfiguration.IgnoreHeader = ignoreHeader;
+
+            return this;
+        }
+
+        public ChoFixedLengthRecordConfiguration WithHeaderLineAt(int pos = 1, bool ignoreHeader = false)
+        {
+            FileHeaderConfiguration.HeaderLineAt = pos;
+            FileHeaderConfiguration.HasHeaderRecord = true;
+            FileHeaderConfiguration.IgnoreHeader = ignoreHeader;
+
+            return this;
+        }
+
+        public ChoFixedLengthRecordConfiguration HeaderLineAt(long value)
+        {
+            FileHeaderConfiguration.HeaderLineAt = value;
+            return this;
+        }
+
+        public ChoFixedLengthRecordConfiguration IgnoreCase(bool value)
+        {
+            FileHeaderConfiguration.IgnoreCase = value;
+            return this;
+        }
+
+        #endregion
     }
 }

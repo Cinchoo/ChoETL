@@ -33,8 +33,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoKVPReaderTest", "..\Test
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoETL.SQLite", "..\ChoETL.Sqlite\ChoETL.SQLite.csproj", "{3AE70956-BB21-4503-9268-A72C2E8DCC8F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoETL.SqlServer", "..\ChoETL.SqlServer\ChoETL.SqlServer.csproj", "{4E00E9B1-F938-465D-8B11-9F41DEA75F45}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoWEIRDRSSFeedReaderTest", "..\Test\ChoWEIRDRSSFeedReaderTest\ChoWEIRDRSSFeedReaderTest.csproj", "{32F3D0A7-A436-457F-B4CF-DF568997C110}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libs", "Libs", "{B55FFF85-D024-49E8-9D3C-43AC1750B61F}"
@@ -72,9 +70,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoXmlReaderUnitTest", "..\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoETL.NETStandard", "..\ChoETL.NETStandard\ChoETL.NETStandard.csproj", "{F6B1C77D-901E-43BA-A7B5-757847459BBA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoETL.JSON.NETStandard", "..\ChoETL.JSON.NETStandard\ChoETL.JSON.NETStandard.csproj", "{D3CC7A2C-BCBA-460E-A774-353570D25716}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoETL.JSON.NETStandard", "..\ChoETL.JSON.NETStandard\ChoETL.JSON.NETStandard.csproj", "{D3CC7A2C-BCBA-460E-A774-353570D25716}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoCSVReaderUnitTest.Core", "..\Test\ChoCSVReaderUnitTest.Core\ChoCSVReaderUnitTest.Core.csproj", "{ED8EE9DE-9216-4E64-A266-5BB3C4BB5FE5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoCSVReaderUnitTest.Core", "..\Test\ChoCSVReaderUnitTest.Core\ChoCSVReaderUnitTest.Core.csproj", "{ED8EE9DE-9216-4E64-A266-5BB3C4BB5FE5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoETL.SqlServer", "..\ChoETL.SqlServer\ChoETL.SqlServer.csproj", "{4E00E9B1-F938-465D-8B11-9F41DEA75F45}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -134,10 +134,6 @@ Global
 		{3AE70956-BB21-4503-9268-A72C2E8DCC8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3AE70956-BB21-4503-9268-A72C2E8DCC8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3AE70956-BB21-4503-9268-A72C2E8DCC8F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4E00E9B1-F938-465D-8B11-9F41DEA75F45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4E00E9B1-F938-465D-8B11-9F41DEA75F45}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4E00E9B1-F938-465D-8B11-9F41DEA75F45}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4E00E9B1-F938-465D-8B11-9F41DEA75F45}.Release|Any CPU.Build.0 = Release|Any CPU
 		{32F3D0A7-A436-457F-B4CF-DF568997C110}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{32F3D0A7-A436-457F-B4CF-DF568997C110}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{32F3D0A7-A436-457F-B4CF-DF568997C110}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -182,6 +178,10 @@ Global
 		{ED8EE9DE-9216-4E64-A266-5BB3C4BB5FE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ED8EE9DE-9216-4E64-A266-5BB3C4BB5FE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ED8EE9DE-9216-4E64-A266-5BB3C4BB5FE5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4E00E9B1-F938-465D-8B11-9F41DEA75F45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E00E9B1-F938-465D-8B11-9F41DEA75F45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E00E9B1-F938-465D-8B11-9F41DEA75F45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E00E9B1-F938-465D-8B11-9F41DEA75F45}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

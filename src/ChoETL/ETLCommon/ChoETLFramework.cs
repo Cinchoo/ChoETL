@@ -234,7 +234,7 @@ namespace ChoETL
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 //#endif
                 AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
-                if (GetConfigValue<bool>("TurnOnConsoleCtrlHandler", true))
+                if (GetConfigValue<bool>("TurnOnConsoleCtrlHandler", false))
                     RegisterConsoleControlHandler();
 
 #if !NETSTANDARD2_0

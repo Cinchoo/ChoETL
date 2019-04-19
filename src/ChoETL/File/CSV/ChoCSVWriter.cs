@@ -343,6 +343,7 @@ namespace ChoETL
             bool truncate = true, string fieldName = null, int? fieldPosition = null, 
             Func<object, object> valueConverter = null, 
             Func<dynamic, object> valueSelector = null,
+            Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, 
             string formatText = null, string nullValue = null)
         {
@@ -350,7 +351,7 @@ namespace ChoETL
                 return this;
 
             return WithField(field.GetMemberName(), fieldType, quoteField, fillChar, fieldValueJustification, truncate, 
-                fieldName, fieldPosition, valueConverter, valueSelector, defaultValue, fallbackValue,
+                fieldName, fieldPosition, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue,
                 field.GetFullyQualifiedMemberName(), formatText, nullValue);
         }
 
@@ -359,11 +360,12 @@ namespace ChoETL
             bool truncate = true, string fieldName = null, int? fieldPosition = null, 
             Func<object, object> valueConverter = null, 
             Func<dynamic, object> valueSelector = null,
+            Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, 
             string formatText = null, string nullValue = null)
         {
             return WithField(name, fieldType, quoteField, fillChar, fieldValueJustification,
-                truncate, fieldName, fieldPosition, valueConverter, valueSelector, defaultValue, fallbackValue, null, formatText, nullValue);
+                truncate, fieldName, fieldPosition, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue, null, formatText, nullValue);
         }
 
         private ChoCSVWriter<T> WithField(string name, Type fieldType = null, bool? quoteField = null, char? fillChar = null,
@@ -371,6 +373,7 @@ namespace ChoETL
             bool truncate = true, string fieldName = null, int? fieldPosition = null, 
             Func<object, object> valueConverter = null, 
             Func<dynamic, object> valueSelector = null,
+            Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null,
             string fullyQualifiedMemberName = null, string formatText = null, string nullValue = null)
         {
@@ -412,6 +415,7 @@ namespace ChoETL
                     FieldName = fieldName,
                     ValueConverter = valueConverter,
                     ValueSelector = valueSelector,
+                    HeaderSelector = headerSelector,
                     DefaultValue = defaultValue,
                     FallbackValue = fallbackValue,
                     FormatText = formatText,

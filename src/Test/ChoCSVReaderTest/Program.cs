@@ -1718,12 +1718,28 @@ ID			DATE		AMOUNT	QUANTITY	ID
                 .WithFirstLineHeader()
                 )
             {
-                foreach (var rec in p)
+                foreach (var rec in p.Select(r =>
+                {
+                    r.Extra = "1";
+                    return r;
+                }))
                 {
                     Console.WriteLine($"Id: {rec.Id}");
                     Console.WriteLine($"Name: {rec.Name}");
+                    Console.WriteLine($"Extra: {rec.Extra}");
                 }
             }
+
+            //using (var parser = new ChoCSVReader(blobFile.OpenRead())
+            //    .Select(row =>
+            //    {
+            //        row.FileLogId = 0;
+            //        return row;
+            //    })
+            //    .AsDataReader())
+            //{
+            //    bulkCopy.WriteToServer(parser);
+            //}
         }
 
         public class EmpNull
@@ -1791,28 +1807,9 @@ ID			DATE		AMOUNT	QUANTITY	ID
                 p.Bcp(connectionString, "Teachers");
         }
 
-        static void EscapeQuoteTest()
-        {
-            using (var reader = new ChoCSVReader<dynamic>("QuoteEscape.csv")
-                .WithDelimiter("\t")
-                .WithFirstLineHeader()
-                .Configure(x =>
-                {
-                    //x.QuoteEscapeChar = '\\';
-                    x.MaxScanRows = 0;
-                    x.IgnoreEmptyLine = true;
-                    x.ThrowAndStopOnMissingField = false;
-                }))
-            {
-                foreach (var rec in reader)
-                    Console.WriteLine(rec.Dump());
-            }
-
-        }
-
         static void ZipCodeBcpTest()
         {
-            string connectionString = @"data source=WNPCTDVZKN01\MSZKND01;initial catalog=RS_QA_Safety;integrated security=True;multipleactiveresultsets=True";
+            string connectionString = @"Data Source=(LocalDB)\MSSQLLocalDb;Initial Catalog=EFSample.SchoolContext;Integrated Security=True";
 
             using (var r = new ChoCSVReader("ZipCodesEx.csv")
                 .WithFirstLineHeader()
@@ -1829,7 +1826,7 @@ ID			DATE		AMOUNT	QUANTITY	ID
 
         static void ZipCodeLoadTest()
         {
-            string connectionString = @"data source=WNPCTDVZKN01\MSZKND01;initial catalog=QA_CentralizedTesting_A;integrated security=True;multipleactiveresultsets=True";
+            string connectionString = @"Data Source=(LocalDB)\MSSQLLocalDb;Initial Catalog=EFSample.SchoolContext;Integrated Security=True";
             using (var conn = new SqlConnection(connectionString))
             {
                 conn.Open();
@@ -1845,9 +1842,158 @@ ID			DATE		AMOUNT	QUANTITY	ID
                 }
             }
         }
+
+        static void Issue43()
+        {
+            //var c2 = new ChoCSVReader("issue43.csv")
+            //    .WithFirstLineHeader().WithMaxScanRows(1)
+            //    .Configure(c => c.ErrorMode = ChoErrorMode.ReportAndContinue)
+            //    .Count();
+            //Console.WriteLine(c2);
+            //return;
+
+            foreach (var rec in new ChoCSVReader("issue43.csv")
+                .WithFirstLineHeader().WithMaxScanRows(1)
+                .Configure(c => c.ErrorMode = ChoErrorMode.IgnoreAndContinue)
+                //.Where(r => r.Emp_Nbr == "BACKFLSH")
+                )
+            {
+                Console.WriteLine(rec.Emp_Nbr);
+            }
+        }
+
+        static void EscapeQuoteTest()
+        {
+            using (var reader = new ChoCSVReader<dynamic>("QuoteEscape.csv")
+                .WithDelimiter("\t")
+                .WithFirstLineHeader()
+                .Configure(x =>
+                {
+                    //x.QuoteEscapeChar = '\0';
+                    x.MayContainEOLInData = true;
+                    x.MaxScanRows = 0;
+                    x.IgnoreEmptyLine = true;
+                    x.ThrowAndStopOnMissingField = false;
+                }))
+            {
+                var dataReader = reader.AsDataReader();
+
+                while (dataReader.Read())
+                {
+                    Console.WriteLine($"{dataReader[0]}, {dataReader[1]}, {dataReader[2]}");
+                }
+            }
+
+        }
+
+        public class FooBar
+        {
+            public int FooID { get; set; }
+            public string FooProperty1 { get; set; }
+            public List<Bar> Bars { get; set; }
+        }
+
+        public class Bar
+        {
+            public int BarID { get; set; }
+            public string BarProperty1 { get; set; }
+            public string BarProperty2 { get; set; }
+            public string BarProperty3 { get; set; }
+        }
+
+        static void NestedCSV1()
+        {
+            string csv = @"FooID,FooProperty1,BarID_1,BarProperty1_1,BarProperty2_1,BarProperty3_1,BarID_2,BarProperty1_2,BarProperty2_2,BarProperty3_2
+1,Prop1,2,BP21,BP22,BP23,3,BP31,BP32,BP33
+";
+            StringBuilder csvOut = new StringBuilder();
+
+            using (var p = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .ThrowAndStopOnMissingField(false)
+                .Configure(c => c.NestedColumnSeparator = '_'))
+            {
+                using (var w = new ChoCSVWriter<FooBar>(csvOut)
+             .WithFirstLineHeader()
+             .WithField(r => r.Bars, headerSelector: () => "BarID_1,BarProperty1_1,BarProperty2_1,BarProperty3_1,BarID_2,BarProperty1_2,BarProperty2_2,BarProperty3_2", 
+                valueSelector: (o) =>
+                {
+                    var r = (FooBar)o;
+                    return $"{r.Bars[0].BarID},{r.Bars[0].BarProperty1},{r.Bars[0].BarProperty2},{r.Bars[0].BarProperty3}{r.Bars[1].BarID},{r.Bars[1].BarProperty1},{r.Bars[1].BarProperty2},{r.Bars[1].BarProperty3}";
+                })
+                )
+                {
+                    foreach (var rec in p.Select(r =>
+                {
+                    return new FooBar
+                    {
+                        FooID = ChoUtility.CastTo<int>(r.FooID),
+                        FooProperty1 = ChoUtility.CastTo<string>(r.FooProperty1),
+                        Bars = new List<Bar>
+                        {
+                            new Bar
+                            {
+                                BarID = ChoUtility.CastTo<int>(r.BarID[0]),
+                                BarProperty1 = ChoUtility.CastTo<string>(r.BarProperty1[0]),
+                                BarProperty2 = ChoUtility.CastTo<string>(r.BarProperty2[0]),
+                                BarProperty3 = ChoUtility.CastTo<string>(r.BarProperty3[0]),
+                            },
+                             new Bar
+                            {
+                                BarID = ChoUtility.CastTo<int>(r.BarID[1]),
+                                BarProperty1 = ChoUtility.CastTo<string>(r.BarProperty1[1]),
+                                BarProperty2 = ChoUtility.CastTo<string>(r.BarProperty2[1]),
+                                BarProperty3 = ChoUtility.CastTo<string>(r.BarProperty3[1]),
+                            },
+                       }
+                    };
+
+                }))
+                    {
+                        //Console.WriteLine(rec.Dump());
+                        w.Write(rec);
+                    }
+                }
+            }
+            Console.WriteLine(csvOut.ToString());
+
+            //StringBuilder csvOut = new StringBuilder();
+            //using (var p = ChoCSVReader<FooBar>.LoadText(csv)
+            //    .WithFirstLineHeader()
+            //    .WithField(r => r.Bars, valueConverter: (o) => new List<Bar>())
+            //    .ThrowAndStopOnMissingField(false)
+            //    .Configure(c => c.NestedColumnSeparator = '_'))
+
+            //{
+            //    using (var w = new ChoCSVWriter<FooBar>(csvOut)
+            //        .WithFirstLineHeader()
+            //        .WithField(r => r.Bars, headerSelector: () => "col1, col2", valueSelector: (o) => "x,y")
+            //        )
+            //    {
+            //        w.Write(p);
+            //    }
+            //}
+            //Console.WriteLine(csvOut.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Error;
+            NestedCSV1();
+            return;
+
+            //            string csv = @"""Line 3 Field 1"","""",""Line 3 Field 3
+            //x""Line 4 Field 1""   """"  ""Line 4 Field 3""";
+            //            var t = csv.FastSplit(',', '"', '"');
+            //            foreach (var tc in t)
+            //                Console.WriteLine(tc);
+
+            //            return;
+
+            SimpleCSVTest();
+            return;
+
+
             //ZipCodeLoadTest();
             ZipCodeBcpTest();
             return;

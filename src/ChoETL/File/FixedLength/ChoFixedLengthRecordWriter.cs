@@ -399,7 +399,7 @@ namespace ChoETL
                     }
                     else
                     {
-                        fieldValue = fieldConfig.ValueSelector(fieldValue);
+                        fieldValue = fieldConfig.ValueSelector(rec);
                     }
 
                     if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.MemberLevel)
@@ -593,12 +593,20 @@ namespace ChoETL
             string value;
             foreach (var member in Configuration.FixedLengthRecordFieldConfigurations)
             {
-                value = NormalizeFieldValue(member.Name, member.FieldName, member.Size,
+                if (Configuration.IgnoredFields.Contains(member.Name))
+                    continue;
+
+                if (member.HeaderSelector == null)
+                {
+                    value = NormalizeFieldValue(member.Name, member.FieldName, member.Size,
                     Configuration.FileHeaderConfiguration.Truncate == null ? true : Configuration.FileHeaderConfiguration.Truncate.Value,
                         Configuration.FileHeaderConfiguration.QuoteAllHeaders,
                         Configuration.FileHeaderConfiguration.Justification == null ? ChoFieldValueJustification.Left : Configuration.FileHeaderConfiguration.Justification.Value,
                         Configuration.FileHeaderConfiguration.FillChar == null ? ' ' : Configuration.FileHeaderConfiguration.FillChar.Value,
                         true, null, Configuration.FileHeaderConfiguration.TrimOption);
+                }
+                else
+                    value = member.HeaderSelector();
 
                 msg.Append(value);
             }

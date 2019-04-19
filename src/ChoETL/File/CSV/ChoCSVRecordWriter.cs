@@ -414,7 +414,7 @@ namespace ChoETL
                     }
                     else
                     {
-                        fieldValue = fieldConfig.ValueSelector(fieldValue);
+                        fieldValue = fieldConfig.ValueSelector(rec);
                     }
 
                     if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.MemberLevel)
@@ -605,12 +605,20 @@ namespace ChoETL
             string value;
             foreach (var member in Configuration.CSVRecordFieldConfigurations)
             {
-                value = NormalizeFieldValue(member.Name, member.FieldName, null, 
+                if (Configuration.IgnoredFields.Contains(member.Name))
+                    continue;
+
+                if (member.HeaderSelector == null)
+                {
+                    value = NormalizeFieldValue(member.Name, member.FieldName, null,
                     Configuration.FileHeaderConfiguration.Truncate == null ? true : Configuration.FileHeaderConfiguration.Truncate.Value,
-                        Configuration.FileHeaderConfiguration.QuoteAllHeaders, 
+                        Configuration.FileHeaderConfiguration.QuoteAllHeaders,
                         Configuration.FileHeaderConfiguration.Justification == null ? ChoFieldValueJustification.None : Configuration.FileHeaderConfiguration.Justification.Value,
-                        Configuration.FileHeaderConfiguration.FillChar == null ? ' ' : Configuration.FileHeaderConfiguration.FillChar.Value, 
+                        Configuration.FileHeaderConfiguration.FillChar == null ? ' ' : Configuration.FileHeaderConfiguration.FillChar.Value,
                         true, null, null, member);
+                }
+                else
+                    value = member.HeaderSelector();
 
                 if (msg.Length == 0)
                     msg.Append(value);

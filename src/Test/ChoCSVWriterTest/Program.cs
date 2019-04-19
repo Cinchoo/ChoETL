@@ -480,9 +480,37 @@ namespace ChoCSVWriterTest
             Console.WriteLine(csvOut.ToString());
         }
 
+        static void Issue45()
+        {
+            var bucket = new List<ExpandoObject>();
+
+            var x1 = Enumerable.Range(1, 10).Select(x =>
+            {
+                dynamic record = new ExpandoObject();
+                record.DateOfBirth = "10/11/2016";
+                record.Email = "test@gmail.com";
+                record.FirstName = "Raj";
+                record.FundDeposits = 100;
+                record.LastName = "Mark";
+                record.PhoneNumber = "609-333-2222";
+                record.Source = "IVR";
+                record.State = "NJ";
+                bucket.Add(record);
+                return record;
+            }).ToArray();
+
+
+            StringBuilder msg = new StringBuilder();
+            using (var parser = new ChoCSVWriter(msg).WithFirstLineHeader())
+            {
+                parser.Write(bucket.ToList());
+            }
+            Console.WriteLine(msg.ToString());
+        }
+
         static void Main(string[] args)
         {
-            ConfigFirstApproachWriteDynamicRecordsToFile();
+            Issue45();
             return;
 
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;

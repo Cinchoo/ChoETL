@@ -613,9 +613,12 @@ namespace ChoETL
                                 fieldValue = fieldNameValues[fieldConfig.FieldName];
                             }
 
-                            if (fieldValue == null && Configuration.ThrowAndStopOnMissingField)
+                            if (fieldValue == null)
                             {
-                                throw new ChoMissingRecordFieldException("Missing '{0}' field in CSV file.".FormatString(fieldConfig.FieldName));
+                                if (Configuration.ThrowAndStopOnMissingField)
+                                    throw new ChoMissingRecordFieldException("Missing '{0}' field in CSV file.".FormatString(fieldConfig.FieldName));
+                                else
+                                    fieldValue = fieldNameValues;
 
                                 //if (Configuration.ColumnOrderStrict)
                                 //    throw new ChoParserException("No matching '{0}' field header found.".FormatString(fieldConfig.FieldName));
@@ -634,6 +637,8 @@ namespace ChoETL
                                 fieldValue = fieldValues[fieldConfig.FieldPosition - 1];
                             else if (Configuration.ThrowAndStopOnMissingField)
                                 throw new ChoMissingRecordFieldException("Missing field value at [Position: {1}] in CSV file.".FormatString(fieldConfig.FieldName, fieldConfig.FieldPosition));
+                            else
+                                fieldValue = fieldNameValues;
                         }
                         else
                         {

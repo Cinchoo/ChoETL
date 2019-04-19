@@ -274,6 +274,7 @@ namespace ChoETL
         public ChoFixedLengthWriter<T> WithField<TField>(Expression<Func<T, TField>> field, int startIndex, int size, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
             bool truncate = true, string fieldName = null, Func<object, object> valueConverter = null, 
             Func<dynamic, object> valueSelector = null,
+            Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null,
             string nullValue = null)
         {
@@ -281,22 +282,24 @@ namespace ChoETL
                 return this;
 
             return WithField(field.GetMemberName(), startIndex, size, fieldType, quoteField, fillChar, fieldValueJustification,
-                    truncate, fieldName, valueConverter, valueSelector, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, nullValue);
+                    truncate, fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, nullValue);
         }
 
         public ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
             bool truncate = true, string fieldName = null, Func<object, object> valueConverter = null, 
             Func<dynamic, object> valueSelector = null,
+            Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null,
             string nullValue = null)
         {
             return WithField(name, startIndex, size, fieldType, quoteField, fillChar, fieldValueJustification,
-                truncate, fieldName, valueConverter, valueSelector, defaultValue, fallbackValue, null, formatText, nullValue);
+                truncate, fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue, null, formatText, nullValue);
         }
 
         private ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
             bool truncate = true, string fieldName = null, Func<object, object> valueConverter = null, 
             Func<dynamic, object> valueSelector = null,
+            Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null,
             string fullyQualifiedMemberName = null, string formatText = null, string nullValue = null)
         {
@@ -331,6 +334,7 @@ namespace ChoETL
                     FieldName = fieldName.IsNullOrWhiteSpace() ? name : fieldName,
                     ValueConverter = valueConverter,
                     ValueSelector = valueSelector,
+                    HeaderSelector = headerSelector,
                     DefaultValue = defaultValue,
                     FallbackValue = fallbackValue,
                     FormatText = formatText,

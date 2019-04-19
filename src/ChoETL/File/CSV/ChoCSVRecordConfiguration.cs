@@ -465,5 +465,46 @@ namespace ChoETL
 
             return CSVRecordFieldConfigurations.First(fc => fc.Name == fn);
         }
+
+        #region Fluent API
+
+        public ChoCSVRecordConfiguration IgnoreHeader()
+        {
+            FileHeaderConfiguration.HasHeaderRecord = true;
+            FileHeaderConfiguration.IgnoreHeader = true;
+
+            return this;
+        }
+
+        public ChoCSVRecordConfiguration WithFirstLineHeader(bool ignoreHeader = false)
+        {
+            FileHeaderConfiguration.HasHeaderRecord = true;
+            FileHeaderConfiguration.IgnoreHeader = ignoreHeader;
+
+            return this;
+        }
+
+        public ChoCSVRecordConfiguration WithHeaderLineAt(int pos = 1, bool ignoreHeader = false)
+        {
+            FileHeaderConfiguration.HeaderLineAt = pos;
+            FileHeaderConfiguration.HasHeaderRecord = true;
+            FileHeaderConfiguration.IgnoreHeader = ignoreHeader;
+
+            return this;
+        }
+
+        public ChoCSVRecordConfiguration HeaderLineAt(long value)
+        {
+            FileHeaderConfiguration.HeaderLineAt = value;
+            return this;
+        }
+
+        public ChoCSVRecordConfiguration IgnoreCase(bool value)
+        {
+            FileHeaderConfiguration.IgnoreCase = value;
+            return this;
+        }
+
+        #endregion 
     }
 }

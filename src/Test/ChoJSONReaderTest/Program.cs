@@ -924,7 +924,6 @@ namespace ChoJSONReaderTest
     ]
 }
 ";
-            StringBuilder csv = new StringBuilder();
             var memStream = new MemoryStream();
             using (var p = ChoJSONReader<Facility>.LoadText(json)
                 .WithJSONPath("$..facilities")
@@ -937,16 +936,20 @@ namespace ChoJSONReaderTest
                     w.Write(p);
                 }
             }
-            memStream.Position = 0;
 
             Console.WriteLine(Encoding.ASCII.GetString(memStream.ToArray()));
+        }
+
+        static void Sample31Test()
+        {
+            var dt = new ChoJSONReader("sample31.json").WithJSONPath("$..headers[*]").Transpose().AsDataTable();
+            new ChoJSONReader("sample31.json").WithJSONPath("$..rowSet[*]").Select(r => ((Array)r.Value).ToDictionary()).Fill(dt);
         }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-
-            Issue42();
+            Sample31Test();
         }
 
         static void JSON2CSV()

@@ -62,6 +62,7 @@
     <None Include="EmpDuplicates.csv" />
     <None Include="EmpQuoteInQuote.csv" />
     <None Include="IgnoreLineFile1.csv" />
+    <None Include="Issue43.csv" />
     <None Include="MasterDetail.csv" />
     <None Include="packages.config" />
     <None Include="planets.csv" />

@@ -1,0 +1,3 @@
+SO_Prty_Cd,SO_No,OP_No,Wrk_Ctr,Item,Itm_Cls,Whs,Lot,Loc,Container,Trans_Dt,Emp_Nbr,Emp_Name,Shift,Dept,Hrs_Typ,Start,Stop,Reason,Trans_Typ,Op_Cmpl,Hrs_Wrkd,Hrs_Std,Qty_Good,Qty_Scrap,Qty_Std
+(0)Production,773152,540,189999,LTCHLSRINDIRECT,NULL,18,,INDIRT,,20190201,4113,Michelle Patzold,1,1836,I,9,10.3,, B,,1.5,1.5,0,0,0
+(0)Production,106453,310,204018,60663004,NULL,20,,WIP20,,20190201,BACKFLSH,Tony Morris,3,2171,M,3.54,4.03,, B,,0.15,0.41,3200,0,1162.52
