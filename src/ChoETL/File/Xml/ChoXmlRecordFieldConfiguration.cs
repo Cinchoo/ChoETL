@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using System.Xml.XPath;
 
 namespace ChoETL
@@ -57,6 +58,12 @@ namespace ChoETL
         {
             get;
             set;
+        }
+        private Func<XElement, Type> _fieldTypeSelector = null;
+        public Func<XElement, Type> FieldTypeSelector
+        {
+            get { return _fieldTypeSelector; }
+            set { if (value == null) return; _fieldTypeSelector = value; }
         }
 
         public ChoXmlRecordFieldConfiguration(string name, string xPath = null) : this(name, (ChoXmlNodeRecordFieldAttribute)null)

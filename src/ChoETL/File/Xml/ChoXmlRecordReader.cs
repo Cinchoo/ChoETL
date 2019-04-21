@@ -850,7 +850,13 @@ namespace ChoETL
                 {
                     if (pi != null)
                     {
-                        kvp.Value.FieldType = pi.PropertyType;
+                        if (kvp.Value.FieldTypeSelector != null)
+                        {
+                            Type rt = kvp.Value.FieldTypeSelector(pair.Item2);
+                            kvp.Value.FieldType = rt == null ? pi.PropertyType : rt;
+                        }
+                        else
+                            kvp.Value.FieldType = pi.PropertyType;
                     }
                     else
                         kvp.Value.FieldType = typeof(string);

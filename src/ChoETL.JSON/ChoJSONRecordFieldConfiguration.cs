@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -47,6 +48,12 @@ namespace ChoETL
         {
             get;
             set;
+        }
+        private Func<JObject, Type> _fieldTypeSelector = null;
+        public Func<JObject, Type> FieldTypeSelector
+        {
+            get { return _fieldTypeSelector; }
+            set { if (value == null) return; _fieldTypeSelector = value; }
         }
 
         internal PropertyInfo PI;

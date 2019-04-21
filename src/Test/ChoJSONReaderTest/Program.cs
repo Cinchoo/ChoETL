@@ -16,9 +16,10 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.Serialization;
 
-namespace ChoJSONReaderTest 
+namespace ChoJSONReaderTest
 {
     public class Filter
     {
@@ -662,7 +663,7 @@ namespace ChoJSONReaderTest
 { ""height"":211,""name"":""166.jpg"",""width"":300}
             ";
 
-            using (var p = ChoJSONReader< JSObject>.LoadText(json))
+            using (var p = ChoJSONReader<JSObject>.LoadText(json))
             {
                 foreach (var rec in p.Where(r => r.name.Contains("4")))
                     Console.WriteLine(rec.Dump());
@@ -684,11 +685,11 @@ namespace ChoJSONReaderTest
                 .WithField("Email")
                 .WithField("Roles", customSerializer: ((o) =>
                 {
-                return ((JArray)o).Select(i =>
-                {
-                    var x = new ChoDynamicObject("role"); x.SetText(i.ToString());
-                    return x;
-                }).ToArray();
+                    return ((JArray)o).Select(i =>
+                    {
+                        var x = new ChoDynamicObject("role"); x.SetText(i.ToString());
+                        return x;
+                    }).ToArray();
                 }))
                 .Configure(c => c.SupportMultipleContent = true)
                 )
@@ -946,10 +947,84 @@ namespace ChoJSONReaderTest
             new ChoJSONReader("sample31.json").WithJSONPath("$..rowSet[*]").Select(r => ((Array)r.Value).ToDictionary()).Fill(dt);
         }
 
+        public class RootObjectx
+        {
+            public Dictionary<string, IList<Output>> Outputs { get; set; }
+        }
+
+        public class Output
+        {
+            public string GSTIN_Status { get; set; }
+            public string GSTIN { get; set; }
+            public string Unique_ID { get; set; }
+            public string State { get; set; }
+            public string Input_PAN { get; set; }
+            public string Processing_Status { get; set; }
+        }
+
+        static void TestData1()
+        {
+            JsonSerializer serializer = new JsonSerializer();
+            var x = JsonConvert.DeserializeObject<Dictionary<string, Output[]>[]>(File.ReadAllText("TestData1.json"));
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Sample31Test();
+            RecordSelectTest();
+        }
+
+        static void RecordSelectTest()
+        {
+            string json = @"{
+    ""id"": 1,
+    ""owner_id"": 1,
+    ""owner_type"": ""App\\Models\\User"",
+    ""created_at"": ""2019-04-21 08:57:53"",
+    ""updated_at"": ""2019-04-21 08:57:53"",
+    ""owner"": {
+        ""id"": 1,
+        ""username"": ""testuser"",
+        ""email"": ""test123@mail.com"",
+        ""email_verified_at"": null,
+        ""created_at"": ""2019-04-20 10:23:50"",
+        ""updated_at"": ""2019-04-20 10:23:50""
+    }
+}";
+
+            using (var p = ChoJSONReader<Vehicle>.LoadText(json)
+                .WithField(r => r.Owner, fieldTypeSelector: o => typeof(User))
+                )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+        public class Vehicle
+        {
+            [JsonProperty("owner_type")]
+            public string OwnerType { get; set; }
+
+            [JsonProperty("owner")]
+            public object Owner { get; set; }
+        }
+        public class User
+        {
+            public int id { get; set; }
+            public int owner_id { get; set; }
+            public string created_at { get; set; }
+            public string updated_at { get; set; }
+            public Owner owner { get; set; }
+        }
+
+        public class Owner
+        {
+            public int id { get; set; }
+            public string username { get; set; }
+            public string email { get; set; }
+            public object email_verified_at { get; set; }
+            public string created_at { get; set; }
+            public string updated_at { get; set; }
         }
 
         static void JSON2CSV()
@@ -1159,7 +1234,7 @@ namespace ChoJSONReaderTest
         }
         static void LoadChildren()
         {
-string json = @"{
+            string json = @"{
     ""test1@gmail.com"": [
         {
             ""action"": ""open"",
@@ -1169,18 +1244,18 @@ string json = @"{
         }
     ]
 }";
-using (var p = ChoJSONReader<ActionMessage>.LoadText(json)
-    .WithJSONPath("$.*")
-    )
-{
-    foreach (var rec in p)
-    {
-        Console.WriteLine("action: " + rec.Action);
-        Console.WriteLine("timestamp: " + rec.Timestamp);
-        Console.WriteLine("url: " + rec.Url);
-        Console.WriteLine("ip: " + rec.IP);
-    }
-}
+            using (var p = ChoJSONReader<ActionMessage>.LoadText(json)
+                .WithJSONPath("$.*")
+                )
+            {
+                foreach (var rec in p)
+                {
+                    Console.WriteLine("action: " + rec.Action);
+                    Console.WriteLine("timestamp: " + rec.Timestamp);
+                    Console.WriteLine("url: " + rec.Url);
+                    Console.WriteLine("ip: " + rec.IP);
+                }
+            }
         }
 
         public class Project : IChoRecordFieldSerializable
@@ -2652,7 +2727,7 @@ using (var p = ChoJSONReader<ActionMessage>.LoadText(json)
                 .Select(r => (IDictionary<string, object>)r).SelectMany(r1 => r1.Keys.Select(k => new { key = k, value = ((dynamic)((IDictionary<string, object>)r1)[k]) })
                 .Select(k1 => new sp { mKey = k1.key, key = k1.value.productType, productType = k1.value.productType })))
                 Console.WriteLine(rec.Dump());
-                //Console.WriteLine($"ProductType: {rec.productType}, Key: {rec.key}");
+            //Console.WriteLine($"ProductType: {rec.productType}, Key: {rec.key}");
 
             //StringBuilder sb = new StringBuilder();
             //using (var p = ChoJSONReader.LoadText(json)
@@ -4065,3 +4140,4 @@ using (var p = ChoJSONReader<ActionMessage>.LoadText(json)
         }
     }
 }
+

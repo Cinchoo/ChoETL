@@ -62,6 +62,7 @@
     <None Include="sample22.json" />
     <None Include="sample21.json" />
     <None Include="sample20.json" />
+    <None Include="TestData1.json" />
     <None Include="TestData.json" />
     <None Include="Colors.json" />
     <None Include="sample19.json" />

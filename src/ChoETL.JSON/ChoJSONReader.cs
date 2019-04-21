@@ -564,14 +564,14 @@ namespace ChoETL
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null,
-            string nullValue = null)
+            string nullValue = null, Func<JObject, Type> fieldTypeSelector = null)
             where TClass : class
         {
             if (field == null)
                 return this;
 
             return WithField(field.GetMemberName(), jsonPath, fieldType, fieldValueTrimOption, isJSONAttribute, fieldName, valueConverter, itemConverter,
-                customSerializer, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, true, nullValue, typeof(TClass));
+                customSerializer, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, true, nullValue, typeof(TClass), fieldTypeSelector);
         }
 
         public ChoJSONReader<T> WithField<TField>(Expression<Func<T, TField>> field, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null,
@@ -579,23 +579,23 @@ namespace ChoETL
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null,
-            string nullValue = null)
+            string nullValue = null, Func<JObject, Type> fieldTypeSelector = null)
         {
             if (field == null)
                 return this;
 
             return WithField(field.GetMemberName(), jsonPath, fieldType, fieldValueTrimOption, isJSONAttribute, fieldName, valueConverter, itemConverter,
-                customSerializer, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, true, nullValue);
+                customSerializer, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, true, nullValue, null, fieldTypeSelector);
         }
 
         public ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null, bool isArray = true,
-            string nullValue = null)
+            string nullValue = null, Func<JObject, Type> fieldTypeSelector = null)
         {
             return WithField(name, jsonPath, fieldType, fieldValueTrimOption, isJSONAttribute, fieldName, valueConverter, itemConverter,
-                customSerializer, defaultValue, fallbackValue, null, formatText, isArray, nullValue);
+                customSerializer, defaultValue, fallbackValue, null, formatText, isArray, nullValue, null, fieldTypeSelector);
         }
 
         private ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
@@ -603,7 +603,7 @@ namespace ChoETL
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null,
             string formatText = null, bool isArray = true, string nullValue = null,
-            Type recordType = null)
+            Type recordType = null, Func<JObject, Type> fieldTypeSelector = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -640,7 +640,8 @@ namespace ChoETL
                     FormatText = formatText,
                     ItemConverter = itemConverter,
                     IsArray = isArray,
-                    NullValue = nullValue
+                    NullValue = nullValue,
+                    FieldTypeSelector = fieldTypeSelector,
                 };
                 if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
                 {

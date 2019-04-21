@@ -93,26 +93,26 @@ public class ToTextConverter : IChoValueConverter
 
         static void Main(string[] args)
         {
-//string codfis = "Example1";
-//var codfisValue = new
-//{ // codfis is the name of the variable as you can see
-//    Cognome = "vcgm",
-//    Nome = "vnm",
-//    Sesso = "ss",
-//    LuogoDiNascita = "ldn",
-//    Provincia = "pr",
-//    DataDiNascita = "ddn"
-//};
-//var jsonCF = new Dictionary<string, object>();
-//jsonCF.Add(codfis, codfisValue);
+            string codfis = "Example1";
+            var codfisValue = new
+            { // codfis is the name of the variable as you can see
+                Cognome = "vcgm",
+                Nome = "vnm",
+                Sesso = "ss",
+                LuogoDiNascita = "ldn",
+                Provincia = "pr",
+                DataDiNascita = "ddn"
+            };
+            var jsonCF = new Dictionary<string, object>();
+            jsonCF.Add(codfis, codfisValue);
 
 
-//using (StreamWriter file = File.CreateText("CodFisCalcolati.json"))
-//{
-//    JsonSerializer serializer = new JsonSerializer();
-//    serializer.Serialize(file, jsonCF);
-//}
-            //return;
+            using (StreamWriter file = File.CreateText("CodFisCalcolati.json"))
+            {
+                JsonSerializer serializer = new JsonSerializer();
+                serializer.Serialize(file, jsonCF);
+            }
+            return;
 
             CustomLabel();
             return;
@@ -1037,3 +1037,5 @@ Console.WriteLine(json.ToString());
         public List<EmployeeRecSimple1> SubEmployeeRecSimple1;
     }
 }
+
+
