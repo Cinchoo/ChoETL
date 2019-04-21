@@ -993,7 +993,7 @@ namespace ChoJSONReaderTest
 }";
 
             using (var p = ChoJSONReader<Vehicle>.LoadText(json)
-                .WithField(r => r.Owner, fieldTypeSelector: o => typeof(User))
+                //.WithField(r => r.Owner, fieldTypeSelector: o => typeof(User))
                 )
             {
                 foreach (var rec in p)
@@ -1006,7 +1006,7 @@ namespace ChoJSONReaderTest
             public string OwnerType { get; set; }
 
             [JsonProperty("owner")]
-            public object Owner { get; set; }
+            public JObject Owner { get; set; }
         }
         public class User
         {

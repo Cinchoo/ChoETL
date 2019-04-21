@@ -613,32 +613,6 @@ namespace ChoETL
                             fieldValue = RaiseItemConverter(fieldConfig, fieldValue);
                         }
                     }
-                    //else if (fieldConfig.FieldType.IsCollection())
-                    //{
-                    //    List<object> list = new List<object>();
-                    //    Type itemType = fieldConfig.FieldType.GetItemType().GetUnderlyingType();
-
-                    //    if (fieldValue is JToken)
-                    //    {
-                    //        if (fieldConfig.ItemConverter != null)
-                    //            fieldValue = fieldConfig.ItemConverter(fieldValue);
-                    //        else
-                    //            fieldValue = ToObject((JToken)fieldValue, itemType);
-                    //    }
-                    //    else if (fieldValue is JToken[])
-                    //    {
-                    //        foreach (var ele in (JToken[])fieldValue)
-                    //        {
-                    //            if (fieldConfig.ItemConverter != null)
-                    //                list.Add(fieldConfig.ItemConverter(ele));
-                    //            else
-                    //            {
-                    //                fieldValue = ToObject(ele, itemType);
-                    //            }
-                    //        }
-                    //        fieldValue = list.ToArray();
-                    //    }
-                    //}
                     else
                     {
                         List<object> list = new List<object>();
@@ -647,7 +621,11 @@ namespace ChoETL
                         //if (itemType.IsCollectionType())
                         //    itemType = itemType.GetItemType().GetUnderlyingType();
 
-                        if (fieldValue is JToken)
+                        if (fieldValue != null && fieldValue.GetType().IsAssignableFrom(fieldConfig.FieldType))
+                        {
+
+                        }
+                        else if (fieldValue is JToken)
                         {
                             fieldValue = ToObject((JToken)fieldValue, itemType, fieldConfig.UseJSONSerialization);
                             fieldValue = RaiseItemConverter(fieldConfig, fieldValue);
@@ -865,6 +843,8 @@ namespace ChoETL
                 return target;
 
             Type recordType = target.GetType();
+            if (typeof(JToken).IsAssignableFrom(recordType))
+                return target;
             if (recordType.IsSimple())
                 return target;
             if (typeof(IList).IsAssignableFrom(recordType))
@@ -931,6 +911,9 @@ namespace ChoETL
                 return target;
 
             Type recordType = target.GetType();
+            if (typeof(JToken).IsAssignableFrom(recordType))
+                return target;
+
             if (recordType.IsSimple())
                 return target;
             if (typeof(IList).IsAssignableFrom(recordType))
