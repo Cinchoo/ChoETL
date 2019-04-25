@@ -252,12 +252,12 @@ namespace ChoETL
 
                     if (config.GetType() == typeof(ChoCSVRecordConfiguration))
                     {
-                        var r = ChoCSVReader.LoadText(rec.GetType(), pair.Item2, config as ChoCSVRecordConfiguration, Configuration.Encoding, Configuration.BufferSize);
+                        var r = ChoCSVReader.LoadText(rec.GetType(), pair.Item2, config as ChoCSVRecordConfiguration, Configuration.Encoding, Configuration.BufferSize, TraceSwitch, Reader);
                         rec = r.FirstOrDefault<object>();
                     }
                     else if (config.GetType() == typeof(ChoFixedLengthRecordConfiguration))
                     {
-                        var r = ChoFixedLengthReader.LoadText(rec.GetType(), pair.Item2, config as ChoFixedLengthRecordConfiguration, Configuration.Encoding, Configuration.BufferSize);
+                        var r = ChoFixedLengthReader.LoadText(rec.GetType(), pair.Item2, config as ChoFixedLengthRecordConfiguration, Configuration.Encoding, Configuration.BufferSize, TraceSwitch, Reader);
                         rec = r.FirstOrDefault<object>();
                     }
                     else
