@@ -372,7 +372,9 @@ namespace ChoETL
             sr.Write(byteData, 0, byteData.Length);
         }
 
-        public static dynamic ToDynamicObject(this object src)
+        public static dynamic ToDynamicObject(this object src, 
+            Func<IDictionary<string, object>> dynamicFactory = null,
+            bool shallowDynamic = true)
         {
             if (src == null) return new ChoDynamicObject();
 
@@ -389,14 +391,29 @@ namespace ChoETL
                 return expando1;
             }
 
-            IDictionary<string, object> expando = new ExpandoObject();
+            object propValue = null;
+            IDictionary<string, object> expando = dynamicFactory == null ? new ChoDynamicObject() : dynamicFactory();
+            if (expando == null) expando = new ChoDynamicObject();
+
             foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(src.GetType()))
             {
                 if (pd.Attributes.OfType<ChoIgnoreMemberAttribute>().Any()) continue;
 
                 try
                 {
-                    expando.Add(pd.Name, pd.GetValue(src));
+                    propValue = pd.GetValue(src);
+
+                    if (shallowDynamic)
+                        expando.Add(pd.Name, propValue);
+                    else
+                    {
+                        if (propValue == null)
+                            expando.Add(pd.Name, propValue);
+                        else if (propValue.GetType().IsSimple())
+                            expando.Add(pd.Name, propValue);
+                        else
+                            expando.Add(pd.Name, ToDynamicObject(propValue));
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -416,7 +433,7 @@ namespace ChoETL
             //    }
             //}
 
-            return expando as ExpandoObject;
+            return expando; // as ExpandoObject;
         }
 
         public static void EagerCloneTo(this object src, object dest)

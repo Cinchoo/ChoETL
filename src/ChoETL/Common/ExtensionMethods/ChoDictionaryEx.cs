@@ -28,7 +28,10 @@ namespace ChoETL
 
         public static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict, char? nestedKeySeparator = null)
         {
-            return Flatten(dict, null, nestedKeySeparator);
+            if (dict is ChoDynamicObject && ((ChoDynamicObject)dict).DynamicObjectName != ChoDynamicObject.DefaultName)
+                return Flatten(dict, ((ChoDynamicObject)dict).DynamicObjectName, nestedKeySeparator);
+            else
+                return Flatten(dict, null, nestedKeySeparator);
         }
 
         private static IEnumerable<KeyValuePair<string, object>> Flatten(this IList list, string pkey, char? nestedKeySeparator = null)
