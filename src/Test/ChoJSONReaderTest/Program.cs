@@ -968,10 +968,59 @@ namespace ChoJSONReaderTest
             var x = JsonConvert.DeserializeObject<Dictionary<string, Output[]>[]>(File.ReadAllText("TestData1.json"));
         }
 
+        static void TestData2()
+        {
+            string json = @"
+{
+  ""inputFile"": [
+    [""Column1"", ""Column2"", ""Column3"", ""Column4"", ""Column5"", ""Column6"", ""Column7"", ""Column8"", ""Column9"", ""Column10""],
+    [ ""A"", ""B"", ""C"", ""D"", ""E"", ""F"", ""G"", ""H"", ""I"", ""J"" ],
+    [ ""K"", ""L"", ""M"", ""N"", ""O"", ""P"", ""Q"", ""R"", ""S"", ""T"" ]
+  ]
+}";
+
+            StringBuilder msg = new StringBuilder();
+            using (var p = ChoJSONReader.LoadText(json)
+                .WithJSONPath("$.inputFile[*]")
+                )
+            {
+                using (var w = new ChoCSVWriter(msg))
+                {
+                    w.Write(p);
+                }
+                Console.WriteLine(msg.ToString());
+            }
+        }
+
+        static void DuplicateNames()
+        {
+            string csv = @"Id, Name, 
+1, Tom, NY
+2, Mark, NJ
+3, Lou, FL
+4, Smith, PA
+5, Raj, DC
+";
+
+            StringBuilder sb = new StringBuilder();
+            using (var p = ChoCSVReader.LoadText(csv)
+                .WithField("Id", position: 1)
+                .WithField("Name", position: 2)
+                .WithField("City", position: 3)
+                .WithFirstLineHeader()
+                )
+            {
+                using (var w = new ChoJSONWriter(sb))
+                    w.Write(p);
+            }
+
+            Console.WriteLine(sb.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            RecordSelectTest();
+            DuplicateNames();
         }
 
         static void RecordSelectTest()

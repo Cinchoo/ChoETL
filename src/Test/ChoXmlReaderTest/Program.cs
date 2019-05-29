@@ -159,7 +159,64 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            XmlToJSON2();
+            Xml2CSV1();
+        }
+
+        static void Xml2CSV1()
+        {
+            string xml = @"<ARandomRoot>
+  <ARandomLOne>
+    <Id>12</Id>
+    <OtherId>34</OtherId>    
+  </ARandomLOne>
+  <AnotherRandomLOne>
+    <ARandomLTwo>
+      <ARandomLTree>
+        <NumberOfElements>2</NumberOfElements>
+        <ARandomLFour>
+          <RandomDataOne>R1</RandomDataOne>
+          <RandomDataTwo>10.12</RandomDataTwo>          
+        </ARandomLFour>
+        <ARandomLFour>
+          <RandomDataOne>R2</RandomDataOne>
+          <RandomDataTwo>9.8</RandomDataTwo>          
+        </ARandomLFour>
+      </ARandomLTree>
+    </ARandomLTwo>
+  </AnotherRandomLOne>
+</ARandomRoot>";
+
+            StringBuilder csv = new StringBuilder();
+            using (var p = ChoXmlReader.LoadText(xml)
+                .WithXPath("/")
+                )
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    .Configure(c => c.NestedColumnSeparator = '-')
+                    )
+                    w.Write(p.SelectMany(r =>
+                        ((dynamic[])r.AnotherRandomLOne.ARandomLTwo.ARandomLTree.ARandomLFours).Select(r1 => new
+                        {
+                            ARandomRoot = new
+                            {
+                                ARandomLOne = r.ARandomLOne,
+                                AnotherRandomLOne = new
+                                {
+                                    ARandomLTwo = new
+                                    {
+                                        ARandomLTree = new
+                                        {
+                                            NumberOfElements = 2,
+                                            ARandomLFour = r1
+                                        }
+                                    }
+                                }
+                            }
+                        })
+                    ));
+            }
+            Console.WriteLine(csv.ToString());
         }
 
         static void Sample50Test()

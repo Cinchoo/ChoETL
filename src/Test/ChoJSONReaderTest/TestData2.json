@@ -1,0 +1,7 @@
+﻿{
+  "inputFile": [
+    [ "Column1", "Column2", "Column3", "Column4", "Column5", "Column6", "Column7", "Column8", "Column9", "Column10" ],
+    [ "A", "B", "C", "D", "E", "F", "G", "H", "I", "J" ],
+    [ "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T" ]
+  ]
+}
