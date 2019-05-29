@@ -81,8 +81,13 @@ namespace ChoETL
                     foreach (var tuple in Flatten(kvp.Value as IList, key == null ? kvp.Key : "{0}{2}{1}".FormatString(key, kvp.Key, nestedKeySeparator), nestedKeySeparator))
                         yield return tuple;
                 }
-                else
+                else if (kvp.Value == null || kvp.Value.GetType().IsSimple())
                     yield return new KeyValuePair<string, object>(key == null ? kvp.Key.ToString() : "{0}{2}{1}".FormatString(key, kvp.Key.ToString(), nestedKeySeparator), kvp.Value);
+                else
+                {
+                    foreach (var tuple in Flatten(kvp.Value.ToDynamicObject() as IDictionary<string, object>, key == null ? kvp.Key : "{0}{2}{1}".FormatString(key, kvp.Key, nestedKeySeparator), nestedKeySeparator))
+                        yield return tuple;
+                }
             }
         }
 
