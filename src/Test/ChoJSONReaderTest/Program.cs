@@ -1017,10 +1017,46 @@ namespace ChoJSONReaderTest
             Console.WriteLine(sb.ToString());
         }
 
+        public class Car
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+            public Brand Brand { get; set; }
+        }
+        public class Brand
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+        }
+
+        static void ChildLoad()
+        {
+            string carJson = @"
+    [
+        {
+            ""Id"": 1,
+            ""Name"": ""Polo"",
+            ""Brand"": ""Volkswagen""
+        },
+        {
+            ""Id"": 2,
+            ""Name"": ""328"",
+            ""Brand"": ""BMW""
+        }
+    ]";
+            using (var p = ChoJSONReader<Car>.LoadText(carJson)
+                .WithField(r => r.Brand, valueConverter: o => new Brand() { Id = 1, Name = "xxx" })
+                )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            DuplicateNames();
+            ChildLoad();
         }
 
         static void RecordSelectTest()

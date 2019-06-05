@@ -577,19 +577,14 @@ namespace ChoETL
                     {
                         if (fieldValue is JToken)
                         {
-                            fieldValue = ToObject((JToken)fieldValue, null, fieldConfig.UseJSONSerialization);
-                            fieldValue = RaiseItemConverter(fieldConfig, fieldValue);
+                            fieldValue = DeserializeNode((JToken)fieldValue, null, fieldConfig);
                         }
                         else if (fieldValue is JToken[])
                         {
                             List<object> arr = new List<object>();
                             foreach (var ele in (JToken[])fieldValue)
                             {
-                                object fv = ToObject(ele, null, fieldConfig.UseJSONSerialization);
-
-                                if (fieldConfig.ItemConverter != null)
-                                    fv = fieldConfig.ItemConverter(fv);
-
+                                object fv = DeserializeNode(ele, null, fieldConfig);
                                 arr.Add(fv);
                             }
 
@@ -603,14 +598,7 @@ namespace ChoETL
 
                         if (fieldValue is JToken)
                         {
-                            try
-                            {
-                                fieldValue = ToObject((JToken)fieldValue, fieldConfig.FieldType, fieldConfig.UseJSONSerialization);
-                            }
-                            catch
-                            {
-                            }
-                            fieldValue = RaiseItemConverter(fieldConfig, fieldValue);
+                            fieldValue = DeserializeNode((JToken)fieldValue, fieldConfig.FieldType, fieldConfig);
                         }
                     }
                     else
@@ -627,8 +615,7 @@ namespace ChoETL
                         }
                         else if (fieldValue is JToken)
                         {
-                            fieldValue = ToObject((JToken)fieldValue, itemType, fieldConfig.UseJSONSerialization);
-                            fieldValue = RaiseItemConverter(fieldConfig, fieldValue);
+                            fieldValue = DeserializeNode((JToken)fieldValue, itemType, fieldConfig);
                         }
                         else if (fieldValue is JArray)
                         {
@@ -637,10 +624,7 @@ namespace ChoETL
                                 itemType = fieldConfig.FieldType.GetUnderlyingType().GetItemType().GetUnderlyingType();
                                 foreach (var ele in (JArray)fieldValue)
                                 {
-                                    object fv = ToObject(ele, itemType, fieldConfig.UseJSONSerialization);
-                                    if (fieldConfig.ItemConverter != null)
-                                        fv = fieldConfig.ItemConverter(fv);
-
+                                    object fv = DeserializeNode(ele, itemType, fieldConfig);
                                     list.Add(fv);
                                 }
                                 fieldValue = list.ToArray();
@@ -648,8 +632,7 @@ namespace ChoETL
                             else
                             {
                                 var fi = ((JArray)fieldValue).FirstOrDefault();
-                                fieldValue = ToObject(fi, itemType, fieldConfig.UseJSONSerialization);
-                                fieldValue = RaiseItemConverter(fieldConfig, fieldValue);
+                                fieldValue = DeserializeNode(fi, itemType, fieldConfig);
                             }
                         }
                         else if (fieldValue is JToken[])
@@ -661,10 +644,7 @@ namespace ChoETL
                                 var array = isJArray ? ((JArray)((JToken[])fieldValue)[0]).ToArray() : (JToken[])fieldValue;
                                 foreach (var ele in array)
                                 {
-                                    object fv = ToObject(ele, itemType, fieldConfig.UseJSONSerialization);
-                                    if (fieldConfig.ItemConverter != null)
-                                        fv = fieldConfig.ItemConverter(fv);
-
+                                    object fv = DeserializeNode(ele, itemType, fieldConfig);
                                     list.Add(fv);
                                 }
                                 fieldValue = list.ToArray();
@@ -672,8 +652,7 @@ namespace ChoETL
                             else
                             {
                                 var fi = ((JToken[])fieldValue).FirstOrDefault();
-                                fieldValue = ToObject(fi, itemType, fieldConfig.UseJSONSerialization);
-                                fieldValue = RaiseItemConverter(fieldConfig, fieldValue);
+                                fieldValue = DeserializeNode(fi, itemType, fieldConfig);
                             }
 
 
@@ -835,6 +814,23 @@ namespace ChoETL
             }
 
             return true;
+        }
+
+        private object DeserializeNode(JToken jtoken, Type type, ChoJSONRecordFieldConfiguration config)
+        {
+            object value = null;
+            type = type == null ? fieldConfig.FieldType : type;
+            try
+            {
+                value = ToObject(jtoken, type, config.UseJSONSerialization);
+            }
+            catch
+            {
+            }
+            if (fieldConfig.ItemConverter != null)
+                value = RaiseItemConverter(config, value);
+
+            return value;
         }
 
         private object AssignDefaultsToNullableMembers(object target, bool isTop = true)
