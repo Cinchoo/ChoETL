@@ -1976,10 +1976,19 @@ ID			DATE		AMOUNT	QUANTITY	ID
             //Console.WriteLine(csvOut.ToString());
         }
 
+        static void DisposeOnForEach()
+        {
+            foreach (var rec in new ChoCSVReader("Emp.csv"))
+            {
+                Console.WriteLine(rec.Dump());
+            }
+            Console.ReadLine();
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Error;
-            NestedCSV1();
+            DisposeOnForEach();
             return;
 
             //            string csv = @"""Line 3 Field 1"","""",""Line 3 Field 3

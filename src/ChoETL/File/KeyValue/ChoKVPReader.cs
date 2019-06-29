@@ -220,7 +220,7 @@ namespace ChoETL
             rr.RowsLoaded += NotifyRowsLoaded;
             rr.MembersDiscovered += MembersDiscovered;
             var e = rr.AsEnumerable(_textReader).GetEnumerator();
-            return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
+            return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

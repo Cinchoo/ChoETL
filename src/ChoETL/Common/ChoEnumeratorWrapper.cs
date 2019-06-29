@@ -10,11 +10,13 @@ namespace ChoETL
     public class ChoEnumeratorWrapper
     {
         public static IEnumerable<T> BuildEnumerable<T>(
-                Func<bool> moveNext, Func<T> current)
+                Func<bool> moveNext, Func<T> current, Action dispose = null)
         {
             var po = new ChoEnumeratorWrapperInternal<T>(moveNext, current);
             foreach (var s in po)
                 yield return s;
+
+            dispose?.Invoke();
         }
 
         private class ChoEnumeratorWrapperInternal<T>

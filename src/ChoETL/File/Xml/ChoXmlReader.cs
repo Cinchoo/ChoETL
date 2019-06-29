@@ -304,7 +304,7 @@ namespace ChoETL
                 rr.RowsLoaded += NotifyRowsLoaded;
                 rr.MembersDiscovered += MembersDiscovered;
                 var e = rr.AsEnumerable(_xmlReader).GetEnumerator();
-                return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
+                return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
             }
             else
             {
@@ -315,7 +315,7 @@ namespace ChoETL
                 rr.RowsLoaded += NotifyRowsLoaded;
                 rr.MembersDiscovered += MembersDiscovered;
                 var e = rr.AsEnumerable(_xElements).GetEnumerator();
-                return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T))).GetEnumerator();
+                return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
             }
         }
 
