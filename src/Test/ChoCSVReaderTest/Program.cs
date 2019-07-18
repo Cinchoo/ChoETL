@@ -1985,10 +1985,33 @@ ID			DATE		AMOUNT	QUANTITY	ID
             Console.ReadLine();
         }
 
+        static void GetRecordsAsDictionaryTest()
+        {
+            foreach (var rec in new ChoCSVReader("Emp.csv")
+                )
+            {
+                foreach (var kvp in rec)
+                    Console.WriteLine(kvp.Key);
+            }
+        }
+
+        static void SpaceColumnsTest()
+        {
+            string csv = @"First Name, Last Name
+Tom, Smith
+Mark, Hartigan";
+
+            foreach (var rec in ChoCSVReader.LoadText(csv).WithFirstLineHeader().OfType<IDictionary<string, object>>())
+            {
+                Console.WriteLine($"{rec["First Name"]}");
+                Console.WriteLine($"{rec["Last Name"]}");
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Error;
-            DisposeOnForEach();
+            SpaceColumnsTest();
             return;
 
             //            string csv = @"""Line 3 Field 1"","""",""Line 3 Field 3

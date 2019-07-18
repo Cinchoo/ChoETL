@@ -229,6 +229,12 @@ namespace ChoETL
             return this;
         }
 
+        public ChoCSVWriter<T> WithEOLDelimiter(string delimiter)
+        {
+            Configuration.EOLDelimiter = delimiter;
+            return this;
+        }
+
         public ChoCSVWriter<T> ConfigureHeader(Action<ChoCSVFileHeaderConfiguration> action)
         {
             if (action != null)

@@ -223,6 +223,20 @@ namespace ChoETL
             return this;
         }
 
+        public ChoFixedLengthWriter<T> WithEOLDelimiter(string delimiter)
+        {
+            Configuration.EOLDelimiter = delimiter;
+            return this;
+        }
+
+        public ChoFixedLengthWriter<T> ConfigureHeader(Action<ChoFixedLengthFileHeaderConfiguration> action)
+        {
+            if (action != null)
+                action(Configuration.FileHeaderConfiguration);
+
+            return this;
+        }
+
         public ChoFixedLengthWriter<T> ClearFields()
         {
             Configuration.FixedLengthRecordFieldConfigurations.Clear();
@@ -360,14 +374,6 @@ namespace ChoETL
 
                 Configuration.FixedLengthRecordFieldConfigurations.Add(nfc);
             }
-
-            return this;
-        }
-
-        public ChoFixedLengthWriter<T> ConfigureHeader(Action<ChoFixedLengthFileHeaderConfiguration> action)
-        {
-            if (action != null)
-                action(Configuration.FileHeaderConfiguration);
 
             return this;
         }

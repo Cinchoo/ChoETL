@@ -112,7 +112,6 @@ namespace ChoETL
 
         public ChoCSVRecordConfiguration() : this(null)
         {
-
         }
 
         internal ChoCSVRecordConfiguration(Type recordType) : base(recordType)
@@ -179,6 +178,8 @@ namespace ChoETL
                 Delimiter = recObjAttr.Delimiter;
                 HasExcelSeparator = recObjAttr.HasExcelSeparatorInternal;
             }
+            if (IgnoreFieldValueMode == null)
+                IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Empty;
 
             if (CSVRecordFieldConfigurations.Count == 0)
                 DiscoverRecordFields(recordType);
