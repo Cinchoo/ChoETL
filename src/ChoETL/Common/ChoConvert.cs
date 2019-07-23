@@ -75,7 +75,7 @@ namespace ChoETL
         {
             Type origType = targetType;
             targetType = targetType.IsNullableType() ? targetType.GetUnderlyingType() : targetType;
-            if (targetType.IsValueType && origType.IsNullableType())
+            if (targetType != null && targetType.IsValueType && origType != null & origType.IsNullableType())
             {
                 if (value == null || (value is string && ((string)value).IsNullOrWhiteSpace()))
                     return null;
