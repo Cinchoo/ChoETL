@@ -207,7 +207,7 @@ namespace ChoXmlReaderTest
                                     {
                                         ARandomLTree = new
                                         {
-                                            NumberOfElements = 2,
+                                            NumberOfElements = r.AnotherRandomLOne.ARandomLTwo.ARandomLTree.NumberOfElements,
                                             ARandomLFour = r1
                                         }
                                     }

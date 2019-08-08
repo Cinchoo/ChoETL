@@ -1,0 +1,59 @@
+﻿[
+  {
+    "Id": "3e399241",
+    "IdLineage": [
+      "sfdsfdsfs",
+      "sdfdsfdsf"
+
+    ],
+    "Individuals": [
+      {
+        "Id": "1232112",
+        "IdLineage": [
+          "fdsfsd1"
+        ],
+        "Events": [
+          {
+
+            "RecordId": "2132121321",
+            "RecordType": "SALE",
+            "EventDate": "2016-01-04T05:00:00Z"
+          },
+          {
+
+            "RecordId": "123213212",
+            "RecordType": "SALE",
+            "EventDate": "2012-07-16T04:00:00Z"
+          }
+
+
+        ]
+      },
+      {
+        "Id": "ssf2112",
+        "IdLineage": [],
+        "Events": [
+
+          {
+
+            "RecordId": "123213ds21",
+            "RecordType": "ACXIOMRECORD",
+            "EventDate": "2017-12-17T03:33:54.875Z"
+          }
+        ]
+      },
+      {
+        "Id": "asadsad",
+        "IdLineage": [],
+        "Events": [
+          {
+
+            "RecordId": "213213sa21",
+            "RecordType": "SALE",
+            "EventDate": "2018-03-09T05:00:00Z"
+          }
+        ]
+      }
+    ]
+  }
+]

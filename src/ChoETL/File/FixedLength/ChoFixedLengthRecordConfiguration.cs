@@ -73,7 +73,6 @@ namespace ChoETL
 
         public ChoFixedLengthRecordConfiguration() : this(null)
         {
-
         }
 
         internal ChoFixedLengthRecordConfiguration(Type recordType) : base(recordType)
@@ -126,6 +125,8 @@ namespace ChoETL
             {
                 RecordLength = recObjAttr.RecordLength;
             }
+            if (IgnoreFieldValueMode == null)
+                IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Empty | ChoIgnoreFieldValueMode.WhiteSpace;
 
             if (FixedLengthRecordFieldConfigurations.Count == 0)
                 DiscoverRecordFields(recordType);

@@ -65,7 +65,7 @@ https://github.com/Cinchoo/ChoETL/wiki
 
 ## StackOverflow
 
-[Cinchoo ETL questions in StackOverflow](http://stackoverflow.com/questions/tagged/choetl)
+[Cinchoo ETL questions in StackOverflow](https://stackoverflow.com/search?page=2&tab=Relevance&q=%22Cinchoo%20ETL%22)
 
 ## Download Binary
 

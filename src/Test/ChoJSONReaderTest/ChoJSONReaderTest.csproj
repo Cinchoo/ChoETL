@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="sample100.json" />
+    <None Include="sample32.json" />
     <None Include="sample31.json" />
     <None Include="sample30.json" />
     <None Include="sample29.json" />

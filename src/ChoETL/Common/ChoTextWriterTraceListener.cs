@@ -549,16 +549,23 @@ namespace ChoETL
                 }
                 catch (Exception ex)
                 {
-                    string errMsg;
-                    if (item != null)
-                        errMsg = String.Format("Error while writing the below message.{0}{1}{0}Exception: {2}", Environment.NewLine,
-                            item.ToString(), ex.ToString());
+                    if (ex is ThreadAbortException)
+                    {
+                        Thread.ResetAbort();
+                    }
                     else
-                        errMsg = ex.ToString();
+                    {
+                        string errMsg;
+                        if (item != null)
+                            errMsg = String.Format("Error while writing the below message.{0}{1}{0}Exception: {2}", Environment.NewLine,
+                                item.ToString(), ex.ToString());
+                        else
+                            errMsg = ex.ToString();
 
 #if !NETSTANDARD2_0
                     ChoETLFramework.WriteToEventLog(errMsg, EventLogEntryType.Error);
 #endif
+                    }
                 }
             }
         }

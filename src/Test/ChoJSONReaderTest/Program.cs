@@ -1053,10 +1053,28 @@ namespace ChoJSONReaderTest
             }
         }
 
+        static void Sample32Test()
+        {
+            StringBuilder msg = new StringBuilder();
+
+            using (var w = new ChoCSVWriter(msg)
+                .WithFirstLineHeader()
+                )
+            {
+                using (var r = new ChoJSONReader("Sample32.json")
+                    .WithJSONPath("$..Events[*]")
+                    )
+                {
+                    w.Write(r);
+                }
+            }
+            Console.WriteLine(msg.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            ChildLoad();
+            Sample32Test();
         }
 
         static void RecordSelectTest()

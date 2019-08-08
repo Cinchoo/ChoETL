@@ -86,7 +86,6 @@ namespace ChoETL
 
         public ChoKVPRecordConfiguration() : this(null)
         {
-
         }
 
         internal ChoKVPRecordConfiguration(Type recordType) : base(recordType)
@@ -120,6 +119,8 @@ namespace ChoETL
                 RecordEnd = recObjAttr.RecordEnd;
                 LineContinuationChars = recObjAttr.LineContinuationChars;
             }
+            if (IgnoreFieldValueMode == null)
+                IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Empty;
 
             if (KVPRecordFieldConfigurations.Count == 0)
                 DiscoverRecordFields(recordType);
