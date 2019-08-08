@@ -393,13 +393,13 @@ namespace ChoETL
             RecordFieldConfigurationsDict = FixedLengthRecordFieldConfigurations.OrderBy(i => i.StartIndex).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name, FileHeaderConfiguration.StringComparer);
             RecordFieldConfigurationsDict2 = FixedLengthRecordFieldConfigurations.OrderBy(i => i.StartIndex).Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName, FileHeaderConfiguration.StringComparer);
             if (IsDynamicObject)
-                AlternativeKeys = RecordFieldConfigurationsDict2.ToDictionary(kvp => kvp.Key, kvp =>
+                AlternativeKeys = RecordFieldConfigurationsDict2.ToDictionary(kvp =>
                 {
                     if (kvp.Key == kvp.Value.Name)
                         return kvp.Value.Name.ToValidVariableName();
                     else
                         return kvp.Value.Name;
-                }, FileHeaderConfiguration.StringComparer);
+                }, kvp => kvp.Key, FileHeaderConfiguration.StringComparer);
             else
                 AlternativeKeys = RecordFieldConfigurationsDict2.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Name, FileHeaderConfiguration.StringComparer);
 
