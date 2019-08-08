@@ -2007,11 +2007,27 @@ Mark, Hartigan";
                 Console.WriteLine($"{rec["Last Name"]}");
             }
         }
+        static void UnicodeTest()
+        {
+            string csv = @"Endereço_4, Endereço_5
+1, 11
+2, 22";
+            StringBuilder output = new StringBuilder();
+            using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader())
+            {
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.Endere_o_4);
+                using (var w = new ChoJSONWriter(output))
+                    w.Write(r);
+            }
+
+            Console.WriteLine(output);
+        }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Error;
-            SpaceColumnsTest();
+            UnicodeTest();
             return;
 
             //            string csv = @"""Line 3 Field 1"","""",""Line 3 Field 3
