@@ -23,7 +23,8 @@ namespace ChoETL
         {
             // Read the BOM
             var bom = new byte[4];
-            file.Seek(0, SeekOrigin.Begin);
+            if (file.CanSeek)
+                file.Seek(0, SeekOrigin.Begin);
 
             file.Read(bom, 0, 4);
             // Analyze the BOM

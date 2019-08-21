@@ -1918,8 +1918,11 @@ namespace ChoETL
         }
         public static void Seek(this StreamReader sr, long position, SeekOrigin origin)
         {
-            sr.BaseStream.Seek(position, origin);
-            sr.DiscardBufferedData();
+            if (sr.BaseStream.CanSeek)
+            {
+                sr.BaseStream.Seek(position, origin);
+                sr.DiscardBufferedData();
+            }
         }
 
         public static string Truncate(this string value, int maxLength)
