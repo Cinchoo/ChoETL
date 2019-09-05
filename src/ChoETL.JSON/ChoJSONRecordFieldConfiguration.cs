@@ -67,7 +67,7 @@ namespace ChoETL
 
         internal ChoJSONRecordFieldConfiguration(string name, ChoJSONRecordFieldAttribute attr = null, Attribute[] otherAttrs = null) : base(name, attr, otherAttrs)
         {
-            IsArray = true;
+            IsArray = false;
             FieldName = name;
             if (attr != null)
             {

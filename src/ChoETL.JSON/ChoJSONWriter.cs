@@ -523,7 +523,7 @@ namespace ChoETL
 
                 foreach (var fc in Configuration.JSONRecordFieldConfigurations)
                 {
-                    expandoDic.Add(fc.Name, row[fc.Name]);
+                    expandoDic.Add(fc.Name, row[fc.Name] == DBNull.Value ? null : row[fc.Name]);
                 }
 
                 Write(expando);
