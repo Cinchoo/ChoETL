@@ -113,10 +113,7 @@ namespace ChoETL
                                 }
                                 else
                                 {
-                                    if (skipUntil.Value)
-                                        skip = skipUntil;
-                                    else
-                                        skip = true;
+                                    skip = skipUntil.Value;
                                 }
                             }
                         }

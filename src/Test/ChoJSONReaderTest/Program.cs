@@ -1057,18 +1057,21 @@ namespace ChoJSONReaderTest
         {
             StringBuilder msg = new StringBuilder();
 
-            using (var w = new ChoCSVWriter(msg)
-                .WithFirstLineHeader()
-                )
+            using (var fw = new StreamWriter("Sample321.csv", true))
             {
-                using (var r = new ChoJSONReader("Sample32.json")
-                    .WithJSONPath("$..Events[*]")
+                using (var w = new ChoCSVWriter("Sample32.csv")
+                    .WithFirstLineHeader()
                     )
                 {
-                    w.Write(r);
+                    using (var r = new ChoJSONReader("Sample32.json")
+                        .WithJSONPath("$..Individuals[*]")
+                        )
+                    {
+                        w.Write(r.SelectMany(r1 => ((dynamic[])r1.Events).Select(r2 => new { r1.Id, r2.RecordId, r2.RecordType, r2.EventDate })));
+                    }
                 }
             }
-            Console.WriteLine(msg.ToString());
+            Console.WriteLine(File.ReadAllText("Sample32.csv"));
         }
 
         static void Main(string[] args)

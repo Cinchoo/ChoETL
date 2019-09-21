@@ -1093,8 +1093,8 @@ a,0,1,2-Data";
 
             StringBuilder sb = new StringBuilder();
             using (var p = ChoCSVReader<EmployeeRec>.LoadText(csv)
-                .WithFirstLineHeader()
-                .WithField(m => m.Id)
+                //.WithFirstLineHeader()
+                //.WithField(m => m.Id)
                 )
             {
                 foreach (var rec in p)
@@ -1702,11 +1702,11 @@ ID			DATE		AMOUNT	QUANTITY	ID
                 Console.WriteLine(rec.Dump());
         }
 
-        public partial class EmployeeRec
-        {
-            public int Id { get; set; }
-            public string Name { get; set; }
-        }
+        //public partial class EmployeeRec
+        //{
+        //    public int Id { get; set; }
+        //    public string Name { get; set; }
+        //}
         static void SimpleCSVTest()
         {
             string csv = @"Id, Name
@@ -2009,25 +2009,71 @@ Mark, Hartigan";
         }
         static void UnicodeTest()
         {
-            string csv = @"Endereço_4, Endereço_5
+string csv = @"Endereço_4, Endereço_5
 1, 11
 2, 22";
-            StringBuilder output = new StringBuilder();
-            using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader())
-            {
-                //foreach (var rec in r)
-                //    Console.WriteLine(rec.Endere_o_4);
-                using (var w = new ChoJSONWriter(output))
-                    w.Write(r);
-            }
+StringBuilder output = new StringBuilder();
+using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader())
+{
+    using (var w = new ChoJSONWriter(output))
+        w.Write(r);
+}
 
-            Console.WriteLine(output);
+Console.WriteLine(output);
+        }
+
+        static void DuplicateFields()
+        {
+            StringBuilder csvIn = new StringBuilder(@"ID,Name,Name
+1, David, 1/1/2018
+2, Bob, 2/12/2019");
+
+            using (var r = new ChoCSVReader(csvIn)
+                .WithFirstLineHeader()
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void SolarTemp()
+        {
+            using (var r = new ChoCSVReader("SolarTemp.csv")
+                .WithDelimiter("\t\t")
+                .WithHeaderLineAt(5)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        public class PlantType
+        {
+            public string Plant { get; set; }
+            public int Material { get; set; }
+            public double Density { get; set; }
+            public int StorageLocation { get; set; }
+        }
+
+        static void Sample7Test()
+        {
+            using (var p = new ChoCSVReader<PlantType>("Sample7.csv")
+                .WithFirstLineHeader(true)
+                )
+            {
+                foreach (var rec in p)
+                {
+                    Console.WriteLine(rec.Dump());
+                }
+            }
         }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Error;
-            UnicodeTest();
+            MapTest();
             return;
 
             //            string csv = @"""Line 3 Field 1"","""",""Line 3 Field 3
@@ -2990,7 +3036,7 @@ Mark, Hartigan";
         }
     }
 
-    [ChoCSVFileHeader()]
+    //[ChoCSVFileHeader()]
     [ChoCSVRecordObject(Encoding = "UTF-32", ErrorMode = ChoErrorMode.ReportAndContinue,
     IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any, ThrowAndStopOnMissingField = false,
         ObjectValidationMode = ChoObjectValidationMode.Off)]
@@ -3002,7 +3048,7 @@ Mark, Hartigan";
         //[ChoFallbackValue(1)]
         public int Id { get; set; }
         [ChoCSVRecordField(2, FieldName = "Name")]
-        [StringLength(1)]
+        //[StringLength(1)]
         [DefaultValue("ZZZ")]
         [ChoFallbackValue("XXX")]
         [ChoTypeConverter(typeof(NameFormatter))]
@@ -3051,7 +3097,7 @@ Mark, Hartigan";
 
         public bool SkipUntil(long index, object source)
         {
-            throw new NotImplementedException();
+            return index <= 2 ? true : false;
         }
 
         public bool DoWhile(long index, object source)
@@ -3060,13 +3106,13 @@ Mark, Hartigan";
         }
     }
 
-    //[MetadataType(typeof(EmployeeRecMeta))]
+    [MetadataType(typeof(EmployeeRecMeta))]
     //[ChoCSVFileHeader(TrimOption = ChoFieldValueTrimOption.None)]
     [ChoCSVRecordObject(ErrorMode = ChoErrorMode.IgnoreAndContinue,
     IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any, ThrowAndStopOnMissingField = false)]
     public partial class EmployeeRec //: IChoNotifyRecordRead, IChoValidatable
     {
-        [ChoCSVRecordField(1, FieldName = "id")]
+        [ChoCSVRecordField(1, FieldName = "Id")]
         //[ChoTypeConverter(typeof(IntConverter))]
         //[Range(1, int.MaxValue, ErrorMessage = "Id must be > 0.")]
         //[ChoFallbackValue(1)]

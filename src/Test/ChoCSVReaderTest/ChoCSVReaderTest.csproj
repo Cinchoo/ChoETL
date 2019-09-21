@@ -68,6 +68,7 @@
     <None Include="planets.csv" />
     <None Include="pontos.csv" />
     <None Include="DoubleQuotesTest.csv" />
+    <None Include="Sample7.csv" />
     <None Include="Sample6.csv" />
     <None Include="Sample5.csv" />
     <None Include="Sample3.csv" />
@@ -94,6 +95,7 @@
     <None Include="Nested.csv" />
     <None Include="NestedQuotes.csv" />
     <None Include="QuoteEscape.csv" />
+    <None Include="SolarTemp.csv" />
     <None Include="ZipCodes.csv" />
   </ItemGroup>
   <ItemGroup>

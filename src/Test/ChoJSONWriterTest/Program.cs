@@ -93,6 +93,9 @@ public class ToTextConverter : IChoValueConverter
 
         static void Main(string[] args)
         {
+            DataTableTest();
+            return;
+
             string codfis = "Example1";
             var codfisValue = new
             { // codfis is the name of the variable as you can see
@@ -122,7 +125,6 @@ public class ToTextConverter : IChoValueConverter
             var c = tt.Select((t, i) => String.IsNullOrWhiteSpace(t) ? (int?)i + 1 : null).Where(t => t != null).ToArray();
             Console.WriteLine(String.Join(",", c));
             return;
-            DataTableTest();
         }
 
         static void CustomLabel()
