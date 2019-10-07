@@ -368,7 +368,7 @@ namespace ChoETL
 
             //Find duplicate fields with start index
             ChoFixedLengthRecordFieldConfiguration dupRecConfig = FixedLengthRecordFieldConfigurations.Where(c => c.Size > 0).GroupBy(i => i.StartIndex).Where(g => g.Count() > 1).Select(g => g.FirstOrDefault()).FirstOrDefault();
-            if (dupRecConfig != null)
+            if (dupRecConfig != null && !IgnoreDuplicateFieldConfigurations)
                 throw new ChoRecordConfigurationException("Found duplicate '{0}' record field with same start index.".FormatString(dupRecConfig.FieldName));
 
             //Check any overlapping fields specified
