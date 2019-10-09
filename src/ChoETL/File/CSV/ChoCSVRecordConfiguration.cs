@@ -384,7 +384,7 @@ namespace ChoETL
                     .Where(g => g.Count() > 1)
                     .Select(g => g.Key).ToArray();
 
-                if (dupFields.Length > 0  && !IgnoreDuplicateFieldConfigurations)
+                if (dupFields.Length > 0  && !IgnoreDuplicateFields)
                     throw new ChoRecordConfigurationException("Duplicate field name(s) [Name: {0}] found.".FormatString(String.Join(",", dupFields)));
             }
 

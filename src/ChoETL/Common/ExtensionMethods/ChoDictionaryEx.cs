@@ -175,22 +175,46 @@ namespace ChoETL
 
         public static IDictionary<string, object> AsDictionary(this object source, BindingFlags bindingAttr = BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance)
         {
+            if (source == null) return null;
+
             string key = null;
             Dictionary<string, object> dict = new Dictionary<string, object>();
-            foreach (var p in source.GetType().GetProperties(bindingAttr))
+            if (typeof(ChoDynamicObject).IsAssignableFrom(source.GetType()))
             {
-                if (p.GetCustomAttribute<ChoIgnoreMemberAttribute>() != null)
-                    continue;
+                ChoDynamicObject dobj = source as ChoDynamicObject;
+                if (dobj.AlternativeKeys.Count > 0)
+                {
+                    foreach (var key1 in dobj.Keys)
+                    {
+                        if (dobj.AlternativeKeys.ContainsKey(key1))
+                            dict.Add(dobj.AlternativeKeys[key1], dobj[key1]);
+                        else
+                            dict.Add(key1, dobj[key1]);
+                    }
+                    return dict;
+                }
+                else
+                    return source as IDictionary<string, object>;
+            }
+            else if (source.GetType().IsDynamicType())
+                return source as IDictionary<string, object>;
+            else
+            {
+                foreach (var p in source.GetType().GetProperties(bindingAttr))
+                {
+                    if (p.GetCustomAttribute<ChoIgnoreMemberAttribute>() != null)
+                        continue;
 
-                key = p.Name;
-                var attr = p.GetCustomAttribute<ChoPropertyAttribute>();
-                if (attr != null && !attr.Name.IsNullOrWhiteSpace())
-                    key = attr.Name.NTrim();
+                    key = p.Name;
+                    var attr = p.GetCustomAttribute<ChoPropertyAttribute>();
+                    if (attr != null && !attr.Name.IsNullOrWhiteSpace())
+                        key = attr.Name.NTrim();
 
-                if (dict.ContainsKey(key))
-                    continue;
+                    if (dict.ContainsKey(key))
+                        continue;
 
-                dict.Add(key, p.GetValue(source, null));
+                    dict.Add(key, p.GetValue(source, null));
+                }
             }
             return dict;
         }

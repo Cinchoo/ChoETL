@@ -1084,7 +1084,7 @@ a,0,1,2-Data";
 
         static void MapTest()
         {
-            string csv = @"Id, Name, City
+            string csv = @"Id 1, Name, City
                 1, Tom, NY
                 2, Mark, NJ
                 3, Lou, FL
@@ -1092,8 +1092,8 @@ a,0,1,2-Data";
                 5, Raj, DC";
 
             StringBuilder sb = new StringBuilder();
-            using (var p = ChoCSVReader<EmployeeRec>.LoadText(csv)
-                //.WithFirstLineHeader()
+            using (var p = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
                 //.WithField(m => m.Id)
                 )
             {
