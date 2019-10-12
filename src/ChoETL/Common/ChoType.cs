@@ -1964,23 +1964,12 @@
         public static T GetAttribute<T>(Type type) 
             where T:Attribute
         {
-            return (T)GetAttribute(type, typeof(T));
+            return ChoTypeDescriptor.GetTypeAttribute<T>(type);
         }
 
         public static Attribute GetAttribute(Type type, Type attributeType)
         {
-            if (type == null)
-                throw new NullReferenceException("type");
-            if (attributeType == null)
-                throw new NullReferenceException("interfaceType");
-
-            foreach (Attribute attribute in GetCustomAttributes(type, true))
-            {
-                if (attributeType.IsAssignableFrom(attribute.GetType()))
-                    return attribute;
-            }
-
-            return null;
+            return ChoTypeDescriptor.GetTypeAttribute(type, attributeType);
         }
 
         public static Attribute GetAttribute(MemberInfo memberInfo, bool inherit)

@@ -34,6 +34,36 @@
 
         #region GetTypeConverters Overloads (Public)
 
+        public static T GetTypeAttribute<T>(Type type)
+            where T : Attribute
+        {
+            if (type == null)
+                throw new NullReferenceException("type");
+            return TypeDescriptor.GetAttributes(type).OfType<T>().FirstOrDefault();
+        }
+
+        public static AttributeCollection GetTypeAttributes(Type type)
+        {
+            if (type == null)
+                throw new NullReferenceException("type");
+            return TypeDescriptor.GetAttributes(type);
+        }
+
+        public static Attribute GetTypeAttribute(Type type, Type attributeType)
+        {
+            if (type == null)
+                throw new NullReferenceException("type");
+            if (attributeType == null)
+                throw new NullReferenceException("interfaceType");
+            foreach (Attribute attribute in TypeDescriptor.GetAttributes(type))
+            {
+                if (attributeType.IsAssignableFrom(attribute.GetType()))
+                    return attribute;
+            }
+
+            return null;
+        }
+
         public static IEnumerable<PropertyDescriptor> GetAllProperties(Type type)
         {
             ChoGuard.ArgumentNotNull(type, "Type");
