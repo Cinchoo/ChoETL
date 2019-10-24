@@ -46,21 +46,23 @@ namespace ChoCSVReaderTest
     }
     public class Site
     {
+        public int SiteID { get; set; }
+        public string House { get; set; }
+        public SiteAddress SiteAddress { get; set; }
+    }
+
+    [ChoMetadataRefType(typeof(Site))]
+    [ChoCSVRecordObject(ObjectValidationMode = ChoObjectValidationMode.ObjectLevel, ErrorMode = ChoErrorMode.IgnoreAndContinue, IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any, ThrowAndStopOnMissingField = false)]
+    public class SiteMetadata
+    {
         [Required(ErrorMessage = "SiteID can't be null")]
         //[ChoCSVRecordField(1)]
         public int SiteID { get; set; }
         [Required]
-        public int House { get; set; }
+        public string House { get; set; }
         [ChoValidateObject]
         public SiteAddress SiteAddress { get; set; }
-        public int Apartment { get; set; }
-    }
-
-    [ChoMetadataRefType(typeof(Site))]
-    public class SiteMetadata
-    {
-        public int SiteID { get; set; }
-        public int House { get; set; }
+        //public int Apartment { get; set; }
     }
 
     public class EmpWithAddress
@@ -156,7 +158,7 @@ namespace ChoCSVReaderTest
         {
             using (var json = new ChoJSONWriter("nested.json").Configure(c => c.UseJSONSerialization = false))
             {
-                using (var csv = new ChoCSVReader("nested.csv").WithFirstLineHeader()
+                using (var csv = new ChoCSVReader(new FileStream("nested.csv", FileMode.OpenOrCreate, FileAccess.ReadWrite)).WithFirstLineHeader()
                     .Configure(c => c.NestedColumnSeparator = '/')
                     )
                     json.Write(csv.ExternalSort(new ChoLamdaComparer<dynamic>((e1, e2) => String.Compare(e1.description, e2.description))));
@@ -769,9 +771,9 @@ Date,Count
         static void Sample3()
         {
             using (var p = new ChoCSVReader<Site>("Sample3.csv")
-                            .ClearFields()
-                            .WithField(m => m.SiteID)
-                            .WithField(m => m.SiteAddress.City)
+                            //.ClearFields()
+                            //.WithField(m => m.SiteID)
+                            //.WithField(m => m.SiteAddress.City)
                 .WithFirstLineHeader(true)
                 )
             {
@@ -2073,7 +2075,7 @@ Console.WriteLine(output);
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Error;
-            MapTest();
+            Sample3();
             return;
 
             //            string csv = @"""Line 3 Field 1"","""",""Line 3 Field 3

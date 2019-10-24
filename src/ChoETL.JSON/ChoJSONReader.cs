@@ -120,7 +120,7 @@ namespace ChoETL
 
             Close();
             Init();
-            _JSONReader = new JsonTextReader(new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
+            _textReader = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
             _closeStreamOnDispose = true;
 
             return this;
@@ -229,7 +229,12 @@ namespace ChoETL
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
         }
 
-        public static ChoJSONReader<T> LoadText(string inputText, Encoding encoding = null, ChoJSONRecordConfiguration configuration = null)
+        public static ChoJSONReader<T> LoadText(string inputText, ChoJSONRecordConfiguration configuration = null)
+        {
+            return LoadText(inputText, null, configuration);
+        }
+
+        public static ChoJSONReader<T> LoadText(string inputText, Encoding encoding, ChoJSONRecordConfiguration configuration = null)
         {
             var r = new ChoJSONReader<T>(inputText.ToStream(encoding), configuration);
             r._closeStreamOnDispose = true;
@@ -257,13 +262,34 @@ namespace ChoETL
         //    return rr.AsEnumerable(new StreamReader(inputText.ToStream(), encoding, false, bufferSize)).GetEnumerator();
         //}
 
+        private JsonTextReader Create(TextReader textReader)
+        {
+            var r = new JsonTextReader(textReader);
+            if (Configuration != null)
+            {
+                if (Configuration.Culture != null)
+                    r.Culture = Configuration.Culture;
+                if (Configuration.SupportMultipleContent != null)
+                    r.SupportMultipleContent = Configuration.SupportMultipleContent.Value;
+                if (Configuration.JsonSerializerSettings != null)
+                {
+                    r.DateTimeZoneHandling = Configuration.JsonSerializerSettings.DateTimeZoneHandling;
+                    r.FloatParseHandling = Configuration.JsonSerializerSettings.FloatParseHandling;
+                    r.DateFormatString = Configuration.JsonSerializerSettings.DateFormatString;
+                    r.DateParseHandling = Configuration.JsonSerializerSettings.DateParseHandling;
+                    r.MaxDepth = Configuration.JsonSerializerSettings.MaxDepth;
+                }
+            }
+            return r;
+        }
+
         public IEnumerator<T> GetEnumerator()
         {
             if (_jObjects == null)
             {
                 ChoJSONRecordReader rr = new ChoJSONRecordReader(typeof(T), Configuration);
                 if (_textReader != null)
-                    _JSONReader = new JsonTextReader(_textReader);
+                    _JSONReader = Create(_textReader);
 
                 rr.Reader = this;
                 rr.TraceSwitch = TraceSwitch;
@@ -301,7 +327,7 @@ namespace ChoETL
             {
                 ChoJSONRecordReader rr = new ChoJSONRecordReader(typeof(T), Configuration);
                 if (_textReader != null)
-                    _JSONReader = new JsonTextReader(_textReader);
+                    _JSONReader = Create(_textReader);
                 rr.Reader = this;
                 rr.TraceSwitch = TraceSwitch;
                 rr.RowsLoaded += NotifyRowsLoaded;

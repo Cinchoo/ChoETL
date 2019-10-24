@@ -159,6 +159,7 @@ namespace ChoETL
                 configuration = new ChoXmlRecordConfiguration();
                 configuration.IgnoreRootName = true;
                 configuration.RootName = null;
+                configuration.IgnoreNodeName = true;
             }
 
             if (record != null)

@@ -1276,7 +1276,8 @@ namespace ChoETL
                     case JTokenType.Object:
                     case JTokenType.Undefined:
                     case JTokenType.Raw:
-                        Dictionary<string, object> dict = jToken.ToObject(typeof(Dictionary<string, object>)) as Dictionary<string, object>;
+                        Dictionary<string, object> dict = Configuration.JsonSerializer == null ? jToken.ToObject(typeof(Dictionary<string, object>)) as Dictionary<string, object> :
+                            jToken.ToObject(typeof(Dictionary<string, object>), Configuration.JsonSerializer) as Dictionary<string, object>;
 
                         dict = dict.Select(kvp =>
                         {

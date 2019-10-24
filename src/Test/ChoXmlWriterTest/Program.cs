@@ -33,6 +33,8 @@ namespace ChoXmlWriterTest
     {
         static void Main(string[] args)
         {
+            JSON2XmlDateTimeTest();
+            return;
             CustomStringArrayTest();
 
             using (var file = new FileStream("t.json", FileMode.Append))
@@ -44,6 +46,29 @@ namespace ChoXmlWriterTest
             }
         }
 
+        static void JSON2XmlDateTimeTest()
+        {
+            string json = @"
+{
+    ""start"": ""2019-10-24T10:37:27.590Z"",
+    ""end"": ""2019-10-24T11:00:00.000Z"",
+    ""requests/duration"": {
+      ""avg"": 3819.55
+    }
+  }";
+            //using (var r = new ChoJSONReader(new StringBuilder(json))
+            //    )
+            //{
+            //    Console.WriteLine(r.First().Dump());
+            //}
+
+            Console.WriteLine(ChoJSONWriter.ToText(ChoJSONReader.LoadText(json,
+                new ChoJSONRecordConfiguration().Configure(c => c.JsonSerializerSettings = new Newtonsoft.Json.JsonSerializerSettings
+                {
+                    DateParseHandling = Newtonsoft.Json.DateParseHandling.None
+                })).FirstOrDefault()
+                ));
+        }
         static void CustomStringArrayTest()
         {
             List<string> s = new List<string>();

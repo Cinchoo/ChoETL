@@ -43,6 +43,12 @@ namespace ChoETL
             get;
             set;
         }
+        private Lazy<JsonSerializer> _JsonSerializer = null;
+        public JsonSerializer JsonSerializer
+        {
+            get { return _JsonSerializer.Value; }
+        }
+
         [DataMember]
         public bool? SupportMultipleContent
         {
@@ -144,6 +150,11 @@ namespace ChoETL
 
         internal ChoJSONRecordConfiguration(Type recordType) : base(recordType)
         {
+            _JsonSerializer = new Lazy<JsonSerializer>(() =>
+            {
+                return JsonSerializerSettings == null ? null : JsonSerializer.Create(JsonSerializerSettings);
+            });
+
             JSONRecordFieldConfigurations = new List<ChoJSONRecordFieldConfiguration>();
 
             Formatting = Newtonsoft.Json.Formatting.Indented;
