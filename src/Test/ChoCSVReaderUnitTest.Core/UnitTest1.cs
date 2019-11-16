@@ -1,14 +1,14 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 using ChoETL;
 using System;
 using System.Diagnostics;
 
 namespace ChoCSVReaderUnitTest.Core
 {
-    [TestClass]
+    [TestFixture]
     public class CSVReaderCore
     {
-        [TestMethod]
+        [Test]
         public void CSVTest1()
         {
             string csv = @"Id, Name 
