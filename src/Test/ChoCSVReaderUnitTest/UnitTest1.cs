@@ -3,11 +3,11 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using ChoETL;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace ChoCSVReaderUnitTest
 {
-    [TestClass]
+    [TestFixture]
     public class UnitTest1
     {
         [ChoCSVFileHeader]
@@ -32,9 +32,11 @@ namespace ChoCSVReaderUnitTest
                 return $"{Id}. {Name}.";
             }
         }
-        [TestMethod]
+        [Test]
         public void POCOTest1()
         {
+            System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("us-en");
+
             string csv = @"Id, Name
 1, Raj
 , ";
@@ -46,9 +48,10 @@ namespace ChoCSVReaderUnitTest
             Assert.IsTrue(true);
         }
 
-        [TestMethod]
+        [Test]
         public void AsDataReaderTest()
         {
+            System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("us-en");
             string csv = @"Id, Name 
 2, Tom
                 3, ";

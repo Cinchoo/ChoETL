@@ -1,12 +1,12 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace ChoXmlReaderUnitTest
 {
-    [TestClass]
+    [TestFixture]
     public class UnitTest1
     {
-        [TestMethod]
+        [Test]
         public void ComplexTest1()
         {
             string xml = @"<SalesLead>
