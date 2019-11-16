@@ -798,20 +798,20 @@ namespace ChoETL
 
     public interface IChoRecordFieldSerializable
     {
-        bool RecordFieldSerialize(object record, long index, string propName, ref object source);
-        bool RecordFieldDeserialize(object record, long index, string propName, ref object source);
+        bool RecordFieldSerialize(object record, long index, string propName, ref object value);
+        bool RecordFieldDeserialize(object record, long index, string propName, ref object value);
     }
 
     public interface IChoSerializableWriter
     {
         event EventHandler<ChoRecordFieldSerializeEventArgs> RecordFieldSerialize;
-        bool RaiseRecordFieldSerialize(object record, long index, string propName, ref object source);
+        bool RaiseRecordFieldSerialize(object record, long index, string propName, ref object value);
     }
 
     public interface IChoSerializableReader
     {
         event EventHandler<ChoRecordFieldSerializeEventArgs> RecordFieldDeserialize;
-        bool RaiseRecordFieldDeserialize(object record, long index, string propName, ref object source);
+        bool RaiseRecordFieldDeserialize(object record, long index, string propName, ref object value);
     }
 
     public class ChoRecordFieldSerializeEventArgs

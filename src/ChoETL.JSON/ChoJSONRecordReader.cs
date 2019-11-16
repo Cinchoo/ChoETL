@@ -1091,17 +1091,9 @@ namespace ChoETL
                 }
 
                 bool lUseJSONSerialization = useJSONSerialization == null ? Configuration.UseJSONSerialization : useJSONSerialization.Value;
-//#if _TEST_
-//                if (lUseJSONSerialization)
-//#else
-//                if (true) //lUseJSONSerialization)
-//#endif
                 if (true) //lUseJSONSerialization)
                 {
-                    if (_se == null || _se.Value == null)
-                        return jToken.ToObject(type);
-                    else
-                        return jToken.ToObject(type, _se.Value);
+                    return JTokenToObject(jToken, type, _se);
                 }
                 else
                 {
@@ -1136,6 +1128,34 @@ namespace ChoETL
                         }
                     }
                 }
+            }
+        }
+
+        public object JTokenToObject(JToken jToken, Type objectType, Lazy<JsonSerializer> jsonSerializer = null)
+        {
+            try
+            {
+                if (jsonSerializer == null || jsonSerializer.Value == null)
+                    return jToken.ToObject(objectType);
+                else
+                    return jToken.ToObject(objectType, jsonSerializer.Value);
+            }
+            catch
+            {
+                if (objectType.IsGenericList())
+                {
+                    IList list = Activator.CreateInstance(objectType) as IList;
+
+                    Type itemType = objectType.GetItemType();
+                    if (jsonSerializer == null || jsonSerializer.Value == null)
+                        list.Add(jToken.ToObject(itemType));
+                    else
+                        list.Add(jToken.ToObject(itemType, jsonSerializer.Value));
+
+                    return list;
+                }
+                else
+                    throw;
             }
         }
 
