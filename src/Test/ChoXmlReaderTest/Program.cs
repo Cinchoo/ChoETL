@@ -153,13 +153,32 @@ namespace ChoXmlReaderTest
         public string ConfirmationCode { get; set; }
     }
 
-    
+
     public class Program
     {
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Xml2CSV1();
+            Xml2CSV2();
+        }
+
+        static void Xml2CSV2()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            using (var r = new ChoXmlReader("sample22.xml")
+                .WithXPath("b:MarketingAllCardholderData")
+                .WithXmlNamespace("a", "schemas.datacontract.org/2004/07/ExternalClient.Responses")
+                .WithXmlNamespace("b", "schemas.datacontract.org/2004/07/ExternalClient.Data.Classes")
+                )
+            {
+                using (var w = new ChoCSVWriter(sb)
+                    .WithFirstLineHeader()
+                    .Configure(c => c.UseNestedKeyFormat = false)
+                    )
+                    w.Write(r);
+            }
+            Console.WriteLine(sb.ToString());
         }
 
         static void Xml2CSV1()

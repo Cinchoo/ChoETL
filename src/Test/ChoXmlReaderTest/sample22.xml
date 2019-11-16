@@ -1,0 +1,30 @@
+﻿<s:Envelope xmlns:s="schemas.xmlsoap.org/soap/envelope">
+  <s:Body>
+    <GetMarketingAllCardholderDataResponse xmlns="tempuri.org">
+      <GetMarketingAllCardholderDataResult xmlns:a="schemas.datacontract.org/2004/07/ExternalClient.Responses" xmlns:i="w3.org/2001/XMLSchema-instance">
+        <a:ErrorMessage i:nil="true"/>
+        <a:Success>true</a:Success>
+        <a:MarketingAllCardholder xmlns:b="schemas.datacontract.org/2004/07/ExternalClient.Data.Classes">
+          <b:MarketingAllCardholderData>
+            <b:CentreName>Corporate Office</b:CentreName>
+            <b:Country>Austria</b:Country>
+            <b:CustomerId>379</b:CustomerId>
+            <b:DOB>25/02/1991</b:DOB>
+            <b:Email>farah@gmail.com</b:Email>
+            <b:ExpiryDate>03/01/2020 08:01</b:ExpiryDate>
+
+          </b:MarketingAllCardholderData>
+          <b:MarketingAllCardholderData>
+            <b:CentreName>Corporate Office</b:CentreName>
+            <b:Country>Egypt</b:Country>
+            <b:CustomerId>988915</b:CustomerId>
+            <b:DOB>01/03/1986</b:DOB>
+            <b:Email>hesh.a.metwally@gmail.com</b:Email>
+            <b:ExpiryDate>07/01/2020 11:38</b:ExpiryDate>
+
+          </b:MarketingAllCardholderData>
+        </a:MarketingAllCardholder>
+      </GetMarketingAllCardholderDataResult>
+    </GetMarketingAllCardholderDataResponse>
+  </s:Body>
+</s:Envelope>

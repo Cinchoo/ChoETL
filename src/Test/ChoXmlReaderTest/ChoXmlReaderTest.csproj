@@ -65,6 +65,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Pivot1.xml" />
+    <Content Include="sample22.xml" />
     <Content Include="sample10.xml" />
     <Content Include="sample11.xml" />
     <Content Include="KVPSample.xml" />

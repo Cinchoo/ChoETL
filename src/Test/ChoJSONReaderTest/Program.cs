@@ -1077,7 +1077,141 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Sample32Test();
+            DictTest1();
+        }
+
+        public class RegistrantInfoResponse
+        {
+            public string questionid { get; set; }
+            public string fieldname { get; set; }
+            public string name { get; set; }
+            public object response { get; set; }
+        }
+
+        public class RegistrantInfo
+        {
+            public string attendeeid { get; set; }
+            public Dictionary<int, RegistrantInfoResponse> responses { get; set; }
+        }
+
+        static void DictTest1()
+        {
+            string json = @"
+{
+  ""attendeeid"": ""1"",
+  ""responses"": {
+    ""1"": {
+      ""questionid"": ""1"",
+      ""fieldname"": ""1"",
+      ""name"": ""question?"",
+      ""pageid"": ""2"",
+      ""page"": ""Attendee Information"",
+      ""auto_capitalize"": ""0"",
+      ""choicekey"": """",
+      ""response"": [
+        "" Identify need"",
+        "" Evaluate products and services""
+      ]
+    },
+    ""2"": {
+      ""questionid"": ""2"",
+      ""fieldname"": ""2"",
+      ""name"": ""question2"",
+      ""pageid"": ""2"",
+      ""page"": ""Attendee Information"",
+      ""auto_capitalize"": ""0"",
+      ""choicekey"": ""live"",
+      ""response"": ""live""
+    }
+  }
+}";
+            foreach (var rec in ChoJSONReader< RegistrantInfo>.LoadText(json))
+            {
+                Console.WriteLine(rec.Dump());
+            }
+
+        }
+
+        class Item
+        {
+            [JsonProperty("email")]
+            public string Email { get; set; }
+
+            [JsonProperty("timestamp")]
+            public int Timestamp { get; set; }
+
+            [JsonProperty("event")]
+            public string Event { get; set; }
+
+            [JsonProperty("category")]
+            public List<string> Categories { get; set; }
+        }
+
+        public static void SingleOrArrayItemTest()
+        {
+            string json = @"[
+  {
+    ""email"": ""john.doe@sendgrid.com"",
+    ""timestamp"": 1337966815,
+    ""category"": [
+      ""newuser"",
+      ""transactional""
+    ],
+    ""event"": ""open""
+  },
+  {
+    ""email"": ""jane.doe@sendgrid.com"",
+    ""timestamp"": 1337966815,
+    ""category"": ""olduser"",
+    ""event"": ""open""
+  }
+]";
+            foreach (var rec in ChoJSONReader.LoadText(json))
+            {
+                Console.WriteLine(rec.Dump());
+            }
+        }
+
+        public class Mesh : IChoRecordFieldSerializable
+        {
+            public Triangle[] Triangles { get; set; }
+
+            public bool RecordFieldDeserialize(object record, long index, string propName, ref object source)
+            {
+                JArray array = source as JArray;
+                source = new Triangle[] { new Triangle { Indices = array.SelectMany(y => ((int[])y.ToObject<int[]>()).Select(z => z)).ToArray() } };
+                return true;
+            }
+
+            public bool RecordFieldSerialize(object record, long index, string propName, ref object source)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public class Triangle
+        {
+            public int[] Indices { get; set; }
+        }
+        static void Sample50()
+        {
+            var json = "{ \"Triangles\": [[1337],[1338],[1339]]}";
+
+            foreach (var rec in ChoJSONReader<Mesh>.LoadText(json)
+                //.WithField(o => o.Triangles, customSerializer: o =>
+                //{
+                //    JArray array = o as JArray;
+
+                //    return new Triangle
+                //    {
+                //        // converts the json array to an int[]
+                //        Indices = array.SelectMany(y => ((int[])y.ToObject<int[]>()).Select(z => z)).ToArray()
+                //    };
+                //})
+                )
+            {
+                Console.WriteLine(rec.Dump());
+            }
         }
 
         static void RecordSelectTest()
