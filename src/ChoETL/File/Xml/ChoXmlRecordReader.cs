@@ -20,8 +20,9 @@ namespace ChoETL
 {
     internal class ChoXmlRecordReader : ChoRecordReader
     {
-        private IChoNotifyRecordRead _callbackRecord;
-        private IChoNotifyRecordFieldRead _callbackFieldRecord;
+        private IChoNotifyFileRead _callbackFileRead;
+        private IChoNotifyRecordRead _callbackRecordRead;
+        private IChoNotifyRecordFieldRead _callbackRecordFieldRead;
         private IChoRecordFieldSerializable _callbackRecordSeriablizable;
         private bool _configCheckDone = false;
         private Lazy<XmlSerializer> _se = null;
@@ -38,13 +39,10 @@ namespace ChoETL
             ChoGuard.ArgumentNotNull(configuration, "Configuration");
             Configuration = configuration;
 
-            _callbackRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordRead>(recordType);
-            _callbackFieldRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordFieldRead>(recordType);
-            if (_callbackFieldRecord == null)
-                _callbackFieldRecord = _callbackRecord;
+            _callbackRecordFieldRead = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordFieldRead>(recordType);
+            _callbackFileRead = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyFileRead>(recordType);
+            _callbackRecordRead = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordRead>(recordType);
             _callbackRecordSeriablizable = ChoMetadataObjectCache.CreateMetadataObject<IChoRecordFieldSerializable>(recordType);
-            if (_callbackRecordSeriablizable == null)
-                _callbackRecordSeriablizable = _callbackRecord as IChoRecordFieldSerializable;
 
             //Configuration.Validate();
             _recBuffer = new Lazy<List<XElement>>(() =>
@@ -841,7 +839,16 @@ namespace ChoETL
                 if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
                 {
                     if (fieldValue != null && kvp.Value.FieldType == null && lineNo == 1)
-                        kvp.Value.FieldType = fieldValue is ICollection ? fieldValue.GetType() : fieldValue.GetType().IsSimple() ? DiscoverFieldType(fieldValue as string, Configuration) : null;
+                    {
+                        if (Configuration.MaxScanRows == 0)
+                        {
+                            kvp.Value.FieldType = null;
+                        }
+                        else
+                        {
+                            kvp.Value.FieldType = fieldValue is ICollection ? fieldValue.GetType() : fieldValue.GetType().IsSimple() ? DiscoverFieldType(fieldValue as string, Configuration) : null;
+                        }
+                    }
                 }
                 else
                 {
@@ -1201,9 +1208,9 @@ namespace ChoETL
 
         private bool RaiseBeginLoad(object state)
         {
-            if (_callbackRecord != null)
+            if (_callbackFileRead != null)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeginLoad(state), true);
+                return ChoFuncEx.RunWithIgnoreError(() => _callbackFileRead.BeginLoad(state), true);
             }
             else if (Reader != null)
             {
@@ -1214,9 +1221,9 @@ namespace ChoETL
 
         private void RaiseEndLoad(object state)
         {
-            if (_callbackRecord != null)
+            if (_callbackFileRead != null)
             {
-                ChoActionEx.RunWithIgnoreError(() => _callbackRecord.EndLoad(state));
+                ChoActionEx.RunWithIgnoreError(() => _callbackFileRead.EndLoad(state));
             }
             else if (Reader != null)
             {
@@ -1226,11 +1233,11 @@ namespace ChoETL
 
         private bool? RaiseSkipUntil(Tuple<long, XElement> pair)
         {
-            if (_callbackRecord != null)
+            if (_callbackFileRead != null)
             {
                 long index = pair.Item1;
                 object state = pair.Item2;
-                bool? retValue = ChoFuncEx.RunWithIgnoreErrorNullableReturn<bool>(() => _callbackRecord.SkipUntil(index, state));
+                bool? retValue = ChoFuncEx.RunWithIgnoreErrorNullableReturn<bool>(() => _callbackFileRead.SkipUntil(index, state));
 
                 return retValue;
             }
@@ -1247,11 +1254,11 @@ namespace ChoETL
 
         private bool? RaiseDoWhile(Tuple<long, XElement> pair)
         {
-            if (_callbackRecord != null)
+            if (_callbackFileRead != null)
             {
                 long index = pair.Item1;
                 object state = pair.Item2;
-                bool? retValue = ChoFuncEx.RunWithIgnoreErrorNullableReturn<bool>(() => _callbackRecord.DoWhile(index, state));
+                bool? retValue = ChoFuncEx.RunWithIgnoreErrorNullableReturn<bool>(() => _callbackFileRead.DoWhile(index, state));
 
                 return retValue;
             }
@@ -1268,11 +1275,11 @@ namespace ChoETL
 
         private bool RaiseBeforeRecordLoad(object target, ref Tuple<long, XElement> pair)
         {
-            if (_callbackRecord != null)
+            if (_callbackRecordRead != null)
             {
                 long index = pair.Item1;
                 object state = pair.Item2;
-                bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.BeforeRecordLoad(target, index, ref state), true);
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecordRead.BeforeRecordLoad(target, index, ref state), true);
 
                 if (retValue)
                     pair = new Tuple<long, XElement>(index, state as XElement);
@@ -1297,9 +1304,9 @@ namespace ChoETL
         {
             bool ret = true;
             bool sp = false;
-            if (_callbackRecord != null)
+            if (_callbackRecordRead != null)
             {
-                ret = ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.AfterRecordLoad(target, pair.Item1, pair.Item2, ref sp), true);
+                ret = ChoFuncEx.RunWithIgnoreError(() => _callbackRecordRead.AfterRecordLoad(target, pair.Item1, pair.Item2, ref sp), true);
             }
             else if (Reader != null)
             {
@@ -1311,9 +1318,9 @@ namespace ChoETL
 
         private bool RaiseRecordLoadError(object target, Tuple<long, XElement> pair, Exception ex)
         {
-            if (_callbackRecord != null)
+            if (_callbackRecordRead != null)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecord.RecordLoadError(target, pair.Item1, pair.Item2, ex), false);
+                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecordRead.RecordLoadError(target, pair.Item1, pair.Item2, ex), false);
             }
             else if (Reader != null)
             {
@@ -1324,10 +1331,10 @@ namespace ChoETL
 
         private bool RaiseBeforeRecordFieldLoad(object target, long index, string propName, ref object value)
         {
-            if (_callbackFieldRecord != null)
+            if (_callbackRecordFieldRead != null)
             {
                 object state = value;
-                bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackFieldRecord.BeforeRecordFieldLoad(target, index, propName, ref state), true);
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecordFieldRead.BeforeRecordFieldLoad(target, index, propName, ref state), true);
 
                 if (retValue)
                     value = state;
@@ -1359,9 +1366,9 @@ namespace ChoETL
 
         private bool RaiseAfterRecordFieldLoad(object target, long index, string propName, object value)
         {
-            if (_callbackFieldRecord != null)
+            if (_callbackRecordFieldRead != null)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => _callbackFieldRecord.AfterRecordFieldLoad(target, index, propName, value), true);
+                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecordFieldRead.AfterRecordFieldLoad(target, index, propName, value), true);
             }
             else if (target is IChoNotifyRecordFieldRead)
             {
@@ -1376,9 +1383,9 @@ namespace ChoETL
 
         private bool RaiseRecordFieldLoadError(object target, long index, string propName, object value, Exception ex)
         {
-            if (_callbackFieldRecord != null)
+            if (_callbackRecordFieldRead != null)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => _callbackFieldRecord.RecordFieldLoadError(target, index, propName, value, ex), false);
+                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecordFieldRead.RecordFieldLoadError(target, index, propName, value, ex), false);
             }
             else if (target is IChoNotifyRecordFieldRead)
             {

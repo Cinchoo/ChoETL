@@ -521,7 +521,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoXmlWriter<T> WithField<TField>(Expression<Func<T, TField>> field, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
+        public ChoXmlWriter<T> WithField<TField>(Expression<Func<T, TField>> field, string xPath = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
             bool isXmlAttribute = false, bool isAnyXmlNode = false, string fieldName = null,
             Func<object, object> valueConverter = null, 
             Func<object, object> customSerializer = null,
@@ -532,7 +532,7 @@ namespace ChoETL
             if (field == null)
                 return this;
 
-            return WithField(field.GetMemberName(), xPath, fieldType, fieldValueTrimOption, isXmlAttribute, isAnyXmlNode, fieldName,
+            return WithField(field.GetMemberName(), xPath, field.GetPropertyType(), fieldValueTrimOption, isXmlAttribute, isAnyXmlNode, fieldName,
                 valueConverter, customSerializer, isNullable,
                 defaultValue, fallbackValue, encodeValue, field.GetFullyQualifiedMemberName(), formatText, nullValue);
         }

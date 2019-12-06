@@ -332,13 +332,21 @@ namespace ChoETL
                             }
                             else
                             {
-                                DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
-                                if (dpAttr != null)
+                                DisplayNameAttribute dnAttr = pd.Attributes.OfType<DisplayNameAttribute>().FirstOrDefault();
+                                if (dnAttr != null && !dnAttr.DisplayName.IsNullOrWhiteSpace())
                                 {
-                                    if (!dpAttr.ShortName.IsNullOrWhiteSpace())
-                                        obj.FieldName = dpAttr.ShortName;
-                                    else if (!dpAttr.Name.IsNullOrWhiteSpace())
-                                        obj.FieldName = dpAttr.Name;
+                                    obj.FieldName = dnAttr.DisplayName.Trim();
+                                }
+                                else
+                                {
+                                    DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
+                                    if (dpAttr != null)
+                                    {
+                                        if (!dpAttr.ShortName.IsNullOrWhiteSpace())
+                                            obj.FieldName = dpAttr.ShortName;
+                                        else if (!dpAttr.Name.IsNullOrWhiteSpace())
+                                            obj.FieldName = dpAttr.Name;
+                                    }
                                 }
                             }
                             DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();
@@ -408,6 +416,9 @@ namespace ChoETL
                 {
                     foreach (string fn in fieldNames)
                     {
+                        if (IgnoredFields.Contains(fn))
+                            continue;
+
                         var obj = new ChoJSONRecordFieldConfiguration(fn, (string)null);
                         JSONRecordFieldConfigurations.Add(obj);
                     }
@@ -445,8 +456,8 @@ namespace ChoETL
                 if (fc.PropertyDescriptor == null)
                     continue;
 
-                PIDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
-                PDDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor);
+                PIDict.Add(fc.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
+                PDDict.Add(fc.Name, fc.PropertyDescriptor);
             }
 
             RecordFieldConfigurationsDict = JSONRecordFieldConfigurations.Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);

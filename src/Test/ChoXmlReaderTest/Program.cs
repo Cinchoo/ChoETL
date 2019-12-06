@@ -159,7 +159,89 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Xml2CSV2();
+            Xml2JSONWithTabs();
+        }
+
+        static void Xml2JSONWithTabs()
+        {
+            string xml = @"<Request>
+ <HEADER>
+    <uniqueID>2019111855545921230</uniqueID>
+ </HEADER>
+ <DETAIL>
+<cmnmGrp>
+  <coNm>IS XYZ INC.</coNm>
+  <embossedNm>ANNA ST       UART</embossedNm>
+  <cMNm>ST      UART/ANNA K</cMNm>
+  <cmfirstNm>ANNA</cmfirstNm>
+  <cmmiddleNm>K</cmmiddleNm>
+  <cm2NdLastNm>ST       UART</cm2NdLastNm>
+</cmnmGrp>
+</DETAIL>
+</Request>";
+
+
+            using (var r = ChoXmlReader.LoadText(xml)
+                .WithXPath(@"/")
+                )
+            {
+                Console.WriteLine(ChoJSONWriter.ToTextAll(r));
+            }
+
+        }
+
+        public abstract class AssortmentViewModel
+        {
+            public string Typ { get; set; }
+            public string Nr { get; set; }
+        }
+
+        public class StoreAssortmentViewModel : AssortmentViewModel
+        {
+
+        }
+        public class AgentAssortmentViewModel : AssortmentViewModel
+        {
+
+        }
+
+        static void XmlTypeTest()
+        {
+            string xml = @"<?xml version=""1.0"" encoding=""utf-8""?>
+<ButikerOmbud xmlns:xsd=""http://www.w3.org/2001/XMLSchema"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"">
+    <Info>
+        <Meddelande>blah blah</Meddelande>
+    </Info>
+    <ButikOmbud xsi:type=""StoreAssortmentViewModel"">
+        <Typ>Butik</Typ><Nr>2515</Nr>
+    </ButikOmbud>
+    <ButikOmbud xsi:type=""StoreAssortmentViewModel"">
+        <Typ>Butik</Typ><Nr>2516</Nr>
+    </ButikOmbud>
+    <ButikOmbud xsi:type=""AgentAssortmentViewModel"">
+        <Typ>Ombud</Typ><Nr>011703-91A</Nr>
+    </ButikOmbud>
+    <ButikOmbud xsi:type=""AgentAssortmentViewModel"">
+        <Typ>Ombud</Typ><Nr>011703-92B</Nr>
+    </ButikOmbud>
+</ButikerOmbud>";
+
+            StringBuilder output = new StringBuilder();
+            using (var w = new ChoXmlWriter(output))
+            {
+                foreach (var rec in ChoXmlReader.LoadText(xml)
+                    .WithXPath("/ButikOmbud")
+                    .Configure(c => c.IncludeSchemaInstanceNodes = true)
+                    //.WithXmlNamespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")
+                    //.WithMaxScanNodes(1)
+                    )
+                {
+                    Console.WriteLine(rec.Dump());
+                    //w.Write(rec);
+                }
+            }
+
+            Console.WriteLine(output);
         }
 
         static void Xml2CSV2()

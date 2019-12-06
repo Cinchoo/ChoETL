@@ -208,46 +208,76 @@ namespace ChoETL
                 }
                 else
                 {
-                    foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
+                    if (typeof(IList).IsAssignableFrom(recordType))
                     {
-                        pt = pd.PropertyType.GetUnderlyingType();
-                        if (pt != typeof(object) && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
-                            DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
+
+                    }
+                    else if (recordType.IsGenericType && recordType.GetGenericTypeDefinition() == typeof(Dictionary<,>)
+                        && typeof(string) == recordType.GetGenericArguments()[0])
+                    {
+
+                    }
+                    else
+                    {
+                        if (recordType == typeof(object))
+                        {
+
+                        }
+                        else if (recordType.IsSimple())
+                        {
+                        }
                         else
                         {
-                            if (FixedLengthFieldDefaultSizeConfiguation == null)
-                                size = ChoFixedLengthFieldDefaultSizeConfiguation.Instance.GetSize(pd.PropertyType);
-                            else
-                                size = FixedLengthFieldDefaultSizeConfiguation.GetSize(pd.PropertyType);
+                            foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
+                            {
+                                pt = pd.PropertyType.GetUnderlyingType();
+                                if (pt != typeof(object) && !pt.IsSimple() /*&& !typeof(IEnumerable).IsAssignableFrom(pt)*/)
+                                    DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
+                                else
+                                {
+                                    if (FixedLengthFieldDefaultSizeConfiguation == null)
+                                        size = ChoFixedLengthFieldDefaultSizeConfiguation.Instance.GetSize(pd.PropertyType);
+                                    else
+                                        size = FixedLengthFieldDefaultSizeConfiguation.GetSize(pd.PropertyType);
 
-                            var obj = new ChoFixedLengthRecordFieldConfiguration(pd.Name, startIndex, size);
-                            obj.FieldType = pt;
-                            obj.PropertyDescriptor = pd;
-                            obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
-                            StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
-                            if (slAttr != null && slAttr.MaximumLength > 0)
-                                obj.Size = slAttr.MaximumLength;
-                            DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
-                            if (dpAttr != null)
-                            {
-                                if (!dpAttr.ShortName.IsNullOrWhiteSpace())
-                                    obj.FieldName = dpAttr.ShortName;
-                                else if (!dpAttr.Name.IsNullOrWhiteSpace())
-                                    obj.FieldName = dpAttr.Name;
-                            }
-                            DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();
-                            if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
-                            {
-                                obj.FormatText = dfAttr.DataFormatString;
-                            }
-                            if (dfAttr != null && !dfAttr.NullDisplayText.IsNullOrWhiteSpace())
-                            {
-                                obj.NullValue = dfAttr.NullDisplayText;
-                            }
-                            if (!FixedLengthRecordFieldConfigurations.Any(c => c.Name == pd.Name))
-                                FixedLengthRecordFieldConfigurations.Add(obj);
+                                    var obj = new ChoFixedLengthRecordFieldConfiguration(pd.Name, startIndex, size);
+                                    obj.FieldType = pt;
+                                    obj.PropertyDescriptor = pd;
+                                    obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                                    StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
+                                    if (slAttr != null && slAttr.MaximumLength > 0)
+                                        obj.Size = slAttr.MaximumLength;
+                                    DisplayNameAttribute dnAttr = pd.Attributes.OfType<DisplayNameAttribute>().FirstOrDefault();
+                                    if (dnAttr != null && !dnAttr.DisplayName.IsNullOrWhiteSpace())
+                                    {
+                                        obj.FieldName = dnAttr.DisplayName.Trim();
+                                    }
+                                    else
+                                    {
+                                        DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
+                                        if (dpAttr != null)
+                                        {
+                                            if (!dpAttr.ShortName.IsNullOrWhiteSpace())
+                                                obj.FieldName = dpAttr.ShortName;
+                                            else if (!dpAttr.Name.IsNullOrWhiteSpace())
+                                                obj.FieldName = dpAttr.Name;
+                                        }
+                                    }
+                                    DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();
+                                    if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
+                                    {
+                                        obj.FormatText = dfAttr.DataFormatString;
+                                    }
+                                    if (dfAttr != null && !dfAttr.NullDisplayText.IsNullOrWhiteSpace())
+                                    {
+                                        obj.NullValue = dfAttr.NullDisplayText;
+                                    }
+                                    if (!FixedLengthRecordFieldConfigurations.Any(c => c.Name == pd.Name))
+                                        FixedLengthRecordFieldConfigurations.Add(obj);
 
-                            startIndex += size;
+                                    startIndex += size;
+                                }
+                            }
                         }
                     }
                 }
@@ -329,6 +359,9 @@ namespace ChoETL
                     int fieldLength = ChoFixedLengthFieldDefaultSizeConfiguation.Instance.GetSize(typeof(string));
                     foreach (string fn in fieldNames)
                     {
+                        if (IgnoredFields.Contains(fn))
+                            continue;
+
                         var obj = new ChoFixedLengthRecordFieldConfiguration(fn, startIndex, fieldLength);
                         FixedLengthRecordFieldConfigurations.Add(obj);
                         startIndex += fieldLength;
@@ -387,8 +420,8 @@ namespace ChoETL
                 if (fc.PropertyDescriptor == null)
                     continue;
 
-                PIDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
-                PDDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor);
+                PIDict.Add(fc.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
+                PDDict.Add(fc.Name, fc.PropertyDescriptor);
             }
 
             RecordFieldConfigurationsDict = FixedLengthRecordFieldConfigurations.OrderBy(i => i.StartIndex).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name, FileHeaderConfiguration.StringComparer);

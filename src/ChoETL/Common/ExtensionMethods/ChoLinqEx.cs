@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -19,6 +21,26 @@ namespace ChoETL
         public static string GetMemberName<T>(this Expression<Func<T, object>> field)
         {
             return (field.Body as MemberExpression ?? ((UnaryExpression)field.Body).Operand as MemberExpression).Member.Name;
+        }
+
+        public static PropertyInfo GetPropertyInfo<TClass, TField>(this Expression<Func<TClass, TField>> field)
+        {
+            return ((PropertyInfo)(field.Body as MemberExpression ?? ((UnaryExpression)field.Body).Operand as MemberExpression).Member);
+        }
+
+        public static PropertyDescriptor GetPropertyDescriptor<TClass, TField>(this Expression<Func<TClass, TField>> field)
+        {
+            return GetPropertyDescriptor((PropertyInfo)(field.Body as MemberExpression ?? ((UnaryExpression)field.Body).Operand as MemberExpression).Member);
+        }
+
+        public static PropertyDescriptor GetPropertyDescriptor(this PropertyInfo propertyInfo)
+        {
+            return TypeDescriptor.GetProperties(propertyInfo.DeclaringType)[propertyInfo.Name];
+        }
+
+        public static Type GetPropertyType<TClass, TField>(this Expression<Func<TClass, TField>> field)
+        {
+            return ((PropertyInfo)(field.Body as MemberExpression ?? ((UnaryExpression)field.Body).Operand as MemberExpression).Member).PropertyType;
         }
 
         public static string GetMemberName<TClass, TField>(this Expression<Func<TClass, TField>> field)

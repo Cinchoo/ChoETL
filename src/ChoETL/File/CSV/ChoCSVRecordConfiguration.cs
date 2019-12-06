@@ -91,6 +91,11 @@ namespace ChoETL
             get;
             private set;
         }
+        //internal Dictionary<string, KeyValuePair<string, ChoCSVRecordFieldConfiguration>[]> RecordFieldConfigurationsDictGroup
+        //{
+        //    get;
+        //    private set;
+        //}
 
         public ChoCSVRecordConfiguration Configure(Action<ChoCSVRecordConfiguration> action)
         {
@@ -100,7 +105,7 @@ namespace ChoETL
             return this;
         }
 
-        internal KeyValuePair<string, ChoCSVRecordFieldConfiguration>[] FCArray;
+        //internal KeyValuePair<string, ChoCSVRecordFieldConfiguration>[] FCArray;
 
         public ChoCSVRecordFieldConfiguration this[string name]
         {
@@ -238,7 +243,8 @@ namespace ChoETL
                 ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().Any()).Any());
         }
 
-        private void DiscoverRecordFields(Type recordType, ref int position, string declaringMember = null, bool optIn = false)
+        private void DiscoverRecordFields(Type recordType, ref int position, string declaringMember = null, 
+            bool optIn = false, PropertyDescriptor propDesc = null)
         {
             if (!recordType.IsDynamicType())
             {
@@ -263,43 +269,164 @@ namespace ChoETL
                 }
                 else
                 {
-                    foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
+                    if (typeof(IList).IsAssignableFrom(recordType))
                     {
-                        pt = pd.PropertyType.GetUnderlyingType();
-                        if (pt != typeof(object) && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
-                            DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
+                        if (propDesc != null)
+                        {
+                            RangeAttribute dnAttr = propDesc.Attributes.OfType<RangeAttribute>().FirstOrDefault();
+
+                            if (dnAttr != null && dnAttr.Minimum.CastTo<int>() >= 0 && dnAttr.Maximum.CastTo<int>() > 0
+                                && dnAttr.Minimum.CastTo<int>() <= dnAttr.Maximum.CastTo<int>())
+                            {
+                                recordType = recordType.GetItemType().GetUnderlyingType();
+
+                                if (recordType.IsSimple())
+                                {
+                                    for (int range = dnAttr.Minimum.CastTo<int>(); range <= dnAttr.Maximum.CastTo<int>(); range++)
+                                    {
+                                        ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, range);
+                                        //if (!CSVRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
+                                        CSVRecordFieldConfigurations.Add(obj);
+                                    }
+                                }
+                                else
+                                {
+                                    for (int range = dnAttr.Minimum.CastTo<int>(); range <= dnAttr.Maximum.CastTo<int>(); range++)
+                                    {
+                                        foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
+                                        {
+                                            pt = pd.PropertyType.GetUnderlyingType();
+                                            if (pt != typeof(object) && !pt.IsSimple() /*&& !typeof(IEnumerable).IsAssignableFrom(pt)*/)
+                                            {
+                                                //DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, pd);
+                                            }
+                                            else
+                                            {
+                                                ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref position, declaringMember, pd, range, propDesc.GetDisplayName());
+
+                                                if (!CSVRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
+                                                    CSVRecordFieldConfigurations.Add(obj);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else if (recordType.IsGenericType && recordType.GetGenericTypeDefinition() == typeof(Dictionary<,>)
+                        && typeof(string) == recordType.GetGenericArguments()[0])
+                    {
+                        if (propDesc != null)
+                        {
+                            ChoDictionaryKeyAttribute[] dnAttrs = propDesc.Attributes.OfType<ChoDictionaryKeyAttribute>().ToArray();
+                            var keys = (from a in dnAttrs
+                                       where a != null && !a.Keys.IsNullOrWhiteSpace()
+                                       select a.Keys.SplitNTrim()).SelectMany(a => a).ToArray();
+
+                            foreach (var key in keys)
+                            { 
+                                if (!key.IsNullOrWhiteSpace())
+                                {
+                                    ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, dictKey: key);
+
+                                    //if (!CSVRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
+                                        CSVRecordFieldConfigurations.Add(obj);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (recordType == typeof(object))
+                        {
+
+                        }
+                        else if (recordType.IsSimple())
+                        {
+                            ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref position, declaringMember, propDesc);
+                            if (!CSVRecordFieldConfigurations.Any(c => c.Name == propDesc.Name))
+                                CSVRecordFieldConfigurations.Add(obj);
+                        }
                         else
                         {
-                            var obj = new ChoCSVRecordFieldConfiguration(pd.Name, ++position);
-                            obj.FieldType = pd.PropertyType; // pt;
-                            obj.PropertyDescriptor = pd;
-                            obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
-                            StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
-                            if (slAttr != null && slAttr.MaximumLength > 0)
-                                obj.Size = slAttr.MaximumLength;
-                            DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
-                            if (dpAttr != null)
+                            foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                             {
-                                if (!dpAttr.ShortName.IsNullOrWhiteSpace())
-                                    obj.FieldName = dpAttr.ShortName;
-                                else if (!dpAttr.Name.IsNullOrWhiteSpace())
-                                    obj.FieldName = dpAttr.Name;
+                                pt = pd.PropertyType.GetUnderlyingType();
+                                if (pt != typeof(object) && !pt.IsSimple()  /*&& !typeof(IEnumerable).IsAssignableFrom(pt)*/)
+                                {
+                                    if (propDesc == null)
+                                        DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, pd);
+                                }
+                                else
+                                {
+                                    ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref position, declaringMember, pd, null, propDesc.GetDisplayName());
+                                    if (!CSVRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
+                                        CSVRecordFieldConfigurations.Add(obj);
+                                }
                             }
-                            DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();
-                            if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
-                            {
-                                obj.FormatText = dfAttr.DataFormatString;
-                            }
-                            if (dfAttr != null && !dfAttr.NullDisplayText.IsNullOrWhiteSpace())
-                            {
-                                obj.NullValue = dfAttr.NullDisplayText;
-                            }
-                            if (!CSVRecordFieldConfigurations.Any(c => c.Name == pd.Name))
-                                CSVRecordFieldConfigurations.Add(obj);
                         }
                     }
                 }
             }
+        }
+
+        internal ChoCSVRecordFieldConfiguration NewFieldConfiguration(ref int position, string declaringMember, PropertyDescriptor pd,
+            int? arrayIndex = null, string displayName = null, string dictKey = null)
+        {
+            ChoCSVRecordFieldConfiguration obj = null;
+
+            if (displayName == null)
+                obj = new ChoCSVRecordFieldConfiguration(declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), ++position);
+            else
+                obj = new ChoCSVRecordFieldConfiguration("{0}.{1}".FormatString(displayName, pd.Name), ++position);
+
+            obj.DictKey = dictKey;
+            obj.ArrayIndex = arrayIndex;
+            obj.FieldType = pd.PropertyType; // pt;
+            obj.PropertyDescriptor = pd;
+            obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
+            StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
+            if (slAttr != null && slAttr.MaximumLength > 0)
+                obj.Size = slAttr.MaximumLength;
+            DisplayNameAttribute dnAttr = pd.Attributes.OfType<DisplayNameAttribute>().FirstOrDefault();
+            if (dnAttr != null && !dnAttr.DisplayName.IsNullOrWhiteSpace())
+            {
+                obj.FieldName = dnAttr.DisplayName.Trim();
+            }
+            else
+            {
+                DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
+                if (dpAttr != null)
+                {
+                    if (!dpAttr.ShortName.IsNullOrWhiteSpace())
+                        obj.FieldName = dpAttr.ShortName.Trim();
+                    else if (!dpAttr.Name.IsNullOrWhiteSpace())
+                        obj.FieldName = dpAttr.Name.Trim();
+                }
+            }
+            DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();
+            if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
+            {
+                obj.FormatText = dfAttr.DataFormatString;
+            }
+            if (dfAttr != null && !dfAttr.NullDisplayText.IsNullOrWhiteSpace())
+            {
+                obj.NullValue = dfAttr.NullDisplayText;
+            }
+
+            if (arrayIndex != null)
+            {
+                if (ArrayIndexSeparator == null)
+                    obj.FieldName = obj.FieldName + "_" + arrayIndex;
+                else
+                    obj.FieldName = obj.FieldName + ArrayIndexSeparator + arrayIndex;
+            }
+            else if (!dictKey.IsNullOrWhiteSpace())
+            {
+                obj.FieldName = dictKey;
+            }
+
+            return obj;
         }
 
         public override void Validate(object state)
@@ -332,7 +459,9 @@ namespace ChoETL
                 {
                     int index = 0;
                     CSVRecordFieldConfigurations = (from header in headers
-                                                    select new ChoCSVRecordFieldConfiguration(header, ++index)).ToList();
+                                                    where !IgnoredFields.Contains(header)
+                                                    select new ChoCSVRecordFieldConfiguration(header, ++index)
+                                                    ).ToList();
                 }
                 else
                 {
@@ -397,11 +526,12 @@ namespace ChoETL
                 if (fc.PropertyDescriptor == null)
                     continue;
 
-                PIDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
-                PDDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor);
+                PIDict.Add(fc.FieldName, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
+                PDDict.Add(fc.FieldName, fc.PropertyDescriptor);
             }
 
-            RecordFieldConfigurationsDict = CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name, FileHeaderConfiguration.StringComparer);
+            RecordFieldConfigurationsDict = CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName, FileHeaderConfiguration.StringComparer);
+            //RecordFieldConfigurationsDictGroup = RecordFieldConfigurationsDict.GroupBy(kvp => kvp.Key.Contains(".") ? kvp.Key.SplitNTrim(".").First() : kvp.Key).ToDictionary(i => i.Key, i => i.ToArray());
             RecordFieldConfigurationsDict2 = CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName, FileHeaderConfiguration.StringComparer);
             if (IsDynamicObject)
                 AlternativeKeys = RecordFieldConfigurationsDict2.ToDictionary(kvp =>
@@ -414,7 +544,7 @@ namespace ChoETL
             else
                 AlternativeKeys = RecordFieldConfigurationsDict2.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Name, FileHeaderConfiguration.StringComparer);
 
-            FCArray = RecordFieldConfigurationsDict.ToArray();
+            //FCArray = RecordFieldConfigurationsDict.ToArray();
 
             LoadNCacheMembers(CSVRecordFieldConfigurations);
 

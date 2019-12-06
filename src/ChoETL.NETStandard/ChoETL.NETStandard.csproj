@@ -31,6 +31,7 @@
     <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\ChoETL\Common\Attributes\ChoDictionaryKeyAttribute.cs" Link="Common\Attributes\ChoDictionaryKeyAttribute.cs" />
     <Compile Include="..\ChoETL\Common\Attributes\ChoDataTableColumnTypeAttribute.cs" Link="Common\Attributes\ChoDataTableColumnTypeAttribute.cs" />
     <Compile Include="..\ChoETL\Common\Attributes\ChoMetadataRefTypeAttribute.cs" Link="Common\Attributes\ChoMetadataRefTypeAttribute.cs" />
     <Compile Include="..\ChoETL\Common\Attributes\ChoFieldMapAttribute.cs" Link="Common\Attributes\ChoFieldMapAttribute.cs" />

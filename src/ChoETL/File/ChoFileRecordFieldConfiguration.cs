@@ -60,7 +60,16 @@ namespace ChoETL
             get;
             set;
         }
-
+        public int? ArrayIndex
+        {
+            get;
+            set;
+        }
+        public string DictKey
+        {
+            get;
+            set;
+        }
         public ChoFileRecordFieldConfiguration(string name, ChoFileRecordFieldAttribute attr = null, Attribute[] otherAttrs = null) : base(name, attr, otherAttrs)
         {
             Truncate = true;

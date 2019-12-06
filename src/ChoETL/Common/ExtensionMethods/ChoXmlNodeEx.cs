@@ -782,7 +782,8 @@ namespace ChoETL
             return nil != null && (bool)nil;
         }
 
-        public static bool IsValidAttribute(this XAttribute attribute, string xmlSchemaNS = null, string jsonSchemaNS = null)
+        public static bool IsValidAttribute(this XAttribute attribute, string xmlSchemaNS = null, string jsonSchemaNS = null,
+            ChoXmlNamespaceManager nsMgr = null, bool includeSchemaInstanceNodes = false)
         {
             if (attribute.Name.ToString().StartsWith("xmlns"))
                 return false;
@@ -793,11 +794,18 @@ namespace ChoETL
             if (jsonSchemaNS != null && ns.StartsWith(jsonSchemaNS, StringComparison.InvariantCultureIgnoreCase))
                 return false;
             if (!ns.IsNullOrEmpty() && ChoXmlSettings.XmlSchemaInstanceNamespace.EndsWith(ns, StringComparison.InvariantCultureIgnoreCase))
-                return false;
+                return includeSchemaInstanceNodes ? true : false;
             if (!ns.IsNullOrEmpty() && ChoXmlSettings.JSONSchemaNamespace.EndsWith(ns, StringComparison.InvariantCultureIgnoreCase))
                 return false;
             if (!ns.IsNullOrEmpty() && ChoXmlSettings.XmlNamespace.EndsWith(ns, StringComparison.InvariantCultureIgnoreCase))
                 return false;
+
+            if (nsMgr != null)
+            {
+                string prefix = nsMgr.GetPrefixOfNamespace(attribute.Name.Namespace.ToString());
+                if (!prefix.IsNullOrWhiteSpace()) return true;
+            }
+
 
             return true;
         }

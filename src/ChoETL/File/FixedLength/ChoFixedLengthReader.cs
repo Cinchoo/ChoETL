@@ -493,7 +493,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoFixedLengthReader<T> WithField<TField>(Expression<Func<T, TField>> field, int startIndex, int size, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
+        public ChoFixedLengthReader<T> WithField<TField>(Expression<Func<T, TField>> field, int startIndex, int size, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
             string fieldName = null, Func<object, object> valueConverter = null, 
             Func<dynamic, object> valueSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, 
@@ -503,7 +503,7 @@ namespace ChoETL
             if (field == null)
                 return this;
 
-            return WithField(field.GetMemberName(), startIndex, size, fieldType, quoteField, fieldValueTrimOption,
+            return WithField(field.GetMemberName(), startIndex, size, field.GetPropertyType(), quoteField, fieldValueTrimOption,
                 fieldName, valueConverter, valueSelector, defaultValue, fallbackValue, altFieldNames, field.GetFullyQualifiedMemberName(), formatText, nullValue);
         }
 

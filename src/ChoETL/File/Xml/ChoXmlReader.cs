@@ -687,7 +687,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoXmlReader<T> WithField<TField>(Expression<Func<T, TField>> field, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
+        public ChoXmlReader<T> WithField<TField>(Expression<Func<T, TField>> field, string xPath = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
             bool isXmlAttribute = false, string fieldName = null, bool isArray = false,
             Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
@@ -698,7 +698,7 @@ namespace ChoETL
             if (field == null)
                 return this;
 
-            return WithField(field.GetMemberName(), xPath, fieldType, fieldValueTrimOption, isXmlAttribute, fieldName, isArray,
+            return WithField(field.GetMemberName(), xPath, field.GetPropertyType(), fieldValueTrimOption, isXmlAttribute, fieldName, isArray,
                 valueConverter,
                 itemConverter, customSerializer,
                 defaultValue, fallbackValue, encodeValue, field.GetFullyQualifiedMemberName(), nullValue, fieldTypeSelector);

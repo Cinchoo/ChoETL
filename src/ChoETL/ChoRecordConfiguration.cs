@@ -65,12 +65,7 @@ namespace ChoETL
         internal bool HasConfigValidators = false;
         internal Dictionary<string, ValidationAttribute[]> ValDict = null;
         internal string[] PropertyNames;
-
-        private readonly HashSet<string> _ignoredFields = new HashSet<string>();
-        public HashSet<string> IgnoredFields
-        {
-            get { return _ignoredFields; }
-        }
+        public HashSet<string> IgnoredFields { get; } = new HashSet<string>();
 
         internal ChoRecordConfiguration(Type recordType = null)
         {

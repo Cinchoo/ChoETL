@@ -216,6 +216,19 @@ namespace ChoETL
             Initialize();
         }
 
+        public void RenameKey(string oldKey, string newKey)
+        {
+            if (oldKey.IsNullOrWhiteSpace() || newKey.IsNullOrWhiteSpace())
+                return;
+
+            if (!_kvpDict.ContainsKey(oldKey))
+                return;
+
+            var value = _kvpDict[oldKey];
+            _kvpDict.Remove(oldKey);
+            _kvpDict.Add(newKey, value);
+        }
+
         public dynamic ConvertToNestedObject(char separator = '/')
         {
             return ChoExpandoObjectEx.ConvertToNestedObject(this, separator);

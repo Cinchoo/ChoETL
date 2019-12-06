@@ -127,6 +127,12 @@ namespace ChoETL
             set;
         }
         [DataMember]
+        public char? ArrayIndexSeparator
+        {
+            get;
+            set;
+        }
+        [DataMember]
         public bool TreatCurrencyAsDecimal
         {
             get;
@@ -282,6 +288,15 @@ namespace ChoETL
                     throw new ChoRecordConfigurationException("Nested column separator [{0}] can't be quote character [{1}]".FormatString(NestedColumnSeparator, QuoteChar));
                 if (EOLDelimiter.Contains(NestedColumnSeparator.Value))
                     throw new ChoRecordConfigurationException("Nested column separator [{0}] can't be one EOLDelimiter characters [{1}]".FormatString(NestedColumnSeparator, EOLDelimiter));
+            }
+            if (ArrayIndexSeparator != null)
+            {
+                if (ArrayIndexSeparator.Value == ChoCharEx.NUL)
+                    throw new ChoRecordConfigurationException("Invalid '{0}' array index separator specified.".FormatString(ArrayIndexSeparator));
+                if (ArrayIndexSeparator.Value == QuoteChar)
+                    throw new ChoRecordConfigurationException("Array index separator [{0}] can't be quote character [{1}]".FormatString(ArrayIndexSeparator, QuoteChar));
+                if (EOLDelimiter.Contains(ArrayIndexSeparator.Value))
+                    throw new ChoRecordConfigurationException("Array index separator [{0}] can't be one EOLDelimiter characters [{1}]".FormatString(ArrayIndexSeparator, EOLDelimiter));
             }
             if (Comments != null)
             {

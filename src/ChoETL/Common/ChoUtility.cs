@@ -372,9 +372,10 @@ namespace ChoETL
             sr.Write(byteData, 0, byteData.Length);
         }
 
-        public static dynamic ToDynamicObject(this object src, 
-            Func<IDictionary<string, object>> dynamicFactory = null,
-            bool shallowDynamic = true)
+        public static dynamic ToDynamicObject(this object src,
+            bool shallowDynamic = false,
+            Func<IDictionary<string, object>> dynamicFactory = null
+            )
         {
             if (src == null) return new ChoDynamicObject();
 
@@ -395,32 +396,67 @@ namespace ChoETL
             IDictionary<string, object> expando = dynamicFactory == null ? new ChoDynamicObject() : dynamicFactory();
             if (expando == null) expando = new ChoDynamicObject();
 
-            foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(src.GetType()))
+            if (src is IList)
             {
-                if (pd.Attributes.OfType<ChoIgnoreMemberAttribute>().Any()) continue;
-
-                try
+                List<object> list = new List<object>();
+                foreach (var rec in (IList)src)
                 {
-                    propValue = pd.GetValue(src);
-
-                    if (shallowDynamic)
-                        expando.Add(pd.Name, propValue);
-                    else
+                    if (rec != null)
                     {
-                        if (propValue == null)
-                            expando.Add(pd.Name, propValue);
-                        else if (propValue.GetType().IsSimple())
-                            expando.Add(pd.Name, propValue);
+                        if (rec.GetType().IsSimple())
+                            list.Add(rec);
                         else
-                            expando.Add(pd.Name, ToDynamicObject(propValue));
+                            list.Add(ToDynamicObject(rec, shallowDynamic, dynamicFactory));
                     }
                 }
-                catch (Exception ex)
+                return list.ToArray();
+            }
+            else if (src is IDictionary)
+            {
+                Dictionary<string, object> dict = new Dictionary<string, object>();
+                foreach (var key in ((IDictionary)src).Keys)
                 {
-                    ChoETLFramework.WriteLog(ChoETLFramework.TraceSwitch.TraceError, "ToDynamicObject: Error assinging value for '{0}' member. {1}".FormatString(ChoType.GetMemberName(pd), ex.Message));
+                    string keyObj = null;
+                    keyObj = key.ToString();
+
+                    object valueObj = ((IDictionary)src)[key];
+                    if (valueObj == null)
+                        dict.Add(keyObj, null);
+                    if (key.GetType().IsSimple())
+                        dict.Add(keyObj, valueObj);
+                    else
+                        dict.Add(keyObj, ToDynamicObject(valueObj, shallowDynamic, dynamicFactory));
+                }
+                return dict;
+            }
+            else
+            {
+                foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(src.GetType()))
+                {
+                    if (pd.Attributes.OfType<ChoIgnoreMemberAttribute>().Any()) continue;
+
+                    try
+                    {
+                        propValue = pd.GetValue(src);
+
+                        if (shallowDynamic)
+                            expando.Add(pd.Name, propValue);
+                        else
+                        {
+                            if (propValue == null)
+                                expando.Add(pd.Name, propValue);
+                            else if (propValue.GetType().IsSimple())
+                                expando.Add(pd.Name, propValue);
+                            else
+                                expando.Add(pd.Name, ToDynamicObject(propValue, shallowDynamic, dynamicFactory));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ChoETLFramework.WriteLog(ChoETLFramework.TraceSwitch.TraceError, "ToDynamicObject: Error assinging value for '{0}' member. {1}".FormatString(ChoType.GetMemberName(pd), ex.Message));
+                    }
                 }
             }
-
             //foreach (MemberInfo memberInfo in ChoType.GetMembers(src.GetType()).Where(m => ChoType.GetAttribute<ChoIgnoreMemberAttribute>(m) == null))
             //{
             //    try

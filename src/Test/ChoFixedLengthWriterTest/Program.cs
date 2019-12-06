@@ -16,7 +16,7 @@ namespace ChoFixedLengthWriterTest
         {
 			ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-			TrimTest();
+            QuickWriteTest2();
         }
 
 		public static void TrimTest()
@@ -93,7 +93,8 @@ namespace ChoFixedLengthWriterTest
 
         static void QuickWriteTest2()
         {
-            using (var parser = new ChoFixedLengthWriter("Emp.txt").
+            StringBuilder output = new StringBuilder();
+            using (var parser = new ChoFixedLengthWriter(output).
                 WithFirstLineHeader().
                 WithField("Id", 0, 8).
                 WithField("Name", 5, 10))
@@ -110,6 +111,8 @@ namespace ChoFixedLengthWriterTest
 
                 parser.Write(rec2);
             }
+
+            Console.WriteLine(output);
         }
 
         static void QuickWriteTest()

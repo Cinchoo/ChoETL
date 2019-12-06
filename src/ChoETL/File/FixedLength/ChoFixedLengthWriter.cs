@@ -285,7 +285,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoFixedLengthWriter<T> WithField<TField>(Expression<Func<T, TField>> field, int startIndex, int size, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
+        public ChoFixedLengthWriter<T> WithField<TField>(Expression<Func<T, TField>> field, int startIndex, int size, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
             bool truncate = true, string fieldName = null, Func<object, object> valueConverter = null, 
             Func<dynamic, object> valueSelector = null,
             Func<string> headerSelector = null,
@@ -295,7 +295,7 @@ namespace ChoETL
             if (field == null)
                 return this;
 
-            return WithField(field.GetMemberName(), startIndex, size, fieldType, quoteField, fillChar, fieldValueJustification,
+            return WithField(field.GetMemberName(), startIndex, size, field.GetPropertyType(), quoteField, fillChar, fieldValueJustification,
                     truncate, fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, nullValue);
         }
 
@@ -422,6 +422,8 @@ namespace ChoETL
             DataTable schemaTable = dr.GetSchemaTable();
             dynamic expando = new ExpandoObject();
             var expandoDic = (IDictionary<string, object>)expando;
+
+            Configuration.UseNestedKeyFormat = false;
 
             //int ordinal = 0;
             if (Configuration.FixedLengthRecordFieldConfigurations.IsNullOrEmpty())

@@ -330,13 +330,13 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+        public ChoJSONWriter<T> WithField<TField>(Expression<Func<T, TField>> field, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null, string nullValue = null)
         {
             if (field == null)
                 return this;
 
-            return WithField(field.GetMemberName(), fieldType, fieldValueTrimOption, fieldName, valueConverter,
+            return WithField(field.GetMemberName(), field.GetPropertyType(), fieldValueTrimOption, fieldName, valueConverter,
                 defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, nullValue);
         }
 

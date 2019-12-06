@@ -562,7 +562,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVReader<T> WithField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, 
+        public ChoCSVReader<T> WithField<TField>(Expression<Func<T, TField>> field, 
             bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
             string fieldName = null, Func<object, object> valueConverter = null,
             Func<dynamic, object> valueSelector = null,
@@ -572,12 +572,12 @@ namespace ChoETL
             if (field == null)
                 return this;
 
-            return WithField(field.GetMemberName(), null, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter,
+            return WithField(field.GetMemberName(), (int?)null, field.GetPropertyType(), quoteField, fieldValueTrimOption, fieldName, valueConverter,
                 valueSelector, defaultValue, fallbackValue, altFieldNames,
                 field.GetFullyQualifiedMemberName(), formatText, nullValue);
         }
 
-        public ChoCSVReader<T> WithField<TField>(Expression<Func<T, TField>> field, int? position, Type fieldType = null, 
+        public ChoCSVReader<T> WithField<TField>(Expression<Func<T, TField>> field, int? position, 
             bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
             string fieldName = null, Func<object, object> valueConverter = null,
             Func<dynamic, object> valueSelector = null,
@@ -586,7 +586,7 @@ namespace ChoETL
             if (field == null)
                 return this;
 
-            return WithField(field.GetMemberName(), position, fieldType, quoteField, fieldValueTrimOption, fieldName, 
+            return WithField(field.GetMemberName(), position, field.GetPropertyType(), quoteField, fieldValueTrimOption, fieldName, 
                 valueConverter, valueSelector, defaultValue, fallbackValue, altFieldNames,
                 field.GetFullyQualifiedMemberName(), formatText);
         }

@@ -200,13 +200,21 @@ namespace ChoETL
                             StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
                             if (slAttr != null && slAttr.MaximumLength > 0)
                                 obj.Size = slAttr.MaximumLength;
-                            DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
-                            if (dpAttr != null)
+                            DisplayNameAttribute dnAttr = pd.Attributes.OfType<DisplayNameAttribute>().FirstOrDefault();
+                            if (dnAttr != null && !dnAttr.DisplayName.IsNullOrWhiteSpace())
                             {
-                                if (!dpAttr.ShortName.IsNullOrWhiteSpace())
-                                    obj.FieldName = dpAttr.ShortName;
-                                else if (!dpAttr.Name.IsNullOrWhiteSpace())
-                                    obj.FieldName = dpAttr.Name;
+                                obj.FieldName = dnAttr.DisplayName.Trim();
+                            }
+                            else
+                            {
+                                DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
+                                if (dpAttr != null)
+                                {
+                                    if (!dpAttr.ShortName.IsNullOrWhiteSpace())
+                                        obj.FieldName = dpAttr.ShortName;
+                                    else if (!dpAttr.Name.IsNullOrWhiteSpace())
+                                        obj.FieldName = dpAttr.Name;
+                                }
                             }
                             DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();
                             if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
@@ -291,6 +299,7 @@ namespace ChoETL
                     if (headers != null && IsDynamicObject)
                     {
                         KVPRecordFieldConfigurations = (from header in headers
+                                                        where !IgnoredFields.Contains(header)
                                                         select new ChoKVPRecordFieldConfiguration(header)).ToList();
                     }
                     else
@@ -327,8 +336,8 @@ namespace ChoETL
                     if (fc.PropertyDescriptor == null)
                         continue;
 
-                    PIDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
-                    PDDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor);
+                    PIDict.Add(fc.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
+                    PDDict.Add(fc.Name, fc.PropertyDescriptor);
                 }
 
 

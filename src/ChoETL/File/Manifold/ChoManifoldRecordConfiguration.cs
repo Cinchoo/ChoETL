@@ -28,13 +28,17 @@ namespace ChoETL
             get;
             set;
         }
+        internal IChoNotifyFileRead NotifyFileReadObject;
         internal IChoNotifyRecordRead NotifyRecordReadObject;
+        internal IChoNotifyRecordFieldRead NotifyRecordFieldReadObject;
         public Type NotifyRecordReadType
         {
             get;
             set;
         }
+        internal IChoNotifyFileWrite NotifyFileWriteObject;
         internal IChoNotifyRecordWrite NotifyRecordWriteObject;
+        internal IChoNotifyRecordFieldWrite NotifyRecordFieldWriteObject;
         public Type NotifyRecordWriteType
         {
             get;
@@ -116,7 +120,11 @@ namespace ChoETL
             base.Validate(state);
 
             if (NotifyRecordReadType != null)
+            {
+                NotifyFileReadObject = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyFileRead>(NotifyRecordReadType);
                 NotifyRecordReadObject = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordRead>(NotifyRecordReadType);
+                NotifyRecordFieldReadObject = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordFieldRead>(NotifyRecordReadType);
+            }
             if (NotifyRecordWriteType != null)
                 NotifyRecordWriteObject = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordWrite>(NotifyRecordWriteType);
 

@@ -13,16 +13,23 @@ namespace ChoETL
 		bool RecordFieldLoadError(object target, long index, string propName, object value, Exception ex);
 	}
 
-	public interface IChoNotifyRecordRead : IChoNotifyRecordFieldRead
-	{
+    public interface IChoNotifyFileRead
+    {
         bool BeginLoad(object source);
         void EndLoad(object source);
 
         bool SkipUntil(long index, object source);
         bool DoWhile(long index, object source);
+    }
 
+    public interface IChoNotifyRecordRead
+    {
         bool BeforeRecordLoad(object target, long index, ref object source);
         bool AfterRecordLoad(object target, long index, object source, ref bool skip);
         bool RecordLoadError(object target, long index, object source, Exception ex);
     }
+
+    //public interface IChoNotifyRecordRead : IChoNotifyRecordFieldRead
+    //{
+    //}
 }

@@ -321,9 +321,9 @@ namespace ChoETL
 
         private bool RaiseBeginLoad(object state)
         {
-            if (Configuration.NotifyRecordReadObject != null)
+            if (Configuration.NotifyFileReadObject != null)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => Configuration.NotifyRecordReadObject.BeginLoad(state), true);
+                return ChoFuncEx.RunWithIgnoreError(() => Configuration.NotifyFileReadObject.BeginLoad(state), true);
             }
             else if (Reader != null)
             {
@@ -334,9 +334,9 @@ namespace ChoETL
 
         private void RaiseEndLoad(object state)
         {
-            if (Configuration.NotifyRecordReadObject != null)
+            if (Configuration.NotifyFileReadObject != null)
             {
-                ChoActionEx.RunWithIgnoreError(() => Configuration.NotifyRecordReadObject.EndLoad(state));
+                ChoActionEx.RunWithIgnoreError(() => Configuration.NotifyFileReadObject.EndLoad(state));
             }
             else if (Reader != null)
             {
@@ -346,11 +346,11 @@ namespace ChoETL
 
         private bool? RaiseSkipUntil(Tuple<long, string> pair)
         {
-            if (Configuration.NotifyRecordReadObject != null)
+            if (Configuration.NotifyFileReadObject != null)
             {
                 long index = pair.Item1;
                 object state = pair.Item2;
-                bool? retValue = ChoFuncEx.RunWithIgnoreErrorNullableReturn<bool>(() => Configuration.NotifyRecordReadObject.SkipUntil(index, state));
+                bool? retValue = ChoFuncEx.RunWithIgnoreErrorNullableReturn<bool>(() => Configuration.NotifyFileReadObject.SkipUntil(index, state));
 
                 return retValue;
             }
@@ -367,11 +367,11 @@ namespace ChoETL
 
         private bool? RaiseDoWhile(Tuple<long, string> pair)
         {
-            if (Configuration.NotifyRecordReadObject != null)
+            if (Configuration.NotifyFileReadObject != null)
             {
                 long index = pair.Item1;
                 object state = pair.Item2;
-                bool? retValue = ChoFuncEx.RunWithIgnoreErrorNullableReturn<bool>(() => Configuration.NotifyRecordReadObject.DoWhile(index, state));
+                bool? retValue = ChoFuncEx.RunWithIgnoreErrorNullableReturn<bool>(() => Configuration.NotifyFileReadObject.DoWhile(index, state));
 
                 return retValue;
             }
@@ -444,10 +444,10 @@ namespace ChoETL
 
         private bool RaiseBeforeRecordFieldLoad(object target, long index, string propName, ref object value)
         {
-            if (Configuration.NotifyRecordReadObject != null)
+            if (Configuration.NotifyRecordFieldReadObject != null)
             {
                 object state = value;
-                bool retValue = ChoFuncEx.RunWithIgnoreError(() => Configuration.NotifyRecordReadObject.BeforeRecordFieldLoad(target, index, propName, ref state), true);
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => Configuration.NotifyRecordFieldReadObject.BeforeRecordFieldLoad(target, index, propName, ref state), true);
 
                 if (retValue)
                     value = state;
@@ -469,9 +469,9 @@ namespace ChoETL
 
         private bool RaiseAfterRecordFieldLoad(object target, long index, string propName, object value)
         {
-            if (Configuration.NotifyRecordReadObject != null)
+            if (Configuration.NotifyRecordFieldReadObject != null)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => Configuration.NotifyRecordReadObject.AfterRecordFieldLoad(target, index, propName, value), true);
+                return ChoFuncEx.RunWithIgnoreError(() => Configuration.NotifyRecordFieldReadObject.AfterRecordFieldLoad(target, index, propName, value), true);
             }
             else if (Reader != null)
             {
@@ -482,9 +482,9 @@ namespace ChoETL
 
         private bool RaiseRecordFieldLoadError(object target, long index, string propName, object value, Exception ex)
         {
-            if (Configuration.NotifyRecordReadObject != null)
+            if (Configuration.NotifyRecordFieldReadObject != null)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => Configuration.NotifyRecordReadObject.RecordFieldLoadError(target, index, propName, value, ex), false);
+                return ChoFuncEx.RunWithIgnoreError(() => Configuration.NotifyRecordFieldReadObject.RecordFieldLoadError(target, index, propName, value, ex), false);
             }
             else if (Reader != null)
             {

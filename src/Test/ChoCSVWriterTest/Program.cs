@@ -535,8 +535,139 @@ namespace ChoCSVWriterTest
             Console.WriteLine(csv.ToString());
         }
 
+
+        public class StudentInfo
+        {
+            [ChoDictionaryKey("K1,K2,K3")]
+            public Dictionary<string, string> Grades { get; set; }
+            [Range(0, 1)]
+            [DisplayName("Cre")]
+            public Course[] Courses { get; set; }
+            public string Id { get; set; }
+            [DisplayName("Std")]
+            public Student Student { get; set; }
+            [Range(1, 3)]
+            [DisplayName("Sub")]
+            public string[] Subjects { get; set; }
+            public Teacher Teacher { get; set; }
+        }
+
+        public class Student
+        {
+            [DisplayName("StdId")]
+            public string Id { get; set; }
+            [DisplayName("StdName")]
+            public string Name { get; set; }
+        }
+
+        public class Teacher
+        {
+            public string Id { get; set; }
+            public string Name { get; set; }
+        }
+
+        public class Course
+        {
+            [DisplayName("CreId")]
+            public string CourseId { get; set; }
+            [DisplayName("CreName")]
+            public string CourseName { get; set; }
+        }
+
+        static void ComplexObjToCSV()
+        {
+            var si = new StudentInfo
+            {
+                Id = "100",
+                Student = new Student { Id = "1", Name = "Mark" },
+                Teacher = new Teacher { Id = "100", Name = "Tom" },
+                Courses = new Course[]
+                {
+                    new Course { CourseId = "c0", CourseName = "Math0" },
+                    new Course { CourseId = "c1", CourseName = "Math1" }
+                },
+                Subjects = new string[]
+                {
+                    "Math",
+                    "Physics"
+                },
+                Grades = new Dictionary<string, string>
+                {
+                    { "K0", "0" },
+                    { "K1", "A" },
+                    { "K2", "B" }
+                }
+            };
+
+            StringBuilder sb = new StringBuilder();
+            using (var w = new ChoCSVWriter<StudentInfo>(sb)
+                //.WithField(c => c.Courses, defaultValue: null)
+                .WithField(c => c.Student.Id, fieldName: "SId")
+                //.WithField(c => c.Courses.FirstOrDefault().CourseId, fieldName: "CId")
+                .WithFirstLineHeader()
+                .Index(c => c.Courses, 1, 1)
+                .DictionaryKeys(c => c.Grades, "K01", "K2")
+                )
+            {
+                w.Write(si);
+            }
+
+            Console.WriteLine(sb.ToString());
+        }
+
+        static void DataReaderTest()
+        {
+            string csv = @"Id, Name, Address2
+1, Tom,
+2, Mark,";
+
+            var dr = ChoCSVReader.LoadText(csv).WithFirstLineHeader().AsDataReader();
+            
+            using (var sw = new StreamWriter(File.OpenWrite("test.csv")))
+            {
+                using (var csvWriter = new ChoCSVWriter(sw)
+                    .WithFirstLineHeader()
+                    //.Configure(c => c.UseNestedKeyFormat = false)
+                    )
+                {
+                    csvWriter.Write(dr);
+                    sw.Flush();
+                }
+            }
+
+            Console.WriteLine(File.OpenText("test.csv").ReadToEnd());
+        }
+
+        static void Pivot()
+        {
+            string csv = @"Name, Address, Age
+""Foo"", ""Foo's address"", 24
+""Bar"", ""Bar's address"", 19";
+
+            StringBuilder sb = new StringBuilder();
+            using (var r = ChoCSVReader.LoadText(csv)
+                //.WithFirstLineHeader()
+                )
+            {
+                Console.WriteLine(ChoCSVWriter.ToTextAll(r.Transpose(false)));
+            }
+        }
         static void Main(string[] args)
         {
+            //DataReaderTest();
+            //return;
+            //ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
+
+            //Pivot();
+            //return;
+            //ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
+            //DataReaderTest();
+            //return;
+            //CurrencyDynamicTest();
+            //return;
+            ComplexObjToCSV();
+            return;
+
             ValidateSchema();
             return;
 
@@ -824,14 +955,16 @@ namespace ChoCSVWriterTest
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoCSVWriter(writer).WithFirstLineHeader().QuoteAllFields())
             {
-                parser.Write(objs);
+                using (var parser = new ChoCSVWriter(writer).WithFirstLineHeader().QuoteAllFields())
+                {
+                    parser.Write(objs);
 
-                writer.Flush();
-                stream.Position = 0;
+                    writer.Flush();
+                    stream.Position = 0;
 
-                Console.WriteLine(reader.ReadToEnd());
+                    Console.WriteLine(reader.ReadToEnd());
+                }
             }
         }
 

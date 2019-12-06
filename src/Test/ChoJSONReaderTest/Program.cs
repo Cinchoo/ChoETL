@@ -1077,7 +1077,66 @@ namespace ChoJSONReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            DictTest1();
+            DictTest2();
+        }
+
+        public class VarObject
+        {
+
+        }
+
+        public class MyResponse : IChoRecordFieldSerializable
+        {
+            [JsonProperty(PropertyName = "starttime")]
+            public string StartTime { get; set; }
+            [JsonProperty(PropertyName = "endtime")]
+            public string EndTime { get; set; }
+            public Dictionary<string, VarObject> VarData { get; set; }
+
+            public bool RecordFieldDeserialize(object record, long index, string propName, ref object value)
+            {
+                if (propName == nameof(VarData))
+                {
+                    return true;
+                }
+                else
+                    return false;
+            }
+
+            public bool RecordFieldSerialize(object record, long index, string propName, ref object value)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        static void DictTest2()
+        {
+            string json = @"[
+  {
+    ""starttime"": ""...1"",
+    ""endtime"": ""...."",
+    ""var1"": {},
+    ""var2"": {}
+  },
+  {
+    ""starttime"": ""...1"",
+    ""endtime"": ""...."",
+    ""var1"": {},
+    ""var3"": {}
+  },
+  {
+    ""starttime"": ""...1"",
+    ""endtime"": ""...."",
+    ""var1"": {}
+  }
+]";
+            using (var r = ChoJSONReader<MyResponse>.LoadText(json)
+                .WithField(f => f.VarData, customSerializer: o => new Dictionary<string, VarObject> { { "1", new VarObject()} })
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
         }
 
         public class RegistrantInfoResponse

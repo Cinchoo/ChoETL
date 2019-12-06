@@ -123,7 +123,7 @@ namespace ChoETL
         }
         [DataMember]
         public bool RetainAsXmlAwareObjects { get; set; }
-
+        public bool IncludeSchemaInstanceNodes { get; set; }
         internal StringComparer StringComparer
         {
             get;
@@ -360,13 +360,21 @@ namespace ChoETL
                                 }
                                 else
                                 {
-                                    DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
-                                    if (dpAttr != null)
+                                    DisplayNameAttribute dnAttr = pd.Attributes.OfType<DisplayNameAttribute>().FirstOrDefault();
+                                    if (dnAttr != null && !dnAttr.DisplayName.IsNullOrWhiteSpace())
                                     {
-                                        if (!dpAttr.ShortName.IsNullOrWhiteSpace())
-                                            obj.FieldName = dpAttr.ShortName;
-                                        else if (!dpAttr.Name.IsNullOrWhiteSpace())
-                                            obj.FieldName = dpAttr.Name;
+                                        obj.FieldName = dnAttr.DisplayName.Trim();
+                                    }
+                                    else
+                                    {
+                                        DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
+                                        if (dpAttr != null)
+                                        {
+                                            if (!dpAttr.ShortName.IsNullOrWhiteSpace())
+                                                obj.FieldName = dpAttr.ShortName;
+                                            else if (!dpAttr.Name.IsNullOrWhiteSpace())
+                                                obj.FieldName = dpAttr.Name;
+                                        }
                                     }
                                 }
                             }
@@ -464,6 +472,9 @@ namespace ChoETL
                 {
                     foreach (string fn in fieldNames)
                     {
+                        if (IgnoredFields.Contains(fn))
+                            continue;
+
                         if (fn.StartsWith("_"))
                         {
                             string fn1 = fn.Substring(1);
@@ -544,8 +555,8 @@ namespace ChoETL
                 if (fc.PropertyDescriptor == null)
                     continue;
 
-                PIDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
-                PDDict.Add(fc.PropertyDescriptor.Name, fc.PropertyDescriptor);
+                PIDict.Add(fc.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
+                PDDict.Add(fc.Name, fc.PropertyDescriptor);
             }
 
             RecordFieldConfigurationsDict = XmlRecordFieldConfigurations.OrderBy(c => c.IsXmlAttribute).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
@@ -574,7 +585,7 @@ namespace ChoETL
             string name = null;
             foreach (var attr in xpr.Attributes())
             {
-                if (!attr.IsValidAttribute(XmlSchemaNamespace, JSONSchemaNamespace))
+                if (!attr.IsValidAttribute(XmlSchemaNamespace, JSONSchemaNamespace, nsMgr, IncludeSchemaInstanceNodes))
                     continue;
 
                 if (!IsInNamespace(xpr.Name, attr.Name))

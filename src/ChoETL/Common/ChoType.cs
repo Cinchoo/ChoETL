@@ -83,6 +83,33 @@
         //    return ChoType.GetAttribute<ChoDynamicRecordAttribute>(type) != null && typeof(IChoDynamicRecord).IsAssignableFrom(type);
         //}
 
+        public static string GetDisplayName(this PropertyDescriptor pd, string defaultValue = null)
+        {
+            if (pd != null)
+            {
+                DisplayNameAttribute dnAttr = pd.Attributes.OfType<DisplayNameAttribute>().FirstOrDefault();
+                if (dnAttr != null && !dnAttr.DisplayName.IsNullOrWhiteSpace())
+                {
+                    return dnAttr.DisplayName.Trim();
+                }
+                else
+                {
+                    DisplayAttribute dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
+                    if (dpAttr != null)
+                    {
+                        if (!dpAttr.ShortName.IsNullOrWhiteSpace())
+                            return dpAttr.ShortName.Trim();
+                        else if (!dpAttr.Name.IsNullOrWhiteSpace())
+                            return dpAttr.Name.Trim();
+                    }
+                }
+
+                return defaultValue == null ? pd.Name : defaultValue;
+            }
+            else
+                return defaultValue;
+        }
+
         public static bool IsDynamicType(this Type type)
         {
             return type == null ? true : type == typeof(ExpandoObject) || typeof(IDynamicMetaObjectProvider).IsAssignableFrom(type) || type == typeof(object) || type.IsAnonymousType();
