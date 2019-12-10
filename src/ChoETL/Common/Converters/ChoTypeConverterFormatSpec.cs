@@ -72,6 +72,11 @@ namespace ChoETL
 
         public ChoTypeConverterFormatSpec()
         {
+            Reset();
+        }
+
+        public void Reset()
+        {
             DateTimeFormat = "d";
             CurrencyNumberStyle = NumberStyles.Currency;
             CurrencyFormat = "C";

@@ -67,6 +67,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="ConvertToCSVTestExpected.csv" />
+    <None Include="ConvertToCSVWithHeaderTestExpected.csv" />
+    <None Include="hellenic.ini" />
+    <None Include="LoadPOCOTestExpected.csv" />
     <None Include="Maldives Holidays Calendar - Copy %282%29.ics" />
     <None Include="Maldives Holidays Calendar - Copy.ics" />
     <None Include="packages.config" />
@@ -80,7 +84,10 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>COPY $(ProjectDir)*.ics $(TargetDir)</PostBuildEvent>
+    <PostBuildEvent>COPY $(ProjectDir)*.ics $(TargetDir)
+COPY $(ProjectDir)*.csv $(TargetDir)
+COPY $(ProjectDir)*.ini $(TargetDir)
+</PostBuildEvent>
   </PropertyGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

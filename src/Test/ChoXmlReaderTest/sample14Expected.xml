@@ -1,0 +1,20 @@
+<Root>
+  <book>
+    <id>bk102</id>
+    <author>Ralls, Kim</author>
+    <title>Midnight Rain</title>
+    <genre>Fantasy</genre>
+    <price>5.95</price>
+    <publish_date>2000-12-16T00:00:00</publish_date>
+    <description>A former architect [100-x] battles corporate zombies, an evil sorceress, and her own childhood to become queen of the world.</description>
+  </book>
+  <book>
+    <id>bk103</id>
+    <author>Corets, Eva</author>
+    <title>Maeve Ascendant</title>
+    <genre>Fantasy</genre>
+    <price>5.95</price>
+    <publish_date>2000-11-17T00:00:00</publish_date>
+    <description>After the collapse of a nanotechnology society in England, the [01-i] young survivors lay the foundation for a new society.</description>
+  </book>
+</Root>

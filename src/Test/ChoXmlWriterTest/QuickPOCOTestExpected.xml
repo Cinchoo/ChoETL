@@ -1,0 +1,19 @@
+<Employees>
+  <Employee Id="">
+    <Name>Mark</Name>
+    <Depends>
+    <string>AA</string>
+    <string>BB</string>
+  </Depends>
+    <KVP>
+    <KeyValuePair>
+      <Key>1</Key>
+      <Value>AA</Value>
+    </KeyValuePair>
+    <KeyValuePair>
+      <Key>2</Key>
+      <Value>BB</Value>
+    </KeyValuePair>
+  </KVP>
+  </Employee>
+</Employees>

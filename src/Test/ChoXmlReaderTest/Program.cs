@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ChoETL;
+using NUnit.Framework;
 using System.IO;
 using System.Xml.Linq;
 using System.Xml;
@@ -15,6 +16,8 @@ using System.Dynamic;
 using System.Xml.XPath;
 using Newtonsoft.Json;
 using System.Data.SqlClient;
+using UnitTestHelper;
+using System.Data;
 
 namespace ChoXmlReaderTest
 {
@@ -31,6 +34,22 @@ namespace ChoXmlReaderTest
 
         [ChoXmlNodeRecordField(XPath = "/JobApplicationStates/JobApplicationState/Applicants/Applicant")]
         public dynamic[] JobApplicant { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            var application = obj as JobApplication;
+            return application != null &&
+                   JobType == application.JobType &&
+                   new ArrayEqualityComparer<dynamic>().Equals(JobApplicant, application.JobApplicant);
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = -63495930;
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(JobType);
+            hashCode = hashCode * -1521134295 + new ArrayEqualityComparer<dynamic>().GetHashCode(JobApplicant);
+            return hashCode;
+        }
         //[ChoXmlNodeRecordField( XPath = "/JobApplicationStates/JobApplicationState/Applicants/Applicant")]
         //public Applicant[] JobApplicant { get; set; }
     }
@@ -48,11 +67,43 @@ namespace ChoXmlReaderTest
         public string ItemName { get; set; }
         public int? Number { get; set; }
         public DateTime? Created { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            var item = obj as Item;
+            return item != null &&
+                   ItemId == item.ItemId &&
+                   ItemName == item.ItemName &&
+                   EqualityComparer<int?>.Default.Equals(Number, item.Number) &&
+                   EqualityComparer<DateTime?>.Default.Equals(Created, item.Created);
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = 1225882131;
+            hashCode = hashCode * -1521134295 + ItemId.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(ItemName);
+            hashCode = hashCode * -1521134295 + EqualityComparer<int?>.Default.GetHashCode(Number);
+            hashCode = hashCode * -1521134295 + EqualityComparer<DateTime?>.Default.GetHashCode(Created);
+            return hashCode;
+        }
     }
     public class SelectedIds
     {
         [XmlElement]
         public int[] Id;
+
+        public override bool Equals(object obj)
+        {
+            var ids = obj as SelectedIds;
+            return ids != null &&
+                   new ArrayEqualityComparer<int>().Equals(Id, ids.Id);
+        }
+
+        public override int GetHashCode()
+        {
+            return 2108858624 + new ArrayEqualityComparer<int>().GetHashCode(Id);
+        }
     }
 
     public class Person
@@ -61,16 +112,60 @@ namespace ChoXmlReaderTest
         public string LastName { get; set; }
         public DateTime DateOfBirth { get; set; }
         public string Address { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            var person = obj as Person;
+            return person != null &&
+                   FirstName == person.FirstName &&
+                   LastName == person.LastName &&
+                   DateOfBirth == person.DateOfBirth &&
+                   Address == person.Address;
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = 330419756;
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(FirstName);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(LastName);
+            hashCode = hashCode * -1521134295 + DateOfBirth.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Address);
+            return hashCode;
+        }
     }
 
     public class RoomInfo
     {
         public int RoomNumber { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            var info = obj as RoomInfo;
+            return info != null &&
+                   RoomNumber == info.RoomNumber;
+        }
+
+        public override int GetHashCode()
+        {
+            return 929369503 + RoomNumber.GetHashCode();
+        }
     }
 
     public class Table
     {
         public string Color { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            var table = obj as Table;
+            return table != null &&
+                   Color == table.Color;
+        }
+
+        public override int GetHashCode()
+        {
+            return -1200350280 + EqualityComparer<string>.Default.GetHashCode(Color);
+        }
     }
 
     public class Emp
@@ -87,11 +182,41 @@ namespace ChoXmlReaderTest
         public string Request_Status { get; set; }
         [ChoXmlNodeRecordField(XPath = "my:Request_Type")]
         public string Request_Type { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            var myfields = obj as MyMyfields;
+            return myfields != null &&
+                   EqualityComparer<MyAdmin>.Default.Equals(Admin, myfields.Admin) &&
+                   Request_Status == myfields.Request_Status &&
+                   Request_Type == myfields.Request_Type;
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = 1828740556;
+            hashCode = hashCode * -1521134295 + EqualityComparer<MyAdmin>.Default.GetHashCode(Admin);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Request_Status);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Request_Type);
+            return hashCode;
+        }
     }
 
     public class MyAdmin
     {
         public MyRouting_Order Routing_Order { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            var admin = obj as MyAdmin;
+            return admin != null &&
+                   EqualityComparer<MyRouting_Order>.Default.Equals(Routing_Order, admin.Routing_Order);
+        }
+
+        public override int GetHashCode()
+        {
+            return -300207606 + EqualityComparer<MyRouting_Order>.Default.GetHashCode(Routing_Order);
+        }
     }
 
     public class MyRouting_Order
@@ -102,6 +227,24 @@ namespace ChoXmlReaderTest
         public string Approver2_Order { get; set; }
         [XmlElement("Approver-3_Order")]
         public string Approver3_Order { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            var order = obj as MyRouting_Order;
+            return order != null &&
+                   Approver1_Order == order.Approver1_Order &&
+                   Approver2_Order == order.Approver2_Order &&
+                   Approver3_Order == order.Approver3_Order;
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = 2046693555;
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Approver1_Order);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Approver2_Order);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Approver3_Order);
+            return hashCode;
+        }
     }
 
     public class EmployeeRec1
@@ -112,6 +255,24 @@ namespace ChoXmlReaderTest
         public string Name { get; set; }
         [ChoXmlNodeRecordField(XPath = "/Address")]
         public AddressRec Address { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            var rec = obj as EmployeeRec1;
+            return rec != null &&
+                   Id == rec.Id &&
+                   Name == rec.Name &&
+                   EqualityComparer<AddressRec>.Default.Equals(Address, rec.Address);
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = 1983353833;
+            hashCode = hashCode * -1521134295 + Id.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Name);
+            hashCode = hashCode * -1521134295 + EqualityComparer<AddressRec>.Default.GetHashCode(Address);
+            return hashCode;
+        }
     }
 
     public partial class AddressRec
@@ -120,6 +281,22 @@ namespace ChoXmlReaderTest
         public AddressLineRec[] AddressLines { get; set; }
         [XmlElement(ElementName = "Country")]
         public string Country { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            var rec = obj as AddressRec;
+            return rec != null &&
+                   new ArrayEqualityComparer<AddressLineRec>().Equals(AddressLines, rec.AddressLines) &&
+                   Country == rec.Country;
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = -299856257;
+            hashCode = hashCode * -1521134295 + new ArrayEqualityComparer<AddressLineRec>().GetHashCode(AddressLines);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Country);
+            return hashCode;
+        }
     }
 
     public partial class AddressLineRec
@@ -128,6 +305,22 @@ namespace ChoXmlReaderTest
         public int Id { get; set; }
         [XmlText]
         public string AddressLine { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            var rec = obj as AddressLineRec;
+            return rec != null &&
+                   Id == rec.Id &&
+                   AddressLine == rec.AddressLine;
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = -633335143;
+            hashCode = hashCode * -1521134295 + Id.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(AddressLine);
+            return hashCode;
+        }
     }
 
     public class SyncInvoice
@@ -137,6 +330,21 @@ namespace ChoXmlReaderTest
         [ChoXmlNodeRecordField(XPath = "/x:ApplicationArea")]
         public ApplicationArea ApplicationArea { get; set; }
 
+        public override bool Equals(object obj)
+        {
+            var invoice = obj as SyncInvoice;
+            return invoice != null &&
+                   LanguageCode == invoice.LanguageCode &&
+                   EqualityComparer<ApplicationArea>.Default.Equals(ApplicationArea, invoice.ApplicationArea);
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = -1552420970;
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(LanguageCode);
+            hashCode = hashCode * -1521134295 + EqualityComparer<ApplicationArea>.Default.GetHashCode(ApplicationArea);
+            return hashCode;
+        }
     }
 
     public class ApplicationArea
@@ -144,6 +352,24 @@ namespace ChoXmlReaderTest
         public Sender Sender { get; set; }
         public DateTime CreationDateTime { get; set; }
         public string BODID { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            var area = obj as ApplicationArea;
+            return area != null &&
+                   EqualityComparer<Sender>.Default.Equals(Sender, area.Sender) &&
+                   CreationDateTime == area.CreationDateTime &&
+                   BODID == area.BODID;
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = 553382520;
+            hashCode = hashCode * -1521134295 + EqualityComparer<Sender>.Default.GetHashCode(Sender);
+            hashCode = hashCode * -1521134295 + CreationDateTime.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(BODID);
+            return hashCode;
+        }
     }
 
     public class Sender
@@ -151,9 +377,29 @@ namespace ChoXmlReaderTest
         public string LogicalID { get; set; }
         public string ComponentID { get; set; }
         public string ConfirmationCode { get; set; }
+
+        public override bool Equals(object obj)
+        {
+            var sender = obj as Sender;
+            return sender != null &&
+                   LogicalID == sender.LogicalID &&
+                   ComponentID == sender.ComponentID &&
+                   ConfirmationCode == sender.ConfirmationCode;
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = -148620913;
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(LogicalID);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(ComponentID);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(ConfirmationCode);
+            return hashCode;
+        }
     }
 
 
+    [TestFixture]
+    [SetCulture("en-US")] // TODO: Check if correct culture is used
     public class Program
     {
         static void Main(string[] args)
@@ -244,11 +490,26 @@ namespace ChoXmlReaderTest
             Console.WriteLine(output);
         }
 
-        static void Xml2CSV2()
+        [SetUp]
+        public void Setup()
         {
+            Environment.CurrentDirectory = TestContext.CurrentContext.TestDirectory;
+            // Needs to be reset because of some tests changes these settings
+            ChoTypeConverterFormatSpec.Instance.Reset();
+            ChoXmlSettings.Reset();
+        }
+
+        [Test]
+        public static void Xml2CSV2()
+        {
+            string expected = @"CentreName,Country,CustomerId,DOB,Email,ExpiryDate
+Corporate Office,Austria,379,25/02/1991,farah@gmail.com,3/1/2020 8:01:00 AM
+Corporate Office,Egypt,988915,01/03/1986,hesh.a.metwally@gmail.com,7/1/2020 11:38:00 AM";
+            string actual = null;
+
             StringBuilder sb = new StringBuilder();
 
-            using (var r = new ChoXmlReader("sample22.xml")
+            using (var r = new ChoXmlReader(FileNameSample22XML)
                 .WithXPath("b:MarketingAllCardholderData")
                 .WithXmlNamespace("a", "schemas.datacontract.org/2004/07/ExternalClient.Responses")
                 .WithXmlNamespace("b", "schemas.datacontract.org/2004/07/ExternalClient.Data.Classes")
@@ -260,11 +521,19 @@ namespace ChoXmlReaderTest
                     )
                     w.Write(r);
             }
-            Console.WriteLine(sb.ToString());
+            actual = sb.ToString();
+
+            Assert.AreEqual(expected, actual);
         }
 
-        static void Xml2CSV1()
+        [Test]
+        public static void Xml2CSV1()
         {
+            string expected = @"ARandomRoot-ARandomLOne-Id,ARandomRoot-ARandomLOne-OtherId,ARandomRoot-AnotherRandomLOne-ARandomLTwo-ARandomLTree-NumberOfElements,ARandomRoot-AnotherRandomLOne-ARandomLTwo-ARandomLTree-ARandomLFour-RandomDataOne,ARandomRoot-AnotherRandomLOne-ARandomLTwo-ARandomLTree-ARandomLFour-RandomDataTwo
+12,34,2,R1,10.12
+12,34,2,R2,9.8";
+            string actual = null;
+
             string xml = @"<ARandomRoot>
   <ARandomLOne>
     <Id>12</Id>
@@ -317,13 +586,20 @@ namespace ChoXmlReaderTest
                         })
                     ));
             }
-            Console.WriteLine(csv.ToString());
+            actual = csv.ToString();
+
+            Assert.AreEqual(expected, actual);
         }
 
-        static void Sample50Test()
+        [Test]
+        public static void Sample50Test()
         {
+            string expected = @"targetMarketAttributes/targetMarket,targetMarketAttributes/alternateItemIdentificationList/alternateItemIdentification/0/agency,targetMarketAttributes/alternateItemIdentificationList/alternateItemIdentification/0/id,targetMarketAttributes/alternateItemIdentificationList/alternateItemIdentification/1/agency,targetMarketAttributes/alternateItemIdentificationList/alternateItemIdentification/1/id,targetMarketAttributes/shortDescriptionList/shortDescription/lang,targetMarketAttributes/shortDescriptionList/shortDescription/#text,targetMarketAttributes/productDescriptionList/productDescription/lang,targetMarketAttributes/productDescriptionList/productDescription/#text,targetMarketAttributes/additionalDescriptionList/additionalDescription/lang,targetMarketAttributes/additionalDescriptionList/additionalDescription/#text,targetMarketAttributes/isDispatchUnitList/isDispatchUnit,targetMarketAttributes/isInvoiceUnitList/isInvoiceUnit,targetMarketAttributes/isOrderableUnitList/isOrderableUnit,targetMarketAttributes/packagingMarkedReturnable,targetMarketAttributes/minimumTradeItemLifespanFromProductionList/minimumTradeItemLifespanFromProduction,targetMarketAttributes/nonGTINPalletHi,targetMarketAttributes/nonGTINPalletTi,targetMarketAttributes/numberOfItemsPerPallet,targetMarketAttributes/hasBatchNumber,targetMarketAttributes/productMarkedRecyclable,targetMarketAttributes/depth/uom,targetMarketAttributes/depth/#text,targetMarketAttributes/height/uom,targetMarketAttributes/height/#text,targetMarketAttributes/width/uom,targetMarketAttributes/width/#text,targetMarketAttributes/grossWeight/uom,targetMarketAttributes/grossWeight/#text,targetMarketAttributes/netWeight/uom,targetMarketAttributes/netWeight/#text,targetMarketAttributes/totalUnitsPerCase,targetMarketAttributes/preDefinedFlex/alternateClassificationList/alternateClassification/0/code,targetMarketAttributes/preDefinedFlex/alternateClassificationList/alternateClassification/0/scheme,targetMarketAttributes/preDefinedFlex/alternateClassificationList/alternateClassification/1/code,targetMarketAttributes/preDefinedFlex/alternateClassificationList/alternateClassification/1/scheme,targetMarketAttributes/preDefinedFlex/alternateClassificationList/alternateClassification/2/code,targetMarketAttributes/preDefinedFlex/alternateClassificationList/alternateClassification/2/scheme,targetMarketAttributes/preDefinedFlex/alternateClassificationList/alternateClassification/3/code,targetMarketAttributes/preDefinedFlex/alternateClassificationList/alternateClassification/3/scheme,targetMarketAttributes/preDefinedFlex/alternateClassificationList/alternateClassification/4/code,targetMarketAttributes/preDefinedFlex/alternateClassificationList/alternateClassification/4/scheme,targetMarketAttributes/preDefinedFlex/brandOwnerAdditionalTradeItemIdentificationList/brandOwnerAdditionalTradeItemIdentification/brandOwnerAdditionalIdType,targetMarketAttributes/preDefinedFlex/brandOwnerAdditionalTradeItemIdentificationList/brandOwnerAdditionalTradeItemIdentification/brandOwnerAdditionalIdValue,targetMarketAttributes/preDefinedFlex/consumerSalesConditionList/consumerSalesCondition,targetMarketAttributes/preDefinedFlex/countryOfOriginList/countryOfOrigin,targetMarketAttributes/preDefinedFlex/dataCarrierList/dataCarrierTypeCode,targetMarketAttributes/preDefinedFlex/donationIdentificationNumberMarked,targetMarketAttributes/preDefinedFlex/doesTradeItemContainLatex,targetMarketAttributes/preDefinedFlex/exemptFromFDAPreMarketAuthorization,targetMarketAttributes/preDefinedFlex/fDA510KPremarketAuthorization,targetMarketAttributes/preDefinedFlex/fDAMedicalDeviceListingList/fDAMedicalDeviceListing,targetMarketAttributes/preDefinedFlex/gs1TradeItemIdentificationKey/code,targetMarketAttributes/preDefinedFlex/gs1TradeItemIdentificationKey/value,targetMarketAttributes/preDefinedFlex/isTradeItemManagedByManufactureDate,targetMarketAttributes/preDefinedFlex/manufacturerList/manufacturer/gln,targetMarketAttributes/preDefinedFlex/manufacturerDeclaredReusabilityType,targetMarketAttributes/preDefinedFlex/mRICompatibilityCode,targetMarketAttributes/preDefinedFlex/serialNumberLocationCodeList/serialNumberLocationCode,targetMarketAttributes/preDefinedFlex/tradeChannelList/tradeChannel,targetMarketAttributes/preDefinedFlex/tradeItemContactInfoList/tradeItemContactInfo/availableTime/lang,targetMarketAttributes/preDefinedFlex/tradeItemContactInfoList/tradeItemContactInfo/availableTime/#text,targetMarketAttributes/preDefinedFlex/tradeItemContactInfoList/tradeItemContactInfo/contactInfoGLN,targetMarketAttributes/preDefinedFlex/tradeItemContactInfoList/tradeItemContactInfo/contactType,targetMarketAttributes/preDefinedFlex/tradeItemContactInfoList/tradeItemContactInfo/targetMarketCommunicationChannel/communicationChannelList/communicationChannel/communicationChannelCode,targetMarketAttributes/preDefinedFlex/uDIDDeviceCount
+US,Example,31321,Example,1,en,Example,en,Example,en,Example,No,No,No,No,1825,0,0,0,Yes,No,in,12,in,8,in,12,lb,0.3213,lb,0.3213,1,Example,Example,Example,Example,Example,Example,Example,Example,Example,Example,Example,Example,FALSE,US,Example,No,No,No,Example,Example,Example,14,true,0100000000000,SINGLE_USE,UNSPECIFIED,NOT_MARKED,Example,en,2019-02-08T00:00:00,0000000000002,ABC,TELEPHONE,1";
+            string actual = null;
+
             StringBuilder msg = new StringBuilder();
-            using (var p = new ChoXmlReader("sample50.xml")
+            using (var p = new ChoXmlReader(FileNameSample50XML)
                 .WithXPath("//targetMarketAttributes")
                 .WithMaxScanNodes(10)
                 )
@@ -337,7 +613,9 @@ namespace ChoXmlReaderTest
                     w.Write(p);
             }
 
-            Console.WriteLine(msg.ToString());
+            actual = msg.ToString();
+
+            Assert.AreEqual(expected, actual);
         }
 
         public class SoapBody
@@ -346,10 +624,33 @@ namespace ChoXmlReaderTest
             public string UserName { get; set; }
             [ChoXmlNodeRecordField(XPath = "/x:Password")]
             public string Password { get; set; }
+
+            public override bool Equals(object obj)
+            {
+                var body = obj as SoapBody;
+                return body != null &&
+                       UserName == body.UserName &&
+                       Password == body.Password;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = 1155857689;
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(UserName);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Password);
+                return hashCode;
+            }
         }
 
-        static void SoapMsgTest()
+        [Test]
+        public static void SoapMsgTest()
         {
+            List<object> expected = new List<object>
+            {
+                new SoapBody{ UserName = "daniel@xxx.com", Password = "123456"}
+            };
+            List<object> actual = new List<object>();
+
             string soap = @"<s:Envelope xmlns:s=""http://schemas.xmlsoap.org/soap/envelope/"">
 <s:Body>
 <Exit xmlns=""http://tempuri.org/"">
@@ -370,11 +671,21 @@ namespace ChoXmlReaderTest
                 .WithXPath("//Exit")
                 .WithXmlNamespace("x", "http://tempuri.org/")
                 )
-                Console.WriteLine(rec.Dump());
+                actual.Add(rec);
+
+            CollectionAssert.AreEqual(expected, actual);
         }
 
-        static void DefaultNSTest1()
+        [Test]
+        public static void DefaultNSTest1()
         {
+            List<object> expected = new List<object>
+            {
+                new SyncInvoice { LanguageCode = "GB", ApplicationArea = new ApplicationArea { BODID = "05a1ef3c-67c0-4d38-83ea-b4691a3c4fe0", CreationDateTime = new DateTime(2018,12,13,18,19,03,DateTimeKind.Utc), Sender = new Sender {
+                ComponentID = "M3BE", ConfirmationCode = "OnError", LogicalID = "lid://infor.m3be.m3be "} } }
+            };
+            List<object> actual = new List<object>();
+
             string xml = @"<?xml version=""1.0"" encoding=""UTF-8""?>
 <SyncInvoice xmlns=""http://schema.infor.com/InforOAGIS/2"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xsi:schemaLocation=""SyncInvoice.xsd"" releaseID=""9.2"" versionID=""2.13.0"" systemEnvironmentCode=""Production"" languageCode=""GB"">
 <ApplicationArea>
@@ -396,12 +707,15 @@ namespace ChoXmlReaderTest
             {
                 foreach (dynamic rec in parser)
                 {
-                    Console.WriteLine(ChoUtility.Dump(rec));
+                    actual.Add(rec);
                 }
             }
+
+            CollectionAssert.AreEqual(expected, actual);
         }
 
-        static void DefaultNSTest()
+        [Test]
+        public static void DefaultNSTest()
         {
             string xml = @"<SyncInvoice xmlns=""http://schema.infor.com/InforOAGIS/2"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xsi:schemaLocation=""SyncInvoice.xsd"" languageCode=""IT"" />";
 
@@ -414,8 +728,39 @@ namespace ChoXmlReaderTest
             }
         }
 
-        static void TestXml1()
+        [Test]
+        public static void TestXml1()
         {
+            List<object> expected = new List<object>
+            {
+                new EmployeeRec1 {
+                    Id = 1,
+                    Name = "Tom",
+                    Address = new AddressRec
+                    {
+                        AddressLines = new AddressLineRec[]
+                        {
+                            new AddressLineRec{ Id = 1, AddressLine = "XYZ road"},
+                            new AddressLineRec{ Id = 2, AddressLine = "MiceTown"}
+                        }
+                    }
+                },
+                new EmployeeRec1 {
+                    Id = 2,
+                    Name = "Mark",
+                    Address = new AddressRec
+                    {
+                        Country = "United States",
+                        AddressLines = new AddressLineRec[]
+                        {
+                            new AddressLineRec{ Id = 1, AddressLine = "123 street"},
+                            new AddressLineRec{ Id = 2, AddressLine = "TigerCity"}
+                        }
+                    }
+                }
+            };
+            List<object> actual = new List<object>();
+
             string xml = @"<Employees>
     <Employee Id='1'>
         <Name>Tom</Name>
@@ -437,12 +782,21 @@ namespace ChoXmlReaderTest
 
             foreach (var rec in ChoXmlReader<EmployeeRec1>.LoadText(xml))
             {
-                Console.WriteLine(rec.Dump());
+                actual.Add(rec);
             }
+
+            CollectionAssert.AreEqual(expected, actual);
         }
 
-        static void XmlToJSON2()
+        [Test]
+        public static void XmlToJSON2_1()
         {
+            List<object> expected = new List<object>
+            {
+                new MyMyfields{ Request_Status="Save as Draft", Request_Type = "CAPEX", Admin = new MyAdmin { Routing_Order=new MyRouting_Order{ Approver1_Order= "1", Approver2_Order = "5", Approver3_Order = "4"}}}
+            };
+            List<object> actual = new List<object>();
+
             string xml = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <?mso-infoPathSolution name=""urn:schemas-microsoft-com:office:infopath:myProject:-myXSD-2017-05-05T14-19-13"" solutionVersion=""1.0.0.2046"" productVersion=""16.0.0.0"" PIVersion=""1.0.0.0"" href=""https://myportal.sharepoint.com/sites/mySite/myProject/Forms/template.xsn""?>
 <?mso-application progid=""InfoPath.Document"" versionProgid=""InfoPath.Document.4""?>
@@ -465,11 +819,47 @@ namespace ChoXmlReaderTest
                 .WithXmlNamespace("my", "http://schemas.microsoft.com/office/infopath/2003/myXSD/2017-05-05T14:19:13")
                 //.IgnoreField("lang")
                 )
-                Console.WriteLine(ChoJSONWriter.ToText(rec));
-        }
+                actual.Add(rec);
 
-        static void XmlToJSON3()
+            CollectionAssert.AreEqual(expected, actual);
+        }
+        [Test]
+        public static void XmlToJSON2_2()
         {
+            string expected = @"{
+ ""Admin"": {
+   ""Routing_Order"": {
+     ""Approver1_Order"": ""1"",
+     ""Approver2_Order"": ""5"",
+     ""Approver3_Order"": ""4""
+   }
+ },
+ ""Request_Status"": ""Save as Draft"",
+ ""Request_Type"": ""CAPEX""
+}
+";
+            string actual = null;
+
+            List<object> source = new List<object>
+            {
+                new MyMyfields{ Request_Status="Save as Draft", Request_Type = "CAPEX", Admin = new MyAdmin { Routing_Order=new MyRouting_Order{ Approver1_Order= "1", Approver2_Order = "5", Approver3_Order = "4"}}}
+            };
+            StringBuilder sb = new StringBuilder();
+            foreach (var rec in source)
+            {
+                sb.AppendLine(ChoJSONWriter.ToText(rec));
+            }
+
+            actual = sb.ToString();
+            Assert.AreEqual(expected, actual);
+        }
+        [Test]
+        public static void XmlToJSON3()
+        {
+            string expected = @"properties_Guid,properties_ProcessType,properties_Description
+fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
+            string actual = null;
+
             string xml = @"<?xml version='1.0' encoding='UTF-8'?>
 <entry>
     <content>
@@ -521,11 +911,42 @@ namespace ChoXmlReaderTest
                     w.Write(p);
             }
 
-            Console.WriteLine(csv);
+            actual = csv.ToString();
+            Assert.AreEqual(expected, actual);
         }
 
-        static void CSVToXmlTest()
+        [Test]
+        public static void CSVToXmlTest()
         {
+            string expected = @"<Employees>
+  <Employee>
+    <Id>1</Id>
+    <Name>Tom</Name>
+    <City>NY</City>
+  </Employee>
+  <Employee>
+    <Id>2</Id>
+    <Name>Mark</Name>
+    <City>NJ</City>
+  </Employee>
+  <Employee>
+    <Id>3</Id>
+    <Name>Lou</Name>
+    <City>FL</City>
+  </Employee>
+  <Employee>
+    <Id>4</Id>
+    <Name>Smith</Name>
+    <City>PA</City>
+  </Employee>
+  <Employee>
+    <Id>5</Id>
+    <Name>Raj</Name>
+    <City>DC</City>
+  </Employee>
+</Employees>";
+            string actual = null;
+
             string csv = @"Id, Name, City
 1, Tom, NY
 2, Mark, NJ
@@ -546,11 +967,23 @@ namespace ChoXmlReaderTest
                     w.Write(p);
             }
 
-            Console.WriteLine(sb.ToString());
+            actual = sb.ToString();
+
+            Assert.AreEqual(expected, actual);
         }
 
-        static void MultipleXmlNS()
+        [Test]
+        public static void MultipleXmlNS()
         {
+            List<object> expected = new List<object>
+            {
+                new ChoDynamicObject{{"lat",(double)25.0312615000 },{"lon",(double)121.3505846635 } },
+                new ChoDynamicObject{{"lat",(double)25.0312520284 },{"lon",(double)121.3505897764 } },
+                new ChoDynamicObject{{"lat",(double)25.0312457420 },{"lon",(double)121.3506018464 } },
+                new ChoDynamicObject{{"lat",(double)25.0312426407 },{"lon",(double)121.3506035227 } },
+            };
+            List<object> actual = new List<object>();
+
             string xml = @"<gpx xmlns=""http://www.topografix.com/GPX/1/1"" xmlns:gpxx=""http://www.garmin.com/xmlschemas/GpxExtensions/v3"" xmlns:gpxtrkx=""http://www.garmin.com/xmlschemas/TrackStatsExtension/v1"" xmlns:wptx1=""http://www.garmin.com/xmlschemas/WaypointExtension/v1"" xmlns:gpxtpx=""http://www.garmin.com/xmlschemas/TrackPointExtension/v1"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" creator=""GPSMAP 64ST TWN"" version=""1.1"" xsi:schemaLocation=""http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www8.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackStatsExtension/v1 http://www8.garmin.com/xmlschemas/TrackStatsExtension.xsd http://www.garmin.com/xmlschemas/WaypointExtension/v1 http://www8.garmin.com/xmlschemas/WaypointExtensionv1.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd"">
   <metadata>
     <link href=""http://www.garmin.com"">
@@ -607,11 +1040,48 @@ namespace ChoXmlReaderTest
                 .WithField("lat")
                 .WithField("lon")
                 )
-                Console.WriteLine(rec.Dump());
+                actual.Add(rec);
+
+            CollectionAssert.AreEqual(expected, actual);
         }
 
-        static void XmlToJSON1()
+        [Test]
+        public static void XmlToJSON1_1()
         {
+            string expected = @"[
+ {
+  ""@id"": 1,
+  ""Name"": ""Mark"",
+  ""Age"": 35,
+  ""Gender"": ""Male"",
+  ""DateOfBirth"": ""1980-05-30T00:00:00"",
+  ""Height"": {
+    ""@units"": ""cm"",
+    ""#text"": ""30""
+  },
+  ""Weight"": {
+    ""@units"": ""kg"",
+    ""#text"": ""10""
+  }
+ },
+ {
+  ""@id"": 2,
+  ""Name"": ""Tom"",
+  ""Age"": 21,
+  ""Gender"": ""Female"",
+  ""DateOfBirth"": ""2000-01-01T00:00:00"",
+  ""Height"": {
+    ""@units"": ""cm"",
+    ""#text"": ""10""
+  },
+  ""Weight"": {
+    ""@units"": ""kg"",
+    ""#text"": ""20""
+  }
+ }
+]";
+            string actual = null;
+
             string xml = @"<?xml version=""1.0"" encoding=""UTF-8""?>
 <ContrastDoseReport xmlns=""http://www.medrad.com/ContrastDoseReport"" xsi:schemaLocation=""MEDRAD_Injection_Report.XSD"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"">
     <Patient id=""1"">
@@ -632,21 +1102,79 @@ namespace ChoXmlReaderTest
     </Patient>
 </ContrastDoseReport>";
 
-            string json = ChoJSONWriter.ToTextAll(ChoXmlReader.LoadText(xml),
+            actual = ChoJSONWriter.ToTextAll(ChoXmlReader.LoadText(xml),
                 new ChoJSONRecordConfiguration().Configure(c => c.EnableXmlAttributePrefix = true));
-            Console.WriteLine(json);
 
-            foreach (var rec in ChoJSONReader.LoadText(json))
-                Console.WriteLine(rec.Dump());
+            Assert.AreEqual(expected, actual);
+        }
 
-            Console.WriteLine(ChoXmlWriter.ToTextAll(ChoJSONReader.LoadText(json), new ChoXmlRecordConfiguration().Configure(c => c.RootName = "ContrastDoseReport").Configure(c => c.NodeName = "Patient")));
+        [Test]
+        public static void XmlToJSON1_2()
+        {
+            string expected = @"<ContrastDoseReport>
+  <Patient id=""1"">
+    <Name>Mark</Name>
+    <Age>35</Age>
+    <Gender>Male</Gender>
+    <DateOfBirth>1980-05-30T00:00:00</DateOfBirth>
+    <Height units=""cm"">
+    30
+  </Height>
+    <Weight units=""kg"">
+    10
+  </Weight>
+  </Patient>
+  <Patient id=""2"">
+    <Name>Tom</Name>
+    <Age>21</Age>
+    <Gender>Female</Gender>
+    <DateOfBirth>2000-01-01T00:00:00</DateOfBirth>
+    <Height units=""cm"">
+    10
+  </Height>
+    <Weight units=""kg"">
+    20
+  </Weight>
+  </Patient>
+</ContrastDoseReport>";
+            string actual = null;
+            
+            string json = @"[
+ {
+  ""@id"": 1,
+  ""Name"": ""Mark"",
+  ""Age"": 35,
+  ""Gender"": ""Male"",
+  ""DateOfBirth"": ""1980-05-30T00:00:00"",
+  ""Height"": {
+    ""@units"": ""cm"",
+    ""#text"": ""30""
+  },
+  ""Weight"": {
+    ""@units"": ""kg"",
+    ""#text"": ""10""
+  }
+ },
+ {
+  ""@id"": 2,
+  ""Name"": ""Tom"",
+  ""Age"": 21,
+  ""Gender"": ""Female"",
+  ""DateOfBirth"": ""2000-01-01T00:00:00"",
+  ""Height"": {
+    ""@units"": ""cm"",
+    ""#text"": ""10""
+  },
+  ""Weight"": {
+    ""@units"": ""kg"",
+    ""#text"": ""20""
+  }
+ }
+]";
 
-            return;
+            actual = ChoXmlWriter.ToTextAll(ChoJSONReader.LoadText(json), new ChoXmlRecordConfiguration().Configure(c => c.RootName = "ContrastDoseReport").Configure(c => c.NodeName = "Patient"));
 
-            foreach (var rec in ChoXmlReader.LoadText(xml))
-            {
-                Console.WriteLine(rec.Dump());
-            }
+            Assert.AreEqual(expected, actual);
         }
 
         public class Name
@@ -656,10 +1184,36 @@ namespace ChoXmlReaderTest
             {
                 get; set;
             }
+
+            public override bool Equals(object obj)
+            {
+                var name = obj as Name;
+                return name != null &&
+                       Part == name.Part &&
+                       Value == name.Value;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = 1556981182;
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Part);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Value);
+                return hashCode;
+            }
         }
 
+        [Test]
         public static void ComplexTest1()
         {
+            List<object> expected = new List<object>
+            {
+                new Name{ Part = "first", Value = "Foo"},
+                new Name{ Part = "last", Value = "Bar"},
+                new Name{ Part = "first", Value = "Foo1"},
+                new Name{ Part = "last", Value = "Bar1"}
+            };
+            List<object> actual = new List<object>();
+
             string xml = @"<SalesLead>
     <Customer>
          <Name part=""first"">Foo</Name>
@@ -680,8 +1234,10 @@ namespace ChoXmlReaderTest
                     )
                     )
                     )
-                    Console.WriteLine(rec.Dump());
+                    actual.Add(rec);
             }
+
+            Assert.AreEqual(expected, actual);
         }
 
         public class ManagedObject
@@ -694,6 +1250,22 @@ namespace ChoXmlReaderTest
             public string Name { get; set; }
             [ChoXmlNodeRecordField(XPath = @"/p[@name=""cellBarQualify""]")]
             public int CellBarQualify { get; set; }
+
+            public override bool Equals(object obj)
+            {
+                var jTS = obj as ManagedObjectJTS;
+                return jTS != null &&
+                       Name == jTS.Name &&
+                       CellBarQualify == jTS.CellBarQualify;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -295656929;
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Name);
+                hashCode = hashCode * -1521134295 + CellBarQualify.GetHashCode();
+                return hashCode;
+            }
         }
         public class ManagedObjectCCF : ManagedObject
         {
@@ -701,6 +1273,22 @@ namespace ChoXmlReaderTest
             public string Name { get; set; }
             [ChoXmlNodeRecordField(XPath = @"/p[@name=""SBTSId""]")]
             public int SBTSId { get; set; }
+
+            public override bool Equals(object obj)
+            {
+                var cCF = obj as ManagedObjectCCF;
+                return cCF != null &&
+                       Name == cCF.Name &&
+                       SBTSId == cCF.SBTSId;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = 68726846;
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Name);
+                hashCode = hashCode * -1521134295 + SBTSId.GetHashCode();
+                return hashCode;
+            }
         }
         public class ManagedObjectPOC : ManagedObject
         {
@@ -708,11 +1296,36 @@ namespace ChoXmlReaderTest
             public string Alpha { get; set; }
             [ChoXmlNodeRecordField(XPath = @"/p[@name=""bepPeriod""]")]
             public int BepPeriod { get; set; }
+
+            public override bool Equals(object obj)
+            {
+                var pOC = obj as ManagedObjectPOC;
+                return pOC != null &&
+                       Alpha == pOC.Alpha &&
+                       BepPeriod == pOC.BepPeriod;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = 1924863892;
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Alpha);
+                hashCode = hashCode * -1521134295 + BepPeriod.GetHashCode();
+                return hashCode;
+            }
         }
 
-        private static void Test71()
+        [Test]
+        public static void Test71()
         {
-            using (var p = new ChoXmlReader<ManagedObject>("sample71.xml")
+            List<object> expected = new List<object>
+            {
+                new ManagedObjectJTS{ Name = "VM_25261_G1_A", CellBarQualify = 0},
+                new ManagedObjectCCF{ Name = "ET_AR_G_0267_GHABATGHAYATI", SBTSId = 10267},
+                new ManagedObjectPOC{ Alpha = "0", BepPeriod = 10 }
+            };
+            List<object> actual = new List<object>();
+
+            using (var p = new ChoXmlReader<ManagedObject>(FileNameSample71XML)
                 .WithCustomRecordSelector(ele =>
                 {
                     var classValue = ((Tuple<long, XElement>)ele).Item2.Attributes("class").FirstOrDefault().Value;
@@ -728,9 +1341,10 @@ namespace ChoXmlReaderTest
                 )
             {
                 foreach (var rec in p)
-                    Console.WriteLine(rec.Dump());
+                    actual.Add(rec);
             }
 
+            CollectionAssert.AreEqual(expected, actual);
         }
 
         public class TestPlan
@@ -744,21 +1358,65 @@ namespace ChoXmlReaderTest
             public string Path { get; set; }
             [ChoXmlNodeRecordField(XPath = @"/hashTree/hashTree/HTTPSamplerProxy/stringProp[@name=""HTTPSampler.domain""]")]
             public string Domain { get; set; }
+
+            public override bool Equals(object obj)
+            {
+                var plan = obj as TestPlan;
+                return plan != null &&
+                       NumThreads == plan.NumThreads &&
+                       RampTime == plan.RampTime &&
+                       Path == plan.Path &&
+                       Domain == plan.Domain;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -1603925905;
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(NumThreads);
+                hashCode = hashCode * -1521134295 + RampTime.GetHashCode();
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Path);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Domain);
+                return hashCode;
+            }
         }
 
-        static void TestPlanTest()
+        [Test]
+        public static void TestPlanTest()
         {
-            using (var p = new ChoXmlReader<TestPlan>("sample70.xml")
+            List<object> expected = new List<object>
+            {
+                new TestPlan{ Domain = "www.abc.com/abc-service-api", NumThreads="continue", Path = "/v1/test/test?debug=false", RampTime = 1}
+            };
+            List<object> actual = new List<object>();
+
+            using (var p = new ChoXmlReader<TestPlan>(FileNameSample70XML)
                 .WithXPath("/TestPlan/hashTree/hashTree")
                 )
             {
                 foreach (var rec in p)
-                    Console.WriteLine(rec.Dump());
+                    actual.Add(rec);
             }
+
+            CollectionAssert.AreEqual(expected, actual);
         }
 
-        static void XmlToJSONKVP()
+        [Test]
+        public static void XmlToJSONKVP()
         {
+            string expected = @"<List`1s>
+  <ArrayOfAnyType>
+    <anyType xmlns:q1=""http://www.w3.org/2001/XMLSchema"" p3:type=""q1:string"" xmlns:p3=""http://www.w3.org/2001/XMLSchema-instance"">81963</anyType>
+    <anyType xmlns:q2=""http://www.w3.org/2001/XMLSchema"" p3:type=""q2:string"" xmlns:p3=""http://www.w3.org/2001/XMLSchema-instance"">complete</anyType>
+    <anyType xmlns:q3=""http://www.w3.org/2001/XMLSchema"" p3:type=""q3:string"" xmlns:p3=""http://www.w3.org/2001/XMLSchema-instance"">2018-07-30</anyType>
+  </ArrayOfAnyType>
+  <ArrayOfAnyType>
+    <anyType xmlns:q1=""http://www.w3.org/2001/XMLSchema"" p3:type=""q1:string"" xmlns:p3=""http://www.w3.org/2001/XMLSchema-instance"">81194</anyType>
+    <anyType xmlns:q2=""http://www.w3.org/2001/XMLSchema"" p3:type=""q2:string"" xmlns:p3=""http://www.w3.org/2001/XMLSchema-instance"">complete</anyType>
+    <anyType xmlns:q3=""http://www.w3.org/2001/XMLSchema"" p3:type=""q3:string"" xmlns:p3=""http://www.w3.org/2001/XMLSchema-instance"">2018-07-30</anyType>
+  </ArrayOfAnyType>
+</List`1s>";
+            string actual = null;
+
             string xml = @"<jobs><job>
            <properties>
               <name>jobid</name>
@@ -794,33 +1452,100 @@ namespace ChoXmlReaderTest
                 //Console.WriteLine(ChoJSONWriter.ToTextAll(p.Select(r => ((IList<dynamic>)r.propertiess).ToDictionary(r1 => r1.name, r1 => r1.value))));
                 //Console.WriteLine(ChoJSONWriter.ToTextAll(p.Select(r => ((IList<dynamic>)r.propertiess).Select(r1 => r1.value).ToList())));
 
-                Console.WriteLine(ChoXmlWriter.ToTextAll(p.Select(r => ((IList<dynamic>)r.propertiess).Select(r1 => r1.value).ToList())));
+                actual = ChoXmlWriter.ToTextAll(p.Select(r => ((IList<dynamic>)r.propertiess).Select(r1 => r1.value).ToList()));
 
             }
+
+            Assert.AreEqual(expected, actual);
+            Assert.Warn("I am not sure, if this is the original XmlToJSONKVP test.");
         }
 
-        static void Sample49Test()
+        [Test]
+        public static void Sample49Test()
         {
-            using (var r = new ChoXmlReader("Sample49.xml")
+            string expected = @"[
+ {
+  ""StockNumber"": 1020,
+  ""Make"": ""Renault"",
+  ""Models"": [
+   {
+     ""modelName"": ""Kwid"",
+     ""modelType"": ""Basic"",
+     ""price"": ""5 Lakhs"",
+     ""preOrderNeeded"": ""No""
+   },
+   {
+     ""modelName"": ""Kwid"",
+     ""modelType"": ""Compact Model with all upgrades"",
+     ""price"": ""7.25 Lakhs"",
+     ""preOrderNeeded"": ""Yes""
+   }
+  ]
+ },
+ {
+  ""StockNumber"": 1010,
+  ""Make"": ""Toyota"",
+  ""Models"": null
+ }
+]";
+            string actual = null;
+
+            using (var r = new ChoXmlReader(FileNameSample49XML)
                 .WithXPath("/CarCollection/Cars/Car")
                 .WithMaxScanNodes(10)
                 //.Configure(c => c.MaxScanRows = 10)
                 )
             {
-                Console.WriteLine(ChoJSONWriter.ToTextAll(r));
+                actual = ChoJSONWriter.ToTextAll(r);
             }
+
+            Assert.AreEqual(expected, actual);
         }
 
-        static void Sample48Test()
+        [Test]
+        public static void Sample48Test()
         {
-            var dt = new ChoXmlReader("sample48.xml")
+            DataTable expected = new DataTable();
+            expected.Columns.Add("Type",typeof(string));
+            expected.Columns.Add("Indice",typeof(Int64)).AllowDBNull = false;
+            expected.Columns.Add("Limites_Haut");
+            expected.Columns.Add("Limites_Bas");
+            expected.Columns.Add("Points_Point_0_id");
+            expected.Columns.Add("Points_Point_0_X");
+            expected.Columns.Add("Points_Point_0_Y");
+            expected.Columns.Add("Points_Point_0_#text");
+            expected.Columns.Add("Points_Point_1_id");
+            expected.Columns.Add("Points_Point_1_X");
+            expected.Columns.Add("Points_Point_1_Y");
+            expected.Columns.Add("Points_Point_1_#text");
+            expected.Columns.Add("Points_Point_2_id");
+            expected.Columns.Add("Points_Point_2_X");
+            expected.Columns.Add("Points_Point_2_Y");
+            expected.Columns.Add("Points_Point_2_#text");
+            expected.Rows.Add("Point",859,"26.5","43.2","01","45","44","12","02","5","41","5","03","4","464","3");
+            expected.Rows.Add("Point", 256, "16.5", "12.2", "05", "6.5", "22", "5", "06", "58", "46.5", "5", "07", "98", "4.5", "6");
+
+            var actual = new ChoXmlReader(FileNameSample48XML)
                 .WithXPath("//Contour/Elements/Element")
                 .Select(i => i.Flatten())
                 .AsDataTable();
+
+            DataTableAssert.AreEqual(expected, actual);
         }
 
-        static void XmlNSTest()
+        [Test]
+        public static void XmlNSTest()
         {
+            List<object> expected = new List<object>
+            {
+                new ChoDynamicObject("folder") {{"name","Strategy"}, { "id", "ffc905fd-a78c-4311-b2f6-a188c00ed10a" } , { "type", "strategy" } },
+                new ChoDynamicObject("folder") {{"name", "Business" }, { "id", "0d806081-438f-4ae5-86d9-8ff5ee4e9f1a" } , { "type", "business" } },
+                new ChoDynamicObject("folder") {{"name", "Application" }, { "id", "3566e95c-c070-46bb-bde3-f6017ae49dc1" } , { "type", "application" } },
+                new ChoDynamicObject("folder") {{"name", "Technology & Physical" }, { "id", "4fabc4fa-a882-4843-ae69-170b66df7685" } , { "type", "technology" } },
+                new ChoDynamicObject("folder") {{"name", "Motivation" }, { "id", "ce5e0874-1c06-41c1-9b95-eec6558afa89" } , { "type", "motivation" } }
+            };
+            List<object> actual = new List<object>();
+
             string xml = @"<?xml version=""1.0"" encoding=""UTF-8""?>
   <archimate:model xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" 
      xmlns:archimate=""http://www.archimatetool.com/archimate"" name=""ACME"" 
@@ -838,11 +1563,14 @@ namespace ChoXmlReaderTest
                 )
             {
                 foreach (var x in p)
-                    Console.WriteLine(x.Dump());
+                    actual.Add(x);
             }
+
+            CollectionAssert.AreEqual(expected, actual);
         }
 
-        static void XmlToJSONNumberTest()
+        [Test]
+        public static void XmlToJSONNumberTest()
         {
             string xml = @"<Report xmlns:json=""http://james.newtonking.com/projects/json"">
 <ReportItem>
@@ -852,10 +1580,26 @@ namespace ChoXmlReaderTest
 </Report>";
 
             var x = ChoXmlReader.DeserializeText(xml);
+            
             Console.WriteLine(x.DumpAsJson());
+            Assert.Warn("Console.WriteLine(ChoJSONWriter.ToTextAll(x)); works");
         }
-        static void Sample22Test()
+
+        [Test]
+        public static void Sample22Test()
         {
+            DataTable expected = new DataTable();
+            expected.Columns.Add("Age",typeof(long)).AllowDBNull = false;
+            expected.Columns.Add("DateOfBirth");
+            expected.Columns.Add("EmailAddress");
+            expected.Columns.Add("MobilePhone_CountryCode");
+            expected.Columns.Add("MobilePhone_Number");
+            expected.Columns.Add("WorkPhone_CountryCode");
+            expected.Columns.Add("WorkPhone_Number");
+            expected.Rows.Add((long)39, "06:07:1985:00:00", "abc@rentacar3.com", "1", "2049515487", "93", "1921525542");
+            expected.Rows.Add((long)29, "06:07:1989:00:00", "abc@rentacar2.com", "1", "2049515949", "93", "1921525125");
+            DataTable actual = null;
+
             string xml = @"<Response>
     <MemberSummary>
       <Age>39</Age>      
@@ -892,19 +1636,36 @@ namespace ChoXmlReaderTest
 
             using (var p = ChoXmlReader.LoadText(xml))
             {
-                var dt = p.Select(e => e.Flatten()).AsDataTable();
+                actual = p.Select(e => e.Flatten()).AsDataTable();
             }
+
+            DataTableAssert.AreEqual(expected, actual);
         }
 
-        static void Sample21Test()
+        [Test]
+        public static void Sample21Test()
         {
-            using (var p = new ChoXmlReader("sample21.xml")
+            DataTable expected = new DataTable();
+            expected.Columns.Add("Key", typeof(object)).AllowDBNull = false;
+            expected.Columns.Add("Value");
+            expected.Rows.Add("Key1", "79,0441326460292");
+            expected.Rows.Add("Key1", "76,0959542079328");
+            expected.Rows.Add("Key1", "74,3061819154758");
+            expected.Rows.Add("Key1", "78,687039788779");
+            expected.Rows.Add("Key2", "87,7110395931923");
+
+            DataTable actual = null;
+
+            using (var p = new ChoXmlReader(FileNameSample21XML)
                 .WithField("Key")
                 .WithField("Value", xPath: "/Values/string")
                 )
             {
-                var dt = p.SelectMany(r => ((Array)r.Value).OfType<string>().Select(r1 => new { Key = r.Key, Value = r1 })).AsDataTable();
+                actual = p.SelectMany(r => ((Array)r.Value).OfType<string>().Select(r1 => new { Key = r.Key, Value = r1 })).AsDataTable();
+                
             }
+
+            DataTableAssert.AreEqual(expected, actual);
         }
 
         public class Naptan
@@ -913,7 +1674,7 @@ namespace ChoXmlReaderTest
             public string AtcoCode { get; set; }
             [ChoXmlNodeRecordField(XPath = "/z:NaptanCode")]
             public string NaptanCode { get; set; }
-            [ChoXmlNodeRecordField(XPath = "/z:Place/z:Location/z:Translation/z:Longitude")]
+            [ChoXmlNodeRecordField(XPath = "/z:Place/z:Location/z:Translation/z:Latitude")]
             public double Latitude { get; set; }
             [ChoXmlNodeRecordField(XPath = "/z:Place/z:Location/z:Translation/z:Longitude")]
             public double Longitude { get; set; }
@@ -929,21 +1690,63 @@ namespace ChoXmlReaderTest
             public string Street { get; set; }
             [ChoXmlNodeRecordField(XPath = "/z:Descriptor/z:Indicator")]
             public string Indicator { get; set; }
+
+            public override bool Equals(object obj)
+            {
+                var naptan = obj as Naptan;
+                return naptan != null &&
+                       AtcoCode == naptan.AtcoCode &&
+                       NaptanCode == naptan.NaptanCode &&
+                       Latitude == naptan.Latitude &&
+                       Longitude == naptan.Longitude &&
+                       TimmingStatus == naptan.TimmingStatus &&
+                       BusStopType == naptan.BusStopType &&
+                       CommonName == naptan.CommonName &&
+                       Landmark == naptan.Landmark &&
+                       Street == naptan.Street &&
+                       Indicator == naptan.Indicator;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -650170821;
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(AtcoCode);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(NaptanCode);
+                hashCode = hashCode * -1521134295 + Latitude.GetHashCode();
+                hashCode = hashCode * -1521134295 + Longitude.GetHashCode();
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(TimmingStatus);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(BusStopType);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(CommonName);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Landmark);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Street);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Indicator);
+                return hashCode;
+            }
         }
 
-        static void Sample20()
+        [Test]
+        public static void Sample20()
         {
-            using (var p = new ChoXmlReader<Naptan>("sample20.xml")
+            List<object> expected = new List<object>
+            {
+                new Naptan{ AtcoCode = "030028280001", NaptanCode = "brkpjmt", CommonName = "Tinkers Corner", Landmark = "adj Forbury Lane", Street = "Holt Lane", Indicator = "opp", Longitude=-1.42979961186, Latitude =51.38882190967, BusStopType = "CUS", TimmingStatus = "OTH" }
+            };
+            List<object> actual = new List<object>();
+
+            using (var p = new ChoXmlReader<Naptan>(FileNameSample20XML)
                 .WithXPath("//NaPTAN/StopPoints/StopPoint")
                 .WithXmlNamespace("z", "http://www.naptan.org.uk/")
                 )
             {
                 foreach (var rec in p)
-                    Console.WriteLine(rec.Dump());
+                    actual.Add(rec);
             }
+
+            CollectionAssert.AreEqual(expected, actual);
         }
 
-        static void NSTest()
+        [Test]
+        public static void NSTest()
         {
             string xml = @"<ns3:Test_Service xmlns:ns3=""http://www.CCKS.org/XRT/Form"">
   <ns3:fname>mark</ns3:fname>
@@ -999,10 +1802,25 @@ namespace ChoXmlReaderTest
             }
 
             Console.WriteLine(sb.ToString());
+
+            Assert.Fail("Not sure, how to test");
         }
 
-        static void CDATATest()
+        [Test]
+        public static void CDATATest()
         {
+            string expected = @"[
+ {
+  ""First_Name"": ""Luke"",
+  ""Last_Name"": ""Skywalker"",
+  ""ID"": {
+    ""ID1"": ""1"",
+    ""Name"": ""1234""
+  }
+ }
+]";
+            string actual = null;
+
             string ID = null;
 
             string xml = @"<CUST><First_Name>Luke</First_Name> <Last_Name>Skywalker</Last_Name> <ID ID1=""1""><Name><![CDATA[1234]]></Name></ID> </CUST>";
@@ -1013,13 +1831,19 @@ namespace ChoXmlReaderTest
                 .WithXPath("/")
                 )
             {
-                Console.WriteLine(ChoJSONWriter.ToTextAll(p));
-                //foreach (var rec in p)
-                //	Console.WriteLine(rec.Dump());
+                actual = ChoJSONWriter.ToTextAll(p);
             }
+            Assert.AreEqual(expected, actual);
         }
-        static void Sample46()
+
+        [Test]
+        public static void Sample46()
         {
+            string expected = @"overallResult,test
+Passed,ChoETL.ChoDynamicObject
+Passed,ChoETL.ChoDynamicObject";
+            string actual = null;
+            
             string xml = @"<session
     beginTime=""2018-05-11T10:37:30""
     halSerialNumber=""08J-0735""
@@ -1083,21 +1907,33 @@ namespace ChoXmlReaderTest
                     .WithFirstLineHeader()
                     .Configure(c => c.UseNestedKeyFormat = false)
                     )
-                    w.Write(p.SelectMany(r => ((dynamic[])r.appliance.test_sets).Select(r1 => new { r.appliance.overallResult, test = r1.test })));
-
-                using (var csv = new ChoCSVReader(sb)
-                                    .WithFirstLineHeader()
-                    )
                 {
-                    var dt = csv.AsDataTable();
+                    w.Write(p.SelectMany(r => ((dynamic[])r.appliance.test_sets).Select(r1 => new { r.appliance.overallResult, test = r1.test })));
                 }
+                //using (var csv = new ChoCSVReader(sb)
+                //                    .WithFirstLineHeader()
+                //    )
+                //{
+                //    var dt = csv.AsDataTable();
+                //}
             }
 
-            Console.WriteLine(sb.ToString());
+            actual = sb.ToString();
+
+            Assert.AreEqual(expected, actual);
         }
 
-        static void Sample45()
+        [Test]
+        public static void Sample45()
         {
+            string expected = @"ObjectName,PrincipalType,DisplayName,RoleDefBindings
+New Data,,,
+Documents,,,
+Documents2,,,
+Documents2,User,,
+Documents2,Group,,";
+            string actual = null;
+
             string xml = @"<SPSecurableObject>
   <ObjectName>New Data</ObjectName>
   <ChildObjects>
@@ -1144,7 +1980,9 @@ namespace ChoXmlReaderTest
                     w.Write(Flatten(p.First()));
             }
 
-            Console.WriteLine(sb.ToString());
+            actual = sb.ToString();
+
+            Assert.AreEqual(expected, actual);
         }
 
         static IEnumerable Flatten(dynamic obj)
@@ -1163,7 +2001,7 @@ namespace ChoXmlReaderTest
                 yield break;
             else
             {
-                foreach (dynamic child in (IList)obj.ChildObjects.ChildObjects)
+                foreach (dynamic child in (IList)obj.ChildObjects)
                 {
                     foreach (object rec in Flatten(child))
                         yield return rec;
@@ -1171,8 +2009,62 @@ namespace ChoXmlReaderTest
             }
         }
 
-        static void Sample44()
+        [Test]
+        public static void Sample44()
         {
+            string expected = @"{
+ {
+  ""items"": {
+    ""item"": {
+      ""title"": ""Overlay HD/CC"",
+      ""guid"": ""1"",
+      ""description"": ""This example shows tooltip overlays for captions and quality."",
+      ""image"": ""http://content.jwplatform.com/thumbs/3XnJSIm4-640.jpg"",
+      ""source"": {
+        ""file"": ""http://content.jwplatform.com/videos/3XnJSIm4-kNspJqnJ.mp4"",
+        ""label"": ""360p""
+      },
+      ""sources"": [
+        {
+          ""file"": ""http://content.jwplatform.com/videos/3XnJSIm4-DZ7jSYgM.mp4"",
+          ""label"": ""720p""
+        },
+        {
+          ""file"": ""http://content.jwplatform.com/videos/3XnJSIm4-kNspJqnJ.mp4"",
+          ""label"": ""360p""
+        },
+        {
+          ""file"": ""http://content.jwplatform.com/videos/3XnJSIm4-injeKYZS.mp4"",
+          ""label"": ""180p""
+        }
+      ],
+      ""tracks"": [
+        {
+          ""file"": ""http://content.jwplatform.com/captions/2UEDrDhv.txt"",
+          ""label"": ""English""
+        },
+        {
+          ""file"": ""http://content.jwplatform.com/captions/6aaGiPcs.txt"",
+          ""label"": ""Japanese""
+        },
+        {
+          ""file"": ""http://content.jwplatform.com/captions/2nxzdRca.txt"",
+          ""label"": ""Russian""
+        },
+        {
+          ""file"": ""http://content.jwplatform.com/captions/BMjSl0KC.txt"",
+          ""label"": ""Spanish""
+        }
+      ]
+    }
+  }
+ },
+ {
+  ""items"": null
+ }
+}";
+            string actual = null;
+
             string xml = @"<RSS xmlns:jwplayer=""http://support.jwplayer.com/customer/portal/articles/1403635-media-format-reference#feeds"" version=""2.0"">
   <Channel>
     <items>
@@ -1215,12 +2107,42 @@ namespace ChoXmlReaderTest
                 }
 
             }
-            Console.WriteLine(sb.ToString());
+            actual = sb.ToString();
 
-
+            Assert.AreEqual(expected, actual);
         }
-        static void Sample43()
+
+        [Test]
+        public static void Sample43()
         {
+            string expected = @"[
+ {
+  ""name"": ""slideshow"",
+  ""xsl"": ""http://localhost:8080/Xsl-c.xslt"",
+  ""category"": [
+   {
+     ""name"": ""1234"",
+     ""xsl"": ""http://localhost:8080/Xsl-b.xslt""
+   }
+  ]
+ },
+ {
+  ""name"": ""article"",
+  ""xsl"": ""http://localhost:8080/Xsl-a.xslt"",
+  ""category"": [
+   {
+     ""name"": ""1234"",
+     ""xsl"": ""http://localhost:8080/Xsl-b.xslt""
+   },
+   {
+     ""name"": ""1234"",
+     ""xsl"": ""http://localhost:8080/Xsl-b.xslt""
+   }
+  ]
+ }
+]";
+            string actual = null;
+
             string xml = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
 <XslMapper>
   <type name=""slideshow"" xsl=""http://localhost:8080/Xsl-c.xslt"" >
@@ -1246,8 +2168,37 @@ namespace ChoXmlReaderTest
             }
             Console.WriteLine(sb.ToString());
         }
-        static void Sample42()
+
+        [Test]
+        public static void Sample42()
         {
+            string expected = @"[
+ {
+  ""FirstName"": ""Luke"",
+  ""Last_Name"": null,
+  ""EmpID"": null
+ },
+ {
+  ""FirstName"": ""Luke"",
+  ""Last_Name"": null,
+  ""EmpID"": null
+ }
+]";
+            // above is the original console output, below is my expectation (neuli1980)
+            expected = @"[
+ {
+  ""FirstName"": ""Luke"",
+  ""Last_Name"": ""Skywalker"",
+  ""EmpID"": 1234
+ },
+ {
+  ""FirstName"": ""Luke"",
+  ""Last_Name"": ""Skywalker"",
+  ""EmpID"": 1234
+ }
+]";
+            string actual = null;
+
             string xml = @"<custs><CUST><First_Name>Luke</First_Name> <Last_Name>Skywalker</Last_Name> <ID><![CDATA[1234]]></ID> </CUST><CUST><First_Name>Luke</First_Name> <Last_Name>Skywalker</Last_Name> <ID><![CDATA[1234]]></ID> </CUST></custs>";
             StringBuilder sb = new StringBuilder();
             using (var p = ChoXmlReader<Emp>.LoadText(xml)/*.WithXPath("/")*/
@@ -1262,11 +2213,24 @@ namespace ChoXmlReaderTest
                     w.Write(p);
             }
 
-            Console.WriteLine(sb.ToString());
+            actual = sb.ToString();
+
+            Assert.AreEqual(expected, actual);
         }
 
-        static void Sample41()
+        [Test]
+        public static void Sample41()
         {
+            string expected = @"{
+ ""GetItemRequest"": {
+  ""ApplicationCrediential"": {
+    ""ConsumerKey"": """",
+    ""ConsumerSecret"": """"
+  }
+ }
+}";
+            string actual = null;
+
             string xml = @"<GetItemRequest>
     <ApplicationCrediential>
         <ConsumerKey></ConsumerKey>
@@ -1286,11 +2250,30 @@ namespace ChoXmlReaderTest
                     w.Write(p);
             }
 
-            Console.WriteLine(sb.ToString());
+            actual = sb.ToString();
+
+            Assert.AreEqual(expected, actual);
         }
 
-        static void Sample40()
+        [Test]
+        public static void Sample40()
         {
+            string expected = @"[
+ {
+  ""FirstName"": ""name1"",
+  ""LastName"": ""surname1""
+ },
+ {
+  ""FirstName"": ""name2"",
+  ""LastName"": ""surname2""
+ },
+ {
+  ""FirstName"": ""name3"",
+  ""LastName"": ""surname3""
+ }
+]";
+            string actual = null;
+
             string xml = @"<Employees xmlns:x1=""http://company.com/schemas"">
                 <Employee>
                     <FirstName>name1</FirstName>
@@ -1318,12 +2301,19 @@ namespace ChoXmlReaderTest
                     w.Write(p);
             }
 
-            Console.WriteLine(sb.ToString());
+            actual = sb.ToString();
 
+            Assert.AreEqual(expected, actual);
         }
 
-        static void Sample39()
+        [Test]
+        public static void Sample39()
         {
+            string expected = @"forecast_conditions_day_of_week data,forecast_conditions_low data,forecast_conditions_high data,forecast_conditions_icon data,forecast_conditions_condition data
+Sun,34,48,/ig/images/weather/mostly_sunny.gif,Partly Sunny
+Mon,32,45,/ig/images/weather/sunny.gif,Clear";
+            string actual = null;
+
             string xml = @"<weather>
     <current_conditions>
         <condition data=""Mostly Cloudy"" />
@@ -1358,11 +2348,21 @@ namespace ChoXmlReaderTest
                     w.Write(p);
             }
 
-            Console.WriteLine(sb.ToString());
+            actual = sb.ToString();
+
+            Assert.AreEqual(expected, actual);
         }
 
-        static void Sample38()
+        [Test]
+        public static void Sample38()
         {
+            string expected = @"results_field,results_something,results_name
+2,0,alex
+0,0,jack
+2,1,heath
+0,0,blake";
+            string actual = null;
+
             string xml = @"<?xml version=""1.0""?>
             <results>
                 <results>
@@ -1396,23 +2396,45 @@ namespace ChoXmlReaderTest
                     w.Write(p);
             }
 
-            Console.WriteLine(sb.ToString());
+            actual = sb.ToString();
+
+            Assert.AreEqual(expected, actual);
         }
 
-        static void Sample37()
+        [Test]
+        public static void Sample37()
         {
+            string expected = @"[
+ {
+  ""Products"": [
+   {
+     ""ProductCode"": ""C1010"",
+     ""CategoryName"": ""Coins""
+   }
+   {
+     ""ProductCode"": ""C1012"",
+     ""CategoryName"": ""Coins""
+   }
+   {
+     ""ProductCode"": ""C1013"",
+     ""CategoryName"": ""Coins""
+   }
+  ]
+ }
+]";
+            string actual = null;
+
             string xml = @"<Products>
   <Product ProductCode=""C1010"" CategoryName=""Coins"" />
   <Product ProductCode=""C1012"" CategoryName=""Coins"" />
   <Product ProductCode=""C1013"" CategoryName=""Coins"" />
 </Products>";
 
-            StringBuilder sb = new StringBuilder();
             using (var p = ChoXmlReader.LoadText(xml).WithXPath("/")
                 //.Configure(c => c.RetainXmlAttributesAsNative = false)
                 )
             {
-                Console.WriteLine(ChoJSONWriter.ToTextAll(p.ToArray()));
+                actual = ChoJSONWriter.ToTextAll(p.ToArray());
                 //foreach (var rec in p)
                 //    Console.WriteLine(rec.Dump());
                 //using (var w = new ChoCSVWriter(sb)
@@ -1421,12 +2443,24 @@ namespace ChoXmlReaderTest
                 //	w.Write(p);
             }
 
-            Console.WriteLine(sb.ToString());
-
+            Assert.AreEqual(expected, actual);
         }
 
-        static void Sample36()
+        [Test]
+        public static void Sample36()
         {
+            string expected = @"<DataRows>
+  <DataRow>
+    <ColumnNames>
+      <ColumnName>Value1</ColumnName>
+  <ColumnName>Value3</ColumnName>
+  <ColumnName>Value4</ColumnName>
+  <ColumnName>Value5</ColumnName>
+  <ColumnName>Value6</ColumnName></ColumnNames>
+  </DataRow>
+</DataRows>";
+            string actual = null;
+
             string xml = @"<root>
   <DataRow>
     <ColumnName>Value1</ColumnName>
@@ -1437,12 +2471,11 @@ namespace ChoXmlReaderTest
   </DataRow>
 </root>";
 
-            StringBuilder sb = new StringBuilder();
             using (var p = ChoXmlReader.LoadText(xml)
                 .Configure(c => c.RetainAsXmlAwareObjects = true)
                 )
             {
-                Console.WriteLine(ChoXmlWriter.ToTextAll(p.ToArray()));
+                actual = ChoXmlWriter.ToTextAll(p.ToArray());
                 //foreach (var rec in p)
                 //    Console.WriteLine(rec.Dump());
                 //using (var w = new ChoCSVWriter(sb)
@@ -1451,12 +2484,16 @@ namespace ChoXmlReaderTest
                 //	w.Write(p);
             }
 
-            Console.WriteLine(sb.ToString());
-
+            Assert.AreEqual(expected, actual);
         }
 
-        static void Sample35()
+        [Test]
+        public static void Sample35()
         {
+            string expected = @"A_TempFZ1_Set,A_TempHZ2_Set,A_TempHZ3_Set
+60,195,195";
+            string actual = null;
+
             string xml = @"<VWSRecipeFile>
                 <EX_Extrusion User=""ABC"" Version=""1.0"" Description="""" LastChange=""41914.7876341204"">
                     <Values>
@@ -1476,11 +2513,24 @@ namespace ChoXmlReaderTest
                     w.Write(p.ToDictionary(r => r.Item, r => r.Value).ToDynamic());
             }
 
-            Console.WriteLine(sb.ToString());
+            actual = sb.ToString();
+
+            Assert.AreEqual(expected, actual);
         }
 
-        static void Sample34()
+        [Test]
+        public static void Sample34()
         {
+            string expected = @"{
+ ""Items"": [
+  {
+    ""Name"": ""name"",
+    ""Detail"": ""detail""
+  }
+ ]
+}";
+            string actual = null;
+
             string xml = @"<Items>
  <Item>
     <Name>name</Name>
@@ -1497,11 +2547,31 @@ namespace ChoXmlReaderTest
                     w.Write(p);
             }
 
-            Console.WriteLine(sb.ToString());
+            actual = sb.ToString();
+
+            Assert.AreEqual(expected, actual);
         }
 
-        static void Sample33()
+        [Test]
+        public static void Sample33()
         {
+            List<object> expected = new List<object>
+            {
+                new ChoDynamicObject{{"Value",new object[]{
+                            new ChoDynamicObject{ { "id", "108013515952807_470186843068804" },{ "created_time", new DateTime(2013,05,14,20,43,28,DateTimeKind.Utc).ToLocalTime() } },
+                            new ChoDynamicObject{ {"message", "TEKST" }, { "id", "108013515952807_470178529736302" },{ "created_time", new DateTime(2013,05,14,20,22,07,DateTimeKind.Utc).ToLocalTime() } }
+                } } }
+/*                new ChoDynamicObject{{"Value",new object[] 
+                {
+                    new ChoDynamicObject { { "id", "108013515952807" }, {"posts", new ChoDynamicObject {
+                        { "data",new object[]
+                        {
+                        }
+                        } } } }
+                } }}*/
+            };
+            List<object> actual = new List<object>();
+
             string json = @"
 {
     ""id"":""108013515952807"",
@@ -1526,12 +2596,24 @@ namespace ChoXmlReaderTest
             using (var p = ChoJSONReader.LoadText(json).WithJSONPath("$..posts.data").Configure(c => c.MaxScanRows = 10))
             {
                 foreach (var rec in p)
-                    Console.WriteLine(rec.Dump());
+                    actual.Add(rec);
             }
+
+            CollectionAssert.AreEqual(expected, actual);
         }
 
-        static void Sample32()
+        [Test]
+        public static void Sample32()
         {
+            List<object> expected = new List<object>
+            {
+                new ChoDynamicObject("book"){{"id",(Int64)1},{"date",new DateTime(2012,2,1)},{"title","XML Developer's Guide" },
+                    {"price",(double)44.95 }, {"description","An in-depth look at creating applications\n            with XML." } },
+                new ChoDynamicObject("book"){{"id",(Int64)2},{"date",new DateTime(2013,10,16)},{"title","Dolor sit amet" },
+                    {"price",(double)5.95 }, {"description",@"Lorem ipsum" } }
+            };
+            List<object> actual = new List<object>();
+
             string xml = @"<?xml version=""1.0""?>
 <catalog>
     <book id=""1"" date=""2012-02-01"">
@@ -1553,11 +2635,23 @@ namespace ChoXmlReaderTest
             using (var p = ChoXmlReader.LoadText(xml))
             {
                 foreach (var rec in p)
-                    Console.WriteLine(rec.Dump());
+                    actual.Add(rec);
             }
+
+            CollectionAssert.AreEqual(expected, actual);
         }
-        static void Sample31()
+
+        [Test]
+        public static void Sample31()
         {
+            List<object> expected = new List<object>
+            {
+                new ChoDynamicObject("Column"){{"Name","key1"},{ "DataType", "Boolean" },{ "Column", "True" } },
+                new ChoDynamicObject("Column"){ { "Name", "key2" },{ "DataType", "String" },{ "Column",  "Hello World" } },
+                new ChoDynamicObject("Column"){ { "Name", "key3" },{ "DataType", "Integer" }, { "Column", "999" } }
+            };
+            List<object> actual = new List<object>();
+
             string xml = @"<Columns>
  <Column Name=""key1"" DataType=""Boolean"">True</Column>
  <Column Name=""key2"" DataType=""String"">Hello World</Column>
@@ -1567,14 +2661,17 @@ namespace ChoXmlReaderTest
             using (var p = ChoXmlReader.LoadText(xml))
             {
                 foreach (var rec in p)
-                    Console.WriteLine(rec.Dump());
+                    actual.Add(rec);
             }
+
+            CollectionAssert.AreEqual(expected, actual);
         }
 
-        static void Sample30()
+        [Test]
+        public static void Sample30()
         {
             StringBuilder msg = new StringBuilder();
-            using (var p = new ChoXmlReader("sample30.xml")
+            using (var p = new ChoXmlReader(FileNameSample30XML)
                 .WithXPath("/")
                 //.WithField("packages", fieldName: "Package")
                 .Configure(c => c.EmptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Ignore)
@@ -1600,11 +2697,31 @@ namespace ChoXmlReaderTest
                 //	w.Write(p);
                 //}
             }
-            Console.WriteLine(msg.ToString());
+            using (var sw = new StreamWriter(FileNameSample30ActualJSON))
+                sw.Write(msg.ToString());
+            FileAssert.AreEqual(FileNameSample30ExpectedJSON, FileNameSample30ActualJSON);
         }
 
-        static void JSONArrayTest()
+        [Test]
+        public static void JSONArrayTest()
         {
+            string expected = @"""ApplicationCrediential"": {
+ ""ConsumerKey"": {
+   ""Consumer"": [
+     {
+       ""isActive"": ""false"",
+       ""#text"": ""Tom""
+     },
+     {
+       ""#text"": ""Mark""
+     }
+   ]
+ },
+ ""ConsumerSecret"": null
+}
+";
+            string actual = null;
+
             string xml = @"<GetItemRequest xmlns:json=""http://james.newtonking.com/projects/json"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema"">
     <ApplicationCrediential>
         <ConsumerKey>
@@ -1625,18 +2742,27 @@ namespace ChoXmlReaderTest
             )
             {
                 foreach (var rec in p)
-                    Console.WriteLine(ChoJSONWriter.ToText(rec));
+                    msg.AppendLine(ChoJSONWriter.ToText(rec));
 
                 //var x = p.First();
                 //Console.WriteLine(ChoJSONWriter.ToText(x));
                 //Console.WriteLine(ChoXmlWriter.ToText(x));
             }
 
-            Console.WriteLine(msg.ToString());
+            actual = msg.ToString();
+
+            Assert.AreEqual(expected, actual);
         }
 
-        static void Sample22()
+        [Test]
+        public static void Sample22()
         {
+            List<object> expected = new List<object>
+            {
+                new ChoDynamicObject {{"dateprodstart",new DateTime(2018,3,19)}}
+            };
+            List<object> actual = new List<object>();
+
             string xml = @"<?xml version=""1.0"" encoding=""utf- 8""?>
 
 <ListItems dateprodstart=""20180319"" heureprodstart=""12:08:36"" 
@@ -1663,30 +2789,70 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
                 )
             {
                 foreach (var rec in p)
-                    Console.WriteLine(rec.Dump());
+                    actual.Add(rec);
             }
+
+            CollectionAssert.AreEqual(expected, actual);
         }
 
-        static void Sample20Test()
+        [Test]
+        public static void Sample20Test()
         {
+            string expected = @"""GetItemRequest"": {
+ ""ApplicationCrediential"": {
+   ""ConsumerKey"": null,
+   ""ConsumerSecret"": {
+     ""nil"": ""true""
+   }
+ }
+}";
+            string actual = null;
+
             string xml = @"<GetItemRequest xmlns:xsi=""http://www.w3.org/2001/XMLSchema"">
     <ApplicationCrediential>
         <ConsumerKey></ConsumerKey>
         <ConsumerSecret xsi:nil=""true""></ConsumerSecret>
     </ApplicationCrediential>
 </GetItemRequest>";
-
+            
             //ChoXmlSettings.XmlSchemaNamespace = "http://www.w3.org/2001/XMLSchema";
             using (var p = new ChoXmlReader(new StringReader(xml))
                 .WithXPath("/")
             )
             {
                 var x = p.First();
-                Console.WriteLine(ChoJSONWriter.ToText(x));
+                actual = ChoJSONWriter.ToText(x);
             }
+
+            Assert.AreEqual(expected, actual);
         }
-        static void Sample21()
+
+        [Test]
+        public static void Sample21()
         {
+            
+            List<object> expected = new List<object>
+            {
+                @"{
+ ""type"": ""MCS"",
+ ""id"": ""id1"",
+ ""description"": ""desc1""
+}",@"{
+ ""type"": ""MCS"",
+ ""id"": ""id2"",
+ ""description"": ""desc2""
+}",@"{
+ ""type"": ""MCM"",
+ ""id"": ""id3"",
+ ""description"": ""desc3""
+}",@"{
+ ""type"": ""MCM"",
+ ""id"": ""id4"",
+ ""description"": ""desc4""
+}"
+            };
+            List<object> actual = new List<object>();
+
             string xml = @"<AdapterCards>
     <cards type=""MCS"">
         <card>
@@ -1721,33 +2887,46 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
             )
             {
                 foreach (var rec in p.SelectMany(r1 => r1.cards == null ? Enumerable.Empty<object>() : ((dynamic[])r1.cards).Select(r2 => new { type = r1.type, id = r2.id, description = r2.description })))
-                    Console.WriteLine(ChoJSONWriter.ToText(rec));
+                    actual.Add(ChoJSONWriter.ToText(rec));
             }
 
+            CollectionAssert.AreEqual(expected, actual);
         }
 
-        static void Sample19()
+        [Test]
+        public static void Sample19()
         {
-            using (var p = new ChoXmlReader("sample19.xml")
+            List<object> expected = new List<object>
+            {
+                new ChoDynamicObject("WorkUnit") { { "ID", 130 }, { "EmployeeID", 3 }, { "AllocationID", 114 }, { "TaskID", 239 }, { "ProjectID", 26 }, { "ProjectName","LIK Template"} } 
+            };
+            List<object> actual = null;
+
+            using (var p = new ChoXmlReader(FileNameSample19XML)
                 //.WithXmlNamespace("tlp", "http://www.timelog.com/XML/Schema/tlp/v4_4")
                 )
             {
-                //foreach (var rec in p)
-                //	Console.WriteLine(rec.Dump());
-                //return;
-                using (var w = new ChoCSVWriter(Console.Out)
-        .WithFirstLineHeader()
-        )
-                {
-                    w.Write(p);
-                }
+                actual = p.ToList();
+        //        //foreach (var rec in p)
+        //        //	Console.WriteLine(rec.Dump());
+        //        //return;
+        //        using (var w = new ChoCSVWriter(Console.Out)
+        //.WithFirstLineHeader()
+        //)
+        //        {
+        //            w.Write(p);
+        //        }
 
-                Console.WriteLine();
+        //        Console.WriteLine();
             }
+
+            CollectionAssert.AreEqual(expected, actual);
         }
-        static void Sample18()
+
+        [Test]
+        public static void Sample18()
         {
-            using (var p = new ChoXmlReader("sample18.xml")
+            using (var p = new ChoXmlReader(FileNameSample18XML)
                 )
             {
                 //foreach (dynamic rec in p)
@@ -1796,36 +2975,118 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
             public int ID { get; set; }
         }
 
-        static void NoEncodeTest()
+        [Test]
+        public static void NoEncodeTest()
         {
-            using (var xr = new ChoXmlReader("NoEncode.xml")
+            List<object> expected = new List<object>
+            {
+                new ChoDynamicObject{{"id","&lt;bk101&gt;"}},
+                new ChoDynamicObject{{"id","bk102"}},
+                new ChoDynamicObject{{"id","bk103"}}
+            };
+            List<object> actual = new List<object>();
+
+            using (var xr = new ChoXmlReader(FileNameNoEncodeXML)
                 .WithField("id", encodeValue: false)
             )
             {
                 foreach (dynamic rec in xr)
-                    Console.WriteLine(rec.id);
+                    actual.Add(rec);
             }
+
+            CollectionAssert.AreEqual(expected, actual);
         }
 
 
-        static void Sample17()
+        [Test]
+        public static void Sample17()
         {
-            using (var xr = new ChoXmlReader("Sample17.xml").WithXPath("//HouseInfo")
+            List<object> expected = new List<object>
+            {
+                new ChoDynamicObject {{"HouseNumber",(int)1},{"RoomInfos",new List<RoomInfo> { new RoomInfo {  RoomNumber = 1}, new RoomInfo {  RoomNumber = 2}, new RoomInfo { RoomNumber = 2  } }},
+                    { "Furnitures", new Table { Color = "Blue"} } }
+            };
+            List<object> actual = new List<object>();
+
+            using (var xr = new ChoXmlReader(FileNameSample17XML).WithXPath("//HouseInfo")
                 .WithField("HouseNumber", fieldType: typeof(int))
                 .WithField("RoomInfos", xPath: "//HouseLog/RoomInfo", fieldType: typeof(List<RoomInfo>))
                 .WithField("Furnitures", xPath: "//HouseLog/RoomInfo/Furnitures/Table", fieldType: typeof(Table))
             )
             {
                 foreach (dynamic rec in xr)
-                    Console.WriteLine(rec.Dump());
+                    actual.Add(rec);
             }
-        }
 
-        static void HTMLTableToCSV()
+            CollectionAssert.AreEqual(expected, actual);
+        }
+        public static string FileNameHtmlTableXML => "HtmlTable.xml";
+        public static string FileNameHTMLTableToCSVActualCSV => "HtmlTableToCSVActual.csv";
+        public static string FileNameHTMLTableToCSVExpectedCSV => "HtmlTableToCSVExpected.csv";
+        public static string FileNameSampleXML => "sample.xml";
+        public static string FileNameXmlToCSVSampleActualCSV => "XmlToCSVSampleActual.csv";
+        public static string FileNameXmlToCSVSampleExpectedCSV => "XmlToCSVSampleExpected.csv";
+        public static string FileNameXmlToCSVSample2ActualCSV => "XmlToCSVSample2Actual.csv";
+        public static string FileNameXmlToCSVSample2ExpectedCSV => "XmlToCSVSample2Expected.csv";
+        public static string FileNameXmlToCSVSample3ActualCSV => "XmlToCSVSample3Actual.csv";
+        public static string FileNameXmlToCSVSample3ExpectedCSV => "XmlToCSVSample3Expected.csv";
+        public static string FileNameXmlToCSVSample5ActualCSV => "XmlToCSVSample5Actual.csv";
+        public static string FileNameXmlToCSVSample5ExpectedCSV => "XmlToCSVSample5Expected.csv";
+        public static string FileNameXmlToCSVSample6ActualCSV => "XmlToCSVSample6Actual.csv";
+        public static string FileNameXmlToCSVSample6ExpectedCSV => "XmlToCSVSample6Expected.csv";
+        public static string FileNameXmlToCSVSample7ActualCSV => "XmlToCSVSample7Actual.csv";
+        public static string FileNameXmlToCSVSample7ExpectedCSV => "XmlToCSVSample7Expected.csv";
+        public static string FileNameSample2XML => "sample2.xml";
+        public static string FileNameSample3XML => "sample3.xml";
+        public static string FileNameSample4XML => "sample4.xml";
+        public static string FileNameSample5XML => "sample5.xml";
+        public static string FileNameSample6XML => "sample6.xml";
+        public static string FileNameSample7XML => "sample7.xml";
+        public static string FileNameSample8XML => "sample8.xml";
+        public static string FileNameSample8ActualJSON => "sample8Actual.json";
+        public static string FileNameSample8ExpectedJSON => "sample8Expected.json";
+        public static string FileNameSample9XML => "sample9.xml";
+        public static string FileNameSample10XML => "sample10.xml";
+        public static string FileNameSample11XML => "sample11.xml";
+        public static string FileNameSample12XML => "sample12.xml";
+        public static string FileNameSample13XML => "sample13.xml";
+        public static string FileNameXmlNullTestActualJSON => "XmlNullTestActual.json";
+        public static string FileNameXmlNullTestExpectedJSON => "XmlNullTestExpected.json";
+        public static string FileNameSample14XML => "sample14.xml";
+        public static string FileNameSample14ActualXML => "sample14Actual.xml";
+        public static string FileNameSample14ExpectedXML => "sample14Expected.xml";
+        public static string FileNameSample15XML => "sample15.xml";
+        public static string FileNameSample16XML => "sample16.xml";
+        public static string FileNameSample17XML => "sample17.xml";
+        public static string FileNameSample18XML => "sample18.xml";
+        public static string FileNameSample19XML => "sample19.xml";
+        public static string FileNameSample20XML => "sample20.xml";
+        public static string FileNameSample21XML => "sample21.xml";
+        public static string FileNameSample22XML => "sample22.xml";
+        public static string FileNameSample30XML => "sample30.xml";
+        public static string FileNameSample30ActualJSON => "sample30Actual.json";
+        public static string FileNameSample30ExpectedJSON => "sample30Expected.json";
+        public static string FileNameSample48XML => "sample48.xml";
+        public static string FileNameSample49XML => "sample49.xml";
+        public static string FileNameSample50XML => "sample50.xml";
+        public static string FileNameSample70XML => "sample70.xml";
+        public static string FileNameSample71XML => "sample71.xml";
+
+        public static string FileNameXmlToJSONSample4ActualJSON => "XmlToJSONSample4Actual.json";
+        public static string FileNameXmlToJSONSample4ExpectedJSON => "XmlToJSONSample4Expected.json";
+        public static string FileNameJSONToXmlSample4JSON => "JSONToXmlSample4.json";
+        public static string FileNameJSONToXmlSample4ActualXML => "JSONToXmlSample4Actual.xml";
+        public static string FileNameJSONToXmlSample4ExpectedXML => "JSONToXmlSample4Expected.xml";
+        public static string FileNameNoEncodeXML => "NoEncode.xml";
+        public static string FileNamePivot1XML => "Pivot1.xml";
+
+
+        [Test]
+        public static void HTMLTableToCSV()
         {
-            using (var cr = new ChoCSVWriter("HtmlTable.csv").WithFirstLineHeader())
+            using (var cr = new ChoCSVWriter(FileNameHTMLTableToCSVActualCSV).WithFirstLineHeader())
             {
-                using (var xr = new ChoXmlReader("HTMLTable.xml").WithXPath("//tbody/tr")
+                using (var xr = new ChoXmlReader(FileNameHtmlTableXML).WithXPath("//tbody/tr")
                     .WithField("Lot", xPath: "td[1]", fieldType: typeof(int))
                     .WithField("Op", xPath: "td[2]", fieldType: typeof(int))
                     .WithField("Status", xPath: "td[3]", fieldType: typeof(string))
@@ -1839,10 +3100,15 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
                     cr.Write(xr);
                 }
             }
+
+            FileAssert.AreEqual(FileNameHTMLTableToCSVExpectedCSV, FileNameHTMLTableToCSVActualCSV);
         }
 
-        static void BulkLoad1()
+        [Test]
+        public static void BulkLoad1()
         {
+            Assert.Fail(@"Database file C:\USERS\NRAJ39\DOWNLOADS\ADVENTUREWORKS2012_DATA.MDF not attached.");
+
             string connectionstring = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=C:\USERS\NRAJ39\DOWNLOADS\ADVENTUREWORKS2012_DATA.MDF;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
 
             int houseNo = 0;
@@ -1885,34 +3151,63 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
 
         }
 
-        static void Sample16()
+        [Test]
+        public static void Sample16()
         {
-            using (var parser = new ChoXmlReader("sample16.xml")
+            List<object> expected = new List<object>
+            {
+                new Person{ FirstName = "John", LastName = "Doe", DateOfBirth = new DateTime(1900,1,12), Address = "100, Example Street"}
+            };
+            List<object> actual = new List<object>();
+
+            using (var parser = new ChoXmlReader(FileNameSample16XML)
             )
             {
                 var dict = parser.ToDictionary(i => (string)i.name, i => (object)i.value, StringComparer.CurrentCultureIgnoreCase);
                 var person = dict.ToObject<Person>();
-                {
-                    Console.WriteLine("{0}", person.DateOfBirth);
-                }
+
+                actual.Add(person);
             }
+
+            CollectionAssert.AreEqual(expected, actual);
         }
 
-        static void Sample12()
+        [Test]
+        public static void Sample12()
         {
-            using (var parser = new ChoXmlReader("sample12.xml")
+            List<object> expected = new List<object>
+            {
+                new ChoDynamicObject{{"SelectedIdValue",new SelectedIds {  Id = new int[] {108,110,111}} }}
+            };
+            List<object> actual = new List<object>();
+
+            using (var parser = new ChoXmlReader(FileNameSample12XML)
             .WithField("SelectedIdValue", xPath: "//SelectedIds", fieldType: typeof(SelectedIds))
             )
             {
                 foreach (dynamic rec in parser)
                 {
-                    Console.WriteLine("{0}", rec.GetXml());
+                    actual.Add(rec);
+//                    Console.WriteLine("{0}", rec.GetXml());
                 }
             }
+
+            CollectionAssert.AreEqual(expected, actual);
         }
 
+        [Test]
         public static void DynamicXmlTest()
         {
+            string expected = @"<Item1 Id=""100"" Name=""Raj"">
+  <StartDate @Value=""0001-01-11T00:00:00"" />
+  <SelectedIds>
+    <Id @Value=""101"" />
+    <SelectedId @Value=""102"" />
+    <SelectedId @Value=""103"" />
+  </SelectedIds>
+</Item1>";
+            string actual = null;
+
             ChoDynamicObject src = new ChoDynamicObject("Item1");
 
             IDictionary<string, object> x = src as IDictionary<string, object>;
@@ -1936,26 +3231,39 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
 
             x.Add("SelectedIds", new object[] { id1, id2, id3 });
 
-            Console.WriteLine(src.GetXml());
+            actual = src.GetXml();
+
+            Assert.AreEqual(expected, actual);
         }
 
+        [Test]
         public static void Sample15()
         {
-            using (var parser = new ChoXmlReader("sample15.xml")
+            List<object> expected = new List<object>
+            {
+                "I am not sure, whats expected. Really 2 SOAP-ENV:Header entries?"
+            };
+            List<object> actual = new List<object>();
+
+            using (var parser = new ChoXmlReader(FileNameSample15XML)
             )
             {
                 foreach (dynamic rec in parser)
                 {
-                    Console.WriteLine(ChoUtility.Dump(rec));
+                    actual.Add(rec);
+//                    Console.WriteLine(ChoUtility.Dump(rec));
                 }
             }
+
+            CollectionAssert.AreEqual(expected, actual);
         }
 
+        [Test]
         public static void Sample14()
         {
-            using (var w = new ChoXmlWriter("sample14out.xml"))
+            using (var w = new ChoXmlWriter(FileNameSample14ActualXML))
             {
-                using (var parser = new ChoXmlReader("sample14.xml")
+                using (var parser = new ChoXmlReader(FileNameSample14XML)
             )
                 {
                     foreach (dynamic rec in parser)
@@ -1971,59 +3279,152 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
                     }
                 }
             }
+
+            FileAssert.AreEqual(FileNameSample14ExpectedXML, FileNameSample14ActualXML);
+            Assert.Fail("Missing Book with id 101, but source-xml is a valid xml");
         }
 
+        [Test]
         public static void NullableTest()
         {
+            object expected = new Item { Number = 100, ItemName = "TestName1", ItemId = 1 };
+            object actual = null;
+
             string xml = @"<?xml version=""1.0""?>
     <Item Number = ""100"" ItemName = ""TestName1"" ItemId = ""1"" />";
 
             XDocument doc = XDocument.Parse(xml);
 
-            var item = ChoXmlReader<Item>.LoadXElements(new XElement[] { doc.Root }).FirstOrDefault();
-            Console.WriteLine($"ItemId: {item.ItemId}");
-            Console.WriteLine($"ItemName: {item.ItemName}");
-            Console.WriteLine($"Number: {item.Number}");
-            Console.WriteLine($"Created: {item.Created}");
+            actual = ChoXmlReader<Item>.LoadXElements(new XElement[] { doc.Root }).FirstOrDefault();
+
+            Assert.AreEqual(expected, actual);
         }
 
+        [Test]
         public static void Pivot1()
         {
-            using (var parser = new ChoXmlReader("pivot1.xml").WithXPath(@"//Values/*")
+            string expected = @"Column1,Column2,Column3
+A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
+60,196,200";
+            string actual = null;
+
+            using (var parser = new ChoXmlReader(FileNamePivot1XML).WithXPath(@"//Values/*")
                 .WithField("Item")
                 .WithField("Value")
             )
             {
-                Console.WriteLine(ChoCSVWriter.ToTextAll(parser.Cast<ChoDynamicObject>().Transpose(false),
-                    new ChoCSVRecordConfiguration().Configure(c => c.FileHeaderConfiguration.HasHeaderRecord = true)));
+
+                actual = ChoCSVWriter.ToTextAll(parser.Cast<ChoDynamicObject>().Transpose(false),
+                    new ChoCSVRecordConfiguration().Configure(c => c.FileHeaderConfiguration.HasHeaderRecord = true));
             }
+
+            Assert.AreEqual(expected, actual);
+            // I am not sure, if that is correct;
         }
 
-        static void Sample6()
+        [Test]
+        public static void Sample6()
         {
-            using (var parser = new ChoXmlReader<JobApplication>("sample6.xml")
+            List<object> expected = new List<object>
+            {
+                new JobApplication { JobType = "REQUESTED", JobApplicant = new object[]{
+                    new ChoDynamicObject("Applicant") {
+                        { "social_security_number", "999999999" },
+                        {"type", "PB" },
+                        { "date_of_birth", "1972-10-01T00:00:00.0000000" },
+                        {"first_name", "Thomas" },
+                        { "last_name", "Edison" },
+                        { "Addresses", new object[]{
+                            new ChoDynamicObject("Address"){ { "city", "Portland" },{ "state_code_id", "MI" },{ "country_code", "USA" },{ "postal_code", "12345" },{ "item_code", "CURRENT" },{ "street_number", "6297" },{ "street", "LAKE ARBOR" } },
+                            new ChoDynamicObject("Address"){{"item_code","PREVIOUS"}}
+                        } },
+                        { "Communications", new object[]{
+                            new ChoDynamicObject("Communication"){ { "item_code", "PEMAIL" } , { "com", "edison@gmail.com" } , { "contact_type", "CU" } },
+                            new ChoDynamicObject("Communication"){ { "item_code", "HOME" } , { "com", "(123)-456-7890" } , { "contact_type", "CU" } },
+                            new ChoDynamicObject("Communication"){ { "item_code", "OTHER" } , { "contact_type", "CU" } },
+                            new ChoDynamicObject("Communication"){ { "item_code", "WORK" } , { "com", "(100)-200-3000" } , { "contact_type", "CU" } }
+                        } }},
+                    new ChoDynamicObject("Applicant") {
+                        { "social_security_number", "123456789" },
+                        {"type", "CB" },
+                        { "date_of_birth", "1976-10-01T00:00:00.0000000" },
+                        {"first_name", "Mary" },
+                        { "last_name", "Edison" },
+                        { "Addresses", new object[]{
+                            new ChoDynamicObject("Address"){ { "city", "BarHarBor" },{ "state_code_id", "MI" },{ "country_code", "USA" },{ "postal_code", "12345" },{ "item_code", "CURRENT" },{ "street_number", "6297" },{ "street", "LAKE ARBOR" } },
+                            new ChoDynamicObject("Address"){{"item_code","PREVIOUS"}}
+                        } },
+                        { "Communications", new object[]{
+                            new ChoDynamicObject("Communication"){ { "item_code", "PEMAIL" } , { "com", "mary@gmail.com" } , { "contact_type", "CU" } },
+                            new ChoDynamicObject("Communication"){ { "item_code", "HOME" } , { "com", "(999)-456-7890" } , { "contact_type", "CU" } },
+                            new ChoDynamicObject("Communication"){ { "item_code", "OTHER" } , { "contact_type", "CU" } },
+                            new ChoDynamicObject("Communication"){ { "item_code", "WORK" } , { "com", "(300)-200-3000" } , { "contact_type", "CU" } }
+                        } }}} },
+                new JobApplication { JobType = "RECOMMENDED", JobApplicant = new object[]{
+                    new ChoDynamicObject("Applicant") {
+                        { "social_security_number", "999999999" },
+                        {"type", "PB" },
+                        { "date_of_birth", "1972-10-01T00:00:00.0000000" },
+                        {"first_name", "Thomas" },
+                        { "last_name", "Edison" },
+                        { "Addresses", new object[]{
+                            new ChoDynamicObject("Address"){ { "city", "Portland" },{ "state_code_id", "MI" },{ "country_code", "USA" },{ "postal_code", "12345" },{ "item_code", "CURRENT" },{ "street_number", "6297" },{ "street", "LAKE ARBOR" } },
+                            new ChoDynamicObject("Address"){{"item_code","PREVIOUS"}}
+                        } },
+                        { "Communications", new object[]{
+                            new ChoDynamicObject("Communication"){ { "item_code", "PEMAIL" } , { "com", "edison@gmail.com" } , { "contact_type", "CU" } },
+                            new ChoDynamicObject("Communication"){ { "item_code", "HOME" } , { "com", "(123)-456-7890" } , { "contact_type", "CU" } },
+                            new ChoDynamicObject("Communication"){ { "item_code", "OTHER" } , { "contact_type", "CU" } },
+                            new ChoDynamicObject("Communication"){ { "item_code", "WORK" } , { "com", "(100)-200-3000" } , { "contact_type", "CU" } }
+                        } }},
+                    new ChoDynamicObject("Applicant") {
+                        { "social_security_number", "123456789" },
+                        {"type", "CB" },
+                        { "date_of_birth", "1976-10-01T00:00:00.0000000" },
+                        {"first_name", "Mary" },
+                        { "last_name", "Edison" },
+                        { "Addresses", new object[]{
+                            new ChoDynamicObject("Address"){ { "city", "BarHarBor" },{ "state_code_id", "MI" },{ "country_code", "USA" },{ "postal_code", "12345" },{ "item_code", "CURRENT" },{ "street_number", "6297" },{ "street", "LAKE ARBOR" } },
+                            new ChoDynamicObject("Address"){{"item_code","PREVIOUS"}}
+                        } },
+                        { "Communications", new object[]{
+                            new ChoDynamicObject("Communication"){ { "item_code", "PEMAIL" } , { "com", "mary@gmail.com" } , { "contact_type", "CU" } },
+                            new ChoDynamicObject("Communication"){ { "item_code", "HOME" } , { "com", "(999)-456-7890" } , { "contact_type", "CU" } },
+                            new ChoDynamicObject("Communication"){ { "item_code", "OTHER" } , { "contact_type", "CU" } },
+                            new ChoDynamicObject("Communication"){ { "item_code", "WORK" } , { "com", "(300)-200-3000" } , { "contact_type", "CU" } }
+                        } }} }},
+            };
+            List<object> actual = new List<object>();
+
+            using (var parser = new ChoXmlReader<JobApplication>(FileNameSample6XML)
             )
             {
                 foreach (dynamic rec in parser)
                 {
-                    Console.WriteLine(ChoUtility.Dump(rec));
+                    actual.Add(rec);
                 }
             }
+
+            CollectionAssert.AreEqual(expected, actual);
         }
 
-        private static void XmlNullTest()
+        [Test]
+        public static void XmlNullTest()
         {
-            using (var parser = new ChoXmlReader("sample13.xml")
+            using (var parser = new ChoXmlReader(FileNameSample13XML)
             )
             {
                 //var c = parser.Select(x => (string)x.AustrittDatum).ToArray();
-                using (var jw = new ChoJSONWriter("sample13.json"))
-                    jw.Write(new { AustrittDatum = parser.Select(x => (string)x.AustrittDatum).ToArray() });
+                using (var jw = new ChoJSONWriter(FileNameXmlNullTestActualJSON))
+                    //jw.Write(parser.ToArray());
+                    jw.Write(new { AustrittDatum = parser.Select(x => x.AustrittDatum).ToArray() });
+                    //jw.Write(new { AustrittDatum = parser.Select(x => (string)x.AustrittDatum.ToString()).ToArray() });
             }
 
+            FileAssert.AreEqual(FileNameXmlNullTestExpectedJSON, FileNameXmlNullTestActualJSON);
         }
 
-        private static string EmpXml = @"<Employees>
+        private static string EmpXml => @"<Employees>
                 <Employee Id='1'>
                     <Name isActive = 'true'>Tom</Name>
                 </Employee>
@@ -2033,24 +3434,27 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
             </Employees>
         ";
 
-        static void XmlToCSVSample7()
+        [Test]
+        public static void XmlToCSVSample7()
         {
-            using (var parser = new ChoXmlReader("sample7.xml").WithXPath("/UpdateDB/Transaction")
+            using (var parser = new ChoXmlReader(FileNameSample7XML).WithXPath("/UpdateDB/Transaction")
                 .WithField("Table", xPath: "/Insert/Table")
                 .WithField("szCustomerID", xPath: "/Insert/Set/szCustomerID")
                 .WithField("szCustomerName", xPath: "/Insert/Set/szCustomerName")
                 .WithField("szExternalID", xPath: "/Insert/Set/szExternalID")
                 )
             {
-                using (var writer = new ChoCSVWriter("sample7.csv").WithFirstLineHeader())
+                using (var writer = new ChoCSVWriter(FileNameXmlToCSVSample7ActualCSV).WithFirstLineHeader())
                     writer.Write(parser.Where(r => r.Table == "CUSTOMER").Select(r => new { szCustomerID = r.szCustomerID, szCustomerName = r.szCustomerName, szExternalID = r.szExternalID }));
             }
 
+            FileAssert.AreEqual(FileNameXmlToCSVSample7ExpectedCSV, FileNameXmlToCSVSample7ActualCSV);
         }
 
-        static void XmlToCSVSample6()
+        [Test]
+        public static void XmlToCSVSample6()
         {
-            using (var parser = new ChoXmlReader("sample6.xml").WithXPath("JobApplications")
+            using (var parser = new ChoXmlReader(FileNameSample6XML).WithXPath("JobApplications")
                 .WithField("ID", xPath: "@id")
                 .WithField("PB_SSN", xPath: "/JobApplication[@job_type='REQUESTED']/JobApplicationStates/JobApplicationState/Applicants/Applicant[@type='PB']/@social_security_number")
                 .WithField("PB_FIRST_NAME", xPath: "/JobApplication[@job_type='REQUESTED']/JobApplicationStates/JobApplicationState/Applicants/Applicant[@type='PB']/@first_name")
@@ -2064,60 +3468,67 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
                 .WithField("CB_PEMAIL", xPath: "/JobApplication[@job_type='REQUESTED']/JobApplicationStates/JobApplicationState/Applicants/Applicant[@type='CB']/Communications/Communication[@item_code='PEMAIL']/@com")
          )
             {
-                using (var writer = new ChoCSVWriter("sample6.csv").WithFirstLineHeader())
+                using (var writer = new ChoCSVWriter(FileNameXmlToCSVSample6ActualCSV).WithFirstLineHeader())
                     writer.Write(parser);
             }
 
+            FileAssert.AreEqual(FileNameXmlToCSVSample6ExpectedCSV, FileNameXmlToCSVSample6ActualCSV);
         }
 
 
-        static void XmlToCSVSample5()
+        [Test]
+        public static void XmlToCSVSample5()
         {
-            using (var parser = new ChoXmlReader("sample5.xml").WithXPath("/PRICE")
+            using (var parser = new ChoXmlReader(FileNameSample5XML).WithXPath("/PRICE")
             )
             {
-                using (var writer = new ChoCSVWriter("sample5.csv").WithFirstLineHeader())
+                using (var writer = new ChoCSVWriter(FileNameXmlToCSVSample5ActualCSV).WithFirstLineHeader())
                     writer.Write(parser);
             }
 
+            FileAssert.AreEqual(FileNameXmlToCSVSample5ExpectedCSV, FileNameXmlToCSVSample5ActualCSV);
         }
 
-        static void Sample8Test()
+        [Test]
+        public static void Sample8Test()
         {
-            using (var parser = new ChoXmlReader("sample8.xml").WithXPath("/root/data")
+            using (var parser = new ChoXmlReader(FileNameSample8XML).WithXPath("/root/data")
                 .WithField("id", xPath: "@name")
                 .WithField("text", xPath: "/value")
             )
             {
-                using (var writer = new ChoJSONWriter("sample8.json")
+                using (var writer = new ChoJSONWriter(FileNameSample8ActualJSON)
                     .Configure(c => c.SupportMultipleContent = true)
                     )
                     writer.Write(new { Texts = parser.ToArray() });
             }
+
+            FileAssert.AreEqual(FileNameSample8ExpectedJSON, FileNameSample8ActualJSON);
         }
 
-        static void Sample9Test()
+        [Test]
+        public static void Sample9Test()
         {
-            StringBuilder sb = new StringBuilder();
-            //using (var parser = new ChoXmlReader("sample9.xml", "abc.com/api").WithXPath("/")
-            //    )
-            //{
-            //    var x = parser.SelectMany(r1 => ((dynamic[])r1.views).Select(r2 =>
-            //    new
-            //    {
-            //        view_id = r2.id,
-            //        view_name = r2.name,
-            //        view_content_url = r2.contentUrl,
-            //        view_total_count = Int32.Parse(r1.pagination.totalAvailable)
-            //    }));
-
-            //    Console.WriteLine(ChoJSONWriter.ToTextAll(x));
-            //}
-
-            //return;
+            string expected = @"[
+ {
+  ""view_id"": ""2adaf1b2"",
+  ""view_name"": ""Users by Function"",
+  ""view_content_url"": ""ExampleWorkbook/sheets/UsersbyFunction"",
+  ""view_total_count"": 95,
+  ""view_total_available"": 2
+ },
+ {
+  ""view_id"": ""09ecb39a"",
+  ""view_name"": ""Users by Site"",
+  ""view_content_url"": ""ExampleWorkbook/sheets/UsersbySite"",
+  ""view_total_count"": 95,
+  ""view_total_available"": 2
+ }
+]";
+            string actual = null;
 
             int totalAvailable;
-            using (var parser = new ChoXmlReader("sample9.xml", "abc.com/api").WithXPath("/tsResponse/pagination")
+            using (var parser = new ChoXmlReader(FileNameSample9XML, "abc.com/api").WithXPath("/tsResponse/pagination")
                 .WithField("totalAvailable", fieldType: typeof(int))
                 .WithField("pageNumber", fieldType: typeof(int))
             )
@@ -2125,7 +3536,9 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
                 totalAvailable = parser.FirstOrDefault().totalAvailable;
             }
 
-            using (var parser = new ChoXmlReader("sample9.xml", "abc.com/api").WithXPath("/tsResponse/views/view")
+
+            StringBuilder sb = new StringBuilder();
+            using (var parser = new ChoXmlReader(FileNameSample9XML, "abc.com/api").WithXPath("/tsResponse/views/view")
                 .WithField("view_id", xPath: "@id")
                 .WithField("view_name", xPath: "@name")
                 .WithField("view_content_url", xPath: "@contentUrl")
@@ -2141,12 +3554,30 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
                 }
             }
 
-            Console.WriteLine(sb.ToString());
-        }
+            actual = sb.ToString();
 
-        static void Sample10Test()
+            Assert.AreEqual(expected, actual);
+        }
+        [Test]
+        public static void Sample10Test()
         {
-            using (var parser = new ChoXmlReader("sample10.xml").WithXPath("/root/body/e1")
+            List<object> expected = new List<object>
+            {
+                new ChoDynamicObject{
+                    { "tag1","testt1"},
+                    { "tag2","testt2"},
+                    { "tag2a","anonym"},
+                    { "tag3", "testt3" },
+                    { "tag4","testt4"},
+                    { "t51","tttt"},
+                    { "t52","ttt"},
+                    { "t53","ttt"},
+                    { "r1",1},
+                    { "r2",0} }
+            };
+            List<object> actual = new List<object>();
+
+            using (var parser = new ChoXmlReader(FileNameSample10XML).WithXPath("/root/body/e1")
                 .WithField("tag1", xPath: "en/tag1")
                 .WithField("tag2", xPath: "en/tag2/text()")
                 .WithField("tag2a", xPath: "en/tag2/@user")
@@ -2159,27 +3590,35 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
                 .WithField("r2", xPath: "r2/tr1")
             )
             {
-                Console.WriteLine(ChoJSONWriter.ToTextAll(parser));
-
-                //foreach (dynamic rec in parser)
-                //{
-                //    Console.WriteLine(rec.Dump());
-                //}
-                //using (var writer = new ChoJSONWriter("sample10.json")
-                //    )
-                //    writer.Write(parser);
+                actual = parser.ToList();
             }
+
+            CollectionAssert.AreEqual(expected, actual);
         }
 
-        static void Sample11Test()
+        [Test]
+        public static void Sample11Test()
         {
-            using (var parser = new ChoXmlReader("sample11.xml").WithXPath("/members/father")
+            List<object> expected = new List<object>
+            {
+                new ChoDynamicObject
+                {
+                    {"id",1 },
+                    {"sons", new object[] {
+                        new ChoDynamicObject { { "id", "11" }, { "name", "Tom1" }, { "address", new ChoDynamicObject {{"street","10 River Rd" },{ "city", "Edison" },{ "state", "NJ" } } }, { "workbook", new ChoDynamicObject { { "id", "9fb2948d" } } },{ "owner", new ChoDynamicObject { { "id", "c2abaaa9" } } },{"usage",new ChoDynamicObject{ { "totalViewCount", "95" },{"#text","sdsad" } } } },
+                        new ChoDynamicObject { { "id", "12" }, { "name", "Tom2" }, { "address", new ChoDynamicObject {{"street","10 Madison Ave" },{ "city", "New York" },{ "state", "NY" } } }, { "workbook", new ChoDynamicObject { { "id", "9fb2948d" } } },{ "owner", new ChoDynamicObject { { "id", "c2abaaa9" } } },{"usage",new ChoDynamicObject{ { "totalViewCount", "95" },{"#text","sdsad" } } } }
+                    } } }
+            };
+            List<object> actual = new List<object>();
+
+            using (var parser = new ChoXmlReader(FileNameSample11XML).WithXPath("/members/father")
                 .WithField("id")
                 .WithField("sons")
             )
             {
-                Console.WriteLine(ChoJSONWriter.ToTextAll(parser));
+                actual = parser.ToList();
             }
+            CollectionAssert.AreEqual(expected, actual);
         }
 
         static void xMain1(string[] args)
@@ -2253,23 +3692,27 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
             [XmlElement]
             public List<VariableData> VariableData { get; set; }
         }
-        static void JSONToXmlSample4()
+
+        [Test]
+        public static void JSONToXmlSample4()
         {
-            using (var parser = new ChoJSONReader<ProductionOrderFile>("sample3.json").Configure(c => c.UseJSONSerialization = true)
+            using (var parser = new ChoJSONReader<ProductionOrderFile>(FileNameJSONToXmlSample4JSON).Configure(c => c.UseJSONSerialization = true)
     )
             {
-                using (var writer = new ChoXmlWriter<ProductionOrderFile>("sample31.xml").Configure(c => c.UseXmlSerialization = true))
+                using (var writer = new ChoXmlWriter<ProductionOrderFile>(FileNameJSONToXmlSample4ActualXML).Configure(c => c.UseXmlSerialization = true))
                     writer.Write(parser);
-                return;
             }
+
+            FileAssert.AreEqual(FileNameJSONToXmlSample4ExpectedXML, FileNameJSONToXmlSample4ActualXML);
         }
 
-        static void XmlToJSONSample4()
+        [Test]
+        public static void XmlToJSONSample4()
         {
-            using (var parser = new ChoXmlReader<ProductionOrderFile>("sample4.xml").WithXPath("/").Configure(c => c.UseXmlSerialization = true)
+            using (var parser = new ChoXmlReader<ProductionOrderFile>(FileNameSample4XML).WithXPath("/").Configure(c => c.UseXmlSerialization = true)
                 )
             {
-                using (var writer = new ChoJSONWriter("sample3.json").Configure(c => c.UseJSONSerialization = true).Configure(c => c.SupportMultipleContent = false).Configure(c => c.Formatting = Newtonsoft.Json.Formatting.None)
+                using (var writer = new ChoJSONWriter(FileNameXmlToJSONSample4ActualJSON).Configure(c => c.UseJSONSerialization = true).Configure(c => c.SupportMultipleContent = false).Configure(c => c.Formatting = Newtonsoft.Json.Formatting.None)
                     )
                     writer.Write(parser);
 
@@ -2281,6 +3724,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
                 //}
             }
 
+            FileAssert.AreEqual(FileNameXmlToJSONSample4ExpectedJSON, FileNameXmlToJSONSample4ActualJSON);
             //using (var parser = new ChoXmlReader("sample4.xml").WithXPath("/")
             //    .WithField("ProductionOrderName", xPath: "ProductionOrderName")
             //    .WithField("Batches", xPath: "//Batches/Batch", isCollection: true, fieldType: typeof(Batch))
@@ -2299,9 +3743,10 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
             //}
         }
 
-        static void XmlToCSVSample3()
+        [Test]
+        public static void XmlToCSVSample3()
         {
-            using (var parser = ChoXmlReader.LoadXElements(XDocument.Load("sample3.xml").XPathSelectElements("//member[name='table']/value/array/data/value"))
+            using (var parser = ChoXmlReader.LoadXElements(XDocument.Load(FileNameSample3XML).XPathSelectElements("//member[name='table']/value/array/data/value"))
                 .WithField("id", xPath: "array/data/value[1]")
                 .WithField("scanTime", xPath: "array/data/value[2]")
                 .WithField("host", xPath: "array/data/value[3]")
@@ -2310,15 +3755,18 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
                 .WithField("protocol", xPath: "array/data/value[6]")
             )
             {
-                using (var writer = new ChoCSVWriter("sample3.csv").WithFirstLineHeader())
+                using (var writer = new ChoCSVWriter(FileNameXmlToCSVSample3ActualCSV).WithFirstLineHeader())
                     writer.Write(parser);
 
             }
 
+            FileAssert.AreEqual(FileNameXmlToCSVSample3ExpectedCSV, FileNameXmlToCSVSample3ActualCSV);
         }
-        static void XmlToCSVSample2()
+
+        [Test]
+        public static void XmlToCSVSample2()
         {
-            using (var parser = new ChoXmlReader("sample2.xml")
+            using (var parser = new ChoXmlReader(FileNameSample2XML)
                 .WithField("messageID")
                 .WithField("orderNumber")
                 .WithField("model")
@@ -2346,28 +3794,44 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
                         e.Skip = true;
                     }
                 };
-                using (var writer = new ChoCSVWriter("sample2.csv").WithFirstLineHeader())
+                using (var writer = new ChoCSVWriter(FileNameXmlToCSVSample2ActualCSV).WithFirstLineHeader())
                     writer.Write(parser);
             }
 
+            FileAssert.AreEqual(FileNameXmlToCSVSample2ExpectedCSV, FileNameXmlToCSVSample2ActualCSV);
         }
 
-        static void XmlToCSVSample()
+        [Test]
+        public static void XmlToCSVSample()
         {
-            using (var parser = new ChoXmlReader("sample.xml").WithXPath("Attributes/Attribute")
+            using (var parser = new ChoXmlReader(FileNameSampleXML).WithXPath("Attributes/Attribute")
                 .WithField("Name", xPath: "Name")
                 .WithField("Value", xPath: "value")
                 )
             {
-                using (var writer = new ChoCSVWriter("sample.csv"))
+                using (var writer = new ChoCSVWriter(FileNameXmlToCSVSampleActualCSV))
                     writer.Write(parser.Select(kvp => kvp.Value).ToExpandoObject());
                 //Console.WriteLine(ChoCSVWriter.ToText(parser.Select(kvp => kvp.Value).ToExpandoObject()));
             }
 
+            FileAssert.AreEqual(FileNameXmlToCSVSampleExpectedCSV, FileNameXmlToCSVSampleActualCSV);
+
+            // Expected file not checked in because of not existent XPath, maybee a Exception-test
+
         }
 
-        static void ToDataTable()
+        [Test]
+        public static void ToDataTable()
         {
+            DataTable expected = new DataTable();
+            expected.Columns.Add("Id",typeof(Int32)).AllowDBNull = false;
+            expected.Columns.Add("Name",typeof(string));
+            expected.Columns.Add("IsActive",typeof(bool)).AllowDBNull = false;
+            expected.Rows.Add(1,"Tom", true);
+            expected.Rows.Add(2,"Mark", false);
+
+            DataTable actual = null;
+
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
@@ -2378,12 +3842,17 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
                 writer.Flush();
                 stream.Position = 0;
 
-                var dt = parser.AsDataTable();
+                actual = parser.AsDataTable();
             }
+
+            DataTableAssert.AreEqual(expected, actual);
         }
 
-        static void LoadTest()
+        [Test]
+        public static void LoadTest()
         {
+            Assert.Fail(@"File C:\temp\EPAXMLDownload1.xml not found.");
+
             DateTime st = DateTime.Now;
             Console.WriteLine("Starting..." + st);
             using (var r = new ChoXmlReader(@"C:\temp\EPAXMLDownload1.xml").NotifyAfter(10000).WithXPath("Document/FacilitySite"))
@@ -2398,16 +3867,34 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
             Console.ReadLine();
         }
 
-        static void LoadTextTest()
+        [Test]
+        public static void LoadTextTest()
         {
+            List<object> expected = new List<object>
+            {
+                new ChoDynamicObject{{"name","xxx"},{"author","Tom"},{"title","C++" } },
+                new ChoDynamicObject{{"name","yyyy"}, { "author", null }, { "title", null } }
+            };
+            List<object> actual = new List<object>();
+
             foreach (var x in ChoXmlReader.LoadText(@"<books><book name=""xxx"" author=""Tom""><title>C++</title></book><book name=""yyyy""></book></books>"))
             {
-                Console.WriteLine(x.ToStringEx());
+                actual.Add(x);
             }
+
+            CollectionAssert.AreEqual(expected, actual);
         }
 
-        static void POCOTest()
+        [Test]
+        public static void POCOTest()
         {
+            List<object> expected = new List<object>
+            {
+                new EmployeeRec { Id = 1, IsActive = true, Name = "Tom"},
+                new EmployeeRec { Id = 2, Name = "Mark"}
+            };
+            List<object> actual = new List<object>();
+
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
@@ -2421,13 +3908,22 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
                 object rec;
                 while ((rec = parser.Read()) != null)
                 {
-                    Console.WriteLine(rec.ToStringEx());
+                    actual.Add(rec);
                 }
             }
+            CollectionAssert.AreEqual(expected, actual);
         }
 
-        static void ConfigFirstDynamicTest()
+        [Test]
+        public static void ConfigFirstDynamicTest()
         {
+            List<object> expected = new List<object>
+            {
+                new ChoDynamicObject {{"Id", (Int64)1}, { "Name", new ChoDynamicObject { { "isActive","true"},{ "#text", "Tom" } } } },
+                new ChoDynamicObject {{"Id",(Int64)2}, { "Name", "Mark" } }
+            };
+            List<object> actual = new List<object>();
+
             ChoXmlRecordConfiguration config = new ChoXmlRecordConfiguration();
             config.XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration("Id"));
             config.XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration("Name"));
@@ -2445,13 +3941,23 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
                 object rec;
                 while ((rec = parser.Read()) != null)
                 {
-                    Console.WriteLine(rec.ToStringEx());
+                    actual.Add(rec);
                 }
             }
+
+            Assert.AreEqual(expected, actual);
         }
 
-        static void QuickTest()
+        [Test]
+        public static void QuickTest()
         {
+            List<object> expected = new List<object>
+            {
+                new ChoDynamicObject {{"Id",1 }, { "Name", new ChoDynamicObject{ {"isActive", "true" },{ "#text", "Tom" } } } },
+                new ChoDynamicObject {{"Id",2 }, { "Name", "Mark" } }
+            };
+            List<object> actual = new List<object>();
+
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
@@ -2465,13 +3971,22 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
                 object rec;
                 while ((rec = parser.Read()) != null)
                 {
-                    Console.WriteLine(rec.ToStringEx());
+                    actual.Add(rec);
                 }
             }
+            Assert.AreEqual(expected, actual);
         }
 
-        static void CodeFirstTest()
+        [Test]
+        public static void CodeFirstTest()
         {
+            List<object> expected = new List<object>
+            {
+                new EmployeeRecSimple{ Id = 1, Name = "Tom"},
+                new EmployeeRecSimple{ Id = 2, Name = "Mark"}
+            };
+            List<object> actual = new List<object>();
+
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
@@ -2485,13 +4000,25 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
                 object rec;
                 while ((rec = parser.Read()) != null)
                 {
-                    Console.WriteLine(rec.ToStringEx());
+                    actual.Add(rec);
                 }
             }
+
+            Assert.AreEqual(expected, actual);
         }
 
-        static void QuickTestWithXmlNS()
+        [Test]
+        public static void QuickTestWithXmlNS()
         {
+            List<object> expected = new List<object>
+            {
+                new ChoDynamicObject{{"name","Tanmay Patilx"}},
+                new ChoDynamicObject{{"name","Tanmay Patilx1"}},
+                new ChoDynamicObject{{"name","Tanmay Patily"}},
+                new ChoDynamicObject{{"name","Tanmay Patily1"}}
+            };
+            List<object> actual = new List<object>();
+
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
@@ -2537,15 +4064,32 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
                 object rec;
                 while ((rec = parser.Read()) != null)
                 {
-                    Console.WriteLine(rec.ToStringEx());
+                    actual.Add(rec);
                 }
             }
+            CollectionAssert.AreEqual(expected, actual);
         }
 
         public partial class EmployeeRecSimple
         {
             public int Id { get; set; }
             public string Name { get; set; }
+
+            public override bool Equals(object obj)
+            {
+                var simple = obj as EmployeeRecSimple;
+                return simple != null &&
+                       Id == simple.Id &&
+                       Name == simple.Name;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -1919740922;
+                hashCode = hashCode * -1521134295 + Id.GetHashCode();
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Name);
+                return hashCode;
+            }
         }
 
         [XmlRoot(ElementName = "Employee")]
@@ -2571,6 +4115,24 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
             {
                 get;
                 set;
+            }
+
+            public override bool Equals(object obj)
+            {
+                var rec = obj as EmployeeRec;
+                return rec != null &&
+                       Id == rec.Id &&
+                       Name == rec.Name &&
+                       IsActive == rec.IsActive;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -2060289483;
+                hashCode = hashCode * -1521134295 + Id.GetHashCode();
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Name);
+                hashCode = hashCode * -1521134295 + IsActive.GetHashCode();
+                return hashCode;
             }
 
             public override string ToString()

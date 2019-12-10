@@ -117,6 +117,10 @@
       <Project>{0a5062f4-b00a-4998-858d-a3c5d99e2074}</Project>
       <Name>ChoETL</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\UnitTestHelper\UnitTestHelper.csproj">
+      <Project>{cab2dd15-85e2-494b-943c-47e8adade340}</Project>
+      <Name>UnitTestHelper</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

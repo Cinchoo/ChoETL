@@ -1,0 +1,42 @@
+[
+ {
+   "performanceLevels": {
+     "performanceLevel_1": {
+       "title": {
+         "data-type": "string",
+         "source": "column",
+         "source-column": "title-column",
+         "default": "N/A"
+       },
+       "version1": {
+         "data-type": "int",
+         "source": "column",
+         "source-column": "version-column",
+         "default": "1"
+       },
+       "threeLevels": {
+         "version": {
+           "data-type": "int",
+           "source": "column",
+           "source-column": "version-column",
+           "default": "1"
+         }
+       }
+     },
+     "performanceLevel_2": {
+       "title": {
+         "data-type": "string",
+         "source": "column",
+         "source-column": "title-column",
+         "default": "N/A"
+       },
+       "version": {
+         "data-type": "int",
+         "source": "column",
+         "source-column": "version-column",
+         "default": "1"
+       }
+     }
+   }
+ }
+]

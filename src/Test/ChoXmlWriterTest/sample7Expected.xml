@@ -1,0 +1,38 @@
+<Root>
+  <XElement>
+    <id>0</id>
+    <married>true</married>
+    <name>John Lee</name>
+    <sons>
+      <son>
+    <age>15</age>
+    <name>Ronald</name>
+    <address>
+      <street>abc street</street>
+      <city>edison</city>
+      <state>NJ</state>
+    </address>
+  </son>
+    </sons>
+  </XElement>
+  <XElement>
+    <id>1</id>
+    <married>false</married>
+    <name>Kenneth Gonzalez</name>
+    <sons></sons>
+  </XElement>
+  <XElement>
+    <id>2</id>
+    <married>false</married>
+    <name>Larry Lee</name>
+    <sons>
+      <son>
+    <age>4</age>
+    <name>Anthony</name>
+  </son>
+  <son>
+    <age>2</age>
+    <name>Donald</name>
+  </son></sons>
+  </XElement>
+</Root>

@@ -1,0 +1,101 @@
+51,3280 Pheasant Circle,Snohomish
+52,4231 Spar Court,Snohomish
+53,1285 Greenbrier Street,Snohomish
+54,5724 Victory Lane,Snohomish
+55,591 Merriewood Drive,Snohomish
+56,3114 Notre Dame Ave.,Snohomish
+57,7230 Vine Maple Street,Snohomish
+58,2601 Cambridge Drive,Snohomish
+59,2115 Passing,Snohomish
+60,4852 Chaparral Court,Snohomish
+23,6657 Sand Pointe Lane,Seattle
+91,7166 Brock Lane,Seattle
+92,7126 Ending Ct.,Seattle
+93,4598 Manila Avenue,Seattle
+94,5666 Hazelnut Lane,Seattle
+95,1220 Bradford Way,Seattle
+96,5375 Clearland Circle,Seattle
+97,2639 Anchor Court,Seattle
+98,502 Alexander Pl.,Seattle
+99,5802 Ampersand Drive,Seattle
+100,5125 Cotton Ct.,Seattle
+101,3243 Buckingham Dr.,Seattle
+26,5725 Glaze Drive,San Francisco
+22,636 Vine Hill Way,Portland
+28,9228 Via Del Sol,Phoenix
+31,9100 Sheppard Avenue North,Ottawa
+30,9707 Coldwater Drive,Orlando
+27,2487 Riverside Drive,Nevada
+32,26910 Indela Road,Montreal
+61,7726 Driftwood Drive,Monroe
+62,3841 Silver Oaks Place,Monroe
+63,9652 Los Angeles,Monroe
+64,4566 La Jolla,Monroe
+65,1356 Grove Way,Monroe
+66,4775 Kentucky Dr.,Monroe
+67,4734 Sycamore Court,Monroe
+68,896 Southdale,Monroe
+69,2275 Valley Blvd.,Monroe
+70,1792 Belmont Rd.,Monroe
+71,5734 Ashford Court,Monroe
+72,5030 Blue Ridge Dr.,Monroe
+73,158 Walnut Ave,Monroe
+74,8310 Ridge Circle,Monroe
+75,3747 W. Landing Avenue,Monroe
+29,8291 Crossbow Way,Memphis
+36,34 Waterloo Road,Melbourne
+41,793 Crawford Street,Kenmore
+42,463 H Stagecoach Rd.,Kenmore
+43,5203 Virginia Lane,Kenmore
+44,4095 Cooper Dr.,Kenmore
+45,6697 Ridge Park Drive,Kenmore
+46,5669 Ironwood Way,Kenmore
+47,8192 Seagull Court,Kenmore
+48,5553 Cash Avenue,Kenmore
+49,7048 Laurel,Kenmore
+50,25 95th Ave NE,Kenmore
+76,2598 La Vista Circle,Duvall
+77,9693 Mellowood Street,Duvall
+78,1825 Corte Del Prado,Duvall
+79,5086 Nottingham Place,Duvall
+80,3977 Central Avenue,Duvall
+81,8209 Green View Court,Duvall
+82,8463 Vista Avenue,Duvall
+83,5379 Treasure Island Way,Duvall
+84,3421 Bouncing Road,Duvall
+85,991 Vista Verde,Duvall
+24,80 Sunview Terrace,Duluth
+38,8154 Via Mexico,Detroit
+25,9178 Jumping St.,Dallas
+86,390 Ridgewood Ct.,Carnation
+87,1411 Ranch Drive,Carnation
+88,9666 Northridge Ct.,Carnation
+89,3074 Arbor Drive,Carnation
+90,9752 Jeanne Circle,Carnation
+37,Downshire Way,Cambridge
+39,3997 Via De Luna,Cambridge
+33,10203 Acorn Avenue,Calgary
+1,1970 Napa Ct.,Bothell
+2,9833 Mt. Dias Blv.,Bothell
+3,7484 Roundtree Drive,Bothell
+4,9539 Glenside Dr,Bothell
+5,1226 Shoe St.,Bothell
+6,1399 Firestone Drive,Bothell
+7,5672 Hale Dr.,Bothell
+8,6387 Scenic Avenue,Bothell
+9,8713 Yosemite Ct.,Bothell
+10,250 Race Court,Bothell
+11,1318 Lasalle Street,Bothell
+12,5415 San Gabriel Dr.,Bothell
+13,9265 La Paz,Bothell
+14,8157 W. Book,Bothell
+15,4912 La Vuelta,Bothell
+16,40 Ellis St.,Bothell
+17,6696 Anchor Drive,Bothell
+18,1873 Lion Circle,Bothell
+19,3148 Rose Street,Bothell
+20,6872 Thornwood Dr.,Bothell
+21,5747 Shirley Drive,Bothell
+40,1902 Santa Cruz,Bothell
+34,"94, rue Descartes",Bordeaux
+35,Pascalstr 951,Berlin
