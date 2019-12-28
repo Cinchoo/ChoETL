@@ -111,25 +111,31 @@ namespace ChoETL
         {
             if (!IsDynamicObject)
             {
+                string name = null;
                 object defaultValue = null;
                 object fallbackValue = null;
                 foreach (var fc in fcs)
                 {
-                    if (!PDDict.ContainsKey(fc.Name))
+                    if (fc is ChoFileRecordFieldConfiguration)
+                        name = ((ChoFileRecordFieldConfiguration)fc).FieldName;
+                    else
+                        name = fc.Name;
+
+                    if (!PDDict.ContainsKey(name))
                         continue;
 
-                    fc.PD = PDDict[fc.Name];
-                    fc.PI = PIDict[fc.Name];
+                    fc.PD = PDDict[name];
+                    fc.PI = PIDict[name];
 
                     //Load default value
-                    defaultValue = ChoType.GetRawDefaultValue(PDDict[fc.Name]);
+                    defaultValue = ChoType.GetRawDefaultValue(PDDict[name]);
                     if (defaultValue != null)
                     {
                         fc.DefaultValue = defaultValue;
                         fc.IsDefaultValueSpecified = true;
                     }
                     //Load fallback value
-                    fallbackValue = ChoType.GetRawFallbackValue(PDDict[fc.Name]);
+                    fallbackValue = ChoType.GetRawFallbackValue(PDDict[name]);
                     if (fallbackValue != null)
                     {
                         fc.FallbackValue = fallbackValue;
@@ -154,16 +160,24 @@ namespace ChoETL
             {
                 if (!IsDynamicObject)
                 {
+                    string name = null;
                     foreach (var fc in fcs)
                     {
-                        if (!PDDict.ContainsKey(fc.Name))
+                        if (fc is ChoFileRecordFieldConfiguration)
+                            name = ((ChoFileRecordFieldConfiguration)fc).FieldName;
+                        else
+                            name = fc.Name;
+
+                        if (!PDDict.ContainsKey(name))
                             continue;
                         fc.Validators = ChoTypeDescriptor.GetPropetyAttributes<ValidationAttribute>(fc.PD).ToArray();
                     }
                 }
             }
 
-            ValDict = (from fc in fcs select new KeyValuePair<string, ValidationAttribute[]>(fc.Name, fc.Validators)).GroupBy(i => i.Key).Select(g => g.First()).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            ValDict = (from fc in fcs
+                       select new KeyValuePair<string, ValidationAttribute[]>(fc is ChoFileRecordFieldConfiguration ? ((ChoFileRecordFieldConfiguration)fc).FieldName : fc.Name, fc.Validators))
+                       .GroupBy(i => i.Key).Select(g => g.First()).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
         protected virtual void Clone(ChoRecordConfiguration config)
         {

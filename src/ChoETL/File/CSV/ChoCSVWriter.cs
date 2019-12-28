@@ -349,7 +349,7 @@ namespace ChoETL
             Type recordType = field.GetPropertyType().GetUnderlyingType();
             var fqn = field.GetFullyQualifiedMemberName();
 
-            if (typeof(IList).IsAssignableFrom(recordType)
+            if (typeof(IList).IsAssignableFrom(recordType) && !typeof(ArrayList).IsAssignableFrom(recordType)
                 && minumum >= 0 && maximum >= 0 && minumum <= maximum)
             {
                 recordType = recordType.GetItemType().GetUnderlyingType();
@@ -494,11 +494,11 @@ namespace ChoETL
                 //if (Configuration.CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
                 //{
                     if (fullyQualifiedMemberName != null)
-                        fc = Configuration.CSVRecordFieldConfigurations.Where(o => o.DeclaringMember == fullyQualifiedMemberName).First();
+                        fc = Configuration.CSVRecordFieldConfigurations.Where(o => o.DeclaringMember == fullyQualifiedMemberName).FirstOrDefault();
                     else
-                        fc = Configuration.CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+                        fc = Configuration.CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).FirstOrDefault();
 
-                    if (fieldPosition == null)
+                    if (fc != null && fieldPosition == null)
                         fieldPosition = fc.FieldPosition;
 
                     //Configuration.CSVRecordFieldConfigurations.Remove(fc);

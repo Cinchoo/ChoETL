@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -52,17 +53,55 @@ namespace ChoETL
                 fieldValue = fieldConfig.ValueConverter(fieldValue);
             else
             {
-                object[] fcParams = fieldConfig.PropConverterParams;
-                if (!fieldConfig.FormatText.IsNullOrWhiteSpace())
-                    fcParams = new object[] { new object[] { fieldConfig.FormatText } };
-
-                if (fieldConfig.Converters.IsNullOrEmpty())
+                if (fieldConfig.PI.PropertyType.IsGenericType && fieldConfig.PI.PropertyType.GetGenericTypeDefinition() == typeof(Dictionary<,>)
+                        && typeof(string) == fieldConfig.PI.PropertyType.GetGenericArguments()[0])
                 {
-                    fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, fcParams, culture);
+                    IDictionary dict = ChoType.GetPropertyValue(rec, fieldConfig.PI) as IDictionary;
+                    if (dict == null)
+                    {
+                        //dict = Activator.CreateInstance(fieldConfig.PI.PropertyType) as IDictionary;
+                        //ChoType.SetPropertyValue(rec, fieldConfig.PI, dict);
+                    }
+
+                    if (dict != null)
+                    {
+                        if (!dict.Contains(fn))
+                            dict.Add(fn, fieldValue);
+                    }
+                    return;
+                }
+                else if (typeof(IList).IsAssignableFrom(fieldConfig.PI.PropertyType))
+                {
+                    IList list = ChoType.GetPropertyValue(rec, fieldConfig.PI) as IList;
+                    if (list != null)
+                    {
+                        if (list.IsFixedSize)
+                        {
+                            int ai = fieldConfig is ChoFileRecordFieldConfiguration ? ((ChoFileRecordFieldConfiguration)fieldConfig).ArrayIndex != null ? ((ChoFileRecordFieldConfiguration)fieldConfig).ArrayIndex.Value : -1 : -1;
+                            if (ai >= 0 && ai < ((Array)list).Length)
+                                ((Array)list).SetValue(fieldValue, ai);
+                        }
+                        else
+                        {
+                            list.Add(fieldValue);
+                        }
+                    }
+                    return;
                 }
                 else
                 {
-                    fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), fcParams, culture);
+                    object[] fcParams = fieldConfig.PropConverterParams;
+                    if (!fieldConfig.FormatText.IsNullOrWhiteSpace())
+                        fcParams = new object[] { new object[] { fieldConfig.FormatText } };
+
+                    if (fieldConfig.Converters.IsNullOrEmpty())
+                    {
+                        fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, fcParams, culture);
+                    }
+                    else
+                    {
+                        fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), fcParams, culture);
+                    }
                 }
             }
             ChoType.SetPropertyValue(rec, fieldConfig.PI, fieldValue);
