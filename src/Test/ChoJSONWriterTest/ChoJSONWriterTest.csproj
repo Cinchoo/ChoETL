@@ -56,11 +56,19 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Colors.json" />
+    <None Include="DynamicTestExpected.json" />
+    <None Include="IPAddressTestExpected.json" />
+    <None Include="NestedJSONFileExpected.json" />
     <None Include="packages.config" />
+    <None Include="POCOTestExpected.json" />
     <None Include="sample.csv" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <None Include="sample7.json" />
+    <None Include="sample7WriteExpected.json" />
+    <None Include="sampleExpected.json" />
+    <None Include="SaveDictExpected.json" />
+    <None Include="SaveStringListExpected.json" />
     <None Include="TestData.json" />
   </ItemGroup>
   <ItemGroup>

@@ -16,7 +16,19 @@ namespace ChoETL
 
     public static class ChoXmlSettings
     {
-        private static string _XmlSchemaInstanceNamespace = "http://www.w3.org/2001/XMLSchema-instance";
+        static ChoXmlSettings()
+        {
+            Reset();
+        }
+        public static void Reset()
+        {
+            _XmlSchemaInstanceNamespace = "http://www.w3.org/2001/XMLSchema-instance";
+            _XmlNamespace = "http://www.w3.org/2000/xmlns/";
+            _XmlSchemaNamespace = "http://www.w3.org/2001/XMLSchema";
+            _JSONSchemaNamespace = "http://james.newtonking.com/projects/json";
+
+        }
+        private static string _XmlSchemaInstanceNamespace;
         public static string XmlSchemaInstanceNamespace
         {
             get { return _XmlSchemaInstanceNamespace; }
@@ -29,7 +41,7 @@ namespace ChoETL
 
             }
         }
-        private static string _XmlNamespace = "http://www.w3.org/2000/xmlns/";
+        private static string _XmlNamespace ;
         public static string XmlNamespace
         {
             get { return _XmlNamespace; }
@@ -41,7 +53,7 @@ namespace ChoETL
                 _XmlNamespace = value;
             }
         }
-        private static string _XmlSchemaNamespace = "http://www.w3.org/2001/XMLSchema";
+        private static string _XmlSchemaNamespace;
         public static string XmlSchemaNamespace
         {
             get { return _XmlSchemaNamespace; }
@@ -53,7 +65,7 @@ namespace ChoETL
                 _XmlSchemaNamespace = value;
             }
         }
-        private static string _JSONSchemaNamespace = "http://james.newtonking.com/projects/json";
+        private static string _JSONSchemaNamespace;
         public static string JSONSchemaNamespace
         {
             get { return _JSONSchemaNamespace; }

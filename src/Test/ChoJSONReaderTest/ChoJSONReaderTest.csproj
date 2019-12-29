@@ -58,6 +58,9 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="sample100.json" />
+    <None Include="Sample16Expected.csv" />
+    <None Include="Sample18Expected.csv" />
+    <None Include="Sample2Expected.csv" />
     <None Include="sample32.json" />
     <None Include="sample31.json" />
     <None Include="sample30.json" />
@@ -71,6 +74,7 @@
     <None Include="sample22.json" />
     <None Include="sample21.json" />
     <None Include="sample20.json" />
+    <None Include="Sample32Expected.csv" />
     <None Include="TestData2.json" />
     <None Include="TestData1.json" />
     <None Include="TestData.json" />
@@ -111,10 +115,15 @@
       <Project>{0a5062f4-b00a-4998-858d-a3c5d99e2074}</Project>
       <Name>ChoETL</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\UnitTestHelper\UnitTestHelper.csproj">
+      <Project>{cab2dd15-85e2-494b-943c-47e8adade340}</Project>
+      <Name>UnitTestHelper</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>COPY $(ProjectDir)*.json $(TargetDir)</PostBuildEvent>
+    <PostBuildEvent>COPY $(ProjectDir)*.json $(TargetDir)
+COPY $(ProjectDir)*.csv $(TargetDir)</PostBuildEvent>
   </PropertyGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

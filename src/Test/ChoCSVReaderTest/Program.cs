@@ -35,13 +35,21 @@ namespace ChoCSVReaderTest
         [Required]
         [RegularExpression("^[0-9][0-9]*$")]
         public string Zip { get; set; }
+
         public override bool Equals(object obj)
         {
-            SitePostal compareObject = obj as SitePostal;
-            if (compareObject != null)
-                return this.State.Equals(compareObject.State) &&
-                    this.Zip.Equals(compareObject.Zip);
-            return base.Equals(obj);
+            var postal = obj as SitePostal;
+            return postal != null &&
+                   State == postal.State &&
+                   Zip == postal.Zip;
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = -1083755174;
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(State);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Zip);
+            return hashCode;
         }
     }
     public class SiteAddress
@@ -57,14 +65,21 @@ namespace ChoCSVReaderTest
 
         public override bool Equals(object obj)
         {
-            SiteAddress compareObject = obj as SiteAddress;
-            if (compareObject != null)
-                return (this.Street == null ? (compareObject.Street == null ? true : false) : this.Street.Equals(compareObject.Street)) &&
-                    (this.City == null ? (compareObject.City == null ? true : false) : this.City.Equals(compareObject.City)) &&
-                    (this.SitePostal == null ? (compareObject.SitePostal == null ? true : false) : this.SitePostal.Equals(compareObject.SitePostal));
-            return base.Equals(obj);
+            var address = obj as SiteAddress;
+            return address != null &&
+                   Street == address.Street &&
+                   City == address.City &&
+                   EqualityComparer<SitePostal>.Default.Equals(SitePostal, address.SitePostal);
         }
 
+        public override int GetHashCode()
+        {
+            var hashCode = -1241015971;
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Street);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(City);
+            hashCode = hashCode * -1521134295 + EqualityComparer<SitePostal>.Default.GetHashCode(SitePostal);
+            return hashCode;
+        }
     }
     public class Site
     {
@@ -74,12 +89,20 @@ namespace ChoCSVReaderTest
 
         public override bool Equals(object obj)
         {
-            Site compareObject = obj as Site;
-            if (compareObject != null)
-                return this.SiteID.Equals(compareObject.SiteID) &&
-                    (this.House == null?(compareObject.House==null?true:false):this.House.Equals(compareObject.House)) &&
-                    (this.SiteAddress == null?(compareObject.SiteAddress==null?true:false):this.SiteAddress.Equals(compareObject.SiteAddress));
-            return base.Equals(obj);
+            var site = obj as Site;
+            return site != null &&
+                   SiteID == site.SiteID &&
+                   House == site.House &&
+                   EqualityComparer<SiteAddress>.Default.Equals(SiteAddress, site.SiteAddress);
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = -448004452;
+            hashCode = hashCode * -1521134295 + SiteID.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(House);
+            hashCode = hashCode * -1521134295 + EqualityComparer<SiteAddress>.Default.GetHashCode(SiteAddress);
+            return hashCode;
         }
     }
 
@@ -193,6 +216,10 @@ namespace ChoCSVReaderTest
         public void Setup()
         {
             Environment.CurrentDirectory = TestContext.CurrentContext.TestDirectory;
+            // Needs to be reset because of some tests changes these settings
+            ChoTypeConverterFormatSpec.Instance.Reset();
+            ChoXmlSettings.Reset();
+
         }
 
         public static string FileNameSample3CSV => "Sample3.csv";
@@ -916,56 +943,52 @@ new ChoDynamicObject{ {"Column1","2011.01.07"},{"Column2", new DateTime(2011,1,7
 
         public class Employee : IEmployee
         {
-            public int Id
-            {
-                get;
-                set;
-            }
+            public int Id { get; set; }
 
-            public string Name
-            {
-                get;
-                set;
-            }
+            public string Name { get; set; }
 
-            public string City
-            {
-                get;
-                set;
-            }
+            public string City { get; set; }
+
             public override bool Equals(object obj)
             {
-                Employee compareObject = obj as Employee;
-                if (compareObject != null)
-                    return this.Id.Equals(compareObject.Id) && 
-                    (this.Name == null ? (compareObject.Name == null?true:false):this.Name.Equals(compareObject.Name)) && 
-                    (this.City == null ? (compareObject.City == null?true:false):this.City.Equals(compareObject.City));
-//                    (this.Name != null ? this.Name.Equals(compareObject.Name) : (compareObject.Name != null ? compareObject.Name.Equals(this.Name) : true)) && this.City.Equals(compareObject.City);
-                return base.Equals(obj);
+                var employee = obj as Employee;
+                return employee != null &&
+                       Id == employee.Id &&
+                       Name == employee.Name &&
+                       City == employee.City;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -1768068776;
+                hashCode = hashCode * -1521134295 + Id.GetHashCode();
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Name);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(City);
+                return hashCode;
             }
         }
 
         [ChoRecordTypeCode("1")]
         public class Manager : IEmployee
         {
-            public int Id
-            {
-                get;
-                set;
-            }
+            public int Id { get; set; }
 
-            public string Name
-            {
-                get;
-                set;
-            }
+            public string Name { get; set; }
+
             public override bool Equals(object obj)
             {
-                Manager compareObject = obj as Manager;
-                if (compareObject != null)
-                    return this.Id.Equals(compareObject.Id) && 
-                    (this.Name == null ? (compareObject.Name == null ? true : false) : this.Name.Equals(compareObject.Name));
-                return base.Equals(obj);
+                var manager = obj as Manager;
+                return manager != null &&
+                       Id == manager.Id &&
+                       Name == manager.Name;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -1919740922;
+                hashCode = hashCode * -1521134295 + Id.GetHashCode();
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Name);
+                return hashCode;
             }
         }
 
@@ -1026,28 +1049,46 @@ new ChoDynamicObject{ {"Column1","2011.01.07"},{"Column2", new DateTime(2011,1,7
             public double Longitude { get; set; }
             public double Latitude { get; set; }
             public double Elevation { get; set; }
+
             public override bool Equals(object obj)
             {
-                LocationDefinition compareObject = obj as LocationDefinition;
-                if (compareObject != null)
-                    return (this.PlaceName == null ? (compareObject.PlaceName == null?true:false):this.PlaceName.Equals(compareObject.PlaceName)) &&
-                        this.Longitude.Equals(compareObject.Longitude) &&
-                        this.Latitude.Equals(compareObject.Latitude) &&
-                        this.Elevation.Equals(compareObject.Elevation);
-                return base.Equals(obj);
+                var definition = obj as LocationDefinition;
+                return definition != null &&
+                       PlaceName == definition.PlaceName &&
+                       Longitude == definition.Longitude &&
+                       Latitude == definition.Latitude &&
+                       Elevation == definition.Elevation;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = 536176542;
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(PlaceName);
+                hashCode = hashCode * -1521134295 + Longitude.GetHashCode();
+                hashCode = hashCode * -1521134295 + Latitude.GetHashCode();
+                hashCode = hashCode * -1521134295 + Elevation.GetHashCode();
+                return hashCode;
             }
         }
         public class CountDefinition
         {
             public DateTime Date { get; set; }
             public int Count { get; set; }
+
             public override bool Equals(object obj)
             {
-                CountDefinition compareObject = obj as CountDefinition;
-                if (compareObject != null)
-                    return this.Date.Equals(compareObject.Date) &&
-                        this.Count.Equals(compareObject.Count);
-                return base.Equals(obj);
+                var definition = obj as CountDefinition;
+                return definition != null &&
+                       Date == definition.Date &&
+                       Count == definition.Count;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = 379610101;
+                hashCode = hashCode * -1521134295 + Date.GetHashCode();
+                hashCode = hashCode * -1521134295 + Count.GetHashCode();
+                return hashCode;
             }
         }
 
@@ -1181,12 +1222,25 @@ Date,Count
             public string Name { get; set; }
             public decimal Balance { get; set; }
             public DateTime AddedDate { get; set; }
+
             public override bool Equals(object obj)
             {
-                Customer compareObject = obj as Customer;
-                if (compareObject != null)
-                    return this.CustId.Equals(compareObject.CustId) && this.Name.Equals(compareObject.Name) && this.Balance.Equals(compareObject.Balance) && this.AddedDate.Equals(compareObject.AddedDate);
-                return base.Equals(obj);
+                var customer = obj as Customer;
+                return customer != null &&
+                       CustId == customer.CustId &&
+                       Name == customer.Name &&
+                       Balance == customer.Balance &&
+                       AddedDate == customer.AddedDate;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -1218692519;
+                hashCode = hashCode * -1521134295 + CustId.GetHashCode();
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Name);
+                hashCode = hashCode * -1521134295 + Balance.GetHashCode();
+                hashCode = hashCode * -1521134295 + AddedDate.GetHashCode();
+                return hashCode;
             }
         }
 
@@ -1309,14 +1363,23 @@ Date,Count
             public DateTime DateCreated { get; set; }
             [DisplayFormat(DataFormatString = "A")]
             public bool IsActive { get; set; }
+
             public override bool Equals(object obj)
             {
-                Consumer compareObject = obj as Consumer;
-                if (compareObject != null)
-                    return this.Id.Equals(compareObject.Id) &&
-                        this.DateCreated.Equals(compareObject.DateCreated) &&
-                        this.IsActive.Equals(compareObject.IsActive);
-                return base.Equals(obj);
+                var consumer = obj as Consumer;
+                return consumer != null &&
+                       Id == consumer.Id &&
+                       DateCreated == consumer.DateCreated &&
+                       IsActive == consumer.IsActive;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = 673371854;
+                hashCode = hashCode * -1521134295 + Id.GetHashCode();
+                hashCode = hashCode * -1521134295 + DateCreated.GetHashCode();
+                hashCode = hashCode * -1521134295 + IsActive.GetHashCode();
+                return hashCode;
             }
         }
 
@@ -1349,14 +1412,23 @@ Date,Count
             public DateTime DateCreated { get; set; }
             [ChoCSVRecordField(3, FormatText = "A")]
             public bool IsActive { get; set; }
+
             public override bool Equals(object obj)
             {
-                ConsumerOptIn compareObject = obj as ConsumerOptIn;
-                if (compareObject != null)
-                    return this.Id.Equals(compareObject.Id) &&
-                        this.DateCreated.Equals(compareObject.DateCreated) &&
-                        this.IsActive.Equals(compareObject.IsActive);
-                return base.Equals(obj);
+                var @in = obj as ConsumerOptIn;
+                return @in != null &&
+                       Id == @in.Id &&
+                       DateCreated == @in.DateCreated &&
+                       IsActive == @in.IsActive;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = 673371854;
+                hashCode = hashCode * -1521134295 + Id.GetHashCode();
+                hashCode = hashCode * -1521134295 + DateCreated.GetHashCode();
+                hashCode = hashCode * -1521134295 + IsActive.GetHashCode();
+                return hashCode;
             }
         }
 
@@ -1379,6 +1451,7 @@ Date,Count
                     actual.Add(rec);
             }
             CollectionAssert.AreEqual(expected, actual);
+            //Assert.That(expected, Is.EquivalentTo(actual));
         }
 
         public class ImportRow
@@ -1397,8 +1470,8 @@ Date,Count
         public static void Sample20()
         {
             DataTable expected = new DataTable();
-            expected.Columns.Add(new DataColumn("ImportId", typeof(int)));
-            expected.Columns.Add(new DataColumn("RowIndex", typeof(int)));
+            expected.Columns.Add(new DataColumn("ImportId", typeof(int)) { AllowDBNull = false });
+            expected.Columns.Add(new DataColumn("RowIndex", typeof(int)) { AllowDBNull = false });
             expected.Columns.Add(new DataColumn("fields", typeof(string)));
             expected.Rows.Add(42, 0, "[{\"value\":\"acme\"},{\"value\":\"1\"},{\"value\":\"1 / 1 / 2015\"}]");// "acme", 1, new DateTime(2015, 1, 1));
             expected.Rows.Add(42, 1, "[{\"value\":\"contoso\"},{\"value\":\"34\"},{\"value\":\"1/2/2018\"}]");// "contoso", 34, new DateTime(2018, 1, 2));
@@ -1424,7 +1497,7 @@ Date,Count
                 DataTable dt = new DataTable();
                 dt.Load(dr);
 
-                AssertDataTable(expected, dt);
+                UnitTestHelper.DataTableAssert.AreEqual(expected, dt);
                 //foreach (var rec in p.Select(r => new ImportRow
                 //	{
                 //		ImportId = 42,
@@ -1445,7 +1518,7 @@ Date,Count
         {
             DataTable expected = new DataTable();
             expected.Columns.AddRange(new DataColumn[] { 
-                new DataColumn("face"), new DataColumn(" confidence"), new DataColumn(" gaze_0_x"), new DataColumn(" gaze_0_y"), new DataColumn(" gaze_0_z"), new DataColumn(" gaze_1_x"), new DataColumn(" gaze_1_y"), new DataColumn(" gaze_1_z"), new DataColumn(" gaze_angle_x"), new DataColumn(" gaze_angle_y"), new DataColumn(" eye_lmk_x_0"), new DataColumn(" eye_lmk_x_1"), new DataColumn(" eye_lmk_x_2"), new DataColumn(" eye_lmk_x_3"), new DataColumn(" eye_lmk_x_4"), new DataColumn(" eye_lmk_x_5"), new DataColumn(" eye_lmk_x_6"), new DataColumn(" eye_lmk_x_7"), new DataColumn(" eye_lmk_x_8"), new DataColumn(" eye_lmk_x_9"), new DataColumn(" eye_lmk_x_10"), new DataColumn(" eye_lmk_x_11"), new DataColumn(" eye_lmk_x_12"), new DataColumn(" eye_lmk_x_13"), new DataColumn(" eye_lmk_x_14"), new DataColumn(" eye_lmk_x_15"), new DataColumn(" eye_lmk_x_16"), new DataColumn(" eye_lmk_x_17"), new DataColumn(" eye_lmk_x_18"), new DataColumn(" eye_lmk_x_19"), new DataColumn(" eye_lmk_x_20"), new DataColumn(" eye_lmk_x_21"), new DataColumn(" eye_lmk_x_22"), new DataColumn(" eye_lmk_x_23"), new DataColumn(" eye_lmk_x_24"), new DataColumn(" eye_lmk_x_25"), new DataColumn(" eye_lmk_x_26"), new DataColumn(" eye_lmk_x_27"), new DataColumn(" eye_lmk_x_28"), new DataColumn(" eye_lmk_x_29"), new DataColumn(" eye_lmk_x_30"), new DataColumn(" eye_lmk_x_31"), new DataColumn(" eye_lmk_x_32"), new DataColumn(" eye_lmk_x_33"), new DataColumn(" eye_lmk_x_34"), new DataColumn(" eye_lmk_x_35"), new DataColumn(" eye_lmk_x_36"), new DataColumn(" eye_lmk_x_37"), new DataColumn(" eye_lmk_x_38"), new DataColumn(" eye_lmk_x_39"), new DataColumn(" eye_lmk_x_40"), new DataColumn(" eye_lmk_x_41"), new DataColumn(" eye_lmk_x_42"), new DataColumn(" eye_lmk_x_43"), new DataColumn(" eye_lmk_x_44"), new DataColumn(" eye_lmk_x_45"), new DataColumn(" eye_lmk_x_46"), new DataColumn(" eye_lmk_x_47"), new DataColumn(" eye_lmk_x_48"), new DataColumn(" eye_lmk_x_49"), new DataColumn(" eye_lmk_x_50"), new DataColumn(" eye_lmk_x_51"), new DataColumn(" eye_lmk_x_52"), new DataColumn(" eye_lmk_x_53"), new DataColumn(" eye_lmk_x_54"), new DataColumn(" eye_lmk_x_55"), new DataColumn(" eye_lmk_y_0"), new DataColumn(" eye_lmk_y_1"), new DataColumn(" eye_lmk_y_2"), new DataColumn(" eye_lmk_y_3"), new DataColumn(" eye_lmk_y_4"), new DataColumn(" eye_lmk_y_5"), new DataColumn(" eye_lmk_y_6"), new DataColumn(" eye_lmk_y_7"), new DataColumn(" eye_lmk_y_8"), new DataColumn(" eye_lmk_y_9"), new DataColumn(" eye_lmk_y_10"), new DataColumn(" eye_lmk_y_11"), new DataColumn(" eye_lmk_y_12"), new DataColumn(" eye_lmk_y_13"), new DataColumn(" eye_lmk_y_14"), new DataColumn(" eye_lmk_y_15"), new DataColumn(" eye_lmk_y_16"), new DataColumn(" eye_lmk_y_17"), new DataColumn(" eye_lmk_y_18"), new DataColumn(" eye_lmk_y_19"), new DataColumn(" eye_lmk_y_20"), new DataColumn(" eye_lmk_y_21"), new DataColumn(" eye_lmk_y_22"), new DataColumn(" eye_lmk_y_23"), new DataColumn(" eye_lmk_y_24"), new DataColumn(" eye_lmk_y_25"), new DataColumn(" eye_lmk_y_26"), new DataColumn(" eye_lmk_y_27"), new DataColumn(" eye_lmk_y_28"), new DataColumn(" eye_lmk_y_29"), new DataColumn(" eye_lmk_y_30"), new DataColumn(" eye_lmk_y_31"), new DataColumn(" eye_lmk_y_32"), new DataColumn(" eye_lmk_y_33"), new DataColumn(" eye_lmk_y_34"), new DataColumn(" eye_lmk_y_35"), new DataColumn(" eye_lmk_y_36"), new DataColumn(" eye_lmk_y_37"), new DataColumn(" eye_lmk_y_38"), new DataColumn(" eye_lmk_y_39"), new DataColumn(" eye_lmk_y_40"), new DataColumn(" eye_lmk_y_41"), new DataColumn(" eye_lmk_y_42"), new DataColumn(" eye_lmk_y_43"), new DataColumn(" eye_lmk_y_44"), new DataColumn(" eye_lmk_y_45"), new DataColumn(" eye_lmk_y_46"), new DataColumn(" eye_lmk_y_47"), new DataColumn(" eye_lmk_y_48"), new DataColumn(" eye_lmk_y_49"), new DataColumn(" eye_lmk_y_50"), new DataColumn(" eye_lmk_y_51"), new DataColumn(" eye_lmk_y_52"), new DataColumn(" eye_lmk_y_53"), new DataColumn(" eye_lmk_y_54"), new DataColumn(" eye_lmk_y_55"), new DataColumn(" eye_lmk_X_0"), new DataColumn(" eye_lmk_X_1"), new DataColumn(" eye_lmk_X_2"), new DataColumn(" eye_lmk_X_3"), new DataColumn(" eye_lmk_X_4"), new DataColumn(" eye_lmk_X_5"), new DataColumn(" eye_lmk_X_6"), new DataColumn(" eye_lmk_X_7"), new DataColumn(" eye_lmk_X_8"), new DataColumn(" eye_lmk_X_9"), new DataColumn(" eye_lmk_X_10"), new DataColumn(" eye_lmk_X_11"), new DataColumn(" eye_lmk_X_12"), new DataColumn(" eye_lmk_X_13"), new DataColumn(" eye_lmk_X_14"), new DataColumn(" eye_lmk_X_15"), new DataColumn(" eye_lmk_X_16"), new DataColumn(" eye_lmk_X_17"), new DataColumn(" eye_lmk_X_18"), new DataColumn(" eye_lmk_X_19"), new DataColumn(" eye_lmk_X_20"), new DataColumn(" eye_lmk_X_21"), new DataColumn(" eye_lmk_X_22"), new DataColumn(" eye_lmk_X_23"), new DataColumn(" eye_lmk_X_24"), new DataColumn(" eye_lmk_X_25"), new DataColumn(" eye_lmk_X_26"), new DataColumn(" eye_lmk_X_27"), new DataColumn(" eye_lmk_X_28"), new DataColumn(" eye_lmk_X_29"), new DataColumn(" eye_lmk_X_30"), new DataColumn(" eye_lmk_X_31"), new DataColumn(" eye_lmk_X_32"), new DataColumn(" eye_lmk_X_33"), new DataColumn(" eye_lmk_X_34"), new DataColumn(" eye_lmk_X_35"), new DataColumn(" eye_lmk_X_36"), new DataColumn(" eye_lmk_X_37"), new DataColumn(" eye_lmk_X_38"), new DataColumn(" eye_lmk_X_39"), new DataColumn(" eye_lmk_X_40"), new DataColumn(" eye_lmk_X_41"), new DataColumn(" eye_lmk_X_42"), new DataColumn(" eye_lmk_X_43"), new DataColumn(" eye_lmk_X_44"), new DataColumn(" eye_lmk_X_45"), new DataColumn(" eye_lmk_X_46"), new DataColumn(" eye_lmk_X_47"), new DataColumn(" eye_lmk_X_48"), new DataColumn(" eye_lmk_X_49"), new DataColumn(" eye_lmk_X_50"), new DataColumn(" eye_lmk_X_51"), new DataColumn(" eye_lmk_X_52"), new DataColumn(" eye_lmk_X_53"), new DataColumn(" eye_lmk_X_54"), new DataColumn(" eye_lmk_X_55"), new DataColumn(" eye_lmk_Y_0"), new DataColumn(" eye_lmk_Y_1"), new DataColumn(" eye_lmk_Y_2"), new DataColumn(" eye_lmk_Y_3"), new DataColumn(" eye_lmk_Y_4"), new DataColumn(" eye_lmk_Y_5"), new DataColumn(" eye_lmk_Y_6"), new DataColumn(" eye_lmk_Y_7"), new DataColumn(" eye_lmk_Y_8"), new DataColumn(" eye_lmk_Y_9"), new DataColumn(" eye_lmk_Y_10"), new DataColumn(" eye_lmk_Y_11"), new DataColumn(" eye_lmk_Y_12"), new DataColumn(" eye_lmk_Y_13"), new DataColumn(" eye_lmk_Y_14"), new DataColumn(" eye_lmk_Y_15"), new DataColumn(" eye_lmk_Y_16"), new DataColumn(" eye_lmk_Y_17"), new DataColumn(" eye_lmk_Y_18"), new DataColumn(" eye_lmk_Y_19"), new DataColumn(" eye_lmk_Y_20"), new DataColumn(" eye_lmk_Y_21"), new DataColumn(" eye_lmk_Y_22"), new DataColumn(" eye_lmk_Y_23"), new DataColumn(" eye_lmk_Y_24"), new DataColumn(" eye_lmk_Y_25"), new DataColumn(" eye_lmk_Y_26"), new DataColumn(" eye_lmk_Y_27"), new DataColumn(" eye_lmk_Y_28"), new DataColumn(" eye_lmk_Y_29"), new DataColumn(" eye_lmk_Y_30"), new DataColumn(" eye_lmk_Y_31"), new DataColumn(" eye_lmk_Y_32"), new DataColumn(" eye_lmk_Y_33"), new DataColumn(" eye_lmk_Y_34"), new DataColumn(" eye_lmk_Y_35"), new DataColumn(" eye_lmk_Y_36"), new DataColumn(" eye_lmk_Y_37"), new DataColumn(" eye_lmk_Y_38"), new DataColumn(" eye_lmk_Y_39"), new DataColumn(" eye_lmk_Y_40"), new DataColumn(" eye_lmk_Y_41"), new DataColumn(" eye_lmk_Y_42"), new DataColumn(" eye_lmk_Y_43"), new DataColumn(" eye_lmk_Y_44"), new DataColumn(" eye_lmk_Y_45"), new DataColumn(" eye_lmk_Y_46"), new DataColumn(" eye_lmk_Y_47"), new DataColumn(" eye_lmk_Y_48"), new DataColumn(" eye_lmk_Y_49"), new DataColumn(" eye_lmk_Y_50"), new DataColumn(" eye_lmk_Y_51"), new DataColumn(" eye_lmk_Y_52"), new DataColumn(" eye_lmk_Y_53"), new DataColumn(" eye_lmk_Y_54"), new DataColumn(" eye_lmk_Y_55"), new DataColumn(" eye_lmk_Z_0"), new DataColumn(" eye_lmk_Z_1"), new DataColumn(" eye_lmk_Z_2"), new DataColumn(" eye_lmk_Z_3"), new DataColumn(" eye_lmk_Z_4"), new DataColumn(" eye_lmk_Z_5"), new DataColumn(" eye_lmk_Z_6"), new DataColumn(" eye_lmk_Z_7"), new DataColumn(" eye_lmk_Z_8"), new DataColumn(" eye_lmk_Z_9"), new DataColumn(" eye_lmk_Z_10"), new DataColumn(" eye_lmk_Z_11"), new DataColumn(" eye_lmk_Z_12"), new DataColumn(" eye_lmk_Z_13"), new DataColumn(" eye_lmk_Z_14"), new DataColumn(" eye_lmk_Z_15"), new DataColumn(" eye_lmk_Z_16"), new DataColumn(" eye_lmk_Z_17"), new DataColumn(" eye_lmk_Z_18"), new DataColumn(" eye_lmk_Z_19"), new DataColumn(" eye_lmk_Z_20"), new DataColumn(" eye_lmk_Z_21"), new DataColumn(" eye_lmk_Z_22"), new DataColumn(" eye_lmk_Z_23"), new DataColumn(" eye_lmk_Z_24"), new DataColumn(" eye_lmk_Z_25"), new DataColumn(" eye_lmk_Z_26"), new DataColumn(" eye_lmk_Z_27"), new DataColumn(" eye_lmk_Z_28"), new DataColumn(" eye_lmk_Z_29"), new DataColumn(" eye_lmk_Z_30"), new DataColumn(" eye_lmk_Z_31"), new DataColumn(" eye_lmk_Z_32"), new DataColumn(" eye_lmk_Z_33"), new DataColumn(" eye_lmk_Z_34"), new DataColumn(" eye_lmk_Z_35"), new DataColumn(" eye_lmk_Z_36"), new DataColumn(" eye_lmk_Z_37"), new DataColumn(" eye_lmk_Z_38"), new DataColumn(" eye_lmk_Z_39"), new DataColumn(" eye_lmk_Z_40"), new DataColumn(" eye_lmk_Z_41"), new DataColumn(" eye_lmk_Z_42"), new DataColumn(" eye_lmk_Z_43"), new DataColumn(" eye_lmk_Z_44"), new DataColumn(" eye_lmk_Z_45"), new DataColumn(" eye_lmk_Z_46"), new DataColumn(" eye_lmk_Z_47"), new DataColumn(" eye_lmk_Z_48"), new DataColumn(" eye_lmk_Z_49"), new DataColumn(" eye_lmk_Z_50"), new DataColumn(" eye_lmk_Z_51"), new DataColumn(" eye_lmk_Z_52"), new DataColumn(" eye_lmk_Z_53"), new DataColumn(" eye_lmk_Z_54"), new DataColumn(" eye_lmk_Z_55"), new DataColumn(" pose_Tx"), new DataColumn(" pose_Ty"), new DataColumn(" pose_Tz"), new DataColumn(" pose_Rx"), new DataColumn(" pose_Ry"), new DataColumn(" pose_Rz"), new DataColumn(" x_0"), new DataColumn(" x_1"), new DataColumn(" x_2"), new DataColumn(" x_3"), new DataColumn(" x_4"), new DataColumn(" x_5"), new DataColumn(" x_6"), new DataColumn(" x_7"), new DataColumn(" x_8"), new DataColumn(" x_9"), new DataColumn(" x_10"), new DataColumn(" x_11"), new DataColumn(" x_12"), new DataColumn(" x_13"), new DataColumn(" x_14"), new DataColumn(" x_15"), new DataColumn(" x_16"), new DataColumn(" x_17"), new DataColumn(" x_18"), new DataColumn(" x_19"), new DataColumn(" x_20"), new DataColumn(" x_21"), new DataColumn(" x_22"), new DataColumn(" x_23"), new DataColumn(" x_24"), new DataColumn(" x_25"), new DataColumn(" x_26"), new DataColumn(" x_27"), new DataColumn(" x_28"), new DataColumn(" x_29"), new DataColumn(" x_30"), new DataColumn(" x_31"), new DataColumn(" x_32"), new DataColumn(" x_33"), new DataColumn(" x_34"), new DataColumn(" x_35"), new DataColumn(" x_36"), new DataColumn(" x_37"), new DataColumn(" x_38"), new DataColumn(" x_39"), new DataColumn(" x_40"), new DataColumn(" x_41"), new DataColumn(" x_42"), new DataColumn(" x_43"), new DataColumn(" x_44"), new DataColumn(" x_45"), new DataColumn(" x_46"), new DataColumn(" x_47"), new DataColumn(" x_48"), new DataColumn(" x_49"), new DataColumn(" x_50"), new DataColumn(" x_51"), new DataColumn(" x_52"), new DataColumn(" x_53"), new DataColumn(" x_54"), new DataColumn(" x_55"), new DataColumn(" x_56"), new DataColumn(" x_57"), new DataColumn(" x_58"), new DataColumn(" x_59"), new DataColumn(" x_60"), new DataColumn(" x_61"), new DataColumn(" x_62"), new DataColumn(" x_63"), new DataColumn(" x_64"), new DataColumn(" x_65"), new DataColumn(" x_66"), new DataColumn(" x_67"), new DataColumn(" y_0"), new DataColumn(" y_1"), new DataColumn(" y_2"), new DataColumn(" y_3"), new DataColumn(" y_4"), new DataColumn(" y_5"), new DataColumn(" y_6"), new DataColumn(" y_7"), new DataColumn(" y_8"), new DataColumn(" y_9"), new DataColumn(" y_10"), new DataColumn(" y_11"), new DataColumn(" y_12"), new DataColumn(" y_13"), new DataColumn(" y_14"), new DataColumn(" y_15"), new DataColumn(" y_16"), new DataColumn(" y_17"), new DataColumn(" y_18"), new DataColumn(" y_19"), new DataColumn(" y_20"), new DataColumn(" y_21"), new DataColumn(" y_22"), new DataColumn(" y_23"), new DataColumn(" y_24"), new DataColumn(" y_25"), new DataColumn(" y_26"), new DataColumn(" y_27"), new DataColumn(" y_28"), new DataColumn(" y_29"), new DataColumn(" y_30"), new DataColumn(" y_31"), new DataColumn(" y_32"), new DataColumn(" y_33"), new DataColumn(" y_34"), new DataColumn(" y_35"), new DataColumn(" y_36"), new DataColumn(" y_37"), new DataColumn(" y_38"), new DataColumn(" y_39"), new DataColumn(" y_40"), new DataColumn(" y_41"), new DataColumn(" y_42"), new DataColumn(" y_43"), new DataColumn(" y_44"), new DataColumn(" y_45"), new DataColumn(" y_46"), new DataColumn(" y_47"), new DataColumn(" y_48"), new DataColumn(" y_49"), new DataColumn(" y_50"), new DataColumn(" y_51"), new DataColumn(" y_52"), new DataColumn(" y_53"), new DataColumn(" y_54"), new DataColumn(" y_55"), new DataColumn(" y_56"), new DataColumn(" y_57"), new DataColumn(" y_58"), new DataColumn(" y_59"), new DataColumn(" y_60"), new DataColumn(" y_61"), new DataColumn(" y_62"), new DataColumn(" y_63"), new DataColumn(" y_64"), new DataColumn(" y_65"), new DataColumn(" y_66"), new DataColumn(" y_67"), new DataColumn(" X_0"), new DataColumn(" X_1"), new DataColumn(" X_2"), new DataColumn(" X_3"), new DataColumn(" X_4"), new DataColumn(" X_5"), new DataColumn(" X_6"), new DataColumn(" X_7"), new DataColumn(" X_8"), new DataColumn(" X_9"), new DataColumn(" X_10"), new DataColumn(" X_11"), new DataColumn(" X_12"), new DataColumn(" X_13"), new DataColumn(" X_14"), new DataColumn(" X_15"), new DataColumn(" X_16"), new DataColumn(" X_17"), new DataColumn(" X_18"), new DataColumn(" X_19"), new DataColumn(" X_20"), new DataColumn(" X_21"), new DataColumn(" X_22"), new DataColumn(" X_23"), new DataColumn(" X_24"), new DataColumn(" X_25"), new DataColumn(" X_26"), new DataColumn(" X_27"), new DataColumn(" X_28"), new DataColumn(" X_29"), new DataColumn(" X_30"), new DataColumn(" X_31"), new DataColumn(" X_32"), new DataColumn(" X_33"), new DataColumn(" X_34"), new DataColumn(" X_35"), new DataColumn(" X_36"), new DataColumn(" X_37"), new DataColumn(" X_38"), new DataColumn(" X_39"), new DataColumn(" X_40"), new DataColumn(" X_41"), new DataColumn(" X_42"), new DataColumn(" X_43"), new DataColumn(" X_44"), new DataColumn(" X_45"), new DataColumn(" X_46"), new DataColumn(" X_47"), new DataColumn(" X_48"), new DataColumn(" X_49"), new DataColumn(" X_50"), new DataColumn(" X_51"), new DataColumn(" X_52"), new DataColumn(" X_53"), new DataColumn(" X_54"), new DataColumn(" X_55"), new DataColumn(" X_56"), new DataColumn(" X_57"), new DataColumn(" X_58"), new DataColumn(" X_59"), new DataColumn(" X_60"), new DataColumn(" X_61"), new DataColumn(" X_62"), new DataColumn(" X_63"), new DataColumn(" X_64"), new DataColumn(" X_65"), new DataColumn(" X_66"), new DataColumn(" X_67"), new DataColumn(" Y_0"), new DataColumn(" Y_1"), new DataColumn(" Y_2"), new DataColumn(" Y_3"), new DataColumn(" Y_4"), new DataColumn(" Y_5"), new DataColumn(" Y_6"), new DataColumn(" Y_7"), new DataColumn(" Y_8"), new DataColumn(" Y_9"), new DataColumn(" Y_10"), new DataColumn(" Y_11"), new DataColumn(" Y_12"), new DataColumn(" Y_13"), new DataColumn(" Y_14"), new DataColumn(" Y_15"), new DataColumn(" Y_16"), new DataColumn(" Y_17"), new DataColumn(" Y_18"), new DataColumn(" Y_19"), new DataColumn(" Y_20"), new DataColumn(" Y_21"), new DataColumn(" Y_22"), new DataColumn(" Y_23"), new DataColumn(" Y_24"), new DataColumn(" Y_25"), new DataColumn(" Y_26"), new DataColumn(" Y_27"), new DataColumn(" Y_28"), new DataColumn(" Y_29"), new DataColumn(" Y_30"), new DataColumn(" Y_31"), new DataColumn(" Y_32"), new DataColumn(" Y_33"), new DataColumn(" Y_34"), new DataColumn(" Y_35"), new DataColumn(" Y_36"), new DataColumn(" Y_37"), new DataColumn(" Y_38"), new DataColumn(" Y_39"), new DataColumn(" Y_40"), new DataColumn(" Y_41"), new DataColumn(" Y_42"), new DataColumn(" Y_43"), new DataColumn(" Y_44"), new DataColumn(" Y_45"), new DataColumn(" Y_46"), new DataColumn(" Y_47"), new DataColumn(" Y_48"), new DataColumn(" Y_49"), new DataColumn(" Y_50"), new DataColumn(" Y_51"), new DataColumn(" Y_52"), new DataColumn(" Y_53"), new DataColumn(" Y_54"), new DataColumn(" Y_55"), new DataColumn(" Y_56"), new DataColumn(" Y_57"), new DataColumn(" Y_58"), new DataColumn(" Y_59"), new DataColumn(" Y_60"), new DataColumn(" Y_61"), new DataColumn(" Y_62"), new DataColumn(" Y_63"), new DataColumn(" Y_64"), new DataColumn(" Y_65"), new DataColumn(" Y_66"), new DataColumn(" Y_67"), new DataColumn(" Z_0"), new DataColumn(" Z_1"), new DataColumn(" Z_2"), new DataColumn(" Z_3"), new DataColumn(" Z_4"), new DataColumn(" Z_5"), new DataColumn(" Z_6"), new DataColumn(" Z_7"), new DataColumn(" Z_8"), new DataColumn(" Z_9"), new DataColumn(" Z_10"), new DataColumn(" Z_11"), new DataColumn(" Z_12"), new DataColumn(" Z_13"), new DataColumn(" Z_14"), new DataColumn(" Z_15"), new DataColumn(" Z_16"), new DataColumn(" Z_17"), new DataColumn(" Z_18"), new DataColumn(" Z_19"), new DataColumn(" Z_20"), new DataColumn(" Z_21"), new DataColumn(" Z_22"), new DataColumn(" Z_23"), new DataColumn(" Z_24"), new DataColumn(" Z_25"), new DataColumn(" Z_26"), new DataColumn(" Z_27"), new DataColumn(" Z_28"), new DataColumn(" Z_29"), new DataColumn(" Z_30"), new DataColumn(" Z_31"), new DataColumn(" Z_32"), new DataColumn(" Z_33"), new DataColumn(" Z_34"), new DataColumn(" Z_35"), new DataColumn(" Z_36"), new DataColumn(" Z_37"), new DataColumn(" Z_38"), new DataColumn(" Z_39"), new DataColumn(" Z_40"), new DataColumn(" Z_41"), new DataColumn(" Z_42"), new DataColumn(" Z_43"), new DataColumn(" Z_44"), new DataColumn(" Z_45"), new DataColumn(" Z_46"), new DataColumn(" Z_47"), new DataColumn(" Z_48"), new DataColumn(" Z_49"), new DataColumn(" Z_50"), new DataColumn(" Z_51"), new DataColumn(" Z_52"), new DataColumn(" Z_53"), new DataColumn(" Z_54"), new DataColumn(" Z_55"), new DataColumn(" Z_56"), new DataColumn(" Z_57"), new DataColumn(" Z_58"), new DataColumn(" Z_59"), new DataColumn(" Z_60"), new DataColumn(" Z_61"), new DataColumn(" Z_62"), new DataColumn(" Z_63"), new DataColumn(" Z_64"), new DataColumn(" Z_65"), new DataColumn(" Z_66"), new DataColumn(" Z_67"), new DataColumn(" p_scale"), new DataColumn(" p_rx"), new DataColumn(" p_ry"), new DataColumn(" p_rz"), new DataColumn(" p_tx"), new DataColumn(" p_ty"), new DataColumn(" p_0"), new DataColumn(" p_1"), new DataColumn(" p_2"), new DataColumn(" p_3"), new DataColumn(" p_4"), new DataColumn(" p_5"), new DataColumn(" p_6"), new DataColumn(" p_7"), new DataColumn(" p_8"), new DataColumn(" p_9"), new DataColumn(" p_10"), new DataColumn(" p_11"), new DataColumn(" p_12"), new DataColumn(" p_13"), new DataColumn(" p_14"), new DataColumn(" p_15"), new DataColumn(" p_16"), new DataColumn(" p_17"), new DataColumn(" p_18"), new DataColumn(" p_19"), new DataColumn(" p_20"), new DataColumn(" p_21"), new DataColumn(" p_22"), new DataColumn(" p_23"), new DataColumn(" p_24"), new DataColumn(" p_25"), new DataColumn(" p_26"), new DataColumn(" p_27"), new DataColumn(" p_28"), new DataColumn(" p_29"), new DataColumn(" p_30"), new DataColumn(" p_31"), new DataColumn(" p_32"), new DataColumn(" p_33"), new DataColumn(" AU01_r"), new DataColumn(" AU02_r"), new DataColumn(" AU04_r"), new DataColumn(" AU05_r"), new DataColumn(" AU06_r"), new DataColumn(" AU07_r"), new DataColumn(" AU09_r"), new DataColumn(" AU10_r"), new DataColumn(" AU12_r"), new DataColumn(" AU14_r"), new DataColumn(" AU15_r"), new DataColumn(" AU17_r"), new DataColumn(" AU20_r"), new DataColumn(" AU23_r"), new DataColumn(" AU25_r"), new DataColumn(" AU26_r"), new DataColumn(" AU45_r"), new DataColumn(" AU01_c"), new DataColumn(" AU02_c"), new DataColumn(" AU04_c"), new DataColumn(" AU05_c"), new DataColumn(" AU06_c"), new DataColumn(" AU07_c"), new DataColumn(" AU09_c"), new DataColumn(" AU10_c"), new DataColumn(" AU12_c"), new DataColumn(" AU14_c"), new DataColumn(" AU15_c"), new DataColumn(" AU17_c"), new DataColumn(" AU20_c"), new DataColumn(" AU23_c"), new DataColumn(" AU25_c"), new DataColumn(" AU26_c"), new DataColumn(" AU28_c"), new DataColumn(" AU45_c")
+                new DataColumn("face"), new DataColumn("confidence"), new DataColumn("gaze_0_x"), new DataColumn("gaze_0_y"), new DataColumn("gaze_0_z"), new DataColumn("gaze_1_x"), new DataColumn("gaze_1_y"), new DataColumn("gaze_1_z"), new DataColumn("gaze_angle_x"), new DataColumn("gaze_angle_y"), new DataColumn("eye_lmk_x_0"), new DataColumn("eye_lmk_x_1"), new DataColumn("eye_lmk_x_2"), new DataColumn("eye_lmk_x_3"), new DataColumn("eye_lmk_x_4"), new DataColumn("eye_lmk_x_5"), new DataColumn("eye_lmk_x_6"), new DataColumn("eye_lmk_x_7"), new DataColumn("eye_lmk_x_8"), new DataColumn("eye_lmk_x_9"), new DataColumn("eye_lmk_x_10"), new DataColumn("eye_lmk_x_11"), new DataColumn("eye_lmk_x_12"), new DataColumn("eye_lmk_x_13"), new DataColumn("eye_lmk_x_14"), new DataColumn("eye_lmk_x_15"), new DataColumn("eye_lmk_x_16"), new DataColumn("eye_lmk_x_17"), new DataColumn("eye_lmk_x_18"), new DataColumn("eye_lmk_x_19"), new DataColumn("eye_lmk_x_20"), new DataColumn("eye_lmk_x_21"), new DataColumn("eye_lmk_x_22"), new DataColumn("eye_lmk_x_23"), new DataColumn("eye_lmk_x_24"), new DataColumn("eye_lmk_x_25"), new DataColumn("eye_lmk_x_26"), new DataColumn("eye_lmk_x_27"), new DataColumn("eye_lmk_x_28"), new DataColumn("eye_lmk_x_29"), new DataColumn("eye_lmk_x_30"), new DataColumn("eye_lmk_x_31"), new DataColumn("eye_lmk_x_32"), new DataColumn("eye_lmk_x_33"), new DataColumn("eye_lmk_x_34"), new DataColumn("eye_lmk_x_35"), new DataColumn("eye_lmk_x_36"), new DataColumn("eye_lmk_x_37"), new DataColumn("eye_lmk_x_38"), new DataColumn("eye_lmk_x_39"), new DataColumn("eye_lmk_x_40"), new DataColumn("eye_lmk_x_41"), new DataColumn("eye_lmk_x_42"), new DataColumn("eye_lmk_x_43"), new DataColumn("eye_lmk_x_44"), new DataColumn("eye_lmk_x_45"), new DataColumn("eye_lmk_x_46"), new DataColumn("eye_lmk_x_47"), new DataColumn("eye_lmk_x_48"), new DataColumn("eye_lmk_x_49"), new DataColumn("eye_lmk_x_50"), new DataColumn("eye_lmk_x_51"), new DataColumn("eye_lmk_x_52"), new DataColumn("eye_lmk_x_53"), new DataColumn("eye_lmk_x_54"), new DataColumn("eye_lmk_x_55"), new DataColumn("eye_lmk_y_0"), new DataColumn("eye_lmk_y_1"), new DataColumn("eye_lmk_y_2"), new DataColumn("eye_lmk_y_3"), new DataColumn("eye_lmk_y_4"), new DataColumn("eye_lmk_y_5"), new DataColumn("eye_lmk_y_6"), new DataColumn("eye_lmk_y_7"), new DataColumn("eye_lmk_y_8"), new DataColumn("eye_lmk_y_9"), new DataColumn("eye_lmk_y_10"), new DataColumn("eye_lmk_y_11"), new DataColumn("eye_lmk_y_12"), new DataColumn("eye_lmk_y_13"), new DataColumn("eye_lmk_y_14"), new DataColumn("eye_lmk_y_15"), new DataColumn("eye_lmk_y_16"), new DataColumn("eye_lmk_y_17"), new DataColumn("eye_lmk_y_18"), new DataColumn("eye_lmk_y_19"), new DataColumn("eye_lmk_y_20"), new DataColumn("eye_lmk_y_21"), new DataColumn("eye_lmk_y_22"), new DataColumn("eye_lmk_y_23"), new DataColumn("eye_lmk_y_24"), new DataColumn("eye_lmk_y_25"), new DataColumn("eye_lmk_y_26"), new DataColumn("eye_lmk_y_27"), new DataColumn("eye_lmk_y_28"), new DataColumn("eye_lmk_y_29"), new DataColumn("eye_lmk_y_30"), new DataColumn("eye_lmk_y_31"), new DataColumn("eye_lmk_y_32"), new DataColumn("eye_lmk_y_33"), new DataColumn("eye_lmk_y_34"), new DataColumn("eye_lmk_y_35"), new DataColumn("eye_lmk_y_36"), new DataColumn("eye_lmk_y_37"), new DataColumn("eye_lmk_y_38"), new DataColumn("eye_lmk_y_39"), new DataColumn("eye_lmk_y_40"), new DataColumn("eye_lmk_y_41"), new DataColumn("eye_lmk_y_42"), new DataColumn("eye_lmk_y_43"), new DataColumn("eye_lmk_y_44"), new DataColumn("eye_lmk_y_45"), new DataColumn("eye_lmk_y_46"), new DataColumn("eye_lmk_y_47"), new DataColumn("eye_lmk_y_48"), new DataColumn("eye_lmk_y_49"), new DataColumn("eye_lmk_y_50"), new DataColumn("eye_lmk_y_51"), new DataColumn("eye_lmk_y_52"), new DataColumn("eye_lmk_y_53"), new DataColumn("eye_lmk_y_54"), new DataColumn("eye_lmk_y_55"), new DataColumn("eye_lmk_X_01"), new DataColumn("eye_lmk_X_110"), new DataColumn("eye_lmk_X_210"), new DataColumn("eye_lmk_X_310"), new DataColumn("eye_lmk_X_410"),new DataColumn("eye_lmk_X_56"), new DataColumn("eye_lmk_X_61"),new DataColumn("eye_lmk_X_71"), new DataColumn("eye_lmk_X_81"), new DataColumn("eye_lmk_X_91"),new DataColumn("eye_lmk_X_101"), new DataColumn("eye_lmk_X_111"), new DataColumn("eye_lmk_X_121"), new DataColumn("eye_lmk_X_131"), new DataColumn("eye_lmk_X_141"), new DataColumn("eye_lmk_X_151"), new DataColumn("eye_lmk_X_161"), new DataColumn("eye_lmk_X_171"), new DataColumn("eye_lmk_X_181"), new DataColumn("eye_lmk_X_191"), new DataColumn("eye_lmk_X_201"), new DataColumn("eye_lmk_X_211"), new DataColumn("eye_lmk_X_221"), new DataColumn("eye_lmk_X_231"), new DataColumn("eye_lmk_X_241"), new DataColumn("eye_lmk_X_251"), new DataColumn("eye_lmk_X_261"), new DataColumn("eye_lmk_X_271"), new DataColumn("eye_lmk_X_281"), new DataColumn("eye_lmk_X_291"), new DataColumn("eye_lmk_X_301"), new DataColumn("eye_lmk_X_311"), new DataColumn("eye_lmk_X_321"), new DataColumn("eye_lmk_X_331"), new DataColumn("eye_lmk_X_341"), new DataColumn("eye_lmk_X_351"), new DataColumn("eye_lmk_X_361"), new DataColumn("eye_lmk_X_371"), new DataColumn("eye_lmk_X_381"), new DataColumn("eye_lmk_X_391"), new DataColumn("eye_lmk_X_401"), new DataColumn("eye_lmk_X_411"), new DataColumn("eye_lmk_X_421"), new DataColumn("eye_lmk_X_431"), new DataColumn("eye_lmk_X_441"), new DataColumn("eye_lmk_X_451"), new DataColumn("eye_lmk_X_461"), new DataColumn("eye_lmk_X_471"), new DataColumn("eye_lmk_X_481"), new DataColumn("eye_lmk_X_491"), new DataColumn("eye_lmk_X_501"), new DataColumn("eye_lmk_X_511"), new DataColumn("eye_lmk_X_521"), new DataColumn("eye_lmk_X_531"), new DataColumn("eye_lmk_X_541"), new DataColumn("eye_lmk_X_551"), new DataColumn("eye_lmk_Y_01"), new DataColumn("eye_lmk_Y_110"), new DataColumn("eye_lmk_Y_210"), new DataColumn("eye_lmk_Y_310"), new DataColumn("eye_lmk_Y_410"), new DataColumn("eye_lmk_Y_56"), new DataColumn("eye_lmk_Y_61"), new DataColumn("eye_lmk_Y_71"), new DataColumn("eye_lmk_Y_81"), new DataColumn("eye_lmk_Y_91"), new DataColumn("eye_lmk_Y_101"), new DataColumn("eye_lmk_Y_111"), new DataColumn("eye_lmk_Y_121"), new DataColumn("eye_lmk_Y_131"), new DataColumn("eye_lmk_Y_141"), new DataColumn("eye_lmk_Y_151"), new DataColumn("eye_lmk_Y_161"), new DataColumn("eye_lmk_Y_171"), new DataColumn("eye_lmk_Y_181"), new DataColumn("eye_lmk_Y_191"), new DataColumn("eye_lmk_Y_201"), new DataColumn("eye_lmk_Y_211"), new DataColumn("eye_lmk_Y_221"), new DataColumn("eye_lmk_Y_231"), new DataColumn("eye_lmk_Y_241"), new DataColumn("eye_lmk_Y_251"), new DataColumn("eye_lmk_Y_261"), new DataColumn("eye_lmk_Y_271"), new DataColumn("eye_lmk_Y_281"), new DataColumn("eye_lmk_Y_291"), new DataColumn("eye_lmk_Y_301"), new DataColumn("eye_lmk_Y_311"), new DataColumn("eye_lmk_Y_321"), new DataColumn("eye_lmk_Y_331"), new DataColumn("eye_lmk_Y_341"), new DataColumn("eye_lmk_Y_351"), new DataColumn("eye_lmk_Y_361"), new DataColumn("eye_lmk_Y_371"), new DataColumn("eye_lmk_Y_381"), new DataColumn("eye_lmk_Y_391"), new DataColumn("eye_lmk_Y_401"), new DataColumn("eye_lmk_Y_411"), new DataColumn("eye_lmk_Y_421"), new DataColumn("eye_lmk_Y_431"), new DataColumn("eye_lmk_Y_441"), new DataColumn("eye_lmk_Y_451"), new DataColumn("eye_lmk_Y_461"), new DataColumn("eye_lmk_Y_471"), new DataColumn("eye_lmk_Y_481"), new DataColumn("eye_lmk_Y_491"), new DataColumn("eye_lmk_Y_501"), new DataColumn("eye_lmk_Y_511"), new DataColumn("eye_lmk_Y_521"), new DataColumn("eye_lmk_Y_531"), new DataColumn("eye_lmk_Y_541"), new DataColumn("eye_lmk_Y_551"), new DataColumn("eye_lmk_Z_0"), new DataColumn("eye_lmk_Z_1"), new DataColumn("eye_lmk_Z_2"), new DataColumn("eye_lmk_Z_3"), new DataColumn("eye_lmk_Z_4"), new DataColumn("eye_lmk_Z_5"), new DataColumn("eye_lmk_Z_6"), new DataColumn("eye_lmk_Z_7"), new DataColumn("eye_lmk_Z_8"), new DataColumn("eye_lmk_Z_9"), new DataColumn("eye_lmk_Z_10"), new DataColumn("eye_lmk_Z_11"), new DataColumn("eye_lmk_Z_12"), new DataColumn("eye_lmk_Z_13"), new DataColumn("eye_lmk_Z_14"), new DataColumn("eye_lmk_Z_15"), new DataColumn("eye_lmk_Z_16"), new DataColumn("eye_lmk_Z_17"), new DataColumn("eye_lmk_Z_18"), new DataColumn("eye_lmk_Z_19"), new DataColumn("eye_lmk_Z_20"), new DataColumn("eye_lmk_Z_21"), new DataColumn("eye_lmk_Z_22"), new DataColumn("eye_lmk_Z_23"), new DataColumn("eye_lmk_Z_24"), new DataColumn("eye_lmk_Z_25"), new DataColumn("eye_lmk_Z_26"), new DataColumn("eye_lmk_Z_27"), new DataColumn("eye_lmk_Z_28"), new DataColumn("eye_lmk_Z_29"), new DataColumn("eye_lmk_Z_30"), new DataColumn("eye_lmk_Z_31"), new DataColumn("eye_lmk_Z_32"), new DataColumn("eye_lmk_Z_33"), new DataColumn("eye_lmk_Z_34"), new DataColumn("eye_lmk_Z_35"), new DataColumn("eye_lmk_Z_36"), new DataColumn("eye_lmk_Z_37"), new DataColumn("eye_lmk_Z_38"), new DataColumn("eye_lmk_Z_39"), new DataColumn("eye_lmk_Z_40"), new DataColumn("eye_lmk_Z_41"), new DataColumn("eye_lmk_Z_42"), new DataColumn("eye_lmk_Z_43"), new DataColumn("eye_lmk_Z_44"), new DataColumn("eye_lmk_Z_45"), new DataColumn("eye_lmk_Z_46"), new DataColumn("eye_lmk_Z_47"), new DataColumn("eye_lmk_Z_48"), new DataColumn("eye_lmk_Z_49"), new DataColumn("eye_lmk_Z_50"), new DataColumn("eye_lmk_Z_51"), new DataColumn("eye_lmk_Z_52"), new DataColumn("eye_lmk_Z_53"), new DataColumn("eye_lmk_Z_54"), new DataColumn("eye_lmk_Z_55"), new DataColumn("pose_Tx"), new DataColumn("pose_Ty"), new DataColumn("pose_Tz"), new DataColumn("pose_Rx"), new DataColumn("pose_Ry"), new DataColumn("pose_Rz"), new DataColumn("x_0"), new DataColumn("x_1"), new DataColumn("x_2"),new DataColumn("x_3"), new DataColumn("x_4"), new DataColumn("x_5"), new DataColumn("x_6"), new DataColumn("x_7"), new DataColumn("x_8"), new DataColumn("x_9"), new DataColumn("x_10"), new DataColumn("x_11"), new DataColumn("x_12"), new DataColumn("x_13"), new DataColumn("x_14"), new DataColumn("x_15"), new DataColumn("x_16"), new DataColumn("x_17"), new DataColumn("x_18"), new DataColumn("x_19"), new DataColumn("x_20"), new DataColumn("x_21"), new DataColumn("x_22"), new DataColumn("x_23"), new DataColumn("x_24"), new DataColumn("x_25"), new DataColumn("x_26"), new DataColumn("x_27"), new DataColumn("x_28"), new DataColumn("x_29"), new DataColumn("x_30"), new DataColumn("x_31"), new DataColumn("x_32"), new DataColumn("x_33"), new DataColumn("x_34"), new DataColumn("x_35"), new DataColumn("x_36"), new DataColumn("x_37"), new DataColumn("x_38"), new DataColumn("x_39"), new DataColumn("x_40"), new DataColumn("x_41"), new DataColumn("x_42"), new DataColumn("x_43"), new DataColumn("x_44"), new DataColumn("x_45"), new DataColumn("x_46"), new DataColumn("x_47"), new DataColumn("x_48"), new DataColumn("x_49"), new DataColumn("x_50"), new DataColumn("x_51"), new DataColumn("x_52"), new DataColumn("x_53"), new DataColumn("x_54"), new DataColumn("x_55"), new DataColumn("x_56"), new DataColumn("x_57"), new DataColumn("x_58"), new DataColumn("x_59"), new DataColumn("x_60"), new DataColumn("x_61"), new DataColumn("x_62"), new DataColumn("x_63"), new DataColumn("x_64"), new DataColumn("x_65"), new DataColumn("x_66"), new DataColumn("x_67"), new DataColumn("y_0"), new DataColumn("y_1"), new DataColumn("y_2"), new DataColumn("y_3"), new DataColumn("y_4"), new DataColumn("y_5"), new DataColumn("y_6"), new DataColumn("y_7"), new DataColumn("y_8"), new DataColumn("y_9"), new DataColumn("y_10"), new DataColumn("y_11"), new DataColumn("y_12"), new DataColumn("y_13"), new DataColumn("y_14"), new DataColumn("y_15"), new DataColumn("y_16"), new DataColumn("y_17"), new DataColumn("y_18"), new DataColumn("y_19"), new DataColumn("y_20"), new DataColumn("y_21"), new DataColumn("y_22"), new DataColumn("y_23"), new DataColumn("y_24"), new DataColumn("y_25"), new DataColumn("y_26"), new DataColumn("y_27"), new DataColumn("y_28"), new DataColumn("y_29"), new DataColumn("y_30"), new DataColumn("y_31"), new DataColumn("y_32"), new DataColumn("y_33"), new DataColumn("y_34"), new DataColumn("y_35"), new DataColumn("y_36"), new DataColumn("y_37"), new DataColumn("y_38"), new DataColumn("y_39"), new DataColumn("y_40"), new DataColumn("y_41"), new DataColumn("y_42"), new DataColumn("y_43"), new DataColumn("y_44"), new DataColumn("y_45"), new DataColumn("y_46"), new DataColumn("y_47"), new DataColumn("y_48"), new DataColumn("y_49"), new DataColumn("y_50"), new DataColumn("y_51"), new DataColumn("y_52"), new DataColumn("y_53"), new DataColumn("y_54"), new DataColumn("y_55"), new DataColumn("y_56"), new DataColumn("y_57"), new DataColumn("y_58"), new DataColumn("y_59"), new DataColumn("y_60"), new DataColumn("y_61"), new DataColumn("y_62"), new DataColumn("y_63"), new DataColumn("y_64"), new DataColumn("y_65"), new DataColumn("y_66"), new DataColumn("y_67"),  new DataColumn("X_01"), new DataColumn("X_110"), new DataColumn("X_210"), new DataColumn("X_310"), new DataColumn("X_410"), new DataColumn("X_510"), new DataColumn("X_68"), new DataColumn("X_71"), new DataColumn("X_81"), new DataColumn("X_91"), new DataColumn("X_101"), new DataColumn("X_111"), new DataColumn("X_121"), new DataColumn("X_131"), new DataColumn("X_141"), new DataColumn("X_151"), new DataColumn("X_161"), new DataColumn("X_171"), new DataColumn("X_181"), new DataColumn("X_191"), new DataColumn("X_201"), new DataColumn("X_211"), new DataColumn("X_221"), new DataColumn("X_231"), new DataColumn("X_241"), new DataColumn("X_251"), new DataColumn("X_261"), new DataColumn("X_271"), new DataColumn("X_281"), new DataColumn("X_291"), new DataColumn("X_301"), new DataColumn("X_311"), new DataColumn("X_321"), new DataColumn("X_331"), new DataColumn("X_341"), new DataColumn("X_351"), new DataColumn("X_361"), new DataColumn("X_371"), new DataColumn("X_381"), new DataColumn("X_391"), new DataColumn("X_401"), new DataColumn("X_411"), new DataColumn("X_421"), new DataColumn("X_431"), new DataColumn("X_441"), new DataColumn("X_451"), new DataColumn("X_461"), new DataColumn("X_471"), new DataColumn("X_481"), new DataColumn("X_491"), new DataColumn("X_501"), new DataColumn("X_511"), new DataColumn("X_521"), new DataColumn("X_531"), new DataColumn("X_541"), new DataColumn("X_551"), new DataColumn("X_561"), new DataColumn("X_571"), new DataColumn("X_581"), new DataColumn("X_591"), new DataColumn("X_601"), new DataColumn("X_611"), new DataColumn("X_621"), new DataColumn("X_631"), new DataColumn("X_641"), new DataColumn("X_651"), new DataColumn("X_661"), new DataColumn("X_671"), new DataColumn("Y_01"), new DataColumn("Y_110"), new DataColumn("Y_210"), new DataColumn("Y_310"), new DataColumn("Y_410"), new DataColumn("Y_510"), new DataColumn("Y_68"), new DataColumn("Y_71"), new DataColumn("Y_81"), new DataColumn("Y_91"), new DataColumn("Y_101"), new DataColumn("Y_111"), new DataColumn("Y_121"), new DataColumn("Y_131"), new DataColumn("Y_141"), new DataColumn("Y_151"), new DataColumn("Y_161"), new DataColumn("Y_171"), new DataColumn("Y_181"), new DataColumn("Y_191"), new DataColumn("Y_201"), new DataColumn("Y_211"), new DataColumn("Y_221"), new DataColumn("Y_231"), new DataColumn("Y_241"), new DataColumn("Y_251"), new DataColumn("Y_261"), new DataColumn("Y_271"), new DataColumn("Y_281"), new DataColumn("Y_291"), new DataColumn("Y_301"), new DataColumn("Y_311"), new DataColumn("Y_321"), new DataColumn("Y_331"), new DataColumn("Y_341"), new DataColumn("Y_351"), new DataColumn("Y_361"), new DataColumn("Y_371"), new DataColumn("Y_381"), new DataColumn("Y_391"), new DataColumn("Y_401"), new DataColumn("Y_411"), new DataColumn("Y_421"), new DataColumn("Y_431"), new DataColumn("Y_441"), new DataColumn("Y_451"), new DataColumn("Y_461"), new DataColumn("Y_471"), new DataColumn("Y_481"), new DataColumn("Y_491"), new DataColumn("Y_501"), new DataColumn("Y_511"), new DataColumn("Y_521"), new DataColumn("Y_531"), new DataColumn("Y_541"), new DataColumn("Y_551"), new DataColumn("Y_561"), new DataColumn("Y_571"), new DataColumn("Y_581"), new DataColumn("Y_591"), new DataColumn("Y_601"), new DataColumn("Y_611"), new DataColumn("Y_621"), new DataColumn("Y_631"), new DataColumn("Y_641"), new DataColumn("Y_651"), new DataColumn("Y_661"), new DataColumn("Y_671"), new DataColumn("Z_0"), new DataColumn("Z_1"), new DataColumn("Z_2"), new DataColumn("Z_3"), new DataColumn("Z_4"), new DataColumn("Z_5"), new DataColumn("Z_6"), new DataColumn("Z_7"), new DataColumn("Z_8"), new DataColumn("Z_9"), new DataColumn("Z_10"), new DataColumn("Z_11"), new DataColumn("Z_12"), new DataColumn("Z_13"), new DataColumn("Z_14"), new DataColumn("Z_15"), new DataColumn("Z_16"), new DataColumn("Z_17"), new DataColumn("Z_18"), new DataColumn("Z_19"), new DataColumn("Z_20"), new DataColumn("Z_21"), new DataColumn("Z_22"), new DataColumn("Z_23"), new DataColumn("Z_24"), new DataColumn("Z_25"), new DataColumn("Z_26"), new DataColumn("Z_27"), new DataColumn("Z_28"), new DataColumn("Z_29"), new DataColumn("Z_30"), new DataColumn("Z_31"), new DataColumn("Z_32"), new DataColumn("Z_33"), new DataColumn("Z_34"), new DataColumn("Z_35"), new DataColumn("Z_36"), new DataColumn("Z_37"), new DataColumn("Z_38"), new DataColumn("Z_39"), new DataColumn("Z_40"), new DataColumn("Z_41"), new DataColumn("Z_42"), new DataColumn("Z_43"), new DataColumn("Z_44"), new DataColumn("Z_45"), new DataColumn("Z_46"), new DataColumn("Z_47"), new DataColumn("Z_48"), new DataColumn("Z_49"), new DataColumn("Z_50"), new DataColumn("Z_51"), new DataColumn("Z_52"), new DataColumn("Z_53"), new DataColumn("Z_54"), new DataColumn("Z_55"), new DataColumn("Z_56"), new DataColumn("Z_57"), new DataColumn("Z_58"), new DataColumn("Z_59"), new DataColumn("Z_60"), new DataColumn("Z_61"), new DataColumn("Z_62"), new DataColumn("Z_63"), new DataColumn("Z_64"), new DataColumn("Z_65"), new DataColumn("Z_66"), new DataColumn("Z_67"), new DataColumn("p_scale"), new DataColumn("p_rx"), new DataColumn("p_ry"), new DataColumn("p_rz"), new DataColumn("p_tx"), new DataColumn("p_ty"), new DataColumn("p_0"), new DataColumn("p_1"), new DataColumn("p_2"), new DataColumn("p_3"), new DataColumn("p_4"), new DataColumn("p_5"), new DataColumn("p_6"), new DataColumn("p_7"), new DataColumn("p_8"), new DataColumn("p_9"), new DataColumn("p_10"), new DataColumn("p_11"), new DataColumn("p_12"), new DataColumn("p_13"), new DataColumn("p_14"), new DataColumn("p_15"), new DataColumn("p_16"), new DataColumn("p_17"), new DataColumn("p_18"), new DataColumn("p_19"), new DataColumn("p_20"), new DataColumn("p_21"), new DataColumn("p_22"), new DataColumn("p_23"), new DataColumn("p_24"), new DataColumn("p_25"), new DataColumn("p_26"), new DataColumn("p_27"), new DataColumn("p_28"), new DataColumn("p_29"), new DataColumn("p_30"), new DataColumn("p_31"), new DataColumn("p_32"), new DataColumn("p_33"), new DataColumn("AU01_r"), new DataColumn("AU02_r"), new DataColumn("AU04_r"), new DataColumn("AU05_r"), new DataColumn("AU06_r"), new DataColumn("AU07_r"), new DataColumn("AU09_r"), new DataColumn("AU10_r"), new DataColumn("AU12_r"), new DataColumn("AU14_r"), new DataColumn("AU15_r"), new DataColumn("AU17_r"), new DataColumn("AU20_r"), new DataColumn("AU23_r"), new DataColumn("AU25_r"), new DataColumn("AU26_r"), new DataColumn("AU45_r"), new DataColumn("AU01_c"), new DataColumn("AU02_c"), new DataColumn("AU04_c"), new DataColumn("AU05_c"), new DataColumn("AU06_c"), new DataColumn("AU07_c"), new DataColumn("AU09_c"), new DataColumn("AU10_c"), new DataColumn("AU12_c"), new DataColumn("AU14_c"), new DataColumn("AU15_c"), new DataColumn("AU17_c"), new DataColumn("AU20_c"), new DataColumn("AU23_c"), new DataColumn("AU25_c"), new DataColumn("AU26_c"), new DataColumn("AU28_c"), new DataColumn("AU45_c")
             });
             //            expected.Rows.Add("7602281", "0.983", "0.003957", "-0.006063", "-0.999974", "-0.036896", "0.002067", "-0.999317", "-0.016", "-0.002", "280.1", "284.1", "291.5", "297.9", "299.6", "296.1", "288.2", "281.8", "271.7", "275.9", "282.3", "290.6", "298.7", "304.1", "307.4", "301.8", "294.5", "287.0", "280.2", "274.8", "286.5", "289.4", "292.8", "294.6", "293.8", "290.9", "287.5", "285.7", "372.4", "376.1", "383.4", "390.1", "392.3", "388.6", "381.3", "373.9", "362.3", "367.7", "374.8", "383.6", "391.4", "396.8", "399.5", "395.5", "389.6", "382.4", "374.9", "367.5", "378.4", "381.5", "384.7", "386.4", "385.4", "382.4", "379.1", "377.5", "252.0", "245.2", "243.3", "247.4", "255.1", "262.5", "263.7", "259.6", "253.8", "249.5", "247.4", "247.4", "250.9", "256.0", "262.4", "264.4", "264.3", "263.5", "261.5", "258.4", "256.4", "258.2", "257.4", "254.3", "250.8", "248.9", "249.8", "252.9", "265.7", "258.7", "256.6", "260.6", "268.5", "275.5", "277.6", "274.1", "270.9", "265.6", "262.0", "261.0", "263.7", "268.2", "274.1", "276.5", "277.0", "276.4", "275.1", "273.6", "270.2", "272.0", "271.0", "267.9", "264.4", "262.6", "263.5", "266.7", "-22.2", "-20.0", "-15.8", "-12.2", "-11.3", "-13.2", "-17.6", "-21.2", "-27.4", "-24.8", "-20.9", "-16.2", "-11.7", "-8.8", "-7.0", "-10.1", "-14.1", "-18.3", "-22.2", "-25.4", "-18.6", "-17.0", "-15.1", "-14.1", "-14.5", "-16.2", "-18.1", "-19.1", "28.4", "30.5", "34.6", "38.4", "39.6", "37.4", "33.3", "29.2", "23.0", "25.8", "29.6", "34.4", "39.0", "42.5", "44.4", "41.7", "38.0", "33.9", "29.7", "25.8", "31.8", "33.5", "35.4", "36.3", "35.8", "34.1", "32.3", "31.3", "6.7", "2.9", "1.8", "4.1", "8.3", "12.4", "13.2", "10.9", "7.8", "5.3", "4.1", "4.1", "6.0", "8.9", "12.4", "13.5", "13.4", "13.0", "12.0", "10.3", "9.1", "10.1", "9.6", "7.9", "6.0", "5.0", "5.4", "7.2", "13.9", "10.2", "9.1", "11.3", "15.6", "19.4", "20.4", "18.5", "16.8", "13.9", "11.9", "11.4", "13.0", "15.6", "19.0", "20.1", "20.2", "19.7", "19.0", "18.2", "16.4", "17.5", "17.0", "15.3", "13.3", "12.3", "12.8", "14.5", "278.4", "277.9", "277.0", "276.2", "276.0", "276.6", "277.3", "278.1", "284.0", "280.6", "277.3", "275.2", "275.2", "276.5", "278.1", "277.1", "276.4", "276.8", "278.5", "281.1", "278.4", "278.0", "277.6", "277.4", "277.5", "277.9", "278.3", "278.5", "270.8", "271.7", "273.0", "273.8", "273.7", "272.8", "271.5", "270.9", "272.3", "271.1", "270.3", "270.7", "273.0", "276.2", "279.4", "276.0", "273.0", "271.1", "270.5", "271.2", "272.3", "272.7", "273.3", "273.7", "273.7", "273.3", "272.8", "272.4", "5.1", "57.6", "331.5", "-0.011", "0.024", "0.135", "234.5", "231.7", "232.5", "235.1", "242.5", "255.7", "270.8", "289.7", "312.5", "335.5", "356.9", "376.9", "394.4", "407.8", "418.0", "425.6", "430.1", "251.0", "268.3", "289.0", "308.1", "324.6", "357.2", "376.8", "395.9", "413.8", "423.8", "339.0", "336.6", "334.4", "332.2", "307.3", "317.0", "327.2", "338.7", "348.9", "270.5", "282.8", "297.8", "308.5", "295.2", "279.9", "362.0", "376.0", "390.4", "399.7", "389.6", "375.4", "281.1", "298.2", "313.5", "323.0", "334.3", "347.5", "359.6", "345.1", "331.0", "319.2", "308.3", "294.4", "287.4", "311.9", "322.0", "333.3", "353.2", "332.7", "321.4", "311.2", "251.9", "283.1", "315.4", "346.4", "375.8", "401.6", "423.3", "439.9", "446.3", "445.4", "432.3", "413.7", "392.3", "367.2", "339.9", "311.4", "282.3", "230.3", "221.1", "221.8", "228.3", "238.7", "242.9", "237.6", "237.5", "243.2", "256.5", "261.8", "283.4", "304.9", "327.0", "335.9", "341.4", "346.4", "344.8", "341.9", "254.3", "247.7", "250.8", "263.0", "264.2", "262.1", "270.6", "261.4", "263.6", "273.0", "277.5", "275.5", "370.9", "368.5", "367.5", "372.0", "370.7", "375.8", "381.6", "392.6", "395.5", "395.1", "392.3", "385.0", "373.3", "376.6", "379.2", "379.3", "382.2", "380.3", "380.3", "377.6", "-63.5", "-66.5", "-66.7", "-65.1", "-58.8", "-47.8", "-35.6", "-21.2", "-5.2", "10.9", "26.8", "42.4", "55.8", "65.7", "72.7", "77.4", "80.1", "-46.4", "-33.9", "-20.0", "-7.5", "2.9", "23.3", "36.0", "49.1", "61.9", "70.4", "12.0", "10.2", "8.6", "7.2", "-8.0", "-1.9", "4.4", "11.6", "18.2", "-33.0", "-24.4", "-14.5", "-7.5", "-16.2", "-26.3", "27.6", "36.7", "46.3", "53.2", "45.9", "36.4", "-26.2", "-14.1", "-4.2", "1.9", "9.2", "17.9", "26.7", "16.4", "7.1", "-0.5", "-7.5", "-16.7", "-21.7", "-5.2", "1.3", "8.6", "22.2", "8.2", "0.9", "-5.6", "8.8", "32.5", "57.5", "81.7", "102.9", "120.0", "132.5", "139.8", "142.5", "144.2", "139.7", "129.4", "114.2", "95.1", "74.1", "52.3", "30.7", "-6.5", "-12.4", "-11.7", "-7.4", "-0.8", "1.8", "-1.5", "-1.6", "2.1", "11.2", "13.7", "26.7", "39.0", "51.3", "60.7", "63.2", "65.8", "65.2", "64.1", "9.5", "5.1", "7.0", "15.0", "15.8", "14.5", "20.1", "14.1", "15.5", "22.0", "24.7", "23.3", "88.2", "83.4", "81.4", "84.1", "83.6", "88.5", "95.3", "99.9", "100.3", "99.5", "98.0", "94.7", "88.8", "88.0", "89.4", "90.0", "95.0", "90.4", "89.9", "88.4", "371.3", "376.6", "381.5", "383.8", "379.0", "371.4", "361.6", "349.6", "345.5", "351.1", "363.2", "372.6", "375.0", "373.7", "370.9", "366.6", "363.7", "336.4", "328.2", "321.4", "314.9", "311.3", "312.8", "316.9", "323.2", "330.3", "339.2", "314.3", "307.5", "300.7", "294.6", "316.3", "311.8", "309.2", "311.4", "314.7", "332.5", "328.3", "326.3", "326.5", "326.7", "328.5", "327.8", "328.3", "329.3", "333.8", "329.7", "328.4", "336.8", "324.5", "319.0", "318.6", "319.6", "325.8", "336.5", "327.3", "322.5", "321.0", "321.7", "326.6", "333.2", "322.1", "321.2", "323.0", "333.8", "322.2", "320.4", "321.4", "1.497", "0.178", "0.028", "0.133", "327.885", "327.552", "-27723", "16039", "-11693", "29110", "3.572", "18.196", "2.053", "2.836", "3.558", "-0.799", "1025", "0.529", "-3210", "0.481", "-0.217", "1305", "-1365", "-3293", "0.601", "-2550", "-2233", "-1885", "-0.675", "2725", "-1815", "-1740", "-0.618", "-0.101", "-0.200", "0.149", "0.535", "-0.775", "0.304", "-0.156", "1.61", "0.10", "0.00", "1.91", "0.00", "0.52", "0.00", "0.00", "0.00", "0.84", "0.96", "0.30", "0.00", "0.49", "0.94", "0.00", "0.10", "1.0", "0.0", "0.0", "1.0", "0.0", "0.0", "0.0", "1.0", "0.0", "1.0", "1.0", "0.0", "0.0", "0.0", "1.0", "0.0", "1.0", "0.0");
             expected.Rows.Add("7602281", "0.983", "0.003957", "-0.006063", "-0.999974", "-0.036896", "0.002067", "-0.999317", "-0.016", "-0.002", "280.1", "284.1", "291.5", "297.9", "299.6", "296.1", "288.2", "281.8", "271.7", "275.9", "282.3", "290.6", "298.7", "304.1", "307.4", "301.8", "294.5", "287.0", "280.2", "274.8", "286.5", "289.4", "292.8", "294.6", "293.8", "290.9", "287.5", "285.7", "372.4", "376.1", "383.4", "390.1", "392.3", "388.6", "381.3", "373.9", "362.3", "367.7", "374.8", "383.6", "391.4", "396.8", "399.5", "395.5", "389.6", "382.4", "374.9", "367.5", "378.4", "381.5", "384.7", "386.4", "385.4", "382.4", "379.1", "377.5", "252.0", "245.2", "243.3", "247.4", "255.1", "262.5", "263.7", "259.6", "253.8", "249.5", "247.4", "247.4", "250.9", "256.0", "262.4", "264.4", "264.3", "263.5", "261.5", "258.4", "256.4", "258.2", "257.4", "254.3", "250.8", "248.9", "249.8", "252.9", "265.7", "258.7", "256.6", "260.6", "268.5", "275.5", "277.6", "274.1", "270.9", "265.6", "262.0", "261.0", "263.7", "268.2", "274.1", "276.5", "277.0", "276.4", "275.1", "273.6", "270.2", "272.0", "271.0", "267.9", "264.4", "262.6", "263.5", "266.7", "-22.2", "-20.0", "-15.8", "-12.2", "-11.3", "-13.2", "-17.6", "-21.2", "-27.4", "-24.8", "-20.9", "-16.2", "-11.7", "-8.8", "-7.0", "-10.1", "-14.1", "-18.3", "-22.2", "-25.4", "-18.6", "-17.0", "-15.1", "-14.1", "-14.5", "-16.2", "-18.1", "-19.1", "28.4", "30.5", "34.6", "38.4", "39.6", "37.4", "33.3", "29.2", "23.0", "25.8", "29.6", "34.4", "39.0", "42.5", "44.4", "41.7", "38.0", "33.9", "29.7", "25.8", "31.8", "33.5", "35.4", "36.3", "35.8", "34.1", "32.3", "31.3", "6.7", "2.9", "1.8", "4.1", "8.3", "12.4", "13.2", "10.9", "7.8", "5.3", "4.1", "4.1", "6.0", "8.9", "12.4", "13.5", "13.4", "13.0", "12.0", "10.3", "9.1", "10.1", "9.6", "7.9", "6.0", "5.0", "5.4", "7.2", "13.9", "10.2", "9.1", "11.3", "15.6", "19.4", "20.4", "18.5", "16.8", "13.9", "11.9", "11.4", "13.0", "15.6", "19.0", "20.1", "20.2", "19.7", "19.0", "18.2", "16.4", "17.5", "17.0", "15.3", "13.3", "12.3", "12.8", "14.5", "278.4", "277.9", "277.0", "276.2", "276.0", "276.6", "277.3", "278.1", "284.0", "280.6", "277.3", "275.2", "275.2", "276.5", "278.1", "277.1", "276.4", "276.8", "278.5", "281.1", "278.4", "278.0", "277.6", "277.4", "277.5", "277.9", "278.3", "278.5", "270.8", "271.7", "273.0", "273.8", "273.7", "272.8", "271.5", "270.9", "272.3", "271.1", "270.3", "270.7", "273.0", "276.2", "279.4", "276.0", "273.0", "271.1", "270.5", "271.2", "272.3", "272.7", "273.3", "273.7", "273.7", "273.3", "272.8", "272.4", "5.1", "57.6", "331.5", "-0.011", "0.024", "0.135", "234.5", "231.7", "232.5", "235.1", "242.5", "255.7", "270.8", "289.7", "312.5", "335.5", "356.9", "376.9", "394.4", "407.8", "418.0", "425.6", "430.1", "251.0", "268.3", "289.0", "308.1", "324.6", "357.2", "376.8", "395.9", "413.8", "423.8", "339.0", "336.6", "334.4", "332.2", "307.3", "317.0", "327.2", "338.7", "348.9", "270.5", "282.8", "297.8", "308.5", "295.2", "279.9", "362.0", "376.0", "390.4", "399.7", "389.6", "375.4", "281.1", "298.2", "313.5", "323.0", "334.3", "347.5", "359.6", "345.1", "331.0", "319.2", "308.3", "294.4", "287.4", "311.9", "322.0", "333.3", "353.2", "332.7", "321.4", "311.2", "251.9", "283.1", "315.4", "346.4", "375.8", "401.6", "423.3", "439.9", "446.3", "445.4", "432.3", "413.7", "392.3", "367.2", "339.9", "311.4", "282.3", "230.3", "221.1", "221.8", "228.3", "238.7", "242.9", "237.6", "237.5", "243.2", "256.5", "261.8", "283.4", "304.9", "327.0", "335.9", "341.4", "346.4", "344.8", "341.9", "254.3", "247.7", "250.8", "263.0", "264.2", "262.1", "270.6", "261.4", "263.6", "273.0", "277.5", "275.5", "370.9", "368.5", "367.5", "372.0", "370.7", "375.8", "381.6", "392.6", "395.5", "395.1", "392.3", "385.0", "373.3", "376.6", "379.2", "379.3", "382.2", "380.3", "380.3", "377.6", "-63.5", "-66.5", "-66.7", "-65.1", "-58.8", "-47.8", "-35.6", "-21.2", "-5.2", "10.9", "26.8", "42.4", "55.8", "65.7", "72.7", "77.4", "80.1", "-46.4", "-33.9", "-20.0", "-7.5", "2.9", "23.3", "36.0", "49.1", "61.9", "70.4", "12.0", "10.2", "8.6", "7.2", "-8.0", "-1.9", "4.4", "11.6", "18.2", "-33.0", "-24.4", "-14.5", "-7.5", "-16.2", "-26.3", "27.6", "36.7", "46.3", "53.2", "45.9", "36.4", "-26.2", "-14.1", "-4.2", "1.9", "9.2", "17.9", "26.7", "16.4", "7.1", "-0.5", "-7.5", "-16.7", "-21.7", "-5.2", "1.3", "8.6", "22.2", "8.2", "0.9", "-5.6", "8.8", "32.5", "57.5", "81.7", "102.9", "120.0", "132.5", "139.8", "142.5", "144.2", "139.7", "129.4", "114.2", "95.1", "74.1", "52.3", "30.7", "-6.5", "-12.4", "-11.7", "-7.4", "-0.8", "1.8", "-1.5", "-1.6", "2.1", "11.2", "13.7", "26.7", "39.0", "51.3", "60.7", "63.2", "65.8", "65.2", "64.1", "9.5", "5.1", "7.0", "15.0", "15.8", "14.5", "20.1", "14.1", "15.5", "22.0", "24.7", "23.3", "88.2", "83.4", "81.4", "84.1", "83.6", "88.5", "95.3", "99.9", "100.3", "99.5", "98.0", "94.7", "88.8", "88.0", "89.4", "90.0", "95.0", "90.4", "89.9", "88.4", "371.3", "376.6", "381.5", "383.8", "379.0", "371.4", "361.6", "349.6", "345.5", "351.1", "363.2", "372.6", "375.0", "373.7", "370.9", "366.6", "363.7", "336.4", "328.2", "321.4", "314.9", "311.3", "312.8", "316.9", "323.2", "330.3", "339.2", "314.3", "307.5", "300.7", "294.6", "316.3", "311.8", "309.2", "311.4", "314.7", "332.5", "328.3", "326.3", "326.5", "326.7", "328.5", "327.8", "328.3", "329.3", "333.8", "329.7", "328.4", "336.8", "324.5", "319.0", "318.6", "319.6", "325.8", "336.5", "327.3", "322.5", "321.0", "321.7", "326.6", "333.2", "322.1", "321.2", "323.0", "333.8", "322.2", "320.4", "321.4", "1.497", "0.178", "0.028", "0.133", "327.885", "327.552", "-27.723", "16.039", "-11.693", "29.110", "3.572", "18.196", "2.053", "2.836", "3.558", "-0.799", "1.025", "0.529", "-3.210", "0.481", "-0.217", "1.305", "-1.365", "-3.293", "0.601", "-2.550", "-2.233", "-1.885", "-0.675", "2.725", "-1.815", "-1.740", "-0.618", "-0.101", "-0.200", "0.149", "0.535", "-0.775", "0.304", "-0.156", "1.61", "0.10", "0.00", "1.91", "0.00", "0.52", "0.00", "0.00", "0.00", "0.84", "0.96", "0.30", "0.00", "0.49", "0.94", "0.00", "0.10", "1.0", "0.0", "0.0", "1.0", "0.0", "0.0", "0.0", "1.0", "0.0", "1.0", "1.0", "0.0", "0.0", "0.0", "1.0", "0.0", "1.0", "0.0");
@@ -1460,7 +1533,7 @@ Date,Count
                 var dt = new DataTable();
                 dt.Load(dr);
 
-                AssertDataTable(expected, dt);
+                UnitTestHelper.DataTableAssert.AreEqual(expected, dt);
             }
 
             return;
@@ -1755,7 +1828,7 @@ a,0,1,2-Data";
             {
                 actual = p.AsDataTable();
             }
-            AssertDataTable(expected, actual);
+            UnitTestHelper.DataTableAssert.AreEqual(expected, actual);
         }
 
         [Test]
@@ -1796,7 +1869,7 @@ a,0,1,2-Data";
 
                 actual = p.AsDataTable();
             }
-            AssertDataTable(expected, actual);
+            UnitTestHelper.DataTableAssert.AreEqual(expected, actual);
         }
 
         [Test]
@@ -1831,7 +1904,7 @@ a,0,1,2-Data";
                     actual = p1.AsDataTable();
                 }
             }
-            AssertDataTable(expected, actual);
+            UnitTestHelper.DataTableAssert.AreEqual(expected, actual);
         }
 
         [Test]
@@ -1858,13 +1931,23 @@ a,0,1,2-Data";
             public DateTime Created { get; set; }
             public string Name { get; set; }
             public bool Active { get; set; }
+
             public override bool Equals(object obj)
             {
-                BoolObject compareObject = obj as BoolObject;
-                if (compareObject != null)
-                    return (this.Name == null?(compareObject.Name==null?true:false):this.Name.Equals(compareObject.Name)) && 
-                    this.Created.Equals(compareObject.Created) && this.Active.Equals(compareObject.Active);
-                return base.Equals(obj);
+                var @object = obj as BoolObject;
+                return @object != null &&
+                       Created == @object.Created &&
+                       Name == @object.Name &&
+                       Active == @object.Active;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -1463536688;
+                hashCode = hashCode * -1521134295 + Created.GetHashCode();
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Name);
+                hashCode = hashCode * -1521134295 + Active.GetHashCode();
+                return hashCode;
             }
         }
         [Test]
@@ -2037,14 +2120,23 @@ D,World Name , LLC,2018-01-20,BUY";
             public int ID { get; set; }
             public string Name { get; set; }
             public List<string> lastTwelveMonths { get; set; }
+
             public override bool Equals(object obj)
             {
-                AccountBalance compareObject = obj as AccountBalance;
-                if (compareObject != null)
-                    return this.ID.Equals(compareObject.ID) &&
-                        this.Name==null?(compareObject.Name==null?true:false):this.Name.Equals(compareObject.Name) &&
-                        this.lastTwelveMonths.SequenceEqual(compareObject.lastTwelveMonths);
-                return base.Equals(obj);
+                var balance = obj as AccountBalance;
+                return balance != null &&
+                       ID == balance.ID &&
+                       Name == balance.Name &&
+                       EqualityComparer<List<string>>.Default.Equals(lastTwelveMonths, balance.lastTwelveMonths);
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -3043115;
+                hashCode = hashCode * -1521134295 + ID.GetHashCode();
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Name);
+                hashCode = hashCode * -1521134295 + EqualityComparer<List<string>>.Default.GetHashCode(lastTwelveMonths);
+                return hashCode;
             }
         }
 
@@ -2230,17 +2322,28 @@ v-dakash@catalysis.com,""HEY""? Tester, 12345789,""Catalysis"", LLC., Enterprise
 
             public override bool Equals(object obj)
             {
-                EmployeeX compareObject = obj as EmployeeX;
-                if (compareObject != null)
-                    return 
-                        (this.DepartmentPosition == null ? (compareObject.DepartmentPosition == null ? true : false) : this.DepartmentPosition.Equals(compareObject.DepartmentPosition)) &&
-                        (this.ParentDepartmentPosition == null ? (compareObject.ParentDepartmentPosition == null ? true : false) : this.ParentDepartmentPosition.Equals(compareObject.ParentDepartmentPosition)) &&
-                        (this.JobTitle == null ? (compareObject.JobTitle == null ? true : false) : this.JobTitle.Equals(compareObject.JobTitle)) &&
-                        (this.Role == null ? (compareObject.Role == null ? true : false) : this.Role.Equals(compareObject.Role)) &&
-                        (this.Location == null ? (compareObject.Location == null ? true : false) : this.Location.Equals(compareObject.Location)) &&
-                        (this.NameLocation == null ? (compareObject.NameLocation == null ? true : false) : this.NameLocation.Equals(compareObject.NameLocation)) &&
-                        (this.EmployeeStatus == null ? (compareObject.EmployeeStatus == null ? true : false) : this.EmployeeStatus.Equals(compareObject.EmployeeStatus));
-                return base.Equals(obj);
+                var x = obj as EmployeeX;
+                return x != null &&
+                       DepartmentPosition == x.DepartmentPosition &&
+                       ParentDepartmentPosition == x.ParentDepartmentPosition &&
+                       JobTitle == x.JobTitle &&
+                       Role == x.Role &&
+                       Location == x.Location &&
+                       NameLocation == x.NameLocation &&
+                       EmployeeStatus == x.EmployeeStatus;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = 351156953;
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(DepartmentPosition);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(ParentDepartmentPosition);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(JobTitle);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Role);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Location);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(NameLocation);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(EmployeeStatus);
+                return hashCode;
             }
         }
 
@@ -2555,29 +2658,10 @@ ID			DATE		AMOUNT	QUANTITY	ID
             DataTable actual2 = new DataTable();
             actual2.Load(dt);
 
-            AssertDataTable(expected, actual2);
+            UnitTestHelper.DataTableAssert.AreEqual(expected, actual2);
         }
 
-        private static void AssertDataTable(DataTable expected, DataTable actual2)
-        {
-            Assert.AreEqual(expected.Columns.Count, actual2.Columns.Count);
-            Assert.AreEqual(expected.Rows.Count, actual2.Rows.Count);
-            for (int colPos = 0; colPos < expected.Columns.Count; colPos++)
-            {
-                Assert.AreNotEqual(expected.Columns[colPos], actual2.Columns[colPos]);
-                //                Assert.AreNotEqual(expected.Columns[colPos].ColumnName, actual.Columns[colPos].ColumnName);
-                //                Assert.AreNotEqual(expected.Columns[colPos].DataType, actual.Columns[colPos].DataType);
-                //                Assert.AreNotEqual(expected.Columns[colPos]., actual.Columns[colPos].ColumnName);
-            }
-            for (int rowPos = 0; rowPos < expected.Rows.Count; rowPos++)
-            {
-                Assert.AreEqual(expected.Rows[rowPos].ItemArray.Length, actual2.Rows[rowPos].ItemArray.Length);
-                for (int itemPos = 0; itemPos < expected.Rows[rowPos].ItemArray.Length; itemPos++)
-                {
-                     Assert.AreEqual(expected.Rows[rowPos].ItemArray[itemPos], actual2.Rows[rowPos].ItemArray[itemPos]);
-                }
-            }
-        }
+
 
         [Test]
         public static void LargeNoOfColumnsTest()
@@ -2731,14 +2815,23 @@ ID			DATE		AMOUNT	QUANTITY	ID
             public int FooID { get; set; }
             public string FooProperty1 { get; set; }
             public List<Bar> Bars { get; set; }
+
             public override bool Equals(object obj)
             {
-                FooBar compareObject = obj as FooBar;
-                if (compareObject != null)
-                    return this.FooID.Equals(compareObject.FooID) &&
-                        (this.FooProperty1 == null?(compareObject.FooProperty1==null?true:false):this.FooProperty1.Equals(compareObject.FooProperty1)) &&
-                        (this.Bars != null ? this.Bars.SequenceEqual(compareObject.Bars) : (compareObject.Bars != null ? compareObject.Bars.SequenceEqual(this.Bars) : true));
-                return base.Equals(obj);
+                var bar = obj as FooBar;
+                return bar != null &&
+                       FooID == bar.FooID &&
+                       FooProperty1 == bar.FooProperty1 &&
+                       EqualityComparer<List<Bar>>.Default.Equals(Bars, bar.Bars);
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = 1534047906;
+                hashCode = hashCode * -1521134295 + FooID.GetHashCode();
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(FooProperty1);
+                hashCode = hashCode * -1521134295 + EqualityComparer<List<Bar>>.Default.GetHashCode(Bars);
+                return hashCode;
             }
         }
 
@@ -2748,15 +2841,25 @@ ID			DATE		AMOUNT	QUANTITY	ID
             public string BarProperty1 { get; set; }
             public string BarProperty2 { get; set; }
             public string BarProperty3 { get; set; }
+
             public override bool Equals(object obj)
             {
-                Bar compareObject = obj as Bar;
-                if (compareObject != null)
-                    return this.BarID.Equals(compareObject.BarID) &&
-                        (this.BarProperty1==null?(compareObject.BarProperty1==null?true:false):this.BarProperty1.Equals(compareObject.BarProperty1)) &&
-                        (this.BarProperty2==null?(compareObject.BarProperty2==null?true:false):this.BarProperty2.Equals(compareObject.BarProperty2)) &&
-                        (this.BarProperty3==null?(compareObject.BarProperty3==null?true:false):this.BarProperty3.Equals(compareObject.BarProperty3));
-                return base.Equals(obj);
+                var bar = obj as Bar;
+                return bar != null &&
+                       BarID == bar.BarID &&
+                       BarProperty1 == bar.BarProperty1 &&
+                       BarProperty2 == bar.BarProperty2 &&
+                       BarProperty3 == bar.BarProperty3;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = 843256140;
+                hashCode = hashCode * -1521134295 + BarID.GetHashCode();
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(BarProperty1);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(BarProperty2);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(BarProperty3);
+                return hashCode;
             }
         }
 
@@ -2981,17 +3084,26 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
             public int Material { get; set; }
             public double Density { get; set; }
             public int StorageLocation { get; set; }
+
             public override bool Equals(object obj)
             {
-                PlantType compareObject = obj as PlantType;
-                if (compareObject != null)
-                    return (this.Plant == null?(compareObject.Plant == null?true:false):this.Plant.Equals(compareObject.Plant)) &&
-                        this.Material.Equals(compareObject.Material) &&
-                        this.Density.Equals(compareObject.Density) &&
-                        this.StorageLocation.Equals(compareObject.StorageLocation);
-                return base.Equals(obj);
+                var type = obj as PlantType;
+                return type != null &&
+                       Plant == type.Plant &&
+                       Material == type.Material &&
+                       Density == type.Density &&
+                       StorageLocation == type.StorageLocation;
             }
 
+            public override int GetHashCode()
+            {
+                var hashCode = -2100988798;
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Plant);
+                hashCode = hashCode * -1521134295 + Material.GetHashCode();
+                hashCode = hashCode * -1521134295 + Density.GetHashCode();
+                hashCode = hashCode * -1521134295 + StorageLocation.GetHashCode();
+                return hashCode;
+            }
         }
 
         [Test]
@@ -3457,17 +3569,29 @@ K1,K2,K3,Sub_1,Sub_2,Sub_3,Prof_0,Prof_1
             public decimal Amount { get; set; }
             public string Subcategory { get; set; }
             public string Memo { get; set; }
+
             public override bool Equals(object obj)
             {
-                Transaction compareObject = obj as Transaction;
-                if (compareObject != null)
-                    return (this.Id==null?(compareObject.Id==null?true:false):this.Id.Equals(compareObject.Id)) &&
-                        this.Date.Equals(compareObject.Date) &&
-                        (this.Account==null?(compareObject.Account==null?true:false):this.Account.Equals(compareObject.Account)) &&
-                        this.Amount.Equals(compareObject.Amount) &&
-                        (this.Subcategory==null?(compareObject.Subcategory==null?true:false):this.Subcategory.Equals(compareObject.Subcategory)) &&
-                        (this.Memo==null?(compareObject.Memo==null?true:false):this.Memo.Equals(compareObject.Memo));
-                return base.Equals(obj);
+                var transaction = obj as Transaction;
+                return transaction != null &&
+                       Id == transaction.Id &&
+                       Date == transaction.Date &&
+                       Account == transaction.Account &&
+                       Amount == transaction.Amount &&
+                       Subcategory == transaction.Subcategory &&
+                       Memo == transaction.Memo;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = 727656570;
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Id);
+                hashCode = hashCode * -1521134295 + Date.GetHashCode();
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Account);
+                hashCode = hashCode * -1521134295 + Amount.GetHashCode();
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Subcategory);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Memo);
+                return hashCode;
             }
         }
         [Test]
@@ -3996,12 +4120,23 @@ Cassawaw"} },
             public int? Id { get; set; }
             public ChoCDATA Name { get; set; }
             public ChoCurrency? Salary { get; set; }
+
             public override bool Equals(object obj)
             {
-                EmployeeRecWithCDATA compareObject = obj as EmployeeRecWithCDATA;
-                if (compareObject != null)
-                    return this.Id.Equals(compareObject.Id) && (this.Name != null?this.Name.Equals(compareObject.Name):(compareObject.Name!=null?compareObject.Name.Equals(this.Name):true)) && this.Salary.Equals(compareObject.Salary);
-                return base.Equals(obj);    
+                var cDATA = obj as EmployeeRecWithCDATA;
+                return cDATA != null &&
+                       EqualityComparer<int?>.Default.Equals(Id, cDATA.Id) &&
+                       EqualityComparer<ChoCDATA>.Default.Equals(Name, cDATA.Name) &&
+                       EqualityComparer<ChoCurrency?>.Default.Equals(Salary, cDATA.Salary);
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -1858601383;
+                hashCode = hashCode * -1521134295 + EqualityComparer<int?>.Default.GetHashCode(Id);
+                hashCode = hashCode * -1521134295 + EqualityComparer<ChoCDATA>.Default.GetHashCode(Name);
+                hashCode = hashCode * -1521134295 + EqualityComparer<ChoCurrency?>.Default.GetHashCode(Salary);
+                return hashCode;
             }
         }
 
@@ -4011,12 +4146,23 @@ Cassawaw"} },
             public string Name { get; set; }
             //[ChoIgnoreMember]
             public ChoCurrency? Salary { get; set; }
+
             public override bool Equals(object obj)
             {
-                EmployeeRecWithCurrency compareObject = obj as EmployeeRecWithCurrency;
-                if (compareObject != null)
-                    return this.Id.Equals(compareObject.Id) && this.Name.Equals(compareObject.Name) && this.Salary.Equals(compareObject.Salary);
-                return base.Equals(obj);
+                var currency = obj as EmployeeRecWithCurrency;
+                return currency != null &&
+                       EqualityComparer<int?>.Default.Equals(Id, currency.Id) &&
+                       Name == currency.Name &&
+                       EqualityComparer<ChoCurrency?>.Default.Equals(Salary, currency.Salary);
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -1858601383;
+                hashCode = hashCode * -1521134295 + EqualityComparer<int?>.Default.GetHashCode(Id);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Name);
+                hashCode = hashCode * -1521134295 + EqualityComparer<ChoCurrency?>.Default.GetHashCode(Salary);
+                return hashCode;
             }
         }
 

@@ -1,4 +1,5 @@
 ﻿using ChoETL;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -7,9 +8,12 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DescriptionAttribute = System.ComponentModel.DescriptionAttribute;
 
 namespace ChoFixedLengthWriterTest
 {
+    [TestFixture]
+    [SetCulture("en-US")] // TODO: Check if correct culture is used
     class Program
     {
         static void Main(string[] args)
@@ -19,13 +23,33 @@ namespace ChoFixedLengthWriterTest
             QuickWriteTest2();
         }
 
-		public static void TrimTest()
+        [SetUp]
+        public void Setup()
+        {
+            Environment.CurrentDirectory = TestContext.CurrentContext.TestDirectory;
+            // Needs to be reset because of some tests changes these settings
+            ChoTypeConverterFormatSpec.Instance.Reset();
+            ChoXmlSettings.Reset();
+        }
+
+        [Test]
+        public static void TrimTest()
 		{
-			using (var w = new ChoFixedLengthWriter<EmployeeRec>(Console.Out))
+            string expected = @"0000000000Tom 23423432432 432432423";
+            string actual = null;
+
+            using (var ms = new MemoryStream())
+            using (var tw = new StreamWriter(ms))
+            using (var w = new ChoFixedLengthWriter<EmployeeRec>(tw))
 			{
 				w.Write(new EmployeeRec { Id = 90000000000000, Name = "Tom 23423432432 432432423423432423423423432432432423423432" });
-			}
-			Console.WriteLine();
+
+                tw.Flush();
+                ms.Position = 0;
+                actual = ms.ReadToEnd();
+            }
+
+            Assert.AreEqual(expected, actual);
 		}
 
 		public class EmployeeRec
@@ -36,20 +60,34 @@ namespace ChoFixedLengthWriterTest
 			public string Name { get; set; }
 		}
 
-		public static void SaveStringList()
+        [Test]
+        public static void SaveStringList()
         {
+            string expected = @"Value
+20120
+" + DateTime.Now.Year.ToString() + "0";
+            string actual = null;
+
             List<string> list = new List<string>();
             list.Add("1/1/2012");
             list.Add("1/1");
 
-            using (var w = new ChoFixedLengthWriter("List.txt").WithFirstLineHeader()
+            using (var w = new ChoFixedLengthWriter(FileNameSaveStringListTXT).WithFirstLineHeader()
                 .WithField("Value", 1, 5, valueConverter: v => v.CastTo<DateTime>().ToString("yyyyMMddhhmmss"))
                 )
                 w.Write(list);
+
+            actual = new StreamReader(FileNameSaveStringListTXT).ReadToEnd();
+            Assert.AreEqual(expected, actual);
         }
 
-        static void ToTextTest()
+        [Test]
+        public static void ToTextTest()
         {
+            string expected = @"0000000010Mark                     
+0000000200Lou                      ";
+            string actual = null;
+
             ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "G";
             ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.YesOrNo;
             //ChoTypeConverterFormatSpec.Instance.EnumFormat = ChoEnumFormatSpec.Name;
@@ -65,11 +103,23 @@ namespace ChoFixedLengthWriterTest
             rec2.Name = "Lou";
             objs.Add(rec2);
 
-            Console.WriteLine(ChoFixedLengthWriter.ToTextAll< EmployeeRecSimple>(objs));
+            actual = ChoFixedLengthWriter.ToTextAll< EmployeeRecSimple>(objs);
+            Assert.AreEqual(expected, actual);
         }
 
-        static void POCOTest()
+        public static string FileNamePOCOTestTXT => "POCOTest.txt";
+        public static string FileNameQuickWriteTestTXT => "QuickWriteTest.txt";
+        public static string FileNameQuickWriteTest2TXT => "QuickWriteTest2.txt";
+        public static string FileNameSaveStringListTXT => "SaveStringList.txt";
+
+        [Test]
+        public static void POCOTest()
         {
+            string expected = @"Id      Name      
+00000001Mark      
+00000002Jason     ";
+            string actual = null;
+
             List<EmployeeRecSimple> objs = new List<EmployeeRecSimple>();
 
             EmployeeRecSimple rec1 = new EmployeeRecSimple();
@@ -82,19 +132,27 @@ namespace ChoFixedLengthWriterTest
             rec2.Name = "Jason";
             objs.Add(rec2);
 
-            using (var parser = new ChoFixedLengthWriter<EmployeeRecSimple>("Emp.txt").
+            using (var parser = new ChoFixedLengthWriter<EmployeeRecSimple>(FileNamePOCOTestTXT).
                 WithFirstLineHeader().
                 WithField("Id", 0, 8).
                 WithField("Name", 5, 10))
             {
                 parser.Write(objs);
             }
+
+            actual = new StreamReader(FileNamePOCOTestTXT).ReadToEnd();
+            Assert.AreEqual(expected, actual);
         }
 
-        static void QuickWriteTest2()
+        [Test]
+        public static void QuickWriteTest2()
         {
-            StringBuilder output = new StringBuilder();
-            using (var parser = new ChoFixedLengthWriter(output).
+            string expected = @"Id      Name      
+00000001Mark      
+00000002Jason     ";
+            string actual = null;
+
+            using (var parser = new ChoFixedLengthWriter(FileNameQuickWriteTest2TXT).
                 WithFirstLineHeader().
                 WithField("Id", 0, 8).
                 WithField("Name", 5, 10))
@@ -112,11 +170,18 @@ namespace ChoFixedLengthWriterTest
                 parser.Write(rec2);
             }
 
-            Console.WriteLine(output);
+            actual = new StreamReader(FileNameQuickWriteTest2TXT).ReadToEnd();
+            Assert.AreEqual(expected, actual);
         }
 
-        static void QuickWriteTest()
+        [Test]
+        public static void QuickWriteTest()
         {
+            string expected = @"Id      Name      
+00000001Mark      
+00000002Jason     ";
+            string actual = null;
+
             List<ExpandoObject> objs = new List<ExpandoObject>();
             dynamic rec1 = new ExpandoObject();
             rec1.Id = 1;
@@ -128,17 +193,29 @@ namespace ChoFixedLengthWriterTest
             rec2.Name = "Jason";
             objs.Add(rec2);
 
-            using (var parser = new ChoFixedLengthWriter("Emp.txt").
+            using (var parser = new ChoFixedLengthWriter(FileNameQuickWriteTestTXT).
                 WithFirstLineHeader().
                 WithField("Id", 0, 8).
                 WithField("Name", 5, 10))
             {
                 parser.Write(objs);
             }
+
+            actual = new StreamReader(FileNameQuickWriteTestTXT).ReadToEnd();
+            Assert.AreEqual(expected, actual);
+
         }
 
-        static void QuickDynamicTest()
+        [Test]
+        public static void QuickDynamicTest()
         {
+            // TODO: Check missing usage of ChoTypeConverterFormatSpec.Instance.DateTimeFormat
+            // TODO: Check missing usage of ChoTypeConverterFormatSpec.Instance.BooleanFormat
+            string expected = @"Id Name      JoinedDateASalary              
+010MARK      02/02/2001Y$100,000.00         
+000LOU       0000000000N                    ";
+            string actual = null;
+
             ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "MM/dd/yyyy";
             ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.YOrN;
 
@@ -162,8 +239,12 @@ namespace ChoFixedLengthWriterTest
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoFixedLengthWriter(writer).WithFirstLineHeader().WithField("Id", 0, 3, null, null, '0', ChoFieldValueJustification.Right, true).WithField("Name", 3, 10).
-                WithField("JoinedDate", 13, 10, fieldType: typeof(DateTime), fillChar: '0').WithField("IsActive", 23, 1, fieldName: "A").
+            using (var parser = new ChoFixedLengthWriter(writer).
+                WithFirstLineHeader().
+                WithField("Id", 0, 3, null, null, '0', ChoFieldValueJustification.Right, true).
+                WithField("Name", 3, 10).
+                WithField("JoinedDate", 13, 10, fieldType: typeof(DateTime), fillChar: '0').
+                WithField("IsActive", 23, 1, fieldName: "A").
                 WithField("Salary", 24, 20))
             {
                 parser.Configuration["Name"].AddConverter(new ChoUpperCaseConverter());
@@ -172,8 +253,9 @@ namespace ChoFixedLengthWriterTest
                 writer.Flush();
                 stream.Position = 0;
 
-                Console.WriteLine(reader.ReadToEnd());
+                actual=reader.ReadToEnd();
             }
+            Assert.AreEqual(expected, actual);
         }
         public class EmployeeRecWithCurrency
         {
@@ -182,8 +264,14 @@ namespace ChoFixedLengthWriterTest
             public ChoCurrency Salary { get; set; }
         }
 
-        static void CurrencyPOCOTest()
+        [Test]
+        public static void CurrencyPOCOTest()
         {
+            string expected = @"Id   Name                Salary    
+00010Mark                $100,000.0
+00200Lou                 $150,000.0";
+            string actual = null;
+
             List<EmployeeRecWithCurrency> objs = new List<EmployeeRecWithCurrency>();
             EmployeeRecWithCurrency rec1 = new EmployeeRecWithCurrency();
             rec1.Id = 10;
@@ -210,8 +298,10 @@ namespace ChoFixedLengthWriterTest
                 writer.Flush();
                 stream.Position = 0;
 
-                Console.WriteLine(reader.ReadToEnd());
+                actual = reader.ReadToEnd();
             }
+
+            Assert.AreEqual(expected, actual);
         }
         public enum EmployeeType
         {
@@ -223,8 +313,15 @@ namespace ChoFixedLengthWriterTest
             Contract = 2
         }
 
-        static void EnumTest()
+        [Test]
+        public static void EnumTest()
         {
+            // TODO: Check missing usage of ChoTypeConverterFormatSpec.Instance.DateTimeFormat
+            string expected = @"Id   Name                JoinedDateISalary    Status    
+            00010Mark                2/2/2001  T$100,000.0Permanent 
+00200Lou                 10/23/1990F$150,000.0Contract  ";
+            string actual = null;
+
             ChoTypeConverterFormatSpec.Instance.EnumFormat = ChoEnumFormatSpec.Description;
 
             List<ExpandoObject> objs = new List<ExpandoObject>();
@@ -264,12 +361,20 @@ namespace ChoFixedLengthWriterTest
                 writer.Flush();
                 stream.Position = 0;
 
-                Console.WriteLine(reader.ReadToEnd());
+                actual = reader.ReadToEnd();
             }
+
+            Assert.AreEqual(expected, actual);
         }
 
-        static void BoolTest()
+        [Test]
+        public static void BoolTest()
         {
+            string expected = @"Id   Name                JoinedDateISalary    Status    
+00010Mark                2/2/2001  Y$100,000.00         
+00020Lou                 10/23/1990N$150,000.02         ";
+            string actual = null;
+            
             ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.YOrN;
 
             List<ExpandoObject> objs = new List<ExpandoObject>();
@@ -307,11 +412,19 @@ namespace ChoFixedLengthWriterTest
                 writer.Flush();
                 stream.Position = 0;
 
-                Console.WriteLine(reader.ReadToEnd());
+                actual = reader.ReadToEnd();
             }
+
+            Assert.AreEqual(expected, actual);
         }
-        static void DateTimeDynamicTest()
+        [Test]
+        public static void DateTimeDynamicTest()
         {
+/*            string expected = @"     Name                JoinedDateISalary    
+     Mark                Feb 02, 20T$100,000.0
+     Lou                 Oct 23, 19F$150,000.0";
+            string actual = null;
+*/
             ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "MMM dd, yyyy";
 
             List<ExpandoObject> objs = new List<ExpandoObject>();
@@ -342,13 +455,16 @@ namespace ChoFixedLengthWriterTest
                 WithField("Status", 46, 10)
                 )
             {
-                parser.Write(objs);
-
+                Assert.Throws<ChoMissingRecordFieldException>(() => { parser.Write(objs); });
+                Assert.Fail("I think, there are more bugs. (1) missing export for position 0-4 (2) Field for JoinedDate is too short for the expected format (3) Does not use the DateTimeFormat");
+                // TODO: Extract more test cases (without status, field overlapping, too short field)
                 writer.Flush();
                 stream.Position = 0;
 
-                Console.WriteLine(reader.ReadToEnd());
+//                actual = reader.ReadToEnd();
             }
+
+//            Assert.AreEqual(expected, actual);
         }
     }
 

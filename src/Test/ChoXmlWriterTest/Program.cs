@@ -1,4 +1,5 @@
 ﻿using ChoETL;
+using NUnit.Framework;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -29,6 +30,8 @@ namespace ChoXmlWriterTest
         //public Dictionary<int, Emp> EmpDict { get; set; }
     }
 
+    [TestFixture]
+    [SetCulture("en-US")] // TODO: Check if correct culture is used
     class Program
     {
         static void Main(string[] args)
@@ -46,31 +49,54 @@ namespace ChoXmlWriterTest
             }
         }
 
-        static void JSON2XmlDateTimeTest()
+        [SetUp]
+        public void Setup()
         {
-            string json = @"
-{
-    ""start"": ""2019-10-24T10:37:27.590Z"",
-    ""end"": ""2019-10-24T11:00:00.000Z"",
-    ""requests/duration"": {
-      ""avg"": 3819.55
-    }
-  }";
+            Environment.CurrentDirectory = TestContext.CurrentContext.TestDirectory;
+            // Needs to be reset because of some tests changes these settings
+            ChoTypeConverterFormatSpec.Instance.Reset();
+            ChoXmlSettings.Reset();
+        }
+
+        [Test]
+        public static void JSON2XmlDateTimeTest()
+        {
+            string actual;
+            string json = @"{
+ ""start"": ""2019-10-24T10:37:27.590Z"",
+ ""end"": ""2019-10-24T11:00:00.000Z"",
+ ""requests/duration"": {
+   ""avg"": 3819.55
+ }
+}";
+
             //using (var r = new ChoJSONReader(new StringBuilder(json))
             //    )
             //{
             //    Console.WriteLine(r.First().Dump());
             //}
 
-            Console.WriteLine(ChoJSONWriter.ToText(ChoJSONReader.LoadText(json,
+            actual= ChoJSONWriter.ToText(ChoJSONReader.LoadText(json,
                 new ChoJSONRecordConfiguration().Configure(c => c.JsonSerializerSettings = new Newtonsoft.Json.JsonSerializerSettings
                 {
                     DateParseHandling = Newtonsoft.Json.DateParseHandling.None
                 })).FirstOrDefault()
-                ));
+                );
+
+            Assert.AreEqual(json, actual);
         }
-        static void CustomStringArrayTest()
+        [Test]
+        public static void CustomStringArrayTest()
         {
+            string expected = @"<Root>
+  <Days>
+    <Monday />
+    <Tuesday />
+    <Wed />
+  </Days>
+</Root>";
+            string actual = null;
+
             List<string> s = new List<string>();
             s.Add("Monday");
             s.Add("Tuesday");
@@ -91,14 +117,62 @@ namespace ChoXmlWriterTest
                 })
                 )
                 w.Write(new { Days = s });
-            Console.WriteLine(sb.ToString());
-            return;
-                Console.WriteLine(ChoXmlWriter.ToTextAll(s,
-                    new ChoXmlRecordConfiguration() { RootName = "Root" }));
+            actual= sb.ToString();
+
+            Assert.AreEqual(expected, actual);
         }
 
-        static void CustomMemberSerialization()
+        [Test]
+        public static void CustomMemberSerialization()
         {
+            string expected = @"<Choices>
+  <Choice>
+    <Emp>
+    <Id>0</Id>
+    <Name>Raj</Name>
+  </Emp>
+    <Ids>
+    <int>1</int>
+    <int>2</int>
+    <int>3</int>
+  </Ids>
+    <EmpArrs>
+      <Emp>
+    <Id>1</Id>
+    <Name>Tom</Name>
+  </Emp>
+  <Emp>
+    <Id>2</Id>
+    <Name>Mark</Name>
+  </Emp>
+  </EmpArrs>
+    <Options>op 1,op 2</Options>
+  </Choice>
+  <Choice>
+    <Emp>
+    <Id>0</Id>
+    <Name>Raj</Name>
+  </Emp>
+    <Ids>
+    <int>1</int>
+    <int>2</int>
+    <int>3</int>
+  </Ids>
+    <EmpArrs>
+      <Emp>
+    <Id>1</Id>
+    <Name>Tom</Name>
+  </Emp>
+  <Emp>
+    <Id>2</Id>
+    <Name>Mark</Name>
+  </Emp>
+  </EmpArrs>
+    <Options>op 1,op 2</Options>
+  </Choice>
+</Choices>";
+            string actual = null;
+
             var sb = new StringBuilder();
             using (var p = new ChoXmlWriter<Choice>(sb)
                 .WithField("Options", valueConverter: o => String.Join(",", o as string[]))
@@ -125,12 +199,25 @@ namespace ChoXmlWriterTest
                 };
                 p.Write(l);
             }
-            Console.WriteLine(sb.ToString());
+            actual = sb.ToString();
+
+            Assert.AreEqual(expected, actual);
             //Console.WriteLine(ChoXmlWriter.ToText<Choice>(new Choice { Options = new[] { "op 1", "op 2" } }));
         }
 
-        static void CustomSerialization()
+        [Test]
+        public static void CustomSerialization()
         {
+            string expected = @"<Root>
+  <XElement id=""dd"">
+    <address>dd</address>
+  </XElement>
+  <XElement id=""dd"">
+    <address>dd</address>
+  </XElement>
+</Root>";
+            string actual = null;
+
             dynamic address = new ChoDynamicObject();
             address.Street = "10 River Rd";
             address.City = "Princeton";
@@ -159,10 +246,13 @@ namespace ChoXmlWriterTest
                 w.Write(new { id = "2s->", address = address });
                 w.Write(new { id = "1s->", address = address });
             }
-            Console.WriteLine(sb.ToString());
+            actual = sb.ToString();
+
+            Assert.AreEqual(expected, actual);
         }
 
-        static void KVPTest()
+        [Test]
+        public static void KVPTest()
         {
             StringBuilder msg = new StringBuilder();
             using (var xr = new ChoXmlWriter(msg)
@@ -179,56 +269,40 @@ namespace ChoXmlWriterTest
                 //xr.Write(new KeyValuePair<string, int>("X2", 2));
             }
             Console.WriteLine(msg.ToString());
+
+            Assert.Fail("Not sure, whats expected");
         }
 
-        static void sample7Test()
+        [Test]
+        public static void Sample7Test()
         {
 
-            //using (var jr = new ChoJSONReader("sample7.json").WithJSONPath("$.fathers")
-            //    .WithField("id")
-            //    .WithField("married", fieldType: typeof(bool))
-            //    .WithField("name")
-            //    .WithField("sons")
-            //    //.WithField("daughters", fieldType: typeof(Dictionary<string, object>[]))
-            //    )
-            //{
-            //    using (var w = new ChoXmlWriter("sample7.xml"))
-            //    {
-            //        w.Write(jr);
-            //    }
-            //    /*
-            //    foreach (var item in jr)
-            //    {
-            //        var x = item.id;
-            //        Console.WriteLine(x.GetType());
-
-            //        Console.WriteLine(item.id);
-            //        Console.WriteLine(item.married);
-            //        Console.WriteLine(item.name);
-            //        foreach (dynamic son in item.sons)
-            //        {
-            //            var x1 = son.address;
-            //            //Console.WriteLine(ChoUtility.ToStringEx(son.address.street));
-            //        }
-            //        foreach (var daughter in item.daughters)
-            //            Console.WriteLine(ChoUtility.ToStringEx(daughter));
-            //    }
-            //    */
-            //}
-
-            using (var xr = new ChoXmlReader("sample7.xml")
+            using (var jr = new ChoJSONReader(FileNameSample7JSON).WithJSONPath("$.fathers")
                 .WithField("id")
-                .WithField("married")
+                .WithField("married", fieldType: typeof(bool))
+                .WithField("name")
                 .WithField("sons")
                 )
             {
-                using (var xr1 = new ChoJSONWriter("sample7out.json"))
-                    xr1.Write(xr);
+                using (var w = new ChoXmlWriter(FileNameSample7ActualXML))
+                {
+                    w.Write(jr);
+                }
             }
+
+            FileAssert.AreEqual(FileNameSample7ExpectedXML, FileNameSample7ActualXML);
         }
 
+        [Test]
         public static void SaveStringList()
         {
+            string expected = @"<Root>
+  <XElement>1</XElement>
+  <XElement>asas</XElement>
+  <XElement/>
+</Root>";
+            string actual = null;
+
             //List<string> list = new List<string>();
             //list.Add("1/1/2012");
             //list.Add(null);
@@ -242,10 +316,24 @@ namespace ChoXmlWriterTest
                 )
                 w.Write(list);
 
-            Console.WriteLine(msg.ToString());
+            actual =msg.ToString();
         }
+
+        [Test]
         public static void SaveDict()
         {
+            string expected = @"<DictionaryEntries>
+  <DictionaryEntry>
+    <Key>2</Key>
+    <Value />
+  </DictionaryEntry>
+  <DictionaryEntry>
+    <Key>1</Key>
+    <Value>33</Value>
+  </DictionaryEntry>
+</DictionaryEntries>";
+            string actual = null;
+
             //Dictionary<int, string> list = new Dictionary<int, string>();
             //list.Add(1, "1/1/2012");
             //list.Add(2, null);
@@ -257,11 +345,16 @@ namespace ChoXmlWriterTest
             using (var w = new ChoXmlWriter(msg)
                 )
                 w.Write(list);
-            Console.WriteLine(msg.ToString());
+            actual =msg.ToString();
+
+            Assert.AreEqual(expected, actual);
         }
 
-        static void DataTableTest()
+        [Test]
+        public static void DataTableTest()
         {
+            Assert.Fail("Make database testable.");
+
             string connectionstring = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True";
             using (var conn = new SqlConnection(connectionstring))
             {
@@ -276,9 +369,12 @@ namespace ChoXmlWriterTest
                     parser.Write(dt);
             }
         }
-
-        static void DataReaderTest()
+        
+        [Test]
+        public static void DataReaderTest()
         {
+            Assert.Fail("Make database testable.");
+
             string connectionstring = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True";
             using (var conn = new SqlConnection(connectionstring))
             {
@@ -290,8 +386,21 @@ namespace ChoXmlWriterTest
         }
 
 
-        static void ConfigFirstTest()
+        [Test]
+        public static void ConfigFirstTest()
         {
+            string expected = @"<Employees>
+  <Employee>
+    <Id>1</Id>
+    <Name>Mark</Name>
+  </Employee>
+  <Employee>
+    <Id>2</Id>
+    <Name />
+  </Employee>
+</Employees>";
+            string actual = null;
+
             List<ExpandoObject> objs = new List<ExpandoObject>();
             dynamic rec1 = new ExpandoObject();
             rec1.Id = 1;
@@ -321,11 +430,18 @@ namespace ChoXmlWriterTest
                 writer.Flush();
                 stream.Position = 0;
 
-                Console.WriteLine(reader.ReadToEnd());
+                actual = reader.ReadToEnd();
             }
-        }
 
-        static void QuickPOCOTest()
+            Assert.AreEqual(expected, actual);
+        }
+        public static string FileNameQuickPOCOTestActualXML => "QuickPOCOTestActual.xml";
+        public static string FileNameQuickPOCOTestExpectedXML => "QuickPOCOTestExpected.xml";
+        public static string FileNameSample7JSON => "sample7.json";
+        public static string FileNameSample7ExpectedXML => "sample7Expected.xml";
+        public static string FileNameSample7ActualXML => "sample7Actual.xml";
+        [Test]
+        public static void QuickPOCOTest()
         {
             List<EmployeeRecSimple> objs = new List<EmployeeRecSimple>();
 
@@ -336,18 +452,20 @@ namespace ChoXmlWriterTest
             rec1.Courses = new Dictionary<int, string>() { { 1, "AA" }, { 2, "BB" } };
             objs.Add(rec1);
 
-            //EmployeeRecSimple rec2 = new EmployeeRecSimple();
-            //rec2.Id = "2";
-            //rec2.Name = null;
-            //objs.Add(rec2);
+            EmployeeRecSimple rec2 = new EmployeeRecSimple();
+            rec2.Id = "2";
+            rec2.Name = null;
+            objs.Add(rec2);
             objs.Add(null);
 
-            using (var parser = new ChoXmlWriter<EmployeeRecSimple>("Emp.xml").WithXPath("Employees/Employee")
+            using (var parser = new ChoXmlWriter<EmployeeRecSimple>(FileNameQuickPOCOTestActualXML).WithXPath("Employees/Employee")
                 .Configure(e => e.NullValueHandling = ChoNullValueHandling.Default)
                 )
             {
                 parser.Write(objs);
             }
+
+            FileAssert.AreEqual(FileNameQuickPOCOTestExpectedXML, FileNameQuickPOCOTestActualXML);
             //        using (var reader = new ChoXmlReader("emp.xml").WithXPath("Employees/Employee")
             //.WithField("Id")
             //.WithField("Name")
@@ -366,8 +484,43 @@ namespace ChoXmlWriterTest
             //}
         }
 
-        static void QuickDynamicTest()
+        [Test]
+        public static void QuickDynamicTest()
         {
+            string expected = @"<Employees>
+  <Employee>
+    <Id>1</Id>
+    <Name>Mark</Name>
+    <IsActive>true</IsActive>
+    <Message><![CDATA[Test]]></Message>
+    <Array>
+    <anyType xmlns:q1=""http://www.w3.org/2001/XMLSchema"" p3:type=""q1:int"" xmlns:p3=""http://www.w3.org/2001/XMLSchema-instance"">1</anyType>
+    <anyType xmlns:q2=""http://www.w3.org/2001/XMLSchema"" p3:type=""q2:string"" xmlns:p3=""http://www.w3.org/2001/XMLSchema-instance"">abc</anyType>
+  </Array>
+    <Lint>
+    <int>1</int>
+    <int>2</int>
+  </Lint>
+    <Dict>
+    <item>
+      <key>
+        <int>1</int>
+      </key>
+      <value>
+        <string>abc</string>
+      </value>
+    </item>
+  </Dict>
+  </Employee>
+  <Employee>
+    <Id>2</Id>
+    <Name>Jason</Name>
+    <IsActive>true</IsActive>
+    <Message><![CDATA[Test]]></Message>
+  </Employee>
+</Employees>";
+            string actual = null;
+
             ArrayList al = new ArrayList();
             al.Add(1);
             al.Add("abc");
@@ -404,12 +557,14 @@ namespace ChoXmlWriterTest
             {
                 parser.Write(objs);
             }
-            Console.WriteLine(sb.ToString());
+            actual = sb.ToString();
 
-            var a = ChoXmlReader.LoadText(sb.ToString()).ToArray();
-            var config = new ChoXmlRecordConfiguration();
-            //config.Configure(c => c.RootName = "Root");
-            Console.WriteLine(ChoXmlWriter.ToText(a.First(), config));
+            Assert.AreEqual(expected, actual);
+
+            //var a = ChoXmlReader.LoadText(sb.ToString()).ToArray();
+            //var config = new ChoXmlRecordConfiguration();
+            ////config.Configure(c => c.RootName = "Root");
+            //Console.WriteLine(ChoXmlWriter.ToText(a.First(), config));
         }
 
         public partial class EmployeeRecSimple1
@@ -430,7 +585,7 @@ namespace ChoXmlWriterTest
             [ChoXmlElementRecordField]
             public List<ChoKeyValuePair<int, string>> KVP
             {
-                get { return Courses.Select(kvp => new ChoKeyValuePair<int, string>(kvp)).ToList();  }
+                get { return Courses?.Select(kvp => new ChoKeyValuePair<int, string>(kvp)).ToList();  }
                 set { Courses = value != null ? value.ToDictionary(v => v.Key, v => v.Value) : new Dictionary<int, string>(); }
             }
             [ChoIgnoreMember]

@@ -1,0 +1,2 @@
+JobApplications_ID,JobApplications_PB_SSN,JobApplications_PB_FIRST_NAME,JobApplications_PB_CITY,JobApplications_PB_STATE,JobApplications_PB_PEMAIL,JobApplications_CB_SSN,JobApplications_CB_FIRST_NAME,JobApplications_CB_CITY,JobApplications_CB_STATE,JobApplications_CB_PEMAIL
+2407132,999999999,Thomas,Portland,MI,edison@gmail.com,123456789,Mary,BarHarBor,MI,mary@gmail.com

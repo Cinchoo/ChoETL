@@ -1,0 +1,5 @@
+id,scanTime,host,vuln,port,protocol
+1,1414010812,Host.5,Vuln.6230,500,udp
+2,1414010978,Host.6,Vuln.1191,22,tcp
+3,1414010978,Host.6,Vuln.30535,22,tcp
+4,1414010978,Host.6,Vuln.78682,22,tcp

@@ -71,7 +71,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="JSONToXmlSample4Expected.xml" />
     <Content Include="Pivot1.xml" />
+    <Content Include="sample14Expected.xml" />
     <Content Include="sample22.xml" />
     <Content Include="sample10.xml" />
     <Content Include="sample11.xml" />
@@ -117,7 +119,9 @@
     <Content Include="sample16.xml" />
     <Content Include="sample15.xml" />
     <Content Include="sample14.xml" />
-    <Content Include="sample13.xml" />
+    <Content Include="sample13.xml">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="sample12.xml" />
     <Content Include="sample9.xml" />
     <Content Include="sample8.xml" />
@@ -134,7 +138,18 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="HtmlTableToCSVExpected.csv" />
+    <None Include="JSONToXMLSample4.json" />
     <None Include="packages.config" />
+    <None Include="sample30Expected.json" />
+    <None Include="sample8Expected.json" />
+    <None Include="XmlNullTestExpected.json" />
+    <None Include="XmlToCSVSample2Expected.csv" />
+    <None Include="XmlToCSVSample3Expected.csv" />
+    <None Include="XmlToCSVSample5Expected.csv" />
+    <None Include="XmlToCSVSample6Expected.csv" />
+    <None Include="XmlToCSVSample7Expected.csv" />
+    <None Include="XmlToJSONSample4Expected.json" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.5.2">
@@ -157,10 +172,17 @@
       <Project>{0a5062f4-b00a-4998-858d-a3c5d99e2074}</Project>
       <Name>ChoETL</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\UnitTestHelper\UnitTestHelper.csproj">
+      <Project>{cab2dd15-85e2-494b-943c-47e8adade340}</Project>
+      <Name>UnitTestHelper</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>COPY $(ProjectDir)*.xml $(TargetDir)</PostBuildEvent>
+    <PostBuildEvent>COPY $(ProjectDir)*.xml $(TargetDir)
+COPY $(ProjectDir)*.json $(TargetDir)
+COPY $(ProjectDir)*.csv $(TargetDir)
+</PostBuildEvent>
   </PropertyGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

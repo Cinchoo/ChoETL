@@ -1,4 +1,5 @@
 ﻿using ChoETL;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
@@ -10,6 +11,8 @@ using System.Threading.Tasks;
 
 namespace ChoManifoldWriterTest
 {
+    [TestFixture]
+    [SetCulture("en-US")] // TODO: Check if correct culture is used
     class Program
     {
         static void Main(string[] args)
@@ -17,8 +20,23 @@ namespace ChoManifoldWriterTest
             ToTextTest();
         }
 
+        [SetUp]
+        public void Setup()
+        {
+            Environment.CurrentDirectory = TestContext.CurrentContext.TestDirectory;
+            // Needs to be reset because of some tests changes these settings
+            ChoTypeConverterFormatSpec.Instance.Reset();
+            ChoXmlSettings.Reset();
+        }
+
+        [Test]
         public static void ToTextTest()
         {
+            string expected = @"Raj     Mar212
+1|123124|65657657|05122019|DateText||0|0
+10,Mark,2/2/2001 12:00:00 AM,True,$100.00";
+            string actual = null;
+
             List<object> objs = new List<object>();
             SampleType s = new SampleType() { Field1 = "Raj", Field2 = "Mark", Field3 = 1212 };
             objs.Add(s);
@@ -34,16 +52,24 @@ namespace ChoManifoldWriterTest
             rec1.Salary = new ChoCurrency(100);
             objs.Add(rec1);
 
-            Console.WriteLine(ChoManifoldWriter.ToText(objs));
+            actual = ChoManifoldWriter.ToText(objs);
+
+            Assert.AreEqual(expected, actual);
         }
 
+        [Test]
         public static void QuickTest()
         {
+            string expected = @"Raj     Mar212
+1|123124|65657657|05122019|DateText||0|0
+10,Mark,2/2/2001 12:00:00 AM,True,$100.00";
+            string actual = null;
+
             List<object> objs = new List<object>();
             SampleType s = new SampleType() { Field1 = "Raj", Field2 = "Mark", Field3 = 1212 };
             objs.Add(s);
 
-            var o = new Orders { CustomerID = "123124", OrderID = 1, EmployeeID = 65657657, OrderDate = DateTime.Today, RequiredDate = "DateText" };
+            var o = new Orders { CustomerID = "123124", OrderID = 1, EmployeeID = 65657657, OrderDate = new DateTime(2019,12,5), RequiredDate = "DateText" };
             objs.Add(o);
 
             dynamic rec1 = new ExpandoObject();
@@ -64,9 +90,10 @@ namespace ChoManifoldWriterTest
                 writer.Flush();
                 stream.Position = 0;
 
-                Console.WriteLine(reader.ReadToEnd());
+                actual = reader.ReadToEnd();
             }
 
+            Assert.AreEqual(expected, actual);
         }
     }
 

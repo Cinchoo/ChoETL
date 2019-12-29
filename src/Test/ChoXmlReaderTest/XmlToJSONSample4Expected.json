@@ -1,0 +1,3 @@
+[
+{"ProductionOrderName":"\"ProOrd_Xml_001\"","ProductCode":"Pro_EU_001","Batches":[{"Name":"Lote_Xml_01"}],"Levels":[{"Id":1,"Name":"Nivel_1","PkgRatio":120},{"Id":2,"Name":"Nivel_2","PkgRatio":1}],"VariableData":[{"VariableDataId":1,"Value":"Pro_EU_001","LevelId":1},{"VariableDataId":20,"Value":"Lote_Xml_01","LevelId":1},{"VariableDataId":11,"Value":"170101","LevelId":1},{"VariableDataId":17,"Value":"210101","LevelId":1},{"VariableDataId":21,"Value":"####################","LevelId":1}]}
+]
