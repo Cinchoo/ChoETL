@@ -212,9 +212,45 @@ namespace ChoETL
                 return typeof(string);
         }
 
-        protected object GetDeclaringRecord(string declaringMember, object rec)
+        protected object GetDeclaringRecord(string declaringMember, object rec, ChoFileRecordFieldConfiguration config = null)
         {
-            return ChoType.GetDeclaringRecord(declaringMember, rec);
+            if (rec == null)
+                return null;
+
+            var obj = ChoType.GetDeclaringRecord(declaringMember, rec);
+            if (obj == null)
+                return null;
+
+            Type recordType = obj.GetType();
+
+            if (config != null)
+            {
+                if (config.ArrayIndex != null 
+                    && config.ArrayIndex.Value >= 0 
+                    && obj is IEnumerable
+                    && !(obj is ArrayList))
+                {
+                    var item = Enumerable.Skip(((IEnumerable)obj).OfType<object>(), config.ArrayIndex.Value).FirstOrDefault();
+
+                    if (item == null)
+                    {
+                        Type itemType = obj.GetType().GetItemType();
+                        item = Activator.CreateInstance(itemType);
+                    }
+
+                    if (obj is Array)
+                    {
+                        if (config.ArrayIndex.Value < ((Array)obj).Length)
+                            ((Array)obj).SetValue(item, config.ArrayIndex.Value);
+                    }
+                    else if (obj is IList)
+                        ((IList)obj).Add(item);
+
+                    return item;
+                }
+            }
+
+            return obj;
         }
     }
 }

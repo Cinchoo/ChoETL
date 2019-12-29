@@ -3132,8 +3132,88 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
             CollectionAssert.AreEqual(expected, actual);
         }
 
+
+        public class StudentInfo
+        {
+            public string Id { get; set; }
+            //[DisplayName("Std")]
+            public Student Student { get; set; }
+            [Range(0, 1)]
+            //[DisplayName("Cre")]
+            public Course[] Courses { get; set; }
+
+            //[ChoDictionaryKey("K1,K2,K3")]
+            //public Dictionary<string, string> Grades { get; set; }
+            //[Range(1, 3)]
+            //[DisplayName("Sub")]
+            //public string[] Subjects { get; set; }
+            ////public Teacher Teacher { get; set; }
+            //[Range(0, 1)]
+            //[DisplayName("Prof")]
+            //public List<string> Profs { get; set; }
+
+            public StudentInfo()
+            {
+                Courses = new Course[2];
+                //Grades = new Dictionary<string, string>();
+                //Subjects = new string[3];
+                //Profs = new List<string>();
+            }
+        }
+
+        public class Student
+        {
+            [ChoFieldPosition(2)]
+            public string Name { get; set; }
+
+            public Address Address { get; set; }
+        }
+
+        public class Address
+        {
+            [DisplayName("Street")]
+            public string Street { get; set; }
+            [DisplayName("City")]
+            public string City { get; set; }
+        }
+
+        public class Teacher
+        {
+            public string Id { get; set; }
+            public string Name { get; set; }
+        }
+
+        public class Course
+        {
+            [DisplayName("CreId")]
+            public string CourseId { get; set; }
+            [DisplayName("CreName")]
+            public string CourseName { get; set; }
+        }
+
+        static void CSV2ComplexObj()
+        {
+            string csv = @"
+Id, Name, Street, City, 
+K1,K2,K3,Sub_1,Sub_2,Sub_3,Prof_0,Prof_1
+1, Tom, St1, New York, CI0, CN0, CI1, CN1, K1, K2, K3, S1, S2, S3, P0, P1
+2, Mark, St1, Boston, CI0, CN0, CI1, CN1, K1, K2, K3, S1, S2, S3,P0, P1
+";
+            using (var r = ChoCSVReader<StudentInfo>.LoadText(csv)
+                //.Index(c => c.Courses, 0, 0)
+                .WithFirstLineHeader()
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
+            CSV2ComplexObj();
+            return;
+
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Error;
             Sample3();
             return;

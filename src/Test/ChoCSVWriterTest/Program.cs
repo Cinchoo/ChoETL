@@ -15,6 +15,8 @@ using System.Text;
 using System.Threading.Tasks;
 using DescriptionAttribute = System.ComponentModel.DescriptionAttribute;
 using RangeAttribute = System.ComponentModel.DataAnnotations.RangeAttribute;
+using System.Xml;
+using System.Xml.Schema;
 
 namespace ChoCSVWriterTest
 {
@@ -698,6 +700,7 @@ $1.00";
             [Range(0, 1)]
             [DisplayName("Cre")]
             public Course[] Courses { get; set; }
+            //public Course[] Courses { get; set; }
             public string Id { get; set; }
             [DisplayName("Std")]
             public Student Student { get; set; }
@@ -765,7 +768,7 @@ B,c1,Math1,100,1,Mark,Physics,,,100,Tom,";
                 .WithField(c => c.Student.Id, fieldName: "SId")
                 //.WithField(c => c.Courses.FirstOrDefault().CourseId, fieldName: "CId")
                 .WithFirstLineHeader()
-                .Index(c => c.Courses, 1, 1)
+                //.Index(c => c.Courses, 1, 1)
                 .DictionaryKeys(c => c.Grades, "K01", "K2")
                 )
             {
@@ -814,8 +817,46 @@ B,c1,Math1,100,1,Mark,Physics,,,100,Tom,";
                 Console.WriteLine(ChoCSVWriter.ToTextAll(r.Transpose(false)));
             }
         }
+
+        static void LargeXmlToCSV()
+        {
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
+            XmlReaderSettings settings = new XmlReaderSettings();
+
+            // SET THE RESOLVER
+            settings.XmlResolver = new XmlUrlResolver();
+
+            settings.ValidationType = ValidationType.DTD;
+            settings.DtdProcessing = DtdProcessing.Parse;
+            settings.ValidationEventHandler += new ValidationEventHandler(ValidationCallBack);
+            settings.IgnoreWhitespace = true;
+
+            Console.WriteLine(DateTime.Now.ToString());
+
+            using (var r = new ChoXmlReader(XmlReader.Create(@"C:\Users\nraj39\Downloads\Loan\dblp.xml",
+                settings)))
+            {
+                using (FileStream fs = File.Open(@"C:\Users\nraj39\Downloads\Loan\dblp.csv", FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite))
+                using (BufferedStream bs = new BufferedStream(fs))
+                using (var w = new ChoCSVWriter(bs)
+                    .WithFirstLineHeader())
+                {
+                    w.NotifyAfter(1000);
+                    w.Write(r);
+                }
+            }
+            Console.WriteLine(DateTime.Now.ToString());
+        }
+
+        private static void ValidationCallBack(object sender, ValidationEventArgs e)
+        {
+        }
+
         static void Main(string[] args)
         {
+            LargeXmlToCSV();
+            return;
+
             //DataReaderTest();
             //return;
             //ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;

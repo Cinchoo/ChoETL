@@ -279,7 +279,7 @@ namespace ChoETL
                             }
                             else
                                 Configuration.Validate(GetHeaders(pair.Item2));
-                            var dict = recFieldTypes = Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
+                            var dict = recFieldTypes = Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
                             RaiseMembersDiscovered(dict);
                             Configuration.UpdateFieldTypesIfAny(dict);
                             _configCheckDone = true;
@@ -597,7 +597,9 @@ namespace ChoETL
                 if (Configuration.PIDict != null)
                     Configuration.PIDict.TryGetValue(kvp.Key, out pi);
 
-                rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
+                rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec, fieldConfig);
+                if (rec == null)
+                    continue;
 
                 try
                 {
@@ -608,6 +610,14 @@ namespace ChoETL
                             if (fieldNameValues.ContainsKey(fieldConfig.FieldName))
                             {
                                 fieldValue = fieldNameValues[fieldConfig.FieldName];
+                            }
+                            else if (fieldConfig.FieldPosition - 1 >= 0)
+                            {
+                                try
+                                {
+                                    fieldValue = fieldNameValues.ElementAt(fieldConfig.FieldPosition - 1).Value;
+                                }
+                                catch { }
                             }
 
                             if (fieldValue == null)

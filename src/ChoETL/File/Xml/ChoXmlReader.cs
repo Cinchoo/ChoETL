@@ -73,8 +73,11 @@ namespace ChoETL
 
         private void InitXml()
         {
-            _xmlReader = XmlReader.Create(_sr,
-                new XmlReaderSettings() { DtdProcessing = DtdProcessing.Ignore, XmlResolver = null }, new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
+            if (_sr != null)
+            {
+                _xmlReader = XmlReader.Create(_sr,
+                    new XmlReaderSettings() { DtdProcessing = DtdProcessing.Ignore, XmlResolver = null }, new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
+            }
         }
 
         public ChoXmlReader(string filePath, ChoXmlRecordConfiguration configuration = null)

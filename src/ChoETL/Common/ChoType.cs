@@ -2543,7 +2543,7 @@
 
         private static object GetDeclaringRecord(object src, string propName, bool leaf = true)
         {
-            if (src == null) throw new ArgumentException("Value cannot be null.", "src");
+            if (src == null) return null; // throw new ArgumentException("Value cannot be null.", "src");
             if (propName == null) throw new ArgumentException("Value cannot be null.", "propName");
 
             if (propName.Contains("."))//complex type nested
@@ -2559,7 +2559,14 @@
                     var obj = prop.GetValue(src, null);
                     if (obj == null)
                     {
-                        obj = Activator.CreateInstance(prop.PropertyType);
+                        if (typeof(Array).IsAssignableFrom(prop.PropertyType))
+                        {
+                            //obj = Array.CreateInstance(prop.PropertyType.GetItemType(), 2);
+                        }
+                        else
+                        {
+                            obj = Activator.CreateInstance(prop.PropertyType);
+                        }
                         prop.SetValue(src, obj);
                     }
                     return obj;
