@@ -280,7 +280,11 @@ namespace ChoETL
     
         ~ChoManifoldReader()
         {
-            Dispose(true);
+            try
+            {
+                Dispose(true);
+            }
+            catch { }
         }
-}
+    }
 }

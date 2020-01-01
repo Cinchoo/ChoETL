@@ -12,7 +12,31 @@ namespace ChoETL
 {
 	public static class ChoEnumrableEx
     {
-		public static IDataReader AsDataReader(this IEnumerable collection, Action<IDictionary<string, Type>> membersDiscovered = null)
+        public static IEnumerable<V> ZipOrDefault<T, U, V>(
+            this IEnumerable<T> one,
+            IEnumerable<U> two,
+            Func<T, U, V> f)
+        {
+            using (var oneIter = one.GetEnumerator())
+            {
+                using (var twoIter = two.GetEnumerator())
+                {
+                    while (oneIter.MoveNext())
+                    {
+                        yield return f(oneIter.Current,
+                            twoIter.MoveNext() ?
+                                twoIter.Current :
+                                default(U));
+                    }
+
+                    while (twoIter.MoveNext())
+                    {
+                        yield return f(oneIter.Current, twoIter.Current);
+                    }
+                }
+            }
+        }
+        public static IDataReader AsDataReader(this IEnumerable collection, Action<IDictionary<string, Type>> membersDiscovered = null)
 		{
 			var e = new ChoStdDeferedObjectMemberDiscoverer(collection);
             if (membersDiscovered != null)

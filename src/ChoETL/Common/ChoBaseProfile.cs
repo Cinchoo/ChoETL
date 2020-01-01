@@ -332,7 +332,11 @@
 
         ~ChoBaseProfile()
         {
-            Dispose(true);
+            try
+            {
+                Dispose(true);
+            }
+            catch { }
         }
     }
 }

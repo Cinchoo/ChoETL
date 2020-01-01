@@ -747,7 +747,11 @@ namespace ChoETL
 
         ~ChoJSONReader()
         {
-            Dispose(true);
+            try
+            {
+                Dispose(true);
+            }
+            catch { }
         }
     }
 

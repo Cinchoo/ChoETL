@@ -852,9 +852,165 @@ B,c1,Math1,100,1,Mark,Physics,,,100,Tom,";
         {
         }
 
+        static void LargeJSON2CSV()
+        {
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
+            using (var r = new ChoJSONReader(@"C:\Users\nraj39\Downloads\Loan\rows.json"))
+            {
+                //var x = ((IDictionary<string, object>)r.FirstOrDefault()).Flatten().ToDictionary(c => c.Key, c => c.Value);
+                //Console.WriteLine(x.Dump());
+                using (var w = new ChoCSVWriter(@"C:\Users\nraj39\Downloads\Loan\rows.csv")
+                    .WithFirstLineHeader()
+                    )
+                {
+                    w.Write(r.FirstOrDefault());
+                }
+            }
+        }
+
+        static void JSON2CSVTest1()
+        {
+            string json = @"{
+  ""data"": {
+    ""getUsers"": [
+      {
+        ""userProfileDetail"": {
+          ""userStatus"": {
+            ""name"": ""Expired""
+          },
+          ""userStatusDate"": ""2017-04-04T07:48:25+00:00"",
+          ""lastAttestationDate"": ""2019-02-01T03:50:42.6049634-05:00""
+        },
+        ""userInformation"": {
+          ""Id"": 13610875,
+          ""lastName"": ""************"",
+          ""suffix"": null,
+          ""gender"": ""FEMALE"",
+          ""birthDate"": ""1970-01-01T00:01:00+00:00"",
+          ""ssn"": ""000000000"",
+          ""ethnicity"": ""INVALID_REFERENCE_VALUE"",
+          ""languagesSpoken"": null,
+          ""personalEmail"": null,
+          ""otherNames"": null,
+          ""userType"": {
+            ""name"": ""APN""
+          },
+          ""primaryuserState"": ""CO"",
+          ""otheruserState"": [
+            ""CO""
+          ],
+          ""practiceSetting"": ""INPATIENT_ONLY"",
+          ""primaryEmail"": ""*****@*****.com""
+        }
+      }
+    ]
+  }
+}";
+
+            Console.WriteLine(ChoCSVWriter.ToTextAll(ChoJSONReader.LoadText(json,
+                new ChoJSONRecordConfiguration()), 
+                new ChoCSVRecordConfiguration().Configure(c => c.WithFirstLineHeader())));
+        }
+
+        static void JSON2CSVTest2()
+        {
+            string json = @"{
+    ""getUsers"": [
+        {
+            ""UserInformation"": {
+                ""Id"": 1111122,
+                ""firstName"": ""*****1"",
+                ""UserType"": {
+                    ""name"": ""CP""
+                },
+                ""primaryState"": ""MA"",
+                ""otherState"": [
+                    ""MA"",
+                    ""BA""
+                ],
+                ""createdAt"": null
+            }
+        },
+        {
+            ""UserInformation"": {
+                ""Id"": 3333,
+                ""firstName"": ""*****3"",
+                ""UserType"": {
+                    ""name"": ""CPP""
+                },
+                ""primaryState"": ""MPA"",
+                ""otherState"": [
+                    ""KL"",
+                    ""TN"",
+                    ""DL"",
+                    ""AP"",
+                    ""RJ""
+                ],
+                ""createdAt"": null
+            }
+        }
+    ]
+}";
+            StringBuilder csv = new StringBuilder();
+
+            using (var r = ChoJSONReader.LoadText(json)
+                .WithJSONPath("$..getUsers[*]")
+                )
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    .Configure(c => c.MaxScanRows = 2)
+                    .Configure(c => c.ThrowAndStopOnMissingField = false)
+                    )
+                {
+                    w.Write(r);
+                }
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
+        static void JSON2CSVTest3()
+        {
+            dynamic[] x;
+            dynamic[] x1;
+
+            using (var r = new ChoJSONReader(@"C:\Users\nraj39\Downloads\Loan\test1.json")
+                 .WithJSONPath("$..data.getUsers[*]"))
+            {
+                using (var r1 = new ChoJSONReader(@"C:\Users\nraj39\Downloads\Loan\test1.json")
+                    .WithJSONPath("$..errors[*]")
+                    )
+                {
+                    x = r.ToArray();
+                    x1 = r1.ToArray();
+
+                    var r3 = x1.ZipOrDefault(x, (i, j) =>
+                    {
+                        if (j != null)
+                        {
+                            j.Merge(i);
+                            return j;
+                        }
+                        else
+                            return i;
+                    }).ToArray();
+
+                    using (var w = new ChoCSVWriter(@"C:\Users\nraj39\Downloads\Loan\test1.csv")
+                        .WithFirstLineHeader()
+                        .Configure(c => c.MaxScanRows = 10)
+                        .Configure(c => c.ThrowAndStopOnMissingField = false)
+                        )
+                    {
+                        w.Write(r3);
+                    }
+                }
+            }
+        }
+
         static void Main(string[] args)
         {
-            LargeXmlToCSV();
+            JSON2CSVTest3();
             return;
 
             //DataReaderTest();

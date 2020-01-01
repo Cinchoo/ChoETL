@@ -544,7 +544,11 @@ namespace ChoETL
 
         ~ChoJSONWriter()
         {
-            Dispose(true);
+            try
+            {
+                Dispose(true);
+            }
+            catch { }
         }
     }
 

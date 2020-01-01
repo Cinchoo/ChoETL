@@ -288,7 +288,10 @@ namespace ChoETL
             {
                 var dictKeys = new List<string>();
                 var dict = record.ToDynamicObject() as IDictionary<string, Object>;
-                fieldNames = dict.Flatten().ToDictionary().Keys.ToArray();
+                if (Configuration.UseNestedKeyFormat)
+                    fieldNames = dict.Flatten(Configuration.NestedColumnSeparator).ToDictionary().Keys.ToArray();
+                else
+                    fieldNames = dict.Keys.ToArray();
             }
             else
             {
@@ -315,6 +318,7 @@ namespace ChoETL
             if (Configuration.ColumnCountStrict)
                 CheckColumnsStrict(rec);
 
+            bool isInit = false;
             //bool firstColumn = true;
             PropertyInfo pi = null;
             object rootRec = rec;
@@ -335,9 +339,15 @@ namespace ChoETL
 
                 rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
 
-                dict = rec.ToDynamicObject() as IDictionary<string, Object>;
-                if (Configuration.IsDynamicObject)
-                    dict = dict.Flatten().ToDictionary();
+                if (!isInit)
+                {
+                    isInit = true;
+                    if (Configuration.IsDynamicObject)
+                        dict = rec.ToDynamicObject() as IDictionary<string, Object>;
+                    if (Configuration.IsDynamicObject && Configuration.UseNestedKeyFormat)
+                        dict = dict.Flatten(Configuration.NestedColumnSeparator).ToArray().ToDictionary();
+                }
+
 
                 if (Configuration.ThrowAndStopOnMissingField)
                 {
@@ -357,7 +367,7 @@ namespace ChoETL
                 {
                     if (Configuration.IsDynamicObject)
                     {
-                        fieldValue = dict[kvp.Key]; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
+                        fieldValue = dict.ContainsKey(kvp.Key) ? dict[kvp.Key] : null; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
                         if (kvp.Value.FieldType == null)
                         {
                             if (rec is ChoDynamicObject)
@@ -365,10 +375,13 @@ namespace ChoETL
                                 var dobj = rec as ChoDynamicObject;
                                 kvp.Value.FieldType = dobj.GetMemberType(kvp.Key);
                             }
-                            if (fieldValue == null)
-                                kvp.Value.FieldType = typeof(string);
-                            else
-                                kvp.Value.FieldType = fieldValue.GetType();
+                            if (kvp.Value.FieldType == null)
+                            {
+                                if (fieldValue == null)
+                                    kvp.Value.FieldType = typeof(string);
+                                else
+                                    kvp.Value.FieldType = fieldValue.GetType();
+                            }
                         }
                     }
                     else

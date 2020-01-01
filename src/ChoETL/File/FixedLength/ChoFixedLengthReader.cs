@@ -721,9 +721,13 @@ namespace ChoETL
 
         ~ChoFixedLengthReader()
         {
-            Dispose(true);
+            try
+            {
+                Dispose(true);
+            }
+            catch { }
         }
- }
+    }
 
     public class ChoFixedLengthReader : ChoFixedLengthReader<dynamic>
     {

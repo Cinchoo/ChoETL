@@ -572,7 +572,11 @@ namespace ChoETL
 
         ~ChoKVPReader()
         {
-            Dispose(true);
+            try
+            {
+                Dispose(true);
+            }
+            catch { }
         }
     }
 

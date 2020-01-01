@@ -707,7 +707,11 @@ namespace ChoETL
 
         ~ChoCSVWriter()
         {
-            Dispose(true);
+            try
+            {
+                Dispose(true);
+            }
+            catch { }
         }
 
     }

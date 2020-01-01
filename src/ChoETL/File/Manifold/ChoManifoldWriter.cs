@@ -216,7 +216,11 @@ namespace ChoETL
 
         ~ChoManifoldWriter()
         {
-            Dispose(true);
+            try
+            {
+                Dispose(true);
+            }
+            catch { }
         }
     }
 }

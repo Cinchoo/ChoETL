@@ -73,12 +73,14 @@ namespace ChoETL
             {
                 if (kvp.Value is IDictionary<string, object>)
                 {
-                    foreach (var tuple in Flatten(kvp.Value as IDictionary<string, object>, key == null ? kvp.Key : "{0}{2}{1}".FormatString(key, kvp.Key, nestedKeySeparator), nestedKeySeparator))
+                    var lkey = key == null ? kvp.Key : "{0}{2}{1}".FormatString(key, kvp.Key, nestedKeySeparator);
+                    foreach (var tuple in Flatten(kvp.Value as IDictionary<string, object>, lkey, nestedKeySeparator))
                         yield return tuple;
                 }
                 else if (kvp.Value is IList)
                 {
-                    foreach (var tuple in Flatten(kvp.Value as IList, key == null ? kvp.Key : "{0}{2}{1}".FormatString(key, kvp.Key, nestedKeySeparator), nestedKeySeparator))
+                    var lkey = key == null ? kvp.Key : "{0}{2}{1}".FormatString(key, kvp.Key, nestedKeySeparator);
+                    foreach (var tuple in Flatten(kvp.Value as IList, lkey, nestedKeySeparator))
                         yield return tuple;
                 }
                 else if (kvp.Value == null || kvp.Value.GetType().IsSimple())

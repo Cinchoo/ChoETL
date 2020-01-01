@@ -387,6 +387,23 @@ namespace ChoETL
 
         #region Instance Members (Protected/Public)
 
+        public void Merge(IDictionary<string, object> obj, bool skipIfSrcExists = false)
+        {
+            if (obj == null)
+                return;
+
+            foreach (var kvp in obj)
+            {
+                if (ContainsKey(kvp.Key))
+                {
+                    if (skipIfSrcExists)
+                        continue;
+                }
+
+                this[kvp.Key] = kvp.Value;
+            }
+        }
+
         public virtual bool ContainsProperty(string key)
         {
             IDictionary<string, object> kvpDict = _kvpDict;

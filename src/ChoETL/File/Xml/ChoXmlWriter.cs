@@ -743,7 +743,11 @@ namespace ChoETL
 
         ~ChoXmlWriter()
         {
-            Dispose(true);
+            try
+            {
+                Dispose(true);
+            }
+            catch { }
         }
     }
 

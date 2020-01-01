@@ -500,7 +500,11 @@ namespace ChoETL
 
         ~ChoFixedLengthWriter()
         {
-            Dispose(true);
+            try
+            {
+                Dispose(true);
+            }
+            catch { }
         }
     }
 

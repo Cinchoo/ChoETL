@@ -952,7 +952,11 @@ namespace ChoETL
 
         ~ChoCSVReader()
         {
-            Dispose(true);
+            try
+            {
+                Dispose(true);
+            }
+            catch { }
         }
     }
 

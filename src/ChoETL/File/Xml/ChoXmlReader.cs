@@ -835,7 +835,11 @@ namespace ChoETL
 
         ~ChoXmlReader()
         {
-            Dispose(true);
+            try
+            {
+                Dispose(true);
+            }
+            catch { }
         }
     }
 

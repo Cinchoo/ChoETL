@@ -327,6 +327,7 @@ namespace ChoETL
             if (Configuration.ColumnOrderStrict)
                 CheckColumnOrderStrict(rec);
 
+            bool isInit = false;
             bool firstColumn = true;
             PropertyInfo pi = null;
             object rootRec = rec;
@@ -346,10 +347,14 @@ namespace ChoETL
 
                 rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
 
-                if (Configuration.IsDynamicObject)
-                    dict = rec.ToDynamicObject() as IDictionary<string, Object>;
-                if (Configuration.IsDynamicObject && Configuration.UseNestedKeyFormat)
-                    dict = dict.Flatten(Configuration.NestedColumnSeparator).ToArray().ToDictionary();
+                if (!isInit)
+                {
+                    isInit = true;
+                    if (Configuration.IsDynamicObject)
+                        dict = rec.ToDynamicObject() as IDictionary<string, Object>;
+                    if (Configuration.IsDynamicObject && Configuration.UseNestedKeyFormat)
+                        dict = dict.Flatten(Configuration.NestedColumnSeparator).ToArray().ToDictionary();
+                }
 
                 if (Configuration.ThrowAndStopOnMissingField)
                 {
@@ -375,18 +380,23 @@ namespace ChoETL
                 {
                     if (Configuration.IsDynamicObject)
                     {
-                        fieldValue = dict.ContainsKey(kvp.Key) ? dict[kvp.Key] : dict[dict.Keys.ElementAt(fieldConfig.FieldPosition - 1)]; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
-                        if (rec is ChoDynamicObject)
-                        {
-                            var dobj = rec as ChoDynamicObject;
-                            kvp.Value.FieldType = dobj.GetMemberType(kvp.Key);
-                        }
+                        fieldValue = dict.ContainsKey(kvp.Key) ? dict[kvp.Key] :
+                            fieldConfig.FieldPosition > 0 && fieldConfig.FieldPosition - 1 < dict.Keys.Count 
+                            && Configuration.RecordFieldConfigurationsDict.Count == dict.Keys.Count ? dict[dict.Keys.ElementAt(fieldConfig.FieldPosition - 1)] : null; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
                         if (kvp.Value.FieldType == null)
                         {
-                            if (fieldValue == null)
-                                kvp.Value.FieldType = typeof(string);
-                            else
-                                kvp.Value.FieldType = fieldValue.GetType();
+                            if (rec is ChoDynamicObject)
+                            {
+                                var dobj = rec as ChoDynamicObject;
+                                kvp.Value.FieldType = dobj.GetMemberType(kvp.Key);
+                            }
+                            if (kvp.Value.FieldType == null)
+                            {
+                                if (fieldValue == null)
+                                    kvp.Value.FieldType = typeof(string);
+                                else
+                                    kvp.Value.FieldType = fieldValue.GetType();
+                            }
                         }
                     }
                     else
