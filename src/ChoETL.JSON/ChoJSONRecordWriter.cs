@@ -606,7 +606,7 @@ namespace ChoETL
                     }
                     else if (ft == typeof(string) || ft == typeof(char))
                         fieldText = JsonConvert.SerializeObject(NormalizeFieldValue(kvp.Key, fieldValue.ToString(), kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType, Configuration.FieldValueTrimOption)));
-                    else if (ft == typeof(DateTime))
+                    else if (ft == typeof(DateTime) || ft == typeof(TimeSpan))
                         fieldText = JsonConvert.SerializeObject(fieldValue);
                     else if (ft.IsEnum)
                     {
