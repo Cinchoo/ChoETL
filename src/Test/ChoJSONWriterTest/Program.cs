@@ -113,7 +113,7 @@ public class ToTextConverter : IChoValueConverter
 
         static void Main(string[] args)
         {
-            DataTableTest();
+            TimespanTest();
             return;
 
             string codfis = "Example1";
@@ -146,6 +146,15 @@ public class ToTextConverter : IChoValueConverter
             Console.WriteLine(String.Join(",", c));
             return;
         }
+
+        public class Project { public TimeSpan AverageScanTime { get; set; } }
+        public static void TimespanTest()
+        {
+            var newP = new Project() { AverageScanTime = TimeSpan.FromHours(1) };
+
+            Console.WriteLine(ChoJSONWriter.ToText(newP));
+        }
+
 
         [SetUp]
         public void Setup()

@@ -3194,8 +3194,7 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
         static void CSV2ComplexObj()
         {
             string csv = @"
-Id, Name, Street, City, 
-K1,K2,K3,Sub_1,Sub_2,Sub_3,Prof_0,Prof_1
+Id, Name, Street, City, K1,K2,K3,Sub_1,Sub_2,Sub_3,Prof_0,Prof_1
 1, Tom, St1, New York, CI0, CN0, CI1, CN1, K1, K2, K3, S1, S2, S3, P0, P1
 2, Mark, St1, Boston, CI0, CN0, CI1, CN1, K1, K2, K3, S1, S2, S3,P0, P1
 ";

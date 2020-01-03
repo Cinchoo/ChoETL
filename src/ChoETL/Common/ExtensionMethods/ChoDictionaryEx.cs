@@ -26,6 +26,59 @@ namespace ChoETL
         //    }
         //}
 
+        public static IEnumerable<dynamic> FlattenBy(this IEnumerable dicts, params string[] fields)
+        {
+            if (dicts == null || fields == null)
+                yield return dicts;
+            else
+            {
+                foreach (var rec in dicts)
+                {
+                    if (rec is IDictionary<string, object>)
+                    {
+                        foreach (var child in FlattenBy((IDictionary<string, object>)rec, fields))
+                            yield return child;
+                    }
+                    else
+                        yield return rec;
+                }
+            }
+        }
+
+        public static IEnumerable<dynamic> FlattenBy(this IDictionary<string, object> dict, params string[] fields)
+        {
+            if (dict == null || fields == null)
+                yield return dict;
+            else
+            {
+                dynamic dest = new ChoDynamicObject();
+                dest.Merge(dict);
+
+                FlatternBy1(dict, dest, fields);
+
+                yield return dest;
+            }
+        }
+
+        private static void FlatternBy1(IDictionary<string, object> dict, dynamic dest, string[] fields)
+        {
+            if (fields.Length == 0)
+                return;
+
+            string field = fields.First();
+            if (!dict.ContainsKey(field) && !(dict[field] is IDictionary<string, object>))
+                return;
+            else
+            {
+                foreach (IDictionary<string, object> child in (IEnumerable)dict[field])
+                {
+                    dest.Merge(child);
+                    dest.Remove(field);
+                    FlatternBy1(child, dest, fields.Skip(1).ToArray());
+                }
+            }
+        }
+
         public static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict, char? nestedKeySeparator = null)
         {
             if (dict is ChoDynamicObject && ((ChoDynamicObject)dict).DynamicObjectName != ChoDynamicObject.DefaultName)

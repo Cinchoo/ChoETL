@@ -972,9 +972,6 @@ B,c1,Math1,100,1,Mark,Physics,,,100,Tom,";
 
         static void JSON2CSVTest3()
         {
-            dynamic[] x;
-            dynamic[] x1;
-
             using (var r = new ChoJSONReader(@"C:\Users\nraj39\Downloads\Loan\test1.json")
                  .WithJSONPath("$..data.getUsers[*]"))
             {
@@ -982,10 +979,7 @@ B,c1,Math1,100,1,Mark,Physics,,,100,Tom,";
                     .WithJSONPath("$..errors[*]")
                     )
                 {
-                    x = r.ToArray();
-                    x1 = r1.ToArray();
-
-                    var r3 = x1.ZipOrDefault(x, (i, j) =>
+                    var r3 = r1.ZipOrDefault(r, (i, j) =>
                     {
                         if (j != null)
                         {
@@ -994,7 +988,7 @@ B,c1,Math1,100,1,Mark,Physics,,,100,Tom,";
                         }
                         else
                             return i;
-                    }).ToArray();
+                    });
 
                     using (var w = new ChoCSVWriter(@"C:\Users\nraj39\Downloads\Loan\test1.csv")
                         .WithFirstLineHeader()

@@ -1582,10 +1582,94 @@ K,L,M,N,O,P,Q,R,S,T";
             FileAssert.AreEqual(FileNameSample32ExpectedCSV, FileNameSample32TestCSV);
         }
 
+        static void JSON2DataTable1()
+        {
+            string json = @"
+{
+""Count"": 185,
+""Message"": ""Results returned successfully"",
+""SearchCriteria"": ""Make ID:474 | ModelYear:2016"",
+""Results"": [{
+        ""Make_ID"": 474,
+        ""Make_Name"": ""Honda"",
+        ""Model_ID"": 1861,
+        ""Model_Name"": ""i10"",
+        ""owners"": [{
+                ""name"": ""Balaji"",
+                ""address"": [{
+                        ""city"": ""kcp"",
+                        ""pincode"": ""12345""
+                    }
+                ]
+            }, {
+                ""name"": ""Rajesh"",
+                ""address"": [{
+                        ""city"": ""chennai"",
+                        ""pincode"": ""12346""
+                    }
+                ]
+            }
+        ]
+    }, {
+        ""Make_ID"": 475,
+        ""Make_Name"": ""Honda"",
+        ""Model_ID"": 1862,
+        ""Model_Name"": ""i20"",
+        ""owners"": [{
+                ""name"": ""Vijay"",
+                ""address"": [{
+                        ""city"": ""madurai"",
+                        ""pincode"": ""12347""
+                    }
+                ]
+            }, {
+                ""name"": ""Andrej"",
+                ""address"": [{
+                        ""city"": ""Berlin"",
+                        ""pincode"": ""12348""
+                    }
+                ]
+            }
+        ]
+    }
+]}";
+            using (var r = ChoJSONReader.LoadText(json)
+                .WithJSONPath("$..Results[*]")
+                .WithField("Make_ID", jsonPath: "$..Make_ID", isArray: false)
+                .WithField("Model_ID", jsonPath: "$..Model_ID", isArray: false)
+                .WithField("owners", jsonPath: "$..owners[*]")
+                )
+            {
+                foreach (var rec in r.FlattenBy("owners", "address"))
+                    Console.WriteLine(rec.Dump());
+
+                //foreach (IDictionary<string, object> rec in r)
+                //{
+                //    foreach (var child in rec.FlattenBy("owners", "address"))
+                //    {
+                //        Console.WriteLine(child.Dump());
+                //    }
+                //    //foreach (IDictionary<string, object> owner in (IEnumerable)rec["owners"])
+                //    //    foreach (IDictionary<string, object> address in (IEnumerable)owner["address"])
+                //    //    {
+                //    //        dynamic x = new ChoDynamicObject();
+                //    //        x.Merge(rec);
+                //    //        x.Merge(owner);
+                //    //        x.Merge(address);
+
+                //    //        x.Remove("owners");
+                //    //        x.Remove("address");
+                //    //        Console.WriteLine(x.Dump());
+                //    //    }
+                //}
+            }
+
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            DictTest2();
+            JSON2DataTable1();
         }
 
         public class VarObject

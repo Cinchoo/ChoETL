@@ -16,6 +16,11 @@ using System.Xml.Serialization;
 
 namespace ChoETL
 {
+    public static class ChoDynamicObjectSettings
+    {
+        public static bool UseOrderedDictionary = true;
+    }
+
     [Serializable]
     public class ChoDynamicObject : DynamicObject, IDictionary<string, object> //, IList<object>, IList //, IXmlSerializable
     {
@@ -30,7 +35,9 @@ namespace ChoETL
         internal bool IsHeaderOnlyObject = false;
 
         private readonly object _padLock = new object();
-        private IDictionary<string, object> _kvpDict = new Dictionary<string, object>(StringComparer.CurrentCultureIgnoreCase);
+        private IDictionary<string, object> _kvpDict = ChoDynamicObjectSettings.UseOrderedDictionary ?
+            new OrderedDictionary<string, object>(StringComparer.CurrentCultureIgnoreCase) as IDictionary<string, object>
+            : new Dictionary<string, object>(StringComparer.CurrentCultureIgnoreCase) as IDictionary<string, object>;
         [IgnoreDataMember]
         private Func<IDictionary<string, object>> _func = null;
         private bool _watchChange = false;
@@ -400,7 +407,8 @@ namespace ChoETL
                         continue;
                 }
 
-                this[kvp.Key] = kvp.Value;
+                SetPropertyValue(kvp.Key, kvp.Value);
+                //this[kvp.Key] = kvp.Value;
             }
         }
 
