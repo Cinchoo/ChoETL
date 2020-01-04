@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-	public static class ChoEnumrableEx
+	public static class ChoEnumerableEx
     {
         public static IEnumerable<V> ZipOrDefault<T, U, V>(
             this IEnumerable<T> one,
