@@ -36,6 +36,7 @@
     <Compile Include="..\ChoETL\Common\Attributes\ChoDataTableColumnTypeAttribute.cs" Link="Common\Attributes\ChoDataTableColumnTypeAttribute.cs" />
     <Compile Include="..\ChoETL\Common\Attributes\ChoMetadataRefTypeAttribute.cs" Link="Common\Attributes\ChoMetadataRefTypeAttribute.cs" />
     <Compile Include="..\ChoETL\Common\Attributes\ChoFieldMapAttribute.cs" Link="Common\Attributes\ChoFieldMapAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\Collections\ChoOrderedDictionary.cs" Link="Common\Collections\ChoOrderedDictionary.cs" />
     <Compile Include="..\ChoETL\Common\Collections\ChoSerializableDictionary.cs" Link="Common\Collections\ChoSerializableDictionary.cs" />
     <Compile Include="..\ChoETL\Common\Converters\ChoCDATAToStringConverter.cs" Link="Common\Converters\ChoCDATAToStringConverter.cs" />
     <Compile Include="..\ChoETL\Common\ExtensionMethods\ChoEnumerableEx.cs" Link="Common\ExtensionMethods\ChoEnumerableEx.cs" />
