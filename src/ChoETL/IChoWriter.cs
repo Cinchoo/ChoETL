@@ -160,4 +160,12 @@ namespace ChoETL
             set;
         }
     }
+    public class ChoFileHeaderArrangeEventArgs : EventArgs
+    {
+        public List<string> Fields
+        {
+            get;
+            set;
+        }
+    }
 }

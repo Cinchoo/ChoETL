@@ -15,6 +15,7 @@ namespace ChoETL
 {
     internal class ChoFixedLengthRecordWriter : ChoRecordWriter
     {
+        private IChoNotifyFileHeaderArrange _callbackFileHeaderArrange;
         private IChoNotifyFileHeaderWrite _callbackFileHeaderWrite;
         private IChoNotifyFileWrite _callbackFileWrite;
         private IChoNotifyRecordWrite _callbackRecordWrite;
@@ -37,6 +38,7 @@ namespace ChoETL
             ChoGuard.ArgumentNotNull(configuration, "Configuration");
             Configuration = configuration;
 
+            _callbackFileHeaderArrange = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyFileHeaderArrange>(recordType);
             _callbackFileHeaderWrite = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyFileHeaderWrite>(recordType);
             _callbackRecordWrite = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordWrite>(recordType);
             _callbackFileWrite = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyFileWrite>(recordType);
@@ -74,7 +76,7 @@ namespace ChoETL
         }
         private object GetFirstNotNullRecord(IEnumerator<object> recEnum)
         {
-            if (Writer != null && Writer.Context.FirstNotNullRecord != null)
+            if (Writer != null && !Object.ReferenceEquals(Writer.Context.FirstNotNullRecord, null))
                 return Writer.Context.FirstNotNullRecord;
 
             while (recEnum.MoveNext())
@@ -134,10 +136,17 @@ namespace ChoETL
                                         throw new ChoParserException("Invalid record found.");
 
                                     _recBuffer.Value.Add(record1);
-                                    fns = fns.Union(GetFields(record1)).ToList();
+
+                                    var fns1 = GetFields(record1).ToList();
+                                    if (fns.Count < fns1.Count)
+                                        fns = fns1.Union(fns).ToList();
+                                    else
+                                        fns = fns.Union(fns1).ToList();
 
                                     if (recCount == Configuration.MaxScanRows)
                                     {
+                                        RaiseFileHeaderArrange(fns);
+
                                         Configuration.Validate(fns.ToArray());
                                         WriteHeaderLine(sw);
                                         _configCheckDone = true;
@@ -171,8 +180,9 @@ namespace ChoETL
                             {
                                 if (notNullRecord != null)
                                 {
-                                    string[] fieldNames = GetFields(notNullRecord);
-                                    Configuration.Validate(fieldNames);
+                                    var fieldNames = GetFields(notNullRecord).ToList();
+                                    RaiseFileHeaderArrange(fieldNames);
+                                    Configuration.Validate(fieldNames.ToArray());
                                     WriteHeaderLine(sw);
                                     _configCheckDone = true;
                                 }
@@ -304,16 +314,18 @@ namespace ChoETL
             return fieldNames;
         }
 
+        StringBuilder msg = new StringBuilder(6400);
+        object fieldValue = null;
+        string fieldText = null;
+        ChoFixedLengthRecordFieldConfiguration fieldConfig = null;
+        IDictionary<string, Object> dict = null;
         private bool ToText(long index, object rec, out string recText)
         {
             if (typeof(IChoScalarObject).IsAssignableFrom(Configuration.RecordType))
                 rec = ChoActivator.CreateInstance(Configuration.RecordType, rec);
 
             recText = null;
-            StringBuilder msg = new StringBuilder();
-            object fieldValue = null;
-            string fieldText = null;
-            ChoFixedLengthRecordFieldConfiguration fieldConfig = null;
+            msg.Clear();
 
             if (Configuration.ColumnCountStrict)
                 CheckColumnsStrict(rec);
@@ -322,7 +334,6 @@ namespace ChoETL
             //bool firstColumn = true;
             PropertyInfo pi = null;
             object rootRec = rec;
-            IDictionary<string, Object> dict = null;
             foreach (KeyValuePair<string, ChoFixedLengthRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
                 //if (Configuration.IsDynamicObject)
@@ -864,6 +875,17 @@ namespace ChoETL
             }
             headerText = ht;
             return !retValue;
+        }
+        private void RaiseFileHeaderArrange(List<string> fields)
+        {
+            if (_callbackFileHeaderArrange != null)
+            {
+                ChoActionEx.RunWithIgnoreError(() => _callbackFileHeaderArrange.FileHeaderArrange(fields));
+            }
+            else if (Writer != null)
+            {
+                ChoActionEx.RunWithIgnoreError(() => Writer.RaiseFileHeaderArrange(fields));
+            }
         }
     }
 }

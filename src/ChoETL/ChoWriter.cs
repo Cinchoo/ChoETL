@@ -27,6 +27,8 @@ namespace ChoETL
         public event EventHandler<ChoFileHeaderEventArgs> FileHeaderWrite;
         public event EventHandler<ChoRecordFieldSerializeEventArgs> RecordFieldSerialize;
 
+        public event EventHandler<ChoFileHeaderArrangeEventArgs> FileHeaderArrange;
+
         public bool RaiseBeginWrite(object source)
         {
             EventHandler<ChoBeginWriteEventArgs> eh = BeginWrite;
@@ -127,6 +129,15 @@ namespace ChoETL
             eh(this, e);
             headerText = e.HeaderText;
             return e.Skip;
+        }
+        public void RaiseFileHeaderArrange(List<string> fields)
+        {
+            EventHandler<ChoFileHeaderArrangeEventArgs> eh = FileHeaderArrange;
+            if (eh == null)
+                return;
+
+            ChoFileHeaderArrangeEventArgs e = new ChoFileHeaderArrangeEventArgs() { Fields = fields };
+            eh(this, e);
         }
 
         public bool RaiseRecordFieldSerialize(object record, long index, string propName, ref object source)

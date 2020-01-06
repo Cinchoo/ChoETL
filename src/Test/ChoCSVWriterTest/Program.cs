@@ -17,6 +17,7 @@ using DescriptionAttribute = System.ComponentModel.DescriptionAttribute;
 using RangeAttribute = System.ComponentModel.DataAnnotations.RangeAttribute;
 using System.Xml;
 using System.Xml.Schema;
+using Newtonsoft.Json;
 
 namespace ChoCSVWriterTest
 {
@@ -915,46 +916,63 @@ B,c1,Math1,100,1,Mark,Physics,,,100,Tom,";
         static void JSON2CSVTest2()
         {
             string json = @"{
-    ""getUsers"": [
+    ""data"": {
+        ""getUsers"": [
+            {
+                ""UserInformation"": {
+                    ""Id"": 1111122,
+                    ""firstName"": ""*****1"",
+                    ""UserType"": {
+                        ""name"": ""CP""
+                    },
+                    ""primaryState"": ""MA"",
+                    ""otherState"": [
+                        ""MA"",
+                        ""BA""
+                    ],
+                    ""createdAt"": null,
+		     ""lastUpdatedDate"": ""2019-04-03T07:49:05.2827076-04:00""
+                }
+            },
+            {
+                ""UserInformation"": {
+                    ""Id"": 3333,
+                    ""firstName"": ""*****3"",
+                    ""UserType"": {
+                        ""name"": ""CPP""
+                    },
+                    ""primaryState"": ""MPA"",
+                    ""otherState"": [
+                        ""KL"",
+                        ""TN"",
+                        ""DL"",
+                        ""AP"",
+                        ""RJ""
+                    ],
+                    ""createdAt"": null,
+		    ""lastUpdatedDate"": ""2019-12-03T07:50:05.2827076-05:00""
+                }
+            }
+        ]
+    },
+    ""errors"": [
         {
-            ""UserInformation"": {
-                ""Id"": 1111122,
-                ""firstName"": ""*****1"",
-                ""UserType"": {
-                    ""name"": ""CP""
-                },
-                ""primaryState"": ""MA"",
-                ""otherState"": [
-                    ""MA"",
-                    ""BA""
-                ],
-                ""createdAt"": null
+            ""message"": ""GraphQL.ExecutionError: 13614711 - NO__DATA"",
+            ""extensions"": {
+                ""code"": ""212""
             }
         },
-        {
-            ""UserInformation"": {
-                ""Id"": 3333,
-                ""firstName"": ""*****3"",
-                ""UserType"": {
-                    ""name"": ""CPP""
-                },
-                ""primaryState"": ""MPA"",
-                ""otherState"": [
-                    ""KL"",
-                    ""TN"",
-                    ""DL"",
-                    ""AP"",
-                    ""RJ""
-                ],
-                ""createdAt"": null
-            }
-        }
-    ]
+         ]
 }";
             StringBuilder csv = new StringBuilder();
 
             using (var r = ChoJSONReader.LoadText(json)
                 .WithJSONPath("$..getUsers[*]")
+                .Configure(c => c.JsonSerializerSettings = new JsonSerializerSettings
+                {
+                    DateTimeZoneHandling = DateTimeZoneHandling.Utc,
+                    //DateParseHandling = DateParseHandling.DateTimeOffset
+                })
                 )
             {
                 using (var w = new ChoCSVWriter(csv)
@@ -1004,7 +1022,8 @@ B,c1,Math1,100,1,Mark,Physics,,,100,Tom,";
 
         static void Main(string[] args)
         {
-            JSON2CSVTest3();
+            ChoDynamicObjectSettings.UseOrderedDictionary = false;
+            JSON2CSVTest2();
             return;
 
             //DataReaderTest();

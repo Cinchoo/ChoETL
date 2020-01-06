@@ -19,6 +19,11 @@ namespace ChoETL
         void EndWrite(object source);
     }
 
+    public interface IChoNotifyFileHeaderArrange
+    {
+        bool FileHeaderArrange(List<string> fields);
+    }
+
     public interface IChoNotifyFileHeaderWrite
     {
         bool FileHeaderWrite(ref string headerText);
