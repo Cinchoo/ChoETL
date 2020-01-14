@@ -1666,10 +1666,161 @@ K,L,M,N,O,P,Q,R,S,T";
 
         }
 
+        static void ArrayItemsTest()
+        {
+            string json = @"[
+[
+    ""Test123"",
+    ""TestHub"",
+    ""TestVersion"",
+    ""TestMKT"",
+    ""TestCAP"",
+    ""TestRegion"",
+    ""TestAssembly"",
+    ""TestProduct"",
+    ""Testgroup"",
+    ""Testsample"",
+    ""1806"",
+    ""1807"",
+    ""1808"",
+    ""1809"",
+    ""1810"",
+    ""1811"",
+    ""1812"",
+    ""1901"",
+    ""1902"",
+    ""1903"",
+    ""1904"",
+    ""1905"",
+    ""1906"",
+    ""1907"",
+    ""1908"",
+    ""1909"",
+    ""1910"",
+    ""1911"",
+    ""1912""
+],
+[
+    ""Sample12"",
+    ""Sample879"",
+    ""201806.1.0"",
+    ""Sample098"",
+    ""TSA CBU"",
+    ""B8"",
+    ""B8"",
+    ""63"",
+    ""63EM"",
+    ""EM 42 T"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0""
+],
+[
+    ""Sample121233"",
+    ""Sample233879"",
+    ""2012323806.1.0"",
+    ""Sampl233e098"",
+    ""TSA CBU"",
+    ""B8"",
+    ""B8"",
+    ""B3"",
+    ""B3ULUE"",
+    ""UL 42 R"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0"",
+    ""0""
+]
+]";
+
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                var dt = r.Select(rec => ((object[])rec.Value).ToDictionary()).AsDataTable();
+            }
+        }
+
+        static void Sample33Test()
+        {
+            //StringBuilder csvErrors = new StringBuilder();
+            //using (var errors = new ChoJSONReader("sample33.json")
+            //        .WithJSONPath("$..errors[*]")
+            //        .WithField("errors_message", jsonPath: "$.message", isArray: false)
+            //        .WithField("errors_extensions_code", jsonPath: "$.extensions.code", isArray: false)
+            //        .WithField("errors_locations", jsonPath: "$.locations[*]", isArray: false)
+            //        .WithField("errors_path", jsonPath: "$.path[*]")
+            //           )
+            //{
+            //    var arrError = errors.ToArray();
+            //    int errorCount = arrError.Length;
+
+            //    using (var w = new ChoCSVWriter(csvErrors)
+            //        .WithFirstLineHeader()
+            //        .Configure(c => c.MaxScanRows = errorCount)
+            //        .Configure(c => c.ThrowAndStopOnMissingField = false)
+            //        )
+            //    {
+            //        w.FileHeaderArrange += (o, e) =>
+            //        {
+            //            var first = e.Fields.First();
+            //            e.Fields.RemoveAt(0);
+            //            e.Fields.Add(first);
+            //        };
+            //        w.Write(arrError);
+            //    }
+            //}
+            //Console.WriteLine(csvErrors.ToString());
+            //return;
+            StringBuilder csv = new StringBuilder();
+            using (var r = new ChoJSONReader("sample33.json")
+                .WithJSONPath("$..getUsers[*]")
+                )
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    .WithMaxScanRows(10)
+                    .Configure(c => c.ThrowAndStopOnMissingField = false)
+                    )
+                    w.Write(r);
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            JSON2DataTable1();
+            Sample33Test();
         }
 
         public class VarObject

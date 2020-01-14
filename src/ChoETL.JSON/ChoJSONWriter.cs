@@ -219,6 +219,13 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoJSONWriter<T> WithMaxScanNodes(int value)
+        {
+            if (value > 0)
+                Configuration.MaxScanRows = value;
+            return this;
+        }
+
         public ChoJSONWriter<T> SupportMultipleContent(bool value = false)
         {
             Configuration.SupportMultipleContent = value;

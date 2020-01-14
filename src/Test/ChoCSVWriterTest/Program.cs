@@ -919,50 +919,163 @@ B,c1,Math1,100,1,Mark,Physics,,,100,Tom,";
     ""data"": {
         ""getUsers"": [
             {
-                ""UserInformation"": {
-                    ""Id"": 1111122,
-                    ""firstName"": ""*****1"",
-                    ""UserType"": {
-                        ""name"": ""CP""
-                    },
-                    ""primaryState"": ""MA"",
-                    ""otherState"": [
-                        ""MA"",
-                        ""BA""
-                    ],
-                    ""createdAt"": null,
-		     ""lastUpdatedDate"": ""2019-04-03T07:49:05.2827076-04:00""
+                ""personalInformation"": {
+                    ""userId"": 13610642,
+                    ""firstName"": ""***"",
+                    ""languagesSpoken"": null,
+                    ""state"": [
+                        ""CA"",
+                        ""IL""
+                    ]
                 }
             },
             {
-                ""UserInformation"": {
-                    ""Id"": 3333,
-                    ""firstName"": ""*****3"",
-                    ""UserType"": {
-                        ""name"": ""CPP""
-                    },
-                    ""primaryState"": ""MPA"",
-                    ""otherState"": [
-                        ""KL"",
-                        ""TN"",
-                        ""DL"",
-                        ""AP"",
-                        ""RJ""
+                ""personalInformation"": {
+                    ""userId"": 13611014,
+                    ""firstName"": ""**"",
+                    ""languagesSpoken"": [
+                        {
+                            ""name"": ""Afrikaans""
+                        },
+                        {
+                            ""name"": ""Albanian""
+                        },
+                        {
+                            ""name"": ""American Sign Language""
+                        }
                     ],
-                    ""createdAt"": null,
-		    ""lastUpdatedDate"": ""2019-12-03T07:50:05.2827076-05:00""
+                    ""state"": [
+                        ""WA"",
+                        ""TX"",
+                        ""GA"",
+                        ""MN"",
+                        ""NV""
+                    ]
+                }
+            },
+            {
+                ""personalInformation"": {
+                    ""userId"": 13611071,
+                    ""firstName"": ""***"",
+                    ""languagesSpoken"": [
+                        {
+                            ""name"": ""Albanian""
+                        },
+                        {
+                            ""name"": ""Hindi""
+                        },
+                        {
+                            ""name"": ""Telugu""
+                        },
+                        {
+                            ""name"": ""Malayalam""
+                        },
+                        {
+                            ""name"": ""Tamil""
+                        }
+                    ],
+                    ""state"": [
+                        ""OK"",
+                        ""AK"",
+                        ""WA"",
+                        ""MA"",
+                        ""GA"",
+                        ""MN""
+                    ],
+                }
+            },
+            {
+                ""personalInformation"": {
+                    ""userId"": 13611074,
+                    ""firstName"": ""********"",
+                    ""languagesSpoken"": null,
+                    ""state"": [
+                        ""AZ""
+                    ]
+                }
+            },
+            {
+                ""personalInformation"": {
+                    ""userId"": 13611082,
+                    ""firstName"": ""******"",
+                    ""languagesSpoken"": [
+                        {
+                            ""name"": ""Estonian""
+                        },
+                        {
+                            ""name"": ""Faroese""
+                        },
+                        {
+                            ""name"": ""English""
+                        },
+                        {
+                            ""name"": ""Hindi""
+                        }
+                    ],
+                    ""state"": [
+                        ""AK"",
+                        ""CA"",
+                        ""GA"",
+                        ""IL"",
+                        ""NC"",
+                        ""NV"",
+                        ""TX"",
+                        ""OK"",
+                        ""OR"",
+                        ""MA"",
+                        ""MN"",
+                        ""MS"",
+                        ""WA"",
+                        ""WV"",
+                        ""CO""
+                    ]
+                }
+            },
+            {
+                ""personalInformation"": {
+                    ""userId"": 13611227,
+                    ""firstName"": ""**"",
+                    ""languagesSpoken"": [
+                        {
+                            ""name"": ""Latvian""
+                        },
+                        {
+                            ""name"": ""English""
+                        },
+                        {
+                            ""name"": ""Fiji""
+                        },
+                        {
+                            ""name"": ""Hindi""
+                        },
+                        {
+                            ""name"": ""Japanese""
+                        },
+                        {
+                            ""name"": ""Sanskrit""
+                        },
+                        {
+                            ""name"": ""Zhuang""
+                        }
+                    ],
+                    ""state"": [
+                        ""CO"",
+                        ""GA"",
+                        ""IL"",
+                        ""MN"",
+                        ""MS"",
+                        ""MA"",
+                        ""NC"",
+                        ""NV"",
+                        ""OK"",
+                        ""OR"",
+                        ""WA"",
+                        ""WV""
+                    ]
                 }
             }
         ]
-    },
-    ""errors"": [
-        {
-            ""message"": ""GraphQL.ExecutionError: 13614711 - NO__DATA"",
-            ""extensions"": {
-                ""code"": ""212""
-            }
-        },
-         ]
+    }
 }";
             StringBuilder csv = new StringBuilder();
 
@@ -977,11 +1090,16 @@ B,c1,Math1,100,1,Mark,Physics,,,100,Tom,";
             {
                 using (var w = new ChoCSVWriter(csv)
                     .WithFirstLineHeader()
-                    .Configure(c => c.MaxScanRows = 2)
+                    .Configure(c => c.MaxScanRows = 1)
                     .Configure(c => c.ThrowAndStopOnMissingField = false)
                     )
                 {
-                    w.Write(r);
+                    w.Write(r.Select(r1 =>
+                    {
+                        r1.personalInformation.state = String.Join("|", ((IList)r1.personalInformation.state).OfType<string>());
+                        return r1;
+                    }
+                        ));
                 }
             }
 

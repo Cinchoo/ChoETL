@@ -198,6 +198,13 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoCSVWriter<T> WithMaxScanRows(int value)
+        {
+            if (value > 0)
+                Configuration.MaxScanRows = value;
+            return this;
+        }
+
         public ChoCSVWriter<T> NotifyAfter(long rowsWritten)
         {
             Configuration.NotifyAfter = rowsWritten;

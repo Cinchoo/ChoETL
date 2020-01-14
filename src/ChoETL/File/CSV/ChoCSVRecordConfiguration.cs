@@ -16,6 +16,17 @@ namespace ChoETL
     [DataContract]
     public class ChoCSVRecordConfiguration : ChoFileRecordConfiguration
     {
+        public int ArrayBaseIndex
+        {
+            get;
+            set;
+        }
+        public bool AllowLoadingFieldByPosition
+        {
+            get;
+            set;
+        }
+
         [DataMember]
         public ChoCSVFileHeaderConfiguration FileHeaderConfiguration
         {

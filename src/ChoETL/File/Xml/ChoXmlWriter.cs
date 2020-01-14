@@ -305,6 +305,13 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoXmlWriter<T> WithMaxScanNodes(int value)
+        {
+            if (value > 0)
+                Configuration.MaxScanRows = value;
+            return this;
+        }
+
         public ChoXmlWriter<T> NotifyAfter(long rowsLoaded)
         {
             Configuration.NotifyAfter = rowsLoaded;

@@ -130,7 +130,7 @@ namespace ChoETL
                 {
                     if (Configuration.MaxScanRows > 0)
                     {
-                        List<string> fns = new List<string>();
+                        //List<string> fns = new List<string>();
                         foreach (object record1 in GetRecords(recEnum))
                         {
                             recCount++;
@@ -144,24 +144,26 @@ namespace ChoETL
 
                                     _recBuffer.Value.Add(record1);
 
-                                    var fns1 = GetFields(record1).ToList();
-                                    if (fns.Count < fns1.Count)
-                                        fns = fns1.Union(fns).ToList();
-                                    else
-                                        fns = fns.Union(fns1).ToList();
+                                    //var fns1 = GetFields(record1).ToList();
+                                    //if (fns.Count < fns1.Count)
+                                    //    fns = fns1.Union(fns).ToList();
+                                    //else
+                                    //    fns = fns.Union(fns1).ToList();
 
                                     if (recCount == Configuration.MaxScanRows)
                                     {
-                                        RaiseFileHeaderArrange(fns);
-
-                                        Configuration.Validate(fns.ToArray());
-                                        WriteHeaderLine(sw);
-                                        _configCheckDone = true;
                                         break;
                                     }
                                 }
                             }
                         }
+
+                        var fns = GetFields(_recBuffer.Value).ToList();
+                        RaiseFileHeaderArrange(fns);
+
+                        Configuration.Validate(fns.ToArray());
+                        WriteHeaderLine(sw);
+                        _configCheckDone = true;
                     }
                 }
 
@@ -286,6 +288,43 @@ namespace ChoETL
             RaiseEndWrite(sw);
         }
 
+        private string[] GetFields(List<object> records)
+        {
+            string[] fieldNames = null;
+            Type recordType = ElementType == null ? records.First().GetType() : ElementType;
+            Configuration.RecordType = recordType.ResolveType();
+
+            Configuration.IsDynamicObject = recordType.IsDynamicType();
+            if (!Configuration.IsDynamicObject)
+            {
+                if (Configuration.CSVRecordFieldConfigurations.Count == 0)
+                    Configuration.MapRecordFields(Configuration.RecordType);
+            }
+
+            if (Configuration.IsDynamicObject)
+            {
+                var record = new Dictionary<string, object>();
+                foreach (var r in records.Select(r => (IDictionary<string, Object>)r.ToDynamicObject()))
+                {
+                    record.Merge(r);
+                }
+
+                if (Configuration.UseNestedKeyFormat)
+                    fieldNames = record.Flatten(Configuration.NestedColumnSeparator).ToDictionary().Keys.ToArray();
+                else
+                    fieldNames = record.Keys.ToArray();
+            }
+            else
+            {
+                fieldNames = ChoTypeDescriptor.GetProperties<ChoCSVRecordFieldAttribute>(Configuration.RecordType).Select(pd => pd.Name).ToArray();
+                if (fieldNames.Length == 0)
+                {
+                    fieldNames = ChoType.GetProperties(Configuration.RecordType).Select(p => p.Name).ToArray();
+                }
+            }
+            return fieldNames;
+        }
+
         private string[] GetFields(object record)
         {
             string[] fieldNames = null;
@@ -301,7 +340,6 @@ namespace ChoETL
 
             if (Configuration.IsDynamicObject)
             {
-                var dictKeys = new List<string>();
                 var dict = record.ToDynamicObject() as IDictionary<string, Object>;
                 if (Configuration.UseNestedKeyFormat)
                     fieldNames = dict.Flatten(Configuration.NestedColumnSeparator).ToDictionary().Keys.ToArray();

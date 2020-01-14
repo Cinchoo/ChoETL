@@ -1,0 +1,181 @@
+﻿{
+  "data": {
+    "getUsers": [
+      {
+        "usersProfileDetail": {
+          "usersStatus": {
+            "name": "User one"
+          },
+          "usersStatusDate": "2018-02-14T05:04:38+00:00",
+          "attestId": 1111,
+          "lastAttestationDate": "2019-04-03T07:49:05.2827076-04:00"
+        },
+        "usersLocation": [
+          {
+            "activeLocation": [],
+            "archivedLocation": [],
+            "rejectedLocation": null
+          }
+        ]
+      },
+      {
+        "usersProfileDetail": {
+          "usersStatus": {
+            "name": "user two"
+          },
+          "usersStatusDate": "2017-04-04T07:48:25+00:00",
+          "Id": "2222",
+          "lastAttestationDate": "2019-02-01T03:50:42.6049634-05:00"
+        },
+        "usersLocation": [
+          {
+            "activeLocation": [
+              {
+                "ServiceName": "oz*****",
+                "ServiceType2Npi": null,
+                "ServicePrimaryTaxID": null,
+                "ServiceTaxId": [
+                  {
+                    "taxIdNumber": "000000000",
+                    "modifiedAt": "2019-02-01T03:44:02+00:00",
+                    "createdAt": null
+                  }
+                ],
+                "parentOrganization": null,
+                "standardizedLocationID": null,
+                "locationType2Npi": null,
+                "locationTaxId": [
+                  {
+                    "taxIdNumber": "000000000"
+                  }
+                ],
+                "officeType": {
+                  "name": "Other "
+                },
+                "address": {
+                  "address1": "vdgvd",
+                  "address2": null,
+                  "city": "New york",
+                  "state": "CA",
+                  "zipCode": "894165123",
+                  "country": "ALGERIA",
+                  "addressStandardizedFlag": null,
+                  "addressStandardizationSource": null
+                },
+                "locationAccessibility": {
+                  "adaAccessibilityFlag": null,
+                  "accommodateIntellectuallyCognitivelyDisabledFlag": null
+                },
+                "LimitationFlag": null,
+                "Limitation": {
+                  "genderLimitationFlag": false,
+                  "modifiedAt": "2019-02-01T03:44:43+00:00",
+                  "createdAt": null
+                },
+                "usersLocationDetail": [
+                  {
+                    "primaryFlag": false,
+                    "modifiedAt": "2019-02-01T03:43:46+00:00",
+                    "createdAt": null
+                  }
+                ],
+                "healthPlanSubmittedAddress": null,
+                "modifiedAt": null,
+                "createdAt": null
+              },
+              {
+                "ServiceName": "dk************",
+                "ServiceType2Npi": null,
+                "ServicePrimaryTaxID": null,
+                "ServiceTaxId": [
+                  {
+                    "taxIdNumber": "000000000",
+                    "modifiedAt": "2019-02-01T03:44:57+00:00",
+                    "createdAt": null
+                  }
+                ],
+                "parentOrganization": null,
+                "standardizedLocationID": null,
+                "locationType2Npi": null,
+                "locationTaxId": [
+                  {
+                    "taxIdNumber": "000000000"
+                  }
+                ],
+                "officeType": {
+                  "name": "Primary "
+                },
+                "address": {
+                  "address1": "New building",
+                  "address2": null,
+                  "city": "Near Burj Khalifa",
+                  "state": "AR",
+                  "zipCode": "12345",
+                  "country": "ANDORRA",
+                  "addressStandardizedFlag": null,
+                  "addressStandardizationSource": null
+                },
+                "locationAccessibility": {
+                  "adaAccessibilityFlag": null,
+                  "accommodateIntellectuallyCognitivelyDisabledFlag": null
+                },
+                "LimitationFlag": null,
+                "Limitation": {
+                  "genderLimitationFlag": false,
+                  "modifiedAt": "2019-02-01T03:45:38+00:00",
+                  "createdAt": null
+                },
+                "usersLocationDetail": [
+                  {
+                    "primaryFlag": true,
+                    "modifiedAt": null,
+                    "createdAt": null
+                  }
+                ],
+                "healthPlanSubmittedAddress": null,
+                "modifiedAt": null,
+                "createdAt": null
+              }
+            ],
+            "archivedLocation": [],
+            "rejectedLocation": null
+          }
+        ]
+      }
+    ]
+  },
+  "errors": [
+    {
+      "message": "GraphQL.ExecutionError: 34444444 - NOT_IN_ELIGIBLE",
+      "extensions": {
+        "code": "216"
+      }
+    },
+    {
+      "message": "GraphQL.ExecutionError: 13610742 - NOT_IN_ELIGIBLE_STATUS",
+      "extensions": {
+        "code": "216"
+      }
+    },
+    {
+      "message": "GraphQL.ExecutionError: Cannot return null for non-null type. Field: ",
+      "locations": [
+        {
+          "line": 374,
+          "column": 9
+        }
+      ],
+      "path": [
+        "getUsers",
+        "11",
+        "usersxxxxxxx",
+        "0",
+        "abc",
+        "PrivilegeFlag"
+      ],
+      "extensions": {
+        "code": "ID: 123456"
+      }
+    }
+  ]
+}

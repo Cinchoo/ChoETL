@@ -26,6 +26,114 @@ namespace ChoETL
         //    }
         //}
 
+        private static object Clone(this object src)
+        {
+            if (src == null)
+                return src;
+            if (src is IDictionary<string, object>)
+            {
+                Dictionary<string, object> dest = new Dictionary<string, object>();
+                foreach (var kvp in (IDictionary<string, object>)src)
+                    dest.Add(kvp.Key, kvp.Value.Clone());
+                return dest;
+            }
+            else if (src is IList)
+            {
+                List<object> dest = new List<object>();
+                foreach (var item in (IList)src)
+                    dest.Add(item.Clone());
+                return dest;
+            }
+            else if (src is ICloneable)
+                return ((ICloneable)src).Clone();
+            else
+                return src;
+        }
+
+        private static object Merge(this object dest, object src)
+        {
+            if (src == null) return dest;
+            if (dest == null) return src;
+
+            if (dest is IDictionary<string, object> && src is IDictionary<string, object>)
+            {
+                Merge(dest as IDictionary<string, object>, src as IDictionary<string, object>);
+                return dest;
+            }
+            else if (dest is IList && src is IList)
+            {
+                IList dlist = (IList)dest;
+                IList slist = (IList)src;
+
+                int dcount = dlist.Count;
+                int scount = slist.Count;
+
+                int count = dcount < scount ? dcount : scount;
+                for (int i = 0; i < count; i++)
+                    dlist[i] = Merge(dlist[i], slist[i]);
+
+                if (dcount < scount)
+                {
+                    if (dlist.IsFixedSize)
+                    {
+                        List<object> dlist1 = new List<object>();
+                        dlist1.AddRange(dlist.OfType<object>());
+                        dlist = dlist1;
+                    }
+
+                    for (int i = dcount; i < scount; i++)
+                    {
+                        dlist.Add(slist[i].Clone());
+                    }
+                }
+                return dlist;
+            }
+            return dest;
+        }
+
+        public static void Merge(this IDictionary<string, object> dest, IDictionary<string, object> src)
+        {
+            foreach (var kvp in src)
+            {
+                if (!dest.ContainsKey(kvp.Key))
+                    dest.Add(kvp.Key, kvp.Value.Clone());
+                else
+                {
+                    if (dest[kvp.Key] == null)
+                        dest[kvp.Key] = kvp.Value.Clone();
+                    else
+                    {
+                        var destValue = dest[kvp.Key];
+                        var srcValue = kvp.Value;
+
+                        if (destValue is IDictionary<string, object>)
+                        {
+                            if (srcValue is IDictionary<string, object>)
+                                ((IDictionary<string, object>)destValue).Merge((IDictionary<string, object>)srcValue);
+                        }
+                        else if (destValue is IList)
+                        {
+                            if (srcValue is IList)
+                            {
+                                dest[kvp.Key] = Merge(destValue, srcValue);
+                            }
+                        }
+                        else
+                        {
+                            if (srcValue is IDictionary<string, object>)
+                            {
+                                dest[kvp.Key] = kvp.Value.Clone();
+                            }
+                            else if (srcValue is IList)
+                            {
+                                dest[kvp.Key] = kvp.Value.Clone();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         public static IEnumerable<dynamic> FlattenBy(this IEnumerable dicts, params string[] fields)
         {
             if (dicts == null || fields == null)

@@ -61,6 +61,7 @@
     <None Include="Sample16Expected.csv" />
     <None Include="Sample18Expected.csv" />
     <None Include="Sample2Expected.csv" />
+    <None Include="sample33.json" />
     <None Include="sample32.json" />
     <None Include="sample31.json" />
     <None Include="sample30.json" />

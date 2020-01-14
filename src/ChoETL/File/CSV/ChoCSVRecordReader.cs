@@ -611,13 +611,18 @@ namespace ChoETL
                             {
                                 fieldValue = fieldNameValues[fieldConfig.FieldName];
                             }
-                            else if (fieldConfig.FieldPosition - 1 >= 0)
+                            else if (Configuration.AllowLoadingFieldByPosition 
+                                || (!Configuration.FileHeaderConfiguration.HasHeaderRecord 
+                                || (Configuration.FileHeaderConfiguration.HasHeaderRecord && Configuration.FileHeaderConfiguration.IgnoreHeader)))
                             {
-                                try
+                                if (fieldConfig.FieldPosition - 1 >= 0)
                                 {
-                                    fieldValue = fieldNameValues.ElementAt(fieldConfig.FieldPosition - 1).Value;
+                                    try
+                                    {
+                                        fieldValue = fieldNameValues.ElementAt(fieldConfig.FieldPosition - 1).Value;
+                                    }
+                                    catch { }
                                 }
-                                catch { }
                             }
 
                             if (fieldValue == null)

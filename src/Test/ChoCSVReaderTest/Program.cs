@@ -3138,8 +3138,7 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
             public string Id { get; set; }
             //[DisplayName("Std")]
             public Student Student { get; set; }
-            [Range(0, 1)]
-            //[DisplayName("Cre")]
+            [Range(1, 2)]
             public Course[] Courses { get; set; }
 
             //[ChoDictionaryKey("K1,K2,K3")]
@@ -3163,7 +3162,8 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
 
         public class Student
         {
-            [ChoFieldPosition(2)]
+            //[ChoFieldPosition(2)]
+            [DisplayName("Name")]
             public string Name { get; set; }
 
             public Address Address { get; set; }
@@ -3193,10 +3193,9 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
 
         static void CSV2ComplexObj()
         {
-            string csv = @"
-Id, Name, Street, City, K1,K2,K3,Sub_1,Sub_2,Sub_3,Prof_0,Prof_1
+            string csv = @"Id, Name, Street, City, CreId_1, CreName_1, CreId_2, CreName_2, K1,K2,K3,Sub_1,Sub_2,Sub_3,Prof_0,Prof_1
 1, Tom, St1, New York, CI0, CN0, CI1, CN1, K1, K2, K3, S1, S2, S3, P0, P1
-2, Mark, St1, Boston, CI0, CN0, CI1, CN1, K1, K2, K3, S1, S2, S3,P0, P1
+2, Mark, St1, Boston, CI20, CN20, CI21, CN21, K21, K22, K23, S21, S22, S23,P20, P21
 ";
             using (var r = ChoCSVReader<StudentInfo>.LoadText(csv)
                 //.Index(c => c.Courses, 0, 0)
@@ -3208,9 +3207,61 @@ Id, Name, Street, City, K1,K2,K3,Sub_1,Sub_2,Sub_3,Prof_0,Prof_1
             }
         }
 
+        public class Headers
+        {
+            public string TransactionFrom { get; set; }
+            public string TransactionTo { get; set; }
+            public List<Transaction1> Transactions { get; set; }
+        }
+
+        public class Transaction1
+        {
+            [ChoFieldPosition(4)]
+            public string logisticCode { get; set; }
+            [ChoFieldPosition(5)]
+            public string siteId { get; set; }
+            [ChoFieldPosition(6)]
+            public string userId { get; set; }
+            [ChoFieldPosition(2)]
+            public string dateOfTransaction { get; set; }
+            [ChoFieldPosition(1)]
+            public string price { get; set; }
+        }
+
+        static void MultiRecordTypeTest()
+        {
+            string csv = @"2019-12-01T00:00:00.000Z;2019-12-10T23:59:59.999Z
+50;false;2019-12-03T15:00:12.077Z;005033971003;48;141;2019-12-03T00:00:00.000Z;2019-12-03T23:59:59.999Z
+100;false;2019-12-02T12:38:05.989Z;005740784001;80;311;2019-12-02T00:00:00.000Z;2019-12-02T23:59:59.999Z";
+
+            string csvSeparator = ";";
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithDelimiter(csvSeparator)
+                .WithCustomRecordSelector(o =>
+                {
+                    string line = ((Tuple<long, string>)o).Item2;
+
+                    if (line.SplitNTrim(csvSeparator).Length == 2)
+                        return typeof(Headers);
+                    else
+                        return typeof(Transaction1);
+                })
+                )
+            {
+                var json = ChoJSONWriter.ToTextAll(r.GroupWhile(r1 => r1.GetType() != typeof(Headers))
+                    .Select(g =>
+                    {
+                        Headers master = (Headers)g.First();
+                        master.Transactions = g.Skip(1).Cast<Transaction1>().ToList();
+                        return master;
+                    }));
+                Console.WriteLine(json);
+            }
+        }
+
         static void Main(string[] args)
         {
-            CSV2ComplexObj();
+            MultiRecordTypeTest();
             return;
 
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Error;
