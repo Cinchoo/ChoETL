@@ -108,6 +108,13 @@ namespace ChoETL
         //    private set;
         //}
 
+        private Func<string, string> _customTextSelecter = null;
+        public Func<string, string> CustomTextSelecter
+        {
+            get { return _customTextSelecter; }
+            set { if (value == null) return; _customTextSelecter = value; }
+        }
+
         public ChoCSVRecordConfiguration Configure(Action<ChoCSVRecordConfiguration> action)
         {
             if (action != null)

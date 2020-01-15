@@ -448,6 +448,11 @@ namespace ChoETL
                     return true;
                 }
 
+                if (Configuration.CustomTextSelecter != null)
+                {
+                    pair = new Tuple<long, string>(pair.Item1, Configuration.CustomTextSelecter(pair.Item2));
+                }
+
                 if (pair.Item2 == null)
                 {
                     rec = null;

@@ -323,6 +323,11 @@ namespace ChoETL
                     return true;
                 }
 
+                if (Configuration.CustomNodeSelecter != null)
+                {
+                    pair = new Tuple<long, XElement>(pair.Item1, Configuration.CustomNodeSelecter(pair.Item2));
+                }
+
                 if (pair.Item2 == null)
                 {
                     rec = null;

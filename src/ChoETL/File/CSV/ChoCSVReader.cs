@@ -411,6 +411,12 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoCSVReader<T> WithCustomTextSelector(Func<string, string> textSelector)
+        {
+            Configuration.CustomTextSelecter = textSelector;
+            return this;
+        }
+
         public ChoCSVReader<T> NotifyAfter(long rowsLoaded)
         {
             Configuration.NotifyAfter = rowsLoaded;

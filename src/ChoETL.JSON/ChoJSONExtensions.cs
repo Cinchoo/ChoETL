@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,22 @@ namespace ChoETL
 {
     public static class ChoJSONExtensions
     {
+        public static object GetNameAt(this JObject @this, int index)
+        {
+            if (@this == null || index < 0)
+                return null;
+
+            return @this.Properties().Skip(index).Select(p => p.Name).FirstOrDefault();
+        }
+
+        public static object GetValueAt(this JObject @this, int index)
+        {
+            if (@this == null || index < 0)
+                return null;
+
+            return @this.Properties().Skip(index).Select(p => p.Value).FirstOrDefault();
+        }
+
         public static object ToJSONObject(this IDictionary<string, object> dict, Type type)
         {
             object target = ChoActivator.CreateInstance(type);

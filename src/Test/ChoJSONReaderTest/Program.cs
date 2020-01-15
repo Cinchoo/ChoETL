@@ -1816,11 +1816,67 @@ K,L,M,N,O,P,Q,R,S,T";
 
             Console.WriteLine(csv.ToString());
         }
+        interface Vehicle1 { }
+
+        public class Car1 : Vehicle1
+        {
+            public string make { get; set; }
+            public int numberOfDoors { get; set; }
+        }
+
+        public class Bicycle1 : Vehicle1
+        {
+            public int frontGears { get; set; }
+            public int backGears { get; set; }
+        }
+
+        static void PolyTypeTest()
+        {
+            string json = @"[
+  {
+    ""Car"": {
+      ""make"": ""Smart"",
+      ""numberOfDoors"": 2
+    }
+  },
+  {
+    ""Car"": {
+      ""make"": ""Lexus"",
+      ""numberOfDoors"": 4
+    }
+  },
+  {
+    ""Bicycle"" : {
+      ""frontGears"": 3,
+      ""backGears"": 6
+    }
+  }
+]";
+            using (var r = ChoJSONReader<Vehicle1>.LoadText(json)
+                .WithCustomRecordSelector(o =>
+                {
+                    var o1 = o.CastTo<Tuple<long, JObject>>().Item2;
+                    var type = o1.GetNameAt(0) as string;
+                    if (type == "Bicycle")
+                        return typeof(Bicycle1);
+                    else
+                        return typeof(Car1);
+                })
+                .WithCustomNodeSelector(o =>
+                {
+                    return ((JObject)o).GetValueAt(0) as JObject;
+                })
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Sample33Test();
+            PolyTypeTest();
         }
 
         public class VarObject

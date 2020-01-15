@@ -99,6 +99,13 @@ namespace ChoETL
         }
         public bool EnableXmlAttributePrefix { get; set; }
 
+        private Func<JObject, JObject> _customNodeSelecter = null;
+        public Func<JObject, JObject> CustomNodeSelecter
+        {
+            get { return _customNodeSelecter; }
+            set { if (value == null) return; _customNodeSelecter = value; }
+        }
+
         //private bool _isDynamicObject = true;
         //internal virtual bool IsDynamicObject
         //{

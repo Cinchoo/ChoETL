@@ -410,6 +410,12 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoFixedLengthReader<T> WithCustomTextSelector(Func<string, string> textSelector)
+        {
+            Configuration.CustomTextSelecter = textSelector;
+            return this;
+        }
+
         public ChoFixedLengthReader<T> NotifyAfter(long rowsLoaded)
         {
             Configuration.NotifyAfter = rowsLoaded;

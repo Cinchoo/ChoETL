@@ -743,6 +743,12 @@ namespace ChoETL
             return this;
         }
 
+        public ChoJSONReader<T> WithCustomNodeSelector(Func<JObject, JObject> nodeSelector)
+        {
+            Configuration.CustomNodeSelecter = nodeSelector;
+            return this;
+        }
+
         #endregion Fluent API
 
         ~ChoJSONReader()

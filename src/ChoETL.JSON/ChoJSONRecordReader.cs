@@ -324,6 +324,10 @@ namespace ChoETL
                     rec = null;
                     return true;
                 }
+                if (Configuration.CustomNodeSelecter != null)
+                {
+                    pair = new Tuple<long, JObject>(pair.Item1, Configuration.CustomNodeSelecter(pair.Item2));
+                }
 
                 if (pair.Item2 == null)
                 {

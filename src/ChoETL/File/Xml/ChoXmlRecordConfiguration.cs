@@ -86,6 +86,13 @@ namespace ChoETL
         [DataMember]
         public ChoEmptyXmlNodeValueHandling EmptyXmlNodeValueHandling { get; set; }
 
+        private Func<XElement, XElement> _customNodeSelecter = null;
+        public Func<XElement, XElement> CustomNodeSelecter
+        {
+            get { return _customNodeSelecter; }
+            set { if (value == null) return; _customNodeSelecter = value; }
+        }
+
         private bool _ignoreCase = true;
         [DataMember]
         public bool IgnoreCase

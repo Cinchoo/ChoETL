@@ -831,6 +831,12 @@ namespace ChoETL
             return this;
         }
 
+        public ChoXmlReader<T> WithCustomNodeSelector(Func<XElement, XElement> nodeSelector)
+        {
+            Configuration.CustomNodeSelecter = nodeSelector;
+            return this;
+        }
+
         #endregion Fluent API
 
         ~ChoXmlReader()
