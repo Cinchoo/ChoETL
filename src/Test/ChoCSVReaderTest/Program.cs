@@ -21,6 +21,7 @@ using Newtonsoft.Json;
 using System.Data.SqlClient;
 using DescriptionAttribute = System.ComponentModel.DescriptionAttribute;
 using RangeAttribute = System.ComponentModel.DataAnnotations.RangeAttribute;
+using UnitTestHelper;
 #if !NETSTANDARD2_0
 using System.Windows.Data;
 #endif
@@ -3138,25 +3139,54 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
             public string Id { get; set; }
             //[DisplayName("Std")]
             public Student Student { get; set; }
-            [Range(1, 2)]
+            //[Range(1, 2)]
+            //[Range(0, 1)]
             public Course[] Courses { get; set; }
 
-            //[ChoDictionaryKey("K1,K2,K3")]
-            //public Dictionary<string, string> Grades { get; set; }
-            //[Range(1, 3)]
-            //[DisplayName("Sub")]
-            //public string[] Subjects { get; set; }
-            ////public Teacher Teacher { get; set; }
-            //[Range(0, 1)]
-            //[DisplayName("Prof")]
-            //public List<string> Profs { get; set; }
+            [ChoDictionaryKey("K1,K2,K3")]
+            public Dictionary<string, string> Grades { get; set; }
+            [Range(2, 3)]
+            //[Range(1, 2)]
+            [DisplayName("Sub")]
+            public string[] Subjects { get; set; }
+            [DisplayName("Teach")]
+            public Teacher Teacher { get; set; }
+            [Range(0, 1)]
+            [DisplayName("Prof")]
+            public List<string> Profs { get; set; }
 
             public StudentInfo()
             {
                 Courses = new Course[2];
-                //Grades = new Dictionary<string, string>();
-                //Subjects = new string[3];
-                //Profs = new List<string>();
+                Grades = new Dictionary<string, string>();
+                Subjects = new string[5];
+                Profs = new List<string>();
+            }
+
+            public override bool Equals(object obj)
+            {
+                var info = obj as StudentInfo;
+                return info != null &&
+                       Id == info.Id &&
+                       EqualityComparer<Student>.Default.Equals(Student, info.Student) &&
+                       new ArrayEqualityComparer<Course>().Equals(Courses, info.Courses) &&
+                       new DictionaryEqualityComparer<string, string>().Equals(Grades, info.Grades) &&
+                       new ArrayEqualityComparer<string>().Equals(Subjects, info.Subjects) &&
+                       EqualityComparer<Teacher>.Default.Equals(Teacher, info.Teacher) &&
+                       new ListEqualityComparer<string>().Equals(Profs, info.Profs);
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -1412250211;
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Id);
+                hashCode = hashCode * -1521134295 + EqualityComparer<Student>.Default.GetHashCode(Student);
+                hashCode = hashCode * -1521134295 + new ArrayEqualityComparer<Course>().GetHashCode(Courses);
+                hashCode = hashCode * -1521134295 + new DictionaryEqualityComparer<string, string>().GetHashCode(Grades);
+                hashCode = hashCode * -1521134295 + new ArrayEqualityComparer<string>().GetHashCode(Subjects);
+                hashCode = hashCode * -1521134295 + EqualityComparer<Teacher>.Default.GetHashCode(Teacher);
+                hashCode = hashCode * -1521134295 + new ListEqualityComparer<string>().GetHashCode(Profs);
+                return hashCode;
             }
         }
 
@@ -3167,6 +3197,22 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
             public string Name { get; set; }
 
             public Address Address { get; set; }
+
+            public override bool Equals(object obj)
+            {
+                var student = obj as Student;
+                return student != null &&
+                       Name == student.Name &&
+                       EqualityComparer<Address>.Default.Equals(Address, student.Address);
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -1876505879;
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Name);
+                hashCode = hashCode * -1521134295 + EqualityComparer<Address>.Default.GetHashCode(Address);
+                return hashCode;
+            }
         }
 
         public class Address
@@ -3175,12 +3221,45 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
             public string Street { get; set; }
             [DisplayName("City")]
             public string City { get; set; }
+
+            public override bool Equals(object obj)
+            {
+                var address = obj as Address;
+                return address != null &&
+                       Street == address.Street &&
+                       City == address.City;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -1577962384;
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Street);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(City);
+                return hashCode;
+            }
         }
 
         public class Teacher
         {
             public string Id { get; set; }
+            [DisplayName("TeachName")]
             public string Name { get; set; }
+
+            public override bool Equals(object obj)
+            {
+                var teacher = obj as Teacher;
+                return teacher != null &&
+                       Id == teacher.Id &&
+                       Name == teacher.Name;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -1919740922;
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Id);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Name);
+                return hashCode;
+            }
         }
 
         public class Course
@@ -3189,22 +3268,60 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
             public string CourseId { get; set; }
             [DisplayName("CreName")]
             public string CourseName { get; set; }
+
+            public override bool Equals(object obj)
+            {
+                var course = obj as Course;
+                return course != null &&
+                       CourseId == course.CourseId &&
+                       CourseName == course.CourseName;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -1457526968;
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(CourseId);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(CourseName);
+                return hashCode;
+            }
         }
 
-        static void CSV2ComplexObj()
+        [Test]
+        public static void CSV2ComplexObj()
         {
-            string csv = @"Id, Name, Street, City, CreId_1, CreName_1, CreId_2, CreName_2, K1,K2,K3,Sub_1,Sub_2,Sub_3,Prof_0,Prof_1
-1, Tom, St1, New York, CI0, CN0, CI1, CN1, K1, K2, K3, S1, S2, S3, P0, P1
-2, Mark, St1, Boston, CI20, CN20, CI21, CN21, K21, K22, K23, S21, S22, S23,P20, P21
+            List<StudentInfo> expected = new List<StudentInfo>() {
+                new StudentInfo { Id = "1", Student = new Student { Name = "Tom", Address = new Address { Street = "St1", City = "New York" } }, Courses = new Course[2] { new Course { CourseId = "CI0", CourseName = "CN0" }, new Course { CourseId = "CI1", CourseName = "CN1" } }, Subjects = new string[5] { "S2", "S3", null, null, null }, Teacher = new Teacher{ Id = "TId1", Name = "TName1" } , Profs = new List<string> { "P0", "P1" } },
+                new StudentInfo { Id = "2", Student = new Student { Name = "Mark", Address = new Address { Street = "St1", City = "Boston" } }, Courses = new Course[2] { new Course { CourseId = "CI20", CourseName = "CN20" }, new Course { CourseId = "CI21", CourseName = "CN21" } }, Subjects = new string[5] { "S22", "S23", null, null, null }, Teacher = new Teacher{ Id = "TId21", Name = "TName21" } , Profs = new List<string> { "P20", "P21" } }
+            };
+            expected[0].Grades.Add("K1", "K1");
+            expected[0].Grades.Add("K2", "K2");
+            expected[0].Grades.Add("K3", "K3");
+            expected[1].Grades.Add("K1", "K21");
+            expected[1].Grades.Add("K2", "K22");
+            expected[1].Grades.Add("K3", "K23");
+            List<StudentInfo> actual = new List<StudentInfo>();
+
+            string csv = @"Id, Name, Street, City, CreId_1, CreName_1, CreId_2, CreName_2, K1,K2,K3,Sub_1,Sub_2,Sub_3,Sub_4,Prof_0,Prof_1,Teach.Id,TeachName
+1, Tom, St1, New York, CI0, CN0, CI1, CN1, K1, K2, K3, S1, S2, S3, S4, P0, P1, TId1, TName1
+2, Mark, St1, Boston, CI20, CN20, CI21, CN21, K21, K22, K23, S21, S22, S23, S24,P20, P21, TId21, TName21
 ";
+//                   csv = @"Id, Name, Street, City, CreId_1, CreName_1, CreId_2, CreName_2, K1,K2,K3,Sub_0,Sub_1,Sub_2,Sub_3,Prof_0,Prof_1,Teach.Id,TeachName
+//1, Tom, St1, New York, CI0, CN0, CI1, CN1, K1, K2, K3, S1, S2, S3, S4, P0, P1, TId1, TName1
+//2, Mark, St1, Boston, CI20, CN20, CI21, CN21, K21, K22, K23, S21, S22, S23, S24,P20, P21, TId21, TName21
+//";
             using (var r = ChoCSVReader<StudentInfo>.LoadText(csv)
-                //.Index(c => c.Courses, 0, 0)
+                .Index(c => c.Courses, 1, 2)
                 .WithFirstLineHeader()
                 )
             {
                 foreach (var rec in r)
+                {
+                    actual.Add(rec);
                     Console.WriteLine(rec.Dump());
+                }
             }
+
+            CollectionAssert.AreEqual(expected, actual);
         }
 
         public class Headers
@@ -3212,6 +3329,24 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
             public string TransactionFrom { get; set; }
             public string TransactionTo { get; set; }
             public List<Transaction1> Transactions { get; set; }
+
+            public override bool Equals(object obj)
+            {
+                var headers = obj as Headers;
+                return headers != null &&
+                       TransactionFrom == headers.TransactionFrom &&
+                       TransactionTo == headers.TransactionTo &&
+                       new ListEqualityComparer<Transaction1>().Equals(Transactions, headers.Transactions);
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -1815474691;
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(TransactionFrom);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(TransactionTo);
+                hashCode = hashCode * -1521134295 + new ListEqualityComparer<Transaction1>().GetHashCode(Transactions);
+                return hashCode;
+            }
         }
 
         public class Transaction1
@@ -3226,11 +3361,47 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
             public string dateOfTransaction { get; set; }
             [ChoFieldPosition(1)]
             public string price { get; set; }
+
+            public override bool Equals(object obj)
+            {
+                var transaction = obj as Transaction1;
+                return transaction != null &&
+                       logisticCode == transaction.logisticCode &&
+                       siteId == transaction.siteId &&
+                       userId == transaction.userId &&
+                       dateOfTransaction == transaction.dateOfTransaction &&
+                       price == transaction.price;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -1097465422;
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(logisticCode);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(siteId);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(userId);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(dateOfTransaction);
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(price);
+                return hashCode;
+            }
         }
 
-        static void MultiRecordTypeTest()
+        [Test]
+        public static void MultiRecordTypeTest()
         {
+            List<object> expected = new List<object> {
+                new Headers { TransactionFrom = "2019-12-01T00:00:00.000Z", TransactionTo = "2019-12-10T23:59:59.999Z", Transactions = new List<Transaction1>() {
+                    new Transaction1 { logisticCode = "005033971003", siteId = "48", userId = "141", dateOfTransaction = "false", price = "50" },
+                    new Transaction1 { logisticCode = "005740784001", siteId = "80", userId = "311", dateOfTransaction = "false", price = "100" } } },
+                new Headers { TransactionFrom = "2019-12-01T00:00:00.000Z", TransactionTo = "2019-12-10T23:59:59.999Z", Transactions = new List<Transaction1>() {
+                    new Transaction1 { logisticCode = "005033971003", siteId = "48", userId = "141", dateOfTransaction = "false", price = "50" },
+                    new Transaction1 { logisticCode = "005740784001", siteId = "80", userId = "311", dateOfTransaction = "false", price = "100" } } }
+            };
+            List<Headers> actual = null;
+
             string csv = @"2019-12-01T00:00:00.000Z;2019-12-10T23:59:59.999Z
+50;false;2019-12-03T15:00:12.077Z;005033971003;48;141;2019-12-03T00:00:00.000Z;2019-12-03T23:59:59.999Z
+100;false;2019-12-02T12:38:05.989Z;005740784001;80;311;2019-12-02T00:00:00.000Z;2019-12-02T23:59:59.999Z
+2019-12-01T00:00:00.000Z;2019-12-10T23:59:59.999Z
 50;false;2019-12-03T15:00:12.077Z;005033971003;48;141;2019-12-03T00:00:00.000Z;2019-12-03T23:59:59.999Z
 100;false;2019-12-02T12:38:05.989Z;005740784001;80;311;2019-12-02T00:00:00.000Z;2019-12-02T23:59:59.999Z";
 
@@ -3248,15 +3419,16 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
                 })
                 )
             {
-                var json = ChoJSONWriter.ToTextAll(r.GroupWhile(r1 => r1.GetType() != typeof(Headers))
+                actual = r.GroupWhile(r1 => r1.GetType() != typeof(Headers))
                     .Select(g =>
                     {
                         Headers master = (Headers)g.First();
                         master.Transactions = g.Skip(1).Cast<Transaction1>().ToList();
                         return master;
-                    }));
-                Console.WriteLine(json);
+                    }).ToList();
             }
+
+            CollectionAssert.AreEqual(expected, actual);
         }
 
         static void Main(string[] args)
