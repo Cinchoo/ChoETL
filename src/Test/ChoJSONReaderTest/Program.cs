@@ -1666,8 +1666,47 @@ K,L,M,N,O,P,Q,R,S,T";
 
         }
 
-        static void ArrayItemsTest()
+        [Test]
+        public static void ArrayItemsTest()
         {
+            DataTable expected = new DataTable();
+            expected.Columns.Add("Column_0");
+            expected.Columns.Add("Column_1");
+            expected.Columns.Add("Column_2");
+            expected.Columns.Add("Column_3");
+            expected.Columns.Add("Column_4");
+            expected.Columns.Add("Column_5");
+            expected.Columns.Add("Column_6");
+            expected.Columns.Add("Column_7");
+            expected.Columns.Add("Column_8");
+            expected.Columns.Add("Column_9");
+            expected.Columns.Add("Column_10");
+            expected.Columns.Add("Column_11");
+            expected.Columns.Add("Column_12");
+            expected.Columns.Add("Column_13");
+            expected.Columns.Add("Column_14");
+            expected.Columns.Add("Column_15");
+            expected.Columns.Add("Column_16");
+            expected.Columns.Add("Column_17");
+            expected.Columns.Add("Column_18");
+            expected.Columns.Add("Column_19");
+            expected.Columns.Add("Column_20");
+            expected.Columns.Add("Column_21");
+            expected.Columns.Add("Column_22");
+            expected.Columns.Add("Column_23");
+            expected.Columns.Add("Column_24");
+            expected.Columns.Add("Column_25");
+            expected.Columns.Add("Column_26");
+            expected.Columns.Add("Column_27");
+            expected.Columns.Add("Column_28");
+            expected.Rows.Add("Test123", "TestHub","TestVersion","TestMKT","TestCAP","TestRegion","TestAssembly",
+                "TestProduct","Testgroup","Testsample",1806,1807,1808,1809,1810,1811,1812,1901,1902,
+                1903,1904,1905,1906,1907,1908,1909,1910,1911,1912);
+            expected.Rows.Add("Sample12", "Sample879", "201806.1.0", "Sample098", "TSA CBU", "B8", "B8",
+                63, "63EM", "EM 42 T", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+            expected.Rows.Add("Sample121233", "Sample233879", "2012323806.1.0", "Sampl233e098", "TSA CBU", "B8", "B8",
+                "B3", "B3ULUE", "UL 42 R", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+
             string json = @"[
 [
     ""Test123"",
@@ -1767,10 +1806,13 @@ K,L,M,N,O,P,Q,R,S,T";
             using (var r = ChoJSONReader.LoadText(json))
             {
                 var dt = r.Select(rec => ((object[])rec.Value).ToDictionary()).AsDataTable();
+
+                DataTableAssert.AreEqual(expected, dt);
             }
         }
 
-        static void Sample33Test()
+        [Test]
+        public static void Sample33Test()
         {
             //StringBuilder csvErrors = new StringBuilder();
             //using (var errors = new ChoJSONReader("sample33.json")
@@ -1802,7 +1844,7 @@ K,L,M,N,O,P,Q,R,S,T";
             //Console.WriteLine(csvErrors.ToString());
             //return;
             StringBuilder csv = new StringBuilder();
-            using (var r = new ChoJSONReader("sample33.json")
+            using (var r = new ChoJSONReader(FileNameSample33JSON)
                 .WithJSONPath("$..getUsers[*]")
                 )
             {
@@ -1814,7 +1856,10 @@ K,L,M,N,O,P,Q,R,S,T";
                     w.Write(r);
             }
 
-            Console.WriteLine(csv.ToString());
+            using (var sw = new StreamWriter(FileNameSample33TestCSV))
+                sw.Write(csv.ToString());
+
+            FileAssert.AreEqual(FileNameSample33ExpectedCSV, FileNameSample33TestCSV);
         }
         interface Vehicle1 { }
 
@@ -1822,16 +1867,57 @@ K,L,M,N,O,P,Q,R,S,T";
         {
             public string make { get; set; }
             public int numberOfDoors { get; set; }
+
+            public override bool Equals(object obj)
+            {
+                var car = obj as Car1;
+                return car != null &&
+                       make == car.make &&
+                       numberOfDoors == car.numberOfDoors;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -1617715551;
+                hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(make);
+                hashCode = hashCode * -1521134295 + numberOfDoors.GetHashCode();
+                return hashCode;
+            }
         }
 
         public class Bicycle1 : Vehicle1
         {
             public int frontGears { get; set; }
             public int backGears { get; set; }
+
+            public override bool Equals(object obj)
+            {
+                var bicycle = obj as Bicycle1;
+                return bicycle != null &&
+                       frontGears == bicycle.frontGears &&
+                       backGears == bicycle.backGears;
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -539181454;
+                hashCode = hashCode * -1521134295 + frontGears.GetHashCode();
+                hashCode = hashCode * -1521134295 + backGears.GetHashCode();
+                return hashCode;
+            }
         }
 
-        static void PolyTypeTest()
+        [Test]
+        public static void PolyTypeTest()
         {
+            List<object> expected = new List<object>
+            {
+                new Car1{ make = "Smart", numberOfDoors = 2 },
+                new Car1{ make = "Lexus", numberOfDoors = 4 },
+                new Bicycle1{ frontGears = 3, backGears = 6 }
+            };
+            List<object> actual = new List<object>();
+
             string json = @"[
   {
     ""Car"": {
@@ -1869,8 +1955,10 @@ K,L,M,N,O,P,Q,R,S,T";
                 )
             {
                 foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                    actual.Add(rec);
             }
+
+            CollectionAssert.AreEqual(expected, actual);
         }
 
         static void Main(string[] args)
@@ -6599,6 +6687,9 @@ ABC24689753";
         public static string FileNameSample32JSON => "sample32.json";
         public static string FileNameSample32TestCSV => "sample32Test.csv";
         public static string FileNameSample32ExpectedCSV => "sample32Expected.csv";
+        public static string FileNameSample33JSON => "sample33.json";
+        public static string FileNameSample33TestCSV => "sample33Test.csv";
+        public static string FileNameSample33ExpectedCSV => "sample33Expected.csv";
         public static string FileNameSample100JSON => "sample100.json";
         public static string FileNameColorsJSON => "colors.json";
         public static string FileNameEmpJSON => "Emp.json";

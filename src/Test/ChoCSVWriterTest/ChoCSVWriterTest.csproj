@@ -77,6 +77,7 @@
     <None Include="CodeFirstWithDeclarativeApproachWriteRecordsToFileExpected.csv" />
     <None Include="CodeFirstApproachWriteRecordsToFileExpected.csv" />
     <None Include="ConfigFirstApproachWriteDynamicRecordsToFileExpected.csv" />
+    <None Include="DataReaderTestExpected.csv" />
     <None Include="ListPOCOTestExpected.csv" />
     <None Include="IntArrayTestExpected.csv" />
     <None Include="DataFirstApproachWriteSingleRecordToFileExpected.csv" />

@@ -781,7 +781,8 @@ B,c1,Math1,100,1,Mark,Physics,,,100,Tom,";
             Assert.AreEqual(expected, actual);
         }
 
-        static void DataReaderTest()
+        [Test]
+        public static void DataReaderTest()
         {
             string csv = @"Id, Name, Address2
 1, Tom,
@@ -789,7 +790,7 @@ B,c1,Math1,100,1,Mark,Physics,,,100,Tom,";
 
             var dr = ChoCSVReader.LoadText(csv).WithFirstLineHeader().AsDataReader();
             
-            using (var sw = new StreamWriter(File.OpenWrite("test.csv")))
+            using (var sw = new StreamWriter(File.OpenWrite(FileNameDataReaderTestTestCSV)))
             {
                 using (var csvWriter = new ChoCSVWriter(sw)
                     .WithFirstLineHeader()
@@ -801,11 +802,17 @@ B,c1,Math1,100,1,Mark,Physics,,,100,Tom,";
                 }
             }
 
-            Console.WriteLine(File.OpenText("test.csv").ReadToEnd());
+            FileAssert.AreEqual(FileNameDataReaderTestExpectedCSV, FileNameDataReaderTestTestCSV);
         }
 
-        static void Pivot()
+        [Test]
+        public static void Pivot()
         {
+            string expected = @"Name,Foo,Bar
+Address,Foo's address,Bar's address
+Age,24,19";
+            string actual = null;
+
             string csv = @"Name, Address, Age
 ""Foo"", ""Foo's address"", 24
 ""Bar"", ""Bar's address"", 19";
@@ -815,12 +822,17 @@ B,c1,Math1,100,1,Mark,Physics,,,100,Tom,";
                 //.WithFirstLineHeader()
                 )
             {
-                Console.WriteLine(ChoCSVWriter.ToTextAll(r.Transpose(false)));
+                actual = ChoCSVWriter.ToTextAll(r.Transpose(false));
             }
+
+            Assert.AreEqual(expected, actual);
         }
 
-        static void LargeXmlToCSV()
+        [Test]
+        public static void LargeXmlToCSV()
         {
+            Assert.Fail(@"Cannot find file C:\Users\nraj39\Downloads\Loan\dblp.xml");
+
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
             XmlReaderSettings settings = new XmlReaderSettings();
 
@@ -853,8 +865,11 @@ B,c1,Math1,100,1,Mark,Physics,,,100,Tom,";
         {
         }
 
-        static void LargeJSON2CSV()
+        [Test]
+        public static void LargeJSON2CSV()
         {
+            Assert.Fail(@"Cannot find file C:\Users\nraj39\Downloads\Loan\rows.json");
+
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
             using (var r = new ChoJSONReader(@"C:\Users\nraj39\Downloads\Loan\rows.json"))
             {
@@ -869,8 +884,13 @@ B,c1,Math1,100,1,Mark,Physics,,,100,Tom,";
             }
         }
 
-        static void JSON2CSVTest1()
+        [Test]
+        public static void JSON2CSVTest1()
         {
+            string expected = @"data_getUsers_0_userProfileDetail_userStatus_name,data_getUsers_0_userProfileDetail_userStatusDate,data_getUsers_0_userProfileDetail_lastAttestationDate,data_getUsers_0_userInformation_Id,data_getUsers_0_userInformation_lastName,data_getUsers_0_userInformation_suffix,data_getUsers_0_userInformation_gender,data_getUsers_0_userInformation_birthDate,data_getUsers_0_userInformation_ssn,data_getUsers_0_userInformation_ethnicity,data_getUsers_0_userInformation_languagesSpoken,data_getUsers_0_userInformation_personalEmail,data_getUsers_0_userInformation_otherNames,data_getUsers_0_userInformation_userType_name,data_getUsers_0_userInformation_primaryuserState,data_getUsers_0_userInformation_otheruserState_0,data_getUsers_0_userInformation_practiceSetting,data_getUsers_0_userInformation_primaryEmail
+Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/1/1970 1:01:00 AM,000000000,INVALID_REFERENCE_VALUE,,,,APN,CO,CO,INPATIENT_ONLY,*****@*****.com";
+            string actual = null;
+
             string json = @"{
   ""data"": {
     ""getUsers"": [
@@ -908,13 +928,25 @@ B,c1,Math1,100,1,Mark,Physics,,,100,Tom,";
   }
 }";
 
-            Console.WriteLine(ChoCSVWriter.ToTextAll(ChoJSONReader.LoadText(json,
+            actual = ChoCSVWriter.ToTextAll(ChoJSONReader.LoadText(json,
                 new ChoJSONRecordConfiguration()), 
-                new ChoCSVRecordConfiguration().Configure(c => c.WithFirstLineHeader())));
+                new ChoCSVRecordConfiguration().Configure(c => c.WithFirstLineHeader()));
+
+            Assert.AreEqual(expected, actual);
         }
 
-        static void JSON2CSVTest2()
+        [Test]
+        public static void JSON2CSVTest2()
         {
+            string expected = @"personalInformation_userId,personalInformation_firstName,personalInformation_languagesSpoken_0_name,personalInformation_languagesSpoken_1_name,personalInformation_languagesSpoken_2_name,personalInformation_state
+13610642,***,,,,CA|IL
+13611014,**,Afrikaans,Albanian,American Sign Language,WA|TX|GA|MN|NV
+13611071,***,Albanian,Hindi,Telugu,OK|AK|WA|MA|GA|MN
+13611074,********,,,,AZ
+13611082,******,Estonian,Faroese,English,AK|CA|GA|IL|NC|NV|TX|OK|OR|MA|MN|MS|WA|WV|CO
+13611227,**,Latvian,English,Fiji,CO|GA|IL|MN|MS|MA|NC|NV|OK|OR|WA|WV";
+            string actual = null;
+
             string json = @"{
     ""data"": {
         ""getUsers"": [
@@ -1090,7 +1122,7 @@ B,c1,Math1,100,1,Mark,Physics,,,100,Tom,";
             {
                 using (var w = new ChoCSVWriter(csv)
                     .WithFirstLineHeader()
-                    .Configure(c => c.MaxScanRows = 1)
+                    .Configure(c => c.MaxScanRows = 2)
                     .Configure(c => c.ThrowAndStopOnMissingField = false)
                     )
                 {
@@ -1103,11 +1135,16 @@ B,c1,Math1,100,1,Mark,Physics,,,100,Tom,";
                 }
             }
 
-            Console.WriteLine(csv.ToString());
+            actual = csv.ToString();
+
+            Assert.AreEqual(expected, actual);
         }
 
-        static void JSON2CSVTest3()
+        [Test]
+        public static void JSON2CSVTest3()
         {
+            Assert.Fail(@"Cannot find file C:\Users\nraj39\Downloads\Loan\test1.json");
+
             using (var r = new ChoJSONReader(@"C:\Users\nraj39\Downloads\Loan\test1.json")
                  .WithJSONPath("$..data.getUsers[*]"))
             {
@@ -1855,6 +1892,8 @@ Circle,200,Lou,1/1/0001 12:00:00 AM,$0.00,false," + "\0";
             FileAssert.AreEqual(FileNameConfigFirstApproachWriteRecordsToFileExpectedCSV, FileNameConfigFirstApproachWriteRecordsToFileTestCSV);
         }
 
+        public static string FileNameDataReaderTestTestCSV => "DataReaderTestTest.csv";
+        public static string FileNameDataReaderTestExpectedCSV => "DataReaderTestExpected.csv";
         public static string FileNameCodeFirstApproachWriteRecordsToFileTestCSV => "CodeFirstApproachWriteRecordsToFileTest.csv";
         public static string FileNameCodeFirstApproachWriteRecordsToFileExpectedCSV => "CodeFirstApproachWriteRecordsToFileExpected.csv";
         public static string FileNameCodeFirstWithDeclarativeApproachWriteRecordsToFileTestCSV => "CodeFirstWithDeclarativeApproachWriteRecordsToFileTest.csv";
