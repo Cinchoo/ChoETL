@@ -91,11 +91,12 @@ namespace ChoETL
                 if (fieldTypes[key] == typeof(string))
                     continue;
 
-                if (value == null)
+                if (value == null
+                    || (value is string && ((string)value).IsNullOrWhiteSpace()))
                 {
-                    if (isLastScanRow)
-                        fieldTypes[key] = typeof(string);
-                    else
+                    //if (isLastScanRow)
+                    //    fieldTypes[key] = typeof(string);
+                    //else
                         continue;
                 }
 
