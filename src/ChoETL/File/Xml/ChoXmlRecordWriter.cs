@@ -736,37 +736,46 @@ namespace ChoETL
                             else
                                 innerXml1 = "<{0}>{1}</{0}>".FormatString(XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix), innerXml1);
                         }
+                        ele.Add(new XText(Environment.NewLine));
                         ele.Add(ParseElement(innerXml1, Configuration.NamespaceManager, Configuration.DefaultNamespacePrefix, ns));
 
                     }
                 }
             }
 
-            innerXml1 = ele.ToString(SaveOptions.OmitDuplicateNamespaces);
             if (config.IgnoreNodeName)
             {
-                if (_beginNSTagRegex.Match(innerXml1).Success)
-                {
-                    innerXml1 = _beginNSTagRegex.Replace(innerXml1, delegate (Match m)
-                    {
-                        return null;
-                    });
-                }
-                else
-                {
-                    innerXml1 = _beginTagRegex.Replace(innerXml1, delegate (Match m)
-                    {
-                        return null;
-                    });
-                }
+                innerXml1 = ele.InnerXML();
+                //if (_beginNSTagRegex.Match(innerXml1).Success)
+                //{
+                //    innerXml1 = _beginNSTagRegex.Replace(innerXml1, delegate (Match m)
+                //    {
+                //        return null;
+                //    });
+                //}
+                //else
+                //{
+                //    innerXml1 = _beginTagRegex.Replace(innerXml1, delegate (Match m)
+                //    {
+                //        return String.Empty;
+                //    });
+                //}
 
-                innerXml1 = _endTagRegex.Replace(innerXml1, delegate (Match thisMatch)
-                {
-                    return null;
-                });
-                innerXml1 = XElement.Parse(innerXml1).ToString();
+                //innerXml1 = _endTagRegex.Replace(innerXml1, delegate (Match thisMatch)
+                //{
+                //    return null;
+                //});
+
+                //try
+                //{
+                //    innerXml1 = XElement.Parse(innerXml1).ToString();
+                //}
+                //catch { }
             }
+            else
+                innerXml1 = ele.ToString(SaveOptions.OmitDuplicateNamespaces);
 
+            innerXml1 = Regex.Replace(innerXml1, @"^\s*$\n", "", RegexOptions.Multiline).TrimEnd();
             recText = config.IgnoreRootName ? innerXml1 : innerXml1.Indent(config.Indent, config.IndentChar.ToString());
 
             return true;

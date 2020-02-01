@@ -28,6 +28,14 @@ namespace ChoETL
             _JSONSchemaNamespace = "http://james.newtonking.com/projects/json";
 
         }
+
+        public static string InnerXML(this XElement el)
+        {
+            var reader = el.CreateReader();
+            reader.MoveToContent();
+            return reader.ReadInnerXml();
+        }
+
         private static string _XmlSchemaInstanceNamespace;
         public static string XmlSchemaInstanceNamespace
         {

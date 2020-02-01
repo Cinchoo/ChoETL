@@ -159,8 +159,9 @@ namespace ChoETL
                 configuration = new ChoXmlRecordConfiguration();
                 configuration.IgnoreRootName = true;
                 configuration.RootName = null;
-                configuration.IgnoreNodeName = true;
             }
+
+            configuration.IgnoreNodeName = true;
 
             if (record != null)
             {
@@ -222,8 +223,9 @@ namespace ChoETL
             if (configuration == null)
             {
                 configuration = new ChoXmlRecordConfiguration();
-                configuration.IgnoreRootName = false;
             }
+
+            configuration.IgnoreRootName = false;
 
             TRec record = pe.Peek;
 

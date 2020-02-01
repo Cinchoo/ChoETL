@@ -34,8 +34,43 @@ namespace ChoXmlWriterTest
     [SetCulture("en-US")] // TODO: Check if correct culture is used
     class Program
     {
+
+        public static void JSON2XML()
+        {
+            string json = @"{
+  ""header"": ""myheader"",
+  ""transaction"": {
+    ""date"": ""2019-09-24"",
+    ""items"": [
+      {
+        ""number"": ""123"",
+        ""unit"": ""EA"",
+        ""qty"": 6
+      },
+      {
+        ""number"": ""456"",
+        ""unit"": ""CS"",
+        ""qty"": 4
+      }
+    ]
+  }
+}";
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                var x = r.FirstOrDefault();
+                Console.WriteLine(x.Dump());
+                Console.WriteLine(ChoXmlWriter.ToText(x, new ChoXmlRecordConfiguration().Configure(c =>
+                {
+                    c.RootName = "Root1";
+                })));
+            }
+        }
+
         static void Main(string[] args)
         {
+            JSON2XML();
+            return;
+
             JSON2XmlDateTimeTest();
             return;
             CustomStringArrayTest();
