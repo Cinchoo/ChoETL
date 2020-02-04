@@ -58,13 +58,12 @@ namespace ChoETL
         protected void RaiseRecordFieldTypeAssessment(IDictionary<string, Type> fieldTypes, IDictionary<string, object> fieldValues, bool isLastScanRow = false)
         {
             EventHandler<ChoRecordFieldTypeAssessmentEventArgs> recordFieldTypeAssessment = RecordFieldTypeAssessment;
-            if (recordFieldTypeAssessment == null)
+            OnRecordFieldTypeAssessment(fieldTypes, fieldValues, isLastScanRow);
+            if (recordFieldTypeAssessment != null)
             {
-                OnRecordFieldTypeAssessment(fieldTypes, fieldValues, isLastScanRow);
-                return;
+                var ea = new ChoRecordFieldTypeAssessmentEventArgs(fieldTypes, fieldValues, isLastScanRow);
+                recordFieldTypeAssessment(this, ea);
             }
-            var ea = new ChoRecordFieldTypeAssessmentEventArgs(fieldTypes, fieldValues, isLastScanRow);
-            recordFieldTypeAssessment(this, ea);
         }
 
         protected virtual IDictionary<string, object> MigrateToNewSchema(IDictionary<string, object> rec, IDictionary<string, Type> recTypes)

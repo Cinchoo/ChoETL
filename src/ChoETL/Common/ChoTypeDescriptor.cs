@@ -68,15 +68,22 @@
         {
             ChoGuard.ArgumentNotNull(type, "Type");
 
-            return _pdDict[type];
+            lock (_pdDictLock)
+            {
+                return _pdDict[type];
+            }
         }
 
         private static readonly Dictionary<Type, PropertyDescriptor[]> _pdDict = new Dictionary<Type, PropertyDescriptor[]>();
+        private static readonly object _pdDictLock = new object();
         private static void Init(Type type)
         {
-            if (!_pdDict.ContainsKey(type))
+            lock (_pdDictLock)
             {
-                _pdDict.Add(type, GetBasePropertiesFirst(type).AsTypedEnumerable<PropertyDescriptor>().Where(pd => !pd.Attributes.OfType<ChoIgnoreMemberAttribute>().Any()).ToArray());
+                if (!_pdDict.ContainsKey(type))
+                {
+                    _pdDict.Add(type, GetBasePropertiesFirst(type).AsTypedEnumerable<PropertyDescriptor>().Where(pd => !pd.Attributes.OfType<ChoIgnoreMemberAttribute>().Any()).ToArray());
+                }
             }
         }
 
@@ -104,8 +111,10 @@
 
             Init(type);
 
-            return _pdDict[type].Where(pd => pd.Attributes.OfType<T>().Any());
-
+            lock (_pdDictLock)
+            {
+                return _pdDict[type].Where(pd => pd.Attributes.OfType<T>().Any());
+            }
             //return _pdDict[type].Where(pd => pd.Attributes.OfType<T>().Any());
         }
 
@@ -114,8 +123,10 @@
             ChoGuard.ArgumentNotNull(type, "Type");
             Init(type);
 
-            return _pdDict[type];
-
+            lock (_pdDictLock)
+            {
+                return _pdDict[type];
+            }
             //return _pdDict[type];
         }
 
@@ -126,8 +137,11 @@
             ChoGuard.ArgumentNotNullOrEmpty(propName, "PropName");
             Init(type);
 
-            return _pdDict[type].Where(pd =>
+            lock (_pdDictLock)
+            {
+                return _pdDict[type].Where(pd =>
                 pd.Name == propName && pd.Attributes.OfType<T>().Any()).FirstOrDefault();
+            }
 
             //return _pdDict[type].Where(pd =>
             //    pd.Name == propName && pd.Attributes.OfType<T>().Any()).FirstOrDefault();
@@ -139,8 +153,10 @@
             ChoGuard.ArgumentNotNullOrEmpty(propName, "PropName");
             Init(type);
 
-            return _pdDict[type].Where(pd =>
-               pd.Name == propName).FirstOrDefault();
+            lock (_pdDictLock)
+            {
+                return _pdDict[type].Where(pd => pd.Name == propName).FirstOrDefault();
+            }
             //return _pdDict[type].Where(pd =>
             //    pd.Name == propName).FirstOrDefault();
         }
@@ -187,12 +203,15 @@
             ChoGuard.ArgumentNotNullOrEmpty(propName, "PropName");
             Init(type);
 
-            PropertyDescriptor pd = _pdDict[type].Where(pd1 => 
+            lock (_pdDictLock)
+            {
+                PropertyDescriptor pd = _pdDict[type].Where(pd1 =>
                 pd1.Name == propName && pd1.Attributes.OfType<T>().Any()).FirstOrDefault();
-            if (pd == null)
-                return null;
-            else
-                return GetPropetyAttribute<T>(pd);
+                if (pd == null)
+                    return null;
+                else
+                    return GetPropetyAttribute<T>(pd);
+            }
         }
 
         public static IEnumerable<T> GetPropetyAttributes<T>(Type type, string propName)
@@ -202,12 +221,15 @@
             ChoGuard.ArgumentNotNullOrEmpty(propName, "PropName");
             Init(type);
 
-            PropertyDescriptor pd = _pdDict[type].Where(pd1 =>
+            lock (_pdDictLock)
+            {
+                PropertyDescriptor pd = _pdDict[type].Where(pd1 =>
                 pd1.Name == propName && pd1.Attributes.OfType<T>().Any()).FirstOrDefault();
-            if (pd == null)
-                return Enumerable.Empty<T>();
-            else
-                return GetPropetyAttributes<T>(pd);
+                if (pd == null)
+                    return Enumerable.Empty<T>();
+                else
+                    return GetPropetyAttributes<T>(pd);
+            }
         }
 
         public static void RegisterConverters(MemberInfo memberInfo, TypeConverter[] typeConverters)

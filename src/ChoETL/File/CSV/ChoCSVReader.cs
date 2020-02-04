@@ -28,6 +28,7 @@ namespace ChoETL
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
         public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
         public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
+        public event EventHandler<ChoRecordFieldTypeAssessmentEventArgs> RecordFieldTypeAssessment;
         public event EventHandler<ChoMapColumnEventArgs> MapColumn;
         public event EventHandler<ChoEmptyLineEventArgs> EmptyLineFound;
         public event EventHandler<ChoSanitizeLineEventArgs> SanitizeLine;
@@ -230,6 +231,7 @@ namespace ChoETL
             rr.TraceSwitch = TraceSwitch;
             rr.RowsLoaded += NotifyRowsLoaded;
             rr.MembersDiscovered += MembersDiscovered;
+            rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
             var e = _lines != null ? rr.AsEnumerable(_lines).GetEnumerator() : rr.AsEnumerable(_textReader).GetEnumerator();
             return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
         }
@@ -251,6 +253,7 @@ namespace ChoETL
             rr.TraceSwitch = TraceSwitch;
             rr.RowsLoaded += NotifyRowsLoaded;
             rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
+            rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
             var dr = new ChoEnumerableDataReader(_lines != null ? rr.AsEnumerable(_lines) : rr.AsEnumerable(_textReader), rr);
             return dr;
         }

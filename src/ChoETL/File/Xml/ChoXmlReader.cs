@@ -32,6 +32,7 @@ namespace ChoETL
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
         public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
         public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
+        public event EventHandler<ChoRecordFieldTypeAssessmentEventArgs> RecordFieldTypeAssessment;
         private bool _isDisposed = false;
 
         public override dynamic Context
@@ -306,6 +307,7 @@ namespace ChoETL
                 rr.TraceSwitch = TraceSwitch;
                 rr.RowsLoaded += NotifyRowsLoaded;
                 rr.MembersDiscovered += MembersDiscovered;
+                rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
                 var e = rr.AsEnumerable(_xmlReader).GetEnumerator();
                 return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
             }
@@ -317,6 +319,7 @@ namespace ChoETL
                 rr.TraceSwitch = TraceSwitch;
                 rr.RowsLoaded += NotifyRowsLoaded;
                 rr.MembersDiscovered += MembersDiscovered;
+                rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
                 var e = rr.AsEnumerable(_xElements).GetEnumerator();
                 return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
             }
@@ -345,6 +348,7 @@ namespace ChoETL
                 rr.TraceSwitch = TraceSwitch;
                 rr.RowsLoaded += NotifyRowsLoaded;
                 rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
+                rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
                 var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_xmlReader), rr);
                 return dr;
             }
@@ -356,6 +360,7 @@ namespace ChoETL
                 rr.TraceSwitch = TraceSwitch;
                 rr.RowsLoaded += NotifyRowsLoaded;
                 rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
+                rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
                 var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_xElements), rr);
                 return dr;
             }
