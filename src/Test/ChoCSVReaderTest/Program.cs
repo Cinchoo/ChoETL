@@ -3444,13 +3444,22 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
             StringBuilder sb = new StringBuilder();
             using (var p = ChoCSVReader.LoadText(csv)
                 .WithFirstLineHeader()
-                .WithMaxScanRows(2)
+                //.WithMaxScanRows(2)
                 )
             {
                 p.RecordFieldTypeAssessment += (o, e) =>
                 {
                     e.FieldTypes["Id.x"] = typeof(short);
                 };
+
+                p.MembersDiscovered += (o, e) =>
+                {
+                    var ft = e.Value; // p.Configuration.CSVRecordFieldConfigurations.Select(f => f.FieldType).ToList();
+                    //ft["Id.x"] = typeof(short);
+                    //ft["Name"] = typeof(string);
+                    //ft["City"] = typeof(string);
+                };
+
                 foreach (var rec in p)
                     Console.WriteLine(rec.Dump());
                 //using (var w = new ChoJSONWriter(sb))

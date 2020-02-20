@@ -1012,6 +1012,7 @@ namespace ChoETL
                 || typeof(ChoCurrency) == type
                 || typeof(Decimal) == type
                 || typeof(ChoCDATA) == type
+                || typeof(Guid) == type
                 ;
         }
 

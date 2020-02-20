@@ -193,6 +193,7 @@ namespace ChoETL
             DateTime dtresult;
             Decimal decResult = 0;
             ChoCurrency currResult = 0;
+            Guid guidResult;
 
             if (value == null)
                 return typeof(string);
@@ -204,6 +205,8 @@ namespace ChoETL
                 return typeof(DateTime);
             else if (DateTime.TryParse(value, out dtresult))
                 return typeof(DateTime);
+            else if (Guid.TryParse(value, out guidResult))
+                return typeof(Guid);
             else if (!treatCurrencyAsDecimal && ChoCurrency.TryParse(value, out currResult))
                 return typeof(ChoCurrency);
             else if (treatCurrencyAsDecimal && Decimal.TryParse(value, NumberStyles.Currency, CultureInfo.CurrentCulture, out decResult))

@@ -39,6 +39,7 @@ namespace ChoETL
             _dataTypeSize.Add(typeof(DateTime), 10);
             _dataTypeSize.Add(typeof(ChoCurrency), 30);
             _dataTypeSize.Add(typeof(Object), 30);
+            _dataTypeSize.Add(typeof(Guid), 36);
         }
 
         public int GetSize(Type type)

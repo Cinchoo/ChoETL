@@ -105,14 +105,62 @@ public class ToTextConverter : IChoValueConverter
         }
     }
 
+    public class ValueObject<T>
+    {
+        public T Value { get; }
+        public ValueObject(T value) => Value = value;
+    }
+
+    public class CustomerId : ValueObject<Guid>
+    {
+        public CustomerId(Guid value) : base(value) { }
+    }
+
+    public class EmailAddress : ValueObject<string>
+    {
+        public EmailAddress(string value) : base(value) { }
+    }
+
+    public class CustomerInfo
+    {
+        public CustomerId Id { get; }
+        public EmailAddress Email { get; }
+
+        public CustomerInfo(CustomerId id, EmailAddress email)
+        {
+            Id = id;
+            Email = email;
+        }
+    }
     [TestFixture]
     [SetCulture("en-US")] // TODO: Check if correct culture is used
     class Program
     {
+        public static void InheritanceTest()
+        {
+            var customerId = new CustomerId(Guid.NewGuid());
+            var emailAddress = new EmailAddress("some@email.com");
+
+            var customer = new CustomerInfo(customerId, emailAddress);
+
+            StringBuilder msg = new StringBuilder();
+
+            using (var w = new ChoJSONWriter<CustomerInfo>(msg)
+                )
+            {
+                w.Write(customer);
+            }
+
+            Console.WriteLine(msg.ToString());
+        }
+
         public enum EmpType { FullTime, Contract }
 
         static void Main(string[] args)
         {
+            InheritanceTest();
+            return;
+
             TimespanTest();
             return;
 

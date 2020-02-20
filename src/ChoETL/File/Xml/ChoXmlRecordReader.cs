@@ -195,7 +195,8 @@ namespace ChoETL
                     else
                         Configuration.Validate(pair);
                     var dict = Configuration.XmlRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
-                    RaiseMembersDiscovered(dict);
+                    if (Configuration.MaxScanRows == 0)
+                        RaiseMembersDiscovered(dict);
                     Configuration.UpdateFieldTypesIfAny(dict);
                     _configCheckDone = true;
                 }
@@ -734,8 +735,8 @@ namespace ChoETL
                                                     fieldValue = Normalize(fieldConfig.ItemConverter(fXElement));
                                                 else
                                                 {
-                                                    fieldValue = Normalize(fXElement.ToObjectFromXml(fieldConfig.FieldType, GetXmlOverrides(fieldConfig), 
-                                                        Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, 
+                                                    fieldValue = Normalize(fXElement.ToObjectFromXml(fieldConfig.FieldType, GetXmlOverrides(fieldConfig),
+                                                        Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace,
                                                         Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative, ChoNullValueHandling.Ignore, new ChoXmlNamespaceManager(Configuration.NamespaceManager).GetFirstDefaultNamespace()));
                                                 }
                                             }

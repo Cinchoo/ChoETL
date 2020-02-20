@@ -186,7 +186,8 @@ namespace ChoETL
                                 Configuration.Validate(headers == null ? pair : headers);
                             }
                             var dict = recFieldTypes = Configuration.FixedLengthRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
-                            RaiseMembersDiscovered(dict);
+                            if (Configuration.MaxScanRows == 0)
+                                RaiseMembersDiscovered(dict);
                             Configuration.UpdateFieldTypesIfAny(dict);
                             _configCheckDone = true;
                         }
@@ -220,7 +221,8 @@ namespace ChoETL
                                 Configuration.Validate(headers == null ? pair : headers);
                             }
                             var dict = recFieldTypes = Configuration.FixedLengthRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
-                            RaiseMembersDiscovered(dict);
+                            if (Configuration.MaxScanRows == 0)
+                                RaiseMembersDiscovered(dict);
                             Configuration.UpdateFieldTypesIfAny(dict);
                             _configCheckDone = true;
                         }
