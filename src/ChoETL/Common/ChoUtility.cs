@@ -270,7 +270,7 @@ namespace ChoETL
                 }
 
                 object value = null;
-                T rec = Activator.CreateInstance<T>();
+                T rec = ChoActivator.CreateInstance<T>();
                 int index = 0;
 
                 while (index < count)

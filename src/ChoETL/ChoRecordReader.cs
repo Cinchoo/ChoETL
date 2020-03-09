@@ -233,12 +233,12 @@ namespace ChoETL
                     && obj is IEnumerable
                     && !(obj is ArrayList))
                 {
-                    var item = Enumerable.Skip(((IEnumerable)obj).OfType<object>(), config.ArrayIndex.Value).FirstOrDefault();
+                    var item = Enumerable.Skip(((IEnumerable)obj).Cast<object>(), config.ArrayIndex.Value).FirstOrDefault();
 
                     if (item == null)
                     {
                         Type itemType = obj.GetType().GetItemType();
-                        item = Activator.CreateInstance(itemType);
+                        item = ChoActivator.CreateInstance(itemType);
                     }
 
                     if (obj is Array)

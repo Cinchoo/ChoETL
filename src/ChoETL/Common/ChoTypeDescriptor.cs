@@ -505,7 +505,7 @@
 
                             foreach (Type t in types)
                             {
-                                queue1.Add(index1, Activator.CreateInstance(t));
+                                queue1.Add(index1, ChoActivator.CreateInstance(t));
                                 index1++;
                             }
                             _typeTypeConverterCache.Add(objType, queue1.Values.ToArray());

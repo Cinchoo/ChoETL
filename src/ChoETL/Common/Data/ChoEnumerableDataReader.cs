@@ -121,7 +121,7 @@ namespace ChoETL
             {
                 returnValue = _enumerator.MoveNext();
             }
-            _current = returnValue ? _enumerator.Current : _type.IsValueType ? Activator.CreateInstance(_type) : null;
+            _current = returnValue ? _enumerator.Current : _type.IsValueType ? ChoActivator.CreateInstance(_type) : null;
             return returnValue;
         }
 

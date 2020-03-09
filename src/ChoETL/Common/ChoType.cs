@@ -332,13 +332,13 @@
         //[ReflectionPermission(SecurityAction.Assert, Unrestricted = true)]
         public static object CreateInstanceWithReflectionPermission(Type type)
         {
-            return Activator.CreateInstance(type, true);
+            return ChoActivator.CreateInstance(type, true);
         }
 
         //[ReflectionPermission(SecurityAction.Assert, Unrestricted = true)]
         public static object CreateInstanceWithReflectionPermission(Type type, object[] args)
         {
-            return Activator.CreateInstance(type, args);
+            return ChoActivator.CreateInstance(type, args);
         }
 
         #endregion CreateInstanceWithReflectionPermission Overloads
@@ -2565,7 +2565,7 @@
                         }
                         else
                         {
-                            obj = Activator.CreateInstance(prop.PropertyType);
+                            obj = ChoActivator.CreateInstance(prop.PropertyType);
                         }
                         prop.SetValue(src, obj);
                     }

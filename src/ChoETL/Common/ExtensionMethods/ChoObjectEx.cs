@@ -100,7 +100,7 @@ namespace ChoETL
             else
             {
                 Type sourceType = source.GetType();
-                object target = Activator.CreateInstance(type);
+                object target = ChoActivator.CreateInstance(type);
                 string key = null;
                 object value = null;
 
