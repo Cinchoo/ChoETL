@@ -121,6 +121,13 @@ namespace ChoETL
             _writer.RowsWritten += NotifyRowsWritten;
         }
 
+        public void WriteComment(string commentText, bool silent = true)
+        {
+            _writer.Writer = this;
+            _writer.TraceSwitch = TraceSwitch;
+            _writer.WriteComment(_textWriter, commentText, silent);
+        }
+
         public void Write(IEnumerable<T> records)
         {
             _writer.Writer = this;

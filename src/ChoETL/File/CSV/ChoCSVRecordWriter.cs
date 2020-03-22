@@ -23,6 +23,7 @@ namespace ChoETL
         internal ChoWriter Writer = null;
         internal Type ElementType = null;
         private Lazy<List<object>> _recBuffer = null;
+        private bool firstLine = true;
 
         public ChoCSVRecordConfiguration Configuration
         {
@@ -101,6 +102,31 @@ namespace ChoETL
                 }
             }
             return null;
+        }
+
+        public void WriteComment(object writer, string commentText, bool silent = true)
+        {
+            if (Configuration.Comments.IsNullOrEmpty())
+            {
+                if (silent) return;
+                throw new ChoParserException("No comment character set.");
+            }
+
+            string comment = Configuration.Comments.First();
+            Write(writer, $"{comment}{commentText}");
+        }
+
+        private void Write(object writer, string text)
+        {
+            TextWriter sw = writer as TextWriter;
+            ChoGuard.ArgumentNotNull(sw, "TextWriter");
+
+            if (firstLine)
+                sw.Write(text);
+            else
+                sw.Write("{1}{0}", text, Configuration.EOLDelimiter);
+
+            firstLine = false;
         }
 
         public override IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null)
@@ -222,7 +248,8 @@ namespace ChoETL
                                 continue;
                             else if (recText.Length > 0)
                             {
-                                sw.Write("{1}{0}", recText, _hadHeaderWritten || HasExcelSeparator ? Configuration.EOLDelimiter : "");
+                                //sw.Write("{1}{0}", recText, _hadHeaderWritten || HasExcelSeparator ? Configuration.EOLDelimiter : "");
+                                Write(sw, recText);
                                 continue;
                             }
 
@@ -233,10 +260,11 @@ namespace ChoETL
 
                                 if (ToText(_index, record, out recText))
                                 {
-                                    if (_index == 1)
-                                        sw.Write("{1}{0}", recText, _hadHeaderWritten || HasExcelSeparator ? Configuration.EOLDelimiter : "");
-                                    else
-                                        sw.Write("{1}{0}", recText, Configuration.EOLDelimiter);
+                                    //if (_index == 1)
+                                    //    sw.Write("{1}{0}", recText, _hadHeaderWritten || HasExcelSeparator ? Configuration.EOLDelimiter : "");
+                                    //else
+                                    //    sw.Write("{1}{0}", recText, Configuration.EOLDelimiter);
+                                    Write(sw, recText);
 
                                     if (!RaiseAfterRecordWrite(record, _index, recText))
                                         yield break;
@@ -691,8 +719,8 @@ namespace ChoETL
 
         private void WriteHeaderLine(TextWriter sw)
         {
-            if (HasExcelSeparator)
-                sw.Write("sep={0}".FormatString(Configuration.Delimiter));
+            if (HasExcelSeparator && firstLine)
+                Write(sw, "sep={0}".FormatString(Configuration.Delimiter));
 
             if (Configuration.FileHeaderConfiguration.HasHeaderRecord)
             {
@@ -702,7 +730,8 @@ namespace ChoETL
                     if (header.IsNullOrWhiteSpace())
                         return;
 
-                    sw.Write("{1}{0}", header, HasExcelSeparator ? Configuration.EOLDelimiter : "");
+                    //sw.Write("{1}{0}", header, HasExcelSeparator ? Configuration.EOLDelimiter : "");
+                    Write(sw, header);
                     _hadHeaderWritten = true;
                 }
             }

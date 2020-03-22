@@ -1146,7 +1146,7 @@ namespace ChoETL
             {
                 if (objectType.IsGenericList())
                 {
-                    IList list = Activator.CreateInstance(objectType) as IList;
+                    IList list = ChoActivator.CreateInstance(objectType) as IList;
 
                     Type itemType = objectType.GetItemType();
                     if (jsonSerializer == null || jsonSerializer.Value == null)

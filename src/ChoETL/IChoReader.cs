@@ -18,6 +18,11 @@ namespace ChoETL
         event EventHandler<ChoBeforeRecordFieldLoadEventArgs> BeforeRecordFieldLoad;
         event EventHandler<ChoAfterRecordFieldLoadEventArgs> AfterRecordFieldLoad;
         event EventHandler<ChoRecordFieldLoadErrorEventArgs> RecordFieldLoadError;
+
+        event EventHandler<ChoSkipUntilEventArgs> SkipUntil;
+        event EventHandler<ChoDoWhileEventArgs> DoWhile;
+
+        event EventHandler<ChoRecordFieldSerializeEventArgs> RecordFieldDeserialize;
     }
 
     public class ChoBeginLoadEventArgs : EventArgs
