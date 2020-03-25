@@ -460,14 +460,15 @@ namespace ChoETL
             Func<dynamic, object> valueSelector = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, 
-            string formatText = null, string nullValue = null)
+            string formatText = null, string nullValue = null,
+            bool excelField = false)
         {
             if (field == null)
                 return this;
 
             return WithField(field.GetMemberName(), field.GetPropertyType(), quoteField, fillChar, fieldValueJustification, truncate, 
                 fieldName, fieldPosition, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue,
-                field.GetFullyQualifiedMemberName(), formatText, nullValue);
+                field.GetFullyQualifiedMemberName(), formatText, nullValue, excelField);
         }
 
         public ChoCSVWriter<T> WithField(string name, Type fieldType = null, bool? quoteField = null, char? fillChar = null, 
@@ -477,10 +478,12 @@ namespace ChoETL
             Func<dynamic, object> valueSelector = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, 
-            string formatText = null, string nullValue = null)
+            string formatText = null, string nullValue = null,
+            bool excelField = false)
         {
             return WithField(name, fieldType, quoteField, fillChar, fieldValueJustification,
-                truncate, fieldName, fieldPosition, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue, null, formatText, nullValue);
+                truncate, fieldName, fieldPosition, valueConverter, valueSelector, headerSelector, 
+                defaultValue, fallbackValue, null, formatText, nullValue, excelField);
         }
 
         private ChoCSVWriter<T> WithField(string name, Type fieldType = null, bool? quoteField = null, char? fillChar = null,
@@ -490,7 +493,8 @@ namespace ChoETL
             Func<dynamic, object> valueSelector = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null,
-            string fullyQualifiedMemberName = null, string formatText = null, string nullValue = null)
+            string fullyQualifiedMemberName = null, string formatText = null, string nullValue = null,
+            bool excelField = false)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -558,6 +562,7 @@ namespace ChoETL
                         nfc.FormatText = formatText;
                     if (nullValue != null)
                         nfc.NullValue = nullValue;
+                    nfc.ExcelField = excelField;
                 }
                 else
                 {
@@ -575,7 +580,8 @@ namespace ChoETL
                         DefaultValue = defaultValue,
                         FallbackValue = fallbackValue,
                         FormatText = formatText,
-                        NullValue = nullValue
+                        NullValue = nullValue,
+                        ExcelField = excelField
                     };
                     if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
                     {

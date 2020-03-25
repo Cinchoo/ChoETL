@@ -11,6 +11,12 @@ namespace ChoETL
     [DataContract]
     public class ChoCSVRecordFieldConfiguration : ChoFileRecordFieldConfiguration
     {
+        public bool ExcelField
+        {
+            get;
+            set;
+        }
+
         [DataMember]
         public int FieldPosition
         {
@@ -37,6 +43,7 @@ namespace ChoETL
             if (attr != null)
             {
                 FieldPosition = attr.FieldPosition;
+                ExcelField = attr.ExcelField;
                 FieldName = attr.FieldName.IsNullOrWhiteSpace() ? Name : attr.FieldName;
                 AltFieldNames = attr.AltFieldNames.IsNullOrWhiteSpace() ? AltFieldNames : attr.AltFieldNames;
             }

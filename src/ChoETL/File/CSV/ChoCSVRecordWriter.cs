@@ -895,9 +895,8 @@ namespace ChoETL
             if (size != null)
             {
                 if (quoteValue)
-                {
                     size = size.Value - 2;
-                }
+
                 if (size <= 0)
                     return String.Empty;
 
@@ -937,8 +936,28 @@ namespace ChoETL
 
             //quotes are quoted and doubled (excel) i.e. 15" -> field1,"15""",field3
             if (fieldValue.Contains(Configuration.QuoteChar))
+            {
                 fieldValue = fieldValue.Replace(Configuration.QuoteChar.ToString(), Configuration.DoubleQuoteChar);
 
+                if (!isHeader)
+                {
+                    if (fieldConfig != null && fieldConfig.ExcelField)
+                    {
+                        if (Configuration.QuoteChar == '"')
+                            fieldValue = $"={fieldValue}";
+                        else
+                            fieldValue = $"=\"{fieldValue}\"";
+                    }
+                }
+            }
+            else
+            {
+                if (!isHeader)
+                {
+                    if (fieldConfig != null && fieldConfig.ExcelField)
+                        fieldValue = $"=\"{fieldValue}\"";
+                }
+            }
             if (fieldConfig != null && fieldConfig.ValueSelector != null)
                 quoteValue = false;
 

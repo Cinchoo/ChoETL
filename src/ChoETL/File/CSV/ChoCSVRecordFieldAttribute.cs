@@ -21,6 +21,12 @@ namespace ChoETL
             set;
         }
 
+        public bool ExcelField
+        {
+            get;
+            set;
+        }
+
         public ChoCSVRecordFieldAttribute(int fieldPosition)
         {
             FieldPosition = fieldPosition;
