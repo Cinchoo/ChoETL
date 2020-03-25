@@ -838,6 +838,14 @@ namespace ChoETL
                     break;
             }
 
+            if (config.ExcelField)
+            {
+                if (fieldValue.StartsWith("="))
+                {
+                    fieldValue = fieldValue.Substring(1);
+                }
+            }
+
             char startChar;
             char endChar;
 
