@@ -391,8 +391,8 @@ namespace ChoETL
             {
                 //if (config.IsDynamicObject)
                 //{
-                    if (Configuration.IgnoredFields.Contains(kvp.Key))
-                        continue;
+                if (Configuration.IgnoredFields.Contains(kvp.Key))
+                    continue;
                 //}
 
                 fieldConfig = kvp.Value;
@@ -704,7 +704,8 @@ namespace ChoETL
                     else
                     {
                         innerXml1 = ChoUtility.XmlSerialize(kvp.Value, null, Configuration.EOLDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix, Configuration.EmitDataType);
-                        if (!kvp.Value.GetType().IsArray)
+
+                        if (!kvp.Value.GetType().IsArray && !typeof(IList).IsAssignableFrom(kvp.Value.GetType()))
                         {
                             if (_beginNSTagRegex.Match(innerXml1).Success)
                             {
@@ -738,7 +739,6 @@ namespace ChoETL
                         }
                         ele.Add(new XText(Environment.NewLine));
                         ele.Add(ParseElement(innerXml1, Configuration.NamespaceManager, Configuration.DefaultNamespacePrefix, ns));
-
                     }
                 }
             }
@@ -776,6 +776,9 @@ namespace ChoETL
                 innerXml1 = ele.ToString(SaveOptions.OmitDuplicateNamespaces);
 
             innerXml1 = Regex.Replace(innerXml1, @"^\s*$\n", "", RegexOptions.Multiline).TrimEnd();
+
+            if (!config.TurnOffXmlFormatting)
+                innerXml1 = FormatXml(innerXml1);
             recText = config.IgnoreRootName ? innerXml1 : innerXml1.Indent(config.Indent, config.IndentChar.ToString());
 
             return true;
@@ -866,6 +869,22 @@ namespace ChoETL
                 //}
             }
             return e;
+        }
+
+        private string FormatXml(string xml)
+        {
+            return XElement.Parse(xml).ToString();
+            // Format the XML text.
+            StringWriter sw = new StringWriter();
+            XmlTextWriter xw = new XmlTextWriter(sw);
+            xw.Formatting = Formatting.Indented;
+
+            XmlDocument xml_document = new XmlDocument();
+            xml_document.LoadXml(xml);
+            xml_document.WriteTo(xw);
+
+            // Display the result.
+            return sw.ToString();
         }
         private string SerializeObject(string propName, object value, Attribute[] attrs)
         {

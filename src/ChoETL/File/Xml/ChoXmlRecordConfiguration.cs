@@ -18,6 +18,12 @@ namespace ChoETL
     [DataContract]
     public class ChoXmlRecordConfiguration : ChoFileRecordConfiguration
     {
+        public bool TurnOffXmlFormatting
+        {
+            get;
+            set;
+        }
+
         [DataMember]
         public List<ChoXmlRecordFieldConfiguration> XmlRecordFieldConfigurations
         {

@@ -1154,10 +1154,14 @@ namespace ChoETL
 
             StringBuilder xmlString = new StringBuilder();
 
-            if (target.GetType().IsArray)
+            if (target.GetType().IsArray || typeof(IList).IsAssignableFrom(target.GetType()))
             {
-                if (((object[])target).Length > 0)
-                    return ((object[])target).Select(o => XmlSerialize(o, xws, separator, nullValueHandling, nsPrefix, emitDataType)).Aggregate((current, next) => "{0}{1}{2}".FormatString(current, separator, next));
+                if (((IList)target).Count > 0)
+                {
+                    var xml = ((IList)target).OfType<object>().Select(o => XmlSerialize(o, xws, separator, nullValueHandling, nsPrefix, emitDataType)).Aggregate((current, next) => "{0}{1}{2}".FormatString(current, separator, next));
+                    //return $"<dynamics>{xml}</dynamics>";
+                    return xml;
+                }
                 else
                     return String.Empty;
             }
