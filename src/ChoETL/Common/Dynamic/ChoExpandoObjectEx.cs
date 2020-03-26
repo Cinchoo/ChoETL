@@ -63,7 +63,8 @@ namespace ChoETL
             return expando;
         }
 
-        public static dynamic ConvertToNestedObject(this object @this, char separator = '/')
+        public static dynamic ConvertToNestedObject(this object @this, char separator = '/',
+            int maxArraySize = 100)
         {
             if (separator == ChoCharEx.NUL)
                 throw new ArgumentException("Invalid separator passed.");
@@ -81,17 +82,59 @@ namespace ChoETL
                 {
                     var tokens = kvp.Key.SplitNTrim(separator).Where(e => !e.IsNullOrWhiteSpace()).ToArray();
                     IDictionary<string, object> current = root;
-                    foreach (var token in tokens.Take(tokens.Length - 1))
+                    List<ChoDynamicObject> currentArr = null;
+                    string nextToken = null;
+                    string token = null;
+
+                    int length = tokens.Length - 1;
+                    int index = 0;
+                    for (int i = 0; i < length; i++)
                     {
+                        nextToken = null;
+                        token = tokens[i];
+
+                        if (i + 1 < length)
+                            nextToken = tokens[i + 1];
+
                         if (token.IsNullOrWhiteSpace())
                             continue;
 
-                        if (!current.ContainsKey(token))
-                            current.Add(token, new ChoDynamicObject());
+                        if (Int32.TryParse(nextToken, out index) && index >= 0 && index < maxArraySize)
+                        {
+                            if (!current.ContainsKey(token))
+                                current.Add(token, new List<ChoDynamicObject>());
 
-                        current = current[token] as IDictionary<string, object>;
+                            currentArr = current[token] as List<ChoDynamicObject>;
+                        }
+                        else
+                        {
+                            if (Int32.TryParse(token, out index))
+                            {
+                                if (index >= 0 && index < maxArraySize && currentArr != null)
+                                {
+                                    if (index < currentArr.Count)
+                                        current = currentArr[index] as IDictionary<string, object>;
+                                    else
+                                    {
+                                        int count = index - currentArr.Count + 1;
+                                        for (int j = 0; j < count; j++)
+                                            currentArr.Add(new ChoDynamicObject());
+                                    }
+                                    current = currentArr[index];
+                                }
+                            }
+                            else if (current != null)
+                            {
+                                if (!current.ContainsKey(token))
+                                    current.Add(token, new ChoDynamicObject(token));
+
+                                current = current[token] as IDictionary<string, object>;
+                                currentArr = null;
+                            }
+                        }
                     }
-                    current.AddOrUpdate(tokens[tokens.Length - 1], kvp.Value);
+                    if (current != null)
+                        current.AddOrUpdate(tokens[tokens.Length - 1], kvp.Value);
                 }
                 else
                     root.Add(kvp.Key, kvp.Value);
