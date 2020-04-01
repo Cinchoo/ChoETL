@@ -51,11 +51,16 @@ namespace ChoETL
 
             _recBuffer = new Lazy<List<object>>(() =>
             {
-                var b = Writer.Context.RecBuffer;
-                if (b == null)
-                    Writer.Context.RecBuffer = new List<object>();
+                if (Writer != null)
+                {
+                    var b = Writer.Context.ContainsKey("RecBuffer") ? Writer.Context.RecBuffer : null;
+                    if (b == null)
+                        Writer.Context.RecBuffer = new List<object>();
 
-                return Writer.Context.RecBuffer;
+                    return Writer.Context.RecBuffer;
+                }
+                else
+                    return new List<object>();
             });
             //Configuration.Validate();
         }

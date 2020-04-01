@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,6 +11,14 @@ namespace ChoETL
 {
     public static class ChoJSONExtensions
     {
+        public static string DumpAsJson(this DataTable table, Formatting formatting = Formatting.Indented)
+        {
+            if (table == null)
+                return String.Empty;
+
+            return JsonConvert.SerializeObject(table, formatting);
+        }
+
         public static object GetNameAt(this JObject @this, int index)
         {
             if (@this == null || index < 0)

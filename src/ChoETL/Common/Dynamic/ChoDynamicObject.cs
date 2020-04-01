@@ -25,9 +25,12 @@ namespace ChoETL
     public class ChoDynamicObject : DynamicObject, IDictionary<string, object> //, IList<object>, IList //, IXmlSerializable
     {
         public const string DefaultName = "dynamic";
+        private string _keySeparator = ".";
+        private string _attributePrefix = "@";
 
         private static readonly string ValueToken = "#text";
 
+        [IgnoreDataMember]
         private readonly static Dictionary<string, Type> _intrinsicTypes = new Dictionary<string, Type>();
 
         #region Instance Members
@@ -35,12 +38,15 @@ namespace ChoETL
         internal bool IsHeaderOnlyObject = false;
 
         private readonly object _padLock = new object();
+        [IgnoreDataMember]
         private IDictionary<string, object> _kvpDict = ChoDynamicObjectSettings.UseOrderedDictionary ?
             new OrderedDictionary<string, object>(StringComparer.CurrentCultureIgnoreCase) as IDictionary<string, object>
             : new Dictionary<string, object>(StringComparer.CurrentCultureIgnoreCase) as IDictionary<string, object>;
         [IgnoreDataMember]
         private Func<IDictionary<string, object>> _func = null;
         private bool _watchChange = false;
+        [IgnoreDataMember]
+        private Dictionary<string, Type> _memberTypes = new Dictionary<string, Type>(StringComparer.CurrentCultureIgnoreCase);
 
         private bool _isInitialized = false;
         private event EventHandler<EventArgs> _afterLoaded;
@@ -64,7 +70,6 @@ namespace ChoETL
             set;
         }
 
-        private Dictionary<string, Type> _memberTypes = new Dictionary<string, Type>(StringComparer.CurrentCultureIgnoreCase);
         public void SetMemberType(string fn, Type fieldType)
         {
             if (fn.IsNullOrWhiteSpace())
@@ -118,6 +123,7 @@ namespace ChoETL
         //    set { _KeyResolver = value; }
         //}
 
+        [IgnoreDataMember]
         public Dictionary<string, string> AlternativeKeys
         {
             get;
@@ -394,6 +400,61 @@ namespace ChoETL
 
         #region Instance Members (Protected/Public)
 
+        public dynamic Clone()
+        {
+            return new ChoDynamicObject(CloneDictionary(_kvpDict));
+        }
+
+        private IDictionary<string, object> CloneDictionary(IDictionary<string, object> dict)
+        {
+            if (dict == null)
+                return null;
+
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            foreach (var kvp in dict)
+            {
+                result.Add(kvp.Key, CloneObject(kvp.Value));
+            }
+
+            return result;
+        }
+
+        private IDictionary CloneDictionary(IDictionary dict)
+        {
+            if (dict == null)
+                return null;
+
+            IDictionary result = new Hashtable();
+            foreach (var key in dict.Keys)
+            {
+                result.Add(key, CloneObject(dict[key]));
+            }
+
+            return result;
+        }
+
+        private object CloneObject(object value)
+        {
+            if (value == null)
+                return null;
+            else if (value is IDictionary)
+                return CloneDictionary(value as IDictionary);
+            else if (value is IDictionary<string, object>)
+                return CloneDictionary(value as IDictionary<string, object>);
+            else if (value is IList)
+            {
+                IList<object> list = new List<object>();
+                foreach (var item in value as IList)
+                    list.Add(CloneObject(item));
+
+                return list;
+            }
+            else if (value is ICloneable)
+                return ((ICloneable)value).Clone();
+            else
+                return value;
+        }
+
         public void Merge(IDictionary<string, object> obj, bool skipIfSrcExists = false)
         {
             if (obj == null)
@@ -414,8 +475,45 @@ namespace ChoETL
 
         public virtual bool ContainsProperty(string key)
         {
+            if (key.IsNullOrEmpty())
+                return false;
+
             IDictionary<string, object> kvpDict = _kvpDict;
-            return kvpDict != null && (kvpDict.ContainsKey(key) || kvpDict.ContainsKey("@{0}".FormatString(key)));
+            if (key.Contains("."))
+            {
+                if (ContainsNestedProperty(key))
+                    return true;
+            }
+            return kvpDict != null && (kvpDict.ContainsKey(key) || kvpDict.ContainsKey("{0}{1}".FormatString(_attributePrefix, key)));
+        }
+
+        //private bool ContainsNestedProperty(string key, )
+        //{
+
+        //}
+
+        private bool ContainsNestedProperty(string key)
+        {
+            var current = _kvpDict;
+            var subKeys = key.SplitNTrim(".");
+            foreach (var subKey in subKeys.Take(subKeys.Length - 1))
+            {
+                if (subKey.IsNullOrWhiteSpace())
+                    return false;
+
+                if (current.ContainsKey(subKey))
+                {
+                    var obj = current[subKey];
+                    if (obj is IDictionary<string, object>)
+                        current = obj as IDictionary<string, object>;
+                    else
+                        return false;
+                }
+                else
+                    return false;
+            }
+
+            return current == null || !current.ContainsKey(subKeys[subKeys.Length - 1]) ? false : true;
         }
 
         protected virtual bool GetPropertyValue(string name, out object result)
@@ -440,8 +538,8 @@ namespace ChoETL
 
                 if (kvpDict.ContainsKey(name))
                     result = AfterKVPLoaded(name, kvpDict[name]);
-                else if (kvpDict.ContainsKey("@{0}".FormatString(name)))
-                    result = AfterKVPLoaded(name, kvpDict["@{0}".FormatString(name)]);
+                else if (kvpDict.ContainsKey("{0}{1}".FormatString(_attributePrefix, name)))
+                    result = AfterKVPLoaded(name, kvpDict["{0}{1}".FormatString(_attributePrefix, name)]);
                 else
                 {
                     if (name.StartsWith("_"))
@@ -449,8 +547,10 @@ namespace ChoETL
                         string normalizedName = name.Substring(1);
                         if (kvpDict.ContainsKey(normalizedName))
                             result = AfterKVPLoaded(name, kvpDict[normalizedName]);
+                        else if (ThrowExceptionIfPropNotExists)
+                            return false;
                     }
-                    if (ThrowExceptionIfPropNotExists)
+                    else if (ThrowExceptionIfPropNotExists)
                         return false;
                 }
             }
@@ -646,6 +746,15 @@ namespace ChoETL
             return new ChoDynamicObject(dict);
         }
 
+        public object GetNestedPropertyValue(string propName)
+        {
+            return ChoObjectEx.GetNestedPropertyValue(_kvpDict, propName);
+        }
+
+        public void SetNestedPropertyValue(string propName, object propValue)
+        {
+            ChoObjectEx.SetNestedPropertyValue(_kvpDict, propName, propValue);
+        }
 
         public IDictionary<string, object> GetDefaults()
         {
@@ -1115,7 +1224,13 @@ namespace ChoETL
             else
                 return null;
         }
-
+        public void SetAsAttribute(string key)
+        {
+            if (key.IsNullOrEmpty())
+                return;
+            if (key.StartsWith(_attributePrefix)) return;
+            RenameKey(key, $"{_attributePrefix}{key}");
+        }
         public void SetAttribute(string attrName, object value)
         {
             if (!_attributes.Contains(attrName))

@@ -32,6 +32,10 @@ namespace ChoETL
             set;
         }
 
+        public ChoCSVRecordFieldConfiguration(string name) : this(name, null)
+        {
+        }
+
         public ChoCSVRecordFieldConfiguration(string name, int position) : this(name, null)
         {
             FieldPosition = position;

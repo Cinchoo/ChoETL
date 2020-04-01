@@ -46,11 +46,16 @@ namespace ChoETL
 
             _recBuffer = new Lazy<List<string>>(() =>
             {
-                var b = Reader.Context.RecBuffer;
-                if (b == null)
-                    Reader.Context.RecBuffer = new List<string>();
+                if (Reader != null)
+                {
+                    var b = Reader.Context.ContainsKey("RecBuffer") ? Reader.Context.RecBuffer : null;
+                    if (b == null)
+                        Reader.Context.RecBuffer = new List<string>();
 
-                return Reader.Context.RecBuffer;
+                    return Reader.Context.RecBuffer;
+                }
+                else
+                    return new List<string>();
             });
         }
 
@@ -92,7 +97,7 @@ namespace ChoETL
             var recEnum = sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, Configuration.MayContainEOLInData).GetEnumerator();
             CalcFieldMaxCountIfApplicable(recEnum);
 
-            object x = Reader.Context.RecBuffer;
+            //object x = Reader.Context.RecBuffer;
             var arr = _recBuffer.Value.ToArray();
             _recBuffer.Value.Clear();
 

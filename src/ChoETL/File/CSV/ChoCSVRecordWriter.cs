@@ -46,7 +46,7 @@ namespace ChoETL
             {
                 if (Writer != null)
                 {
-                    var b = Writer.Context.RecBuffer;
+                    var b = Writer.Context.ContainsKey("RecBuffer") ? Writer.Context.RecBuffer : null;
                     if (b == null)
                         Writer.Context.RecBuffer = new List<object>();
 

@@ -47,11 +47,16 @@ namespace ChoETL
             //Configuration.Validate();
             _recBuffer = new Lazy<List<XElement>>(() =>
             {
-                var b = Reader.Context.RecBuffer;
-                if (b == null)
-                    Reader.Context.RecBuffer = new List<XElement>();
+                if (Reader != null)
+                {
+                    var b = Reader.Context.ContainsKey("RecBuffer") ? Reader.Context.RecBuffer : null;
+                    if (b == null)
+                        Reader.Context.RecBuffer = new List<XElement>();
 
-                return Reader.Context.RecBuffer;
+                    return Reader.Context.RecBuffer;
+                }
+                else
+                    return new List<XElement>();
             });
         }
 
@@ -122,7 +127,7 @@ namespace ChoETL
         {
             CalcFieldMaxCountIfApplicable(nodes.GetEnumerator());
 
-            object x = Reader.Context.RecBuffer;
+            //object x = Reader.Context.RecBuffer;
             var arr = _recBuffer.Value.ToArray();
             _recBuffer.Value.Clear();
 

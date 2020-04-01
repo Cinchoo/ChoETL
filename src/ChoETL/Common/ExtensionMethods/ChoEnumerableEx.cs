@@ -36,7 +36,9 @@ namespace ChoETL
                 }
             }
         }
-        public static IDataReader AsDataReader(this IEnumerable collection, Action<IDictionary<string, Type>> membersDiscovered = null)
+        public static IDataReader AsDataReader(this IEnumerable collection, 
+            Action<IDictionary<string, Type>> membersDiscovered = null, string[] selectedFields = null, 
+            string[] excludeFields = null)
 		{
 			var e = new ChoStdDeferedObjectMemberDiscoverer(collection);
             if (membersDiscovered != null)
@@ -44,6 +46,28 @@ namespace ChoETL
                 e.MembersDiscovered += (o, e1) =>
                 {
                     membersDiscovered(e1.Value);
+                };
+            }
+            else
+            {
+                e.MembersDiscovered += (o, e1) =>
+                {
+                    if (excludeFields != null)
+                    {
+                        foreach (var ef in excludeFields)
+                        {
+                            if (e1.Value.ContainsKey(ef))
+                                e1.Value.Remove(ef);
+                        }
+
+                    }
+                    else if (selectedFields != null)
+                    {
+                        foreach (var sf in e1.Value.Keys.Except(selectedFields).ToArray())
+                        {
+                            e1.Value.Remove(sf);
+                        }
+                    }
                 };
             }
             var dr = new ChoEnumerableDataReader(e.AsEnumerable(), e);
@@ -72,14 +96,16 @@ namespace ChoETL
 				return item.GetType().GetProperties().Select(kvp => new KeyValuePair<string, Type>(kvp.Name, kvp.PropertyType)).ToArray();
 		}
 
-		public static DataTable AsDataTable(this IEnumerable collection, string tableName = null, CultureInfo ci = null)
+		public static DataTable AsDataTable(this IEnumerable collection, string tableName = null, 
+            CultureInfo ci = null, Action<IDictionary<string, Type>> membersDiscovered = null,
+            string[] selectedFields = null, string[] excludeFields = null)
 		{
 			DataTable dt = tableName.IsNullOrWhiteSpace() ? new DataTable() : new DataTable(tableName);
             if (ci != null)
             {
                 dt.Locale = ci;
             }
-            dt.Load(AsDataReader(collection));
+            dt.Load(AsDataReader(collection, membersDiscovered, selectedFields, excludeFields));
 			return dt;
 		}
 

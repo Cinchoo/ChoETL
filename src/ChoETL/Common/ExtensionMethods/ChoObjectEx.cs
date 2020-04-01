@@ -28,6 +28,133 @@ namespace ChoETL
         private static readonly object _padLock = new object();
         private static readonly Dictionary<Type, Dictionary<PropertyInfo, ChoTypePropertyInfo>> _typeCache = new Dictionary<Type, Dictionary<PropertyInfo, ChoTypePropertyInfo>>();
 
+        public static bool GetNestedMember(this object target, string propName, ref object parent, ref string memberName)
+        {
+            if (target == null)
+                return false;
+            if (propName.IsNullOrWhiteSpace())
+                return false;
+
+            if (!propName.Contains("."))
+            {
+                parent = target;
+                memberName = propName;
+                return true;
+            }
+            else
+            {
+                int pos = propName.IndexOf(".");
+                if (pos < 0)
+                    return false;
+
+                string spropName = propName.Substring(0, pos);
+                if (spropName.IsNullOrWhiteSpace())
+                    return false;
+
+                if (pos + 1 >= propName.Length)
+                    return false;
+
+                string remPropName = propName.Substring(pos + 1);
+
+                if (target is IDictionary)
+                {
+                    IDictionary dict = target as IDictionary;
+                    if (dict.Contains(spropName))
+                        return GetNestedMember(dict[spropName], remPropName, ref parent, ref memberName);
+                    else
+                        return false;
+                }
+                else if (target is IDictionary<string, object>)
+                {
+                    IDictionary<string, object> dict = target as IDictionary<string, object>;
+                    if (dict.ContainsKey(spropName))
+                        return GetNestedMember(dict[spropName], remPropName, ref parent, ref memberName);
+                    else
+                        return false;
+                }
+                else if (target is IList)
+                {
+                    int index = 0;
+                    IList list = (IList)target;
+                    if (int.TryParse(spropName, out index))
+                    {
+                        if (index < list.Count)
+                            return GetNestedMember(list[index], remPropName, ref parent, ref memberName);
+                        else
+                            return false;
+                    }
+                    else
+                        return false;
+                }
+                else
+                {
+                    return GetNestedMember(ChoType.GetPropertyValue(target, spropName), remPropName, ref parent, ref memberName);
+                }
+            }
+        }
+
+        public static object GetNestedPropertyValue(this object target, string propName)
+        {
+            object parent = null;
+            string memberName = null;
+            if (GetNestedMember(target, propName, ref parent, ref memberName))
+            {
+                if (parent is IDictionary)
+                {
+                    IDictionary dict = parent as IDictionary;
+                    if (dict.Contains(memberName))
+                        return dict[memberName];
+                    else
+                        return null;
+                }
+                else if (parent is IDictionary<string, object>)
+                {
+                    IDictionary<string, object> dict = parent as IDictionary<string, object>;
+                    if (dict.ContainsKey(memberName))
+                        return dict[memberName];
+                    else
+                        return null;
+                }
+                else
+                {
+                    return ChoType.GetPropertyValue(parent, memberName);
+                }
+            }
+            else
+                return null;
+        }
+
+        public static void SetNestedPropertyValue(this object target, string propName, object propValue)
+        {
+            object parent = null;
+            string memberName = null;
+            if (GetNestedMember(target, propName, ref parent, ref memberName))
+            {
+                if (parent is IDictionary)
+                {
+                    IDictionary dict = parent as IDictionary;
+                    if (dict.Contains(memberName))
+                        dict[memberName] = propValue;
+                    else
+                        return;
+                }
+                else if (parent is IDictionary<string, object>)
+                {
+                    IDictionary<string, object> dict = parent as IDictionary<string, object>;
+                    if (dict.ContainsKey(memberName))
+                        dict[memberName] = propValue;
+                    else
+                        return;
+                }
+                else
+                {
+                    ChoType.SetPropertyValue(parent, memberName, propName);
+                }
+            }
+            else
+                return;
+        }
+
         private static ChoTypePropertyInfo GetTypePropertyInfo(Type type, PropertyInfo pi)
         {
             if (_typeCache.ContainsKey(type))

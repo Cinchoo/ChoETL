@@ -162,27 +162,33 @@ namespace ChoETL
                 dynamic dest = new ChoDynamicObject();
                 dest.Merge(dict);
 
-                FlatternBy1(dict, dest, fields);
-
-                yield return dest;
+                foreach (var rec in FlattenByInternal(dict, dest, fields))
+                    yield return rec;
             }
         }
 
-        private static void FlatternBy1(IDictionary<string, object> dict, dynamic dest, string[] fields)
+        private static IEnumerable<dynamic> FlattenByInternal(IDictionary<string, object> dict, dynamic dest, string[] fields)
         {
             if (fields.Length == 0)
-                return;
+                yield break;
 
             string field = fields.First();
             if (!dict.ContainsKey(field) && !(dict[field] is IDictionary<string, object>))
-                return;
+                yield break;
             else
             {
                 foreach (IDictionary<string, object> child in (IEnumerable)dict[field])
                 {
-                    dest.Merge(child);
-                    dest.Remove(field);
-                    FlatternBy1(child, dest, fields.Skip(1).ToArray());
+                    var dest1 = dest.Clone();
+                    dest1.Merge(child);
+                    dest1.Remove(field);
+                    if (fields.Skip(1).Count() == 0)
+                        yield return dest1;
+                    else
+                    {
+                        foreach (var ret in FlattenByInternal(child, dest1, fields.Skip(1).ToArray()))
+                            yield return ret;
+                    }
                 }
             }
         }
