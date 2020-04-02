@@ -294,7 +294,12 @@ namespace ChoETL
                         {
                             RangeAttribute dnAttr = propDesc.Attributes.OfType<RangeAttribute>().FirstOrDefault();
 
-                            if (dnAttr != null && dnAttr.Minimum.CastTo<int>() >= 0 && dnAttr.Maximum.CastTo<int>() > 0
+                            if (dnAttr == null)
+                            {
+                                ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, null, declaringMember == null ? propDesc.GetDisplayName() : propDesc.GetDisplayName(String.Empty));
+                                CSVRecordFieldConfigurations.Add(obj);
+                            }
+                            else if (dnAttr != null && dnAttr.Minimum.CastTo<int>() >= 0 && dnAttr.Maximum.CastTo<int>() > 0
                                 && dnAttr.Minimum.CastTo<int>() <= dnAttr.Maximum.CastTo<int>())
                             {
                                 recordType = recordType.GetItemType().GetUnderlyingType();
@@ -333,23 +338,31 @@ namespace ChoETL
                         }
                     }
                     else if (recordType.IsGenericType && recordType.GetGenericTypeDefinition() == typeof(Dictionary<,>)
-                        && typeof(string) == recordType.GetGenericArguments()[0])
+                        /*&& typeof(string) == recordType.GetGenericArguments()[0]*/)
                     {
                         if (propDesc != null)
                         {
                             ChoDictionaryKeyAttribute[] dnAttrs = propDesc.Attributes.OfType<ChoDictionaryKeyAttribute>().ToArray();
-                            var keys = (from a in dnAttrs
-                                       where a != null && !a.Keys.IsNullOrWhiteSpace()
-                                       select a.Keys.SplitNTrim()).SelectMany(a => a).ToArray();
+                            if (dnAttrs.IsNullOrEmpty())
+                            {
+                                ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, null, declaringMember == null ? propDesc.GetDisplayName() : propDesc.GetDisplayName(String.Empty));
+                                CSVRecordFieldConfigurations.Add(obj);
+                            }
+                            else
+                            {
+                                var keys = (from a in dnAttrs
+                                            where a != null && !a.Keys.IsNullOrWhiteSpace()
+                                            select a.Keys.SplitNTrim()).SelectMany(a => a).ToArray();
 
-                            foreach (var key in keys)
-                            { 
-                                if (!key.IsNullOrWhiteSpace())
+                                foreach (var key in keys)
                                 {
-                                    ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, dictKey: key);
+                                    if (!key.IsNullOrWhiteSpace())
+                                    {
+                                        ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, dictKey: key);
 
-                                    //if (!CSVRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
+                                        //if (!CSVRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
                                         CSVRecordFieldConfigurations.Add(obj);
+                                    }
                                 }
                             }
                         }

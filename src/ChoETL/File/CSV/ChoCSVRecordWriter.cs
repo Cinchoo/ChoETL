@@ -104,6 +104,25 @@ namespace ChoETL
             return null;
         }
 
+        public void WriteFields(object writer, params object[] fieldValues)
+        {
+            if (fieldValues == null)
+                return;
+
+            bool first = true;
+            StringBuilder line = new StringBuilder();
+            foreach (var fv in fieldValues)
+            {
+                if (first)
+                    first = false;
+                else
+                    line.Append(Configuration.Delimiter);
+
+                line.Append(fv.ToNString());
+            }
+            Write(writer, line.ToString());
+        }
+
         public void WriteComment(object writer, string commentText, bool silent = true)
         {
             if (Configuration.Comments.IsNullOrEmpty())

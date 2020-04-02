@@ -54,57 +54,152 @@ namespace ChoETL
             else
             {
                 if (fieldConfig.PI.PropertyType.IsGenericType && fieldConfig.PI.PropertyType.GetGenericTypeDefinition() == typeof(Dictionary<,>)
-                        && typeof(string) == fieldConfig.PI.PropertyType.GetGenericArguments()[0])
+                        /*&& typeof(string) == fieldConfig.PI.PropertyType.GetGenericArguments()[0]*/)
                 {
                     IDictionary dict = ChoType.GetPropertyValue(rec, fieldConfig.PI) as IDictionary;
                     if (dict == null)
                     {
-                        //dict = Activator.CreateInstance(fieldConfig.PI.PropertyType) as IDictionary;
-                        //ChoType.SetPropertyValue(rec, fieldConfig.PI, dict);
+                        dict = (IDictionary)Activator.CreateInstance(fieldConfig.FieldType);
+                        ChoType.SetPropertyValue(rec, fieldConfig.PI, dict);
                     }
 
-                    if (dict != null)
+                    if (fieldConfig is ChoFileRecordFieldConfiguration && !((ChoFileRecordFieldConfiguration)fieldConfig).DictKey.IsNullOrWhiteSpace())
                     {
                         if (!dict.Contains(fn))
+                        {
+                            var valueType = fieldConfig.PI.PropertyType.GetGenericArguments()[1];
+                            object[] fcParams = GetPropertyConvertersParams(fieldConfig);
+                            if (fieldConfig.ValueConverters.IsNullOrEmpty())
+                                fieldValue = ChoConvert.ConvertFrom(fieldValue, valueType, null, null, fcParams, culture);
+                            else
+                                fieldValue = ChoConvert.ConvertFrom(fieldValue, valueType, null, fieldConfig.ValueConverters.ToArray(), fcParams, culture);
+
                             dict.Add(fn, fieldValue);
+                        }
                     }
+                    else
+                    {
+                        object[] fcParams = GetPropertyConvertersParams(fieldConfig);
+                        if (fieldConfig.Converters.IsNullOrEmpty())
+                        {
+                            if (fieldConfig.PropConverters.IsNullOrEmpty())
+                            {
+                                var keyType = fieldConfig.PI.PropertyType.GetGenericArguments()[0];
+                                var valueType = fieldConfig.PI.PropertyType.GetGenericArguments()[1];
+
+                                object key = null;
+                                object value = null;
+                                foreach (var kvp in ((string)fieldValue).ToKeyValuePairs())
+                                {
+                                    key = null;
+                                    value = null;
+                                    if (fieldConfig.KeyConverters.IsNullOrEmpty())
+                                        key = ChoConvert.ConvertFrom(kvp.Key, keyType, null, null, fcParams, culture);
+                                    else
+                                        key = ChoConvert.ConvertFrom(kvp.Key, keyType, null, fieldConfig.KeyConverters.ToArray(), fcParams, culture);
+                                    if (fieldConfig.ValueConverters.IsNullOrEmpty())
+                                        value = ChoConvert.ConvertFrom(kvp.Value, valueType, null, null, fcParams, culture);
+                                    else
+                                        value = ChoConvert.ConvertFrom(kvp.Value, valueType, null, fieldConfig.ValueConverters.ToArray(), fcParams, culture);
+
+                                    if (key != null)
+                                        dict.Add(key, value);
+                                }
+                            }
+                            else
+                                fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, fcParams, culture);
+                        }
+                        else
+                            fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), fcParams, culture);
+                    }
+
                     return;
                 }
                 else if (typeof(IList).IsAssignableFrom(fieldConfig.PI.PropertyType))
                 {
+                    var itemType = fieldConfig.PI.PropertyType.GetItemType();
                     IList list = ChoType.GetPropertyValue(rec, fieldConfig.PI) as IList;
-                    if (list != null)
+                    if (list == null && !fieldConfig.FieldType.IsArray)
                     {
-                        if (list.IsFixedSize)
-                        {
-                            int ai = fieldConfig is ChoFileRecordFieldConfiguration ? ((ChoFileRecordFieldConfiguration)fieldConfig).ArrayIndex != null ? ((ChoFileRecordFieldConfiguration)fieldConfig).ArrayIndex.Value : -1 : -1;
-                            if (ai >= 0 && ai < ((Array)list).Length)
-                                ((Array)list).SetValue(fieldValue, ai);
-                        }
-                        else
-                        {
-                            list.Add(fieldValue);
-                        }
+                        list = (IList)Activator.CreateInstance(fieldConfig.FieldType);
+                        ChoType.SetPropertyValue(rec, fieldConfig.PI, list);
                     }
-                    return;
-                }
-                else
-                {
-                    object[] fcParams = fieldConfig.PropConverterParams;
-                    if (!fieldConfig.FormatText.IsNullOrWhiteSpace())
-                        fcParams = new object[] { new object[] { fieldConfig.FormatText } };
 
-                    if (fieldConfig.Converters.IsNullOrEmpty())
+                    if (((ChoFileRecordFieldConfiguration)fieldConfig).ArrayIndex != null)
                     {
-                        fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, fcParams, culture);
+                        if (list != null)
+                        {
+                            if (itemType != null)
+                            {
+                                object[] fcParams = GetPropertyConvertersParams(fieldConfig);
+                                if (fieldConfig.ItemConverters.IsNullOrEmpty())
+                                    fieldValue = ChoConvert.ConvertFrom(fieldValue, itemType, null, null, fcParams, culture);
+                                else
+                                    fieldValue = ChoConvert.ConvertFrom(fieldValue, itemType, null, fieldConfig.ItemConverters.ToArray(), fcParams, culture);
+                            }
+
+                            if (list.IsFixedSize)
+                            {
+                                int ai = fieldConfig is ChoFileRecordFieldConfiguration ? ((ChoFileRecordFieldConfiguration)fieldConfig).ArrayIndex != null ? ((ChoFileRecordFieldConfiguration)fieldConfig).ArrayIndex.Value : -1 : -1;
+                                if (ai >= 0 && ai < ((Array)list).Length)
+                                    ((Array)list).SetValue(fieldValue, ai);
+                            }
+                            else
+                            {
+                                list.Add(fieldValue);
+                            }
+                        }
+                        return;
                     }
                     else
                     {
-                        fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), fcParams, culture);
+                        object[] fcParams = GetPropertyConvertersParams(fieldConfig);
+                        if (fieldConfig.Converters.IsNullOrEmpty())
+                        {
+                            if (fieldConfig.PropConverters.IsNullOrEmpty() && fieldValue is string)
+                            {
+                                List<object> result = new List<object>();
+                                if (itemType != null)
+                                {
+                                    foreach (var item in ((string)fieldValue).SplitNTrim())
+                                    {
+                                        if (fieldConfig.ItemConverters.IsNullOrEmpty())
+                                            result.Add(ChoConvert.ConvertFrom(item, itemType, null, null, fcParams, culture));
+                                        else
+                                            result.Add(ChoConvert.ConvertFrom(item, itemType, null, fieldConfig.ItemConverters.ToArray(), fcParams, culture));
+                                    }
+                                }
+                                if (fieldConfig.PI.PropertyType.IsArray)
+                                    fieldValue = result.ToArray();
+                                else
+                                    fieldValue = result;
+                            }
+                            else
+                                fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, fcParams, culture);
+                        }
+                        else
+                            fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), fcParams, culture);
                     }
+                }
+                else
+                {
+                    object[] fcParams = GetPropertyConvertersParams(fieldConfig);
+                    if (fieldConfig.Converters.IsNullOrEmpty())
+                        fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, fcParams, culture);
+                    else
+                        fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), fcParams, culture);
                 }
             }
             ChoType.SetPropertyValue(rec, fieldConfig.PI, fieldValue);
+        }
+
+        private static object[] GetPropertyConvertersParams(ChoRecordFieldConfiguration fieldConfig)
+        {
+            object[] fcParams = fieldConfig.PropConverterParams;
+            if (!fieldConfig.FormatText.IsNullOrWhiteSpace())
+                fcParams = new object[] { new object[] { fieldConfig.FormatText } };
+
+            return fcParams;
         }
 
         public static bool SetFallbackValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, CultureInfo culture)

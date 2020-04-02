@@ -139,6 +139,9 @@ namespace ChoETL
         }
 
         internal readonly List<object> Converters = new List<object>();
+        internal readonly List<object> ItemConverters = new List<object>();
+        internal readonly List<object> KeyConverters = new List<object>();
+        internal readonly List<object> ValueConverters = new List<object>();
         internal PropertyInfo PI;
         internal PropertyDescriptor PD;
         internal object[] PropConverters;
@@ -207,6 +210,129 @@ namespace ChoETL
             if (converter == null) return;
             if (Converters.Contains(converter))
                 Converters.Remove(converter);
+        }
+
+#if !NETSTANDARD2_0
+        public void AddItemConverter(IValueConverter converter)
+        {
+            if (converter == null) return;
+            ItemConverters.Add(converter);
+        }
+#endif
+        public void AddItemConverter(IChoValueConverter converter)
+        {
+            if (converter == null) return;
+            ItemConverters.Add(converter);
+        }
+
+        public void AddItemConverter(TypeConverter converter)
+        {
+            if (converter == null) return;
+            ItemConverters.Add(converter);
+        }
+
+        public void RemoveItemConverter(IChoValueConverter converter)
+        {
+            if (converter == null) return;
+            if (ItemConverters.Contains(converter))
+                ItemConverters.Remove(converter);
+        }
+
+#if !NETSTANDARD2_0
+        public void RemoveItemConverter(IValueConverter converter)
+        {
+            if (converter == null) return;
+            if (ItemConverters.Contains(converter))
+                ItemConverters.Remove(converter);
+        }
+#endif
+        public void RemoveItemConverter(TypeConverter converter)
+        {
+            if (converter == null) return;
+            if (ItemConverters.Contains(converter))
+                ItemConverters.Remove(converter);
+        }
+
+#if !NETSTANDARD2_0
+        public void AddKeyConverter(IValueConverter converter)
+        {
+            if (converter == null) return;
+            KeyConverters.Add(converter);
+        }
+#endif
+        public void AddKeyConverter(IChoValueConverter converter)
+        {
+            if (converter == null) return;
+            KeyConverters.Add(converter);
+        }
+
+        public void AddKeyConverter(TypeConverter converter)
+        {
+            if (converter == null) return;
+            KeyConverters.Add(converter);
+        }
+
+        public void RemoveKeyConverter(IChoValueConverter converter)
+        {
+            if (converter == null) return;
+            if (KeyConverters.Contains(converter))
+                KeyConverters.Remove(converter);
+        }
+
+#if !NETSTANDARD2_0
+        public void RemoveKeyConverter(IValueConverter converter)
+        {
+            if (converter == null) return;
+            if (KeyConverters.Contains(converter))
+                KeyConverters.Remove(converter);
+        }
+#endif
+        public void RemoveKeyConverter(TypeConverter converter)
+        {
+            if (converter == null) return;
+            if (KeyConverters.Contains(converter))
+                KeyConverters.Remove(converter);
+        }
+
+    #if !NETSTANDARD2_0
+        public void AddValueConverter(IValueConverter converter)
+        {
+            if (converter == null) return;
+            ValueConverters.Add(converter);
+        }
+#endif
+        public void AddValueConverter(IChoValueConverter converter)
+        {
+            if (converter == null) return;
+            ValueConverters.Add(converter);
+        }
+
+        public void AddValueConverter(TypeConverter converter)
+        {
+            if (converter == null) return;
+            ValueConverters.Add(converter);
+        }
+
+        public void RemoveValueConverter(IChoValueConverter converter)
+        {
+            if (converter == null) return;
+            if (ValueConverters.Contains(converter))
+                ValueConverters.Remove(converter);
+        }
+
+#if !NETSTANDARD2_0
+        public void RemoveValueConverter(IValueConverter converter)
+        {
+            if (converter == null) return;
+            if (ValueConverters.Contains(converter))
+                ValueConverters.Remove(converter);
+        }
+#endif
+        public void RemoveValueConverter(TypeConverter converter)
+        {
+            if (converter == null) return;
+            if (ValueConverters.Contains(converter))
+                ValueConverters.Remove(converter);
         }
     }
 }

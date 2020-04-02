@@ -129,6 +129,13 @@ namespace ChoETL
             _writer.WriteComment(_textWriter, commentText, silent);
         }
 
+        public void WriteFields(params object[] fieldValues)
+        {
+            _writer.Writer = this;
+            _writer.TraceSwitch = TraceSwitch;
+            _writer.WriteFields(_textWriter, fieldValues);
+        }
+
         public void Write(IEnumerable<T> records)
         {
             _writer.Writer = this;
