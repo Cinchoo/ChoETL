@@ -136,6 +136,13 @@ namespace ChoETL
             _writer.WriteFields(_textWriter, fieldValues);
         }
 
+        public void WriteHeader(params string[] fieldNames)
+        {
+            _writer.Writer = this;
+            _writer.TraceSwitch = TraceSwitch;
+            _writer.WriteHeader(_textWriter, fieldNames);
+        }
+
         public void Write(IEnumerable<T> records)
         {
             _writer.Writer = this;

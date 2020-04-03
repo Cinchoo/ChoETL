@@ -87,9 +87,21 @@ namespace ChoETL
                                 var keyType = fieldConfig.PI.PropertyType.GetGenericArguments()[0];
                                 var valueType = fieldConfig.PI.PropertyType.GetGenericArguments()[1];
 
+                                char itemSeparator = ';';
+                                char keyValueSeparator = '=';
+
+                                if (fieldConfig is ChoCSVRecordFieldConfiguration)
+                                {
+                                    var fc = fieldConfig as ChoCSVRecordFieldConfiguration;
+                                    if (!fc.ItemSeparator.IsNull())
+                                        itemSeparator = fc.ItemSeparator ;
+                                    if (!fc.KeyValueSeparator.IsNull())
+                                        keyValueSeparator = fc.KeyValueSeparator;
+                                }
+
                                 object key = null;
                                 object value = null;
-                                foreach (var kvp in ((string)fieldValue).ToKeyValuePairs())
+                                foreach (var kvp in ((string)fieldValue).ToKeyValuePairs(itemSeparator, keyValueSeparator))
                                 {
                                     key = null;
                                     value = null;
@@ -161,7 +173,16 @@ namespace ChoETL
                                 List<object> result = new List<object>();
                                 if (itemType != null)
                                 {
-                                    foreach (var item in ((string)fieldValue).SplitNTrim())
+                                    char itemSeparator = ';';
+
+                                    if (fieldConfig is ChoCSVRecordFieldConfiguration)
+                                    {
+                                        var fc = fieldConfig as ChoCSVRecordFieldConfiguration;
+                                        if (!fc.ItemSeparator.IsNull())
+                                            itemSeparator = fc.ItemSeparator;
+                                    }
+
+                                    foreach (var item in ((string)fieldValue).SplitNTrim(itemSeparator))
                                     {
                                         if (fieldConfig.ItemConverters.IsNullOrEmpty())
                                             result.Add(ChoConvert.ConvertFrom(item, itemType, null, null, fcParams, culture));

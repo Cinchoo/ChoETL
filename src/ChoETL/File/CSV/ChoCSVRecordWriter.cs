@@ -23,7 +23,8 @@ namespace ChoETL
         internal ChoWriter Writer = null;
         internal Type ElementType = null;
         private Lazy<List<object>> _recBuffer = null;
-        private bool firstLine = true;
+        private bool _firstLine = true;
+        private string _customHeader = null;
 
         public ChoCSVRecordConfiguration Configuration
         {
@@ -82,6 +83,7 @@ namespace ChoETL
             while (records.MoveNext())
                 yield return records.Current;
         }
+
         private object GetFirstNotNullRecord(IEnumerator<object> recEnum)
         {
             if (Writer != null && !Object.ReferenceEquals(Writer.Context.FirstNotNullRecord, null))
@@ -123,6 +125,14 @@ namespace ChoETL
             Write(writer, line.ToString());
         }
 
+        public void WriteHeader(object writer, params string[] fieldNames)
+        {
+            if (fieldNames.IsNullOrEmpty())
+                return;
+
+            _customHeader = String.Join(Configuration.Delimiter, fieldNames);
+        }
+
         public void WriteComment(object writer, string commentText, bool silent = true)
         {
             if (Configuration.Comments.IsNullOrEmpty())
@@ -140,12 +150,12 @@ namespace ChoETL
             TextWriter sw = writer as TextWriter;
             ChoGuard.ArgumentNotNull(sw, "TextWriter");
 
-            if (firstLine)
+            if (_firstLine)
                 sw.Write(text);
             else
                 sw.Write("{1}{0}", text, Configuration.EOLDelimiter);
 
-            firstLine = false;
+            _firstLine = false;
         }
 
         public override IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null)
@@ -738,7 +748,7 @@ namespace ChoETL
 
         private void WriteHeaderLine(TextWriter sw)
         {
-            if (HasExcelSeparator && firstLine)
+            if (HasExcelSeparator && _firstLine)
                 Write(sw, "sep={0}".FormatString(Configuration.Delimiter));
 
             if (Configuration.FileHeaderConfiguration.HasHeaderRecord)
@@ -766,6 +776,9 @@ namespace ChoETL
 
         private string ToHeaderText()
         {
+            if (!_customHeader.IsNullOrWhiteSpace())
+                return _customHeader;
+
             string delimiter = Configuration.Delimiter;
             StringBuilder msg = new StringBuilder();
             string value;

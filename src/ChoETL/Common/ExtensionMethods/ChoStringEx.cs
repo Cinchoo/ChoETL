@@ -509,11 +509,14 @@ namespace ChoETL
 
         #region ToKeyValuePairs Members
 
-        public static IEnumerable<KeyValuePair<string, string>> ToKeyValuePairs(this string text, char Separator = ';', char keyValueSeparator = '=')
+        public static IEnumerable<KeyValuePair<string, string>> ToKeyValuePairs(this string text, char separator = ';', char keyValueSeparator = '=')
         {
+            ChoGuard.ArgumentNotNullOrEmpty(separator, nameof(separator));
+            ChoGuard.ArgumentNotNullOrEmpty(keyValueSeparator, nameof(separator));
+
             if (!text.IsNullOrEmpty())
             {
-                foreach (string keyValue in text.Split(Separator.ToString(), ChoStringSplitOptions.RemoveEmptyEntries))
+                foreach (string keyValue in text.Split(separator.ToString(), ChoStringSplitOptions.RemoveEmptyEntries))
                 {
                     if (keyValue.IsNullOrEmpty())
                         continue;

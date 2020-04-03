@@ -342,6 +342,11 @@ namespace ChoETL
             return target == null;
         }
 
+        public static bool IsNull(this char target)
+        {
+            return target == '\0';
+        }
+
         public static bool IsNullOrDbNull(this object target)
         {
             return target == null || target == DBNull.Value;

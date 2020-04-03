@@ -32,6 +32,18 @@ namespace ChoETL
             set;
         }
 
+        public char ItemSeparator
+        {
+            get;
+            set;
+        }
+
+        public char KeyValueSeparator
+        {
+            get;
+            set;
+        }
+
         public ChoCSVRecordFieldConfiguration(string name) : this(name, null)
         {
         }
