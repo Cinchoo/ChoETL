@@ -9,6 +9,7 @@ namespace ChoETL
 
         internal ChoCSVRecordFieldConfigurationMap(ChoCSVRecordFieldConfiguration config)
         {
+            ChoGuard.ArgumentNotNull(config, nameof(config));
             _config = config;
         }
 
@@ -146,8 +147,7 @@ namespace ChoETL
 
         public ChoCSVRecordFieldConfigurationMap Configure(Action<ChoCSVRecordFieldConfiguration> action)
         {
-            if (action != null)
-                action(_config);
+            action?.Invoke(_config);
 
             return this;
         }

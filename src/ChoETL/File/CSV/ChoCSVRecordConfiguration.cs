@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
@@ -16,6 +17,12 @@ namespace ChoETL
     [DataContract]
     public class ChoCSVRecordConfiguration : ChoFileRecordConfiguration
     {
+        public bool ImplicitExcelFieldValueHandling
+        {
+            get;
+            set;
+        }
+
         public int ArrayBaseIndex
         {
             get;
@@ -255,13 +262,13 @@ namespace ChoETL
                 CSVRecordFieldConfigurations.Clear();
             }
             //else
-                //SupportsMultiRecordTypes = true;
+            //SupportsMultiRecordTypes = true;
 
             DiscoverRecordFields(recordType, ref pos, null,
                 ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().Any()).Any());
         }
 
-        private void DiscoverRecordFields(Type recordType, ref int position, string declaringMember = null, 
+        private void DiscoverRecordFields(Type recordType, ref int position, string declaringMember = null,
             bool optIn = false, PropertyDescriptor propDesc = null)
         {
             if (!recordType.IsDynamicType())
@@ -288,7 +295,8 @@ namespace ChoETL
                 else
                 {
                     if (typeof(IList).IsAssignableFrom(recordType)
-                        && !typeof(ArrayList).IsAssignableFrom(recordType))
+                        && !typeof(ArrayList).IsAssignableFrom(recordType)
+                        && !recordType.IsInterface)
                     {
                         if (propDesc != null)
                         {
@@ -329,7 +337,7 @@ namespace ChoETL
                                                 ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref position, declaringMember, pd, range, propDesc.GetDisplayName());
 
                                                 //if (!CSVRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
-                                                    CSVRecordFieldConfigurations.Add(obj);
+                                                CSVRecordFieldConfigurations.Add(obj);
                                             }
                                         }
                                     }
@@ -571,7 +579,7 @@ namespace ChoETL
                     .Where(g => g.Count() > 1)
                     .Select(g => g.Key).ToArray();
 
-                if (dupFields.Length > 0  && !IgnoreDuplicateFields)
+                if (dupFields.Length > 0 && !IgnoreDuplicateFields)
                     throw new ChoRecordConfigurationException("Duplicate field name(s) [Name: {0}] found.".FormatString(String.Join(",", dupFields)));
             }
 
@@ -639,7 +647,7 @@ namespace ChoETL
                 throw new ChoRecordConfigurationException("One of the Comments contains {0}. Not allowed.".FormatString(name));
         }
 
-        internal void MapRecordField(string fn, Action<ChoCSVRecordFieldConfigurationMap> mapper)
+        public void MapRecordField(string fn, Action<ChoCSVRecordFieldConfigurationMap> mapper)
         {
             if (mapper == null)
                 return;
@@ -647,10 +655,18 @@ namespace ChoETL
             mapper(new ChoCSVRecordFieldConfigurationMap(GetFieldConfiguration(fn)));
         }
 
-        internal ChoCSVRecordFieldConfiguration GetFieldConfiguration(string fn)
+        public void MapRecordField<T, TField>(Expression<Func<T, TField>> field, Action<ChoCSVRecordFieldConfigurationMap> mapper)
+        {
+            var fn = field.GetMemberName();
+            var pd = field.GetPropertyDescriptor();
+
+            mapper(new ChoCSVRecordFieldConfigurationMap(GetFieldConfiguration(fn, pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray())));
+        }
+
+        internal ChoCSVRecordFieldConfiguration GetFieldConfiguration(string fn, ChoCSVRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)
         {
             if (!CSVRecordFieldConfigurations.Any(fc => fc.Name == fn))
-                CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fn));
+                CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(fn, attr, otherAttrs));
 
             return CSVRecordFieldConfigurations.First(fc => fc.Name == fn);
         }
@@ -695,5 +711,14 @@ namespace ChoETL
         }
 
         #endregion 
+    }
+
+    public class ChoCSVRecordConfiguration<T> : ChoCSVRecordConfiguration
+    {
+        public ChoCSVRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> property, Action<ChoCSVRecordFieldConfigurationMap> setup)
+        {
+            MapRecordField(property, setup);
+            return this;
+        }
     }
 }

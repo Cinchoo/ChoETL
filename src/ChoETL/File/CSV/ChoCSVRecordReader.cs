@@ -843,7 +843,7 @@ namespace ChoETL
                     break;
             }
 
-            if (config.ExcelField)
+            if (Configuration.ImplicitExcelFieldValueHandling || config.ExcelField)
             {
                 if (fieldValue.StartsWith("="))
                 {
