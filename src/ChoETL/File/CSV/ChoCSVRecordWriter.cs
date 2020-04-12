@@ -25,6 +25,8 @@ namespace ChoETL
         private Lazy<List<object>> _recBuffer = null;
         private bool _firstLine = true;
         private string _customHeader = null;
+        private Lazy<bool> BeginWrite = null;
+        private object _sw = null;
 
         public ChoCSVRecordConfiguration Configuration
         {
@@ -57,7 +59,22 @@ namespace ChoETL
                     return new List<object>();
             });
 
+            BeginWrite = new Lazy<bool>(() =>
+            {
+                TextWriter sw = _sw as TextWriter;
+                if (sw != null)
+                    return RaiseBeginWrite(sw);
+
+                return false;
+            });
             //Configuration.Validate();
+        }
+
+        public void Dispose()
+        {
+            TextWriter sw = _sw as TextWriter;
+            if (sw != null)
+                RaiseEndWrite(sw);
         }
 
         //private List<object> _recBuffer = new List<object>();
@@ -108,7 +125,11 @@ namespace ChoETL
 
         public void WriteFields(object writer, params object[] fieldValues)
         {
+            _sw = writer;
             if (fieldValues == null)
+                return;
+
+            if (!BeginWrite.Value)
                 return;
 
             bool first = true;
@@ -135,11 +156,15 @@ namespace ChoETL
 
         public void WriteComment(object writer, string commentText, bool silent = true)
         {
+            _sw = writer;
             if (Configuration.Comments.IsNullOrEmpty())
             {
                 if (silent) return;
                 throw new ChoParserException("No comment character set.");
             }
+
+            if (!BeginWrite.Value)
+                return;
 
             string comment = Configuration.Comments.First();
             Write(writer, $"{comment}{commentText}");
@@ -147,6 +172,7 @@ namespace ChoETL
 
         private void Write(object writer, string text)
         {
+            _sw = writer;
             TextWriter sw = writer as TextWriter;
             ChoGuard.ArgumentNotNull(sw, "TextWriter");
 
@@ -160,12 +186,13 @@ namespace ChoETL
 
         public override IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null)
         {
+            _sw = writer;
             TextWriter sw = writer as TextWriter;
             ChoGuard.ArgumentNotNull(sw, "TextWriter");
 
             if (records == null) yield break;
 
-            if (!RaiseBeginWrite(sw))
+            if (!BeginWrite.Value)
                 yield break;
 
             CultureInfo prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
@@ -341,8 +368,6 @@ namespace ChoETL
             {
                 System.Threading.Thread.CurrentThread.CurrentCulture = prevCultureInfo;
             }
-
-            RaiseEndWrite(sw);
         }
 
         private string[] GetFields(List<object> records)
@@ -440,8 +465,8 @@ namespace ChoETL
             {
                 //if (Configuration.IsDynamicObject)
                 //{
-                    if (Configuration.IgnoredFields.Contains(kvp.Key))
-                        continue;
+                if (Configuration.IgnoredFields.Contains(kvp.Key))
+                    continue;
                 //}
 
                 fieldConfig = kvp.Value;
@@ -486,7 +511,7 @@ namespace ChoETL
                     if (Configuration.IsDynamicObject)
                     {
                         fieldValue = dict.ContainsKey(kvp.Key) ? dict[kvp.Key] :
-                            fieldConfig.FieldPosition > 0 && fieldConfig.FieldPosition - 1 < dict.Keys.Count 
+                            fieldConfig.FieldPosition > 0 && fieldConfig.FieldPosition - 1 < dict.Keys.Count
                             && Configuration.RecordFieldConfigurationsDict.Count == dict.Keys.Count ? dict[dict.Keys.ElementAt(fieldConfig.FieldPosition - 1)] : null; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
                         if (kvp.Value.FieldType == null)
                         {
@@ -553,7 +578,7 @@ namespace ChoETL
                     if (Configuration.ThrowAndStopOnMissingField)
                         throw;
                 }
-                catch (Exception ex)    
+                catch (Exception ex)
                 {
                     ChoETLFramework.HandleException(ref ex);
 
@@ -642,8 +667,8 @@ namespace ChoETL
 
                 if (firstColumn)
                 {
-                    msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, 
-                        GetFieldValueJustification(kvp.Value.FieldValueJustification), GetFillChar(kvp.Value.FillChar), 
+                    msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField,
+                        GetFieldValueJustification(kvp.Value.FieldValueJustification), GetFillChar(kvp.Value.FillChar),
                         false, kvp.Value.NullValue, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType, Configuration.FieldValueTrimOption), fieldConfig));
                     firstColumn = false;
                 }
@@ -670,7 +695,7 @@ namespace ChoETL
             }
             else
             {
-                var item =  ChoType.GetPropertyValue(target, propertyInfo);
+                var item = ChoType.GetPropertyValue(target, propertyInfo);
                 if (item != null && typeof(IList).IsAssignableFrom(item.GetType()))
                 {
                     if (fieldConfig.ArrayIndex != null)

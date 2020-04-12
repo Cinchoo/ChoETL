@@ -34,6 +34,8 @@ namespace ChoETL
             private set;
         }
 
+        public override ChoRecordConfiguration RecordConfiguration => Configuration;
+
         public ChoXmlRecordReader(Type recordType, ChoXmlRecordConfiguration configuration) : base(recordType)
         {
             ChoGuard.ArgumentNotNull(configuration, "Configuration");
@@ -64,6 +66,8 @@ namespace ChoETL
         {
             XmlReader sr = source as XmlReader;
             ChoGuard.ArgumentNotNull(sr, "XmlReader");
+
+            InitializeRecordConfiguration(Configuration);
 
             if (!RaiseBeginLoad(sr))
                 yield break;
@@ -1052,6 +1056,8 @@ namespace ChoETL
                 return target;
 
             Type recordType = target.GetType();
+            if (typeof(XObject).IsAssignableFrom(recordType))
+                return target;
             if (recordType.IsSimple())
                 return target;
             if (typeof(IList).IsAssignableFrom(recordType))

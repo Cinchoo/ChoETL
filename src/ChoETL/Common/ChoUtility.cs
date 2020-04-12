@@ -2104,7 +2104,12 @@ namespace ChoETL
                                     continue;
                                 }
                             }
-                            arrMsg.AppendFormat("{0}{1}", ToStringEx(item), Environment.NewLine);
+                            else if (typeof(XObject).IsAssignableFrom(valueType))
+                                arrMsg.AppendFormat("{0}{1}", ((XObject)item).ToString(), Environment.NewLine);
+                            else if (typeof(XmlNode).IsAssignableFrom(valueType))
+                                arrMsg.AppendFormat("{0}{1}", ((XmlNode)item).OuterXml, Environment.NewLine);
+                            else
+                                arrMsg.AppendFormat("{0}{1}", ToStringEx(item), Environment.NewLine);
                         }
                         else
                             arrMsg.AppendFormat("{0}{1}", "NULL", Environment.NewLine);
@@ -2140,7 +2145,11 @@ namespace ChoETL
                             object value = ChoType.GetMemberValue(target, memberInfo);
                             string memberText = null;
 
-                            if (!type.IsSimple() && type != typeof(Type))
+                            if (typeof(XmlNode).IsAssignableFrom(type))
+                                memberText = value != null ? ((XmlNode)value).OuterXml : "[NULL]";
+                            else if (typeof(XNode).IsAssignableFrom(type))
+                                memberText = value != null ? ((XNode)value).GetInnerXml() : "[NULL]";
+                            else if (!type.IsSimple() && type != typeof(Type))
                             {
                                 memberText = value != null ? ChoUtility.ToStringEx(value) : "[NULL]";
                                 if (memberText.ContainsMultiLines())

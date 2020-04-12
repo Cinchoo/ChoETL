@@ -22,6 +22,8 @@ namespace ChoETL
             private set;
         }
 
+        public override ChoRecordConfiguration RecordConfiguration => Configuration;
+
         public ChoManifoldRecordReader(ChoManifoldRecordConfiguration configuration) : base(typeof(object))
         {
             ChoGuard.ArgumentNotNull(configuration, "Configuration");

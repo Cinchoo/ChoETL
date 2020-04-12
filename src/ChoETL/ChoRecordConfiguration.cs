@@ -67,6 +67,11 @@ namespace ChoETL
         internal string[] PropertyNames;
         public HashSet<string> IgnoredFields { get; } = new HashSet<string>();
 
+        public abstract IEnumerable<ChoRecordFieldConfiguration> RecordFieldConfigurations
+        {
+            get;
+        }
+
         internal ChoRecordConfiguration(Type recordType = null)
         {
             RecordType = recordType;

@@ -172,6 +172,15 @@ namespace ChoETL
             set;
         }
 
+        public override IEnumerable<ChoRecordFieldConfiguration> RecordFieldConfigurations
+        {
+            get
+            {
+                foreach (var fc in XmlRecordFieldConfigurations)
+                    yield return fc;
+            }
+        }
+
         public readonly dynamic Context = new ChoDynamicObject();
 
         internal bool IsComplexXPathUsed = true;

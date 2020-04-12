@@ -33,6 +33,8 @@ namespace ChoETL
             private set;
         }
 
+        public override ChoRecordConfiguration RecordConfiguration => Configuration;
+
         public ChoCSVRecordReader(Type recordType, ChoCSVRecordConfiguration configuration) : base(recordType)
         {
             ChoGuard.ArgumentNotNull(configuration, "Configuration");
@@ -61,6 +63,7 @@ namespace ChoETL
 
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
         {
+            InitializeRecordConfiguration(Configuration);
             return AsEnumerable(source, TraceSwitch, filterFunc);
         }
 
@@ -576,7 +579,7 @@ namespace ChoETL
             lineNo = pair.Item1;
             line = pair.Item2;
 
-            string[] fieldValues = line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar, Configuration.QuoteEscapeChar);
+            string[] fieldValues = line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, !Configuration.QuoteAllFields.GetValueOrDefault(false) ? ChoCharEx.NUL : Configuration.QuoteChar, Configuration.QuoteEscapeChar);
             if (Configuration.ColumnCountStrict)
             {
                 if (fieldValues.Length != Configuration.CSVRecordFieldConfigurations.Count)

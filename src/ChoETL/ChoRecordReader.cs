@@ -19,6 +19,11 @@ namespace ChoETL
         public event EventHandler<ChoRecordFieldTypeAssessmentEventArgs> RecordFieldTypeAssessment;
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
 
+        public abstract ChoRecordConfiguration RecordConfiguration
+        {
+            get;
+        }
+
         public ChoRecordReader(Type recordType, bool force = true)
         {
             ChoGuard.ArgumentNotNull(recordType, "RecordType");
@@ -30,6 +35,35 @@ namespace ChoETL
             }
 
             RecordType = recordType;
+        }
+
+        protected void InitializeRecordConfiguration(ChoRecordConfiguration configuration)
+        {
+            if (configuration == null || configuration.IsDynamicObject || configuration.RecordType == null)
+                return;
+
+            if (!typeof(IChoNotifyRecordConfigurable).IsAssignableFrom(configuration.RecordType))
+                return;
+
+            var obj = ChoActivator.CreateInstance(configuration.RecordType) as IChoNotifyRecordConfigurable;
+            if (obj != null)
+                obj.RecondConfigure(configuration);
+        }
+
+        protected void InitializeRecordFieldConfiguration(ChoRecordConfiguration configuration)
+        {
+            if (configuration == null || configuration.IsDynamicObject || configuration.RecordType == null)
+                return;
+
+            if (!typeof(IChoNotifyRecordFieldConfigurable).IsAssignableFrom(configuration.RecordType))
+                return;
+
+            var obj = ChoActivator.CreateInstance(configuration.RecordType) as IChoNotifyRecordFieldConfigurable;
+            if (obj == null)
+                return;
+
+            foreach (var fc in configuration.RecordFieldConfigurations)
+                obj.RecondFieldConfigure(fc);
         }
 
         protected bool RaisedRowsLoaded(long rowsLoaded, bool isFinal = false)
@@ -49,10 +83,12 @@ namespace ChoETL
         protected void RaiseMembersDiscovered(IDictionary<string, Type> fieldTypes)
         {
             EventHandler<ChoEventArgs<IDictionary<string, Type>>> membersDiscovered = MembersDiscovered;
-            if (membersDiscovered == null)
-                return;
-            var ea = new ChoEventArgs<IDictionary<string, Type>>(fieldTypes);
-            membersDiscovered(this, ea);
+            if (membersDiscovered != null)
+            {
+                var ea = new ChoEventArgs<IDictionary<string, Type>>(fieldTypes);
+                membersDiscovered(this, ea);
+            }
+            InitializeRecordFieldConfiguration(RecordConfiguration);
         }
 
         protected void RaiseRecordFieldTypeAssessment(IDictionary<string, Type> fieldTypes, IDictionary<string, object> fieldValues, bool isLastScanRow = false)

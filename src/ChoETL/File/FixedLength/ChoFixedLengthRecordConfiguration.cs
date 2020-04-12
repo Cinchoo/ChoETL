@@ -145,6 +145,15 @@ namespace ChoETL
             set;
         }
 
+        public override IEnumerable<ChoRecordFieldConfiguration> RecordFieldConfigurations
+        {
+            get
+            {
+                foreach (var fc in FixedLengthRecordFieldConfigurations)
+                    yield return fc;
+            }
+        }
+
         internal void UpdateFieldTypesIfAny(IDictionary<string, Type> dict)
         {
             if (dict == null || RecordFieldConfigurationsDict == null)

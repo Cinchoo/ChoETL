@@ -746,6 +746,22 @@ namespace ChoETL
             return xsType;
         }
 
+        public static XmlElement ToXmlElement(this XElement el)
+        {
+            var doc = new XmlDocument();
+            using (var r = el.CreateReader())
+                doc.Load(r);
+            return doc.DocumentElement;
+        }
+
+        public static XmlElement ToXmlElement(this XElement el, XmlDocument ownerDocument)
+        {
+            var doc = new XmlDocument();
+            using (var r = el.CreateReader())
+                doc.Load(r);
+            return doc.DocumentElement;
+        }
+
         public static Type GetXSType(this XElement element, string xmlSchemaNS = null)
         {
             XNamespace ns = xmlSchemaNS.IsNullOrWhiteSpace() ? ChoXmlSettings.XmlSchemaInstanceNamespace : xmlSchemaNS;

@@ -26,7 +26,10 @@ namespace ChoETL
         internal ChoWriter Writer = null;
         internal Type ElementType = null;
         private Lazy<List<object>> _recBuffer = null;
-        private bool firstLine = true;
+        private bool _firstLine = true;
+        private string _customHeader = null;
+        private Lazy<bool> BeginWrite = null;
+        private object _sw = null;
 
         public ChoFixedLengthRecordConfiguration Configuration
         {
@@ -49,7 +52,7 @@ namespace ChoETL
             {
                 if (Writer != null)
                 {
-                    var b = Writer.Context.RecBuffer;
+                    var b = Writer.Context.ContainsKey("RecBuffer") ? Writer.Context.RecBuffer : null;
                     if (b == null)
                         Writer.Context.RecBuffer = new List<object>();
 
@@ -59,8 +62,33 @@ namespace ChoETL
                     return new List<object>();
             });
 
+            BeginWrite = new Lazy<bool>(() =>
+            {
+                TextWriter sw = _sw as TextWriter;
+                if (sw != null)
+                    return RaiseBeginWrite(sw);
+
+                return false;
+            });
             //Configuration.Validate();
         }
+
+        public void Dispose()
+        {
+            TextWriter sw = _sw as TextWriter;
+            if (sw != null)
+                RaiseEndWrite(sw);
+        }
+
+        //private List<object> _recBuffer = new List<object>();
+        //private IEnumerable<object> GetRecords(IEnumerator<object> records)
+        //{
+        //    foreach (var rec in _recBuffer)
+        //        yield return rec;
+
+        //    while (records.MoveNext())
+        //        yield return records.Current;
+        //}
 
         private IEnumerable<object> GetRecords(IEnumerator<object> records)
         {
@@ -75,6 +103,7 @@ namespace ChoETL
             while (records.MoveNext())
                 yield return records.Current;
         }
+
         private object GetFirstNotNullRecord(IEnumerator<object> recEnum)
         {
             if (Writer != null && !Object.ReferenceEquals(Writer.Context.FirstNotNullRecord, null))
@@ -97,13 +126,26 @@ namespace ChoETL
             return null;
         }
 
+        public void WriteHeader(object writer, string header)
+        {
+            _sw = writer;
+            if (header.IsNullOrEmpty())
+                return;
+
+            _customHeader = header;
+        }
+
         public void WriteComment(object writer, string commentText, bool silent = true)
         {
+            _sw = writer;
             if (Configuration.Comments.IsNullOrEmpty())
             {
                 if (silent) return;
                 throw new ChoParserException("No comment character set.");
             }
+
+            if (!BeginWrite.Value)
+                return;
 
             string comment = Configuration.Comments.First();
             Write(writer, $"{comment}{commentText}");
@@ -111,25 +153,27 @@ namespace ChoETL
 
         private void Write(object writer, string text)
         {
+            _sw = writer;
             TextWriter sw = writer as TextWriter;
             ChoGuard.ArgumentNotNull(sw, "TextWriter");
 
-            if (firstLine)
+            if (_firstLine)
                 sw.Write(text);
             else
                 sw.Write("{1}{0}", text, Configuration.EOLDelimiter);
 
-            firstLine = false;
+            _firstLine = false;
         }
 
         public override IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null)
         {
+            _sw = writer;
             TextWriter sw = writer as TextWriter;
             ChoGuard.ArgumentNotNull(sw, "TextWriter");
 
             if (records == null) yield break;
 
-            if (!RaiseBeginWrite(sw))
+            if (!BeginWrite.Value)
                 yield break;
 
             CultureInfo prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
@@ -309,8 +353,6 @@ namespace ChoETL
             {
                 System.Threading.Thread.CurrentThread.CurrentCulture = prevCultureInfo;
             }
-
-            RaiseEndWrite(sw);
         }
 
         private string[] GetFields(List<object> records)
@@ -578,7 +620,26 @@ namespace ChoETL
                 if (fieldValue == null)
                     fieldText = String.Empty;
                 else
-                    fieldText = fieldValue.ToString();
+                {
+                    if (fieldValue is IList)
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        bool first = true;
+                        foreach (var item in (IList)fieldValue)
+                        {
+                            if (first)
+                            {
+                                sb.Append(NormalizeFieldValue(kvp.Key, item.ToNString(), null, false, null, ChoFieldValueJustification.None, ChoCharEx.NUL));
+                                first = false;
+                            }
+                            else
+                                sb.Append(NormalizeFieldValue(kvp.Key, item.ToNString(), null, false, null, ChoFieldValueJustification.None, ChoCharEx.NUL));
+                        }
+                        fieldText = sb.ToString();
+                    }
+                    else
+                        fieldText = fieldValue.ToString();
+                }
 
                 msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, 
                     GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), 
@@ -686,6 +747,8 @@ namespace ChoETL
 
         private string ToHeaderText()
         {
+            if (!_customHeader.IsNullOrWhiteSpace())
+                return _customHeader;
             StringBuilder msg = new StringBuilder();
             string value;
             foreach (var member in Configuration.FixedLengthRecordFieldConfigurations)
@@ -802,6 +865,17 @@ namespace ChoETL
                     }
                 }
             }
+
+            //quotes are quoted and doubled (excel) i.e. 15" -> field1,"15""",field3
+            if (fieldValue.Contains(Configuration.QuoteChar))
+            {
+                fieldValue = fieldValue.Replace(Configuration.QuoteChar.ToString(), Configuration.DoubleQuoteChar);
+            }
+            else
+            {
+            }
+            if (fieldConfig != null && fieldConfig.ValueSelector != null)
+                quoteValue = false;
 
             if (quoteValue)
                 fieldValue = "{1}{0}{1}".FormatString(fieldValue, Configuration.QuoteChar);

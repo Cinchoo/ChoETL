@@ -69,6 +69,15 @@ namespace ChoETL
             set;
         }
 
+        public override IEnumerable<ChoRecordFieldConfiguration> RecordFieldConfigurations
+        {
+            get
+            {
+                foreach (var fc in KVPRecordFieldConfigurations)
+                    yield return fc;
+            }
+        }
+
         internal KeyValuePair<string, ChoKVPRecordFieldConfiguration>[] FCArray;
         internal bool AutoDiscoveredColumns = false;
         private bool _isWildcardComparisionOnRecordStart = false;

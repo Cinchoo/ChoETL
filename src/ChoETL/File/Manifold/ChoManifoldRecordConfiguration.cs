@@ -50,6 +50,15 @@ namespace ChoETL
             get;
             set;
         }
+
+        public override IEnumerable<ChoRecordFieldConfiguration> RecordFieldConfigurations
+        {
+            get
+            {
+                yield break;
+            }
+        }
+
         private readonly Dictionary<Type, ChoFileRecordConfiguration> SubRecordConfigurations = new Dictionary<Type, ChoFileRecordConfiguration>();
         public ChoFileRecordConfiguration this[Type recordType]
         {

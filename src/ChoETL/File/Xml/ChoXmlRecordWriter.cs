@@ -32,6 +32,8 @@ namespace ChoETL
         internal ChoWriter Writer = null;
         internal Type ElementType = null;
         private Lazy<List<object>> _recBuffer = null;
+        private Lazy<bool> BeginWrite = null;
+        private object _sw = null;
 
         public ChoXmlRecordConfiguration Configuration
         {
@@ -63,6 +65,15 @@ namespace ChoETL
                     return new List<object>();
             });
             //Configuration.Validate();
+
+            BeginWrite = new Lazy<bool>(() =>
+            {
+                TextWriter sw = _sw as TextWriter;
+                if (sw != null)
+                    return RaiseBeginWrite(sw);
+
+                return false;
+            });
         }
 
         internal void EndWrite(object writer)
@@ -102,6 +113,7 @@ namespace ChoETL
             while (records.MoveNext())
                 yield return records.Current;
         }
+
         private object GetFirstNotNullRecord(IEnumerator<object> recEnum)
         {
             if (Writer.Context.FirstNotNullRecord != null)
@@ -121,6 +133,7 @@ namespace ChoETL
 
         public override IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null)
         {
+            _sw = writer;
             TextWriter sw = writer as TextWriter;
             ChoGuard.ArgumentNotNull(sw, "TextWriter");
 
@@ -192,7 +205,7 @@ namespace ChoETL
 
                                 _configCheckDone = true;
 
-                                if (!RaiseBeginWrite(sw))
+                                if (!BeginWrite.Value)
                                     yield break;
 
                                 if (!Configuration.RootName.IsNullOrWhiteSpace() && !Configuration.IgnoreRootName)

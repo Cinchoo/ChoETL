@@ -34,6 +34,8 @@ namespace ChoETL
             private set;
         }
 
+        public override ChoRecordConfiguration RecordConfiguration => Configuration;
+
         public ChoKVPRecordReader(Type recordType, ChoKVPRecordConfiguration configuration) : base(recordType)
         {
             ChoGuard.ArgumentNotNull(configuration, "Configuration");
@@ -49,6 +51,7 @@ namespace ChoETL
 
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
         {
+            InitializeRecordConfiguration(Configuration);
             return AsEnumerable(source, TraceSwitch, filterFunc);
         }
 

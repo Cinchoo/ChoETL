@@ -29,6 +29,16 @@ namespace ChoETL
         bool RecordLoadError(object target, long index, object source, Exception ex);
     }
 
+    public interface IChoNotifyRecordConfigurable
+    {
+        void RecondConfigure(ChoRecordConfiguration configuration);
+    }
+
+    public interface IChoNotifyRecordFieldConfigurable
+    {
+        void RecondFieldConfigure(ChoRecordFieldConfiguration fieldConfiguration);
+    }
+
     //public interface IChoNotifyRecordRead : IChoNotifyRecordFieldRead
     //{
     //}

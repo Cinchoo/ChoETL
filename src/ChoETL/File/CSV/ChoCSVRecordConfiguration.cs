@@ -122,6 +122,15 @@ namespace ChoETL
             set { if (value == null) return; _customTextSelecter = value; }
         }
 
+        public override IEnumerable<ChoRecordFieldConfiguration> RecordFieldConfigurations
+        {
+            get
+            {
+                foreach (var fc in CSVRecordFieldConfigurations)
+                    yield return fc;
+            }
+        }
+
         public ChoCSVRecordConfiguration Configure(Action<ChoCSVRecordConfiguration> action)
         {
             if (action != null)

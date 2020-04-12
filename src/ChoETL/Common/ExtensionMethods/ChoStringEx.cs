@@ -579,6 +579,11 @@ namespace ChoETL
             if (type == null)
                 throw new ArgumentNullException("Missing type.");
 
+            if (typeof(XObject).IsAssignableFrom(type))
+                return element;
+            if (typeof(XmlNode).IsAssignableFrom(type))
+                return element.ToXmlElement();
+
             if (type.IsDynamicType())
             {
                 return ToDynamic(element, true, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling);

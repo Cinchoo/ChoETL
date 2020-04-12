@@ -53,7 +53,12 @@ namespace ChoETL
                 fieldValue = fieldConfig.ValueConverter(fieldValue);
             else
             {
-                if (fieldConfig.PI.PropertyType.IsGenericType && fieldConfig.PI.PropertyType.GetGenericTypeDefinition() == typeof(Dictionary<,>)
+                if (fieldValue != null && fieldConfig.PI.PropertyType != null
+                    && fieldConfig.PI.PropertyType.IsAssignableFrom(fieldValue.GetType()))
+                {
+
+                }
+                else if (fieldConfig.PI.PropertyType.IsGenericType && fieldConfig.PI.PropertyType.GetGenericTypeDefinition() == typeof(Dictionary<,>)
                         /*&& typeof(string) == fieldConfig.PI.PropertyType.GetGenericArguments()[0]*/)
                 {
                     IDictionary dict = ChoType.GetPropertyValue(rec, fieldConfig.PI) as IDictionary;

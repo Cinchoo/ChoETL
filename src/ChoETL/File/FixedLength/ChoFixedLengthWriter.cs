@@ -74,6 +74,7 @@ namespace ChoETL
 
             Configuration = configuration;
             Init();
+
             if (inStream is MemoryStream)
                 _textWriter = new StreamWriter(inStream);
             else
@@ -95,6 +96,8 @@ namespace ChoETL
         {
             if (_isDisposed)
                 return;
+
+            _writer.Dispose();
 
             _isDisposed = true;
             if (_closeStreamOnDispose)
@@ -119,6 +122,13 @@ namespace ChoETL
 
             _writer = new ChoFixedLengthRecordWriter(typeof(T), Configuration);
             _writer.RowsWritten += NotifyRowsWritten;
+        }
+
+        public void WriteHeader(object writer, string header)
+        {
+            _writer.Writer = this;
+            _writer.TraceSwitch = TraceSwitch;
+            _writer.WriteHeader(_textWriter, header);
         }
 
         public void WriteComment(string commentText, bool silent = true)
@@ -396,6 +406,12 @@ namespace ChoETL
         public ChoFixedLengthWriter<T> ColumnCountStrict(bool flag = true)
         {
             Configuration.ColumnCountStrict = flag;
+            return this;
+        }
+
+        public ChoFixedLengthWriter<T> ThrowAndStopOnMissingField(bool flag = true)
+        {
+            Configuration.ThrowAndStopOnMissingField = flag;
             return this;
         }
 
