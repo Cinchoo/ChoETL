@@ -141,6 +141,16 @@ namespace ChoETL
             get;
             set;
         }
+
+        public override IEnumerable<ChoRecordFieldConfiguration> RecordFieldConfigurations
+        {
+            get
+            {
+                foreach (var fc in JSONRecordFieldConfigurations)
+                    yield return fc;
+            }
+        }
+
         public ChoJSONRecordFieldConfiguration this[string name]
         {
             get

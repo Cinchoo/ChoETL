@@ -33,6 +33,8 @@ namespace ChoETL
             private set;
         }
 
+        public override ChoRecordConfiguration RecordConfiguration => Configuration;
+
         public ChoJSONRecordReader(Type recordType, ChoJSONRecordConfiguration configuration) : base(recordType, false)
         {
             ChoGuard.ArgumentNotNull(configuration, "Configuration");
@@ -50,6 +52,8 @@ namespace ChoETL
         {
             JsonTextReader sr = source as JsonTextReader;
             ChoGuard.ArgumentNotNull(sr, "JsonTextReader");
+
+            InitializeRecordConfiguration(Configuration);
 
             if (!RaiseBeginLoad(sr))
                 yield break;
@@ -70,51 +74,153 @@ namespace ChoETL
             }
         }
 
+        private IEnumerable<JObject> ReadNodes(JsonTextReader sr)
+        {
+            while (sr.Read())
+            {
+                if (sr.TokenType == JsonToken.StartArray)
+                {
+                    while (sr.Read())
+                    {
+                        if (sr.TokenType == JsonToken.StartObject)
+                        {
+                            yield return JObject.Load(sr);
+                        }
+                        else if (sr.TokenType == JsonToken.StartArray)
+                        {
+                            var z = JArray.Load(sr).Children().ToArray();
+                            dynamic x = new JObject(new JProperty("Value", z));
+                            yield return x;
+                        }
+                    }
+                }
+                if (sr.TokenType == JsonToken.StartObject)
+                    yield return (JObject)JToken.ReadFrom(sr);
+
+                sr.Skip();
+            }
+        }
+
         private IEnumerable<JObject> ReadJObjects(JsonTextReader sr)
         {
             if (Configuration.JSONPath.IsNullOrWhiteSpace())
             {
                 sr.SupportMultipleContent = Configuration.SupportMultipleContent == null ? true : Configuration.SupportMultipleContent.Value;
-                while (sr.Read())
+                foreach (var node in ReadNodes(sr))
+                    yield return node;
+            }
+            else
+            {
+                string[] tokens = null;
+                if (IsSimpleJSONPath(Configuration.JSONPath, out tokens))
                 {
-                    if (sr.TokenType == JsonToken.StartArray)
+                    foreach (var jo in StreamElements(sr, tokens))
+                        yield return jo;
+                }
+                else
+                {
+                    while (sr.Read())
                     {
-                        while (sr.Read())
+                        if (sr.TokenType == JsonToken.StartArray)
                         {
-                            if (sr.TokenType == JsonToken.StartObject)
+                            foreach (var t in ToJObjects(JArray.Load(sr).SelectTokens(Configuration.JSONPath)))
                             {
-                                yield return JObject.Load(sr);
+                                yield return t;
                             }
-                            else if (sr.TokenType == JsonToken.StartArray)
+                        }
+                        if (sr.TokenType == JsonToken.StartObject)
+                        {
+                            foreach (var t in ToJObjects(JObject.Load(sr).SelectTokens(Configuration.JSONPath)))
                             {
-                                var z = JArray.Load(sr).Children().ToArray();
-                                dynamic x = new JObject(new JProperty("Value", z));
-                                yield return x;
+                                yield return t;
                             }
                         }
                     }
-                    if (sr.TokenType == JsonToken.StartObject)
-                        yield return (JObject)JToken.ReadFrom(sr);
+                }
+            }
+        }
+
+        private bool IsSimpleJSONPath(string jsonPath, out string[] tokens)
+        {
+            tokens = null;
+
+            if (jsonPath.StartsWith("$"))
+                jsonPath = jsonPath.Substring(1);
+            while (jsonPath.StartsWith("."))
+                jsonPath = jsonPath.Substring(1);
+            if (jsonPath.Length == 0)
+                return false;
+
+            var tokens1 = jsonPath.SplitNTrim(".");
+            foreach (var token in tokens1)
+            {
+                if (token.IsNullOrWhiteSpace())
+                    return false;
+                if (!token.IsAlphaNumeric())
+                    return false;
+            }
+
+            tokens = tokens1;
+            return true;
+        }
+
+        private bool ReadToFollowing(JsonTextReader sr, string elementName)
+        {
+            while (sr.Read())
+            {
+                if (sr.TokenType == JsonToken.StartObject)
+                {
+                    while (sr.Read())
+                    {
+                        if (sr.TokenType == JsonToken.PropertyName && (sr.Path == elementName || sr.Path.EndsWith($".{elementName}")))
+                            return true;
+                    }
+                }
+                break;
+            }
+
+            return false;
+        }
+
+        private IEnumerable<JObject> StreamElements(JsonTextReader sr, string[] elementNames)
+        {
+            if (elementNames.Length == 1)
+            {
+                string elementName = elementNames[0];
+                if (elementName == "*")
+                {
+                    foreach (var node in ReadNodes(sr))
+                        yield return node;
+                }
+                else
+                {
+                    if (ReadToFollowing(sr, elementName))
+                    {
+                        foreach (var node in ReadNodes(sr))
+                            yield return node;
+                    }
                 }
             }
             else
             {
-                while (sr.Read())
+                bool match = true;
+                foreach (var en in elementNames.Take(elementNames.Length - 1))
                 {
-                    if (sr.TokenType == JsonToken.StartArray)
+                    if (!ReadToFollowing(sr, en))
                     {
-                        foreach (var t in ToJObjects(JArray.Load(sr).SelectTokens(Configuration.JSONPath)))
-                        {
-                            yield return t;
-                        }
+                        match = false;
+                        break;
                     }
-                    if (sr.TokenType == JsonToken.StartObject)
+                }
+
+                if (match)
+                {
+                    if (ReadToFollowing(sr, elementNames.Skip(elementNames.Length - 1).First()))
                     {
-                        foreach (var t in ToJObjects(JObject.Load(sr).SelectTokens(Configuration.JSONPath)))
-                        {
-                            yield return t;
-                        }
+                        foreach (var node in ReadNodes(sr))
+                            yield return node;
                     }
+
                 }
             }
         }
@@ -614,11 +720,16 @@ namespace ChoETL
                         }
                         else if (fieldValue is JToken)
                         {
-                            fieldValue = DeserializeNode((JToken)fieldValue, itemType, fieldConfig);
+                            if (!typeof(JToken).IsAssignableFrom(itemType))
+                                fieldValue = DeserializeNode((JToken)fieldValue, itemType, fieldConfig);
                         }
                         else if (fieldValue is JArray)
                         {
-                            if (fieldConfig.FieldType.GetUnderlyingType().IsCollection())
+                            if (!typeof(JArray).IsAssignableFrom(itemType))
+                            {
+
+                            }
+                            else if (fieldConfig.FieldType.GetUnderlyingType().IsCollection())
                             {
                                 itemType = fieldConfig.FieldType.GetUnderlyingType().GetItemType().GetUnderlyingType();
                                 foreach (var ele in (JArray)fieldValue)
@@ -637,7 +748,11 @@ namespace ChoETL
                         else if (fieldValue is JToken[])
                         {
                             itemType = fieldConfig.FieldType.GetUnderlyingType().GetItemType().GetUnderlyingType();
-                            if (fieldConfig.FieldType.GetUnderlyingType().IsCollection())
+                            if (!typeof(JToken[]).IsAssignableFrom(itemType))
+                            {
+
+                            }
+                            else if (fieldConfig.FieldType.GetUnderlyingType().IsCollection())
                             {
                                 var isJArray = ((JToken[])fieldValue).Length == 1 && ((JToken[])fieldValue)[0] is JArray;
                                 var array = isJArray ? ((JArray)((JToken[])fieldValue)[0]).ToArray() : (JToken[])fieldValue;

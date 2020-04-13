@@ -26,6 +26,8 @@ namespace ChoETL
         internal ChoWriter Writer = null;
         internal Type ElementType = null;
         private Lazy<List<object>> _recBuffer = null;
+        private Lazy<bool> BeginWrite = null;
+        private object _sw = null;
 
         public ChoJSONRecordConfiguration Configuration
         {
@@ -58,6 +60,15 @@ namespace ChoETL
             });
 
             //Configuration.Validate();
+
+            BeginWrite = new Lazy<bool>(() =>
+            {
+                TextWriter sw = _sw as TextWriter;
+                if (sw != null)
+                    return RaiseBeginWrite(sw);
+
+                return false;
+            });
         }
 
         private bool SupportMultipleContent
@@ -96,6 +107,7 @@ namespace ChoETL
 
         public override IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null)
         {
+            _sw = writer;
             TextWriter sw = writer as TextWriter;
             ChoGuard.ArgumentNotNull(sw, "TextWriter");
 
@@ -203,7 +215,7 @@ namespace ChoETL
 
                             Configuration.IsInitialized = true;
 
-                            if (!RaiseBeginWrite(sw))
+                            if (!BeginWrite.Value)
                                 yield break;
 
                             if (!SupportMultipleContent)
