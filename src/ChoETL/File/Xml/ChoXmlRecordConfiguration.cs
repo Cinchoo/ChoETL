@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
@@ -775,12 +776,28 @@ namespace ChoETL
             return this;
         }
 
-        internal void MapRecordField(string fn, Action<ChoXmlRecordFieldConfigurationMap> mapper)
+        public void MapRecordField(string fn, Action<ChoXmlRecordFieldConfigurationMap> mapper)
         {
             if (mapper == null)
                 return;
 
             mapper(new ChoXmlRecordFieldConfigurationMap(GetFieldConfiguration(fn)));
+        }
+
+        public void MapRecordField<T, TField>(Expression<Func<T, TField>> field, Action<ChoXmlRecordFieldConfigurationMap> mapper)
+        {
+            var fn = field.GetMemberName();
+            var pd = field.GetPropertyDescriptor();
+
+            mapper(new ChoXmlRecordFieldConfigurationMap(GetFieldConfiguration(fn, pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray())));
+        }
+
+        internal ChoXmlRecordFieldConfiguration GetFieldConfiguration(string fn, ChoXmlNodeRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)
+        {
+            if (!XmlRecordFieldConfigurations.Any(fc => fc.Name == fn))
+                XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(fn, attr, otherAttrs));
+
+            return XmlRecordFieldConfigurations.First(fc => fc.Name == fn);
         }
 
         internal ChoXmlRecordFieldConfiguration GetFieldConfiguration(string fn)
@@ -790,6 +807,15 @@ namespace ChoETL
                 XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(fn, $"/{fn}"));
 
             return XmlRecordFieldConfigurations.First(fc => fc.Name == fn);
+        }
+    }
+
+    public class ChoXmlRecordConfiguration<T> : ChoXmlRecordConfiguration
+    {
+        public ChoXmlRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> property, Action<ChoXmlRecordFieldConfigurationMap> setup)
+        {
+            MapRecordField(property, setup);
+            return this;
         }
     }
 

@@ -254,6 +254,7 @@
     <Compile Include="..\ChoETL\File\KeyValue\ChoKVPRecordObjectAttribute.cs" Link="File\KeyValue\ChoKVPRecordObjectAttribute.cs" />
     <Compile Include="..\ChoETL\File\KeyValue\ChoKVPRecordFieldConfiguration.cs" Link="File\KeyValue\ChoKVPRecordFieldConfiguration.cs" />
     <Compile Include="..\ChoETL\File\KeyValue\ChoKVPRecordConfiguration.cs" Link="File\KeyValue\ChoKVPRecordConfiguration.cs" />
+    <Compile Include="..\ChoETL\File\KeyValue\ChoKVPRecordConfigurationMap.cs" Link="File\KeyValue\ChoKVPRecordConfigurationMap.cs" />
     <Compile Include="..\ChoETL\File\KeyValue\ChoKVPRecordReader.cs" Link="File\KeyValue\ChoKVPRecordReader.cs" />
     <Compile Include="..\ChoETL\File\KeyValue\ChoKVPReader.cs" Link="File\KeyValue\ChoKVPReader.cs" />
     <Compile Include="..\ChoETL\File\Manifold\ChoRecordTypeCodeAttribute.cs" Link="File\Manifold\ChoRecordTypeCodeAttribute.cs" />

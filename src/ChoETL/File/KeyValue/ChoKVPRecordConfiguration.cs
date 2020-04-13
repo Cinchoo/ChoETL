@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
@@ -145,6 +146,30 @@ namespace ChoETL
                 if (RecordFieldConfigurationsDict.ContainsKey(key) && dict[key] != null)
                     RecordFieldConfigurationsDict[key].FieldType = dict[key];
             }
+        }
+
+        public void MapRecordField(string fn, Action<ChoKVPRecordFieldConfigurationMap> mapper)
+        {
+            if (mapper == null)
+                return;
+
+            mapper(new ChoKVPRecordFieldConfigurationMap(GetFieldConfiguration(fn)));
+        }
+
+        public void MapRecordField<T, TField>(Expression<Func<T, TField>> field, Action<ChoKVPRecordFieldConfigurationMap> mapper)
+        {
+            var fn = field.GetMemberName();
+            var pd = field.GetPropertyDescriptor();
+
+            mapper(new ChoKVPRecordFieldConfigurationMap(GetFieldConfiguration(fn, pd.Attributes.OfType<ChoKVPRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray())));
+        }
+
+        internal ChoKVPRecordFieldConfiguration GetFieldConfiguration(string fn, ChoKVPRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)
+        {
+            if (!KVPRecordFieldConfigurations.Any(fc => fc.Name == fn))
+                KVPRecordFieldConfigurations.Add(new ChoKVPRecordFieldConfiguration(fn, attr, otherAttrs));
+
+            return KVPRecordFieldConfigurations.First(fc => fc.Name == fn);
         }
 
         public override void MapRecordFields<T>()
@@ -405,6 +430,15 @@ namespace ChoETL
             if (action != null)
                 action(this);
 
+            return this;
+        }
+    }
+
+    public class ChoKVPRecordConfiguration<T> : ChoKVPRecordConfiguration
+    {
+        public ChoKVPRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> property, Action<ChoKVPRecordFieldConfigurationMap> setup)
+        {
+            MapRecordField(property, setup);
             return this;
         }
     }

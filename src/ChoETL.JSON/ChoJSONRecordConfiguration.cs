@@ -8,6 +8,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
@@ -490,12 +491,28 @@ namespace ChoETL
             return this;
         }
 
-        internal void MapRecordField(string fn, Action<ChoJSONRecordFieldConfigurationMap> mapper)
+        public void MapRecordField(string fn, Action<ChoJSONRecordFieldConfigurationMap> mapper)
         {
             if (mapper == null)
                 return;
 
             mapper(new ChoJSONRecordFieldConfigurationMap(GetFieldConfiguration(fn)));
+        }
+
+        public void MapRecordField<T, TField>(Expression<Func<T, TField>> field, Action<ChoJSONRecordFieldConfigurationMap> mapper)
+        {
+            var fn = field.GetMemberName();
+            var pd = field.GetPropertyDescriptor();
+
+            mapper(new ChoJSONRecordFieldConfigurationMap(GetFieldConfiguration(fn, pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray())));
+        }
+
+        internal ChoJSONRecordFieldConfiguration GetFieldConfiguration(string fn, ChoJSONRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)
+        {
+            if (!JSONRecordFieldConfigurations.Any(fc => fc.Name == fn))
+                JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration(fn, attr, otherAttrs));
+
+            return JSONRecordFieldConfigurations.First(fc => fc.Name == fn);
         }
 
         internal ChoJSONRecordFieldConfiguration GetFieldConfiguration(string fn)
@@ -528,5 +545,14 @@ namespace ChoETL
         //    }
         //}
 
+    }
+
+    public class ChoJSONRecordConfiguration<T> : ChoJSONRecordConfiguration
+    {
+        public ChoJSONRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> property, Action<ChoJSONRecordFieldConfigurationMap> setup)
+        {
+            MapRecordField(property, setup);
+            return this;
+        }
     }
 }
