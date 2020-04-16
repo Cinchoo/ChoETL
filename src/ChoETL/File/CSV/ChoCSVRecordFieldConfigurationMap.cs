@@ -7,6 +7,11 @@ namespace ChoETL
     {
         private readonly ChoCSVRecordFieldConfiguration _config;
 
+        public ChoCSVRecordFieldConfiguration Value
+        {
+            get { return _config; }
+        }
+
         internal ChoCSVRecordFieldConfigurationMap(ChoCSVRecordFieldConfiguration config)
         {
             ChoGuard.ArgumentNotNull(config, nameof(config));

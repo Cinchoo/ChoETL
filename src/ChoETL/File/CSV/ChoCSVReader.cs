@@ -573,16 +573,19 @@ namespace ChoETL
 
         public ChoCSVReader<T> Index<TField>(Expression<Func<T, TField>> field, int minumum, int maximum)
         {
-            Type recordType = field.GetPropertyType().GetUnderlyingType();
-            var fqn = field.GetFullyQualifiedMemberName();
-
-            if (typeof(IList).IsAssignableFrom(recordType) && !typeof(ArrayList).IsAssignableFrom(recordType)
-                && minumum >= 0 && maximum >= 0 && minumum <= maximum)
-            {
-                return IndexInternal(fqn, recordType, minumum, maximum,
-                    field.GetFullyQualifiedMemberName(), field.GetPropertyDescriptor().GetDisplayName());
-            }
+            Configuration.IndexMap(field, minumum, maximum, null);
             return this;
+
+            //Type recordType = field.GetPropertyType().GetUnderlyingType();
+            //var fqn = field.GetFullyQualifiedMemberName();
+
+            //if (typeof(IList).IsAssignableFrom(recordType) && !typeof(ArrayList).IsAssignableFrom(recordType)
+            //    && minumum >= 0 && maximum >= 0 && minumum <= maximum)
+            //{
+            //    return IndexInternal(fqn, recordType, minumum, maximum,
+            //        field.GetFullyQualifiedMemberName(), field.GetPropertyDescriptor().GetDisplayName());
+            //}
+            //return this;
         }
 
         //public ChoCSVReader<T> Index(string fieldName, Type fieldType, int minumum, int maximum)
@@ -590,92 +593,95 @@ namespace ChoETL
         //    return IndexInternal(fieldName, fieldType, minumum, maximum);
         //}
 
-        private ChoCSVReader<T> IndexInternal(string fieldName, Type fieldType, int minumum, int maximum,
-            string fullyQualifiedMemberName = null, string displayName = null)
-        {
-            if (fieldType == null)
-                return this;
-            if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
-                fullyQualifiedMemberName = fieldName;
-            //if (displayName.IsNullOrWhiteSpace())
-            //    displayName = fieldName;
+        //private ChoCSVReader<T> IndexInternal(string fieldName, Type fieldType, int minumum, int maximum,
+        //    string fullyQualifiedMemberName = null, string displayName = null)
+        //{
+        //    if (fieldType == null)
+        //        return this;
+        //    if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
+        //        fullyQualifiedMemberName = fieldName;
+        //    //if (displayName.IsNullOrWhiteSpace())
+        //    //    displayName = fieldName;
 
-            Type recordType = fieldType;
-            var fqn = fieldName;
+        //    Type recordType = fieldType;
+        //    var fqn = fieldName;
 
-            if (typeof(IList).IsAssignableFrom(recordType) && !typeof(ArrayList).IsAssignableFrom(recordType)
-                && minumum >= 0 && maximum >= 0 && minumum <= maximum
-                && !fieldType.IsInterface)
-            {
-                var itemType = recordType.GetItemType().GetUnderlyingType();
-                if (itemType.IsSimple())
-                {
-                    for (int index = minumum; index <= maximum; index++)
-                    {
-                        int fieldPosition = 0;
-                        fieldPosition = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-                        fieldPosition++;
+        //    if (typeof(IList).IsAssignableFrom(recordType) && !typeof(ArrayList).IsAssignableFrom(recordType)
+        //        && minumum >= 0 && maximum >= 0 && minumum <= maximum
+        //        && !fieldType.IsInterface)
+        //    {
+        //        var itemType = recordType.GetItemType().GetUnderlyingType();
+        //        if (itemType.IsSimple())
+        //        {
+        //            for (int index = minumum; index <= maximum; index++)
+        //            {
+        //                int fieldPosition = 0;
+        //                fieldPosition = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
+        //                fieldPosition++;
 
-                        string lFieldName = null;
-                        if (Configuration.ArrayIndexSeparator == null)
-                            lFieldName = fieldName + "_" + index;
-                        else
-                            lFieldName = fieldName + Configuration.ArrayIndexSeparator + index;
+        //                string lFieldName = null;
+        //                if (Configuration.ArrayIndexSeparator == null)
+        //                    lFieldName = fieldName + "_" + index;
+        //                else
+        //                    lFieldName = fieldName + Configuration.ArrayIndexSeparator + index;
 
-                        var nfc = new ChoCSVRecordFieldConfiguration(lFieldName, fieldPosition) { ArrayIndex = index };
-                        nfc.FieldType = recordType;
-                        Configuration.CSVRecordFieldConfigurations.Add(nfc);
-                    }
-                }
-                else
-                {
-                    //Remove collection config member
-                    var fcs1 = Configuration.CSVRecordFieldConfigurations.Where(o => o.FieldName == fqn).ToArray();
-                    foreach (var fc in fcs1)
-                        Configuration.CSVRecordFieldConfigurations.Remove(fc);
+        //                var nfc = new ChoCSVRecordFieldConfiguration(lFieldName, fieldPosition) { ArrayIndex = index };
+        //                nfc.FieldType = recordType;
+        //                Configuration.CSVRecordFieldConfigurations.Add(nfc);
+        //            }
+        //        }
+        //        else
+        //        {
+        //            //Remove collection config member
+        //            var fcs1 = Configuration.CSVRecordFieldConfigurations.Where(o => o.FieldName == fqn).ToArray();
+        //            foreach (var fc in fcs1)
+        //                Configuration.CSVRecordFieldConfigurations.Remove(fc);
 
-                    //Remove any unused config
-                    foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(itemType))
-                    {
-                        var fcs = Configuration.CSVRecordFieldConfigurations.Where(o => o.DeclaringMember == "{0}.{1}".FormatString(fullyQualifiedMemberName, pd.Name)
-                        && o.ArrayIndex != null && (o.ArrayIndex < minumum || o.ArrayIndex > maximum)).ToArray();
+        //            //Remove any unused config
+        //            foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(itemType))
+        //            {
+        //                var fcs = Configuration.CSVRecordFieldConfigurations.Where(o => o.DeclaringMember == "{0}.{1}".FormatString(fullyQualifiedMemberName, pd.Name)
+        //                && o.ArrayIndex != null && (o.ArrayIndex < minumum || o.ArrayIndex > maximum)).ToArray();
 
-                        foreach (var fc in fcs)
-                            Configuration.CSVRecordFieldConfigurations.Remove(fc);
-                    }
+        //                foreach (var fc in fcs)
+        //                    Configuration.CSVRecordFieldConfigurations.Remove(fc);
+        //            }
 
-                    for (int index = minumum; index <= maximum; index++)
-                    {
-                        foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(itemType))
-                        {
-                            var fc = Configuration.CSVRecordFieldConfigurations.Where(o => o.DeclaringMember == "{0}.{1}".FormatString(fullyQualifiedMemberName, pd.Name)
-                            && o.ArrayIndex != null && o.ArrayIndex == index).FirstOrDefault();
+        //            for (int index = minumum; index <= maximum; index++)
+        //            {
+        //                foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(itemType))
+        //                {
+        //                    var fc = Configuration.CSVRecordFieldConfigurations.Where(o => o.DeclaringMember == "{0}.{1}".FormatString(fullyQualifiedMemberName, pd.Name)
+        //                    && o.ArrayIndex != null && o.ArrayIndex == index).FirstOrDefault();
 
-                            if (fc != null) continue;
+        //                    if (fc != null) continue;
 
-                            Type pt = pd.PropertyType.GetUnderlyingType();
-                            if (pt != typeof(object) && !pt.IsSimple())
-                            {
-                            }
-                            else
-                            {
-                                int fieldPosition = 0;
-                                fieldPosition = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-                                fieldPosition++;
-                                ChoCSVRecordFieldConfiguration obj = Configuration.NewFieldConfiguration(ref fieldPosition, fullyQualifiedMemberName, pd, index, displayName);
+        //                    Type pt = pd.PropertyType.GetUnderlyingType();
+        //                    if (pt != typeof(object) && !pt.IsSimple())
+        //                    {
+        //                    }
+        //                    else
+        //                    {
+        //                        int fieldPosition = 0;
+        //                        fieldPosition = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
+        //                        fieldPosition++;
+        //                        ChoCSVRecordFieldConfiguration obj = Configuration.NewFieldConfiguration(ref fieldPosition, fullyQualifiedMemberName, pd, index, displayName);
 
-                                //if (!CSVRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
-                                Configuration.CSVRecordFieldConfigurations.Add(obj);
-                            }
-                        }
-                    }
-                }
-            }
-            return this;
-        }
+        //                        //if (!CSVRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
+        //                        Configuration.CSVRecordFieldConfigurations.Add(obj);
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //    return this;
+        //}
 
         public ChoCSVReader<T> DictionaryKeys<TField>(Expression<Func<T, TField>> field, params string[] keys)
         {
+            Configuration.DictionaryMap(field, keys, null);
+            return this;
+
             Type recordType = field.GetPropertyType().GetUnderlyingType();
             var fqn = field.GetFullyQualifiedMemberName();
             PropertyDescriptor pd = field.GetPropertyDescriptor();
@@ -751,14 +757,14 @@ namespace ChoETL
 
         public ChoCSVReader<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoCSVRecordFieldConfigurationMap> setup)
         {
-            Configuration.MapRecordField(field, setup);
+            Configuration.Map(field, setup);
             return this;
         }
 
         public ChoCSVReader<T> WithField(string name, Action<ChoCSVRecordFieldConfigurationMap> mapper)
         {
             if (!name.IsNullOrWhiteSpace())
-                Configuration.MapRecordField(name, mapper);
+                Configuration.Map(name, mapper);
             return this;
         }
 

@@ -161,7 +161,7 @@ namespace ChoETL
             var fn = field.GetMemberName();
             var pd = field.GetPropertyDescriptor();
 
-            mapper(new ChoKVPRecordFieldConfigurationMap(GetFieldConfiguration(fn, pd.Attributes.OfType<ChoKVPRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray())));
+            mapper(new ChoKVPRecordFieldConfigurationMap(GetFieldConfiguration(fn, pd.Attributes.OfType<ChoKVPRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray())));
         }
 
         internal ChoKVPRecordFieldConfiguration GetFieldConfiguration(string fn, ChoKVPRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)

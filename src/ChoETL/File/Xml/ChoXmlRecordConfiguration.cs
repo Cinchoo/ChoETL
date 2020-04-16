@@ -789,7 +789,7 @@ namespace ChoETL
             var fn = field.GetMemberName();
             var pd = field.GetPropertyDescriptor();
 
-            mapper(new ChoXmlRecordFieldConfigurationMap(GetFieldConfiguration(fn, pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray())));
+            mapper(new ChoXmlRecordFieldConfigurationMap(GetFieldConfiguration(fn, pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray())));
         }
 
         internal ChoXmlRecordFieldConfiguration GetFieldConfiguration(string fn, ChoXmlNodeRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)

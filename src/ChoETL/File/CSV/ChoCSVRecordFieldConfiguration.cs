@@ -55,7 +55,7 @@ namespace ChoETL
 
         internal ChoCSVRecordFieldConfiguration(string name, ChoCSVRecordFieldAttribute attr = null, Attribute[] otherAttrs = null) : base(name, attr, otherAttrs)
         {
-            FieldName = name;
+            DeclaringMember = FieldName = name;
             if (attr != null)
             {
                 FieldPosition = attr.FieldPosition;

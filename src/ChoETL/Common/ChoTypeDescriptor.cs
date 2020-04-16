@@ -155,12 +155,32 @@
 
             lock (_pdDictLock)
             {
-                return _pdDict[type].Where(pd => pd.Name == propName).FirstOrDefault();
+                if (propName.Contains("."))
+                {
+                    PropertyDescriptor pd = null;
+                    Type subType = type;
+                    foreach (var mn in propName.SplitNTrim(".").Where(m => !m.IsNullOrWhiteSpace()))
+                    {
+                        pd = GetAllPropetiesForType(subType).Where(p => p.Name == mn).FirstOrDefault();
+                        if (subType == null)
+                            break;
+                        subType = pd.PropertyType;
+                    }
+
+                    return pd;
+                }
+                else
+                    return GetAllPropetiesForType(type).Where(pd => pd.Name == propName).FirstOrDefault();
             }
             //return _pdDict[type].Where(pd =>
             //    pd.Name == propName).FirstOrDefault();
         }
 
+        private static PropertyDescriptor[] GetAllPropetiesForType(Type type)
+        {
+            Init(type);
+            return _pdDict[type];
+        }
         public static PropertyDescriptor GetNestedProperty(Type recType, string pn)
         {
             if (pn.IsNullOrWhiteSpace()) return null;

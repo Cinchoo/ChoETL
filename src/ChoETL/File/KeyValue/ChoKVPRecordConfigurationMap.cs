@@ -7,6 +7,11 @@ namespace ChoETL
     {
         private readonly ChoKVPRecordFieldConfiguration _config;
 
+        public ChoKVPRecordFieldConfiguration Value
+        {
+            get { return _config; }
+        }
+
         internal ChoKVPRecordFieldConfigurationMap(ChoKVPRecordFieldConfiguration config)
         {
             _config = config;

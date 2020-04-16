@@ -21,7 +21,7 @@ namespace ChoETL
         public string Name
         {
             get;
-            private set;
+            internal set;
         }
         [DataMember]
         public ChoErrorMode? ErrorMode

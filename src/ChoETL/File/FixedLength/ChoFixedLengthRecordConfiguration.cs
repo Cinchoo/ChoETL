@@ -182,7 +182,7 @@ namespace ChoETL
             var fn = field.GetMemberName();
             var pd = field.GetPropertyDescriptor();
 
-            mapper(new ChoFixedLengthRecordFieldConfigurationMap(GetFieldConfiguration(fn, pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray())));
+            mapper(new ChoFixedLengthRecordFieldConfigurationMap(GetFieldConfiguration(fn, pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray())));
         }
 
         internal ChoFixedLengthRecordFieldConfiguration GetFieldConfiguration(string fn, ChoFixedLengthRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)

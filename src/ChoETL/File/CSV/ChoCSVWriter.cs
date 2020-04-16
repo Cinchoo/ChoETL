@@ -363,14 +363,14 @@ namespace ChoETL
 
         public ChoCSVWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoCSVRecordFieldConfigurationMap> setup)
         {
-            Configuration.MapRecordField(field.GetMemberName(), setup);
+            Configuration.Map(field.GetMemberName(), setup);
             return this;
         }
 
         public ChoCSVWriter<T> WithField(string name, Action<ChoCSVRecordFieldConfigurationMap> mapper)
         {
             if (!name.IsNullOrWhiteSpace())
-                Configuration.MapRecordField(name, mapper);
+                Configuration.Map(name, mapper);
             return this;
         }
 

@@ -7,6 +7,11 @@ namespace ChoETL
     {
         private readonly ChoFixedLengthRecordFieldConfiguration _config;
 
+        public ChoFixedLengthRecordFieldConfiguration Value
+        {
+            get { return _config; }
+        }
+
         internal ChoFixedLengthRecordFieldConfigurationMap(ChoFixedLengthRecordFieldConfiguration config)
         {
             _config = config;

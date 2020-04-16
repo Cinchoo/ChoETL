@@ -7,6 +7,11 @@ namespace ChoETL
     {
         private readonly ChoXmlRecordFieldConfiguration _config;
 
+        public ChoXmlRecordFieldConfiguration Value
+        {
+            get { return _config; }
+        }
+
         internal ChoXmlRecordFieldConfigurationMap(ChoXmlRecordFieldConfiguration config)
         {
             _config = config;

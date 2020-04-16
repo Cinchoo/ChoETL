@@ -119,6 +119,9 @@ namespace ChoETL
                 }
                 else
                 {
+                    if (!Configuration.AllowComplexJSONPath)
+                        throw new JsonException("Complex JSON path not supported.");
+
                     while (sr.Read())
                     {
                         if (sr.TokenType == JsonToken.StartArray)

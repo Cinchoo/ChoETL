@@ -162,12 +162,33 @@ namespace ChoETL
             }
             else
             {
-                //string rootName = null;
-                string[] matchNames = xPath.SplitNTrim("/").Where(i => !i.IsNullOrWhiteSpace() && i.NTrim() != "." && i.NTrim() != "..").ToArray();
-                if (matchNames.Length == 0) yield break;
-                foreach (var ele in StreamElements(xmlReader, matchNames))
-                    yield return ele;
+                string[] matchNames = null;
+                if (IsSimpleXmlPath(xPath, out matchNames))
+                {
+                    //string rootName = null;
+                    if (matchNames.Length == 0) yield break;
+                    foreach (var ele in StreamElements(xmlReader, matchNames))
+                        yield return ele;
+                }
+                else
+                    throw new XmlException("Complex xml path not supported.");
             }
+        }
+
+        private static bool IsSimpleXmlPath(string xmlPath, out string[] tokens)
+        {
+            tokens = null;
+
+            //var tokens1 = xmlPath.SplitNTrim("/").Where(x => !x.IsNullOrWhiteSpace()).ToArray();
+            var tokens1 = xmlPath.SplitNTrim("/").Where(i => !i.IsNullOrWhiteSpace() && i.NTrim() != "." && i.NTrim() != "..").ToArray();
+            foreach (var token in tokens1)
+            {
+                if (!token.IsAlphaNumeric())
+                    return false;
+            }
+
+            tokens = tokens1;
+            return true;
         }
 
         public static IEnumerable<XElement> StreamElements(XmlReader reader, string[] elementNames)

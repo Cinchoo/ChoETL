@@ -21,6 +21,12 @@ namespace ChoETL
     {
         internal Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>> JSONRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>>();
 
+        public bool AllowComplexJSONPath
+        {
+            get;
+            set;
+        }
+
         [DataMember]
         public List<ChoJSONRecordFieldConfiguration> JSONRecordFieldConfigurations
         {
@@ -504,7 +510,7 @@ namespace ChoETL
             var fn = field.GetMemberName();
             var pd = field.GetPropertyDescriptor();
 
-            mapper(new ChoJSONRecordFieldConfigurationMap(GetFieldConfiguration(fn, pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray())));
+            mapper(new ChoJSONRecordFieldConfigurationMap(GetFieldConfiguration(fn, pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray())));
         }
 
         internal ChoJSONRecordFieldConfiguration GetFieldConfiguration(string fn, ChoJSONRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)
