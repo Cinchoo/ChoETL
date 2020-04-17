@@ -776,10 +776,22 @@ namespace ChoETL
             return this;
         }
 
-        public ChoXmlRecordConfiguration Map(string fn, Action<ChoXmlRecordFieldConfigurationMap> mapper)
+        public ChoXmlRecordConfiguration Map(string propertyName, string xpath)
         {
-            var cf = GetFieldConfiguration(fn);
+            Map(propertyName, m => m.XPath(xpath));
+            return this;
+        }
+
+        public ChoXmlRecordConfiguration Map(string propertyName, Action<ChoXmlRecordFieldConfigurationMap> mapper)
+        {
+            var cf = GetFieldConfiguration(propertyName);
             mapper?.Invoke(new ChoXmlRecordFieldConfigurationMap(cf));
+            return this;
+        }
+
+        public ChoXmlRecordConfiguration Map<T, TProperty>(Expression<Func<T, TProperty>> field, string xpath)
+        {
+            Map(field, m => m.XPath(xpath));
             return this;
         }
 
@@ -794,29 +806,35 @@ namespace ChoETL
             return this;
         }
 
-        internal ChoXmlRecordFieldConfiguration GetFieldConfiguration(string fn, ChoXmlNodeRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)
+        internal ChoXmlRecordFieldConfiguration GetFieldConfiguration(string propertyName, ChoXmlNodeRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)
         {
-            if (!XmlRecordFieldConfigurations.Any(fc => fc.Name == fn))
-                XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(fn, attr, otherAttrs));
+            if (!XmlRecordFieldConfigurations.Any(fc => fc.Name == propertyName))
+                XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(propertyName, attr, otherAttrs));
 
-            return XmlRecordFieldConfigurations.First(fc => fc.Name == fn);
+            return XmlRecordFieldConfigurations.First(fc => fc.Name == propertyName);
         }
 
-        internal ChoXmlRecordFieldConfiguration GetFieldConfiguration(string fn)
+        internal ChoXmlRecordFieldConfiguration GetFieldConfiguration(string propertyName)
         {
-            fn = fn.NTrim();
-            if (!XmlRecordFieldConfigurations.Any(fc => fc.Name == fn))
-                XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(fn, $"/{fn}"));
+            propertyName = propertyName.NTrim();
+            if (!XmlRecordFieldConfigurations.Any(fc => fc.Name == propertyName))
+                XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(propertyName, $"/{propertyName}"));
 
-            return XmlRecordFieldConfigurations.First(fc => fc.Name == fn);
+            return XmlRecordFieldConfigurations.First(fc => fc.Name == propertyName);
         }
     }
 
     public class ChoXmlRecordConfiguration<T> : ChoXmlRecordConfiguration
     {
-        public ChoXmlRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> property, Action<ChoXmlRecordFieldConfigurationMap> setup)
+        public ChoXmlRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, string xpath)
         {
-            MapRecordField(property, setup);
+            base.Map(field, xpath);
+            return this;
+        }
+
+        public ChoXmlRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, Action<ChoXmlRecordFieldConfigurationMap> setup)
+        {
+            base.Map(field, setup);
             return this;
         }
     }

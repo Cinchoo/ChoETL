@@ -497,10 +497,16 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONRecordConfiguration Map(string fn, Action<ChoJSONRecordFieldConfigurationMap> mapper)
+        public ChoJSONRecordConfiguration Map(string propertyName, Action<ChoJSONRecordFieldConfigurationMap> mapper)
         {
-            var cf = GetFieldConfiguration(fn);
+            var cf = GetFieldConfiguration(propertyName);
             mapper?.Invoke(new ChoJSONRecordFieldConfigurationMap(cf));
+            return this;
+        }
+        
+        public ChoJSONRecordConfiguration Map<T, TProperty>(Expression<Func<T, TProperty>> field, string jsonPath)
+        {
+            Map(field, m => m.JSONPath(jsonPath));
             return this;
         }
 
@@ -515,12 +521,12 @@ namespace ChoETL
             return this;
         }
 
-        internal ChoJSONRecordFieldConfiguration GetFieldConfiguration(string fn, ChoJSONRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)
+        internal ChoJSONRecordFieldConfiguration GetFieldConfiguration(string propertyName, ChoJSONRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)
         {
-            if (!JSONRecordFieldConfigurations.Any(fc => fc.Name == fn))
-                JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration(fn, attr, otherAttrs));
+            if (!JSONRecordFieldConfigurations.Any(fc => fc.Name == propertyName))
+                JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration(propertyName, attr, otherAttrs));
 
-            return JSONRecordFieldConfigurations.First(fc => fc.Name == fn);
+            return JSONRecordFieldConfigurations.First(fc => fc.Name == propertyName);
         }
 
         internal ChoJSONRecordFieldConfiguration GetFieldConfiguration(string fn)
@@ -557,9 +563,15 @@ namespace ChoETL
 
     public class ChoJSONRecordConfiguration<T> : ChoJSONRecordConfiguration
     {
-        public ChoJSONRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> property, Action<ChoJSONRecordFieldConfigurationMap> setup)
+        public ChoJSONRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, string jsonPath)
         {
-            base.Map(property, setup);
+            base.Map(field, jsonPath);
+            return this;
+        }
+
+        public ChoJSONRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, Action<ChoJSONRecordFieldConfigurationMap> setup)
+        {
+            base.Map(field, setup);
             return this;
         }
     }

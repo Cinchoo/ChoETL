@@ -685,9 +685,33 @@ namespace ChoETL
                 throw new ChoRecordConfigurationException("One of the Comments contains {0}. Not allowed.".FormatString(name));
         }
 
-        public ChoCSVRecordConfiguration Map(string fn, Action<ChoCSVRecordFieldConfigurationMap> mapper = null)
+        public ChoCSVRecordConfiguration Map<T, TProperty>(Expression<Func<T, TProperty>> field, int position)
         {
-            var cf = GetFieldConfiguration(fn);
+            Map(field, m => m.Position(position));
+            return this;
+        }
+
+        public ChoCSVRecordConfiguration Map<T, TProperty>(Expression<Func<T, TProperty>> field, string fieldName)
+        {
+            Map(field, m => m.FieldName(fieldName));
+            return this;
+        }
+
+        public ChoCSVRecordConfiguration Map(string propertyName, int position)
+        {
+            Map(propertyName, m => m.Position(position));
+            return this;
+        }
+
+        public ChoCSVRecordConfiguration Map(string propertyName, string fieldName)
+        {
+            Map(propertyName, m => m.FieldName(fieldName));
+            return this;
+        }
+
+        public ChoCSVRecordConfiguration Map(string propertyName, Action<ChoCSVRecordFieldConfigurationMap> mapper = null)
+        {
+            var cf = GetFieldConfiguration(propertyName);
             mapper?.Invoke(new ChoCSVRecordFieldConfigurationMap(cf));
             return this;
         }
@@ -953,10 +977,22 @@ namespace ChoETL
 
     public class ChoCSVRecordConfiguration<T> : ChoCSVRecordConfiguration
     {
-        public ChoCSVRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> property, 
+        public ChoCSVRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, int position)
+        {
+            base.Map(field, position);
+            return this;
+        }
+
+        public ChoCSVRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, string fieldName)
+        {
+            base.Map(field, fieldName);
+            return this;
+        }
+
+        public ChoCSVRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, 
             Action<ChoCSVRecordFieldConfigurationMap> setup = null)
         {
-            base.Map(property, setup);
+            base.Map(field, setup);
             return this;
         }
 

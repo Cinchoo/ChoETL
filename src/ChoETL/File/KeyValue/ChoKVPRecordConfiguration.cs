@@ -148,9 +148,21 @@ namespace ChoETL
             }
         }
 
-        public ChoKVPRecordConfiguration Map(string fn, Action<ChoKVPRecordFieldConfigurationMap> mapper)
+        public ChoKVPRecordConfiguration Map<T, TProperty>(Expression<Func<T, TProperty>> field, string fieldName)
         {
-            var cf = GetFieldConfiguration(fn);
+            Map(field, m => m.FieldName(fieldName));
+            return this;
+        }
+
+        public ChoKVPRecordConfiguration Map(string propertyName, string fieldName)
+        {
+            Map(propertyName, m => m.FieldName(fieldName));
+            return this;
+        }
+
+        public ChoKVPRecordConfiguration Map(string propertyName, Action<ChoKVPRecordFieldConfigurationMap> mapper)
+        {
+            var cf = GetFieldConfiguration(propertyName);
             mapper?.Invoke(new ChoKVPRecordFieldConfigurationMap(cf));
             return this;
         }
@@ -166,12 +178,12 @@ namespace ChoETL
             return this;
         }
 
-        internal ChoKVPRecordFieldConfiguration GetFieldConfiguration(string fn, ChoKVPRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)
+        internal ChoKVPRecordFieldConfiguration GetFieldConfiguration(string propertyName, ChoKVPRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)
         {
-            if (!KVPRecordFieldConfigurations.Any(fc => fc.Name == fn))
-                KVPRecordFieldConfigurations.Add(new ChoKVPRecordFieldConfiguration(fn, attr, otherAttrs));
+            if (!KVPRecordFieldConfigurations.Any(fc => fc.Name == propertyName))
+                KVPRecordFieldConfigurations.Add(new ChoKVPRecordFieldConfiguration(propertyName, attr, otherAttrs));
 
-            return KVPRecordFieldConfigurations.First(fc => fc.Name == fn);
+            return KVPRecordFieldConfigurations.First(fc => fc.Name == propertyName);
         }
 
         public override void MapRecordFields<T>()
@@ -438,9 +450,15 @@ namespace ChoETL
 
     public class ChoKVPRecordConfiguration<T> : ChoKVPRecordConfiguration
     {
-        public ChoKVPRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> property, Action<ChoKVPRecordFieldConfigurationMap> setup)
+        public ChoKVPRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, string fieldName)
         {
-            base.Map(property, setup);
+            base.Map(field, fieldName);
+            return this;
+        }
+
+        public ChoKVPRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, Action<ChoKVPRecordFieldConfigurationMap> setup)
+        {
+            base.Map(field, setup);
             return this;
         }
     }

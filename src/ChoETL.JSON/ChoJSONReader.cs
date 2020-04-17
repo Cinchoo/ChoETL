@@ -568,18 +568,6 @@ namespace ChoETL
             return this;
         }
 
-        //public ChoJSONReader<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoJSONRecordFieldConfigurationMap> setup)
-        //{
-        //    Configuration.MapRecordField(field.GetMemberName(), setup);
-        //    return this;
-        //}
-
-        //public ChoJSONReader<T> WithField<TClass, TField>(Expression<Func<TClass, TField>> field, Action<ChoJSONRecordFieldConfigurationMap> setup)
-        //{
-        //    Configuration.MapRecordField(field.GetMemberName(), setup);
-        //    return this;
-        //}
-
         public ChoJSONReader<T> WithField(string name, Action<ChoJSONRecordFieldConfigurationMap> mapper)
         {
             if (!name.IsNullOrWhiteSpace())

@@ -519,14 +519,14 @@ namespace ChoETL
 
         public ChoXmlWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoXmlRecordFieldConfigurationMap> setup)
         {
-            Configuration.MapRecordField(field.GetMemberName(), setup);
+            Configuration.Map(field.GetMemberName(), setup);
             return this;
         }
 
         public ChoXmlWriter<T> WithField(string name, Action<ChoXmlRecordFieldConfigurationMap> mapper)
         {
             if (!name.IsNullOrWhiteSpace())
-                Configuration.MapRecordField(name, mapper);
+                Configuration.Map(name, mapper);
             return this;
         }
 

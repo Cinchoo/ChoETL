@@ -169,10 +169,22 @@ namespace ChoETL
             AreAllFieldTypesNull = RecordFieldConfigurationsDict.All(kvp => kvp.Value.FieldType == null);
         }
 
-        public ChoFixedLengthRecordConfiguration Map(string fn, Action<ChoFixedLengthRecordFieldConfigurationMap> mapper)
+        public ChoFixedLengthRecordConfiguration Map(string propertyName, int startIndex, int size)
         {
-            var cf = GetFieldConfiguration(fn);
+            Map(propertyName, m => m.StartIndex(startIndex).Size(size));
+            return this;
+        }
+
+        public ChoFixedLengthRecordConfiguration Map(string propertyName, Action<ChoFixedLengthRecordFieldConfigurationMap> mapper)
+        {
+            var cf = GetFieldConfiguration(propertyName);
             mapper?.Invoke(new ChoFixedLengthRecordFieldConfigurationMap(cf));
+            return this;
+        }
+
+        public ChoFixedLengthRecordConfiguration Map<T, TProperty>(Expression<Func<T, TProperty>> field, int startIndex, int size)
+        {
+            Map(field, m => m.StartIndex(startIndex).Size(size));
             return this;
         }
 
@@ -187,12 +199,12 @@ namespace ChoETL
             return this;
         }
 
-        internal ChoFixedLengthRecordFieldConfiguration GetFieldConfiguration(string fn, ChoFixedLengthRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)
+        internal ChoFixedLengthRecordFieldConfiguration GetFieldConfiguration(string propertyName, ChoFixedLengthRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)
         {
-            if (!FixedLengthRecordFieldConfigurations.Any(fc => fc.Name == fn))
-                FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(fn, attr, otherAttrs));
+            if (!FixedLengthRecordFieldConfigurations.Any(fc => fc.Name == propertyName))
+                FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration(propertyName, attr, otherAttrs));
 
-            return FixedLengthRecordFieldConfigurations.First(fc => fc.Name == fn);
+            return FixedLengthRecordFieldConfigurations.First(fc => fc.Name == propertyName);
         }
 
         public override void MapRecordFields<T>()
@@ -606,9 +618,15 @@ namespace ChoETL
 
     public class ChoFixedLengthRecordConfiguration<T> : ChoFixedLengthRecordConfiguration
     {
-        public ChoFixedLengthRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> property, Action<ChoFixedLengthRecordFieldConfigurationMap> setup)
+        public ChoFixedLengthRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, int startIndex, int size)
         {
-            base.Map(property, setup);
+            base.Map(field, startIndex, size);
+            return this;
+        }
+
+        public ChoFixedLengthRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, Action<ChoFixedLengthRecordFieldConfigurationMap> setup)
+        {
+            base.Map(field, setup);
             return this;
         }
     }
