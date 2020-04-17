@@ -142,7 +142,7 @@ namespace ChoETL
         internal readonly List<object> ItemConverters = new List<object>();
         internal readonly List<object> KeyConverters = new List<object>();
         internal readonly List<object> ValueConverters = new List<object>();
-        internal PropertyInfo PI;
+        internal PropertyInfo PI { get; set; }
         internal PropertyDescriptor PD;
         internal object[] PropConverters;
         internal object[] PropConverterParams;

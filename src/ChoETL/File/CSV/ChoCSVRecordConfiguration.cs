@@ -216,20 +216,23 @@ namespace ChoETL
                 DiscoverRecordFields(recordType);
         }
 
-        public override void MapRecordFields<T>()
+        public ChoCSVRecordConfiguration MapRecordFields<T>()
         {
             DiscoverRecordFields(typeof(T));
+            return this;
         }
 
-        public override void MapRecordFields(params Type[] recordTypes)
+        public ChoCSVRecordConfiguration MapRecordFields(params Type[] recordTypes)
         {
             if (recordTypes == null)
-                return;
+                return this;
 
             int pos = 0;
-            DiscoverRecordFields(recordTypes.FirstOrDefault(), ref pos, true);
-            foreach (var rt in recordTypes.Skip(1))
+            DiscoverRecordFields(recordTypes.Where(rt => rt != null).FirstOrDefault(), ref pos, true);
+            foreach (var rt in recordTypes.Skip(1).Where(rt => rt != null))
                 DiscoverRecordFields(rt, ref pos, false);
+
+            return this;
         }
 
         internal void UpdateFieldTypesIfAny(IDictionary<string, Type> dict)
@@ -272,6 +275,8 @@ namespace ChoETL
         private void DiscoverRecordFields(Type recordType, ref int position, string declaringMember = null,
             bool optIn = false, PropertyDescriptor propDesc = null)
         {
+            if (recordType == null)
+                return;
             if (!recordType.IsDynamicType())
             {
                 Type pt = null;
@@ -616,6 +621,11 @@ namespace ChoETL
                             fc.FieldType = pd.PropertyType.GetUnderlyingType();
                     }
                 }
+
+                var pd1 = fc.DeclaringMember.IsNullOrWhiteSpace() ? ChoTypeDescriptor.GetProperty(RecordType, fc.Name)
+                    : ChoTypeDescriptor.GetProperty(RecordType, fc.DeclaringMember);
+                if (pd1 != null)
+                    fc.PropertyDescriptor = pd1;
 
                 if (fc.PropertyDescriptor == null)
                     fc.PropertyDescriptor = ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Name == fc.Name).FirstOrDefault();
@@ -1047,6 +1057,18 @@ namespace ChoETL
         public new ChoCSVRecordConfiguration<T> IgnoreCase(bool value)
         {
             base.IgnoreCase(value);
+            return this;
+        }
+
+        public new ChoCSVRecordConfiguration<T> MapRecordFields<TClass>()
+        {
+            base.MapRecordFields(typeof(TClass));
+            return this;
+        }
+
+        public new ChoCSVRecordConfiguration<T> MapRecordFields(params Type[] recordTypes)
+        {
+            base.MapRecordFields(recordTypes);
             return this;
         }
 

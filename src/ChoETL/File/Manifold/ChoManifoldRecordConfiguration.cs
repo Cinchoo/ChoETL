@@ -114,12 +114,12 @@ namespace ChoETL
             });
         }
 
-        public override void MapRecordFields<T>()
+        public ChoManifoldRecordConfiguration MapRecordFields<T>()
         {
             throw new NotSupportedException();
         }
 
-        public override void MapRecordFields(params Type[] recordTypes)
+        public ChoManifoldRecordConfiguration MapRecordFields(params Type[] recordTypes)
         {
             throw new NotSupportedException();
         }

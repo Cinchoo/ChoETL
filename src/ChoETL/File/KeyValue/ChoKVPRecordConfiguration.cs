@@ -186,23 +186,28 @@ namespace ChoETL
             return KVPRecordFieldConfigurations.First(fc => fc.Name == propertyName);
         }
 
-        public override void MapRecordFields<T>()
+        public ChoKVPRecordConfiguration MapRecordFields<T>()
         {
             MapRecordFields(typeof(T));
+            return this;
         }
 
-        public override void MapRecordFields(params Type[] recordTypes)
+        public ChoKVPRecordConfiguration MapRecordFields(params Type[] recordTypes)
         {
             if (recordTypes == null)
-                return;
+                return this;
 
-            DiscoverRecordFields(recordTypes.FirstOrDefault());
-            foreach (var rt in recordTypes.Skip(1))
+            DiscoverRecordFields(recordTypes.Where(rt => rt != null).FirstOrDefault());
+            foreach (var rt in recordTypes.Skip(1).Where(rt => rt != null))
                 DiscoverRecordFields(rt, false);
+            return this;
         }
 
         private void DiscoverRecordFields(Type recordType, bool clear = true)
         {
+            if (recordType == null)
+                return;
+
             if (clear)
                 KVPRecordFieldConfigurations.Clear();
             DiscoverRecordFields(recordType, null,
@@ -211,6 +216,8 @@ namespace ChoETL
 
         private void DiscoverRecordFields(Type recordType, string declaringMember, bool optIn = false)
         {
+            if (recordType == null)
+                return;
             if (!recordType.IsDynamicType())
             {
                 Type pt = null;
@@ -379,6 +386,11 @@ namespace ChoETL
                 PDDict = new Dictionary<string, PropertyDescriptor>();
                 foreach (var fc in KVPRecordFieldConfigurations)
                 {
+                    var pd1 = fc.DeclaringMember.IsNullOrWhiteSpace() ? ChoTypeDescriptor.GetProperty(RecordType, fc.Name)
+                        : ChoTypeDescriptor.GetProperty(RecordType, fc.DeclaringMember);
+                    if (pd1 != null)
+                        fc.PropertyDescriptor = pd1;
+
                     if (fc.PropertyDescriptor == null)
                         fc.PropertyDescriptor = ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Name == fc.Name).FirstOrDefault();
                     if (fc.PropertyDescriptor == null)
@@ -467,6 +479,18 @@ namespace ChoETL
             if (action != null)
                 action(this);
 
+            return this;
+        }
+
+        public new ChoKVPRecordConfiguration<T> MapRecordFields<TClass>()
+        {
+            base.MapRecordFields(typeof(TClass));
+            return this;
+        }
+
+        public new ChoKVPRecordConfiguration<T> MapRecordFields(params Type[] recordTypes)
+        {
+            base.MapRecordFields(recordTypes);
             return this;
         }
     }
