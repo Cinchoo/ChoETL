@@ -574,5 +574,13 @@ namespace ChoETL
             base.Map(field, setup);
             return this;
         }
+
+        public ChoJSONRecordConfiguration<T> Configure(Action<ChoJSONRecordConfiguration<T>> action)
+        {
+            if (action != null)
+                action(this);
+
+            return this;
+        }
     }
 }

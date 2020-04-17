@@ -837,6 +837,14 @@ namespace ChoETL
             base.Map(field, setup);
             return this;
         }
+
+        public ChoXmlRecordConfiguration<T> Configure(Action<ChoXmlRecordConfiguration<T>> action)
+        {
+            if (action != null)
+                action(this);
+
+            return this;
+        }
     }
 
     public class ChoXmlNamespaceManager

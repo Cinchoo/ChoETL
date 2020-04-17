@@ -558,14 +558,6 @@ namespace ChoETL
             return words.ToArray();
         }
 
-        public ChoFixedLengthRecordConfiguration Configure(Action<ChoFixedLengthRecordConfiguration> action)
-        {
-            if (action != null)
-                action(this);
-
-            return this;
-        }
-
         internal ChoFixedLengthRecordFieldConfiguration GetFieldConfiguration(string fn)
         {
             if (!FixedLengthRecordFieldConfigurations.Any(fc => fc.Name == fn))
@@ -575,6 +567,14 @@ namespace ChoETL
         }
 
         #region Fluent API
+
+        public ChoFixedLengthRecordConfiguration Configure(Action<ChoFixedLengthRecordConfiguration> action)
+        {
+            if (action != null)
+                action(this);
+
+            return this;
+        }
 
         public ChoFixedLengthRecordConfiguration IgnoreHeader()
         {
@@ -629,5 +629,54 @@ namespace ChoETL
             base.Map(field, setup);
             return this;
         }
+
+        #region Fluent API
+
+        public ChoFixedLengthRecordConfiguration<T> Configure(Action<ChoFixedLengthRecordConfiguration<T>> action)
+        {
+            if (action != null)
+                action(this);
+
+            return this;
+        }
+
+        public new ChoFixedLengthRecordConfiguration<T> IgnoreHeader()
+        {
+            FileHeaderConfiguration.HasHeaderRecord = true;
+            FileHeaderConfiguration.IgnoreHeader = true;
+
+            return this;
+        }
+
+        public new ChoFixedLengthRecordConfiguration<T> WithFirstLineHeader(bool ignoreHeader = false)
+        {
+            FileHeaderConfiguration.HasHeaderRecord = true;
+            FileHeaderConfiguration.IgnoreHeader = ignoreHeader;
+
+            return this;
+        }
+
+        public new ChoFixedLengthRecordConfiguration<T> WithHeaderLineAt(int pos = 1, bool ignoreHeader = false)
+        {
+            FileHeaderConfiguration.HeaderLineAt = pos;
+            FileHeaderConfiguration.HasHeaderRecord = true;
+            FileHeaderConfiguration.IgnoreHeader = ignoreHeader;
+
+            return this;
+        }
+
+        public new ChoFixedLengthRecordConfiguration<T> HeaderLineAt(long value)
+        {
+            FileHeaderConfiguration.HeaderLineAt = value;
+            return this;
+        }
+
+        public new ChoFixedLengthRecordConfiguration<T> IgnoreCase(bool value)
+        {
+            FileHeaderConfiguration.IgnoreCase = value;
+            return this;
+        }
+
+        #endregion
     }
 }

@@ -461,5 +461,13 @@ namespace ChoETL
             base.Map(field, setup);
             return this;
         }
+
+        public ChoKVPRecordConfiguration<T> Configure(Action<ChoKVPRecordConfiguration<T>> action)
+        {
+            if (action != null)
+                action(this);
+
+            return this;
+        }
     }
 }

@@ -131,14 +131,6 @@ namespace ChoETL
             }
         }
 
-        public ChoCSVRecordConfiguration Configure(Action<ChoCSVRecordConfiguration> action)
-        {
-            if (action != null)
-                action(this);
-
-            return this;
-        }
-
         //internal KeyValuePair<string, ChoCSVRecordFieldConfiguration>[] FCArray;
 
         public ChoCSVRecordFieldConfiguration this[string name]
@@ -935,6 +927,14 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoCSVRecordConfiguration Configure(Action<ChoCSVRecordConfiguration> action)
+        {
+            if (action != null)
+                action(this);
+
+            return this;
+        }
+
         public ChoCSVRecordConfiguration IgnoreHeader()
         {
             FileHeaderConfiguration.HasHeaderRecord = true;
@@ -1009,5 +1009,47 @@ namespace ChoETL
             base.DictionaryMap(field, keys, mapper);
             return this;
         }
+
+        #region Fluent API
+
+        public ChoCSVRecordConfiguration<T> Configure(Action<ChoCSVRecordConfiguration<T>> action)
+        {
+            if (action != null)
+                action(this);
+
+            return this;
+        }
+
+        public new ChoCSVRecordConfiguration<T> IgnoreHeader()
+        {
+            base.IgnoreHeader();
+            return this;
+        }
+
+        public new ChoCSVRecordConfiguration<T> WithFirstLineHeader(bool ignoreHeader = false)
+        {
+            base.WithFirstLineHeader(ignoreHeader);
+            return this;
+        }
+
+        public new ChoCSVRecordConfiguration<T> WithHeaderLineAt(int pos = 1, bool ignoreHeader = false)
+        {
+            base.WithHeaderLineAt(pos, ignoreHeader);
+            return this;
+        }
+
+        public new ChoCSVRecordConfiguration<T> HeaderLineAt(long value)
+        {
+            base.HeaderLineAt(value);
+            return this;
+        }
+
+        public new ChoCSVRecordConfiguration<T> IgnoreCase(bool value)
+        {
+            base.IgnoreCase(value);
+            return this;
+        }
+
+        #endregion
     }
 }
