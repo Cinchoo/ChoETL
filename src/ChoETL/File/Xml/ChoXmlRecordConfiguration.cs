@@ -776,20 +776,22 @@ namespace ChoETL
             return this;
         }
 
-        public void MapRecordField(string fn, Action<ChoXmlRecordFieldConfigurationMap> mapper)
+        public ChoXmlRecordConfiguration Map(string fn, Action<ChoXmlRecordFieldConfigurationMap> mapper)
         {
-            if (mapper == null)
-                return;
-
-            mapper(new ChoXmlRecordFieldConfigurationMap(GetFieldConfiguration(fn)));
+            var cf = GetFieldConfiguration(fn);
+            mapper?.Invoke(new ChoXmlRecordFieldConfigurationMap(cf));
+            return this;
         }
 
-        public void MapRecordField<T, TField>(Expression<Func<T, TField>> field, Action<ChoXmlRecordFieldConfigurationMap> mapper)
+        public ChoXmlRecordConfiguration Map<T, TField>(Expression<Func<T, TField>> field, Action<ChoXmlRecordFieldConfigurationMap> mapper)
         {
             var fn = field.GetMemberName();
             var pd = field.GetPropertyDescriptor();
+            var fqm = field.GetFullyQualifiedMemberName();
 
-            mapper(new ChoXmlRecordFieldConfigurationMap(GetFieldConfiguration(fn, pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray())));
+            var cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray());
+            mapper?.Invoke(new ChoXmlRecordFieldConfigurationMap(cf));
+            return this;
         }
 
         internal ChoXmlRecordFieldConfiguration GetFieldConfiguration(string fn, ChoXmlNodeRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)

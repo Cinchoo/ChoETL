@@ -275,14 +275,14 @@ namespace ChoETL
 
         public ChoJSONWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoJSONRecordFieldConfigurationMap> setup)
         {
-            Configuration.MapRecordField(field.GetMemberName(), setup);
+            Configuration.Map(field.GetMemberName(), setup);
             return this;
         }
 
         public ChoJSONWriter<T> WithField(string name, Action<ChoJSONRecordFieldConfigurationMap> mapper)
         {
             if (!name.IsNullOrWhiteSpace())
-                Configuration.MapRecordField(name, mapper);
+                Configuration.Map(name, mapper);
             return this;
         }
 

@@ -592,14 +592,14 @@ namespace ChoETL
 
         public ChoFixedLengthReader<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoFixedLengthRecordFieldConfigurationMap> setup)
         {
-            Configuration.MapRecordField(field.GetMemberName(), setup);
+            Configuration.Map(field.GetMemberName(), setup);
             return this;
         }
 
         public ChoFixedLengthReader<T> WithField(string name, Action<ChoFixedLengthRecordFieldConfigurationMap> mapper)
         {
             if (!name.IsNullOrWhiteSpace())
-                Configuration.MapRecordField(name, mapper);
+                Configuration.Map(name, mapper);
             return this;
         }
 

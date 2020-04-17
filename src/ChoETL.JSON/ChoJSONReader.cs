@@ -583,7 +583,7 @@ namespace ChoETL
         public ChoJSONReader<T> WithField(string name, Action<ChoJSONRecordFieldConfigurationMap> mapper)
         {
             if (!name.IsNullOrWhiteSpace())
-                Configuration.MapRecordField(name, mapper);
+                Configuration.Map(name, mapper);
             return this;
         }
 

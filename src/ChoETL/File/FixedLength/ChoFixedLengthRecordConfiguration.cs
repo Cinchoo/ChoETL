@@ -169,20 +169,22 @@ namespace ChoETL
             AreAllFieldTypesNull = RecordFieldConfigurationsDict.All(kvp => kvp.Value.FieldType == null);
         }
 
-        public void MapRecordField(string fn, Action<ChoFixedLengthRecordFieldConfigurationMap> mapper)
+        public ChoFixedLengthRecordConfiguration Map(string fn, Action<ChoFixedLengthRecordFieldConfigurationMap> mapper)
         {
-            if (mapper == null)
-                return;
-
-            mapper(new ChoFixedLengthRecordFieldConfigurationMap(GetFieldConfiguration(fn)));
+            var cf = GetFieldConfiguration(fn);
+            mapper?.Invoke(new ChoFixedLengthRecordFieldConfigurationMap(cf));
+            return this;
         }
 
-        public void MapRecordField<T, TField>(Expression<Func<T, TField>> field, Action<ChoFixedLengthRecordFieldConfigurationMap> mapper)
+        public ChoFixedLengthRecordConfiguration Map<T, TField>(Expression<Func<T, TField>> field, Action<ChoFixedLengthRecordFieldConfigurationMap> mapper)
         {
             var fn = field.GetMemberName();
             var pd = field.GetPropertyDescriptor();
+            var fqm = field.GetFullyQualifiedMemberName();
 
-            mapper(new ChoFixedLengthRecordFieldConfigurationMap(GetFieldConfiguration(fn, pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray())));
+            var cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray());
+            mapper?.Invoke(new ChoFixedLengthRecordFieldConfigurationMap(cf));
+            return this;
         }
 
         internal ChoFixedLengthRecordFieldConfiguration GetFieldConfiguration(string fn, ChoFixedLengthRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)
@@ -606,7 +608,7 @@ namespace ChoETL
     {
         public ChoFixedLengthRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> property, Action<ChoFixedLengthRecordFieldConfigurationMap> setup)
         {
-            MapRecordField(property, setup);
+            base.Map(property, setup);
             return this;
         }
     }

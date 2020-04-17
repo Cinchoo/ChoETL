@@ -497,20 +497,22 @@ namespace ChoETL
             return this;
         }
 
-        public void MapRecordField(string fn, Action<ChoJSONRecordFieldConfigurationMap> mapper)
+        public ChoJSONRecordConfiguration Map(string fn, Action<ChoJSONRecordFieldConfigurationMap> mapper)
         {
-            if (mapper == null)
-                return;
-
-            mapper(new ChoJSONRecordFieldConfigurationMap(GetFieldConfiguration(fn)));
+            var cf = GetFieldConfiguration(fn);
+            mapper?.Invoke(new ChoJSONRecordFieldConfigurationMap(cf));
+            return this;
         }
 
-        public void MapRecordField<T, TField>(Expression<Func<T, TField>> field, Action<ChoJSONRecordFieldConfigurationMap> mapper)
+        public ChoJSONRecordConfiguration Map<T, TField>(Expression<Func<T, TField>> field, Action<ChoJSONRecordFieldConfigurationMap> mapper)
         {
             var fn = field.GetMemberName();
             var pd = field.GetPropertyDescriptor();
+            var fqm = field.GetFullyQualifiedMemberName();
 
-            mapper(new ChoJSONRecordFieldConfigurationMap(GetFieldConfiguration(fn, pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray())));
+            var cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray());
+            mapper?.Invoke(new ChoJSONRecordFieldConfigurationMap(cf));
+            return this;
         }
 
         internal ChoJSONRecordFieldConfiguration GetFieldConfiguration(string fn, ChoJSONRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)
@@ -557,7 +559,7 @@ namespace ChoETL
     {
         public ChoJSONRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> property, Action<ChoJSONRecordFieldConfigurationMap> setup)
         {
-            MapRecordField(property, setup);
+            base.Map(property, setup);
             return this;
         }
     }

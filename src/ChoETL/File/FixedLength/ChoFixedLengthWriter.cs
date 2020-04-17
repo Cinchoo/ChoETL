@@ -299,14 +299,14 @@ namespace ChoETL
 
         public ChoFixedLengthWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoFixedLengthRecordFieldConfigurationMap> setup)
         {
-            Configuration.MapRecordField(field.GetMemberName(), setup);
+            Configuration.Map(field.GetMemberName(), setup);
             return this;
         }
 
         public ChoFixedLengthWriter<T> WithField(string name, Action<ChoFixedLengthRecordFieldConfigurationMap> mapper)
         {
             if (!name.IsNullOrWhiteSpace())
-                Configuration.MapRecordField(name, mapper);
+                Configuration.Map(name, mapper);
             return this;
         }
 
