@@ -208,6 +208,9 @@ namespace ChoETL
             if (recordType == null)
                 return;
 
+            if (RecordMapType == null)
+                RecordMapType = recordType;
+
             if (clear)
                 KVPRecordFieldConfigurations.Clear();
             DiscoverRecordFields(recordType, null,

@@ -20,6 +20,13 @@ namespace ChoETL
             set;
         }
 
+        private Type _recordMapType;
+        public Type RecordMapType
+        {
+            get { return _recordMapType == null ? RecordType : _recordMapType; }
+            set { _recordMapType = value; }
+        }
+
         [DataMember]
         public ChoErrorMode? ErrorMode
         {

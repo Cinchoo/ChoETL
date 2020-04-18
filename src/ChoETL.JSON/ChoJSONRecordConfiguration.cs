@@ -285,6 +285,10 @@ namespace ChoETL
         {
             if (recordType == null)
                 return;
+
+            if (RecordMapType == null)
+                RecordMapType = recordType;
+
             if (recordFieldConfigurations == null)
                 recordFieldConfigurations = JSONRecordFieldConfigurations;
 

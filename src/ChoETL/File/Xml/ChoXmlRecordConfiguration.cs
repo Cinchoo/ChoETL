@@ -290,6 +290,10 @@ namespace ChoETL
         {
             if (recordType == null)
                 return;
+
+            if (RecordMapType == null)
+                RecordMapType = recordType;
+
             if (clear)
                 XmlRecordFieldConfigurations.Clear();
             DiscoverRecordFields(recordType, null,

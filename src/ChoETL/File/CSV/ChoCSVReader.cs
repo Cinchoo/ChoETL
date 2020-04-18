@@ -904,9 +904,9 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVReader<T> MapRecordFields<T1>()
+        public ChoCSVReader<T> MapRecordFields<TClass>()
         {
-            MapRecordFields(typeof(T1));
+            MapRecordFields(typeof(TClass));
             return this;
         }
 

@@ -42,10 +42,10 @@ namespace ChoETL
             if (configuration == null || configuration.IsDynamicObject || configuration.RecordType == null)
                 return;
 
-            if (!typeof(IChoNotifyRecordConfigurable).IsAssignableFrom(configuration.RecordType))
+            if (!typeof(IChoNotifyRecordConfigurable).IsAssignableFrom(configuration.RecordMapType))
                 return;
 
-            var obj = ChoActivator.CreateInstance(configuration.RecordType) as IChoNotifyRecordConfigurable;
+            var obj = ChoActivator.CreateInstance(configuration.RecordMapType) as IChoNotifyRecordConfigurable;
             if (obj != null)
                 obj.RecondConfigure(configuration);
         }
@@ -55,10 +55,10 @@ namespace ChoETL
             if (configuration == null || configuration.IsDynamicObject || configuration.RecordType == null)
                 return;
 
-            if (!typeof(IChoNotifyRecordFieldConfigurable).IsAssignableFrom(configuration.RecordType))
+            if (!typeof(IChoNotifyRecordFieldConfigurable).IsAssignableFrom(configuration.RecordMapType))
                 return;
 
-            var obj = ChoActivator.CreateInstance(configuration.RecordType) as IChoNotifyRecordFieldConfigurable;
+            var obj = ChoActivator.CreateInstance(configuration.RecordMapType) as IChoNotifyRecordFieldConfigurable;
             if (obj == null)
                 return;
 

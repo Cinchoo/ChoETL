@@ -230,6 +230,9 @@ namespace ChoETL
             if (recordType == null)
                 return;
 
+            if (RecordMapType == null)
+                RecordMapType = recordType;
+
             if (clear)
             {
                 //SupportsMultiRecordTypes = false;
