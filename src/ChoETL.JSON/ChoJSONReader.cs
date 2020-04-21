@@ -575,6 +575,12 @@ namespace ChoETL
             return this;
         }
 
+        public ChoJSONReader<T> ClearFieldForType<TClass>()
+        {
+            Configuration.ClearRecordFieldsForType(typeof(TClass));
+            return this;
+        }
+
         public ChoJSONReader<T> WithFieldForType<TClass>(Expression<Func<TClass, object>> field,
             string jsonPath = null, Type fieldType = null,
             ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
@@ -622,7 +628,7 @@ namespace ChoETL
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null,
             string formatText = null, bool isArray = true, string nullValue = null,
-            Type recordType = null, Func<JObject, Type> fieldTypeSelector = null)
+            Type subRecordType = null, Func<JObject, Type> fieldTypeSelector = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -631,64 +637,11 @@ namespace ChoETL
                     ClearFields();
                     Configuration.MapRecordFields(Configuration.RecordType);
                 }
-                if (recordType != null)
-                    Configuration.MapRecordFieldsForType(recordType);
 
-                string fnTrim = name.NTrim();
-                ChoJSONRecordFieldConfiguration fc = null;
-                PropertyDescriptor pd = null;
-                if (Configuration.JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-                {
-                    fc = Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
-                    Configuration.JSONRecordFieldConfigurations.Remove(fc);
-                }
-                else if (recordType != null)
-                    pd = ChoTypeDescriptor.GetNestedProperty(recordType, fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
-                else
-                    pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
-
-                var nfc = new ChoJSONRecordFieldConfiguration(fnTrim, jsonPath)
-                {
-                    FieldType = fieldType,
-                    FieldValueTrimOption = fieldValueTrimOption,
-                    FieldName = fieldName,
-                    ValueConverter = valueConverter,
-                    CustomSerializer = customSerializer,
-                    DefaultValue = defaultValue,
-                    FallbackValue = fallbackValue,
-                    FormatText = formatText,
-                    ItemConverter = itemConverter,
-                    IsArray = isArray,
-                    NullValue = nullValue,
-                    FieldTypeSelector = fieldTypeSelector,
-                };
-                if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
-                {
-                    nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
-                    nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
-                }
-                else
-                {
-                    if (recordType == null)
-                        pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
-                    else
-                        pd = ChoTypeDescriptor.GetNestedProperty(recordType, fullyQualifiedMemberName);
-
-                    nfc.PropertyDescriptor = pd;
-                    nfc.DeclaringMember = fullyQualifiedMemberName;
-                }
-                if (pd != null)
-                {
-                    if (nfc.FieldType == null)
-                        nfc.FieldType = pd.PropertyType;
-                }
-
-                if (recordType == null)
-                    Configuration.JSONRecordFieldConfigurations.Add(nfc);
-                else
-                    Configuration.Add(recordType, nfc);
+                Configuration.WithField(name, jsonPath, fieldType, fieldValueTrimOption, isJSONAttribute, fieldName,
+                    valueConverter, itemConverter, customSerializer, defaultValue, fallbackValue, fullyQualifiedMemberName, formatText,
+                    isArray, nullValue, typeof(T), subRecordType, fieldTypeSelector);
             }
-
             return this;
         }
 

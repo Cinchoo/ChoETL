@@ -1102,7 +1102,7 @@
                 )
                 return false;
 
-            return memberInfo.GetCustomAttributeEx<ChoIgnoreMemberAttribute>() == null;
+            return true; // memberInfo.GetCustomAttributeEx<ChoIgnoreMemberAttribute>() == null;
         }
 
         public static object GetMemberValue(object target, MemberInfo memberInfo)

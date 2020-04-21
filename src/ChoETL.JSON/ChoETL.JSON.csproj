@@ -49,6 +49,7 @@
   <ItemGroup>
     <Compile Include="ChoJSONExtensions.cs" />
     <Compile Include="ChoJSONPathAttribute.cs" />
+    <Compile Include="ChoPropertyRenameAndIgnoreSerializerContractResolver.cs" />
     <Compile Include="ChoUseJSONSerializationAttribute.cs" />
     <Compile Include="ChoJSONRootNameAttribute.cs" />
     <Compile Include="ChoJSONNodeNameAttribute.cs" />

@@ -594,6 +594,7 @@ namespace ChoETL
                         continue;
                 }
 
+                jToken = null;
                 fieldValue = null;
                 fieldConfig = kvp.Value;
                 if (Configuration.PIDict != null)
@@ -619,8 +620,8 @@ namespace ChoETL
                     {
                         if (Configuration.ColumnCountStrict)
                             throw new ChoParserException("No matching '{0}' field found.".FormatString(fieldConfig.FieldName));
-                        else
-                            jToken = node;
+                        //else
+                        //    jToken = node;
                     }
                 }
 
@@ -728,7 +729,7 @@ namespace ChoETL
                         }
                         else if (fieldValue is JArray)
                         {
-                            if (!typeof(JArray).IsAssignableFrom(itemType))
+                            if (typeof(JArray).IsAssignableFrom(itemType))
                             {
 
                             }
@@ -751,7 +752,7 @@ namespace ChoETL
                         else if (fieldValue is JToken[])
                         {
                             itemType = fieldConfig.FieldType.GetUnderlyingType().GetItemType().GetUnderlyingType();
-                            if (!typeof(JToken[]).IsAssignableFrom(itemType))
+                            if (typeof(JToken[]).IsAssignableFrom(itemType))
                             {
 
                             }
@@ -939,7 +940,7 @@ namespace ChoETL
             type = type == null ? fieldConfig.FieldType : type;
             try
             {
-                value = ToObject(jtoken, type, config.UseJSONSerialization);
+                value = ToObject(jtoken, type, config.UseJSONSerialization, config);
             }
             catch
             {
@@ -1169,7 +1170,7 @@ namespace ChoETL
             return false;
         }
 
-        private object ToObject(JToken jToken, Type type, bool? useJSONSerialization = null)
+        private object ToObject(JToken jToken, Type type, bool? useJSONSerialization = null, ChoJSONRecordFieldConfiguration config = null)
         {
             if (type == null || type.IsDynamicType())
             {
@@ -1237,7 +1238,7 @@ namespace ChoETL
                     {
                         try
                         {
-                            return DeserializeToObject(type, jToken);
+                            return DeserializeToObject(type, jToken, config);
                         }
                         catch
                         {
@@ -1279,7 +1280,7 @@ namespace ChoETL
             }
         }
 
-        private object DeserializeToObject(Type type, JToken token)
+        private object DeserializeToObject(Type type, JToken token, ChoJSONRecordFieldConfiguration config = null)
         {
             if (token == null)
                 return null;

@@ -32,6 +32,7 @@
     <Compile Include="..\ChoETL.JSON\ChoJSONPathAttribute.cs" Link="ChoJSONPathAttribute.cs" />
     <Compile Include="..\ChoETL.JSON\ChoJSONReader.cs" Link="ChoJSONReader.cs" />
     <Compile Include="..\ChoETL.JSON\ChoJSONRecordConfiguration.cs" Link="ChoJSONRecordConfiguration.cs" />
+    <Compile Include="..\ChoETL.JSON\ChoPropertyRenameAndIgnoreSerializerContractResolver.cs" Link="ChoPropertyRenameAndIgnoreSerializerContractResolver.cs" />
     <Compile Include="..\ChoETL.JSON\ChoJSONRecordConfigurationMap.cs" Link="ChoJSONRecordConfigurationMap.cs" />
     <Compile Include="..\ChoETL.JSON\ChoJSONRecordFieldAttribute.cs" Link="ChoJSONRecordFieldAttribute.cs" />
     <Compile Include="..\ChoETL.JSON\ChoJSONRecordFieldConfiguration.cs" Link="ChoJSONRecordFieldConfiguration.cs" />

@@ -32,7 +32,8 @@ namespace ChoETL
 
         public ChoCSVRecordFieldConfigurationMap FieldName(string name)
         {
-            _config.FieldName = name;
+            if (!name.IsNullOrWhiteSpace())
+                _config.FieldName = name;
             return this;
         }
 

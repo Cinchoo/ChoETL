@@ -128,9 +128,9 @@ namespace ChoETL
                 object fallbackValue = null;
                 foreach (var fc in fcs)
                 {
-                    if (fc is ChoFileRecordFieldConfiguration)
-                        name = ((ChoFileRecordFieldConfiguration)fc).FieldName;
-                    else
+                    //if (fc is ChoFileRecordFieldConfiguration)
+                    //    name = ((ChoFileRecordFieldConfiguration)fc).FieldName;
+                    //else
                         name = fc.Name;
 
                     if (!PDDict.ContainsKey(name))

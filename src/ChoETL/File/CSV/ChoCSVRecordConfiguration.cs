@@ -696,7 +696,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVRecordConfiguration Map<T, TProperty>(Expression<Func<T, TProperty>> field, string fieldName)
+        public ChoCSVRecordConfiguration Map<T, TProperty>(Expression<Func<T, TProperty>> field, string fieldName = null)
         {
             Map(field, m => m.FieldName(fieldName));
             return this;
@@ -996,7 +996,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, string fieldName)
+        public ChoCSVRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, string fieldName = null)
         {
             base.Map(field, fieldName);
             return this;

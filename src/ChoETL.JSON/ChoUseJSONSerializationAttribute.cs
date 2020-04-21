@@ -9,5 +9,20 @@ namespace ChoETL
 	[AttributeUsage(AttributeTargets.Property)]
 	public class ChoUseJSONSerializationAttribute : Attribute
 	{
-	}
+        public bool Flag
+        {
+            get;
+            private set;
+        }
+
+        public ChoUseJSONSerializationAttribute()
+        {
+            Flag = true;
+        }
+
+        public ChoUseJSONSerializationAttribute(bool flag)
+        {
+            Flag = flag;
+        }
+    }
 }

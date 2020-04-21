@@ -791,9 +791,9 @@ namespace ChoETL
             return this;
         }
 
-        public ChoXmlRecordConfiguration Map(string propertyName, string xpath)
+        public ChoXmlRecordConfiguration Map(string propertyName, string xpath = null, string fieldName = null)
         {
-            Map(propertyName, m => m.XPath(xpath));
+            Map(propertyName, m => m.XPath(xpath).FieldName(fieldName));
             return this;
         }
 
@@ -804,9 +804,9 @@ namespace ChoETL
             return this;
         }
 
-        public ChoXmlRecordConfiguration Map<T, TProperty>(Expression<Func<T, TProperty>> field, string xpath)
+        public ChoXmlRecordConfiguration Map<T, TProperty>(Expression<Func<T, TProperty>> field, string xpath = null, string fieldName = null)
         {
-            Map(field, m => m.XPath(xpath));
+            Map(field, m => m.XPath(xpath).FieldName(fieldName));
             return this;
         }
 
@@ -841,9 +841,9 @@ namespace ChoETL
 
     public class ChoXmlRecordConfiguration<T> : ChoXmlRecordConfiguration
     {
-        public ChoXmlRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, string xpath)
+        public ChoXmlRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, string xpath = null, string fieldName = null)
         {
-            base.Map(field, xpath);
+            base.Map(field, xpath, fieldName);
             return this;
         }
 
