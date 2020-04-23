@@ -473,7 +473,7 @@ namespace ChoETL
 
         public ChoJSONReader<T> ClearFields()
         {
-            Configuration.JSONRecordFieldConfigurations.Clear();
+            Configuration.ClearFields();
             _clearFields = true;
             return this;
         }

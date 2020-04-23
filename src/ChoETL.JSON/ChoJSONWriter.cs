@@ -240,7 +240,7 @@ namespace ChoETL
 
         public ChoJSONWriter<T> ClearFields()
         {
-            Configuration.JSONRecordFieldConfigurations.Clear();
+            Configuration.ClearFields();
             _clearFields = true;
             return this;
         }

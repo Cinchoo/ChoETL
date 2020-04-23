@@ -19,7 +19,7 @@ namespace ChoETL
     [DataContract]
     public class ChoJSONRecordConfiguration : ChoFileRecordConfiguration
     {
-        internal Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>> JSONRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>>();
+        internal readonly Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>> JSONRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>>();
 
         public bool AllowComplexJSONPath
         {
@@ -218,7 +218,7 @@ namespace ChoETL
             }
         }
 
-        internal void Add(Type rt, ChoJSONRecordFieldConfiguration rc)
+        internal void AddFieldForType(Type rt, ChoJSONRecordFieldConfiguration rc)
         {
             if (rt == null || rc == null)
                 return;
@@ -333,6 +333,7 @@ namespace ChoETL
 
             if (clear && recordFieldConfigurations != null)
                 recordFieldConfigurations.Clear();
+
             DiscoverRecordFields(recordType, null,
                 ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any()).Any(), recordFieldConfigurations);
         }
@@ -551,6 +552,13 @@ namespace ChoETL
             return this;
         }
 
+        public ChoJSONRecordConfiguration ClearFields()
+        {
+            JSONRecordFieldConfigurationsForType.Clear();
+            JSONRecordFieldConfigurations.Clear();
+            return this;
+        }
+
         public ChoJSONRecordConfiguration Map(string propertyName, string jsonPath = null, string fieldName = null)
         {
             Map(propertyName, m => m.JSONPath(jsonPath).FieldName(fieldName));
@@ -578,23 +586,8 @@ namespace ChoETL
             var fqm = field.GetFullyQualifiedMemberName();
 
             ChoJSONRecordFieldConfiguration cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(),
-                    subType == typeof(T) ? null : subType);
+                pd, fqm, subType == typeof(T) ? null : subType);
             mapper?.Invoke(new ChoJSONRecordFieldConfigurationMap(cf));
-            return this;
-        }
-
-        public ChoJSONRecordConfiguration MapForType<T, TField>(Expression<Func<T, TField>> field, string jsonPath = null, string fieldName = null)
-        {
-            var subType = field.GetReflectedType();
-            var fn = field.GetMemberName();
-            var pd = field.GetPropertyDescriptor();
-            var fqm = field.GetFullyQualifiedMemberName();
-
-            ChoJSONRecordFieldConfiguration cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(),
-                    subType);
-
-            new ChoJSONRecordFieldConfigurationMap(cf).FieldName(fieldName).JSONPath(jsonPath);
-
             return this;
         }
 
@@ -664,18 +657,18 @@ namespace ChoETL
                 if (subRecordType == null)
                     JSONRecordFieldConfigurations.Add(nfc);
                 else
-                    Add(subRecordType, nfc);
+                    AddFieldForType(subRecordType, nfc);
             }
         }
 
         internal ChoJSONRecordFieldConfiguration GetFieldConfiguration(string propertyName, ChoJSONRecordFieldAttribute attr = null, Attribute[] otherAttrs = null,
-            Type subType = null)
+            PropertyDescriptor pd = null, string fqm = null, Type subType = null)
         {
             if (subType != null)
             {
                 MapRecordFieldsForType(subType);
                 var fc = new ChoJSONRecordFieldConfiguration(propertyName, attr, otherAttrs);
-                Add(subType, fc);
+                AddFieldForType(subType, fc);
 
                 return fc;
             }
@@ -743,10 +736,32 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONRecordConfiguration<T> MapForType<TClass, TProperty>(Expression<Func<TClass, TProperty>> field, string jsonPath = null, string fieldName = null)
-            where TClass : class
+        public ChoJSONRecordConfiguration<T> MapForType<TClass>(Expression<Func<TClass, object>> field, string jsonPath = null, string fieldName = null)
         {
-            base.MapForType<TClass, TProperty>(field, jsonPath, fieldName);
+            var subType = field.GetReflectedType();
+            var fn = field.GetMemberName();
+            var pd = field.GetPropertyDescriptor();
+            var fqm = field.GetFullyQualifiedMemberName();
+
+            ChoJSONRecordFieldConfiguration cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(),
+                pd, fqm, subType);
+
+            new ChoJSONRecordFieldConfigurationMap(cf).FieldName(fieldName).JSONPath(jsonPath);
+
+            return this;
+        }
+
+        public ChoJSONRecordConfiguration<T> MapForType<TClass>(Expression<Func<TClass, object>> field, Action<ChoJSONRecordFieldConfigurationMap> mapper)
+        {
+            var subType = field.GetReflectedType();
+            var fn = field.GetMemberName();
+            var pd = field.GetPropertyDescriptor();
+            var fqm = field.GetFullyQualifiedMemberName();
+
+            ChoJSONRecordFieldConfiguration cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(),
+                pd, fqm, subType);
+
+            mapper?.Invoke(new ChoJSONRecordFieldConfigurationMap(cf));
             return this;
         }
 

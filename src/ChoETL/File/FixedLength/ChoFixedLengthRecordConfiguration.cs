@@ -138,7 +138,7 @@ namespace ChoETL
                 IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Empty | ChoIgnoreFieldValueMode.WhiteSpace;
 
             if (FixedLengthRecordFieldConfigurations.Count == 0)
-                DiscoverRecordFields(recordType);
+                DiscoverRecordFields(recordType, true);
         }
         internal bool AreAllFieldTypesNull
         {
@@ -209,7 +209,7 @@ namespace ChoETL
 
         public ChoFixedLengthRecordConfiguration MapRecordFields<T>()
         {
-            DiscoverRecordFields(typeof(T));
+            DiscoverRecordFields(typeof(T), true);
             return this;
         }
 
@@ -218,14 +218,14 @@ namespace ChoETL
             if (recordTypes == null)
                 return this;
 
-            DiscoverRecordFields(recordTypes.Where(rt => rt != null).FirstOrDefault());
+            DiscoverRecordFields(recordTypes.Where(rt => rt != null).FirstOrDefault(), true);
             foreach (var rt in recordTypes.Skip(1).Where(rt => rt != null))
                 DiscoverRecordFields(rt, false);
 
             return this;
         }
 
-        private void DiscoverRecordFields(Type recordType, bool clear = true)
+        private void DiscoverRecordFields(Type recordType, bool clear)
         {
             if (recordType == null)
                 return;

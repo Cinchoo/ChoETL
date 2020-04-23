@@ -164,7 +164,7 @@
                         pd = GetAllPropetiesForType(subType).Where(p => p.Name == mn).FirstOrDefault();
                         if (subType == null)
                             break;
-                        subType = pd.PropertyType;
+                        subType = pd.PropertyType.GetUnderlyingType().GetItemType();
                     }
 
                     return pd;

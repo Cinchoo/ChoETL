@@ -275,7 +275,7 @@ namespace ChoETL
 
         public ChoCSVWriter<T> ClearFields()
         {
-            Configuration.CSVRecordFieldConfigurations.Clear();
+            Configuration.ClearFields();
             _clearFields = true;
             return this;
         }

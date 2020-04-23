@@ -17,6 +17,8 @@ namespace ChoETL
     [DataContract]
     public class ChoCSVRecordConfiguration : ChoFileRecordConfiguration
     {
+        internal readonly Dictionary<Type, Dictionary<string, ChoCSVRecordFieldConfiguration>> CSVRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoCSVRecordFieldConfiguration>>();
+
         public bool ImplicitExcelFieldValueHandling
         {
             get;
@@ -235,6 +237,27 @@ namespace ChoETL
             return this;
         }
 
+        private void DiscoverRecordFields(Type recordType, bool clear = true,
+            List<ChoCSVRecordFieldConfiguration> recordFieldConfigurations = null)
+        {
+            if (recordType == null)
+                return;
+
+            if (RecordMapType == null)
+                RecordMapType = recordType;
+
+            if (recordFieldConfigurations == null)
+                recordFieldConfigurations = CSVRecordFieldConfigurations;
+
+            if (clear && recordFieldConfigurations != null)
+                recordFieldConfigurations.Clear();
+
+            int position = 0;
+            DiscoverRecordFields(recordType, ref position, null,
+                ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().Any()).Any(), 
+                null, recordFieldConfigurations);
+        }
+
         internal void UpdateFieldTypesIfAny(IDictionary<string, Type> dict)
         {
             if (dict == null || RecordFieldConfigurationsDict == null)
@@ -252,10 +275,11 @@ namespace ChoETL
         private void DiscoverRecordFields(Type recordType)
         {
             int pos = 0;
-            DiscoverRecordFields(recordType, ref pos, true);
+            DiscoverRecordFields(recordType, ref pos, false);
         }
 
-        private void DiscoverRecordFields(Type recordType, ref int pos, bool clear = true)
+        private void DiscoverRecordFields(Type recordType, ref int pos, bool clear,
+            List<ChoCSVRecordFieldConfiguration> recordFieldConfigurations = null)
         {
             if (recordType == null)
                 return;
@@ -263,20 +287,19 @@ namespace ChoETL
             if (RecordMapType == null)
                 RecordMapType = recordType;
 
-            if (clear)
-            {
-                //SupportsMultiRecordTypes = false;
+            if (recordFieldConfigurations == null)
+                recordFieldConfigurations = CSVRecordFieldConfigurations;
+
+            if (clear && recordFieldConfigurations != null)
                 CSVRecordFieldConfigurations.Clear();
-            }
-            //else
-            //SupportsMultiRecordTypes = true;
 
             DiscoverRecordFields(recordType, ref pos, null,
-                ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().Any()).Any());
+                ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().Any()).Any(), 
+                null, recordFieldConfigurations);
         }
 
         private void DiscoverRecordFields(Type recordType, ref int position, string declaringMember = null,
-            bool optIn = false, PropertyDescriptor propDesc = null)
+            bool optIn = false, PropertyDescriptor propDesc = null, List<ChoCSVRecordFieldConfiguration> recordFieldConfigurations = null)
         {
             if (recordType == null)
                 return;
@@ -289,15 +312,15 @@ namespace ChoETL
                     {
                         pt = pd.PropertyType.GetUnderlyingType();
                         if (!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
-                            DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
+                            DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, null, recordFieldConfigurations);
                         else if (pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().Any())
                         {
                             var obj = new ChoCSVRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray());
                             obj.FieldType = pt;
                             obj.PropertyDescriptor = pd;
                             obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
-                            if (!CSVRecordFieldConfigurations.Any(c => c.Name == pd.Name))
-                                CSVRecordFieldConfigurations.Add(obj);
+                            if (!recordFieldConfigurations.Any(c => c.Name == pd.Name))
+                                recordFieldConfigurations.Add(obj);
                         }
                     }
                 }
@@ -314,7 +337,7 @@ namespace ChoETL
                             if (dnAttr == null)
                             {
                                 ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, null, declaringMember == null ? propDesc.GetDisplayName() : propDesc.GetDisplayName(String.Empty));
-                                CSVRecordFieldConfigurations.Add(obj);
+                                recordFieldConfigurations.Add(obj);
                             }
                             else if (dnAttr != null && dnAttr.Minimum.CastTo<int>() >= 0 && dnAttr.Maximum.CastTo<int>() > 0
                                 && dnAttr.Minimum.CastTo<int>() <= dnAttr.Maximum.CastTo<int>())
@@ -327,7 +350,7 @@ namespace ChoETL
                                     {
                                         ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, range);
                                         //if (!CSVRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
-                                        CSVRecordFieldConfigurations.Add(obj);
+                                        recordFieldConfigurations.Add(obj);
                                     }
                                 }
                                 else
@@ -346,7 +369,7 @@ namespace ChoETL
                                                 ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref position, declaringMember, pd, range, propDesc.GetDisplayName());
 
                                                 //if (!CSVRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
-                                                CSVRecordFieldConfigurations.Add(obj);
+                                                recordFieldConfigurations.Add(obj);
                                             }
                                         }
                                     }
@@ -363,7 +386,7 @@ namespace ChoETL
                             if (dnAttrs.IsNullOrEmpty())
                             {
                                 ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, null, declaringMember == null ? propDesc.GetDisplayName() : propDesc.GetDisplayName(String.Empty));
-                                CSVRecordFieldConfigurations.Add(obj);
+                                recordFieldConfigurations.Add(obj);
                             }
                             else
                             {
@@ -378,7 +401,7 @@ namespace ChoETL
                                         ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, dictKey: key);
 
                                         //if (!CSVRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
-                                        CSVRecordFieldConfigurations.Add(obj);
+                                        recordFieldConfigurations.Add(obj);
                                     }
                                 }
                             }
@@ -396,8 +419,8 @@ namespace ChoETL
                         else if (recordType.IsSimple())
                         {
                             ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref position, declaringMember, propDesc);
-                            if (!CSVRecordFieldConfigurations.Any(c => c.Name == propDesc.Name))
-                                CSVRecordFieldConfigurations.Add(obj);
+                            if (!recordFieldConfigurations.Any(c => c.Name == propDesc.Name))
+                                recordFieldConfigurations.Add(obj);
                         }
                         else
                         {
@@ -416,15 +439,15 @@ namespace ChoETL
                                 if (pt != typeof(object) && !pt.IsSimple()  /*&& !typeof(IEnumerable).IsAssignableFrom(pt)*/)
                                 {
                                     if (propDesc == null)
-                                        DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, pd);
+                                        DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, pd, recordFieldConfigurations);
                                     else
-                                        DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, pd);
+                                        DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, pd, recordFieldConfigurations);
                                 }
                                 else
                                 {
                                     ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref position, declaringMember, pd, null, declaringMember == null ? propDesc.GetDisplayName() : propDesc.GetDisplayName(String.Empty));
-                                    if (!CSVRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
-                                        CSVRecordFieldConfigurations.Add(obj);
+                                    if (!recordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
+                                        recordFieldConfigurations.Add(obj);
                                 }
                             }
                         }
@@ -501,6 +524,18 @@ namespace ChoETL
                 if (dfAttr != null && !dfAttr.NullDisplayText.IsNullOrWhiteSpace())
                 {
                     obj.NullValue = dfAttr.NullDisplayText;
+                }
+            }
+
+            if (pd.ComponentType != null)
+            {
+                if (ContainsRecordConfigForType(pd.ComponentType))
+                {
+                    var st = GetRecordConfigForType(pd.ComponentType);
+                    if (st != null && st.Any(fc => fc.Name == pd.Name))
+                    {
+                        obj.FieldName = st.First(fc => fc.Name == pd.Name).FieldName;
+                    }
                 }
             }
 
@@ -690,6 +725,13 @@ namespace ChoETL
                 throw new ChoRecordConfigurationException("One of the Comments contains {0}. Not allowed.".FormatString(name));
         }
 
+        public ChoCSVRecordConfiguration ClearFields()
+        {
+            CSVRecordFieldConfigurationsForType.Clear();
+            CSVRecordFieldConfigurations.Clear();
+            return this;
+        }
+
         public ChoCSVRecordConfiguration Map<T, TProperty>(Expression<Func<T, TProperty>> field, int position)
         {
             Map(field, m => m.Position(position));
@@ -723,37 +765,204 @@ namespace ChoETL
 
         public ChoCSVRecordConfiguration Map<T, TField>(Expression<Func<T, TField>> field, Action<ChoCSVRecordFieldConfigurationMap> mapper = null)
         {
+            var subType = field.GetReflectedType();
             var fn = field.GetMemberName();
             var pd = field.GetPropertyDescriptor();
             var fqm = field.GetFullyQualifiedMemberName();
 
-            var cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(), pd, fqm);
+            var cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(), 
+                pd, fqm, subType == typeof(T) ? null : subType);
             mapper?.Invoke(new ChoCSVRecordFieldConfigurationMap(cf));
             return this;
         }
 
-        internal ChoCSVRecordFieldConfiguration GetFieldConfiguration(string fn, ChoCSVRecordFieldAttribute attr = null, Attribute[] otherAttrs = null,
-            PropertyDescriptor pd = null, string fqm = null)
+        public void ClearRecordFieldsForType(Type rt)
         {
-            if (fqm == null)
-                fqm = fn;
+            if (rt == null)
+                return;
 
-            fn = fn.SplitNTrim(".").LastOrDefault();
-            if (!CSVRecordFieldConfigurations.Any(fc => fc.DeclaringMember == fqm))
+            if (ContainsRecordConfigForType(rt))
+                CSVRecordFieldConfigurationsForType.Remove(rt);
+        }
+
+        public void MapRecordFieldsForType(Type rt)
+        {
+            if (rt == null)
+                return;
+
+            if (ContainsRecordConfigForType(rt))
+                return;
+
+            List<ChoCSVRecordFieldConfiguration> recordFieldConfigurations = new List<ChoCSVRecordFieldConfiguration>();
+            DiscoverRecordFields(rt, true, recordFieldConfigurations);
+
+            CSVRecordFieldConfigurationsForType.Add(rt, recordFieldConfigurations.ToDictionary(item => item.Name, StringComparer.InvariantCultureIgnoreCase));
+        }
+
+        internal void AddFieldForType(Type rt, ChoCSVRecordFieldConfiguration rc)
+        {
+            if (rt == null || rc == null)
+                return;
+
+            if (!CSVRecordFieldConfigurationsForType.ContainsKey(rt))
+                CSVRecordFieldConfigurationsForType.Add(rt, new Dictionary<string, ChoCSVRecordFieldConfiguration>(StringComparer.InvariantCultureIgnoreCase));
+
+            if (CSVRecordFieldConfigurationsForType[rt].ContainsKey(rc.Name))
+                CSVRecordFieldConfigurationsForType[rt][rc.Name] = rc;
+            else
+                CSVRecordFieldConfigurationsForType[rt].Add(rc.Name, rc);
+        }
+
+        internal bool ContainsRecordConfigForType(Type rt)
+        {
+            return CSVRecordFieldConfigurationsForType.ContainsKey(rt);
+        }
+
+        internal ChoCSVRecordFieldConfiguration[] GetRecordConfigForType(Type rt)
+        {
+            if (ContainsRecordConfigForType(rt))
+                return CSVRecordFieldConfigurationsForType[rt].Values.ToArray();
+            else
+                return null;
+        }
+
+        public ChoCSVRecordConfiguration MapForType<T, TField>(Expression<Func<T, TField>> field, int? position = null, 
+            string fieldName = null)
+        {
+            var subType = field.GetReflectedType();
+            var fn = field.GetMemberName();
+            var pd = field.GetPropertyDescriptor();
+            var fqm = field.GetFullyQualifiedMemberName();
+
+            ChoCSVRecordFieldConfiguration cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(),
+                pd, fqm, subType);
+
+            var cf1 = new ChoCSVRecordFieldConfigurationMap(cf).FieldName(fieldName);
+            if (position != null)
+                cf1.Position(position.Value);
+
+            return this;
+        }
+
+        internal void WithField(string name, int? position, Type fieldType = null, bool? quoteField = null,
+            ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
+            Func<object, object> valueConverter = null,
+            Func<dynamic, object> valueSelector = null,
+            object defaultValue = null, object fallbackValue = null, string altFieldNames = null,
+            string fullyQualifiedMemberName = null, string formatText = null,
+            string nullValue = null, bool excelField = false, Type recordType = null, Type subRecordType = null)
+        {
+            if (!name.IsNullOrEmpty())
             {
-                var c = new ChoCSVRecordFieldConfiguration(fn, attr, otherAttrs);
-                if (pd != null)
+                if (fieldName.IsNullOrWhiteSpace())
+                    fieldName = name;
+                if (subRecordType != null)
+                    MapRecordFieldsForType(subRecordType);
+
+                string fnTrim = name.NTrim();
+                ChoCSVRecordFieldConfiguration fc = null;
+                PropertyDescriptor pd = null;
+                if (CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
                 {
-                    c.PropertyDescriptor = pd;
-                    c.FieldType = pd.PropertyType.GetUnderlyingType();
+                    fc = CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+                    if (position == null)
+                        position = fc.FieldPosition;
+
+                    CSVRecordFieldConfigurations.Remove(fc);
+                }
+                else if (subRecordType != null)
+                {
+                    pd = ChoTypeDescriptor.GetNestedProperty(subRecordType, fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
+                    position = CSVRecordFieldConfigurations.Count > 0 ? CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
+                    position++;
+                }
+                else
+                {
+                    pd = ChoTypeDescriptor.GetNestedProperty(recordType, fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
+                    position = CSVRecordFieldConfigurations.Count > 0 ? CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
+                    position++;
                 }
 
-                c.DeclaringMember = fqm;
+                var nfc = new ChoCSVRecordFieldConfiguration(fnTrim, position.Value)
+                {
+                    FieldType = fieldType,
+                    QuoteField = quoteField,
+                    FieldValueTrimOption = fieldValueTrimOption,
+                    FieldName = fieldName,
+                    ValueConverter = valueConverter,
+                    ValueSelector = valueSelector,
+                    DefaultValue = defaultValue,
+                    FallbackValue = fallbackValue,
+                    AltFieldNames = altFieldNames,
+                    FormatText = formatText,
+                    NullValue = nullValue,
+                    ExcelField = excelField
+                };
+                if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
+                {
+                    nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
+                    nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
+                }
+                else
+                {
+                    if (subRecordType == null)
+                        pd = ChoTypeDescriptor.GetNestedProperty(recordType, fullyQualifiedMemberName);
+                    else
+                        pd = ChoTypeDescriptor.GetNestedProperty(subRecordType, fullyQualifiedMemberName);
 
-                CSVRecordFieldConfigurations.Add(c);
+                    nfc.PropertyDescriptor = pd;
+                    nfc.DeclaringMember = fullyQualifiedMemberName;
+                }
+                if (pd != null)
+                {
+                    if (nfc.FieldType == null)
+                        nfc.FieldType = pd.PropertyType;
+                }
+
+                if (subRecordType == null)
+                    CSVRecordFieldConfigurations.Add(nfc);
+                else
+                    AddFieldForType(subRecordType, nfc);
             }
+        }
 
-            return CSVRecordFieldConfigurations.First(fc => fc.DeclaringMember == fqm);
+        internal ChoCSVRecordFieldConfiguration GetFieldConfiguration(string propertyName, ChoCSVRecordFieldAttribute attr = null, Attribute[] otherAttrs = null,
+            PropertyDescriptor pd = null, string fqm = null, Type subType = null)
+        {
+            if (subType != null)
+            {
+                MapRecordFieldsForType(subType);
+                var fc = new ChoCSVRecordFieldConfiguration(propertyName, attr, otherAttrs);
+                AddFieldForType(subType, fc);
+
+                return fc;
+            }
+            else
+            {
+                //if (!CSVRecordFieldConfigurations.Any(fc => fc.Name == propertyName))
+                //    CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(propertyName, attr, otherAttrs));
+
+                //return CSVRecordFieldConfigurations.First(fc => fc.Name == propertyName);
+                if (fqm == null)
+                    fqm = propertyName;
+
+                propertyName = propertyName.SplitNTrim(".").LastOrDefault();
+                if (!CSVRecordFieldConfigurations.Any(fc => fc.DeclaringMember == fqm))
+                {
+                    var c = new ChoCSVRecordFieldConfiguration(propertyName, attr, otherAttrs);
+                    if (pd != null)
+                    {
+                        c.PropertyDescriptor = pd;
+                        c.FieldType = pd.PropertyType.GetUnderlyingType();
+                    }
+
+                    c.DeclaringMember = fqm;
+
+                    CSVRecordFieldConfigurations.Add(c);
+                }
+
+                return CSVRecordFieldConfigurations.First(fc => fc.DeclaringMember == fqm);
+            }
         }
 
         public ChoCSVRecordConfiguration IndexMap(string fieldName, Type fieldType, int minumum, int maximum, Action<ChoCSVRecordFieldConfigurationMap> mapper = null)
@@ -762,7 +971,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVRecordConfiguration IndexMap<T, TField>(Expression<Func<T, TField>> field, int minumum, 
+        public ChoCSVRecordConfiguration IndexMap<T, TField>(Expression<Func<T, TField>> field, int minumum,
             int maximum, Action<ChoCSVRecordFieldConfigurationMap> mapper = null)
         {
             Type fieldType = field.GetPropertyType().GetUnderlyingType();
@@ -778,7 +987,7 @@ namespace ChoETL
         }
 
         internal void IndexMapInternal(string fieldName, Type fieldType, int minumum, int maximum,
-            string fullyQualifiedMemberName = null, string displayName = null, 
+            string fullyQualifiedMemberName = null, string displayName = null,
             Action<ChoCSVRecordFieldConfigurationMap> mapper = null)
         {
             if (fullyQualifiedMemberName == null)
@@ -864,7 +1073,7 @@ namespace ChoETL
                                 int fieldPosition = 0;
                                 fieldPosition = CSVRecordFieldConfigurations.Count > 0 ? CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
                                 fieldPosition++;
-                                ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref fieldPosition, fullyQualifiedMemberName, pd, index, displayName, ignoreAttrs: true,
+                                ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref fieldPosition, fullyQualifiedMemberName, pd, index, displayName, ignoreAttrs: false,
                                     mapper: mapper);
 
                                 //if (!CSVRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
@@ -1002,10 +1211,51 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, 
-            Action<ChoCSVRecordFieldConfigurationMap> setup = null)
+        public ChoCSVRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field,
+            Action<ChoCSVRecordFieldConfigurationMap> setup)
         {
             base.Map(field, setup);
+            return this;
+        }
+
+        public ChoCSVRecordConfiguration<T> MapForType<TClass>(Expression<Func<TClass, object>> field, string fieldName = null)
+        {
+            var subType = field.GetReflectedType();
+            var fn = field.GetMemberName();
+            var pd = field.GetPropertyDescriptor();
+            var fqm = field.GetFullyQualifiedMemberName();
+
+            ChoCSVRecordFieldConfiguration cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(),
+                pd, fqm, subType);
+
+            new ChoCSVRecordFieldConfigurationMap(cf).FieldName(fieldName);
+            return this;
+        }
+
+        public ChoCSVRecordConfiguration<T> MapForType<TClass, TField>(Expression<Func<TClass, TField>> field, int position)
+        {
+            var subType = field.GetReflectedType();
+            var fn = field.GetMemberName();
+            var pd = field.GetPropertyDescriptor();
+            var fqm = field.GetFullyQualifiedMemberName();
+
+            ChoCSVRecordFieldConfiguration cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(),
+                pd, fqm, subType);
+
+            new ChoCSVRecordFieldConfigurationMap(cf).Position(position);
+            return this;
+        }
+
+        public ChoCSVRecordConfiguration<T> MapForType<TClass, TField>(Expression<Func<TClass, TField>> field, Action<ChoCSVRecordFieldConfigurationMap> mapper)
+        {
+            var subType = field.GetReflectedType();
+            var fn = field.GetMemberName();
+            var pd = field.GetPropertyDescriptor();
+            var fqm = field.GetFullyQualifiedMemberName();
+
+            var cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(),
+                pd, fqm, subType);
+            mapper?.Invoke(new ChoCSVRecordFieldConfigurationMap(cf));
             return this;
         }
 
