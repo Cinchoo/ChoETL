@@ -190,6 +190,11 @@ namespace ChoETL
             return r;
         }
 
+        public static ChoManifoldReader LoadText(string inputText, ChoManifoldRecordConfiguration config, TraceSwitch traceSwitch = null)
+        {
+            return LoadText(inputText, null, config, traceSwitch);
+        }
+
         private void NotifyRowsLoaded(object sender, ChoRowsLoadedEventArgs e)
         {
             EventHandler<ChoRowsLoadedEventArgs> rowsLoadedEvent = RowsLoaded;

@@ -286,6 +286,11 @@ namespace ChoETL
             return r;
         }
 
+        public static ChoXmlReader<T> LoadText(string inputText, ChoXmlRecordConfiguration config, TraceSwitch traceSwitch = null)
+        {
+            return LoadText(inputText, null, config, traceSwitch);
+        }
+
         //internal static IEnumerator<object> LoadText(Type recType, string inputText, ChoXmlRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null)
         //{
         //    ChoXmlRecordReader rr = new ChoXmlRecordReader(recType, configuration);

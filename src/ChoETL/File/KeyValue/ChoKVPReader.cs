@@ -206,6 +206,11 @@ namespace ChoETL
             return r;
         }
 
+        public static ChoKVPReader<T> LoadText(string inputText, ChoKVPRecordConfiguration config, TraceSwitch traceSwitch = null)
+        {
+            return LoadText(inputText, null, config, traceSwitch);
+        }
+
         internal static IEnumerator<object> LoadText(Type recType, string inputText, ChoKVPRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null)
         {
             ChoKVPRecordReader rr = new ChoKVPRecordReader(recType, configuration);
