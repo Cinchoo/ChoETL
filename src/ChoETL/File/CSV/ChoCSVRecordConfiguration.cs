@@ -534,7 +534,13 @@ namespace ChoETL
                     var st = GetRecordConfigForType(pd.ComponentType);
                     if (st != null && st.Any(fc => fc.Name == pd.Name))
                     {
-                        obj.FieldName = st.First(fc => fc.Name == pd.Name).FieldName;
+                        var f = st.FirstOrDefault(fc => fc.Name == pd.Name);
+                        if (f != null)
+                        {
+                            obj.FieldName = f.FieldName;
+                            if (f.FieldPosition > 0)
+                                obj.FieldPosition = f.FieldPosition;
+                        }
                     }
                 }
             }
@@ -732,6 +738,18 @@ namespace ChoETL
             return this;
         }
 
+        public ChoCSVRecordConfiguration IgnoreField<T, TProperty>(Expression<Func<T, TProperty>> field)
+        {
+            if (CSVRecordFieldConfigurations.Count == 0)
+                MapRecordFields<T>();
+
+            var fc = CSVRecordFieldConfigurations.Where(f => f.DeclaringMember == field.GetFullyQualifiedMemberName()).FirstOrDefault();
+            if (fc != null)
+                CSVRecordFieldConfigurations.Remove(fc);
+
+            return this;
+        }
+
         public ChoCSVRecordConfiguration IgnoreField(string fieldName)
         {
             var fc = CSVRecordFieldConfigurations.Where(f => f.DeclaringMember == fieldName || f.FieldName == fieldName).FirstOrDefault();
@@ -854,12 +872,13 @@ namespace ChoETL
         }
 
         internal void WithField(string name, int? position, Type fieldType = null, bool? quoteField = null,
-            ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
+            ChoFieldValueTrimOption? fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
             Func<object, object> valueConverter = null,
             Func<dynamic, object> valueSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null,
             string fullyQualifiedMemberName = null, string formatText = null,
-            string nullValue = null, bool excelField = false, Type recordType = null, Type subRecordType = null)
+            string nullValue = null, bool excelField = false, Type recordType = null, Type subRecordType = null,
+            ChoFieldValueJustification? fieldValueJustification = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -874,7 +893,7 @@ namespace ChoETL
                 if (CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
                 {
                     fc = CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
-                    if (position == null)
+                    if (position == null || position <= 0)
                         position = fc.FieldPosition;
 
                     CSVRecordFieldConfigurations.Remove(fc);
@@ -882,14 +901,20 @@ namespace ChoETL
                 else if (subRecordType != null)
                 {
                     pd = ChoTypeDescriptor.GetNestedProperty(subRecordType, fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
-                    position = CSVRecordFieldConfigurations.Count > 0 ? CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-                    position++;
+                    if (position == null || position <= 0)
+                    {
+                        position = CSVRecordFieldConfigurations.Count > 0 ? CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
+                        position++;
+                    }
                 }
                 else
                 {
                     pd = ChoTypeDescriptor.GetNestedProperty(recordType, fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
-                    position = CSVRecordFieldConfigurations.Count > 0 ? CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-                    position++;
+                    if (position == null || position <= 0)
+                    {
+                        position = CSVRecordFieldConfigurations.Count > 0 ? CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
+                        position++;
+                    }
                 }
 
                 var nfc = new ChoCSVRecordFieldConfiguration(fnTrim, position.Value)
@@ -897,6 +922,7 @@ namespace ChoETL
                     FieldType = fieldType,
                     QuoteField = quoteField,
                     FieldValueTrimOption = fieldValueTrimOption,
+                    FieldValueJustification = fieldValueJustification,
                     FieldName = fieldName,
                     ValueConverter = valueConverter,
                     ValueSelector = valueSelector,
@@ -1216,13 +1242,7 @@ namespace ChoETL
 
         public ChoCSVRecordConfiguration<T> Ignore<TProperty>(Expression<Func<T, TProperty>> field)
         {
-            if (CSVRecordFieldConfigurations.Count == 0)
-                MapRecordFields<T>();
-
-            var fc = CSVRecordFieldConfigurations.Where(f => f.DeclaringMember == field.GetFullyQualifiedMemberName()).FirstOrDefault();
-            if (fc != null)
-                CSVRecordFieldConfigurations.Remove(fc);
-
+            base.IgnoreField(field);
             return this;
         }
 

@@ -247,10 +247,8 @@ namespace ChoETL
 
         public ChoJSONWriter<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
         {
-            if (field != null)
-                return IgnoreField(field.GetFullyQualifiedMemberName());
-            else
-                return this;
+            Configuration.IgnoreField(field);
+            return this;
         }
 
         public ChoJSONWriter<T> IgnoreField(string fieldName)

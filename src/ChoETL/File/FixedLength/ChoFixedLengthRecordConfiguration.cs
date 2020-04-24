@@ -176,6 +176,18 @@ namespace ChoETL
             return this;
         }
 
+        public ChoFixedLengthRecordConfiguration IgnoreField<T, TProperty>(Expression<Func<T, TProperty>> field)
+        {
+            if (FixedLengthRecordFieldConfigurations.Count == 0)
+                MapRecordFields<T>();
+
+            var fc = FixedLengthRecordFieldConfigurations.Where(f => f.DeclaringMember == field.GetFullyQualifiedMemberName()).FirstOrDefault();
+            if (fc != null)
+                FixedLengthRecordFieldConfigurations.Remove(fc);
+
+            return this;
+        }
+
         public ChoFixedLengthRecordConfiguration IgnoreField(string fieldName)
         {
             var fc = FixedLengthRecordFieldConfigurations.Where(f => f.DeclaringMember == fieldName || f.FieldName == fieldName).FirstOrDefault();
@@ -659,13 +671,7 @@ namespace ChoETL
 
         public ChoFixedLengthRecordConfiguration<T> Ignore<TProperty>(Expression<Func<T, TProperty>> field)
         {
-            if (FixedLengthRecordFieldConfigurations.Count == 0)
-                MapRecordFields<T>();
-
-            var fc = FixedLengthRecordFieldConfigurations.Where(f => f.DeclaringMember == field.GetFullyQualifiedMemberName()).FirstOrDefault();
-            if (fc != null)
-                FixedLengthRecordFieldConfigurations.Remove(fc);
-
+            base.IgnoreField(field);
             return this;
         }
 

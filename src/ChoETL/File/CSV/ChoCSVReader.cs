@@ -480,6 +480,14 @@ namespace ChoETL
             return this;
         }
 
+        public ChoCSVReader<T> ConfigureHeader(Action<ChoCSVFileHeaderConfiguration> action)
+        {
+            if (action != null)
+                action(Configuration.FileHeaderConfiguration);
+
+            return this;
+        }
+
         public ChoCSVReader<T> QuoteAllFields(bool flag = true, char quoteChar = '"')
         {
             Configuration.QuoteAllFields = flag;
@@ -496,10 +504,8 @@ namespace ChoETL
 
         public ChoCSVReader<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
         {
-            if (field != null)
-                return IgnoreField(field.GetMemberName());
-            else
-                return this;
+            Configuration.IgnoreField(field);
+            return this;
         }
 
         public ChoCSVReader<T> IgnoreField(string fieldName)
@@ -576,28 +582,20 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVReader<T> Index<TField>(Expression<Func<T, TField>> field, int minumum, int maximum)
+        public ChoCSVReader<T> WithFieldForType<TClass>(Expression<Func<TClass, object>> field, int? position,
+            bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
+            string fieldName = null, Func<object, object> valueConverter = null,
+            Func<dynamic, object> valueSelector = null,
+            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
+            string nullValue = null, bool excelField = false)
+            where TClass : class
         {
-            if (!_clearFields)
-            {
-                ClearFields();
-                Configuration.MapRecordFields(Configuration.RecordType);
-            }
+            if (field == null)
+                return this;
 
-            Configuration.IndexMap(field, minumum, maximum, null);
-            return this;
-        }
-
-        public ChoCSVReader<T> DictionaryKeys<TField>(Expression<Func<T, TField>> field, params string[] keys)
-        {
-            if (!_clearFields)
-            {
-                ClearFields();
-                Configuration.MapRecordFields(Configuration.RecordType);
-            }
-
-            Configuration.DictionaryMap(field, keys, null);
-            return this;
+            return WithField(field.GetMemberName(), position, field.GetPropertyType(), quoteField, fieldValueTrimOption, fieldName, valueConverter,
+                valueSelector, defaultValue, fallbackValue, altFieldNames,
+                field.GetFullyQualifiedMemberName(), formatText, nullValue, excelField, field.GetReflectedType());
         }
 
         public ChoCSVReader<T> WithFieldForType<TClass>(Expression<Func<TClass, object>> field,
@@ -614,6 +612,19 @@ namespace ChoETL
             return WithField(field.GetMemberName(), (int?)null, field.GetPropertyType(), quoteField, fieldValueTrimOption, fieldName, valueConverter,
                 valueSelector, defaultValue, fallbackValue, altFieldNames,
                 field.GetFullyQualifiedMemberName(), formatText, nullValue, excelField, field.GetReflectedType());
+        }
+
+        public ChoCSVReader<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoCSVRecordFieldConfigurationMap> setup)
+        {
+            Configuration.Map(field, setup);
+            return this;
+        }
+
+        public ChoCSVReader<T> WithField(string name, Action<ChoCSVRecordFieldConfigurationMap> mapper)
+        {
+            if (!name.IsNullOrWhiteSpace())
+                Configuration.Map(name, mapper);
+            return this;
         }
 
         public ChoCSVReader<T> WithField<TField>(Expression<Func<T, TField>> field, 
@@ -644,19 +655,6 @@ namespace ChoETL
             return WithField(field.GetMemberName(), position, field.GetPropertyType(), quoteField, fieldValueTrimOption, fieldName, 
                 valueConverter, valueSelector, defaultValue, fallbackValue, altFieldNames,
                 field.GetFullyQualifiedMemberName(), formatText, excelField, field.GetReflectedType());
-        }
-
-        public ChoCSVReader<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoCSVRecordFieldConfigurationMap> setup)
-        {
-            Configuration.Map(field, setup);
-            return this;
-        }
-
-        public ChoCSVReader<T> WithField(string name, Action<ChoCSVRecordFieldConfigurationMap> mapper)
-        {
-            if (!name.IsNullOrWhiteSpace())
-                Configuration.Map(name, mapper);
-            return this;
         }
 
         public ChoCSVReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null, 
@@ -706,6 +704,30 @@ namespace ChoETL
             return this;
         }
 
+        public ChoCSVReader<T> Index<TField>(Expression<Func<T, TField>> field, int minumum, int maximum)
+        {
+            if (!_clearFields)
+            {
+                ClearFields();
+                Configuration.MapRecordFields(Configuration.RecordType);
+            }
+
+            Configuration.IndexMap(field, minumum, maximum, null);
+            return this;
+        }
+
+        public ChoCSVReader<T> DictionaryKeys<TField>(Expression<Func<T, TField>> field, params string[] keys)
+        {
+            if (!_clearFields)
+            {
+                ClearFields();
+                Configuration.MapRecordFields(Configuration.RecordType);
+            }
+
+            Configuration.DictionaryMap(field, keys, null);
+            return this;
+        }
+
         public ChoCSVReader<T> IgnoreEmptyLine(bool flag = true)
         {
             Configuration.IgnoreEmptyLine = flag;
@@ -750,18 +772,6 @@ namespace ChoETL
             MapRecordFields(typeof(TClass));
             return this;
         }
-
-        //public ChoCSVReader<T> MapRecordFields(Type recordType)
-        //{
-        //    if (recordType != null)
-        //    {
-        //        if (recordType != null && !typeof(T).IsAssignableFrom(recordType))
-        //            throw new ChoParserException("Incompatible [{0}] record type passed.".FormatString(recordType.FullName));
-        //        Configuration.MapRecordFields(recordType);
-        //    }
-
-        //    return this;
-        //}
 
         public ChoCSVReader<T> MapRecordFields(params Type[] recordTypes)
         {
@@ -836,14 +846,6 @@ namespace ChoETL
         public ChoCSVReader<T> WithComments(params string[] comments)
         {
             Configuration.Comments = comments;
-            return this;
-        }
-
-        public ChoCSVReader<T> ConfigureHeader(Action<ChoCSVFileHeaderConfiguration> action)
-        {
-            if (action != null)
-                action(Configuration.FileHeaderConfiguration);
-
             return this;
         }
 

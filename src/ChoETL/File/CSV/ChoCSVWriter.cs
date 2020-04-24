@@ -240,19 +240,6 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVWriter<T> WithFirstLineHeader()
-        {
-            Configuration.FileHeaderConfiguration.HasHeaderRecord = true;
-            return this;
-        }
-
-        public ChoCSVWriter<T> QuoteAllFields(bool flag = true, char quoteChar = '"')
-        {
-            Configuration.QuoteAllFields = flag;
-            Configuration.QuoteChar = quoteChar;
-            return this;
-        }
-
         public ChoCSVWriter<T> HasExcelSeparator(bool? value)
         {
             Configuration.HasExcelSeparator = value;
@@ -265,11 +252,25 @@ namespace ChoETL
             return this;
         }
 
+        public ChoCSVWriter<T> WithFirstLineHeader(bool ignoreHeader = false)
+        {
+            Configuration.FileHeaderConfiguration.HasHeaderRecord = true;
+            Configuration.FileHeaderConfiguration.IgnoreHeader = ignoreHeader;
+            return this;
+        }
+
         public ChoCSVWriter<T> ConfigureHeader(Action<ChoCSVFileHeaderConfiguration> action)
         {
             if (action != null)
                 action(Configuration.FileHeaderConfiguration);
 
+            return this;
+        }
+
+        public ChoCSVWriter<T> QuoteAllFields(bool flag = true, char quoteChar = '"')
+        {
+            Configuration.QuoteAllFields = flag;
+            Configuration.QuoteChar = quoteChar;
             return this;
         }
 
@@ -282,10 +283,8 @@ namespace ChoETL
 
         public ChoCSVWriter<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
         {
-            if (field != null)
-                return IgnoreField(field.GetMemberName());
-            else
-                return this;
+            Configuration.IgnoreField(field);
+            return this;
         }
 
         public ChoCSVWriter<T> IgnoreField(string fieldName)
@@ -361,6 +360,44 @@ namespace ChoETL
             return this;
         }
 
+        public ChoCSVWriter<T> WithFieldForType<TClass>(Expression<Func<TClass, object>> field, int? position, bool? quoteField = null,
+            char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
+            bool truncate = true, string fieldName = null,
+            Func<object, object> valueConverter = null,
+            Func<dynamic, object> valueSelector = null,
+            Func<string> headerSelector = null,
+            object defaultValue = null, object fallbackValue = null,
+            string formatText = null, string nullValue = null,
+            bool excelField = false)
+            where TClass : class
+        {
+            if (field == null)
+                return this;
+
+            return WithField(field.GetMemberName(), position, field.GetPropertyType(), quoteField, fillChar, fieldValueJustification, truncate,
+                fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue,
+                field.GetFullyQualifiedMemberName(), formatText, nullValue, excelField, field.GetReflectedType());
+        }
+
+        public ChoCSVWriter<T> WithFieldForType<TClass>(Expression<Func<TClass, object>> field, bool? quoteField = null,
+            char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
+            bool truncate = true, string fieldName = null,
+            Func<object, object> valueConverter = null,
+            Func<dynamic, object> valueSelector = null,
+            Func<string> headerSelector = null,
+            object defaultValue = null, object fallbackValue = null,
+            string formatText = null, string nullValue = null,
+            bool excelField = false)
+            where TClass : class
+        {
+            if (field == null)
+                return this;
+
+            return WithField(field.GetMemberName(), (int?)null, field.GetPropertyType(), quoteField, fillChar, fieldValueJustification, truncate,
+                fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue,
+                field.GetFullyQualifiedMemberName(), formatText, nullValue, excelField, field.GetReflectedType());
+        }
+
         public ChoCSVWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoCSVRecordFieldConfigurationMap> setup)
         {
             Configuration.Map(field.GetMemberName(), setup);
@@ -374,104 +411,27 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVWriter<T> Index<TField>(Expression<Func<T, TField>> field, int minumum, int maximum)
+        public ChoCSVWriter<T> WithField<TField>(Expression<Func<T, TField>> field, int position, bool? quoteField = null,
+            char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
+            bool truncate = true, string fieldName = null,
+            Func<object, object> valueConverter = null,
+            Func<dynamic, object> valueSelector = null,
+            Func<string> headerSelector = null,
+            object defaultValue = null, object fallbackValue = null,
+            string formatText = null, string nullValue = null,
+            bool excelField = false)
         {
-            Type recordType = field.GetPropertyType().GetUnderlyingType();
-            var fqn = field.GetFullyQualifiedMemberName();
+            if (field == null)
+                return this;
 
-            if (typeof(IList).IsAssignableFrom(recordType) && !typeof(ArrayList).IsAssignableFrom(recordType)
-                && minumum >= 0 && maximum >= 0 && minumum <= maximum)
-            {
-                recordType = recordType.GetItemType().GetUnderlyingType();
-                if (recordType.IsSimple())
-                {
-
-                }
-                else
-                {
-                    //Remove any unused config
-                    foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
-                    {
-                        var fcs = Configuration.CSVRecordFieldConfigurations.Where(o => o.DeclaringMember == "{0}.{1}".FormatString(field.GetFullyQualifiedMemberName(), pd.Name)
-                        && o.ArrayIndex != null && (o.ArrayIndex < minumum || o.ArrayIndex > maximum)).ToArray();
-
-                        foreach (var fc in fcs)
-                            Configuration.CSVRecordFieldConfigurations.Remove(fc);
-                    }
-
-                    for (int index = minumum; index <= maximum; index++)
-                    {
-                        foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
-                        {
-                            var fc = Configuration.CSVRecordFieldConfigurations.Where(o => o.DeclaringMember == "{0}.{1}".FormatString(field.GetFullyQualifiedMemberName(), pd.Name)
-                            && o.ArrayIndex != null && o.ArrayIndex == index).FirstOrDefault();
-
-                            if (fc != null) continue;
-
-                            Type pt = pd.PropertyType.GetUnderlyingType();
-                            if (pt != typeof(object) && !pt.IsSimple())
-                            {
-                            }
-                            else
-                            {
-                                int fieldPosition = 0;
-                                fieldPosition = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-                                fieldPosition++;
-                                ChoCSVRecordFieldConfiguration obj = Configuration.NewFieldConfiguration(ref fieldPosition, field.GetFullyQualifiedMemberName(), pd, index, field.GetPropertyDescriptor().GetDisplayName());
-
-                                //if (!CSVRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
-                                Configuration.CSVRecordFieldConfigurations.Add(obj);
-                            }
-                        }
-                    }
-                }
-            }
-            return this;
-        }
-
-        public ChoCSVWriter<T> DictionaryKeys<TField>(Expression<Func<T, TField>> field, params string[] keys)
-        {
-            Type recordType = field.GetPropertyType().GetUnderlyingType();
-            var fqn = field.GetFullyQualifiedMemberName();
-            PropertyDescriptor pd = field.GetPropertyDescriptor();
-
-            if (recordType.IsGenericType && recordType.GetGenericTypeDefinition() == typeof(Dictionary<,>)
-                && typeof(string) == recordType.GetGenericArguments()[0]
-                && keys != null && keys.Length > 0)
-            {
-                //Remove any unused config
-                var fcs = Configuration.CSVRecordFieldConfigurations.Where(o => o.DeclaringMember == pd.Name
-                && !o.DictKey.IsNullOrWhiteSpace() && !keys.Contains(o.DictKey)).ToArray();
-
-                foreach (var fc in fcs)
-                    Configuration.CSVRecordFieldConfigurations.Remove(fc);
-
-                foreach (var key in keys)
-                {
-                    if (!key.IsNullOrWhiteSpace())
-                    {
-                        var fc = Configuration.CSVRecordFieldConfigurations.Where(o => o.DeclaringMember == pd.Name
-                            && !o.DictKey.IsNullOrWhiteSpace() && key == o.DictKey).FirstOrDefault();
-
-                        if (fc != null) continue;
-
-                        //ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, dictKey: key);
-                        int fieldPosition = 0;
-                        fieldPosition = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-                        fieldPosition++;
-                        ChoCSVRecordFieldConfiguration obj = Configuration.NewFieldConfiguration(ref fieldPosition, null, field.GetPropertyDescriptor(), dictKey: key);
-
-                        //if (!CSVRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
-                        Configuration.CSVRecordFieldConfigurations.Add(obj);
-                    }
-                }
-            }
-            return this;
+            return WithField(field.GetMemberName(), position, field.GetPropertyType(), quoteField, fillChar, fieldValueJustification, truncate,
+                fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue,
+                field.GetFullyQualifiedMemberName(), formatText, nullValue, excelField);
         }
 
         public ChoCSVWriter<T> WithField<TField>(Expression<Func<T, TField>> field, bool? quoteField = null, 
             char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
-            bool truncate = true, string fieldName = null, int? fieldPosition = null, 
+            bool truncate = true, string fieldName = null, 
             Func<object, object> valueConverter = null, 
             Func<dynamic, object> valueSelector = null,
             Func<string> headerSelector = null,
@@ -482,14 +442,14 @@ namespace ChoETL
             if (field == null)
                 return this;
 
-            return WithField(field.GetMemberName(), field.GetPropertyType(), quoteField, fillChar, fieldValueJustification, truncate, 
-                fieldName, fieldPosition, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue,
+            return WithField(field.GetMemberName(), (int?)null, field.GetPropertyType(), quoteField, fillChar, fieldValueJustification, truncate, 
+                fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue,
                 field.GetFullyQualifiedMemberName(), formatText, nullValue, excelField);
         }
 
         public ChoCSVWriter<T> WithField(string name, Type fieldType = null, bool? quoteField = null, char? fillChar = null, 
             ChoFieldValueJustification? fieldValueJustification = null,
-            bool truncate = true, string fieldName = null, int? fieldPosition = null, 
+            bool truncate = true, string fieldName = null, 
             Func<object, object> valueConverter = null, 
             Func<dynamic, object> valueSelector = null,
             Func<string> headerSelector = null,
@@ -497,20 +457,20 @@ namespace ChoETL
             string formatText = null, string nullValue = null,
             bool excelField = false)
         {
-            return WithField(name, fieldType, quoteField, fillChar, fieldValueJustification,
-                truncate, fieldName, fieldPosition, valueConverter, valueSelector, headerSelector, 
+            return WithField(name, null, fieldType, quoteField, fillChar, fieldValueJustification,
+                truncate, fieldName, valueConverter, valueSelector, headerSelector, 
                 defaultValue, fallbackValue, null, formatText, nullValue, excelField);
         }
 
-        private ChoCSVWriter<T> WithField(string name, Type fieldType = null, bool? quoteField = null, char? fillChar = null,
+        private ChoCSVWriter<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null, char? fillChar = null,
             ChoFieldValueJustification? fieldValueJustification = null,
-            bool? truncate = null, string fieldName = null, int? fieldPosition = null, 
+            bool? truncate = null, string fieldName = null, 
             Func<object, object> valueConverter = null, 
             Func<dynamic, object> valueSelector = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null,
             string fullyQualifiedMemberName = null, string formatText = null, string nullValue = null,
-            bool excelField = false)
+            bool excelField = false, Type subRecordType = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -519,107 +479,36 @@ namespace ChoETL
                     ClearFields();
                     Configuration.MapRecordFields(Configuration.RecordType);
                 }
-                if (fieldName.IsNullOrWhiteSpace())
-                    fieldName = name;
 
-                string fnTrim = name.NTrim();
-                ChoCSVRecordFieldConfiguration fc = null;
-                PropertyDescriptor pd = null;
-                //if (Configuration.CSVRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-                //{
-                    if (fullyQualifiedMemberName != null)
-                        fc = Configuration.CSVRecordFieldConfigurations.Where(o => o.DeclaringMember == fullyQualifiedMemberName).FirstOrDefault();
-                    else
-                        fc = Configuration.CSVRecordFieldConfigurations.Where(o => o.Name == fnTrim).FirstOrDefault();
-
-                    if (fc != null && fieldPosition == null)
-                        fieldPosition = fc.FieldPosition;
-
-                    //Configuration.CSVRecordFieldConfigurations.Remove(fc);
-                //}
-                if (fc == null)
-                {
-                    pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
-                    if (fieldPosition == null)
-                    {
-                        fieldPosition = Configuration.CSVRecordFieldConfigurations.Count > 0 ? Configuration.CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-                        fieldPosition++;
-                    }
-                }
-
-                ChoCSVRecordFieldConfiguration nfc = null;
-                if (fc != null)
-                {
-                    nfc = fc;
-
-                    if (fieldType != null)
-                        nfc.FieldType = fieldType;
-                    if (quoteField != null)
-                        nfc.QuoteField = quoteField;
-                    if (fillChar != null)
-                        nfc.FillChar = fillChar;
-                    if (fieldValueJustification != null)
-                        nfc.FieldValueJustification = fieldValueJustification;
-                    if (truncate != null)
-                        nfc.Truncate = truncate.Value;
-                    if (fieldName != null)
-                        nfc.FieldName = fieldName;
-                    if (valueConverter != null)
-                        nfc.ValueConverter = valueConverter;
-                    if (valueSelector != null)
-                        nfc.ValueSelector = valueSelector;
-                    if (headerSelector != null)
-                        nfc.HeaderSelector = headerSelector;
-                    if (defaultValue != null)
-                        nfc.DefaultValue = defaultValue;
-                    if (fallbackValue != null)
-                        nfc.FallbackValue = fallbackValue;
-                    if (formatText != null)
-                        nfc.FormatText = formatText;
-                    if (nullValue != null)
-                        nfc.NullValue = nullValue;
-                    nfc.ExcelField = excelField;
-                }
-                else
-                {
-                    nfc = new ChoCSVRecordFieldConfiguration(fnTrim, fieldPosition.Value)
-                    {
-                        FieldType = fieldType,
-                        QuoteField = quoteField,
-                        FillChar = fillChar,
-                        FieldValueJustification = fieldValueJustification,
-                        Truncate = truncate != null ? truncate.Value : true,
-                        FieldName = fieldName,
-                        ValueConverter = valueConverter,
-                        ValueSelector = valueSelector,
-                        HeaderSelector = headerSelector,
-                        DefaultValue = defaultValue,
-                        FallbackValue = fallbackValue,
-                        FormatText = formatText,
-                        NullValue = nullValue,
-                        ExcelField = excelField
-                    };
-                    if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
-                    {
-                        nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
-                        nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
-                    }
-                    else
-                    {
-                        pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
-                        nfc.PropertyDescriptor = pd;
-                        nfc.DeclaringMember = fullyQualifiedMemberName;
-                    }
-                    if (pd != null)
-                    {
-                        if (nfc.FieldType == null)
-                            nfc.FieldType = pd.PropertyType;
-                    }
-
-                    Configuration.CSVRecordFieldConfigurations.Add(nfc);
-                }
+                Configuration.WithField(name, position, fieldType, quoteField, null, fieldName,
+                    valueConverter, valueConverter, defaultValue, fallbackValue, null, fullyQualifiedMemberName, formatText,
+                    nullValue, excelField, typeof(T), subRecordType, fieldValueJustification);
             }
 
+            return this;
+        }
+
+        public ChoCSVWriter<T> Index<TField>(Expression<Func<T, TField>> field, int minumum, int maximum)
+        {
+            if (!_clearFields)
+            {
+                ClearFields();
+                Configuration.MapRecordFields(Configuration.RecordType);
+            }
+
+            Configuration.IndexMap(field, minumum, maximum, null);
+            return this;
+        }
+
+        public ChoCSVWriter<T> DictionaryKeys<TField>(Expression<Func<T, TField>> field, params string[] keys)
+        {
+            if (!_clearFields)
+            {
+                ClearFields();
+                Configuration.MapRecordFields(Configuration.RecordType);
+            }
+
+            Configuration.DictionaryMap(field, keys, null);
             return this;
         }
 
@@ -651,9 +540,9 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVWriter<T> MapRecordFields<T1>()
+        public ChoCSVWriter<T> MapRecordFields<TClass>()
         {
-            Configuration.MapRecordFields<T1>();
+            Configuration.MapRecordFields<TClass>();
             return this;
         }
 
@@ -662,6 +551,12 @@ namespace ChoETL
             if (recordType != null)
                 Configuration.MapRecordFields(recordType);
 
+            return this;
+        }
+
+        public ChoCSVWriter<T> WithComments(params string[] comments)
+        {
+            Configuration.Comments = comments;
             return this;
         }
 

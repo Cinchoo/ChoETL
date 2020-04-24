@@ -480,10 +480,8 @@ namespace ChoETL
 
         public ChoJSONReader<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
         {
-            if (field != null)
-                return IgnoreField(field.GetMemberName());
-            else
-                return this;
+            Configuration.IgnoreField(field);
+            return this;
         }
 
         public ChoJSONReader<T> IgnoreField(string fieldName)

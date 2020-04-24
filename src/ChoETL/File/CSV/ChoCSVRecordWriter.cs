@@ -807,7 +807,7 @@ namespace ChoETL
             string delimiter = Configuration.Delimiter;
             StringBuilder msg = new StringBuilder();
             string value;
-            foreach (var member in Configuration.CSVRecordFieldConfigurations)
+            foreach (var member in Configuration.RecordFieldConfigurationsDict.Values.ToArray())
             {
                 if (Configuration.IgnoredFields.Contains(member.Name))
                     continue;

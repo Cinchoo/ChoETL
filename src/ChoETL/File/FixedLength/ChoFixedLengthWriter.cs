@@ -271,10 +271,8 @@ namespace ChoETL
 
         public ChoFixedLengthWriter<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
         {
-            if (field != null)
-                return IgnoreField(field.GetFullyQualifiedMemberName());
-            else
-                return this;
+            Configuration.IgnoreField(field);
+            return this;
         }
 
         public ChoFixedLengthWriter<T> IgnoreField(string fieldName)

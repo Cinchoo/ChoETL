@@ -798,6 +798,18 @@ namespace ChoETL
             return this;
         }
 
+        public ChoXmlRecordConfiguration IgnoreField<T, TProperty>(Expression<Func<T, TProperty>> field)
+        {
+            if (XmlRecordFieldConfigurations.Count == 0)
+                MapRecordFields<T>();
+
+            var fc = XmlRecordFieldConfigurations.Where(f => f.DeclaringMember == field.GetFullyQualifiedMemberName()).FirstOrDefault();
+            if (fc != null)
+                XmlRecordFieldConfigurations.Remove(fc);
+
+            return this;
+        }
+
         public ChoXmlRecordConfiguration IgnoreField(string fieldName)
         {
             var fc = XmlRecordFieldConfigurations.Where(f => f.DeclaringMember == fieldName || f.FieldName == fieldName).FirstOrDefault();
@@ -865,13 +877,7 @@ namespace ChoETL
 
         public ChoXmlRecordConfiguration<T> Ignore<TProperty>(Expression<Func<T, TProperty>> field)
         {
-            if (XmlRecordFieldConfigurations.Count == 0)
-                MapRecordFields<T>();
-
-            var fc = XmlRecordFieldConfigurations.Where(f => f.DeclaringMember == field.GetFullyQualifiedMemberName()).FirstOrDefault();
-            if (fc != null)
-                XmlRecordFieldConfigurations.Remove(fc);
-
+            base.IgnoreField(field);
             return this;
         }
 

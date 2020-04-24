@@ -559,6 +559,18 @@ namespace ChoETL
             return this;
         }
 
+        public ChoJSONRecordConfiguration IgnoreField<T, TProperty>(Expression<Func<T, TProperty>> field)
+        {
+            if (JSONRecordFieldConfigurations.Count == 0)
+                MapRecordFields<T>();
+
+            var fc = JSONRecordFieldConfigurations.Where(f => f.DeclaringMember == field.GetFullyQualifiedMemberName()).FirstOrDefault();
+            if (fc != null)
+                JSONRecordFieldConfigurations.Remove(fc);
+
+            return this;
+        }
+
         public ChoJSONRecordConfiguration IgnoreField(string fieldName)
         {
             var fc = JSONRecordFieldConfigurations.Where(f => f.DeclaringMember == fieldName || f.FieldName == fieldName).FirstOrDefault();
@@ -741,13 +753,7 @@ namespace ChoETL
 
         public ChoJSONRecordConfiguration<T> Ignore<TProperty>(Expression<Func<T, TProperty>> field)
         {
-            if (JSONRecordFieldConfigurations.Count == 0)
-                MapRecordFields<T>();
-
-            var fc = JSONRecordFieldConfigurations.Where(f => f.DeclaringMember == field.GetFullyQualifiedMemberName()).FirstOrDefault();
-            if (fc != null)
-                JSONRecordFieldConfigurations.Remove(fc);
-
+            base.IgnoreField(field);
             return this;
         }
 

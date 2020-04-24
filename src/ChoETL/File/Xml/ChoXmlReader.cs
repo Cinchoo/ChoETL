@@ -522,10 +522,8 @@ namespace ChoETL
 
         public ChoXmlReader<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
         {
-            if (field != null)
-                return IgnoreField(field.GetFullyQualifiedMemberName());
-            else
-                return this;
+            Configuration.IgnoreField(field);
+            return this;
         }
 
         public ChoXmlReader<T> IgnoreField(string fieldName)
