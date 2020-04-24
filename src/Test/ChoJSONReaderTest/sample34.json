@@ -1,0 +1,81 @@
+﻿{
+  "data": {
+    "getUsers": [
+      {
+        "UserProfileDetail": {
+          "UserStatus": {
+            "name": "User One"
+          },
+          "UserStatusDate": "2018-10-31T06:12:42+00:00",
+          "EnrollId": "am**********************************",
+          "lastDate": "2019-07-22T03:05:39.0245313-04:00"
+        },
+        "UserInformation": {
+          "Id": 1111122,
+          "firstName": "*****",
+          "middleName": null,
+          "lastName": "*****",
+          "otherNames": null,
+          "primaryState": "MA",
+          "otherState": [
+            "MA",
+            "BA",
+            "DL",
+            "RJ"
+          ],
+          "UserLicense": [
+            {
+              "licenseState": "MA",
+              "licenseNumber": "000000000",
+              "licenseStatus": null,
+              "aaaaaaaaaaaaaaaaa": "only one"
+            },
+            {
+              "licenseState": "MA2",
+              "licenseNumber": "00000000022",
+              "licenseStatus": null,
+              "aaaaaaaaaaaaaaaaa": "only one2"
+            }
+          ],
+          "Setting": "ADMINISTRATIVE",
+          "primaryEmail": "*****@*****.com",
+          "modifiedAt": null,
+          "createdAt": null
+        }
+      },
+      {
+        "UserProfileDetail": {
+          "UserStatus": {
+            "name": "User Two"
+          },
+          "UserStatusDate": "2019-10-31T06:12:42+00:00",
+          "EnrollId": "am**********************************",
+          "lastDate": "2019-07-22T03:05:39.0245313-04:00"
+        },
+        "UserInformation": {
+          "Id": 443333,
+          "firstName": "*****",
+          "middleName": "Jhon",
+          "lastName": "*****",
+          "otherNames": null,
+          "primaryState": "AK",
+          "otherState": [
+            "MP",
+            "CLT"
+          ],
+          "UserLicense": [
+            {
+              "licenseState": "KL",
+              "licenseNumber": "000000220",
+              "licenseStatus": "Valid"
+            }
+          ],
+          "Setting": "ADMINISTRATIVE",
+          "primaryEmail": "*****@*****.com",
+          "modifiedAt": null,
+          "createdAt": null
+        }
+      }
+    ]
+  }
+}

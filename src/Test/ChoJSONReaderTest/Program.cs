@@ -620,7 +620,7 @@ namespace ChoJSONReaderTest
                 foreach (var rec in p)
                     actual.Add(rec);
             }
-            
+
             CollectionAssert.AreEqual(expected, actual);
         }
 
@@ -1160,11 +1160,11 @@ namespace ChoJSONReaderTest
 
         public class Guest
         {
-            //[JsonProperty("guest_id")]
+            [JsonProperty("guest_id")]
             public string GuestId { get; set; }
-            //[JsonProperty("first_name")]
+            [JsonProperty("first_name")]
             public string FirstName { get; set; }
-            //[JsonProperty("last_name")]
+            [ChoJSONRecordField(FieldName = "last_name")]
             public string LastName { get; set; }
             //[JsonProperty("telephone")]
             public string Email { get; set; }
@@ -1220,18 +1220,33 @@ namespace ChoJSONReaderTest
     }
 }";
 
+            var config = new ChoJSONRecordConfiguration<Event>()
+                //.Map(p => p.Guests.FirstOrDefault().GuestId, fieldName: "guest_id")
+                //.Map(p => p.Guests.FirstOrDefault().FirstName, fieldName: "first_name")
+                //.Map(p => p.Guests.FirstOrDefault().LastName, fieldName: "last_name")
+                .MapForType<Guest>(p => p.GuestId, fieldName: "guest_id")
+                .MapForType<Guest>(p => p.FirstName, fieldName: "first_name")
+                .MapForType<Guest>(p => p.LastName, fieldName: "last_name")
+                .Map(p => p.EventId, fieldName: "event_id")
+                .Map(p => p.Guests, "$..guests[*]")
+                ;
+
             using (var p = ChoJSONReader<Event>.LoadText(json)
                 .WithField(m => m.EventId, fieldName: "event_id")
-                .WithField(m => m.Guests, jsonPath: "$..guests")
-                .WithFieldForType<Guest>(m => m.GuestId)
+                .WithField(m => m.Guests, jsonPath: "$..guests[*]")
+                //.WithFieldForType<Guest>(m => m.GuestId, fieldName: "guest_id")
+                //.WithFieldForType<Guest>(m => m.FirstName, fieldName: "first_name")
+                //.WithFieldForType<Guest>(m => m.LastName, fieldName: "last_name")
                 )
             {
                 foreach (var rec in p)
+                {
                     actual.Add(rec);
-//                    Console.WriteLine(rec.Dump());
+                    Console.WriteLine(rec.Dump());
+                }
             }
 
-            CollectionAssert.AreEqual(expected, actual);
+            //CollectionAssert.AreEqual(expected, actual);
         }
 
         [Test]
@@ -1564,20 +1579,20 @@ K,L,M,N,O,P,Q,R,S,T";
         {
             StringBuilder msg = new StringBuilder();
 
-//            using (var fw = new StreamWriter("Sample321.csv", true))
-//            {
-                using (var w = new ChoCSVWriter(FileNameSample32TestCSV)
-                    .WithFirstLineHeader()
+            //            using (var fw = new StreamWriter("Sample321.csv", true))
+            //            {
+            using (var w = new ChoCSVWriter(FileNameSample32TestCSV)
+                .WithFirstLineHeader()
+                )
+            {
+                using (var r = new ChoJSONReader(FileNameSample32JSON)
+                    .WithJSONPath("$..Individuals[*]")
                     )
                 {
-                    using (var r = new ChoJSONReader(FileNameSample32JSON)
-                        .WithJSONPath("$..Individuals[*]")
-                        )
-                    {
-                        w.Write(r.SelectMany(r1 => ((dynamic[])r1.Events).Select(r2 => new { r1.Id, r2.RecordId, r2.RecordType, r2.EventDate })));
-                    }
+                    w.Write(r.SelectMany(r1 => ((dynamic[])r1.Events).Select(r2 => new { r1.Id, r2.RecordId, r2.RecordType, r2.EventDate })));
                 }
-//            }
+            }
+            //            }
 
             FileAssert.AreEqual(FileNameSample32ExpectedCSV, FileNameSample32TestCSV);
         }
@@ -1699,9 +1714,9 @@ K,L,M,N,O,P,Q,R,S,T";
             expected.Columns.Add("Column_26");
             expected.Columns.Add("Column_27");
             expected.Columns.Add("Column_28");
-            expected.Rows.Add("Test123", "TestHub","TestVersion","TestMKT","TestCAP","TestRegion","TestAssembly",
-                "TestProduct","Testgroup","Testsample",1806,1807,1808,1809,1810,1811,1812,1901,1902,
-                1903,1904,1905,1906,1907,1908,1909,1910,1911,1912);
+            expected.Rows.Add("Test123", "TestHub", "TestVersion", "TestMKT", "TestCAP", "TestRegion", "TestAssembly",
+                "TestProduct", "Testgroup", "Testsample", 1806, 1807, 1808, 1809, 1810, 1811, 1812, 1901, 1902,
+                1903, 1904, 1905, 1906, 1907, 1908, 1909, 1910, 1911, 1912);
             expected.Rows.Add("Sample12", "Sample879", "201806.1.0", "Sample098", "TSA CBU", "B8", "B8",
                 63, "63EM", "EM 42 T", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
             expected.Rows.Add("Sample121233", "Sample233879", "2012323806.1.0", "Sampl233e098", "TSA CBU", "B8", "B8",
@@ -1961,10 +1976,245 @@ K,L,M,N,O,P,Q,R,S,T";
             CollectionAssert.AreEqual(expected, actual);
         }
 
+        static void Sample34Test()
+        {
+            StringBuilder csv = new StringBuilder();
+
+            using (var r = new ChoJSONReader("sample34.json")
+                .WithJSONPath("$..data.getUsers[*]")
+                )
+            {
+                var arrPractitioners = r.ToArray();
+                int practitionersCount = arrPractitioners.Length;
+
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    .Configure(c => c.ThrowAndStopOnMissingField = false)
+                    )
+                {
+                    w.Write(arrPractitioners.Select(r1 => new
+                    {
+                        UserProfileDetail_UserStatus_name = r1.UserProfileDetail.UserStatus.name,
+                        UserProfileDetail_UserStatusDate = r1.UserProfileDetail.UserStatusDate,
+                        UserProfileDetail_EnrollId = r1.UserProfileDetail.EnrollId,
+                        UserProfileDetail_lastDate = r1.UserProfileDetail.lastDate,
+                        UserInformation_id = r1.UserInformation.id,
+                        UserInformation_firstName = r1.UserInformation.firstName,
+                        UserInformation_middleName = r1.UserInformation.middleName,
+                        UserInformation_lastName = r1.UserInformation.lastName,
+                        UserInformation_otherNames = r1.UserInformation.otherNames,
+                        UserInformation_primaryState = r1.UserInformation.primaryState,
+                        UserInformation_otherState = r1.UserInformation.otherState != null ? string.Join("|", r1.UserInformation.otherState) : null,
+                        UserInformation_UserLicense_licenseState = r1.UserInformation.UserLicense != null ? string.Join("|", ((dynamic[])r1.UserInformation.UserLicense).Select(r2 => r2.licenseState).ToArray()) : null,
+                        UserInformation_UserLicense_licenseNumber = r1.UserInformation.UserLicense != null ? string.Join("|", ((dynamic[])r1.UserInformation.UserLicense).Select(r2 => Int32.Parse(r2.licenseNumber)).ToArray()) : null,
+                        UserInformation_UserLicense_licenseStatus = r1.UserInformation.UserLicense != null ? string.Join("|", ((dynamic[])r1.UserInformation.UserLicense).Select(r2 => r2.licenseStatus).ToArray()) : null,
+                        UserInformation_UserLicense_aaaaaaaaaaaaaaaaa = r1.UserInformation.UserLicense != null ? string.Join("|", ((dynamic[])r1.UserInformation.UserLicense).Select(r2 => r2.aaaaaaaaaaaaaaaaa).ToArray()) : null,
+                        UserInformation_Setting = r1.UserInformation.Setting,
+                        UserInformation_primaryEmail = r1.UserInformation.primaryEmail,
+                        UserInformation_modifiedAt = r1.UserInformation.modifiedAt,
+                        UserInformation_createdAt = r1.UserInformation.createdAt,
+                    }));
+                }
+                //using (var w = new ChoCSVWriter(csv)
+                //    .WithFirstLineHeader()
+                //    .WithMaxScanRows(2)
+                //    .ThrowAndStopOnMissingField(false)
+                //    )
+                //    w.Write(r);
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
+        static void JSON2XmlArray()
+        {
+            string json = @"{
+  ""header"": ""myheader"",
+  ""transaction"": {
+    ""date"": ""2019-09-24"",
+    ""items"": [
+      {
+        ""number"": ""123"",
+        ""unit"": ""EA"",
+        ""qty"": 6
+      },
+      {
+        ""number"": ""456"",
+        ""unit"": ""CS"",
+        ""qty"": 4
+      }
+    ]
+  }
+}";
+
+            StringBuilder xml = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                r.AfterRecordLoad += (o, e) =>
+                {
+                    var rec = e.Record as dynamic;
+
+                    rec.transaction.SetAsAttribute("date");
+                    var items = ((IList)rec.transaction.items).Cast<dynamic>()
+                        .Select(i =>
+                        {
+                            i.SetAsAttribute("number");
+                            i.SetAsAttribute("unit");
+                            i.SetAsAttribute("qty");
+                            return i;
+                        }).ToArray();
+                };
+
+                using (var w = new ChoXmlWriter(xml)
+                    .Configure(c => c.IgnoreRootName = true)
+                    .Configure(c => c.NodeName = "Root")
+                    )
+                {
+                    w.Write(r);
+                }
+            }
+
+            Console.WriteLine(xml.ToString());
+        }
+
+        static void BuildDynamicDataTableFromJSON()
+        {
+            StringBuilder csv = new StringBuilder();
+            using (var r = new ChoJSONReader("sample35.json")
+                .WithJSONPath("$..Results[*]")
+                )
+            {
+                var r1 = r.FlattenBy("owners", "address");
+                var dt = r1.AsDataTable(selectedFields: new string[] { "Make_ID", "Model_ID", "name", "city" });
+                Console.WriteLine(dt.DumpAsJson());
+
+                return;
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    .WithFields("Make_ID", "Model_ID", "name", "city")
+                    )
+                    w.Write(r1);
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
+        static void JSONDataTable()
+        {
+            string json = @"{
+              ""header"": ""myheader"",
+              ""transaction"": {
+                ""date"": ""2019-09-24"",
+                ""items"": [
+                  {
+                    ""number"": ""123"",
+                    ""unit"": ""EA"",
+                    ""qty"": 6
+                  },
+                  {
+                    ""number"": ""456"",
+                    ""unit"": ""CS"",
+                    ""qty"": 4
+                  }
+                ]
+              }
+            }";
+
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                var dt = r.Select(f => f.Flatten()).AsDataTable();
+                Console.WriteLine(dt.DumpAsJson());
+            }
+        }
+
+        static void JSON2CSV1()
+        {
+            StringBuilder csv = new StringBuilder();
+
+            using (var r = new ChoJSONReader("sample36.json")
+                .WithJSONPath("$..products[*]")
+                )
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    )
+                {
+                    w.Write(r);
+                }
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
+        public class Person
+        {
+            public string Name { get; set; }
+            public JToken Items { get; set; }
+
+            [JsonIgnore]
+            public string ItemsValue => Items.ToString();
+        }
+
+        static void DeserializeAsJToken()
+        {
+            string json = @"{
+  ""name"" : ""tim"",
+  ""items"" : {
+    ""car"" : ""Mercedes"",
+    ""house"" : ""2 Bedroom""
+  }
+}";
+            using (var r = ChoJSONReader<Person>.LoadText(json))
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+        static void SetupTest()
+        {
+            List<ExpandoObject> objs = new List<ExpandoObject>();
+            dynamic rec1 = new ExpandoObject();
+            rec1.Id = 10;
+            rec1.Name = "Mark";
+            objs.Add(rec1);
+
+            dynamic rec2 = new ExpandoObject();
+            rec2.Id = 200;
+            rec2.Name = "Lou";
+            objs.Add(rec2);
+
+            StringBuilder csv = new StringBuilder();
+            using (var parser = new ChoCSVWriter(csv)
+              .WithFirstLineHeader()
+                .Setup(r => r.BeforeRecordWrite += (o, e) =>
+                {
+                })
+              )
+            {
+                parser.Write(objs);
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
+        static void LargeJsonTest()
+        {
+            //JObject o1 = JObject.Parse(File.ReadAllText(@"citylots.json"));
+
+            using (var r = new ChoJSONReader("sample14.json") //sf_city_lots citylots
+                .WithJSONPath("$.irCurves.EUR")
+                )
+            {
+                //Console.WriteLine(r.Count());
+                foreach (var rec in r.Take(10))
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            PolyTypeTest();
+            Test3();
         }
 
         public class VarObject
@@ -2018,7 +2268,7 @@ K,L,M,N,O,P,Q,R,S,T";
   }
 ]";
             using (var r = ChoJSONReader<MyResponse>.LoadText(json)
-                .WithField(f => f.VarData, customSerializer: o => new Dictionary<string, VarObject> { { "1", new VarObject()} })
+                .WithField(f => f.VarData, customSerializer: o => new Dictionary<string, VarObject> { { "1", new VarObject() } })
                 )
             {
                 foreach (var rec in r)
@@ -2040,7 +2290,7 @@ K,L,M,N,O,P,Q,R,S,T";
                        questionid == response.questionid &&
                        fieldname == response.fieldname &&
                        name == response.name;// &&
-                       //EqualityComparer<object>.Default.Equals(this.response, response.response);
+                                             //EqualityComparer<object>.Default.Equals(this.response, response.response);
             }
 
             public override int GetHashCode()
@@ -2144,7 +2394,7 @@ K,L,M,N,O,P,Q,R,S,T";
     }
   }
 }";
-            foreach (var rec in ChoJSONReader< RegistrantInfo>.LoadText(json))
+            foreach (var rec in ChoJSONReader<RegistrantInfo>.LoadText(json))
                 actual.Add(rec);
 
             CollectionAssert.AreEqual(expected, actual);
@@ -2195,7 +2445,7 @@ K,L,M,N,O,P,Q,R,S,T";
             foreach (var rec in ChoJSONReader.LoadText(json))
             {
                 actual.Add(rec);
-//                Console.WriteLine(rec.Dump());
+                //                Console.WriteLine(rec.Dump());
             }
 
             CollectionAssert.AreEqual(expected, actual);
@@ -2273,7 +2523,7 @@ K,L,M,N,O,P,Q,R,S,T";
                 )
             {
                 actual.Add(rec);
-//                Console.WriteLine(rec.Dump());
+                //                Console.WriteLine(rec.Dump());
             }
 
             CollectionAssert.AreEqual(expected, actual);
@@ -2435,7 +2685,7 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
             {
                 foreach (var rec in p)
                     actual.Add(rec);
-//                    Console.WriteLine($"Name: {rec.name}, Id: {rec.id}");
+                //                    Console.WriteLine($"Name: {rec.name}, Id: {rec.id}");
             }
             CollectionAssert.AreEqual(expected, actual);
         }
@@ -2629,9 +2879,9 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
         [Test]
         public static void DictTest()
         {
-            List<Dictionary<string, LevelBonus>> expected = new List<Dictionary<string, LevelBonus>> { new Dictionary<string, LevelBonus>()};
+            List<Dictionary<string, LevelBonus>> expected = new List<Dictionary<string, LevelBonus>> { new Dictionary<string, LevelBonus>() };
             expected[0].Add("0", new LevelBonus { Armor = 1, Strenght = 1, Mana = 2, Power = 1, Health = 1 });
-            expected[0].Add("1", new LevelBonus { Armor = 1, Strenght = 1});
+            expected[0].Add("1", new LevelBonus { Armor = 1, Strenght = 1 });
             List<object> actual = new List<object>();
 
             string json = @"{
@@ -2873,7 +3123,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
                             r1.invoiceNumber
                         })));
             }
-            actual  = sb.ToString();
+            actual = sb.ToString();
 
             Assert.AreEqual(expected, actual);
         }
@@ -2915,7 +3165,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
                 { "PlanLimitAmount",(double)3000.01 },
                 { "Visible","False" },
                 { "Count",null } };
-            
+
             string json = @" {
         ""Source"": ""WEB"",
         ""CodePlan"": 5,
@@ -2932,7 +3182,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             string xml = ChoXmlWriter.ToText(r.First(), new ChoXmlRecordConfiguration { EmitDataType = false });
             Console.WriteLine(xml);
             var actual = ChoXmlReader.LoadText(xml).First();
-            
+
             Assert.AreEqual(expected, actual);
         }
 
@@ -2979,7 +3229,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             {
                 foreach (var rec in p)
                     actual.Add(rec);
-//                    Console.WriteLine(rec.Dump());
+                //                    Console.WriteLine(rec.Dump());
             }
 
             CollectionAssert.AreEqual(expected, actual);
@@ -3081,7 +3331,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             expected1.Columns.Add("IsAddAllowed");
             expected1.Columns.Add("IsEditAllowed");
             expected1.Columns.Add("IsDeleteAllowed");
-            expected1.Rows.Add("B27A68AD-7C21-4DDB-8A1D-8932459CF53B",true,true,true);
+            expected1.Rows.Add("B27A68AD-7C21-4DDB-8A1D-8932459CF53B", true, true, true);
 
             DataTable expected2 = new DataTable();
             expected2.Columns.Add("ViewId");
@@ -3613,7 +3863,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             {
                 foreach (var rec in p)
                     actual.Add(rec);
-//                    Console.WriteLine(rec.Dump());
+                //                    Console.WriteLine(rec.Dump());
             }
 
             CollectionAssert.AreEqual(expected, actual);
@@ -4186,7 +4436,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
         [Test]
         public static void GetUSDEURTest()
         {
-            
+
             List<RootObject1> expected = new List<RootObject1>{
                 new RootObject1 { success = true, terms = @"https://currencylayer.com/terms", privacy = @"https://currencylayer.com/privacy", source = "USD", timestamp = 1531859047, quotes = new Quotes
                 {   USDAED = 3.672696, USDAFN = 72.349998, USDALL = 107.800003, USDAMD = 479.869995, USDANG = 1.840135, USDAOA = 253.248993, USDARS = 27.519729, USDAUD = 1.352971, USDAWG = 1.78, USDAZN = 1.699498, USDBAM = 1.679202, USDBBD = 2, USDBDT = 83.989998, USDBGN = 1.670597, USDBHD = 0.378397, USDBIF = 1750.97998, USDBMD = 1, USDBND = 1.351802, USDBOB = 6.860055, USDBRL = 3.843706, USDBSD = 1, USDBTC = 0.000137, USDBTN = 68.599998, USDBWP = 10.240898, USDBYN = 1.969683,
@@ -4294,7 +4544,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
 
             using (var p = ChoJSONReader.LoadText(json).WithJSONPath("$.*"))
             {
-                actual =p.Count();
+                actual = p.Count();
             }
             Assert.AreEqual(expected, actual);
         }
@@ -4645,7 +4895,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             expected.Columns.Add("links_0_uri");
             expected.Columns.Add("links_1_rel");
             expected.Columns.Add("links_1_uri");
-            expected.Rows.Add("1234","foo1","bar1","self","/blah/1234","pricing_data","/blah/1234/pricing_data");
+            expected.Rows.Add("1234", "foo1", "bar1", "self", "/blah/1234", "pricing_data", "/blah/1234/pricing_data");
             expected.Rows.Add("5678", "foo2", "bar2", "self", "/blah/5678", "pricing_data", "/blah/5678/pricing_data");
             DataTable actual = null;
 
@@ -4789,7 +5039,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             {
                 foreach (var rec in p)
                     actual.Add(rec);
-//                    Console.WriteLine(rec.Dump());
+                //                    Console.WriteLine(rec.Dump());
             }
 
             CollectionAssert.AreEqual(expected, actual);
@@ -4987,8 +5237,10 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
         [Test]
         public static void BookingInfoTest()
         {
-            FlightInfo expected = new FlightInfo { DepartAt=new DateTime(2018,6,3,6,25,0,DateTimeKind.Utc),
-                ArriveAt = new DateTime(2018,6,3,7,25,0,DateTimeKind.Utc),
+            FlightInfo expected = new FlightInfo
+            {
+                DepartAt = new DateTime(2018, 6, 3, 6, 25, 0, DateTimeKind.Utc),
+                ArriveAt = new DateTime(2018, 6, 3, 7, 25, 0, DateTimeKind.Utc),
                 Origin = "PEN",
                 BookingInfo = new BookingInfo[] { new BookingInfo { BookingCode = "Q", TravelClass = "ECONOMY" } }
             };
@@ -5068,7 +5320,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
                 .WithJSONPath("$.results[0].itineraries[0].outbound.flights")
                 .FirstOrDefault();
 
-            Assert.AreEqual(expected,x);
+            Assert.AreEqual(expected, x);
         }
 
         [Test]
@@ -5120,7 +5372,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
                 //.WithField("category")
                 )
             {
-//                var tmp = p.ToList();
+                //                var tmp = p.ToList();
                 actual = p.AsDataTable();
                 //foreach (var rec in p)
                 //	Console.WriteLine(rec.Dump());
@@ -5274,7 +5526,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
                     ChoDynamicObject.FromKeyValuePairs(r2.Select(kvp => new KeyValuePair<string, object>(kvp.Key.ToString(), kvp.Value)))
                 ).ToList();
 
-//                Console.WriteLine(ChoJSONWriter.ToTextAll(result));
+                //                Console.WriteLine(ChoJSONWriter.ToTextAll(result));
             }
 
             CollectionAssert.AreEqual(expected, actual);
@@ -5648,8 +5900,8 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
         [Test]
         public static void Sample33()
         {
-            Issue expected = new Issue{ id = 1, project_id = 1, project_name = "name of project" };
-            
+            Issue expected = new Issue { id = 1, project_id = 1, project_name = "name of project" };
+
             string json = @"{
                ""issue"" : 
                {
@@ -5863,8 +6115,8 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             using (var p = ChoJSONReader.LoadText(json).Configure(c => c.SupportMultipleContent = true)
                 )
             {
-//                dynamic rec = p.First();
-//                var x = rec.Emp[0];
+                //                dynamic rec = p.First();
+                //                var x = rec.Emp[0];
 
                 using (var w = new ChoXmlWriter(sb)
                     .Configure(c => c.IgnoreRootName = true)
@@ -6540,13 +6792,13 @@ ABC24689753";
                 new {pickcompname = (object)"ABC Company", qty = (object)5},
                 new {pickcompname = (object)"ABC Company", qty = (object)7}
             };
-/*            dynamic expectedDyn1 = new ExpandoObject();
-            expectedDyn1.pickcompname = "ABC Company";
-            expectedDyn1.qty = 5;
-            dynamic expectedDyn2 = new ExpandoObject();
-            expectedDyn2.pickcompname = "ABC Company";
-            expectedDyn2.qty = 7;
-            IEnumerable<object> expected = new object[] { expectedDyn1, expectedDyn2 };*/
+            /*            dynamic expectedDyn1 = new ExpandoObject();
+                        expectedDyn1.pickcompname = "ABC Company";
+                        expectedDyn1.qty = 5;
+                        dynamic expectedDyn2 = new ExpandoObject();
+                        expectedDyn2.pickcompname = "ABC Company";
+                        expectedDyn2.qty = 7;
+                        IEnumerable<object> expected = new object[] { expectedDyn1, expectedDyn2 };*/
             var actual = expected;
 
             //            expectedDyn.dasdf  
@@ -6816,7 +7068,7 @@ ABC24689753";
                 new ChoDynamicObject {
                     { "USD",  new IRCUBE[] { new IRCUBE { CurveDefinitionId= "FCC" , CurveFamilyId =  "value" , CurveName =  "value" , MarketDataSet = "value" ,  Referenced = "False" } , new IRCUBE { CurveDefinitionId= "FCC" , CurveFamilyId="value" , CurveName="value" , MarketDataSet= "value" , Referenced= "False" } } },
                     { "EUR", new IRCUBE[] { new IRCUBE { CurveDefinitionId="FCC" , CurveFamilyId= "EUR/EURCURVE" , CurveName= "EURCURVE" , MarketDataSet = "FCC-IRCUBE" , Referenced = "False" } } },
-                    { "GBP" , new IRCUBE[]{ new IRCUBE { CurveDefinitionId="FCC" , CurveFamilyId="value" , CurveName="value" , MarketDataSet ="value" , Referenced = "False" } } }  
+                    { "GBP" , new IRCUBE[]{ new IRCUBE { CurveDefinitionId="FCC" , CurveFamilyId="value" , CurveName="value" , MarketDataSet ="value" , Referenced = "False" } } }
                 }
             };
             List<object> actual = new List<object>();
@@ -6859,7 +7111,7 @@ ABC24689753";
             {
                 foreach (dynamic rec in p)
                     actual.Add(rec.menu.popup.menuitem[1].value);
-//                    Console.WriteLine(rec.menu.popup.menuitem[1].value);
+                //                    Console.WriteLine(rec.menu.popup.menuitem[1].value);
             }
 
             CollectionAssert.AreEqual(expected, actual);
@@ -6889,7 +7141,7 @@ ABC24689753";
                             ((ChoDynamicObject)newObj).AddOrUpdate(kvp.Key, kvp.Value);
 
                         actual.Add(newObj);
-//                        Console.WriteLine(ChoUtility.DumpAsJson(newObj));
+                        //                        Console.WriteLine(ChoUtility.DumpAsJson(newObj));
                     }
                 }
             }
@@ -7024,7 +7276,7 @@ ABC24689753";
                         new DataMapper{ Name = "version", DataMapperProperty = new DataMapperProperty{DataType = "int", Source = "column", SourceColumn = "version-column", Default = "1" } } }
                         }
                     }
-                } 
+                }
             };
             List<object> actual = new List<object>();
 
@@ -7055,10 +7307,10 @@ ABC24689753";
                 foreach (var x in jr)
                 {
                     actual.Add(x);
-/*                    Console.WriteLine(x.Id);
-                    foreach (var fm in x.Daughters)
-                        Console.WriteLine(fm);
- */
+                    /*                    Console.WriteLine(x.Id);
+                                        foreach (var fm in x.Daughters)
+                                            Console.WriteLine(fm);
+                     */
                 }
             }
             CollectionAssert.AreEqual(expected, actual);
@@ -7115,7 +7367,7 @@ ABC24689753";
         [Test]
         public static void KVPTest()
         {
-            List<object> expected = new List<object>{"OBJ1","OBJ2"};
+            List<object> expected = new List<object> { "OBJ1", "OBJ2" };
             List<object> actual = new List<object>();
 
             using (var jr = new ChoJSONReader<Dictionary<string, string>>(FileNameSample5JSON).Configure(c => c.UseJSONSerialization = true))
@@ -7301,7 +7553,7 @@ ABC24689753";
         public static void JsonToCSV()
         {
             Assert.Fail("File companies.json not found");
-            
+
             using (var csv = new ChoCSVWriter("companies.csv") { TraceSwitch = ChoETLFramework.TraceSwitchOff }.WithFirstLineHeader())
             {
                 csv.Write(new ChoJSONReader<Company>("companies.json") { TraceSwitch = ChoETLFramework.TraceSwitchOff }.NotifyAfter(10000).Take(10).

@@ -489,7 +489,7 @@ namespace ChoETL
                     if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
                     {
                         if (kvp.Value.FieldType == null)
-                            kvp.Value.FieldType = Configuration.MaxScanRows == 0 ? DiscoverFieldType(fieldValue as string, Configuration) : typeof(string);
+                            kvp.Value.FieldType = typeof(string);
                     }
                     else
                     {

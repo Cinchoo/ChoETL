@@ -1174,9 +1174,175 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
                 }
             }
         }
+        public class Client
+        {
+            public int Indice { get; set; }
+            public string Name { get; set; }
+            public string Surname { get; set; }
+            public string Company { get; set; }
+            public string Tel1 { get; set; }
+            public string Tel2 { get; set; }
+        }
+
+        public class CallClient
+        {
+            public int Indice { get; set; }
+            public string CallDateTime { get; set; }
+            public string Status { get; set; }
+        }
+
+        public class ResponsePollClient
+        {
+            public int Indice { get; set; }
+            public string Question1 { get; set; }
+            public string Question2 { get; set; }
+            public string Question3 { get; set; }
+            public string StatusPoll { get; set; }
+        }
+
+        public class DataClient
+        {
+            public Client client { get; set; }
+            public CallClient callClient { get; set; }
+            public ResponsePollClient pollClient { get; set; }
+        }
+
+        static void WriteComplexObjs()
+        {
+            var rec = new DataClient
+            {
+                client = new Client
+                {
+                    Indice = 1,
+                    Company = "ABC Company",
+                    Name = "Name",
+                    Surname = "Surname",
+                    Tel1 = "555-555-5555",
+                    Tel2 = "610-333-1234"
+                },
+                callClient = new CallClient
+                {
+                    Indice = 1,
+                    CallDateTime = DateTime.Today.ToString(),
+                    Status = "Approved"
+                },
+                pollClient = new ResponsePollClient
+                {
+                    Indice = 1,
+                    Question1 = "Question1",
+                    Question2 = "Question2",
+                    Question3 = "Question3",
+                    StatusPoll = "StatusPoll"
+                }
+            };
+
+            StringBuilder csv = new StringBuilder();
+
+            var cf = new ChoCSVRecordConfiguration<DataClient>()
+                .WithFirstLineHeader()
+                .Ignore(f => f.callClient.Indice)
+                .Ignore(f => f.pollClient.Indice)
+                //.Map(f => f.client.Indice)
+                //.Map(f => f.client.Name)
+                //.Map(f => f.client.Tel1)
+                //.Map(f => f.callClient.CallDateTime)
+                //.Map(f => f.callClient.Status)
+                //.Map(f => f.pollClient.Question1)
+                //.Map(f => f.pollClient.Question2)
+                //.Map(f => f.pollClient.Question2)
+                //.Map(f => f.pollClient.StatusPoll)
+                ;
+
+            using (var w = new ChoCSVWriter<DataClient>(csv, cf)
+                //.WithFirstLineHeader()
+                //.ClearFields()
+                //.WithField(f => f.client.Indice)
+                //.WithField(f => f.client.Name)
+                //.WithField(f => f.client.Tel1)
+                //.WithField(f => f.callClient.CallDateTime)
+                //.WithField(f => f.callClient.Status)
+                //.WithField(f => f.pollClient.Question1)
+                //.WithField(f => f.pollClient.Question2)
+                //.WithField(f => f.pollClient.Question2)
+                //.WithField(f => f.pollClient.StatusPoll)
+                )
+            {
+                w.Write(rec);
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
+
+        public class StudentInfo1
+        {
+            public string Id { get; set; }
+            public string Name { get; set; }
+            [Range(0, 1)]
+            public Course1[] Courses { get; set; }
+
+            public StudentInfo1()
+            {
+                Courses = new Course1[2];
+            }
+        }
+        public class Course1
+        {
+            //[DisplayName("CreId")]
+            public string CourseId { get; set; }
+            //[DisplayName("CreName")]
+            public string CourseName { get; set; }
+        }
+
+
+        static void ArrayWriteTest()
+        {
+            var rec = new StudentInfo1
+            {
+                Id = "1",
+                Name = "Tom",
+                Courses = new Course1[]
+                {
+                    new Course1
+                    {
+                        CourseId = "C11",
+                        CourseName = "Math"
+                    },
+                    new Course1
+                    {
+                        CourseId = "C12",
+                        CourseName = "Biology"
+                    }
+
+                }
+            };
+
+            StringBuilder csv = new StringBuilder();
+
+            using (var w = new ChoCSVWriter<StudentInfo1>(csv)
+                .WithFirstLineHeader()
+                .ClearFields()
+                .WithField(o => o.Id)
+                .WithField(o => o.Name)
+                //.WithField(o => o.Courses.FirstOrDefault().CourseId, fieldName: "CreId")
+                //.WithFieldForType<Course1>(o => o.CourseId, fieldName: "CreId")
+                //.Index(o => o.Courses, 0, 1)
+                )
+            {
+                w.Write(rec);
+            }
+
+            Console.WriteLine(csv.ToString());
+
+        }
 
         static void Main(string[] args)
         {
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
+            ArrayWriteTest();
+
+            return;
+
             ChoDynamicObjectSettings.UseOrderedDictionary = false;
             JSON2CSVTest2();
             return;

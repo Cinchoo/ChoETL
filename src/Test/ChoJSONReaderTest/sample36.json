@@ -1,0 +1,40 @@
+﻿{
+  "products": [
+    {
+      "product": "my-sku-123",
+      "display": { "en": "String" },
+      "description": {
+        "summary": { "en": "String" },
+        "action": { "en": "String" },
+        "full": { "en": "String" }
+      },
+      "fulfillment": {
+        "instructions": {
+          "en": "String",
+          "es": "String"
+        }
+      },
+      "image": "https://d8y8nchqlnmka.cloudfront.net/NVaGM-nhSpQ/-FooqIP-R84/photio-imac-hero.png",
+      "format": "digital",
+      "sku": "string",
+      "attributes": {
+        "key1": "value1",
+        "key2": "value2"
+      },
+      "pricing": {
+        "trial": 2,
+        "interval": "month",
+        "intervalLength": 1,
+        "quantityBehavior": "allow",
+        "quantityDefault": 1,
+        "price": {
+          "USD": 14.95,
+          "EUR": 10.99
+        },
+        "quantityDiscounts": { 10: 25.00 },
+        "discountReason": { "en": "The Reason" },
+        "discountDuration": 1
+      }
+    }
+  ]
+}

@@ -18,6 +18,7 @@ using Newtonsoft.Json;
 using System.Data.SqlClient;
 using UnitTestHelper;
 using System.Data;
+using Newtonsoft.Json.Linq;
 
 namespace ChoXmlReaderTest
 {
@@ -397,6 +398,24 @@ namespace ChoXmlReaderTest
         }
     }
 
+    public class Car : IChoNotifyRecordFieldConfigurable, IChoNotifyRecordConfigurable
+    {
+        public string StockNumber { get; set; }
+        public string Make { get; set; }
+        public XmlNode[] Models { get; set; }
+
+        public void RecondConfigure(ChoRecordConfiguration configuration)
+        {
+        }
+
+        public void RecondFieldConfigure(ChoRecordFieldConfiguration fieldConfiguration)
+        {
+            if (fieldConfiguration.Name == nameof(Models))
+            {
+                ((ChoXmlRecordFieldConfiguration)fieldConfiguration).XPath = "//model";
+            }
+        }
+    }
 
     [TestFixture]
     [SetCulture("en-US")] // TODO: Check if correct culture is used
@@ -405,7 +424,46 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Xml2JSONWithTabs();
+
+            PartialLoadTest();
+        }
+
+        static void PartialLoadTest()
+        {
+            using (var r = new ChoXmlReader<Car>("sample49.xml")
+                .WithXPath("/Car")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void XmlRead1()
+        {
+            string csv = @"<Flusso>
+  <Affidamento IdAffidamento=""2325"">
+   <Pratica IdPratica=""0010193043084620""></Pratica>  
+   <Pratica IdPratica=""0010193043084611""></Pratica>  
+   </Affidamento>
+  <Affidamento IdAffidamento=""2325"">  
+    <Pratica IdPratica=""0010193043084621""></Pratica>
+   </Affidamento>
+</Flusso>
+";
+
+            using (var r = ChoXmlReader.LoadText(csv)
+                .WithField("IdAffidamento")
+                .WithField("Pratica", isArray: true)
+                )
+            {
+                foreach (var e in r)
+                {
+                        Console.WriteLine(e.IdAffidamento);
+                        foreach (var Pratica in e.Pratica)
+                            Console.WriteLine(Pratica.IdPratica);
+                }
+            }
         }
 
         static void Xml2JSONWithTabs()

@@ -38,8 +38,4 @@ namespace ChoETL
     {
         void RecondFieldConfigure(ChoRecordFieldConfiguration fieldConfiguration);
     }
-
-    //public interface IChoNotifyRecordRead : IChoNotifyRecordFieldRead
-    //{
-    //}
 }

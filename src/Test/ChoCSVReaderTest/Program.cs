@@ -1033,17 +1033,6 @@ new ChoDynamicObject{ {"Column1","2011.01.07"},{"Column2", new DateTime(2011,1,7
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [ChoCSVRecordObject(NullValue = "#NULL#")]
-        public class Emp
-        {
-            [ChoCSVRecordField(1)]
-            public int Id { get; set; }
-            [ChoCSVRecordField(2)]
-            public string Name { get; set; }
-            [ChoCSVRecordField(3, NullValue = "#NULL#")]
-            public string City { get; set; }
-        }
-
         public class LocationDefinition
         {
             public string PlaceName { get; set; }
@@ -1147,9 +1136,9 @@ Date,Count
             };
             List<object> actual = new List<object>();
             using (var p = new ChoCSVReader<Site>(FileNameSample3CSV)
-                            //.ClearFields()
-                            //.WithField(m => m.SiteID)
-                            //.WithField(m => m.SiteAddress.City)
+                //.ClearFields()
+                //.WithField(m => m.SiteID)
+                //.WithField(m => m.SiteAddress.City)
                 .WithFirstLineHeader(true)
                 )
             {
@@ -1158,7 +1147,7 @@ Date,Count
 
                 //}
                 foreach (var rec in p)
-                    actual.Add(rec); 
+                    actual.Add(rec);
                 //Exception ex;
                 //Console.WriteLine("IsValid: " + p.IsValid(out ex));
             }
@@ -1518,7 +1507,7 @@ Date,Count
         public static void Sample21()
         {
             DataTable expected = new DataTable();
-            expected.Columns.AddRange(new DataColumn[] { 
+            expected.Columns.AddRange(new DataColumn[] {
                 new DataColumn("face"), new DataColumn("confidence"), new DataColumn("gaze_0_x"), new DataColumn("gaze_0_y"), new DataColumn("gaze_0_z"), new DataColumn("gaze_1_x"), new DataColumn("gaze_1_y"), new DataColumn("gaze_1_z"), new DataColumn("gaze_angle_x"), new DataColumn("gaze_angle_y"), new DataColumn("eye_lmk_x_0"), new DataColumn("eye_lmk_x_1"), new DataColumn("eye_lmk_x_2"), new DataColumn("eye_lmk_x_3"), new DataColumn("eye_lmk_x_4"), new DataColumn("eye_lmk_x_5"), new DataColumn("eye_lmk_x_6"), new DataColumn("eye_lmk_x_7"), new DataColumn("eye_lmk_x_8"), new DataColumn("eye_lmk_x_9"), new DataColumn("eye_lmk_x_10"), new DataColumn("eye_lmk_x_11"), new DataColumn("eye_lmk_x_12"), new DataColumn("eye_lmk_x_13"), new DataColumn("eye_lmk_x_14"), new DataColumn("eye_lmk_x_15"), new DataColumn("eye_lmk_x_16"), new DataColumn("eye_lmk_x_17"), new DataColumn("eye_lmk_x_18"), new DataColumn("eye_lmk_x_19"), new DataColumn("eye_lmk_x_20"), new DataColumn("eye_lmk_x_21"), new DataColumn("eye_lmk_x_22"), new DataColumn("eye_lmk_x_23"), new DataColumn("eye_lmk_x_24"), new DataColumn("eye_lmk_x_25"), new DataColumn("eye_lmk_x_26"), new DataColumn("eye_lmk_x_27"), new DataColumn("eye_lmk_x_28"), new DataColumn("eye_lmk_x_29"), new DataColumn("eye_lmk_x_30"), new DataColumn("eye_lmk_x_31"), new DataColumn("eye_lmk_x_32"), new DataColumn("eye_lmk_x_33"), new DataColumn("eye_lmk_x_34"), new DataColumn("eye_lmk_x_35"), new DataColumn("eye_lmk_x_36"), new DataColumn("eye_lmk_x_37"), new DataColumn("eye_lmk_x_38"), new DataColumn("eye_lmk_x_39"), new DataColumn("eye_lmk_x_40"), new DataColumn("eye_lmk_x_41"), new DataColumn("eye_lmk_x_42"), new DataColumn("eye_lmk_x_43"), new DataColumn("eye_lmk_x_44"), new DataColumn("eye_lmk_x_45"), new DataColumn("eye_lmk_x_46"), new DataColumn("eye_lmk_x_47"), new DataColumn("eye_lmk_x_48"), new DataColumn("eye_lmk_x_49"), new DataColumn("eye_lmk_x_50"), new DataColumn("eye_lmk_x_51"), new DataColumn("eye_lmk_x_52"), new DataColumn("eye_lmk_x_53"), new DataColumn("eye_lmk_x_54"), new DataColumn("eye_lmk_x_55"), new DataColumn("eye_lmk_y_0"), new DataColumn("eye_lmk_y_1"), new DataColumn("eye_lmk_y_2"), new DataColumn("eye_lmk_y_3"), new DataColumn("eye_lmk_y_4"), new DataColumn("eye_lmk_y_5"), new DataColumn("eye_lmk_y_6"), new DataColumn("eye_lmk_y_7"), new DataColumn("eye_lmk_y_8"), new DataColumn("eye_lmk_y_9"), new DataColumn("eye_lmk_y_10"), new DataColumn("eye_lmk_y_11"), new DataColumn("eye_lmk_y_12"), new DataColumn("eye_lmk_y_13"), new DataColumn("eye_lmk_y_14"), new DataColumn("eye_lmk_y_15"), new DataColumn("eye_lmk_y_16"), new DataColumn("eye_lmk_y_17"), new DataColumn("eye_lmk_y_18"), new DataColumn("eye_lmk_y_19"), new DataColumn("eye_lmk_y_20"), new DataColumn("eye_lmk_y_21"), new DataColumn("eye_lmk_y_22"), new DataColumn("eye_lmk_y_23"), new DataColumn("eye_lmk_y_24"), new DataColumn("eye_lmk_y_25"), new DataColumn("eye_lmk_y_26"), new DataColumn("eye_lmk_y_27"), new DataColumn("eye_lmk_y_28"), new DataColumn("eye_lmk_y_29"), new DataColumn("eye_lmk_y_30"), new DataColumn("eye_lmk_y_31"), new DataColumn("eye_lmk_y_32"), new DataColumn("eye_lmk_y_33"), new DataColumn("eye_lmk_y_34"), new DataColumn("eye_lmk_y_35"), new DataColumn("eye_lmk_y_36"), new DataColumn("eye_lmk_y_37"), new DataColumn("eye_lmk_y_38"), new DataColumn("eye_lmk_y_39"), new DataColumn("eye_lmk_y_40"), new DataColumn("eye_lmk_y_41"), new DataColumn("eye_lmk_y_42"), new DataColumn("eye_lmk_y_43"), new DataColumn("eye_lmk_y_44"), new DataColumn("eye_lmk_y_45"), new DataColumn("eye_lmk_y_46"), new DataColumn("eye_lmk_y_47"), new DataColumn("eye_lmk_y_48"), new DataColumn("eye_lmk_y_49"), new DataColumn("eye_lmk_y_50"), new DataColumn("eye_lmk_y_51"), new DataColumn("eye_lmk_y_52"), new DataColumn("eye_lmk_y_53"), new DataColumn("eye_lmk_y_54"), new DataColumn("eye_lmk_y_55"), new DataColumn("eye_lmk_X_01"), new DataColumn("eye_lmk_X_110"), new DataColumn("eye_lmk_X_210"), new DataColumn("eye_lmk_X_310"), new DataColumn("eye_lmk_X_410"),new DataColumn("eye_lmk_X_56"), new DataColumn("eye_lmk_X_61"),new DataColumn("eye_lmk_X_71"), new DataColumn("eye_lmk_X_81"), new DataColumn("eye_lmk_X_91"),new DataColumn("eye_lmk_X_101"), new DataColumn("eye_lmk_X_111"), new DataColumn("eye_lmk_X_121"), new DataColumn("eye_lmk_X_131"), new DataColumn("eye_lmk_X_141"), new DataColumn("eye_lmk_X_151"), new DataColumn("eye_lmk_X_161"), new DataColumn("eye_lmk_X_171"), new DataColumn("eye_lmk_X_181"), new DataColumn("eye_lmk_X_191"), new DataColumn("eye_lmk_X_201"), new DataColumn("eye_lmk_X_211"), new DataColumn("eye_lmk_X_221"), new DataColumn("eye_lmk_X_231"), new DataColumn("eye_lmk_X_241"), new DataColumn("eye_lmk_X_251"), new DataColumn("eye_lmk_X_261"), new DataColumn("eye_lmk_X_271"), new DataColumn("eye_lmk_X_281"), new DataColumn("eye_lmk_X_291"), new DataColumn("eye_lmk_X_301"), new DataColumn("eye_lmk_X_311"), new DataColumn("eye_lmk_X_321"), new DataColumn("eye_lmk_X_331"), new DataColumn("eye_lmk_X_341"), new DataColumn("eye_lmk_X_351"), new DataColumn("eye_lmk_X_361"), new DataColumn("eye_lmk_X_371"), new DataColumn("eye_lmk_X_381"), new DataColumn("eye_lmk_X_391"), new DataColumn("eye_lmk_X_401"), new DataColumn("eye_lmk_X_411"), new DataColumn("eye_lmk_X_421"), new DataColumn("eye_lmk_X_431"), new DataColumn("eye_lmk_X_441"), new DataColumn("eye_lmk_X_451"), new DataColumn("eye_lmk_X_461"), new DataColumn("eye_lmk_X_471"), new DataColumn("eye_lmk_X_481"), new DataColumn("eye_lmk_X_491"), new DataColumn("eye_lmk_X_501"), new DataColumn("eye_lmk_X_511"), new DataColumn("eye_lmk_X_521"), new DataColumn("eye_lmk_X_531"), new DataColumn("eye_lmk_X_541"), new DataColumn("eye_lmk_X_551"), new DataColumn("eye_lmk_Y_01"), new DataColumn("eye_lmk_Y_110"), new DataColumn("eye_lmk_Y_210"), new DataColumn("eye_lmk_Y_310"), new DataColumn("eye_lmk_Y_410"), new DataColumn("eye_lmk_Y_56"), new DataColumn("eye_lmk_Y_61"), new DataColumn("eye_lmk_Y_71"), new DataColumn("eye_lmk_Y_81"), new DataColumn("eye_lmk_Y_91"), new DataColumn("eye_lmk_Y_101"), new DataColumn("eye_lmk_Y_111"), new DataColumn("eye_lmk_Y_121"), new DataColumn("eye_lmk_Y_131"), new DataColumn("eye_lmk_Y_141"), new DataColumn("eye_lmk_Y_151"), new DataColumn("eye_lmk_Y_161"), new DataColumn("eye_lmk_Y_171"), new DataColumn("eye_lmk_Y_181"), new DataColumn("eye_lmk_Y_191"), new DataColumn("eye_lmk_Y_201"), new DataColumn("eye_lmk_Y_211"), new DataColumn("eye_lmk_Y_221"), new DataColumn("eye_lmk_Y_231"), new DataColumn("eye_lmk_Y_241"), new DataColumn("eye_lmk_Y_251"), new DataColumn("eye_lmk_Y_261"), new DataColumn("eye_lmk_Y_271"), new DataColumn("eye_lmk_Y_281"), new DataColumn("eye_lmk_Y_291"), new DataColumn("eye_lmk_Y_301"), new DataColumn("eye_lmk_Y_311"), new DataColumn("eye_lmk_Y_321"), new DataColumn("eye_lmk_Y_331"), new DataColumn("eye_lmk_Y_341"), new DataColumn("eye_lmk_Y_351"), new DataColumn("eye_lmk_Y_361"), new DataColumn("eye_lmk_Y_371"), new DataColumn("eye_lmk_Y_381"), new DataColumn("eye_lmk_Y_391"), new DataColumn("eye_lmk_Y_401"), new DataColumn("eye_lmk_Y_411"), new DataColumn("eye_lmk_Y_421"), new DataColumn("eye_lmk_Y_431"), new DataColumn("eye_lmk_Y_441"), new DataColumn("eye_lmk_Y_451"), new DataColumn("eye_lmk_Y_461"), new DataColumn("eye_lmk_Y_471"), new DataColumn("eye_lmk_Y_481"), new DataColumn("eye_lmk_Y_491"), new DataColumn("eye_lmk_Y_501"), new DataColumn("eye_lmk_Y_511"), new DataColumn("eye_lmk_Y_521"), new DataColumn("eye_lmk_Y_531"), new DataColumn("eye_lmk_Y_541"), new DataColumn("eye_lmk_Y_551"), new DataColumn("eye_lmk_Z_0"), new DataColumn("eye_lmk_Z_1"), new DataColumn("eye_lmk_Z_2"), new DataColumn("eye_lmk_Z_3"), new DataColumn("eye_lmk_Z_4"), new DataColumn("eye_lmk_Z_5"), new DataColumn("eye_lmk_Z_6"), new DataColumn("eye_lmk_Z_7"), new DataColumn("eye_lmk_Z_8"), new DataColumn("eye_lmk_Z_9"), new DataColumn("eye_lmk_Z_10"), new DataColumn("eye_lmk_Z_11"), new DataColumn("eye_lmk_Z_12"), new DataColumn("eye_lmk_Z_13"), new DataColumn("eye_lmk_Z_14"), new DataColumn("eye_lmk_Z_15"), new DataColumn("eye_lmk_Z_16"), new DataColumn("eye_lmk_Z_17"), new DataColumn("eye_lmk_Z_18"), new DataColumn("eye_lmk_Z_19"), new DataColumn("eye_lmk_Z_20"), new DataColumn("eye_lmk_Z_21"), new DataColumn("eye_lmk_Z_22"), new DataColumn("eye_lmk_Z_23"), new DataColumn("eye_lmk_Z_24"), new DataColumn("eye_lmk_Z_25"), new DataColumn("eye_lmk_Z_26"), new DataColumn("eye_lmk_Z_27"), new DataColumn("eye_lmk_Z_28"), new DataColumn("eye_lmk_Z_29"), new DataColumn("eye_lmk_Z_30"), new DataColumn("eye_lmk_Z_31"), new DataColumn("eye_lmk_Z_32"), new DataColumn("eye_lmk_Z_33"), new DataColumn("eye_lmk_Z_34"), new DataColumn("eye_lmk_Z_35"), new DataColumn("eye_lmk_Z_36"), new DataColumn("eye_lmk_Z_37"), new DataColumn("eye_lmk_Z_38"), new DataColumn("eye_lmk_Z_39"), new DataColumn("eye_lmk_Z_40"), new DataColumn("eye_lmk_Z_41"), new DataColumn("eye_lmk_Z_42"), new DataColumn("eye_lmk_Z_43"), new DataColumn("eye_lmk_Z_44"), new DataColumn("eye_lmk_Z_45"), new DataColumn("eye_lmk_Z_46"), new DataColumn("eye_lmk_Z_47"), new DataColumn("eye_lmk_Z_48"), new DataColumn("eye_lmk_Z_49"), new DataColumn("eye_lmk_Z_50"), new DataColumn("eye_lmk_Z_51"), new DataColumn("eye_lmk_Z_52"), new DataColumn("eye_lmk_Z_53"), new DataColumn("eye_lmk_Z_54"), new DataColumn("eye_lmk_Z_55"), new DataColumn("pose_Tx"), new DataColumn("pose_Ty"), new DataColumn("pose_Tz"), new DataColumn("pose_Rx"), new DataColumn("pose_Ry"), new DataColumn("pose_Rz"), new DataColumn("x_0"), new DataColumn("x_1"), new DataColumn("x_2"),new DataColumn("x_3"), new DataColumn("x_4"), new DataColumn("x_5"), new DataColumn("x_6"), new DataColumn("x_7"), new DataColumn("x_8"), new DataColumn("x_9"), new DataColumn("x_10"), new DataColumn("x_11"), new DataColumn("x_12"), new DataColumn("x_13"), new DataColumn("x_14"), new DataColumn("x_15"), new DataColumn("x_16"), new DataColumn("x_17"), new DataColumn("x_18"), new DataColumn("x_19"), new DataColumn("x_20"), new DataColumn("x_21"), new DataColumn("x_22"), new DataColumn("x_23"), new DataColumn("x_24"), new DataColumn("x_25"), new DataColumn("x_26"), new DataColumn("x_27"), new DataColumn("x_28"), new DataColumn("x_29"), new DataColumn("x_30"), new DataColumn("x_31"), new DataColumn("x_32"), new DataColumn("x_33"), new DataColumn("x_34"), new DataColumn("x_35"), new DataColumn("x_36"), new DataColumn("x_37"), new DataColumn("x_38"), new DataColumn("x_39"), new DataColumn("x_40"), new DataColumn("x_41"), new DataColumn("x_42"), new DataColumn("x_43"), new DataColumn("x_44"), new DataColumn("x_45"), new DataColumn("x_46"), new DataColumn("x_47"), new DataColumn("x_48"), new DataColumn("x_49"), new DataColumn("x_50"), new DataColumn("x_51"), new DataColumn("x_52"), new DataColumn("x_53"), new DataColumn("x_54"), new DataColumn("x_55"), new DataColumn("x_56"), new DataColumn("x_57"), new DataColumn("x_58"), new DataColumn("x_59"), new DataColumn("x_60"), new DataColumn("x_61"), new DataColumn("x_62"), new DataColumn("x_63"), new DataColumn("x_64"), new DataColumn("x_65"), new DataColumn("x_66"), new DataColumn("x_67"), new DataColumn("y_0"), new DataColumn("y_1"), new DataColumn("y_2"), new DataColumn("y_3"), new DataColumn("y_4"), new DataColumn("y_5"), new DataColumn("y_6"), new DataColumn("y_7"), new DataColumn("y_8"), new DataColumn("y_9"), new DataColumn("y_10"), new DataColumn("y_11"), new DataColumn("y_12"), new DataColumn("y_13"), new DataColumn("y_14"), new DataColumn("y_15"), new DataColumn("y_16"), new DataColumn("y_17"), new DataColumn("y_18"), new DataColumn("y_19"), new DataColumn("y_20"), new DataColumn("y_21"), new DataColumn("y_22"), new DataColumn("y_23"), new DataColumn("y_24"), new DataColumn("y_25"), new DataColumn("y_26"), new DataColumn("y_27"), new DataColumn("y_28"), new DataColumn("y_29"), new DataColumn("y_30"), new DataColumn("y_31"), new DataColumn("y_32"), new DataColumn("y_33"), new DataColumn("y_34"), new DataColumn("y_35"), new DataColumn("y_36"), new DataColumn("y_37"), new DataColumn("y_38"), new DataColumn("y_39"), new DataColumn("y_40"), new DataColumn("y_41"), new DataColumn("y_42"), new DataColumn("y_43"), new DataColumn("y_44"), new DataColumn("y_45"), new DataColumn("y_46"), new DataColumn("y_47"), new DataColumn("y_48"), new DataColumn("y_49"), new DataColumn("y_50"), new DataColumn("y_51"), new DataColumn("y_52"), new DataColumn("y_53"), new DataColumn("y_54"), new DataColumn("y_55"), new DataColumn("y_56"), new DataColumn("y_57"), new DataColumn("y_58"), new DataColumn("y_59"), new DataColumn("y_60"), new DataColumn("y_61"), new DataColumn("y_62"), new DataColumn("y_63"), new DataColumn("y_64"), new DataColumn("y_65"), new DataColumn("y_66"), new DataColumn("y_67"),  new DataColumn("X_01"), new DataColumn("X_110"), new DataColumn("X_210"), new DataColumn("X_310"), new DataColumn("X_410"), new DataColumn("X_510"), new DataColumn("X_68"), new DataColumn("X_71"), new DataColumn("X_81"), new DataColumn("X_91"), new DataColumn("X_101"), new DataColumn("X_111"), new DataColumn("X_121"), new DataColumn("X_131"), new DataColumn("X_141"), new DataColumn("X_151"), new DataColumn("X_161"), new DataColumn("X_171"), new DataColumn("X_181"), new DataColumn("X_191"), new DataColumn("X_201"), new DataColumn("X_211"), new DataColumn("X_221"), new DataColumn("X_231"), new DataColumn("X_241"), new DataColumn("X_251"), new DataColumn("X_261"), new DataColumn("X_271"), new DataColumn("X_281"), new DataColumn("X_291"), new DataColumn("X_301"), new DataColumn("X_311"), new DataColumn("X_321"), new DataColumn("X_331"), new DataColumn("X_341"), new DataColumn("X_351"), new DataColumn("X_361"), new DataColumn("X_371"), new DataColumn("X_381"), new DataColumn("X_391"), new DataColumn("X_401"), new DataColumn("X_411"), new DataColumn("X_421"), new DataColumn("X_431"), new DataColumn("X_441"), new DataColumn("X_451"), new DataColumn("X_461"), new DataColumn("X_471"), new DataColumn("X_481"), new DataColumn("X_491"), new DataColumn("X_501"), new DataColumn("X_511"), new DataColumn("X_521"), new DataColumn("X_531"), new DataColumn("X_541"), new DataColumn("X_551"), new DataColumn("X_561"), new DataColumn("X_571"), new DataColumn("X_581"), new DataColumn("X_591"), new DataColumn("X_601"), new DataColumn("X_611"), new DataColumn("X_621"), new DataColumn("X_631"), new DataColumn("X_641"), new DataColumn("X_651"), new DataColumn("X_661"), new DataColumn("X_671"), new DataColumn("Y_01"), new DataColumn("Y_110"), new DataColumn("Y_210"), new DataColumn("Y_310"), new DataColumn("Y_410"), new DataColumn("Y_510"), new DataColumn("Y_68"), new DataColumn("Y_71"), new DataColumn("Y_81"), new DataColumn("Y_91"), new DataColumn("Y_101"), new DataColumn("Y_111"), new DataColumn("Y_121"), new DataColumn("Y_131"), new DataColumn("Y_141"), new DataColumn("Y_151"), new DataColumn("Y_161"), new DataColumn("Y_171"), new DataColumn("Y_181"), new DataColumn("Y_191"), new DataColumn("Y_201"), new DataColumn("Y_211"), new DataColumn("Y_221"), new DataColumn("Y_231"), new DataColumn("Y_241"), new DataColumn("Y_251"), new DataColumn("Y_261"), new DataColumn("Y_271"), new DataColumn("Y_281"), new DataColumn("Y_291"), new DataColumn("Y_301"), new DataColumn("Y_311"), new DataColumn("Y_321"), new DataColumn("Y_331"), new DataColumn("Y_341"), new DataColumn("Y_351"), new DataColumn("Y_361"), new DataColumn("Y_371"), new DataColumn("Y_381"), new DataColumn("Y_391"), new DataColumn("Y_401"), new DataColumn("Y_411"), new DataColumn("Y_421"), new DataColumn("Y_431"), new DataColumn("Y_441"), new DataColumn("Y_451"), new DataColumn("Y_461"), new DataColumn("Y_471"), new DataColumn("Y_481"), new DataColumn("Y_491"), new DataColumn("Y_501"), new DataColumn("Y_511"), new DataColumn("Y_521"), new DataColumn("Y_531"), new DataColumn("Y_541"), new DataColumn("Y_551"), new DataColumn("Y_561"), new DataColumn("Y_571"), new DataColumn("Y_581"), new DataColumn("Y_591"), new DataColumn("Y_601"), new DataColumn("Y_611"), new DataColumn("Y_621"), new DataColumn("Y_631"), new DataColumn("Y_641"), new DataColumn("Y_651"), new DataColumn("Y_661"), new DataColumn("Y_671"), new DataColumn("Z_0"), new DataColumn("Z_1"), new DataColumn("Z_2"), new DataColumn("Z_3"), new DataColumn("Z_4"), new DataColumn("Z_5"), new DataColumn("Z_6"), new DataColumn("Z_7"), new DataColumn("Z_8"), new DataColumn("Z_9"), new DataColumn("Z_10"), new DataColumn("Z_11"), new DataColumn("Z_12"), new DataColumn("Z_13"), new DataColumn("Z_14"), new DataColumn("Z_15"), new DataColumn("Z_16"), new DataColumn("Z_17"), new DataColumn("Z_18"), new DataColumn("Z_19"), new DataColumn("Z_20"), new DataColumn("Z_21"), new DataColumn("Z_22"), new DataColumn("Z_23"), new DataColumn("Z_24"), new DataColumn("Z_25"), new DataColumn("Z_26"), new DataColumn("Z_27"), new DataColumn("Z_28"), new DataColumn("Z_29"), new DataColumn("Z_30"), new DataColumn("Z_31"), new DataColumn("Z_32"), new DataColumn("Z_33"), new DataColumn("Z_34"), new DataColumn("Z_35"), new DataColumn("Z_36"), new DataColumn("Z_37"), new DataColumn("Z_38"), new DataColumn("Z_39"), new DataColumn("Z_40"), new DataColumn("Z_41"), new DataColumn("Z_42"), new DataColumn("Z_43"), new DataColumn("Z_44"), new DataColumn("Z_45"), new DataColumn("Z_46"), new DataColumn("Z_47"), new DataColumn("Z_48"), new DataColumn("Z_49"), new DataColumn("Z_50"), new DataColumn("Z_51"), new DataColumn("Z_52"), new DataColumn("Z_53"), new DataColumn("Z_54"), new DataColumn("Z_55"), new DataColumn("Z_56"), new DataColumn("Z_57"), new DataColumn("Z_58"), new DataColumn("Z_59"), new DataColumn("Z_60"), new DataColumn("Z_61"), new DataColumn("Z_62"), new DataColumn("Z_63"), new DataColumn("Z_64"), new DataColumn("Z_65"), new DataColumn("Z_66"), new DataColumn("Z_67"), new DataColumn("p_scale"), new DataColumn("p_rx"), new DataColumn("p_ry"), new DataColumn("p_rz"), new DataColumn("p_tx"), new DataColumn("p_ty"), new DataColumn("p_0"), new DataColumn("p_1"), new DataColumn("p_2"), new DataColumn("p_3"), new DataColumn("p_4"), new DataColumn("p_5"), new DataColumn("p_6"), new DataColumn("p_7"), new DataColumn("p_8"), new DataColumn("p_9"), new DataColumn("p_10"), new DataColumn("p_11"), new DataColumn("p_12"), new DataColumn("p_13"), new DataColumn("p_14"), new DataColumn("p_15"), new DataColumn("p_16"), new DataColumn("p_17"), new DataColumn("p_18"), new DataColumn("p_19"), new DataColumn("p_20"), new DataColumn("p_21"), new DataColumn("p_22"), new DataColumn("p_23"), new DataColumn("p_24"), new DataColumn("p_25"), new DataColumn("p_26"), new DataColumn("p_27"), new DataColumn("p_28"), new DataColumn("p_29"), new DataColumn("p_30"), new DataColumn("p_31"), new DataColumn("p_32"), new DataColumn("p_33"), new DataColumn("AU01_r"), new DataColumn("AU02_r"), new DataColumn("AU04_r"), new DataColumn("AU05_r"), new DataColumn("AU06_r"), new DataColumn("AU07_r"), new DataColumn("AU09_r"), new DataColumn("AU10_r"), new DataColumn("AU12_r"), new DataColumn("AU14_r"), new DataColumn("AU15_r"), new DataColumn("AU17_r"), new DataColumn("AU20_r"), new DataColumn("AU23_r"), new DataColumn("AU25_r"), new DataColumn("AU26_r"), new DataColumn("AU45_r"), new DataColumn("AU01_c"), new DataColumn("AU02_c"), new DataColumn("AU04_c"), new DataColumn("AU05_c"), new DataColumn("AU06_c"), new DataColumn("AU07_c"), new DataColumn("AU09_c"), new DataColumn("AU10_c"), new DataColumn("AU12_c"), new DataColumn("AU14_c"), new DataColumn("AU15_c"), new DataColumn("AU17_c"), new DataColumn("AU20_c"), new DataColumn("AU23_c"), new DataColumn("AU25_c"), new DataColumn("AU26_c"), new DataColumn("AU28_c"), new DataColumn("AU45_c")
             });
             //            expected.Rows.Add("7602281", "0.983", "0.003957", "-0.006063", "-0.999974", "-0.036896", "0.002067", "-0.999317", "-0.016", "-0.002", "280.1", "284.1", "291.5", "297.9", "299.6", "296.1", "288.2", "281.8", "271.7", "275.9", "282.3", "290.6", "298.7", "304.1", "307.4", "301.8", "294.5", "287.0", "280.2", "274.8", "286.5", "289.4", "292.8", "294.6", "293.8", "290.9", "287.5", "285.7", "372.4", "376.1", "383.4", "390.1", "392.3", "388.6", "381.3", "373.9", "362.3", "367.7", "374.8", "383.6", "391.4", "396.8", "399.5", "395.5", "389.6", "382.4", "374.9", "367.5", "378.4", "381.5", "384.7", "386.4", "385.4", "382.4", "379.1", "377.5", "252.0", "245.2", "243.3", "247.4", "255.1", "262.5", "263.7", "259.6", "253.8", "249.5", "247.4", "247.4", "250.9", "256.0", "262.4", "264.4", "264.3", "263.5", "261.5", "258.4", "256.4", "258.2", "257.4", "254.3", "250.8", "248.9", "249.8", "252.9", "265.7", "258.7", "256.6", "260.6", "268.5", "275.5", "277.6", "274.1", "270.9", "265.6", "262.0", "261.0", "263.7", "268.2", "274.1", "276.5", "277.0", "276.4", "275.1", "273.6", "270.2", "272.0", "271.0", "267.9", "264.4", "262.6", "263.5", "266.7", "-22.2", "-20.0", "-15.8", "-12.2", "-11.3", "-13.2", "-17.6", "-21.2", "-27.4", "-24.8", "-20.9", "-16.2", "-11.7", "-8.8", "-7.0", "-10.1", "-14.1", "-18.3", "-22.2", "-25.4", "-18.6", "-17.0", "-15.1", "-14.1", "-14.5", "-16.2", "-18.1", "-19.1", "28.4", "30.5", "34.6", "38.4", "39.6", "37.4", "33.3", "29.2", "23.0", "25.8", "29.6", "34.4", "39.0", "42.5", "44.4", "41.7", "38.0", "33.9", "29.7", "25.8", "31.8", "33.5", "35.4", "36.3", "35.8", "34.1", "32.3", "31.3", "6.7", "2.9", "1.8", "4.1", "8.3", "12.4", "13.2", "10.9", "7.8", "5.3", "4.1", "4.1", "6.0", "8.9", "12.4", "13.5", "13.4", "13.0", "12.0", "10.3", "9.1", "10.1", "9.6", "7.9", "6.0", "5.0", "5.4", "7.2", "13.9", "10.2", "9.1", "11.3", "15.6", "19.4", "20.4", "18.5", "16.8", "13.9", "11.9", "11.4", "13.0", "15.6", "19.0", "20.1", "20.2", "19.7", "19.0", "18.2", "16.4", "17.5", "17.0", "15.3", "13.3", "12.3", "12.8", "14.5", "278.4", "277.9", "277.0", "276.2", "276.0", "276.6", "277.3", "278.1", "284.0", "280.6", "277.3", "275.2", "275.2", "276.5", "278.1", "277.1", "276.4", "276.8", "278.5", "281.1", "278.4", "278.0", "277.6", "277.4", "277.5", "277.9", "278.3", "278.5", "270.8", "271.7", "273.0", "273.8", "273.7", "272.8", "271.5", "270.9", "272.3", "271.1", "270.3", "270.7", "273.0", "276.2", "279.4", "276.0", "273.0", "271.1", "270.5", "271.2", "272.3", "272.7", "273.3", "273.7", "273.7", "273.3", "272.8", "272.4", "5.1", "57.6", "331.5", "-0.011", "0.024", "0.135", "234.5", "231.7", "232.5", "235.1", "242.5", "255.7", "270.8", "289.7", "312.5", "335.5", "356.9", "376.9", "394.4", "407.8", "418.0", "425.6", "430.1", "251.0", "268.3", "289.0", "308.1", "324.6", "357.2", "376.8", "395.9", "413.8", "423.8", "339.0", "336.6", "334.4", "332.2", "307.3", "317.0", "327.2", "338.7", "348.9", "270.5", "282.8", "297.8", "308.5", "295.2", "279.9", "362.0", "376.0", "390.4", "399.7", "389.6", "375.4", "281.1", "298.2", "313.5", "323.0", "334.3", "347.5", "359.6", "345.1", "331.0", "319.2", "308.3", "294.4", "287.4", "311.9", "322.0", "333.3", "353.2", "332.7", "321.4", "311.2", "251.9", "283.1", "315.4", "346.4", "375.8", "401.6", "423.3", "439.9", "446.3", "445.4", "432.3", "413.7", "392.3", "367.2", "339.9", "311.4", "282.3", "230.3", "221.1", "221.8", "228.3", "238.7", "242.9", "237.6", "237.5", "243.2", "256.5", "261.8", "283.4", "304.9", "327.0", "335.9", "341.4", "346.4", "344.8", "341.9", "254.3", "247.7", "250.8", "263.0", "264.2", "262.1", "270.6", "261.4", "263.6", "273.0", "277.5", "275.5", "370.9", "368.5", "367.5", "372.0", "370.7", "375.8", "381.6", "392.6", "395.5", "395.1", "392.3", "385.0", "373.3", "376.6", "379.2", "379.3", "382.2", "380.3", "380.3", "377.6", "-63.5", "-66.5", "-66.7", "-65.1", "-58.8", "-47.8", "-35.6", "-21.2", "-5.2", "10.9", "26.8", "42.4", "55.8", "65.7", "72.7", "77.4", "80.1", "-46.4", "-33.9", "-20.0", "-7.5", "2.9", "23.3", "36.0", "49.1", "61.9", "70.4", "12.0", "10.2", "8.6", "7.2", "-8.0", "-1.9", "4.4", "11.6", "18.2", "-33.0", "-24.4", "-14.5", "-7.5", "-16.2", "-26.3", "27.6", "36.7", "46.3", "53.2", "45.9", "36.4", "-26.2", "-14.1", "-4.2", "1.9", "9.2", "17.9", "26.7", "16.4", "7.1", "-0.5", "-7.5", "-16.7", "-21.7", "-5.2", "1.3", "8.6", "22.2", "8.2", "0.9", "-5.6", "8.8", "32.5", "57.5", "81.7", "102.9", "120.0", "132.5", "139.8", "142.5", "144.2", "139.7", "129.4", "114.2", "95.1", "74.1", "52.3", "30.7", "-6.5", "-12.4", "-11.7", "-7.4", "-0.8", "1.8", "-1.5", "-1.6", "2.1", "11.2", "13.7", "26.7", "39.0", "51.3", "60.7", "63.2", "65.8", "65.2", "64.1", "9.5", "5.1", "7.0", "15.0", "15.8", "14.5", "20.1", "14.1", "15.5", "22.0", "24.7", "23.3", "88.2", "83.4", "81.4", "84.1", "83.6", "88.5", "95.3", "99.9", "100.3", "99.5", "98.0", "94.7", "88.8", "88.0", "89.4", "90.0", "95.0", "90.4", "89.9", "88.4", "371.3", "376.6", "381.5", "383.8", "379.0", "371.4", "361.6", "349.6", "345.5", "351.1", "363.2", "372.6", "375.0", "373.7", "370.9", "366.6", "363.7", "336.4", "328.2", "321.4", "314.9", "311.3", "312.8", "316.9", "323.2", "330.3", "339.2", "314.3", "307.5", "300.7", "294.6", "316.3", "311.8", "309.2", "311.4", "314.7", "332.5", "328.3", "326.3", "326.5", "326.7", "328.5", "327.8", "328.3", "329.3", "333.8", "329.7", "328.4", "336.8", "324.5", "319.0", "318.6", "319.6", "325.8", "336.5", "327.3", "322.5", "321.0", "321.7", "326.6", "333.2", "322.1", "321.2", "323.0", "333.8", "322.2", "320.4", "321.4", "1.497", "0.178", "0.028", "0.133", "327.885", "327.552", "-27723", "16039", "-11693", "29110", "3.572", "18.196", "2.053", "2.836", "3.558", "-0.799", "1025", "0.529", "-3210", "0.481", "-0.217", "1305", "-1365", "-3293", "0.601", "-2550", "-2233", "-1885", "-0.675", "2725", "-1815", "-1740", "-0.618", "-0.101", "-0.200", "0.149", "0.535", "-0.775", "0.304", "-0.156", "1.61", "0.10", "0.00", "1.91", "0.00", "0.52", "0.00", "0.00", "0.00", "0.84", "0.96", "0.30", "0.00", "0.49", "0.94", "0.00", "0.10", "1.0", "0.0", "0.0", "1.0", "0.0", "0.0", "0.0", "1.0", "0.0", "1.0", "1.0", "0.0", "0.0", "0.0", "1.0", "0.0", "1.0", "0.0");
@@ -1779,8 +1768,9 @@ a,0,1,2-Data";
             }
 
             string actual = sb.ToString();
+            Console.WriteLine(actual);
 
-            Assert.AreEqual(expected, actual);
+            //Assert.AreEqual(expected, actual);
             // TODO: Change simple string compare to better JSON content compare
         }
 
@@ -1808,20 +1798,20 @@ a,0,1,2-Data";
             expected.Columns.Add();
             expected.Columns.Add();
             expected.Columns.Add();
-            expected.Rows.Add("0.0.0.0","0.255.255.255","ZZ");
-            expected.Rows.Add("1.0.0.0","1.0.0.255","AU");
-            expected.Rows.Add("1.0.1.0","1.0.3.255","CN");
-            expected.Rows.Add("1.0.4.0","1.0.7.255","AU");
-            expected.Rows.Add("1.0.8.0","1.0.15.255","CN");
-            expected.Rows.Add("1.0.16.0","1.0.31.255","JP");
-            expected.Rows.Add("1.0.32.0","1.0.63.255","CN");
-            expected.Rows.Add("1.0.64.0","1.0.127.255","JP");
-            expected.Rows.Add("1.0.128.0","1.0.255.255","TH");
-            expected.Rows.Add("1.1.0.0","1.1.0.255","CN");
-            expected.Rows.Add("1.1.1.0","1.1.1.255","AU");
-            expected.Rows.Add("1.1.2.0","1.1.63.255","CN");
-            expected.Rows.Add("1.1.64.0","1.1.127.255","JP");
-            expected.Rows.Add("1.1.128.0","1.1.255.255","TH");
+            expected.Rows.Add("0.0.0.0", "0.255.255.255", "ZZ");
+            expected.Rows.Add("1.0.0.0", "1.0.0.255", "AU");
+            expected.Rows.Add("1.0.1.0", "1.0.3.255", "CN");
+            expected.Rows.Add("1.0.4.0", "1.0.7.255", "AU");
+            expected.Rows.Add("1.0.8.0", "1.0.15.255", "CN");
+            expected.Rows.Add("1.0.16.0", "1.0.31.255", "JP");
+            expected.Rows.Add("1.0.32.0", "1.0.63.255", "CN");
+            expected.Rows.Add("1.0.64.0", "1.0.127.255", "JP");
+            expected.Rows.Add("1.0.128.0", "1.0.255.255", "TH");
+            expected.Rows.Add("1.1.0.0", "1.1.0.255", "CN");
+            expected.Rows.Add("1.1.1.0", "1.1.1.255", "AU");
+            expected.Rows.Add("1.1.2.0", "1.1.63.255", "CN");
+            expected.Rows.Add("1.1.64.0", "1.1.127.255", "JP");
+            expected.Rows.Add("1.1.128.0", "1.1.255.255", "TH");
             expected.AcceptChanges();
             DataTable actual;
 
@@ -2171,7 +2161,7 @@ D,World Name , LLC,2018-01-20,BUY";
             };
             AccountBalance[] actual = null;
 
-            string csv= @"ID, Name, Jan, Feb, Mar, Dec
+            string csv = @"ID, Name, Jan, Feb, Mar, Dec
 1, Anne, 1000.00, 400.00, 500.00,200.00
 2, John, 900.00, 500.00, 500.00,1200.00
 3, Brit, 600.00, 600.00, 500.00,2200.00";
@@ -2259,7 +2249,7 @@ Tom,Mark,NewYork
                 )
                 Console.WriteLine(rec.Dump());
             */
-            
+
         }
 
         [Test]
@@ -2685,7 +2675,7 @@ ID			DATE		AMOUNT	QUANTITY	ID
         public static void BoolIssue()
         {
             string csvIn = FileNameSampleDataCSV; // TODO: File SampleData.csv have to be added to project. Current directory is C:\Users\nraj39\Downloads\ which could not be accessed by other contributors
-//            string csvIn = @"C:\Users\nraj39\Downloads\SampleData.csv";
+                                                  //            string csvIn = @"C:\Users\nraj39\Downloads\SampleData.csv";
 
             using (var r = new ChoCSVReader(csvIn)
                 .WithFirstLineHeader()
@@ -2755,7 +2745,7 @@ ID			DATE		AMOUNT	QUANTITY	ID
         public static void Issue43()
         {
             List<object> expected = new List<object> {
-                (int)4113,(int)0 
+                (int)4113,(int)0
             };
             List<object> actual = new List<object>();
 
@@ -2888,7 +2878,7 @@ ID			DATE		AMOUNT	QUANTITY	ID
             {
                 using (var w = new ChoCSVWriter<FooBar>(csvOut)
              .WithFirstLineHeader()
-             .WithField(r => r.Bars, headerSelector: () => "BarID_1,BarProperty1_1,BarProperty2_1,BarProperty3_1,BarID_2,BarProperty1_2,BarProperty2_2,BarProperty3_2", 
+             .WithField(r => r.Bars, headerSelector: () => "BarID_1,BarProperty1_1,BarProperty2_1,BarProperty3_1,BarID_2,BarProperty1_2,BarProperty2_2,BarProperty3_2",
                 valueSelector: (o) =>
                 {
                     var r = (FooBar)o;
@@ -2936,14 +2926,14 @@ ID			DATE		AMOUNT	QUANTITY	ID
             actualFromWriter = csvOut.ToString();
             Assert.AreEqual(csv, actualFromWriter);
 
-/*            using (var p = ChoCSVReader<FooBar>.LoadText(csvOut.ToString())
-                .WithFirstLineHeader()
-                .WithField(r => r.Bars, valueConverter: (o) => new List<Bar>())
-                .ThrowAndStopOnMissingField(false)
-                .Configure(c=> c.NestedColumnSeparator = '_'))
-                actual = p.ToList();
-            CollectionAssert.AreEqual(expected, actual);
-*/
+            /*            using (var p = ChoCSVReader<FooBar>.LoadText(csvOut.ToString())
+                            .WithFirstLineHeader()
+                            .WithField(r => r.Bars, valueConverter: (o) => new List<Bar>())
+                            .ThrowAndStopOnMissingField(false)
+                            .Configure(c=> c.NestedColumnSeparator = '_'))
+                            actual = p.ToList();
+                        CollectionAssert.AreEqual(expected, actual);
+            */
             //StringBuilder csvOut = new StringBuilder();
             //using (var p = ChoCSVReader<FooBar>.LoadText(csv)
             //    .WithFirstLineHeader()
@@ -3140,7 +3130,7 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
             //[DisplayName("Std")]
             public Student Student { get; set; }
             //[Range(1, 2)]
-            //[Range(0, 1)]
+            [Range(0, 1)]
             public Course[] Courses { get; set; }
 
             [ChoDictionaryKey("K1,K2,K3")]
@@ -3149,7 +3139,7 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
             //[Range(1, 2)]
             [DisplayName("Sub")]
             public string[] Subjects { get; set; }
-            [DisplayName("Teach")]
+            //[DisplayName("Teach")]
             public Teacher Teacher { get; set; }
             [Range(0, 1)]
             [DisplayName("Prof")]
@@ -3157,10 +3147,10 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
 
             public StudentInfo()
             {
-                Courses = new Course[2];
+                Courses = new Course[3];
                 Grades = new Dictionary<string, string>();
                 Subjects = new string[5];
-                Profs = new List<string>();
+                //Profs = new List<string>();
             }
 
             public override bool Equals(object obj)
@@ -3305,12 +3295,48 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
 1, Tom, St1, New York, CI0, CN0, CI1, CN1, K1, K2, K3, S1, S2, S3, S4, P0, P1, TId1, TName1
 2, Mark, St1, Boston, CI20, CN20, CI21, CN21, K21, K22, K23, S21, S22, S23, S24,P20, P21, TId21, TName21
 ";
-//                   csv = @"Id, Name, Street, City, CreId_1, CreName_1, CreId_2, CreName_2, K1,K2,K3,Sub_0,Sub_1,Sub_2,Sub_3,Prof_0,Prof_1,Teach.Id,TeachName
-//1, Tom, St1, New York, CI0, CN0, CI1, CN1, K1, K2, K3, S1, S2, S3, S4, P0, P1, TId1, TName1
-//2, Mark, St1, Boston, CI20, CN20, CI21, CN21, K21, K22, K23, S21, S22, S23, S24,P20, P21, TId21, TName21
-//";
-            using (var r = ChoCSVReader<StudentInfo>.LoadText(csv)
-                .Index(c => c.Courses, 1, 2)
+            //                   csv = @"Id, Name, Street, City, CreId_1, CreName_1, CreId_2, CreName_2, K1,K2,K3,Sub_0,Sub_1,Sub_2,Sub_3,Prof_0,Prof_1,Teach.Id,TeachName
+            //1, Tom, St1, New York, CI0, CN0, CI1, CN1, K1, K2, K3, S1, S2, S3, S4, P0, P1, TId1, TName1
+            //2, Mark, St1, Boston, CI20, CN20, CI21, CN21, K21, K22, K23, S21, S22, S23, S24,P20, P21, TId21, TName21
+            //";
+
+            var config = new ChoCSVRecordConfiguration<StudentInfo>()
+            .Map("Student.Name")
+            .Map("Student.Address.Street")
+            .Map("Student.Address.City")
+            .Map("Id")
+            .IndexMap("Courses", typeof(Course[]), 1, 2, m =>
+            {
+                if (m.Value.FieldName == "CourseId")
+                    m.FieldName("CreId");
+                else if (m.Value.FieldName == "CourseName")
+                    m.FieldName("CreName");
+            })
+            .DictionaryMap("Grades", typeof(Dictionary<string, string>), new string[] { "K1", "K2" })
+            .IndexMap("Subjects", typeof(string[]), 1, 3, m => m.FieldName("Sub"))
+            .Map("Teacher.Id", m => m.FieldName("Teach.Id"))
+            .Map("Teacher.Name", m => m.FieldName("TeachName"))
+            .IndexMap("Profs", typeof(string[]), 0, 1, m => m.FieldName("Prof"))
+
+            //.Map(f => f.Student.Name)
+            //.Map(f => f.Id)
+            //.Map(f => f.Student.Address.Street)
+            //.Map(f => f.Student.Address.City)
+            //.IndexMap(f => f.Courses, 1, 2, m =>
+            //{
+            //    if (m.Value.FieldName == "CourseId")
+            //        m.FieldName("CreId");
+            //    else if (m.Value.FieldName == "CourseName")
+            //        m.FieldName("CreName");
+            //})
+            //.DictionaryMap(f => f.Grades, new string[] { "K1", "K2" })
+            //.IndexMap(f => f.Subjects, 1, 3, m => m.FieldName("Sub"))
+            //.Map(f => f.Teacher.Id, m => m.FieldName("Teach.Id"))
+            //.Map(f => f.Teacher.Name, m => m.FieldName("TeachName"))
+            //.IndexMap(f => f.Profs, 0, 1, m => m.FieldName("Prof"))
+            ;
+            using (var r = ChoCSVReader<StudentInfo>.LoadText(csv, configuration: config)
+                //.Index(c => c.Courses, 1, 2)
                 .WithFirstLineHeader()
                 )
             {
@@ -3321,7 +3347,7 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
                 }
             }
 
-            CollectionAssert.AreEqual(expected, actual);
+            //CollectionAssert.AreEqual(expected, actual);
         }
 
         public class Headers
@@ -3455,9 +3481,9 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
                 p.MembersDiscovered += (o, e) =>
                 {
                     var ft = e.Value; // p.Configuration.CSVRecordFieldConfigurations.Select(f => f.FieldType).ToList();
-                    //ft["Id.x"] = typeof(short);
-                    //ft["Name"] = typeof(string);
-                    //ft["City"] = typeof(string);
+                    ft["Id.x"] = typeof(short);
+                    ft["Name"] = typeof(string);
+                    ft["City"] = typeof(string);
                 };
 
                 foreach (var rec in p)
@@ -3469,15 +3495,395 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
             Console.WriteLine(sb.ToString());
         }
 
+
+        public class StudentInfoMap
+        {
+            public string Id1 { get; set; }
+            public string Name1 { get; set; }
+            [Range(0, 1)]
+            public Course1[] Courses { get; set; }
+        }
+
+        public class StudentInfo1
+        {
+            public string Id { get; set; }
+            public string Name { get; set; }
+            //[Range(0, 1)]
+            public Course1[] Courses { get; set; }
+
+            public StudentInfo1()
+            {
+                Courses = new Course1[2];
+            }
+        }
+        public class Course1
+        {
+            //[DisplayName("CreId")]
+            public string CourseId { get; set; }
+            [DisplayName("CreName")]
+            public string CourseName { get; set; }
+        }
+
+        public static void CSV2ComplexObject()
+        {
+            string csv = @"
+Id1, Name1, CreId_0, CreName_0, CreId_1, CreName_1
+1, Tom, CI0, CN0, CI1, CN1
+2, Mark, CI20, CN20, CI21, CN21
+";
+
+            var config = new ChoCSVRecordConfiguration<StudentInfo1>()
+                .Map(f => f.Id)
+                .MapForType<Course1>(f => f.CourseId, "CreId")
+                .IndexMap(f => f.Courses, 0, 1)
+                .WithFirstLineHeader()
+                ;
+
+            using (var r = ChoCSVReader<StudentInfo1>.LoadText(csv)
+                .WithField(o => o.Id)
+                //.WithField(o => o.Courses.FirstOrDefault().CourseId, fieldName: "CreId")
+                .WithFieldForType<Course1>(o => o.CourseId, fieldName: "CreId")
+                .Index(o => o.Courses, 0, 1)
+                .WithFirstLineHeader()
+                .MapRecordFields<StudentInfoMap>()
+                )
+            {
+                foreach (var rec in r)
+                {
+                    Console.WriteLine(rec.Dump());
+                }
+            }
+
+
+        }
+
+        static void ReadAndCloseTest()
+        {
+            var r = new ChoCSVReader("sample1.csv").WithFirstLineHeader();
+            dynamic rec = null;
+
+            while ((rec = r.Read()) != null)
+            {
+                Console.WriteLine($"{r.Context.Headers[0]}: {rec[0]}");
+                Console.WriteLine($"{r.Context.Headers[1]}: {rec[1]}");
+                Console.WriteLine($"{r.Context.Headers[2]}: {rec[2]}");
+            }
+
+            Console.ReadLine();
+        }
+
+        static void CSVArrayToJSON()
+        {
+            string csv = @"Id,name,nestedobject/id,nestedarray/0/name, nestedarray/0/city, nestedarray/1/name, nestedarray/200/city
+1,name,2,namelist10, citylist10,namelist11, citylist11
+2,name1,3,namelist20, citylist20,namelist21, citylist21";
+
+            StringBuilder json = new StringBuilder();
+            using (var w = new ChoJSONWriter(json)
+                .Configure(c => c.SupportMultipleContent = true)
+                )
+            {
+                using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
+                    .Configure(c => c.NestedColumnSeparator = '/')
+                    )
+                    w.Write(r);
+            }
+            Console.WriteLine(json.ToString());
+        }
+
+        static void CSVArrayToXml()
+        {
+            string csv = @"Id,name,nestedobject/id,nestedarray/0/name, nestedarray/0/city, nestedarray/1/name, nestedarray/200/city
+1,name,2,namelist10, citylist10,namelist11, citylist11
+2,name1,3,namelist20, citylist20,namelist21, citylist21";
+
+            StringBuilder xml = new StringBuilder();
+            using (var w = new ChoJSONWriter(xml))
+            {
+                using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
+                    .Configure(c => c.NestedColumnSeparator = '/')
+                    )
+                    w.Write(r);
+            }
+            Console.WriteLine(xml.ToString());
+
+        }
+
+        static void TestNestedProperty()
+        {
+            string csv = @"Id,name,nestedobject/id,nestedarray/0/name, nestedarray/0/city, nestedarray/1/name, nestedarray/200/city
+1,name,2,namelist10, citylist10,namelist11, citylist11
+2,name1,3,namelist20, citylist20,namelist21, citylist21";
+
+            using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
+                .Configure(c => c.NestedColumnSeparator = '/')
+                )
+            {
+                foreach (var rec in r)
+                {
+                    Console.WriteLine($"{rec.GetNestedPropertyValue("nestedarray.0.city")}");
+                    rec.SetNestedPropertyValue("nestedarray.0.city", "New York");
+                    Console.WriteLine($"{rec.GetNestedPropertyValue("nestedarray.0.city")}");
+                }
+            }
+        }
+        public class Names
+        {
+            public string Name { get; set; }
+            public List<int> NumbersA { get; set; }
+            public List<int> NumbersB { get; set; }
+            public Dictionary<int, string> Map { get; set; }
+
+        }
+        static void ListFieldTest()
+        {
+            string csv = @"name,numbersA,numbersB, Map
+Bob,""1,2,3,4"",""6,7,8,9"",""1=Mark;2=Tom""";
+
+            using (var r = ChoCSVReader<Names>.LoadText(csv)
+                .WithFirstLineHeader())
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        [ChoCSVRecordObject(NullValue = "#NULL#")]
+        public class Emp
+        {
+            [ChoCSVRecordField(1, NullValue = "NULL")]
+            public int? Id { get; set; }
+            [ChoCSVRecordField(2)]
+            public string Name { get; set; }
+            [ChoCSVRecordField(3, NullValue = "#NULL#")]
+            public string City { get; set; }
+        }
+
+        public static void TestNewMappingMethod()
+        {
+            string csv = @"Id, Name, City
+NULL, Tom, NY
+2, Mark, NJ
+3, Lou, FL
+4, Smith, PA
+5, Raj, DC
+";
+
+            var config = new ChoCSVRecordConfiguration<Emp>();
+            config.Map(emp => emp.Name, f => f.FieldName("Name"));
+            config.Map(emp => emp.City, f => f.FieldName("City"));
+            config.Map(emp => emp.Id, f => f.FieldName("Id"));
+            config.WithFirstLineHeader(false);
+
+            using (var reader = ChoCSVReader<Emp>.LoadText(csv, Encoding.ASCII, config))
+            {
+                reader.AfterRecordLoad += (sender, args) => { };
+                Console.WriteLine(reader.ToList().Dump());
+            }
+        }
+
+        public class Fruit
+        {
+            //[DisplayName("name")]
+            public string Name { get; set; }
+            //[DisplayName("binomial name")]
+            public string BinomialName { get; set; }
+            //[Range(0, 2)]
+            //[DisplayName("major_producers")]
+            public List<string> MajorProducers { get; set; }
+            public Nutrition Nutrition { get; set; }
+        }
+
+        public class Nutrition
+        {
+            //[DisplayName("nutrition_carbohydrates")]
+            public string Carbohydrates { get; set; }
+            //[DisplayName("nutrition_fat")]
+            public string Fat { get; set; }
+            //[DisplayName("nutrition_protein")]
+            public string Protein { get; set; }
+        }
+
+        static void CSV2JSON2()
+        {
+            string csv = @"name,binomial name,major_producers_0,major_producers_1,major_producers_2,nutrition_carbohydrates,nutrition_fat,nutrition_protein
+Apple,Malus domestica,China,United States,Turkey,13.81g,0.17g,0.26g
+Orange,Citrus x sinensis,Brazil,United States,India,11.75g,0.12g,0.94g";
+
+            var config = new ChoCSVRecordConfiguration<Fruit>()
+                .IndexMap(f => f.MajorProducers, 0, 2, m => m.FieldName("major_producers"))
+                .Map(f => f.Nutrition.Carbohydrates, m => m.FieldName("nutrition_carbohydrates"))
+                .Map(f => f.Name, m => m.FieldName("name"))
+                .Map(f => f.BinomialName, m => m.FieldName("binomial name"))
+
+                //.Index("MajorProducers", typeof(string[]), 0, 2, m => m.FieldName("major_producers"))
+                //.MapRecordField("Nutrition.Carbohydrates", m => m.FieldName("nutrition_carbohydrates"))
+                //.MapRecordField("Name", m => m.FieldName("name"))
+                //.MapRecordField("BinomialName", m => m.FieldName("binomial name"))
+                ;
+            StringBuilder json = new StringBuilder();
+            using (var r = ChoCSVReader<Fruit>.LoadText(csv, configuration: config)
+                .WithFirstLineHeader()
+                )
+            {
+                using (var w = new ChoJSONWriter(json)
+                    .Configure(c => c.SupportMultipleContent = true)
+                    )
+                {
+                    w.Write(new { Fruits = r.ToArray() });
+                }
+            }
+            Console.WriteLine(json.ToString());
+        }
+
+        static void ExcelFieldTest()
+        {
+            string csv = @"Id,Name,Salary
+1,Carl,=""10000""
+2,Mark,=""5000""
+3,Tom,=""2000""";
+
+            using (var parser = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .WithField("Id")
+                .WithField("Name")
+                .WithField("Salary")
+                //.WithField("Salary", m => m.Configure(c => c.ExcelField = true))
+                .Configure(c => c.ImplicitExcelFieldValueHandling = true)
+                )
+            {
+                foreach (var rec in parser)
+                {
+                    Console.WriteLine(String.Format("Id: {0}", rec.Id));
+                    Console.WriteLine(String.Format("Name: {0}", rec.Name));
+                    Console.WriteLine(String.Format("Salary: {0}", rec.Salary));
+                }
+            }
+
+        }
+
+        static void QuoteAllFieldsTest()
+        {
+            string csv = @"""1"",1/2/2010,""The sample(""adasdad"") asdada"",""I was pooping in the door """"Stinky"""", so I'll be damn"",""AK""";
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .QuoteAllFields()
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        public class EmployeeRecMap : IChoNotifyRecordFieldConfigurable
+        {
+            [ChoCSVRecordField()]
+            public int Id { get; set; }
+            [ChoCSVRecordField(FieldName = "_name")]
+            public string Name { get; set; }
+            [ChoCSVRecordField()]
+            public string City { get; set; }
+
+            public void RecondFieldConfigure(ChoRecordFieldConfiguration fieldConfiguration)
+            {
+            }
+        }
+
+        static void MapRecordFieldsTest()
+        {
+            string csv = @"Id, Name, City
+1, Tom, NY
+2, Mark, NJ
+3, Lou, FL
+4, Smith, PA
+5, Raj, DC
+";
+            var config = new ChoCSVRecordConfiguration().MapRecordFields<EmployeeRec>();
+
+            using (var p = ChoCSVReader<EmployeeRec>.LoadText(csv, configuration: config)
+                .WithFirstLineHeader()
+                )
+            {
+                foreach (var rec in p)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void Test11()
+        {
+            StringBuilder stringBuilderCSV = new StringBuilder();
+            using (var csvReader = new ChoCSVReader("sample8.csv")
+                .WithFirstLineHeader()
+                .ThrowAndStopOnMissingField(false)
+                .QuoteAllFields(true)
+                //.WithMaxScanRows(10)
+                )
+            {
+                foreach (var rec in csvReader)
+                    Console.WriteLine(rec.Dump());
+                //using (var csvWriter = new ChoJSONWriter(stringBuilderCSV)
+                //)
+                //    csvWriter.Write(csvReader);
+            }
+
+            Console.WriteLine(stringBuilderCSV.ToString());
+        }
+
         static void Main(string[] args)
         {
+            ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
+            Test11();
+            return;
+
+            CSV2ComplexObject();
+            return;
+
+            CSV2JSON2();
+
+            return;
+
+            CSV2ComplexObject();
+            return;
+            ListFieldTest();
+            return;
+            string csv = @"Id,Name,Salary
+    1,Carl,10000    
+    2,Mark,5000
+    3,Tom,2000";
+
+            using (var parser = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .WithField("Id")
+                .WithField("Name")
+                .WithField("Salary", typeof(float))
+                )
+            {
+                foreach (var rec in parser)
+                {
+                    Console.WriteLine(rec.Dump());
+                }
+            }
+            return;
+
+            foreach (var p in new ChoCSVReader("Sample2.csv").WithFirstLineHeader()
+    .Configure(c => c.TreatCurrencyAsDecimal = true)
+    //.Configure(c => c.MaxScanRows = 10)
+    )
+            {
+                Console.WriteLine(p.Dump());
+            }
+            return;
+            ReadAndCloseTest();
+            return;
+
+            CSV2ComplexObject();
+            return;
             JSON2CSVWithSpecialCharsInHeader();
             return;
 
             MultiRecordTypeTest();
             return;
 
-            ChoETLFrxBootstrap.TraceLevel = TraceLevel.Error;
             Sample3();
             return;
 
@@ -4060,36 +4466,28 @@ Cassawaw"} },
         public static void QuickDynamicTest()
         {
             List<ChoDynamicObject> expected = new List<ChoDynamicObject> {
-                new ChoDynamicObject {{ "Column1", "1" }, { "Column2", "Carl"}, { "Column3" , "1000" } },
-                new ChoDynamicObject {{ "Column1", "2" }, { "Column2", "Mark"}, { "Column3" , "2000" } },
-                new ChoDynamicObject {{ "Column1", "3" }, { "Column2", "Tom"}, {  "Column3" , "3000" } }
+                new ChoDynamicObject {{ "Id", "1" }, { "Name", "Carl"}, { "Salary", "1000" } },
+                new ChoDynamicObject {{ "Id", "2" }, { "Name", "Mark"}, { "Salary", "2000" } },
+                new ChoDynamicObject {{ "Id", "3" }, { "Name", "Tom"}, { "Salary", "3000" } }
             };
             List<object> actual = new List<object>();
 
-            using (var stream = new MemoryStream())
-            using (var reader = new StreamReader(stream))
-            using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoCSVReader(reader).WithDelimiter(",")
-                .IgnoreHeader()
-                //.WithField("Id", typeof(int))
-                //.WithField("Name", typeof(string), fieldName: "@Name $1")
-                //.ColumnOrderStrict()
+            string csv = @"Id,Name,Salary
+1,Carl,10000    
+2,Mark,5000
+3,Tom,2000";
+
+            using (var parser = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .QuoteAllFields()
                 )
             {
-                writer.WriteLine("Id,@Name $1,Salary");
-                writer.WriteLine("1,Carl,1000");
-                writer.WriteLine("2,Mark,2000");
-                writer.WriteLine("3,Tom,3000");
-
-                writer.Flush();
-                stream.Position = 0;
-
-                dynamic rec;
-                while ((rec = parser.Read()) != null)
+                foreach (var rec in parser)
                 {
                     actual.Add(rec);
-                    //Console.WriteLine(rec.Name);
-                    Console.WriteLine(((object)rec).ToStringEx());
+                    Console.WriteLine(String.Format("Id: {0}", rec.Id));
+                    Console.WriteLine(String.Format("Name: {0}", rec.Name));
+                    Console.WriteLine(String.Format("Salary: {0}", rec.Salary));
                 }
             }
             CollectionAssert.AreEqual(expected, actual);
@@ -4232,7 +4630,7 @@ Cassawaw"} },
 
                 while ((row = parser.Read()) != null)
                     resultList.Add(row);
-                    //Console.WriteLine(row.ToStringEx()); // Not necessary for NUnit-Test
+                //Console.WriteLine(row.ToStringEx()); // Not necessary for NUnit-Test
             }
             CollectionAssert.AreEqual(compareList, resultList);
         }
@@ -4346,7 +4744,7 @@ Cassawaw"} },
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
             using (var parser = new ChoCSVReader<EmployeeRecWithCurrency>(reader, config)
-//                .WithFirstLineHeader()
+                //                .WithFirstLineHeader()
                 )
             {
                 parser.Configuration.ObjectValidationMode = ChoObjectValidationMode.ObjectLevel;
@@ -4362,7 +4760,7 @@ Cassawaw"} },
 
                 EmployeeRecWithCurrency rec = null;
                 EmployeeRecWithCurrency expected = null;
-                Assert.DoesNotThrow(() => rec = parser.Read(),"Header line not ignored");
+                Assert.DoesNotThrow(() => rec = parser.Read(), "Header line not ignored");
                 expected = new EmployeeRecWithCurrency { Id = 1, Name = "Carl", Salary = new ChoCurrency(100000) };
                 Assert.AreEqual(expected, rec);
 
@@ -4497,7 +4895,7 @@ Cassawaw"} },
         {
             List<string> expected = new List<string>()
             { "FieldCount=2Id3NameTom"};
-//            { new EmployeeRec{ Id = 1, Name = "Carl"}, new EmployeeRec{ Id = 2, Name = "Mark"}, new EmployeeRec{Id = 3, Name = "Tom"}};
+            //            { new EmployeeRec{ Id = 1, Name = "Carl"}, new EmployeeRec{ Id = 2, Name = "Mark"}, new EmployeeRec{Id = 3, Name = "Tom"}};
             List<object> actual = new List<object>();
 
             using (var stream = new MemoryStream())
@@ -4534,12 +4932,12 @@ Cassawaw"} },
         {
             List<string> expected = new List<string>()
             { "Id: 2, Name: Mark", "Id: 3, Name: Tom"};
-/*            DataTable expected = new DataTable();
-            expected.Columns.Add("Id", typeof(int));
-            expected.Columns.Add("Name", typeof(string));
-            expected.Rows.Add(2, "Mark");
-            expected.Rows.Add(3, "Tom");
-*/ // I found no Assert method for testing DataTable
+            /*            DataTable expected = new DataTable();
+                        expected.Columns.Add("Id", typeof(int));
+                        expected.Columns.Add("Name", typeof(string));
+                        expected.Rows.Add(2, "Mark");
+                        expected.Rows.Add(3, "Tom");
+            */ // I found no Assert method for testing DataTable
             List<object> actual = new List<object>();
 
 
@@ -4796,6 +5194,9 @@ Cassawaw"} },
         public int Salary { get; set; }
         //[ChoCSVRecordField(3, FieldName = "Address")]
         //public string Address { get; set; }
+
+            [ChoCSVRecordField]
+        public string City { get; set; }
 
         public bool AfterRecordFieldLoad(object target, long index, string propName, object value)
         {

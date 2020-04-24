@@ -61,6 +61,9 @@
     <None Include="Sample16Expected.csv" />
     <None Include="Sample18Expected.csv" />
     <None Include="Sample2Expected.csv" />
+    <None Include="sample36.json" />
+    <None Include="sample35.json" />
+    <None Include="sample34.json" />
     <None Include="sample33.json" />
     <None Include="sample32.json" />
     <None Include="sample31.json" />
@@ -75,8 +78,8 @@
     <None Include="sample22.json" />
     <None Include="sample21.json" />
     <None Include="sample20.json" />
-    <None Include="Sample32Expected.csv" />
     <None Include="sample33Expected.csv" />
+    <None Include="sf_city_lots.json" />
     <None Include="TestData2.json" />
     <None Include="TestData1.json" />
     <None Include="TestData.json" />
