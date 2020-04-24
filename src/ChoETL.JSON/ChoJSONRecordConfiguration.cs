@@ -134,7 +134,7 @@ namespace ChoETL
             get;
             set;
         }
-        public bool EnableXmlAttributePrefix { get; set; }
+        public bool EnableJSONAttributePrefix { get; set; }
 
         private Func<JObject, JObject> _customNodeSelecter = null;
         public Func<JObject, JObject> CustomNodeSelecter
@@ -559,6 +559,15 @@ namespace ChoETL
             return this;
         }
 
+        public ChoJSONRecordConfiguration IgnoreField(string fieldName)
+        {
+            var fc = JSONRecordFieldConfigurations.Where(f => f.DeclaringMember == fieldName || f.FieldName == fieldName).FirstOrDefault();
+            if (fc != null)
+                JSONRecordFieldConfigurations.Remove(fc);
+
+            return this;
+        }
+
         public ChoJSONRecordConfiguration Map(string propertyName, string jsonPath = null, string fieldName = null)
         {
             Map(propertyName, m => m.JSONPath(jsonPath).FieldName(fieldName));
@@ -724,6 +733,24 @@ namespace ChoETL
 
     public class ChoJSONRecordConfiguration<T> : ChoJSONRecordConfiguration
     {
+        public new ChoJSONRecordConfiguration<T> ClearFields()
+        {
+            base.ClearFields();
+            return this;
+        }
+
+        public ChoJSONRecordConfiguration<T> Ignore<TProperty>(Expression<Func<T, TProperty>> field)
+        {
+            if (JSONRecordFieldConfigurations.Count == 0)
+                MapRecordFields<T>();
+
+            var fc = JSONRecordFieldConfigurations.Where(f => f.DeclaringMember == field.GetFullyQualifiedMemberName()).FirstOrDefault();
+            if (fc != null)
+                JSONRecordFieldConfigurations.Remove(fc);
+
+            return this;
+        }
+
         public ChoJSONRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, string jsonPath = null, string fieldName = null)
         {
             base.Map(field, jsonPath, fieldName);

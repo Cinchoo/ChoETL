@@ -169,6 +169,22 @@ namespace ChoETL
             AreAllFieldTypesNull = RecordFieldConfigurationsDict.All(kvp => kvp.Value.FieldType == null);
         }
 
+        public ChoFixedLengthRecordConfiguration ClearFields()
+        {
+            FixedLengthRecordFieldConfigurationsForType.Clear();
+            FixedLengthRecordFieldConfigurations.Clear();
+            return this;
+        }
+
+        public ChoFixedLengthRecordConfiguration IgnoreField(string fieldName)
+        {
+            var fc = FixedLengthRecordFieldConfigurations.Where(f => f.DeclaringMember == fieldName || f.FieldName == fieldName).FirstOrDefault();
+            if (fc != null)
+                FixedLengthRecordFieldConfigurations.Remove(fc);
+
+            return this;
+        }
+
         public ChoFixedLengthRecordConfiguration Map(string propertyName, int startIndex, int size)
         {
             Map(propertyName, m => m.StartIndex(startIndex).Size(size));
@@ -635,6 +651,24 @@ namespace ChoETL
 
     public class ChoFixedLengthRecordConfiguration<T> : ChoFixedLengthRecordConfiguration
     {
+        public new ChoFixedLengthRecordConfiguration<T> ClearFields()
+        {
+            base.ClearFields();
+            return this;
+        }
+
+        public ChoFixedLengthRecordConfiguration<T> Ignore<TProperty>(Expression<Func<T, TProperty>> field)
+        {
+            if (FixedLengthRecordFieldConfigurations.Count == 0)
+                MapRecordFields<T>();
+
+            var fc = FixedLengthRecordFieldConfigurations.Where(f => f.DeclaringMember == field.GetFullyQualifiedMemberName()).FirstOrDefault();
+            if (fc != null)
+                FixedLengthRecordFieldConfigurations.Remove(fc);
+
+            return this;
+        }
+
         public ChoFixedLengthRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, int startIndex, int size)
         {
             base.Map(field, startIndex, size);

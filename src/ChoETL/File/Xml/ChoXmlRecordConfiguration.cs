@@ -791,6 +791,22 @@ namespace ChoETL
             return this;
         }
 
+        public ChoXmlRecordConfiguration ClearFields()
+        {
+            //XmlRecordFieldConfigurationsForType.Clear();
+            XmlRecordFieldConfigurations.Clear();
+            return this;
+        }
+
+        public ChoXmlRecordConfiguration IgnoreField(string fieldName)
+        {
+            var fc = XmlRecordFieldConfigurations.Where(f => f.DeclaringMember == fieldName || f.FieldName == fieldName).FirstOrDefault();
+            if (fc != null)
+                XmlRecordFieldConfigurations.Remove(fc);
+
+            return this;
+        }
+
         public ChoXmlRecordConfiguration Map(string propertyName, string xpath = null, string fieldName = null)
         {
             Map(propertyName, m => m.XPath(xpath).FieldName(fieldName));
@@ -841,6 +857,24 @@ namespace ChoETL
 
     public class ChoXmlRecordConfiguration<T> : ChoXmlRecordConfiguration
     {
+        public new ChoXmlRecordConfiguration<T> ClearFields()
+        {
+            base.ClearFields();
+            return this;
+        }
+
+        public ChoXmlRecordConfiguration<T> Ignore<TProperty>(Expression<Func<T, TProperty>> field)
+        {
+            if (XmlRecordFieldConfigurations.Count == 0)
+                MapRecordFields<T>();
+
+            var fc = XmlRecordFieldConfigurations.Where(f => f.DeclaringMember == field.GetFullyQualifiedMemberName()).FirstOrDefault();
+            if (fc != null)
+                XmlRecordFieldConfigurations.Remove(fc);
+
+            return this;
+        }
+
         public ChoXmlRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, string xpath = null, string fieldName = null)
         {
             base.Map(field, xpath, fieldName);

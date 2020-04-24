@@ -148,6 +148,22 @@ namespace ChoETL
             }
         }
 
+        public ChoKVPRecordConfiguration ClearFields()
+        {
+            KVPRecordFieldConfigurationsForType.Clear();
+            KVPRecordFieldConfigurations.Clear();
+            return this;
+        }
+
+        public ChoKVPRecordConfiguration IgnoreField(string fieldName)
+        {
+            var fc = KVPRecordFieldConfigurations.Where(f => f.DeclaringMember == fieldName || f.FieldName == fieldName).FirstOrDefault();
+            if (fc != null)
+                KVPRecordFieldConfigurations.Remove(fc);
+
+            return this;
+        }
+
         public ChoKVPRecordConfiguration Map<T, TProperty>(Expression<Func<T, TProperty>> field, string fieldName)
         {
             Map(field, m => m.FieldName(fieldName));
@@ -465,6 +481,24 @@ namespace ChoETL
 
     public class ChoKVPRecordConfiguration<T> : ChoKVPRecordConfiguration
     {
+        public new ChoKVPRecordConfiguration<T> ClearFields()
+        {
+            base.ClearFields();
+            return this;
+        }
+
+        public ChoKVPRecordConfiguration<T> Ignore<TProperty>(Expression<Func<T, TProperty>> field)
+        {
+            if (KVPRecordFieldConfigurations.Count == 0)
+                MapRecordFields<T>();
+
+            var fc = KVPRecordFieldConfigurations.Where(f => f.DeclaringMember == field.GetFullyQualifiedMemberName()).FirstOrDefault();
+            if (fc != null)
+                KVPRecordFieldConfigurations.Remove(fc);
+
+            return this;
+        }
+
         public ChoKVPRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, string fieldName)
         {
             base.Map(field, fieldName);

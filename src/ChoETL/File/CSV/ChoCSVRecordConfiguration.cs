@@ -732,6 +732,15 @@ namespace ChoETL
             return this;
         }
 
+        public ChoCSVRecordConfiguration IgnoreField(string fieldName)
+        {
+            var fc = CSVRecordFieldConfigurations.Where(f => f.DeclaringMember == fieldName || f.FieldName == fieldName).FirstOrDefault();
+            if (fc != null)
+                CSVRecordFieldConfigurations.Remove(fc);
+
+            return this;
+        }
+
         public ChoCSVRecordConfiguration Map<T, TProperty>(Expression<Func<T, TProperty>> field, int position)
         {
             Map(field, m => m.Position(position));
@@ -771,7 +780,7 @@ namespace ChoETL
             var fqm = field.GetFullyQualifiedMemberName();
 
             var cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(), 
-                pd, fqm, subType == typeof(T) ? null : subType);
+                pd, fqm/*, subType == typeof(T) ? null : subType*/);
             mapper?.Invoke(new ChoCSVRecordFieldConfigurationMap(cf));
             return this;
         }
@@ -1199,6 +1208,24 @@ namespace ChoETL
 
     public class ChoCSVRecordConfiguration<T> : ChoCSVRecordConfiguration
     {
+        public new ChoCSVRecordConfiguration<T> ClearFields()
+        {
+            base.ClearFields();
+            return this;
+        }
+
+        public ChoCSVRecordConfiguration<T> Ignore<TProperty>(Expression<Func<T, TProperty>> field)
+        {
+            if (CSVRecordFieldConfigurations.Count == 0)
+                MapRecordFields<T>();
+
+            var fc = CSVRecordFieldConfigurations.Where(f => f.DeclaringMember == field.GetFullyQualifiedMemberName()).FirstOrDefault();
+            if (fc != null)
+                CSVRecordFieldConfigurations.Remove(fc);
+
+            return this;
+        }
+
         public ChoCSVRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, int position)
         {
             base.Map(field, position);
