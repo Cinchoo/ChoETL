@@ -171,7 +171,7 @@ namespace ChoETL
 
         public ChoFixedLengthRecordConfiguration ClearFields()
         {
-            FixedLengthRecordFieldConfigurationsForType.Clear();
+            //FixedLengthRecordFieldConfigurationsForType.Clear();
             FixedLengthRecordFieldConfigurations.Clear();
             return this;
         }

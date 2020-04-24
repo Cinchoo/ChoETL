@@ -134,7 +134,7 @@ namespace ChoETL
             get;
             set;
         }
-        public bool EnableJSONAttributePrefix { get; set; }
+        public bool EnableXmlAttributePrefix { get; set; }
 
         private Func<JObject, JObject> _customNodeSelecter = null;
         public Func<JObject, JObject> CustomNodeSelecter
