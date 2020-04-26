@@ -265,4 +265,28 @@ namespace ChoETL
             LineNo = lineNo;
         }
     }
+
+    public class ChoMultiLineHeaderEventArgs : EventArgs
+    {
+        public long LineNo
+        {
+            get;
+            private set;
+        }
+        public string Line
+        {
+            get;
+            set;
+        }
+        public bool IsHeader
+        {
+            get;
+            set;
+        }
+        public ChoMultiLineHeaderEventArgs(long lineNo, string line)
+        {
+            Line = line;
+            LineNo = lineNo;
+        }
+    }
 }

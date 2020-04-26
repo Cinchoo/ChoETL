@@ -35,7 +35,11 @@ namespace ChoETL
             get;
             set;
         }
-
+        public bool TurnOnMultiLineHeaderSupport
+        {
+            get;
+            set;
+        }
         [DataMember]
         public ChoCSVFileHeaderConfiguration FileHeaderConfiguration
         {

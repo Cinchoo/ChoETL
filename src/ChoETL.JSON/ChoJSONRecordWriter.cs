@@ -25,7 +25,7 @@ namespace ChoETL
         bool isFirstRec = true;
         internal ChoWriter Writer = null;
         internal Type ElementType = null;
-        private Lazy<List<object>> _recBuffer = null;
+        //private Lazy<List<object>> _recBuffer = null;
         private Lazy<bool> BeginWrite = null;
         private object _sw = null;
 
@@ -45,19 +45,19 @@ namespace ChoETL
             _callbackRecordFieldWrite = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordFieldWrite>(recordType);
             _callbackRecordSeriablizable = ChoMetadataObjectCache.CreateMetadataObject<IChoRecordFieldSerializable>(recordType);
 
-            _recBuffer = new Lazy<List<object>>(() =>
-            {
-                if (Writer != null)
-                {
-                    var b = Writer.Context.ContainsKey("RecBuffer") ? Writer.Context.RecBuffer : null;
-                    if (b == null)
-                        Writer.Context.RecBuffer = new List<object>();
+            //_recBuffer = new Lazy<List<object>>(() =>
+            //{
+            //    if (Writer != null)
+            //    {
+            //        var b = Writer.Context.ContainsKey("RecBuffer") ? Writer.Context.RecBuffer : null;
+            //        if (b == null)
+            //            Writer.Context.RecBuffer = new List<object>();
 
-                    return Writer.Context.RecBuffer;
-                }
-                else
-                    return new List<object>();
-            });
+            //        return Writer.Context.RecBuffer;
+            //    }
+            //    else
+            //        return new List<object>();
+            //}, true);
 
             //Configuration.Validate();
 

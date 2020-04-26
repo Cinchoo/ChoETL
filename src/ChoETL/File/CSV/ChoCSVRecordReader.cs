@@ -135,6 +135,7 @@ namespace ChoETL
             IDictionary<string, Type> recFieldTypes = null;
             bool? skipUntil = true;
             bool? doWhile = true;
+            StringBuilder multiLineHeader = new StringBuilder();
 
             using (ChoPeekEnumerator<Tuple<long, string>> e = new ChoPeekEnumerator<Tuple<long, string>>(
                 new ChoIndexedEnumerator<string>(source is IEnumerable<string> ? (IEnumerable<string>)source :
@@ -276,7 +277,48 @@ namespace ChoETL
                     //}
 
                     //LoadHeader if any
-                    if ((Configuration.FileHeaderConfiguration.HasHeaderRecord
+                    if (Configuration.TurnOnMultiLineHeaderSupport && Reader is IChoMultiLineHeaderReader)
+                    {
+                        var mlr = Reader as IChoMultiLineHeaderReader;
+                        if (mlr.RaiseMultiLineHeader(pair.Item1, pair.Item2))
+                        {
+                            //if (multiLineHeader.Length > 0 && !multiLineHeader.ToString().EndsWith(Configuration.Delimiter))
+                            //    multiLineHeader.Append(Configuration.Delimiter);
+
+                            if (Reader is IChoSanitizableReader)
+                            {
+                                pair = new Tuple<long, string>(pair.Item1, ((IChoSanitizableReader)Reader).RaiseSanitizeLine(pair.Item1, pair.Item2));
+                            }
+
+                            multiLineHeader.Append(pair.Item2);
+                            return new Tuple<bool?, Tuple<long, string>>(true, pair);
+                        }
+                        else
+                        {
+                            string header = multiLineHeader.ToString();
+                            Configuration.FileHeaderConfiguration.HasHeaderRecord = header.Length > 0;
+                            if (!_configCheckDone)
+                            {
+                                if (Configuration.SupportsMultiRecordTypes && Configuration.RecordSelector != null && !Configuration.RecordTypeMapped)
+                                {
+                                }
+                                else
+                                    Configuration.Validate(GetHeaders(header));
+                                var dict = recFieldTypes = Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
+                                if (Configuration.MaxScanRows == 0)
+                                    RaiseMembersDiscovered(dict);
+                                Configuration.UpdateFieldTypesIfAny(dict);
+                                _configCheckDone = true;
+                            }
+
+                                headerLineLoaded = true;
+                            _headerFound = true;
+                            LoadHeaderLine(header);
+
+                            return new Tuple<bool?, Tuple<long, string>>(false, pair);
+                        }
+                    }
+                    else if ((Configuration.FileHeaderConfiguration.HasHeaderRecord
                         || Configuration.FileHeaderConfiguration.HeaderLineAt > 0)
                         && !_headerFound)
                     {
@@ -645,7 +687,7 @@ namespace ChoETL
                                 if (Configuration.ThrowAndStopOnMissingField)
                                     throw new ChoMissingRecordFieldException("Missing '{0}' field in CSV file.".FormatString(fieldConfig.FieldName));
                                 else
-                                    fieldValue = fieldNameValues;
+                                    fieldValue = null; // fieldNameValues;
 
                                 //if (Configuration.ColumnOrderStrict)
                                 //    throw new ChoParserException("No matching '{0}' field header found.".FormatString(fieldConfig.FieldName));
@@ -665,7 +707,7 @@ namespace ChoETL
                             else if (Configuration.ThrowAndStopOnMissingField)
                                 throw new ChoMissingRecordFieldException("Missing field value at [Position: {1}] in CSV file.".FormatString(fieldConfig.FieldName, fieldConfig.FieldPosition));
                             else
-                                fieldValue = fieldNameValues;
+                                fieldValue = null; // fieldNameValues;
                         }
                         else
                         {
@@ -1019,7 +1061,11 @@ namespace ChoETL
         private void LoadHeaderLine(Tuple<long, string> pair)
         {
             string line = pair.Item2;
+            LoadHeaderLine(line);
+        }
 
+        private void LoadHeaderLine(string line)
+        {
             //Validate header
             _fieldNames = GetHeaders(line);
             if (_fieldNames == null)
