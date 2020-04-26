@@ -60,7 +60,7 @@ namespace ChoETL
                 }
                 else
                     return new List<object>();
-            });
+            }, true);
 
             BeginWrite = new Lazy<bool>(() =>
             {
@@ -92,13 +92,12 @@ namespace ChoETL
 
         private IEnumerable<object> GetRecords(IEnumerator<object> records)
         {
-            object x = Writer != null ? Writer.Context.RecBuffer : null;
+            //object x = Writer != null ? Writer.Context.RecBuffer : null;
             var arr = _recBuffer.Value.ToArray();
             _recBuffer.Value.Clear();
 
             foreach (var rec in arr)
                 yield return rec;
-
 
             while (records.MoveNext())
                 yield return records.Current;

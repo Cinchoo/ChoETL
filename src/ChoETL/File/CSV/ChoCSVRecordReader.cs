@@ -26,6 +26,7 @@ namespace ChoETL
         private Dictionary<string, object> fieldNameValues = null;
         private Dictionary<string, object> fieldNameValuesEx = null;
         internal ChoReader Reader = null;
+        private Lazy<List<string>> _recBuffer = null;
 
         public ChoCSVRecordConfiguration Configuration
         {
@@ -58,7 +59,7 @@ namespace ChoETL
                 }
                 else
                     return new List<string>();
-            });
+            }, true);
         }
 
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
@@ -67,7 +68,6 @@ namespace ChoETL
             return AsEnumerable(source, TraceSwitch, filterFunc);
         }
 
-        private Lazy<List<string>> _recBuffer = null;
         private void CalcFieldMaxCountIfApplicable(IEnumerator<string> recEnum)
         {
             if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)

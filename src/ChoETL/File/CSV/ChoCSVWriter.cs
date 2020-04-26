@@ -145,6 +145,13 @@ namespace ChoETL
             _writer.WriteHeader(_textWriter, fieldNames);
         }
 
+        public void WriteCustomHeader(string header)
+        {
+            _writer.Writer = this;
+            _writer.TraceSwitch = TraceSwitch;
+            _writer.WriteCustomHeader(_textWriter, header);
+        }
+
         public void Write(IEnumerable<T> records)
         {
             _writer.Writer = this;

@@ -57,7 +57,7 @@ namespace ChoETL
                 }
                 else
                     return new List<object>();
-            });
+            }, true);
 
             BeginWrite = new Lazy<bool>(() =>
             {
@@ -89,7 +89,7 @@ namespace ChoETL
 
         private IEnumerable<object> GetRecords(IEnumerator<object> records)
         {
-            object x = Writer != null ? Writer.Context.RecBuffer : null;
+            //object x = Writer != null ? Writer.Context.RecBuffer : null;
             var arr = _recBuffer.Value.ToArray();
             _recBuffer.Value.Clear();
 
@@ -152,6 +152,14 @@ namespace ChoETL
                 return;
 
             _customHeader = String.Join(Configuration.Delimiter, fieldNames);
+        }
+
+        public void WriteCustomHeader(object writer, string header)
+        {
+            if (header.IsNullOrEmpty())
+                return;
+
+            _customHeader = header;
         }
 
         public void WriteComment(object writer, string commentText, bool silent = true)

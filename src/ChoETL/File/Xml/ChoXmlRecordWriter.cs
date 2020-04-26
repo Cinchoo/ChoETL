@@ -63,7 +63,7 @@ namespace ChoETL
                 }
                 else
                     return new List<object>();
-            });
+            }, true);
             //Configuration.Validate();
 
             BeginWrite = new Lazy<bool>(() =>
