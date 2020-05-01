@@ -498,7 +498,8 @@ namespace ChoETL
 
             IDictionary<string, object> dict = rec as IDictionary<string, object>;
             dynamic dict1 = new ChoDynamicObject(dict.ToDictionary(kvp => Configuration.RecordFieldConfigurationsDict[kvp.Key].FieldName, kvp => kvp.Value));
-            return dict1.ConvertMembersToArrayIfAny(Configuration.ArrayIndexSeparator == null ? '_' : Configuration.ArrayIndexSeparator.Value);
+            return dict1.ConvertMembersToArrayIfAny(Configuration.ArrayIndexSeparator == null ? '_' : Configuration.ArrayIndexSeparator.Value,
+                Configuration.AllowNestedArrayConversion);
         }
 
         private bool LoadLine(Tuple<long, string> pair, ref object rec)

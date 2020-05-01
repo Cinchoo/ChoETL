@@ -242,9 +242,9 @@ namespace ChoETL
             _kvpDict.Add(newKey, value);
         }
 
-        public dynamic ConvertMembersToArrayIfAny(char separator = '_')
+        public dynamic ConvertMembersToArrayIfAny(char separator = '_', bool allowNestedConversion = true)
         {
-            return ChoExpandoObjectEx.ConvertMembersToArrayIfAny(this, separator);
+            return ChoExpandoObjectEx.ConvertMembersToArrayIfAny(this, separator, allowNestedConversion);
         }
 
         public dynamic ConvertToNestedObject(char separator = '/')

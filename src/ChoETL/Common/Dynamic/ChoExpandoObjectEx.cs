@@ -69,11 +69,12 @@ namespace ChoETL
             if (separator == ChoCharEx.NUL)
                 throw new ArgumentException("Invalid separator passed.");
 
-            if (@this == null || !@this.GetType().IsDynamicType())
+            if (@this == null)
+                return @this;
+            if (!(@this is ExpandoObject || @this is ChoDynamicObject || @this is IDictionary<string, object>))
                 return @this;
 
-            IDictionary<string, object> expandoDic = null;
-            expandoDic = @this is ExpandoObject || @this is ChoDynamicObject ? (IDictionary<string, object>)@this : ToExpandoObject(@this as DynamicObject);
+            IDictionary<string, object> expandoDic = (IDictionary<string, object>)@this;
             IDictionary<string, object> root = new ChoDynamicObject();
 
             foreach (var kvp in expandoDic)
@@ -143,23 +144,27 @@ namespace ChoETL
             return root as ChoDynamicObject;
         }
 
-        public static dynamic ConvertMembersToArrayIfAny(this object @this, char separator = '_')
+        public static dynamic ConvertMembersToArrayIfAny(this object @this, char separator = '_', bool allowNestedConversion = true)
         {
             if (separator == ChoCharEx.NUL)
                 throw new ArgumentException("Invalid separator passed.");
 
-            if (@this == null || !@this.GetType().IsDynamicType())
+            if (@this == null)
+                return @this;
+            if (!(@this is ExpandoObject || @this is ChoDynamicObject || @this is IDictionary<string, object>))
                 return @this;
 
-            IDictionary<string, object> expandoDic = null;
-            expandoDic = @this is ExpandoObject || @this is ChoDynamicObject ? (IDictionary<string, object>)@this : ToExpandoObject(@this as DynamicObject);
+            IDictionary<string, object> expandoDic = (IDictionary<string, object>)@this;
             IDictionary<string, object> root = new ChoDynamicObject();
 
+            object value = null;
             foreach (var kvp in expandoDic)
             {
                 var pos = kvp.Key.LastIndexOf(separator);
+                value = allowNestedConversion ? ConvertMembersToArrayIfAny(kvp.Value, separator, allowNestedConversion) : kvp.Value;
+
                 if (pos <= 0)
-                    root.Add(kvp.Key, kvp.Value);
+                    root.Add(kvp.Key, value);
                 else
                 {
                     var key = kvp.Key.Substring(0, pos);
@@ -167,7 +172,7 @@ namespace ChoETL
                     int index = 0;
 
                     if (!int.TryParse(indexValue, out index))
-                        root.Add(kvp.Key, kvp.Value);
+                        root.Add(kvp.Key, value);
                     else
                     {
                         if (!root.ContainsKey(key))
@@ -180,7 +185,7 @@ namespace ChoETL
                             root[key] = arrValue;
                         }
 
-                        arrValue[index] = kvp.Value;
+                        arrValue[index] = value;
                     }
                 }
             }

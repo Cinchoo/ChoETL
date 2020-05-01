@@ -25,6 +25,12 @@ namespace ChoETL
             set;
         }
 
+        public bool AllowNestedArrayConversion
+        {
+            get;
+            set;
+        }
+
         public bool ImplicitExcelFieldValueHandling
         {
             get;
