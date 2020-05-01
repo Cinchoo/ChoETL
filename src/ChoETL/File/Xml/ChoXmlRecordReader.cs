@@ -1427,7 +1427,7 @@ namespace ChoETL
 
                 return retValue;
             }
-            else if (Reader != null && Reader is IChoSerializableWriter)
+            else if (Reader != null && Reader is IChoSerializableReader)
             {
                 object state = value;
                 bool retValue = ChoFuncEx.RunWithIgnoreError(() => ((IChoSerializableReader)Reader).RaiseRecordFieldDeserialize(target, index, propName, ref state), false);

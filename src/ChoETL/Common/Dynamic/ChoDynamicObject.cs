@@ -242,10 +242,16 @@ namespace ChoETL
             _kvpDict.Add(newKey, value);
         }
 
+        public dynamic ConvertMembersToArrayIfAny(char separator = '_')
+        {
+            return ChoExpandoObjectEx.ConvertMembersToArrayIfAny(this, separator);
+        }
+
         public dynamic ConvertToNestedObject(char separator = '/')
         {
             return ChoExpandoObjectEx.ConvertToNestedObject(this, separator);
         }
+
         public dynamic ConvertToFlattenObject(char separator = '/')
         {
             return ChoExpandoObjectEx.ConvertToFlattenObject(this, separator);

@@ -21,8 +21,6 @@ namespace ChoETL
 
         event EventHandler<ChoSkipUntilEventArgs> SkipUntil;
         event EventHandler<ChoDoWhileEventArgs> DoWhile;
-
-        event EventHandler<ChoRecordFieldSerializeEventArgs> RecordFieldDeserialize;
     }
 
     public class ChoBeginLoadEventArgs : EventArgs

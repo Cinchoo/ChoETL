@@ -19,6 +19,12 @@ namespace ChoETL
     {
         internal readonly Dictionary<Type, Dictionary<string, ChoCSVRecordFieldConfiguration>> CSVRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoCSVRecordFieldConfiguration>>();
 
+        public bool AutoArrayDiscovery
+        {
+            get;
+            set;
+        }
+
         public bool ImplicitExcelFieldValueHandling
         {
             get;

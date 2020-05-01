@@ -143,6 +143,51 @@ namespace ChoETL
             return root as ChoDynamicObject;
         }
 
+        public static dynamic ConvertMembersToArrayIfAny(this object @this, char separator = '_')
+        {
+            if (separator == ChoCharEx.NUL)
+                throw new ArgumentException("Invalid separator passed.");
+
+            if (@this == null || !@this.GetType().IsDynamicType())
+                return @this;
+
+            IDictionary<string, object> expandoDic = null;
+            expandoDic = @this is ExpandoObject || @this is ChoDynamicObject ? (IDictionary<string, object>)@this : ToExpandoObject(@this as DynamicObject);
+            IDictionary<string, object> root = new ChoDynamicObject();
+
+            foreach (var kvp in expandoDic)
+            {
+                var pos = kvp.Key.LastIndexOf(separator);
+                if (pos <= 0)
+                    root.Add(kvp.Key, kvp.Value);
+                else
+                {
+                    var key = kvp.Key.Substring(0, pos);
+                    var indexValue = kvp.Key.Substring(pos + 1);
+                    int index = 0;
+
+                    if (!int.TryParse(indexValue, out index))
+                        root.Add(kvp.Key, kvp.Value);
+                    else
+                    {
+                        if (!root.ContainsKey(key))
+                            root.Add(key, new object[] { });
+
+                        var arrValue = root[key] as object[];
+                        if (index + 1 > arrValue.Length)
+                        {
+                            Array.Resize(ref arrValue, index + 1);
+                            root[key] = arrValue;
+                        }
+
+                        arrValue[index] = kvp.Value;
+                    }
+                }
+            }
+
+            return root as ChoDynamicObject;
+        }
+
         public static dynamic ConvertToFlattenObject(this object @this, char separator = '/')
         {
             if (separator == ChoCharEx.NUL)

@@ -481,12 +481,24 @@ namespace ChoETL
         private object ConvertToNestedObjectIfApplicable(object rec, bool headerLineFound)
         {
             if (!headerLineFound || !Configuration.IsDynamicObject || Configuration.NestedColumnSeparator == null)
-                return rec;
+                return ConvertToArrayMemebersIfApplicable(rec, headerLineFound);
 
             IDictionary<string, object> dict = rec as IDictionary<string, object>;
             dynamic dict1 = new ChoDynamicObject(dict.ToDictionary(kvp => Configuration.RecordFieldConfigurationsDict[kvp.Key].FieldName, kvp => kvp.Value));
 
-            return dict1.ConvertToNestedObject(Configuration.NestedColumnSeparator.Value);
+            return dict1.ConvertToNestedObject(Configuration.NestedColumnSeparator == null ? '/' : Configuration.NestedColumnSeparator.Value);
+        }
+
+        private object ConvertToArrayMemebersIfApplicable(object rec, bool headerLineFound)
+        {
+            if (!headerLineFound || !Configuration.IsDynamicObject)
+                return rec;
+            if (!Configuration.AutoArrayDiscovery)
+                return rec;
+
+            IDictionary<string, object> dict = rec as IDictionary<string, object>;
+            dynamic dict1 = new ChoDynamicObject(dict.ToDictionary(kvp => Configuration.RecordFieldConfigurationsDict[kvp.Key].FieldName, kvp => kvp.Value));
+            return dict1.ConvertMembersToArrayIfAny(Configuration.ArrayIndexSeparator == null ? '_' : Configuration.ArrayIndexSeparator.Value);
         }
 
         private bool LoadLine(Tuple<long, string> pair, ref object rec)
