@@ -156,6 +156,52 @@ public class ToTextConverter : IChoValueConverter
 
         public enum EmpType { FullTime, Contract }
 
+        public class Person1
+        {
+            public IProfession Profession { get; set; }
+        }
+
+        public interface IProfession
+        {
+            string JobTitle { get; }
+        }
+
+        public class Programming : IProfession
+        {
+            public string JobTitle => "Software Developer";
+            public string FavoriteLanguage { get; set; }
+        }
+
+        public class Writing : IProfession
+        {
+            public string JobTitle => "Copywriter";
+            public string FavoriteWord { get; set; }
+        }
+
+
+        static void InterfaceTest()
+        {
+            string json = @"{
+    ""$type"": ""ChoJSONReaderTest.Program+Person1, ChoJSONReaderTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"",
+    ""Profession"": {
+        ""$type"": ""ChoJSONReaderTest.Program+Programming, ChoJSONReaderTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"",
+        ""JobTitle"": ""Software Developer"",
+        ""FavoriteLanguage"": ""C#""
+    }
+}";
+            StringBuilder jsonOut = new StringBuilder();
+
+            using (var w = new ChoJSONWriter(jsonOut)
+                .UseJsonSerialization()
+                .JsonSerializationSettings(s => s.TypeNameHandling = TypeNameHandling.All)
+            )
+            {
+                w.Write(new Person1() { Profession = new Writing() });
+            }
+
+            Console.WriteLine(jsonOut.ToString());
+        }
+
         static void Main(string[] args)
         {
             InheritanceTest();

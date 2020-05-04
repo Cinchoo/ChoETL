@@ -459,6 +459,24 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoJSONReader<T> SupportMultipleContent(bool flag = true)
+        {
+            Configuration.SupportMultipleContent = flag;
+            return this;
+        }
+
+        public ChoJSONReader<T> UseJsonSerialization(bool flag = true)
+        {
+            Configuration.UseJSONSerialization = flag;
+            return this;
+        }
+
+        public ChoJSONReader<T> JsonSerializationSettings(Action<JsonSerializerSettings> settings)
+        {
+            settings?.Invoke(Configuration.JsonSerializerSettings);
+            return this;
+        }
+
         public ChoJSONReader<T> NotifyAfter(long rowsLoaded)
         {
             Configuration.NotifyAfter = rowsLoaded;

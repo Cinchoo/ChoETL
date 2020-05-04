@@ -278,7 +278,7 @@ namespace ChoETL
                                 if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.Off) != ChoObjectValidationMode.Off)
                                     record.DoObjectLevelValidation(Configuration, Configuration.JSONRecordFieldConfigurations);
 
-                                recText = JsonConvert.SerializeObject(record, Configuration.Formatting);
+                                recText = JsonConvert.SerializeObject(record, Configuration.Formatting, Configuration.JsonSerializerSettings);
                                 if (!SupportMultipleContent)
                                     sw.Write("{1}{0}", Configuration.Formatting == Formatting.Indented ? recText.Indent(1, " ") : recText, Configuration.EOLDelimiter);
                                 else
@@ -708,7 +708,7 @@ namespace ChoETL
                         return "[{0}{1}{0}]".FormatString(Environment.NewLine, msg.ToString().Indent(1, " "));
                     }
                     else
-                        return JsonConvert.SerializeObject(MapToDictionary(target), Configuration.Formatting, Configuration.JsonSerializerSettings);
+                        return JsonConvert.SerializeObject(target /*MapToDictionary(target)*/, Configuration.Formatting, Configuration.JsonSerializerSettings);
                 }
             }
         }

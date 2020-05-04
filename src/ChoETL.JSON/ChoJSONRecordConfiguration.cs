@@ -143,25 +143,6 @@ namespace ChoETL
             set { if (value == null) return; _customNodeSelecter = value; }
         }
 
-        //private bool _isDynamicObject = true;
-        //internal virtual bool IsDynamicObject
-        //{
-        //    get { return _isDynamicObject; }
-        //    set { _isDynamicObject = value; }
-        //}
-
-        //public override bool IsDynamicObject
-        //{
-        //    get
-        //    {
-        //        return base.IsDynamicObject; // && !UseJSONSerialization;
-        //    }
-
-        //    set
-        //    {
-        //        base.IsDynamicObject = value;
-        //    }
-        //}
         internal Dictionary<string, ChoJSONRecordFieldConfiguration> RecordFieldConfigurationsDict
         {
             get;
@@ -740,7 +721,6 @@ namespace ChoETL
         //        }
         //    }
         //}
-
     }
 
     public class ChoJSONRecordConfiguration<T> : ChoJSONRecordConfiguration

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -219,16 +220,28 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoJSONWriter<T> SupportMultipleContent(bool flag = true)
+        {
+            Configuration.SupportMultipleContent = flag;
+            return this;
+        }
+
+        public ChoJSONWriter<T> UseJsonSerialization(bool flag = true)
+        {
+            Configuration.UseJSONSerialization = flag;
+            return this;
+        }
+
+        public ChoJSONWriter<T> JsonSerializationSettings(Action<JsonSerializerSettings> settings)
+        {
+            settings?.Invoke(Configuration.JsonSerializerSettings);
+            return this;
+        }
+
         public ChoJSONWriter<T> WithMaxScanNodes(int value)
         {
             if (value > 0)
                 Configuration.MaxScanRows = value;
-            return this;
-        }
-
-        public ChoJSONWriter<T> SupportMultipleContent(bool value = false)
-        {
-            Configuration.SupportMultipleContent = value;
             return this;
         }
 

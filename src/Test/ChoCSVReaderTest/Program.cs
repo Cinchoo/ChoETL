@@ -3894,6 +3894,7 @@ ID	DATE	AMOUNT	QUANTITY	ID
             {
                 using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
                     .Configure(c => c.AutoArrayDiscovery = true)
+                    .Configure(c => c.AllowNestedArrayConversion = true)
                     .WithMaxScanRows(2)
                     )
                     w.Write(r);

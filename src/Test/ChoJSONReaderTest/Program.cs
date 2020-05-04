@@ -2211,10 +2211,50 @@ K,L,M,N,O,P,Q,R,S,T";
             }
         }
 
+        public class Person1
+        {
+            public IProfession Profession { get; set; }
+        }
+
+        public interface IProfession
+        {
+            string JobTitle { get; }
+        }
+
+        public class Programming : IProfession
+        {
+            public string JobTitle => "Software Developer";
+            public string FavoriteLanguage { get; set; }
+        }
+
+        public class Writing : IProfession
+        {
+            public string JobTitle => "Copywriter";
+            public string FavoriteWord { get; set; }
+        }
+
+        static void InterfaceTest()
+        {
+            string json = @"{
+    ""$type"": ""ChoJSONReaderTest.Program+Person1, ChoJSONReaderTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"",
+    ""Profession"": {
+        ""$type"": ""ChoJSONReaderTest.Program+Programming, ChoJSONReaderTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"",
+        ""JobTitle"": ""Software Developer"",
+        ""FavoriteLanguage"": ""C#""
+    }
+}";
+
+            foreach (var rec in ChoJSONReader<Person1>.LoadText(json)
+                .Configure(c => c.UseJSONSerialization = true)
+                .Configure(c => c.JsonSerializerSettings.TypeNameHandling = TypeNameHandling.All)
+                )
+                Console.WriteLine(rec.Dump());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Test3();
+            InterfaceTest();
         }
 
         public class VarObject
