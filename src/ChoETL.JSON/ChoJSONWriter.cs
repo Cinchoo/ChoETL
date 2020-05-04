@@ -238,6 +238,12 @@ namespace ChoETL
             return this;
         }
 
+        public ChoJSONWriter<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
+        {
+            spec?.Invoke(Configuration.TypeConverterFormatSpec);
+            return this;
+        }
+
         public ChoJSONWriter<T> WithMaxScanNodes(int value)
         {
             if (value > 0)

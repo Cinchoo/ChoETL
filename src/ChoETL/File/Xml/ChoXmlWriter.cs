@@ -307,6 +307,12 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoXmlWriter<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
+        {
+            spec?.Invoke(Configuration.TypeConverterFormatSpec);
+            return this;
+        }
+
         public ChoXmlWriter<T> WithMaxScanNodes(int value)
         {
             if (value > 0)

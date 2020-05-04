@@ -480,6 +480,12 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoXmlReader<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
+        {
+            spec?.Invoke(Configuration.TypeConverterFormatSpec);
+            return this;
+        }
+
         public ChoXmlReader<T> NotifyAfter(long rowsLoaded)
         {
             Configuration.NotifyAfter = rowsLoaded;

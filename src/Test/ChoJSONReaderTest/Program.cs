@@ -2251,10 +2251,33 @@ K,L,M,N,O,P,Q,R,S,T";
                 Console.WriteLine(rec.Dump());
         }
 
+        static void DateTimeAsStringTest()
+        {
+            string json = @"[
+  {
+    ""rno"": 1,
+    ""Name"": ""XYZ"",
+    ""Created Date"": ""2014-04-30T14:39:12.2397769Z""
+  },
+  {
+    ""rno"": 2,
+    ""Name"": ""ABC"",
+    ""Created Date"": """"
+  }
+]";
+            using (var r = ChoJSONReader.LoadText(json)
+                .JsonSerializationSettings(j => j.DateParseHandling = DateParseHandling.None)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            InterfaceTest();
+            DateTimeAsStringTest();
         }
 
         public class VarObject

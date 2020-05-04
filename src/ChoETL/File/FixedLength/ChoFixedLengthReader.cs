@@ -418,6 +418,12 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoFixedLengthReader<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
+        {
+            spec?.Invoke(Configuration.TypeConverterFormatSpec);
+            return this;
+        }
+
         public ChoFixedLengthReader<T> WithCustomTextSelector(Func<string, string> textSelector)
         {
             Configuration.CustomTextSelecter = textSelector;

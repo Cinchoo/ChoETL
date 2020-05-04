@@ -361,6 +361,12 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoKVPReader<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
+        {
+            spec?.Invoke(Configuration.TypeConverterFormatSpec);
+            return this;
+        }
+
         public ChoKVPReader<T> NotifyAfter(long rowsLoaded)
         {
             Configuration.NotifyAfter = rowsLoaded;

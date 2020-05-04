@@ -228,6 +228,12 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoCSVWriter<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
+        {
+            spec?.Invoke(Configuration.TypeConverterFormatSpec);
+            return this;
+        }
+
         public ChoCSVWriter<T> UseNestedKeyFormat(bool flag = true)
         {
             Configuration.UseNestedKeyFormat = flag;

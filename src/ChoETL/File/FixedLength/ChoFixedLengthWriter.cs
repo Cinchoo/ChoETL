@@ -215,13 +215,18 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoFixedLengthWriter<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
+        {
+            spec?.Invoke(Configuration.TypeConverterFormatSpec);
+            return this;
+        }
+
         public ChoFixedLengthWriter<T> WithMaxScanRows(int value)
         {
             if (value > 0)
                 Configuration.MaxScanRows = value;
             return this;
         }
-
 
         public ChoFixedLengthWriter<T> NotifyAfter(long rowsWritten)
         {

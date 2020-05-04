@@ -3904,11 +3904,31 @@ ID,DATE,AMOUNT,QUANTITY ID
             Console.WriteLine(json.ToString());
         }
 
+
+        [ChoCSVFileHeader]
+        [ChoCSVRecordObject("|")]
+        public partial class ArchivoCliente
+        {
+            [DisplayFormat(DataFormatString = "dd/MM/yy hh:mm")]
+            public DateTime FECHA_FRANQUEO { get; set; } // datetime2(7), not null
+            public string ID_INCIDENCIA { get; set; } // nvarchar(7), not null
+            public string CIF { get; set; } // nvarchar(9), not null
+            public string PERSONA_CONTACTO { get; set; } // nvarchar(50), not null
+        }
+
         static void CustomDateTimeTest()
         {
             string csv = @"FECHA_FRANQUEO|ID_INCIDENCIA|CIF|PERSONA_CONTACTO
 14/04/20 09:44|7093927|bbbbbbbbb|RAFA
 14/04/20 09:02|7093933|aaaaaaaaa|Maria / Roger";
+
+            using (var r = ChoCSVReader<ArchivoCliente>.LoadText(csv))
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+
+            return;
 
             ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "dd/MM/yy hh:mm";
 
@@ -3926,7 +3946,7 @@ ID,DATE,AMOUNT,QUANTITY ID
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            Sample2();
+            CustomDateTimeTest();
             return;
 
             CSV2ComplexObject();

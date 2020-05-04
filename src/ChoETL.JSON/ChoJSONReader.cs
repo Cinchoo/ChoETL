@@ -477,6 +477,12 @@ namespace ChoETL
             return this;
         }
 
+        public ChoJSONReader<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
+        {
+            spec?.Invoke(Configuration.TypeConverterFormatSpec);
+            return this;
+        }
+
         public ChoJSONReader<T> NotifyAfter(long rowsLoaded)
         {
             Configuration.NotifyAfter = rowsLoaded;

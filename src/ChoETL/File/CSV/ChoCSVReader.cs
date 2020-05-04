@@ -431,6 +431,12 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoCSVReader<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
+        {
+            spec?.Invoke(Configuration.TypeConverterFormatSpec);
+            return this;
+        }
+
         public ChoCSVReader<T> WithCustomTextSelector(Func<string, string> textSelector)
         {
             Configuration.CustomTextSelecter = textSelector;
