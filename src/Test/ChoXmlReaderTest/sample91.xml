@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Root>
+  <StudentRequestList count="3">
+    <StudentRequest>
+      <StudentFirstName>Test1</StudentFirstName>
+      <StudentLastName>TestLastName</StudentLastName>
+      <StudentGrade>3</StudentGrade>
+      <StudentHomeroomTeacher>WhiteTest1</StudentHomeroomTeacher>
+      <VariableData>
+        <Variable name="Email">test@email.com</Variable>
+        <Variable name="Hobby1">TestHobby1</Variable>
+        <Variable name="Hobby2">TestHobby2</Variable>
+        <Variable name="Hobby3">TestHobby3</Variable>
+        <Variable name="satscore">satscoreTest1</Variable>
+        <Variable name="kprepscore">krepscore1</Variable>
+      </VariableData>
+    </StudentRequest>
+    <StudentRequest>
+      <StudentFirstName>Test2</StudentFirstName>
+      <StudentLastName>TestLastName2</StudentLastName>
+      <StudentGrade>3</StudentGrade>
+      <StudentHomeroomTeacher>WhiteTest1</StudentHomeroomTeacher>
+      <VariableData>
+        <Variable name="Email">test2@email.com</Variable>
+        <Variable name="Hobby5">TestHobby5</Variable>
+        <Variable name="Hobby6">TestHobby6</Variable>
+        <Variable name="Hobby3">TestHobby3</Variable>
+        <Variable name="satscore">satscoreTest2</Variable>
+        <Variable name="kprepscore">krepscore2</Variable>
+      </VariableData>
+    </StudentRequest>
+    <StudentRequest>
+      <StudentFirstName>Test1</StudentFirstName>
+      <StudentLastName>TestLastName</StudentLastName>
+      <StudentGrade>3</StudentGrade>
+      <StudentHomeroomTeacher>WhiteTest1</StudentHomeroomTeacher>
+      <VariableData>
+        <Variable name="Email">test@email.com</Variable>
+        <Variable name="Hobby4">TestHobby4</Variable>
+        <Variable name="Hobby2">TestHobby2</Variable>
+        <Variable name="Hobby3">TestHobby3</Variable>
+        <Variable name="satscore">satscoreTest3</Variable>
+        <Variable name="kprepscore">krepscore3</Variable>
+      </VariableData>
+    </StudentRequest>
+  </StudentRequestList>
+</Root>
+

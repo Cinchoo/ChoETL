@@ -1,0 +1,30 @@
+﻿<OrderList>
+  <Order xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" href="/__API__/order/1" order_id="1">
+    <OrderNo>1</OrderNo>
+    <ErpOrderNo xsi:nil="true" />
+    <Customer href="/__API__/customer/42">1</Customer>
+    <State>DENIED</State>
+    <PaymentState>PAID</PaymentState>
+    <PaymentIsCaptured>false</PaymentIsCaptured>
+    <CaptureTime xsi:nil="true" />
+    <PaymentIsCancelled>false</PaymentIsCancelled>
+    <CancelTime xsi:nil="true" />
+    <CreatedTime>2018-11-06T15:00:00Z</CreatedTime>
+    <ChangedTime>2019-05-06T12:45:30Z</ChangedTime>
+    <SyncedTime xsi:nil="true" />
+  </Order>
+  <Order xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" href="/__API__/order/2" order_id="2">
+    <OrderNo>2</OrderNo>
+    <ErpOrderNo xsi:nil="true" />
+    <Customer href="/__API__/customer/42">1</Customer>
+    <State>DENIED</State>
+    <PaymentState xsi:nil="true" />
+    <PaymentIsCaptured>false</PaymentIsCaptured>
+    <CaptureTime xsi:nil="true" />
+    <PaymentIsCancelled>false</PaymentIsCancelled>
+    <CancelTime xsi:nil="true" />
+    <CreatedTime>2018-11-06T15:49:47Z</CreatedTime>
+    <ChangedTime>2019-05-06T12:45:30Z</ChangedTime>
+    <SyncedTime xsi:nil="true" />
+  </Order>
+</OrderList>

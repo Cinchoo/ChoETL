@@ -228,6 +228,12 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoCSVWriter<T> UseNestedKeyFormat(bool flag = true)
+        {
+            Configuration.UseNestedKeyFormat = flag;
+            return this;
+        }
+
         public ChoCSVWriter<T> WithMaxScanRows(int value)
         {
             if (value > 0)

@@ -221,7 +221,7 @@ namespace ChoETL
                         }
 
                         var fns = GetFields(_recBuffer.Value).ToList();
-                        RaiseFileHeaderArrange(fns);
+                        RaiseFileHeaderArrange(ref fns);
 
                         Configuration.Validate(fns.ToArray());
                         WriteHeaderLine(sw);
@@ -252,7 +252,7 @@ namespace ChoETL
                                 if (notNullRecord != null)
                                 {
                                     var fieldNames = GetFields(notNullRecord).ToList();
-                                    RaiseFileHeaderArrange(fieldNames);
+                                    RaiseFileHeaderArrange(ref fieldNames);
                                     Configuration.Validate(fieldNames.ToArray());
                                     WriteHeaderLine(sw);
                                     _configCheckDone = true;
@@ -1019,16 +1019,22 @@ namespace ChoETL
             headerText = ht;
             return !retValue;
         }
-        private void RaiseFileHeaderArrange(List<string> fields)
+
+        private void RaiseFileHeaderArrange(ref List<string> fields)
         {
+            var fs = fields;
+
             if (_callbackFileHeaderArrange != null)
             {
-                ChoActionEx.RunWithIgnoreError(() => _callbackFileHeaderArrange.FileHeaderArrange(fields));
+                ChoActionEx.RunWithIgnoreError(() => _callbackFileHeaderArrange.FileHeaderArrange(fs));
             }
             else if (Writer != null)
             {
-                ChoActionEx.RunWithIgnoreError(() => Writer.RaiseFileHeaderArrange(fields));
+                ChoActionEx.RunWithIgnoreError(() => Writer.RaiseFileHeaderArrange(ref fs));
             }
+
+            if (fs != null)
+                fields = fs;
         }
     }
 }

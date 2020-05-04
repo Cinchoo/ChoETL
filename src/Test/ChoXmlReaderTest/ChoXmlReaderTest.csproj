@@ -123,6 +123,8 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="sample12.xml" />
+    <Content Include="sample92.xml" />
+    <Content Include="sample91.xml" />
     <Content Include="sample9.xml" />
     <Content Include="sample8.xml" />
     <Content Include="sample7.xml" />

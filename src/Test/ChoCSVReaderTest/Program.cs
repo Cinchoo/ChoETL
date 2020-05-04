@@ -3837,48 +3837,47 @@ Orange,Citrus x sinensis,Brazil,United States,India,11.75g,0.12g,0.94g";
             Console.WriteLine(stringBuilderCSV.ToString());
         }
 
-        static void MultiLineHeaderTest()
-        {
-            string csv = @"* Select	d  : 02:02:12 20 MAR 2017						
+static void MultiLineHeaderTest()
+{
+    string csv = @"* Select	d  : 02:02:12 20 MAR 2017						
 * Shippi	g Date >= 01/20/2017 ; Shipping Dat	<= 03/20/2017	; Shipping	Branch = 2	9,15,19,21,22,	5,26,27,2	,29,30,31,
 ********	***********************************	**************	**********	**********	**************	*********	**********
 							
-CUSTOMER	CUSTOMER NAME	INVOICE ID	PURCHASE	PRODUCT ID	PURCHASED	PURCHASED1	LOCATION
-ID	DATE	AMOUNT	QUANTITY	ID
-22160	MANSFIELD BROTHERS HEATING & AIR	sss.001	02/08/2017	193792	69.374	2	30
-27849	OWSLEY SUPPLY LLC  - EQUIPMENT	sss.001	03/14/2017	123906	70.409	1	2
-27849	OWSLEY SUPPLY LLC  - EQUIPMENT	sss.001	03/14/2017	40961	10.000	1	2
-16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	116511	63.016	1	15
-16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	116511	-63.016	-1	15
-16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	122636	30.748	1	15
-16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	137661	432.976	1	15
-16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	137661	-432.976	-1	15";
+CUSTOMER,CUSTOMER NAME,INVOICE ID,PURCHASE,PRODUCT ID,PURCHASED,PURCHASED QTY,LOCATION
+ID,DATE,AMOUNT,QUANTITY ID
+22160,MANSFIELD BROTHERS HEATING & AIR,sss.001,02/08/2017,193792,69.374,2,30
+27849,OWSLEY SUPPLY LLC  - EQUIPMENT,sss.001,03/14/2017,123906,70.409,1,2
+27849,OWSLEY SUPPLY LLC  - EQUIPMENT,sss.001,03/14/2017,40961,10.000,1,2
+16794,ALEXANDER GILMORE dba AL'S HEATING,sss.001,01/25/2017,116511,63.016,1,15
+16794,ALEXANDER GILMORE dba AL'S HEATING,sss.001,01/25/2017,116511,-63.016,-1,15
+16794,ALEXANDER GILMORE dba AL'S HEATING,sss.001,01/25/2017,122636,30.748,1,15
+16794,ALEXANDER GILMORE dba AL'S HEATING,sss.001,01/25/2017,137661,432.976,1,15
+16794,ALEXANDER GILMORE dba AL'S HEATING,sss.001,01/25/2017,137661,-432.976,-1,15";
 
-            foreach (var rec in ChoCSVReader.LoadText(csv)
-                .WithDelimiter("\t")
-                .WithMaxScanRows(2)
-                .Setup(s =>
-                {
-                    s.SkipUntil += (o, e) =>
-                    {
-                        e.Skip = e.Index <= 4;
-                    };
-                })
-                .Setup(s =>
-                {
-                    s.MultiLineHeader += (o, e) =>
-                    {
-                        if (e.LineNo <= 6)
-                            e.IsHeader = true;
-                        else
-                            e.IsHeader = false;
-                    };
-                })
-                .Configure(c => c.TurnOnMultiLineHeaderSupport = true)
-                .ThrowAndStopOnMissingField(false)
-                )
-                Console.WriteLine(rec.Dump());
-        }
+    foreach (var rec in ChoCSVReader.LoadText(csv)
+        .WithMaxScanRows(2)
+        .Setup(s =>
+        {
+            s.SkipUntil += (o, e) =>
+            {
+                e.Skip = e.Index <= 4;
+            };
+        })
+        .Setup(s =>
+        {
+            s.MultiLineHeader += (o, e) =>
+            {
+                if (e.LineNo <= 6)
+                    e.IsHeader = true;
+                else
+                    e.IsHeader = false;
+            };
+        })
+        .Configure(c => c.TurnOnMultiLineHeaderSupport = true)
+        .ThrowAndStopOnMissingField(false)
+        )
+        Console.WriteLine(rec.Dump());
+}
 
 
         static void CSVArrayToJSON1()
@@ -3906,7 +3905,7 @@ ID	DATE	AMOUNT	QUANTITY	ID
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            CSVArrayToJSON1();
+            MultiLineHeaderTest();
             return;
 
             CSV2ComplexObject();

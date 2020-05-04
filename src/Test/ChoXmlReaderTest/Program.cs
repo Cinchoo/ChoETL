@@ -425,7 +425,56 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            PartialLoadTest();
+            TestSample92();
+        }
+
+        static void TestSample91()
+        {
+            StringBuilder csv = new StringBuilder();
+
+            using (var r = new ChoXmlReader("sample91.xml")
+                .WithXPath("//StudentRequest")
+                .WithField("StudentFirstName")
+                .WithField("Email", xPath: @"/VariableData/Variable[@name='Email']/text()")
+                )
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    .UseNestedKeyFormat(false)
+                    )
+                    w.Write(r);
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
+        static void TestSample92()
+        {
+            StringBuilder csv = new StringBuilder();
+
+            using (var r = new ChoXmlReader("sample92.xml")
+                .WithXPath("//Order")
+                )
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    .UseNestedKeyFormat(true)
+                    .Configure(c => c.IgnoreRootNodeName = true)
+                    .Setup(s => s.FileHeaderArrange += (o, e) =>
+                    {
+                        e.Fields = e.Fields.Select(f =>
+                        {
+                            if (f == "Customer_#text")
+                                return "Customer_ID";
+                            else
+                                return f;
+                        }).ToList();
+                    })
+                    )
+                    w.Write(r.Select(r1 => { r1.RenameKey("Customer_#text", "Customer_Id"); return r1; }));
+            }
+
+            Console.WriteLine(csv.ToString());
         }
 
         static void PartialLoadTest()

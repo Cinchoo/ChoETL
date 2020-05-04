@@ -130,7 +130,8 @@ namespace ChoETL
             headerText = e.HeaderText;
             return e.Skip;
         }
-        public void RaiseFileHeaderArrange(List<string> fields)
+
+        public void RaiseFileHeaderArrange(ref List<string> fields)
         {
             EventHandler<ChoFileHeaderArrangeEventArgs> eh = FileHeaderArrange;
             if (eh == null)
@@ -138,6 +139,8 @@ namespace ChoETL
 
             ChoFileHeaderArrangeEventArgs e = new ChoFileHeaderArrangeEventArgs() { Fields = fields };
             eh(this, e);
+            if (e.Fields != null)
+                fields = e.Fields;
         }
 
         public bool RaiseRecordFieldSerialize(object record, long index, string propName, ref object source)
