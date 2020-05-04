@@ -80,7 +80,6 @@ namespace ChoETL
             get;
             set;
         }
-        public bool TreatCurrencyAsDecimal { get; set; }
 
         public ChoFileRecordObjectAttribute()
         {
@@ -95,7 +94,6 @@ namespace ChoETL
             QuoteChar = '"';
             StringSplitOptions = ChoStringSplitOptions.None;
             Encoding = "UTF-8";
-            TreatCurrencyAsDecimal = true;
         }
     }
 }

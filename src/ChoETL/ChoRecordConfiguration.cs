@@ -14,6 +14,12 @@ namespace ChoETL
     [DataContract]
     public abstract class ChoRecordConfiguration
     {
+        ChoTypeConverterFormatSpec _typeConverterFormatSpec = null;
+        public ChoTypeConverterFormatSpec TypeConverterFormatSpec
+        {
+            get { return _typeConverterFormatSpec == null ? ChoTypeConverterFormatSpec.Instance : _typeConverterFormatSpec; }
+            set { _typeConverterFormatSpec = value; }
+        }
         public Type RecordType
         {
             get;

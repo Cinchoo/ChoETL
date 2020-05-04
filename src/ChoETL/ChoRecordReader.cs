@@ -140,15 +140,27 @@ namespace ChoETL
                 double dresult = 0;
                 decimal decResult = 0;
                 DateTime dtResult;
+                ChoCurrency currResult = 0;
+                Guid guidResult;
+                bool treatCurrencyAsDecimal = RecordConfiguration.TypeConverterFormatSpec.TreatCurrencyAsDecimal;
 
                 if (ChoBoolean.TryParse(value.ToNString(), out boolValue))
                     fieldType = typeof(bool);
+                else if (Guid.TryParse(value.ToNString(), out guidResult))
+                    fieldType = typeof(Guid);
                 else if (!value.ToNString().Contains(ci.NumberFormat.NumberDecimalSeparator) && long.TryParse(value.ToNString(), out lresult))
                     fieldType = typeof(long);
                 else if (double.TryParse(value.ToNString(), out dresult))
                     fieldType = typeof(double);
                 else if (decimal.TryParse(value.ToNString(), out decResult))
                     fieldType = typeof(decimal);
+                else if (!treatCurrencyAsDecimal && ChoCurrency.TryParse(value.ToNString(), out currResult))
+                    fieldType = typeof(ChoCurrency);
+                else if (treatCurrencyAsDecimal && Decimal.TryParse(value.ToNString(), NumberStyles.Currency, CultureInfo.CurrentCulture, out decResult))
+                    fieldType = typeof(Decimal);
+                else if (!RecordConfiguration.TypeConverterFormatSpec.DateTimeFormat.IsNullOrWhiteSpace()
+                        && ChoDateTime.TryParseExact(value.ToNString(), RecordConfiguration.TypeConverterFormatSpec.DateTimeFormat, CultureInfo.CurrentCulture, out dtResult))
+                    fieldType = typeof(DateTime);
                 else if (DateTime.TryParse(value.ToNString(), out dtResult))
                     fieldType = typeof(DateTime);
                 else
@@ -161,6 +173,20 @@ namespace ChoETL
 
                 if (fieldType == typeof(string))
                     fieldTypes[key] = fieldType;
+                else if (fieldType == typeof(ChoCurrency))
+                {
+                    if (fieldTypes[key] == null)
+                        fieldTypes[key] = fieldType;
+                    else if (fieldTypes[key] != typeof(ChoCurrency))
+                        fieldTypes[key] = typeof(string);
+                }
+                else if (fieldType == typeof(Guid))
+                {
+                    if (fieldTypes[key] == null)
+                        fieldTypes[key] = fieldType;
+                    else if (fieldTypes[key] != typeof(Guid))
+                        fieldTypes[key] = typeof(string);
+                }
                 else if (fieldType == typeof(DateTime))
                 {
                     if (fieldTypes[key] == null)
@@ -221,35 +247,36 @@ namespace ChoETL
             }
         }
 
-        protected Type DiscoverFieldType(string value, ChoFileRecordConfiguration config)
-        {
-            bool treatCurrencyAsDecimal = config.TreatCurrencyAsDecimal;
-            long lresult = 0;
-            double dresult = 0;
-            DateTime dtresult;
-            Decimal decResult = 0;
-            ChoCurrency currResult = 0;
-            Guid guidResult;
+        //protected Type DiscoverFieldType(string value, ChoFileRecordConfiguration config)
+        //{
+        //    bool treatCurrencyAsDecimal = config.TreatCurrencyAsDecimal;
+        //    long lresult = 0;
+        //    double dresult = 0;
+        //    DateTime dtresult;
+        //    Decimal decResult = 0;
+        //    ChoCurrency currResult = 0;
+        //    Guid guidResult;
 
-            if (value == null)
-                return typeof(string);
-            else if (long.TryParse(value, out lresult))
-                return typeof(long);
-            else if (double.TryParse(value, out dresult))
-                return typeof(double);
-            else if (DateTime.TryParse(value, out dtresult))
-                return typeof(DateTime);
-            else if (DateTime.TryParse(value, out dtresult))
-                return typeof(DateTime);
-            else if (Guid.TryParse(value, out guidResult))
-                return typeof(Guid);
-            else if (!treatCurrencyAsDecimal && ChoCurrency.TryParse(value, out currResult))
-                return typeof(ChoCurrency);
-            else if (treatCurrencyAsDecimal && Decimal.TryParse(value, NumberStyles.Currency, CultureInfo.CurrentCulture, out decResult))
-                return typeof(Decimal);
-            else
-                return typeof(string);
-        }
+        //    if (value == null)
+        //        return typeof(string);
+        //    else if (long.TryParse(value, out lresult))
+        //        return typeof(long);
+        //    else if (double.TryParse(value, out dresult))
+        //        return typeof(double);
+        //    else if (RecordConfiguration.TypeConverterFormatSpec.DateTimeFormat.IsNullOrWhiteSpace()
+        //        && ChoDateTime.TryParseExact(value, RecordConfiguration.TypeConverterFormatSpec.DateTimeFormat, CultureInfo.CurrentCulture, out dtResult))
+        //        return typeof(DateTime);
+        //    else if (DateTime.TryParse(value, out dtresult))
+        //        return typeof(DateTime);
+        //    else if (Guid.TryParse(value, out guidResult))
+        //        return typeof(Guid);
+        //    else if (!treatCurrencyAsDecimal && ChoCurrency.TryParse(value, out currResult))
+        //        return typeof(ChoCurrency);
+        //    else if (treatCurrencyAsDecimal && Decimal.TryParse(value, NumberStyles.Currency, CultureInfo.CurrentCulture, out decResult))
+        //        return typeof(Decimal);
+        //    else
+        //        return typeof(string);
+        //}
 
         protected object GetDeclaringRecord(string declaringMember, object rec, ChoFileRecordFieldConfiguration config = null)
         {

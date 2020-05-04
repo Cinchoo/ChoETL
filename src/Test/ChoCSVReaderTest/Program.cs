@@ -705,12 +705,15 @@ namespace ChoCSVReaderTest
                 new ChoDynamicObject {{ "Cust_ID", "CGO9650" }, { "CustName", "Comercial Tecnipak Ltda" }, { "CustOrder", "7/11/2016 0:00" }, { "Salary", "$80,000" } }
             };
 
-            var actual = new ChoCSVReader(FileNameSample2CSV).WithFirstLineHeader().ToList();
-            CollectionAssert.AreEqual(expected, actual);
+            //var actual = new ChoCSVReader(FileNameSample2CSV).WithFirstLineHeader().ToList();
+            //CollectionAssert.AreEqual(expected, actual);
 
-            return;
             foreach (var p in new ChoCSVReader("Sample2.csv").WithFirstLineHeader()
-                .Configure(c => c.TreatCurrencyAsDecimal = false)
+                //.Configure(c => c.TypeConverterFormatSpec.TreatCurrencyAsDecimal = false)
+                .QuoteAllFields()
+                //.WithMaxScanRows(2)
+                .WithField("Cust_ID")
+                .WithField("Salary", fieldType: typeof(Decimal))
                 //.Configure(c => c.MaxScanRows = 10)
                 )
             {
@@ -3901,11 +3904,29 @@ ID,DATE,AMOUNT,QUANTITY ID
             Console.WriteLine(json.ToString());
         }
 
+        static void CustomDateTimeTest()
+        {
+            string csv = @"FECHA_FRANQUEO|ID_INCIDENCIA|CIF|PERSONA_CONTACTO
+14/04/20 09:44|7093927|bbbbbbbbb|RAFA
+14/04/20 09:02|7093933|aaaaaaaaa|Maria / Roger";
+
+            ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "dd/MM/yy hh:mm";
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .WithDelimiter("|")
+                .WithMaxScanRows(2)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            MultiLineHeaderTest();
+            Sample2();
             return;
 
             CSV2ComplexObject();
@@ -3938,13 +3959,13 @@ ID,DATE,AMOUNT,QUANTITY ID
             }
             return;
 
-            foreach (var p in new ChoCSVReader("Sample2.csv").WithFirstLineHeader()
-    .Configure(c => c.TreatCurrencyAsDecimal = true)
-    //.Configure(c => c.MaxScanRows = 10)
-    )
-            {
-                Console.WriteLine(p.Dump());
-            }
+    //        foreach (var p in new ChoCSVReader("Sample2.csv").WithFirstLineHeader()
+    //.Configure(c => c.TreatCurrencyAsDecimal = true)
+    ////.Configure(c => c.MaxScanRows = 10)
+    //)
+    //        {
+    //            Console.WriteLine(p.Dump());
+    //        }
             return;
             ReadAndCloseTest();
             return;

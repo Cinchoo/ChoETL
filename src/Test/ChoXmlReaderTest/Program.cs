@@ -456,6 +456,8 @@ namespace ChoXmlReaderTest
                 .WithXPath("//Order")
                 )
             {
+                //using (var w = new ChoJSONWriter(csv))
+                //    w.Write(r);
                 using (var w = new ChoCSVWriter(csv)
                     .WithFirstLineHeader()
                     .UseNestedKeyFormat(true)
@@ -471,7 +473,7 @@ namespace ChoXmlReaderTest
                         }).ToList();
                     })
                     )
-                    w.Write(r.Select(r1 => { r1.RenameKey("Customer_#text", "Customer_Id"); return r1; }));
+                    w.Write(r);
             }
 
             Console.WriteLine(csv.ToString());

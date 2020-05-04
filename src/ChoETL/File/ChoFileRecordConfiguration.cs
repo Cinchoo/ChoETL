@@ -132,12 +132,6 @@ namespace ChoETL
             get;
             set;
         }
-        [DataMember]
-        public bool TreatCurrencyAsDecimal
-        {
-            get;
-            set;
-        }
         public bool SupportsMultiRecordTypes
         {
             get;
@@ -232,7 +226,6 @@ namespace ChoETL
             //QuoteAllFields = false;
             StringSplitOptions = ChoStringSplitOptions.None;
             //Encoding = Encoding.UTF8;
-            TreatCurrencyAsDecimal = true;
             if (QuoteEscapeChar == null)
                 QuoteEscapeChar = '\0';
         }
@@ -265,7 +258,6 @@ namespace ChoETL
                 StringSplitOptions = recObjAttr.StringSplitOptions;
                 if (!recObjAttr.Encoding.IsNullOrWhiteSpace())
                     Encoding = Encoding.GetEncoding(recObjAttr.Encoding);
-                TreatCurrencyAsDecimal = recObjAttr.TreatCurrencyAsDecimal;
                 NullValue = recObjAttr.NullValue;
             }
         }
@@ -370,7 +362,6 @@ namespace ChoETL
             fconfig.EscapeQuoteAndDelimiter = EscapeQuoteAndDelimiter;
             fconfig.IgnoreDuplicateFields = IgnoreDuplicateFields;
             fconfig.NestedColumnSeparator = NestedColumnSeparator;
-            fconfig.TreatCurrencyAsDecimal = TreatCurrencyAsDecimal;
             fconfig.QuoteChar = QuoteChar;
             fconfig.BackslashQuote = BackslashQuote;
             fconfig.DoubleQuoteChar = DoubleQuoteChar;

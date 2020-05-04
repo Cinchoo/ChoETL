@@ -199,6 +199,7 @@
     <Compile Include="..\ChoETL\Common\ExtensionMethods\ChoIniFileEx.cs" Link="Common\ExtensionMethods\ChoIniFileEx.cs" />
     <Compile Include="..\ChoETL\Common\ExtensionMethods\ChoObjectEx.cs" Link="Common\ExtensionMethods\ChoObjectEx.cs" />
     <Compile Include="..\ChoETL\Common\ExtensionMethods\ChoStringEx.cs" Link="Common\ExtensionMethods\ChoStringEx.cs" />
+    <Compile Include="..\ChoETL\Common\ExtensionMethods\ChoDateTime.cs" Link="Common\ExtensionMethods\ChoDateTime.cs" />
     <Compile Include="..\ChoETL\Common\ExtensionMethods\ChoXmlNodeEx.cs" Link="Common\ExtensionMethods\ChoXmlNodeEx.cs" />
     <Compile Include="..\ChoETL\Common\IChoInitializable.cs" Link="Common\IChoInitializable.cs" />
     <Compile Include="..\ChoETL\Common\IChoValueConverter.cs" Link="Common\IChoValueConverter.cs" />

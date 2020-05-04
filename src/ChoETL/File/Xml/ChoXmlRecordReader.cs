@@ -861,7 +861,7 @@ namespace ChoETL
                         }
                         else
                         {
-                            kvp.Value.FieldType = fieldValue is ICollection ? fieldValue.GetType() : fieldValue.GetType().IsSimple() ? DiscoverFieldType(fieldValue as string, Configuration) : null;
+                            kvp.Value.FieldType = fieldValue is ICollection ? fieldValue.GetType() : null; // fieldValue.GetType().IsSimple() ? DiscoverFieldType(fieldValue as string, Configuration) : null;
                         }
                     }
                 }

@@ -27,6 +27,7 @@ namespace ChoETL
             get { return _instance.Value; }
         }
 
+        public bool TreatCurrencyAsDecimal { get; set; }
         public string DateTimeFormat { get; set; }
         public ChoBooleanFormatSpec BooleanFormat { get; set; }
         public ChoEnumFormatSpec EnumFormat { get; set; }
@@ -77,6 +78,7 @@ namespace ChoETL
 
         public void Reset()
         {
+            TreatCurrencyAsDecimal = true;
             DateTimeFormat = "d";
             CurrencyNumberStyle = NumberStyles.Currency;
             CurrencyFormat = "C";
