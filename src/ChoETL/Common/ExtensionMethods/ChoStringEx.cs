@@ -439,8 +439,9 @@ namespace ChoETL
         {
             // handle invariants
             if (invariants != null && invariants.Contains(text)) return text;
-            if (!IsSingular(text)) return text;
+            //if (!IsSingular(text)) return text;
 
+            var origText = text;
             if (_singleRegex1.IsMatch(text))
                 return _singleRegex1.Replace(text, "${keep}ies");
             else if (_singleRegex2.IsMatch(text))
@@ -450,7 +451,7 @@ namespace ChoETL
             else if (_singleRegex4.IsMatch(text))
                 return _singleRegex4.Replace(text, "${keep}s");
 
-            return text;
+            return origText == text ? text + "s" : text;
         }
 
         #endregion ToPlural Members

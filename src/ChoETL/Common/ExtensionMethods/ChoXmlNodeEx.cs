@@ -1012,7 +1012,10 @@ namespace ChoETL
                                 if (subElement == null)
                                     continue;
 
-                                object dobj = ToDynamic(subElement, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling);
+                                dynamic dobj = ToDynamic(subElement, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling);
+                                if (dobj.Count == 1 && dobj.HasText())
+                                    dobj = dobj.GetText();
+
                                 if (dobj != null || (dobj == null && emptyXmlNodeValueHandling != ChoEmptyXmlNodeValueHandling.Ignore))
                                 {
                                     if (dobj is IList && ((IList)dobj).OfType<ChoDynamicObject>().Count() == ((IList)dobj).Count)
@@ -1021,7 +1024,7 @@ namespace ChoETL
                                         list.Add(dobj);
                                 }
 
-                                keyName = subElement.Name.LocalName + "s";
+                                keyName = subElement.Name.LocalName.ToPlural();
                             }
                             if (!hasAttr && obj.Count == 0)
                                 return list.ToArray();
