@@ -19,6 +19,12 @@ namespace ChoETL
     [DataContract]
     public class ChoXmlRecordConfiguration : ChoFileRecordConfiguration
     {
+        public bool DoNotEmitXmlNamespace
+        {
+            get;
+            set;
+        }
+
         public bool TurnOffXmlFormatting
         {
             get;
@@ -928,7 +934,7 @@ namespace ChoETL
             return NSDict.Where(Xml => Xml.Value == ns && !Xml.Key.IsNullOrWhiteSpace()).Select(Xml => Xml.Key).FirstOrDefault();
         }
 
-        public string GetNamespaceForPrefix(string prefix)
+        public XNamespace GetNamespaceForPrefix(string prefix)
         {
             if (prefix != null && NSDict.ContainsKey(prefix))
                 return NSDict[prefix];
@@ -939,6 +945,42 @@ namespace ChoETL
         public string GetFirstDefaultNamespace()
         {
             return NSDict.Where(kvp => kvp.Key != "xml").Select(kvp => kvp.Value).FirstOrDefault();
+        }
+
+        public override string ToString()
+        {
+            StringBuilder msg = new StringBuilder();
+
+            if (NSDict != null)
+            {
+                foreach (var kvp in NSDict)
+                {
+                    msg.AppendFormat(@" xmlns:{0}=""{1}""", kvp.Key, kvp.Value);
+                }
+            }
+
+            return msg.ToString();
+        }
+
+        public string ToString(ChoXmlRecordConfiguration config)
+        {
+            if (config == null)
+                return ToString();
+
+            StringBuilder msg = new StringBuilder();
+
+            if (NSDict != null)
+            {
+                foreach (var kvp in NSDict)
+                {
+                    if (!config.DoNotEmitXmlNamespace && kvp.Key == "xml")
+                        continue;
+
+                    msg.AppendFormat(@" xmlns:{0}=""{1}""", kvp.Key, kvp.Value);
+                }
+            }
+
+            return msg.ToString();
         }
     }
 }

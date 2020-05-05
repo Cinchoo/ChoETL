@@ -58,17 +58,50 @@ namespace ChoXmlWriterTest
             using (var r = ChoJSONReader.LoadText(json))
             {
                 var x = r.FirstOrDefault();
-                Console.WriteLine(x.Dump());
+                //Console.WriteLine(x.Dump());
                 Console.WriteLine(ChoXmlWriter.ToText(x, new ChoXmlRecordConfiguration().Configure(c =>
                 {
                     c.RootName = "Root1";
+                    //c.DoNotEmitXmlNamespace = true;
+                    //c.TurnOffXmlFormatting = true;
                 })));
             }
         }
 
-        static void Main(string[] args)
+        public static void JSON2SoapXML()
         {
-            JSON2XML();
+            string json = @"{
+  ""Name"": ""00141169"",
+  ""CurrencyCode"": ""EUR"",
+  ""Date"": ""2020-04-03"",
+}";
+
+            StringBuilder xml = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                var x = r.FirstOrDefault();
+                //Console.WriteLine(x.Dump());
+
+                using (var w = new ChoXmlWriter(xml)
+                    .Configure(c => c.NamespaceManager.AddNamespace("soap", "http://schemas.xmlsoap.org/soap/envelope/"))
+                    .Configure(c => c.NamespaceManager.AddNamespace("tmp", "http://tempuri.org/"))
+                    .Configure(c => c.RootName = "soap:Envelope")
+                    .Configure(c => c.NodeName = "soap:Body")
+                    .Configure(c => c.DefaultNamespacePrefix = "tmp")
+                    )
+                {
+                    w.Write(new { listdata  = x });
+                }
+            }
+
+            Console.WriteLine(xml.ToString());
+        }
+
+        static void Main(string[] args)
+        { 
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
+
+            JSON2SoapXML();
             return;
 
             JSON2XmlDateTimeTest();

@@ -91,6 +91,28 @@ namespace ChoETL
     {
         #region Instance Members (Public)
 
+        public static string RemoveAllNamespaces(this string xmlDocument)
+        {
+            XElement xmlDocumentWithoutNs = RemoveAllNamespaces(XElement.Parse(xmlDocument));
+
+            return xmlDocumentWithoutNs.ToString();
+        }
+
+        public static XElement RemoveAllNamespaces(this XElement xmlDocument)
+        {
+            if (!xmlDocument.HasElements)
+            {
+                XElement xElement = new XElement(xmlDocument.Name.LocalName);
+                xElement.Value = xmlDocument.Value;
+
+                foreach (XAttribute attribute in xmlDocument.Attributes())
+                    xElement.Add(attribute);
+
+                return xElement;
+            }
+            return new XElement(xmlDocument.Name.LocalName, xmlDocument.Elements().Select(el => RemoveAllNamespaces(el)));
+        }
+
         public static IEnumerable<XElement> GetXmlElements(this XmlReader xmlReader, string xPath)
         {
             //if (xPath.IsNullOrWhiteSpace()) yield break;

@@ -209,7 +209,7 @@ namespace ChoETL
                                     yield break;
 
                                 if (!Configuration.RootName.IsNullOrWhiteSpace() && !Configuration.IgnoreRootName)
-                                    sw.Write("{0}".FormatString(XmlNamespaceStartElementText(Configuration.RootName, Configuration.DefaultNamespacePrefix, Configuration.NS)));
+                                    sw.Write("{0}".FormatString(XmlNamespaceStartElementText(new ChoXmlNamespaceManager(Configuration.NamespaceManager), Configuration.RootName)));
                             }
                         }
                         //Check record 
@@ -616,16 +616,17 @@ namespace ChoETL
                 nodeName = dobj.DynamicObjectName;
             }
 
+            var nsMgr = new ChoXmlNamespaceManager(Configuration.NamespaceManager);
             XNamespace ns = Configuration.NS;
-            XElement ele = NewXElement(nodeName, Configuration.DefaultNamespacePrefix, ns);
+            XElement ele = null; // NewXElement(nsMgr, nodeName); //, Configuration.DefaultNamespacePrefix, ns);
             string innerXml1 = null;
             if (typeof(IChoScalarObject).IsAssignableFrom(config.RecordType))
             {
-                ele = NewXElement(nodeName, Configuration.DefaultNamespacePrefix, ns, elems.First().Value);
+                ele = NewXElement(nsMgr, nodeName, elems.First().Value);
             }
             else
             {
-                ele = NewXElement(nodeName, Configuration.DefaultNamespacePrefix, ns);
+                ele = NewXElement(nsMgr, nodeName);
                 foreach (var kvp in attrs)
                 {
                     object value = kvp.Value;
@@ -707,7 +708,7 @@ namespace ChoETL
                                 ele.Add(ns != null ? new XElement(ns + kvp.Key, new XCData(kvp.Value.ToNString())) : new XElement(kvp.Key, new XCData(kvp.Value.ToNString())));
                             else
                             {
-                                XElement e = NewXElement(kvp.Key, Configuration.DefaultNamespacePrefix, ns, kvp.Value, Configuration.EmitDataType);
+                                XElement e = NewXElement(nsMgr, kvp.Key, kvp.Value, Configuration.EmitDataType);
                                 //var e = ns != null ? new XElement(ns + kvp.Key, kvp.Value) : new XElement(kvp.Key, kvp.Value);
                                 ele.Add(e);
                             }
@@ -799,6 +800,9 @@ namespace ChoETL
                 innerXml1 = FormatXml(innerXml1);
             recText = config.IgnoreRootName ? innerXml1 : innerXml1.Indent(config.Indent, config.IndentChar.ToString());
 
+            //Remove namespaces
+            recText = Regex.Replace(recText, @"\sxmlns[^""]+""[^""]+""", String.Empty);
+
             return true;
         }
 
@@ -826,15 +830,23 @@ namespace ChoETL
             }
         }
 
-        private string XmlNamespaceStartElementText(string name, string nsPrefix = null, XNamespace xs = null)
+        private string XmlNamespaceStartElementText(ChoXmlNamespaceManager nsMgr, string name)
         {
-            if (xs == null)
-            {
-                return "<{0}>".FormatString(name);
-            }
+            string prefix = name.Contains(":") ? name.SplitNTrim(":").First() : null;
+            name = name.Contains(":") ? name.SplitNTrim(":").Skip(1).First() : name;
+
+            XNamespace ns = null;
+            if (prefix != null)
+                ns = nsMgr.GetNamespaceForPrefix(prefix);
+
+            if (prefix == null)
+                return "<{0}{1}>".FormatString(name, nsMgr.ToString(Configuration));
             else
             {
-                return @"<{0}:{1} xmlns:{0}=""{2}"">".FormatString(nsPrefix, name, xs.ToString());
+                if (ns == null)
+                    throw new ChoParserException($"Missing namespace for '{prefix}' prefix.");
+
+                return @"<{0}:{1}{2}>".FormatString(prefix, name, nsMgr.ToString(Configuration));
             }
         }
 
@@ -851,15 +863,31 @@ namespace ChoETL
 
         }
 
-        private XElement NewXElement(string name, string nsPrefix = null, XNamespace xs = null, object value = null, bool emitType = false)
+        private XElement NewXElement(ChoXmlNamespaceManager nsMgr, string name, object value = null, bool emitType = false)
         {
-            var e = value == null ? new XElement(name) : new XElement(name, value);
+            ChoGuard.ArgumentNotNullOrEmpty(nsMgr, nameof(nsMgr));
 
-            if (xs != null)
+            string prefix = name.Contains(":") ? name.SplitNTrim(":").First() : null;
+            name = name.Contains(":") ? name.SplitNTrim(":").Skip(1).First() : name;
+
+            XElement e = null;
+            XNamespace ns = null;
+            if (prefix == null)
+                e = value == null ? new XElement(name) : new XElement(name, value);
+            else
             {
-                var nsAttr = new XAttribute(XNamespace.Xmlns + nsPrefix, xs);
+                ns = nsMgr.GetNamespaceForPrefix(prefix);
+                if (ns == null)
+                    throw new ChoParserException($"Missing namespace for '{prefix}' prefix.");
+
+                e = value == null ? new XElement(ns + name) : new XElement(ns + name, value);
+            }
+
+            if (ns != null)
+            {
+                var nsAttr = new XAttribute(XNamespace.Xmlns + prefix, ns);
                 e.Add(nsAttr);
-                e.Name = xs + e.Name.LocalName;
+                e.Name = ns + e.Name.LocalName;
             }
 
             if (emitType && value != null && value.GetType().IsSimple())
@@ -891,7 +919,14 @@ namespace ChoETL
 
         private string FormatXml(string xml)
         {
-            return XElement.Parse(xml).ToString();
+            try
+            {
+                return XElement.Parse(xml).ToString();
+            }
+            catch
+            {
+                return xml;
+            }
             // Format the XML text.
             StringWriter sw = new StringWriter();
             XmlTextWriter xw = new XmlTextWriter(sw);
