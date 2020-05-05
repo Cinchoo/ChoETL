@@ -86,7 +86,7 @@ namespace ChoETL
                 {
                     if (!Configuration.RootName.IsNullOrWhiteSpace() && !Configuration.IgnoreRootName)
                     {
-                        sw.Write("{1}{0}".FormatString(XmlNamespaceEndElementText(Configuration.RootName, Configuration.DefaultNamespacePrefix, Configuration.NS), Configuration.EOLDelimiter));
+                        sw.Write("{1}{0}".FormatString(XmlNamespaceEndElementText(new ChoXmlNamespaceManager(Configuration.NamespaceManager), Configuration.RootName, Configuration.DefaultNamespacePrefix, Configuration.NS), Configuration.EOLDelimiter));
                     }
                 }
             }
@@ -209,7 +209,8 @@ namespace ChoETL
                                     yield break;
 
                                 if (!Configuration.RootName.IsNullOrWhiteSpace() && !Configuration.IgnoreRootName)
-                                    sw.Write("{0}".FormatString(XmlNamespaceStartElementText(new ChoXmlNamespaceManager(Configuration.NamespaceManager), Configuration.RootName)));
+                                    sw.Write("{0}".FormatString(XmlNamespaceStartElementText(new ChoXmlNamespaceManager(Configuration.NamespaceManager), 
+                                        Configuration.RootName, Configuration.DefaultNamespacePrefix, Configuration.NS)));
                             }
                         }
                         //Check record 
@@ -622,11 +623,11 @@ namespace ChoETL
             string innerXml1 = null;
             if (typeof(IChoScalarObject).IsAssignableFrom(config.RecordType))
             {
-                ele = NewXElement(nsMgr, nodeName, elems.First().Value);
+                ele = NewXElement(nsMgr, nodeName, Configuration.DefaultNamespacePrefix, Configuration.NS, elems.First().Value);
             }
             else
             {
-                ele = NewXElement(nsMgr, nodeName);
+                ele = NewXElement(nsMgr, nodeName, Configuration.DefaultNamespacePrefix, Configuration.NS);
                 foreach (var kvp in attrs)
                 {
                     object value = kvp.Value;
@@ -708,7 +709,7 @@ namespace ChoETL
                                 ele.Add(ns != null ? new XElement(ns + kvp.Key, new XCData(kvp.Value.ToNString())) : new XElement(kvp.Key, new XCData(kvp.Value.ToNString())));
                             else
                             {
-                                XElement e = NewXElement(nsMgr, kvp.Key, kvp.Value, Configuration.EmitDataType);
+                                XElement e = NewXElement(nsMgr, kvp.Key, Configuration.DefaultNamespacePrefix, Configuration.NS, kvp.Value, Configuration.EmitDataType);
                                 //var e = ns != null ? new XElement(ns + kvp.Key, kvp.Value) : new XElement(kvp.Key, kvp.Value);
                                 ele.Add(e);
                             }
@@ -818,19 +819,8 @@ namespace ChoETL
             }
         }
 
-        private string XmlNamespaceEndElementText(string name, string nsPrefix = null, XNamespace xs = null)
-        {
-            if (xs == null)
-            {
-                return "</{0}>".FormatString(name);
-            }
-            else
-            {
-                return "</{0}:{1}>".FormatString(nsPrefix, name);
-            }
-        }
-
-        private string XmlNamespaceStartElementText(ChoXmlNamespaceManager nsMgr, string name)
+        private string XmlNamespaceEndElementText(ChoXmlNamespaceManager nsMgr, string name,
+            string defaultNSPrefix, XNamespace NS)
         {
             string prefix = name.Contains(":") ? name.SplitNTrim(":").First() : null;
             name = name.Contains(":") ? name.SplitNTrim(":").Skip(1).First() : name;
@@ -840,7 +830,39 @@ namespace ChoETL
                 ns = nsMgr.GetNamespaceForPrefix(prefix);
 
             if (prefix == null)
-                return "<{0}{1}>".FormatString(name, nsMgr.ToString(Configuration));
+            {
+                if (defaultNSPrefix.IsNullOrWhiteSpace())
+                    return "</{0}>".FormatString(name);
+                else
+                    return "</{0}:{1}>".FormatString(defaultNSPrefix, name);
+            }
+            else
+            {
+                if (ns == null)
+                    throw new ChoParserException($"Missing namespace for '{prefix}' prefix.");
+
+                return @"</{0}:{1}>".FormatString(prefix, name);
+            }
+
+        }
+
+        private string XmlNamespaceStartElementText(ChoXmlNamespaceManager nsMgr, string name,
+            string defaultNSPrefix, XNamespace NS)
+        {
+            string prefix = name.Contains(":") ? name.SplitNTrim(":").First() : null;
+            name = name.Contains(":") ? name.SplitNTrim(":").Skip(1).First() : name;
+
+            XNamespace ns = null;
+            if (prefix != null)
+                ns = nsMgr.GetNamespaceForPrefix(prefix);
+
+            if (prefix == null)
+            {
+                if (defaultNSPrefix.IsNullOrWhiteSpace())
+                    return "<{0}{1}>".FormatString(name, nsMgr.ToString(Configuration));
+                else
+                    return "<{0}:{1}{2}>".FormatString(defaultNSPrefix, name, nsMgr.ToString(Configuration));
+            }
             else
             {
                 if (ns == null)
@@ -852,18 +874,27 @@ namespace ChoETL
 
         private string XmlNamespaceElementName(string name, string nsPrefix = null)
         {
-            if (nsPrefix.IsNullOrWhiteSpace())
+            string prefix = name.Contains(":") ? name.SplitNTrim(":").First() : null;
+            name = name.Contains(":") ? name.SplitNTrim(":").Skip(1).First() : name;
+
+            if (prefix == null)
             {
-                return name;
+                if (nsPrefix.IsNullOrWhiteSpace())
+                {
+                    return name;
+                }
+                else
+                {
+                    return @"{0}:{1}".FormatString(nsPrefix, name);
+                }
             }
             else
             {
-                return @"{0}:{1}".FormatString(nsPrefix, name);
+                return name;
             }
-
         }
 
-        private XElement NewXElement(ChoXmlNamespaceManager nsMgr, string name, object value = null, bool emitType = false)
+        private XElement NewXElement(ChoXmlNamespaceManager nsMgr, string name, string defaultNSPrefix, XNamespace NS, object value = null, bool emitType = false)
         {
             ChoGuard.ArgumentNotNullOrEmpty(nsMgr, nameof(nsMgr));
 
@@ -873,7 +904,20 @@ namespace ChoETL
             XElement e = null;
             XNamespace ns = null;
             if (prefix == null)
-                e = value == null ? new XElement(name) : new XElement(name, value);
+            {
+                if (defaultNSPrefix.IsNullOrWhiteSpace())
+                {
+                    e = value == null ? new XElement(name) : new XElement(name, value);
+                }
+                else
+                {
+                    prefix = defaultNSPrefix;
+                    ns = nsMgr.GetNamespaceForPrefix(defaultNSPrefix);
+                    if (ns == null)
+                        throw new ChoParserException($"Missing namespace for '{defaultNSPrefix}' prefix.");
+                    e = value == null ? new XElement(ns + name) : new XElement(ns + name, value);
+                }
+            }
             else
             {
                 ns = nsMgr.GetNamespaceForPrefix(prefix);
