@@ -205,7 +205,16 @@ namespace ChoETL
             var tokens1 = xmlPath.SplitNTrim("/").Where(i => !i.IsNullOrWhiteSpace() && i.NTrim() != "." && i.NTrim() != "..").ToArray();
             foreach (var token in tokens1)
             {
-                if (!token.IsAlphaNumeric())
+                if (token.Contains(":"))
+                {
+                    var subTokens = token.SplitNTrim(":");
+                    if (subTokens.Length != 2 ||
+                        subTokens[0].IsNullOrWhiteSpace() || subTokens[1].IsNullOrWhiteSpace())
+                        return false;
+                    if (!subTokens[0].IsAlphaNumeric() || !subTokens[1].IsAlphaNumeric())
+                        return false;
+                }
+                else if (!token.IsAlphaNumeric())
                     return false;
             }
 
