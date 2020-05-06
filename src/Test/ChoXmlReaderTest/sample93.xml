@@ -1,0 +1,103 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--PUBLICATION_DATE_2020-01-01-->
+<os:FeatureCollection
+    xmlns:ad="http://inspire.ec.europa.eu/schemas/ad/4.0"
+    xmlns:am="http://inspire.ec.europa.eu/schemas/am/4.0"
+    xmlns:au="http://inspire.ec.europa.eu/schemas/au/4.0"
+    xmlns:base="http://inspire.ec.europa.eu/schemas/base/3.3"
+    xmlns:base2="http://inspire.ec.europa.eu/schemas/base2/2.0"
+    xmlns:bu-base="http://inspire.ec.europa.eu/schemas/bu-base/4.0"
+    xmlns:cp="http://inspire.ec.europa.eu/schemas/cp/4.0"
+    xmlns:dedication="http://namespaces.os.uk/mastermap/highwayDedication/1.0"
+    xmlns:gco="http://www.isotc211.org/2005/gco"
+    xmlns:gmd="http://www.isotc211.org/2005/gmd"
+    xmlns:gml="http://www.opengis.net/gml/3.2"
+    xmlns:gmlexr="http://www.opengis.net/gml/3.3/exr"
+    xmlns:gmlxbt="http://www.opengis.net/gml/3.3/xbt"
+    xmlns:gn="http://inspire.ec.europa.eu/schemas/gn/4.0"
+    xmlns:gsr="http://www.isotc211.org/2005/gsr"
+    xmlns:gss="http://www.isotc211.org/2005/gss"
+    xmlns:gts="http://www.isotc211.org/2005/gts"
+    xmlns:highway="http://namespaces.os.uk/mastermap/highwayNetwork/2.0"
+    xmlns:hwtn="http://namespaces.os.uk/mastermap/highwaysWaterTransportNetwork/1.0"
+    gml:id="OS_HIGHWAYS"
+    xmlns:net="http://inspire.ec.europa.eu/schemas/net/4.0"
+    xmlns:network="http://namespaces.os.uk/mastermap/generalNetwork/2.0"
+    xmlns:os="http://namespaces.os.uk/product/1.0"
+    xmlns:ram="http://namespaces.os.uk/mastermap/routingAndAssetManagement/2.1"
+    xmlns:sc="http://www.interactive-instruments.de/ShapeChange/AppInfo"
+    xmlns:stat="urn:x-inspire:specification:gmlas:StatisticalUnits:0.0"
+    xmlns:su-core="http://inspire.ec.europa.eu/schemas/su-core/4.0"
+    xmlns:tn="http://inspire.ec.europa.eu/schemas/tn/4.0"
+    xmlns:tn-ro="http://inspire.ec.europa.eu/schemas/tn-ro/4.0"
+    xmlns:tn-w="http://inspire.ec.europa.eu/schemas/tn-w/4.0"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <os:metadata xlink:href="http://www.os.uk/xml/products/Highways.xml"/>
+  <os:featureMember>
+    <highway:Road gml:id="osgb4000000030533203">
+      <gml:identifier codeSpace="http://inspire.jrc.ec.europa.eu/ids">http://data.os.uk/id/4000000030533203</gml:identifier>
+      <net:beginLifespanVersion>2016-06-17T00:00:00.000</net:beginLifespanVersion>
+      <net:inspireId>
+        <base:Identifier>
+          <base:localId>4000000030533203</base:localId>
+          <base:namespace>http://data.os.uk/</base:namespace>
+        </base:Identifier>
+      </net:inspireId>
+      <net:inNetwork xlink:href="#OSHighwayNetwork"/>
+      <net:link xlink:href="#osgb4000000030157289"/>
+      <net:link xlink:href="#osgb4000000030258530"/>
+      <net:link xlink:href="#osgb4000000030362042"/>
+      <net:link xlink:href="#osgb4000000030362044"/>
+      <net:link xlink:href="#osgb4000000030362050"/>
+      <net:link xlink:href="#osgb4000000030362112"/>
+      <net:link xlink:href="#osgb4000000030428758"/>
+      <net:link xlink:href="#osgb4000000031188582"/>
+      <net:link xlink:href="#osgb4000000031188611"/>
+      <tn:validFrom nilReason="unknown" xsi:nil="true"/>
+      <highway:designatedName>
+        <highway:DesignatedNameType>
+          <highway:name>Gwynne Park Avenue</highway:name>
+          <highway:namingAuthority>
+            <highway:ResponsibleAuthority>
+              <highway:identifier>7655</highway:identifier>
+              <highway:authorityName>Ordnance Survey</highway:authorityName>
+            </highway:ResponsibleAuthority>
+          </highway:namingAuthority>
+        </highway:DesignatedNameType>
+      </highway:designatedName>
+      <highway:reasonForChange codeSpace="http://www.os.uk/xml/codelists/ChangeTypeValue.xml">New</highway:reasonForChange>
+    </highway:Road>
+  </os:featureMember>
+  <os:featureMember>
+    <highway:Road gml:id="osgb4000000030533204">
+      <gml:identifier codeSpace="http://inspire.jrc.ec.europa.eu/ids">http://data.os.uk/id/4000000030533204</gml:identifier>
+      <net:beginLifespanVersion>2016-06-17T00:00:00.000</net:beginLifespanVersion>
+      <net:inspireId>
+        <base:Identifier>
+          <base:localId>4000000030533204</base:localId>
+          <base:namespace>http://data.os.uk/</base:namespace>
+        </base:Identifier>
+      </net:inspireId>
+      <net:inNetwork xlink:href="#OSHighwayNetwork"/>
+      <net:link xlink:href="#osgb4000000030258465"/>
+      <net:link xlink:href="#osgb4000000030362051"/>
+      <net:link xlink:href="#osgb4000000030362055"/>
+      <net:link xlink:href="#osgb4000000030362056"/>
+      <tn:validFrom nilReason="unknown" xsi:nil="true"/>
+      <highway:designatedName>
+        <highway:DesignatedNameType>
+          <highway:name>Rosebury Square</highway:name>
+          <highway:namingAuthority>
+            <highway:ResponsibleAuthority>
+              <highway:identifier>7655</highway:identifier>
+              <highway:authorityName>Ordnance Survey</highway:authorityName>
+            </highway:ResponsibleAuthority>
+          </highway:namingAuthority>
+        </highway:DesignatedNameType>
+      </highway:designatedName>
+      <highway:reasonForChange codeSpace="http://www.os.uk/xml/codelists/ChangeTypeValue.xml">New</highway:reasonForChange>
+    </highway:Road>
+  </os:featureMember>
+</os:FeatureCollection>

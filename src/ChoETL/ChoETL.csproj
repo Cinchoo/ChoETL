@@ -116,6 +116,8 @@
     <Compile Include="File\FixedLength\ChoFixedLengthRecordTypeConfiguration.cs" />
     <Compile Include="File\KeyValue\ChoKVPRecordConfigurationMap.cs" />
     <Compile Include="File\Manifold\ChoManifoldRecordTypeConfiguration.cs" />
+    <Compile Include="File\TSV\ChoTSVWriter.cs" />
+    <Compile Include="File\TSV\ChoTSVReader.cs" />
     <Compile Include="File\Xml\ChoXmlRecordConfigurationMap.cs" />
     <Compile Include="IChoEmptyLineReportable.cs" />
     <Compile Include="IChoCustomColumnMappable.cs" />

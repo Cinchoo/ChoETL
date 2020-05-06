@@ -425,7 +425,140 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            TestSample92();
+            Sample93Test();
+        }
+
+        static void ToKVPTest()
+        {
+            string xml = @"<test-run>
+ <test-suite>
+   <test-case id=""1234"" name=""ABC"" result=""Passed"">
+   </test-case>
+ </test-suite>
+</test-run>";
+            using (var r = ChoXmlReader.LoadText(xml)
+                .WithXPath("//test-case")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void ExtractTextFromXml()
+        {
+            string xml = @"<PolicyResponseMessage xmlns=""urn:oasis:names:tc:legalxml-courtfiling:schema:xsd:CourtPolicyResponseMessage-4.0"" xmlns:j=""http://niem.gov/niem/domains/jxdm/4.0"" 
+xmlns:nc=""http://niem.gov/niem/niem-core/2.0"" xmlns:mark=""urn:mark:ecf:extensions:Common"" xmlns:ecf=""urn:oasis:names:tc:legalxml-courtfiling:schema:xsd:CommonTypes-4.0"">
+      <RuntimePolicyParameters>
+        <CourtCodelist>
+          <ECFElementName>nc:CaseCategoryText</ECFElementName>
+          <EffectiveDate>
+            <nc:Date>2012-10-10</nc:Date>
+          </EffectiveDate>
+          <CourtCodelistURI>
+            <nc:IdentificationID>https://Test1.com</nc:IdentificationID>
+          </CourtCodelistURI>
+        </CourtCodelist>
+        <CourtCodelist>
+          <ECFElementName>mark:CaseTypeText</ECFElementName>
+          <EffectiveDate>
+            <nc:Date>2012-10-10</nc:Date>
+          </EffectiveDate>
+          <CourtCodelistURI>
+            <nc:IdentificationID>https://Test2.com</nc:IdentificationID>
+          </CourtCodelistURI>
+        </CourtCodelist>
+      </RuntimePolicyParameters>
+    </PolicyResponseMessage>";
+
+            using (var r = ChoXmlReader.LoadText(xml)
+                .WithXmlNamespace("nc", "http://niem.gov/niem/niem-core/2.0")
+                .WithXPath("//nc:IdentificationID/text()")
+                )
+            {
+                    Console.WriteLine(r.Select(kvp => kvp.Value).ToArray().Dump());
+            }
+        }
+
+        static void FilterNodesTest()
+        {
+            string xml = @"<ABC>
+  <NAMEDETAILS></NAMEDETAILS>
+  <PRODUCT>
+    <PRODUCTDETAILS>
+      <ProductName>
+         <name>Car</name>
+         <name>lorry</name>
+         <name>Car</name>
+      </ProductName>
+    </PRODUCTDETAILS>
+    <PRODUCTDETAILS>
+      <ProductName>
+         <name>van</name>
+         <name>cycle</name>
+         <name>bus</name>
+      </ProductName>
+    </PRODUCTDETAILS>
+    <PRODUCTDETAILS>
+      <ProductName>
+         <name>car</name>
+         <name>cycle</name>
+         <name>bus</name>
+      </ProductName>
+    </PRODUCTDETAILS>
+  </PRODUCT>    
+</ABC>";
+
+            using (var r = ChoXmlReader.LoadText(xml)
+                .WithXPath("//PRODUCTDETAILS")
+                )
+            {
+                foreach (var rec in r)
+                {
+                    if (((IList)rec.ProductName).Contains("Car"))
+                        Console.WriteLine(rec.Dump());
+                }
+            }
+        }
+
+        static void Sample93Test()
+        {
+            StringBuilder json = new StringBuilder();
+            using (var r = new ChoXmlReader("sample93.xml")
+                .Configure(c => c.DefaultNamespacePrefix = null)
+                .WithXPath("//os:featureMember")
+                )
+            {
+                using (var w = new ChoJSONWriter(json))
+                    w.Write(r);
+            }
+
+            Console.WriteLine(json.ToString());
+        }
+
+        static void LoadSoapXmlTest()
+        {
+            string xml = @"<soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"" xmlns:tmp=""http://tempuri.org/"">
+  <soap:Body>
+    <tmp:listdata>
+      <tmp:Name>00141169</tmp:Name>
+      <tmp:CurrencyCode>EUR</tmp:CurrencyCode>
+      <tmp:Date>2020-04-03</tmp:Date>
+    </tmp:listdata>
+  </soap:Body>
+</soap:Envelope>";
+
+            using (var r = ChoXmlReader.LoadText(xml)
+                             .Configure(c => c.NamespaceManager.AddNamespace("soap", "http://schemas.xmlsoap.org/soap/envelope/"))
+                    .Configure(c => c.NamespaceManager.AddNamespace("tmp", "http://tempuri.org/"))
+                    .Configure(c => c.RootName = "soap:Envelope")
+                    .Configure(c => c.NodeName = "Body")
+                    .Configure(c => c.DefaultNamespacePrefix = "tmp")
+       )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
         }
 
         static void TestSample91()
@@ -545,16 +678,19 @@ namespace ChoXmlReaderTest
 
         }
 
+        [XmlRoot("ButikOmbud")]
         public abstract class AssortmentViewModel
         {
             public string Typ { get; set; }
             public string Nr { get; set; }
         }
 
+        [XmlRoot("ButikOmbud")]
         public class StoreAssortmentViewModel : AssortmentViewModel
         {
 
         }
+        [XmlRoot("ButikOmbud")]
         public class AgentAssortmentViewModel : AssortmentViewModel
         {
 
@@ -582,17 +718,24 @@ namespace ChoXmlReaderTest
 </ButikerOmbud>";
 
             StringBuilder output = new StringBuilder();
-            using (var w = new ChoXmlWriter(output))
+            using (var w = new ChoXmlWriter<AssortmentViewModel>(output)
+                    .Configure(c => c.UseXmlSerialization = true)
+                    .Configure(c => c.XmlSerializer = new XmlSerializer(typeof(AssortmentViewModel), new Type[] { typeof(StoreAssortmentViewModel), typeof(AgentAssortmentViewModel) }))
+                )
             {
-                foreach (var rec in ChoXmlReader.LoadText(xml)
+                foreach (var rec in ChoXmlReader<AssortmentViewModel>.LoadText(xml)
                     .WithXPath("/ButikOmbud")
+                    .WithXmlNamespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")
+                    .Configure(c => c.DefaultNamespacePrefix = null)
                     .Configure(c => c.IncludeSchemaInstanceNodes = true)
+                    .Configure(c => c.UseXmlSerialization = true)
+                    .Configure(c => c.XmlSerializer = new XmlSerializer(typeof(AssortmentViewModel), new Type[] { typeof(StoreAssortmentViewModel), typeof(AgentAssortmentViewModel) }))
                     //.WithXmlNamespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")
                     //.WithMaxScanNodes(1)
                     )
                 {
                     Console.WriteLine(rec.Dump());
-                    //w.Write(rec);
+                    w.Write(rec);
                 }
             }
 

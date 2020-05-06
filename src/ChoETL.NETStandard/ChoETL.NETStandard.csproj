@@ -236,6 +236,8 @@
     <Compile Include="..\ChoETL\File\ChoFileRecordConfiguration.cs" Link="File\ChoFileRecordConfiguration.cs" />
     <Compile Include="..\ChoETL\File\ChoFileHeaderAttribute.cs" Link="File\ChoFileHeaderAttribute.cs" />
     <Compile Include="..\ChoETL\File\ChoFileRecordFieldConfiguration.cs" Link="File\ChoFileRecordFieldConfiguration.cs" />
+    <Compile Include="..\ChoETL\File\TSV\ChoTSVWriter.cs" Link="File\TSV\ChoTSVWriter.cs" />
+    <Compile Include="..\ChoETL\File\TSV\ChoTSVReader.cs" Link="File\TSV\ChoTSVReader.cs" />
     <Compile Include="..\ChoETL\File\CSV\ChoCSVWriter.cs" Link="File\CSV\ChoCSVWriter.cs" />
     <Compile Include="..\ChoETL\File\CSV\ChoCSVReader.cs" Link="File\CSV\ChoCSVReader.cs" />
     <Compile Include="..\ChoETL\File\CSV\ChoCSVRecordReader.cs" Link="File\CSV\ChoCSVRecordReader.cs" />

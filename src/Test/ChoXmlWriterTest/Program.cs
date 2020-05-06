@@ -86,7 +86,7 @@ namespace ChoXmlWriterTest
                     .Configure(c => c.NamespaceManager.AddNamespace("soap", "http://schemas.xmlsoap.org/soap/envelope/"))
                     .Configure(c => c.NamespaceManager.AddNamespace("tmp", "http://tempuri.org/"))
                     .Configure(c => c.RootName = "soap:Envelope")
-                    .Configure(c => c.NodeName = "soap:Body")
+                    .Configure(c => c.NodeName = "Body")
                     .Configure(c => c.DefaultNamespacePrefix = "tmp")
                     )
                 {
