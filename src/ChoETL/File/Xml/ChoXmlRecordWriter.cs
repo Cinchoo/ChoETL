@@ -86,7 +86,7 @@ namespace ChoETL
                 {
                     if (!Configuration.RootName.IsNullOrWhiteSpace() && !Configuration.IgnoreRootName)
                     {
-                        sw.Write("{1}{0}".FormatString(XmlNamespaceEndElementText(new ChoXmlNamespaceManager(Configuration.NamespaceManager), Configuration.RootName, Configuration.DefaultNamespacePrefix, Configuration.NS), Configuration.EOLDelimiter));
+                        sw.Write("{1}{0}".FormatString(XmlNamespaceEndElementText(Configuration.XmlNamespaceManager.Value, Configuration.RootName, Configuration.DefaultNamespacePrefix, Configuration.NS), Configuration.EOLDelimiter));
                     }
                 }
             }
@@ -209,8 +209,10 @@ namespace ChoETL
                                     yield break;
 
                                 if (!Configuration.RootName.IsNullOrWhiteSpace() && !Configuration.IgnoreRootName)
-                                    sw.Write("{0}".FormatString(XmlNamespaceStartElementText(new ChoXmlNamespaceManager(Configuration.NamespaceManager), 
+                                {
+                                    sw.Write("{0}".FormatString(XmlNamespaceStartElementText(Configuration.XmlNamespaceManager.Value,
                                         Configuration.RootName, Configuration.DefaultNamespacePrefix, Configuration.NS)));
+                                }
                             }
                         }
                         //Check record 
@@ -228,7 +230,7 @@ namespace ChoETL
                             }
                             else
                             {
-                                if (rt != Configuration.RecordType && !Configuration.UseXmlSerialization)
+                                if (!Configuration.RecordType.IsAssignableFrom(rt) && !Configuration.UseXmlSerialization)
                                     throw new ChoWriterException("Invalid record found.");
                             }
                         }
@@ -273,9 +275,23 @@ namespace ChoETL
                                 if (record != null)
                                 {
                                     if (_se.Value != null)
-                                        _se.Value.Serialize(sw, record);
+                                    {
+                                        XmlWriterSettings settings = new XmlWriterSettings();
+                                        settings.OmitXmlDeclaration = true;
+                                        settings.Indent = true;
+                                        settings.NamespaceHandling = NamespaceHandling.OmitDuplicates;
+
+                                        StringBuilder xml = new StringBuilder();
+                                        using (XmlWriter xw = XmlWriter.Create(xml, settings))
+                                        {
+                                            _se.Value.Serialize(xw, record);
+                                        }
+
+                                        sw.Write(Configuration.EOLDelimiter);
+                                        sw.Write(xml.ToString().RemoveXmlNamespaces().Indent(2, Configuration.IndentChar.ToString()));
+                                    }
                                     else
-                                        sw.Write("{1}{0}", ChoUtility.XmlSerialize(record, null, Configuration.EOLDelimiter, Configuration.NullValueHandling).Indent(2, Configuration.IndentChar.ToString()), Configuration.EOLDelimiter);
+                                        sw.Write("{1}{0}", ChoUtility.XmlSerialize(record, null, Configuration.EOLDelimiter, Configuration.NullValueHandling).RemoveXmlNamespaces().Indent(2, Configuration.IndentChar.ToString()), Configuration.EOLDelimiter);
 
                                     if (!RaiseAfterRecordWrite(record, _index, null))
                                         yield break;
@@ -331,7 +347,7 @@ namespace ChoETL
                 return null;
 
             StringBuilder nsText = new StringBuilder();
-            foreach (var kvp in new ChoXmlNamespaceManager(Configuration.NamespaceManager).NSDict)
+            foreach (var kvp in Configuration.XmlNamespaceManager.Value.NSDict)
             {
                 if (kvp.Key == "xml")
                     continue;
@@ -617,7 +633,7 @@ namespace ChoETL
                 nodeName = dobj.DynamicObjectName;
             }
 
-            var nsMgr = new ChoXmlNamespaceManager(Configuration.NamespaceManager);
+            var nsMgr = Configuration.XmlNamespaceManager.Value;
             XNamespace ns = Configuration.NS;
             XElement ele = null; // NewXElement(nsMgr, nodeName); //, Configuration.DefaultNamespacePrefix, ns);
             string innerXml1 = null;
@@ -799,10 +815,11 @@ namespace ChoETL
 
             if (!config.TurnOffXmlFormatting)
                 innerXml1 = FormatXml(innerXml1);
+                innerXml1 = FormatXml(innerXml1);
             recText = config.IgnoreRootName ? innerXml1 : innerXml1.Indent(config.Indent, config.IndentChar.ToString());
 
             //Remove namespaces
-            recText = Regex.Replace(recText, @"\sxmlns[^""]+""[^""]+""", String.Empty);
+            recText = recText.RemoveXmlNamespaces(); // Regex.Replace(recText, @"\sxmlns[^""]+""[^""]+""", String.Empty);
 
             return true;
         }

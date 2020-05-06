@@ -513,9 +513,9 @@ namespace ChoETL
             return this;
         }
 
-        public ChoXmlReader<T> UseXmlSerialization()
+        public ChoXmlReader<T> UseXmlSerialization(bool flag = true)
         {
-            Configuration.UseXmlSerialization = true;
+            Configuration.UseXmlSerialization = flag;
             return this;
         }
 

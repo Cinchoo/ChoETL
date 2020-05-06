@@ -361,6 +361,12 @@ namespace ChoETL
             return this;
         }
 
+        public ChoXmlWriter<T> UseXmlSerialization(bool flag = true)
+        {
+            Configuration.UseXmlSerialization = flag;
+            return this;
+        }
+
         public ChoXmlWriter<T> ClearFields()
         {
             Configuration.XmlRecordFieldConfigurations.Clear();

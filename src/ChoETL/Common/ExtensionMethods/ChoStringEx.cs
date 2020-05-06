@@ -567,13 +567,13 @@ namespace ChoETL
         }
 
         public static T ToObjectFromXml<T>(this XElement element, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null, bool retainXmlAttributesAsNative = true, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore,
-            string NS = null)
+            string NS = null, string defaultNSPrefix = null)
         {
-            return (T)ToObjectFromXml(element, typeof(T), overrides, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling, NS);
+            return (T)ToObjectFromXml(element, typeof(T), overrides, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling, NS, defaultNSPrefix);
         }
 
         public static object ToObjectFromXml(this XElement element, Type type, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null, bool retainXmlAttributesAsNative = true,
-            ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore, string NS = null)
+            ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore, string NS = null, string defaultNSPrefix = null, ChoXmlNamespaceManager nsMgr = null)
         {
             if (element == null)
                 return null;
@@ -587,7 +587,8 @@ namespace ChoETL
 
             if (type.IsDynamicType())
             {
-                return ToDynamic(element, true, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling);
+                return ToDynamic(element, true, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling, 
+                    defaultNSPrefix: defaultNSPrefix, nsMgr: nsMgr);
             }
             else
             {
@@ -626,19 +627,21 @@ namespace ChoETL
         }
 
         public static object ToObjectFromXml(this string xml, Type type, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null, bool retainXmlAttributesAsNative = true,
-            ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore, string NS = null)
+            ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore, string NS = null, string defaultNSPrefix = null, ChoXmlNamespaceManager nsMgr = null)
         {
             if (xml.IsNullOrWhiteSpace())
                 return null;
             if (type == null)
                 throw new ArgumentNullException("Missing type.");
-            return ToObjectFromXml(XElement.Parse(xml), type, overrides, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling, NS);
+            return ToObjectFromXml(XElement.Parse(xml), type, overrides, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling, NS,
+                defaultNSPrefix, nsMgr);
         }
 
         public static object ToDynamic(XElement element, bool topLevel = true, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null,
-            bool retainXmlAttributesAsNative = true, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore)
+            bool retainXmlAttributesAsNative = true, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore, string defaultNSPrefix = null, ChoXmlNamespaceManager nsMgr = null)
         {
-            return (ChoUtility.XmlDeserialize<ChoDynamicObject>(element.GetOuterXml(), null, null, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling));
+            return (ChoUtility.XmlDeserialize<ChoDynamicObject>(element.GetOuterXml(), null, null, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, 
+                retainXmlAttributesAsNative, nullValueHandling, defaultNSPrefix, nsMgr));
 
             if (element.Name.LocalName == ChoDynamicObject.DefaultName)
             {
@@ -1705,5 +1708,12 @@ namespace ChoETL
             return text;
         }
 
+        public static string RemoveXmlNamespaces(this string xml)
+        {
+            if (xml == null)
+                return xml;
+
+            return Regex.Replace(xml, @"\sxmlns[^""]+""[^""]+""", String.Empty);
+        }
     }
 }
