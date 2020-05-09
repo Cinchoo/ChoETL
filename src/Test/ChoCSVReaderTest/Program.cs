@@ -3943,10 +3943,51 @@ ID	DATE	AMOUNT	QUANTITY ID
             }
         }
 
+        public static void ConvertCsvStream()
+        {
+            string csvText = "\"Invoice Number\"\n\"1583-03\"\n\"1589-00\"";
+
+            StringBuilder json = new StringBuilder();
+            using (var r = ChoCSVReader.LoadText(csvText)
+                .WithFirstLineHeader()
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+                //using (var w = new ChoJSONWriter(json))
+                //    w.Write(r);
+            }
+            Console.WriteLine(json.ToString());
+        }
+
+        static void TSV2Xml()
+        {
+            string tsv = @"Time	Object	pmPdDrb	pmPdcDlSrb
+00:45	EUtranCellFDD=GNL02294_7A_1	2588007	1626
+00:45	EUtranCellFDD=GNL02294_7B_1	18550	32
+00:45	EUtranCellFDD=GNL02294_7C_1	26199	38
+00:45	EUtranCellFDD=GNL02294_9A_1	3857243	751";
+
+            StringBuilder xml = new StringBuilder();
+            using (var r = ChoTSVReader.LoadText(tsv)
+                .WithFirstLineHeader()
+                )
+            {
+                //var dt = r.AsDataTable();
+                //return;
+                using (var w = new ChoXmlWriter(xml)
+                    .Configure(c => c.RootName = "xmlnodes")
+                    .Configure(c => c.NodeName = "xmlnode")
+                    )
+                    w.Write(r);
+            }
+            Console.WriteLine(xml.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            MultiLineHeaderTest();
+            TSV2Xml();
             return;
 
             CSV2ComplexObject();

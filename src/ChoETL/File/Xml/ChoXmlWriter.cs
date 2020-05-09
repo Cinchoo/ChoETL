@@ -307,6 +307,30 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoXmlWriter<T> WithRootName(string name)
+        {
+            Configuration.RootName = name;
+            return this;
+        }
+
+        public ChoXmlWriter<T> WithNodeName(string name)
+        {
+            Configuration.NodeName = name;
+            return this;
+        }
+
+        public ChoXmlWriter<T> IgnoreRootName(bool flag = true)
+        {
+            Configuration.IgnoreRootName = flag;
+            return this;
+        }
+
+        public ChoXmlWriter<T> IgnoreNodeName(bool flag = true)
+        {
+            Configuration.IgnoreNodeName = flag;
+            return this;
+        }
+
         public ChoXmlWriter<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
         {
             spec?.Invoke(Configuration.TypeConverterFormatSpec);

@@ -480,6 +480,30 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoXmlReader<T> WithRootName(string name)
+        {
+            Configuration.RootName = name;
+            return this;
+        }
+
+        public ChoXmlReader<T> WithNodeName(string name)
+        {
+            Configuration.NodeName = name;
+            return this;
+        }
+
+        public ChoXmlReader<T> IgnoreRootName(bool flag = true)
+        {
+            Configuration.IgnoreRootName = flag;
+            return this;
+        }
+
+        public ChoXmlReader<T> IgnoreNodeName(bool flag = true)
+        {
+            Configuration.IgnoreNodeName = flag;
+            return this;
+        }
+
         public ChoXmlReader<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
         {
             spec?.Invoke(Configuration.TypeConverterFormatSpec);

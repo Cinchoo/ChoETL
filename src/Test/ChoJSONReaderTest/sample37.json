@@ -1,0 +1,56 @@
+﻿{
+  "@context": "http://schema.org",
+  "@type": "Movie",
+  "url": "/title/tt7131622/",
+  "name": "Once Upon a Time... in Hollywood",
+  "genre": [
+    "Comedy",
+    "Drama"
+  ],
+  "actor": [
+    {
+      "@type": "Person",
+      "url": "/name/nm0000138/",
+      "name": "Leonardo DiCaprio"
+    },
+    {
+      "@type": "Person",
+      "url": "/name/nm0000093/",
+      "name": "Brad Pitt"
+    },
+    {
+      "@type": "Person",
+      "url": "/name/nm3053338/",
+      "name": "Margot Robbie"
+    },
+    {
+      "@type": "Person",
+      "url": "/name/nm0386472/",
+      "name": "Emile Hirsch"
+    }
+  ],
+  "director": {
+    "@type": "Person",
+    "url": "/name/nm0000233/",
+    "name": "Quentin Tarantino"
+  },
+  "creator": [
+    {
+      "@type": "Person",
+      "url": "/name/nm0000233/",
+      "name": "Quentin Tarantino"
+    },
+    {
+      "@type": "Organization",
+      "url": "/company/co0050868/"
+    },
+    {
+      "@type": "Organization",
+      "url": "/company/co0452101/"
+    },
+    {
+      "@type": "Organization",
+      "url": "/company/co0159772/"
+    }
+  ]
+}

@@ -425,7 +425,38 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            Sample93Test();
+            Xml2JSON2();
+        }
+
+        static void Xml2JSON2()
+        {
+            string xml = @"<map version=""1.2"" tiledversion=""1.3.1"" orientation=""orthogonal"" renderorder=""right-down"" compressionlevel=""0"" width=""80"" height=""50"" tilewidth=""16"" tileheight=""16"" infinite=""0"" nextlayerid=""2"" nextobjectid=""1"">
+ <tileset firstgid=""1"" name=""TilesetSA"" tilewidth=""16"" tileheight=""16"" tilecount=""4000"" columns=""80"">
+  <image source=""../../TilesetSA.png"" width=""1280"" height=""800""/>
+ </tileset>
+ <layer id=""1"" name=""Walls"" width=""80"" height=""50"">
+  <data encoding=""csv"">
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,
+3,81,81,81,81,81,81,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,3,3,3,3,3,3,3,3,3,3,3,
+3,3,3,3,3,3,3,3,3,3,3,3,3,3,
+</data>
+ </layer>
+</map>";
+
+            StringBuilder json = new StringBuilder();
+            using (var r = ChoXmlReader.LoadText(xml)
+                .WithXPath("/")
+                )
+            {
+                //Console.WriteLine(r.First().layer.data.GetText());
+                using (var w = new ChoJSONWriter(json))
+                {
+                    w.Write(r);
+                }
+            }
+            Console.WriteLine(json.ToString());
         }
 
         static void ToKVPTest()

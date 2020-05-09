@@ -2274,10 +2274,56 @@ K,L,M,N,O,P,Q,R,S,T";
             }
         }
 
+        public class ImdbJsonPerson
+        {
+            public string Url { get; set; }
+        }
+
+        public class ImdbJsonMovie
+        {
+            public string Url { get; set; }
+            public string Name { get; set; }
+            public string Image { get; set; }
+            public List<string> Genre { get; set; }
+            public List<ImdbJsonPerson> Actor { get; set; }
+            public List<ImdbJsonPerson> Director { get; set; }
+            //public string[] Creator { get; set; }
+        }
+
+        static void ArrayOrSingleNodeTest()
+        {
+
+            using (var r = new ChoJSONReader<ImdbJsonMovie>("sample37.json"))
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void Json2CSV1()
+        {
+            string json = @"{
+                'attr1': 'val1',
+                'attr2': 'val2',
+                'attr3': 'val3'                      
+            }";
+
+            StringBuilder csv = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    )
+                    w.Write(r);
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            DateTimeAsStringTest();
+            Json2CSV1();
         }
 
         public class VarObject
