@@ -459,6 +459,12 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoJSONReader<T> AllowComplexJSONPath(bool flag = true)
+        {
+            Configuration.AllowComplexJSONPath = flag;
+            return this;
+        }
+
         public ChoJSONReader<T> SupportMultipleContent(bool flag = true)
         {
             Configuration.SupportMultipleContent = flag;

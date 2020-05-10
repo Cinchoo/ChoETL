@@ -3523,14 +3523,13 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
         {
             //[DisplayName("CreId")]
             public string CourseId { get; set; }
-            [DisplayName("CreName")]
+            //[DisplayName("CreName")]
             public string CourseName { get; set; }
         }
 
         public static void CSV2ComplexObject()
         {
-            string csv = @"
-Id1, Name1, CreId_0, CreName_0, CreId_1, CreName_1
+            string csv = @"Id, Name, CreId_0, CreName_0, CreId_1, CreName_1
 1, Tom, CI0, CN0, CI1, CN1
 2, Mark, CI20, CN20, CI21, CN21
 ";
@@ -3538,17 +3537,18 @@ Id1, Name1, CreId_0, CreName_0, CreId_1, CreName_1
             var config = new ChoCSVRecordConfiguration<StudentInfo1>()
                 .Map(f => f.Id)
                 .MapForType<Course1>(f => f.CourseId, "CreId")
+                .MapForType<Course1>(f => f.CourseName, "CreName")
                 .IndexMap(f => f.Courses, 0, 1)
                 .WithFirstLineHeader()
                 ;
 
-            using (var r = ChoCSVReader<StudentInfo1>.LoadText(csv)
-                .WithField(o => o.Id)
-                //.WithField(o => o.Courses.FirstOrDefault().CourseId, fieldName: "CreId")
-                .WithFieldForType<Course1>(o => o.CourseId, fieldName: "CreId")
-                .Index(o => o.Courses, 0, 1)
+            using (var r = ChoCSVReader<StudentInfo1>.LoadText(csv, config)
+                //.WithField(o => o.Id)
+                ////.WithField(o => o.Courses.FirstOrDefault().CourseId, fieldName: "CreId")
+                //.WithFieldForType<Course1>(o => o.CourseId, fieldName: "CreId")
+                //.Index(o => o.Courses, 0, 1)
                 .WithFirstLineHeader()
-                .MapRecordFields<StudentInfoMap>()
+                //.MapRecordFields<StudentInfoMap>()
                 )
             {
                 foreach (var rec in r)
@@ -3885,19 +3885,18 @@ ID	DATE	AMOUNT	QUANTITY ID
 
         static void CSVArrayToJSON1()
         {
-            string csv = @"Id,name,nestedarray_0,nestedarray_1, nestedarray_2, nestedarray_3, nestedarray_4
-1,name,2,namelist10, citylist10,namelist11, citylist11
-2,name1,3,namelist20, citylist20,namelist21, citylist21";
+            string csv = @"id,name,friends/0,friends/1
+1,Tom,Dick,Harry";
 
             StringBuilder json = new StringBuilder();
             using (var w = new ChoJSONWriter(json)
                 .Configure(c => c.SupportMultipleContent = true)
+                .Configure(c => c.SingleElement = true)
                 )
             {
                 using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
                     .Configure(c => c.AutoArrayDiscovery = true)
-                    .Configure(c => c.AllowNestedArrayConversion = true)
-                    .WithMaxScanRows(2)
+                    .Configure(c => c.ArrayIndexSeparator = '/')
                     )
                     w.Write(r);
             }
@@ -3987,7 +3986,7 @@ ID	DATE	AMOUNT	QUANTITY ID
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            TSV2Xml();
+            CSV2ComplexObject();
             return;
 
             CSV2ComplexObject();

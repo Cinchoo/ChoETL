@@ -220,6 +220,12 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoJSONWriter<T> SingleElement(bool flag = true)
+        {
+            Configuration.SingleElement = flag;
+            return this;
+        }
+
         public ChoJSONWriter<T> SupportMultipleContent(bool flag = true)
         {
             Configuration.SupportMultipleContent = flag;

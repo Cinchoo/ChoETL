@@ -2320,10 +2320,28 @@ K,L,M,N,O,P,Q,R,S,T";
             Console.WriteLine(csv.ToString());
         }
 
+        static void Json2CSV2()
+        {
+            string json = @" {id: 1, name: ""Tom"", friends: [""Dick"", ""Harry""]}";
+
+            StringBuilder csv = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(json)
+                )
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    .NestedColumnSeparator('/')
+                    )
+                    w.Write(r);
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Json2CSV1();
+            Json2CSV2();
         }
 
         public class VarObject

@@ -228,6 +228,24 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoCSVWriter<T> ArrayIndexSeparator(char value)
+        {
+            if (value == ChoCharEx.NUL)
+                throw new ArgumentException("Invalid array index separator passed.");
+
+            Configuration.ArrayIndexSeparator = value;
+            return this;
+        }
+
+        public ChoCSVWriter<T> NestedColumnSeparator(char value)
+        {
+            if (value == ChoCharEx.NUL)
+                throw new ArgumentException("Invalid nested column separator passed.");
+
+            Configuration.NestedColumnSeparator = value;
+            return this;
+        }
+
         public ChoCSVWriter<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
         {
             spec?.Invoke(Configuration.TypeConverterFormatSpec);

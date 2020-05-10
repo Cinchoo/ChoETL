@@ -560,7 +560,7 @@ namespace ChoETL
                         if (f != null)
                         {
                             obj.FieldName = f.FieldName;
-                            if (f.FieldPosition > 0)
+                            if (f.FieldPosition > 0 && arrayIndex == null)
                                 obj.FieldPosition = f.FieldPosition;
                         }
                     }
@@ -1006,7 +1006,12 @@ namespace ChoETL
                 propertyName = propertyName.SplitNTrim(".").LastOrDefault();
                 if (!CSVRecordFieldConfigurations.Any(fc => fc.DeclaringMember == fqm))
                 {
+                    int fieldPosition = 0;
+                    fieldPosition = CSVRecordFieldConfigurations.Count > 0 ? CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
+                    fieldPosition++;
+
                     var c = new ChoCSVRecordFieldConfiguration(propertyName, attr, otherAttrs);
+                    c.FieldPosition = fieldPosition;
                     if (pd != null)
                     {
                         c.PropertyDescriptor = pd;
@@ -1129,7 +1134,7 @@ namespace ChoETL
                             {
                                 int fieldPosition = 0;
                                 fieldPosition = CSVRecordFieldConfigurations.Count > 0 ? CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-                                fieldPosition++;
+                                //fieldPosition++;
                                 ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref fieldPosition, fullyQualifiedMemberName, pd, index, displayName, ignoreAttrs: false,
                                     mapper: mapper);
 

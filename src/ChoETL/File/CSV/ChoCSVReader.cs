@@ -431,6 +431,30 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoCSVReader<T> AutoArrayDiscovery(bool flag)
+        {
+            Configuration.AutoArrayDiscovery = flag;
+            return this;
+        }
+
+        public ChoCSVReader<T> ArrayIndexSeparator(char value)
+        {
+            if (value == ChoCharEx.NUL)
+                throw new ArgumentException("Invalid array index separator passed.");
+
+            Configuration.ArrayIndexSeparator = value;
+            return this;
+        }
+
+        public ChoCSVReader<T> NestedColumnSeparator(char value)
+        {
+            if (value == ChoCharEx.NUL)
+                throw new ArgumentException("Invalid nested column separator passed.");
+
+            Configuration.NestedColumnSeparator = value;
+            return this;
+        }
+
         public ChoCSVReader<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
         {
             spec?.Invoke(Configuration.TypeConverterFormatSpec);
