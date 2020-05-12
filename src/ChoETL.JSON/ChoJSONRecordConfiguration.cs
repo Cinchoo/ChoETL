@@ -525,6 +525,8 @@ namespace ChoETL
             LoadNCacheMembers(JSONRecordFieldConfigurations);
         }
 
+        #region Fluent API
+
         public ChoJSONRecordConfiguration Configure(Action<ChoJSONRecordConfiguration> action)
         {
             if (action != null)
@@ -592,6 +594,8 @@ namespace ChoETL
             mapper?.Invoke(new ChoJSONRecordFieldConfigurationMap(cf));
             return this;
         }
+
+        #endregion Fluent API
 
         internal void WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,

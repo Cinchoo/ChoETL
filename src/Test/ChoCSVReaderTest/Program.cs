@@ -3514,6 +3514,9 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
             //[Range(0, 1)]
             public Course1[] Courses { get; set; }
 
+            //[DisplayName("Grade")]
+            public List<string> Grades { get; set; }
+
             public StudentInfo1()
             {
                 Courses = new Course1[2];
@@ -3529,16 +3532,18 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
 
         public static void CSV2ComplexObject()
         {
-            string csv = @"Id, Name, CreId_0, CreName_0, CreId_1, CreName_1
-1, Tom, CI0, CN0, CI1, CN1
-2, Mark, CI20, CN20, CI21, CN21
+            string csv = @"Id, Name, CreId_0, CreName_0, CreId_1, CreName_1,Grade_1,Grade_2,Grade_3
+1, Tom, CI0, CN0, CI1, CN1,A,B,C
+2, Mark, CI20, CN20, CI21, CN21,A,B,C
 ";
 
             var config = new ChoCSVRecordConfiguration<StudentInfo1>()
                 .Map(f => f.Id)
+                .IndexMap(f => f.Courses, 0, 1)
+                .IndexMap(f => f.Grades, 1, 3)
+                .Map(f => f.Grades, "Grade")
                 .MapForType<Course1>(f => f.CourseId, "CreId")
                 .MapForType<Course1>(f => f.CourseName, "CreName")
-                .IndexMap(f => f.Courses, 0, 1)
                 .WithFirstLineHeader()
                 ;
 
@@ -3546,8 +3551,11 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
                 //.WithField(o => o.Id)
                 ////.WithField(o => o.Courses.FirstOrDefault().CourseId, fieldName: "CreId")
                 //.WithFieldForType<Course1>(o => o.CourseId, fieldName: "CreId")
+                //.WithFieldForType<Course1>(o => o.CourseName, fieldName: "CreName")
                 //.Index(o => o.Courses, 0, 1)
-                .WithFirstLineHeader()
+                //.Index(f => f.Grades, 0, 1)
+                //.WithField(f => f.Grades, fieldName: "Grade")
+                //.WithFirstLineHeader()
                 //.MapRecordFields<StudentInfoMap>()
                 )
             {

@@ -495,9 +495,10 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONReader<T> WithJSONPath(string jsonPath)
+        public ChoJSONReader<T> WithJSONPath(string jsonPath, bool allowComplexJSONPath = false)
         {
             Configuration.JSONPath = jsonPath;
+            Configuration.AllowComplexJSONPath = allowComplexJSONPath;
             return this;
         }
 

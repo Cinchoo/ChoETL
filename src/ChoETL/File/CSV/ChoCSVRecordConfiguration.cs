@@ -17,6 +17,7 @@ namespace ChoETL
     [DataContract]
     public class ChoCSVRecordConfiguration : ChoFileRecordConfiguration
     {
+        private readonly Dictionary<string, dynamic> _indexMapDict = new Dictionary<string, dynamic>();
         internal readonly Dictionary<Type, Dictionary<string, ChoCSVRecordFieldConfiguration>> CSVRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoCSVRecordFieldConfiguration>>();
 
         public bool IgnoreRootNodeName
@@ -313,7 +314,7 @@ namespace ChoETL
                 recordFieldConfigurations = CSVRecordFieldConfigurations;
 
             if (clear && recordFieldConfigurations != null)
-                CSVRecordFieldConfigurations.Clear();
+                ClearFields(); // CSVRecordFieldConfigurations.Clear();
 
             DiscoverRecordFields(recordType, ref pos, null,
                 ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().Any()).Any(), 
@@ -636,6 +637,14 @@ namespace ChoETL
             else
                 throw new ChoRecordConfigurationException("No record fields specified.");
 
+            //Index map initialization
+            foreach (var value in _indexMapDict.Values)
+            {
+                BuildIndexMap(value.fieldName, value.fieldType, value.minumum, value.maximum,
+                    value.fieldName, value.displayName,
+                    value.mapper);
+            }
+
             //Validate each record field
             foreach (var fieldConfig in CSVRecordFieldConfigurations)
                 fieldConfig.Validate(this);
@@ -755,6 +764,7 @@ namespace ChoETL
 
         public ChoCSVRecordConfiguration ClearFields()
         {
+            _indexMapDict.Clear();
             CSVRecordFieldConfigurationsForType.Clear();
             CSVRecordFieldConfigurations.Clear();
             return this;
@@ -904,6 +914,9 @@ namespace ChoETL
         {
             if (!name.IsNullOrEmpty())
             {
+                if (subRecordType == recordType)
+                    subRecordType = null;
+
                 if (fieldName.IsNullOrWhiteSpace())
                     fieldName = name;
                 if (subRecordType != null)
@@ -1004,7 +1017,7 @@ namespace ChoETL
                     fqm = propertyName;
 
                 propertyName = propertyName.SplitNTrim(".").LastOrDefault();
-                if (!CSVRecordFieldConfigurations.Any(fc => fc.DeclaringMember == fqm))
+                if (!CSVRecordFieldConfigurations.Any(fc => fc.DeclaringMember == fqm && fc.ArrayIndex == null))
                 {
                     int fieldPosition = 0;
                     fieldPosition = CSVRecordFieldConfigurations.Count > 0 ? CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
@@ -1023,7 +1036,7 @@ namespace ChoETL
                     CSVRecordFieldConfigurations.Add(c);
                 }
 
-                return CSVRecordFieldConfigurations.First(fc => fc.DeclaringMember == fqm);
+                return CSVRecordFieldConfigurations.First(fc => fc.DeclaringMember == fqm && fc.ArrayIndex == null);
             }
         }
 
@@ -1038,6 +1051,7 @@ namespace ChoETL
         {
             Type fieldType = field.GetPropertyType().GetUnderlyingType();
             var fqn = field.GetFullyQualifiedMemberName();
+            var dn = field.GetPropertyDescriptor().GetDisplayName();
 
             if (typeof(IList).IsAssignableFrom(fieldType) && !typeof(ArrayList).IsAssignableFrom(fieldType)
                 && minumum >= 0 && maximum >= 0 && minumum <= maximum)
@@ -1049,6 +1063,24 @@ namespace ChoETL
         }
 
         internal void IndexMapInternal(string fieldName, Type fieldType, int minumum, int maximum,
+            string fullyQualifiedMemberName = null, string displayName = null,
+            Action<ChoCSVRecordFieldConfigurationMap> mapper = null)
+        {
+            if (_indexMapDict.ContainsKey(fieldName))
+                _indexMapDict.Remove(fieldName);
+            _indexMapDict.AddOrUpdate(fieldName, new
+            {
+                fieldType,
+                minumum,
+                maximum,
+                fieldName,
+                displayName,
+                mapper
+            });
+
+        }
+
+        internal void BuildIndexMap(string fieldName, Type fieldType, int minumum, int maximum,
             string fullyQualifiedMemberName = null, string displayName = null,
             Action<ChoCSVRecordFieldConfigurationMap> mapper = null)
         {
@@ -1075,14 +1107,26 @@ namespace ChoETL
                 var itemType = recordType.GetItemType().GetUnderlyingType();
                 if (itemType.IsSimple())
                 {
+                    var fcs1 = CSVRecordFieldConfigurations.Where(o => o.DeclaringMember == fullyQualifiedMemberName).ToArray();
+
+                    foreach (var fc in fcs1)
+                    {
+                        displayName = fcs1.First().FieldName;
+                        CSVRecordFieldConfigurations.Remove(fc);
+                    }
+
                     for (int index = minumum; index <= maximum; index++)
                     {
                         int fieldPosition = 0;
                         fieldPosition = CSVRecordFieldConfigurations.Count > 0 ? CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
                         fieldPosition++;
 
+
                         var nfc = new ChoCSVRecordFieldConfiguration(fieldName, fieldPosition) { ArrayIndex = index };
                         mapper?.Invoke(new ChoCSVRecordFieldConfigurationMap(nfc));
+
+                        if (displayName != null)
+                            nfc.FieldName = displayName;
 
                         string lFieldName = null;
                         if (ArrayIndexSeparator == null)
