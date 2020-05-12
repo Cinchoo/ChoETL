@@ -361,7 +361,7 @@ namespace ChoETL
                             }
                             else
                                 Configuration.Validate(GetHeaders(pair.Item2));
-                            var dict = recFieldTypes = Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
+                            var dict = recFieldTypes = Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
                             if (Configuration.MaxScanRows == 0)
                                 RaiseMembersDiscovered(dict);
                             Configuration.UpdateFieldTypesIfAny(dict);
@@ -443,7 +443,7 @@ namespace ChoETL
                             if (recCount == Configuration.MaxScanRows || e.Peek == null)
                             {
                                 Configuration.UpdateFieldTypesIfAny(recFieldTypes);
-                                var dict = recFieldTypes = Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
+                                var dict = recFieldTypes = Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
                                 RaiseMembersDiscovered(dict);
 
                                 foreach (object rec1 in buffer)

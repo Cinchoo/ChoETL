@@ -583,6 +583,52 @@ namespace ChoETL
             return obj;
         }
 
+        protected override void LoadNCacheMembers(IEnumerable<ChoRecordFieldConfiguration> fcs)
+        {
+            if (!IsDynamicObject)
+            {
+                string name = null;
+                object defaultValue = null;
+                object fallbackValue = null;
+                foreach (var fc in fcs.OfType<ChoCSVRecordFieldConfiguration>())
+                {
+                    name = fc.Name;
+
+                    if (!PDDict.ContainsKey(name))
+                    {
+                        if (!PDDict.ContainsKey(fc.FieldName))
+                            continue;
+
+                        name = fc.FieldName;
+                    }
+
+                    fc.PD = PDDict[name];
+                    fc.PI = PIDict[name];
+
+                    //Load default value
+                    defaultValue = ChoType.GetRawDefaultValue(PDDict[name]);
+                    if (defaultValue != null)
+                    {
+                        fc.DefaultValue = defaultValue;
+                        fc.IsDefaultValueSpecified = true;
+                    }
+                    //Load fallback value
+                    fallbackValue = ChoType.GetRawFallbackValue(PDDict[name]);
+                    if (fallbackValue != null)
+                    {
+                        fc.FallbackValue = fallbackValue;
+                        fc.IsFallbackValueSpecified = true;
+                    }
+
+                    //Load Converters
+                    fc.PropConverters = ChoTypeDescriptor.GetTypeConverters(fc.PI);
+                    fc.PropConverterParams = ChoTypeDescriptor.GetTypeConverterParams(fc.PI);
+
+                }
+            }
+            base.LoadNCacheMembers(fcs);
+        }
+
         public override void Validate(object state)
         {
             base.Validate(state);
@@ -1078,6 +1124,7 @@ namespace ChoETL
                 mapper
             });
 
+            WithFirstLineHeader();
         }
 
         internal void BuildIndexMap(string fieldName, Type fieldType, int minumum, int maximum,
@@ -1217,6 +1264,8 @@ namespace ChoETL
                 && typeof(string) == fieldType.GetGenericArguments()[0]
                 && keys != null && keys.Length > 0)
             {
+                WithFirstLineHeader();
+
                 //Remove collection config member
                 var fcs1 = CSVRecordFieldConfigurations.Where(o => o.FieldName == fqn).ToArray();
                 foreach (var fc in fcs1)
