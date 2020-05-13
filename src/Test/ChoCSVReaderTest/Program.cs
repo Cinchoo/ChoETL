@@ -3357,6 +3357,7 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
         {
             public string TransactionFrom { get; set; }
             public string TransactionTo { get; set; }
+            [ChoIgnoreMember]
             public List<Transaction1> Transactions { get; set; }
 
             public override bool Equals(object obj)
@@ -3414,6 +3415,46 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
             }
         }
 
+        public static void MultiRecordTypeTest1()
+        {
+            string csv = @"2019-12-01T00:00:00.000Z;2019-12-10T23:59:59.999Z
+50;false;2019-12-03T15:00:12.077Z;005033971003;48;141;2019-12-03T00:00:00.000Z;2019-12-03T23:59:59.999Z
+100;false;2019-12-02T12:38:05.989Z;005740784001;80;311;2019-12-02T00:00:00.000Z;2019-12-02T23:59:59.999Z";
+
+            StringBuilder json = new StringBuilder();
+            string csvSeparator = ";";
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithDelimiter(csvSeparator)
+                .WithCustomRecordSelector(o =>
+                {
+                    string line = ((Tuple<long, string>)o).Item2;
+
+                    if (line.SplitNTrim(csvSeparator).Length == 2)
+                        return typeof(Headers);
+                    else
+                        return typeof(Transaction1);
+                })
+                )
+            {
+                using (var w = new ChoJSONWriter<Headers>(json)
+                    .WithField(f => f.TransactionFrom)
+                    .WithField(f => f.TransactionTo)
+                    .WithField(f => f.Transactions)
+                    )
+                {
+                    w.Write(r.GroupWhile(r1 => r1.GetType() != typeof(Headers))
+                        .Select(g =>
+                        {
+                            Headers master = (Headers)g.First();
+                            master.Transactions = g.Skip(1).Cast<Transaction1>().ToList();
+                            return master;
+                        }));
+                }
+            }
+
+            Console.WriteLine(json.ToString());
+        }
+
         [Test]
         public static void MultiRecordTypeTest()
         {
@@ -3428,9 +3469,6 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
             List<Headers> actual = null;
 
             string csv = @"2019-12-01T00:00:00.000Z;2019-12-10T23:59:59.999Z
-50;false;2019-12-03T15:00:12.077Z;005033971003;48;141;2019-12-03T00:00:00.000Z;2019-12-03T23:59:59.999Z
-100;false;2019-12-02T12:38:05.989Z;005740784001;80;311;2019-12-02T00:00:00.000Z;2019-12-02T23:59:59.999Z
-2019-12-01T00:00:00.000Z;2019-12-10T23:59:59.999Z
 50;false;2019-12-03T15:00:12.077Z;005033971003;48;141;2019-12-03T00:00:00.000Z;2019-12-03T23:59:59.999Z
 100;false;2019-12-02T12:38:05.989Z;005740784001;80;311;2019-12-02T00:00:00.000Z;2019-12-02T23:59:59.999Z";
 
@@ -3511,10 +3549,11 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
         {
             public string Id { get; set; }
             public string Name { get; set; }
-            //[Range(0, 1)]
+            [Range(0, 1)]
             public Course1[] Courses { get; set; }
 
-            //[DisplayName("Grade")]
+            [DisplayName("Grade")]
+            [Range(1, 3)]
             public List<string> Grades { get; set; }
 
             public StudentInfo1()
@@ -3524,9 +3563,9 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
         }
         public class Course1
         {
-            //[DisplayName("CreId")]
+            [DisplayName("CreId")]
             public string CourseId { get; set; }
-            //[DisplayName("CreName")]
+            [DisplayName("CreName")]
             public string CourseName { get; set; }
         }
 
@@ -3547,7 +3586,55 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
                 .WithFirstLineHeader()
                 ;
 
-            using (var r = ChoCSVReader<StudentInfo1>.LoadText(csv, config)
+            using (var r = ChoCSVReader<StudentInfo1>.LoadText(csv)
+                //.WithField(o => o.Id)
+                ////.WithField(o => o.Courses.FirstOrDefault().CourseId, fieldName: "CreId")
+                //.WithFieldForType<Course1>(o => o.CourseId, fieldName: "CreId")
+                //.WithFieldForType<Course1>(o => o.CourseName, fieldName: "CreName")
+                //.Index(o => o.Courses, 0, 1)
+                //.Index(f => f.Grades, 0, 1)
+                //.WithField(f => f.Grades, fieldName: "Grade")
+                .WithFirstLineHeader()
+                //.MapRecordFields<StudentInfoMap>()
+                )
+            {
+                foreach (var rec in r)
+                {
+                    Console.WriteLine(rec.Dump());
+                }
+            }
+
+
+        }
+
+        public class StudentInfo2
+        {
+            public string Id { get; set; }
+            public string Name { get; set; }
+            [ChoDictionaryKey("K1, K2")]
+            public Dictionary<string, string> Grades { get; set; }
+            
+            public StudentInfo2()
+            {
+                Grades = new Dictionary<string, string>();
+            }
+        }
+
+        public static void CSV2DictionaryMemberTest()
+        {
+            string csv = @"Id, Name, K1, K2
+1, Tom, A, B
+2, Mark, C, D
+";
+
+            var config = new ChoCSVRecordConfiguration<StudentInfo2>()
+                .Map(f => f.Id)
+                .Map(f => f.Name)
+                .DictionaryMap(f => f.Grades, new string[] { "K1", "K2" })
+                //.WithFirstLineHeader()
+                ;
+
+            using (var r = ChoCSVReader<StudentInfo2>.LoadText(csv, config)
                 //.WithField(o => o.Id)
                 ////.WithField(o => o.Courses.FirstOrDefault().CourseId, fieldName: "CreId")
                 //.WithFieldForType<Course1>(o => o.CourseId, fieldName: "CreId")
@@ -3567,7 +3654,6 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
 
 
         }
-
         static void ReadAndCloseTest()
         {
             var r = new ChoCSVReader("sample1.csv").WithFirstLineHeader();
@@ -3994,7 +4080,7 @@ ID	DATE	AMOUNT	QUANTITY ID
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            CSV2ComplexObject();
+            MultiRecordTypeTest1();
             return;
 
             CSV2ComplexObject();

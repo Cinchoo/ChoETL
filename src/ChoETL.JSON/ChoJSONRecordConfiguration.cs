@@ -512,7 +512,7 @@ namespace ChoETL
                     fc.PropertyDescriptor = pd1;
 
                 if (fc.PropertyDescriptor == null)
-                    fc.PropertyDescriptor = ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Name == fc.Name).FirstOrDefault();
+                    fc.PropertyDescriptor = TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Name == fc.Name).FirstOrDefault();
                 if (fc.PropertyDescriptor == null)
                     continue;
 
