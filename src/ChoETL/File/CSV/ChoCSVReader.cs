@@ -431,7 +431,13 @@ namespace ChoETL
 
         #region Fluent API
 
-        public ChoCSVReader<T> AutoArrayDiscovery(bool flag)
+        public ChoCSVReader<T> AutoIncrementDuplicateColumnNames(bool flag = true)
+        {
+            Configuration.AutoIncrementDuplicateColumnNames = flag;
+            return this;
+        }
+
+        public ChoCSVReader<T> AutoArrayDiscovery(bool flag = true)
         {
             Configuration.AutoArrayDiscovery = flag;
             return this;

@@ -115,12 +115,6 @@ namespace ChoETL
             set;
         }
         [DataMember]
-        public bool IgnoreDuplicateFields
-        {
-            get;
-            set;
-        }
-        [DataMember]
         public char? NestedColumnSeparator
         {
             get;
@@ -213,7 +207,6 @@ namespace ChoETL
             UseNestedKeyFormat = true;
             AutoDiscoverFieldTypes = true;
             MaxScanRows = 0;
-            IgnoreDuplicateFields = false;
             IgnoreIfNoRecordTypeFound = true;
             BufferSize = 4096;
             Comments = null; // new string[] { "#", "//" };
@@ -360,7 +353,6 @@ namespace ChoETL
             fconfig.ColumnCountStrict = ColumnCountStrict;
             fconfig.ColumnOrderStrict = ColumnOrderStrict;
             fconfig.EscapeQuoteAndDelimiter = EscapeQuoteAndDelimiter;
-            fconfig.IgnoreDuplicateFields = IgnoreDuplicateFields;
             fconfig.NestedColumnSeparator = NestedColumnSeparator;
             fconfig.QuoteChar = QuoteChar;
             fconfig.BackslashQuote = BackslashQuote;

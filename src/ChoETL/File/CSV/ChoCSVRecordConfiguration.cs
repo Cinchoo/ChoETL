@@ -20,6 +20,12 @@ namespace ChoETL
         private readonly Dictionary<string, dynamic> _indexMapDict = new Dictionary<string, dynamic>();
         internal readonly Dictionary<Type, Dictionary<string, ChoCSVRecordFieldConfiguration>> CSVRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoCSVRecordFieldConfiguration>>();
 
+        public bool AutoIncrementDuplicateColumnNames
+        {
+            get;
+            set;
+        }
+
         public bool IgnoreRootNodeName
         {
             get;
@@ -721,8 +727,30 @@ namespace ChoETL
                     .Where(g => g.Count() > 1)
                     .Select(g => g.Key).ToArray();
 
-                if (dupFields.Length > 0 && !IgnoreDuplicateFields)
-                    throw new ChoRecordConfigurationException("Duplicate field name(s) [Name: {0}] found.".FormatString(String.Join(",", dupFields)));
+                if (dupFields.Length > 0)
+                {
+                    if (!AutoIncrementDuplicateColumnNames)
+                        throw new ChoRecordConfigurationException("Duplicate field name(s) [Name: {0}] found.".FormatString(String.Join(",", dupFields)));
+                    else
+                    {
+                        var dupFieldConfigs = CSVRecordFieldConfigurations.GroupBy(i => i.FieldName, FileHeaderConfiguration.StringComparer)
+                                            .Where(g => g.Count() > 1)
+                                            .ToArray();
+
+                        var arrayIndexSeparator = ArrayIndexSeparator == ChoCharEx.NUL ? '_' : ArrayIndexSeparator;
+                        int index = 1;
+                        string fieldName = null;
+                        foreach (var grp in dupFieldConfigs)
+                        {
+                            index = 1;
+                            fieldName = grp.Key;
+                            foreach (var fc in grp.ToArray().Skip(1))
+                            {
+                                fc.FieldName = $"{fc.FieldName}{ArrayIndexSeparator}{index++}";
+                            }
+                        }
+                    }
+                }
             }
 
             PIDict = new Dictionary<string, System.Reflection.PropertyInfo>();
@@ -760,16 +788,21 @@ namespace ChoETL
             RecordFieldConfigurationsDict = CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName, FileHeaderConfiguration.StringComparer);
             //RecordFieldConfigurationsDictGroup = RecordFieldConfigurationsDict.GroupBy(kvp => kvp.Key.Contains(".") ? kvp.Key.SplitNTrim(".").First() : kvp.Key).ToDictionary(i => i.Key, i => i.ToArray());
             RecordFieldConfigurationsDict2 = CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName, FileHeaderConfiguration.StringComparer);
-            if (IsDynamicObject)
-                AlternativeKeys = RecordFieldConfigurationsDict2.ToDictionary(kvp =>
-                {
-                    if (kvp.Key == kvp.Value.Name)
-                        return kvp.Value.Name.ToValidVariableName();
-                    else
-                        return kvp.Value.Name;
-                }, kvp => kvp.Key, FileHeaderConfiguration.StringComparer);
-            else
-                AlternativeKeys = RecordFieldConfigurationsDict2.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Name, FileHeaderConfiguration.StringComparer);
+
+            try
+            {
+                if (IsDynamicObject)
+                    AlternativeKeys = RecordFieldConfigurationsDict2.ToDictionary(kvp =>
+                    {
+                        if (kvp.Key == kvp.Value.Name)
+                            return kvp.Value.Name.ToValidVariableName();
+                        else
+                            return kvp.Value.Name;
+                    }, kvp => kvp.Key, FileHeaderConfiguration.StringComparer);
+                else
+                    AlternativeKeys = RecordFieldConfigurationsDict2.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Name, FileHeaderConfiguration.StringComparer);
+            }
+            catch { }
 
             //FCArray = RecordFieldConfigurationsDict.ToArray();
 

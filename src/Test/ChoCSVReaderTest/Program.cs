@@ -3613,19 +3613,14 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
             public string Name { get; set; }
             [ChoDictionaryKey("K1, K2")]
             public Dictionary<string, string> Grades { get; set; }
-            
-            public StudentInfo2()
-            {
-                Grades = new Dictionary<string, string>();
-            }
         }
 
         public static void CSV2DictionaryMemberTest()
         {
             string csv = @"Id, Name, K1, K2
-1, Tom, A, B
-2, Mark, C, D
-";
+        1, Tom, A, B
+        2, Mark, C, D
+        ";
 
             var config = new ChoCSVRecordConfiguration<StudentInfo2>()
                 .Map(f => f.Id)
@@ -3651,9 +3646,8 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
                     Console.WriteLine(rec.Dump());
                 }
             }
-
-
         }
+
         static void ReadAndCloseTest()
         {
             var r = new ChoCSVReader("sample1.csv").WithFirstLineHeader();
@@ -4077,10 +4071,26 @@ ID	DATE	AMOUNT	QUANTITY ID
             Console.WriteLine(xml.ToString());
         }
 
+        static void DuplicateNameInDynamicModeTest()
+        {
+            string csv = @"Id, Name, Name
+1, Tom, Mark
+2, Kevin, Fahey";
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .AutoIncrementDuplicateColumnNames()
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            MultiRecordTypeTest1();
+            DuplicateNameInDynamicModeTest();
             return;
 
             CSV2ComplexObject();

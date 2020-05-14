@@ -1094,6 +1094,25 @@ namespace ChoETL
                 throw new ChoParserException("Atleast one of the field header is empty. Please check the field headers at [{0}].".FormatString(String.Join(",", c)));
             }
 
+            //Check if any duplicate column found
+            string[] dupFields = _fieldNames.GroupBy(i => i, Configuration.FileHeaderConfiguration.StringComparer)
+                .Where(g => g.Count() > 1)
+                .Select(g => g.Key).ToArray();
+
+            if (dupFields.Length > 0)
+            {
+                if (!Configuration.AutoIncrementDuplicateColumnNames)
+                    throw new ChoRecordConfigurationException("Duplicate field name(s) [Name: {0}] found.".FormatString(String.Join(",", dupFields)));
+                else
+                {
+                    var arrayIndexSeparator = Configuration.ArrayIndexSeparator == ChoCharEx.NUL ? '_' : Configuration.ArrayIndexSeparator;
+                    _fieldNames = _fieldNames.GroupBy(i => i, Configuration.FileHeaderConfiguration.StringComparer)
+                                        .Select(g => g.ToArray().Select((g1, i) => i == 0 ? g1 : $"{g1}{arrayIndexSeparator}{i}").ToArray())
+                                        .Unfold().ToArray()
+                                        ;
+                }
+            }
+
             if (Configuration.ColumnCountStrict)
             {
                 if (_fieldNames.Length != Configuration.CSVRecordFieldConfigurations.Count)
