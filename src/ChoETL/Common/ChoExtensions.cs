@@ -756,22 +756,56 @@ namespace ChoETL
             }
         }
 
+        private static string ReadLineWithFixedNewlineDelimeter(StreamReader reader, string delim, int maxLineSize = 32768)
+        {
+            if (reader.EndOfStream)
+                return null;
+            if (string.IsNullOrEmpty(delim))
+                return reader.ReadToEnd();
+
+            var sb = new StringBuilder();
+            var delimCandidatePosition = 0;
+            while (!reader.EndOfStream && delimCandidatePosition < delim.Length)
+            {
+                var c = (char)reader.Read();
+                if (c == delim[delimCandidatePosition])
+                {
+                    delimCandidatePosition++;
+                }
+                else
+                {
+                    delimCandidatePosition = 0;
+                }
+                sb.Append(c);
+                if (sb.Length > maxLineSize)
+                    throw new ApplicationException("Large line found. Check and correct the end of line delimiter.");
+            }
+            return sb.ToString(0, sb.Length - (delimCandidatePosition == delim.Length ? delim.Length : 0));
+        }
+
         public static IEnumerable<string> ReadLines(this TextReader reader, string EOLDelimiter = null, char quoteChar = ChoCharEx.NUL, bool mayContainEOLInData = false, int maxLineSize = 32768)
         {
             ChoGuard.ArgumentNotNull(reader, "TextReader");
             EOLDelimiter = EOLDelimiter ?? Environment.NewLine;
 
-            if (!mayContainEOLInData
-                && (EOLDelimiter == Environment.NewLine
+            if (!mayContainEOLInData)
+            {
+                if (EOLDelimiter == Environment.NewLine
                 || (EOLDelimiter.Length == 1 && EOLDelimiter[0] == '\r')
                 || (EOLDelimiter.Length == 1 && EOLDelimiter[0] == '\n')
-                ))
-            {
-                string line;
-
-                while ((line = reader.ReadLine()) != null)
+                )
                 {
-                    yield return line;
+                    string line;
+
+                    while ((line = reader.ReadLine()) != null)
+                        yield return line;
+                }
+                else
+                {
+                    string line;
+
+                    while ((line = ReadLineWithFixedNewlineDelimeter(reader as StreamReader, EOLDelimiter)) != null)
+                        yield return line;
                 }
             }
 

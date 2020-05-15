@@ -205,14 +205,19 @@ namespace ChoETL
                         }
                         else
                         {
-                            if (!Configuration.IgnoreEmptyLine)
-                                throw new ChoParserException("Empty line found at [{0}] location.".FormatString(pair.Item1));
+                            if (_headerFound)
+                                return new Tuple<bool?, Tuple<long, string>>(false, pair);
                             else
-                            {
-                                if (TraceSwitch.TraceVerbose)
-                                    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring empty line found at [{0}].".FormatString(pair.Item1));
                                 return new Tuple<bool?, Tuple<long, string>>(true, pair);
-                            }
+
+                            //if (!Configuration.IgnoreEmptyLine)
+                            //    throw new ChoParserException("Empty line found at [{0}] location.".FormatString(pair.Item1));
+                            //else
+                            //{
+                            //    if (TraceSwitch.TraceVerbose)
+                            //        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring empty line found at [{0}].".FormatString(pair.Item1));
+                            //    return new Tuple<bool?, Tuple<long, string>>(false, pair);
+                            //}
                         }
                     }
 
@@ -1107,7 +1112,18 @@ namespace ChoETL
                 {
                     var arrayIndexSeparator = Configuration.ArrayIndexSeparator == ChoCharEx.NUL ? '_' : Configuration.ArrayIndexSeparator;
                     _fieldNames = _fieldNames.GroupBy(i => i, Configuration.FileHeaderConfiguration.StringComparer)
-                                        .Select(g => g.ToArray().Select((g1, i) => i == 0 ? g1 : $"{g1}{arrayIndexSeparator}{i}").ToArray())
+                                        .Select(g =>
+                                        {
+                                            if (g.ToArray().Length <= 1)
+                                                return g.ToArray();
+                                            else
+                                            {
+                                                int ai = Configuration.AutoIncrementStartIndex;
+                                                return g.ToArray().Select(
+                                                    (g1, i) => !Configuration.AutoIncrementAllDuplicateColumnNames && i == 0 ? g1 : $"{g1}{arrayIndexSeparator}{ai++}"
+                                                    ).ToArray();
+                                            }
+                                        })
                                         .Unfold().ToArray()
                                         ;
                 }
@@ -1404,11 +1420,11 @@ namespace ChoETL
         {
             if (_emptyLineReportableRecord != null)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => _emptyLineReportableRecord.EmptyLineFound(index), true);
+                return ChoFuncEx.RunWithIgnoreError(() => _emptyLineReportableRecord.EmptyLineFound(index), false);
             }
             else if (Reader != null)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseReportEmptyLine(index), true);
+                return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseReportEmptyLine(index), false);
             }
             return true;
         }

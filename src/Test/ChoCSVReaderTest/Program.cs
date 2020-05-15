@@ -4073,13 +4073,30 @@ ID	DATE	AMOUNT	QUANTITY ID
 
         static void DuplicateNameInDynamicModeTest()
         {
-            string csv = @"Id, Name, Name
-1, Tom, Mark
-2, Kevin, Fahey";
+            string csv = @"Id, Name, Name, City, City
+1, Tom, Mark, NY, NYC
+2, Kevin, Fahey, NJ, NJX";
 
             using (var r = ChoCSVReader.LoadText(csv)
                 .WithFirstLineHeader()
                 .AutoIncrementDuplicateColumnNames()
+                //.ArrayIndexSeparator('_')
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void SkipEmptyLinesTest()
+        {
+            string csv = "^^Id, Name^^1, Tom^^2, Mark";
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .Configure(c => c.IgnoreEmptyLine = false)
+                .Configure(c => c.MayContainEOLInData = false)
+                .WithEOLDelimiter("^")
                 )
             {
                 foreach (var rec in r)
@@ -4090,7 +4107,7 @@ ID	DATE	AMOUNT	QUANTITY ID
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            DuplicateNameInDynamicModeTest();
+            SkipEmptyLinesTest();
             return;
 
             CSV2ComplexObject();

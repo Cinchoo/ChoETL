@@ -26,6 +26,24 @@ namespace ChoETL
             set;
         }
 
+        private int _autoIncrementStartIndex = 2;
+        public int AutoIncrementStartIndex
+        {
+            get { return _autoIncrementStartIndex; }
+            set
+            {
+                if (value < 0)
+                    return;
+                _autoIncrementStartIndex = value;
+            }
+        }
+
+        public bool AutoIncrementAllDuplicateColumnNames
+        {
+            get;
+            set;
+        }
+
         public bool IgnoreRootNodeName
         {
             get;
@@ -738,15 +756,17 @@ namespace ChoETL
                                             .ToArray();
 
                         var arrayIndexSeparator = ArrayIndexSeparator == ChoCharEx.NUL ? '_' : ArrayIndexSeparator;
-                        int index = 1;
+                        int index = AutoIncrementStartIndex;
                         string fieldName = null;
                         foreach (var grp in dupFieldConfigs)
                         {
-                            index = 1;
+                            index = AutoIncrementStartIndex;
                             fieldName = grp.Key;
-                            foreach (var fc in grp.ToArray().Skip(1))
+                            var g = AutoIncrementAllDuplicateColumnNames ? grp.ToArray() : grp.ToArray().Skip(1);
+                            foreach (var fc in g)
                             {
-                                fc.FieldName = $"{fc.FieldName}{ArrayIndexSeparator}{index++}";
+                                fc.FieldName = $"{fc.FieldName}{arrayIndexSeparator}{index}";
+                                index++;
                             }
                         }
                     }

@@ -323,7 +323,12 @@ namespace ChoETL
             EventHandler<ChoEmptyLineEventArgs> emptyLineFound = EmptyLineFound;
             if (emptyLineFound == null)
             {
-                return true;
+                if (Configuration.IgnoreEmptyLine)
+                    return true;
+                else
+                    return false;
+
+                //throw new ChoParserException("Empty line found at [{0}] location.".FormatString(lineNo));
             }
 
             var ea = new ChoEmptyLineEventArgs(lineNo);
@@ -431,9 +436,18 @@ namespace ChoETL
 
         #region Fluent API
 
-        public ChoCSVReader<T> AutoIncrementDuplicateColumnNames(bool flag = true)
+        public ChoCSVReader<T> AutoIncrementDuplicateColumnNames(bool allColumns = false, bool flag = true)
         {
             Configuration.AutoIncrementDuplicateColumnNames = flag;
+            Configuration.AutoIncrementAllDuplicateColumnNames = allColumns;
+            return this;
+        }
+
+        public ChoCSVReader<T> AutoIncrementDuplicateColumnNames(int startIndex, bool allColumns = false)
+        {
+            Configuration.AutoIncrementDuplicateColumnNames = true;
+            Configuration.AutoIncrementStartIndex = startIndex;
+            Configuration.AutoIncrementAllDuplicateColumnNames = allColumns;
             return this;
         }
 
