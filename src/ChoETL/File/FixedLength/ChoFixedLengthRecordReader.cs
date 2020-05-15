@@ -135,14 +135,33 @@ namespace ChoETL
 
                     if (pair.Item2.IsNullOrWhiteSpace())
                     {
-                        if (!Configuration.IgnoreEmptyLine)
-                            throw new ChoParserException("Empty line found at [{0}] location.".FormatString(pair.Item1));
-                        else
+                        if (RaiseReportEmptyLine(this, pair.Item1))
                         {
                             if (TraceSwitch.TraceVerbose)
                                 ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring empty line found at [{0}].".FormatString(pair.Item1));
                             return new Tuple<bool?, Tuple<long, string>>(true, pair);
                         }
+                        else
+                        {
+                            if (Configuration.FileHeaderConfiguration.HasHeaderRecord)
+                            {
+                                if (_headerFound)
+                                    return new Tuple<bool?, Tuple<long, string>>(false, pair);
+                                else
+                                    return new Tuple<bool?, Tuple<long, string>>(true, pair);
+                            }
+                            else
+                                return new Tuple<bool?, Tuple<long, string>>(false, pair);
+                        }
+
+                        //if (!Configuration.IgnoreEmptyLine)
+                        //    throw new ChoParserException("Empty line found at [{0}] location.".FormatString(pair.Item1));
+                        //else
+                        //{
+                        //    if (TraceSwitch.TraceVerbose)
+                        //        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring empty line found at [{0}].".FormatString(pair.Item1));
+                        //    return new Tuple<bool?, Tuple<long, string>>(true, pair);
+                        //}
                     }
 
                     if (commentTokens != null && commentTokens.Length > 0)

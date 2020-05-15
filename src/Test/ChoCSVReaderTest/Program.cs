@@ -4093,7 +4093,7 @@ ID	DATE	AMOUNT	QUANTITY ID
             string csv = "^^Id, Name^^1, Tom^^2, Mark";
 
             using (var r = ChoCSVReader.LoadText(csv)
-                .WithFirstLineHeader()
+                //.WithFirstLineHeader()
                 .Configure(c => c.IgnoreEmptyLine = false)
                 .Configure(c => c.MayContainEOLInData = false)
                 .WithEOLDelimiter("^")
