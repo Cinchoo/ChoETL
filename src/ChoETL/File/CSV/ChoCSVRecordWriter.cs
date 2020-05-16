@@ -475,7 +475,7 @@ namespace ChoETL
             bool firstColumn = true;
             PropertyInfo pi = null;
             object rootRec = rec;
-            foreach (KeyValuePair<string, ChoCSVRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
+            foreach (KeyValuePair<string, ChoCSVRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict.OrderBy(kvp => kvp.Value.Priority))
             {
                 //if (Configuration.IsDynamicObject)
                 //{
@@ -682,6 +682,7 @@ namespace ChoETL
                         fieldText = fieldValue.ToString();
                 }
 
+                quoteField = kvp.Value.QuoteField;
                 if (firstColumn)
                 {
                     msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, quoteField,
@@ -824,7 +825,7 @@ namespace ChoETL
             string delimiter = Configuration.Delimiter;
             StringBuilder msg = new StringBuilder();
             string value;
-            foreach (var member in Configuration.RecordFieldConfigurationsDict.Values.ToArray())
+            foreach (var member in Configuration.RecordFieldConfigurationsDict.OrderBy(kvp => kvp.Value.Priority).Select(kvp => kvp.Value).ToArray())
             {
                 if (Configuration.IgnoredFields.Contains(member.Name))
                     continue;

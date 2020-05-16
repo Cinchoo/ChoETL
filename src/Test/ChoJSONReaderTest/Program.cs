@@ -2348,17 +2348,27 @@ K,L,M,N,O,P,Q,R,S,T";
         static void Sample38Test()
         {
             StringBuilder csv = new StringBuilder();
-            using (var r = new ChoJSONReader("sample38.json")
+            using (var r = new ChoJSONReader<FileInfo>("sample38.json")
                 .WithJSONPath("$..^")
+                .WithField(f => f.filenames, jsonPath: "Value[*].filenames")
+                .WithField(f => f.cluster_number, jsonPath: "Value[*].cluster_number")
+                .WithField(f => f.Top_Terms, jsonPath: "Value[*].Top_Terms")
+                //.WithField("filenames", jsonPath: "Value[*].filenames", fieldType: typeof(string[]))
+                //.WithField("cluster_number", jsonPath: "Value[*].cluster_number", fieldType: typeof(int))
+                //.WithField("Top_Terms", jsonPath: "Value[*].Top_Terms", fieldType: typeof(string[]))
                 )
             {
-                var x = r.ToArray();
+                //var x = r/*.Select(r1 => r1.Value)*/.ToArray();
 
-                //using (var w = new ChoCSVWriter(csv)
-                //    .WithFirstLineHeader()
-                //    .UseNestedKeyFormat()
-                //    )
-                //    w.Write(r.Select(r1 => (object[])r1.Value).Unfold());
+                using (var w = new ChoCSVWriter<FileInfo>(csv)
+                    .WithFirstLineHeader()
+                    .WithField(f => f.filenames)
+                    .WithField(f => f.cluster_number)
+                    .WithField(f => f.Top_Terms)
+                    .Index(f => f.filenames, 0, 3)
+                    .Index(f => f.Top_Terms, 0, 3)
+                    )
+                    w.Write(r);
                 //    //foreach (var rec in r) //.Select(r2 => ((dynamic[])r2).SelectMany(r1 => ((IList<string>)r1.filenames))))
                 //    //    Console.WriteLine(rec.Dump());
             }

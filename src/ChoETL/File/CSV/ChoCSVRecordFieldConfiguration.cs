@@ -17,11 +17,24 @@ namespace ChoETL
             set;
         }
 
-        [DataMember]
-        public int FieldPosition
+        public int Priority
         {
             get;
             set;
+        }
+
+        private int _fieldPosition = 0;
+        [DataMember]
+        public int FieldPosition
+        {
+            get { return _fieldPosition; }
+            set
+            {
+                if (Priority == 0)
+                    Priority = value;
+
+                _fieldPosition = value;
+            }
         }
 
         internal string[] AltFieldNamesArray = new string[] { };
