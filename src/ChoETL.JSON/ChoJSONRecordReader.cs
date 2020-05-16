@@ -101,6 +101,28 @@ namespace ChoETL
             }
         }
 
+        public static IEnumerable<IDictionary<string, object>> ToCollections(object o)
+        {
+            var jo = o as JObject;
+            if (jo != null)
+            {
+                var ret = jo.ToObject<IDictionary<string, object>>();
+                ret.ToDictionary(k => k.Key, v => ToCollections(v.Value));
+
+                yield return ret;
+            }
+
+            var ja = o as JArray;
+            if (ja != null)
+            {
+                var list = ja.ToObject<List<object>>().Select(ToCollections).ToList();
+                foreach (var e in list.OfType<IDictionary<string, object>>())
+                {
+                    yield return e;
+                }
+            }
+        }
+
         private IEnumerable<JObject> ReadJObjects(JsonTextReader sr)
         {
             if (Configuration.JSONPath.IsNullOrWhiteSpace())
@@ -111,11 +133,38 @@ namespace ChoETL
             }
             else
             {
+                bool dictKey = false;
+                bool dictValue = false;
                 string[] tokens = null;
-                if (IsSimpleJSONPath(Configuration.JSONPath, out tokens))
+                if (!Configuration.AllowComplexJSONPath && IsSimpleJSONPath(Configuration.JSONPath, out tokens, out dictKey, out dictValue))
                 {
                     foreach (var jo in StreamElements(sr, tokens))
-                        yield return jo;
+                    {
+                        if (dictKey)
+                        {
+                            foreach (var dict in ToCollections(jo))
+                            {
+                                foreach (var kvp in dict)
+                                {
+                                    foreach (var j in ToJObjects(new JToken[] { new JValue(kvp.Key) }))
+                                        yield return j;
+                                }
+                            }
+                        }
+                        else if (dictValue)
+                        {
+                            foreach (var dict in ToCollections(jo))
+                            {
+                                foreach (var kvp in dict)
+                                {
+                                    foreach (var j in ToJObjects(new JToken[] { kvp.Value is JToken ? (JToken)kvp.Value : new JValue(kvp.Value) }))
+                                        yield return j;
+                                }
+                            }
+                        }
+                        else
+                            yield return jo;
+                    }
                 }
                 else
                 {
@@ -143,8 +192,10 @@ namespace ChoETL
             }
         }
 
-        private bool IsSimpleJSONPath(string jsonPath, out string[] tokens)
+        private bool IsSimpleJSONPath(string jsonPath, out string[] tokens, out bool dictKey, out bool dictValue)
         {
+            dictKey = false;
+            dictValue = false;
             tokens = null;
 
             if (jsonPath.StartsWith("$"))
@@ -155,6 +206,19 @@ namespace ChoETL
                 return false;
 
             var tokens1 = jsonPath.SplitNTrim(".");
+            if (String.Join("/", tokens1) == "~")
+            {
+                tokens = new string[] { "*" };
+                dictKey = true;
+                return true;
+            }
+            else if (String.Join("/", tokens1) == "^")
+            {
+                tokens = new string[] { "*" };
+                dictValue = true;
+                return true;
+            }
+
             foreach (var token in tokens1)
             {
                 if (token.IsNullOrWhiteSpace())

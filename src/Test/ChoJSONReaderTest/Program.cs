@@ -2338,10 +2338,38 @@ K,L,M,N,O,P,Q,R,S,T";
             Console.WriteLine(csv.ToString());
         }
 
+        public class FileInfo
+        {
+            public IList<string> filenames { get; set; }
+            public int? cluster_number { get; set; }
+            public IList<string> Top_Terms { get; set; }
+        }
+
+        static void Sample38Test()
+        {
+            StringBuilder csv = new StringBuilder();
+            using (var r = new ChoJSONReader("sample38.json")
+                .WithJSONPath("$..^")
+                )
+            {
+                var x = r.ToArray();
+
+                //using (var w = new ChoCSVWriter(csv)
+                //    .WithFirstLineHeader()
+                //    .UseNestedKeyFormat()
+                //    )
+                //    w.Write(r.Select(r1 => (object[])r1.Value).Unfold());
+                //    //foreach (var rec in r) //.Select(r2 => ((dynamic[])r2).SelectMany(r1 => ((IList<string>)r1.filenames))))
+                //    //    Console.WriteLine(rec.Dump());
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Json2CSV2();
+            Sample38Test();
         }
 
         public class VarObject

@@ -1358,6 +1358,7 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             //[ChoCSVRecordField(QuoteField = false)]
             ///[Range(1,2)]
             public List<UserFavourites> Favourites { get; set; }
+            public UserFavourites SelectedUserFavourites { get; set; }
 
             public string GetFieldName(string declaringMemberName, string memberName, char separator, int index)
             {
@@ -1405,39 +1406,54 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
         }
         public static void NestedClass2CSVTest()
         {
-            //var rec1 = new UserAndValues
-            //{
-            //    UserID = 1,
-            //    FirstName = "Tom",
-            //    LastName = "Smith",
-            //    Favourites = new List<UserFavourites>
-            //    {
-            //        new UserFavourites
-            //        {
-            //            Id = 11,
-            //            Title = "Matrix"
-            //        },
-            //        new UserFavourites
-            //        {
-            //            Id = 12,
-            //            Title = "Matrix 2"
-            //        }
-            //    }
-            //};
+            var rec1 = new UserAndValues
+            {
+                UserID = 1,
+                FirstName = "Tom",
+                LastName = "Smith",
+                Favourites = new List<UserFavourites>
+                {
+                    new UserFavourites
+                    {
+                        Id = 11,
+                        Title = "Matrix"
+                    },
+                    new UserFavourites
+                    {
+                        Id = 12,
+                        Title = "Matrix 2"
+                    }
+                },
+                SelectedUserFavourites = new UserFavourites
+                {
+                    Id = 100,
+                    Title = "Matrix 100"
+                }
+            };
 
-            //StringBuilder csv = new StringBuilder();
-            //using (var w = new ChoCSVWriter<UserAndValues>(csv)
-            //    .WithFirstLineHeader()
-            //    //.WithField(f => f.UserID)
-            //    //.WithField(f => f.FirstName)
-            //    //.WithField(f => f.LastName)
-            //    //.WithField(f => f.Favourites, headerSelector: () => "x, y, z, a")
-            //    )
-            //{
-            //    w.Write(rec1);
-            //}
-            //Console.WriteLine(csv.ToString());
-            //return;
+            var c = new ChoCSVRecordConfiguration<UserAndValues>()
+                .WithFirstLineHeader()
+                .Map(f => f.UserID)
+                .Map(f => f.FirstName)
+                .Map(f => f.LastName)
+                .Map(f => f.SelectedUserFavourites.Title)
+                ;
+
+            StringBuilder csv = new StringBuilder();
+            using (var w = new ChoCSVWriter<UserAndValues>(csv, c)
+                //.WithFirstLineHeader()
+                //.ClearFields()
+                //.WithField(f => f.UserID)
+                //.WithField(f => f.FirstName)
+                //.WithField(f => f.LastName)
+                //.WithField(f => f.SelectedUserFavourites.Title)
+                //.WithField(f => f.Favourites, headerSelector: () => "x, y, z, a")
+                )
+            {
+                w.Write(rec1);
+            }
+            Console.WriteLine(csv.ToString());
+            return;
 
             var csv1 = @"UserID,FirstName,LastName,x, y, z, a
 1,Tom,Smith,11,Matrix,12,Matrix 2";

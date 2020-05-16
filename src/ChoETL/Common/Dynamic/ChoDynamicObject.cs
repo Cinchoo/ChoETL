@@ -1024,6 +1024,11 @@ namespace ChoETL
             return this;
         }
 
+        public IDictionary<string, object> AsDictionary()
+        {
+            return _kvpDict;
+        }
+
         public string Dump()
         {
             return ChoUtility.ToStringEx(this);

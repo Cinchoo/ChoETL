@@ -1,0 +1,40 @@
+﻿{
+  "0": [
+    {
+      "filenames": [
+        "a.txt",
+        "b.txt",
+        "c.txt"
+      ]
+    },
+    {
+      "cluster_number": 0
+    },
+    {
+      "Top_Terms": [
+        "would",
+        "get",
+        "like"
+      ]
+    }
+  ],
+  "1": [
+    {
+      "filenames": [
+        "a.txt",
+        "b.txt",
+        "c.txt"
+      ]
+    },
+    {
+      "cluster_number": 0
+    },
+    {
+      "Top_Terms": [
+        "would",
+        "get",
+        "like"
+      ]
+    }
+  ]
+}
