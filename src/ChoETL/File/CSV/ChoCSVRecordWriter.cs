@@ -655,23 +655,26 @@ namespace ChoETL
                     }
                 }
 
+                var quoteField = kvp.Value.QuoteField;
                 if (fieldValue == null)
                     fieldText = String.Empty;
                 else
                 {
                     if (fieldValue is IList)
                     {
+                        quoteField = false;
+
                         StringBuilder sb = new StringBuilder();
                         bool first = true;
                         foreach (var item in (IList)fieldValue)
                         {
                             if (first)
                             {
-                                sb.Append(NormalizeFieldValue(kvp.Key, item.ToNString(), null, false, null, ChoFieldValueJustification.None, GetFillChar(kvp.Value.FillChar)));
+                                sb.Append(NormalizeFieldValue(kvp.Key, item.ToNString(), null, false, quoteField, ChoFieldValueJustification.None, GetFillChar(kvp.Value.FillChar)));
                                 first = false;
                             }
                             else
-                                sb.AppendFormat("{0}{1}", Configuration.Delimiter, NormalizeFieldValue(kvp.Key, item.ToNString(), null, false, null, ChoFieldValueJustification.None, GetFillChar(kvp.Value.FillChar)));
+                                sb.AppendFormat("{0}{1}", Configuration.Delimiter, NormalizeFieldValue(kvp.Key, item.ToNString(), null, false, quoteField, ChoFieldValueJustification.None, GetFillChar(kvp.Value.FillChar)));
                         }
                         fieldText = sb.ToString();
                     }
@@ -681,13 +684,13 @@ namespace ChoETL
 
                 if (firstColumn)
                 {
-                    msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField,
+                    msg.Append(NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, quoteField,
                         GetFieldValueJustification(kvp.Value.FieldValueJustification), GetFillChar(kvp.Value.FillChar),
                         false, kvp.Value.NullValue, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType, Configuration.FieldValueTrimOption), fieldConfig));
                     firstColumn = false;
                 }
                 else
-                    msg.AppendFormat("{0}{1}", Configuration.Delimiter, NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, kvp.Value.QuoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification),
+                    msg.AppendFormat("{0}{1}", Configuration.Delimiter, NormalizeFieldValue(kvp.Key, fieldText, kvp.Value.Size, kvp.Value.Truncate, quoteField, GetFieldValueJustification(kvp.Value.FieldValueJustification),
                         GetFillChar(kvp.Value.FillChar), false, kvp.Value.NullValue, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType, Configuration.FieldValueTrimOption), fieldConfig));
             }
 
@@ -716,7 +719,7 @@ namespace ChoETL
                     {
                         return ((IList)item).OfType<object>().Skip(fieldConfig.ArrayIndex.Value).FirstOrDefault();
                     }
-                    return null;
+                    return item;
                 }
                 else if (item != null && item.GetType().IsGenericType && item.GetType().GetGenericTypeDefinition() == typeof(Dictionary<,>)
                     && typeof(string) == item.GetType().GetGenericArguments()[0])
@@ -725,7 +728,7 @@ namespace ChoETL
                     {
                         return ((IDictionary)item)[fieldConfig.DictKey];
                     }
-                    return null;
+                    return item;
                 }
                 else
                     return item;
@@ -828,12 +831,23 @@ namespace ChoETL
 
                 if (member.HeaderSelector == null)
                 {
-                    value = NormalizeFieldValue(member.Name, member.FieldName, null,
+                    var ignoreCheckDelimiter = false;
+                    var fv = member.FieldName;
+                    if (member.PropConverters != null)
+                    {
+                        var vc = member.PropConverters.OfType<IChoHeaderConverter>().FirstOrDefault();
+                        if (vc != null)
+                        {
+                            fv = vc.GetHeader(member.Name, member.FieldName, member.PropConverterParams, Configuration.Culture);
+                            ignoreCheckDelimiter = true;
+                        }
+                    }
+                    value = NormalizeFieldValue(member.Name, fv, null,
                     Configuration.FileHeaderConfiguration.Truncate == null ? true : Configuration.FileHeaderConfiguration.Truncate.Value,
                         Configuration.FileHeaderConfiguration.QuoteAllHeaders,
                         Configuration.FileHeaderConfiguration.Justification == null ? ChoFieldValueJustification.None : Configuration.FileHeaderConfiguration.Justification.Value,
                         Configuration.FileHeaderConfiguration.FillChar == null ? ' ' : Configuration.FileHeaderConfiguration.FillChar.Value,
-                        true, null, null, member);
+                        true, null, null, member, ignoreCheckDelimiter);
                 }
                 else
                     value = member.HeaderSelector();
@@ -851,7 +865,8 @@ namespace ChoETL
         bool quoteValue = false;
         private string NormalizeFieldValue(string fieldName, string fieldValue, int? size, bool truncate, bool? quoteField,
             ChoFieldValueJustification fieldValueJustification, char fillChar, bool isHeader = false, string nullValue = null,
-            ChoFieldValueTrimOption? fieldValueTrimOption = null, ChoCSVRecordFieldConfiguration fieldConfig = null)
+            ChoFieldValueTrimOption? fieldValueTrimOption = null, ChoCSVRecordFieldConfiguration fieldConfig = null,
+            bool ignoreCheckDelimiter = false)
         {
             string lFieldValue = fieldValue;
             bool retValue = false;
@@ -889,7 +904,7 @@ namespace ChoETL
                             quoteValue = true;
                         }
 
-                        if (fieldValue.IndexOf(Configuration.Delimiter) >= 0)
+                        if (!ignoreCheckDelimiter && fieldValue.IndexOf(Configuration.Delimiter) >= 0)
                         {
                             if (isHeader)
                             {

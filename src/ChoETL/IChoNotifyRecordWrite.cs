@@ -35,4 +35,9 @@ namespace ChoETL
         bool AfterRecordWrite(object target, long index, object source);
         bool RecordWriteError(object target, long index, object source, Exception ex);
     }
+
+    public interface IChoArrayItemFieldNameOverrideable
+    {
+        string GetFieldName(string declaringMemberName, string memberName, char separator, int index);
+    }
 }

@@ -518,7 +518,7 @@ namespace ChoETL
                 }
 
                 Configuration.WithField(name, position, fieldType, quoteField, null, fieldName,
-                    valueConverter, valueConverter, defaultValue, fallbackValue, null, fullyQualifiedMemberName, formatText,
+                    valueConverter, valueConverter, headerSelector, defaultValue, fallbackValue, null, fullyQualifiedMemberName, formatText,
                     nullValue, excelField, typeof(T), subRecordType, fieldValueJustification);
             }
 

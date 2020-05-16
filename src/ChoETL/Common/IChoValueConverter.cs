@@ -14,4 +14,9 @@ namespace ChoETL
         object Convert(object value, Type targetType, object parameter, CultureInfo culture);
         object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture);
     }
+
+    public interface IChoHeaderConverter
+    {
+        string GetHeader(string name, string fieldName, object parameter, CultureInfo culture);
+    }
 }

@@ -1336,10 +1336,96 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
 
         }
 
+        class UserFavourites
+        {
+            public int Id { get; set; }
+            public string Title { get; set; }
+
+            public override string ToString()
+            {
+                return $"{Id}, {Title}";
+            }
+        }
+        class UserAndValues : IChoArrayItemFieldNameOverrideable
+        {
+            //[ChoCSVRecordField]
+            public int UserID { get; set; }
+            //[ChoCSVRecordField]
+            public string FirstName { get; set; }
+            //[ChoCSVRecordField]
+            public string LastName { get; set; }
+            [ChoTypeConverter(typeof(MyListConverter))]
+            //[ChoCSVRecordField(QuoteField = false)]
+            ///[Range(1,2)]
+            public List<UserFavourites> Favourites { get; set; }
+
+            public string GetFieldName(string declaringMemberName, string memberName, char separator, int index)
+            {
+                return $"{declaringMemberName}{index}{memberName}";
+            }
+        }
+
+        public class MyListConverter : IChoValueConverter, IChoHeaderConverter
+        {
+            public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                throw new NotImplementedException();
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                var list = value as ICollection<UserFavourites>;
+                return list.Select(f => new object[] { f.Id, f.Title }).Unfold().ToArray();
+                return string.Join(",",
+                    list.Select(f => f.ToString()));
+            }
+
+            public string GetHeader(string name, string fieldName, object parameter, CultureInfo culture)
+            {
+                return "x, y, z, a";
+            }
+        }
+        public static void NestedClass2CSVTest()
+        {
+            var rec1 = new UserAndValues
+            {
+                UserID = 1,
+                FirstName = "Tom",
+                LastName = "Smith",
+                Favourites = new List<UserFavourites>
+                {
+                    new UserFavourites
+                    {
+                        Id = 11,
+                        Title = "Matrix"
+                    },
+                    new UserFavourites
+                    {
+                        Id = 12,
+                        Title = "Matrix 2"
+                    }
+                }
+            };
+
+            StringBuilder csv = new StringBuilder();
+            using (var w = new ChoCSVWriter<UserAndValues>(csv)
+                .WithFirstLineHeader()
+                //.WithField(f => f.UserID)
+                //.WithField(f => f.FirstName)
+                //.WithField(f => f.LastName)
+                //.WithField(f => f.Favourites, headerSelector: () => "x, y, z, a")
+                )
+            {
+                w.Write(rec1);
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            ArrayWriteTest();
+            NestedClass2CSVTest();
 
             return;
 

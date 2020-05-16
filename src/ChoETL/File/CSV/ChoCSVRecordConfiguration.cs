@@ -594,10 +594,16 @@ namespace ChoETL
 
             if (arrayIndex != null)
             {
-                if (ArrayIndexSeparator == null)
-                    obj.Name = obj.FieldName = obj.FieldName + "_" + arrayIndex;
+                var arrayIndexSeparator = ArrayIndexSeparator == null ? '_' : ArrayIndexSeparator.Value;
+
+                if (_recObject.Value is IChoArrayItemFieldNameOverrideable)
+                {
+                    obj.Name = obj.FieldName = ((IChoArrayItemFieldNameOverrideable)_recObject.Value).GetFieldName(displayName.IsNullOrWhiteSpace() ? declaringMember : displayName, obj.FieldName, arrayIndexSeparator, arrayIndex.Value);
+                }
                 else
-                    obj.Name = obj.FieldName = obj.FieldName + ArrayIndexSeparator + arrayIndex;
+                {
+                    obj.Name = obj.FieldName = obj.FieldName + arrayIndexSeparator + arrayIndex.Value;
+                }
             }
             else if (!dictKey.IsNullOrWhiteSpace())
             {
@@ -1005,7 +1011,7 @@ namespace ChoETL
         internal void WithField(string name, int? position, Type fieldType = null, bool? quoteField = null,
             ChoFieldValueTrimOption? fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
             Func<object, object> valueConverter = null,
-            Func<dynamic, object> valueSelector = null,
+            Func<dynamic, object> valueSelector = null, Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null,
             string fullyQualifiedMemberName = null, string formatText = null,
             string nullValue = null, bool excelField = false, Type recordType = null, Type subRecordType = null,
@@ -1060,6 +1066,7 @@ namespace ChoETL
                     FieldName = fieldName,
                     ValueConverter = valueConverter,
                     ValueSelector = valueSelector,
+                    HeaderSelector = headerSelector,
                     DefaultValue = defaultValue,
                     FallbackValue = fallbackValue,
                     AltFieldNames = altFieldNames,

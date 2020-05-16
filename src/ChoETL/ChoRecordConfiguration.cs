@@ -14,7 +14,8 @@ namespace ChoETL
     [DataContract]
     public abstract class ChoRecordConfiguration
     {
-        ChoTypeConverterFormatSpec _typeConverterFormatSpec = null;
+        protected Lazy<object> _recObject;
+        private ChoTypeConverterFormatSpec _typeConverterFormatSpec = null;
         public ChoTypeConverterFormatSpec TypeConverterFormatSpec
         {
             get { return _typeConverterFormatSpec == null ? ChoTypeConverterFormatSpec.Instance : _typeConverterFormatSpec; }
@@ -100,6 +101,7 @@ namespace ChoETL
             if (recordType == null)
                 return;
 
+            _recObject = new Lazy<object>(() => ChoActivator.CreateInstance(RecordType));
             ChoRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoRecordObjectAttribute>(recordType);
             if (recObjAttr != null)
             {
