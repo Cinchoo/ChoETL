@@ -1365,7 +1365,7 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             }
         }
 
-        public class MyListConverter : IChoValueConverter, IChoHeaderConverter
+        public class MyListConverter : IChoValueConverter, IChoHeaderConverter, IChoValueSelector
         {
             public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
             {
@@ -1384,42 +1384,72 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             {
                 return "x, y, z, a";
             }
+
+            public object ExtractValue(string name, string fieldName, object value, CultureInfo culture)
+            {
+                IDictionary<string, object> dict = value as IDictionary<string, object>;
+                List<UserFavourites> list = new List<UserFavourites>();
+
+                list.Add(new UserFavourites
+                {
+                    Id = dict["x"].CastTo<int>(),
+                    Title = dict["y"].CastTo<string>()
+                });
+                list.Add(new UserFavourites
+                {
+                    Id = dict["z"].CastTo<int>(),
+                    Title = dict["a"].CastTo<string>()
+                });
+                return list;
+            }
         }
         public static void NestedClass2CSVTest()
         {
-            var rec1 = new UserAndValues
-            {
-                UserID = 1,
-                FirstName = "Tom",
-                LastName = "Smith",
-                Favourites = new List<UserFavourites>
-                {
-                    new UserFavourites
-                    {
-                        Id = 11,
-                        Title = "Matrix"
-                    },
-                    new UserFavourites
-                    {
-                        Id = 12,
-                        Title = "Matrix 2"
-                    }
-                }
-            };
+            //var rec1 = new UserAndValues
+            //{
+            //    UserID = 1,
+            //    FirstName = "Tom",
+            //    LastName = "Smith",
+            //    Favourites = new List<UserFavourites>
+            //    {
+            //        new UserFavourites
+            //        {
+            //            Id = 11,
+            //            Title = "Matrix"
+            //        },
+            //        new UserFavourites
+            //        {
+            //            Id = 12,
+            //            Title = "Matrix 2"
+            //        }
+            //    }
+            //};
 
-            StringBuilder csv = new StringBuilder();
-            using (var w = new ChoCSVWriter<UserAndValues>(csv)
+            //StringBuilder csv = new StringBuilder();
+            //using (var w = new ChoCSVWriter<UserAndValues>(csv)
+            //    .WithFirstLineHeader()
+            //    //.WithField(f => f.UserID)
+            //    //.WithField(f => f.FirstName)
+            //    //.WithField(f => f.LastName)
+            //    //.WithField(f => f.Favourites, headerSelector: () => "x, y, z, a")
+            //    )
+            //{
+            //    w.Write(rec1);
+            //}
+            //Console.WriteLine(csv.ToString());
+            //return;
+
+            var csv1 = @"UserID,FirstName,LastName,x, y, z, a
+1,Tom,Smith,11,Matrix,12,Matrix 2";
+
+            using (var r = ChoCSVReader<UserAndValues>.LoadText(csv1)
                 .WithFirstLineHeader()
-                //.WithField(f => f.UserID)
-                //.WithField(f => f.FirstName)
-                //.WithField(f => f.LastName)
-                //.WithField(f => f.Favourites, headerSelector: () => "x, y, z, a")
                 )
             {
-                w.Write(rec1);
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
             }
 
-            Console.WriteLine(csv.ToString());
         }
 
         static void Main(string[] args)

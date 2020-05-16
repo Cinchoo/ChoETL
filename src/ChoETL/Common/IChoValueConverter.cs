@@ -19,4 +19,9 @@ namespace ChoETL
     {
         string GetHeader(string name, string fieldName, object parameter, CultureInfo culture);
     }
+
+    public interface IChoValueSelector
+    {
+        object ExtractValue(string name, string fieldName, object value, CultureInfo culture);
+    }
 }

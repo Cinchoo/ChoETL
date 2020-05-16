@@ -687,33 +687,42 @@ namespace ChoETL
                     {
                         if (fieldConfig.ValueSelector == null)
                         {
-                            if (fieldNameValues.ContainsKey(fieldConfig.FieldName))
+                            if (fieldConfig.PropConverters.IsNullOrEmpty()
+                                || fieldConfig.PropConverters.OfType<IChoValueSelector>().Count() == 0)
                             {
-                                fieldValue = fieldNameValues[fieldConfig.FieldName];
-                            }
-                            else if (Configuration.AllowLoadingFieldByPosition 
-                                || (!Configuration.FileHeaderConfiguration.HasHeaderRecord 
-                                || (Configuration.FileHeaderConfiguration.HasHeaderRecord && Configuration.FileHeaderConfiguration.IgnoreHeader)))
-                            {
-                                if (fieldConfig.FieldPosition - 1 >= 0)
+                                if (fieldNameValues.ContainsKey(fieldConfig.FieldName))
                                 {
-                                    try
+                                    fieldValue = fieldNameValues[fieldConfig.FieldName];
+                                }
+                                else if (Configuration.AllowLoadingFieldByPosition
+                                    || (!Configuration.FileHeaderConfiguration.HasHeaderRecord
+                                    || (Configuration.FileHeaderConfiguration.HasHeaderRecord && Configuration.FileHeaderConfiguration.IgnoreHeader)))
+                                {
+                                    if (fieldConfig.FieldPosition - 1 >= 0)
                                     {
-                                        fieldValue = fieldNameValues.ElementAt(fieldConfig.FieldPosition - 1).Value;
+                                        try
+                                        {
+                                            fieldValue = fieldNameValues.ElementAt(fieldConfig.FieldPosition - 1).Value;
+                                        }
+                                        catch { }
                                     }
-                                    catch { }
+                                }
+
+                                if (fieldValue == null)
+                                {
+                                    if (Configuration.ThrowAndStopOnMissingField)
+                                        throw new ChoMissingRecordFieldException("Missing '{0}' field in CSV file.".FormatString(fieldConfig.FieldName));
+                                    else
+                                        fieldValue = null; // fieldNameValues;
+
+                                    //if (Configuration.ColumnOrderStrict)
+                                    //    throw new ChoParserException("No matching '{0}' field header found.".FormatString(fieldConfig.FieldName));
                                 }
                             }
-
-                            if (fieldValue == null)
+                            else
                             {
-                                if (Configuration.ThrowAndStopOnMissingField)
-                                    throw new ChoMissingRecordFieldException("Missing '{0}' field in CSV file.".FormatString(fieldConfig.FieldName));
-                                else
-                                    fieldValue = null; // fieldNameValues;
-
-                                //if (Configuration.ColumnOrderStrict)
-                                //    throw new ChoParserException("No matching '{0}' field header found.".FormatString(fieldConfig.FieldName));
+                                var fs = fieldConfig.PropConverters.OfType<IChoValueSelector>().First();
+                                fieldValue = fs.ExtractValue(fieldConfig.Name, fieldConfig.FieldName, fieldNameValues, Configuration.Culture);
                             }
                         }
                         else
