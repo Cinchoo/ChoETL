@@ -531,9 +531,10 @@ namespace ChoETL
             return this;
         }
 
-        public ChoXmlReader<T> WithXPath(string xPath)
+        public ChoXmlReader<T> WithXPath(string xPath, bool allowComplexXmlPath = false)
         {
             Configuration.XPath = xPath;
+            Configuration.AllowComplexXmlPath = allowComplexXmlPath;
             return this;
         }
 

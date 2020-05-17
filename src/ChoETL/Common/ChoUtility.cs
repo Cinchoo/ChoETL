@@ -1138,11 +1138,27 @@ namespace ChoETL
 
             using (XmlWriter xtw = XmlTextWriter.Create(sr, xws ?? _xws))
             {
-                ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(target.GetType());
+                ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(target.GetType(), GetXmlOverrides(target.GetType()));
                 serializer.Serialize(xtw, target);
 
                 xtw.Flush();
             }
+        }
+
+        private static  XmlAttributeOverrides GetXmlOverrides(Type type)
+        {
+            if (type == null) return null;
+
+            var ra = type.GetCustomAttribute(typeof(XmlRootAttribute)) as XmlRootAttribute;
+            if (ra == null)
+                return null;
+
+            XmlAttributeOverrides overrides = null;
+            var xattribs = new XmlAttributes();
+            xattribs.XmlRoot = ra;
+            overrides = new XmlAttributeOverrides();
+            overrides.Add(type, xattribs);
+            return overrides;
         }
 
         public static string XmlSerialize(object target, XmlWriterSettings xws = null, string separator = null, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore,
@@ -1174,7 +1190,7 @@ namespace ChoETL
                 }
                 else
                 {
-                    ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(target.GetType());
+                    ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(target.GetType(), GetXmlOverrides(target.GetType()));
                     serializer.Serialize(xtw, target);
                 }
 

@@ -425,7 +425,7 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            Xml2JSON2();
+            XmlTypeTest();
         }
 
         static void Xml2JSON2()
@@ -716,12 +716,12 @@ xmlns:nc=""http://niem.gov/niem/niem-core/2.0"" xmlns:mark=""urn:mark:ecf:extens
             public string Nr { get; set; }
         }
 
-        [XmlRoot("ButikOmbud")]
+        [XmlRoot("StoreAssortmentView")]
         public class StoreAssortmentViewModel : AssortmentViewModel
         {
 
         }
-        [XmlRoot("ButikOmbud")]
+        [XmlRoot("AgentAssortmentView")]
         public class AgentAssortmentViewModel : AssortmentViewModel
         {
 
@@ -748,10 +748,30 @@ xmlns:nc=""http://niem.gov/niem/niem-core/2.0"" xmlns:mark=""urn:mark:ecf:extens
     </ButikOmbud>
 </ButikerOmbud>";
 
+            string xml1 = @"<ButikerOmbud xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"">
+  <StoreAssortmentView>
+    <Typ>Butik</Typ>
+    <Nr>2515</Nr>
+  </StoreAssortmentView>
+  <StoreAssortmentView>
+    <Typ>Butik</Typ>
+    <Nr>2516</Nr>
+  </StoreAssortmentView>
+  <AgentAssortmentView>
+    <Typ>Ombud</Typ>
+    <Nr>011703-91A</Nr>
+  </AgentAssortmentView>
+  <AgentAssortmentView>
+    <Typ>Ombud</Typ>
+    <Nr>011703-92B</Nr>
+  </AgentAssortmentView>
+</ButikerOmbud>";
+
             StringBuilder output = new StringBuilder();
             using (var w = new ChoXmlWriter<AssortmentViewModel>(output)
                     .Configure(c => c.UseXmlSerialization = true)
-                    .Configure(c => c.XmlSerializer = new XmlSerializer(typeof(AssortmentViewModel), new Type[] { typeof(StoreAssortmentViewModel), typeof(AgentAssortmentViewModel) }))
+                    .WithRootName("ButikerOmbud")
+                //.Configure(c => c.XmlSerializer = new XmlSerializer(typeof(AssortmentViewModel), new Type[] { typeof(StoreAssortmentViewModel), typeof(AgentAssortmentViewModel) }))
                 )
             {
                 foreach (var rec in ChoXmlReader<AssortmentViewModel>.LoadText(xml)
@@ -760,7 +780,7 @@ xmlns:nc=""http://niem.gov/niem/niem-core/2.0"" xmlns:mark=""urn:mark:ecf:extens
                     .Configure(c => c.DefaultNamespacePrefix = null)
                     .Configure(c => c.IncludeSchemaInstanceNodes = true)
                     .Configure(c => c.UseXmlSerialization = true)
-                    .Configure(c => c.XmlSerializer = new XmlSerializer(typeof(AssortmentViewModel), new Type[] { typeof(StoreAssortmentViewModel), typeof(AgentAssortmentViewModel) }))
+                    //.Configure(c => c.XmlSerializer = new XmlSerializer(typeof(AssortmentViewModel), new Type[] { typeof(StoreAssortmentViewModel), typeof(AgentAssortmentViewModel) }))
                     //.WithXmlNamespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")
                     //.WithMaxScanNodes(1)
                     )

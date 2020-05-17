@@ -619,6 +619,16 @@ namespace ChoETL
                                 overrides.Add(type, xattribs);
                             }
                         }
+                        else
+                        {
+                            var xattribs = new XmlAttributes();
+                            var xroot = type.GetCustomAttribute(typeof(XmlRootAttribute)) as XmlRootAttribute; // type.Name);
+                            if (!NS.IsNullOrWhiteSpace())
+                                xroot.Namespace = NS;
+                            xattribs.XmlRoot = xroot;
+                            overrides = new XmlAttributeOverrides();
+                            overrides.Add(type, xattribs);
+                        }
                     }
                     XmlSerializer serializer = overrides != null ? new XmlSerializer(type, overrides) : new XmlSerializer(type);
                     return serializer.Deserialize(reader);

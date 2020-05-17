@@ -39,6 +39,11 @@ namespace ChoETL
             get;
             private set;
         }
+        public bool AllowComplexXmlPath
+        {
+            get;
+            set;
+        }
         [DataMember]
         public string XPath
         {

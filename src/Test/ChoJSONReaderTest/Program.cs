@@ -2360,15 +2360,21 @@ K,L,M,N,O,P,Q,R,S,T";
             {
                 //var x = r/*.Select(r1 => r1.Value)*/.ToArray();
 
-                using (var w = new ChoCSVWriter<FileInfo>(csv)
+                using (var w = new ChoCSVWriter(csv)
                     .WithFirstLineHeader()
-                    .WithField(f => f.filenames)
-                    .WithField(f => f.cluster_number)
-                    .WithField(f => f.Top_Terms)
-                    .Index(f => f.filenames, 0, 3)
-                    .Index(f => f.Top_Terms, 0, 3)
+                    //.WithField(f => f.filenames)
+                    //.WithField(f => f.cluster_number)
+                    //.WithField(f => f.Top_Terms)
+                    //.Index(f => f.filenames, 0, 3)
+                    //.Index(f => f.Top_Terms, 0, 3)
                     )
-                    w.Write(r);
+                    w.Write(r.SelectMany(r1 => r1.filenames.Select((f, i) => new
+                    {
+                        filename = f,
+                        cluster_number = r1.cluster_number,
+                        top_terms = r1.Top_Terms[i]
+                    })
+                    ));
                 //    //foreach (var rec in r) //.Select(r2 => ((dynamic[])r2).SelectMany(r1 => ((IList<string>)r1.filenames))))
                 //    //    Console.WriteLine(rec.Dump());
             }

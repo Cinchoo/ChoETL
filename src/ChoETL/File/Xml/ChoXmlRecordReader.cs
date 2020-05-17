@@ -72,7 +72,8 @@ namespace ChoETL
             if (!RaiseBeginLoad(sr))
                 yield break;
 
-            foreach (var item in AsEnumerable(sr.GetXmlElements(Configuration.XPath, Configuration.NamespaceManager), TraceSwitch, filterFunc))
+            foreach (var item in AsEnumerable(sr.GetXmlElements(Configuration.XPath, Configuration.NamespaceManager,
+                Configuration.AllowComplexXmlPath), TraceSwitch, filterFunc))
             {
                 yield return item;
             }
@@ -143,16 +144,35 @@ namespace ChoETL
 
         }
 
+        private Lazy<Dictionary<string, Type>> _xmlTypeCache = new Lazy<Dictionary<string, Type>>(() =>
+        {
+            Dictionary<string, Type> dict = new Dictionary<string, Type>();
+            var types = ChoType.GetTypes(typeof(XmlRootAttribute));
+            if (types != null)
+            {
+                foreach (var t in types.Where(t1 => !t1.Name.IsNullOrWhiteSpace()))
+                {
+                    var xr = t.GetCustomAttribute(typeof(XmlRootAttribute)) as XmlRootAttribute;
+                    if (xr == null || xr.ElementName.IsNullOrWhiteSpace())
+                        continue;
+
+                    dict.AddOrUpdate(xr.ElementName, t);
+                }
+            }
+
+            return dict;
+        });
+
         private object Deserialize(Tuple<long, XElement> pair)
         {
-            return _se.Value.Deserialize(pair.Item2.CreateReader());
-
-            //XElement node = pair.Item2;
-            //Type recordType = node.GetXmlType();
-            //if (recordType)
-            //    return _se.Value.Deserialize(pair.Item2.CreateReader());
-            //else
-
+            if (_se.Value != null)
+                return _se.Value.Deserialize(pair.Item2.CreateReader());
+            else
+            {
+                string name = pair.Item2.Name.ToString();
+                var recType = _xmlTypeCache.Value.ContainsKey(name) && _xmlTypeCache.Value[name] != null ? _xmlTypeCache.Value[name] : RecordType;
+                return pair.Item2.ToObjectFromXml(recType);
+            }
         }
 
         bool _nsInitialized = false;
@@ -166,7 +186,7 @@ namespace ChoETL
             bool? skipUntil = true;
             bool? doWhile = true;
             bool abortRequested = false;
-            _se = new Lazy<XmlSerializer>(() => Configuration.XmlSerializer == null ? new XmlSerializer(RecordType) : Configuration.XmlSerializer);
+            _se = new Lazy<XmlSerializer>(() => Configuration.XmlSerializer == null ? null : Configuration.XmlSerializer);
             if (!Configuration.NamespaceManager.DefaultNamespace.IsNullOrWhiteSpace())
             {
                 _nsInitialized = true;
@@ -682,8 +702,8 @@ namespace ChoETL
                                                 if (fieldConfig.ItemConverter != null)
                                                     fieldValue = fieldConfig.ItemConverter(fXElements[0]);
                                                 else
-                                                    fieldValue = fXElements[0].ToObjectFromXml(typeof(ChoDynamicObject), 
-                                                        GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, 
+                                                    fieldValue = fXElements[0].ToObjectFromXml(typeof(ChoDynamicObject),
+                                                        GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace,
                                                         Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative, defaultNSPrefix: Configuration.DefaultNamespacePrefix, nsMgr: Configuration.XmlNamespaceManager.Value);
 
                                                 fieldValue = Normalize(fieldValue);

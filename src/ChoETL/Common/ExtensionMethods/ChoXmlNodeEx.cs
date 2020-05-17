@@ -194,7 +194,8 @@ namespace ChoETL
             return new XElement(xmlDocument.Name.LocalName, xmlDocument.Elements().Select(el => RemoveAllNamespaces(el)));
         }
 
-        public static IEnumerable<XElement> GetXmlElements(this XmlReader xmlReader, string xPath, XmlNamespaceManager nsMgr)
+        public static IEnumerable<XElement> GetXmlElements(this XmlReader xmlReader, string xPath, XmlNamespaceManager nsMgr,
+            bool allowComplexXmlPath = false)
         {
             //if (xPath.IsNullOrWhiteSpace()) yield break;
             if (!xPath.IsNullOrWhiteSpace() && (xPath == "/" || xPath == "//"))
@@ -206,7 +207,7 @@ namespace ChoETL
                       as XElement;
 
             }
-            else if (xPath.IsNullOrWhiteSpace() || xPath == "//*" || xPath == "./*")
+            else if (xPath.IsNullOrWhiteSpace() || xPath == "//*" || xPath == "./*" || xPath == "/*")
             {
                 while (xmlReader.Read())
                 {
@@ -266,7 +267,7 @@ namespace ChoETL
             else
             {
                 string[] matchNames = null;
-                if (IsSimpleXmlPath(xPath, out matchNames))
+                if (!allowComplexXmlPath && IsSimpleXmlPath(xPath, out matchNames))
                 {
                     //string rootName = null;
                     if (matchNames.Length == 0) yield break;
@@ -275,6 +276,9 @@ namespace ChoETL
                 }
                 else
                 {
+                    if (!allowComplexXmlPath)
+                        throw new XmlException("Complex Xml path not supported.");
+
                     var document = XDocument.Load(xmlReader);
                     foreach (var ele in ((IEnumerable<object>)document.XPathEvaluate(xPath, nsMgr)))
                     {
