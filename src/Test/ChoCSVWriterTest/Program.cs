@@ -1468,6 +1468,51 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
 
         }
 
+        public class Model
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+        }
+
+        public class Foo : Model
+        {
+            public string Description { get; set; }
+            //[DisplayName("Parent")]
+            public Foo ParentFoo { get; set; }
+        }
+
+        static void NestedClassRefTest()
+        {
+            var f1 = new Foo
+            {
+                Id = 1,
+                Name = "Tom",
+                Description = "Employee",
+                ParentFoo = new Foo
+                {
+                    Id = 2,
+                    Name = "Mark",
+                    Description = "Contractor",
+                    ParentFoo = new Foo
+                    {
+                        Id = 3,
+                        Name = "Kevin",
+                        Description = "Employee",
+                    }
+                }
+            };
+
+            StringBuilder csv = new StringBuilder();
+            using (var w = new ChoCSVWriter(csv)
+                .WithFirstLineHeader()
+                )
+            {
+                w.Write(f1);
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;

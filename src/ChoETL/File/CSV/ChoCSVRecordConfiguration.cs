@@ -476,19 +476,26 @@ namespace ChoETL
                                 pt = pd.PropertyType.GetUnderlyingType();
 
                                 if (pt == typeof(object)
-    || typeof(ArrayList).IsAssignableFrom(pt)
-    || typeof(Hashtable).IsAssignableFrom(pt)
-    )
+                                    || typeof(ArrayList).IsAssignableFrom(pt)
+                                    || typeof(Hashtable).IsAssignableFrom(pt)
+                                    )
                                 {
                                     continue;
                                 }
 
                                 if (pt != typeof(object) && !pt.IsSimple()  /*&& !typeof(IEnumerable).IsAssignableFrom(pt)*/)
                                 {
-                                    if (propDesc == null)
-                                        DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, pd, recordFieldConfigurations);
+                                    if (declaringMember == pd.Name)
+                                    {
+
+                                    }
                                     else
-                                        DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, pd, recordFieldConfigurations);
+                                    {
+                                        if (propDesc == null)
+                                            DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, pd, recordFieldConfigurations);
+                                        else
+                                            DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, pd, recordFieldConfigurations);
+                                    }
                                 }
                                 else
                                 {
@@ -511,11 +518,16 @@ namespace ChoETL
             if (displayName.IsNullOrEmpty())
                 obj = new ChoCSVRecordFieldConfiguration(declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), ++position);
             else if (pd != null)
-                obj = new ChoCSVRecordFieldConfiguration("{0}.{1}".FormatString(displayName, pd.Name), ++position);
+            {
+                if (displayName.IsNullOrWhiteSpace())
+                    obj = new ChoCSVRecordFieldConfiguration("{0}".FormatString(pd.Name), ++position);
+                else
+                    obj = new ChoCSVRecordFieldConfiguration("{0}.{1}".FormatString(displayName, pd.Name), ++position);
+            }
             else
                 obj = new ChoCSVRecordFieldConfiguration(displayName, ++position);
 
-            obj.FieldName = pd != null ? pd.Name : displayName;
+            //obj.FieldName = pd != null ? pd.Name : displayName;
 
             mapper?.Invoke(new ChoCSVRecordFieldConfigurationMap(obj));
 

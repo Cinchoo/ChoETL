@@ -1153,10 +1153,9 @@ namespace ChoETL
             if (ra == null)
                 return null;
 
-            XmlAttributeOverrides overrides = null;
+            XmlAttributeOverrides overrides = new XmlAttributeOverrides();
             var xattribs = new XmlAttributes();
             xattribs.XmlRoot = ra;
-            overrides = new XmlAttributeOverrides();
             overrides.Add(type, xattribs);
             return overrides;
         }

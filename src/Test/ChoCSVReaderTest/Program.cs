@@ -4104,10 +4104,10 @@ ID	DATE	AMOUNT	QUANTITY ID
             }
         }
 
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            CSV2ComplexObject();
             return;
 
             CSV2ComplexObject();
