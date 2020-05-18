@@ -4097,6 +4097,7 @@ ID	DATE	AMOUNT	QUANTITY ID
                 .Configure(c => c.IgnoreEmptyLine = false)
                 .Configure(c => c.MayContainEOLInData = false)
                 .WithEOLDelimiter("^")
+                .Configure(c => c.MaxLineSize = 1000005)
                 )
             {
                 foreach (var rec in r)
@@ -4108,6 +4109,7 @@ ID	DATE	AMOUNT	QUANTITY ID
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
+            SkipEmptyLinesTest();
             return;
 
             CSV2ComplexObject();

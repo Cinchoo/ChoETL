@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <key>
+    <item> value </item>
+    <item> value2 </item>
+    <item> value3 </item>
+  </key>
+
+  <id>1</id>
+  <name>Foo</name>
+
+  <hugeArray>
+    <!-- This array has around 12 millions of entries. Here is my problem. -->
+    <item>
+      <direction> </direction>
+      <companyId> </companyId>
+      <nameId> </nameId>
+    </item>
+    <item>
+      <direction> </direction>
+      <companyId> </companyId>
+      <nameId> </nameId>
+    </item>
+  </hugeArray>
+</root>

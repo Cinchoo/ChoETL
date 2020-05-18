@@ -78,6 +78,16 @@ namespace ChoETL
             get;
             set;
         }
+        private int _maxLineSize = 32768;
+        public int MaxLineSize
+        {
+            get { return _maxLineSize; }
+            set
+            {
+                if (value > 32768)
+                    _maxLineSize = value;
+            }
+        }
         [DataMember]
         public string EOLDelimiter
         {

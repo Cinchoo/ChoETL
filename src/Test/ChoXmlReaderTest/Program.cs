@@ -425,7 +425,21 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            XmlTypeTest();
+            HugeXml2Json();
+        }
+
+        static void HugeXml2Json()
+        {
+            StringBuilder json = new StringBuilder();
+            using (var r = new ChoXmlReader("sample94.xml")
+                .WithXPath("/root/hugeArray/item")
+                )
+            {
+                using (var w = new ChoJSONWriter(json))
+                    w.Write(r);
+            }
+
+            Console.WriteLine(json.ToString());
         }
 
         static void Xml2JSON2()

@@ -77,7 +77,7 @@ namespace ChoETL
 
             using (ChoPeekEnumerator<Tuple<long, string>> e = new ChoPeekEnumerator<Tuple<long, string>>(
                 new ChoIndexedEnumerator<string>(source is IEnumerable<string> ? (IEnumerable<string>)source : 
-                sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, false /*Configuration.MayContainEOLInData*/)).ToEnumerable(),
+                sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, false /*Configuration.MayContainEOLInData*/, Configuration.MaxLineSize)).ToEnumerable(),
                 (pair) =>
                 {
                     //bool isStateAvail = IsStateAvail();

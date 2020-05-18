@@ -463,9 +463,30 @@ AntoinedeSaint-ExupéryMale  1529-06-1900";
             CollectionAssert.AreEqual(expected, actual);
         }
 
+        static void Sample1Test()
+        {
+            string fix = @"---------------------------A---------------------------
+
+AARON THIAGO LOPES                       3099234 100-11
+
+AARON PAPA DA SILVA                      8610822 160-26
+
+ABNER MENEZEZ SOUZA                      1494778 500-35
+
+EDSON EDUARD MOZART                      1286664 500-34";
+
+            using (var r = ChoFixedLengthReader.LoadText(fix)
+                .Configure(c => c.Comment = "--")
+                .WithField("Name", 0, 41)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
         static void Main(string[] args)
         {
-            CodeFirstWithDeclarativeApproach();
+            Sample1Test();
             return;
 
             AABillingTest();

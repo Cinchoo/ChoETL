@@ -2388,6 +2388,10 @@ K,L,M,N,O,P,Q,R,S,T";
             Sample38Test();
         }
 
+        static void SimpleTest()
+        {
+        }
+
         public class VarObject
         {
 

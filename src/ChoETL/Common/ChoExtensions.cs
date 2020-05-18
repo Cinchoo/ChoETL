@@ -804,7 +804,7 @@ namespace ChoETL
                 {
                     string line;
 
-                    while ((line = ReadLineWithFixedNewlineDelimeter(reader as StreamReader, EOLDelimiter)) != null)
+                    while ((line = ReadLineWithFixedNewlineDelimeter(reader as StreamReader, EOLDelimiter, maxLineSize)) != null)
                         yield return line;
                 }
             }

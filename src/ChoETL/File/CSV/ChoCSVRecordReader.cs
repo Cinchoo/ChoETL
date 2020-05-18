@@ -95,9 +95,9 @@ namespace ChoETL
             }
         }
 
-        private IEnumerable<string> ReadLines(TextReader sr, string EOLDelimiter = null, char quoteChar = ChoCharEx.NUL, bool mayContainEOLInData = false, int maxLineSize = 32768)
+        private IEnumerable<string> ReadLines(TextReader sr)
         {
-            var recEnum = sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, Configuration.MayContainEOLInData).GetEnumerator();
+            var recEnum = sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, Configuration.MayContainEOLInData, Configuration.MaxLineSize).GetEnumerator();
             CalcFieldMaxCountIfApplicable(recEnum);
 
             //object x = Reader.Context.RecBuffer;
@@ -107,7 +107,7 @@ namespace ChoETL
             foreach (var rec in arr)
                 yield return rec;
 
-            foreach (var line in sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, Configuration.MayContainEOLInData))
+            foreach (var line in sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, Configuration.MayContainEOLInData, Configuration.MaxLineSize))
                 yield return line;
         }
 
@@ -139,7 +139,7 @@ namespace ChoETL
 
             using (ChoPeekEnumerator<Tuple<long, string>> e = new ChoPeekEnumerator<Tuple<long, string>>(
                 new ChoIndexedEnumerator<string>(source is IEnumerable<string> ? (IEnumerable<string>)source :
-                    ReadLines(sr, Configuration.EOLDelimiter, Configuration.QuoteChar, Configuration.MayContainEOLInData)).ToEnumerable(),
+                    ReadLines(sr)).ToEnumerable(),
                 (pair) =>
                 {
                     //bool isStateAvail = IsStateAvail();
