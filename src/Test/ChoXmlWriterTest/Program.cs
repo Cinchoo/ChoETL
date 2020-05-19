@@ -108,15 +108,11 @@ namespace ChoXmlWriterTest
                 .WithFirstLineHeader())
             {
                 using (var w = new ChoXmlWriter(xml)
-                    .TurnOffAutoCorrectXNames()
+                    //.TurnOffAutoCorrectXNames()
                     .ErrorMode(ChoErrorMode.ThrowAndStop)
                     )
                 {
-                    w.Write(r.Select(r1 =>
-                    {
-                        r1.RenameKey("First Name", "FirstName");
-                        return r1;
-                    }));
+                    w.Write(r);
                 }
             }
 

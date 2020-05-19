@@ -211,6 +211,8 @@ public class ToTextConverter : IChoValueConverter
             using (var r = ChoCSVReader.LoadText(csv)
                 .WithFirstLineHeader())
             {
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.FirstName);
                 using (var w = new ChoJSONWriter(json)
                     .ErrorMode(ChoErrorMode.ThrowAndStop)
                     )

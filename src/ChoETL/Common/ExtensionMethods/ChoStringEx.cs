@@ -20,6 +20,12 @@ namespace ChoETL
 
     public static class ChoString
     {
+        public static string IdentifierSeparator 
+        {
+            get;
+            set;
+        }
+
         #region Constants
 
         private const string HeaderDelimiter = "--";
@@ -1688,7 +1694,9 @@ namespace ChoETL
                 catch { }
             }
 
-            text = text.Replace("-", "_");
+            var sep = IdentifierSeparator == null ? String.Empty : IdentifierSeparator.NTrim();
+
+            text = text.Replace("-", sep);
             StringBuilder identifier = new StringBuilder(text);
             if (Char.IsDigit(identifier[0]))
                 identifier = new StringBuilder("_" + identifier.ToString());
@@ -1704,8 +1712,8 @@ namespace ChoETL
             //            identifier[1] = '_';
             //    }
             //}
-            string final = Regex.Replace(identifier.ToString(), @"\s+", "_");
-            final = Regex.Replace(final, @"[^a-zA-Z0-9 -]", "_");
+            string final = Regex.Replace(identifier.ToString(), @"\s+", sep);
+            final = Regex.Replace(final, @"[^a-zA-Z0-9 -]", sep);
             return final;
             //if (!final.StartsWith("@"))
             //return Regex.Replace(final, @"[^a-zA-Z0-9 -]", "_");

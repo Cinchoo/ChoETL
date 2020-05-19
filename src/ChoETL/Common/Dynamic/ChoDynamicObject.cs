@@ -535,32 +535,53 @@ namespace ChoETL
                     return true;
                 }
 
-                if (AlternativeKeys != null && AlternativeKeys.ContainsKey(name))
-                {
-                    var newName = AlternativeKeys[name];
-                    if (!newName.IsNullOrWhiteSpace())
-                        name = newName;
-                }
-
                 if (kvpDict.ContainsKey(name))
+                {
                     result = AfterKVPLoaded(name, kvpDict[name]);
+                    return true;
+                }
                 else if (kvpDict.ContainsKey("{0}{1}".FormatString(_attributePrefix, name)))
+                {
                     result = AfterKVPLoaded(name, kvpDict["{0}{1}".FormatString(_attributePrefix, name)]);
+                    return true;
+                }
                 else
                 {
                     if (name.StartsWith("_"))
                     {
                         string normalizedName = name.Substring(1);
                         if (kvpDict.ContainsKey(normalizedName))
+                        {
                             result = AfterKVPLoaded(name, kvpDict[normalizedName]);
+                            return true;
+                        }
                         else if (ThrowExceptionIfPropNotExists)
                             return false;
                     }
-                    else if (ThrowExceptionIfPropNotExists)
-                        return false;
+                    else if (AlternativeKeys != null && AlternativeKeys.ContainsKey(name))
+                    {
+                        var newName = AlternativeKeys[name];
+                        if (!newName.IsNullOrWhiteSpace())
+                        {
+                            if (kvpDict.ContainsKey(newName))
+                            {
+                                result = AfterKVPLoaded(newName, kvpDict[newName]);
+                                return true;
+                            }
+                            else if (kvpDict.ContainsKey("{0}{1}".FormatString(_attributePrefix, newName)))
+                            {
+                                result = AfterKVPLoaded(name, kvpDict["{0}{1}".FormatString(_attributePrefix, newName)]);
+                                return true;
+                            }
+                        }
+                    }
                 }
             }
-            return true;
+
+            if (ThrowExceptionIfPropNotExists)
+                return false;
+            else
+                return true;
         }
 
         protected virtual bool SetPropertyValue(string name, object value)
@@ -574,12 +595,12 @@ namespace ChoETL
             IDictionary<string, object> kvpDict = _kvpDict;
             if (kvpDict != null)
             {
-                if (AlternativeKeys != null && AlternativeKeys.ContainsKey(name))
-                {
-                    var newName = AlternativeKeys[name];
-                    if (!newName.IsNullOrWhiteSpace())
-                        name = newName;
-                }
+                //if (AlternativeKeys != null && AlternativeKeys.ContainsKey(name))
+                //{
+                //    var newName = AlternativeKeys[name];
+                //    if (!newName.IsNullOrWhiteSpace())
+                //        name = newName;
+                //}
 
                 if (!kvpDict.ContainsKey(name))
                 {
