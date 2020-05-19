@@ -693,187 +693,186 @@ namespace ChoETL
 
                 if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
                     continue;
-
-                //if (Configuration.IsDynamicObject) //rec is ExpandoObject)
-                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
-                {
-                }
-                else
-                {
-                    if (pi != null)
-                    {
-                        if (kvp.Value.FieldTypeSelector != null)
-                        {
-                            Type rt = kvp.Value.FieldTypeSelector(pair.Item2);
-                            kvp.Value.FieldType = rt == null ? pi.PropertyType : rt;
-                        }
-                        else
-                            kvp.Value.FieldType = pi.PropertyType;
-                    }
-                    else
-                        kvp.Value.FieldType = typeof(string);
-                }
-
-                object v1 = !jTokens.IsNullOrEmpty() ? (object)jTokens : jToken == null ? node : jToken;
-                if (fieldConfig.CustomSerializer != null)
-                    fieldValue = fieldConfig.CustomSerializer(v1);
-                else if (RaiseRecordFieldDeserialize(rec, pair.Item1, kvp.Key, ref v1))
-                    fieldValue = v1;
-                else
-                {
-                    if (fieldConfig.FieldType == null)
-                    {
-                        if (!fieldConfig.IsArray && fieldValue is JToken[])
-                        {
-                            fieldValue = ((JToken[])fieldValue).FirstOrDefault();
-                            if (fieldValue is JArray)
-                            {
-                                fieldValue = ((JArray)fieldValue).FirstOrDefault();
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (!fieldConfig.FieldType.IsCollection() && fieldValue is JToken[])
-                        {
-                            fieldValue = ((JToken[])fieldValue).FirstOrDefault();
-                            //if (fieldValue is JArray)
-                            //{
-                            //    fieldValue = ((JArray)fieldValue).FirstOrDefault();
-                            //}
-                        }
-                    }
-
-                    if (fieldConfig.FieldType == null
-                        || fieldConfig.FieldType == typeof(object)
-                        || fieldConfig.FieldType.GetItemType() == typeof(object))
-                    {
-                        if (fieldValue is JToken)
-                        {
-                            fieldValue = DeserializeNode((JToken)fieldValue, null, fieldConfig);
-                        }
-                        else if (fieldValue is JToken[])
-                        {
-                            List<object> arr = new List<object>();
-                            foreach (var ele in (JToken[])fieldValue)
-                            {
-                                object fv = DeserializeNode(ele, null, fieldConfig);
-                                arr.Add(fv);
-                            }
-
-                            fieldValue = arr.ToArray();
-                        }
-                    }
-                    else if (fieldConfig.FieldType == typeof(string) || fieldConfig.FieldType.IsSimple())
-                    {
-                        if (fieldValue is JToken[])
-                            fieldValue = ((JToken[])fieldValue).FirstOrDefault();
-
-                        if (fieldValue is JToken)
-                        {
-                            fieldValue = DeserializeNode((JToken)fieldValue, fieldConfig.FieldType, fieldConfig);
-                        }
-                    }
-                    else
-                    {
-                        List<object> list = new List<object>();
-                        Type itemType = fieldConfig.FieldType.GetUnderlyingType();
-
-                        //if (itemType.IsCollectionType())
-                        //    itemType = itemType.GetItemType().GetUnderlyingType();
-
-                        if (fieldValue != null && fieldValue.GetType().IsAssignableFrom(fieldConfig.FieldType))
-                        {
-
-                        }
-                        else if (fieldValue is JToken)
-                        {
-                            if (!typeof(JToken).IsAssignableFrom(itemType))
-                                fieldValue = DeserializeNode((JToken)fieldValue, itemType, fieldConfig);
-                        }
-                        else if (fieldValue is JArray)
-                        {
-                            if (typeof(JArray).IsAssignableFrom(itemType))
-                            {
-
-                            }
-                            else if (fieldConfig.FieldType.GetUnderlyingType().IsCollection())
-                            {
-                                itemType = fieldConfig.FieldType.GetUnderlyingType().GetItemType().GetUnderlyingType();
-                                foreach (var ele in (JArray)fieldValue)
-                                {
-                                    object fv = DeserializeNode(ele, itemType, fieldConfig);
-                                    list.Add(fv);
-                                }
-                                fieldValue = list.ToArray();
-                            }
-                            else
-                            {
-                                var fi = ((JArray)fieldValue).FirstOrDefault();
-                                fieldValue = DeserializeNode(fi, itemType, fieldConfig);
-                            }
-                        }
-                        else if (fieldValue is JToken[])
-                        {
-                            itemType = fieldConfig.FieldType.GetUnderlyingType().GetItemType().GetUnderlyingType();
-                            if (typeof(JToken[]).IsAssignableFrom(itemType))
-                            {
-
-                            }
-                            else if (fieldConfig.FieldType.GetUnderlyingType().IsCollection())
-                            {
-                                var isJArray = ((JToken[])fieldValue).Length == 1 && ((JToken[])fieldValue)[0] is JArray;
-                                var array = isJArray ? ((JArray)((JToken[])fieldValue)[0]).ToArray() : (JToken[])fieldValue;
-                                foreach (var ele in array)
-                                {
-                                    object fv = DeserializeNode(ele, itemType, fieldConfig);
-                                    list.Add(fv);
-                                }
-                                fieldValue = list.ToArray();
-                            }
-                            else
-                            {
-                                var fi = ((JToken[])fieldValue).FirstOrDefault();
-                                fieldValue = DeserializeNode(fi, itemType, fieldConfig);
-                            }
-
-
-                            //if (fi is JArray && !itemType.IsCollection())
-                            //                     {
-                            //                         fieldValue = ToObject(fi, itemType);
-                            //	fieldValue = RaiseItemConverter(fieldConfig, fieldValue);
-                            //}
-                            //else
-                            //                     {
-                            //                         foreach (var ele in (JToken[])fieldValue)
-                            //                         {
-                            //		object fv = ToObject(ele, itemType);
-                            //		if (fieldConfig.ItemConverter != null)
-                            //			fv = fieldConfig.ItemConverter(fv);
-
-                            //		list.Add(fv);
-                            //	}
-                            //                         fieldValue = list.ToArray();
-                            //                     }
-                        }
-                    }
-                }
-
-                if (!(fieldValue is ICollection))
-                {
-                    if (fieldValue is string)
-                        fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue as string);
-                    else if (fieldValue is JValue)
-                    {
-                        if (((JValue)fieldValue).Value is string)
-                            fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue.ToString());
-                        else
-                            fieldValue = ((JValue)fieldValue).Value;
-                    }
-                }
-
                 try
                 {
+                    //if (Configuration.IsDynamicObject) //rec is ExpandoObject)
+                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                    {
+                    }
+                    else
+                    {
+                        if (pi != null)
+                        {
+                            if (kvp.Value.FieldTypeSelector != null)
+                            {
+                                Type rt = kvp.Value.FieldTypeSelector(pair.Item2);
+                                kvp.Value.FieldType = rt == null ? pi.PropertyType : rt;
+                            }
+                            else
+                                kvp.Value.FieldType = pi.PropertyType;
+                        }
+                        else
+                            kvp.Value.FieldType = typeof(string);
+                    }
+
+                    object v1 = !jTokens.IsNullOrEmpty() ? (object)jTokens : jToken == null ? node : jToken;
+                    if (fieldConfig.CustomSerializer != null)
+                        fieldValue = fieldConfig.CustomSerializer(v1);
+                    else if (RaiseRecordFieldDeserialize(rec, pair.Item1, kvp.Key, ref v1))
+                        fieldValue = v1;
+                    else
+                    {
+                        if (fieldConfig.FieldType == null)
+                        {
+                            if (!fieldConfig.IsArray && fieldValue is JToken[])
+                            {
+                                fieldValue = ((JToken[])fieldValue).FirstOrDefault();
+                                if (fieldValue is JArray)
+                                {
+                                    fieldValue = ((JArray)fieldValue).FirstOrDefault();
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (!fieldConfig.FieldType.IsCollection() && fieldValue is JToken[])
+                            {
+                                fieldValue = ((JToken[])fieldValue).FirstOrDefault();
+                                //if (fieldValue is JArray)
+                                //{
+                                //    fieldValue = ((JArray)fieldValue).FirstOrDefault();
+                                //}
+                            }
+                        }
+
+                        if (fieldConfig.FieldType == null
+                            || fieldConfig.FieldType == typeof(object)
+                            || fieldConfig.FieldType.GetItemType() == typeof(object))
+                        {
+                            if (fieldValue is JToken)
+                            {
+                                fieldValue = DeserializeNode((JToken)fieldValue, null, fieldConfig);
+                            }
+                            else if (fieldValue is JToken[])
+                            {
+                                List<object> arr = new List<object>();
+                                foreach (var ele in (JToken[])fieldValue)
+                                {
+                                    object fv = DeserializeNode(ele, null, fieldConfig);
+                                    arr.Add(fv);
+                                }
+
+                                fieldValue = arr.ToArray();
+                            }
+                        }
+                        else if (fieldConfig.FieldType == typeof(string) || fieldConfig.FieldType.IsSimple())
+                        {
+                            if (fieldValue is JToken[])
+                                fieldValue = ((JToken[])fieldValue).FirstOrDefault();
+
+                            if (fieldValue is JToken)
+                            {
+                                fieldValue = DeserializeNode((JToken)fieldValue, fieldConfig.FieldType, fieldConfig);
+                            }
+                        }
+                        else
+                        {
+                            List<object> list = new List<object>();
+                            Type itemType = fieldConfig.FieldType.GetUnderlyingType();
+
+                            //if (itemType.IsCollectionType())
+                            //    itemType = itemType.GetItemType().GetUnderlyingType();
+
+                            if (fieldValue != null && fieldValue.GetType().IsAssignableFrom(fieldConfig.FieldType))
+                            {
+
+                            }
+                            else if (fieldValue is JToken)
+                            {
+                                if (!typeof(JToken).IsAssignableFrom(itemType))
+                                    fieldValue = DeserializeNode((JToken)fieldValue, itemType, fieldConfig);
+                            }
+                            else if (fieldValue is JArray)
+                            {
+                                if (typeof(JArray).IsAssignableFrom(itemType))
+                                {
+
+                                }
+                                else if (fieldConfig.FieldType.GetUnderlyingType().IsCollection())
+                                {
+                                    itemType = fieldConfig.FieldType.GetUnderlyingType().GetItemType().GetUnderlyingType();
+                                    foreach (var ele in (JArray)fieldValue)
+                                    {
+                                        object fv = DeserializeNode(ele, itemType, fieldConfig);
+                                        list.Add(fv);
+                                    }
+                                    fieldValue = list.ToArray();
+                                }
+                                else
+                                {
+                                    var fi = ((JArray)fieldValue).FirstOrDefault();
+                                    fieldValue = DeserializeNode(fi, itemType, fieldConfig);
+                                }
+                            }
+                            else if (fieldValue is JToken[])
+                            {
+                                itemType = fieldConfig.FieldType.GetUnderlyingType().GetItemType().GetUnderlyingType();
+                                if (typeof(JToken[]).IsAssignableFrom(itemType))
+                                {
+
+                                }
+                                else if (fieldConfig.FieldType.GetUnderlyingType().IsCollection())
+                                {
+                                    var isJArray = ((JToken[])fieldValue).Length == 1 && ((JToken[])fieldValue)[0] is JArray;
+                                    var array = isJArray ? ((JArray)((JToken[])fieldValue)[0]).ToArray() : (JToken[])fieldValue;
+                                    foreach (var ele in array)
+                                    {
+                                        object fv = DeserializeNode(ele, itemType, fieldConfig);
+                                        list.Add(fv);
+                                    }
+                                    fieldValue = list.ToArray();
+                                }
+                                else
+                                {
+                                    var fi = ((JToken[])fieldValue).FirstOrDefault();
+                                    fieldValue = DeserializeNode(fi, itemType, fieldConfig);
+                                }
+
+
+                                //if (fi is JArray && !itemType.IsCollection())
+                                //                     {
+                                //                         fieldValue = ToObject(fi, itemType);
+                                //	fieldValue = RaiseItemConverter(fieldConfig, fieldValue);
+                                //}
+                                //else
+                                //                     {
+                                //                         foreach (var ele in (JToken[])fieldValue)
+                                //                         {
+                                //		object fv = ToObject(ele, itemType);
+                                //		if (fieldConfig.ItemConverter != null)
+                                //			fv = fieldConfig.ItemConverter(fv);
+
+                                //		list.Add(fv);
+                                //	}
+                                //                         fieldValue = list.ToArray();
+                                //                     }
+                            }
+                        }
+                    }
+
+                    if (!(fieldValue is ICollection))
+                    {
+                        if (fieldValue is string)
+                            fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue as string);
+                        else if (fieldValue is JValue)
+                        {
+                            if (((JValue)fieldValue).Value is string)
+                                fieldValue = CleanFieldValue(fieldConfig, kvp.Value.FieldType, fieldValue.ToString());
+                            else
+                                fieldValue = ((JValue)fieldValue).Value;
+                        }
+                    }
+
                     bool ignoreFieldValue = fieldConfig.IgnoreFieldValue(fieldValue);
                     if (ignoreFieldValue)
                         fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
@@ -1008,9 +1007,11 @@ namespace ChoETL
             }
             catch
             {
+                if (fieldConfig.ItemConverter != null)
+                    value = RaiseItemConverter(config, value);
+                else
+                    throw;
             }
-            if (fieldConfig.ItemConverter != null)
-                value = RaiseItemConverter(config, value);
 
             return value;
         }

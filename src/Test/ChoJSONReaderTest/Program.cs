@@ -2353,6 +2353,10 @@ K,L,M,N,O,P,Q,R,S,T";
                 .WithField(f => f.filenames, jsonPath: "Value[*].filenames")
                 .WithField(f => f.cluster_number, jsonPath: "Value[*].cluster_number")
                 .WithField(f => f.Top_Terms, jsonPath: "Value[*].Top_Terms")
+                .Setup(s => s.SkipUntil += (o, e) =>
+                {
+                    var node = e.Source as JObject;
+                })
                 //.WithField("filenames", jsonPath: "Value[*].filenames", fieldType: typeof(string[]))
                 //.WithField("cluster_number", jsonPath: "Value[*].cluster_number", fieldType: typeof(int))
                 //.WithField("Top_Terms", jsonPath: "Value[*].Top_Terms", fieldType: typeof(string[]))
@@ -2382,10 +2386,66 @@ K,L,M,N,O,P,Q,R,S,T";
             Console.WriteLine(csv.ToString());
         }
 
+        static void DefaultValueTest()
+        {
+            string json = @"
+    [
+        {
+            ""Id"": 1,
+            ""Name"": ""Polo"",
+            ""Brand"": ""Volkswagen""
+        },
+        {
+            ""Id"": 2,
+            ""Name"": ""328"",
+            ""Brand"": ""BMW""
+        }
+    ]";
+
+            using (var r = ChoJSONReader.LoadText(json)
+                .WithField("Id")
+                .WithField("Name")
+                .WithField("Name1", defaultValue: "Test")
+                .Configure(c => c.IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Null)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+        static void FallbackValueTest()
+        {
+            string json = @"
+    [
+        {
+            ""Id"": ""1"",
+            ""Name"": ""Polo"",
+            ""Brand"": ""Volkswagen""
+        },
+        {
+            ""Id"": ""2x"",
+            ""Name"": ""328"",
+            ""Brand"": ""BMW""
+        }
+    ]";
+
+            using (var r = ChoJSONReader.LoadText(json)
+                .WithField("Id", fieldType: typeof(int), fallbackValue: 100)
+                .WithField("Name")
+                .WithField("Name1", defaultValue: "Test")
+                .IgnoreFieldValueMode(ChoIgnoreFieldValueMode.Any)
+                //.ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Sample38Test();
+            FallbackValueTest();
         }
 
         static void SimpleTest()

@@ -459,6 +459,18 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoJSONReader<T> ErrorMode(ChoErrorMode mode)
+        {
+            Configuration.ErrorMode = mode;
+            return this;
+        }
+
+        public ChoJSONReader<T> IgnoreFieldValueMode(ChoIgnoreFieldValueMode mode)
+        {
+            Configuration.IgnoreFieldValueMode = mode;
+            return this;
+        }
+
         public ChoJSONReader<T> AllowComplexJSONPath(bool flag = true)
         {
             Configuration.AllowComplexJSONPath = flag;

@@ -418,6 +418,18 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoFixedLengthReader<T> ErrorMode(ChoErrorMode mode)
+        {
+            Configuration.ErrorMode = mode;
+            return this;
+        }
+
+        public ChoFixedLengthReader<T> IgnoreFieldValueMode(ChoIgnoreFieldValueMode mode)
+        {
+            Configuration.IgnoreFieldValueMode = mode;
+            return this;
+        }
+
         public ChoFixedLengthReader<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
         {
             spec?.Invoke(Configuration.TypeConverterFormatSpec);

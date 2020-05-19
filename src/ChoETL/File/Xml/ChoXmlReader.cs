@@ -480,6 +480,18 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoXmlReader<T> ErrorMode(ChoErrorMode mode)
+        {
+            Configuration.ErrorMode = mode;
+            return this;
+        }
+
+        public ChoXmlReader<T> IgnoreFieldValueMode(ChoIgnoreFieldValueMode mode)
+        {
+            Configuration.IgnoreFieldValueMode = mode;
+            return this;
+        }
+
         public ChoXmlReader<T> WithRootName(string name)
         {
             Configuration.RootName = name;

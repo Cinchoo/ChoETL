@@ -436,6 +436,18 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoCSVReader<T> ErrorMode(ChoErrorMode mode)
+        {
+            Configuration.ErrorMode = mode;
+            return this;
+        }
+
+        public ChoCSVReader<T> IgnoreFieldValueMode(ChoIgnoreFieldValueMode mode)
+        {
+            Configuration.IgnoreFieldValueMode = mode;
+            return this;
+        }
+
         public ChoCSVReader<T> AutoIncrementDuplicateColumnNames(bool allColumns = false, bool flag = true)
         {
             Configuration.AutoIncrementDuplicateColumnNames = flag;

@@ -215,6 +215,18 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoFixedLengthWriter<T> ErrorMode(ChoErrorMode mode)
+        {
+            Configuration.ErrorMode = mode;
+            return this;
+        }
+
+        public ChoFixedLengthWriter<T> IgnoreFieldValueMode(ChoIgnoreFieldValueMode mode)
+        {
+            Configuration.IgnoreFieldValueMode = mode;
+            return this;
+        }
+
         public ChoFixedLengthWriter<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
         {
             spec?.Invoke(Configuration.TypeConverterFormatSpec);

@@ -307,6 +307,18 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoXmlWriter<T> ErrorMode(ChoErrorMode mode)
+        {
+            Configuration.ErrorMode = mode;
+            return this;
+        }
+
+        public ChoXmlWriter<T> IgnoreFieldValueMode(ChoIgnoreFieldValueMode mode)
+        {
+            Configuration.IgnoreFieldValueMode = mode;
+            return this;
+        }
+
         public ChoXmlWriter<T> WithRootName(string name)
         {
             Configuration.RootName = name;

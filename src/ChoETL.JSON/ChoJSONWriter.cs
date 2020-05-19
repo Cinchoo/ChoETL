@@ -220,6 +220,18 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoJSONWriter<T> ErrorMode(ChoErrorMode mode)
+        {
+            Configuration.ErrorMode = mode;
+            return this;
+        }
+
+        public ChoJSONWriter<T> IgnoreFieldValueMode(ChoIgnoreFieldValueMode mode)
+        {
+            Configuration.IgnoreFieldValueMode = mode;
+            return this;
+        }
+
         public ChoJSONWriter<T> SingleElement(bool flag = true)
         {
             Configuration.SingleElement = flag;

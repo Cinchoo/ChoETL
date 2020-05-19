@@ -4106,10 +4106,62 @@ ID	DATE	AMOUNT	QUANTITY ID
         }
 
 
+        static void GuidTest()
+        {
+            string csv = @"Id, Guid
+10, cc6f0116-589a-4cf1-8605-a4eb6ab3bd34";
+
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .WithMaxScanRows(1)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void DefaultValueTest()
+        {
+            string csv = @"Id, Guid
+10, cc6f0116-589a-4cf1-8605-a4eb6ab3bd34
+20, 
+";
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .WithField("Id", fieldType: typeof(int))
+                .WithField("Guid", fieldType: typeof(Guid), defaultValue: Guid.NewGuid())
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void FallbacktValueTest()
+        {
+            string csv = @"Id, Guid
+10, cc6f0116-589a-4cf1-8605-a4eb6ab3bd34
+2s, cc6f0116-589a-4cf1-8605-a4eb6ab3bd34
+";
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .WithField("Id", fieldType: typeof(int), fallbackValue: 200)
+                .WithField("Guid", fieldType: typeof(Guid), defaultValue: Guid.NewGuid())
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            SkipEmptyLinesTest();
+            FallbacktValueTest();
             return;
 
             CSV2ComplexObject();

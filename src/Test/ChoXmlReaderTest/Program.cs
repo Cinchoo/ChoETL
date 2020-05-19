@@ -425,7 +425,55 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            HugeXml2Json();
+            FallbacktValueTest();
+        }
+
+        static void DefaultValueTest()
+        {
+            string xml = @"<Emps>
+  <Emp>
+    <Id>10</Id>
+    <Name>Tom</Name>
+  </Emp>
+  <Emp>
+    <Id>20</Id>
+  </Emp>
+</Emps>
+";
+
+            using (var r = ChoXmlReader.LoadText(xml)
+                .WithField("Id", fieldType: typeof(int))
+                .WithField("Name", fieldType: typeof(string), defaultValue: "Markx")
+                .IgnoreFieldValueMode(ChoIgnoreFieldValueMode.Any)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void FallbacktValueTest()
+        {
+            string xml = @"<Emps>
+  <Emp>
+    <Id>10</Id>
+    <Name>Tom</Name>
+  </Emp>
+  <Emp>
+    <Id>2x</Id>
+    <Name>Mark</Name>
+  </Emp>
+</Emps>
+";
+
+            using (var r = ChoXmlReader.LoadText(xml)
+                .WithField("Id", fieldType: typeof(int), fallbackValue: 200)
+                .WithField("Name", fieldType: typeof(string), defaultValue: "Markx")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
         }
 
         static void HugeXml2Json()

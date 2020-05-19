@@ -228,6 +228,18 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoCSVWriter<T> ErrorMode(ChoErrorMode mode)
+        {
+            Configuration.ErrorMode = mode;
+            return this;
+        }
+
+        public ChoCSVWriter<T> IgnoreFieldValueMode(ChoIgnoreFieldValueMode mode)
+        {
+            Configuration.IgnoreFieldValueMode = mode;
+            return this;
+        }
+
         public ChoCSVWriter<T> ArrayIndexSeparator(char value)
         {
             if (value == ChoCharEx.NUL)
