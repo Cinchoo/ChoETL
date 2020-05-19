@@ -2442,10 +2442,44 @@ K,L,M,N,O,P,Q,R,S,T";
             }
         }
 
+        public class EmpWithCurrency
+        {
+            public int Id { get; set; }
+            public ChoCurrency Salary { get; set; }
+        }
+
+        static void CurrencyTest()
+        {
+            string json = @"
+    [
+        {
+            ""Id"": ""1"",
+            ""Name"": ""Polo"",
+            ""Salary"": ""$2000""
+        },
+        {
+            ""Id"": ""2"",
+            ""Name"": ""328"",
+            ""Salary"": ""$10,000""
+        }
+    ]";
+
+            using (var r = ChoJSONReader.LoadText(json)
+                .WithField("Id")
+                .WithField("Salary", fieldType: typeof(decimal))
+                .WithMaxScanNodes(1)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            FallbackValueTest();
+            CurrencyTest();
         }
 
         static void SimpleTest()

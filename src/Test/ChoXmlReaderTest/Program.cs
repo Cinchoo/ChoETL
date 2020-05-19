@@ -417,6 +417,12 @@ namespace ChoXmlReaderTest
         }
     }
 
+    public class EmpWithCurrency
+    {
+        public int Id { get; set; }
+        public ChoCurrency Salary { get; set; }
+    }
+
     [TestFixture]
     [SetCulture("en-US")] // TODO: Check if correct culture is used
     public class Program
@@ -425,7 +431,53 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            XNameWithSpaceTest();
+            CurrencyDynamicTest();
+        }
+
+        static void CurrencyDynamicTest()
+        {
+            string xml = @"<Emps>
+  <Emp>
+    <Id>10</Id>
+    <Salary>$2000</Salary>
+  </Emp>
+  <Emp>
+    <Id>20</Id>
+    <Salary>$10,000</Salary>
+  </Emp>
+</Emps>
+";
+
+            using (var r = ChoXmlReader.LoadText(xml)
+                .WithMaxScanNodes(10)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void CurrencyTest()
+        {
+            string xml = @"<Emps>
+  <Emp>
+    <Id>10</Id>
+    <Salary>$2000</Salary>
+  </Emp>
+  <Emp>
+    <Id>20</Id>
+    <Salary>$10,000</Salary>
+  </Emp>
+</Emps>
+";
+
+            using (var r = ChoXmlReader<EmpWithCurrency>.LoadText(xml)
+                .WithMaxScanNodes(10)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
         }
 
         static void XNameWithSpaceTest()

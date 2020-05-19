@@ -4149,8 +4149,9 @@ ID	DATE	AMOUNT	QUANTITY ID
 
             using (var r = ChoCSVReader.LoadText(csv)
                 .WithFirstLineHeader()
-                .WithField("Id", fieldType: typeof(int), fallbackValue: 200)
-                .WithField("Guid", fieldType: typeof(Guid), defaultValue: Guid.NewGuid())
+                .WithMaxScanRows(1)
+                //.WithField("Id", fieldType: typeof(int), fallbackValue: 200)
+                //.WithField("Guid", fieldType: typeof(Guid), defaultValue: Guid.NewGuid())
                 )
             {
                 foreach (var rec in r)

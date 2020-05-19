@@ -1324,7 +1324,18 @@ namespace ChoETL
                 if (jsonSerializer == null || jsonSerializer.Value == null)
                     return jToken.ToObject(objectType);
                 else
-                    return jToken.ToObject(objectType, jsonSerializer.Value);
+                {
+                    if (objectType == typeof(ChoCurrency))
+                    {
+                        ChoCurrency currency = null;
+                        if (ChoCurrency.TryParse(jToken.ToObject(typeof(string), jsonSerializer.Value) as string, out currency))
+                            return currency;
+                        else
+                            throw new ChoParserException("");
+                    }
+                    else
+                        return jToken.ToObject(objectType, jsonSerializer.Value);
+                }
             }
             catch
             {

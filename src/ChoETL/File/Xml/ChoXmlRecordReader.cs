@@ -130,7 +130,8 @@ namespace ChoETL
         private Lazy<List<XElement>> _recBuffer = null;
         private IEnumerable<XElement> ReadNodes(IEnumerable<XElement> nodes)
         {
-            CalcFieldMaxCountIfApplicable(nodes.GetEnumerator());
+            var nodesEnum = nodes.GetEnumerator();
+            CalcFieldMaxCountIfApplicable(nodesEnum);
 
             //object x = Reader.Context.RecBuffer;
             var arr = _recBuffer.Value.ToArray();
@@ -139,9 +140,8 @@ namespace ChoETL
             foreach (var rec in arr)
                 yield return rec;
 
-            foreach (var rec in nodes)
-                yield return rec;
-
+            while (nodesEnum.MoveNext())
+                yield return nodesEnum.Current;
         }
 
         private Lazy<Dictionary<string, Type>> _xmlTypeCache = new Lazy<Dictionary<string, Type>>(() =>
@@ -186,6 +186,8 @@ namespace ChoETL
             bool? skipUntil = true;
             bool? doWhile = true;
             bool abortRequested = false;
+            List<object> buffer = new List<object>();
+            IDictionary<string, Type> recFieldTypes = null;
             _se = new Lazy<XmlSerializer>(() => Configuration.XmlSerializer == null ? null : Configuration.XmlSerializer);
             if (!Configuration.NamespaceManager.DefaultNamespace.IsNullOrWhiteSpace())
             {
@@ -253,7 +255,32 @@ namespace ChoETL
                 if (rec == null)
                     continue;
 
-                yield return rec;
+                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                {
+                    if (Configuration.AreAllFieldTypesNull && Configuration.AutoDiscoverFieldTypes && Configuration.MaxScanRows > 0 && counter <= Configuration.MaxScanRows)
+                    {
+                        buffer.Add(rec);
+                        recFieldTypes = Configuration.XmlRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
+                        RaiseRecordFieldTypeAssessment(recFieldTypes, (IDictionary<string, object>)rec, counter == Configuration.MaxScanRows);
+                        if (counter == Configuration.MaxScanRows)
+                        {
+                            Configuration.UpdateFieldTypesIfAny(recFieldTypes);
+                            var dict = recFieldTypes = Configuration.XmlRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
+                            RaiseMembersDiscovered(dict);
+
+                            foreach (object rec1 in buffer)
+                                yield return new ChoDynamicObject(MigrateToNewSchema(rec1 as IDictionary<string, object>, recFieldTypes));
+
+                            buffer.Clear();
+                        }
+                    }
+                    else
+                    {
+                        yield return rec;
+                    }
+                }
+                else
+                    yield return rec;
 
                 if (Configuration.NotifyAfter > 0 && pair.Item1 % Configuration.NotifyAfter == 0)
                 {
@@ -272,6 +299,20 @@ namespace ChoETL
                         break;
                 }
             }
+
+            if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+            {
+                if (buffer.Count > 0)
+                {
+                    Configuration.UpdateFieldTypesIfAny(recFieldTypes);
+                    var dict = recFieldTypes = Configuration.XmlRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
+                    RaiseMembersDiscovered(dict);
+
+                    foreach (object rec1 in buffer)
+                        yield return new ChoDynamicObject(MigrateToNewSchema(rec1 as IDictionary<string, object>, recFieldTypes));
+                }
+            }
+
             if (!abortRequested && pair != null)
                 RaisedRowsLoaded(pair.Item1);
         }

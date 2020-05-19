@@ -95,6 +95,11 @@ namespace ChoETL
             get;
             set;
         }
+        internal bool AreAllFieldTypesNull
+        {
+            get;
+            set;
+        }
         [DataMember]
         public string XmlVersion
         { get; set; }
@@ -275,7 +280,7 @@ namespace ChoETL
                 DiscoverRecordFields(recordType);
         }
 
-        internal void UpdateFieldTypesIfAny(Dictionary<string, Type> dict)
+        internal void UpdateFieldTypesIfAny(IDictionary<string, Type> dict)
         {
             if (dict == null || RecordFieldConfigurationsDict == null)
                 return;
@@ -285,6 +290,7 @@ namespace ChoETL
                 if (RecordFieldConfigurationsDict.ContainsKey(key) && dict[key] != null)
                     RecordFieldConfigurationsDict[key].FieldType = dict[key];
             }
+            AreAllFieldTypesNull = RecordFieldConfigurationsDict.All(kvp => kvp.Value.FieldType == null);
         }
 
         public ChoXmlRecordConfiguration MapRecordFields<T>()
