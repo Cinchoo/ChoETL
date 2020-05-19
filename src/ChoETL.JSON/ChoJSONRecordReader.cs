@@ -1385,11 +1385,21 @@ namespace ChoETL
                 {
                     if (objectType == typeof(ChoCurrency))
                     {
+                        var value = jToken.ToObject(typeof(string)) as string;
+
                         ChoCurrency currency = null;
-                        if (ChoCurrency.TryParse(jToken.ToObject(typeof(string), jsonSerializer.Value) as string, out currency))
+                        if (ChoCurrency.TryParse(value, out currency))
                             return currency;
                         else
-                            throw new ChoParserException("");
+                            throw new ChoParserException($"failed to parse `{value}` currency value.");
+                    }
+                    else if (objectType == typeof(Decimal))
+                    {
+                        ChoCurrency currency = null;
+                        if (ChoCurrency.TryParse(jToken.ToObject(typeof(string), jsonSerializer.Value) as string, out currency))
+                            return currency.Amount;
+                        else
+                            return jToken.ToObject(objectType, jsonSerializer.Value);
                     }
                     else
                         return jToken.ToObject(objectType, jsonSerializer.Value);

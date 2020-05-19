@@ -2465,8 +2465,8 @@ K,L,M,N,O,P,Q,R,S,T";
     ]";
 
             using (var r = ChoJSONReader.LoadText(json)
-                .WithField("Id")
-                .WithField("Salary", fieldType: typeof(decimal))
+                //.WithField("Id")
+                //.WithField("Salary", fieldType: typeof(decimal))
                 .WithMaxScanNodes(1)
                 )
             {
@@ -2492,6 +2492,7 @@ K,L,M,N,O,P,Q,R,S,T";
         }
     ]";
 
+            //ChoTypeConverterFormatSpec.Instance.TreatCurrencyAsDecimal = false;
             using (var r = ChoJSONReader.LoadText(json)
                 //.WithField("Id")
                 //.WithField("Salary", fieldType: typeof(decimal))
@@ -2507,7 +2508,7 @@ K,L,M,N,O,P,Q,R,S,T";
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            CurrencyDynamicTest();
+            CurrencyTest();
         }
 
         static void SimpleTest()
