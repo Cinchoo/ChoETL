@@ -425,7 +425,30 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            FallbacktValueTest();
+            XNameWithSpaceTest();
+        }
+
+        static void XNameWithSpaceTest()
+        {
+            string xml = @"<Emps>
+  <Emp>
+    <Id>10</Id>
+    <Name>Tom</Name>
+  </Emp>
+  <Emp>
+    <Id>20</Id>
+  </Emp>
+</Emps>
+";
+
+            using (var r = ChoXmlReader.LoadText(xml)
+                .WithFields("Id", "First Name")
+                .IgnoreFieldValueMode(ChoIgnoreFieldValueMode.Any)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
         }
 
         static void DefaultValueTest()

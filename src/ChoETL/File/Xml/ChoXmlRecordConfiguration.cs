@@ -21,6 +21,12 @@ namespace ChoETL
     {
         internal readonly Lazy<ChoXmlNamespaceManager> XmlNamespaceManager;
 
+        public bool TurnOffAutoCorrectXNames
+        {
+            get;
+            set;
+        }
+
         public bool DoNotEmitXmlNamespace
         {
             get;

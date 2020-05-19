@@ -97,11 +97,57 @@ namespace ChoXmlWriterTest
             Console.WriteLine(xml.ToString());
         }
 
+        public static void CSVWithSpaceHeader2Xml()
+        {
+            string csv = @"Id, First Name
+1, Tom
+2, Mark";
+
+            StringBuilder xml = new StringBuilder();
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader())
+            {
+                using (var w = new ChoXmlWriter(xml)
+                    .TurnOffAutoCorrectXNames()
+                    .ErrorMode(ChoErrorMode.ThrowAndStop)
+                    )
+                {
+                    w.Write(r.Select(r1 =>
+                    {
+                        r1.RenameKey("First Name", "FirstName");
+                        return r1;
+                    }));
+                }
+            }
+
+            Console.WriteLine(xml.ToString());
+
+            //using (var reader = new ChoCSVReader("C:\\Server Media\\test3.csv")
+            //    .WithFirstLineHeader()
+            //    .Configure(c => c.FileHeaderConfiguration.IgnoreColumnsWithEmptyHeader = true)
+            //    )
+            //{
+            //    using (var writer = new ChoXmlWriter(sb)
+            //        .Configure(c => c.RootName = "Records")
+            //        .Configure(c => c.NodeName = "Record")
+            //        .Configure(c => c.EmptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Empty)
+            //        .Configure(c => c.ErrorMode = ChoErrorMode.ThrowAndStop)
+            //        )
+            //    {
+            //        writer.Write(reader.Select(r =>
+            //        {
+            //            r.RenameKey("Company Name", "CompanyName");
+            //            return r;
+            //        }));
+            //    }
+            //}
+        }
+
         static void Main(string[] args)
         { 
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            JSON2SoapXML();
+            CSVWithSpaceHeader2Xml();
             return;
 
             JSON2XmlDateTimeTest();

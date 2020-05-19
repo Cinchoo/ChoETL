@@ -719,10 +719,11 @@ namespace ChoETL
 
                         if (ElementType == null)
                         {
+                            var name = Configuration.TurnOffAutoCorrectXNames ? kvp.Key : kvp.Key.ToValidVariableName();
                             if (kvp.Value is ChoCDATA)
-                                ele.Add(ns != null ? new XElement(ns + kvp.Key, new XCData(((ChoCDATA)kvp.Value).Value)) : new XElement(kvp.Key, new XCData(((ChoCDATA)kvp.Value).Value)));
+                                ele.Add(ns != null ? new XElement(ns + name, new XCData(((ChoCDATA)kvp.Value).Value)) : new XElement(kvp.Key, new XCData(((ChoCDATA)kvp.Value).Value)));
                             else if (isCDATA)
-                                ele.Add(ns != null ? new XElement(ns + kvp.Key, new XCData(kvp.Value.ToNString())) : new XElement(kvp.Key, new XCData(kvp.Value.ToNString())));
+                                ele.Add(ns != null ? new XElement(ns + name, new XCData(kvp.Value.ToNString())) : new XElement(kvp.Key, new XCData(kvp.Value.ToNString())));
                             else
                             {
                                 XElement e = NewXElement(nsMgr, kvp.Key, Configuration.DefaultNamespacePrefix, Configuration.NS, kvp.Value, Configuration.EmitDataType);
@@ -917,6 +918,8 @@ namespace ChoETL
 
             string prefix = name.Contains(":") ? name.SplitNTrim(":").First() : null;
             name = name.Contains(":") ? name.SplitNTrim(":").Skip(1).First() : name;
+
+            name = Configuration.TurnOffAutoCorrectXNames ? name : name.ToValidVariableName();
 
             XElement e = null;
             XNamespace ns = null;

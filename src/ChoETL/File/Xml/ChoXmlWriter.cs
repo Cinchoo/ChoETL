@@ -307,6 +307,12 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoXmlWriter<T> TurnOffAutoCorrectXNames(bool flag = true)
+        {
+            Configuration.TurnOffAutoCorrectXNames = flag;
+            return this;
+        }
+
         public ChoXmlWriter<T> ErrorMode(ChoErrorMode mode)
         {
             Configuration.ErrorMode = mode;

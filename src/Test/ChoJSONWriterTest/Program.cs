@@ -201,10 +201,30 @@ public class ToTextConverter : IChoValueConverter
 
             Console.WriteLine(jsonOut.ToString());
         }
+        public static void CSVWithSpaceHeader2JSON()
+        {
+            string csv = @"Id, First Name
+1, Tom
+2, Mark";
+
+            StringBuilder json = new StringBuilder();
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader())
+            {
+                using (var w = new ChoJSONWriter(json)
+                    .ErrorMode(ChoErrorMode.ThrowAndStop)
+                    )
+                {
+                    w.Write(r);
+                }
+            }
+
+            Console.WriteLine(json.ToString());
+        }
 
         static void Main(string[] args)
         {
-            InheritanceTest();
+            CSVWithSpaceHeader2JSON();
             return;
 
             TimespanTest();
