@@ -879,6 +879,11 @@ namespace ChoETL
         bool RaiseRecordFieldDeserialize(object record, long index, string propName, ref object value);
     }
 
+    public interface IChoCustomNodeNameOverrideable
+    {
+        string GetOverrideNodeName(long index, object record);
+    }
+
     public class ChoRecordFieldSerializeEventArgs
     {
         public string PropertyName

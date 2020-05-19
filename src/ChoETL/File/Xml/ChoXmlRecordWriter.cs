@@ -23,6 +23,7 @@ namespace ChoETL
         private IChoNotifyRecordWrite _callbackRecordWrite;
         private IChoNotifyRecordFieldWrite _callbackRecordFieldWrite;
         private IChoRecordFieldSerializable _callbackRecordSeriablizable;
+        private IChoCustomNodeNameOverrideable _callbackCustomNodeNameOverrideable;
         private bool _configCheckDone = false;
         private long _index = 0;
         private Lazy<XmlSerializer> _se = null;
@@ -50,6 +51,7 @@ namespace ChoETL
             _callbackFileWrite = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyFileWrite>(recordType);
             _callbackRecordFieldWrite = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordFieldWrite>(recordType);
             _callbackRecordSeriablizable = ChoMetadataObjectCache.CreateMetadataObject<IChoRecordFieldSerializable>(recordType);
+            _callbackCustomNodeNameOverrideable = ChoMetadataObjectCache.CreateMetadataObject<IChoCustomNodeNameOverrideable>(recordType);
 
             _recBuffer = new Lazy<List<object>>(() =>
             {
@@ -381,6 +383,12 @@ namespace ChoETL
             }
         }
 
+        private string GetNodeName(long index, object rec)
+        {
+            var newName = RaiseRecordFieldWriteError(index, rec);
+            return newName.IsNullOrWhiteSpace() ? Configuration.NodeName : newName;
+        }
+
         private bool ToText(long index, object rec, ChoXmlRecordConfiguration config, out string recText)
         {
             if (typeof(IChoScalarObject).IsAssignableFrom(config.RecordType) && rec != null)
@@ -395,12 +403,12 @@ namespace ChoETL
                     rec = ChoActivator.CreateInstance(config.RecordType);
                 else if (config.NullValueHandling == ChoNullValueHandling.Empty)
                 {
-                    recText = @"<{0}/>".FormatString(XmlNamespaceElementName(config.NodeName, Configuration.DefaultNamespacePrefix)).Indent(config.Indent * 1, config.IndentChar.ToString());
+                    recText = @"<{0}/>".FormatString(XmlNamespaceElementName(GetNodeName(index, rec), Configuration.DefaultNamespacePrefix)).Indent(config.Indent * 1, config.IndentChar.ToString());
                     return true;
                 }
                 else
                 {
-                    recText = @"<{0} xmlns:xsi=""{1}"" xsi:nil=""true"" />".FormatString(XmlNamespaceElementName(config.NodeName, Configuration.DefaultNamespacePrefix), ChoXmlSettings.XmlSchemaInstanceNamespace
+                    recText = @"<{0} xmlns:xsi=""{1}"" xsi:nil=""true"" />".FormatString(XmlNamespaceElementName(GetNodeName(index, rec), Configuration.DefaultNamespacePrefix), ChoXmlSettings.XmlSchemaInstanceNamespace
                                 ).Indent(config.Indent * 1, config.IndentChar.ToString());
                     return true;
                 }
@@ -626,7 +634,7 @@ namespace ChoETL
                 }
             }
 
-            string nodeName = config.NodeName;
+            string nodeName = GetNodeName(index, rec);
             if (rec is ChoDynamicObject && ((ChoDynamicObject)rec).DynamicObjectName != ChoDynamicObject.DefaultName)
             {
                 ChoDynamicObject dobj = rec as ChoDynamicObject;
@@ -1378,6 +1386,19 @@ namespace ChoETL
                 return retValue;
             }
             return false;
+        }
+
+        private string RaiseRecordFieldWriteError(long index, object record)
+        {
+            if (_callbackCustomNodeNameOverrideable != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => _callbackCustomNodeNameOverrideable.GetOverrideNodeName(index, record), null);
+            }
+            else if (Writer != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseCustomeNodeNameOverride(index, record), null);
+            }
+            return null;
         }
     }
 }

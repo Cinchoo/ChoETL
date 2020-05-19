@@ -29,6 +29,8 @@ namespace ChoETL
 
         public event EventHandler<ChoFileHeaderArrangeEventArgs> FileHeaderArrange;
 
+        public event EventHandler<ChoCustomNodeNameOverrideEventArgs> CustomeNodeNameOverride;
+
         public bool RaiseBeginWrite(object source)
         {
             EventHandler<ChoBeginWriteEventArgs> eh = BeginWrite;
@@ -141,6 +143,17 @@ namespace ChoETL
             eh(this, e);
             if (e.Fields != null)
                 fields = e.Fields;
+        }
+
+        public string RaiseCustomeNodeNameOverride(long index, object record)
+        {
+            EventHandler<ChoCustomNodeNameOverrideEventArgs> eh = CustomeNodeNameOverride;
+            if (eh == null)
+                return null;
+
+            ChoCustomNodeNameOverrideEventArgs e = new ChoCustomNodeNameOverrideEventArgs() { Index = index, Record = record };
+            eh(this, e);
+            return e.NodeName;
         }
 
         public bool RaiseRecordFieldSerialize(object record, long index, string propName, ref object source)

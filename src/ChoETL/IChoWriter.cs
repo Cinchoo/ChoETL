@@ -147,6 +147,7 @@ namespace ChoETL
             internal set;
         }
     }
+
     public class ChoFileHeaderEventArgs : EventArgs
     {
         public string HeaderText
@@ -160,9 +161,29 @@ namespace ChoETL
             set;
         }
     }
+
     public class ChoFileHeaderArrangeEventArgs : EventArgs
     {
         public List<string> Fields
+        {
+            get;
+            set;
+        }
+    }
+
+    public class ChoCustomNodeNameOverrideEventArgs : EventArgs
+    {
+        public long Index
+        {
+            get;
+            set;
+        }
+        public object Record
+        {
+            get;
+            set;
+        }
+        public string NodeName
         {
             get;
             set;

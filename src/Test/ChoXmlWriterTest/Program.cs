@@ -175,11 +175,76 @@ namespace ChoXmlWriterTest
             Console.WriteLine(xml.ToString());
         }
 
+        public static void CustomNodeNameTest()
+        {
+            string xml1 = @"<Root>
+  <Node1>
+    <Id>1</Id>
+    <FirstName>Tom</FirstName>
+  </Node1>
+  <Node2>
+    <Id>2</Id>
+    <FirstName>Mark</FirstName>
+  </Node2>
+</Root>";
+
+            using (var r = ChoXmlReader.LoadText(xml1))
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+
+            }
+
+            return;
+
+                string csv = @"Id, First Name
+1, Tom
+2, Mark";
+
+            StringBuilder xml = new StringBuilder();
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader())
+            {
+                using (var w = new ChoXmlWriter(xml)
+                    .ErrorMode(ChoErrorMode.ThrowAndStop)
+                    .Setup(s => s.CustomeNodeNameOverride += (o, e) =>
+                    {
+                        e.NodeName = $"Node{e.Index}";
+                    })
+                    )
+                {
+                    w.Write(r);
+                }
+            }
+
+            Console.WriteLine(xml.ToString());
+
+            //using (var reader = new ChoCSVReader("C:\\Server Media\\test3.csv")
+            //    .WithFirstLineHeader()
+            //    .Configure(c => c.FileHeaderConfiguration.IgnoreColumnsWithEmptyHeader = true)
+            //    )
+            //{
+            //    using (var writer = new ChoXmlWriter(sb)
+            //        .Configure(c => c.RootName = "Records")
+            //        .Configure(c => c.NodeName = "Record")
+            //        .Configure(c => c.EmptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Empty)
+            //        .Configure(c => c.ErrorMode = ChoErrorMode.ThrowAndStop)
+            //        )
+            //    {
+            //        writer.Write(reader.Select(r =>
+            //        {
+            //            r.RenameKey("Company Name", "CompanyName");
+            //            return r;
+            //        }));
+            //    }
+            //}
+        }
+
         static void Main(string[] args)
         { 
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            RootAttributeWithNSTest();
+            CustomNodeNameTest();
             return;
 
             JSON2XmlDateTimeTest();
