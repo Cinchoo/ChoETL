@@ -947,7 +947,13 @@ namespace ChoETL
 
             if (NSDict != null)
             {
-                foreach (var kvp in NSDict)
+                foreach (var kvp in NSDict.Where(kvp1 => kvp1.Key.IsNullOrWhiteSpace()))
+                {
+                    msg.AppendFormat(@" xmlns=""{0}""", kvp.Value);
+                    break;
+                }
+
+                foreach (var kvp in NSDict.Where(kvp1 => !kvp1.Key.IsNullOrWhiteSpace()))
                 {
                     if (!config.DoNotEmitXmlNamespace && kvp.Key == "xml")
                         continue;

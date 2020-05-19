@@ -139,11 +139,47 @@ namespace ChoXmlWriterTest
             //}
         }
 
+        public class FooBar
+        {
+
+            private string foo;
+
+            public string Foo
+            {
+                get
+                {
+                    return this.foo;
+                }
+                set
+                {
+                    this.foo = value;
+                }
+            }
+        }
+
+        static void RootAttributeWithNSTest()
+        {
+            StringBuilder xml = new StringBuilder();
+
+            using (var w = new ChoXmlWriter<FooBar>(xml)
+                //.WithXmlNamespace("", "urn:foobar1")
+                .Configure(c => c.DoNotEmitXmlNamespace = true)
+                )
+            {
+                w.Write(new FooBar
+                {
+                    Foo = "Tom"
+                });
+            }
+
+            Console.WriteLine(xml.ToString());
+        }
+
         static void Main(string[] args)
         { 
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            CSVWithSpaceHeader2Xml();
+            RootAttributeWithNSTest();
             return;
 
             JSON2XmlDateTimeTest();
