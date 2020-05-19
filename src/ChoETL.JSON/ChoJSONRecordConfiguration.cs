@@ -45,7 +45,11 @@ namespace ChoETL
             get;
             set;
         }
-
+        internal bool AreAllFieldTypesNull
+        {
+            get;
+            set;
+        }
         public ChoPropertyRenameAndIgnoreSerializerContractResolver JSONSerializerContractResolver
         {
             get
@@ -248,7 +252,7 @@ namespace ChoETL
             JSONRecordFieldConfigurations.Clear();
         }
 
-        internal void UpdateFieldTypesIfAny(Dictionary<string, Type> dict)
+        internal void UpdateFieldTypesIfAny(IDictionary<string, Type> dict)
         {
             if (dict == null || RecordFieldConfigurationsDict == null)
                 return;
@@ -258,6 +262,7 @@ namespace ChoETL
                 if (RecordFieldConfigurationsDict.ContainsKey(key) && dict[key] != null)
                     RecordFieldConfigurationsDict[key].FieldType = dict[key];
             }
+            AreAllFieldTypesNull = RecordFieldConfigurationsDict.All(kvp => kvp.Value.FieldType == null);
         }
 
         public ChoJSONRecordConfiguration MapRecordFields<T>()

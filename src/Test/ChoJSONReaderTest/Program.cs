@@ -2476,10 +2476,38 @@ K,L,M,N,O,P,Q,R,S,T";
 
         }
 
+        static void CurrencyDynamicTest()
+        {
+            string json = @"
+    [
+        {
+            ""Id"": ""1"",
+            ""Name"": ""Polo"",
+            ""Salary"": ""$2000""
+        },
+        {
+            ""Id"": ""2"",
+            ""Name"": ""328"",
+            ""Salary"": ""$10,000""
+        }
+    ]";
+
+            using (var r = ChoJSONReader.LoadText(json)
+                //.WithField("Id")
+                //.WithField("Salary", fieldType: typeof(decimal))
+                .WithMaxScanNodes(2)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            CurrencyTest();
+            CurrencyDynamicTest();
         }
 
         static void SimpleTest()

@@ -27,6 +27,7 @@ namespace ChoETL
         private bool _configCheckDone = false;
         private Lazy<XmlSerializer> _se = null;
         internal ChoReader Reader = null;
+        private Lazy<List<XElement>> _recBuffer = null;
 
         public ChoXmlRecordConfiguration Configuration
         {
@@ -127,7 +128,6 @@ namespace ChoETL
             }
         }
 
-        private Lazy<List<XElement>> _recBuffer = null;
         private IEnumerable<XElement> ReadNodes(IEnumerable<XElement> nodes)
         {
             var nodesEnum = nodes.GetEnumerator();
@@ -260,7 +260,8 @@ namespace ChoETL
                     if (Configuration.AreAllFieldTypesNull && Configuration.AutoDiscoverFieldTypes && Configuration.MaxScanRows > 0 && counter <= Configuration.MaxScanRows)
                     {
                         buffer.Add(rec);
-                        recFieldTypes = Configuration.XmlRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
+                        if (recFieldTypes == null)
+                            recFieldTypes = Configuration.XmlRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
                         RaiseRecordFieldTypeAssessment(recFieldTypes, (IDictionary<string, object>)rec, counter == Configuration.MaxScanRows);
                         if (counter == Configuration.MaxScanRows)
                         {

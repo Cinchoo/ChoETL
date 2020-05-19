@@ -26,6 +26,7 @@ namespace ChoETL
         private bool _configCheckDone = false;
         private Lazy<JsonSerializer> _se;
         internal ChoReader Reader = null;
+        private Lazy<List<JObject>> _recBuffer = null;
 
         public ChoJSONRecordConfiguration Configuration
         {
@@ -46,6 +47,19 @@ namespace ChoETL
             _callbackRecordSeriablizable = ChoMetadataObjectCache.CreateMetadataObject<IChoRecordFieldSerializable>(recordType);
 
             //Configuration.Validate();
+            _recBuffer = new Lazy<List<JObject>>(() =>
+            {
+                if (Reader != null)
+                {
+                    var b = Reader.Context.ContainsKey("RecBuffer") ? Reader.Context.RecBuffer : null;
+                    if (b == null)
+                        Reader.Context.RecBuffer = new List<JObject>();
+
+                    return Reader.Context.RecBuffer;
+                }
+                else
+                    return new List<JObject>();
+            });
         }
 
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
@@ -391,6 +405,8 @@ namespace ChoETL
             bool? doWhile = true;
             bool abortRequested = false;
             _se = new Lazy<JsonSerializer>(() => Configuration.JsonSerializerSettings != null ? JsonSerializer.Create(Configuration.JsonSerializerSettings) : null);
+            List<object> buffer = new List<object>();
+            IDictionary<string, Type> recFieldTypes = null;
 
             foreach (var obj in jObjects)
             {
@@ -425,7 +441,9 @@ namespace ChoETL
                     else
                         Configuration.Validate(pair);
                     var dict = Configuration.JSONRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
-                    RaiseMembersDiscovered(dict);
+                    if (Configuration.MaxScanRows == 0)
+                        RaiseMembersDiscovered(dict);
+                    Configuration.UpdateFieldTypesIfAny(dict);
                     _configCheckDone = true;
                 }
 
@@ -439,7 +457,33 @@ namespace ChoETL
                 if (rec == null)
                     continue;
 
-                yield return rec;
+                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                {
+                    if (Configuration.AreAllFieldTypesNull && Configuration.AutoDiscoverFieldTypes && Configuration.MaxScanRows > 0 && counter <= Configuration.MaxScanRows)
+                    {
+                        buffer.Add(rec);
+                        if (recFieldTypes == null)
+                            recFieldTypes = Configuration.JSONRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
+                        RaiseRecordFieldTypeAssessment(recFieldTypes, (IDictionary<string, object>)rec, counter == Configuration.MaxScanRows);
+                        if (counter == Configuration.MaxScanRows)
+                        {
+                            Configuration.UpdateFieldTypesIfAny(recFieldTypes);
+                            var dict = recFieldTypes = Configuration.JSONRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
+                            RaiseMembersDiscovered(dict);
+
+                            foreach (object rec1 in buffer)
+                                yield return new ChoDynamicObject(MigrateToNewSchema(rec1 as IDictionary<string, object>, recFieldTypes));
+
+                            buffer.Clear();
+                        }
+                    }
+                    else
+                    {
+                        yield return rec;
+                    }
+                }
+                else
+                    yield return rec;
 
                 if (Configuration.NotifyAfter > 0 && pair.Item1 % Configuration.NotifyAfter == 0)
                 {
@@ -458,6 +502,20 @@ namespace ChoETL
                         break;
                 }
             }
+
+            if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+            {
+                if (buffer.Count > 0)
+                {
+                    Configuration.UpdateFieldTypesIfAny(recFieldTypes);
+                    var dict = recFieldTypes = Configuration.JSONRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
+                    RaiseMembersDiscovered(dict);
+
+                    foreach (object rec1 in buffer)
+                        yield return new ChoDynamicObject(MigrateToNewSchema(rec1 as IDictionary<string, object>, recFieldTypes));
+                }
+            }
+
             if (!abortRequested && pair != null)
                 RaisedRowsLoaded(pair.Item1);
         }

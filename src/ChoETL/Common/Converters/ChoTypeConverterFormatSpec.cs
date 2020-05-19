@@ -83,7 +83,7 @@ namespace ChoETL
             CurrencyNumberStyle = NumberStyles.Currency;
             CurrencyFormat = "C";
             EnumFormat = ChoEnumFormatSpec.Value;
-            BooleanFormat = ChoBooleanFormatSpec.Any;
+            BooleanFormat = ChoBooleanFormatSpec.TrueOrFalse;
         }
     }
 }

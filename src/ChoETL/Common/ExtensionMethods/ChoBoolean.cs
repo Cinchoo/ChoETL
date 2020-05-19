@@ -15,17 +15,54 @@ namespace ChoETL
             if (value.IsNullOrWhiteSpace())
                 return false;
 
-            if (value.Length == 1)
+            if (ChoTypeConverterFormatSpec.Instance.BooleanFormat == ChoBooleanFormatSpec.Any)
             {
-                if (value[0] == 'Y' || value[0] == 'y') { result = true; return true; }
-                if (value[0] == 'N' || value[0] == 'n') { result = false; return true; }
-                if (value[0] == '1') { result = true; return true; }
-                if (value[0] == '0') { result = false; return true; }
+                if (value.Length == 1)
+                {
+                    if (value[0] == 'Y' || value[0] == 'y') { result = true; return true; }
+                    if (value[0] == 'N' || value[0] == 'n') { result = false; return true; }
+                    if (value[0] == '1') { result = true; return true; }
+                    if (value[0] == '0') { result = false; return true; }
+                }
+                else
+                {
+                    if (String.Compare(value, "true", true) == 0) { result = true; return true; }
+                    if (String.Compare(value, "false", true) == 0) { result = false; return true; }
+                    if (String.Compare(value, "yes", true) == 0) { result = true; return true; }
+                    if (String.Compare(value, "no", true) == 0) { result = false; return true; }
+                }
             }
-            else
+            else if (ChoTypeConverterFormatSpec.Instance.BooleanFormat == ChoBooleanFormatSpec.TOrF)
+            {
+                if (value.Length == 1)
+                {
+                    if (value[0] == 'T' || value[0] == 't') { result = true; return true; }
+                    if (value[0] == 'F' || value[0] == 'f') { result = false; return true; }
+                }
+            }
+            else if (ChoTypeConverterFormatSpec.Instance.BooleanFormat == ChoBooleanFormatSpec.YOrN)
+            {
+                if (value.Length == 1)
+                {
+                    if (value[0] == 'Y' || value[0] == 'y') { result = true; return true; }
+                    if (value[0] == 'N' || value[0] == 'n') { result = false; return true; }
+                }
+            }
+            else if (ChoTypeConverterFormatSpec.Instance.BooleanFormat == ChoBooleanFormatSpec.ZeroOrOne)
+            {
+                if (value.Length == 1)
+                {
+                    if (value[0] == '1') { result = true; return true; }
+                    if (value[0] == '0') { result = false; return true; }
+                }
+            }
+            else if (ChoTypeConverterFormatSpec.Instance.BooleanFormat == ChoBooleanFormatSpec.TrueOrFalse)
             {
                 if (String.Compare(value, "true", true) == 0) { result = true; return true; }
                 if (String.Compare(value, "false", true) == 0) { result = false; return true; }
+            }
+            else if (ChoTypeConverterFormatSpec.Instance.BooleanFormat == ChoBooleanFormatSpec.YesOrNo)
+            {
                 if (String.Compare(value, "yes", true) == 0) { result = true; return true; }
                 if (String.Compare(value, "no", true) == 0) { result = false; return true; }
             }
