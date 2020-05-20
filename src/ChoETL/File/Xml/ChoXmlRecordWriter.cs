@@ -29,7 +29,7 @@ namespace ChoETL
         private Lazy<XmlSerializer> _se = null;
         private readonly Regex _beginNSTagRegex = new Regex(@"^(<\w+\:\w+)(.*)", RegexOptions.Compiled | RegexOptions.Multiline);
         private readonly Regex _beginTagRegex = new Regex(@"^(<\w+)(.*)", RegexOptions.Compiled | RegexOptions.Multiline);
-        private readonly Regex _endTagRegex = new Regex("</.*>$");
+        private readonly Regex _endTagRegex = new Regex("(.*)(</.*>)$", RegexOptions.Compiled | RegexOptions.Multiline);
         internal ChoWriter Writer = null;
         internal Type ElementType = null;
         private Lazy<List<object>> _recBuffer = null;
@@ -88,7 +88,7 @@ namespace ChoETL
                 {
                     if (!Configuration.RootName.IsNullOrWhiteSpace() && !Configuration.IgnoreRootName)
                     {
-                        sw.Write("{1}{0}".FormatString(XmlNamespaceEndElementText(Configuration.XmlNamespaceManager.Value, Configuration.RootName, Configuration.DefaultNamespacePrefix, Configuration.NS), Configuration.EOLDelimiter));
+                        sw.Write("{1}{0}".FormatString(XmlNamespaceEndElementText(Configuration.XmlNamespaceManager.Value, Configuration.RootName, Configuration.DefaultNamespacePrefix, Configuration.NS), EOLDelimiter));
                     }
                 }
             }
@@ -147,7 +147,7 @@ namespace ChoETL
 
             string recText = String.Empty;
             if (!Configuration.OmitXmlDeclaration)
-                sw.Write("{0}{1}", GetXmlDeclaration(), Configuration.EOLDelimiter);
+                sw.Write("{0}{1}", GetXmlDeclaration(), EOLDelimiter);
 
             try
             {
@@ -257,7 +257,7 @@ namespace ChoETL
                                     {
                                         if (!Configuration.IgnoreRootName)
                                         {
-                                            sw.Write("{1}{0}", recText, Configuration.EOLDelimiter);
+                                            sw.Write("{1}{0}", recText, EOLDelimiter);
                                         }
                                         else
                                         {
@@ -280,7 +280,7 @@ namespace ChoETL
                                     {
                                         XmlWriterSettings settings = new XmlWriterSettings();
                                         settings.OmitXmlDeclaration = true;
-                                        settings.Indent = true;
+                                        settings.Indent = Configuration.Formatting == Formatting.Indented;
                                         settings.NamespaceHandling = NamespaceHandling.OmitDuplicates;
 
                                         StringBuilder xml = new StringBuilder();
@@ -289,11 +289,11 @@ namespace ChoETL
                                             _se.Value.Serialize(xw, record);
                                         }
 
-                                        sw.Write(Configuration.EOLDelimiter);
-                                        sw.Write(xml.ToString().RemoveXmlNamespaces().Indent(2, Configuration.IndentChar.ToString()));
+                                        sw.Write(EOLDelimiter);
+                                        sw.Write(Indent(xml.ToString().RemoveXmlNamespaces()));
                                     }
                                     else
-                                        sw.Write("{1}{0}", ChoUtility.XmlSerialize(record, null, Configuration.EOLDelimiter, Configuration.NullValueHandling).RemoveXmlNamespaces().Indent(2, Configuration.IndentChar.ToString()), Configuration.EOLDelimiter);
+                                        sw.Write("{1}{0}", Indent(ChoUtility.XmlSerialize(record, null, EOLDelimiter, Configuration.NullValueHandling).RemoveXmlNamespaces()), EOLDelimiter);
 
                                     if (!RaiseAfterRecordWrite(record, _index, null))
                                         yield break;
@@ -340,6 +340,30 @@ namespace ChoETL
             finally
             {
                 System.Threading.Thread.CurrentThread.CurrentCulture = prevCultureInfo;
+            }
+        }
+
+        private string Indent(string value, int indentValue = 2)
+        {
+            if (value == null)
+                return value;
+
+            return Configuration.Formatting == Formatting.Indented ? value.Indent(indentValue, Configuration.IndentChar.ToString()) : value;
+        }
+
+        private string Unindent(string value, int indentValue = 2)
+        {
+            if (value == null)
+                return value;
+
+            return Configuration.Formatting == Formatting.Indented ? value.Unindent(indentValue, Configuration.IndentChar.ToString()) : value;
+        }
+
+        private string EOLDelimiter
+        {
+            get
+            {
+                return Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty;
             }
         }
 
@@ -403,13 +427,13 @@ namespace ChoETL
                     rec = ChoActivator.CreateInstance(config.RecordType);
                 else if (config.NullValueHandling == ChoNullValueHandling.Empty)
                 {
-                    recText = @"<{0}/>".FormatString(XmlNamespaceElementName(GetNodeName(index, rec), Configuration.DefaultNamespacePrefix)).Indent(config.Indent * 1, config.IndentChar.ToString());
+                    recText = Indent(@"<{0}/>".FormatString(XmlNamespaceElementName(GetNodeName(index, rec), Configuration.DefaultNamespacePrefix)), config.Indent * 1);
                     return true;
                 }
                 else
                 {
-                    recText = @"<{0} xmlns:xsi=""{1}"" xsi:nil=""true"" />".FormatString(XmlNamespaceElementName(GetNodeName(index, rec), Configuration.DefaultNamespacePrefix), ChoXmlSettings.XmlSchemaInstanceNamespace
-                                ).Indent(config.Indent * 1, config.IndentChar.ToString());
+                    recText = Indent(@"<{0} xmlns:xsi=""{1}"" xsi:nil=""true"" />".FormatString(XmlNamespaceElementName(GetNodeName(index, rec), Configuration.DefaultNamespacePrefix), ChoXmlSettings.XmlSchemaInstanceNamespace
+                                ), config.Indent * 1);
                     return true;
                 }
             }
@@ -594,14 +618,14 @@ namespace ChoETL
                 if (fieldConfig.CustomSerializer != null)
                 {
                     recText = fieldConfig.CustomSerializer(fieldValue) as string;
-                    recText = recText.Indent(2, Configuration.IndentChar.ToString());
+                    recText = Indent(recText);
                     return true;
                 }
 
                 if (RaiseRecordFieldSerialize(rec, index, kvp.Key, ref fieldValue) && fieldValue is string)
                 {
                     recText = fieldValue as string;
-                    recText = recText.Indent(2, Configuration.IndentChar.ToString());
+                    recText = Indent(recText);
                     return true;
                 }
 
@@ -690,7 +714,7 @@ namespace ChoETL
                         else if (config.NullValueHandling == ChoNullValueHandling.Default)
                         {
                             rec = ChoActivator.CreateInstance(config.RecordType);
-                            innerXml = ChoUtility.XmlSerialize(rec, null, Configuration.EOLDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix);
+                            innerXml = ChoUtility.XmlSerialize(rec, null, EOLDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix);
                             if (_beginNSTagRegex.Match(innerXml1).Success)
                             {
                                 innerXml = _beginNSTagRegex.Replace(innerXml, delegate (Match m)
@@ -748,7 +772,7 @@ namespace ChoETL
                     }
                     else
                     {
-                        innerXml1 = ChoUtility.XmlSerialize(kvp.Value, null, Configuration.EOLDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix, Configuration.EmitDataType);
+                        innerXml1 = ChoUtility.XmlSerialize(kvp.Value, null, EOLDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix, Configuration.EmitDataType);
 
                         if (!kvp.Value.GetType().IsArray && !typeof(IList).IsAssignableFrom(kvp.Value.GetType()))
                         {
@@ -766,9 +790,9 @@ namespace ChoETL
                                     return "<" + XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
                                 });
                             }
-                            innerXml1 = _endTagRegex.Replace(innerXml1, delegate (Match thisMatch)
+                            innerXml1 = _endTagRegex.Replace(innerXml1, delegate (Match m)
                             {
-                                return "</{0}>".FormatString(XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix));
+                                return m.Groups[1].Value + "</{0}>".FormatString(XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix));
                             });
                         }
                         else
@@ -782,7 +806,8 @@ namespace ChoETL
                             else
                                 innerXml1 = "<{0}>{1}</{0}>".FormatString(XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix), innerXml1);
                         }
-                        ele.Add(new XText(Environment.NewLine));
+                        if (EOLDelimiter != null)
+                            ele.Add(new XText(EOLDelimiter));
                         ele.Add(ParseElement(innerXml1, Configuration.NamespaceManager, Configuration.DefaultNamespacePrefix, ns));
                     }
                 }
@@ -818,14 +843,16 @@ namespace ChoETL
                 //catch { }
             }
             else
-                innerXml1 = ele.ToString(SaveOptions.OmitDuplicateNamespaces);
+                innerXml1 = config.Formatting == Formatting.Indented ? ele.ToString(SaveOptions.OmitDuplicateNamespaces) : ele.ToString(SaveOptions.OmitDuplicateNamespaces | SaveOptions.DisableFormatting);
 
             innerXml1 = Regex.Replace(innerXml1, @"^\s*$\n", "", RegexOptions.Multiline).TrimEnd();
 
-            if (!config.TurnOffXmlFormatting)
-                innerXml1 = FormatXml(innerXml1);
-                innerXml1 = FormatXml(innerXml1);
-            recText = config.IgnoreRootName ? innerXml1 : innerXml1.Indent(config.Indent, config.IndentChar.ToString());
+            if (config.Formatting == Formatting.Indented)
+            {
+                if (!config.TurnOffXmlFormatting)
+                    innerXml1 = FormatXml(innerXml1);
+            }
+            recText = config.IgnoreRootName ? innerXml1 : Indent(innerXml1, config.Indent);
 
             //Remove namespaces
             recText = recText.RemoveXmlNamespaces(); // Regex.Replace(recText, @"\sxmlns[^""]+""[^""]+""", String.Empty);
@@ -997,6 +1024,17 @@ namespace ChoETL
             }
             catch
             {
+                try
+                {
+                    return XElement.Parse($"<root>{xml}</root>").ToString(SaveOptions.OmitDuplicateNamespaces)
+                        .Replace($"<root>{Environment.NewLine}", null).Replace($"{Environment.NewLine}</root>", null)
+                        .Replace($"<root>", null).Replace($"</root>", null)
+                        .Unindent(2, " ");
+                }
+                catch
+                {
+
+                }
                 return xml;
             }
             // Format the XML text.
@@ -1037,7 +1075,7 @@ namespace ChoETL
                 {
                     if (itemType.IsSimple())
                     {
-                        recText = "<{0}>{1}</{0}>{2}".FormatString(itemName, item.ToString(), config.EOLDelimiter).Indent(config.Indent, config.IndentChar.ToString());
+                        recText = Indent("<{0}>{1}</{0}>{2}".FormatString(itemName, item.ToString(), config.EOLDelimiter), config.Indent);
                     }
                     else
                         ToText(0, item, config, out recText);
@@ -1078,12 +1116,12 @@ namespace ChoETL
                 {
                     if (keyType.IsSimple())
                     {
-                        recText = "<{0}>{1}</{0}>{2}".FormatString(keyElementName, key.ToString(), config.EOLDelimiter).Indent(config.Indent, config.IndentChar.ToString());
+                        recText = Indent("<{0}>{1}</{0}>{2}".FormatString(keyElementName, key.ToString(), config.EOLDelimiter), config.Indent);
                     }
                     else
                     {
                         ToText(0, key, config, out recText);
-                        recText = "<{1}>{0}{2}{0}</{1}>".FormatString(config.EOLDelimiter, keyElementName, recText).Indent(config.Indent, config.IndentChar.ToString());
+                        recText = Indent("<{1}>{0}{2}{0}</{1}>".FormatString(config.EOLDelimiter, keyElementName, recText), config.Indent);
                     }
 
                     msg.Append(recText + config.EOLDelimiter);
@@ -1091,12 +1129,12 @@ namespace ChoETL
                     object dictValue = ((IDictionary)value)[key];
                     if (valueType.IsSimple())
                     {
-                        recText = "<{0}>{1}</{0}>{2}".FormatString(valueElementName, dictValue.ToString(), config.EOLDelimiter).Indent(config.Indent, config.IndentChar.ToString());
+                        recText = Indent("<{0}>{1}</{0}>{2}".FormatString(valueElementName, dictValue.ToString(), config.EOLDelimiter), config.Indent);
                     }
                     else
                     {
                         ToText(0, dictValue, config, out recText);
-                        recText = "<{1}>{0}{2}{0}</{1}>".FormatString(config.EOLDelimiter, valueElementName, recText).Indent(config.Indent, config.IndentChar.ToString());
+                        recText = Indent("<{1}>{0}{2}{0}</{1}>".FormatString(config.EOLDelimiter, valueElementName, recText), config.Indent);
                     }
                     msg.Append(recText + config.EOLDelimiter);
                 }
@@ -1113,7 +1151,7 @@ namespace ChoETL
                 ToText(0, value, config, out recText);
             }
             if (config != null)
-                return recText.Unindent(config.Indent, config.IndentChar.ToString());
+                return Unindent(recText, config.Indent);
             else
                 return recText;
         }
@@ -1175,7 +1213,7 @@ namespace ChoETL
                 }
                 else
                 {
-                    if (fieldValue.Contains(Configuration.EOLDelimiter))
+                    if (!EOLDelimiter.IsNullOrEmpty() && fieldValue.Contains(EOLDelimiter))
                     {
                         if (isHeader)
                             throw new ChoParserException("Field header '{0}' value contains EOL delimiter character.".FormatString(fieldName));

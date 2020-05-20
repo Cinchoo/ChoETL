@@ -1014,7 +1014,7 @@ namespace ChoETL
                 }
                 else
                 {
-                    if (!EOLDelimiter.IsNullOrWhiteSpace() && fieldValue.Contains(EOLDelimiter))
+                    if (!EOLDelimiter.IsNullOrEmpty() && fieldValue.Contains(EOLDelimiter))
                     {
                         if (isHeader)
                             throw new ChoParserException("Field header '{0}' value contains EOL delimiter character.".FormatString(fieldName));

@@ -1073,8 +1073,11 @@ namespace ChoETL
         }
 
         public string GetXml(string tag = null, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Empty, string nsPrefix = null,
-            bool emitDataType = false)
+            bool emitDataType = false, string EOLDelimiter = null)
         {
+            if (EOLDelimiter == null)
+                EOLDelimiter = Environment.NewLine;
+
             if (nsPrefix.IsNullOrWhiteSpace())
                 nsPrefix = String.Empty;
 
@@ -1094,8 +1097,8 @@ namespace ChoETL
                 if (hasAttrs)
                 {
                     msg.AppendFormat(">");
-                    msg.AppendFormat("{0}{1}", Environment.NewLine, this[ValueToken].ToNString().Indent(1, "  "));
-                    msg.AppendFormat("{0}</{1}>", Environment.NewLine, tag);
+                    msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(this[ValueToken].ToNString(), EOLDelimiter));
+                    msg.AppendFormat("{0}</{1}>", EOLDelimiter, tag);
                 }
                 else
                 {
@@ -1120,9 +1123,9 @@ namespace ChoETL
                     value = this[key];
                     var x = IsCDATA(key);
 
-                    GetXml(msg, value, key, nullValueHandling, nsPrefix, IsCDATA(key), emitDataType);
+                    GetXml(msg, value, key, nullValueHandling, nsPrefix, IsCDATA(key), emitDataType, EOLDelimiter: EOLDelimiter);
                 }
-                msg.AppendFormat("{0}</{1}>", Environment.NewLine, tag);
+                msg.AppendFormat("{0}</{1}>", EOLDelimiter, tag);
             }
             //else if (_list != null && _list.Count > 0)
             //{
@@ -1132,7 +1135,7 @@ namespace ChoETL
             //		if (obj == null) continue;
             //		GetXml(msg, obj, tag.ToSingular());
             //	}
-            //	msg.AppendFormat("{0}</{1}>", Environment.NewLine, tag);
+            //	msg.AppendFormat("{0}</{1}>", EOLDelimiter, tag);
             //}
             else
             {
@@ -1142,11 +1145,26 @@ namespace ChoETL
             return msg.ToString();
         }
 
-        private void GetXml(StringBuilder msg, object value, string key, ChoNullValueHandling nullValueHandling, string nsPrefix = null, bool isCDATA = false, bool emitDataType = false)
+        private string Indent(string value, string delimiter, int indentValue = 1)
         {
+            if (value == null)
+                return value;
+
+            if (delimiter.IsNullOrEmpty())
+                return value;
+
+            return value.Indent(indentValue, "  ");
+        }
+
+        private void GetXml(StringBuilder msg, object value, string key, ChoNullValueHandling nullValueHandling, string nsPrefix = null, 
+            bool isCDATA = false, bool emitDataType = false, string EOLDelimiter = null)
+        {
+            if (EOLDelimiter == null)
+                EOLDelimiter = Environment.NewLine;
+
             if (value is ChoDynamicObject)
             {
-                msg.AppendFormat("{0}{1}", Environment.NewLine, ((ChoDynamicObject)value).GetXml(((ChoDynamicObject)value).NName, nullValueHandling, nsPrefix).Indent(1, "  "));
+                msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(((ChoDynamicObject)value).GetXml(((ChoDynamicObject)value).NName, nullValueHandling, nsPrefix, EOLDelimiter: EOLDelimiter), EOLDelimiter));
             }
             else
             {
@@ -1156,25 +1174,25 @@ namespace ChoETL
                     {
                         if (isCDATA)
                         {
-                            msg.AppendFormat("{0}{1}", Environment.NewLine, "<{0}><![CDATA[{1}]]></{0}>".FormatString(key, value).Indent(1, "  "));
+                            msg.AppendFormat("{0}{1}", EOLDelimiter, Indent("<{0}><![CDATA[{1}]]></{0}>".FormatString(key, value), EOLDelimiter));
                         }
                         else
-                            msg.AppendFormat("{0}{1}", Environment.NewLine, "<{0}>{1}</{0}>".FormatString(key, value).Indent(1, "  "));
+                            msg.AppendFormat("{0}{1}", EOLDelimiter, Indent("<{0}>{1}</{0}>".FormatString(key, value), EOLDelimiter));
                     }
                     else
                     {
                         key = value is IList ? key.ToPlural() != key ? key.ToPlural() : key.Length > 1 && key.EndsWith("s", StringComparison.InvariantCultureIgnoreCase) ? key : "{0}s".FormatString(key) : key;
-                        msg.AppendFormat("{0}{1}", Environment.NewLine, "<{0}>".FormatString(key).Indent(1, "  "));
+                        msg.AppendFormat("{0}{1}", EOLDelimiter, Indent("<{0}>".FormatString(key), EOLDelimiter));
                         if (value is IList)
                         {
                             foreach (var collValue in ((IList)value).OfType<ChoDynamicObject>())
                             {
-                                msg.AppendFormat("{0}{1}", Environment.NewLine, collValue.GetXml(collValue.NName == DefaultName ? key.ToSingular() : collValue.NName, nullValueHandling, nsPrefix).Indent(2, "  "));
+                                msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(collValue.GetXml(collValue.NName == DefaultName ? key.ToSingular() : collValue.NName, nullValueHandling, nsPrefix, EOLDelimiter: EOLDelimiter), EOLDelimiter));
                             }
                         }
                         else
-                            msg.AppendFormat("{0}{1}", Environment.NewLine, ChoUtility.XmlSerialize(value).Indent(2, "  "));
-                        msg.AppendFormat("{0}{1}", Environment.NewLine, "</{0}>".FormatString(key).Indent(1, "  "));
+                            msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(ChoUtility.XmlSerialize(value), EOLDelimiter, 2));
+                        msg.AppendFormat("{0}{1}", EOLDelimiter, Indent("</{0}>".FormatString(key), EOLDelimiter));
                     }
                 }
                 else
@@ -1182,12 +1200,12 @@ namespace ChoETL
                     switch (nullValueHandling)
                     {
                         case ChoNullValueHandling.Empty:
-                            msg.AppendFormat("{0}{1}", Environment.NewLine, @"<{0}/>".FormatString(key).Indent(1, "  "));
+                            msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(@"<{0}/>".FormatString(key), EOLDelimiter));
                             break;
                         case ChoNullValueHandling.Ignore:
                             break;
                         default:
-                            msg.AppendFormat("{0}{1}", Environment.NewLine, @"<{0} xsi:nil=""true"" xmlns:xsi=""{1}""/>".FormatString(key, ChoXmlSettings.XmlSchemaInstanceNamespace).Indent(1, "  "));
+                            msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(@"<{0} xsi:nil=""true"" xmlns:xsi=""{1}""/>".FormatString(key, ChoXmlSettings.XmlSchemaInstanceNamespace), EOLDelimiter));
                             break;
                     }
                 }

@@ -1163,6 +1163,17 @@ namespace ChoETL
         public static string XmlSerialize(object target, XmlWriterSettings xws = null, string separator = null, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore,
             string nsPrefix = null, bool emitDataType = false)
         {
+            if (xws == null)
+            {
+                if (separator.IsNullOrEmpty())
+                {
+                    xws = new XmlWriterSettings();
+                    xws.OmitXmlDeclaration = true;
+                    xws.Indent = false;
+                    xws.NamespaceHandling = NamespaceHandling.OmitDuplicates;
+                }
+            }
+
             //ChoGuard.ArgumentNotNull(target, "Target");
             if (target == null)
                 return null;
@@ -1185,7 +1196,7 @@ namespace ChoETL
             {
                 if (target is ChoDynamicObject)
                 {
-                    xtw.WriteRaw(((ChoDynamicObject)target).GetXml(null, nullValueHandling, nsPrefix, emitDataType));
+                    xtw.WriteRaw(((ChoDynamicObject)target).GetXml(null, nullValueHandling, nsPrefix, emitDataType, EOLDelimiter: separator));
                 }
                 else
                 {

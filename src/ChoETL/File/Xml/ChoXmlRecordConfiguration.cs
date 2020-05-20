@@ -78,6 +78,12 @@ namespace ChoETL
             get;
             set;
         }
+        [DataMember]
+        public System.Xml.Formatting Formatting
+        {
+            get;
+            set;
+        }
         public XmlSerializer XmlSerializer
         {
             get;
@@ -225,6 +231,7 @@ namespace ChoETL
 
             XmlRecordFieldConfigurations = new List<ChoXmlRecordFieldConfiguration>();
 
+            Formatting = Formatting.Indented;
             XmlVersion = "1.0";
             OmitXmlDeclaration = true;
             Indent = 2;
