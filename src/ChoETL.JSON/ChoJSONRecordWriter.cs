@@ -87,16 +87,16 @@ namespace ChoETL
                     if (!SupportMultipleContent)
                     {
                         if (Configuration.IgnoreRootName || Configuration.RootName.IsNullOrWhiteSpace())
-                            sw.Write(String.Format("{0}]", Configuration.EOLDelimiter));
+                            sw.Write(String.Format("{0}]", EOLDelimiter));
                         else
                         {
-                            sw.Write(String.Format("{0}]}}", Configuration.EOLDelimiter));
+                            sw.Write(String.Format("{0}]}}", EOLDelimiter));
                         }
                     }
                     else
                     {
                         if (!Configuration.SingleElement.Value)
-                            sw.Write(String.Format("{0}}}", Configuration.EOLDelimiter));
+                            sw.Write(String.Format("{0}}}", EOLDelimiter));
                     }
                 }
             }
@@ -230,7 +230,7 @@ namespace ChoETL
                             else
                             {
                                 if (!Configuration.SingleElement.Value)
-                                    sw.Write(String.Format("{{{0}", Configuration.EOLDelimiter));
+                                    sw.Write(String.Format("{{{0}", EOLDelimiter));
                             }
                         }
 
@@ -252,19 +252,19 @@ namespace ChoETL
                                     if (!recText.IsNullOrEmpty())
                                     {
                                         if (!SupportMultipleContent)
-                                            sw.Write("{1}{0}", Configuration.Formatting == Formatting.Indented ? recText.Indent(1, " ") : recText, Configuration.EOLDelimiter);
+                                            sw.Write("{1}{0}", Indent(recText), EOLDelimiter);
                                         else
                                         {
                                             if (Configuration.SingleElement.Value)
                                             {
-                                                sw.Write(recText.Unindent(1, " "));
+                                                sw.Write(Unindent(recText));
                                             }
                                             else
                                             {
                                                 if (_index == 1)
-                                                    sw.Write("{0}", recText.Indent(1, " "));
+                                                    sw.Write("{0}", Indent(recText));
                                                 else
-                                                    sw.Write("{1}{0}", recText.Indent(1, " "), Configuration.EOLDelimiter);
+                                                    sw.Write("{1}{0}", Indent(recText), EOLDelimiter);
                                             }
                                         }
 
@@ -280,19 +280,19 @@ namespace ChoETL
 
                                 recText = JsonConvert.SerializeObject(record, Configuration.Formatting, Configuration.JsonSerializerSettings);
                                 if (!SupportMultipleContent)
-                                    sw.Write("{1}{0}", Configuration.Formatting == Formatting.Indented ? recText.Indent(1, " ") : recText, Configuration.EOLDelimiter);
+                                    sw.Write("{1}{0}", Indent(recText), EOLDelimiter);
                                 else
                                 {
                                     if (Configuration.SingleElement.Value)
                                     {
-                                        sw.Write(recText.Unindent(1, " "));
+                                        sw.Write(Unindent(recText));
                                     }
                                     else
                                     {
                                         if (_index == 1)
-                                            sw.Write("{0}", recText.Indent(1, " "));
+                                            sw.Write("{0}", Indent(recText));
                                         else
-                                            sw.Write("{1}{0}", recText.Indent(1, " "), Configuration.EOLDelimiter);
+                                            sw.Write("{1}{0}", Indent(recText), EOLDelimiter);
                                     }
                                 }
 
@@ -374,7 +374,7 @@ namespace ChoETL
                     rec = ChoActivator.CreateInstance(Configuration.RecordType);
                 else
                 {
-                    recText = "{{{0}}}".FormatString(Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
+                    recText = "{{{0}}}".FormatString(EOLDelimiter);
                     return true;
                 }
             }
@@ -403,15 +403,15 @@ namespace ChoETL
                 if (Configuration.NodeName.IsNullOrWhiteSpace())
                 {
                     if (Configuration.IsDynamicObject && rec is ChoDynamicObject && ((ChoDynamicObject)rec).DynamicObjectName != ChoDynamicObject.DefaultName)
-                        msg.AppendFormat(@"""{1}"": {{{0}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, ((ChoDynamicObject)rec).DynamicObjectName);
+                        msg.AppendFormat(@"""{1}"": {{{0}", EOLDelimiter, ((ChoDynamicObject)rec).DynamicObjectName);
                     else
-                        msg.AppendFormat("{{{0}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
+                        msg.AppendFormat("{{{0}", EOLDelimiter);
                 }
                 else
-                    msg.AppendFormat(@"""{1}"": {{{0}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, Configuration.NodeName);
+                    msg.AppendFormat(@"""{1}"": {{{0}", EOLDelimiter, Configuration.NodeName);
             }
             else
-                msg.AppendFormat("{{{0}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
+                msg.AppendFormat("{{{0}", EOLDelimiter);
 
             foreach (KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
@@ -643,23 +643,47 @@ namespace ChoETL
                         if (isFirst)
                         {
                             msg.AppendFormat("{2}\"{0}\":{1}", fieldName, isSimple ? " {0}".FormatString(fieldText) :
-                                Configuration.Formatting == Formatting.Indented ? SerializeObject(fieldValue, fieldConfig.UseJSONSerialization).Indent(1, " ") : SerializeObject(fieldValue, fieldConfig.UseJSONSerialization),
+                                Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization)),
                                 Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
                         }
                         else
                         {
                             msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldName, isSimple ? " {0}".FormatString(fieldText) :
-                                Configuration.Formatting == Formatting.Indented ? SerializeObject(fieldValue, fieldConfig.UseJSONSerialization).Indent(1, " ") : SerializeObject(fieldValue, fieldConfig.UseJSONSerialization),
-                                Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty, Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
+                                Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization)),
+                                EOLDelimiter, Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
                         }
                         isFirst = false;
                     }
                 }
             }
-            msg.AppendFormat("{0}}}", Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty);
-            recText = Configuration.IgnoreNodeName ? msg.ToString().Unindent(1, " ") : msg.ToString();
+            msg.AppendFormat("{0}}}", EOLDelimiter);
+            recText = Configuration.IgnoreNodeName ? Unindent(msg.ToString()) : msg.ToString();
 
             return true;
+        }
+
+        private string Indent(string value)
+        {
+            if (value == null)
+                return value;
+
+            return Configuration.Formatting == Formatting.Indented ? value.Indent(1, " ") : value;
+        }
+
+        private string Unindent(string value)
+        {
+            if (value == null)
+                return value;
+
+            return Configuration.Formatting == Formatting.Indented ? value.Unindent(1, " ") : value;
+        }
+
+        private string EOLDelimiter
+        {
+            get
+            {
+                return Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty;
+            }
         }
 
         private string SerializeObject(object target, bool? useJSONSerialization = null)
@@ -685,7 +709,7 @@ namespace ChoETL
                             if (first)
                                 first = false;
                             else
-                                msg.Append($",{Environment.NewLine}");
+                                msg.Append($",{EOLDelimiter}");
 
                             if (item == null)
                             {
@@ -705,7 +729,7 @@ namespace ChoETL
                             }
                         }
 
-                        return "[{0}{1}{0}]".FormatString(Environment.NewLine, msg.ToString().Indent(1, " "));
+                        return "[{0}{1}{0}]".FormatString(EOLDelimiter, Indent(msg.ToString()));
                     }
                     else
                         return JsonConvert.SerializeObject(target /*MapToDictionary(target)*/, Configuration.Formatting, Configuration.JsonSerializerSettings);
@@ -990,7 +1014,7 @@ namespace ChoETL
                 }
                 else
                 {
-                    if (fieldValue.Contains(Configuration.EOLDelimiter))
+                    if (!EOLDelimiter.IsNullOrWhiteSpace() && fieldValue.Contains(EOLDelimiter))
                     {
                         if (isHeader)
                             throw new ChoParserException("Field header '{0}' value contains EOL delimiter character.".FormatString(fieldName));

@@ -201,6 +201,7 @@ public class ToTextConverter : IChoValueConverter
 
             Console.WriteLine(jsonOut.ToString());
         }
+
         public static void CSVWithSpaceHeader2JSON()
         {
             string csv = @"Id, First Name
@@ -224,9 +225,34 @@ public class ToTextConverter : IChoValueConverter
             Console.WriteLine(json.ToString());
         }
 
+        public static void CSV2JSONNoIndentation()
+        {
+            string csv = @"Id, First Name
+1, Tom
+2, Mark";
+
+            StringBuilder json = new StringBuilder();
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .WithMaxScanRows(2)
+                )
+            {
+                using (var w = new ChoJSONWriter(json)
+                    .Configure(c => c.Formatting = Formatting.None)
+                    .SupportMultipleContent()
+                    .SingleElement()
+                    )
+                {
+                    w.Write(r.Take(2));
+                }
+            }
+
+            Console.WriteLine(json.ToString());
+        }
+
         static void Main(string[] args)
         {
-            CSVWithSpaceHeader2JSON();
+            CSV2JSONNoIndentation();
             return;
 
             TimespanTest();
