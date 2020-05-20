@@ -592,6 +592,9 @@ namespace ChoETL
             for (int index = 0; index < totalWidth; index++)
                 tabs = tabs + paddingChar;
 
+            if (text == String.Empty)
+                return tabs;
+
             string pattern = String.Format(@".*[{0}]*", Environment.NewLine);
 
             StringBuilder formattedtext = new StringBuilder();

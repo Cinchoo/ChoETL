@@ -18,18 +18,34 @@ using DescriptionAttribute = System.ComponentModel.DescriptionAttribute;
 
 namespace ChoJSONWriterTest
 {
-public class ToTextConverter : IChoValueConverter
-{
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    public class ToTextConverter : IChoValueConverter
     {
-        return value;
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value.ToNString();
+        }
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    public class Emp
     {
-        return value.ToNString();
+        public int Id { get; set; }
+        public string Name { get; set; }
     }
-}
+
+    public class Choice
+    {
+        public string[] Options { get; set; }
+        public Emp Emp { get; set; }
+        public List<int> Ids { get; set; }
+        public Emp[] EmpArr { get; set; }
+        //public Dictionary<int, Emp> EmpDict { get; set; }
+    }
+
 
     public class SomeOuterObject
     {
@@ -238,9 +254,9 @@ public class ToTextConverter : IChoValueConverter
                 )
             {
                 using (var w = new ChoJSONWriter(json)
-                    .Configure(c => c.Formatting = Formatting.None)
-                    .SupportMultipleContent()
-                    .SingleElement()
+                    //.Configure(c => c.Formatting = Formatting.None)
+                    //.SupportMultipleContent()
+                    //.SingleElement()
                     )
                 {
                     w.Write(r.Take(2));
@@ -250,9 +266,43 @@ public class ToTextConverter : IChoValueConverter
             Console.WriteLine(json.ToString());
         }
 
+        static void ComplexObjSerializationTest()
+        {
+            var sb = new StringBuilder();
+            using (var p = new ChoJSONWriter<Choice>(sb)
+                .WithField("Options", valueConverter: o => String.Join(",", o as string[]))
+                .Formatting()
+                )
+            {
+                List<Choice> l = new List<Choice>
+                {
+                    new Choice
+                {
+                    Options = new[] { "op 1", "op 2" },
+                    EmpArr = new Emp[] { new Emp { Id = 1, Name = "Tom" }, new Emp { Id = 2, Name = "Mark" }, null },
+                    Emp = new Emp {  Id = 0, Name = "Raj"},
+                    //EmpDict = new Dictionary<int, Emp> { { 1, new Emp { Id = 11, Name = "Tom1" } } },
+                    Ids = new List<int> { 1, 2, 3}
+                },
+                    new Choice
+                {
+                    Options = new[] { "op 1", "op 2" },
+                    EmpArr = new Emp[] { new Emp { Id = 1, Name = "Tom" }, new Emp { Id = 2, Name = "Mark" }, null },
+                    Emp = new Emp {  Id = 0, Name = "Raj"},
+                    //EmpDict = new Dictionary<int, Emp> { { 1, new Emp { Id = 11, Name = "Tom1" } } },
+                    Ids = new List<int> { 1, 2, 3}
+                }
+                };
+                p.Write(l);
+            }
+
+            Console.WriteLine(sb.ToString());
+
+        }
         static void Main(string[] args)
         {
-            CSV2JSONNoIndentation();
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
+            ComplexObjSerializationTest();
             return;
 
             TimespanTest();
@@ -1228,7 +1278,7 @@ public class ToTextConverter : IChoValueConverter
                 )
             {
                 actual = jr.ToList();
-                
+
                 /*
                 foreach (var item in jr)
                 {
@@ -1425,7 +1475,7 @@ public class ToTextConverter : IChoValueConverter
             dynamic rec1 = new ExpandoObject();
             rec1.Id = 1;
             rec1.Name = "Mark";
-            rec1.Date = new DateTime(2019,12,3,17,34,23, 421,DateTimeKind.Utc);
+            rec1.Date = new DateTime(2019, 12, 3, 17, 34, 23, 421, DateTimeKind.Utc);
             rec1.Active = true;
             rec1.Salary = new ChoCurrency(10.01);
             rec1.EmpType = EmpType.FullTime;
@@ -1448,7 +1498,7 @@ public class ToTextConverter : IChoValueConverter
 
             using (var w = new ChoJSONWriter(FileNameDynamicTestActualJSON)
                 .Configure(c => c.ThrowAndStopOnMissingField = false)
-                .Configure( c => c.NullValueHandling = ChoNullValueHandling.Empty)
+                .Configure(c => c.NullValueHandling = ChoNullValueHandling.Empty)
                 )
             {
                 w.Write(objs);

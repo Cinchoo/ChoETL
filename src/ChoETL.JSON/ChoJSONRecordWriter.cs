@@ -643,14 +643,14 @@ namespace ChoETL
                         if (isFirst)
                         {
                             msg.AppendFormat("{2}\"{0}\":{1}", fieldName, isSimple ? " {0}".FormatString(fieldText) :
-                                Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization)),
-                                Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
+                                Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization)).Substring(1),
+                                Indent(String.Empty));
                         }
                         else
                         {
                             msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldName, isSimple ? " {0}".FormatString(fieldText) :
-                                Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization)),
-                                EOLDelimiter, Configuration.Formatting == Formatting.Indented ? " " : String.Empty);
+                                Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization)).Substring(1),
+                                EOLDelimiter, Indent(String.Empty));
                         }
                         isFirst = false;
                     }
@@ -662,12 +662,12 @@ namespace ChoETL
             return true;
         }
 
-        private string Indent(string value)
+        private string Indent(string value, int indentValue = 1)
         {
             if (value == null)
                 return value;
 
-            return Configuration.Formatting == Formatting.Indented ? value.Indent(1, " ") : value;
+            return Configuration.Formatting == Formatting.Indented ? value.Indent(indentValue, "  ") : value;
         }
 
         private string Unindent(string value)
@@ -675,7 +675,7 @@ namespace ChoETL
             if (value == null)
                 return value;
 
-            return Configuration.Formatting == Formatting.Indented ? value.Unindent(1, " ") : value;
+            return Configuration.Formatting == Formatting.Indented ? value.Unindent(1, "  ") : value;
         }
 
         private string EOLDelimiter
