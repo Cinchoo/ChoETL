@@ -185,23 +185,28 @@ namespace ChoETL
                     if (!Configuration.AllowComplexJSONPath)
                         throw new JsonException("Complex JSON path not supported.");
 
-                    while (sr.Read())
+                    foreach (var t in ToJObjects(JObject.Load(sr).SelectTokens(Configuration.JSONPath)))
                     {
-                        if (sr.TokenType == JsonToken.StartArray)
-                        {
-                            foreach (var t in ToJObjects(JArray.Load(sr).SelectTokens(Configuration.JSONPath)))
-                            {
-                                yield return t;
-                            }
-                        }
-                        if (sr.TokenType == JsonToken.StartObject)
-                        {
-                            foreach (var t in ToJObjects(JObject.Load(sr).SelectTokens(Configuration.JSONPath)))
-                            {
-                                yield return t;
-                            }
-                        }
+                        yield return t;
                     }
+
+                    //while (sr.Read())
+                    //{
+                    //    if (sr.TokenType == JsonToken.StartArray)
+                    //    {
+                    //        foreach (var t in ToJObjects(JArray.Load(sr).SelectTokens(Configuration.JSONPath)))
+                    //        {
+                    //            yield return t;
+                    //        }
+                    //    }
+                    //    if (sr.TokenType == JsonToken.StartObject)
+                    //    {
+                    //        foreach (var t in ToJObjects(JObject.Load(sr).SelectTokens(Configuration.JSONPath)))
+                    //        {
+                    //            yield return t;
+                    //        }
+                    //    }
+                    //}
                 }
             }
         }

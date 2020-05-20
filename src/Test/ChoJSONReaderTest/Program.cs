@@ -2505,10 +2505,69 @@ K,L,M,N,O,P,Q,R,S,T";
 
         }
 
+        public class Balance
+        {
+            public float amount { get; set; }
+            public float value { get; set; }
+        }
+
+        static void LoadDictValuesTest()
+        {
+            string json = @"{
+  ""AE"": {
+    ""amount"": ""0.00000000"",
+    ""value"": ""0.00000000""
+  },
+  ""AR"": {
+    ""amount"": ""0.00000000"",
+    ""value"": ""0.00000000""
+  },
+  ""BC"": {
+    ""amount"": ""0.09670332"",
+    ""value"": ""3.74814004""
+  }
+}";
+
+            using (var r = ChoJSONReader< Balance>.LoadText(json)
+                .WithJSONPath("$..^")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void LoadDictTest()
+        {
+            string json = @"{
+  ""AE"": {
+    ""amount"": ""0.00000000"",
+    ""value"": ""0.00000000""
+  },
+  ""AR"": {
+    ""amount"": ""0.00000000"",
+    ""value"": ""0.00000000""
+  },
+  ""BC"": {
+    ""amount"": ""0.09670332"",
+    ""value"": ""3.74814004""
+  }
+}";
+
+            using (var r = ChoJSONReader.LoadText(json)
+                .WithJSONPath("$", true)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            CurrencyTest();
+            LoadDictTest();
         }
 
         static void SimpleTest()
