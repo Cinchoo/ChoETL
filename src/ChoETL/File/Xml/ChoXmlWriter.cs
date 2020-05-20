@@ -307,6 +307,12 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoXmlWriter<T> Formatting(Formatting value = System.Xml.Formatting.Indented)
+        {
+            Configuration.Formatting = value;
+            return this;
+        }
+
         public ChoXmlWriter<T> TurnOffAutoCorrectXNames(bool flag = true)
         {
             Configuration.TurnOffAutoCorrectXNames = flag;
