@@ -419,7 +419,10 @@ namespace ChoETL
                 }
 
 
-                if (!Configuration.UseXmlSerialization)
+                if (!Configuration.UseXmlSerialization
+                    && !typeof(ICollection).IsAssignableFrom(Configuration.RecordType)
+                    && !(Configuration.RecordType.IsGenericType && Configuration.RecordType.GetGenericTypeDefinition() == typeof(ICollection<>))
+                    )
                 {
                     if (!FillRecord(rec, pair))
                         return false;

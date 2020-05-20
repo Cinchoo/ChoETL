@@ -30,8 +30,23 @@ namespace ChoETL
 			try
 			{
 				object obj = Factory != null ? Factory(objType, args) : null;
-				if (obj == null)
-					obj = Activator.CreateInstance(objType, args);
+                if (obj == null)
+                {
+                    if (objType.IsGenericType && objType.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+                    {
+                        obj = Activator.CreateInstance(typeof(Dictionary<,>).MakeGenericType(objType.GetGenericArguments()));
+                    }
+                    else if (objType.IsGenericType && objType.GetGenericTypeDefinition() == typeof(IList<>))
+                    {
+                        obj = Activator.CreateInstance(typeof(List<>).MakeGenericType(objType.GetGenericArguments()));
+                    }
+                    else if (objType == typeof(string))
+                    {
+                        return String.Empty;
+                    }
+                    else
+                        obj = Activator.CreateInstance(objType, args);
+                }
 
 				return obj;
 			}

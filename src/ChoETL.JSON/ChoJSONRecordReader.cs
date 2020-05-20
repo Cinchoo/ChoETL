@@ -572,9 +572,11 @@ namespace ChoETL
                 }
 
                 if (!Configuration.UseJSONSerialization
-                    && !typeof(ICollection).IsAssignableFrom(Configuration.RecordType))
+                    && !typeof(ICollection).IsAssignableFrom(Configuration.RecordType)
+                    && !(Configuration.RecordType.IsGenericType && Configuration.RecordType.GetGenericTypeDefinition() == typeof(ICollection<>))
+                    )
                 {
-                    if (!FillRecord(rec, pair))
+                    if (!FillRecord(ref rec, pair))
                         return false;
 
                     if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
@@ -684,7 +686,7 @@ namespace ChoETL
         ChoJSONRecordFieldConfiguration fieldConfig = null;
         PropertyInfo pi = null;
 
-        private bool FillRecord(object rec, Tuple<long, JObject> pair)
+        private bool FillRecord(ref object rec, Tuple<long, JObject> pair)
         {
             long lineNo;
             JObject node;
@@ -961,6 +963,8 @@ namespace ChoETL
 
                         if (pi != null)
                             rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
+                        else if (RecordType.IsSimple())
+                            rec = ChoConvert.ConvertTo(fieldValue, RecordType, Configuration.Culture);
                         else
                             throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(kvp.Key, ChoType.GetTypeName(rec)));
 

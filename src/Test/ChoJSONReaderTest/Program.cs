@@ -2537,6 +2537,32 @@ K,L,M,N,O,P,Q,R,S,T";
             }
         }
 
+        static void LoadDictKeysTest()
+        {
+            string json = @"{
+  ""1"": {
+    ""amount"": ""0.00000000"",
+    ""value"": ""0.00000000""
+  },
+  ""2"": {
+    ""amount"": ""0.00000000"",
+    ""value"": ""0.00000000""
+  },
+  ""3"": {
+    ""amount"": ""0.09670332"",
+    ""value"": ""3.74814004""
+  }
+}";
+
+            using (var r = ChoJSONReader<string>.LoadText(json)
+                .WithJSONPath("$..^")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
         static void LoadDictTest()
         {
             string json = @"{
@@ -2554,8 +2580,8 @@ K,L,M,N,O,P,Q,R,S,T";
   }
 }";
 
-            using (var r = ChoJSONReader.LoadText(json)
-                .WithJSONPath("$", true)
+            using (var r = ChoJSONReader<IDictionary<string, Balance>>.LoadText(json)
+                //.WithJSONPath("$", true)
                 )
             {
                 foreach (var rec in r)
@@ -2563,11 +2589,42 @@ K,L,M,N,O,P,Q,R,S,T";
             }
         }
 
+        public enum Gender { Male, Female }
+        public class Employee
+        {
+            public int Age { get; set; }
+            public Gender Gender { get; set; }
+        }
+
+        static void EnumTest()
+        {
+            string json = @"{ ""Age"": 35, ""Gender"": ""Male"" }";
+
+            using (var r = ChoJSONReader<Employee>.LoadText(json))
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void DynamicEnumTest()
+        {
+            string json = @"{ ""Age"": 35, ""Gender"": ""Male"" }";
+
+            using (var r = ChoJSONReader.LoadText(json)
+                .WithField("Age")
+                .WithField("Gender", fieldType: typeof(Gender))
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            LoadDictTest();
+            LoadDictValuesTest();
         }
 
         static void SimpleTest()
@@ -4986,7 +5043,6 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             }
         }
 
-        public enum Gender { Male, Female }
         public class SessionPerformanceStats
         {
             [JsonProperty(PropertyName = "attendance")]

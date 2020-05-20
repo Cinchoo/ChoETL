@@ -358,6 +358,15 @@ namespace ChoETL
                 }
                 else
                 {
+                    if (recordType.IsSimple())
+                    {
+                        var obj = new ChoJSONRecordFieldConfiguration("Value", "$.Value");
+                        obj.FieldType = recordType;
+
+                        recordFieldConfigurations.Add(obj);
+                        return;
+                    }
+
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                     {
                         JsonIgnoreAttribute jiAttr = pd.Attributes.OfType<JsonIgnoreAttribute>().FirstOrDefault();
