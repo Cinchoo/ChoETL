@@ -272,6 +272,7 @@ namespace ChoJSONWriterTest
             using (var p = new ChoJSONWriter<Choice>(sb)
                 .WithField("Options", valueConverter: o => String.Join(",", o as string[]))
                 .Formatting()
+                .Configure(c => c.NullValueHandling = ChoNullValueHandling.Ignore)
                 )
             {
                 List<Choice> l = new List<Choice>
@@ -280,18 +281,18 @@ namespace ChoJSONWriterTest
                 {
                     Options = new[] { "op 1", "op 2" },
                     EmpArr = new Emp[] { new Emp { Id = 1, Name = "Tom" }, new Emp { Id = 2, Name = "Mark" }, null },
-                    Emp = new Emp {  Id = 0, Name = "Raj"},
+                    //Emp = new Emp {  Id = 0, Name = "Raj"},
                     //EmpDict = new Dictionary<int, Emp> { { 1, new Emp { Id = 11, Name = "Tom1" } } },
                     Ids = new List<int> { 1, 2, 3}
                 },
-                    new Choice
-                {
-                    Options = new[] { "op 1", "op 2" },
-                    EmpArr = new Emp[] { new Emp { Id = 1, Name = "Tom" }, new Emp { Id = 2, Name = "Mark" }, null },
-                    Emp = new Emp {  Id = 0, Name = "Raj"},
-                    //EmpDict = new Dictionary<int, Emp> { { 1, new Emp { Id = 11, Name = "Tom1" } } },
-                    Ids = new List<int> { 1, 2, 3}
-                }
+                //    new Choice
+                //{
+                //    Options = new[] { "op 1", "op 2" },
+                //    EmpArr = new Emp[] { new Emp { Id = 1, Name = "Tom" }, new Emp { Id = 2, Name = "Mark" }, null },
+                //    //Emp = new Emp {  Id = 0, Name = "Raj"},
+                //    //EmpDict = new Dictionary<int, Emp> { { 1, new Emp { Id = 11, Name = "Tom1" } } },
+                //    Ids = new List<int> { 1, 2, 3}
+                //}
                 };
                 p.Write(l);
             }
@@ -299,10 +300,36 @@ namespace ChoJSONWriterTest
             Console.WriteLine(sb.ToString());
 
         }
+
+        static void IgnoreNullNodeTest()
+        {
+            string json = @"[
+  {
+    ""Id"": 1,
+    ""Name"": ""Mark""
+  },
+  {
+    ""Id"": 2,
+    ""Name"": null
+  }
+]
+";
+            StringBuilder xml = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                using (var w = new ChoXmlWriter(xml)
+                  .WithRootName("Emps")
+                  .WithNodeName("Emp")
+                  )
+                    w.Write(r);
+            }
+            Console.WriteLine(xml.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            ComplexObjSerializationTest();
+            IgnoreNullNodeTest();
             return;
 
             TimespanTest();

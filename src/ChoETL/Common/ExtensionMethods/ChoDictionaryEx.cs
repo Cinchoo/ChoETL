@@ -270,18 +270,20 @@ namespace ChoETL
                 dict.Add(key, value);
         }
 
-        public static bool ContainsKey<TValue>(this IDictionary<string, TValue> dict, string key, bool ignoreCase, CultureInfo culture)
+        public static bool ContainsKey<TValue>(this IDictionary<string, TValue> dict, string key, bool ignoreCase = false, CultureInfo culture = null)
         {
             ChoGuard.ArgumentNotNull(dict, "Dictionary");
-            ChoGuard.ArgumentNotNull(culture, "Culture");
+            if (culture == null)
+                culture = System.Threading.Thread.CurrentThread.CurrentCulture;
 
             return dict.Keys.Where(i => String.Compare(i, key, ignoreCase, culture) == 0).Any();
         }
 
-        public static void AddOrUpdateValue<TValue>(this IDictionary<string, TValue> dict, string key, TValue value, bool ignoreCase, CultureInfo culture)
+        public static void AddOrUpdateValue<TValue>(this IDictionary<string, TValue> dict, string key, TValue value, bool ignoreCase = false, CultureInfo culture = null)
         {
             ChoGuard.ArgumentNotNull(dict, "Dictionary");
-            ChoGuard.ArgumentNotNull(culture, "Culture");
+            if (culture == null)
+                culture = System.Threading.Thread.CurrentThread.CurrentCulture;
 
             string cultureSpecificKeyName = dict.Keys.Where(i => String.Compare(i, key, ignoreCase, culture) == 0).FirstOrDefault();
             if (cultureSpecificKeyName.IsNullOrWhiteSpace())
@@ -290,10 +292,11 @@ namespace ChoETL
                 dict[cultureSpecificKeyName] = value;
         }
 
-        public static TValue GetValue<TValue>(this IDictionary<string, TValue> dict, string key, bool ignoreCase, CultureInfo culture, TValue defaultValue = default(TValue))
+        public static TValue GetValue<TValue>(this IDictionary<string, TValue> dict, string key, bool ignoreCase = false, CultureInfo culture = null, TValue defaultValue = default(TValue))
         {
             ChoGuard.ArgumentNotNull(dict, "Dictionary");
-            ChoGuard.ArgumentNotNull(culture, "Culture");
+            if (culture == null)
+                culture = System.Threading.Thread.CurrentThread.CurrentCulture;
 
             string cultureSpecificKeyName = dict.Keys.Where(i => String.Compare(i, key, ignoreCase, culture) == 0).FirstOrDefault();
             if (!cultureSpecificKeyName.IsNullOrWhiteSpace())

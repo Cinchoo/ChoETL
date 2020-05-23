@@ -106,6 +106,11 @@ namespace ChoETL
                             dynamic x = new JObject(new JProperty("Value", z));
                             yield return x;
                         }
+                        else if (sr.TokenType != JsonToken.EndArray)
+                        {
+                            dynamic x = new JObject(new JProperty("Value", JToken.Load(sr)));
+                            yield return x;
+                        }
                     }
                 }
                 if (sr.TokenType == JsonToken.StartObject)

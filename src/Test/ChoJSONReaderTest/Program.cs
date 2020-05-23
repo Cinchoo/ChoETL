@@ -2528,7 +2528,7 @@ K,L,M,N,O,P,Q,R,S,T";
   }
 }";
 
-            using (var r = ChoJSONReader< Balance>.LoadText(json)
+            using (var r = ChoJSONReader<Balance>.LoadText(json)
                 .WithJSONPath("$..^")
                 )
             {
@@ -2621,10 +2621,257 @@ K,L,M,N,O,P,Q,R,S,T";
             }
         }
 
+        static void JSON2XmlTest()
+        {
+            string json = @"[
+  {
+    ""Id"": 1,
+    ""Name"": ""Mark""
+  },
+  {
+    ""Id"": 2,
+    ""Name"": ""Tom""
+  }
+]
+";
+            StringBuilder xml = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                using (var w = new ChoXmlWriter(xml)
+                    .WithRootName("Emps")
+                    .WithNodeName("Emp")
+                    )
+                    w.Write(r);
+            }
+            Console.WriteLine(xml.ToString());
+        }
+
+        public class UserInfo
+        {
+            [ChoJSONRecordField(JSONPath = "$.name")]
+            public string name { get; set; }
+            [ChoJSONRecordField(JSONPath = "$.teamname")]
+            public string teamname { get; set; }
+            [ChoJSONRecordField(JSONPath = "$.email")]
+            public string email { get; set; }
+            [ChoJSONRecordField(JSONPath = "$.players1")]
+            public string[] players { get; set; }
+        }
+
+        static void ReadSelectNodeTest()
+        {
+            string json = @"
+{
+    ""user"": {
+        ""name"": ""asdf"",
+        ""teamname"": ""b"",
+        ""email"": ""c"",
+        ""players"": [""1"", ""2""]
+    }
+}";
+
+            using (var r = ChoJSONReader<UserInfo>.LoadText(json)
+                .WithJSONPath("$.user")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        public class Image
+        {
+            public string Src { get; set; }
+        }
+
+        static void Sample39Test()
+        {
+            var tokens = JObject.Load(new JsonTextReader(new StreamReader(ChoPath.GetFullPath("sample39.json")))).SelectTokens("$..queryresult.pods[*].subpods[*].img")
+                .Select(t => JsonConvert.DeserializeObject<Image>(t.ToString()));
+            foreach (var rec in tokens)
+                Console.WriteLine(rec.Dump());
+
+            return;
+            using (var r = new ChoJSONReader("sample39.json")
+                .WithJSONPath("$..queryresult.pods[*].subpods[*].img", true)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        public abstract class Person2
+        {
+            public string FirstName { get; set; }
+            public string LastName { get; set; }
+        }
+
+        public class Employee2 : Person2
+        {
+            public string Department { get; set; }
+            public string JobTitle { get; set; }
+        }
+
+        public class Artist2 : Person2
+        {
+            public string Skill { get; set; }
+        }
+
+        static void DeserializeDifferentObjects()
+        {
+            string json = @"[
+  {
+    ""Department"": ""Department1"",
+    ""JobTitle"": ""JobTitle1"",
+    ""FirstName"": ""FirstName1"",
+    ""LastName"": ""LastName1""
+  },
+  {
+    ""Department"": ""Department2"",
+    ""JobTitle"": ""JobTitle2"",
+    ""FirstName"": ""FirstName2"",
+    ""LastName"": ""LastName2""
+  },
+  {
+    ""Skill"": ""Painter"",
+    ""FirstName"": ""FirstName3"",
+    ""LastName"": ""LastName3""
+  }
+]";
+
+            using (var r = ChoJSONReader<Person2>.LoadText(json)
+                .WithCustomRecordSelector(o =>
+                {
+                    var pair = (Tuple<long, JObject>)o;
+                    var obj = pair.Item2;
+
+                    if (obj.ContainsKey("Skill"))
+                        return typeof(Artist2);
+
+                    return typeof(Employee2);
+                })
+                )
+            {
+                foreach (var rec in r)
+                {
+                    Console.WriteLine(rec.Dump());
+                }
+            }
+        }
+
+        public class Account
+        {
+            public string Email { get; set; }
+            public bool Active { get; set; }
+            public DateTime CreatedDate { get; set; }
+            public IList<string> Roles { get; set; }
+        }
+        static void DeserializeObject()
+        {
+            string json = @"{
+  'Email': 'james@example.com',
+  'Active': true,
+  'CreatedDate': '2013-01-20T00:00:00Z',
+  'Roles': [
+    'User',
+    'Admin'
+  ]
+}";
+
+            Account account = ChoJSONReader.DeserializeText<Account>(json).FirstOrDefault();
+
+            Console.WriteLine(account.Email);
+        }
+
+        static void DeserializeCollection()
+        {
+            string json = @"['Starcraft','Halo','Legend of Zelda']";
+
+            List<string> videogames = ChoJSONReader.DeserializeText<string>(json).ToList();
+
+            Console.WriteLine(string.Join(", ", videogames.ToArray()));
+        }
+
+        static void DeserializeDictionary()
+        {
+            string json = @"{
+  'href': '/account/login.aspx',
+  'target': '_blank'
+}";
+
+            Dictionary<string, string> htmlAttributes = ChoJSONReader.DeserializeText<Dictionary<string, string>>(json).FirstOrDefault();
+
+            Console.WriteLine(htmlAttributes["href"]);
+            // /account/login.aspx
+
+            Console.WriteLine(htmlAttributes["target"]);
+        }
+
+        static void DeserializeAnonymousTYpe()
+        {
+            string json = @"{
+  'href': '/account/login.aspx',
+  'target': '_blank'
+}";
+
+            Dictionary<string, string> htmlAttributes = ChoJSONReader.DeserializeText<Dictionary<string, string>>(json).FirstOrDefault();
+
+            Console.WriteLine(htmlAttributes["href"]);
+            // /account/login.aspx
+
+            Console.WriteLine(htmlAttributes["target"]);
+        }
+
+        public class Movie
+        {
+            public string Name { get; set; }
+            public int Year { get; set; }
+        }
+
+        static void DeserializeFromFile()
+        {
+            Movie movie1 = ChoJSONReader.Deserialize<Movie>("movie.json").FirstOrDefault();
+        }
+
+        public class Person3
+        {
+            public string FirstName { get; set; }
+            public string LastName { get; set; }
+            public DateTime BirthDate { get; set; }
+        }
+
+        public class Employee3 : Person3
+        {
+            public string Department { get; set; }
+            public string JobTitle { get; set; }
+        }
+
+        static void CustomCreationTest()
+        {
+            string json = @"{
+  'Department': 'Furniture',
+  'JobTitle': 'Carpenter',
+  'FirstName': 'John',
+  'LastName': 'Joinery',
+  'BirthDate': '1983-02-02T00:00:00'
+}";
+
+            ChoActivator.Factory = (type, args) =>
+            {
+                if (type == typeof(Person3))
+                    return new Employee3();
+                else
+                    return null;
+            };
+            Person3 person = ChoJSONReader.DeserializeText<Person3>(json).FirstOrDefault();
+            Console.WriteLine(person.GetType().Name);
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            LoadDictValuesTest();
+            CustomCreationTest();
         }
 
         static void SimpleTest()

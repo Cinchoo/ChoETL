@@ -1,0 +1,198 @@
+﻿{
+  "queryresult": {
+    "success": true,
+    "error": false,
+    "numpods": 6,
+    "datatypes": "Math",
+    "timedout": "",
+    "timedoutpods": "",
+    "timing": 1.014,
+    "parsetiming": 0.109,
+    "parsetimedout": false,
+    "recalculate": "",
+    "id": "MSP362323b9dc107h895b64000027hfia8g5abf0bfg",
+    "host": "https://www5a.myWebsite.com",
+    "server": "54",
+    "related": "https://www5a.myWebsite.com/api/v1/relatedQueries.jsp?id=MSPa362423b9dc107h895b6400000ge80d6fecdd3g305802790122383609046",
+    "version": "2.6",
+    "pods": [
+      {
+        "title": "Input",
+        "scanner": "Identity",
+        "id": "Input",
+        "position": 100,
+        "error": false,
+        "numsubpods": 1,
+        "subpods": [
+          {
+            "title": "",
+            "img": {
+              "src": "https://www5a.myWebsite.com/Calculate/MSP/MSP362523b9dc107h895b640000214gh7dcb3c6e027?MSPStoreType=image/gif&s=54",
+              "alt": "3 + 3",
+              "title": "3 + 3",
+              "width": 30,
+              "height": 18,
+              "type": "Default",
+              "themes": "1,2,3,4,5,6,7,8,9,10,11,12",
+              "colorinvertable": true
+            }
+          }
+        ],
+        "expressiontypes": {
+          "name": "Default"
+        }
+      },
+      {
+        "title": "Result",
+        "scanner": "Simplification",
+        "id": "Result",
+        "position": 200,
+        "error": false,
+        "numsubpods": 1,
+        "primary": true,
+        "subpods": [
+          {
+            "title": "",
+            "img": {
+              "src": "https://www5a.myWebsite.com/Calculate/MSP/MSP362623b9dc107h895b6400005d6ad57aedd6f604?MSPStoreType=image/gif&s=54",
+              "alt": "6",
+              "title": "6",
+              "width": 8,
+              "height": 18,
+              "type": "Default",
+              "themes": "1,2,3,4,5,6,7,8,9,10,11,12",
+              "colorinvertable": true
+            }
+          }
+        ],
+        "expressiontypes": {
+          "name": "Default"
+        },
+        "states": [
+          {
+            "name": "Step-by-step solution",
+            "input": "Result__Step-by-step solution",
+            "stepbystep": true
+          }
+        ]
+      },
+      {
+        "title": "Number line",
+        "scanner": "NumberLine",
+        "id": "NumberLine",
+        "position": 300,
+        "error": false,
+        "numsubpods": 1,
+        "subpods": [
+          {
+            "title": "",
+            "img": {
+              "src": "https://www5a.myWebsite.com/Calculate/MSP/MSP362723b9dc107h895b6400001971f69egfe5ac57?MSPStoreType=image/gif&s=54",
+              "alt": "Number line",
+              "title": "",
+              "width": 330,
+              "height": 54,
+              "type": "1DMathPlot_2",
+              "themes": "1,2,3,4,5,6,7,8,9,10,11,12",
+              "colorinvertable": true
+            }
+          }
+        ],
+        "expressiontypes": {
+          "name": "1DMathPlot"
+        }
+      },
+      {
+        "title": "Number name",
+        "scanner": "Integer",
+        "id": "NumberName",
+        "position": 400,
+        "error": false,
+        "numsubpods": 1,
+        "subpods": [
+          {
+            "title": "",
+            "img": {
+              "src": "https://www5a.myWebsite.com/Calculate/MSP/MSP362823b9dc107h895b6400004b2i72a35885f8hf?MSPStoreType=image/gif&s=54",
+              "alt": "six",
+              "title": "six",
+              "width": 18,
+              "height": 18,
+              "type": "Default",
+              "themes": "1,2,3,4,5,6,7,8,9,10,11,12",
+              "colorinvertable": true
+            }
+          }
+        ],
+        "expressiontypes": {
+          "name": "Default"
+        }
+      },
+      {
+        "title": "Manipulatives illustration",
+        "scanner": "Arithmetic",
+        "id": "Illustration",
+        "position": 500,
+        "error": false,
+        "numsubpods": 1,
+        "subpods": [
+          {
+            "title": "",
+            "img": {
+              "src": "https://www5a.myWebsite.com/Calculate/MSP/MSP362923b9dc107h895b64000055i4die93dg45fa5?MSPStoreType=image/gif&s=54",
+              "alt": " | + | | = | \n3 | | 3 | | 6",
+              "title": " | + | | = | \n3 | | 3 | | 6",
+              "width": 130,
+              "height": 56,
+              "type": "Default",
+              "themes": "1,2,3,4,5,6,7,8,9,10,11,12",
+              "colorinvertable": true
+            }
+          }
+        ],
+        "expressiontypes": {
+          "name": "Default"
+        }
+      },
+      {
+        "title": "Typical human computation times",
+        "scanner": "Arithmetic",
+        "id": "TypicalHumanComputationTimes",
+        "position": 600,
+        "error": false,
+        "numsubpods": 1,
+        "subpods": [
+          {
+            "title": "",
+            "microsources": {
+              "microsource": "HumanComputationQuery"
+            },
+            "img": {
+              "src": "https://www5a.myWebsite.com/Calculate/MSP/MSP363023b9dc107h895b6400002hcc1ibbc04h11de?MSPStoreType=image/gif&s=54",
+              "alt": "age 6: 3.2 seconds | age 8: 1.8 seconds | age 10: 1.2 seconds | \nage 18: 0.83 seconds\n(ignoring concentration, repetition, variations in education, etc.)",
+              "title": "age 6: 3.2 seconds | age 8: 1.8 seconds | age 10: 1.2 seconds | \nage 18: 0.83 seconds\n(ignoring concentration, repetition, variations in education, etc.)",
+              "width": 449,
+              "height": 64,
+              "type": "Grid",
+              "themes": "1,2,3,4,5,6,7,8,9,10,11,12",
+              "colorinvertable": true
+            }
+          }
+        ],
+        "expressiontypes": {
+          "name": "Grid"
+        },
+        "states": [
+          {
+            "name": "More details",
+            "input": "TypicalHumanComputationTimes__More details"
+          }
+        ]
+      }
+    ],
+    "sources": {
+      "url": "https://www5a.myWebsite.com/sources/HumanComputationQuerySourceInformationNotes.html",
+      "text": "Human computation query"
+    }
+  }
+}

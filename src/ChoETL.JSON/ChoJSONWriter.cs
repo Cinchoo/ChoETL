@@ -220,6 +220,12 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoJSONWriter<T> NullValueHandling(ChoNullValueHandling value = ChoNullValueHandling.Default)
+        {
+            Configuration.NullValueHandling = value;
+            return this;
+        }
+
         public ChoJSONWriter<T> Formatting(Newtonsoft.Json.Formatting value = Newtonsoft.Json.Formatting.Indented)
         {
             Configuration.Formatting = value;

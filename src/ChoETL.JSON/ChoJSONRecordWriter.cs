@@ -608,6 +608,8 @@ namespace ChoETL
                             fieldText = null;
                         else if (Configuration.NullValueHandling == ChoNullValueHandling.Default)
                             fieldText = JsonConvert.SerializeObject(ChoActivator.CreateInstance(fieldConfig.FieldType));
+                        else if (Configuration.NullValueHandling == ChoNullValueHandling.Empty && fieldConfig.FieldType == typeof(string))
+                            fieldText = String.Empty;
                         else
                         {
                             if (fieldConfig.NullValue == null)
