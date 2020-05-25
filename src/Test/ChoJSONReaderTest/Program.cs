@@ -2815,6 +2815,8 @@ K,L,M,N,O,P,Q,R,S,T";
   'target': '_blank'
 }";
 
+            var dt = ChoJSONReader.LoadText(json).AsDataTable();
+
             Dictionary<string, string> htmlAttributes = ChoJSONReader.DeserializeText<Dictionary<string, string>>(json).FirstOrDefault();
 
             Console.WriteLine(htmlAttributes["href"]);
@@ -2864,14 +2866,33 @@ K,L,M,N,O,P,Q,R,S,T";
                 else
                     return null;
             };
+            //var dt = ChoJSONReader.LoadText(json).AsDataTable();
             Person3 person = ChoJSONReader.DeserializeText<Person3>(json).FirstOrDefault();
             Console.WriteLine(person.GetType().Name);
+        }
+
+        static void ToDataTable()
+        {
+            string json = @"[
+{""id"":""10"",""name"":""User"",""add"":false,""edit"":true,""authorize"":true,""view"":true},
+{ ""id"":""11"",""name"":""Group"",""add"":true,""edit"":false,""authorize"":false,""view"":true},
+{ ""id"":""12"",""name"":""Permission"",""add"":true,""edit"":true,""authorize"":true,""view"":true}
+]";
+
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                var dt = r.AsDataTable();
+            }
+            using (var r = new ChoJSONReader("sample7.json"))
+            {
+                var dt = r.AsDataTable(); //.Select(f => f.Flatten()).AsDataTable();
+            }
         }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            CustomCreationTest();
+            DeserializeAnonymousTYpe();
         }
 
         static void SimpleTest()

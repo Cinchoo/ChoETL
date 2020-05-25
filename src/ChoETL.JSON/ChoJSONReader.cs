@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 namespace ChoETL
 {
     public class ChoJSONReader<T> : ChoReader, IDisposable, IEnumerable<T>, IChoSerializableReader
-        //where T : class
+    //where T : class
     {
         private TextReader _textReader;
         private JsonTextReader _JSONReader;
@@ -336,8 +336,24 @@ namespace ChoETL
                 rr.RowsLoaded += NotifyRowsLoaded;
                 rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
                 rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
-                var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_JSONReader), rr);
-                return dr;
+
+                return this.Select(s =>
+                {
+                    if (s is IDictionary<string, object>)
+                        return ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator).ToDictionary() as object;
+                    else
+                        return s;
+                }).AsDataReader();
+                //var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_JSONReader), rr);
+
+                var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_JSONReader).Select(s =>
+                {
+                    if (s is IDictionary<string, object>)
+                        return ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator).ToDictionary() as object;
+                    else
+                        return s;
+                }), rr);
+                //return dr;
             }
             else
             {
@@ -805,7 +821,7 @@ namespace ChoETL
         }
 
         public static IEnumerable<T> DeserializeText<T>(string inputText, string jsonPath, Encoding encoding = null, TraceSwitch traceSwitch = null)
-            //where T : class, new()
+        //where T : class, new()
         {
             var configuration = new ChoJSONRecordConfiguration();
             configuration.JSONPath = jsonPath;
@@ -813,7 +829,7 @@ namespace ChoETL
         }
 
         public static IEnumerable<T> DeserializeText<T>(string inputText, Encoding encoding = null, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-            //where T : class
+        //where T : class
         {
             if (configuration == null)
                 configuration = new ChoJSONRecordConfiguration(typeof(T));
@@ -851,7 +867,7 @@ namespace ChoETL
         }
 
         public static IEnumerable<T> Deserialize<T>(string filePath, string jsonPath, TraceSwitch traceSwitch = null)
-            //where T : class, new()
+        //where T : class, new()
         {
             var configuration = new ChoJSONRecordConfiguration();
             configuration.JSONPath = jsonPath;
@@ -859,7 +875,7 @@ namespace ChoETL
         }
 
         public static IEnumerable<T> Deserialize<T>(string filePath, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-            //where T : class, new()
+        //where T : class, new()
         {
             if (configuration == null)
                 configuration = new ChoJSONRecordConfiguration(typeof(T));
@@ -897,7 +913,7 @@ namespace ChoETL
         }
 
         public static IEnumerable<T> Deserialize<T>(TextReader textReader, string jsonPath, TraceSwitch traceSwitch = null)
-            //where T : class, new()
+        //where T : class, new()
         {
             var configuration = new ChoJSONRecordConfiguration();
             configuration.JSONPath = jsonPath;
@@ -905,7 +921,7 @@ namespace ChoETL
         }
 
         public static IEnumerable<T> Deserialize<T>(TextReader textReader, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-            //where T : class, new()
+        //where T : class, new()
         {
             if (configuration == null)
                 configuration = new ChoJSONRecordConfiguration(typeof(T));
@@ -943,7 +959,7 @@ namespace ChoETL
         }
 
         public static IEnumerable<T> Deserialize<T>(Stream inStream, string jsonPath, TraceSwitch traceSwitch = null)
-            //where T : class, new()
+        //where T : class, new()
         {
             var configuration = new ChoJSONRecordConfiguration();
             configuration.JSONPath = jsonPath;
@@ -951,7 +967,7 @@ namespace ChoETL
         }
 
         public static IEnumerable<T> Deserialize<T>(Stream inStream, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-            //where T : class, new()
+        //where T : class, new()
         {
             if (configuration == null)
                 configuration = new ChoJSONRecordConfiguration(typeof(T));
@@ -972,7 +988,7 @@ namespace ChoETL
         }
 
         public static IEnumerable<T> Deserialize<T>(IEnumerable<JToken> jObjects, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-            //where T : class, new()
+        //where T : class, new()
         {
             return new ChoJSONReader<T>(jObjects, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
         }
@@ -983,7 +999,7 @@ namespace ChoETL
         }
 
         public static T Deserialize<T>(JToken jObject, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-            //where T : class, new()
+        //where T : class, new()
         {
             return new ChoJSONReader<T>(jObject, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
         }

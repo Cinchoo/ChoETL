@@ -20,6 +20,23 @@ namespace ChoETL
         private readonly Dictionary<string, dynamic> _indexMapDict = new Dictionary<string, dynamic>();
         internal readonly Dictionary<Type, Dictionary<string, ChoCSVRecordFieldConfiguration>> CSVRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoCSVRecordFieldConfiguration>>();
 
+        private char[] _autoDetectDelimiterChars = { ';', '|', '\t', ',' };
+        public char[] AutoDetectDelimiterChars
+        {
+            get { return _autoDetectDelimiterChars; }
+            set
+            {
+                if (value != null && value.Length > 0)
+                    _autoDetectDelimiterChars = value;
+            }
+        }
+
+        public bool AutoDetectDelimiter
+        {
+            get;
+            set;
+        }
+
         public bool AutoIncrementDuplicateColumnNames
         {
             get;
@@ -516,7 +533,12 @@ namespace ChoETL
             ChoCSVRecordFieldConfiguration obj = null;
 
             if (displayName.IsNullOrEmpty())
-                obj = new ChoCSVRecordFieldConfiguration(declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), ++position);
+            {
+                if (pd != null)
+                    obj = new ChoCSVRecordFieldConfiguration(declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), ++position);
+                else
+                    obj = new ChoCSVRecordFieldConfiguration("Value", ++position);
+            }
             else if (pd != null)
             {
                 if (displayName.IsNullOrWhiteSpace())
@@ -586,7 +608,7 @@ namespace ChoETL
                 }
             }
 
-            if (pd.ComponentType != null)
+            if (pd != null && pd.ComponentType != null)
             {
                 if (ContainsRecordConfigForType(pd.ComponentType))
                 {

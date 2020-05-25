@@ -16,7 +16,7 @@ using System.Xml;
 namespace ChoETL
 {
     public class ChoJSONWriter<T> : ChoWriter, IChoSerializableWriter, IDisposable
-        where T : class
+        //where T : class
     {
         private TextWriter _textWriter;
         private bool _closeStreamOnDispose = false;
@@ -130,7 +130,7 @@ namespace ChoETL
         {
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
-            _writer.WriteTo(_textWriter, records).Loop();
+            _writer.WriteTo(_textWriter, records.OfType<object>()).Loop();
         }
 
         public void Write(T record)
@@ -142,23 +142,22 @@ namespace ChoETL
                 if (record is ArrayList)
                     _writer.ElementType = typeof(object);
 
-                _writer.WriteTo(_textWriter, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
+                _writer.WriteTo(_textWriter, ((IEnumerable)record).AsTypedEnumerable<T>().OfType<object>()).Loop();
             }
             else if (record != null && (!record.GetType().IsDynamicType() && record is IDictionary))
             {
                 if (Configuration.SingleElement == null)
                     Configuration.SingleElement = true;
-                _writer.WriteTo(_textWriter, new T[] { record }).Loop();
+                _writer.WriteTo(_textWriter, new object[] { record }).Loop();
             }
             else
             {
                 if (Configuration.SingleElement == null) Configuration.SingleElement = true;
-                _writer.WriteTo(_textWriter, new T[] { record }).Loop();
+                _writer.WriteTo(_textWriter, new object[] { record }).Loop();
             }
         }
 
         public static string ToText<TRec>(TRec record, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string jsonPath = null)
-            where TRec : class
         {
             if (configuration == null)
                 configuration = new ChoJSONRecordConfiguration();
@@ -173,7 +172,6 @@ namespace ChoETL
 
 
         public static string ToTextAll<TRec>(IEnumerable<TRec> records, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string jsonPath = null)
-            where TRec : class
         {
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
@@ -633,9 +631,8 @@ namespace ChoETL
         }
 
         public static string SerializeAll<T>(IEnumerable<T> records, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-            where T : class
         {
-            return ToTextAll<T>(records, configuration, traceSwitch);
+            return ToTextAll(records, configuration, traceSwitch);
         }
 
         public static string Serialize(dynamic record, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
@@ -644,9 +641,8 @@ namespace ChoETL
         }
 
         public static string Serialize<T>(T record, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-            where T : class
         {
-            return ToText<T>(record, configuration, traceSwitch);
+            return ToText(record, configuration, traceSwitch);
         }
     }
 }

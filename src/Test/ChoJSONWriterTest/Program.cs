@@ -326,10 +326,79 @@ namespace ChoJSONWriterTest
             Console.WriteLine(xml.ToString());
         }
 
+        public class Account
+        {
+            public string Email { get; set; }
+            public bool Active { get; set; }
+            public DateTime CreatedDate { get; set; }
+            public IList<string> Roles { get; set; }
+        }
+        static void SerializeObject()
+        {
+            //            string json = @"{
+            //  'Email': 'james@example.com',
+            //  'Active': true,
+            //  'CreatedDate': '2013-01-20T00:00:00Z',
+            //  'Roles': [
+            //    'User',
+            //    'Admin'
+            //  ]
+            //}";
+
+            //string json = ChoJSONWriter.Serialize<Account>(new Account
+            //{
+            //    Email = "james@example.com",
+            //    Active = true
+            //});
+            string json = ChoJSONWriter.SerializeAll<Account>(new Account[] {
+                new Account
+                {
+                Email = "james@example.com",
+                Active = true
+                }
+            }
+            );
+
+
+            Console.WriteLine(json);
+        }
+
+        static void SerializeCollection()
+        {
+            string json = ChoJSONWriter.SerializeAll(new int[] { 1, 2, 3 },
+                new ChoJSONRecordConfiguration().Configure(c => c.Formatting = Formatting.None)); // new string[] { "Starcraft", "Halo", "Legend of Zelda" });
+
+            Console.WriteLine(json);
+        }
+
+        static void SerializeDictionary()
+        {
+            string json = ChoJSONWriter.SerializeAll(new Dictionary<string, int>[] {
+            new Dictionary<string, int>()
+            {
+                ["1"] = 1,
+                ["2"] = 2
+            }
+            });
+
+            Console.WriteLine(json);
+        }
+
+        static void SerializeScalar()
+        {
+            string json = ChoJSONWriter.Serialize(1,
+                new ChoJSONRecordConfiguration()
+                .Configure(c => c.Formatting = Formatting.None)
+                .Configure(c => c.NodeName = "Root")
+                ); // new string[] { "Starcraft", "Halo", "Legend of Zelda" });
+
+            Console.WriteLine(json);
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            IgnoreNullNodeTest();
+            ToDataTable();
             return;
 
             TimespanTest();

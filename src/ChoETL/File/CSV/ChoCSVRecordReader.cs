@@ -68,29 +68,46 @@ namespace ChoETL
             return AsEnumerable(source, TraceSwitch, filterFunc);
         }
 
-        private void CalcFieldMaxCountIfApplicable(IEnumerator<string> recEnum)
+        private void AutoDetectDelimiterIfAny(IEnumerator<string> recEnum)
+        {
+            long recCount = 0;
+            if (!Configuration.AutoDetectDelimiter)
+                return;
+
+            if (Configuration.MaxScanRows <= 0)
+                return;
+
+            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Auto-Detecting CSV delimiter...");
+
+            while (recEnum.MoveNext())
+            {
+                _recBuffer.Value.Add(recEnum.Current);
+                recCount++;
+
+                if (Configuration.MaxScanRows == recCount)
+                    break;
+            }
+
+            var autoDelimiter = ChoCSVSeperatorDetector.DetectSeparator(_recBuffer.Value.ToArray());
+            if (autoDelimiter != null)
+            {
+                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, $"Auto-Detect found `{autoDelimiter.ToString().Escape()}` as CSV delimiter.");
+                Configuration.Delimiter = autoDelimiter.ToString();
+            }
+        }
+
+        private void CalcFieldMaxCountIfApplicable(IEnumerable<string> recEnum)
         {
             if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
             {
-                long recCount = 0;
-                if (Configuration.MaxScanRows <= 0)
-                    return;
-
-                while (recEnum.MoveNext())
+                foreach (string line in recEnum)
                 {
-                    _recBuffer.Value.Add(recEnum.Current);
-                    recCount++;
-
-                    string line = recEnum.Current;
                     if (!line.IsNullOrWhiteSpace())
                     {
                         string[] fieldValues = line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar, Configuration.QuoteEscapeChar);
                         if (Configuration.MaxFieldPosition < fieldValues.Length)
                             Configuration.MaxFieldPosition = fieldValues.Length;
                     }
-
-                    if (Configuration.MaxScanRows == recCount)
-                        break;
                 }
             }
         }
@@ -98,7 +115,8 @@ namespace ChoETL
         private IEnumerable<string> ReadLines(TextReader sr)
         {
             var recEnum = sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, Configuration.MayContainEOLInData, Configuration.MaxLineSize).GetEnumerator();
-            CalcFieldMaxCountIfApplicable(recEnum);
+            AutoDetectDelimiterIfAny(recEnum);
+            CalcFieldMaxCountIfApplicable(_recBuffer.Value.ToArray());
 
             //object x = Reader.Context.RecBuffer;
             var arr = _recBuffer.Value.ToArray();
@@ -1444,5 +1462,27 @@ namespace ChoETL
         }
 
         #endregion Event Raisers
+    }
+
+    internal static class ChoCSVSeperatorDetector
+    {
+        private static readonly char[] SeparatorChars = { ';', '|', '\t', ',' };
+
+        public static char? DetectSeparator(string csvFilePath)
+        {
+            string[] lines = File.ReadAllLines(csvFilePath);
+            return DetectSeparator(lines);
+        }
+
+        public static char? DetectSeparator(string[] lines)
+        {
+            var q = SeparatorChars.Select(sep => new
+            { Separator = sep, Found = lines.GroupBy(line => line.Count(ch => ch == sep)) })
+                .OrderByDescending(res => res.Found.Count(grp => grp.Key > 0))
+                .ThenBy(res => res.Found.Count())
+                .FirstOrDefault();
+
+            return q.Separator;
+        }
     }
 }

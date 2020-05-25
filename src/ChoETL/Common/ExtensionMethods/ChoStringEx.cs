@@ -823,6 +823,18 @@ namespace ChoETL
 
         #endregion Truncate Overloads
 
+        #region Escape Overloads
+
+        public static string Escape(this string text)
+        {
+            if (text == null)
+                return text;
+
+            return Regex.Escape(text);
+        }
+
+        #endregion Escape Overloads
+
         public static string Left(this string value, int maxLength)
         {
             if (string.IsNullOrEmpty(value)) return value;

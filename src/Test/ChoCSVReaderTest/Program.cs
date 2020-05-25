@@ -4142,14 +4142,15 @@ ID	DATE	AMOUNT	QUANTITY ID
 
         static void FallbacktValueTest()
         {
-            string csv = @"Id, Guid
-10, cc6f0116-589a-4cf1-8605-a4eb6ab3bd34
-2s, cc6f0116-589a-4cf1-8605-a4eb6ab3bd34
+            string csv = @"Id;Guid
+10;cc6f0116-589a-4cf1-8605-a4eb6ab3bd34
+20;cc6f0116-589a-4cf1-8605-a4eb6ab3bd34
 ";
 
             using (var r = ChoCSVReader.LoadText(csv)
                 .WithFirstLineHeader()
                 .WithMaxScanRows(1)
+                .AutoDetectDelimiter()
                 //.WithField("Id", fieldType: typeof(int), fallbackValue: 200)
                 //.WithField("Guid", fieldType: typeof(Guid), defaultValue: Guid.NewGuid())
                 )
@@ -4159,10 +4160,27 @@ ID	DATE	AMOUNT	QUANTITY ID
             }
         }
 
+        static void DeserializeCollection()
+        {
+            string csv = @"Id,Name
+10,Tom
+20,Mark
+";
+
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
-            ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            FallbacktValueTest();
+            //ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
+            DeserializeCollection();
             return;
 
             CSV2ComplexObject();

@@ -436,6 +436,12 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoCSVReader<T> AutoDetectDelimiter(bool flag = true)
+        {
+            Configuration.AutoDetectDelimiter = flag;
+            return this;
+        }
+
         public ChoCSVReader<T> ErrorMode(ChoErrorMode mode)
         {
             Configuration.ErrorMode = mode;

@@ -404,13 +404,18 @@ namespace ChoETL
                 {
                     if (Configuration.IsDynamicObject && rec is ChoDynamicObject && ((ChoDynamicObject)rec).DynamicObjectName != ChoDynamicObject.DefaultName)
                         msg.AppendFormat(@"""{1}"": {{{0}", EOLDelimiter, ((ChoDynamicObject)rec).DynamicObjectName);
-                    else
+                    else if(!RecordType.IsSimple())
                         msg.AppendFormat("{{{0}", EOLDelimiter);
                 }
                 else
-                    msg.AppendFormat(@"""{1}"": {{{0}", EOLDelimiter, Configuration.NodeName);
+                {
+                    if (!RecordType.IsSimple())
+                        msg.AppendFormat(@"""{1}"": {{{0}", EOLDelimiter, Configuration.NodeName);
+                    else
+                        msg.AppendFormat(@"""{1}"": {0}", EOLDelimiter, Configuration.NodeName);
+                }
             }
-            else
+            else if (!RecordType.IsSimple())
                 msg.AppendFormat("{{{0}", EOLDelimiter);
 
             foreach (KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
@@ -440,7 +445,10 @@ namespace ChoETL
                     else
                     {
                         if (pi == null)
-                            throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' JSON node.".FormatString(fieldConfig.FieldName));
+                        {
+                            if (!RecordType.IsSimple())
+                                throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' JSON node.".FormatString(fieldConfig.FieldName));
+                        }
                     }
                 }
 
@@ -497,6 +505,8 @@ namespace ChoETL
 
                     if (fieldConfig.ValueConverter != null)
                         fieldValue = fieldConfig.ValueConverter(fieldValue);
+                    else if (RecordType.IsSimple())
+                        fieldValue = rec;
                     else
                         rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue);
 
@@ -644,21 +654,37 @@ namespace ChoETL
                     {
                         if (isFirst)
                         {
-                            msg.AppendFormat("{2}\"{0}\":{1}", fieldName, isSimple ? " {0}".FormatString(fieldText) :
-                                Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization)).Substring(1),
-                                Indent(String.Empty));
+                            if (RecordType.IsSimple())
+                            {
+                                msg.AppendFormat(fieldText);
+                            }
+                            else
+                            {
+                                msg.AppendFormat("{2}\"{0}\":{1}", fieldName, isSimple ? " {0}".FormatString(fieldText) :
+                                    Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization)).Substring(1),
+                                    Indent(String.Empty));
+                            }
                         }
                         else
                         {
-                            msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldName, isSimple ? " {0}".FormatString(fieldText) :
-                                Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization)).Substring(1),
-                                EOLDelimiter, Indent(String.Empty));
+                            if (RecordType.IsSimple())
+                            {
+                                msg.AppendFormat($",{fieldText}");
+                            }
+                            else
+                            {
+                                msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldName, isSimple ? " {0}".FormatString(fieldText) :
+                                    Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization)).Substring(1),
+                                    EOLDelimiter, Indent(String.Empty));
+                            }
                         }
                         isFirst = false;
                     }
                 }
             }
-            msg.AppendFormat("{0}}}", EOLDelimiter);
+
+            if (!RecordType.IsSimple())
+                msg.AppendFormat("{0}}}", EOLDelimiter);
             recText = Configuration.IgnoreNodeName ? Unindent(msg.ToString()) : msg.ToString();
 
             return true;
