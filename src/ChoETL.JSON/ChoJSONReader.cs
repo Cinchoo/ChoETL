@@ -326,46 +326,55 @@ namespace ChoETL
 
         private IDataReader AsDataReader(Action<IDictionary<string, Type>> membersDiscovered)
         {
-            if (_jObjects == null)
+            this.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
+            return this.Select(s =>
             {
-                ChoJSONRecordReader rr = new ChoJSONRecordReader(typeof(T), Configuration);
-                if (_textReader != null)
-                    _JSONReader = Create(_textReader);
-                rr.Reader = this;
-                rr.TraceSwitch = TraceSwitch;
-                rr.RowsLoaded += NotifyRowsLoaded;
-                rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
-                rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
+                if (s is IDictionary<string, object>)
+                    return ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator).ToDictionary() as object;
+                else
+                    return s;
+            }).AsDataReader();
 
-                return this.Select(s =>
-                {
-                    if (s is IDictionary<string, object>)
-                        return ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator).ToDictionary() as object;
-                    else
-                        return s;
-                }).AsDataReader();
-                //var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_JSONReader), rr);
+            //if (_jObjects == null)
+            //{
+            //    ChoJSONRecordReader rr = new ChoJSONRecordReader(typeof(T), Configuration);
+            //    if (_textReader != null)
+            //        _JSONReader = Create(_textReader);
+            //    rr.Reader = this;
+            //    rr.TraceSwitch = TraceSwitch;
+            //    rr.RowsLoaded += NotifyRowsLoaded;
+            //    rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
+            //    rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
 
-                var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_JSONReader).Select(s =>
-                {
-                    if (s is IDictionary<string, object>)
-                        return ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator).ToDictionary() as object;
-                    else
-                        return s;
-                }), rr);
-                //return dr;
-            }
-            else
-            {
-                ChoJSONRecordReader rr = new ChoJSONRecordReader(typeof(T), Configuration);
-                rr.Reader = this;
-                rr.TraceSwitch = TraceSwitch;
-                rr.RowsLoaded += NotifyRowsLoaded;
-                rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
-                rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
-                var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_jObjects), rr);
-                return dr;
-            }
+            //    return this.Select(s =>
+            //    {
+            //        if (s is IDictionary<string, object>)
+            //            return ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator).ToDictionary() as object;
+            //        else
+            //            return s;
+            //    }).AsDataReader();
+            //    //var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_JSONReader), rr);
+
+            //    var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_JSONReader).Select(s =>
+            //    {
+            //        if (s is IDictionary<string, object>)
+            //            return ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator).ToDictionary() as object;
+            //        else
+            //            return s;
+            //    }), rr);
+            //    //return dr;
+            //}
+            //else
+            //{
+            //    ChoJSONRecordReader rr = new ChoJSONRecordReader(typeof(T), Configuration);
+            //    rr.Reader = this;
+            //    rr.TraceSwitch = TraceSwitch;
+            //    rr.RowsLoaded += NotifyRowsLoaded;
+            //    rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
+            //    rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
+            //    var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_jObjects), rr);
+            //    return dr;
+            //}
         }
 
         public DataTable AsDataTable(string tableName = null)

@@ -342,33 +342,42 @@ namespace ChoETL
 
         private IDataReader AsDataReader(Action<IDictionary<string, Type>> membersDiscovered)
         {
-            if (_xElements == null)
+            this.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
+            return this.Select(s =>
             {
-                InitXml();
+                if (s is IDictionary<string, object>)
+                    return ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator).ToDictionary() as object;
+                else
+                    return s;
+            }).AsDataReader();
 
-                ChoXmlRecordReader rr = new ChoXmlRecordReader(typeof(T), Configuration);
-                //if (_textReader != null)
-                //    _xmlReader = XmlReader.Create(_textReader, new XmlReaderSettings() { DtdProcessing = DtdProcessing.Ignore, XmlResolver = null }, new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
-                rr.Reader = this;
-                rr.TraceSwitch = TraceSwitch;
-                rr.RowsLoaded += NotifyRowsLoaded;
-                rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
-                rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
-                var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_xmlReader), rr);
-                return dr;
-            }
-            else
-            {
-                ChoXmlRecordReader rr = new ChoXmlRecordReader(typeof(T), Configuration);
+            //if (_xElements == null)
+            //{
+            //    InitXml();
 
-                rr.Reader = this;
-                rr.TraceSwitch = TraceSwitch;
-                rr.RowsLoaded += NotifyRowsLoaded;
-                rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
-                rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
-                var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_xElements), rr);
-                return dr;
-            }
+            //    ChoXmlRecordReader rr = new ChoXmlRecordReader(typeof(T), Configuration);
+            //    //if (_textReader != null)
+            //    //    _xmlReader = XmlReader.Create(_textReader, new XmlReaderSettings() { DtdProcessing = DtdProcessing.Ignore, XmlResolver = null }, new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
+            //    rr.Reader = this;
+            //    rr.TraceSwitch = TraceSwitch;
+            //    rr.RowsLoaded += NotifyRowsLoaded;
+            //    rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
+            //    rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
+            //    var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_xmlReader), rr);
+            //    return dr;
+            //}
+            //else
+            //{
+            //    ChoXmlRecordReader rr = new ChoXmlRecordReader(typeof(T), Configuration);
+
+            //    rr.Reader = this;
+            //    rr.TraceSwitch = TraceSwitch;
+            //    rr.RowsLoaded += NotifyRowsLoaded;
+            //    rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
+            //    rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
+            //    var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_xElements), rr);
+            //    return dr;
+            //}
         }
 
         public DataTable AsDataTable(string tableName = null)

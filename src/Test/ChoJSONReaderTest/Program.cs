@@ -2892,7 +2892,7 @@ K,L,M,N,O,P,Q,R,S,T";
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            DeserializeAnonymousTYpe();
+            ToDataTable();
         }
 
         static void SimpleTest()

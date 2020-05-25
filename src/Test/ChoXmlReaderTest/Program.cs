@@ -431,7 +431,7 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            CurrencyDynamicTest();
+            Xml2JSON2();
         }
 
         static void CurrencyDynamicTest()
@@ -587,6 +587,8 @@ namespace ChoXmlReaderTest
                 .WithXPath("/")
                 )
             {
+                var dt = r.AsDataTable();
+
                 //Console.WriteLine(r.First().layer.data.GetText());
                 using (var w = new ChoJSONWriter(json))
                 {
