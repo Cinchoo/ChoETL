@@ -1055,20 +1055,20 @@ namespace ChoETL
                 }
             }
 
-            //Find any object members and serialize them
-            if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
-            {
+            ////Find any object members and serialize them
+            //if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+            //{
 
-            }
-            else
-            {
-                //try
-                //{
-                //    rec = SerializeObjectMembers(rec);
-                //}
-                //catch { }
-                //rec = AssignDefaultsToNullableMembers(rec);
-            }
+            //}
+            //else
+            //{
+            //    try
+            //    {
+            //        rec = SerializeObjectMembers(rec);
+            //    }
+            //    catch { }
+            //    rec = AssignDefaultsToNullableMembers(rec);
+            //}
 
             return true;
         }
