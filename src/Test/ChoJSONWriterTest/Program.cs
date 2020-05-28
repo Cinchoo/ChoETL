@@ -398,7 +398,6 @@ namespace ChoJSONWriterTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            ToDataTable();
             return;
 
             TimespanTest();
