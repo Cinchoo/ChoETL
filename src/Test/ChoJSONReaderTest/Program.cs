@@ -21,6 +21,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using DescriptionAttribute = System.ComponentModel.DescriptionAttribute;
 using UnitTestHelper;
+using System.ComponentModel.DataAnnotations;
 
 namespace ChoJSONReaderTest
 {
@@ -1649,14 +1650,16 @@ K,L,M,N,O,P,Q,R,S,T";
     }
 ]}";
             using (var r = ChoJSONReader.LoadText(json)
-                .WithJSONPath("$..Results[*]")
+                .WithJSONPath("$..Results[*]", true)
                 .WithField("Make_ID", jsonPath: "$..Make_ID", isArray: false)
                 .WithField("Model_ID", jsonPath: "$..Model_ID", isArray: false)
-                .WithField("owners", jsonPath: "$..owners[*]")
+                .WithField("owners", jsonPath: "$..owners[0].address[0]", isArray: false)
                 )
             {
-                foreach (var rec in r.FlattenBy("owners", "address"))
+                foreach (var rec in r)
                     Console.WriteLine(rec.Dump());
+                //foreach (var rec in r.FlattenBy("owners", "address"))
+                //    Console.WriteLine(rec.Dump());
 
                 //foreach (IDictionary<string, object> rec in r)
                 //{
@@ -2465,9 +2468,20 @@ K,L,M,N,O,P,Q,R,S,T";
     ]";
 
             using (var r = ChoJSONReader.LoadText(json)
+                .WithField("Id")
+                .WithField("Salary", fieldType: typeof(ChoCurrency))
+                .WithMaxScanNodes(1)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+
+
+            using (var r = ChoJSONReader<EmpWithCurrency>.LoadText(json)
                 //.WithField("Id")
                 //.WithField("Salary", fieldType: typeof(decimal))
-                .WithMaxScanNodes(1)
+                //.WithMaxScanNodes(1)
                 )
             {
                 foreach (var rec in r)
@@ -2889,10 +2903,127 @@ K,L,M,N,O,P,Q,R,S,T";
             }
         }
 
+
+        public class Employee4
+        {
+            [ChoJSONRecordField]
+            public string Department { get; set; }
+            [ChoJSONRecordField]
+            public string JobTitle { get; set; }
+            //[DisplayFormat(DataFormatString = "dd-MM-yyyy")]
+            [ChoJSONRecordField(FormatText = "dd-MM-yyyy")]
+            public DateTime BirthDate { get; set; }
+        }
+
+        static void CustomDateTimeFormatTest()
+        {
+            string json = @"{
+  'Department': 'Furniture',
+  'JobTitle': 'Carpenter',
+  'FirstName': 'John',
+  'LastName': 'Joinery',
+  'BirthDate': '30-12-2003'
+}";
+
+            using (var r = ChoJSONReader.LoadText(json)
+                .WithField("Department")
+                .WithField("JobTitle")
+                .WithField("BirthDate", fieldType: typeof(DateTime), formatText: "dd-MM-yyyy")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+            return;
+
+            using (var r = ChoJSONReader<Employee4>.LoadText(json))
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+
+        }
+
+        static void Sample41Test()
+        {
+            StringBuilder csv = new StringBuilder();
+
+            using (var w = new ChoCSVWriter(csv)
+                .WithFirstLineHeader()
+                )
+            {
+                using (var r = new ChoJSONReader(@"C:\Projects\GitHub\ChoETL\src\Test\ChoJSONReaderTest\sample41.json")
+                    .WithField("startTime", jsonPath: "$.start.dateTime", isArray: false)
+                    .WithField("endTime", jsonPath: "$.end.dateTime", isArray: false)
+                    .WithField("id")
+                    .WithField("iCalUId")
+                    .WithField("isAllDay")
+                    .WithField("isCancelled")
+                    .WithField("isOrganizer")
+                    .WithField("isOnlineMeeting")
+                    .WithField("onlineMeetingProvider")
+                    .WithField("type")
+                    .WithField("location", jsonPath: "$.location.displayname")
+                    .WithField("locationType", jsonPath: "$.location.locationType", isArray: false)
+                    .WithField("organizer", jsonPath: "$.organizer.emailAddress.name", isArray: false)
+                    .WithField("recurrence", jsonPath: "$.recurrence.pattern.type")
+                    .WithField("attendees", jsonPath: "$.attendees[*]", valueConverter: o => ((IList)o).Count)
+                )
+                {
+                    w.Write(r);
+                }
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
+        public class fooString : IChoNotifyRecordFieldRead
+        {
+            public string time { get; set; }
+            public List<double[]> data1m { get; set; }
+
+            public bool AfterRecordFieldLoad(object target, long index, string propName, object value)
+            {
+                return true;
+            }
+
+            public bool BeforeRecordFieldLoad(object target, long index, string propName, ref object value)
+            {
+                if (propName == nameof(data1m))
+                {
+                    ((fooString)target).data1m = JsonConvert.DeserializeObject<List<double[]>>(value.ToString());
+                    return false;
+                }
+                return true;
+            }
+
+            public bool RecordFieldLoadError(object target, long index, string propName, object value, Exception ex)
+            {
+                return true;
+            }
+        }
+
+        static void TestArray()
+        {
+            string json = @"{
+  ""time"": 20200526, 
+  ""data1m"": ""[[1590451620,204.73,204.81,204.73,204.81,1.00720100],[1590451680,204.66,204.66,204.58,204.58,1.00000000],[1590452280,204.65,204.83,204.65,204.83,13.74186800],[1590452820,203.75,203.75,203.75,203.75,0.50000000],[1590452880,203.47,203.47,203,203,1.60000000],[1590453000,203.06,203.06,203.06,203.06,4.00000000]]""
+}";
+
+            using (var r = ChoJSONReader<fooString>.LoadText(json)
+                //.WithField("time")
+                //.WithField("data1m", valueConverter: o => JsonConvert.DeserializeObject<List<double[]>>(o as string))
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            ToDataTable();
+            TestArray();
         }
 
         static void SimpleTest()
@@ -3082,7 +3213,7 @@ K,L,M,N,O,P,Q,R,S,T";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        class Item
+        public class Item
         {
             [JsonProperty("email")]
             public string Email { get; set; }
@@ -3124,13 +3255,13 @@ K,L,M,N,O,P,Q,R,S,T";
     ""event"": ""open""
   }
 ]";
-            foreach (var rec in ChoJSONReader.LoadText(json))
+            foreach (var rec in ChoJSONReader<Item>.LoadText(json))
             {
                 actual.Add(rec);
-                //                Console.WriteLine(rec.Dump());
+                Console.WriteLine(rec.Dump());
             }
 
-            CollectionAssert.AreEqual(expected, actual);
+            //CollectionAssert.AreEqual(expected, actual);
         }
 
         public class Mesh : IChoRecordFieldSerializable

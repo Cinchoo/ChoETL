@@ -2287,7 +2287,7 @@ namespace ChoETL
             if (itemConverter == null)
                 return list;
 
-            var oldList = new ArrayList();
+            var oldList = new List<object>();
             foreach (object t in list)
                 oldList.Add(t);
 
@@ -2295,7 +2295,7 @@ namespace ChoETL
 
             if (list is Array)
             {
-                ArrayList l = new ArrayList();
+                List<object> l = new List<object>();
                 foreach (object t in oldList)
                     l.Add(itemConverter(t));
 

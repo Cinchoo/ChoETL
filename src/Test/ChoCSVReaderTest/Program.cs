@@ -4177,10 +4177,40 @@ ID	DATE	AMOUNT	QUANTITY ID
             }
         }
 
+        static void CSV2JSONGroupBy()
+        {
+            string csv = @"Category,BookId,BookName
+Mystery,1,My first book
+Biography,2,My second book
+Mystery,3,My third book
+Crime,4,My fourth book
+Romance,5,My fifth book
+Biography,6,My sixth book
+Mystery,7,My seventh book
+Romance,8,My eight book
+SciFi,9,My ninth book
+Poetry,10,My tenth book";
+
+            StringBuilder json = new StringBuilder();
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                )
+            {
+                using (var w = new ChoJSONWriter(json))
+                {
+                    w.Write(r.GroupBy(r1 => r1.Category)
+                        .Select(g => new KeyValuePair<string, object>(g.Key, g.ToArray().ToDictionary(kvp => kvp.BookId, kvp => new { Name = kvp.BookName }))).ToDictionary()
+                        );
+                }
+            }
+
+            Console.WriteLine(json.ToString());
+        }
+
         static void Main(string[] args)
         {
             //ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            DeserializeCollection();
+            CSV2JSONGroupBy();
             return;
 
             CSV2ComplexObject();

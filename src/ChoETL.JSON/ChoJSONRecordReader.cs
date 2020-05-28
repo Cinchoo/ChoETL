@@ -842,7 +842,7 @@ namespace ChoETL
 
                             if (fieldValue is JToken)
                             {
-                                fieldValue = DeserializeNode((JToken)fieldValue, fieldConfig.FieldType, fieldConfig);
+                                fieldValue = DeserializeNode((JToken)fieldValue, typeof(string) /*fieldConfig.FieldType*/, fieldConfig);
                             }
                         }
                         else
@@ -1062,8 +1062,12 @@ namespace ChoETL
             }
             else
             {
-                rec = SerializeObjectMembers(rec);
-                rec = AssignDefaultsToNullableMembers(rec);
+                //try
+                //{
+                //    rec = SerializeObjectMembers(rec);
+                //}
+                //catch { }
+                //rec = AssignDefaultsToNullableMembers(rec);
             }
 
             return true;
