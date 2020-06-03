@@ -161,6 +161,16 @@ namespace ChoETL
 
         public void Write(T record)
         {
+            if (record is DataTable)
+            {
+                Write(record as DataTable);
+                return;
+            }
+            else if (record is IDataReader)
+            {
+                Write(record as IDataReader);
+                return;
+            }
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
             if (record != null && !record.GetType().IsSimple() && !record.GetType().IsDynamicType() && record is IList)
@@ -181,6 +191,35 @@ namespace ChoETL
         public static string ToTextAll<TRec>(IEnumerable<TRec> records, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
             where TRec : class
         {
+            if (records == null) return null;
+
+            if (typeof(DataTable).IsAssignableFrom(typeof(TRec)))
+            {
+                StringBuilder csv = new StringBuilder();
+
+                foreach (var dt in records.Take(1))
+                {
+                    configuration = configuration == null ? new ChoCSVRecordConfiguration().Configure(c => c.WithFirstLineHeader()) : configuration;
+                    using (var w = new ChoCSVWriter(csv, configuration))
+                        w.Write(dt);
+                }
+
+                return csv.ToString();
+            }
+            else if (typeof(IDataReader).IsAssignableFrom(typeof(TRec)))
+            {
+                StringBuilder csv = new StringBuilder();
+
+                foreach (var dt in records.Take(1))
+                {
+                    configuration = configuration == null ? new ChoCSVRecordConfiguration().Configure(c => c.WithFirstLineHeader()) : configuration;
+                    using (var w = new ChoCSVWriter(csv, configuration))
+                        w.Write(dt);
+                }
+
+                return csv.ToString();
+            }
+
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
@@ -202,6 +241,23 @@ namespace ChoETL
 
         internal static string ToText(object rec, ChoCSVRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null)
         {
+            if (rec is DataTable)
+            {
+                StringBuilder csv = new StringBuilder();
+                configuration = configuration == null ? new ChoCSVRecordConfiguration().Configure(c => c.WithFirstLineHeader()) : configuration;
+                using (var w = new ChoCSVWriter(csv, configuration))
+                    w.Write(rec as DataTable);
+                return csv.ToString();
+            }
+            else if (rec is IDataReader)
+            {
+                StringBuilder csv = new StringBuilder();
+                configuration = configuration == null ? new ChoCSVRecordConfiguration().Configure(c => c.WithFirstLineHeader()) : configuration;
+                using (var w = new ChoCSVWriter(csv, configuration))
+                    w.Write(rec as IDataReader);
+                return csv.ToString();
+            }
+
             ChoCSVRecordWriter writer = new ChoCSVRecordWriter(rec.GetType(), configuration);
             writer.TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitchOff : traceSwitch;
 
@@ -478,43 +534,43 @@ namespace ChoETL
                 field.GetFullyQualifiedMemberName(), formatText, nullValue, excelField);
         }
 
-        public ChoCSVWriter<T> WithField<TField>(Expression<Func<T, TField>> field, bool? quoteField = null, 
+        public ChoCSVWriter<T> WithField<TField>(Expression<Func<T, TField>> field, bool? quoteField = null,
             char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
-            bool truncate = true, string fieldName = null, 
-            Func<object, object> valueConverter = null, 
+            bool truncate = true, string fieldName = null,
+            Func<object, object> valueConverter = null,
             Func<dynamic, object> valueSelector = null,
             Func<string> headerSelector = null,
-            object defaultValue = null, object fallbackValue = null, 
+            object defaultValue = null, object fallbackValue = null,
             string formatText = null, string nullValue = null,
             bool excelField = false)
         {
             if (field == null)
                 return this;
 
-            return WithField(field.GetMemberName(), (int?)null, field.GetPropertyType(), quoteField, fillChar, fieldValueJustification, truncate, 
+            return WithField(field.GetMemberName(), (int?)null, field.GetPropertyType(), quoteField, fillChar, fieldValueJustification, truncate,
                 fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue,
                 field.GetFullyQualifiedMemberName(), formatText, nullValue, excelField);
         }
 
-        public ChoCSVWriter<T> WithField(string name, Type fieldType = null, bool? quoteField = null, char? fillChar = null, 
+        public ChoCSVWriter<T> WithField(string name, Type fieldType = null, bool? quoteField = null, char? fillChar = null,
             ChoFieldValueJustification? fieldValueJustification = null,
-            bool truncate = true, string fieldName = null, 
-            Func<object, object> valueConverter = null, 
+            bool truncate = true, string fieldName = null,
+            Func<object, object> valueConverter = null,
             Func<dynamic, object> valueSelector = null,
             Func<string> headerSelector = null,
-            object defaultValue = null, object fallbackValue = null, 
+            object defaultValue = null, object fallbackValue = null,
             string formatText = null, string nullValue = null,
             bool excelField = false)
         {
             return WithField(name, null, fieldType, quoteField, fillChar, fieldValueJustification,
-                truncate, fieldName, valueConverter, valueSelector, headerSelector, 
+                truncate, fieldName, valueConverter, valueSelector, headerSelector,
                 defaultValue, fallbackValue, null, formatText, nullValue, excelField);
         }
 
         private ChoCSVWriter<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null, char? fillChar = null,
             ChoFieldValueJustification? fieldValueJustification = null,
-            bool? truncate = null, string fieldName = null, 
-            Func<object, object> valueConverter = null, 
+            bool? truncate = null, string fieldName = null,
+            Func<object, object> valueConverter = null,
             Func<dynamic, object> valueSelector = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null,

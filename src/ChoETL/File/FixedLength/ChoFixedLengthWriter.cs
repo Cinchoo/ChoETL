@@ -147,6 +147,17 @@ namespace ChoETL
 
         public void Write(T record)
         {
+            if (record is DataTable)
+            {
+                Write(record as DataTable);
+                return;
+            }
+            else if (record is IDataReader)
+            {
+                Write(record as IDataReader);
+                return;
+            }
+
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
             if (record != null && !record.GetType().IsSimple() && !record.GetType().IsDynamicType() && record is IList)
@@ -173,6 +184,35 @@ namespace ChoETL
         public static string ToTextAll<TRec>(IEnumerable<TRec> records, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
             where TRec : class
         {
+            if (records == null) return null;
+
+            if (typeof(DataTable).IsAssignableFrom(typeof(TRec)))
+            {
+                StringBuilder text = new StringBuilder();
+
+                foreach (var dt in records.Take(1))
+                {
+                    configuration = configuration == null ? new ChoFixedLengthRecordConfiguration().Configure(c => c.WithFirstLineHeader()) : configuration;
+                    using (var w = new ChoFixedLengthWriter(text, configuration))
+                        w.Write(dt);
+                }
+
+                return text.ToString();
+            }
+            else if (typeof(IDataReader).IsAssignableFrom(typeof(TRec)))
+            {
+                StringBuilder text = new StringBuilder();
+
+                foreach (var dt in records.Take(1))
+                {
+                    configuration = configuration == null ? new ChoFixedLengthRecordConfiguration().Configure(c => c.WithFirstLineHeader()) : configuration;
+                    using (var w = new ChoFixedLengthWriter(text, configuration))
+                        w.Write(dt);
+                }
+
+                return text.ToString();
+            }
+
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
@@ -189,6 +229,23 @@ namespace ChoETL
 
         internal static string ToText(object rec, ChoFixedLengthRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null)
         {
+            if (rec is DataTable)
+            {
+                StringBuilder text = new StringBuilder();
+                configuration = configuration == null ? new ChoFixedLengthRecordConfiguration().Configure(c => c.WithFirstLineHeader()) : configuration;
+                using (var w = new ChoFixedLengthWriter(text, configuration))
+                    w.Write(rec as DataTable);
+                return text.ToString();
+            }
+            else if (rec is IDataReader)
+            {
+                StringBuilder text = new StringBuilder();
+                configuration = configuration == null ? new ChoFixedLengthRecordConfiguration().Configure(c => c.WithFirstLineHeader()) : configuration;
+                using (var w = new ChoFixedLengthWriter(text, configuration))
+                    w.Write(rec as IDataReader);
+                return text.ToString();
+            }
+
             ChoFixedLengthRecordWriter writer = new ChoFixedLengthRecordWriter(rec.GetType(), configuration);
             writer.TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitchOff : traceSwitch;
 

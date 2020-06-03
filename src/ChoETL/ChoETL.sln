@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29613.14
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.779
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoETL", "ChoETL.csproj", "{0A5062F4-B00A-4998-858D-A3C5D99E2074}"
 EndProject
@@ -77,6 +77,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTestHelper", "..\UnitTestHelper\UnitTestHelper.csproj", "{CAB2DD15-85E2-494B-943C-47E8ADADE340}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoCSVReaderUnitTest.Core", "..\Test\ChoCSVReaderUnitTest.Core\ChoCSVReaderUnitTest.Core.csproj", "{145F4F00-2E68-4B77-B342-AAD6B4382305}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoETL.Parquet", "..\ChoETL.Parquet\ChoETL.Parquet.csproj", "{69713F4B-9948-4207-9EC9-44BA956C7052}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoParquetReaderTest", "..\Test\ChoParquetReaderTest\ChoParquetReaderTest.csproj", "{D27B93EE-A4D4-4828-B3A1-4989479589F0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -188,6 +192,14 @@ Global
 		{145F4F00-2E68-4B77-B342-AAD6B4382305}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{145F4F00-2E68-4B77-B342-AAD6B4382305}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{145F4F00-2E68-4B77-B342-AAD6B4382305}.Release|Any CPU.Build.0 = Release|Any CPU
+		{69713F4B-9948-4207-9EC9-44BA956C7052}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{69713F4B-9948-4207-9EC9-44BA956C7052}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{69713F4B-9948-4207-9EC9-44BA956C7052}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{69713F4B-9948-4207-9EC9-44BA956C7052}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D27B93EE-A4D4-4828-B3A1-4989479589F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D27B93EE-A4D4-4828-B3A1-4989479589F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D27B93EE-A4D4-4828-B3A1-4989479589F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D27B93EE-A4D4-4828-B3A1-4989479589F0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -215,6 +227,7 @@ Global
 		{2AAF991E-40B7-4E0F-82ED-DD88A380659E} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 		{CAB2DD15-85E2-494B-943C-47E8ADADE340} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 		{145F4F00-2E68-4B77-B342-AAD6B4382305} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
+		{D27B93EE-A4D4-4828-B3A1-4989479589F0} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D35E7445-B861-41CC-B854-44981E4F9FFB}

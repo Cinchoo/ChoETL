@@ -1538,10 +1538,29 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             Console.WriteLine(csv.ToString());
         }
 
+        static void ValueListTest()
+        {
+            List<int> list = new List<int>()
+            {
+                1,
+                2,
+                3
+            };
+
+            StringBuilder csv = new StringBuilder();
+            using (var w = new ChoCSVWriter(csv)
+                .WithFirstLineHeader()
+                .WithField("Value", fieldName: "X")
+                )
+            {
+                w.Write(list);
+            }
+            Console.WriteLine(csv.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            GuidWriteTest();
 
             return;
 

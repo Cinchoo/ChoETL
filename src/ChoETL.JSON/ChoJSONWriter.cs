@@ -135,6 +135,17 @@ namespace ChoETL
 
         public void Write(T record)
         {
+            if (record is DataTable)
+            {
+                Write(record as DataTable);
+                return;
+            }
+            else if (record is IDataReader)
+            {
+                Write(record as IDataReader);
+                return;
+            }
+
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
             if (record != null && !record.GetType().IsSimple() && !record.GetType().IsDynamicType() && record is IList)
@@ -159,6 +170,21 @@ namespace ChoETL
 
         public static string ToText<TRec>(TRec record, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string jsonPath = null)
         {
+            if (record is DataTable)
+            {
+                StringBuilder xml = new StringBuilder();
+                using (var w = new ChoJSONWriter(xml, configuration))
+                    w.Write(record as DataTable);
+                return xml.ToString();
+            }
+            else if (record is IDataReader)
+            {
+                StringBuilder xml = new StringBuilder();
+                using (var w = new ChoJSONWriter(xml, configuration))
+                    w.Write(record as IDataReader);
+                return xml.ToString();
+            }
+
             if (configuration == null)
                 configuration = new ChoJSONRecordConfiguration();
 
@@ -173,6 +199,38 @@ namespace ChoETL
 
         public static string ToTextAll<TRec>(IEnumerable<TRec> records, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string jsonPath = null)
         {
+            if (records == null) return null;
+
+            if (typeof(DataTable).IsAssignableFrom(typeof(TRec)))
+            {
+                StringBuilder json = new StringBuilder();
+
+                foreach (var dt in records.Take(1))
+                {
+                    using (var w = new ChoJSONWriter(json, configuration))
+                    {
+                        w.Write(dt);
+                    }
+                }
+
+                return json.ToString();
+            }
+            else if (typeof(IDataReader).IsAssignableFrom(typeof(TRec)))
+            {
+                StringBuilder json = new StringBuilder();
+
+                foreach (var dt in records.Take(1))
+                {
+                    using (var w = new ChoJSONWriter(json, configuration))
+                    {
+                        w.Write(dt);
+                    }
+                }
+
+                return json.ToString();
+            }
+
+
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
@@ -192,6 +250,25 @@ namespace ChoETL
 
         internal static string ToText(object rec, ChoJSONRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null)
         {
+            if (rec is DataTable)
+            {
+                StringBuilder json = new StringBuilder();
+                using (var w = new ChoJSONWriter(json, configuration))
+                {
+                    w.Write(rec as DataTable);
+                }
+                return json.ToString();
+            }
+            else if (rec is IDataReader)
+            {
+                StringBuilder json = new StringBuilder();
+                using (var w = new ChoJSONWriter(json, configuration))
+                {
+                    w.Write(rec as IDataReader);
+                }
+                return json.ToString();
+            }
+
             ChoJSONRecordWriter writer = new ChoJSONRecordWriter(rec.GetType(), configuration);
             writer.TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitchOff : traceSwitch;
 
@@ -643,6 +720,15 @@ namespace ChoETL
         public static string Serialize<T>(T record, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
             return ToText(record, configuration, traceSwitch);
+        }
+
+        ~ChoJSONWriter()
+        {
+            try
+            {
+                Dispose(true);
+            }
+            catch { }
         }
     }
 }

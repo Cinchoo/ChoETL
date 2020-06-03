@@ -4210,7 +4210,7 @@ Poetry,10,My tenth book";
         static void Main(string[] args)
         {
             //ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            CSV2JSONGroupBy();
+            CSVArrayToJSON1();
             return;
 
             CSV2ComplexObject();

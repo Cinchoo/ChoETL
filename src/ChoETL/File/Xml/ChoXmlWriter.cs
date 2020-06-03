@@ -134,6 +134,17 @@ namespace ChoETL
 
         public void Write(T record)
         {
+            if (record is DataTable)
+            {
+                Write(record as DataTable);
+                return;
+            }
+            else if (record is IDataReader)
+            {
+                Write(record as IDataReader);
+                return;
+            }
+
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
             if (record != null && !record.GetType().IsSimple() && !record.GetType().IsDynamicType() && record is IList)
@@ -154,6 +165,21 @@ namespace ChoETL
         public static string ToText<TRec>(TRec record, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string xpath = null)
             where TRec : class
         {
+            if (record is DataTable)
+            {
+                StringBuilder xml = new StringBuilder();
+                using (var w = new ChoXmlWriter(xml, configuration))
+                    w.Write(record as DataTable);
+                return xml.ToString();
+            }
+            else if (record is IDataReader)
+            {
+                StringBuilder xml = new StringBuilder();
+                using (var w = new ChoXmlWriter(xml, configuration))
+                    w.Write(record as IDataReader);
+                return xml.ToString();
+            }
+
             if (configuration == null)
             {
                 configuration = new ChoXmlRecordConfiguration();
@@ -219,6 +245,31 @@ namespace ChoETL
         {
             if (records == null) return null;
 
+            if (typeof(DataTable).IsAssignableFrom(typeof(TRec)))
+            {
+                StringBuilder xml = new StringBuilder();
+
+                foreach (var dt in records.Take(1))
+                {
+                    using (var w = new ChoXmlWriter(xml, configuration))
+                        w.Write(dt);
+                }
+
+                return xml.ToString();
+            }
+            else if (typeof(IDataReader).IsAssignableFrom(typeof(TRec)))
+            {
+                StringBuilder xml = new StringBuilder();
+
+                foreach (var dt in records.Take(1))
+                {
+                    using (var w = new ChoXmlWriter(xml, configuration))
+                        w.Write(dt);
+                }
+
+                return xml.ToString();
+            }
+
             var pe = new ChoPeekEnumerator<TRec>(records, (Func<TRec, bool?>)null);
             if (configuration == null)
             {
@@ -281,6 +332,21 @@ namespace ChoETL
 
         internal static string ToText(object rec, ChoXmlRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null)
         {
+            if (rec is DataTable)
+            {
+                StringBuilder xml = new StringBuilder();
+                using (var w = new ChoXmlWriter(xml, configuration))
+                    w.Write(rec as DataTable);
+                return xml.ToString();
+            }
+            else if (rec is IDataReader)
+            {
+                StringBuilder xml = new StringBuilder();
+                using (var w = new ChoXmlWriter(xml, configuration))
+                    w.Write(rec as IDataReader);
+                return xml.ToString();
+            }
+
             ChoXmlRecordWriter writer = new ChoXmlRecordWriter(rec.GetType(), configuration);
             writer.TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitchOff : traceSwitch;
 
