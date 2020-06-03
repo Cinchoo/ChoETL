@@ -431,7 +431,7 @@ namespace ChoETL
                         fieldValue = ChoConvert.ConvertTo(fieldValue, nativeType ? fieldConfig.FieldType : fieldValue == null ? typeof(string) : fieldValue.GetType(), null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
                     }
                     else
-                        fieldValue = ChoConvert.ConvertTo(fieldValue, typeof(string), null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                        fieldValue = ChoConvert.ConvertTo(fieldValue, nativeType ? fieldConfig.FieldType : typeof(string), null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
                 }
                 else
                 {

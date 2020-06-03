@@ -108,8 +108,14 @@ namespace ChoETL
                         }
                         else if (sr.TokenType != JsonToken.EndArray)
                         {
-                            dynamic x = new JObject(new JProperty("Value", JToken.Load(sr)));
-                            yield return x;
+                            dynamic x = null;
+                            try
+                            {
+                                x = new JObject(new JProperty("Value", JToken.Load(sr)));
+                            }
+                            catch { }
+                            if (x != null)
+                                yield return x;
                         }
                     }
                 }
