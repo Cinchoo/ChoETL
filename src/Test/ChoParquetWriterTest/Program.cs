@@ -19,6 +19,26 @@ namespace ChoParquetWriterTest
             [Description("Contract Employee")]
             Contract = 2
         }
+
+        static void QuickTest()
+        {
+            string csv = @"Id, Name
+1, Tom
+2, Mark";
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .WithMaxScanRows(2)
+                .QuoteAllFields()
+                )
+            {
+                using (var w = new ChoParquetWriter("quicktest.parquet"))
+                {
+                    w.Write(r);
+                }
+            }
+        }
+
         static void Test1()
         {
             string csv = @"Cust_ID,CustName,CustOrder,Salary,Guid
@@ -178,6 +198,7 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
 
         static void Main(string[] args)
         {
+            QuickTest();
             Test1();
             EnumTest();
             CSVArrayToParquet();

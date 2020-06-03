@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\ChoETL.JSON.NETStandard\ChoETL.JSON.NETStandard.csproj" />
     <ProjectReference Include="..\..\ChoETL.Parquet\ChoETL.Parquet.csproj" />
   </ItemGroup>
 

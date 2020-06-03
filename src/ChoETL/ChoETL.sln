@@ -82,6 +82,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoETL.Parquet", "..\ChoETL
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoParquetReaderTest", "..\Test\ChoParquetReaderTest\ChoParquetReaderTest.csproj", "{D27B93EE-A4D4-4828-B3A1-4989479589F0}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoParquetWriterTest", "..\Test\ChoParquetWriterTest\ChoParquetWriterTest.csproj", "{69B4D371-2A3F-4765-81FD-85D46E04957F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -200,6 +202,10 @@ Global
 		{D27B93EE-A4D4-4828-B3A1-4989479589F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D27B93EE-A4D4-4828-B3A1-4989479589F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D27B93EE-A4D4-4828-B3A1-4989479589F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{69B4D371-2A3F-4765-81FD-85D46E04957F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{69B4D371-2A3F-4765-81FD-85D46E04957F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{69B4D371-2A3F-4765-81FD-85D46E04957F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{69B4D371-2A3F-4765-81FD-85D46E04957F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -228,6 +234,7 @@ Global
 		{CAB2DD15-85E2-494B-943C-47E8ADADE340} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 		{145F4F00-2E68-4B77-B342-AAD6B4382305} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 		{D27B93EE-A4D4-4828-B3A1-4989479589F0} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
+		{69B4D371-2A3F-4765-81FD-85D46E04957F} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D35E7445-B861-41CC-B854-44981E4F9FFB}
