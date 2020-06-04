@@ -594,11 +594,11 @@ namespace ChoETL
 
                 if (fieldConfig.CustomSerializer != null)
                 {
-                    recText = fieldConfig.CustomSerializer(fieldValue) as string;
+                    fieldText = fieldConfig.CustomSerializer(fieldValue) as string;
                 }
                 else if (RaiseRecordFieldSerialize(rec, index, kvp.Key, ref fieldValue))
                 {
-                    recText = fieldValue as string;
+                    fieldText = fieldValue as string;
                 }
                 else
                 {
@@ -649,37 +649,37 @@ namespace ChoETL
                         fieldText = fieldValue.ToString();
                     else
                         isSimple = false;
+                }
 
-                    if (fieldText != null)
+                if (fieldText != null)
+                {
+                    if (isFirst)
                     {
-                        if (isFirst)
+                        if (RecordType.IsSimple())
                         {
-                            if (RecordType.IsSimple())
-                            {
-                                msg.AppendFormat(fieldText);
-                            }
-                            else
-                            {
-                                msg.AppendFormat("{2}\"{0}\":{1}", fieldName, isSimple ? " {0}".FormatString(fieldText) :
-                                    Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization)).Substring(1),
-                                    Indent(String.Empty));
-                            }
+                            msg.AppendFormat(fieldText);
                         }
                         else
                         {
-                            if (RecordType.IsSimple())
-                            {
-                                msg.AppendFormat($",{fieldText}");
-                            }
-                            else
-                            {
-                                msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldName, isSimple ? " {0}".FormatString(fieldText) :
-                                    Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization)).Substring(1),
-                                    EOLDelimiter, Indent(String.Empty));
-                            }
+                            msg.AppendFormat("{2}\"{0}\":{1}", fieldName, isSimple ? " {0}".FormatString(fieldText) :
+                                Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization)).Substring(1),
+                                Indent(String.Empty));
                         }
-                        isFirst = false;
                     }
+                    else
+                    {
+                        if (RecordType.IsSimple())
+                        {
+                            msg.AppendFormat($",{fieldText}");
+                        }
+                        else
+                        {
+                            msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldName, isSimple ? " {0}".FormatString(fieldText) :
+                                Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization)).Substring(1),
+                                EOLDelimiter, Indent(String.Empty));
+                        }
+                    }
+                    isFirst = false;
                 }
             }
 

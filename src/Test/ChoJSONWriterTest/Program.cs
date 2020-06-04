@@ -395,10 +395,55 @@ namespace ChoJSONWriterTest
             Console.WriteLine(json);
         }
 
+        public class Record
+        {
+            public User User { get; set; }
+            public User Sister { get; set; }
+            public User Mother { get; set; }
+        }
+
+        public class User
+        {
+            public string Name { get; set; }
+            public int Id { get; set; }
+        }
+
+        static void SerializeComplexType()
+        {
+            var rec = new Record
+            {
+                User = new User
+                {
+                    Id = 1,
+                    Name = "Tom"
+                },
+                Sister = new User
+                {
+                    Id = 2,
+                    Name = "Betsy"
+                },
+                Mother = new User
+                {
+                    Id = 3,
+                    Name = "Sisly"
+                }
+            };
+
+            StringBuilder json = new StringBuilder();
+            using (var w = new ChoJSONWriter<Record>(json)
+                .WithField(f => f.User, m => m.CustomSerializer((o) => JsonConvert.SerializeObject(o.ToDictionary().Select(kvp => new KeyValuePair<string, object>($"User_{kvp.Key}", kvp.Value)).ToDictionary())))
+                )
+            {
+                w.Write(rec);
+            }
+
+            Console.WriteLine(json.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            SerializeObject();
+            SerializeComplexType();
             return;
 
             TimespanTest();
