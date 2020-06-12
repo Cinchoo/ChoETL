@@ -47,20 +47,21 @@ namespace ChoETL
                 var dict = _configuration.JSONRecordFieldConfigurationsForType[property.DeclaringType];
                 if (dict != null && dict.ContainsKey(property.UnderlyingName))
                 {
-                    property.Converter = property.MemberConverter = new ChoContractResolverJsonConverter(dict[property.UnderlyingName], _configuration.Culture, property.PropertyType);
+                    property.Converter = property.MemberConverter = new ChoContractResolverJsonConverter(dict[property.UnderlyingName], _configuration.Culture, 
+                        property.PropertyType, _configuration.ObjectValidationMode, member);
                 }
             }
             else if (_configuration.JSONRecordFieldConfigurations.Any(f => f.DeclaringMember == propertyFullName))
             {
                 var fc = _configuration.JSONRecordFieldConfigurations.First(f => f.DeclaringMember == propertyFullName);
-                property.MemberConverter = new ChoContractResolverJsonConverter(fc, _configuration.Culture, property.PropertyType);
+                property.MemberConverter = new ChoContractResolverJsonConverter(fc, _configuration.Culture, property.PropertyType, _configuration.ObjectValidationMode, member);
                 property.DefaultValue = fc.DefaultValue;
                 property.Order = fc.Order;
             }
             else if (_configuration.JSONRecordFieldConfigurations.Any(f => f.Name == propertyFullName))
             {
                 var fc = _configuration.JSONRecordFieldConfigurations.First(f => f.Name == propertyFullName);
-                property.MemberConverter = new ChoContractResolverJsonConverter(fc, _configuration.Culture, property.PropertyType);
+                property.MemberConverter = new ChoContractResolverJsonConverter(fc, _configuration.Culture, property.PropertyType, _configuration.ObjectValidationMode, member);
                 property.DefaultValue = fc.DefaultValue;
                 property.Order = fc.Order;
             }
@@ -168,12 +169,16 @@ namespace ChoETL
         private ChoJSONRecordFieldConfiguration _fc = null;
         private CultureInfo _culture;
         private Type _objType;
+        private ChoObjectValidationMode _validationMode;
+        private MemberInfo _mi;
 
-        public ChoContractResolverJsonConverter(ChoJSONRecordFieldConfiguration fc, CultureInfo culture, Type objType)
+        public ChoContractResolverJsonConverter(ChoJSONRecordFieldConfiguration fc, CultureInfo culture, Type objType, ChoObjectValidationMode validationMode, MemberInfo mi)
         {
             _fc = fc;
             _culture = culture;
             _objType = objType;
+            _validationMode = validationMode;
+            _mi = mi;
         }
 
         public override bool CanConvert(Type objectType)
@@ -199,6 +204,8 @@ namespace ChoETL
             if (retValue != null)
                 retValue = ChoConvert.ConvertFrom(retValue, objectType, null, _fc.PropConverters, _fc.PropConverterParams, _culture);
 
+            Validate(retValue);
+
             return retValue;
         }
 
@@ -217,6 +224,10 @@ namespace ChoETL
                 else
                 {
                     object retValue = _fc.ValueConverter(value);
+
+                    Validate(retValue);
+
+                    ChoETLRecordHelper.DoMemberLevelValidation(retValue, _fc.Name, _fc, _validationMode);
                     JToken t = JToken.FromObject(retValue);
                     t.WriteTo(writer);
                 }
@@ -226,10 +237,43 @@ namespace ChoETL
                 object retValue = _fc.CustomSerializer(writer);
                 if (retValue != null)
                 {
+                    Validate(retValue);
                     JToken t = JToken.FromObject(value);
                     t.WriteTo(writer);
                 }
             }
+        }
+
+        private void Validate(object value)
+        {
+            if (_validationMode == ChoObjectValidationMode.MemberLevel)
+            {
+                var results = new List<ValidationResult>();
+                var context = new ValidationContext(value, null, null);
+                context.MemberName = _mi.Name;
+
+                var vResult = Validator.TryValidateValue(value, context, results, _fc.Validators.IsNullOrEmpty() ? _mi.GetCustomAttributes<ValidationAttribute>() : _fc.Validators);
+                if (!vResult)
+                {
+                    if (results.Count > 0)
+                        throw new ValidationException("Failed to validate '{0}' member. {2}{1}".FormatString(_mi.Name, ToString(results), Environment.NewLine));
+                    else
+                        throw new ValidationException("Failed to valudate.");
+                }
+            }
+        }
+        private static string ToString(IEnumerable<ValidationResult> results)
+        {
+            StringBuilder msg = new StringBuilder();
+            foreach (var validationResult in results)
+            {
+                msg.AppendLine(validationResult.ErrorMessage);
+
+                if (validationResult is CompositeValidationResult)
+                    msg.AppendLine(ToString(((CompositeValidationResult)validationResult).Results).Indent());
+            }
+
+            return msg.ToString();
         }
     }
 }
