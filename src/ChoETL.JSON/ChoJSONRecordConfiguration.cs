@@ -558,21 +558,29 @@ namespace ChoETL
 
         public ChoJSONRecordConfiguration IgnoreField<T, TProperty>(Expression<Func<T, TProperty>> field)
         {
-            if (JSONRecordFieldConfigurations.Count == 0)
-                MapRecordFields<T>();
+            if (field != null)
+            {
+                if (JSONRecordFieldConfigurations.Count == 0)
+                    MapRecordFields<T>();
 
-            var fc = JSONRecordFieldConfigurations.Where(f => f.DeclaringMember == field.GetFullyQualifiedMemberName()).FirstOrDefault();
-            if (fc != null)
-                JSONRecordFieldConfigurations.Remove(fc);
+                var fc = JSONRecordFieldConfigurations.Where(f => f.DeclaringMember == field.GetFullyQualifiedMemberName()).FirstOrDefault();
+                if (fc != null)
+                    JSONRecordFieldConfigurations.Remove(fc);
+            }
 
             return this;
         }
 
         public ChoJSONRecordConfiguration IgnoreField(string fieldName)
         {
-            var fc = JSONRecordFieldConfigurations.Where(f => f.DeclaringMember == fieldName || f.FieldName == fieldName).FirstOrDefault();
-            if (fc != null)
-                JSONRecordFieldConfigurations.Remove(fc);
+            if (fieldName != null)
+            {
+                var fc = JSONRecordFieldConfigurations.Where(f => f.DeclaringMember == fieldName || f.FieldName == fieldName).FirstOrDefault();
+                if (fc != null)
+                    JSONRecordFieldConfigurations.Remove(fc);
+                else
+                    IgnoredFields.Add(fieldName);
+            }
 
             return this;
         }
@@ -611,7 +619,7 @@ namespace ChoETL
 
         #endregion Fluent API
 
-        internal void WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isJSONAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
+        internal void WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null,
@@ -642,7 +650,7 @@ namespace ChoETL
                 {
                     FieldType = fieldType,
                     FieldValueTrimOption = fieldValueTrimOption,
-                    FieldName = fieldName,
+                    FieldName = fieldName.IsNullOrWhiteSpace() ? name : fieldName,
                     ValueConverter = valueConverter,
                     CustomSerializer = customSerializer,
                     DefaultValue = defaultValue,

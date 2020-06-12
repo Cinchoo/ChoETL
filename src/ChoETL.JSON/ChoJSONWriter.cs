@@ -369,6 +369,17 @@ namespace ChoETL
             return this;
         }
 
+        private ChoJSONWriter<T> ClearFieldsIf()
+        {
+            if (!_clearFields)
+            {
+                Configuration.ClearFields();
+                _clearFields = true;
+                Configuration.MapRecordFields(Configuration.RecordType);
+            }
+            return this;
+        }
+
         public ChoJSONWriter<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
         {
             Configuration.IgnoreField(field);
@@ -379,32 +390,12 @@ namespace ChoETL
         {
             if (!fieldName.IsNullOrWhiteSpace())
             {
+                ClearFieldsIf();
                 string fnTrim = null;
-                if (!_clearFields)
-                {
-                    ClearFields();
-                    Configuration.MapRecordFields(Configuration.RecordType);
-                }
                 fnTrim = fieldName.NTrim();
-                if (Configuration.JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-                    Configuration.JSONRecordFieldConfigurations.Remove(Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
-                else
-                    Configuration.IgnoredFields.Add(fieldName);
+                Configuration.IgnoreField(fnTrim);
             }
 
-            return this;
-        }
-
-        public ChoJSONWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoJSONRecordFieldConfigurationMap> setup)
-        {
-            Configuration.Map(field.GetMemberName(), setup);
-            return this;
-        }
-
-        public ChoJSONWriter<T> WithField(string name, Action<ChoJSONRecordFieldConfigurationMap> mapper)
-        {
-            if (!name.IsNullOrWhiteSpace())
-                Configuration.Map(name, mapper);
             return this;
         }
 
@@ -429,11 +420,7 @@ namespace ChoETL
                 {
                     if (fn.IsNullOrEmpty())
                         continue;
-                    if (!_clearFields)
-                    {
-                        ClearFields();
-                        Configuration.MapRecordFields(Configuration.RecordType);
-                    }
+                    ClearFieldsIf();
                     fnTrim = fn.NTrim();
                     if (Configuration.JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
                     {
@@ -459,84 +446,91 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONWriter<T> WithField<TField>(Expression<Func<T, TField>> field, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
-            object defaultValue = null, object fallbackValue = null, string formatText = null, string nullValue = null)
+        public ChoJSONWriter<T> WithField(string name, Action<ChoJSONRecordFieldConfigurationMap> mapper)
+        {
+            if (!name.IsNullOrWhiteSpace())
+                Configuration.Map(name, mapper);
+            return this;
+        }
+
+        public ChoJSONWriter<T> ClearFieldForType<TClass>()
+        {
+            Configuration.ClearRecordFieldsForType(typeof(TClass));
+            return this;
+        }
+
+        public ChoJSONWriter<T> WithFieldForType<TClass>(Expression<Func<TClass, object>> field,
+            string jsonPath = null, Type fieldType = null,
+            ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
+            string fieldName = null,
+            Func<object, object> valueConverter = null,
+            Func<object, object> itemConverter = null,
+            Func<object, object> customSerializer = null,
+            object defaultValue = null, object fallbackValue = null, string formatText = null,
+            string nullValue = null)
+            where TClass : class
         {
             if (field == null)
                 return this;
 
-            return WithField(field.GetMemberName(), field.GetPropertyType(), fieldValueTrimOption, fieldName, valueConverter,
-                defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, nullValue);
+            return WithField(field.GetMemberName(), fieldType, fieldValueTrimOption, fieldName, valueConverter, itemConverter,
+                customSerializer, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, true, nullValue, typeof(TClass));
+        }
+
+        public ChoJSONWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoJSONRecordFieldConfigurationMap> mapper)
+        {
+            ClearFieldsIf();
+
+            if (!field.GetMemberName().IsNullOrWhiteSpace())
+                Configuration.Map(field.GetMemberName(), mapper);
+            return this;
+        }
+
+        public ChoJSONWriter<T> WithField<TField>(Expression<Func<T, TField>> field, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
+            Func<object, object> valueConverter = null,
+            Func<object, object> itemConverter = null,
+            Func<object, object> customSerializer = null,
+            object defaultValue = null, object fallbackValue = null, string formatText = null,
+            string nullValue = null)
+        {
+            if (field == null)
+                return this;
+
+            return WithField(field.GetMemberName(), field.GetPropertyType(), fieldValueTrimOption, fieldName, valueConverter, itemConverter,
+                customSerializer, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, true, nullValue, null);
         }
 
         public ChoJSONWriter<T> WithField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
-            object defaultValue = null, object fallbackValue = null, string formatText = null, string nullValue = null)
+            Func<object, object> itemConverter = null,
+            Func<object, object> customSerializer = null,
+            object defaultValue = null, object fallbackValue = null, string formatText = null, bool isArray = true,
+            string nullValue = null)
         {
-            return WithField(name, fieldType, fieldValueTrimOption, fieldName, valueConverter,
-                defaultValue, fallbackValue, null, formatText, nullValue);
+            return WithField(name, fieldType, fieldValueTrimOption, fieldName, valueConverter, itemConverter,
+                customSerializer, defaultValue, fallbackValue, null, formatText, isArray, nullValue, null);
         }
 
         private ChoJSONWriter<T> WithField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
-            object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null, string formatText = null,
-            string nullValue = null)
+            Func<object, object> itemConverter = null,
+            Func<object, object> customSerializer = null,
+            object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null,
+            string formatText = null, bool isArray = true, string nullValue = null,
+            Type subRecordType = null)
         {
             if (!name.IsNullOrEmpty())
             {
-                if (!_clearFields)
-                {
-                    ClearFields();
-                    Configuration.MapRecordFields(Configuration.RecordType);
-                }
-
-                string fnTrim = name.NTrim();
-                ChoJSONRecordFieldConfiguration fc = null;
-                PropertyDescriptor pd = null;
-                if (Configuration.JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-                {
-                    fc = Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
-                    Configuration.JSONRecordFieldConfigurations.Remove(fc);
-                }
-                else
-                    pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
-
-                var nfc = new ChoJSONRecordFieldConfiguration(fnTrim, (string)null)
-                {
-                    FieldType = fieldType,
-                    FieldValueTrimOption = fieldValueTrimOption,
-                    FieldName = fieldName,
-                    ValueConverter = valueConverter,
-                    DefaultValue = defaultValue,
-                    FallbackValue = fallbackValue,
-                    FormatText = formatText,
-                    NullValue = nullValue
-                };
-                if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
-                {
-                    nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
-                    nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
-                }
-                else
-                {
-                    pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
-                    nfc.PropertyDescriptor = pd;
-                    nfc.DeclaringMember = fullyQualifiedMemberName;
-                }
-                if (pd != null)
-                {
-                    if (nfc.FieldType == null)
-                        nfc.FieldType = pd.PropertyType;
-                }
-
-                Configuration.JSONRecordFieldConfigurations.Add(nfc);
+                ClearFieldsIf();
+                Configuration.WithField(name, null, fieldType, fieldValueTrimOption, fieldName,
+                    valueConverter, itemConverter, customSerializer, defaultValue, fallbackValue, fullyQualifiedMemberName, formatText,
+                    isArray, nullValue, typeof(T), subRecordType);
             }
-
             return this;
         }
 
         public ChoJSONWriter<T> WithFlatToNestedObjectSupport(bool flatToNestedObjectSupport = true)
         {
             Configuration.FlatToNestedObjectSupport = flatToNestedObjectSupport;
-            ClearFields();
+            ClearFieldsIf();
             Configuration.MapRecordFields(Configuration.RecordType);
             return this;
         }

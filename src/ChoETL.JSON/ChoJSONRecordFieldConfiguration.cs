@@ -22,6 +22,12 @@ namespace ChoETL
             set;
         }
 
+        public int Order
+        {
+            get;
+            set;
+        }
+
         public bool IsArray
         {
             get;
@@ -71,6 +77,7 @@ namespace ChoETL
             FieldName = name;
             if (attr != null)
             {
+                Order = attr.Order;
                 JSONPath = attr.JSONPath;
                 UseJSONSerialization = attr.UseJSONSerializationInternal;
                 FieldName = attr.FieldName.IsNullOrWhiteSpace() ? Name.NTrim() : attr.FieldName.NTrim();

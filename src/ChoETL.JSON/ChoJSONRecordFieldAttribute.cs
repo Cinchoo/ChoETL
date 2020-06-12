@@ -15,6 +15,12 @@ namespace ChoETL
             set;
         }
 
+        public int Order
+        {
+            get;
+            set;
+        }
+
         public ChoJSONRecordFieldAttribute()
         {
 

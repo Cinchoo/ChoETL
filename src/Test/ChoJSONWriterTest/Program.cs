@@ -440,10 +440,87 @@ namespace ChoJSONWriterTest
             Console.WriteLine(json.ToString());
         }
 
+        static void BSONTest()
+        {
+            string json = @"[
+  {
+    ""Id"": 1,
+    ""Name"": ""Mark""
+  },
+  {
+    ""Id"": 2,
+    ""Name"": null
+  }
+]
+";
+            StringBuilder xml = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+            }
+            Console.WriteLine(xml.ToString());
+
+        }
+
+        static void XmlWithXData2JSON()
+        {
+            string json  = @"{
+      ""d1"": ""test"",
+      ""d2"": ""test@1234"",
+      ""xmltestData"": ""<![CDATA[<Invoices><key>we</key></Invoices>]]>"",
+      ""user"": ""demo"",
+      ""pass"": ""653""
+    }";
+
+            StringBuilder xml = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                using (var w = new ChoXmlWriter(xml)
+                    .WithField("xmlTestData")
+                    )
+                    w.Write(r);
+            }
+
+            Console.WriteLine(xml.ToString());
+        }
+
+        static void WriteCommentTest()
+        {
+            var rec = new Record
+            {
+                User = new User
+                {
+                    Id = 1,
+                    Name = "Tom"
+                },
+                Sister = new User
+                {
+                    Id = 2,
+                    Name = "Betsy"
+                },
+                Mother = new User
+                {
+                    Id = 3,
+                    Name = "Sisly"
+                }
+            };
+
+            StringBuilder json = new StringBuilder();
+            using (var w = new ChoJSONWriter<Record>(json)
+                //.WithField(f => f.User, m => m.CustomSerializer((o) => JsonConvert.SerializeObject(o.ToDictionary().Select(kvp => new KeyValuePair<string, object>($"User_{kvp.Key}", kvp.Value)).ToDictionary())))
+                .WithFieldForType<User>(f => f.Name, valueConverter: o => o.ToNString() + "M")
+                )
+            {
+                w.Write(rec);
+            }
+
+            Console.WriteLine(json.ToString());
+
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            SerializeComplexType();
+            WriteCommentTest();
             return;
 
             TimespanTest();

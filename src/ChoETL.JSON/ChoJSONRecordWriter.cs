@@ -404,7 +404,7 @@ namespace ChoETL
                 {
                     if (Configuration.IsDynamicObject && rec is ChoDynamicObject && ((ChoDynamicObject)rec).DynamicObjectName != ChoDynamicObject.DefaultName)
                         msg.AppendFormat(@"""{1}"": {{{0}", EOLDelimiter, ((ChoDynamicObject)rec).DynamicObjectName);
-                    else if(!RecordType.IsSimple())
+                    else if (!RecordType.IsSimple())
                         msg.AppendFormat("{{{0}", EOLDelimiter);
                 }
                 else
@@ -418,12 +418,12 @@ namespace ChoETL
             else if (!RecordType.IsSimple())
                 msg.AppendFormat("{{{0}", EOLDelimiter);
 
-            foreach (KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
+            foreach (KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict.OrderBy(kvp => kvp.Value.Order))
             {
                 //if (Configuration.IsDynamicObject)
                 //{
-                    if (Configuration.IgnoredFields.Contains(kvp.Key))
-                        continue;
+                if (Configuration.IgnoredFields.Contains(kvp.Key))
+                    continue;
                 //}
 
                 fieldConfig = kvp.Value;
@@ -765,10 +765,10 @@ namespace ChoETL
             }
         }
 
-  //      public IEnumerable<IDictionary<string, object>> MapToDictionary(IList source)
-  //      {
-  //          foreach (var item in source)
-  //              return MapToDictionary(item);
+        //      public IEnumerable<IDictionary<string, object>> MapToDictionary(IList source)
+        //      {
+        //          foreach (var item in source)
+        //              return MapToDictionary(item);
 
         //	return Enumerable.Empty<IDictionary<string, object>>();
         //}

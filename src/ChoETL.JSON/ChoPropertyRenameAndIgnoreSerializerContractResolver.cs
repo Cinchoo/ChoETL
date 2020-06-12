@@ -19,69 +19,90 @@ namespace ChoETL
 {
     public class ChoPropertyRenameAndIgnoreSerializerContractResolver : DefaultContractResolver
     {
-        private readonly Dictionary<Type, HashSet<string>> _ignores;
-        private readonly Dictionary<Type, Dictionary<string, string>> _renames;
         private readonly ChoJSONRecordConfiguration _configuration;
 
         public ChoPropertyRenameAndIgnoreSerializerContractResolver(ChoJSONRecordConfiguration configuration)
         {
-            _ignores = new Dictionary<Type, HashSet<string>>();
-            _renames = new Dictionary<Type, Dictionary<string, string>>();
             _configuration = configuration;
-        }
-
-        public void IgnoreProperty(Type type, params string[] jsonPropertyNames)
-        {
-            if (!_ignores.ContainsKey(type))
-                _ignores[type] = new HashSet<string>();
-
-            foreach (var prop in jsonPropertyNames)
-                _ignores[type].Add(prop);
-        }
-
-        public void RenameProperty(Type type, string propertyName, string newJsonPropertyName)
-        {
-            if (!_renames.ContainsKey(type))
-                _renames[type] = new Dictionary<string, string>();
-
-            _renames[type][propertyName] = newJsonPropertyName;
         }
 
         protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
         {
             var property = base.CreateProperty(member, memberSerialization);
-
-            if (IsIgnored(property.DeclaringType, property.PropertyName, property.UnderlyingName))
+            var propertyFullName = member.GetFullName();
+            if (IsIgnored(property.DeclaringType, property.PropertyName, property.UnderlyingName, propertyFullName))
             {
                 property.ShouldSerialize = i => false;
                 property.Ignored = true;
             }
 
-            if (IsRenamed(property.DeclaringType, property.PropertyName, property.UnderlyingName, out var newJsonPropertyName))
-                property.PropertyName = newJsonPropertyName;
+            if (IsRenamed(property.DeclaringType, property.PropertyName, property.UnderlyingName, propertyFullName, out var newJsonPropertyName))
+            {
+                if (!newJsonPropertyName.IsNullOrWhiteSpace())
+                    property.PropertyName = newJsonPropertyName;
+            }
+
+            if (_configuration.ContainsRecordConfigForType(property.DeclaringType))
+            {
+                var dict = _configuration.JSONRecordFieldConfigurationsForType[property.DeclaringType];
+                if (dict != null && dict.ContainsKey(property.UnderlyingName))
+                {
+                    property.Converter = property.MemberConverter = new ChoContractResolverJsonConverter(dict[property.UnderlyingName], _configuration.Culture, property.PropertyType);
+                }
+            }
+            else if (_configuration.JSONRecordFieldConfigurations.Any(f => f.DeclaringMember == propertyFullName))
+            {
+                var fc = _configuration.JSONRecordFieldConfigurations.First(f => f.DeclaringMember == propertyFullName);
+                property.MemberConverter = new ChoContractResolverJsonConverter(fc, _configuration.Culture, property.PropertyType);
+                property.DefaultValue = fc.DefaultValue;
+                property.Order = fc.Order;
+            }
+            else if (_configuration.JSONRecordFieldConfigurations.Any(f => f.Name == propertyFullName))
+            {
+                var fc = _configuration.JSONRecordFieldConfigurations.First(f => f.Name == propertyFullName);
+                property.MemberConverter = new ChoContractResolverJsonConverter(fc, _configuration.Culture, property.PropertyType);
+                property.DefaultValue = fc.DefaultValue;
+                property.Order = fc.Order;
+            }
+            else
+            {
+                var pd = ChoTypeDescriptor.GetProperty(property.DeclaringType, property.UnderlyingName);
+                if (pd != null)
+                {
+                    if (pd.Attributes.OfType<DefaultValueAttribute>().Any())
+                        property.DefaultValue = pd.Attributes.OfType<DefaultValueAttribute>().First().Value;
+                    if (pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any())
+                        property.Order = pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().First().Order;
+                }
+            }
+
+            if (_configuration.NullValueHandling == ChoNullValueHandling.Ignore)
+                property.NullValueHandling = NullValueHandling.Ignore;
+            else
+                property.NullValueHandling = NullValueHandling.Include;
+
 
             return property;
         }
 
-        private bool IsIgnored(Type type, string jsonPropertyName, string propertyName)
+        private bool IsIgnored(Type type, string jsonPropertyName, string propertyName, string propertyFullName)
         {
-            if (_configuration != null && _configuration.ContainsRecordConfigForType(type))
+            if (_configuration.IgnoredFields.Contains(propertyFullName) || _configuration.IgnoredFields.Contains(propertyName))
+                return true;
+
+            var pd = ChoTypeDescriptor.GetProperty(type, propertyName);
+            if (pd != null)
             {
-                var dict = _configuration.JSONRecordFieldConfigurationsForType[type];
-                if (dict != null && dict.ContainsKey(jsonPropertyName))
-                    return false;
+                if (pd.Attributes.OfType<ChoIgnoreMemberAttribute>().Any())
+                    return true;
+                else if (pd.Attributes.OfType<JsonIgnoreAttribute>().Any())
+                    return true;
             }
 
-            if (!_ignores.ContainsKey(type))
-            {
-                var pd = ChoTypeDescriptor.GetProperty(type, propertyName);
-                return pd != null ? pd.Attributes.OfType<ChoIgnoreMemberAttribute>().Any() : true;
-            }
-
-            return _ignores[type].Contains(jsonPropertyName);
+            return false;
         }
 
-        private bool IsRenamed(Type type, string jsonPropertyName, string propertyName, out string newJsonPropertyName)
+        private bool IsRenamed(Type type, string jsonPropertyName, string propertyName, string propertyFullName, out string newJsonPropertyName)
         {
             newJsonPropertyName = null;
 
@@ -95,25 +116,120 @@ namespace ChoETL
                 }
             }
 
-            Dictionary<string, string> renames;
-
-            if (!_renames.TryGetValue(type, out renames) || !renames.TryGetValue(jsonPropertyName, out newJsonPropertyName))
+            if (_configuration.JSONRecordFieldConfigurations.Any(f => f.DeclaringMember == propertyFullName))
             {
-                var pd = ChoTypeDescriptor.GetProperty(type, propertyName);
-                if (pd != null)
+                newJsonPropertyName = _configuration.JSONRecordFieldConfigurations.First(f => f.DeclaringMember == propertyFullName).FieldName;
+                return true;
+            }
+
+            if (_configuration.JSONRecordFieldConfigurations.Any(f => f.Name == propertyName))
+            {
+                newJsonPropertyName = _configuration.JSONRecordFieldConfigurations.First(f => f.Name == propertyName).FieldName;
+                return true;
+            }
+
+            var pd = ChoTypeDescriptor.GetProperty(type, propertyName);
+            if (pd != null)
+            {
+                var attr = pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().FirstOrDefault();
+                if (attr != null && !attr.FieldName.IsNullOrWhiteSpace())
                 {
-                    var attr = pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().FirstOrDefault();
-                    if (attr != null && !attr.FieldName.IsNullOrWhiteSpace())
+                    newJsonPropertyName = attr.FieldName.Trim();
+                    return true;
+                }
+                var attr1 = pd.Attributes.OfType<DisplayNameAttribute>().FirstOrDefault();
+                if (attr1 != null && !attr1.DisplayName.IsNullOrWhiteSpace())
+                {
+                    newJsonPropertyName = attr1.DisplayName.Trim();
+                    return true;
+                }
+                var dpAttr = pd.Attributes.OfType<DisplayAttribute>().FirstOrDefault();
+                if (dpAttr != null)
+                {
+                    if (!dpAttr.ShortName.IsNullOrWhiteSpace())
                     {
-                        newJsonPropertyName = attr.FieldName.Trim();
+                        newJsonPropertyName = dpAttr.ShortName;
+                        return true;
+                    }
+                    else if (!dpAttr.Name.IsNullOrWhiteSpace())
+                    {
+                        newJsonPropertyName = dpAttr.Name;
                         return true;
                     }
                 }
-
-                return false;
             }
 
+            return false;
+        }
+    }
+
+    public class ChoContractResolverJsonConverter : JsonConverter
+    {
+        private ChoJSONRecordFieldConfiguration _fc = null;
+        private CultureInfo _culture;
+        private Type _objType;
+
+        public ChoContractResolverJsonConverter(ChoJSONRecordFieldConfiguration fc, CultureInfo culture, Type objType)
+        {
+            _fc = fc;
+            _culture = culture;
+            _objType = objType;
+        }
+
+        public override bool CanConvert(Type objectType)
+        {
             return true;
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            object retValue = null;
+            if (_fc.CustomSerializer == null)
+            {
+                if (_fc.ValueConverter == null)
+                    retValue = serializer.Deserialize(reader, objectType);
+                else
+                    retValue = _fc.ValueConverter(serializer.Deserialize(reader, typeof(string)));
+            }
+            else
+            {
+                retValue = _fc.CustomSerializer(reader);
+            }
+
+            if (retValue != null)
+                retValue = ChoConvert.ConvertFrom(retValue, objectType, null, _fc.PropConverters, _fc.PropConverterParams, _culture);
+
+            return retValue;
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            if (value != null && _objType != null)
+                value = ChoConvert.ConvertTo(value, _objType, null, _fc.PropConverters, _fc.PropConverterParams, _culture);
+
+            if (_fc.CustomSerializer == null)
+            {
+                if (_fc.ValueConverter == null)
+                {
+                    JToken t = JToken.FromObject(value);
+                    t.WriteTo(writer);
+                }
+                else
+                {
+                    object retValue = _fc.ValueConverter(value);
+                    JToken t = JToken.FromObject(retValue);
+                    t.WriteTo(writer);
+                }
+            }
+            else
+            {
+                object retValue = _fc.CustomSerializer(writer);
+                if (retValue != null)
+                {
+                    JToken t = JToken.FromObject(value);
+                    t.WriteTo(writer);
+                }
+            }
         }
     }
 }

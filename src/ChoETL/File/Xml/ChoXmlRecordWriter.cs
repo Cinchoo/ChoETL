@@ -947,7 +947,8 @@ namespace ChoETL
             }
         }
 
-        private XElement NewXElement(ChoXmlNamespaceManager nsMgr, string name, string defaultNSPrefix, XNamespace NS, object value = null, bool emitType = false)
+        private XElement NewXElement(ChoXmlNamespaceManager nsMgr, string name, string defaultNSPrefix, XNamespace NS, object value = null, bool emitType = false,
+            bool? isXmlValue = null)
         {
             ChoGuard.ArgumentNotNullOrEmpty(nsMgr, nameof(nsMgr));
 
@@ -958,11 +959,24 @@ namespace ChoETL
 
             XElement e = null;
             XNamespace ns = null;
+            if (isXmlValue == null && value is string)
+            {
+                string t = value as string;
+                if (t.StartsWith("<![CDATA[") && t.EndsWith("]]>"))
+                    value = t = t.Replace("<![CDATA[", "").Replace("]]>", "");
+                if (t.StartsWith("<") && t.EndsWith(">") && !t.StartsWith("<![CDATA["))
+                    isXmlValue = true;
+                else
+                    isXmlValue = false;
+            }
+            if (isXmlValue == null)
+                isXmlValue = false;
+
             if (prefix == null)
             {
                 if (defaultNSPrefix.IsNullOrWhiteSpace())
                 {
-                    e = value == null ? new XElement(name) : new XElement(name, value);
+                    e = value == null ? new XElement(name) : !isXmlValue.Value ? new XElement(name, value) : new XElement(name, XElement.Parse(value.ToNString()));
                 }
                 else
                 {
@@ -970,7 +984,7 @@ namespace ChoETL
                     ns = nsMgr.GetNamespaceForPrefix(defaultNSPrefix);
                     if (ns == null)
                         throw new ChoParserException($"Missing namespace for '{defaultNSPrefix}' prefix.");
-                    e = value == null ? new XElement(ns + name) : new XElement(ns + name, value);
+                    e = value == null ? new XElement(ns + name) : !isXmlValue.Value ? new XElement(ns + name, value) : new XElement(ns + name, XElement.Parse(value.ToNString()));
                 }
             }
             else
@@ -979,7 +993,7 @@ namespace ChoETL
                 if (ns == null)
                     throw new ChoParserException($"Missing namespace for '{prefix}' prefix.");
 
-                e = value == null ? new XElement(ns + name) : new XElement(ns + name, value);
+                e = value == null ? new XElement(ns + name) : !isXmlValue.Value ? new XElement(ns + name, value) : new XElement(ns + name, XElement.Parse(value.ToNString()));
             }
 
             if (ns != null)

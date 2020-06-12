@@ -3021,10 +3021,46 @@ K,L,M,N,O,P,Q,R,S,T";
             }
         }
 
+        public class Packaging
+        {
+            public string Qty { get; set; }
+        }
+        public class Company1
+        {
+            public string Ref { get; set; }
+            public double GW { get; set; }
+            public List<Packaging> Packaging { get; set; }
+        }
+
+        static void CustomResolverTest()
+        {
+            using (var r = new ChoJSONReader<Company1>("sample16.json")
+                .WithField(f => f.Ref)
+                .WithFieldForType<Packaging>(f => f.Qty, fieldName: "qty", valueConverter: o => o.ToNString() + "M", customSerializer: o =>
+                {
+                    JsonReader reader = o as JsonReader;
+                    JsonSerializer serializer = new JsonSerializer();
+                    if (reader.TokenType == JsonToken.Null)
+                    {
+                        return string.Empty;
+                    }
+                    else if (reader.TokenType == JsonToken.Integer)
+                    {
+                        return serializer.Deserialize(reader, typeof(int));
+                    }
+                    return 0;
+                })
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Issue42();
+            CustomResolverTest();
         }
 
         static void SimpleTest()
