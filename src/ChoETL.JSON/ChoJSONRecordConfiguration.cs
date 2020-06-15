@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
@@ -77,6 +78,10 @@ namespace ChoETL
 
                         _jsonSerializerSettings = new JsonSerializerSettings();
                         _jsonSerializerSettings.ContractResolver = jsonResolver;
+                        _jsonSerializerSettings.Converters = new List<JsonConverter>()
+                        {
+                            new ExpandoObjectConverter()
+                        };
                     }
 
                     return _jsonSerializerSettings;

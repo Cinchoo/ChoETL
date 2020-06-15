@@ -4207,10 +4207,40 @@ Poetry,10,My tenth book";
             Console.WriteLine(json.ToString());
         }
 
+        [ChoCSVFileHeader(IgnoreHeader = true)]
+        [ChoCSVRecordObject(QuoteAllFields = true)]
+        public class Insurance
+        {
+            //[ChoCSVRecordField(FieldName = "Short Name")]
+            public string ShortName { get; set; }
+
+            //[ChoCSVRecordField(FieldName = "Cust Key")]
+            public string CustKey { get; set; }
+
+            //[ChoCSVRecordField(FieldName = "Old CIF Key")]
+            public string OldCIFKey { get; set; }
+        }
+
+        static void Issue90()
+        {
+            string csv = @"Short Name,Cust Key,Old CIF Key
+Fire & Casualty,00000000000001,AAA FIR CA 00
+""Doe, John"",00000000000008,JDOEPD.0J5J.00
+Legal Research &,00000000000009,AALE RES WR 00
+Indoor Advertisi Llc,00000000000011,CO MA L00";
+
+            using (var r = ChoCSVReader<Insurance>.LoadText(csv)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+
+        }
         static void Main(string[] args)
         {
             //ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            CSVArrayToJSON1();
+            Issue90();
             return;
 
             CSV2ComplexObject();

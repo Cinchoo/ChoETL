@@ -599,7 +599,7 @@ namespace ChoETL
                     //if (Configuration.IsDynamicObject)
                     if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
                     {
-                        rec = JsonConvert.DeserializeObject<ExpandoObject>(pair.Item2.ToString(), new ExpandoObjectConverter());
+                        rec = JsonConvert.DeserializeObject<ExpandoObject>(pair.Item2.ToString(), Configuration.JsonSerializerSettings);
                         if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.Off) != ChoObjectValidationMode.Off)
                             rec.DoObjectLevelValidation(Configuration, Configuration.JSONRecordFieldConfigurations);
                     }

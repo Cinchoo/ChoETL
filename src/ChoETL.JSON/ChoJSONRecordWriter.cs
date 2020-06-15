@@ -90,12 +90,12 @@ namespace ChoETL
                             sw.Write(String.Format("{0}]", EOLDelimiter));
                         else
                         {
-                            sw.Write(String.Format("{0}]}}", EOLDelimiter));
+                            sw.Write(String.Format("{0}{1}{0}}}", EOLDelimiter, Indent("]")));
                         }
                     }
                     else
                     {
-                        if (!Configuration.SingleElement.Value)
+                        if (!Configuration.SingleElement.Value || (!Configuration.IgnoreNodeName && !Configuration.NodeName.IsNullOrWhiteSpace()))
                             sw.Write(String.Format("{0}}}", EOLDelimiter));
                     }
                 }
@@ -224,12 +224,12 @@ namespace ChoETL
                                     sw.Write("[");
                                 else
                                 {
-                                    sw.Write(@"{{""{0}"": [".FormatString(Configuration.RootName.NTrim()));
+                                    sw.Write($"{{{EOLDelimiter}{Indent(Configuration.RootName.NTrim())}: [");
                                 }
                             }
                             else
                             {
-                                if (!Configuration.SingleElement.Value)
+                                if (!Configuration.SingleElement.Value || (!Configuration.IgnoreNodeName && !Configuration.NodeName.IsNullOrWhiteSpace()))
                                     sw.Write(String.Format("{{{0}", EOLDelimiter));
                             }
                         }
@@ -257,7 +257,10 @@ namespace ChoETL
                                         {
                                             if (Configuration.SingleElement.Value)
                                             {
-                                                sw.Write(Unindent(recText));
+                                                if (!Configuration.IgnoreNodeName && !Configuration.NodeName.IsNullOrWhiteSpace())
+                                                    sw.Write(Indent(recText));
+                                                else
+                                                    sw.Write(Unindent(recText));
                                             }
                                             else
                                             {
@@ -412,7 +415,7 @@ namespace ChoETL
                     if (!RecordType.IsSimple())
                         msg.AppendFormat(@"""{1}"": {{{0}", EOLDelimiter, Configuration.NodeName);
                     else
-                        msg.AppendFormat(@"""{1}"": {0}", EOLDelimiter, Configuration.NodeName);
+                        msg.AppendFormat(@"""{0}"": ", Configuration.NodeName);
                 }
             }
             else if (!RecordType.IsSimple())
@@ -617,7 +620,7 @@ namespace ChoETL
                         if (Configuration.NullValueHandling == ChoNullValueHandling.Ignore)
                             fieldText = null;
                         else if (Configuration.NullValueHandling == ChoNullValueHandling.Default)
-                            fieldText = JsonConvert.SerializeObject(ChoActivator.CreateInstance(fieldConfig.FieldType));
+                            fieldText = JsonConvert.SerializeObject(ChoActivator.CreateInstance(fieldConfig.FieldType), Configuration.Formatting, Configuration.JsonSerializerSettings);
                         else if (Configuration.NullValueHandling == ChoNullValueHandling.Empty && fieldConfig.FieldType == typeof(string))
                             fieldText = String.Empty;
                         else
@@ -634,17 +637,18 @@ namespace ChoETL
                         }
                     }
                     else if (ft == typeof(string) || ft == typeof(char))
-                        fieldText = JsonConvert.SerializeObject(NormalizeFieldValue(kvp.Key, fieldValue.ToString(), kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType, Configuration.FieldValueTrimOption)));
+                        fieldText = JsonConvert.SerializeObject(NormalizeFieldValue(kvp.Key, fieldValue.ToString(), kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType, Configuration.FieldValueTrimOption)),
+                            Configuration.Formatting, Configuration.JsonSerializerSettings);
                     else if (ft == typeof(DateTime) || ft == typeof(TimeSpan))
-                        fieldText = JsonConvert.SerializeObject(fieldValue);
+                        fieldText = JsonConvert.SerializeObject(fieldValue, Configuration.Formatting, Configuration.JsonSerializerSettings);
                     else if (ft.IsEnum)
                     {
-                        fieldText = JsonConvert.SerializeObject(fieldValue);
+                        fieldText = JsonConvert.SerializeObject(fieldValue, Configuration.Formatting, Configuration.JsonSerializerSettings);
                     }
                     else if (ft == typeof(ChoCurrency))
                         fieldText = "\"{0}\"".FormatString(fieldValue.ToString());
                     else if (ft == typeof(bool))
-                        fieldText = JsonConvert.SerializeObject(fieldValue);
+                        fieldText = JsonConvert.SerializeObject(fieldValue, Configuration.Formatting, Configuration.JsonSerializerSettings);
                     else if (ft.IsNumeric())
                         fieldText = fieldValue.ToString();
                     else
@@ -718,14 +722,14 @@ namespace ChoETL
         {
             bool lUseJSONSerialization = useJSONSerialization == null ? Configuration.UseJSONSerialization : useJSONSerialization.Value;
             if (lUseJSONSerialization)
-                return JsonConvert.SerializeObject(target, Configuration.Formatting);
+                return JsonConvert.SerializeObject(target, Configuration.Formatting, Configuration.JsonSerializerSettings);
             else
             {
                 //return JsonConvert.SerializeObject(target, Configuration.Formatting);
 
                 Type objType = target.GetType();
                 if (objType.IsSimple())
-                    return JsonConvert.SerializeObject(target);
+                    return JsonConvert.SerializeObject(target, Configuration.Formatting, Configuration.JsonSerializerSettings);
                 else
                 {
                     if (target is IEnumerable && !(target is IDictionary) && !target.GetType().IsDynamicType())
@@ -746,14 +750,14 @@ namespace ChoETL
 
                                 }
                                 else
-                                    msg.Append(JsonConvert.SerializeObject(null));
+                                    msg.Append(JsonConvert.SerializeObject(null, Configuration.Formatting, Configuration.JsonSerializerSettings));
                             }
                             else if (item.GetType().IsSimple())
-                                msg.Append(JsonConvert.SerializeObject(item, Configuration.Formatting));
+                                msg.Append(JsonConvert.SerializeObject(item, Configuration.Formatting, Configuration.JsonSerializerSettings));
                             else
                             {
                                 //var obj = MapToDictionary(item);
-                                msg.Append(JsonConvert.SerializeObject(item, Configuration.Formatting));
+                                msg.Append(JsonConvert.SerializeObject(item, Configuration.Formatting, Configuration.JsonSerializerSettings));
                             }
                         }
 

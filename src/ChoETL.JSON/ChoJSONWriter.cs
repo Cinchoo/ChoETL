@@ -716,6 +716,27 @@ namespace ChoETL
             return ToText(record, configuration, traceSwitch);
         }
 
+        public static string SerializeAll(IEnumerable<dynamic> records, JsonSerializerSettings jsonSerializerSettings, TraceSwitch traceSwitch = null)
+        {
+            return ToTextAll(records, new ChoJSONRecordConfiguration().Configure(c => c.JsonSerializerSettings = jsonSerializerSettings).Configure(c => c.UseJSONSerialization = true),
+                traceSwitch);
+        }
+
+        public static string SerializeAll<T>(IEnumerable<T> records, JsonSerializerSettings jsonSerializerSettings, TraceSwitch traceSwitch = null)
+        {
+            return ToTextAll(records, new ChoJSONRecordConfiguration().Configure(c => c.JsonSerializerSettings = jsonSerializerSettings).Configure(c => c.UseJSONSerialization = true), traceSwitch);
+        }
+
+        public static string Serialize(dynamic record, JsonSerializerSettings jsonSerializerSettings, TraceSwitch traceSwitch = null)
+        {
+            return ToText(record, new ChoJSONRecordConfiguration().Configure(c => c.JsonSerializerSettings = jsonSerializerSettings).Configure(c => c.UseJSONSerialization = true), traceSwitch);
+        }
+
+        public static string Serialize<T>(T record, JsonSerializerSettings jsonSerializerSettings, TraceSwitch traceSwitch = null)
+        {
+            return ToText(record, new ChoJSONRecordConfiguration().Configure(c => c.JsonSerializerSettings = jsonSerializerSettings).Configure(c => c.UseJSONSerialization = true), traceSwitch);
+        }
+
         ~ChoJSONWriter()
         {
             try

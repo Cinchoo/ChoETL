@@ -326,12 +326,50 @@ namespace ChoJSONWriterTest
             Console.WriteLine(xml.ToString());
         }
 
+        static void SerializeDynamicObject()
+        {
+            dynamic obj = new ExpandoObject();
+            obj.Email = "james@example.com";
+            obj.Active = true;
+            obj.Roles = new List<string>()
+            {
+                "DEV",
+                "OPS"
+            };
+
+            string json = ChoJSONWriter.Serialize(obj);
+
+            Console.WriteLine(json);
+        }
+
+        static void SerializeAnonymousObject()
+        {
+            string json = ChoJSONWriter.Serialize(new
+            {
+                Email = "james@example.com",
+                Active = true,
+                Roles = new List<string>()
+                {
+                    "DEV",
+                    "OPS"
+                }
+            });
+
+            Console.WriteLine(json);
+        }
+
+
         public class Account
         {
             public string Email { get; set; }
             public bool Active { get; set; }
             public DateTime CreatedDate { get; set; }
             public IList<string> Roles { get; set; }
+
+            public override string ToString()
+            {
+                return Email;
+            }
         }
         static void SerializeObject()
         {
@@ -345,19 +383,31 @@ namespace ChoJSONWriterTest
             //  ]
             //}";
 
-            //string json = ChoJSONWriter.Serialize<Account>(new Account
-            //{
-            //    Email = "james@example.com",
-            //    Active = true
-            //});
-            string json = ChoJSONWriter.SerializeAll<Account>(new Account[] {
-                new Account
-                {
+            string json = ChoJSONWriter.Serialize(new Account
+            {
                 Email = "james@example.com",
-                Active = true
-                }
-            }
-            );
+                Active = true,
+                Roles = new List<string>()
+                    {
+                        "DEV",
+                        "OPS"
+                    }
+
+            });
+            //string json = ChoJSONWriter.SerializeAll<Account>(new Account[] {
+            //    new Account
+            //    {
+            //    Email = "james@example.com",
+            //    Active = true,
+            //    Roles = new List<string>()
+            //    {
+            //        "DEV",
+            //        "OPS"
+            //    }
+
+            //    }
+            //}
+            //);
 
 
             Console.WriteLine(json);
@@ -373,13 +423,37 @@ namespace ChoJSONWriterTest
 
         static void SerializeDictionary()
         {
-            string json = ChoJSONWriter.SerializeAll(new Dictionary<string, int>[] {
-            new Dictionary<string, int>()
+            var acc1 = new Account
             {
-                ["1"] = 1,
-                ["2"] = 2
+                Email = "james@example.com",
+                Active = true,
+                Roles = new List<string>()
+                    {
+                        "DEV",
+                        "OPS"
+                    }
+
+            };
+            var acc2 = new Account
+            {
+                Email = "rob@example.com",
+                Active = true,
+                Roles = new List<string>()
+                    {
+                        "DEV",
+                        "OPS"
+                    }
+
+            };
+
+            string json = ChoJSONWriter.SerializeAll(new Dictionary<Account, Account>[] {
+            new Dictionary<Account, Account>()
+            {
+                [acc1] = acc1,
+                [acc2] = acc2
             }
-            });
+            }, new ChoJSONRecordConfiguration()
+            );
 
             Console.WriteLine(json);
         }
@@ -388,8 +462,9 @@ namespace ChoJSONWriterTest
         {
             string json = ChoJSONWriter.Serialize(1,
                 new ChoJSONRecordConfiguration()
-                .Configure(c => c.Formatting = Formatting.None)
-                .Configure(c => c.NodeName = "Root")
+                //.Configure(c => c.Formatting = Formatting.None)
+                //.Configure(c => c.RootName = "Root")
+                //.Configure(c => c.NodeName = "Node")
                 ); // new string[] { "Starcraft", "Halo", "Legend of Zelda" });
 
             Console.WriteLine(json);
@@ -517,10 +592,57 @@ namespace ChoJSONWriterTest
 
         }
 
+        public class Employee
+        {
+            public string Name { get; set; }
+            public Employee Manager { get; set; }
+
+            public bool ShouldSerializeManager()
+            {
+                // don't serialize the Manager property if an employee is their own manager
+                return (Manager != this);
+            }
+        }
+        public static void ConditionalPropertySerialize()
+        {
+            Employee joe = new Employee();
+            joe.Name = "Joe Employee";
+            Employee mike = new Employee();
+            mike.Name = "Mike Manager";
+
+            joe.Manager = mike;
+
+            // mike is his own manager
+            // ShouldSerialize will skip this property
+            mike.Manager = mike;
+
+            string json = ChoJSONWriter.SerializeAll(new[] { joe, mike }, new ChoJSONRecordConfiguration().Configure(c => c.UseJSONSerialization = true));
+
+            Console.WriteLine(json);
+        }
+
+        static void SerializeDateTimeTest()
+        {
+            IList<DateTime> dateList = new List<DateTime>
+            {
+                new DateTime(2009, 12, 7, 23, 10, 0, DateTimeKind.Utc),
+                new DateTime(2010, 1, 1, 9, 0, 0, DateTimeKind.Utc),
+                new DateTime(2010, 2, 10, 10, 0, 0, DateTimeKind.Utc)
+            };
+
+            string json = ChoJSONWriter.SerializeAll(dateList, new JsonSerializerSettings
+            {
+                DateFormatString = "d MMMM, yyyy",
+                Formatting = Formatting.Indented
+            });
+
+            Console.WriteLine(json);
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            WriteCommentTest();
+            SerializeDateTimeTest();
             return;
 
             TimespanTest();
@@ -1636,7 +1758,7 @@ namespace ChoJSONWriterTest
 
             Console.WriteLine(sb.ToString());
 
-            Assert.Fail("Make database testable");
+            //Assert.Fail("Make database testable");
         }
 
         [Test]
