@@ -264,7 +264,7 @@ namespace ChoETL
                             var obj = new ChoKVPRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoKVPRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray());
                             obj.FieldType = pt;
                             obj.PropertyDescriptor = pd;
-                            obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                            obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
                             if (!KVPRecordFieldConfigurations.Any(c => c.Name == pd.Name))
                                 KVPRecordFieldConfigurations.Add(obj);
                         }
@@ -282,7 +282,7 @@ namespace ChoETL
                             var obj = new ChoKVPRecordFieldConfiguration(pd.Name);
                             obj.FieldType = pt;
                             obj.PropertyDescriptor = pd;
-                            obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                            obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
                             StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
                             if (slAttr != null && slAttr.MaximumLength > 0)
                                 obj.Size = slAttr.MaximumLength;

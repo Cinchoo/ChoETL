@@ -371,7 +371,7 @@ namespace ChoETL
                             var obj = new ChoXmlRecordFieldConfiguration(pd.Name, attr, pd.Attributes.OfType<Attribute>().ToArray());
                             obj.FieldType = pt;
                             obj.PropertyDescriptor = pd;
-                            obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                            obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
                             obj.UseCache = useCache;
                             if (obj.XPath.IsNullOrWhiteSpace())
                             {
@@ -405,7 +405,7 @@ namespace ChoETL
                             var obj = new ChoXmlRecordFieldConfiguration(pd.Name, $"/{pd.Name}|/@{pd.Name}");
                             obj.FieldType = pt;
                             obj.PropertyDescriptor = pd;
-                            obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                            obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
                             StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
                             if (slAttr != null && slAttr.MaximumLength > 0)
                                 obj.Size = slAttr.MaximumLength;

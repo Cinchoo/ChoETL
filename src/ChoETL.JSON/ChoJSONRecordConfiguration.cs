@@ -87,7 +87,12 @@ namespace ChoETL
                     return _jsonSerializerSettings;
                 }
             }
-            set { _jsonSerializerSettings = value; }
+            set
+            {
+                _jsonSerializerSettings = value;
+                if (value != null && _formatting == null)
+                    _formatting = _jsonSerializerSettings.Formatting;
+            }
         }
         private Lazy<JsonSerializer> _JsonSerializer = null;
         public JsonSerializer JsonSerializer
@@ -101,11 +106,13 @@ namespace ChoETL
             get;
             set;
         }
+
+        private Newtonsoft.Json.Formatting? _formatting = null;
         [DataMember]
         public Newtonsoft.Json.Formatting Formatting
         {
-            get;
-            set;
+            get { return _formatting == null ? Formatting.Indented : _formatting.Value; }
+            set { _formatting = value; }
         }
         [DataMember]
         public ChoNullValueHandling NullValueHandling
@@ -352,7 +359,7 @@ namespace ChoETL
                             var obj = new ChoJSONRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray());
                             obj.FieldType = pt;
                             obj.PropertyDescriptor = pd;
-                            obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                            obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
                             if (recordFieldConfigurations != null)
                             {
                                 if (!recordFieldConfigurations.Any(c => c.Name == pd.Name))
@@ -388,7 +395,7 @@ namespace ChoETL
                             var obj = new ChoJSONRecordFieldConfiguration(pd.Name, (string)null);
                             obj.FieldType = pt;
                             obj.PropertyDescriptor = pd;
-                            obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                            obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
                             StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
                             if (slAttr != null && slAttr.MaximumLength > 0)
                                 obj.Size = slAttr.MaximumLength;

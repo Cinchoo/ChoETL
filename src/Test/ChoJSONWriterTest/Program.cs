@@ -244,8 +244,8 @@ namespace ChoJSONWriterTest
         public static void CSV2JSONNoIndentation()
         {
             string csv = @"Id, First Name
-1, Tom
-2, Mark";
+                1, Tom
+                2, Mark";
 
             StringBuilder json = new StringBuilder();
             using (var r = ChoCSVReader.LoadText(csv)
@@ -639,10 +639,82 @@ namespace ChoJSONWriterTest
             Console.WriteLine(json);
         }
 
+        public class Account1
+        {
+            //[ChoIgnoreMember]
+            //[JsonIgnore]
+            public string Email { get; set; }
+            public bool Active { get; set; }
+            public DateTime CreatedDate { get; set; }
+            public IList<string> Roles { get; set; }
+        }
+
+        static void ExcludePropertyTest()
+        {
+            StringBuilder json = new StringBuilder();
+            using (var w = new ChoJSONWriter<Account1>(json)
+                .IgnoreField(f => f.Email)
+                )
+            {
+                w.Write(new Account1
+                {
+                    Email = "james@example.com",
+                    Active = true,
+                    Roles = new List<string>()
+                    {
+                        "DEV",
+                        "OPS"
+                    }
+
+                });
+            }
+
+                //string json = ChoJSONWriter.Serialize(new Account1
+                //{
+                //    Email = "james@example.com",
+                //    Active = true,
+                //    Roles = new List<string>()
+                //    {
+                //        "DEV",
+                //        "OPS"
+                //    }
+
+                //}, new ChoJSONRecordConfiguration<Account>().Ignore(f => f.Email));
+
+            Console.WriteLine(json);
+        }
+
+        static void Xml2JSON()
+        {
+            string xml = @"<Employees xmlns=""http://company.com/schemas"">
+                <Employee>
+                    <FirstName>name1</FirstName>
+                    <LastName>surname1</LastName>
+                </Employee>
+                <Employee>
+                    <FirstName>name2</FirstName>
+                    <LastName>surname2</LastName>
+                </Employee>
+                <Employee>
+                    <FirstName>name3</FirstName>
+                    <LastName>surname3</LastName>
+                </Employee>
+            </Employees>";
+
+            StringBuilder json = new StringBuilder();
+            using (var r = ChoXmlReader.LoadText(xml))
+            {
+                using (var w = new ChoJSONWriter(json))
+                    w.Write(r);
+            }
+
+            Console.WriteLine(json.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            SerializeDateTimeTest();
+            CSV2JSONNoIndentation();
             return;
 
             TimespanTest();
@@ -682,7 +754,7 @@ namespace ChoJSONWriterTest
         public class Project { public TimeSpan AverageScanTime { get; set; } }
         public static void TimespanTest()
         {
-            var newP = new Project() { AverageScanTime = TimeSpan.FromHours(1) };
+            var newP = new Project() { AverageScanTime = TimeSpan.FromHours(5) };
 
             Console.WriteLine(ChoJSONWriter.ToText(newP));
         }

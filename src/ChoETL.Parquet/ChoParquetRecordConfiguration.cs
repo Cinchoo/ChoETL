@@ -255,7 +255,7 @@ namespace ChoETL
                             var obj = new ChoParquetRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoParquetRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray());
                             obj.FieldType = pt;
                             obj.PropertyDescriptor = pd;
-                            obj.DeclaringMember = declaringMember == null ? null : "{0}.{1}".FormatString(declaringMember, pd.Name);
+                            obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
                             if (!recordFieldConfigurations.Any(c => c.Name == pd.Name))
                                 recordFieldConfigurations.Add(obj);
                         }
