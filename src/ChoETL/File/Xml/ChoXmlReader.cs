@@ -291,6 +291,18 @@ namespace ChoETL
             return LoadText(inputText, null, config, traceSwitch);
         }
 
+        public static ChoXmlReader<T> LoadxmlFragment(string inputText, Encoding encoding = null, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            var rootName = configuration != null && !configuration.RootName.IsNullOrWhiteSpace() ? configuration.RootName : "root";
+            var r = new ChoXmlReader<T>($"<{rootName}>{inputText}</{rootName}>".ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
+            return r;
+        }
+
+        public static ChoXmlReader<T> LoadxmlFragment(string inputText, ChoXmlRecordConfiguration config, TraceSwitch traceSwitch = null)
+        {
+            return LoadxmlFragment(inputText, null, config, traceSwitch);
+        }
+
         //internal static IEnumerator<object> LoadText(Type recType, string inputText, ChoXmlRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null)
         //{
         //    ChoXmlRecordReader rr = new ChoXmlRecordReader(recType, configuration);
@@ -948,6 +960,50 @@ namespace ChoETL
         public ChoXmlReader(XElement xElement, ChoXmlRecordConfiguration configuration = null)
             : base(xElement, configuration)
         {
+        }
+
+        public static IEnumerable<dynamic> DeserializeXmlFragmentText(string inputText, string xPath, Encoding encoding = null, TraceSwitch traceSwitch = null)
+        {
+            var configuration = new ChoXmlRecordConfiguration();
+            configuration.XPath = xPath;
+            return DeserializeXmlFragmentText(inputText, encoding, configuration, traceSwitch);
+        }
+
+        public static IEnumerable<dynamic> DeserializeXmlFragmentText(string inputText, Encoding encoding = null, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            if (configuration == null)
+                configuration = new ChoXmlRecordConfiguration();
+
+            if (configuration != null)
+            {
+                if (configuration.XPath.IsNullOrWhiteSpace())
+                    configuration.XPath = "//";
+            }
+            var rootName = configuration != null && !configuration.RootName.IsNullOrWhiteSpace() ? configuration.RootName : "root";
+            return new ChoXmlReader($"<{rootName}>{inputText}</{rootName}>".ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
+        }
+
+        public static IEnumerable<T> DeserializeXmlFragmentText<T>(string inputText, string xPath, Encoding encoding = null, TraceSwitch traceSwitch = null)
+            where T : class, new()
+        {
+            var configuration = new ChoXmlRecordConfiguration();
+            configuration.XPath = xPath;
+            return DeserializeXmlFragmentText<T>(inputText, encoding, configuration, traceSwitch);
+        }
+
+        public static IEnumerable<T> DeserializeXmlFragmentText<T>(string inputText, Encoding encoding = null, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+            where T : class, new()
+        {
+            if (configuration == null)
+                configuration = new ChoXmlRecordConfiguration(typeof(T));
+
+            if (configuration != null)
+            {
+                if (configuration.XPath.IsNullOrWhiteSpace())
+                    configuration.XPath = "//";
+            }
+            var rootName = configuration != null && !configuration.RootName.IsNullOrWhiteSpace() ? configuration.RootName : "root";
+            return new ChoXmlReader<T>($"<{rootName}>{inputText}</{rootName}>".ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
         }
 
         public static IEnumerable<dynamic> DeserializeText(string inputText, string xPath, Encoding encoding = null, TraceSwitch traceSwitch = null)

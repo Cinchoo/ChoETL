@@ -43,7 +43,7 @@ namespace ChoETL
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            if ((value != null && value.GetType().IsEnum) && targetType == typeof(string))
+            if ((value != null && value.GetType().IsEnum))
             {
                 ChoEnumFormatSpec EnumFormat = parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.EnumFormat);
                 switch (EnumFormat)

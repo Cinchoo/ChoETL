@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
+using System.IO;
 
 namespace ChoParquetWriterTest
 {
@@ -61,6 +62,23 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
 
         static void EnumTest()
         {
+            ChoTypeConverterFormatSpec.Instance.EnumFormat = ChoEnumFormatSpec.Description;
+
+            using (var w = new ChoParquetWriter("EnumTest.parquet")
+                .WithField("Id")
+                .WithField("Name")
+                .WithField("EmpType", valueConverter: o => (int)o, fieldType: typeof(int))
+                )
+            {
+                w.Write(new
+                {
+                    Id = 1,
+                    Name = "Tom",
+                    EmpType = EmployeeType.Permanent
+                });
+            }
+            return;
+
             string csv = @"Id, Name, EmpType
 1, Tom, Full Time Employee
 2, Mark, Contract Employee";
@@ -156,6 +174,9 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
 
         static void SerializeValue()
         {
+            //byte[] x = ChoParquetWriter.Serialize(4);
+            //File.WriteAllBytes("SerializeValue.parquet", ChoParquetWriter.Serialize(4));
+            //return;
             using (var w = new ChoParquetWriter("SerializeValue.parquet"))
             {
                 w.Write(4);
@@ -196,8 +217,22 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
             }
         }
 
+        static void SerializeDateTime()
+        {
+            IList<DateTime> dateList = new List<DateTime>
+{
+    new DateTime(2009, 12, 7, 23, 10, 0, DateTimeKind.Utc),
+    new DateTime(2010, 1, 1, 9, 0, 0, DateTimeKind.Utc),
+    new DateTime(2010, 2, 10, 10, 0, 0, DateTimeKind.Utc)
+};
+
+            using (var w = new ChoParquetWriter("DateTimeTest.parquet"))
+                w.Write(dateList);
+        }
+
         static void Main(string[] args)
         {
+            EnumTest();
             QuickTest();
             Test1();
             EnumTest();
@@ -207,6 +242,7 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
             SerializeArray();
             SerializeDictionary();
             ByteArrayTest();
+            SerializeDateTime();
         }
     }
 }

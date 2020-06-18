@@ -431,7 +431,30 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            Xml2JSON2();
+            LoadXmlFragmentTest();
+        }
+
+        static void LoadXmlFragmentTest()
+        {
+            string xml = @"
+  <Emp>
+    <Id>10</Id>
+    <Salary>$2000</Salary>
+  </Emp>
+  <Emp>
+    <Id>20</Id>
+    <Salary>$10,000</Salary>
+  </Emp>
+";
+
+            using (var r = ChoXmlReader.LoadxmlFragment(xml)
+                .WithMaxScanNodes(10)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+
         }
 
         static void CurrencyDynamicTest()

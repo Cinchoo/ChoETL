@@ -9,13 +9,10 @@ using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ChoETL
 {
     public class ChoParquetWriter<T> : ChoWriter, IDisposable
-        where T : class
     {
         private StreamWriter _streamWriter;
         private bool _closeStreamOnDispose = false;
@@ -124,7 +121,7 @@ namespace ChoETL
         {
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
-            _writer.WriteTo(_streamWriter, records).Loop();
+            _writer.WriteTo(_streamWriter, records.OfType<object>()).Loop();
         }
 
         public void Write(T record)
@@ -147,14 +144,14 @@ namespace ChoETL
                 if (record is ArrayList)
                     _writer.ElementType = typeof(object);
 
-                _writer.WriteTo(_streamWriter, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
+                _writer.WriteTo(_streamWriter, ((IEnumerable)record).AsTypedEnumerable<object>()).Loop();
             }
             else if (record != null && (!record.GetType().IsDynamicType() && record is IDictionary))
             {
-                _writer.WriteTo(_streamWriter, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
+                _writer.WriteTo(_streamWriter, ((IEnumerable)record).AsTypedEnumerable<object>()).Loop();
             }
             else
-                _writer.WriteTo(_streamWriter, new T[] { record }).Loop();
+                _writer.WriteTo(_streamWriter, new object[] { record }).Loop();
         }
 
         private void NotifyRowsWritten(object sender, ChoRowsWrittenEventArgs e)
@@ -622,9 +619,74 @@ namespace ChoETL
         {
         }
 
+        public ChoParquetWriter(StreamWriter streamWriter, ChoParquetRecordConfiguration configuration = null)
+            : base(streamWriter, configuration)
+        {
+
+        }
         public ChoParquetWriter(Stream inStream, ChoParquetRecordConfiguration configuration = null)
             : base(inStream, configuration)
         {
+        }
+
+        public static byte[] SerializeAll(IEnumerable<dynamic> records, ChoParquetRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            using (var stream = new MemoryStream())
+            using (var writer = new StreamWriter(stream))
+            {
+                using (var w = new ChoParquetWriter(writer))
+                {
+                    w.Write(records);
+                }
+                writer.Flush();
+                stream.Position = 0;
+                return stream.ToArray();
+            }
+        }
+
+        public static byte[] SerializeAll<T>(IEnumerable<T> records, ChoParquetRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            using (var stream = new MemoryStream())
+            using (var writer = new StreamWriter(stream))
+            {
+                using (var w = new ChoParquetWriter<T>(writer))
+                {
+                    w.Write(records);
+                }
+                writer.Flush();
+                stream.Position = 0;
+                return stream.ToArray();
+            }
+        }
+
+        public static byte[] Serialize(dynamic record, ChoParquetRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            using (var stream = new MemoryStream())
+            using (var writer = new StreamWriter(stream))
+            {
+                using (var w = new ChoParquetWriter(writer))
+                {
+                    w.Write(record);
+                }
+                writer.Flush();
+                stream.Position = 0;
+                return stream.ToArray();
+            }
+        }
+
+        public static byte[] Serialize<T>(T record, ChoParquetRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            using (var stream = new MemoryStream())
+            using (var writer = new StreamWriter(stream))
+            {
+                using (var w = new ChoParquetWriter<T>(writer))
+                {
+                    w.Write(record);
+                }
+                writer.Flush();
+                stream.Position = 0;
+                return stream.ToArray();
+            }
         }
     }
 }

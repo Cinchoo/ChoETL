@@ -3036,7 +3036,7 @@ K,L,M,N,O,P,Q,R,S,T";
         {
             using (var r = new ChoJSONReader<Company1>("sample16.json")
                 .WithField(f => f.Ref)
-                .WithFieldForType<Packaging>(f => f.Qty, fieldName: "qty", valueConverter: o => o.ToNString() + "M", customSerializer: o =>
+                .WithFieldForType<Packaging>(f => f.Qty/*, fieldName: "qty"*/, valueConverter: o => o.ToNString() + "M", customSerializer: o =>
                 {
                     JsonReader reader = o as JsonReader;
                     JsonSerializer serializer = new JsonSerializer();
