@@ -3057,10 +3057,31 @@ K,L,M,N,O,P,Q,R,S,T";
             }
         }
 
+        static void Json2CSVContainsNewLine()
+        {
+            string json = @"{
+""comment"": ""this is a test line \n \n but still value for this record""
+}";
+
+            StringBuilder csv = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    .WithField("comment", valueConverter: o => ((string)o).Replace("\n", ""))
+                    )
+                {
+                    w.Write(r);
+                }
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            CustomResolverTest();
+            Json2CSVContainsNewLine();
         }
 
         static void SimpleTest()
