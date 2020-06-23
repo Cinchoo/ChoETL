@@ -354,7 +354,7 @@ namespace ChoETL
                     return s;
             }).AsDataReader();
 
-            //if (_jObjects == null)
+            //if (_yamlObjects == null)
             //{
             //    ChoYamlRecordReader rr = new ChoYamlRecordReader(typeof(T), Configuration);
             //    if (_textReader != null)
@@ -391,7 +391,7 @@ namespace ChoETL
             //    rr.RowsLoaded += NotifyRowsLoaded;
             //    rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
             //    rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
-            //    var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_jObjects), rr);
+            //    var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_yamlObjects), rr);
             //    return dr;
             //}
         }
@@ -850,7 +850,6 @@ namespace ChoETL
         }
 
         public static IEnumerable<T> DeserializeText<T>(string inputText, string yamlPath, Encoding encoding = null, TraceSwitch traceSwitch = null)
-        //where T : class, new()
         {
             var configuration = new ChoYamlRecordConfiguration();
             configuration.YamlPath = yamlPath;
@@ -858,7 +857,6 @@ namespace ChoETL
         }
 
         public static IEnumerable<T> DeserializeText<T>(string inputText, Encoding encoding = null, ChoYamlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-        //where T : class
         {
             if (configuration == null)
                 configuration = new ChoYamlRecordConfiguration(typeof(T));
@@ -892,7 +890,6 @@ namespace ChoETL
         }
 
         public static IEnumerable<T> Deserialize<T>(string filePath, string yamlPath, TraceSwitch traceSwitch = null)
-        //where T : class, new()
         {
             var configuration = new ChoYamlRecordConfiguration();
             configuration.YamlPath = yamlPath;
@@ -900,7 +897,6 @@ namespace ChoETL
         }
 
         public static IEnumerable<T> Deserialize<T>(string filePath, ChoYamlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-        //where T : class, new()
         {
             if (configuration == null)
                 configuration = new ChoYamlRecordConfiguration(typeof(T));
@@ -934,7 +930,6 @@ namespace ChoETL
         }
 
         public static IEnumerable<T> Deserialize<T>(TextReader textReader, string yamlPath, TraceSwitch traceSwitch = null)
-        //where T : class, new()
         {
             var configuration = new ChoYamlRecordConfiguration();
             configuration.YamlPath = yamlPath;
@@ -942,7 +937,6 @@ namespace ChoETL
         }
 
         public static IEnumerable<T> Deserialize<T>(TextReader textReader, ChoYamlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-        //where T : class, new()
         {
             if (configuration == null)
                 configuration = new ChoYamlRecordConfiguration(typeof(T));
@@ -976,7 +970,6 @@ namespace ChoETL
         }
 
         public static IEnumerable<T> Deserialize<T>(Stream inStream, string yamlPath, TraceSwitch traceSwitch = null)
-        //where T : class, new()
         {
             var configuration = new ChoYamlRecordConfiguration();
             configuration.YamlPath = yamlPath;
@@ -984,7 +977,6 @@ namespace ChoETL
         }
 
         public static IEnumerable<T> Deserialize<T>(Stream inStream, ChoYamlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-        //where T : class, new()
         {
             if (configuration == null)
                 configuration = new ChoYamlRecordConfiguration(typeof(T));
@@ -997,26 +989,54 @@ namespace ChoETL
             return new ChoYamlReader<T>(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
         }
 
-        public static IEnumerable<dynamic> Deserialize(IEnumerable<YamlNode> jObjects, ChoYamlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static IEnumerable<dynamic> Deserialize(IEnumerable<YamlNode> yamlObjects, ChoYamlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            return new ChoYamlReader(jObjects, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
+            return new ChoYamlReader(yamlObjects, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
         }
 
-        public static IEnumerable<T> Deserialize<T>(IEnumerable<YamlNode> jObjects, ChoYamlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-        //where T : class, new()
+        public static IEnumerable<T> Deserialize<T>(IEnumerable<YamlNode> yamlObjects, ChoYamlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            return new ChoYamlReader<T>(jObjects, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
+            return new ChoYamlReader<T>(yamlObjects, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
         }
 
-        public static dynamic Deserialize(YamlNode jObject, ChoYamlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static dynamic Deserialize(YamlNode yamlObject, ChoYamlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            return new ChoYamlReader(jObject, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+            return new ChoYamlReader(yamlObject, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
         }
 
-        public static T Deserialize<T>(YamlNode jObject, ChoYamlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-        //where T : class, new()
+        public static T Deserialize<T>(YamlNode yamlObject, ChoYamlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
-            return new ChoYamlReader<T>(jObject, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+            return new ChoYamlReader<T>(yamlObject, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static IEnumerable<dynamic> Deserialize(IEnumerable<YamlDocument> yamlDocs, ChoYamlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            return new ChoYamlReader(yamlDocs, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
+        }
+
+        public static IEnumerable<T> Deserialize<T>(IEnumerable<YamlDocument> yamlDocs, ChoYamlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            return new ChoYamlReader<T>(yamlDocs, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
+        }
+
+        public static dynamic Deserialize(YamlDocument yamlDoc, ChoYamlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            return new ChoYamlReader(yamlDoc, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static T Deserialize<T>(YamlDocument yamlDoc, ChoYamlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            return new ChoYamlReader<T>(yamlDoc, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static dynamic Deserialize(YamlStream yamlStream, ChoYamlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            return new ChoYamlReader(yamlStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static T Deserialize<T>(YamlStream yamlStream, ChoYamlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            return new ChoYamlReader<T>(yamlStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
         }
     }
 }

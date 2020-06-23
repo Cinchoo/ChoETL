@@ -193,10 +193,70 @@ namespace ChoYamlReaderTest
             }
             Console.WriteLine(json.ToString());
         }
+        public class MyModel
+        {
+            public FileConfig FileConfig { get; set; }
+        }
 
+        public class FileConfig
+        {
+            public string SourceFolder { get; set; }
+            public string DestinationFolder { get; set; }
+            public List<Scenario> Scenarios { get; set; }
+        }
+
+        public class Scenario
+        {
+            public string Name { get; set; }
+            public List<Alteration> Alterations { get; set; }
+        }
+
+        public class Alteration
+        {
+            public string TableExtension { get; set; }
+            public List<TableAlteration> Alterations { get; set; }
+        }
+
+        public class TableAlteration
+        {
+            public string Type { get; set; }
+            public int SourceLineIndex { get; set; }
+            public int DestinationLineIndex { get; set; }
+            public string ColumnName { get; set; }
+            public string NewValue { get; set; }
+        }
+        static void Test1()
+        {
+            string yaml = @"FileConfig: 
+  sourceFolder: /home
+  destinationFolder: /home/billy/my-test-case
+  scenarios: 
+  - name: first-scenario 
+    alterations: 
+    - tableExtension: ln
+      alterations: 
+      - type: copy-line
+        sourceLineIndex: 0
+        destinationLineIndex: 0
+      - type: cell-change
+        sourceLineIndex: 0
+        columnName: FAKE_COL
+        newValue: NEW_Value1
+    - tableExtension: env
+      alterations: 
+      - type: cell-change
+        sourceLineIndex: 0
+        columnName: ID
+        newValue: 10";
+
+            using (var r = ChoYamlReader<MyModel>.LoadText(yaml))
+            {
+                Console.WriteLine(ChoJSONWriter<MyModel>.ToTextAll(r));
+            }
+        }
         static void Main(string[] args)
         {
-            YamlPathTest();
+            Test1();
         }
     }
 }
