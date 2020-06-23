@@ -46,6 +46,7 @@ namespace ChoETL
             _callbackFileRead = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyFileRead>(recordType);
             _callbackRecordRead = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordRead>(recordType);
             _callbackRecordSeriablizable = ChoMetadataObjectCache.CreateMetadataObject<IChoRecordFieldSerializable>(recordType);
+            System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
 
             //Configuration.Validate();
             _recBuffer = new Lazy<List<XElement>>(() =>
@@ -65,6 +66,9 @@ namespace ChoETL
 
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
         {
+            if (source == null)
+                yield break;
+
             XmlReader sr = source as XmlReader;
             ChoGuard.ArgumentNotNull(sr, "XmlReader");
 

@@ -42,10 +42,14 @@ namespace ChoETL
             _customColumnMappableRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoCustomColumnMappable>(recordType);
             _emptyLineReportableRecord = ChoMetadataObjectCache.CreateMetadataObject<IChoEmptyLineReportable>(recordType);
             //Configuration.Validate();
+            System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
         }
 
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
         {
+            if (source == null)
+                return Enumerable.Empty<object>();
+
             InitializeRecordConfiguration(Configuration);
             return AsEnumerable(source, TraceSwitch, filterFunc);
         }

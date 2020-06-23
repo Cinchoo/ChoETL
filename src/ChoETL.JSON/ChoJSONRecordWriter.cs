@@ -44,6 +44,7 @@ namespace ChoETL
             _callbackFileWrite = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyFileWrite>(recordType);
             _callbackRecordFieldWrite = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordFieldWrite>(recordType);
             _callbackRecordSeriablizable = ChoMetadataObjectCache.CreateMetadataObject<IChoRecordFieldSerializable>(recordType);
+            System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
 
             //_recBuffer = new Lazy<List<object>>(() =>
             //{

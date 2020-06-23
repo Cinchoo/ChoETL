@@ -4237,10 +4237,57 @@ Indoor Advertisi Llc,00000000000011,CO MA L00";
             }
 
         }
+
+        static void FadaSignTest()
+        {
+            using (var reader = new ChoCSVReader(new StreamReader("COUNTY.csv", Encoding.GetEncoding("iso-8859-1")))
+                    .WithFirstLineHeader()
+                    .WithDelimiter("\t")
+                    )
+            {
+                var dt = reader.AsDataTable();
+            }
+            return;
+
+            string csv = @"Id, Name
+1, Athchóirigh an Téacs: Gaeilge (ga)
+2, CHIARRAÍ";
+
+            using (var r = ChoCSVReader.LoadText(csv, Encoding.GetEncoding(1252))
+                .WithFirstLineHeader()
+                .WithMaxScanRows(2)
+                .Configure(c => c.Culture = new System.Globalization.CultureInfo("ga-IE"))
+                )
+            {
+                var dt = r.AsDataTable();
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void CultureSpecificDateTimeTest()
+        {
+            string csv =
+@"Id,Date,Account,Amount,Subcategory,Memo
+ 1,09/05/2017,XXX XXXXXX,-29.00,FT , [Sample string]
+ 2,09/05/2017,XXX XXXXXX,-20.00,FT ,[Sample string]
+ 3,25/05/2017,XXX XXXXXX,-6.30,PAYMENT,[Sample string]";
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .WithMaxScanRows(2)
+                .Configure(c => c.Culture = new System.Globalization.CultureInfo("en-GB"))
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
             //ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            Issue90();
+            FadaSignTest();
             return;
 
             CSV2ComplexObject();

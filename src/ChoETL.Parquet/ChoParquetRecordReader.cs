@@ -42,10 +42,14 @@ namespace ChoETL
             _callbackFileRead = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyFileRead>(recordType);
             _callbackRecordRead = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordRead>(recordType);
             _callbackRecordSeriablizable = ChoMetadataObjectCache.CreateMetadataObject<IChoRecordFieldSerializable>(recordType);
+            System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
         }
 
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
         {
+            if (source == null)
+                yield break;
+
             ParquetReader sr = source as ParquetReader;
             ChoGuard.ArgumentNotNull(sr, "ParquetReader");
 

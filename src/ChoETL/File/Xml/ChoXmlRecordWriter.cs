@@ -52,6 +52,7 @@ namespace ChoETL
             _callbackRecordFieldWrite = ChoMetadataObjectCache.CreateMetadataObject<IChoNotifyRecordFieldWrite>(recordType);
             _callbackRecordSeriablizable = ChoMetadataObjectCache.CreateMetadataObject<IChoRecordFieldSerializable>(recordType);
             _callbackCustomNodeNameOverrideable = ChoMetadataObjectCache.CreateMetadataObject<IChoCustomNodeNameOverrideable>(recordType);
+            System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
 
             _recBuffer = new Lazy<List<object>>(() =>
             {
