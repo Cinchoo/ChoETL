@@ -55,8 +55,8 @@ Here are the items will be targetted on phase 1.
       + [Manifold Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickManifoldLoad)
       + [Manifold Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickManifoldWrite)
   7. Parquet Reader / Writer
-      + [Parquet Reader]
-      + [Parquet Writer]
+      + [Parquet Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickParquetLoad)
+      + [Parquet Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickParquetWrite)
 
 # Phase 2:
 ETL Pipelines and ETL processes are coming...
