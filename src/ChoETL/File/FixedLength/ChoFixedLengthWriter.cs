@@ -117,10 +117,11 @@ namespace ChoETL
 
         private void Init()
         {
+            var recordType = typeof(T).ResolveRecordType();
             if (Configuration == null)
-                Configuration = new ChoFixedLengthRecordConfiguration(typeof(T));
+                Configuration = new ChoFixedLengthRecordConfiguration(recordType);
 
-            _writer = new ChoFixedLengthRecordWriter(typeof(T), Configuration);
+            _writer = new ChoFixedLengthRecordWriter(recordType, Configuration);
             _writer.RowsWritten += NotifyRowsWritten;
         }
 

@@ -118,10 +118,11 @@ namespace ChoETL
 
         private void Init()
         {
+            var recordType = typeof(T).GetUnderlyingType();
             if (Configuration == null)
-                Configuration = new ChoXmlRecordConfiguration(typeof(T));
+                Configuration = new ChoXmlRecordConfiguration(recordType);
 
-            _writer = new ChoXmlRecordWriter(typeof(T), Configuration);
+            _writer = new ChoXmlRecordWriter(recordType, Configuration);
             _writer.RowsWritten += NotifyRowsWritten;
         }
 

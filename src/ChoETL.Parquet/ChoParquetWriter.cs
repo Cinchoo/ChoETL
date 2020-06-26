@@ -110,10 +110,11 @@ namespace ChoETL
 
         private void Init()
         {
+            var recordType = typeof(T).GetUnderlyingType();
             if (Configuration == null)
-                Configuration = new ChoParquetRecordConfiguration(typeof(T));
+                Configuration = new ChoParquetRecordConfiguration(recordType);
 
-            _writer = new ChoParquetRecordWriter(typeof(T), Configuration);
+            _writer = new ChoParquetRecordWriter(recordType, Configuration);
             _writer.RowsWritten += NotifyRowsWritten;
         }
 

@@ -176,7 +176,7 @@ namespace ChoETL
         {
             _enumerator = new Lazy<IEnumerator<T>>(() => GetEnumerator());
 
-            var recordType = Configuration.RecordType.GetUnderlyingType();
+            var recordType = typeof(T).GetUnderlyingType();
             if (Configuration == null)
                 Configuration = new ChoParquetRecordConfiguration(recordType);
             else

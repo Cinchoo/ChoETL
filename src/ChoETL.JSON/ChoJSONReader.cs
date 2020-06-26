@@ -219,10 +219,11 @@ namespace ChoETL
         private void Init()
         {
             _enumerator = new Lazy<IEnumerator<T>>(() => GetEnumerator());
+            var recordType = typeof(T).GetUnderlyingType();
             if (Configuration == null)
-                Configuration = new ChoJSONRecordConfiguration(typeof(T));
+                Configuration = new ChoJSONRecordConfiguration(recordType);
             else
-                Configuration.RecordType = typeof(T);
+                Configuration.RecordType = recordType;
 
             Configuration.RecordType = Configuration.RecordType.GetUnderlyingType();
             Configuration.IsDynamicObject = Configuration.RecordType.IsDynamicType();

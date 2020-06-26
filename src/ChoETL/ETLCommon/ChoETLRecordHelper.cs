@@ -13,6 +13,15 @@ namespace ChoETL
 {
     public static class ChoETLRecordHelper
     {
+        public static Type ResolveRecordType(this Type recordType)
+        {
+            if (typeof(ICollection).IsAssignableFrom(recordType)
+                || recordType.IsSimple())
+                throw new ChoParserException("Invalid record type passed.");
+            else
+                return recordType.GetUnderlyingType();
+        }
+
         public static void ConvertNSetMemberValue(this IDictionary<string, object> dict, string fn, ChoRecordFieldConfiguration fieldConfig, ref object fieldValue, CultureInfo culture)
         {
             if (fieldValue is ChoDynamicObject)

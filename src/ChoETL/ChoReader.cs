@@ -31,15 +31,6 @@ namespace ChoETL
 
         public event EventHandler<ChoRecordFieldSerializeEventArgs> RecordFieldDeserialize;
 
-        protected Type ResolveRecordType(Type recordType)
-        {
-            if (typeof(ICollection).IsAssignableFrom(recordType)
-                || recordType.IsSimple())
-                throw new ChoParserException("Invalid record type passed.");
-            else
-                return recordType.GetUnderlyingType();
-        }
-
         public bool HasBeginLoadSubscribed
         {
             get

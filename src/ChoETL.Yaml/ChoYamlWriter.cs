@@ -120,10 +120,11 @@ namespace ChoETL
 
         private void Init()
         {
+            var recordType = Configuration.RecordType.GetUnderlyingType();
             if (Configuration == null)
-                Configuration = new ChoYamlRecordConfiguration(typeof(T));
+                Configuration = new ChoYamlRecordConfiguration(recordType);
 
-            _writer = new ChoYamlRecordWriter(typeof(T), Configuration);
+            _writer = new ChoYamlRecordWriter(recordType, Configuration);
             _writer.Writer = this;
             _writer.RowsWritten += NotifyRowsWritten;
         }

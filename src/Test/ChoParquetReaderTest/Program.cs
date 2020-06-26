@@ -46,7 +46,7 @@ namespace ChoParquetReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            ByteArrayTest();
+            Test1();
         }
     }
 }

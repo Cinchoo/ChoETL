@@ -256,7 +256,7 @@ namespace ChoETL
         {
             _enumerator = new Lazy<IEnumerator<T>>(() => GetEnumerator());
 
-            var recordType = ResolveRecordType(typeof(T));
+            var recordType = typeof(T).GetUnderlyingType();
             if (Configuration == null)
                 Configuration = new ChoXmlRecordConfiguration(recordType);
             else

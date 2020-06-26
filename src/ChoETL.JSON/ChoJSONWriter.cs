@@ -119,10 +119,11 @@ namespace ChoETL
 
         private void Init()
         {
+            var recordType = typeof(T).GetUnderlyingType();
             if (Configuration == null)
-                Configuration = new ChoJSONRecordConfiguration(typeof(T));
+                Configuration = new ChoJSONRecordConfiguration(recordType);
 
-            _writer = new ChoJSONRecordWriter(typeof(T), Configuration);
+            _writer = new ChoJSONRecordWriter(recordType, Configuration);
             _writer.Writer = this;
             _writer.RowsWritten += NotifyRowsWritten;
         }
