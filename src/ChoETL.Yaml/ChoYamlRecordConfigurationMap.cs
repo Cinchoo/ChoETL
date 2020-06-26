@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SharpYaml.Serialization;
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace ChoETL

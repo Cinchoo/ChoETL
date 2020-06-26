@@ -2143,7 +2143,16 @@ namespace ChoETL
         {
             if (target == null) return String.Empty;
 
-            if (target.GetType().IsSimple())
+            if (target is DataTable)
+            {
+                StringBuilder csv = new StringBuilder();
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    )
+                    w.Write(target);
+                return csv.ToString();
+            }
+            else if (target.GetType().IsSimple())
                 return target.ToString();
             else if (target is IEnumerable)
             {

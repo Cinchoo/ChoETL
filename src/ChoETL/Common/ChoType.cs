@@ -189,7 +189,11 @@
 
         public static Type GetType(string typeName)
         {
-            return Type.GetType(typeName);
+            var type = Type.GetType(typeName);
+            if (type != null)
+                return type;
+
+            return System.AppDomain.CurrentDomain.GetAssemblies().SelectMany(x => x.GetTypes()).FirstOrDefault(x => x.Name == typeName);
         }
 
         public static string GetMemberName(MemberInfo memberInfo)
@@ -2532,6 +2536,34 @@
         #endregion IsOverridden Overloads
 
         #region GetDeclaringMethod Overrides
+
+        public static object GetMemberObjectMatchingType(string declaringMember, object rec)
+        {
+            if (declaringMember == null)
+                return null;
+
+            if (declaringMember.Contains("."))
+            {
+                int index = declaringMember.IndexOf(".");
+                Type type = ChoType.GetType(declaringMember.Substring(0, index));
+                return type == null ? null : Activator.CreateInstance(type);
+            }
+            return null;
+        }
+
+        public static string GetFieldName(string declaringMember)
+        {
+            if (declaringMember == null)
+                return null;
+
+            if (declaringMember.Contains("."))
+            {
+                int lastIndex = declaringMember.LastIndexOf(".");
+                return declaringMember.Substring(lastIndex + 1);
+            }
+            else
+                return declaringMember;
+        }
 
         public static object GetDeclaringRecord(string declaringMember, object rec)
         {

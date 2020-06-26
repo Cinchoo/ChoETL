@@ -15,6 +15,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using DescriptionAttribute = System.ComponentModel.DescriptionAttribute;
+using System.ComponentModel.DataAnnotations;
 
 namespace ChoJSONWriterTest
 {
@@ -115,7 +116,7 @@ namespace ChoJSONWriterTest
             return true;
         }
 
-        public bool RecordFieldWriteError(object target, long index, string propName, object value, Exception ex)
+        public bool RecordFieldWriteError(object target, long index, string propName, ref object value, Exception ex)
         {
             throw new NotImplementedException();
         }
@@ -711,9 +712,124 @@ namespace ChoJSONWriterTest
             Console.WriteLine(json.ToString());
         }
 
+        [ChoJSONRecordObject(ObjectValidationMode = ChoObjectValidationMode.MemberLevel, ErrorMode = ChoErrorMode.ReportAndContinue)]
+        public class Emp1
+        {
+            [DisplayName("Id")]
+            public int ID { get; set; }
+            public string Name { get; set; }
+
+            public Address1 Address { get; set; }
+        }
+
+        public class Address1 : IChoNotifyRecordFieldWrite, IChoNotifyRecordFieldRead
+        {
+            [DisplayName("street")]
+            [StringLength(maximumLength: 5)]
+            //[ChoIgnoreMember]
+            public string Street { get; set; }
+            public string City { get; set; }
+
+            public bool AfterRecordFieldLoad(object target, long index, string propName, object value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool AfterRecordFieldWrite(object target, long index, string propName, object value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool BeforeRecordFieldLoad(object target, long index, string propName, ref object value)
+            {
+                if (propName == "City")
+                {
+                    value = "Edison";
+                    return true;
+                }
+                else
+                    return false;
+
+            }
+
+            public bool BeforeRecordFieldWrite(object target, long index, string propName, ref object value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool RecordFieldLoadError(object target, long index, string propName, ref object value, Exception ex)
+            {
+                value = "new value";
+                return true;
+            }
+
+            public bool RecordFieldWriteError(object target, long index, string propName, ref object value, Exception ex)
+            {
+                return false;
+            }
+        }
+
+
+        static void POCOWriteTest()
+        {
+            StringBuilder json = new StringBuilder();
+            Emp1 e1 = new Emp1
+            {
+                ID = 1,
+                Name = "Tom",
+
+                Address = new Address1
+                {
+                    Street = "1 Main Street",
+                    City = "NYC"
+                }
+            };
+
+            using (var w = new ChoJSONWriter<Emp1>(json)
+                )
+            {
+                w.Write(e1);
+            }
+
+            Console.WriteLine(json.ToString());
+
+        }
+
+        static void POCOReadTest()
+        {
+            string json = @"[
+  {
+    ""Id"": 1,
+    ""Name"": ""Tom"",
+    ""Address"": {
+      ""street"": ""1 Main Street"",
+      ""City"": ""NYC""
+    }
+  }
+]";
+
+            using (var r = ChoJSONReader<Emp1>.LoadText(json)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
+
+            POCOWriteTest();
+            return;
+
+            StringBuilder json = new StringBuilder();
+            using (var w = new ChoJSONWriter<bool>(json))
+                w.Write(true);
+            Console.WriteLine(json.ToString());
+            return;
+
             CSV2JSONNoIndentation();
             return;
 

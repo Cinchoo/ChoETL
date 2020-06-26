@@ -46,6 +46,7 @@ namespace ChoETL
             private set;
         }
 
+
         public ChoXmlReader(StringBuilder sb, ChoXmlRecordConfiguration configuration = null) : this(new StringReader(sb.ToString()), configuration)
         {
 
@@ -254,15 +255,19 @@ namespace ChoETL
         private void Init()
         {
             _enumerator = new Lazy<IEnumerator<T>>(() => GetEnumerator());
-            if (Configuration == null)
-                Configuration = new ChoXmlRecordConfiguration(typeof(T));
-            else
-                Configuration.RecordType = typeof(T);
 
-            Configuration.RecordType = ResolveRecordType(Configuration.RecordType);
+            var recordType = ResolveRecordType(typeof(T));
+            if (Configuration == null)
+                Configuration = new ChoXmlRecordConfiguration(recordType);
+            else
+                Configuration.RecordType = recordType;
             Configuration.IsDynamicObject = Configuration.RecordType.IsDynamicType();
-            _prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
-            System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
+
+            if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
+            {
+                _prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
+                System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
+            }
         }
 
         public static ChoXmlReader<T> LoadXElements(IEnumerable<XElement> xElements, ChoXmlRecordConfiguration configuration = null)
@@ -347,66 +352,46 @@ namespace ChoETL
             return GetEnumerator();
         }
 
-        public IDataReader AsDataReader()
+        public IDataReader AsDataReader(Action<IDictionary<string, object>> selector = null)
         {
-            return AsDataReader(null);
+            return AsDataReader(null, selector);
         }
 
-        private IDataReader AsDataReader(Action<IDictionary<string, Type>> membersDiscovered)
+        private IDataReader AsDataReader(Action<IDictionary<string, Type>> membersDiscovered, Action<IDictionary<string, object>> selector = null)
         {
             this.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
             return this.Select(s =>
             {
+                IDictionary<string, object> dict = null;
                 if (s is IDictionary<string, object>)
-                    return ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator).ToDictionary() as object;
+                    dict = ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator == null ? '_' : Configuration.NestedColumnSeparator).ToDictionary();
                 else
-                    return s;
+                    dict = s.ToDictionary().Flatten(Configuration.NestedColumnSeparator == null ? '_' : Configuration.NestedColumnSeparator).ToDictionary();
+
+                selector?.Invoke(dict);
+
+                return dict as object;
             }).AsDataReader();
-
-            //if (_xElements == null)
-            //{
-            //    InitXml();
-
-            //    ChoXmlRecordReader rr = new ChoXmlRecordReader(typeof(T), Configuration);
-            //    //if (_textReader != null)
-            //    //    _xmlReader = XmlReader.Create(_textReader, new XmlReaderSettings() { DtdProcessing = DtdProcessing.Ignore, XmlResolver = null }, new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
-            //    rr.Reader = this;
-            //    rr.TraceSwitch = TraceSwitch;
-            //    rr.RowsLoaded += NotifyRowsLoaded;
-            //    rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
-            //    rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
-            //    var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_xmlReader), rr);
-            //    return dr;
-            //}
-            //else
-            //{
-            //    ChoXmlRecordReader rr = new ChoXmlRecordReader(typeof(T), Configuration);
-
-            //    rr.Reader = this;
-            //    rr.TraceSwitch = TraceSwitch;
-            //    rr.RowsLoaded += NotifyRowsLoaded;
-            //    rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
-            //    rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
-            //    var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_xElements), rr);
-            //    return dr;
-            //}
         }
 
-        public DataTable AsDataTable(string tableName = null)
+        public DataTable AsDataTable(Action<IDictionary<string, object>> selector)
+        {
+            return AsDataTable(null, selector);
+        }
+
+        public DataTable AsDataTable(string tableName = null, Action<IDictionary<string, object>> selector = null)
         {
             DataTable dt = tableName.IsNullOrWhiteSpace() ? new DataTable() : new DataTable(tableName);
             dt.Locale = Configuration.Culture;
-            dt.Load(AsDataReader());
+            dt.Load(AsDataReader(selector));
             return dt;
         }
 
-        public int Fill(DataTable dt)
+        public void Fill(DataTable dt, Action<IDictionary<string, object>> selector = null)
         {
             if (dt == null)
                 throw new ArgumentException("Missing datatable.");
-            dt.Load(AsDataReader());
-
-            return dt.Rows.Count;
+            dt.Load(AsDataReader(selector));
         }
 
         private void NotifyRowsLoaded(object sender, ChoRowsLoadedEventArgs e)

@@ -84,9 +84,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoParquetReaderTest", "..\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoParquetWriterTest", "..\Test\ChoParquetWriterTest\ChoParquetWriterTest.csproj", "{69B4D371-2A3F-4765-81FD-85D46E04957F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoETL.Yaml", "..\ChoETL.Yaml\ChoETL.Yaml.csproj", "{D1F1F3B5-EDD3-4792-8779-6882BFA4E3C8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoETL.Yaml", "..\ChoETL.Yaml\ChoETL.Yaml.csproj", "{D1F1F3B5-EDD3-4792-8779-6882BFA4E3C8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoYamlReaderTest", "..\Test\ChoYamlReaderTest\ChoYamlReaderTest.csproj", "{2FCE1104-5E34-4681-BF9A-3BF385A6C9AB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoYamlReaderTest", "..\Test\ChoYamlReaderTest\ChoYamlReaderTest.csproj", "{2FCE1104-5E34-4681-BF9A-3BF385A6C9AB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoYamlWriterTest", "..\Test\ChoYamlWriterTest\ChoYamlWriterTest.csproj", "{A2CE2DD3-6E0D-45D3-A808-D76A345A60C0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -218,6 +220,10 @@ Global
 		{2FCE1104-5E34-4681-BF9A-3BF385A6C9AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2FCE1104-5E34-4681-BF9A-3BF385A6C9AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2FCE1104-5E34-4681-BF9A-3BF385A6C9AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A2CE2DD3-6E0D-45D3-A808-D76A345A60C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2CE2DD3-6E0D-45D3-A808-D76A345A60C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2CE2DD3-6E0D-45D3-A808-D76A345A60C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2CE2DD3-6E0D-45D3-A808-D76A345A60C0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -248,6 +254,7 @@ Global
 		{D27B93EE-A4D4-4828-B3A1-4989479589F0} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 		{69B4D371-2A3F-4765-81FD-85D46E04957F} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 		{2FCE1104-5E34-4681-BF9A-3BF385A6C9AB} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
+		{A2CE2DD3-6E0D-45D3-A808-D76A345A60C0} = {C17EFEDF-16CF-4615-86AC-0580547B6AEB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D35E7445-B861-41CC-B854-44981E4F9FFB}

@@ -246,15 +246,19 @@ namespace ChoETL
         private void Init()
         {
             _enumerator = new Lazy<IEnumerator<T>>(() => GetEnumerator());
-            if (Configuration == null)
-                Configuration = new ChoYamlRecordConfiguration(typeof(T));
-            else
-                Configuration.RecordType = typeof(T);
 
-            Configuration.RecordType = Configuration.RecordType.GetUnderlyingType();
+            var recordType = Configuration.RecordType.GetUnderlyingType();
+            if (Configuration == null)
+                Configuration = new ChoYamlRecordConfiguration(recordType);
+            else
+                Configuration.RecordType = recordType;
             Configuration.IsDynamicObject = Configuration.RecordType.IsDynamicType();
-            _prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
-            System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
+
+            if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
+            {
+                _prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
+                System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
+            }
         }
 
         public static ChoYamlReader<T> LoadText(string inputText, ChoYamlRecordConfiguration configuration = null)
@@ -338,77 +342,55 @@ namespace ChoETL
             return GetEnumerator();
         }
 
-        public IDataReader AsDataReader()
+        public IDataReader AsDataReader(Action<IDictionary<string, object>> selector = null)
         {
-            return AsDataReader(null);
+            return AsDataReader(null, selector);
         }
 
-        private IDataReader AsDataReader(Action<IDictionary<string, Type>> membersDiscovered)
+        private IDataReader AsDataReader(Action<IDictionary<string, Type>> membersDiscovered, Action<IDictionary<string, object>> selector = null)
         {
             this.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
             return this.Select(s =>
             {
+                IDictionary<string, object> dict = null;
                 if (s is IDictionary<string, object>)
-                    return ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator).ToDictionary() as object;
+                    dict = ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator == null ? '_' : Configuration.NestedColumnSeparator).ToDictionary();
                 else
-                    return s;
+                    dict = s.ToDictionary().Flatten(Configuration.NestedColumnSeparator == null ? '_' : Configuration.NestedColumnSeparator).ToDictionary();
+
+                selector?.Invoke(dict);
+
+                return dict as object;
             }).AsDataReader();
-
-            //if (_yamlObjects == null)
-            //{
-            //    ChoYamlRecordReader rr = new ChoYamlRecordReader(typeof(T), Configuration);
-            //    if (_textReader != null)
-            //        _YamlReader = Create(_textReader);
-            //    rr.Reader = this;
-            //    rr.TraceSwitch = TraceSwitch;
-            //    rr.RowsLoaded += NotifyRowsLoaded;
-            //    rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
-            //    rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
-
-            //    return this.Select(s =>
-            //    {
-            //        if (s is IDictionary<string, object>)
-            //            return ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator).ToDictionary() as object;
-            //        else
-            //            return s;
-            //    }).AsDataReader();
-            //    //var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_YamlReader), rr);
-
-            //    var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_YamlReader).Select(s =>
-            //    {
-            //        if (s is IDictionary<string, object>)
-            //            return ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator).ToDictionary() as object;
-            //        else
-            //            return s;
-            //    }), rr);
-            //    //return dr;
-            //}
-            //else
-            //{
-            //    ChoYamlRecordReader rr = new ChoYamlRecordReader(typeof(T), Configuration);
-            //    rr.Reader = this;
-            //    rr.TraceSwitch = TraceSwitch;
-            //    rr.RowsLoaded += NotifyRowsLoaded;
-            //    rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
-            //    rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
-            //    var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_yamlObjects), rr);
-            //    return dr;
-            //}
         }
 
-        public DataTable AsDataTable(string tableName = null)
+        public DataTable AsDataTable(Action<IDictionary<string, object>> selector)
+        {
+            return AsDataTable(null, selector);
+        }
+
+        public DataTable AsDataTable(string tableName = null, Action<IDictionary<string, object>> selector = null)
         {
             DataTable dt = tableName.IsNullOrWhiteSpace() ? new DataTable() : new DataTable(tableName);
             dt.Locale = Configuration.Culture;
-            dt.Load(AsDataReader());
+
+            try
+            {
+                dt.BeginLoadData();
+                dt.Load(AsDataReader(selector));
+            }
+            finally
+            {
+                dt.EndLoadData();
+            }
             return dt;
         }
 
-        public void Fill(DataTable dt)
+        public void Fill(DataTable dt, Action<IDictionary<string, object>> selector = null)
         {
             if (dt == null)
                 throw new ArgumentException("Missing datatable.");
-            dt.Load(AsDataReader());
+            dt.Load(AsDataReader(selector));
         }
 
         private void NotifyRowsLoaded(object sender, ChoRowsLoadedEventArgs e)
@@ -503,6 +485,12 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoYamlReader<T> ReuseSerializerObject(bool flag = true)
+        {
+            Configuration.ReuseSerializerObject = flag;
+            return this;
+        }
+
         public ChoYamlReader<T> ErrorMode(ChoErrorMode mode)
         {
             Configuration.ErrorMode = mode;
@@ -515,17 +503,23 @@ namespace ChoETL
             return this;
         }
 
-        public ChoYamlReader<T> AllowComplexYamlPath(bool flag = true)
+        public ChoYamlReader<T> YamlSerializerSettings(Action<SerializerSettings> settings)
         {
-            Configuration.AllowComplexYamlPath = flag;
+            settings?.Invoke(Configuration.YamlSerializerSettings);
             return this;
         }
 
-        public ChoYamlReader<T> UseYamlSerialization(bool flag = true)
-        {
-            Configuration.UseYamlSerialization = flag;
-            return this;
-        }
+        //public ChoYamlReader<T> AllowComplexYamlPath(bool flag = true)
+        //{
+        //    Configuration.AllowComplexYamlPath = flag;
+        //    return this;
+        //}
+
+        //public ChoYamlReader<T> UseYamlSerialization(bool flag = true)
+        //{
+        //    Configuration.UseYamlSerialization = flag;
+        //    return this;
+        //}
 
         public ChoYamlReader<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
         {
@@ -542,7 +536,7 @@ namespace ChoETL
         public ChoYamlReader<T> WithYamlPath(string yamlPath, bool allowComplexYamlPath = false)
         {
             Configuration.YamlPath = yamlPath;
-            Configuration.AllowComplexYamlPath = allowComplexYamlPath;
+            //Configuration.AllowComplexYamlPath = allowComplexYamlPath;
             return this;
         }
 

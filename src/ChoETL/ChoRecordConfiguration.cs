@@ -88,7 +88,7 @@ namespace ChoETL
 
         internal ChoRecordConfiguration(Type recordType = null)
         {
-            RecordType = recordType;
+            RecordType = recordType.GetUnderlyingType();
             ErrorMode = ChoErrorMode.ReportAndContinue;
             AutoDiscoverColumns = true;
             ThrowAndStopOnMissingField = true;

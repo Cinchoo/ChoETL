@@ -10,7 +10,7 @@ namespace ChoETL
     {
         bool BeforeRecordFieldWrite(object target, long index, string propName, ref object value);
         bool AfterRecordFieldWrite(object target, long index, string propName, object value);
-        bool RecordFieldWriteError(object target, long index, string propName, object value, Exception ex);
+        bool RecordFieldWriteError(object target, long index, string propName, ref object value, Exception ex);
     }
 
     public interface IChoNotifyFileWrite

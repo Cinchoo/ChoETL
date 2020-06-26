@@ -59,11 +59,6 @@ namespace ChoETL
             get;
             set;
         }
-        internal string DeclaringMember
-        {
-            get;
-            set;
-        }
         internal PropertyDescriptor PropertyDescriptor
         {
             get;

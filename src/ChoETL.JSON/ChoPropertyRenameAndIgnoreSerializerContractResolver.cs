@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq;
@@ -19,9 +20,21 @@ namespace ChoETL
 {
     public class ChoPropertyRenameAndIgnoreSerializerContractResolver : DefaultContractResolver
     {
-        private readonly ChoJSONRecordConfiguration _configuration;
+        private readonly ChoFileRecordConfiguration _configuration;
+        public IChoNotifyRecordFieldWrite CallbackRecordFieldWrite
+        {
+            get;
+            set;
+        }
+        public ChoWriter Writer
+        {
+            get;
+            set;
+        }
+        public IChoNotifyRecordFieldRead CallbackRecordFieldRead { get; set; }
+        public ChoReader Reader { get; set; }
 
-        public ChoPropertyRenameAndIgnoreSerializerContractResolver(ChoJSONRecordConfiguration configuration)
+        public ChoPropertyRenameAndIgnoreSerializerContractResolver(ChoFileRecordConfiguration configuration)
         {
             _configuration = configuration;
         }
@@ -44,24 +57,44 @@ namespace ChoETL
 
             if (_configuration.ContainsRecordConfigForType(property.DeclaringType))
             {
-                var dict = _configuration.JSONRecordFieldConfigurationsForType[property.DeclaringType];
+                var dict = _configuration.GetRecordConfigDictionaryForType(property.DeclaringType);
                 if (dict != null && dict.ContainsKey(property.UnderlyingName))
                 {
-                    property.Converter = property.MemberConverter = new ChoContractResolverJsonConverter(dict[property.UnderlyingName], _configuration.Culture, 
-                        property.PropertyType, _configuration.ObjectValidationMode, member);
+                    property.Converter = property.MemberConverter = new ChoContractResolverJsonConverter(dict[property.UnderlyingName] as ChoFileRecordFieldConfiguration, _configuration.Culture,
+                        property.PropertyType, _configuration.ObjectValidationMode, member)
+                    {
+                        Reader = Reader,
+                        CallbackRecordFieldRead = CallbackRecordFieldRead,
+                         Writer = Writer,
+                        CallbackRecordFieldWrite = CallbackRecordFieldWrite
+                    };
                 }
             }
-            else if (_configuration.JSONRecordFieldConfigurations.Any(f => f.DeclaringMember == propertyFullName))
+            else if (_configuration.RecordFieldConfigurations.Any(f => f.DeclaringMember == propertyFullName))
             {
-                var fc = _configuration.JSONRecordFieldConfigurations.First(f => f.DeclaringMember == propertyFullName);
-                property.MemberConverter = new ChoContractResolverJsonConverter(fc, _configuration.Culture, property.PropertyType, _configuration.ObjectValidationMode, member);
+                var fc = _configuration.RecordFieldConfigurations.First(f => f.DeclaringMember == propertyFullName) as ChoFileRecordFieldConfiguration;
+                property.Converter = property.MemberConverter = new ChoContractResolverJsonConverter(fc, _configuration.Culture, property.PropertyType, _configuration.ObjectValidationMode, member)
+                {
+                    Reader = Reader,
+                    CallbackRecordFieldRead = CallbackRecordFieldRead,
+                    Writer = Writer,
+                    CallbackRecordFieldWrite = CallbackRecordFieldWrite
+                };
+
                 property.DefaultValue = fc.DefaultValue;
                 property.Order = fc.Order;
             }
-            else if (_configuration.JSONRecordFieldConfigurations.Any(f => f.Name == propertyFullName))
+            else if (_configuration.RecordFieldConfigurations.Any(f => f.Name == propertyFullName))
             {
-                var fc = _configuration.JSONRecordFieldConfigurations.First(f => f.Name == propertyFullName);
-                property.MemberConverter = new ChoContractResolverJsonConverter(fc, _configuration.Culture, property.PropertyType, _configuration.ObjectValidationMode, member);
+                var fc = _configuration.RecordFieldConfigurations.First(f => f.Name == propertyFullName) as ChoFileRecordFieldConfiguration;
+                property.MemberConverter = new ChoContractResolverJsonConverter(fc, _configuration.Culture, property.PropertyType, _configuration.ObjectValidationMode, member)
+                {
+                    Reader = Reader,
+                    CallbackRecordFieldRead = CallbackRecordFieldRead,
+                    Writer = Writer,
+                    CallbackRecordFieldWrite = CallbackRecordFieldWrite
+                };
+
                 property.DefaultValue = fc.DefaultValue;
                 property.Order = fc.Order;
             }
@@ -74,6 +107,18 @@ namespace ChoETL
                         property.DefaultValue = pd.Attributes.OfType<DefaultValueAttribute>().First().Value;
                     if (pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any())
                         property.Order = pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().First().Order;
+                    else if (pd.Attributes.OfType<DisplayAttribute>().Any())
+                        property.Order = pd.Attributes.OfType<DisplayAttribute>().First().Order;
+                    else if (pd.Attributes.OfType<ColumnAttribute>().Any())
+                        property.Order = pd.Attributes.OfType<ColumnAttribute>().First().Order;
+
+                    property.Converter = property.MemberConverter = new ChoContractResolverJsonConverter(null, _configuration.Culture, property.PropertyType, _configuration.ObjectValidationMode, member)
+                    {
+                        Reader = Reader,
+                        CallbackRecordFieldRead = CallbackRecordFieldRead,
+                        Writer = Writer,
+                        CallbackRecordFieldWrite = CallbackRecordFieldWrite
+                    };
                 }
             }
 
@@ -92,6 +137,8 @@ namespace ChoETL
                 return true;
 
             var pd = ChoTypeDescriptor.GetProperty(type, propertyName);
+            if (pd == null)
+                return true;
             if (pd != null)
             {
                 if (pd.Attributes.OfType<ChoIgnoreMemberAttribute>().Any())
@@ -109,23 +156,23 @@ namespace ChoETL
 
             if (_configuration != null && _configuration.ContainsRecordConfigForType(type))
             {
-                var dict = _configuration.JSONRecordFieldConfigurationsForType[type];
+                var dict = _configuration.GetRecordConfigDictionaryForType(type);
                 if (dict != null && dict.ContainsKey(jsonPropertyName))
                 {
-                    newJsonPropertyName = dict[jsonPropertyName].FieldName;
+                    newJsonPropertyName = ((ChoFileRecordFieldConfiguration)dict[jsonPropertyName]).FieldName;
                     return true;
                 }
             }
 
-            if (_configuration.JSONRecordFieldConfigurations.Any(f => f.DeclaringMember == propertyFullName))
+            if (_configuration.RecordFieldConfigurations.Any(f => f.DeclaringMember == propertyFullName))
             {
-                newJsonPropertyName = _configuration.JSONRecordFieldConfigurations.First(f => f.DeclaringMember == propertyFullName).FieldName;
+                newJsonPropertyName = _configuration.RecordFieldConfigurations.OfType<ChoFileRecordFieldConfiguration>().First(f => f.DeclaringMember == propertyFullName).FieldName;
                 return true;
             }
 
-            if (_configuration.JSONRecordFieldConfigurations.Any(f => f.Name == propertyName))
+            if (_configuration.RecordFieldConfigurations.Any(f => f.Name == propertyName))
             {
-                newJsonPropertyName = _configuration.JSONRecordFieldConfigurations.First(f => f.Name == propertyName).FieldName;
+                newJsonPropertyName = _configuration.RecordFieldConfigurations.OfType<ChoFileRecordFieldConfiguration>().First(f => f.Name == propertyName).FieldName;
                 return true;
             }
 
@@ -166,13 +213,25 @@ namespace ChoETL
 
     public class ChoContractResolverJsonConverter : JsonConverter
     {
-        private ChoJSONRecordFieldConfiguration _fc = null;
+        private ChoFileRecordFieldConfiguration _fc = null;
         private CultureInfo _culture;
         private Type _objType;
         private ChoObjectValidationMode _validationMode;
         private MemberInfo _mi;
+        public IChoNotifyRecordFieldWrite CallbackRecordFieldWrite
+        {
+            get;
+            set;
+        }
+        public ChoWriter Writer
+        {
+            get;
+            set;
+        }
+        public IChoNotifyRecordFieldRead CallbackRecordFieldRead { get; set; }
+        public ChoReader Reader { get; set; }
 
-        public ChoContractResolverJsonConverter(ChoJSONRecordFieldConfiguration fc, CultureInfo culture, Type objType, ChoObjectValidationMode validationMode, MemberInfo mi)
+        public ChoContractResolverJsonConverter(ChoFileRecordFieldConfiguration fc, CultureInfo culture, Type objType, ChoObjectValidationMode validationMode, MemberInfo mi)
         {
             _fc = fc;
             _culture = culture;
@@ -189,60 +248,358 @@ namespace ChoETL
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             object retValue = null;
-            if (_fc.CustomSerializer == null)
+
+            var crs = Reader.ContractResolverState;
+            var fc = crs.FieldConfig;
+            crs.Name = _fc == null ? _mi.GetFullName() : crs.Name;
+
+            var rec = ChoType.GetMemberObjectMatchingType(crs.Name, crs.Record);
+            var name = ChoType.GetFieldName(crs.Name);
+
+            retValue = reader;
+            if (!RaiseBeforeRecordFieldLoad(rec, crs.Index, name, ref retValue))
             {
-                if (_fc.ValueConverter == null)
-                    retValue = serializer.Deserialize(reader, objectType);
+                if (_fc != null)
+                {
+                    if (_fc.CustomSerializer == null)
+                    {
+                        if (_fc.ValueConverter == null)
+                            retValue = serializer.Deserialize(reader, objectType);
+                        else
+                            retValue = _fc.ValueConverter(serializer.Deserialize(reader, typeof(string)));
+                    }
+                    else
+                    {
+                        retValue = _fc.CustomSerializer(reader);
+                    }
+
+                    ValidateORead(ref retValue);
+                    //ChoETLRecordHelper.DoMemberLevelValidation(retValue, _fc.Name, _fc, _validationMode);
+
+                    if (retValue != null)
+                        retValue = ChoConvert.ConvertFrom(retValue, objectType, null, _fc.PropConverters, _fc.PropConverterParams, _culture);
+                }
                 else
-                    retValue = _fc.ValueConverter(serializer.Deserialize(reader, typeof(string)));
+                {
+                    retValue = serializer.Deserialize(reader, objectType);
+                    ValidateORead(ref retValue);
+
+                    if (retValue != null)
+                        retValue = ChoConvert.ConvertFrom(retValue, objectType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
+                }
             }
-            else
-            {
-                retValue = _fc.CustomSerializer(reader);
-            }
+            if (!RaiseAfterRecordFieldLoad(rec, crs.Index, name, retValue))
+                return null;
 
-            if (retValue != null)
-                retValue = ChoConvert.ConvertFrom(retValue, objectType, null, _fc.PropConverters, _fc.PropConverterParams, _culture);
-
-            Validate(retValue);
-
-            return retValue;
+            return retValue == reader ? null : retValue;
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            if (value != null && _objType != null)
-                value = ChoConvert.ConvertTo(value, _objType, null, _fc.PropConverters, _fc.PropConverterParams, _culture);
+            var crs = Writer.ContractResolverState;
+            var fc = crs.FieldConfig;
+            crs.Name = _fc == null ? _mi.GetFullName() : crs.Name;
 
-            if (_fc.CustomSerializer == null)
+            var rec = ChoType.GetMemberObjectMatchingType(crs.Name, crs.Record);
+            var name = ChoType.GetFieldName(crs.Name);
+
+            if (RaiseBeforeRecordFieldWrite(rec, crs.Index, name, ref value))
             {
-                if (_fc.ValueConverter == null)
+                if (_fc != null)
                 {
-                    JToken t = JToken.FromObject(value);
-                    t.WriteTo(writer);
+                    if (value != null && _objType != null)
+                        value = ChoConvert.ConvertTo(value, _objType, null, _fc.PropConverters, _fc.PropConverterParams, _culture);
+
+                    if (_fc.CustomSerializer == null)
+                    {
+                        if (_fc.ValueConverter == null)
+                        {
+                            JToken t = JToken.FromObject(value);
+                            t.WriteTo(writer);
+                        }
+                        else
+                        {
+                            object retValue = _fc.ValueConverter(value);
+                            ValidateOnWrite(ref retValue);
+
+                            //ChoETLRecordHelper.DoMemberLevelValidation(retValue, _fc.Name, _fc, _validationMode);
+                            JToken t = JToken.FromObject(retValue);
+                            t.WriteTo(writer);
+                        }
+                    }
+                    else
+                    {
+                        object retValue = _fc.CustomSerializer(writer);
+                        ValidateOnWrite(ref retValue);
+                        JToken t = JToken.FromObject(retValue);
+                        t.WriteTo(writer);
+                    }
                 }
                 else
                 {
-                    object retValue = _fc.ValueConverter(value);
+                    if (value != null && _objType != null)
+                        value = ChoConvert.ConvertTo(value, _objType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
 
-                    Validate(retValue);
-
-                    ChoETLRecordHelper.DoMemberLevelValidation(retValue, _fc.Name, _fc, _validationMode);
-                    JToken t = JToken.FromObject(retValue);
-                    t.WriteTo(writer);
+                    if (ValidateOnWrite(ref value))
+                    {
+                        JToken t = JToken.FromObject(value);
+                        t.WriteTo(writer);
+                    }
+                    else
+                    {
+                        JToken t = JToken.FromObject(null);
+                        t.WriteTo(writer);
+                    }
                 }
+
+                RaiseAfterRecordFieldWrite(rec, crs.Index, name, value);
             }
             else
             {
-                object retValue = _fc.CustomSerializer(writer);
-                if (retValue != null)
-                {
-                    Validate(retValue);
-                    JToken t = JToken.FromObject(value);
-                    t.WriteTo(writer);
-                }
+                JToken t = JToken.FromObject(null);
+                t.WriteTo(writer);
             }
         }
+
+        private bool ValidateORead(ref object value)
+        {
+            var crs = Reader.ContractResolverState;
+            var fc = crs.FieldConfig;
+            crs.Name = _fc == null ? _mi.GetFullName() : crs.Name;
+
+            var rec = ChoType.GetMemberObjectMatchingType(crs.Name, crs.Record);
+            var name = ChoType.GetFieldName(crs.Name);
+
+            try
+            {
+                Validate(value);
+            }
+            catch (Exception ex)
+            {
+                ChoETLFramework.HandleException(ref ex);
+
+                if (fc != null && fc.ErrorMode == ChoErrorMode.ThrowAndStop)
+                    throw;
+
+                if (fc != null)
+                {
+                    if (fc.ErrorMode == ChoErrorMode.IgnoreAndContinue)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        if (!RaiseRecordFieldLoadError(rec, crs.Index, name, ref value, ex))
+                            throw new ChoWriterException($"Failed to load '{value}' value for '{crs.Name}' member.", ex);
+                    }
+                }
+                else
+                {
+                    throw new ChoWriterException($"Failed to load '{value}' value for '{crs.Name}' member.", ex);
+                }
+            }
+
+            return true;
+        }
+
+        private bool ValidateOnWrite(ref object value)
+        {
+            var crs = Writer.ContractResolverState;
+            var fc = crs.FieldConfig;
+            crs.Name = _fc == null ? _mi.GetFullName() : crs.Name;
+
+            var rec = ChoType.GetMemberObjectMatchingType(crs.Name, crs.Record);
+            var name = ChoType.GetFieldName(crs.Name);
+
+            try
+            {
+                Validate(value);
+            }
+            catch (Exception ex)
+            {
+                ChoETLFramework.HandleException(ref ex);
+
+                if (fc != null && fc.ErrorMode == ChoErrorMode.ThrowAndStop)
+                    throw;
+
+                if (fc != null)
+                { 
+                    if (fc.ErrorMode == ChoErrorMode.IgnoreAndContinue)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        if (!RaiseRecordFieldWriteError(rec, crs.Index, name, ref value, ex))
+                            throw new ChoWriterException($"Failed to write '{value}' value of '{crs.Name}' member.", ex);
+                    }
+                }
+                else
+                {
+                    throw new ChoWriterException($"Failed to write '{value}' value of '{crs.Name}' member.", ex);
+                }
+            }
+
+            return true;
+        }
+
+        #region Event Raisers
+
+        private bool RaiseAfterRecordFieldWrite(object target, long index, string propName, object value)
+        {
+            if (Writer != null && Writer.HasAfterRecordFieldWriteSubscribed)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseAfterRecordFieldWrite(target, index, propName, value), true);
+            }
+            else if (target is IChoNotifyRecordFieldWrite)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordFieldWrite)target).AfterRecordFieldWrite(target, index, propName, value), true);
+            }
+            else if (CallbackRecordFieldWrite != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => CallbackRecordFieldWrite.AfterRecordFieldWrite(target, index, propName, value), true);
+            }
+            return true;
+        }
+
+        private bool RaiseBeforeRecordFieldWrite(object target, long index, string propName, ref object value)
+        {
+            if (Writer != null && Writer.HasBeforeRecordFieldWriteSubscribed)
+            {
+                object state = value;
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseBeforeRecordFieldWrite(target, index, propName, ref state), true);
+
+                if (retValue)
+                    value = state;
+
+                return retValue;
+            }
+            else if (target is IChoNotifyRecordFieldWrite)
+            {
+                object state = value;
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordFieldWrite)target).BeforeRecordFieldWrite(target, index, propName, ref state), true);
+
+                if (retValue)
+                    value = state;
+
+                return retValue;
+            }
+            else if (CallbackRecordFieldWrite != null)
+            {
+                object state = value;
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => CallbackRecordFieldWrite.BeforeRecordFieldWrite(target, index, propName, ref state), true);
+
+                if (retValue)
+                    value = state;
+
+                return retValue;
+            }
+            return true;
+        }
+
+        private bool RaiseBeforeRecordFieldLoad(object target, long index, string propName, ref object value)
+        {
+            if (Reader != null && Reader.HasBeforeRecordFieldLoadSubscribed)
+            {
+                object state = value;
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseBeforeRecordFieldLoad(target, index, propName, ref state), true);
+
+                if (retValue)
+                    value = state;
+
+                return retValue;
+            }
+            else if (target is IChoNotifyRecordFieldRead)
+            {
+                object state = value;
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordFieldRead)target).BeforeRecordFieldLoad(target, index, propName, ref state), true);
+
+                if (retValue)
+                    value = state;
+
+                return retValue;
+            }
+            else if (CallbackRecordFieldRead != null)
+            {
+                object state = value;
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => CallbackRecordFieldRead.BeforeRecordFieldLoad(target, index, propName, ref state), true);
+
+                if (retValue)
+                    value = state;
+
+                return retValue;
+            }
+            return true;
+        }
+
+        private bool RaiseAfterRecordFieldLoad(object target, long index, string propName, object value)
+        {
+            if (Reader != null && Reader.HasAfterRecordFieldLoadSubscribed)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseAfterRecordFieldLoad(target, index, propName, value), true);
+            }
+            else if (target is IChoNotifyRecordFieldRead)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordFieldRead)target).AfterRecordFieldLoad(target, index, propName, value), true);
+            }
+            else if (CallbackRecordFieldRead != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => CallbackRecordFieldRead.AfterRecordFieldLoad(target, index, propName, value), true);
+            }
+            return true;
+        }
+
+        private bool RaiseRecordFieldLoadError(object target, long index, string propName, ref object value, Exception ex)
+        {
+            bool retValue = true;
+            object state = value;
+            if (Reader != null && Reader.HasRecordFieldLoadErrorSubscribed)
+            {
+                retValue = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseRecordFieldLoadError(target, index, propName, ref state, ex), true);
+                if (retValue)
+                    value = state;
+            }
+            else if (target is IChoNotifyRecordFieldRead)
+            {
+                retValue = ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordFieldRead)target).RecordFieldLoadError(target, index, propName, ref state, ex), true);
+                if (retValue)
+                    value = state;
+            }
+            else if (CallbackRecordFieldRead != null)
+            {
+                retValue = ChoFuncEx.RunWithIgnoreError(() => CallbackRecordFieldRead.RecordFieldLoadError(target, index, propName, ref state, ex), true);
+                if (retValue)
+                    value = state;
+            }
+            return retValue;
+        }
+
+        private bool RaiseRecordFieldWriteError(object target, long index, string propName, ref object value, Exception ex)
+        {
+            bool retValue = true;
+            object state = value;
+            if (Writer != null && Writer.HasRecordFieldWriteErrorSubscribed)
+            {
+                retValue = ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseRecordFieldWriteError(target, index, propName, ref state, ex), true);
+                if (retValue)
+                    value = state;
+            }
+            else if (target is IChoNotifyRecordFieldWrite)
+            {
+                retValue = ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordFieldWrite)target).RecordFieldWriteError(target, index, propName, ref state, ex), true);
+                if (retValue)
+                    value = state;
+            }
+            else if (CallbackRecordFieldWrite != null)
+            {
+                retValue = ChoFuncEx.RunWithIgnoreError(() => CallbackRecordFieldWrite.RecordFieldWriteError(target, index, propName, ref state, ex), true);
+                if (retValue)
+                    value = state;
+            }
+            return retValue;
+        }
+
+        #endregion Event Raisers
 
         private void Validate(object value)
         {
@@ -252,7 +609,12 @@ namespace ChoETL
                 var context = new ValidationContext(value, null, null);
                 context.MemberName = _mi.Name;
 
-                var vResult = Validator.TryValidateValue(value, context, results, _fc.Validators.IsNullOrEmpty() ? _mi.GetCustomAttributes<ValidationAttribute>() : _fc.Validators);
+                bool vResult = false;
+                if (_fc != null)
+                    vResult = Validator.TryValidateValue(value, context, results, _fc.Validators.IsNullOrEmpty() ? _mi.GetCustomAttributes<ValidationAttribute>() : _fc.Validators);
+                else
+                    vResult = Validator.TryValidateValue(value, context, results, _mi.GetCustomAttributes<ValidationAttribute>());
+
                 if (!vResult)
                 {
                     if (results.Count > 0)

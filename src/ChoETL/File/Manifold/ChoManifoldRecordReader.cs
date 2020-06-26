@@ -489,11 +489,23 @@ namespace ChoETL
         {
             if (Configuration.NotifyRecordFieldReadObject != null)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => Configuration.NotifyRecordFieldReadObject.RecordFieldLoadError(target, index, propName, value, ex), false);
+                object state = value;
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => Configuration.NotifyRecordFieldReadObject.RecordFieldLoadError(target, index, propName, ref value, ex), false);
+
+                if (retValue)
+                    value = state;
+
+                return retValue;
             }
             else if (Reader != null)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseRecordFieldLoadError(target, index, propName, value, ex), false);
+                object state = value;
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseRecordFieldLoadError(target, index, propName, ref value, ex), false);
+
+                if (retValue)
+                    value = state;
+
+                return retValue;
             }
             return true;
         }

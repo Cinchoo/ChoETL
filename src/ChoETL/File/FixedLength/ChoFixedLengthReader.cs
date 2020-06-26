@@ -185,13 +185,14 @@ namespace ChoETL
         private void Init()
         {
             _enumerator = new Lazy<IEnumerator<T>>(() => GetEnumerator());
-            if (Configuration == null)
-                Configuration = new ChoFixedLengthRecordConfiguration(typeof(T));
-            else
-                Configuration.RecordType = typeof(T);
 
-            Configuration.RecordType = ResolveRecordType(Configuration.RecordType);
+            var recordType = ResolveRecordType(typeof(T));
+            if (Configuration == null)
+                Configuration = new ChoFixedLengthRecordConfiguration(recordType);
+            else
+                Configuration.RecordType = recordType;
             Configuration.IsDynamicObject = Configuration.RecordType.IsDynamicType();
+
             if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
             {
                 _prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;

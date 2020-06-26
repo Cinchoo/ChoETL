@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq;
@@ -11,6 +12,8 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using SharpYaml.Serialization;
 
 namespace ChoETL
@@ -28,11 +31,11 @@ namespace ChoETL
             set { _stringComparer = value; }
         }
 
-        public bool AllowComplexYamlPath
-        {
-            get;
-            set;
-        }
+        //public bool AllowComplexYamlPath
+        //{
+        //    get;
+        //    set;
+        //}
 
         [DataMember]
         public List<ChoYamlRecordFieldConfiguration> YamlRecordFieldConfigurations
@@ -61,10 +64,14 @@ namespace ChoETL
         private Lazy<SharpYaml.Serialization.Serializer> _yamlSerializer = null;
         public SharpYaml.Serialization.Serializer YamlSerializer
         {
-            get { return _yamlSerializer.Value; }
+            get { return ReuseSerializerObject ? _yamlSerializer.Value : new SharpYaml.Serialization.Serializer(YamlSerializerSettings); }
         }
-        [DataMember]
-        public ChoNullValueHandling NullValueHandling
+        private Lazy<SerializerSettings> _yamlSerializerSettings = null;
+        public SerializerSettings YamlSerializerSettings
+        {
+            get { return _yamlSerializerSettings.Value; }
+        }
+        public bool ReuseSerializerObject
         {
             get;
             set;
@@ -74,7 +81,42 @@ namespace ChoETL
             get;
             set;
         }
+        public bool? SingleDocument
+        {
+            get;
+            set;
+        }
+        private JsonSerializerSettings _jsonSerializerSettings = null;
+        public JsonSerializerSettings JsonSerializerSettings
+        {
+            get
+            {
+                if (_jsonSerializerSettings != null)
+                    return _jsonSerializerSettings;
 
+                lock (_padLock)
+                {
+                    if (_jsonSerializerSettings != null)
+                        return _jsonSerializerSettings;
+
+                    if (true) //JSONRecordFieldConfigurationsForType.Count > 0)
+                    {
+                        _jsonSerializerSettings = new JsonSerializerSettings();
+                        _jsonSerializerSettings.ContractResolver = new ChoPropertyRenameAndIgnoreSerializerContractResolver(this);
+                        _jsonSerializerSettings.Converters = new List<JsonConverter>()
+                        {
+                            new ExpandoObjectConverter()
+                        };
+                    }
+
+                    return _jsonSerializerSettings;
+                }
+            }
+            //set
+            //{
+            //    _jsonSerializerSettings = value;
+            //}
+        }
         private Func<IDictionary<string, object>, IDictionary<string, object>> _customNodeSelecter = null;
         public Func<IDictionary<string, object>, IDictionary<string, object>> CustomNodeSelecter
         {
@@ -108,6 +150,8 @@ namespace ChoETL
             }
         }
 
+        public string RootName { get; internal set; }
+
         public ChoYamlRecordFieldConfiguration this[string name]
         {
             get
@@ -124,9 +168,17 @@ namespace ChoETL
 
         internal ChoYamlRecordConfiguration(Type recordType) : base(recordType)
         {
+            _yamlSerializerSettings = new Lazy<SerializerSettings>(() =>
+            {
+                var yamlSettings = new SerializerSettings();
+                yamlSettings.EmitTags = false;
+                yamlSettings.ComparerForKeySorting = null;
+                return yamlSettings;
+            });
+
             _yamlSerializer = new Lazy<SharpYaml.Serialization.Serializer>(() =>
             {
-                return new SharpYaml.Serialization.Serializer();
+                return new SharpYaml.Serialization.Serializer(YamlSerializerSettings);
             });
 
             YamlRecordFieldConfigurations = new List<ChoYamlRecordFieldConfiguration>();
@@ -151,15 +203,23 @@ namespace ChoETL
                 YamlRecordFieldConfigurationsForType[rt].Add(rc.Name, rc);
         }
 
-        internal bool ContainsRecordConfigForType(Type rt)
+        public override bool ContainsRecordConfigForType(Type rt)
         {
             return YamlRecordFieldConfigurationsForType.ContainsKey(rt);
         }
 
-        internal ChoYamlRecordFieldConfiguration[] GetRecordConfigForType(Type rt)
+        public override ChoRecordFieldConfiguration[] GetRecordConfigForType(Type rt)
         {
             if (ContainsRecordConfigForType(rt))
                 return YamlRecordFieldConfigurationsForType[rt].Values.ToArray();
+            else
+                return null;
+        }
+
+        public override Dictionary<string, ChoRecordFieldConfiguration> GetRecordConfigDictionaryForType(Type rt)
+        {
+            if (ContainsRecordConfigForType(rt))
+                return YamlRecordFieldConfigurationsForType[rt].ToDictionary(kvp => kvp.Key, kvp => (ChoRecordFieldConfiguration)kvp.Value);
             else
                 return null;
         }
@@ -310,7 +370,7 @@ namespace ChoETL
                         pt = pd.PropertyType.GetUnderlyingType();
                         if (pt != typeof(object) && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt) && FlatToNestedObjectSupport)
                         {
-                            DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
+                            DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, recordFieldConfigurations);
                         }
                         else
                         {
@@ -321,9 +381,9 @@ namespace ChoETL
                             StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
                             if (slAttr != null && slAttr.MaximumLength > 0)
                                 obj.Size = slAttr.MaximumLength;
-                            ChoUseYamlSerializationAttribute sAttr = pd.Attributes.OfType<ChoUseYamlSerializationAttribute>().FirstOrDefault();
-                            if (sAttr != null)
-                                obj.UseYamlSerialization = sAttr.Flag;
+                            //ChoUseYamlSerializationAttribute sAttr = pd.Attributes.OfType<ChoUseYamlSerializationAttribute>().FirstOrDefault();
+                            //if (sAttr != null)
+                            //    obj.UseYamlSerialization = sAttr.Flag;
                             ChoYamlPathAttribute jpAttr = pd.Attributes.OfType<ChoYamlPathAttribute>().FirstOrDefault();
                             if (jpAttr != null)
                                 obj.YamlPath = jpAttr.YamlPath;
@@ -349,6 +409,18 @@ namespace ChoETL
                                             obj.FieldName = dpAttr.ShortName;
                                         else if (!dpAttr.Name.IsNullOrWhiteSpace())
                                             obj.FieldName = dpAttr.Name;
+
+                                        obj.Order = dpAttr.Order;
+                                    }
+                                    else
+                                    {
+                                        ColumnAttribute clAttr = pd.Attributes.OfType<ColumnAttribute>().FirstOrDefault();
+                                        if (clAttr != null)
+                                        {
+                                            obj.Order = clAttr.Order;
+                                            if (!clAttr.Name.IsNullOrWhiteSpace())
+                                                obj.FieldName = clAttr.Name;
+                                        }
                                     }
                                 }
                             }
@@ -472,6 +544,12 @@ namespace ChoETL
         }
 
         #region Fluent API
+
+        public ChoYamlRecordConfiguration ConfigureYamlSerializerSettings(Action<SerializerSettings> settings)
+        {
+            settings?.Invoke(YamlSerializerSettings);
+            return this;
+        }
 
         public ChoYamlRecordConfiguration Configure(Action<ChoYamlRecordConfiguration> action)
         {
@@ -654,7 +732,7 @@ namespace ChoETL
         {
             fn = fn.NTrim();
             if (ContainsRecordConfigForType(type) && GetRecordConfigForType(type).Any(fc => fc.Name == fn))
-                return GetRecordConfigForType(type).FirstOrDefault(fc => fc.Name == fn);
+                return GetRecordConfigForType(type).OfType<ChoYamlRecordFieldConfiguration>().FirstOrDefault(fc => fc.Name == fn);
 
             return null;
         }

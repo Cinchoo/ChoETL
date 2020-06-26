@@ -21,12 +21,6 @@ namespace ChoETL
             set;
         }
 
-        public int Order
-        {
-            get;
-            set;
-        }
-
         public bool IsArray
         {
             get;
@@ -44,11 +38,6 @@ namespace ChoETL
             set;
         }
 
-        internal string DeclaringMember
-        {
-            get;
-            set;
-        }
         internal PropertyDescriptor PropertyDescriptor
         {
             get;
@@ -60,10 +49,6 @@ namespace ChoETL
             get { return _fieldTypeSelector; }
             set { if (value == null) return; _fieldTypeSelector = value; }
         }
-
-        internal PropertyInfo PI;
-        internal object[] PropConverters;
-        internal object[] PropConverterParams;
 
         public ChoYamlRecordFieldConfiguration(string name, string yamlPath = null) : this(name, (ChoYamlRecordFieldAttribute)null)
         {

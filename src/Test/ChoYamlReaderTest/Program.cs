@@ -31,10 +31,65 @@ namespace ChoYamlReaderTest
         [DisplayName("part_no")]
         public string PartNo { get; set; }
     }
+    public class MyModel
+    {
+        public FileConfig FileConfig { get; set; }
+    }
+
+    public class FileConfig
+    {
+        public string SourceFolder { get; set; }
+        public string DestinationFolder { get; set; }
+        public List<Scenario> Scenarios { get; set; }
+    }
+
+    public class Scenario
+    {
+        public string Name { get; set; }
+        public List<Alteration> Alterations { get; set; }
+    }
+
+    public class Alteration
+    {
+        public string TableExtension { get; set; }
+        public List<TableAlteration> Alterations { get; set; }
+    }
+
+    public class TableAlteration
+    {
+        public string Type { get; set; }
+        public int SourceLineIndex { get; set; }
+        public int DestinationLineIndex { get; set; }
+        public string ColumnName { get; set; }
+        public string NewValue { get; set; }
+    }
 
     class Program
     {
-        private const string yamlText = @"---
+        private const string yamlText1 = @"FileConfig: 
+  sourceFolder: /home
+  destinationFolder: /home/billy/my-test-case
+  scenarios: 
+  - name: first-scenario 
+    alterations: 
+    - tableExtension: ln
+      alterations: 
+      - type: copy-line
+        sourceLineIndex: 0
+        destinationLineIndex: 0
+      - type: cell-change
+        sourceLineIndex: 0
+        columnName: FAKE_COL
+        newValue: NEW_Value1
+    - tableExtension: env
+      alterations: 
+      - type: cell-change
+        sourceLineIndex: 0
+        columnName: ID
+        newValue: 10";
+
+
+        private const string yamlText2 = @"---
             receipt:    Oz-Ware Purchase Invoice
             date:        2007-08-06
             customer:
@@ -78,7 +133,7 @@ namespace ChoYamlReaderTest
         static void SelectiveNodeTest()
         {
             StringBuilder json = new StringBuilder();
-            using (var r = ChoYamlReader.LoadText(yamlText)
+            using (var r = ChoYamlReader.LoadText(yamlText2)
                 .WithField("receipt")
                 .WithField("date", fieldType: typeof(DateTime))
                 )
@@ -93,7 +148,7 @@ namespace ChoYamlReaderTest
         static void YamlPathTest()
         {
             StringBuilder json = new StringBuilder();
-            using (var r = ChoYamlReader.LoadText(yamlText)
+            using (var r = ChoYamlReader.LoadText(yamlText2)
                 //.WithYamlPath("$items[*]")
                 //.Configure(c => c.StringComparer = StringComparer.CurrentCulture)
                 .WithField("part_no", yamlPath: ".items[0].part_no")
@@ -111,7 +166,7 @@ namespace ChoYamlReaderTest
         static void Yaml2JSON()
         {
             StringBuilder json = new StringBuilder();
-            using (var r = ChoYamlReader.LoadText(yamlText))
+            using (var r = ChoYamlReader.LoadText(yamlText2))
             {
                 using (var w = new ChoJSONWriter(json))
                     w.Write(r);
@@ -122,7 +177,7 @@ namespace ChoYamlReaderTest
         static void Yaml2CSV()
         {
             StringBuilder csv = new StringBuilder();
-            using (var r = ChoYamlReader.LoadText(yamlText))
+            using (var r = ChoYamlReader.LoadText(yamlText2))
             {
                 using (var w = new ChoCSVWriter(csv)
                     .WithFirstLineHeader()
@@ -135,7 +190,7 @@ namespace ChoYamlReaderTest
         static void YamlStreamTest()
         {
             YamlStream sr = new YamlStream();
-            sr.Load(new StringReader(yamlText));
+            sr.Load(new StringReader(yamlText2));
 
             StringBuilder json = new StringBuilder();
             using (var r = new ChoYamlReader(sr)
@@ -152,7 +207,7 @@ namespace ChoYamlReaderTest
         static void YamlObjectTest()
         {
             YamlStream sr = new YamlStream();
-            sr.Load(new StringReader(yamlText));
+            sr.Load(new StringReader(yamlText2));
 
             StringBuilder json = new StringBuilder();
             using (var r = new ChoYamlReader(sr.Documents.First().RootNode)
@@ -169,7 +224,7 @@ namespace ChoYamlReaderTest
         static void YamlDocTest()
         {
             YamlStream sr = new YamlStream();
-            sr.Load(new StringReader(yamlText));
+            sr.Load(new StringReader(yamlText2));
 
             StringBuilder json = new StringBuilder();
             using (var r = new ChoYamlReader(sr.Documents.First())
@@ -186,77 +241,31 @@ namespace ChoYamlReaderTest
         static void POCOTest()
         {
             StringBuilder json = new StringBuilder();
-            using (var r = ChoYamlReader<Customer>.LoadText(yamlText))
+            using (var r = ChoYamlReader<Customer>.LoadText(yamlText2))
             {
                 using (var w = new ChoJSONWriter(json))
                     w.Write(r);
             }
             Console.WriteLine(json.ToString());
         }
-        public class MyModel
-        {
-            public FileConfig FileConfig { get; set; }
-        }
-
-        public class FileConfig
-        {
-            public string SourceFolder { get; set; }
-            public string DestinationFolder { get; set; }
-            public List<Scenario> Scenarios { get; set; }
-        }
-
-        public class Scenario
-        {
-            public string Name { get; set; }
-            public List<Alteration> Alterations { get; set; }
-        }
-
-        public class Alteration
-        {
-            public string TableExtension { get; set; }
-            public List<TableAlteration> Alterations { get; set; }
-        }
-
-        public class TableAlteration
-        {
-            public string Type { get; set; }
-            public int SourceLineIndex { get; set; }
-            public int DestinationLineIndex { get; set; }
-            public string ColumnName { get; set; }
-            public string NewValue { get; set; }
-        }
         static void Test1()
         {
-            string yaml = @"FileConfig: 
-  sourceFolder: /home
-  destinationFolder: /home/billy/my-test-case
-  scenarios: 
-  - name: first-scenario 
-    alterations: 
-    - tableExtension: ln
-      alterations: 
-      - type: copy-line
-        sourceLineIndex: 0
-        destinationLineIndex: 0
-      - type: cell-change
-        sourceLineIndex: 0
-        columnName: FAKE_COL
-        newValue: NEW_Value1
-    - tableExtension: env
-      alterations: 
-      - type: cell-change
-        sourceLineIndex: 0
-        columnName: ID
-        newValue: 10";
-
-            using (var r = ChoYamlReader<MyModel>.LoadText(yaml))
+            using (var r = ChoYamlReader<MyModel>.LoadText(yamlText1))
             {
                 Console.WriteLine(ChoJSONWriter<MyModel>.ToTextAll(r));
             }
         }
+        static void ToDataTableTest()
+        {
+            using (var r = ChoYamlReader<MyModel>.LoadText(yamlText1))
+            {
+                var dt = r.AsDataTable();
+                Console.WriteLine(dt.Dump());
+            }
+        }
         static void Main(string[] args)
         {
-            Test1();
+            ToDataTableTest();
         }
     }
 }

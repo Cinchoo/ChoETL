@@ -12,6 +12,7 @@ namespace ChoETL
         {
             get;
         }
+        public ChoContractResolverState ContractResolverState { get; set; }
 
         public event EventHandler<ChoBeginWriteEventArgs> BeginWrite;
         public event EventHandler<ChoEndWriteEventArgs> EndWrite;
@@ -31,6 +32,15 @@ namespace ChoETL
 
         public event EventHandler<ChoCustomNodeNameOverrideEventArgs> CustomeNodeNameOverride;
 
+        public bool HasBeginWriteSubscribed
+        {
+            get
+            {
+                EventHandler<ChoBeginWriteEventArgs> eh = BeginWrite;
+                return (eh != null);
+            }
+        }
+
         public bool RaiseBeginWrite(object source)
         {
             EventHandler<ChoBeginWriteEventArgs> eh = BeginWrite;
@@ -42,6 +52,15 @@ namespace ChoETL
             return !e.Stop;
         }
 
+        public bool HasEndWriteSubscribed
+        {
+            get
+            {
+                EventHandler<ChoEndWriteEventArgs> eh = EndWrite;
+                return (eh != null);
+            }
+        }
+
         public void RaiseEndWrite(object source)
         {
             EventHandler<ChoEndWriteEventArgs> eh = EndWrite;
@@ -50,6 +69,15 @@ namespace ChoETL
 
             ChoEndWriteEventArgs e = new ChoEndWriteEventArgs() { Source = source };
             eh(this, e);
+        }
+
+        public bool HasBeforeRecordWriteSubscribed
+        {
+            get
+            {
+                EventHandler<ChoBeforeRecordWriteEventArgs> eh = BeforeRecordWrite;
+                return (eh != null);
+            }
         }
 
         public bool RaiseBeforeRecordWrite(object record, long index, ref object source)
@@ -64,6 +92,15 @@ namespace ChoETL
             return !e.Skip;
         }
 
+        public bool HasAfterRecordWriteSubscribed
+        {
+            get
+            {
+                EventHandler<ChoAfterRecordWriteEventArgs> eh = AfterRecordWrite;
+                return (eh != null);
+            }
+        }
+
         public bool RaiseAfterRecordWrite(object record, long index, object source)
         {
             EventHandler<ChoAfterRecordWriteEventArgs> eh = AfterRecordWrite;
@@ -73,6 +110,15 @@ namespace ChoETL
             ChoAfterRecordWriteEventArgs e = new ChoAfterRecordWriteEventArgs() { Record = record, Index = index, Source = source };
             eh(this, e);
             return !e.Stop;
+        }
+
+        public bool HasRecordWriteErrorSubscribed
+        {
+            get
+            {
+                EventHandler<ChoRecordWriteErrorEventArgs> eh = RecordWriteError;
+                return (eh != null);
+            }
         }
 
         public bool RaiseRecordWriteError(object record, long index, object source, Exception ex)
@@ -87,6 +133,15 @@ namespace ChoETL
             return e.Handled;
         }
 
+        public bool HasBeforeRecordFieldWriteSubscribed
+        {
+            get
+            {
+                EventHandler<ChoBeforeRecordFieldWriteEventArgs> eh = BeforeRecordFieldWrite;
+                return (eh != null);
+            }
+        }
+
         public bool RaiseBeforeRecordFieldWrite(object record, long index, string propName, ref object source)
         {
             EventHandler<ChoBeforeRecordFieldWriteEventArgs> eh = BeforeRecordFieldWrite;
@@ -97,6 +152,15 @@ namespace ChoETL
             eh(this, e);
             source = e.Source;
             return !e.Skip;
+        }
+
+        public bool HasAfterRecordFieldWriteSubscribed
+        {
+            get
+            {
+                EventHandler<ChoAfterRecordFieldWriteEventArgs> eh = AfterRecordFieldWrite;
+                return (eh != null);
+            }
         }
 
         public bool RaiseAfterRecordFieldWrite(object record, long index, string propName, object source)
@@ -110,7 +174,16 @@ namespace ChoETL
             return !e.Stop;
         }
 
-        public bool RaiseRecordFieldWriteError(object record, long index, string propName, object source, Exception ex)
+        public bool HasRecordFieldWriteErrorSubscribed
+        {
+            get
+            {
+                EventHandler<ChoRecordFieldWriteErrorEventArgs> eh = RecordFieldWriteError;
+                return (eh != null);
+            }
+        }
+
+        public bool RaiseRecordFieldWriteError(object record, long index, string propName, ref object source, Exception ex)
         {
             EventHandler<ChoRecordFieldWriteErrorEventArgs> eh = RecordFieldWriteError;
             if (eh == null)
@@ -121,6 +194,16 @@ namespace ChoETL
             source = e.Source;
             return e.Handled;
         }
+
+        public bool HasFileHeaderWriteSubscribed
+        {
+            get
+            {
+                EventHandler<ChoFileHeaderEventArgs> eh = FileHeaderWrite;
+                return (eh != null);
+            }
+        }
+
         public bool RaiseFileHeaderWrite(ref string headerText)
         {
             EventHandler<ChoFileHeaderEventArgs> eh = FileHeaderWrite;
@@ -131,6 +214,15 @@ namespace ChoETL
             eh(this, e);
             headerText = e.HeaderText;
             return e.Skip;
+        }
+
+        public bool HasFileHeaderArrangeSubscribed
+        {
+            get
+            {
+                EventHandler<ChoFileHeaderArrangeEventArgs> eh = FileHeaderArrange;
+                return (eh != null);
+            }
         }
 
         public void RaiseFileHeaderArrange(ref List<string> fields)
@@ -145,6 +237,15 @@ namespace ChoETL
                 fields = e.Fields;
         }
 
+        public bool HasCustomeNodeNameOverrideSubscribed
+        {
+            get
+            {
+                EventHandler<ChoCustomNodeNameOverrideEventArgs> eh = CustomeNodeNameOverride;
+                return (eh != null);
+            }
+        }
+
         public string RaiseCustomeNodeNameOverride(long index, object record)
         {
             EventHandler<ChoCustomNodeNameOverrideEventArgs> eh = CustomeNodeNameOverride;
@@ -154,6 +255,15 @@ namespace ChoETL
             ChoCustomNodeNameOverrideEventArgs e = new ChoCustomNodeNameOverrideEventArgs() { Index = index, Record = record };
             eh(this, e);
             return e.NodeName;
+        }
+
+        public bool HasRecordFieldSerializeSubscribed
+        {
+            get
+            {
+                EventHandler<ChoRecordFieldSerializeEventArgs> eh = RecordFieldSerialize;
+                return (eh != null);
+            }
         }
 
         public bool RaiseRecordFieldSerialize(object record, long index, string propName, ref object source)
@@ -166,6 +276,30 @@ namespace ChoETL
             eh(this, e);
             source = e.Source;
             return e.Handled;
+        }
+    }
+
+    public class ChoContractResolverState
+    {
+        public string Name
+        {
+            get;
+            set;
+        }
+        public long Index
+        {
+            get;
+            set;
+        }
+        public object Record
+        {
+            get;
+            set;
+        }
+        public ChoRecordFieldConfiguration FieldConfig
+        {
+            get;
+            set;
         }
     }
 }

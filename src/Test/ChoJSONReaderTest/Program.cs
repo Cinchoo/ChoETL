@@ -2998,7 +2998,7 @@ K,L,M,N,O,P,Q,R,S,T";
                 return true;
             }
 
-            public bool RecordFieldLoadError(object target, long index, string propName, object value, Exception ex)
+            public bool RecordFieldLoadError(object target, long index, string propName, ref object value, Exception ex)
             {
                 return true;
             }
@@ -6014,7 +6014,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
                 return hashCode;
             }
 
-            public bool RecordFieldLoadError(object target, long index, string propName, object value, Exception ex)
+            public bool RecordFieldLoadError(object target, long index, string propName, ref object value, Exception ex)
             {
                 throw new NotImplementedException();
             }

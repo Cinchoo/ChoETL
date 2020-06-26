@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq;
@@ -595,6 +596,18 @@ namespace ChoETL
                             obj.FieldName = dpAttr.ShortName.Trim();
                         else if (!dpAttr.Name.IsNullOrWhiteSpace())
                             obj.FieldName = dpAttr.Name.Trim();
+
+                        obj.Order = dpAttr.Order;
+                    }
+                    else
+                    {
+                        ColumnAttribute clAttr = pd.Attributes.OfType<ColumnAttribute>().FirstOrDefault();
+                        if (clAttr != null)
+                        {
+                            obj.Order = clAttr.Order;
+                            if (!clAttr.Name.IsNullOrWhiteSpace())
+                                obj.FieldName = clAttr.Name;
+                        }
                     }
                 }
                 DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();
@@ -612,7 +625,7 @@ namespace ChoETL
             {
                 if (ContainsRecordConfigForType(pd.ComponentType))
                 {
-                    var st = GetRecordConfigForType(pd.ComponentType);
+                    var st = GetRecordConfigForType(pd.ComponentType).OfType<ChoCSVRecordFieldConfiguration>();
                     if (st != null && st.Any(fc => fc.Name == pd.Name))
                     {
                         var f = st.FirstOrDefault(fc => fc.Name == pd.Name);
@@ -1011,15 +1024,23 @@ namespace ChoETL
                 CSVRecordFieldConfigurationsForType[rt].Add(rc.Name, rc);
         }
 
-        internal bool ContainsRecordConfigForType(Type rt)
+        public override bool ContainsRecordConfigForType(Type rt)
         {
             return CSVRecordFieldConfigurationsForType.ContainsKey(rt);
         }
 
-        internal ChoCSVRecordFieldConfiguration[] GetRecordConfigForType(Type rt)
+        public override ChoRecordFieldConfiguration[] GetRecordConfigForType(Type rt)
         {
             if (ContainsRecordConfigForType(rt))
                 return CSVRecordFieldConfigurationsForType[rt].Values.ToArray();
+            else
+                return null;
+        }
+
+        public override Dictionary<string, ChoRecordFieldConfiguration> GetRecordConfigDictionaryForType(Type rt)
+        {
+            if (ContainsRecordConfigForType(rt))
+                return CSVRecordFieldConfigurationsForType[rt].ToDictionary(kvp => kvp.Key, kvp => (ChoRecordFieldConfiguration)kvp.Value);
             else
                 return null;
         }

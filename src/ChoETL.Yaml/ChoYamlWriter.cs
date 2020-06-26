@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using SharpYaml.Serialization;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -15,12 +16,12 @@ using System.Xml;
 
 namespace ChoETL
 {
-    public class ChoJSONWriter<T> : ChoWriter, IChoSerializableWriter, IDisposable
+    public class ChoYamlWriter<T> : ChoWriter, IChoSerializableWriter, IDisposable
         //where T : class
     {
         private TextWriter _textWriter;
         private bool _closeStreamOnDispose = false;
-        private ChoJSONRecordWriter _writer = null;
+        private ChoYamlRecordWriter _writer = null;
         private bool _clearFields = false;
         public event EventHandler<ChoRowsWrittenEventArgs> RowsWritten;
 
@@ -32,24 +33,24 @@ namespace ChoETL
             get { return Configuration.Context; }
         }
 
-        public ChoJSONRecordConfiguration Configuration
+        public ChoYamlRecordConfiguration Configuration
         {
             get;
             private set;
         }
         
-        public ChoJSONWriter(StringBuilder sb, ChoJSONRecordConfiguration configuration = null) : this(new StringWriter(sb), configuration)
+        public ChoYamlWriter(StringBuilder sb, ChoYamlRecordConfiguration configuration = null) : this(new StringWriter(sb), configuration)
         {
 
         }
 
-        public ChoJSONWriter(ChoJSONRecordConfiguration configuration = null)
+        public ChoYamlWriter(ChoYamlRecordConfiguration configuration = null)
         {
             Configuration = configuration;
             Init();
         }
 
-        public ChoJSONWriter(string filePath, ChoJSONRecordConfiguration configuration = null)
+        public ChoYamlWriter(string filePath, ChoYamlRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
 
@@ -61,7 +62,7 @@ namespace ChoETL
             _closeStreamOnDispose = true;
         }
 
-        public ChoJSONWriter(TextWriter textWriter, ChoJSONRecordConfiguration configuration = null)
+        public ChoYamlWriter(TextWriter textWriter, ChoYamlRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNull(textWriter, "TextWriter");
 
@@ -71,7 +72,7 @@ namespace ChoETL
             _textWriter = textWriter;
         }
 
-        public ChoJSONWriter(Stream inStream, ChoJSONRecordConfiguration configuration = null)
+        public ChoYamlWriter(Stream inStream, ChoYamlRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNull(inStream, "Stream");
 
@@ -120,16 +121,16 @@ namespace ChoETL
         private void Init()
         {
             if (Configuration == null)
-                Configuration = new ChoJSONRecordConfiguration(typeof(T));
+                Configuration = new ChoYamlRecordConfiguration(typeof(T));
 
-            _writer = new ChoJSONRecordWriter(typeof(T), Configuration);
+            _writer = new ChoYamlRecordWriter(typeof(T), Configuration);
             _writer.Writer = this;
             _writer.RowsWritten += NotifyRowsWritten;
         }
 
         public void Write(IEnumerable<T> records)
         {
-            _writer.Writer = this;
+            //_writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
             _writer.WriteTo(_textWriter, records.OfType<object>()).Loop();
         }
@@ -149,55 +150,52 @@ namespace ChoETL
 
             //_writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
+            //if (record != null && !record.GetType().IsSimple() && !record.GetType().IsDynamicType() && record is IList)
             if (record is ArrayList)
             {
-                if (Configuration.SingleElement == null)
-                    Configuration.SingleElement = true;
+                if (Configuration.SingleDocument == null)
+                    Configuration.SingleDocument = true;
                 _writer.WriteTo(_textWriter, ((IEnumerable)record).AsTypedEnumerable<T>().OfType<object>()).Loop();
             }
             else if (record != null && (!record.GetType().IsDynamicType() && record is IDictionary))
             {
-                if (Configuration.SingleElement == null)
-                    Configuration.SingleElement = true;
+                if (Configuration.SingleDocument == null)
+                    Configuration.SingleDocument = true;
                 _writer.WriteTo(_textWriter, new object[] { record }).Loop();
             }
             else
             {
-                if (Configuration.SingleElement == null) Configuration.SingleElement = true;
+                if (Configuration.SingleDocument == null) Configuration.SingleDocument = true;
                 _writer.WriteTo(_textWriter, new object[] { record }).Loop();
             }
         }
 
-        public static string ToText<TRec>(TRec record, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string jsonPath = null)
+        public static string ToText<TRec>(TRec record, ChoYamlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string yamlPath = null)
         {
             if (record is DataTable)
             {
                 StringBuilder xml = new StringBuilder();
-                using (var w = new ChoJSONWriter(xml, configuration))
+                using (var w = new ChoYamlWriter(xml, configuration))
                     w.Write(record as DataTable);
                 return xml.ToString();
             }
             else if (record is IDataReader)
             {
                 StringBuilder xml = new StringBuilder();
-                using (var w = new ChoJSONWriter(xml, configuration))
+                using (var w = new ChoYamlWriter(xml, configuration))
                     w.Write(record as IDataReader);
                 return xml.ToString();
             }
 
             if (configuration == null)
-                configuration = new ChoJSONRecordConfiguration();
+                configuration = new ChoYamlRecordConfiguration();
 
-            configuration.IgnoreRootName = true;
-            configuration.RootName = null;
-            if (configuration.SingleElement == null) configuration.SingleElement = true;
-            configuration.SupportMultipleContent = true;
-
-            return ToTextAll(ChoEnumerable.AsEnumerable<TRec>(record), configuration, traceSwitch, jsonPath);
+            if (configuration.SingleDocument == null) configuration.SingleDocument = true;
+            return ToTextAll(ChoEnumerable.AsEnumerable<TRec>(record), configuration, traceSwitch, yamlPath);
         }
 
 
-        public static string ToTextAll<TRec>(IEnumerable<TRec> records, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string jsonPath = null)
+        public static string ToTextAll<TRec>(IEnumerable<TRec> records, ChoYamlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string yamlPath = null)
         {
             if (records == null) return null;
 
@@ -207,7 +205,7 @@ namespace ChoETL
 
                 foreach (var dt in records.Take(1))
                 {
-                    using (var w = new ChoJSONWriter(json, configuration))
+                    using (var w = new ChoYamlWriter(json, configuration))
                     {
                         w.Write(dt);
                     }
@@ -221,7 +219,7 @@ namespace ChoETL
 
                 foreach (var dt in records.Take(1))
                 {
-                    using (var w = new ChoJSONWriter(json, configuration))
+                    using (var w = new ChoYamlWriter(json, configuration))
                     {
                         w.Write(dt);
                     }
@@ -234,9 +232,9 @@ namespace ChoETL
             using (var stream = new MemoryStream())
             using (var reader = new StreamReader(stream))
             using (var writer = new StreamWriter(stream))
-            using (var parser = new ChoJSONWriter<TRec>(writer, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch })
+            using (var parser = new ChoYamlWriter<TRec>(writer, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch })
             {
-                parser.Configuration.JSONPath = jsonPath;
+                parser.Configuration.YamlPath = yamlPath;
 
                 parser.Write(records);
                 parser.Close();
@@ -248,12 +246,12 @@ namespace ChoETL
             }
         }
 
-        internal static string ToText(object rec, ChoJSONRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null)
+        internal static string ToText(object rec, ChoYamlRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null)
         {
             if (rec is DataTable)
             {
                 StringBuilder json = new StringBuilder();
-                using (var w = new ChoJSONWriter(json, configuration))
+                using (var w = new ChoYamlWriter(json, configuration))
                 {
                     w.Write(rec as DataTable);
                 }
@@ -262,14 +260,14 @@ namespace ChoETL
             else if (rec is IDataReader)
             {
                 StringBuilder json = new StringBuilder();
-                using (var w = new ChoJSONWriter(json, configuration))
+                using (var w = new ChoYamlWriter(json, configuration))
                 {
                     w.Write(rec as IDataReader);
                 }
                 return json.ToString();
             }
 
-            ChoJSONRecordWriter writer = new ChoJSONRecordWriter(rec.GetType(), configuration);
+            ChoYamlRecordWriter writer = new ChoYamlRecordWriter(rec.GetType(), configuration);
             writer.TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitchOff : traceSwitch;
 
             using (var stream = new MemoryStream())
@@ -295,81 +293,69 @@ namespace ChoETL
 
         #region Fluent API
 
-        public ChoJSONWriter<T> NullValueHandling(ChoNullValueHandling value = ChoNullValueHandling.Default)
+        public ChoYamlWriter<T> ReuseSerializerObject(bool flag = true)
+        {
+            Configuration.ReuseSerializerObject = flag;
+            return this;
+        }
+
+        public ChoYamlWriter<T> YamlSerializerSettings(Action<SerializerSettings> settings)
+        {
+            settings?.Invoke(Configuration.YamlSerializerSettings);
+            return this;
+        }
+
+        public ChoYamlWriter<T> NullValueHandling(ChoNullValueHandling value = ChoNullValueHandling.Default)
         {
             Configuration.NullValueHandling = value;
             return this;
         }
 
-        public ChoJSONWriter<T> Formatting(Newtonsoft.Json.Formatting value = Newtonsoft.Json.Formatting.Indented)
-        {
-            Configuration.Formatting = value;
-            return this;
-        }
-
-        public ChoJSONWriter<T> ErrorMode(ChoErrorMode mode)
+        public ChoYamlWriter<T> ErrorMode(ChoErrorMode mode)
         {
             Configuration.ErrorMode = mode;
             return this;
         }
 
-        public ChoJSONWriter<T> IgnoreFieldValueMode(ChoIgnoreFieldValueMode mode)
+        public ChoYamlWriter<T> IgnoreFieldValueMode(ChoIgnoreFieldValueMode mode)
         {
             Configuration.IgnoreFieldValueMode = mode;
             return this;
         }
 
-        public ChoJSONWriter<T> SingleElement(bool flag = true)
+        public ChoYamlWriter<T> SingleDocument(bool flag = true)
         {
-            Configuration.SingleElement = flag;
+            Configuration.SingleDocument = flag;
             return this;
         }
 
-        public ChoJSONWriter<T> SupportMultipleContent(bool flag = true)
-        {
-            Configuration.SupportMultipleContent = flag;
-            return this;
-        }
-
-        public ChoJSONWriter<T> UseJsonSerialization(bool flag = true)
-        {
-            Configuration.UseJSONSerialization = flag;
-            return this;
-        }
-
-        public ChoJSONWriter<T> JsonSerializationSettings(Action<JsonSerializerSettings> settings)
-        {
-            settings?.Invoke(Configuration.JsonSerializerSettings);
-            return this;
-        }
-
-        public ChoJSONWriter<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
+        public ChoYamlWriter<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
         {
             spec?.Invoke(Configuration.TypeConverterFormatSpec);
             return this;
         }
 
-        public ChoJSONWriter<T> WithMaxScanNodes(int value)
+        public ChoYamlWriter<T> WithMaxScanNodes(int value)
         {
             if (value > 0)
                 Configuration.MaxScanRows = value;
             return this;
         }
 
-        public ChoJSONWriter<T> NotifyAfter(long rowsLoaded)
+        public ChoYamlWriter<T> NotifyAfter(long rowsLoaded)
         {
             Configuration.NotifyAfter = rowsLoaded;
             return this;
         }
 
-        public ChoJSONWriter<T> ClearFields()
+        public ChoYamlWriter<T> ClearFields()
         {
             Configuration.ClearFields();
             _clearFields = true;
             return this;
         }
 
-        private ChoJSONWriter<T> ClearFieldsIf()
+        private ChoYamlWriter<T> ClearFieldsIf()
         {
             if (!_clearFields)
             {
@@ -380,13 +366,13 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONWriter<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
+        public ChoYamlWriter<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
         {
             Configuration.IgnoreField(field);
             return this;
         }
 
-        public ChoJSONWriter<T> IgnoreField(string fieldName)
+        public ChoYamlWriter<T> IgnoreField(string fieldName)
         {
             if (!fieldName.IsNullOrWhiteSpace())
             {
@@ -399,7 +385,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONWriter<T> WithFields<TField>(params Expression<Func<T, TField>>[] fields)
+        public ChoYamlWriter<T> WithFields<TField>(params Expression<Func<T, TField>>[] fields)
         {
             if (fields != null)
             {
@@ -409,28 +395,28 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONWriter<T> WithFields(params string[] fieldsNames)
+        public ChoYamlWriter<T> WithFields(params string[] fieldsNames)
         {
             string fnTrim = null;
             if (!fieldsNames.IsNullOrEmpty())
             {
                 PropertyDescriptor pd = null;
-                ChoJSONRecordFieldConfiguration fc = null;
+                ChoYamlRecordFieldConfiguration fc = null;
                 foreach (string fn in fieldsNames)
                 {
                     if (fn.IsNullOrEmpty())
                         continue;
                     ClearFieldsIf();
                     fnTrim = fn.NTrim();
-                    if (Configuration.JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                    if (Configuration.YamlRecordFieldConfigurations.Any(o => o.Name == fnTrim))
                     {
-                        fc = Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
-                        Configuration.JSONRecordFieldConfigurations.Remove(Configuration.JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+                        fc = Configuration.YamlRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+                        Configuration.YamlRecordFieldConfigurations.Remove(Configuration.YamlRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
                     }
                     else
                         pd = ChoTypeDescriptor.GetProperty(typeof(T), fn);
 
-                    var nfc = new ChoJSONRecordFieldConfiguration(fnTrim, (string)null);
+                    var nfc = new ChoYamlRecordFieldConfiguration(fnTrim, (string)null);
                     nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
                     nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
                     if (pd != null)
@@ -439,28 +425,28 @@ namespace ChoETL
                             nfc.FieldType = pd.PropertyType;
                     }
 
-                    Configuration.JSONRecordFieldConfigurations.Add(nfc);
+                    Configuration.YamlRecordFieldConfigurations.Add(nfc);
                 }
             }
 
             return this;
         }
 
-        public ChoJSONWriter<T> WithField(string name, Action<ChoJSONRecordFieldConfigurationMap> mapper)
+        public ChoYamlWriter<T> WithField(string name, Action<ChoYamlRecordFieldConfigurationMap> mapper)
         {
             if (!name.IsNullOrWhiteSpace())
                 Configuration.Map(name, mapper);
             return this;
         }
 
-        public ChoJSONWriter<T> ClearFieldForType<TClass>()
+        public ChoYamlWriter<T> ClearFieldForType<TClass>()
         {
             Configuration.ClearRecordFieldsForType(typeof(TClass));
             return this;
         }
 
-        public ChoJSONWriter<T> WithFieldForType<TClass>(Expression<Func<TClass, object>> field,
-            string jsonPath = null, Type fieldType = null,
+        public ChoYamlWriter<T> WithFieldForType<TClass>(Expression<Func<TClass, object>> field,
+            string yamlPath = null, Type fieldType = null,
             ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
             string fieldName = null,
             Func<object, object> valueConverter = null,
@@ -477,7 +463,7 @@ namespace ChoETL
                 customSerializer, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, true, nullValue, typeof(TClass));
         }
 
-        public ChoJSONWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoJSONRecordFieldConfigurationMap> mapper)
+        public ChoYamlWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoYamlRecordFieldConfigurationMap> mapper)
         {
             ClearFieldsIf();
 
@@ -486,7 +472,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONWriter<T> WithField<TField>(Expression<Func<T, TField>> field, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
+        public ChoYamlWriter<T> WithField<TField>(Expression<Func<T, TField>> field, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
             Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
@@ -500,7 +486,7 @@ namespace ChoETL
                 customSerializer, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, true, nullValue, null);
         }
 
-        public ChoJSONWriter<T> WithField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+        public ChoYamlWriter<T> WithField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null, bool isArray = true,
@@ -510,7 +496,7 @@ namespace ChoETL
                 customSerializer, defaultValue, fallbackValue, null, formatText, isArray, nullValue, null);
         }
 
-        private ChoJSONWriter<T> WithField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+        private ChoYamlWriter<T> WithField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null,
@@ -527,7 +513,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONWriter<T> WithFlatToNestedObjectSupport(bool flatToNestedObjectSupport = true)
+        public ChoYamlWriter<T> WithFlatToNestedObjectSupport(bool flatToNestedObjectSupport = true)
         {
             Configuration.FlatToNestedObjectSupport = flatToNestedObjectSupport;
             ClearFieldsIf();
@@ -535,13 +521,13 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONWriter<T> ColumnCountStrict()
+        public ChoYamlWriter<T> ColumnCountStrict()
         {
             Configuration.ColumnCountStrict = true;
             return this;
         }
 
-        public ChoJSONWriter<T> Configure(Action<ChoJSONRecordConfiguration> action)
+        public ChoYamlWriter<T> Configure(Action<ChoYamlRecordConfiguration> action)
         {
             if (action != null)
                 action(Configuration);
@@ -549,7 +535,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONWriter<T> Setup(Action<ChoJSONWriter<T>> action)
+        public ChoYamlWriter<T> Setup(Action<ChoYamlWriter<T>> action)
         {
             if (action != null)
                 action(this);
@@ -557,13 +543,13 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONWriter<T> MapRecordFields<T1>()
+        public ChoYamlWriter<T> MapRecordFields<T1>()
         {
             Configuration.MapRecordFields<T1>();
             return this;
         }
 
-        public ChoJSONWriter<T> MapRecordFields(Type recordType)
+        public ChoYamlWriter<T> MapRecordFields(Type recordType)
         {
             if (recordType != null)
                 Configuration.MapRecordFields(recordType);
@@ -582,7 +568,7 @@ namespace ChoETL
             var expandoDic = (IDictionary<string, object>)expando;
 
             //int ordinal = 0;
-            if (Configuration.JSONRecordFieldConfigurations.IsNullOrEmpty())
+            if (Configuration.YamlRecordFieldConfigurations.IsNullOrEmpty())
             {
                 string colName = null;
                 Type colType = null;
@@ -594,8 +580,8 @@ namespace ChoETL
                     colType = row["DataType"] as Type;
                     //if (!colType.IsSimple()) continue;
 
-                    var obj = new ChoJSONRecordFieldConfiguration(colName, jsonPath: null);
-                    Configuration.JSONRecordFieldConfigurations.Add(obj);
+                    var obj = new ChoYamlRecordFieldConfiguration(colName, yamlPath: null);
+                    Configuration.YamlRecordFieldConfigurations.Add(obj);
                     startIndex += fieldLength;
                 }
             }
@@ -604,7 +590,7 @@ namespace ChoETL
             {
                 expandoDic.Clear();
 
-                foreach (var fc in Configuration.JSONRecordFieldConfigurations)
+                foreach (var fc in Configuration.YamlRecordFieldConfigurations)
                 {
                     expandoDic.Add(fc.Name, dr[fc.Name]);
                 }
@@ -621,7 +607,7 @@ namespace ChoETL
             dynamic expando = new ExpandoObject();
             var expandoDic = (IDictionary<string, object>)expando;
 
-            if (Configuration.JSONRecordFieldConfigurations.IsNullOrEmpty())
+            if (Configuration.YamlRecordFieldConfigurations.IsNullOrEmpty())
             {
                 string colName = null;
                 Type colType = null;
@@ -633,8 +619,8 @@ namespace ChoETL
                     colType = col.DataType;
                     //if (!colType.IsSimple()) continue;
 
-                    var obj = new ChoJSONRecordFieldConfiguration(colName, jsonPath: null);
-                    Configuration.JSONRecordFieldConfigurations.Add(obj);
+                    var obj = new ChoYamlRecordFieldConfiguration(colName, yamlPath: null);
+                    Configuration.YamlRecordFieldConfigurations.Add(obj);
                     startIndex += fieldLength;
                 }
             }
@@ -644,7 +630,7 @@ namespace ChoETL
             {
                 expandoDic.Clear();
 
-                foreach (var fc in Configuration.JSONRecordFieldConfigurations)
+                foreach (var fc in Configuration.YamlRecordFieldConfigurations)
                 {
                     expandoDic.Add(fc.Name, row[fc.Name] == DBNull.Value ? null : row[fc.Name]);
                 }
@@ -660,12 +646,11 @@ namespace ChoETL
             foreach (DataTable dt in ds.Tables)
             {
                 Configuration.Reset();
-                Configuration.RootName = ds.DataSetName.IsNullOrWhiteSpace() ? "Root" : ds.DataSetName;
                 Write(dt);
             }
         }
 
-        ~ChoJSONWriter()
+        ~ChoYamlWriter()
         {
             try
             {
@@ -675,69 +660,69 @@ namespace ChoETL
         }
     }
 
-    public class ChoJSONWriter : ChoJSONWriter<dynamic>
+    public class ChoYamlWriter : ChoYamlWriter<dynamic>
     {
-        public ChoJSONWriter(StringBuilder sb, ChoJSONRecordConfiguration configuration = null) : base(sb, configuration)
+        public ChoYamlWriter(StringBuilder sb, ChoYamlRecordConfiguration configuration = null) : base(sb, configuration)
         {
 
         }
-        public ChoJSONWriter(string filePath, ChoJSONRecordConfiguration configuration = null)
+        public ChoYamlWriter(string filePath, ChoYamlRecordConfiguration configuration = null)
             : base(filePath, configuration)
         {
 
         }
-        public ChoJSONWriter(TextWriter textWriter, ChoJSONRecordConfiguration configuration = null)
+        public ChoYamlWriter(TextWriter textWriter, ChoYamlRecordConfiguration configuration = null)
             : base(textWriter, configuration)
         {
         }
 
-        public ChoJSONWriter(Stream inStream, ChoJSONRecordConfiguration configuration = null)
+        public ChoYamlWriter(Stream inStream, ChoYamlRecordConfiguration configuration = null)
             : base(inStream, configuration)
         {
         }
 
-        public static string SerializeAll(IEnumerable<dynamic> records, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static string SerializeAll(IEnumerable<dynamic> records, ChoYamlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
             return ToTextAll(records, configuration, traceSwitch);
         }
 
-        public static string SerializeAll<T>(IEnumerable<T> records, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static string SerializeAll<T>(IEnumerable<T> records, ChoYamlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
             return ToTextAll(records, configuration, traceSwitch);
         }
 
-        public static string Serialize(dynamic record, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static string Serialize(dynamic record, ChoYamlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
             return ToText(record, configuration, traceSwitch);
         }
 
-        public static string Serialize<T>(T record, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static string Serialize<T>(T record, ChoYamlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
             return ToText(record, configuration, traceSwitch);
         }
 
         public static string SerializeAll(IEnumerable<dynamic> records, JsonSerializerSettings jsonSerializerSettings, TraceSwitch traceSwitch = null)
         {
-            return ToTextAll(records, new ChoJSONRecordConfiguration().Configure(c => c.JsonSerializerSettings = jsonSerializerSettings).Configure(c => c.UseJSONSerialization = true),
+            return ToTextAll(records, new ChoYamlRecordConfiguration(),
                 traceSwitch);
         }
 
         public static string SerializeAll<T>(IEnumerable<T> records, JsonSerializerSettings jsonSerializerSettings, TraceSwitch traceSwitch = null)
         {
-            return ToTextAll(records, new ChoJSONRecordConfiguration().Configure(c => c.JsonSerializerSettings = jsonSerializerSettings).Configure(c => c.UseJSONSerialization = true), traceSwitch);
+            return ToTextAll(records, new ChoYamlRecordConfiguration(), traceSwitch);
         }
 
         public static string Serialize(dynamic record, JsonSerializerSettings jsonSerializerSettings, TraceSwitch traceSwitch = null)
         {
-            return ToText(record, new ChoJSONRecordConfiguration().Configure(c => c.JsonSerializerSettings = jsonSerializerSettings).Configure(c => c.UseJSONSerialization = true), traceSwitch);
+            return ToText(record, new ChoYamlRecordConfiguration(), traceSwitch);
         }
 
         public static string Serialize<T>(T record, JsonSerializerSettings jsonSerializerSettings, TraceSwitch traceSwitch = null)
         {
-            return ToText(record, new ChoJSONRecordConfiguration().Configure(c => c.JsonSerializerSettings = jsonSerializerSettings).Configure(c => c.UseJSONSerialization = true), traceSwitch);
+            return ToText(record, new ChoYamlRecordConfiguration(), traceSwitch);
         }
 
-        ~ChoJSONWriter()
+        ~ChoYamlWriter()
         {
             try
             {

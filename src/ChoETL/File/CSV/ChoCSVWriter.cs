@@ -173,11 +173,8 @@ namespace ChoETL
             }
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
-            if (record != null && !record.GetType().IsSimple() && !record.GetType().IsDynamicType() && record is IList)
+            if (record is ArrayList)
             {
-                if (record is ArrayList)
-                    _writer.ElementType = typeof(object);
-
                 _writer.WriteTo(_textWriter, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
             }
             else if (record != null && (!record.GetType().IsDynamicType() && record is IDictionary))

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq;
@@ -357,6 +358,18 @@ namespace ChoETL
                                                 obj.FieldName = dpAttr.ShortName;
                                             else if (!dpAttr.Name.IsNullOrWhiteSpace())
                                                 obj.FieldName = dpAttr.Name;
+
+                                            obj.Order = dpAttr.Order;
+                                        }
+                                        else
+                                        {
+                                            ColumnAttribute clAttr = pd.Attributes.OfType<ColumnAttribute>().FirstOrDefault();
+                                            if (clAttr != null)
+                                            {
+                                                obj.Order = clAttr.Order;
+                                                if (!clAttr.Name.IsNullOrWhiteSpace())
+                                                    obj.FieldName = clAttr.Name;
+                                            }
                                         }
                                     }
                                     DisplayFormatAttribute dfAttr = pd.Attributes.OfType<DisplayFormatAttribute>().FirstOrDefault();

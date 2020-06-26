@@ -9,6 +9,11 @@ namespace ChoETL
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true )]
     public abstract class ChoFileRecordFieldAttribute : ChoRecordFieldAttribute
     {
+        public int Order
+        {
+            get;
+            set;
+        }
         public string FieldName
         {
             get;

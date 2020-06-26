@@ -1558,10 +1558,49 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             Console.WriteLine(csv.ToString());
         }
 
+
+        static void JSON2CSV()
+        {
+            string json = @"[
+  {
+    ""id"": 1234,
+    ""states"": [
+      ""PA"",
+      ""VA""
+    ]
+  },
+  {
+    ""id"": 1235,
+    ""states"": [
+      ""CA"",
+      ""DE"",
+      ""MD""
+    ]
+  }
+]";
+            var csvData = new StringBuilder();
+            using (var jsonReader = ChoJSONReader.LoadText(json))
+            {
+                using (var csvWriter = new ChoCSVWriter(csvData)
+                    .WithFirstLineHeader()
+                    //.WithDelimiter("|")
+                    //.QuoteAllFields()
+                    .Configure(c => c.UseNestedKeyFormat = false)
+                    .Configure(c => c.ArrayValueSeparator = '|')
+                    //.Configure(c => c.NestedColumnSeparator = '|')
+                    )
+                {
+                    csvWriter.Write(jsonReader);
+                }
+            }
+
+            Console.WriteLine(csvData.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-
+            JSON2CSV();
             return;
 
             ChoDynamicObjectSettings.UseOrderedDictionary = false;

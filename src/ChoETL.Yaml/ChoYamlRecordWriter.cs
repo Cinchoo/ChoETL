@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using SharpYaml.Serialization;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -15,27 +16,26 @@ using System.Xml.Serialization;
 
 namespace ChoETL
 {
-    internal class ChoJSONRecordWriter : ChoRecordWriter
+    internal class ChoYamlRecordWriter : ChoRecordWriter
     {
         private IChoNotifyFileWrite _callbackFileWrite;
         private IChoNotifyRecordWrite _callbackRecordWrite;
         private IChoNotifyRecordFieldWrite _callbackRecordFieldWrite;
         private IChoRecordFieldSerializable _callbackRecordSeriablizable;
         private long _index = 0;
-        bool isFirstRec = true;
         internal ChoWriter Writer = null;
         internal Type ElementType = null;
         //private Lazy<List<object>> _recBuffer = null;
         private Lazy<bool> BeginWrite = null;
         private object _sw = null;
 
-        public ChoJSONRecordConfiguration Configuration
+        public ChoYamlRecordConfiguration Configuration
         {
             get;
             private set;
         }
 
-        public ChoJSONRecordWriter(Type recordType, ChoJSONRecordConfiguration configuration) : base(recordType, true)
+        public ChoYamlRecordWriter(Type recordType, ChoYamlRecordConfiguration configuration) : base(recordType, true)
         {
             ChoGuard.ArgumentNotNull(configuration, "Configuration");
             Configuration = configuration;
@@ -72,36 +72,9 @@ namespace ChoETL
             });
         }
 
-        private bool SupportMultipleContent
-        {
-            get { return Configuration.SupportMultipleContent == null ? false : Configuration.SupportMultipleContent.Value; }
-        }
-
         internal void EndWrite(object writer)
         {
             TextWriter sw = writer as TextWriter;
-
-            try
-            {
-                if (Configuration.IsInitialized)
-                {
-                    if (!SupportMultipleContent)
-                    {
-                        if (Configuration.IgnoreRootName || Configuration.RootName.IsNullOrWhiteSpace())
-                            sw.Write(String.Format("{0}]", EOLDelimiter));
-                        else
-                        {
-                            sw.Write(String.Format("{0}{1}{0}}}", EOLDelimiter, Indent("]")));
-                        }
-                    }
-                    else
-                    {
-                        if (!Configuration.SingleElement.Value || (!Configuration.IgnoreNodeName && !Configuration.NodeName.IsNullOrWhiteSpace()))
-                            sw.Write(String.Format("{0}}}", EOLDelimiter));
-                    }
-                }
-            }
-            catch { }
 
             RaiseEndWrite(sw);
         }
@@ -120,8 +93,8 @@ namespace ChoETL
             }
 
             if (records == null) yield break;
-            if (Configuration.SingleElement == null)
-                Configuration.SingleElement = false;
+            if (Configuration.SingleDocument == null)
+                Configuration.SingleDocument = false;
 
             CultureInfo prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
@@ -134,13 +107,13 @@ namespace ChoETL
                 {
                     _index++;
 
-                    if (!isFirstRec)
-                    {
-                        if (!recordIgnored)
-                            sw.Write(",");
-                        else
-                            recordIgnored = false;
-                    }
+                    //if (!isFirstRec)
+                    //{
+                    //    if (!recordIgnored)
+                    //        sw.Write(",");
+                    //    else
+                    //        recordIgnored = false;
+                    //}
 
                     if (TraceSwitch.TraceVerbose)
                     {
@@ -160,48 +133,19 @@ namespace ChoETL
                                 continue;
 
                             string[] fieldNames = null;
-                            Type recordType = ElementType == null ? record.GetType() : ElementType;
-                            Configuration.RecordType = recordType; //.ResolveType();
-                            Configuration.IsDynamicObject = recordType.IsDynamicType();
+                            if (Configuration.RecordType == typeof(object))
+                            {
+                                Type recordType = ElementType == null ? record.GetType() : ElementType;
+                                RecordType = Configuration.RecordType = recordType.GetUnderlyingType(); //.ResolveType();
+                                Configuration.IsDynamicObject = recordType.IsDynamicType();
+                            }
                             if (typeof(IDictionary).IsAssignableFrom(Configuration.RecordType)
                                 || typeof(IList).IsAssignableFrom(Configuration.RecordType))
-                                Configuration.UseJSONSerialization = true;
+                                Configuration.UseYamlSerialization = true;
 
                             if (!Configuration.IsDynamicObject)
                             {
-                                if (!Configuration.SingleElement.Value)
-                                {
-                                    if (Configuration.RootName.IsNullOrWhiteSpace())
-                                    {
-                                        var root = Configuration.RecordType.GetCustomAttribute<ChoJSONNRootNameAttribute>();
-                                        if (root != null)
-                                        {
-                                            Configuration.RootName = root.Name;
-                                        }
-                                    }
-
-                                    if (Configuration.NodeName.IsNullOrWhiteSpace())
-                                    {
-                                        var root = Configuration.RecordType.GetCustomAttribute<ChoJSONNRootNameAttribute>();
-                                        if (root != null)
-                                        {
-                                            Configuration.NodeName = root.Name;
-                                        }
-                                        else
-                                        {
-                                            var xmlRoot = Configuration.RecordType.GetCustomAttribute<XmlRootAttribute>();
-                                            if (xmlRoot != null)
-                                            {
-                                                Configuration.NodeName = xmlRoot.ElementName;
-                                            }
-                                            else
-                                                Configuration.NodeName = Configuration.RecordType.Name;
-
-                                        }
-                                    }
-                                }
-
-                                if (Configuration.JSONRecordFieldConfigurations.Count == 0)
+                                if (Configuration.YamlRecordFieldConfigurations.Count == 0)
                                     Configuration.MapRecordFields(Configuration.RecordType);
                             }
 
@@ -212,7 +156,7 @@ namespace ChoETL
                             }
                             else
                             {
-                                fieldNames = ChoTypeDescriptor.GetProperties<ChoJSONRecordFieldAttribute>(Configuration.RecordType).Select(pd => pd.Name).ToArray();
+                                fieldNames = ChoTypeDescriptor.GetProperties<ChoYamlRecordFieldAttribute>(Configuration.RecordType).Select(pd => pd.Name).ToArray();
                                 if (fieldNames.Length == 0)
                                 {
                                     fieldNames = ChoType.GetProperties(Configuration.RecordType).Select(p => p.Name).ToArray();
@@ -225,21 +169,6 @@ namespace ChoETL
 
                             if (!BeginWrite.Value)
                                 yield break;
-
-                            if (!SupportMultipleContent)
-                            {
-                                if (Configuration.IgnoreRootName || Configuration.RootName.IsNullOrWhiteSpace())
-                                    sw.Write("[");
-                                else
-                                {
-                                    sw.Write($"{{{EOLDelimiter}{Indent(Configuration.RootName.NTrim())}: [");
-                                }
-                            }
-                            else
-                            {
-                                if (!Configuration.SingleElement.Value || (!Configuration.IgnoreNodeName && !Configuration.NodeName.IsNullOrWhiteSpace()))
-                                    sw.Write(String.Format("{{{0}", EOLDelimiter));
-                            }
                         }
 
                         if (!RaiseBeforeRecordWrite(record, _index, ref recText))
@@ -250,62 +179,24 @@ namespace ChoETL
 
                         try
                         {
-                            if (!Configuration.UseJSONSerialization)
+                            if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
+                                record.DoObjectLevelValidation(Configuration, Configuration.YamlRecordFieldConfigurations);
+
+                            if (ToText(_index, record, out recText))
                             {
-                                if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
-                                    record.DoObjectLevelValidation(Configuration, Configuration.JSONRecordFieldConfigurations);
+                                if (recText.EndsWith("..."))
+                                    recText = recText.Left(recText.Length - 3);
 
-                                if (ToText(_index, record, out recText))
-                                {
-                                    if (!recText.IsNullOrEmpty())
-                                    {
-                                        if (!SupportMultipleContent)
-                                            sw.Write("{1}{0}", Indent(recText), EOLDelimiter);
-                                        else
-                                        {
-                                            if (Configuration.SingleElement.Value)
-                                            {
-                                                if (!Configuration.IgnoreNodeName && !Configuration.NodeName.IsNullOrWhiteSpace())
-                                                    sw.Write(Indent(recText));
-                                                else
-                                                    sw.Write(Unindent(recText));
-                                            }
-                                            else
-                                            {
-                                                if (_index == 1)
-                                                    sw.Write("{0}", Indent(recText));
-                                                else
-                                                    sw.Write("{1}{0}", Indent(recText), EOLDelimiter);
-                                            }
-                                        }
+                                if (recText.EndsWith($"...{Environment.NewLine}"))
+                                    recText = recText.Left(recText.Length - $"...{Environment.NewLine}".Length);
 
-                                        if (!RaiseAfterRecordWrite(record, _index, recText))
-                                            yield break;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.Off) != ChoObjectValidationMode.Off)
-                                    record.DoObjectLevelValidation(Configuration, Configuration.JSONRecordFieldConfigurations);
+                                if (!Configuration.SingleDocument.Value)
+                                    sw.Write($"---{EOLDelimiter}");
 
-                                recText = JsonConvert.SerializeObject(record, Configuration.Formatting, Configuration.JsonSerializerSettings);
-                                if (!SupportMultipleContent)
-                                    sw.Write("{1}{0}", Indent(recText), EOLDelimiter);
-                                else
-                                {
-                                    if (Configuration.SingleElement.Value)
-                                    {
-                                        sw.Write(Unindent(recText));
-                                    }
-                                    else
-                                    {
-                                        if (_index == 1)
-                                            sw.Write("{0}", Indent(recText));
-                                        else
-                                            sw.Write("{1}{0}", Indent(recText), EOLDelimiter);
-                                    }
-                                }
+                                sw.Write("{0}", recText);
+
+                                if (!Configuration.SingleDocument.Value)
+                                    sw.Write($"...{EOLDelimiter}");
 
                                 if (!RaiseAfterRecordWrite(record, _index, recText))
                                     yield break;
@@ -348,8 +239,6 @@ namespace ChoETL
                             yield break;
                         }
                     }
-
-                    isFirstRec = false;
                 }
             }
             finally
@@ -377,23 +266,15 @@ namespace ChoETL
             }
 
             recText = null;
-            if (rec == null)
+            if (Configuration.UseYamlSerialization)
             {
-                if (Configuration.NullValueHandling == ChoNullValueHandling.Ignore)
-                    return false;
-                else if (Configuration.NullValueHandling == ChoNullValueHandling.Default)
-                    rec = ChoActivator.CreateInstance(Configuration.RecordType);
-                else
-                {
-                    recText = "{{{0}}}".FormatString(EOLDelimiter);
-                    return true;
-                }
+                recText = new Serializer().Serialize(rec, rec.GetType());
+                return true;
             }
-
             StringBuilder msg = new StringBuilder();
             object fieldValue = null;
             string fieldText = null;
-            ChoJSONRecordFieldConfiguration fieldConfig = null;
+            ChoYamlRecordFieldConfiguration fieldConfig = null;
             string fieldName = null;
 
             if (Configuration.ColumnCountStrict)
@@ -404,32 +285,8 @@ namespace ChoETL
             bool isFirst = true;
             object rootRec = rec;
 
-            if (!Configuration.IgnoreNodeName)
-            {
-                if (Configuration.SupportMultipleContent == null || !Configuration.SupportMultipleContent.Value)
-                    Configuration.IgnoreNodeName = true;
-            }
-            if (!Configuration.IgnoreNodeName)
-            {
-                if (Configuration.NodeName.IsNullOrWhiteSpace())
-                {
-                    if (Configuration.IsDynamicObject && rec is ChoDynamicObject && ((ChoDynamicObject)rec).DynamicObjectName != ChoDynamicObject.DefaultName)
-                        msg.AppendFormat(@"""{1}"": {{{0}", EOLDelimiter, ((ChoDynamicObject)rec).DynamicObjectName);
-                    else if (!RecordType.IsSimple())
-                        msg.AppendFormat("{{{0}", EOLDelimiter);
-                }
-                else
-                {
-                    if (!RecordType.IsSimple())
-                        msg.AppendFormat(@"""{1}"": {{{0}", EOLDelimiter, Configuration.NodeName);
-                    else
-                        msg.AppendFormat(@"""{0}"": ", Configuration.NodeName);
-                }
-            }
-            else if (!RecordType.IsSimple())
-                msg.AppendFormat("{{{0}", EOLDelimiter);
-
-            foreach (KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict.OrderBy(kvp => kvp.Value.Order))
+            Dictionary<string, object> output = new Dictionary<string, object>();
+            foreach (KeyValuePair<string, ChoYamlRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict.OrderBy(kvp => kvp.Value.Order))
             {
                 //if (Configuration.IsDynamicObject)
                 //{
@@ -451,14 +308,14 @@ namespace ChoETL
                     {
                         var dict = rec.ToDynamicObject() as IDictionary<string, Object>;
                         if (!dict.ContainsKey(kvp.Key))
-                            throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' JSON node.".FormatString(fieldConfig.FieldName));
+                            throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' Yaml node.".FormatString(fieldConfig.FieldName));
                     }
                     else
                     {
                         if (pi == null)
                         {
                             if (!RecordType.IsSimple())
-                                throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' JSON node.".FormatString(fieldConfig.FieldName));
+                                throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' Yaml node.".FormatString(fieldConfig.FieldName));
                         }
                     }
                 }
@@ -471,9 +328,6 @@ namespace ChoETL
                         fieldValue = dict[kvp.Key]; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
                         if (rec is ChoDynamicObject)
                         {
-                            if (((ChoDynamicObject)rec).IsAttribute(fieldName)
-                                && Configuration.EnableXmlAttributePrefix)
-                                fieldName = "@{0}".FormatString(fieldName);
                         }
 
                         if (kvp.Value.FieldType == null)
@@ -601,14 +455,6 @@ namespace ChoETL
                     }
                 }
 
-                Writer.ContractResolverState = new ChoContractResolverState
-                {
-                    Name = kvp.Key,
-                    Index = index,
-                    Record = rec,
-                    FieldConfig = kvp.Value
-                };
-					
                 bool isSimple = true;
 
                 if (fieldConfig.CustomSerializer != null)
@@ -636,253 +482,86 @@ namespace ChoETL
                         if (Configuration.NullValueHandling == ChoNullValueHandling.Ignore)
                             fieldText = null;
                         else if (Configuration.NullValueHandling == ChoNullValueHandling.Default)
-                            fieldText = JsonConvert.SerializeObject(ChoActivator.CreateInstance(fieldConfig.FieldType), Configuration.Formatting, Configuration.JsonSerializerSettings);
+                            fieldText = ChoActivator.CreateInstance(fieldConfig.FieldType).ToNString();
                         else if (Configuration.NullValueHandling == ChoNullValueHandling.Empty && fieldConfig.FieldType == typeof(string))
                             fieldText = String.Empty;
                         else
                         {
                             if (fieldConfig.NullValue == null)
                             {
-                                if (fieldConfig.FieldType == null || fieldConfig.FieldType == typeof(object))
-                                    fieldText = !fieldConfig.IsArray ? "null" : "[]";
-                                else
-                                    fieldText = !typeof(IList).IsAssignableFrom(fieldConfig.FieldType) ? "null" : "[]";
                             }
                             else
                                 fieldText = fieldConfig.NullValue;
                         }
                     }
                     else if (ft == typeof(string) || ft == typeof(char))
-                        fieldText = JsonConvert.SerializeObject(NormalizeFieldValue(kvp.Key, fieldValue.ToString(), kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType, Configuration.FieldValueTrimOption)),
-                            Configuration.Formatting, Configuration.JsonSerializerSettings);
+                        fieldText = NormalizeFieldValue(kvp.Key, fieldValue.ToString(), kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType),
+                            GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType, Configuration.FieldValueTrimOption));
                     else if (ft == typeof(DateTime) || ft == typeof(TimeSpan))
-                        fieldText = JsonConvert.SerializeObject(fieldValue, Configuration.Formatting, Configuration.JsonSerializerSettings);
+                        fieldText = ChoConvert.ConvertTo(fieldValue, typeof(String), Configuration.Culture) as string; 
                     else if (ft.IsEnum)
-                    {
-                        fieldText = JsonConvert.SerializeObject(fieldValue, Configuration.Formatting, Configuration.JsonSerializerSettings);
-                    }
+                        fieldText = ChoConvert.ConvertTo(fieldValue, typeof(String), Configuration.Culture) as string;
                     else if (ft == typeof(ChoCurrency))
-                        fieldText = "\"{0}\"".FormatString(fieldValue.ToString());
-                    else if (ft == typeof(bool))
-                        fieldText = JsonConvert.SerializeObject(fieldValue, Configuration.Formatting, Configuration.JsonSerializerSettings);
-                    else if (ft.IsNumeric())
                         fieldText = fieldValue.ToString();
+                    else if (ft == typeof(bool))
+                        fieldText = ChoConvert.ConvertTo(fieldValue, typeof(String), Configuration.Culture) as string; 
+                    else if (ft.IsNumeric())
+                        fieldText = ChoConvert.ConvertTo(fieldValue, typeof(String), Configuration.Culture) as string;
                     else
                         isSimple = false;
                 }
 
-                if (fieldText != null)
+                object objValue = null;
+                if (isSimple)
+                    objValue = fieldText;
+                else
                 {
-                    if (isFirst)
+                    Writer.ContractResolverState = new ChoContractResolverState
                     {
-                        if (RecordType.IsSimple())
-                        {
-                            msg.AppendFormat(fieldText);
-                        }
-                        else
-                        {
-                            msg.AppendFormat("{2}\"{0}\":{1}", fieldName, isSimple ? " {0}".FormatString(fieldText) :
-                                Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization)).Substring(1),
-                                Indent(String.Empty));
-                        }
-                    }
-                    else
-                    {
-                        if (RecordType.IsSimple())
-                        {
-                            msg.AppendFormat($",{fieldText}");
-                        }
-                        else
-                        {
-                            msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldName, isSimple ? " {0}".FormatString(fieldText) :
-                                Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization)).Substring(1),
-                                EOLDelimiter, Indent(String.Empty));
-                        }
-                    }
-                    isFirst = false;
+                        Name = kvp.Key,
+                        Index = index,
+                        Record = rec,
+                        FieldConfig = kvp.Value
+                    };
+                    var json = JsonConvert.SerializeObject(fieldValue, Configuration.JsonSerializerSettings);
+                    objValue = JsonConvert.DeserializeObject<IDictionary<string, object>>(json);
                 }
+
+                if (!RecordType.IsSimple())
+                    output.Add(fieldName, objValue);
+                else
+                    fieldValue = objValue;
             }
 
             if (!RecordType.IsSimple())
-                msg.AppendFormat("{0}}}", EOLDelimiter);
-            recText = Configuration.IgnoreNodeName ? Unindent(msg.ToString()) : msg.ToString();
+                recText = Configuration.YamlSerializer.Serialize(output, output.GetType());
+            else
+                recText = Configuration.YamlSerializer.Serialize(fieldValue, fieldValue.GetType());
 
             return true;
         }
 
         private string Indent(string value, int indentValue = 1)
         {
-            if (value == null)
-                return value;
-
-            return Configuration.Formatting == Formatting.Indented ? value.Indent(indentValue, "  ") : value;
+            return value;
         }
 
         private string Unindent(string value)
         {
-            if (value == null)
-                return value;
-
-            return Configuration.Formatting == Formatting.Indented ? value.Unindent(1, "  ") : value;
+            return value;
         }
 
         private string EOLDelimiter
         {
             get
             {
-                return Configuration.Formatting == Formatting.Indented ? Configuration.EOLDelimiter : String.Empty;
+                return Configuration.EOLDelimiter;
             }
         }
 
-        private string SerializeObject(object target, bool? useJSONSerialization = null)
+        private string SerializeObject(object target, bool? useYamlSerialization = null)
         {
-            bool lUseJSONSerialization = useJSONSerialization == null ? Configuration.UseJSONSerialization : useJSONSerialization.Value;
-            if (lUseJSONSerialization)
-                return JsonConvert.SerializeObject(target, Configuration.Formatting, Configuration.JsonSerializerSettings);
-            else
-            {
-                //return JsonConvert.SerializeObject(target, Configuration.Formatting);
-
-                Type objType = target.GetType();
-                if (objType.IsSimple())
-                    return JsonConvert.SerializeObject(target, Configuration.Formatting, Configuration.JsonSerializerSettings);
-                else
-                {
-                    if (target is IEnumerable && !(target is IDictionary) && !target.GetType().IsDynamicType())
-                    {
-                        StringBuilder msg = new StringBuilder();
-                        bool first = true;
-                        foreach (var item in (IEnumerable)target)
-                        {
-                            if (first)
-                                first = false;
-                            else
-                                msg.Append($",{EOLDelimiter}");
-
-                            if (item == null)
-                            {
-                                if (Configuration.JsonSerializerSettings != null && Configuration.JsonSerializerSettings.NullValueHandling == NullValueHandling.Ignore)
-                                {
-
-                                }
-                                else
-                                    msg.Append(JsonConvert.SerializeObject(null, Configuration.Formatting, Configuration.JsonSerializerSettings));
-                            }
-                            else if (item.GetType().IsSimple())
-                                msg.Append(JsonConvert.SerializeObject(item, Configuration.Formatting, Configuration.JsonSerializerSettings));
-                            else
-                            {
-                                //var obj = MapToDictionary(item);
-                                msg.Append(JsonConvert.SerializeObject(item, Configuration.Formatting, Configuration.JsonSerializerSettings));
-                            }
-                        }
-
-                        return "[{0}{1}{0}]".FormatString(EOLDelimiter, Indent(msg.ToString()));
-                    }
-                    else
-                        return JsonConvert.SerializeObject(target /*MapToDictionary(target)*/, Configuration.Formatting, Configuration.JsonSerializerSettings);
-                }
-            }
-        }
-
-        //      public IEnumerable<IDictionary<string, object>> MapToDictionary(IList source)
-        //      {
-        //          foreach (var item in source)
-        //              return MapToDictionary(item);
-
-        //	return Enumerable.Empty<IDictionary<string, object>>();
-        //}
-
-        public object MapToDictionary(object source)
-        {
-            IDictionary<string, object> dict = null;
-            if (source != null && source.GetType().IsDynamicType())
-            {
-                if (source is ChoDynamicObject)
-                {
-                    ChoDynamicObject dobj = source as ChoDynamicObject;
-
-                    dict = new Dictionary<string, object>();
-                    foreach (var kvp in dobj)
-                    {
-                        if (dobj.IsAttribute(kvp.Key) && Configuration.EnableXmlAttributePrefix)
-                            dict.Add("@{0}".FormatString(kvp.Key), kvp.Value);
-                        else
-                            dict.Add(kvp.Key, kvp.Value);
-                    }
-                }
-                else if (source is IDictionary<string, object>)
-                    dict = source as IDictionary<string, object>;
-                else
-                    return source;
-            }
-            else
-            {
-                var dictionary = new Dictionary<string, object>();
-                MapToDictionaryInternal(dictionary, source);
-                dict = dictionary;
-            }
-
-            if (dict is ChoDynamicObject && dict.Keys.Count == 1 && ((ChoDynamicObject)dict).DynamicObjectName == dict.Keys.First().ToPlural())
-            {
-                object x = dict[dict.Keys.First()];
-                if (!(x is IList))
-                    return FixArray(x as IDictionary<string, object>);
-                else
-                {
-                    return ((IList)x).Cast<object>().Select(i => FixArray(i as IDictionary<string, object>)).ToArray();
-                }
-            }
-            else
-            {
-                return FixArray(dict);
-            }
-        }
-
-        private IDictionary<string, object> FixArray(IDictionary<string, object> dict)
-        {
-            if (dict == null)
-                return dict;
-
-            foreach (var key in dict.Keys.ToArray())
-            {
-                object value = dict[key];
-                if (value is IList && ((IList)value).Cast<object>().All(i => i is ChoDynamicObject))
-                {
-                    if (((IList)value).Cast<ChoDynamicObject>().All(i => i.Count == 1 && i.HasText()))
-                    {
-                        dict[key] = ((IList)value).Cast<ChoDynamicObject>().Select(i => i.GetText()).ToArray();
-                    }
-                }
-                else if (value is IDictionary<string, object>)
-                {
-                    dict[key] = MapToDictionary(value as IDictionary<string, object>);
-                    //if (!(value1 is IList))
-                    //	dict[key] = MapToDictionary(value as IDictionary<string, object>);
-                    //else
-                    //	dict[key] = MapToDictionary(value as IDictionary<string, object>).ToArray();
-                }
-                else if (value is IList)
-                {
-                    List<object> list = new List<object>();
-                    foreach (var obj in (IList)value)
-                    {
-                        if (obj is IDictionary<string, object>)
-                        {
-                            object value1 = MapToDictionary(obj as IDictionary<string, object>);
-                            if (value1 is IList)
-                                list.AddRange(((IList)value1).Cast<object>().ToArray());
-                            else
-                                list.Add(value1);
-                        }
-                        else
-                            list.Add(obj);
-                    }
-
-                    dict[key] = list.ToArray();
-                }
-            }
-            return dict;
+            return null;
         }
 
         private object SimpleTypeValue(object source)
@@ -893,119 +572,6 @@ namespace ChoETL
                 return source;
         }
 
-        private object Marshal(object source)
-        {
-            if (source == null)
-                return null;
-            if (source.GetType().IsSimple())
-                return SimpleTypeValue(source);
-
-            return MapToDictionary(source);
-        }
-
-        private void MapToDictionaryInternal(IDictionary<string, object> dictionary, object source)
-        {
-            var isKVPAttrDefined = source.GetType().GetCustomAttribute<ChoKeyValueTypeAttribute>() != null;
-
-            //check if object is KeyValuePair
-            Type valueType = source.GetType();
-            if (valueType.IsGenericType)
-            {
-                Type baseType = valueType.GetGenericTypeDefinition();
-                if (baseType == typeof(KeyValuePair<,>))
-                {
-                    object kvpKey = valueType.GetProperty("Key").GetValue(source, null);
-                    object kvpValue = valueType.GetProperty("Value").GetValue(source, null);
-                    if (kvpValue is IEnumerable)
-                        dictionary[kvpKey.ToNString()] = MapToDictionary(kvpValue as IEnumerable);
-                    else if (kvpValue != null)
-                        dictionary[kvpKey.ToNString()] = MapToDictionary(kvpValue);
-                }
-            }
-
-            if (isKVPAttrDefined)
-            {
-                var kP = source.GetType().GetProperties().Where(p => p.GetCustomAttribute<ChoKeyAttribute>() != null).FirstOrDefault();
-                var vP = source.GetType().GetProperties().Where(p => p.GetCustomAttribute<ChoValueAttribute>() != null).FirstOrDefault();
-
-
-                if (kP != null && vP != null)
-                {
-                    object value = vP.GetValue(source);
-                    if (value is IEnumerable)
-                        dictionary[kP.GetValue(source).ToNString()] = MapToDictionary(value as IEnumerable);
-                    else if (value != null)
-                        dictionary[kP.GetValue(source).ToNString()] = MapToDictionary(value);
-                    return;
-                }
-            }
-            if (typeof(IChoKeyValueType).IsAssignableFrom(source.GetType()))
-            {
-                IChoKeyValueType kvp = source as IChoKeyValueType;
-                object value = kvp.Value;
-                if (value.GetType().IsDynamicType())
-                    dictionary[kvp.Key.ToNString()] = value;
-                else if (value is IEnumerable && !(value is IDictionary))
-                    dictionary[kvp.Key.ToNString()] = MapToDictionary(value as IEnumerable);
-                else if (value != null)
-                    dictionary[kvp.Key.ToNString()] = MapToDictionary(value);
-                return;
-            }
-            if (source is IDictionary<string, object>)
-            {
-                foreach (string key in (source as IDictionary<string, object>).Keys)
-                {
-                    dictionary.Add(key, ((IDictionary<string, object>)source)[key]);
-                }
-                return;
-            }
-
-            var properties = ChoType.GetProperties(source.GetType()); // source.GetType().GetProperties();
-            foreach (var p in properties)
-            {
-                var key = p.Name.StartsWith("_") ? p.Name.Substring(1) : p.Name;
-                var attr = p.GetCustomAttribute<JsonPropertyAttribute>();
-                if (attr != null && !attr.PropertyName.IsNullOrWhiteSpace())
-                    key = attr.PropertyName.NTrim();
-
-                object value = p.GetValue(source, null);
-                if (value == null)
-                {
-                    if (attr != null && attr.NullValueHandling == NullValueHandling.Ignore)
-                    {
-
-                    }
-                    else
-                        dictionary[key] = null;
-
-                    continue;
-                }
-                valueType = value.GetType();
-
-                if (valueType.IsSimple())
-                {
-                    dictionary[key] = Marshal(value);
-                }
-                else if (value.GetType().IsDynamicType())
-                {
-                    dictionary[key] = value;
-                }
-                else if (value is IDictionary)
-                {
-                    IDictionary dict = ((IDictionary)value);
-                    foreach (var key1 in dict.Keys)
-                    {
-                        var val = dict[key];
-                        dictionary[key1.ToNString()] = Marshal(value);
-                    }
-                    dictionary[key] = dict;
-                }
-                else if (value is IEnumerable)
-                    dictionary[key] = MapToDictionary((IEnumerable)value);
-                else
-                    dictionary[key] = Marshal(value);
-            }
-        }
         private ChoFieldValueJustification GetFieldValueJustification(ChoFieldValueJustification? fieldValueJustification, Type fieldType)
         {
             return fieldValueJustification == null ? ChoFieldValueJustification.None : fieldValueJustification.Value;
@@ -1022,21 +588,21 @@ namespace ChoETL
             {
                 var eoDict = rec == null ? new Dictionary<string, object>() : rec.ToDynamicObject() as IDictionary<string, Object>;
 
-                if (eoDict.Count != Configuration.JSONRecordFieldConfigurations.Count)
-                    throw new ChoParserException("Incorrect number of fields found in record object. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.JSONRecordFieldConfigurations.Count, eoDict.Count));
+                if (eoDict.Count != Configuration.YamlRecordFieldConfigurations.Count)
+                    throw new ChoParserException("Incorrect number of fields found in record object. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.YamlRecordFieldConfigurations.Count, eoDict.Count));
 
-                string[] missingColumns = Configuration.JSONRecordFieldConfigurations.Select(v => v.Name).Except(eoDict.Keys).ToArray();
+                string[] missingColumns = Configuration.YamlRecordFieldConfigurations.Select(v => v.Name).Except(eoDict.Keys).ToArray();
                 if (missingColumns.Length > 0)
                     throw new ChoParserException("[{0}] fields are not found in record object.".FormatString(String.Join(",", missingColumns)));
             }
             else
             {
-                PropertyDescriptor[] pds = rec == null ? new PropertyDescriptor[] { } : ChoTypeDescriptor.GetProperties<ChoJSONRecordFieldAttribute>(rec.GetType()).ToArray();
+                PropertyDescriptor[] pds = rec == null ? new PropertyDescriptor[] { } : ChoTypeDescriptor.GetProperties<ChoYamlRecordFieldAttribute>(rec.GetType()).ToArray();
 
-                if (pds.Length != Configuration.JSONRecordFieldConfigurations.Count)
-                    throw new ChoParserException("Incorrect number of fields found in record object. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.JSONRecordFieldConfigurations.Count, pds.Length));
+                if (pds.Length != Configuration.YamlRecordFieldConfigurations.Count)
+                    throw new ChoParserException("Incorrect number of fields found in record object. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.YamlRecordFieldConfigurations.Count, pds.Length));
 
-                string[] missingColumns = Configuration.JSONRecordFieldConfigurations.Select(v => v.Name).Except(pds.Select(pd => pd.Name)).ToArray();
+                string[] missingColumns = Configuration.YamlRecordFieldConfigurations.Select(v => v.Name).Except(pds.Select(pd => pd.Name)).ToArray();
                 if (missingColumns.Length > 0)
                     throw new ChoParserException("[{0}] fields are not found in record object.".FormatString(String.Join(",", missingColumns)));
             }

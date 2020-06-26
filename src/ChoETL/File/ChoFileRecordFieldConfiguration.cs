@@ -12,6 +12,11 @@ namespace ChoETL
     [DataContract]
     public abstract class ChoFileRecordFieldConfiguration : ChoRecordFieldConfiguration
     {
+        public int Order
+        {
+            get;
+            set;
+        }
         [DataMember]
         public string FieldName
         {

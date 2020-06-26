@@ -606,7 +606,7 @@ namespace ChoETL
                             }
                             else
                             {
-                                if (!RaiseRecordFieldWriteError(rec, index, kvp.Key, fieldText, ex))
+                                if (!RaiseRecordFieldWriteError(rec, index, kvp.Key, ref fieldValue, ex))
                                     throw new ChoWriterException($"Failed to write '{fieldValue}' value of '{kvp.Key}' member.", ex);
                             }
                         }
@@ -883,45 +883,47 @@ namespace ChoETL
             return fieldValue;
         }
 
+        #region Event Raisers
+
         private bool RaiseBeginWrite(object state)
         {
-            if (_callbackFileWrite != null)
-            {
-                return ChoFuncEx.RunWithIgnoreError(() => _callbackFileWrite.BeginWrite(state), true);
-            }
-            else if (Writer != null)
+            if (Writer != null && Writer.HasBeginWriteSubscribed)
             {
                 return ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseBeginWrite(state), true);
+            }
+            else if (_callbackFileWrite != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => _callbackFileWrite.BeginWrite(state), true);
             }
             return true;
         }
 
         private void RaiseEndWrite(object state)
         {
-            if (_callbackFileWrite != null)
-            {
-                ChoActionEx.RunWithIgnoreError(() => _callbackFileWrite.EndWrite(state));
-            }
-            else if (Writer != null)
+            if (Writer != null && Writer.HasEndWriteSubscribed)
             {
                 ChoActionEx.RunWithIgnoreError(() => Writer.RaiseEndWrite(state));
+            }
+            else if (_callbackFileWrite != null)
+            {
+                ChoActionEx.RunWithIgnoreError(() => _callbackFileWrite.EndWrite(state));
             }
         }
 
         private bool RaiseBeforeRecordWrite(object target, long index, ref string state)
         {
-            if (_callbackRecordWrite != null)
+            if (Writer != null && Writer.HasBeforeRecordWriteSubscribed)
             {
                 object inState = state;
-                bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecordWrite.BeforeRecordWrite(target, index, ref inState), true);
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseBeforeRecordWrite(target, index, ref inState), true);
                 if (retValue)
                     state = inState == null ? null : inState.ToString();
                 return retValue;
             }
-            else if (Writer != null)
+            else if (_callbackRecordWrite != null)
             {
                 object inState = state;
-                bool retValue = ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseBeforeRecordWrite(target, index, ref inState), true);
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecordWrite.BeforeRecordWrite(target, index, ref inState), true);
                 if (retValue)
                     state = inState == null ? null : inState.ToString();
                 return retValue;
@@ -931,46 +933,56 @@ namespace ChoETL
 
         private bool RaiseAfterRecordWrite(object target, long index, string state)
         {
-            if (_callbackRecordWrite != null)
-            {
-                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecordWrite.AfterRecordWrite(target, index, state), true);
-            }
-            else if (Writer != null)
+            if (Writer != null && Writer.HasAfterRecordWriteSubscribed)
             {
                 return ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseAfterRecordWrite(target, index, state), true);
+            }
+            else if (_callbackRecordWrite != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecordWrite.AfterRecordWrite(target, index, state), true);
             }
             return true;
         }
 
         private bool RaiseRecordWriteError(object target, long index, string state, Exception ex)
         {
-            if (_callbackRecordWrite != null)
-            {
-                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecordWrite.RecordWriteError(target, index, state, ex), false);
-            }
-            else if (Writer != null)
+            if (Writer != null && Writer.HasRecordWriteErrorSubscribed)
             {
                 return ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseRecordWriteError(target, index, state, ex), false);
+            }
+            else if (_callbackRecordWrite != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecordWrite.RecordWriteError(target, index, state, ex), false);
             }
             return true;
         }
 
         private bool RaiseBeforeRecordFieldWrite(object target, long index, string propName, ref object value)
         {
-            if (_callbackRecordFieldWrite != null)
+            if (Writer != null && Writer.HasBeforeRecordFieldWriteSubscribed)
             {
                 object state = value;
-                bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecordFieldWrite.BeforeRecordFieldWrite(target, index, propName, ref state), true);
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseBeforeRecordFieldWrite(target, index, propName, ref state), true);
 
                 if (retValue)
                     value = state;
 
                 return retValue;
             }
-            else if (Writer != null)
+            else if (target is IChoNotifyRecordFieldWrite)
             {
                 object state = value;
-                bool retValue = ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseBeforeRecordFieldWrite(target, index, propName, ref state), true);
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordFieldWrite)target).BeforeRecordFieldWrite(target, index, propName, ref state), true);
+
+                if (retValue)
+                    value = state;
+
+                return retValue;
+            }
+            else if (_callbackRecordFieldWrite != null)
+            {
+                object state = value;
+                bool retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecordFieldWrite.BeforeRecordFieldWrite(target, index, propName, ref state), true);
 
                 if (retValue)
                     value = state;
@@ -982,40 +994,63 @@ namespace ChoETL
 
         private bool RaiseAfterRecordFieldWrite(object target, long index, string propName, object value)
         {
-            if (_callbackRecordFieldWrite != null)
-            {
-                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecordFieldWrite.AfterRecordFieldWrite(target, index, propName, value), true);
-            }
-            else if (Writer != null)
+            if (Writer != null && Writer.HasAfterRecordFieldWriteSubscribed)
             {
                 return ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseAfterRecordFieldWrite(target, index, propName, value), true);
+            }
+            else if (target is IChoNotifyRecordFieldWrite)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordFieldWrite)target).AfterRecordFieldWrite(target, index, propName, value), true);
+            }
+            else if (_callbackRecordFieldWrite != null)
+            {
+                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecordFieldWrite.AfterRecordFieldWrite(target, index, propName, value), true);
             }
             return true;
         }
 
-        private bool RaiseRecordFieldWriteError(object target, long index, string propName, object value, Exception ex)
+        private bool RaiseRecordFieldWriteError(object target, long index, string propName, ref object value, Exception ex)
         {
-            if (_callbackRecordFieldWrite != null)
+            bool retValue = true;
+            object state = value;
+
+            if (Writer != null && Writer.HasRecordFieldWriteErrorSubscribed)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => _callbackRecordFieldWrite.RecordFieldWriteError(target, index, propName, value, ex), true);
+                retValue = ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseRecordFieldWriteError(target, index, propName, ref state, ex), true);
+
+                if (retValue)
+                    value = state;
             }
-            else if (Writer != null)
+            else if (target is IChoNotifyRecordFieldWrite)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseRecordFieldWriteError(target, index, propName, value, ex), true);
+                retValue = ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordFieldWrite)target).RecordFieldWriteError(target, index, propName, ref state, ex), true);
+
+                if (retValue)
+                    value = state;
             }
-            return true;
+            else if (_callbackRecordFieldWrite != null)
+            {
+                retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackRecordFieldWrite.RecordFieldWriteError(target, index, propName, ref state, ex), true);
+
+                if (retValue)
+                    value = state;
+            }
+            return retValue;
         }
+
+        #endregion Event Raisers
+
         private bool RaiseFileHeaderWrite(ref string headerText)
         {
             string ht = headerText;
             bool retValue = true;
-            if (_callbackFileHeaderWrite != null)
-            {
-                retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackFileHeaderWrite.FileHeaderWrite(ref ht), false);
-            }
-            else if (Writer != null)
+            if (Writer != null && Writer.HasFileHeaderWriteSubscribed)
             {
                 retValue = ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseFileHeaderWrite(ref ht), false);
+            }
+            else if (_callbackFileHeaderWrite != null)
+            {
+                retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackFileHeaderWrite.FileHeaderWrite(ref ht), false);
             }
             headerText = ht;
             return !retValue;
@@ -1025,17 +1060,18 @@ namespace ChoETL
         {
             var fs = fields;
 
-            if (_callbackFileHeaderArrange != null)
-            {
-                ChoActionEx.RunWithIgnoreError(() => _callbackFileHeaderArrange.FileHeaderArrange(fs));
-            }
-            else if (Writer != null)
+            if (Writer != null && Writer.HasFileHeaderArrangeSubscribed)
             {
                 ChoActionEx.RunWithIgnoreError(() => Writer.RaiseFileHeaderArrange(ref fs));
+            }
+            else if (_callbackFileHeaderArrange != null)
+            {
+                ChoActionEx.RunWithIgnoreError(() => _callbackFileHeaderArrange.FileHeaderArrange(fs));
             }
 
             if (fs != null)
                 fields = fs;
         }
+
     }
 }

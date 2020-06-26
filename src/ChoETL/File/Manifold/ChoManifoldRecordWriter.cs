@@ -267,7 +267,7 @@ namespace ChoETL
 
         private bool RaiseBeforeRecordFieldWrite(object target, long index, string propName, ref object value)
         {
-            if (Configuration.NotifyRecordFieldWriteObject != null)
+            if (Configuration.NotifyRecordWriteObject != null)
             {
                 object state = value;
                 bool retValue = ChoFuncEx.RunWithIgnoreError(() => Configuration.NotifyRecordFieldWriteObject.BeforeRecordFieldWrite(target, index, propName, ref state), true);
@@ -292,7 +292,7 @@ namespace ChoETL
 
         private bool RaiseAfterRecordFieldWrite(object target, long index, string propName, object value)
         {
-            if (Configuration.NotifyRecordFieldWriteObject != null)
+            if (Configuration.NotifyRecordWriteObject != null)
             {
                 return ChoFuncEx.RunWithIgnoreError(() => Configuration.NotifyRecordFieldWriteObject.AfterRecordFieldWrite(target, index, propName, value), true);
             }
@@ -303,17 +303,32 @@ namespace ChoETL
             return true;
         }
 
-        private bool RaiseRecordFieldWriteError(object target, long index, string propName, object value, Exception ex)
+        private bool RaiseRecordFieldWriteError(object target, long index, string propName, ref object value, Exception ex)
         {
-            if (Configuration.NotifyRecordFieldWriteObject != null)
+            bool retValue = true;
+            object state = value;
+            if (target is IChoNotifyRecordFieldWrite)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => Configuration.NotifyRecordFieldWriteObject.RecordFieldWriteError(target, index, propName, value, ex), false);
+                retValue = ChoFuncEx.RunWithIgnoreError(() => ((IChoNotifyRecordFieldWrite)target).RecordFieldWriteError(target, index, propName, ref state, ex), true);
+
+                if (retValue)
+                    value = state;
             }
             else if (Writer != null)
             {
-                return ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseRecordFieldWriteError(target, index, propName, value, ex), false);
+                retValue = ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseRecordFieldWriteError(target, index, propName, ref state, ex), true);
+
+                if (retValue)
+                    value = state;
             }
-            return true;
+            else if (Configuration.NotifyRecordWriteObject != null)
+            {
+                retValue = ChoFuncEx.RunWithIgnoreError(() => Configuration.NotifyRecordFieldWriteObject.RecordFieldWriteError(target, index, propName, ref state, ex), false);
+
+                if (retValue)
+                    value = state;
+            }
+            return retValue;
         }
     }
 }

@@ -136,12 +136,24 @@ namespace ChoETL
             get;
             set;
         }
+        [DataMember]
+        public char? ArrayValueSeparator
+        {
+            get;
+            set;
+        }
         public bool SupportsMultiRecordTypes
         {
             get;
             set;
         }
         public bool RecordTypeMapped
+        {
+            get;
+            set;
+        }
+        [DataMember]
+        public ChoNullValueHandling NullValueHandling
         {
             get;
             set;
@@ -342,6 +354,21 @@ namespace ChoETL
             }
 
             return Encoding;
+        }
+
+        public virtual bool ContainsRecordConfigForType(Type rt)
+        {
+            throw new NotSupportedException();
+        }
+
+        public virtual ChoRecordFieldConfiguration[] GetRecordConfigForType(Type rt)
+        {
+            throw new NotSupportedException();
+        }
+
+        public virtual Dictionary<string, ChoRecordFieldConfiguration> GetRecordConfigDictionaryForType(Type rt)
+        {
+            throw new NotSupportedException();
         }
 
         protected override void Clone(ChoRecordConfiguration config)

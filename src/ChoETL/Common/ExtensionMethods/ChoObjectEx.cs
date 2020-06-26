@@ -289,7 +289,7 @@ namespace ChoETL
             {
                 if (callbackRecord != null)
                 {
-                    bool ret = ChoFuncEx.RunWithIgnoreError(() => callbackRecord.RecordFieldLoadError(target, index, pd.Name, fv, ex), false);
+                    bool ret = ChoFuncEx.RunWithIgnoreError(() => callbackRecord.RecordFieldLoadError(target, index, pd.Name, ref fv, ex), false);
                     if (!ret)
                     {
                         if (ex is ValidationException)
@@ -297,13 +297,30 @@ namespace ChoETL
 
                         throw new ChoReaderException($"Failed to parse '{fv}' value for '{pd.Name}' field in '{target.GetType().Name}' object.", ex);
                     }
+                    else
+                        pd.SetValue(target, fv);
                 }
             }
         }
 
-        public static Dictionary<string, object> ToDictionary(this object target)
+        public static object ToDictionaryInternal(this object target)
         {
-            ChoGuard.ArgumentNotNull(target, "Target");
+            if (target == null)
+                return null;
+            else if (target.GetType().IsSimpleSpecial())
+                return target.ToNString();
+            else if (target.GetType().IsSimple())
+                return target;
+            else
+                return target.ToDictionary();
+        }
+
+        public static Dictionary<string, object> ToDictionary(this object target, string propName = null)
+        {
+            if (target == null)
+                return null;
+
+            //ChoGuard.ArgumentNotNull(target, "Target");
 
             if (target is IDictionary<string, object>)
                 return (Dictionary<string, object>)target;
@@ -317,16 +334,27 @@ namespace ChoETL
                 return dict1;
             }
             if (target is IEnumerable<KeyValuePair<string, object>>)
-                return new List<KeyValuePair<string, object>>(target as IEnumerable<KeyValuePair<string, object>>).ToDictionary(x => x.Key, x => x.Value);
+                return new List<KeyValuePair<string, object>>(target as IEnumerable<KeyValuePair<string, object>>).ToDictionary(x => x.Key, x => x.Value.ToDictionaryInternal());
             if (target is IEnumerable<Tuple<string, object>>)
-                return new List<Tuple<string, object>>(target as IEnumerable<Tuple<string, object>>).ToDictionary(x => x.Item1, x => x.Item2);
+                return new List<Tuple<string, object>>(target as IEnumerable<Tuple<string, object>>).ToDictionary(x => x.Item1, x => x.Item2.ToDictionaryInternal());
             if (target is IList)
-                return ((IList)(target)).OfType<object>().Select((item, index) => new KeyValuePair<string, object>("Column_{0}".FormatString(index), item)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+                return ((IList)(target)).OfType<object>().Select((item, index) =>
+                {
+                    return new KeyValuePair<string, object>("{0}".FormatString(index), item);
+                }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToDictionaryInternal());
 
             Dictionary<string, object> dict = new Dictionary<string, object>();
             foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(target.GetType()))
             {
-                dict.Add(pd.Name, ChoType.GetPropertyValue(target, pd.Name));
+                var value = ChoType.GetPropertyValue(target, pd.Name);
+                if (value == null)
+                    dict.Add(pd.Name, value);
+                else if (value.GetType().IsSimpleSpecial())
+                    dict.Add(pd.Name, value.ToNString());
+                else if (value.GetType().IsSimple())
+                    dict.Add(pd.Name, value);
+                else
+                    dict.Add(pd.Name, value.ToDictionary(pd.Name));
             }
 
             return dict;

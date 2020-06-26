@@ -10,7 +10,11 @@ namespace ChoETL
 {
     public abstract class ChoRecordWriter
     {
-        public readonly Type RecordType;
+        public Type RecordType
+        {
+            get;
+            protected set;
+        }
         public TraceSwitch TraceSwitch;
         public event EventHandler<ChoRowsWrittenEventArgs> RowsWritten;
 

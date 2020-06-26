@@ -187,11 +187,12 @@ namespace ChoETL
         private void Init()
         {
             _enumerator = new Lazy<IEnumerator<T>>(() => GetEnumerator());
+
+            var recordType = ResolveRecordType(typeof(T));
             if (Configuration == null)
-                Configuration = new ChoCSVRecordConfiguration(typeof(T));
+                Configuration = new ChoCSVRecordConfiguration(recordType);
             else
-                Configuration.RecordType = typeof(T);
-            Configuration.RecordType = ResolveRecordType(Configuration.RecordType);
+                Configuration.RecordType = recordType;
             Configuration.IsDynamicObject = Configuration.RecordType.IsDynamicType();
 
             if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
@@ -293,6 +294,11 @@ namespace ChoETL
             }
             else
                 rowsLoadedEvent(this, e);
+        }
+
+        public override bool HasMapColumnSubscribed
+        {
+            get { return false; }
         }
 
         public override bool RaiseMapColumn(int colPos, string colName, out string newColName)

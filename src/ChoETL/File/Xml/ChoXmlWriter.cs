@@ -147,11 +147,8 @@ namespace ChoETL
 
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
-            if (record != null && !record.GetType().IsSimple() && !record.GetType().IsDynamicType() && record is IList)
+            if (record is ArrayList)
             {
-                if (record is ArrayList)
-                    _writer.ElementType = typeof(object);
-
                 _writer.WriteTo(_textWriter, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
             }
             else if (record != null && (!record.GetType().IsDynamicType() && record is IDictionary))
@@ -942,12 +939,14 @@ namespace ChoETL
     public interface IChoSerializableWriter
     {
         event EventHandler<ChoRecordFieldSerializeEventArgs> RecordFieldSerialize;
+        bool HasRecordFieldSerializeSubscribed { get; }
         bool RaiseRecordFieldSerialize(object record, long index, string propName, ref object value);
     }
 
     public interface IChoSerializableReader
     {
         event EventHandler<ChoRecordFieldSerializeEventArgs> RecordFieldDeserialize;
+        bool HasRecordFieldDeserializeSubcribed { get; }
         bool RaiseRecordFieldDeserialize(object record, long index, string propName, ref object value);
     }
 

@@ -22,12 +22,6 @@ namespace ChoETL
             set;
         }
 
-        public int Order
-        {
-            get;
-            set;
-        }
-
         public bool IsArray
         {
             get;
@@ -44,12 +38,6 @@ namespace ChoETL
             get;
             set;
         }
-
-        internal string DeclaringMember
-        {
-            get;
-            set;
-        }
         internal PropertyDescriptor PropertyDescriptor
         {
             get;
@@ -61,10 +49,6 @@ namespace ChoETL
             get { return _fieldTypeSelector; }
             set { if (value == null) return; _fieldTypeSelector = value; }
         }
-
-        internal PropertyInfo PI;
-        internal object[] PropConverters;
-        internal object[] PropConverterParams;
 
         public ChoJSONRecordFieldConfiguration(string name, string jsonPath = null) : this(name, (ChoJSONRecordFieldAttribute)null)
         {

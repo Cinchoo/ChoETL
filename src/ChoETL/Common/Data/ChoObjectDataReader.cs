@@ -362,7 +362,7 @@ namespace ChoETL
 
                 MemberName = memberName;
                 ProperyType = memberType == null ? typeof(string) : memberType.GetUnderlyingType();
-                IsNullable = memberType == null ? true : memberType.IsNullableType() || memberType == typeof(string);
+                IsNullable = memberType == null ? true : memberType.IsNullableType() || memberType == typeof(string) || !memberType.IsValueType;
                 ChoDataTableColumnTypeAttribute dtColumnType = ChoType.GetAttribute<ChoDataTableColumnTypeAttribute>(ProperyType);
                 if (dtColumnType != null && dtColumnType.Type != null)
                     ProperyType = dtColumnType.Type;

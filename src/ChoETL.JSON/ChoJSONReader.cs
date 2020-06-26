@@ -319,77 +319,46 @@ namespace ChoETL
             return GetEnumerator();
         }
 
-        public IDataReader AsDataReader()
+        public IDataReader AsDataReader(Action<IDictionary<string, object>> selector = null)
         {
-            return AsDataReader(null);
+            return AsDataReader(null, selector);
         }
 
-        private IDataReader AsDataReader(Action<IDictionary<string, Type>> membersDiscovered)
+        private IDataReader AsDataReader(Action<IDictionary<string, Type>> membersDiscovered, Action<IDictionary<string, object>> selector = null)
         {
             this.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
             return this.Select(s =>
             {
+                IDictionary<string, object> dict = null;
                 if (s is IDictionary<string, object>)
-                    return ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator).ToDictionary() as object;
+                    dict = ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator == null ? '_' : Configuration.NestedColumnSeparator).ToDictionary();
                 else
-                    return s;
+                    dict = s.ToDictionary().Flatten(Configuration.NestedColumnSeparator == null ? '_' : Configuration.NestedColumnSeparator).ToDictionary();
+
+                selector?.Invoke(dict);
+
+                return dict as object;
             }).AsDataReader();
-
-            //if (_jObjects == null)
-            //{
-            //    ChoJSONRecordReader rr = new ChoJSONRecordReader(typeof(T), Configuration);
-            //    if (_textReader != null)
-            //        _JSONReader = Create(_textReader);
-            //    rr.Reader = this;
-            //    rr.TraceSwitch = TraceSwitch;
-            //    rr.RowsLoaded += NotifyRowsLoaded;
-            //    rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
-            //    rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
-
-            //    return this.Select(s =>
-            //    {
-            //        if (s is IDictionary<string, object>)
-            //            return ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator).ToDictionary() as object;
-            //        else
-            //            return s;
-            //    }).AsDataReader();
-            //    //var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_JSONReader), rr);
-
-            //    var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_JSONReader).Select(s =>
-            //    {
-            //        if (s is IDictionary<string, object>)
-            //            return ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator).ToDictionary() as object;
-            //        else
-            //            return s;
-            //    }), rr);
-            //    //return dr;
-            //}
-            //else
-            //{
-            //    ChoJSONRecordReader rr = new ChoJSONRecordReader(typeof(T), Configuration);
-            //    rr.Reader = this;
-            //    rr.TraceSwitch = TraceSwitch;
-            //    rr.RowsLoaded += NotifyRowsLoaded;
-            //    rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
-            //    rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
-            //    var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_jObjects), rr);
-            //    return dr;
-            //}
         }
 
-        public DataTable AsDataTable(string tableName = null)
+        public DataTable AsDataTable(Action<IDictionary<string, object>> selector)
+        {
+            return AsDataTable(null, selector);
+        }
+
+        public DataTable AsDataTable(string tableName = null, Action<IDictionary<string, object>> selector = null)
         {
             DataTable dt = tableName.IsNullOrWhiteSpace() ? new DataTable() : new DataTable(tableName);
             dt.Locale = Configuration.Culture;
-            dt.Load(AsDataReader());
+            dt.Load(AsDataReader(selector));
             return dt;
         }
 
-        public void Fill(DataTable dt)
+        public void Fill(DataTable dt, Action<IDictionary<string, object>> selector = null)
         {
             if (dt == null)
                 throw new ArgumentException("Missing datatable.");
-            dt.Load(AsDataReader());
+            dt.Load(AsDataReader(selector));
         }
 
         private void NotifyRowsLoaded(object sender, ChoRowsLoadedEventArgs e)

@@ -19,6 +19,14 @@ namespace ChoETL
     public abstract class ChoBaseKVPReader : ChoReader, IChoCustomKVPReader
     {
         public event EventHandler<ChoKVPEventArgs> ToKVP;
+        public bool HasCustomKVPSubscribed
+        {
+            get
+            {
+                EventHandler<ChoKVPEventArgs> eh = ToKVP;
+                return (eh != null);
+            }
+        }
 
         internal KeyValuePair<string, string>? RaiseToKVP(string recText)
         {
@@ -187,15 +195,19 @@ namespace ChoETL
         private void Init()
         {
             _enumerator = new Lazy<IEnumerator<T>>(() => GetEnumerator());
-            if (Configuration == null)
-                Configuration = new ChoKVPRecordConfiguration(typeof(T));
-            else
-                Configuration.RecordType = typeof(T);
 
-            Configuration.RecordType = ResolveRecordType(Configuration.RecordType);
+            var recordType = ResolveRecordType(typeof(T));
+            if (Configuration == null)
+                Configuration = new ChoKVPRecordConfiguration(recordType);
+            else
+                Configuration.RecordType = recordType;
             Configuration.IsDynamicObject = Configuration.RecordType.IsDynamicType();
-            _prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
-            System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
+
+            if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
+            {
+                _prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
+                System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
+            }
         }
 
         public static ChoKVPReader<T> LoadText(string inputText, Encoding encoding = null, ChoKVPRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
@@ -643,6 +655,7 @@ namespace ChoETL
     public interface IChoCustomKVPReader
     {
         event EventHandler<ChoKVPEventArgs> ToKVP;
+        bool HasCustomKVPSubscribed { get; }
     }
 
 }

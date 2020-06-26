@@ -127,7 +127,7 @@ namespace ChoETL
             }
         }
 
-        internal string DeclaringMember
+        public string DeclaringMember
         {
             get;
             set;
@@ -142,10 +142,10 @@ namespace ChoETL
         internal readonly List<object> ItemConverters = new List<object>();
         internal readonly List<object> KeyConverters = new List<object>();
         internal readonly List<object> ValueConverters = new List<object>();
-        internal PropertyInfo PI { get; set; }
+        public PropertyInfo PI { get; set; }
         internal PropertyDescriptor PD;
-        internal object[] PropConverters;
-        internal object[] PropConverterParams;
+        public object[] PropConverters;
+        public object[] PropConverterParams;
 
         public ChoRecordFieldConfiguration(string name, ChoRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)
         {

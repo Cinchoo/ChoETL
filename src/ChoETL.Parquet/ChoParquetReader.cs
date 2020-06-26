@@ -175,15 +175,19 @@ namespace ChoETL
         private void Init()
         {
             _enumerator = new Lazy<IEnumerator<T>>(() => GetEnumerator());
-            if (Configuration == null)
-                Configuration = new ChoParquetRecordConfiguration(typeof(T));
-            else
-                Configuration.RecordType = typeof(T);
 
-            Configuration.RecordType = Configuration.RecordType.GetUnderlyingType();
+            var recordType = Configuration.RecordType.GetUnderlyingType();
+            if (Configuration == null)
+                Configuration = new ChoParquetRecordConfiguration(recordType);
+            else
+                Configuration.RecordType = recordType;
             Configuration.IsDynamicObject = Configuration.RecordType.IsDynamicType();
-            _prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
-            System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
+
+            if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
+            {
+                _prevCultureInfo = System.Threading.Thread.CurrentThread.CurrentCulture;
+                System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
+            }
         }
 
         private ParquetReader Create(StreamReader sr)

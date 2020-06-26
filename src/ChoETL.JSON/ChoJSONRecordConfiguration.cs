@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq;
@@ -113,12 +114,6 @@ namespace ChoETL
         {
             get { return _formatting == null ? Formatting.Indented : _formatting.Value; }
             set { _formatting = value; }
-        }
-        [DataMember]
-        public ChoNullValueHandling NullValueHandling
-        {
-            get;
-            set;
         }
         internal bool FlatToNestedObjectSupport
         {
@@ -229,15 +224,23 @@ namespace ChoETL
                 JSONRecordFieldConfigurationsForType[rt].Add(rc.Name, rc);
         }
 
-        internal bool ContainsRecordConfigForType(Type rt)
+        public override bool ContainsRecordConfigForType(Type rt)
         {
             return JSONRecordFieldConfigurationsForType.ContainsKey(rt);
         }
 
-        internal ChoJSONRecordFieldConfiguration[] GetRecordConfigForType(Type rt)
+        public override ChoRecordFieldConfiguration[] GetRecordConfigForType(Type rt)
         {
             if (ContainsRecordConfigForType(rt))
                 return JSONRecordFieldConfigurationsForType[rt].Values.ToArray();
+            else
+                return null;
+        }
+
+        public override Dictionary<string, ChoRecordFieldConfiguration> GetRecordConfigDictionaryForType(Type rt)
+        {
+            if (ContainsRecordConfigForType(rt))
+                return JSONRecordFieldConfigurationsForType[rt].ToDictionary(kvp => kvp.Key, kvp => (ChoRecordFieldConfiguration)kvp.Value);
             else
                 return null;
         }
@@ -427,6 +430,18 @@ namespace ChoETL
                                             obj.FieldName = dpAttr.ShortName;
                                         else if (!dpAttr.Name.IsNullOrWhiteSpace())
                                             obj.FieldName = dpAttr.Name;
+
+                                        obj.Order = dpAttr.Order;
+                                    }
+                                    else
+                                    {
+                                        ColumnAttribute clAttr = pd.Attributes.OfType<ColumnAttribute>().FirstOrDefault();
+                                        if (clAttr != null)
+                                        {
+                                            obj.Order = clAttr.Order;
+                                            if (!clAttr.Name.IsNullOrWhiteSpace())
+                                                obj.FieldName = clAttr.Name;
+                                        }
                                     }
                                 }
                             }
@@ -734,7 +749,7 @@ namespace ChoETL
         {
             fn = fn.NTrim();
             if (ContainsRecordConfigForType(type) && GetRecordConfigForType(type).Any(fc => fc.Name == fn))
-                return GetRecordConfigForType(type).FirstOrDefault(fc => fc.Name == fn);
+                return GetRecordConfigForType(type).FirstOrDefault(fc => fc.Name == fn) as ChoJSONRecordFieldConfiguration;
 
             return null;
         }

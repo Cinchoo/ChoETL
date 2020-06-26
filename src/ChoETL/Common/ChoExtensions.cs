@@ -1037,6 +1037,16 @@ namespace ChoETL
             return new Attribute[] { };
         }
 
+        public static bool IsSimpleSpecial(this Type type)
+        {
+            CheckTypeIsNotNull(type);
+            type = type.GetUnderlyingType();
+            return type.IsPrimitive
+                || type.IsEnum
+                || typeof(ChoCurrency) == type
+                || typeof(ChoCDATA) == type
+                ;
+        }
         public static bool IsSimple(this Type type)
         {
             CheckTypeIsNotNull(type);
