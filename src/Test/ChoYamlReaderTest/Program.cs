@@ -9,6 +9,12 @@ using System.Collections.Generic;
 
 namespace ChoYamlReaderTest
 {
+    public class A
+    {
+        public string Name { get; set; }
+        [DefaultValue("tom@gmail.com")]
+        public string Email { get; set; }
+    }
     public class Customer
     {
         public string Receipt { get; set; }
@@ -263,9 +269,20 @@ namespace ChoYamlReaderTest
                 Console.WriteLine(dt.Dump());
             }
         }
+        static void DefaultValueTest()
+        {
+            string yaml = @"name: buddhika";
+            using (var r = ChoYamlReader<A>.LoadText(yaml))
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+
+        }
+
         static void Main(string[] args)
         {
-            ToDataTableTest();
+            DefaultValueTest();
         }
     }
 }
