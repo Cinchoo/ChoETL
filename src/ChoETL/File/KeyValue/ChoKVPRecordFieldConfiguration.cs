@@ -73,7 +73,7 @@ namespace ChoETL
         internal bool IgnoreFieldValue(object fieldValue)
         {
             if (IgnoreFieldValueMode == null)
-                return true;
+                return fieldValue == null;
 
             if (fieldValue == null)
                 return (IgnoreFieldValueMode & ChoIgnoreFieldValueMode.Null) == ChoIgnoreFieldValueMode.Null;

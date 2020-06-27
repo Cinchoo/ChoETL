@@ -140,10 +140,12 @@ namespace ChoYamlReaderTest
         {
             StringBuilder json = new StringBuilder();
             using (var r = ChoYamlReader.LoadText(yamlText2)
-                .WithField("receipt")
-                .WithField("date", fieldType: typeof(DateTime))
+                //.WithField("receipt")
+                //.WithField("date", fieldType: typeof(DateTime))
                 )
             {
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.Dump());
                 using (var w = new ChoJSONWriter(json))
                     w.Write(r);
             }
@@ -282,7 +284,7 @@ namespace ChoYamlReaderTest
 
         static void Main(string[] args)
         {
-            DefaultValueTest();
+            SelectiveNodeTest();
         }
     }
 }
