@@ -105,7 +105,7 @@ namespace ChoETL
             set
             {
                 _defaultValue = value;
-                IsDefaultValueSpecified = true;
+                IsDefaultValueSpecified = _defaultValue != null;
             }
         }
 
@@ -123,7 +123,7 @@ namespace ChoETL
             set
             {
                 _fallbackValue = value;
-                IsFallbackValueSpecified = true;
+                IsFallbackValueSpecified = _fallbackValue != null;
             }
         }
 

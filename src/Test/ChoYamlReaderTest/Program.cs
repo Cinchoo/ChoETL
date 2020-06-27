@@ -140,8 +140,8 @@ namespace ChoYamlReaderTest
         {
             StringBuilder json = new StringBuilder();
             using (var r = ChoYamlReader.LoadText(yamlText2)
-                //.WithField("receipt")
-                //.WithField("date", fieldType: typeof(DateTime))
+                .WithField("receipt")
+                .WithField("date", fieldType: typeof(DateTimeOffset))
                 )
             {
                 //foreach (var rec in r)

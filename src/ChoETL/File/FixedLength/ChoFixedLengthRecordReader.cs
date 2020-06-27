@@ -1039,7 +1039,7 @@ namespace ChoETL
 
         private bool RaiseRecordFieldLoadError(object target, long index, string propName, ref object value, Exception ex)
         {
-            bool retValue = true;
+            bool retValue = fasle;
             object state = null;
             if (Reader != null && Reader.HasRecordFieldLoadErrorSubscribed)
             {
