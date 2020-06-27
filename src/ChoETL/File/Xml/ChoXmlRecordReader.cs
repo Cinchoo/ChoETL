@@ -963,7 +963,7 @@ namespace ChoETL
 
                 try
                 {
-                    bool ignoreFieldValue = fieldConfig.IgnoreFieldValue(fieldValue);
+                    bool ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
                     if (ignoreFieldValue)
                         fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
 

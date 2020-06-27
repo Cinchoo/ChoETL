@@ -157,6 +157,10 @@ namespace ChoETL
                     bool iterateAllItems = false;
                     object value = null;
                     new SharpYaml.Serialization.Serializer().Deserialize<IDictionary<string, object>>(sr).TrySelectValue(Configuration.StringComparer, Configuration.YamlPath, out value, out iterateAllItems);
+                    bool ignoreFieldValue = value.IgnoreFieldValue(Configuration.IgnoreFieldValueMode);
+                    if (ignoreFieldValue)
+                        continue;
+
                     if (value is IDictionary<object, object>)
                         value = ((IDictionary<object, object>)value).ToDictionary(kvp1 => kvp1.Key.ToNString(), kvp1 => kvp1.Value, Configuration.StringComparer);
 
@@ -801,7 +805,7 @@ namespace ChoETL
                     //    //}
                     //}
 
-                    bool ignoreFieldValue = fieldConfig.IgnoreFieldValue(fieldValue);
+                    bool ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
                     if (ignoreFieldValue)
                         fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
 

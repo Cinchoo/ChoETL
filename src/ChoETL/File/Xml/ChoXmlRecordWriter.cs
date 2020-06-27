@@ -527,11 +527,14 @@ namespace ChoETL
                     }
 
                     //Discover default value, use it if null
-                    if (fieldValue == null)
-                    {
-                        if (fieldConfig.IsDefaultValueSpecified)
-                            fieldValue = fieldConfig.DefaultValue;
-                    }
+                    //if (fieldValue == null)
+                    //{
+                    //    if (fieldConfig.IsDefaultValueSpecified)
+                    //        fieldValue = fieldConfig.DefaultValue;
+                    //}
+                    bool ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
+                    if (ignoreFieldValue)
+                        fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
 
                     if (!RaiseBeforeRecordFieldWrite(rec, index, kvp.Key, ref fieldValue))
                         return false;

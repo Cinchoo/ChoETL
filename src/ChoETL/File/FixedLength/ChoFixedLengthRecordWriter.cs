@@ -518,11 +518,15 @@ namespace ChoETL
                     }
 
                     //Discover default value, use it if null
-                    if (fieldValue == null)
-                    {
-                        if (fieldConfig.IsDefaultValueSpecified)
-                            fieldValue = fieldConfig.DefaultValue;
-                    }
+                    //if (fieldValue == null)
+                    //{
+                    //    if (fieldConfig.IsDefaultValueSpecified)
+                    //        fieldValue = fieldConfig.DefaultValue;
+                    //}
+                    bool ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
+                    if (ignoreFieldValue)
+                        fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
+
 
                     if (!RaiseBeforeRecordFieldWrite(rec, index, kvp.Key, ref fieldValue))
                         return false;
@@ -1047,13 +1051,17 @@ namespace ChoETL
             if (Writer != null && Writer.HasFileHeaderWriteSubscribed)
             {
                 retValue = ChoFuncEx.RunWithIgnoreError(() => Writer.RaiseFileHeaderWrite(ref ht), false);
+                if (retValue)
+                    headerText = ht;
             }
             else if (_callbackFileHeaderWrite != null)
             {
                 retValue = ChoFuncEx.RunWithIgnoreError(() => _callbackFileHeaderWrite.FileHeaderWrite(ref ht), false);
+                if (retValue)
+                    headerText = ht;
             }
             headerText = ht;
-            return !retValue;
+            return retValue;
         }
 
         private void RaiseFileHeaderArrange(ref List<string> fields)

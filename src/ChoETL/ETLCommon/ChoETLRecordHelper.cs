@@ -13,6 +13,23 @@ namespace ChoETL
 {
     public static class ChoETLRecordHelper
     {
+        public static bool IgnoreFieldValue(this object fieldValue, ChoIgnoreFieldValueMode? ignoreFieldValueMode)
+        {
+            if (ignoreFieldValueMode == null)
+                return fieldValue == null;
+
+            if ((ignoreFieldValueMode & ChoIgnoreFieldValueMode.Null) == ChoIgnoreFieldValueMode.Null && fieldValue == null)
+                return true;
+            else if ((ignoreFieldValueMode & ChoIgnoreFieldValueMode.DBNull) == ChoIgnoreFieldValueMode.DBNull && fieldValue == DBNull.Value)
+                return true;
+            else if ((ignoreFieldValueMode & ChoIgnoreFieldValueMode.Empty) == ChoIgnoreFieldValueMode.Empty && fieldValue is string && ((string)fieldValue).IsEmpty())
+                return true;
+            else if ((ignoreFieldValueMode & ChoIgnoreFieldValueMode.WhiteSpace) == ChoIgnoreFieldValueMode.WhiteSpace && fieldValue is string && ((string)fieldValue).IsNullOrWhiteSpace())
+                return true;
+
+            return false;
+        }
+
         public static Type ResolveRecordType(this Type recordType)
         {
             if (typeof(ICollection).IsAssignableFrom(recordType)

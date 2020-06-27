@@ -130,27 +130,5 @@ namespace ChoETL
                 throw new ChoRecordConfigurationException("Invalid configuration found at '{0}' field.".FormatString(Name), ex);
             }
         }
-
-        internal bool IgnoreFieldValue(object fieldValue)
-        {
-            if (IgnoreFieldValueMode == null)
-                return fieldValue == null;
-
-            if (fieldValue == null)
-                return (IgnoreFieldValueMode & ChoIgnoreFieldValueMode.Null) == ChoIgnoreFieldValueMode.Null;
-            else if (fieldValue == DBNull.Value)
-                return (IgnoreFieldValueMode & ChoIgnoreFieldValueMode.DBNull) == ChoIgnoreFieldValueMode.DBNull;
-            else if (fieldValue is string)
-            {
-                string strValue = fieldValue as string;
-                if (String.IsNullOrEmpty(strValue))
-                    return (IgnoreFieldValueMode & ChoIgnoreFieldValueMode.Empty) == ChoIgnoreFieldValueMode.Empty;
-                else if (String.IsNullOrWhiteSpace(strValue))
-                    return (IgnoreFieldValueMode & ChoIgnoreFieldValueMode.WhiteSpace) == ChoIgnoreFieldValueMode.WhiteSpace;
-            }
-
-            return false;
-        }
-
     }
 }

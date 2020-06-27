@@ -527,7 +527,7 @@ namespace ChoETL
                     if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
                         continue;
 
-                    bool ignoreFieldValue = fieldConfig.IgnoreFieldValue(fieldValue);
+                    bool ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
                     if (ignoreFieldValue)
                         fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
 
@@ -1039,7 +1039,7 @@ namespace ChoETL
 
         private bool RaiseRecordFieldLoadError(object target, long index, string propName, ref object value, Exception ex)
         {
-            bool retValue = fasle;
+            bool retValue = false;
             object state = null;
             if (Reader != null && Reader.HasRecordFieldLoadErrorSubscribed)
             {

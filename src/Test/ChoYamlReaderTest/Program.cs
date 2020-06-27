@@ -157,10 +157,10 @@ namespace ChoYamlReaderTest
         {
             StringBuilder json = new StringBuilder();
             using (var r = ChoYamlReader.LoadText(yamlText2)
-                //.WithYamlPath("$items[*]")
+                .WithYamlPath("$items[*]")
                 //.Configure(c => c.StringComparer = StringComparer.CurrentCulture)
-                .WithField("part_no", yamlPath: ".items[0].part_no")
-                .WithField("bill_street", yamlPath: ".bill-to.Street")
+                //.WithField("part_no", yamlPath: ".items[0].part_no")
+                //.WithField("bill_street", yamlPath: ".bill-to.Street")
 
                 //.WithField("price", fieldType: typeof(Double))
                 )
@@ -284,7 +284,9 @@ namespace ChoYamlReaderTest
 
         static void Main(string[] args)
         {
-            SelectiveNodeTest();
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
+
+            Yaml2CSV();
         }
     }
 }
