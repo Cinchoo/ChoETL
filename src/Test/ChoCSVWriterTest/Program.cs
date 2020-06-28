@@ -1597,10 +1597,42 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             Console.WriteLine(csvData.ToString());
         }
 
+        public class ClassAttendance
+        {
+            [ChoDictionaryKey("addcol1, addcol2, addcol3")]
+            public IDictionary<string, object> AdditionalDetails { get; set; }
+            public bool Confirmed { get; set; }
+            public string DigitalDelivery { get; set; }
+        }
+        static void DataWithJSONPayloadToCSV()
+        {
+            StringBuilder csv = new StringBuilder();
+
+            using (var w = new ChoCSVWriter<ClassAttendance>(csv)
+                .WithFirstLineHeader()
+                .WithMaxScanRows(2)
+                .Configure(c => c.UseNestedKeyFormat = true)
+                )
+            {
+                w.Write(new ClassAttendance
+                {
+                    Confirmed = true,
+                    DigitalDelivery = "DD1",
+                    AdditionalDetails = new ChoDynamicObject(new Dictionary<string, object>
+                    {
+                        ["addcol1"] = "one",
+                        ["addcol2"] = "two",
+                    })
+                });
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            JSON2CSV();
+            DataWithJSONPayloadToCSV();
             return;
 
             ChoDynamicObjectSettings.UseOrderedDictionary = false;

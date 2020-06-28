@@ -727,14 +727,14 @@ namespace ChoETL
                     }
                     return item;
                 }
-                else if (item != null && item.GetType().IsGenericType && item.GetType().GetGenericTypeDefinition() == typeof(Dictionary<,>)
-                    && typeof(string) == item.GetType().GetGenericArguments()[0])
+                else if (item != null && typeof(IDictionary<string, object>).IsAssignableFrom(item.GetType()))
                 {
-                    if (fieldConfig.DictKey != null && ((IDictionary)item).Contains(fieldConfig.DictKey))
+                    if (fieldConfig.DictKey != null && ((IDictionary<string, object>)item).ContainsKey(fieldConfig.DictKey))
                     {
-                        return ((IDictionary)item)[fieldConfig.DictKey];
+                        return ((IDictionary<string, object>)item)[fieldConfig.DictKey];
                     }
-                    return item;
+                    else
+                        return null;
                 }
                 else
                     return item;
