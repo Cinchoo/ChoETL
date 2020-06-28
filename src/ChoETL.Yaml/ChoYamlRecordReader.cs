@@ -157,9 +157,6 @@ namespace ChoETL
                     bool iterateAllItems = false;
                     object value = null;
                     new SharpYaml.Serialization.Serializer().Deserialize<IDictionary<string, object>>(sr).TrySelectValue(Configuration.StringComparer, Configuration.YamlPath, out value, out iterateAllItems);
-                    bool ignoreFieldValue = value.IgnoreFieldValue(Configuration.IgnoreFieldValueMode);
-                    if (ignoreFieldValue)
-                        continue;
 
                     if (value is IDictionary<object, object>)
                         value = ((IDictionary<object, object>)value).ToDictionary(kvp1 => kvp1.Key.ToNString(), kvp1 => kvp1.Value, Configuration.StringComparer);
@@ -190,13 +187,15 @@ namespace ChoETL
                                 }
                             }
                         }
-                        else
+                        else if (value != null)
                         {
                             dynamic v = new ChoDynamicObject();
                             v.Value = value;
 
                             yield return v;
                         }
+                        else
+                            yield return null;
                     }
                 }
                 while (!sr.Accept<StreamEnd>());
@@ -424,6 +423,15 @@ namespace ChoETL
 
         private bool LoadNode(Tuple<long, IDictionary<string, object>> pair, ref object rec)
         {
+            bool ignoreFieldValue = pair.Item2.IgnoreFieldValue(Configuration.IgnoreFieldValueMode);
+            if (ignoreFieldValue)
+                return false;
+            else if (pair.Item2 == null && !Configuration.IsDynamicObject)
+            {
+                rec = RecordType.CreateInstanceAndDefaultToMembers(Configuration.RecordFieldConfigurationsDict.ToDictionary(kvp => kvp.Key, kvp => kvp.Value as ChoRecordFieldConfiguration));
+                return true;
+            }
+
             if (Configuration.SupportsMultiRecordTypes && Configuration.RecordSelector != null)
             {
                 Type recType = Configuration.RecordSelector(pair);

@@ -35,6 +35,7 @@ namespace ChoYamlReaderTest
     public class Item
     {
         [DisplayName("part_no")]
+        [DefaultValue("PART_X")]
         public string PartNo { get; set; }
     }
     public class MyModel
@@ -156,8 +157,9 @@ namespace ChoYamlReaderTest
         static void YamlPathTest()
         {
             StringBuilder json = new StringBuilder();
-            using (var r = ChoYamlReader.LoadText(yamlText2)
+            using (var r = ChoYamlReader< Item>.LoadText(yamlText2)
                 .WithYamlPath("$items[*]")
+                .IgnoreFieldValueMode(ChoIgnoreFieldValueMode.Empty)
                 //.Configure(c => c.StringComparer = StringComparer.CurrentCulture)
                 //.WithField("part_no", yamlPath: ".items[0].part_no")
                 //.WithField("bill_street", yamlPath: ".bill-to.Street")
@@ -286,7 +288,7 @@ namespace ChoYamlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            Yaml2CSV();
+            YamlPathTest();
         }
     }
 }

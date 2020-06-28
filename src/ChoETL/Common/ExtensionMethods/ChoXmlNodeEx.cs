@@ -286,8 +286,10 @@ namespace ChoETL
                             yield return ele as XElement;
                         else if (ele is XAttribute)
                             yield return new XElement(((XAttribute)ele).Name, ((XAttribute)ele).Value);
-                        else
+                        else if (ele != null)
                             yield return new XElement("Value", ele);
+                        else
+                            yield return null;
                     }
                 }
             }

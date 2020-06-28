@@ -13,6 +13,29 @@ namespace ChoETL
 {
     public static class ChoETLRecordHelper
     {
+        public static object CreateInstanceAndDefaultToMembers(this Type type, IDictionary<string, ChoRecordFieldConfiguration> fcs)
+        {
+            var obj = ChoActivator.CreateInstance(type);
+            object defaultValue = null;
+            foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(type))
+            {
+                try
+                {
+                    if (!fcs.ContainsKey(pd.Name) || !fcs[pd.Name].IsDefaultValueSpecified)
+                        continue;
+
+                    defaultValue = fcs[pd.Name].DefaultValue;
+                    if (defaultValue != null)
+                        ChoType.ConvertNSetPropertyValue(obj, pd.Name, defaultValue);
+                }
+                catch (Exception ex)
+                {
+                    ChoETLFramework.WriteLog(ChoETLFramework.TraceSwitch.TraceError, "Error while assigning default value '{0}' to '{1}' member. {2}".FormatString(defaultValue, ChoType.GetMemberName(pd), ex.Message));
+                }
+            }
+            return obj;
+        }
+
         public static bool IgnoreFieldValue(this object fieldValue, ChoIgnoreFieldValueMode? ignoreFieldValueMode)
         {
             if (ignoreFieldValueMode == null)

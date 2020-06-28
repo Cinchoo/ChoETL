@@ -60,7 +60,7 @@ namespace ChoETL
 
             foreach (var item in AsEnumerable(ReadObjects(sr), TraceSwitch, filterFunc))
             {
-                    yield return item;
+                yield return item;
             }
 
             RaiseEndLoad(sr);
@@ -254,6 +254,15 @@ namespace ChoETL
 
         private bool LoadNode(Tuple<long, IDictionary<string, object>> pair, ref object rec)
         {
+            bool ignoreFieldValue = pair.Item2.IgnoreFieldValue(Configuration.IgnoreFieldValueMode);
+            if (ignoreFieldValue)
+                return false;
+            else if (pair.Item2 == null && !Configuration.IsDynamicObject)
+            {
+                rec = RecordType.CreateInstanceAndDefaultToMembers(Configuration.RecordFieldConfigurationsDict.ToDictionary(kvp => kvp.Key, kvp => kvp.Value as ChoRecordFieldConfiguration));
+                return true;
+            }
+
             if (Configuration.SupportsMultiRecordTypes && Configuration.RecordSelector != null)
             {
                 Type recType = Configuration.RecordSelector(pair);
