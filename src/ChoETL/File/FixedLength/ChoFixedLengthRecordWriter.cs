@@ -165,6 +165,7 @@ namespace ChoETL
             _firstLine = false;
         }
 
+        private bool _rowScanComplete = false;
         public override IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null)
         {
             _sw = writer;
@@ -189,7 +190,7 @@ namespace ChoETL
                 if (notNullRecord == null)
                     yield break;
 
-                if (Configuration.IsDynamicObject)
+                if (Configuration.MaxScanRows > 0 && !_rowScanComplete)
                 {
                     if (Configuration.MaxScanRows > 0)
                     {
@@ -221,6 +222,7 @@ namespace ChoETL
                             }
                         }
 
+                        _rowScanComplete = true;
                         var fns = GetFields(_recBuffer.Value).ToList();
                         RaiseFileHeaderArrange(ref fns);
 
@@ -377,7 +379,7 @@ namespace ChoETL
                 }
 
                 if (Configuration.UseNestedKeyFormat)
-                    fieldNames = record.Flatten(Configuration.NestedColumnSeparator).ToDictionary().Keys.ToArray();
+                    fieldNames = record.Flatten(Configuration.NestedColumnSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToDictionary().Keys.ToArray();
                 else
                     fieldNames = record.Keys.ToArray();
             }
@@ -466,7 +468,7 @@ namespace ChoETL
                     if (Configuration.IsDynamicObject)
                         dict = rec.ToDynamicObject() as IDictionary<string, Object>;
                     if (Configuration.IsDynamicObject && Configuration.UseNestedKeyFormat)
-                        dict = dict.Flatten(Configuration.NestedColumnSeparator).ToArray().ToDictionary();
+                        dict = dict.Flatten(Configuration.NestedColumnSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToArray().ToDictionary();
                 }
 
 

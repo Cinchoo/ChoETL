@@ -194,6 +194,7 @@ namespace ChoETL
             _firstLine = false;
         }
 
+        private bool _rowScanComplete = false;
         public override IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null)
         {
             _sw = writer;
@@ -220,7 +221,7 @@ namespace ChoETL
 
                 if (Configuration.IsDynamicObject)
                 {
-                    if (Configuration.MaxScanRows > 0)
+                    if (Configuration.MaxScanRows > 0 && !_rowScanComplete)
                     {
                         //List<string> fns = new List<string>();
                         foreach (object record1 in GetRecords(recEnum))
@@ -250,6 +251,7 @@ namespace ChoETL
                             }
                         }
 
+                        _rowScanComplete = true;
                         var fns = GetFields(_recBuffer.Value).ToList();
                         RaiseFileHeaderArrange(ref fns);
 
@@ -402,7 +404,7 @@ namespace ChoETL
                 }
 
                 if (Configuration.UseNestedKeyFormat)
-                    fieldNames = record.Flatten(Configuration.NestedColumnSeparator).ToDictionary().Keys.ToArray();
+                    fieldNames = record.Flatten(Configuration.NestedColumnSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToDictionary().Keys.ToArray();
                 else
                     fieldNames = record.Keys.ToArray();
             }
@@ -499,7 +501,7 @@ namespace ChoETL
                     if (Configuration.IsDynamicObject)
                         dict = rec.ToDynamicObject() as IDictionary<string, Object>;
                     if (Configuration.IsDynamicObject && Configuration.UseNestedKeyFormat)
-                        dict = dict.Flatten(Configuration.NestedColumnSeparator).ToArray().ToDictionary();
+                        dict = dict.Flatten(Configuration.NestedColumnSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToArray().ToDictionary();
                 }
 
                 if (Configuration.ThrowAndStopOnMissingField)
@@ -508,6 +510,8 @@ namespace ChoETL
                     {
                         if (!dict.ContainsKey(kvp.Key))
                         {
+                            if (!Configuration.FileHeaderConfiguration.IgnoreHeader)
+                                throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' CSV column.".FormatString(fieldConfig.FieldName));
                             if (fieldConfig.FieldPosition > dict.Count)
                                 throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' CSV column.".FormatString(fieldConfig.FieldName));
                         }
@@ -526,9 +530,13 @@ namespace ChoETL
                 {
                     if (Configuration.IsDynamicObject)
                     {
-                        fieldValue = dict.ContainsKey(kvp.Key) ? dict[kvp.Key] :
-                            fieldConfig.FieldPosition > 0 && fieldConfig.FieldPosition - 1 < dict.Keys.Count
-                            && Configuration.RecordFieldConfigurationsDict.Count == dict.Keys.Count ? dict[dict.Keys.ElementAt(fieldConfig.FieldPosition - 1)] : null; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
+                        if (Configuration.FileHeaderConfiguration.IgnoreHeader)
+                            fieldValue = dict.ContainsKey(kvp.Key) ? dict[kvp.Key] :
+                                fieldConfig.FieldPosition > 0 && fieldConfig.FieldPosition - 1 < dict.Keys.Count
+                                && Configuration.RecordFieldConfigurationsDict.Count == dict.Keys.Count ? dict[dict.Keys.ElementAt(fieldConfig.FieldPosition - 1)] : null; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
+                        else
+                            fieldValue = dict.ContainsKey(kvp.Key) ? dict[kvp.Key] : null;
+
                         if (kvp.Value.FieldType == null)
                         {
                             if (rec is ChoDynamicObject)

@@ -131,6 +131,12 @@ namespace ChoETL
             set;
         }
         [DataMember]
+        public bool IgnoreDictionaryFieldPrefix
+        {
+            get;
+            set;
+        }
+        [DataMember]
         public char? ArrayIndexSeparator
         {
             get;

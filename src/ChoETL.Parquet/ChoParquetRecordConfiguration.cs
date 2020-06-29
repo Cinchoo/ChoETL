@@ -94,6 +94,8 @@ namespace ChoETL
             }
         }
 
+        public bool IgnoreHeader { get; internal set; }
+
         public ChoParquetRecordFieldConfiguration this[string name]
         {
             get
@@ -315,7 +317,7 @@ namespace ChoETL
                             }
                         }
                     }
-                    else if (recordType.IsGenericType && recordType.GetGenericTypeDefinition() == typeof(Dictionary<,>)
+                    else if (recordType.IsGenericType && (recordType.GetGenericTypeDefinition() == typeof(Dictionary<,>) || recordType.GetGenericTypeDefinition() == typeof(IDictionary<,>))
                         /*&& typeof(string) == recordType.GetGenericArguments()[0]*/)
                     {
                         if (propDesc != null)
@@ -1235,7 +1237,7 @@ namespace ChoETL
             string[] keys, PropertyDescriptor pd = null, Action<ChoParquetRecordFieldConfigurationMap> mapper = null)
         {
             List<ChoParquetRecordFieldConfiguration> fcsList = new List<ChoParquetRecordFieldConfiguration>();
-            if (fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(Dictionary<,>)
+            if (fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(IDictionary<,>)
                 && typeof(string) == fieldType.GetGenericArguments()[0]
                 && keys != null && keys.Length > 0)
             {

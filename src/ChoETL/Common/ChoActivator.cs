@@ -44,6 +44,8 @@ namespace ChoETL
                     {
                         return String.Empty;
                     }
+                    else if (objType == typeof(object))
+                        return new ChoDynamicObject();
                     else
                         obj = Activator.CreateInstance(objType, args);
                 }

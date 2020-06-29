@@ -1597,24 +1597,27 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             Console.WriteLine(csvData.ToString());
         }
 
-        public class ClassAttendance
+        public class ClassAttendance 
         {
-            [ChoDictionaryKey("addcol1, addcol2, addcol3")]
+            //[ChoDictionaryKey("addcol1, addcol2, addcol3")]
             public IDictionary<string, object> AdditionalDetails { get; set; }
             public bool Confirmed { get; set; }
             public string DigitalDelivery { get; set; }
         }
-        static void DataWithJSONPayloadToCSV()
+
+        static void IgnoreDictionaryFieldPrefixTest()
         {
             StringBuilder csv = new StringBuilder();
 
-            using (var w = new ChoCSVWriter<ClassAttendance>(csv)
+            using (var w = new ChoCSVWriter(csv)
                 .WithFirstLineHeader()
                 .WithMaxScanRows(2)
                 .Configure(c => c.UseNestedKeyFormat = true)
+                .Configure(c => c.IgnoreDictionaryFieldPrefix = true)
+                .ThrowAndStopOnMissingField(false)
                 )
             {
-                w.Write(new ClassAttendance
+                w.Write(new 
                 {
                     Confirmed = true,
                     DigitalDelivery = "DD1",
@@ -1622,6 +1625,16 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
                     {
                         ["addcol1"] = "one",
                         ["addcol2"] = "two",
+                    })
+                });
+                w.Write(new
+                {
+                    Confirmed = true,
+                    DigitalDelivery = "DD1",
+                    AdditionalDetails = new ChoDynamicObject(new Dictionary<string, object>
+                    {
+                        ["addcol1"] = "one",
+                        ["addcol3"] = "three",
                     })
                 });
             }
@@ -1632,7 +1645,7 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            DataWithJSONPayloadToCSV();
+            IgnoreDictionaryFieldPrefixTest();
             return;
 
             ChoDynamicObjectSettings.UseOrderedDictionary = false;

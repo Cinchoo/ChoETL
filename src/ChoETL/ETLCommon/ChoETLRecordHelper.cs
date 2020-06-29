@@ -107,7 +107,7 @@ namespace ChoETL
                 {
 
                 }
-                else if (fieldConfig.PI.PropertyType.IsGenericType && fieldConfig.PI.PropertyType.GetGenericTypeDefinition() == typeof(Dictionary<,>)
+                else if (fieldConfig.PI.PropertyType.IsGenericType && (fieldConfig.PI.PropertyType.GetGenericTypeDefinition() == typeof(Dictionary<,>) || fieldConfig.PI.PropertyType.GetGenericTypeDefinition() == typeof(IDictionary<,>))
                         /*&& typeof(string) == fieldConfig.PI.PropertyType.GetGenericArguments()[0]*/)
                 {
                     IDictionary dict = ChoType.GetPropertyValue(rec, fieldConfig.PI) as IDictionary;

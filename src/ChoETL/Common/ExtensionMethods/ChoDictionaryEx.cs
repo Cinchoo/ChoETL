@@ -193,12 +193,12 @@ namespace ChoETL
             }
         }
 
-        public static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict, char? nestedKeySeparator = null)
+        public static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict, char? nestedKeySeparator = null, bool ignoreDictionaryFieldPrefix = false)
         {
             if (dict is ChoDynamicObject && ((ChoDynamicObject)dict).DynamicObjectName != ChoDynamicObject.DefaultName)
-                return Flatten(dict, ((ChoDynamicObject)dict).DynamicObjectName, nestedKeySeparator);
+                return Flatten(dict, ((ChoDynamicObject)dict).DynamicObjectName, nestedKeySeparator, ignoreDictionaryFieldPrefix);
             else
-                return Flatten(dict, null, nestedKeySeparator);
+                return Flatten(dict, null, nestedKeySeparator, ignoreDictionaryFieldPrefix);
         }
 
         private static IEnumerable<KeyValuePair<string, object>> Flatten(this IList list, string pkey, char? nestedKeySeparator = null)
@@ -230,7 +230,7 @@ namespace ChoETL
             }
 
         }
-        private static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict, string key = null, char? nestedKeySeparator = null)
+        private static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict, string key = null, char? nestedKeySeparator = null, bool ignoreDictionaryFieldPrefix = false)
         {
             if (dict == null)
                 yield break;
@@ -240,9 +240,18 @@ namespace ChoETL
             {
                 if (kvp.Value is IDictionary<string, object>)
                 {
-                    var lkey = key == null ? kvp.Key : "{0}{2}{1}".FormatString(key, kvp.Key, nestedKeySeparator);
-                    foreach (var tuple in Flatten(kvp.Value as IDictionary<string, object>, lkey, nestedKeySeparator))
-                        yield return tuple;
+                    string lkey = null;
+                    lkey = key == null ? kvp.Key : "{0}{2}{1}".FormatString(key, kvp.Key, nestedKeySeparator);
+                    if (!ignoreDictionaryFieldPrefix)
+                    {
+                        foreach (var tuple in Flatten(kvp.Value as IDictionary<string, object>, lkey, nestedKeySeparator, ignoreDictionaryFieldPrefix))
+                            yield return tuple;
+                    }
+                    else
+                    {
+                        foreach (var tuple in Flatten(kvp.Value as IDictionary<string, object>, null, nestedKeySeparator, ignoreDictionaryFieldPrefix))
+                            yield return tuple;
+                    }
                 }
                 else if (kvp.Value is IList)
                 {
@@ -254,7 +263,7 @@ namespace ChoETL
                     yield return new KeyValuePair<string, object>(key == null ? kvp.Key.ToString() : "{0}{2}{1}".FormatString(key, kvp.Key.ToString(), nestedKeySeparator), kvp.Value);
                 else
                 {
-                    foreach (var tuple in Flatten(kvp.Value.ToDynamicObject() as IDictionary<string, object>, key == null ? kvp.Key : "{0}{2}{1}".FormatString(key, kvp.Key, nestedKeySeparator), nestedKeySeparator))
+                    foreach (var tuple in Flatten(kvp.Value.ToDynamicObject() as IDictionary<string, object>, key == null ? kvp.Key : "{0}{2}{1}".FormatString(key, kvp.Key, nestedKeySeparator), nestedKeySeparator, ignoreDictionaryFieldPrefix))
                         yield return tuple;
                 }
             }

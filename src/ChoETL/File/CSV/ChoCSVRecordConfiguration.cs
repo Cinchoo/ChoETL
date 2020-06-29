@@ -1383,7 +1383,7 @@ namespace ChoETL
             string[] keys, PropertyDescriptor pd = null, Action<ChoCSVRecordFieldConfigurationMap> mapper = null)
         {
             List<ChoCSVRecordFieldConfiguration> fcsList = new List<ChoCSVRecordFieldConfiguration>();
-            if (fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(Dictionary<,>)
+            if (fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(IDictionary<,>)
                 && typeof(string) == fieldType.GetGenericArguments()[0]
                 && keys != null && keys.Length > 0)
             {

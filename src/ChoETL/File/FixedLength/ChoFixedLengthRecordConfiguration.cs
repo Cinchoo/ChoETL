@@ -309,7 +309,7 @@ namespace ChoETL
                     {
 
                     }
-                    else if (recordType.IsGenericType && recordType.GetGenericTypeDefinition() == typeof(Dictionary<,>)
+                    else if (recordType.IsGenericType && recordType.GetGenericTypeDefinition() == typeof(IDictionary<,>)
                         && typeof(string) == recordType.GetGenericArguments()[0])
                     {
 
