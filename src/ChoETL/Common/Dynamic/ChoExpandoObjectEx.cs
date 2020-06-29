@@ -193,15 +193,16 @@ namespace ChoETL
             return root as ChoDynamicObject;
         }
 
-        public static dynamic ConvertToFlattenObject(this object @this, char separator = '/')
+        public static dynamic ConvertToFlattenObject(this object @this, char? nestedKeySeparator = null, bool ignoreDictionaryFieldPrefix = false)
         {
-            if (separator == ChoCharEx.NUL)
-                throw new ArgumentException("Invalid separator passed.");
+            //if (@this == null || !@this.GetType().IsDynamicType())
+            //    return @this;
 
-            if (@this == null || !@this.GetType().IsDynamicType())
-                return @this;
-
-            throw new NotImplementedException();
+            IDictionary<string, object> dict = @this as IDictionary<string, object>;
+            if (dict == null)
+                return dict;
+            else
+                return new ChoDynamicObject(dict.Flatten(nestedKeySeparator, ignoreDictionaryFieldPrefix).ToDictionary());
         }
 
         private static object GetDynamicMember(object obj, string memberName)

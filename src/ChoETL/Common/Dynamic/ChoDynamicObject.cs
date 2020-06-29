@@ -252,9 +252,9 @@ namespace ChoETL
             return ChoExpandoObjectEx.ConvertToNestedObject(this, separator);
         }
 
-        public dynamic ConvertToFlattenObject(char separator = '/')
+        public dynamic ConvertToFlattenObject(char? nestedKeySeparator = null, bool ignoreDictionaryFieldPrefix = false)
         {
-            return ChoExpandoObjectEx.ConvertToFlattenObject(this, separator);
+            return ChoExpandoObjectEx.ConvertToFlattenObject(this, nestedKeySeparator, ignoreDictionaryFieldPrefix);
         }
 
         public string GetDescription(string name)

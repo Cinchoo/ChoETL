@@ -1617,7 +1617,7 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
                 .ThrowAndStopOnMissingField(false)
                 )
             {
-                w.Write(new 
+                var x = new ClassAttendance
                 {
                     Confirmed = true,
                     DigitalDelivery = "DD1",
@@ -1626,17 +1626,18 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
                         ["addcol1"] = "one",
                         ["addcol2"] = "two",
                     })
-                });
-                w.Write(new
-                {
-                    Confirmed = true,
-                    DigitalDelivery = "DD1",
-                    AdditionalDetails = new ChoDynamicObject(new Dictionary<string, object>
-                    {
-                        ["addcol1"] = "one",
-                        ["addcol3"] = "three",
-                    })
-                });
+                }.ToDynamicObject().ConvertToFlattenObject('/', true);
+                w.Write(x);
+                //w.Write(new ClassAttendance
+                //{
+                //    Confirmed = true,
+                //    DigitalDelivery = "DD1",
+                //    AdditionalDetails = new ChoDynamicObject(new Dictionary<string, object>
+                //    {
+                //        ["addcol1"] = "one",
+                //        ["addcol3"] = "three",
+                //    })
+                //});
             }
 
             Console.WriteLine(csv.ToString());
