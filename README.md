@@ -51,13 +51,10 @@ Here are the items will be targetted on phase 1.
   5. Key-Value Reader / Writer
       + [Key-Value Pair (KVP) Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickKVPLoad)
       + [Key-Value Pair (KVP) Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickKVPWrite)
-  6. Manifold Reader / Writer
-      + [Manifold Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickManifoldLoad)
-      + [Manifold Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickManifoldWrite)
-  7. Parquet Reader / Writer
+  6. Parquet Reader / Writer
       + [Parquet Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickParquetLoad)
       + [Parquet Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickParquetWrite)
-  8. Yaml Reader / Writer
+  7. Yaml Reader / Writer
       + [Yaml Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickYamlLoad)
       + [Yaml Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickYamlWrite)
 
