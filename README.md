@@ -57,6 +57,9 @@ Here are the items will be targetted on phase 1.
   7. Parquet Reader / Writer
       + [Parquet Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickParquetLoad)
       + [Parquet Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickParquetWrite)
+  8. Yaml Reader / Writer
+      + [Yaml Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickYamlLoad)
+      + [Yaml Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickYamlWrite)
 
 # Phase 2:
 ETL Pipelines and ETL processes are coming...
