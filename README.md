@@ -88,6 +88,11 @@ https://github.com/Cinchoo/ChoETL/wiki
 
 + [Nuget (.NET Framework / .NET Core)](https://www.nuget.org/packages/ChoETL.Parquet/)
 
+#### Yaml Plug-In
+
++ [Nuget (.NET Framework / .NET Core)](https://www.nuget.org/packages/ChoETL.Yaml/)
+
+
 If this project help you reduce time to develop, you can give me a cup of coffee :)
 
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=6S2UVXDPR63X8&source=url)
