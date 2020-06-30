@@ -51,12 +51,12 @@ Here are the items will be targetted on phase 1.
   5. Key-Value Reader / Writer
       + [Key-Value Pair (KVP) Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickKVPLoad)
       + [Key-Value Pair (KVP) Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickKVPWrite)
-  6. Manifold Reader / Writer
-      + [Manifold Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickManifoldLoad)
-      + [Manifold Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickManifoldWrite)
-  7. Parquet Reader / Writer
+  6. Parquet Reader / Writer
       + [Parquet Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickParquetLoad)
       + [Parquet Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickParquetWrite)
+  7. Yaml Reader / Writer
+      + [Yaml Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickYamlLoad)
+      + [Yaml Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickYamlWrite)
 
 # Phase 2:
 ETL Pipelines and ETL processes are coming...
@@ -84,4 +84,16 @@ https://github.com/Cinchoo/ChoETL/wiki
 + [Nuget (.NET Framework)](https://www.nuget.org/packages/ChoETL.JSON/)
 + [Nuget (.NET Core)](https://www.nuget.org/packages/ChoETL.JSON.NETStandard/)
 
+#### Parquet Plug-In
+
++ [Nuget (.NET Framework / .NET Core)](https://www.nuget.org/packages/ChoETL.Parquet/)
+
+#### Yaml Plug-In
+
++ [Nuget (.NET Framework / .NET Core)](https://www.nuget.org/packages/ChoETL.Yaml/)
+
+
+If this project help you reduce time to develop, you can give me a cup of coffee :)
+
+[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=6S2UVXDPR63X8&source=url)
 
