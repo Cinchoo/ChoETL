@@ -648,8 +648,8 @@ namespace ChoETL
                         fieldValue = node[kvp.Value.FieldName];
                 }
 
-                if (fieldValue is IList)
-                    fieldValue = ((IList)fieldValue).OfType<IDictionary>().ToArray();
+                //if (fieldValue is IList)
+                //    fieldValue = ((IList)fieldValue).OfType<IDictionary>().ToArray();
 
                 //fieldValue = !yamlTokens.IsNullOrEmpty() ? (object)yamlTokens : yamlToken;
                 //if (!fieldConfig.FieldType.IsCollection())

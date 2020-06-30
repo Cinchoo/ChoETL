@@ -10,6 +10,12 @@ using System.Collections;
 
 namespace ChoYamlReaderTest
 {
+    public enum Gender { Male, Female }
+    public class Employee
+    {
+        public int Age { get; set; }
+        public Gender Gender { get; set; }
+    }
     public class A
     {
         public string Name { get; set; }
@@ -405,12 +411,46 @@ requests:
                     Console.WriteLine(rec.Dump());
             }
         }
+        static void EnumTest()
+        {
+            string yaml = @"
+emps:
+    - Age: 15
+      Gender: Male
 
+    - Age: 25
+      Gender: Female
+";
+
+            using (var r = ChoYamlReader<Employee>.LoadText(yaml)
+                .WithYamlPath("$.emps[*]")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void LoadDictKeysTest()
+        {
+            string yaml = @"
+Age: 15
+Gender: Male
+";
+
+            using (var r = ChoYamlReader.LoadText(yaml)
+                .WithYamlPath("$.^")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            HelloWorldTest();
+            LoadDictKeysTest();
         }
     }
 }
