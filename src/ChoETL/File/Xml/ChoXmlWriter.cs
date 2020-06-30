@@ -648,7 +648,15 @@ namespace ChoETL
         public ChoXmlWriter<T> WithField(string name, Action<ChoXmlRecordFieldConfigurationMap> mapper)
         {
             if (!name.IsNullOrWhiteSpace())
+            {
+                if (!_clearFields)
+                {
+                    ClearFields();
+                    Configuration.MapRecordFields(Configuration.RecordType);
+                }
+
                 Configuration.Map(name, mapper);
+            }
             return this;
         }
 

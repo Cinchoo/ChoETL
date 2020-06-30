@@ -806,14 +806,21 @@ namespace ChoETL
                         }
                         else
                         {
-                            string eleName = XmlNamespaceElementName(kvp.Key.ToSingular(), Configuration.DefaultNamespacePrefix);
-                            innerXml1 = innerXml1.Replace("<dynamic>", "<{0}>".FormatString(eleName));
-                            innerXml1 = innerXml1.Replace("</dynamic>", "</{0}>".FormatString(eleName));
+                            var en = kvp.Key.ToSingular();
+                            innerXml1 = Regex.Replace(innerXml1, @"<\w+", $"<{en}");
+                            innerXml1 = Regex.Replace(innerXml1, @"</\w+", $"</{en}");
 
-                            if (eleName == kvp.Key)
-                                innerXml1 = "<{0}>{1}</{0}>".FormatString(XmlNamespaceElementName(kvp.Key.ToPlural(), Configuration.DefaultNamespacePrefix), innerXml1);
-                            else
-                                innerXml1 = "<{0}>{1}</{0}>".FormatString(XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix), innerXml1);
+                            if (fieldConfig.IsArray == null || fieldConfig.IsArray.Value)
+                            {
+                                string eleName = XmlNamespaceElementName(kvp.Key.ToSingular(), Configuration.DefaultNamespacePrefix);
+                                innerXml1 = innerXml1.Replace("<dynamic>", "<{0}>".FormatString(eleName));
+                                innerXml1 = innerXml1.Replace("</dynamic>", "</{0}>".FormatString(eleName));
+
+                                if (eleName == kvp.Key)
+                                    innerXml1 = "<{0}>{1}</{0}>".FormatString(XmlNamespaceElementName(kvp.Key.ToPlural(), Configuration.DefaultNamespacePrefix), innerXml1);
+                                else
+                                    innerXml1 = "<{0}>{1}</{0}>".FormatString(XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix), innerXml1);
+                            }
                         }
                         if (EOLDelimiter != null)
                             ele.Add(new XText(EOLDelimiter));
@@ -1020,23 +1027,36 @@ namespace ChoETL
             return e;
         }
 
-        private XElement ParseElement(string strXml, XmlNamespaceManager mngr, string nsPrefix = null, XNamespace xs = null)
+        private XElement[] ParseElement(string strXml, XmlNamespaceManager mngr, string nsPrefix = null, XNamespace xs = null)
         {
             XmlParserContext parserContext = new XmlParserContext(null, mngr, null, XmlSpace.None);
-            XmlTextReader txtReader = new XmlTextReader(strXml, XmlNodeType.Element, parserContext);
-            var e = XElement.Load(txtReader);
+            XElement[] es = null;
+
+            try
+            {
+                XmlTextReader txtReader = new XmlTextReader(strXml, XmlNodeType.Element, parserContext);
+                es = new XElement[] { XElement.Load(txtReader) };
+            }
+            catch
+            {
+                XmlTextReader txtReader = new XmlTextReader($"<root>{strXml}</root>", XmlNodeType.Element, parserContext);
+                es = XElement.Load(txtReader).Descendants().ToArray();
+            }
             if (xs != null)
             {
-                var nsAttr = new XAttribute(XNamespace.Xmlns + nsPrefix, xs);
-                e.Add(nsAttr);
-                foreach (XElement ce in e.DescendantsAndSelf())
-                    ce.Name = xs + ce.Name.LocalName;
-                //if (!Configuration.IgnoreRootName)
-                //{
-                //	e.Attribute(XNamespace.Xmlns + nsPrefix).Remove();
-                //}
+                foreach (var e in es)
+                {
+                    var nsAttr = new XAttribute(XNamespace.Xmlns + nsPrefix, xs);
+                    e.Add(nsAttr);
+                    foreach (XElement ce in e.DescendantsAndSelf())
+                        ce.Name = xs + ce.Name.LocalName;
+                    //if (!Configuration.IgnoreRootName)
+                    //{
+                    //	e.Attribute(XNamespace.Xmlns + nsPrefix).Remove();
+                    //}
+                }
             }
-            return e;
+            return es;
         }
 
         private string FormatXml(string xml)

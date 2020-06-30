@@ -368,7 +368,15 @@ namespace ChoETL
         public ChoParquetWriter<T> WithField(string name, Action<ChoParquetRecordFieldConfigurationMap> mapper)
         {
             if (!name.IsNullOrWhiteSpace())
+            {
+                if (!_clearFields)
+                {
+                    ClearFields();
+                    Configuration.MapRecordFields(Configuration.RecordType);
+                }
+
                 Configuration.Map(name, mapper);
+            }
             return this;
         }
 

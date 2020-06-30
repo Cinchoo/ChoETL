@@ -3146,10 +3146,35 @@ K,L,M,N,O,P,Q,R,S,T";
             }
         }
 
+        static void JSON2XmlArrayTest()
+        {
+            string json = @"{
+   ""userName"":[
+      ""user1"",
+      ""user2""
+   ],
+   ""referenceNumber"":""098784866589157763"",
+   ""responseCode"":""00"",
+   ""responseDesc"":""Success.""
+}";
+
+            StringBuilder xml = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                using (var w = new ChoXmlWriter(xml)
+                    //.WithField("userName", m => m.Configure(c => c.IsArray = false))
+                    //.WithField("referenceNumber")
+                    )
+                    w.Write(r);
+            }
+
+            Console.WriteLine(xml.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            InterfaceTest();
+            JSON2XmlArrayTest();
         }
 
         static void SimpleTest()

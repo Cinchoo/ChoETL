@@ -49,7 +49,7 @@ namespace ChoETL
             get;
             set;
         }
-        internal bool? IsArray
+        public bool? IsArray
         {
             get;
             set;

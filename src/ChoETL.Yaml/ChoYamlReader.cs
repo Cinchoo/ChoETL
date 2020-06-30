@@ -628,7 +628,15 @@ namespace ChoETL
         public ChoYamlReader<T> WithField(string name, Action<ChoYamlRecordFieldConfigurationMap> mapper)
         {
             if (!name.IsNullOrWhiteSpace())
+            {
+                if (!_clearFields)
+                {
+                    ClearFields();
+                    Configuration.MapRecordFields(Configuration.RecordType);
+                }
+
                 Configuration.Map(name, mapper);
+            }
             return this;
         }
 
