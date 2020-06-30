@@ -274,7 +274,7 @@ namespace ChoETL
             {
                 if (token.IsNullOrWhiteSpace())
                     return false;
-                if (!token.IsValidIdentifier())
+                if (!token.IsValidIdentifierEx())
                     return false;
             }
 

@@ -1023,6 +1023,11 @@ namespace ChoETL
             return Regex.IsMatch(name, @"([a-zA-Z])([a-zA-Z_0-9])*");
         }
 
+        public static bool IsValidIdentifierEx(this string name)
+        {
+            return Regex.IsMatch(name, @"([a-zA-Z])([a-zA-Z_0-9\-])*");
+        }
+
         /// <summary>
         /// Wraps long lines at the specified column number breaking on the specified break
         /// character.

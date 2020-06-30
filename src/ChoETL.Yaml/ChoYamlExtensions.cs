@@ -214,7 +214,7 @@ namespace ChoETL
                     else
                         return false;
                 }
-                else if (!token.IsValidIdentifier())
+                else if (!token.IsValidIdentifierEx())
                     return false;
 
                 outTokens.Add(new KeyValuePair<string, string>(token, null));

@@ -436,26 +436,33 @@ namespace ChoXmlReaderTest
 
         static void Soap2JSONTest()
         {
-            string soap = @"<?xml version=""1.0"" encoding=""UTF-8""?>
-<s:Envelope xmlns:s=""http://schemas.xmlsoap.org/soap/envelope/"">
-   <s:Body>
-      <FunctionName xmlns=""http://tempuri.org/"">
-         <sampleString>value</sampleString>
-         <sampleObject xmlns:a=""http://schemas.datacontract.org/2004/07/contract"" xmlns:i=""http://www.w3.org/2001/XMLSchema-instance"">
-            <a:sampleProperty1>value1</a:sampleProperty1>
-            <a:sampleProperty2>value2</a:sampleProperty2>
-         </sampleObject>
-      </FunctionName>
-   </s:Body>
-</s:Envelope>";
+            string soap = @"<SOAP-ENV:Envelope
+    xmlns:SOAP-ENV=""http://schemas.xmlsoap.org/soap/envelope/""
+    xmlns:SOAP-ENC=""http://schemas.xmlsoap.org/soap/encoding/""
+    xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""
+    xmlns:xsd=""http://www.w3.org/2001/XMLSchema"">
+    <SOAP-ENV:Header>
+        <reportname>ReportName</reportname>
+        <reportstartdate>2020-Jun-1</reportstartdate>
+        <reportenddate>2020-Jun-1</reportenddate>
+    </SOAP-ENV:Header>
+    <SOAP-ENV:Body>
+        <reportresponse>
+            <row>
+                <rowid>1</rowid>
+                <value1>1</value1>
+                <value2>1</value2>
+                <value3>1</value3>
+            </row>
+        </reportresponse>
+    </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>";
 
 
             StringBuilder json = new StringBuilder();
             using (var r = ChoXmlReader.LoadText(soap)
-                .WithXmlNamespace("s", "http://schemas.xmlsoap.org/soap/envelope/")
-                .WithXmlNamespace("x", "http://tempuri.org/")
-                .WithXmlNamespace("a", "http://schemas.datacontract.org/2004/07/contract")
-                .WithXPath("//s:Body")
+                .WithXmlNamespace("SOAP-ENV", "http://schemas.xmlsoap.org/soap/envelope/")
+                .WithXPath("//SOAP-ENV:Envelope")
                 )
             {
                 using (var w = new ChoJSONWriter(json))

@@ -309,10 +309,10 @@ namespace ChoETL
                     if (subTokens.Length != 2 ||
                         subTokens[0].IsNullOrWhiteSpace() || subTokens[1].IsNullOrWhiteSpace())
                         return false;
-                    if (!subTokens[0].IsAlphaNumeric() || !subTokens[1].IsAlphaNumeric())
+                    if (!subTokens[0].IsValidIdentifierEx() || !subTokens[1].IsValidIdentifierEx())
                         return false;
                 }
-                else if (!token.IsAlphaNumeric())
+                else if (!token.IsValidIdentifierEx())
                     return false;
             }
 
