@@ -239,7 +239,7 @@ namespace ChoYamlWriterTest
 
         static void Main(string[] args)
         {
-            SerializeValueTypesOneAtATime();
+            POCOTest();
         }
     }
 }

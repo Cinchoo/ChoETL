@@ -466,7 +466,12 @@ namespace ChoXmlReaderTest
                 )
             {
                 using (var w = new ChoJSONWriter(json))
-                    w.Write(r);
+                    w.Write(r.Select(r1 =>
+                    {
+                        var item = r1.Body.reportresponse.row;
+                        r1.Body.reportresponse["row"] = new object[] { item };
+                        return r1;
+                    }));
             }
 
             Console.WriteLine(json.ToString());

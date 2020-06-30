@@ -57,7 +57,7 @@ namespace ChoETL
 
         internal ChoYamlRecordFieldConfiguration(string name, ChoYamlRecordFieldAttribute attr = null, Attribute[] otherAttrs = null) : base(name, attr, otherAttrs)
         {
-            IsArray = false;
+            IsArray = true;
             FieldName = name;
             if (attr != null)
             {

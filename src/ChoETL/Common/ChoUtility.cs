@@ -2179,6 +2179,12 @@ namespace ChoETL
                                     count++;
                                     continue;
                                 }
+                                else
+                                {
+                                    arrMsg.AppendFormat("{0}{1}", ToStringEx(item), Environment.NewLine);
+                                    count++;
+                                    continue;
+                                }
                             }
                             else if (typeof(XObject).IsAssignableFrom(valueType))
                                 arrMsg.AppendFormat("{0}{1}", ((XObject)item).ToString(), Environment.NewLine);

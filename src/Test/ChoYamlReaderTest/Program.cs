@@ -289,15 +289,15 @@ namespace ChoYamlReaderTest
         {
             string yaml = @"
 emps:
-    - id:   1
-        name:   Tom
+    - id: 1
+      name: Tom
 
-    - id:   2
-        name:   Mark
+    - id: 2
+      name: Mark
 ";
 
             using (var r = ChoYamlReader.LoadText(yaml)
-                .WithYamlPath("$.emps[*]")
+                //.WithYamlPath("$.emps[*]")
                 )
             {
                 foreach (var rec in r)
@@ -410,7 +410,7 @@ requests:
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            ArrayOfIntTest();
+            HelloWorldTest();
         }
     }
 }
