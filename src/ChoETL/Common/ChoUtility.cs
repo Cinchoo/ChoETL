@@ -1271,7 +1271,8 @@ namespace ChoETL
 
             using (StringReader sr = new StringReader(xmlString))
             {
-                using (XmlReader xtw = XmlTextReader.Create(sr, xrs ?? new XmlReaderSettings()))
+                XmlParserContext parserContext = new XmlParserContext(null, nsMgr.NSMgr, null, XmlSpace.None);
+                using (XmlReader xtw = XmlTextReader.Create(sr, xrs ?? new XmlReaderSettings(), parserContext))
                 {
                     if (type == typeof(ChoDynamicObject))
                     {

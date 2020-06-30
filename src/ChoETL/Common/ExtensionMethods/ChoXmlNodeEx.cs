@@ -1050,6 +1050,8 @@ namespace ChoETL
                         if (!name.IsValidXNode(defaultNSPrefix))
                             continue;
                     }
+                    if (!nsMgr.IsInNamespace(attribute.Name))
+                        continue;
 
                     hasAttr = true;
                     obj.SetAttribute(attribute.Name.LocalName, System.Net.WebUtility.HtmlDecode(attribute.Value));
@@ -1071,6 +1073,8 @@ namespace ChoETL
                             if (!name.IsValidXNode(defaultNSPrefix))
                                 continue;
                         }
+                        if (!nsMgr.IsInNamespace(subElement.Name))
+                            continue;
 
                         if (subElement.HasAttributes(xmlSchemaNS, jsonSchemaNS) || subElement.HasElements)
                         {

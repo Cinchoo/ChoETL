@@ -431,7 +431,38 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            LoadXmlFragmentTest();
+            Soap2JSONTest();
+        }
+
+        static void Soap2JSONTest()
+        {
+            string soap = @"<?xml version=""1.0"" encoding=""UTF-8""?>
+<s:Envelope xmlns:s=""http://schemas.xmlsoap.org/soap/envelope/"">
+   <s:Body>
+      <FunctionName xmlns=""http://tempuri.org/"">
+         <sampleString>value</sampleString>
+         <sampleObject xmlns:a=""http://schemas.datacontract.org/2004/07/contract"" xmlns:i=""http://www.w3.org/2001/XMLSchema-instance"">
+            <a:sampleProperty1>value1</a:sampleProperty1>
+            <a:sampleProperty2>value2</a:sampleProperty2>
+         </sampleObject>
+      </FunctionName>
+   </s:Body>
+</s:Envelope>";
+
+
+            StringBuilder json = new StringBuilder();
+            using (var r = ChoXmlReader.LoadText(soap)
+                .WithXmlNamespace("s", "http://schemas.xmlsoap.org/soap/envelope/")
+                .WithXmlNamespace("x", "http://tempuri.org/")
+                .WithXmlNamespace("a", "http://schemas.datacontract.org/2004/07/contract")
+                .WithXPath("//s:Body")
+                )
+            {
+                using (var w = new ChoJSONWriter(json))
+                    w.Write(r);
+            }
+
+            Console.WriteLine(json.ToString());
         }
 
         static void LoadXmlFragmentTest()

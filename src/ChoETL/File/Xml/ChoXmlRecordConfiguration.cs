@@ -919,9 +919,11 @@ namespace ChoETL
     public class ChoXmlNamespaceManager
     {
         public readonly IDictionary<string, string> NSDict;
+        public readonly XmlNamespaceManager NSMgr;
 
         public ChoXmlNamespaceManager(XmlNamespaceManager nsMgr)
         {
+            NSMgr = nsMgr;
             NSDict = nsMgr.GetNamespacesInScope(XmlNamespaceScope.All);
         }
 
