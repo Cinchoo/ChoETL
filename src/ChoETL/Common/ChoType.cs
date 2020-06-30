@@ -112,7 +112,8 @@
 
         public static bool IsDynamicType(this Type type)
         {
-            return type == null ? true : type == typeof(ExpandoObject) || typeof(IDynamicMetaObjectProvider).IsAssignableFrom(type) || type == typeof(object) || type.IsAnonymousType();
+            return type == null ? true : type == typeof(ExpandoObject) || typeof(IDynamicMetaObjectProvider).IsAssignableFrom(type) || type == typeof(object) || type.IsAnonymousType()
+                || typeof(IDictionary).IsAssignableFrom(type) || (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IDictionary<,>));
         }
 
         public static bool IsAnonymousType(this Type type)

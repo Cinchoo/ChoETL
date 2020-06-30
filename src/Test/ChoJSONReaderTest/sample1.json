@@ -1,142 +1,35 @@
 ﻿{
-  "data": {
-    "id": "",
-    "type": "player",
-    "children": [
-      {
-        "id": "legend_8",
-        "type": "legend",
-        "metadata": {
-          "legend_name": "Pathfinder",
-          "icon": "https://trackercdn.com/cdn/apex.tracker.gg/legends/pathfinder-tile.png",
-          "bgimage": "https://trackercdn.com/cdn/apex.tracker.gg/legends/pathfinder-concept-bg-small.jpg",
-          "is_active": true
-        },
-        "stats": [
-          {
-            "metadata": {
-              "key": "Kills",
-              "name": "Kills",
-              "categoryKey": "combat",
-              "categoryName": "Combat",
-              "isReversed": false
-            },
-            "value": 377.0,
-            "percentile": 21.0,
-            "displayValue": "377",
-            "displayRank": ""
-          },
-          {
-            "metadata": {
-              "key": "Finishers",
-              "name": "Finishers",
-              "categoryKey": "game",
-              "categoryName": "Game",
-              "isReversed": false
-            },
-            "value": 39.0,
-            "percentile": 0.2,
-            "rank": 886,
-            "displayValue": "39",
-            "displayRank": "886"
-          }
-        ]
-      },
-      {
-        "id": "legend_5",
-        "type": "legend",
-        "metadata": {
-          "legend_name": "Bloodhound",
-          "icon": "https://trackercdn.com/cdn/apex.tracker.gg/legends/bloodhound-tile.png",
-          "bgimage": "https://trackercdn.com/cdn/apex.tracker.gg/legends/bloodhound-concept-bg-small.jpg",
-          "is_active": false
-        },
-        "stats": [
-          {
-            "metadata": {
-              "key": "Kills",
-              "name": "Kills",
-              "categoryKey": "combat",
-              "categoryName": "Combat",
-              "isReversed": false
-            },
-            "value": 235.0,
-            "percentile": 16.0,
-            "displayValue": "235",
-            "displayRank": ""
-          }
-        ]
-      }
-    ],
-    "metadata": {
-      "statsCategoryOrder": [
-        "combat",
-        "game",
-        "weapons"
-      ],
-      "platformId": 2,
-      "platformUserHandle": "",
-      "accountId": "",
-      "cacheExpireDate": "11/10/2019 10:48:14 PM",
-      "level": 49,
-      "avatarUrl": "https://avatar-cdn.tracker.gg/api/avatar/2/",
-      "countryCode": null,
-      "collections": 36,
-      "activeLegend": 8
+  "Library": null,
+  "LibraryNumber": 5,
+  "Author": {
+    "Year": null,
+    "Address": null,
+    "LastName": null,
+    "AllBooks": [],
+    "WonNYBestSeller": false,
+    "NumberofBooks": 0,
+    "SelfPublished": false,
+    "AuthorFunFacts": {
+      "NumberofPets": 0,
+      "NumberofCars": 0,
+      "PlaceofBirth": null,
+      "WrittenChildrenBook": false
     },
-    "stats": [
-      {
-        "metadata": {
-          "key": "Level",
-          "name": "Level",
-          "categoryKey": "combat",
-          "categoryName": "Combat",
-          "isReversed": false
-        },
-        "value": 49.0,
-        "percentile": 46.0,
-        "displayValue": "49",
-        "displayRank": ""
-      },
-      {
-        "metadata": {
-          "key": "Kills",
-          "name": "Kills",
-          "categoryKey": "combat",
-          "categoryName": "Combat",
-          "isReversed": false
-        },
-        "value": 612.0,
-        "percentile": 20.0,
-        "displayValue": "612",
-        "displayRank": ""
-      },
-      {
-        "metadata": {
-          "key": "Finishers",
-          "name": "Finishers",
-          "categoryKey": "game",
-          "categoryName": "Game",
-          "isReversed": false
-        },
-        "value": 39.0,
-        "percentile": 0.5,
-        "displayValue": "39",
-        "displayRank": ""
-      },
-      {
-        "metadata": {
-          "key": "RankScore",
-          "name": "Rank Score",
-          "categoryKey": "game",
-          "categoryName": "Game",
-          "isReversed": false
-        },
-        "value": 64.0,
-        "percentile": 21.0,
-        "displayValue": "64",
-        "displayRank": ""
-      }
-    ]
-  }
+    "Biography": null,
+    "Age": 32,
+    "NumberBestSellers": 0,
+    "NumberMovies": 1
+  },
+  "AuthorLuckyNumber": 24,
+  "SearchKeys": [
+    "Alice",
+    "AuthorX"
+  ],
+  "Website": null,
+  "BookPublications": {
+    "FirstPublication": 1,
+    "LastPublication": 1
+  },
+  "FavoriteQuote": "FavoriteQuote1",
+  "NumberPoems": 1
 }

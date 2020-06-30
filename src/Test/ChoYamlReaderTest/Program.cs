@@ -6,6 +6,7 @@ using System.IO;
 using System.Text;
 using System.ComponentModel;
 using System.Collections.Generic;
+using System.Collections;
 
 namespace ChoYamlReaderTest
 {
@@ -284,11 +285,132 @@ namespace ChoYamlReaderTest
 
         }
 
+        static void HelloWorldTest()
+        {
+            string yaml = @"
+emps:
+    - id:   1
+        name:   Tom
+
+    - id:   2
+        name:   Mark
+";
+
+            using (var r = ChoYamlReader.LoadText(yaml)
+                .WithYamlPath("$.emps[*]")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void ListTest()
+        {
+            string yaml = @"
+jedis:
+  - Yoda
+  - Qui-Gon Jinn
+  - Obi-Wan Kenobi
+  - Luke Skywalker
+";
+
+            using (var r = ChoYamlReader<string>.LoadText(yaml)
+                .WithYamlPath("$.jedis[*]")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void DictTest()
+        {
+            string yaml = @"
+jedi:
+  name: Obi-Wan Kenobi
+  home-planet: Stewjon
+  species: human
+  master: Qui-Gon Jinn
+  height: 1.82m";
+
+            using (var r = ChoYamlReader<IDictionary>.LoadText(yaml)
+                .WithYamlPath("$.jedi")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void List2DictTest()
+        {
+            string yaml = @"
+jedis:
+  - Yoda
+  - Qui-Gon Jinn
+  - Obi-Wan Kenobi
+  - Luke Skywalker
+";
+
+            using (var r = ChoYamlReader<IDictionary>.LoadText(yaml)
+                .WithYamlPath("$.jedis")
+                .Configure(c => c.CustomNodeSelecter = o =>
+                {
+                    dynamic d = o as dynamic;
+                    var x = ((IList)d.Value).OfType<object>().ToDictionary(kvp => kvp.ToString(), kvp => kvp);
+                    return x;
+                })
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void NestedDictTest()
+        {
+            string yaml = @"
+requests:
+  # first item of `requests` list is just a string
+  - http://example1.com/
+ 
+  # second item of `requests` list is a dictionary
+  - url: http://example.com/
+    method: GET
+";
+
+            using (var r = ChoYamlReader.LoadText(yaml)
+                .WithYamlPath("$.requests[*]")
+                .WithField("Value")
+                .WithField("url")
+                .WithField("method")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+
+        static void ArrayOfIntTest()
+        {
+            string yaml = @"episodes: [1, 2, 3, 4, 5, 6, 7]";
+
+            using (var r = ChoYamlReader<int>.LoadText(yaml)
+                .WithYamlPath("$.episodes[*]")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
-            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            YamlPathTest();
+            ArrayOfIntTest();
         }
     }
 }

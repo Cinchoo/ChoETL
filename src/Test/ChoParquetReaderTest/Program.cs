@@ -22,6 +22,17 @@ namespace ChoParquetReaderTest
 
             Console.WriteLine(csv.ToString());
         }
+        static void DataTableTest()
+        {
+            StringBuilder csv = new StringBuilder();
+            using (var r = new ChoParquetReader(@"C:\Projects\GitHub\ChoETL\src\Test\ChoParquetWriterTest\bin\Debug\netcoreapp2.1\test1.parquet")
+                .ParquetOptions(o => o.TreatByteArrayAsString = true))
+            {
+                var dt = r.AsDataTable();
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
 
         static void ByteArrayTest()
         {
@@ -46,7 +57,7 @@ namespace ChoParquetReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Test1();
+            DataTableTest();
         }
     }
 }

@@ -29,6 +29,15 @@ namespace ChoETL
         internal ChoReader Reader = null;
         private Lazy<List<YamlNode>> _recBuffer = null;
 
+        public override Type RecordType
+        {
+            get => Configuration != null ? Configuration.RecordType : base.RecordType;
+            set
+            {
+                if (Configuration != null)
+                    Configuration.RecordType = value;
+            }
+        }
         public ChoYamlRecordConfiguration Configuration
         {
             get;
@@ -492,7 +501,10 @@ namespace ChoETL
                     //if (Configuration.IsDynamicObject)
                     if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
                     {
-                        rec = _se.Value.Deserialize<ExpandoObject>(pair.Item2.ToString());
+                        if (pair.Item2 is IDictionary)
+                            rec = pair.Item2;
+                        else
+                            rec = _se.Value.Deserialize<ExpandoObject>(pair.Item2.ToString());
                         if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.Off) != ChoObjectValidationMode.Off)
                             rec.DoObjectLevelValidation(Configuration, Configuration.YamlRecordFieldConfigurations);
                     }

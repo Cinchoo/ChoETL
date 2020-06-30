@@ -120,7 +120,7 @@ namespace ChoETL
 
         private void Init()
         {
-            var recordType = Configuration.RecordType.GetUnderlyingType();
+            var recordType = typeof(T).GetUnderlyingType();
             if (Configuration == null)
                 Configuration = new ChoYamlRecordConfiguration(recordType);
 

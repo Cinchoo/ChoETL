@@ -28,6 +28,16 @@ namespace ChoETL
         internal ChoReader Reader = null;
         private Lazy<List<JObject>> _recBuffer = null;
 
+        public override Type RecordType
+        {
+            get => Configuration != null ? Configuration.RecordType : base.RecordType;
+            set
+            {
+                if (Configuration != null)
+                    Configuration.RecordType = value;
+            }
+        }
+
         public ChoJSONRecordConfiguration Configuration
         {
             get;
@@ -619,7 +629,10 @@ namespace ChoETL
                     //if (Configuration.IsDynamicObject)
                     if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
                     {
-                        rec = JsonConvert.DeserializeObject<ExpandoObject>(pair.Item2.ToString(), Configuration.JsonSerializerSettings);
+                        if (pair.Item2 is IDictionary)
+                            rec = pair.Item2;
+                        else
+                            rec = JsonConvert.DeserializeObject<ExpandoObject>(pair.Item2.ToString(), Configuration.JsonSerializerSettings);
                         if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.Off) != ChoObjectValidationMode.Off)
                             rec.DoObjectLevelValidation(Configuration, Configuration.JSONRecordFieldConfigurations);
                     }

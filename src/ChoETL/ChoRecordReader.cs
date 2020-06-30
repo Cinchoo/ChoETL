@@ -13,7 +13,7 @@ namespace ChoETL
 {
     public abstract class ChoRecordReader : IChoDeferedObjectMemberDiscoverer
     {
-        public readonly Type RecordType;
+        public virtual Type RecordType { get; set; }
         public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
         public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
         public event EventHandler<ChoRecordFieldTypeAssessmentEventArgs> RecordFieldTypeAssessment;

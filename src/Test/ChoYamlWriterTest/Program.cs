@@ -224,9 +224,22 @@ namespace ChoYamlWriterTest
             Console.WriteLine(yaml.ToString());
         }
 
+        static void SerializeValueTypesOneAtATime()
+        {
+            StringBuilder yaml = new StringBuilder();
+            using (var w = new ChoYamlWriter<int>(yaml)
+                )
+            {
+                w.Write(1);
+                w.Write(2);
+            }
+
+            Console.WriteLine(yaml.ToString());
+        }
+
         static void Main(string[] args)
         {
-            POCOTest();
+            SerializeValueTypesOneAtATime();
         }
     }
 }

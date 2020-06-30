@@ -250,6 +250,9 @@ namespace ChoETL
             object retValue = null;
 
             var crs = Reader.ContractResolverState;
+            if (crs == null)
+                return serializer.Deserialize(reader, objectType);
+
             var fc = crs.FieldConfig;
             crs.Name = _fc == null ? _mi.GetFullName() : crs.Name;
 
@@ -297,6 +300,12 @@ namespace ChoETL
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             var crs = Writer.ContractResolverState;
+            if (crs == null)
+            {
+                JToken t = JToken.FromObject(value);
+                t.WriteTo(writer);
+                return;
+            }
             var fc = crs.FieldConfig;
             crs.Name = _fc == null ? _mi.GetFullName() : crs.Name;
 

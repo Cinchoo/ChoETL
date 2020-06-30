@@ -374,7 +374,7 @@ namespace ChoETL
                     if (fieldConfig.ValueConverter != null)
                         fieldValue = fieldConfig.ValueConverter(fieldValue);
                     else if (RecordType.IsSimple())
-                        fieldValue = rec;
+                        fieldValue = new List<object> { rec };
                     else
                         rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, true);
 
@@ -532,7 +532,11 @@ namespace ChoETL
                         FieldConfig = kvp.Value
                     };
                     var json = JsonConvert.SerializeObject(fieldValue, Configuration.JsonSerializerSettings);
-                    objValue = JsonConvert.DeserializeObject<IDictionary<string, object>>(json);
+
+                    if (RecordType.IsSimple())
+                        objValue = JsonConvert.DeserializeObject<IList<object>>(json);
+                    else
+                        objValue = JsonConvert.DeserializeObject<IDictionary<string, object>>(json);
                 }
 
                 if (!RecordType.IsSimple())

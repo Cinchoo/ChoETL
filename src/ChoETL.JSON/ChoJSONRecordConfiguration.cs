@@ -258,7 +258,7 @@ namespace ChoETL
             }
 
             if (JSONRecordFieldConfigurations.Count == 0)
-                DiscoverRecordFields(recordType, false);
+                MapRecordFields(); // DiscoverRecordFields(recordType, false);
         }
 
         internal void Reset()
@@ -320,11 +320,16 @@ namespace ChoETL
             return this;
         }
 
-        private void DiscoverRecordFields(Type recordType, bool clear = true,
-            List<ChoJSONRecordFieldConfiguration> recordFieldConfigurations = null)
+        public void MapRecordFields()
+        {
+            RecordType = DiscoverRecordFields(RecordType, false, null, true);
+        }
+
+        private Type DiscoverRecordFields(Type recordType, bool clear = true,
+            List<ChoJSONRecordFieldConfiguration> recordFieldConfigurations = null, bool isTop = false)
         {
             if (recordType == null)
-                return;
+                return recordType;
 
             if (RecordMapType == null)
                 RecordMapType = recordType;
@@ -335,15 +340,15 @@ namespace ChoETL
             if (clear && recordFieldConfigurations != null)
                 recordFieldConfigurations.Clear();
 
-            DiscoverRecordFields(recordType, null,
-                ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any()).Any(), recordFieldConfigurations);
+            return DiscoverRecordFields(recordType, null,
+                ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any()).Any(), recordFieldConfigurations, isTop);
         }
 
-        private void DiscoverRecordFields(Type recordType, string declaringMember, bool optIn = false,
-            List<ChoJSONRecordFieldConfiguration> recordFieldConfigurations = null)
+        private Type DiscoverRecordFields(Type recordType, string declaringMember, bool optIn = false,
+            List<ChoJSONRecordFieldConfiguration> recordFieldConfigurations = null, bool isTop = false)
         {
             if (recordType == null)
-                return;
+                return recordType;
             if (!recordType.IsDynamicType())
             {
                 Type pt = null;
@@ -355,7 +360,7 @@ namespace ChoETL
                         bool optIn1 = ChoTypeDescriptor.GetProperties(pt).Where(pd1 => pd1.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any()).Any();
                         if (optIn1 && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt) && FlatToNestedObjectSupport)
                         {
-                            DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn1);
+                            DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn1, recordFieldConfigurations, false);
                         }
                         else if (pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any())
                         {
@@ -373,13 +378,31 @@ namespace ChoETL
                 }
                 else
                 {
+                    if (isTop)
+                    {
+                        if (typeof(IList).IsAssignableFrom(recordType) || (recordType.IsGenericType && recordType.GetGenericTypeDefinition() == typeof(IList<>)))
+                        {
+                            throw new ChoParserException("Record type not supported.");
+                        }
+                        else if (typeof(IDictionary<string, object>).IsAssignableFrom(recordType))
+                        {
+                            recordType = typeof(ExpandoObject);
+                            return recordType;
+                        }
+                        else if (typeof(IDictionary).IsAssignableFrom(recordType))
+                        {
+                            recordType = typeof(ExpandoObject);
+                            return recordType;
+                        }
+                    }
+
                     if (recordType.IsSimple())
                     {
                         var obj = new ChoJSONRecordFieldConfiguration("Value", "$.Value");
                         obj.FieldType = recordType;
 
                         recordFieldConfigurations.Add(obj);
-                        return;
+                        return recordType;
                     }
 
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
@@ -391,7 +414,7 @@ namespace ChoETL
                         pt = pd.PropertyType.GetUnderlyingType();
                         if (pt != typeof(object) && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt) && FlatToNestedObjectSupport)
                         {
-                            DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
+                            DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, recordFieldConfigurations, false);
                         }
                         else
                         {
@@ -464,6 +487,7 @@ namespace ChoETL
                     }
                 }
             }
+            return recordType;
         }
 
         public override void Validate(object state)

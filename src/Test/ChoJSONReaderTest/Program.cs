@@ -3078,10 +3078,78 @@ K,L,M,N,O,P,Q,R,S,T";
             Console.WriteLine(csv.ToString());
         }
 
+        static void FlattenJSONTest()
+        {
+            string json = @"{
+  ""Library"": null,
+  ""LibraryNumber"": 5,
+  ""Author"": {
+    ""Year"": null,
+    ""Address"": null,
+    ""LastName"": null,
+    ""AllBooks"": [],
+    ""WonNYBestSeller"": false,
+    ""NumberofBooks"": 0,
+    ""SelfPublished"": false,
+    ""AuthorFunFacts"": {
+      ""NumberofPets"": 0,
+      ""NumberofCars"": 0,
+      ""PlaceofBirth"": null,
+      ""WrittenChildrenBook"": false
+    },
+    ""Biography"": null,
+    ""Age"": 32,
+    ""NumberBestSellers"": 0,
+    ""NumberMovies"": 1
+  },
+  ""AuthorLuckyNumber"": 24,
+  ""SearchKeys"": [
+    ""Alice"",
+    ""AuthorX""
+  ],
+  ""Website"": null,
+  ""BookPublications"": {
+    ""FirstPublication"": 1,
+    ""LastPublication"": 1
+  },
+  ""FavoriteQuote"": ""FavoriteQuote1"",
+  ""NumberPoems"": 1,
+}";
+
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.ConvertToFlattenObject('/', true).Dump());
+            }
+        }
+
+        static void DictTest5()
+        {
+            string json = @"{
+""Id"": 1,
+""Name"": ""Tom""
+}";
+            using (var r = ChoJSONReader<IDictionary>.LoadText(json))
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void ArrayTest1()
+        {
+            string json = @"[1, 2]";
+            using (var r = ChoJSONReader<int>.LoadText(json))
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Json2CSVContainsNewLine();
+            InterfaceTest();
         }
 
         static void SimpleTest()
