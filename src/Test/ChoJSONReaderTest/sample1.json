@@ -1,35 +1,38 @@
 ﻿{
-  "Library": null,
-  "LibraryNumber": 5,
-  "Author": {
-    "Year": null,
-    "Address": null,
-    "LastName": null,
-    "AllBooks": [],
-    "WonNYBestSeller": false,
-    "NumberofBooks": 0,
-    "SelfPublished": false,
-    "AuthorFunFacts": {
-      "NumberofPets": 0,
-      "NumberofCars": 0,
-      "PlaceofBirth": null,
-      "WrittenChildrenBook": false
-    },
-    "Biography": null,
-    "Age": 32,
-    "NumberBestSellers": 0,
-    "NumberMovies": 1
-  },
-  "AuthorLuckyNumber": 24,
-  "SearchKeys": [
-    "Alice",
-    "AuthorX"
-  ],
-  "Website": null,
-  "BookPublications": {
-    "FirstPublication": 1,
-    "LastPublication": 1
-  },
-  "FavoriteQuote": "FavoriteQuote1",
-  "NumberPoems": 1
+  "sourceFolder": "/home",
+  "destinationFolder": "/home/billy/my-test-case",
+  "scenarios": [
+    {
+      "name": "first-scenario",
+      "alterations": [
+        {
+          "tableExtension": "ln",
+          "alterations": [
+            {
+              "type": "copy-line",
+              "sourceLineIndex": 0,
+              "destinationLineIndex": 0
+            },
+            {
+              "type": "cell-change",
+              "sourceLineIndex": 0,
+              "columnName": "FAKE_COL",
+              "newValue": "NEW_Value1"
+            }
+          ]
+        },
+        {
+          "tableExtension": "env",
+          "alterations": [
+            {
+              "type": "cell-change",
+              "sourceLineIndex": 0,
+              "columnName": "ID",
+              "newValue": 10
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }

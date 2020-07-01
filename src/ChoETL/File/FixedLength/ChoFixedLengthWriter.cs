@@ -575,6 +575,8 @@ namespace ChoETL
             dynamic expando = new ExpandoObject();
             var expandoDic = (IDictionary<string, object>)expando;
 
+            Configuration.UseNestedKeyFormat = false;
+
             if (Configuration.FixedLengthRecordFieldConfigurations.IsNullOrEmpty())
             {
                 string colName = null;

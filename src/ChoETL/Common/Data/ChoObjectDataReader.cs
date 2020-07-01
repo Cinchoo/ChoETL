@@ -403,7 +403,8 @@ namespace ChoETL
                         {
                             return ((ChoDynamicObject)target).GetText();
                         }
-                        throw new ApplicationException("Can't find '{0}' member in dynamic object.".FormatString(MemberName));
+                        return null;
+                        //throw new ApplicationException("Can't find '{0}' member in dynamic object.".FormatString(MemberName));
                     }
                 }
                 else

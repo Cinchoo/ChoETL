@@ -16,6 +16,11 @@ namespace ChoYamlReaderTest
         public int Age { get; set; }
         public Gender Gender { get; set; }
     }
+    public class Emp
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+    }
     public class A
     {
         public string Name { get; set; }
@@ -54,13 +59,13 @@ namespace ChoYamlReaderTest
     {
         public string SourceFolder { get; set; }
         public string DestinationFolder { get; set; }
-        public List<Scenario> Scenarios { get; set; }
+        public Scenario[] Scenarios { get; set; }
     }
 
     public class Scenario
     {
         public string Name { get; set; }
-        public List<Alteration> Alterations { get; set; }
+        //public List<Alteration> Alterations { get; set; }
     }
 
     public class Alteration
@@ -269,12 +274,26 @@ namespace ChoYamlReaderTest
         {
             using (var r = ChoYamlReader<MyModel>.LoadText(yamlText1))
             {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+                return;
                 Console.WriteLine(ChoJSONWriter<MyModel>.ToTextAll(r));
             }
         }
         static void ToDataTableTest()
         {
-            using (var r = ChoYamlReader<MyModel>.LoadText(yamlText1))
+            string yaml = @"
+emps:
+    - id: 1
+      name: Tom
+
+    - id: 2
+      name: Mark
+";
+
+            using (var r = ChoYamlReader.LoadText(yaml)
+                .WithYamlPath("$.emps[*]")
+                )
             {
                 var dt = r.AsDataTable();
                 Console.WriteLine(dt.Dump());
@@ -446,11 +465,42 @@ Gender: Male
                     Console.WriteLine(rec.Dump());
             }
         }
+        static void Yaml2XmlTest()
+        {
+    string yaml = @"
+emps:
+    - id: 1
+      name: Tom
+
+    - id: 2
+      name: Mark
+";
+
+            StringBuilder xml = new StringBuilder();
+            using (var r = ChoYamlReader.LoadText(yaml).WithYamlPath("$.emps[*]"))
+            {
+                using (var w = new ChoXmlWriter(xml)
+                  .WithRootName("Emps")
+                  .WithNodeName("Emp")
+                  )
+                    w.Write(r);
+            }
+            Console.WriteLine(xml.ToString());
+        }
+        static void ToComplexDataTableTest()
+        {
+            using (var r = ChoYamlReader.LoadText(yamlText2)
+                )
+            {
+                var dt = r.AsDataTable();
+                Console.WriteLine(dt.Dump());
+            }
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            LoadDictKeysTest();
+            ToComplexDataTableTest();
         }
     }
 }

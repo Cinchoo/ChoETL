@@ -719,6 +719,8 @@ namespace ChoETL
             dynamic expando = new ExpandoObject();
             var expandoDic = (IDictionary<string, object>)expando;
 
+            Configuration.UseNestedKeyFormat = false;
+
             int ordinal = 0;
             if (Configuration.CSVRecordFieldConfigurations.IsNullOrEmpty())
             {
