@@ -496,11 +496,70 @@ emps:
                 Console.WriteLine(dt.Dump());
             }
         }
+
+        static void DeserializeObjectTest()
+        {
+            string yaml = @"
+id: 1
+name: Tom
+";
+            Console.WriteLine(ChoYamlReader.DeserializeText<Emp>(yaml).FirstOrDefault().Dump());
+        }
+
+        static void DeserializeCollectioTest()
+        {
+            string yaml = @"
+emps: 
+    - Tom
+    - Mark
+";
+            var emps = ChoYamlReader.DeserializeText<string>(yaml, "$.emps[*]").ToList();
+            Console.WriteLine(emps.Dump());
+        }
+
+        static void DeserializeDictTest()
+        {
+            string yaml = @"
+id: 1
+name: Tom
+";
+            Console.WriteLine(ChoYamlReader.DeserializeText<Dictionary<string, object>>(yaml).FirstOrDefault().Dump());
+        }
+
+        public class UserInfo
+        {
+            [ChoYamlRecordField(YamlPath = "$.name")]
+            public string name { get; set; }
+            [ChoYamlRecordField(YamlPath = "$.teamname")]
+            public string teamname { get; set; }
+            [ChoYamlRecordField(YamlPath = "$.email")]
+            public string email { get; set; }
+            [ChoYamlRecordField(YamlPath = "$.players")]
+            public int[] players { get; set; }
+        }
+        static void SelectiveNodeTest1()
+        {
+            string yaml = @"
+users:
+    - name: 1
+      teamname: Tom
+      email: xx@gmail.com
+      players: [1, 2]
+";
+            using (var r = ChoYamlReader<UserInfo>.LoadText(yaml)
+                .WithYamlPath("$.users[*]")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            ToComplexDataTableTest();
+            SelectiveNodeTest1();
         }
     }
 }
