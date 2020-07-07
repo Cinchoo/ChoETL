@@ -436,6 +436,8 @@ namespace ChoETL
                             if (jAttr != null && !jAttr.PropertyName.IsNullOrWhiteSpace())
                             {
                                 obj.FieldName = jAttr.PropertyName;
+                                obj.JSONPath = jAttr.PropertyName;
+                                obj.Order = jAttr.Order;
                             }
                             else
                             {

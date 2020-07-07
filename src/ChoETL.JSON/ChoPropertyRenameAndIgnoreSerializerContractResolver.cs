@@ -112,6 +112,25 @@ namespace ChoETL
                     else if (pd.Attributes.OfType<ColumnAttribute>().Any())
                         property.Order = pd.Attributes.OfType<ColumnAttribute>().First().Order;
 
+                    if (pd.Attributes.OfType<JsonPropertyAttribute>().Any())
+                    {
+                        var jp = pd.Attributes.OfType<JsonPropertyAttribute>().First();
+                        property.PropertyName = jp.PropertyName;
+                        property.Order = jp.Order;
+                        property.Required = jp.Required;
+                        property.ReferenceLoopHandling = jp.ItemReferenceLoopHandling;
+                        property.IsReference = jp.IsReference;
+                        property.TypeNameHandling = jp.TypeNameHandling;
+                        property.ObjectCreationHandling = jp.ObjectCreationHandling;
+                        property.ReferenceLoopHandling = jp.ReferenceLoopHandling;
+                        property.DefaultValueHandling = jp.DefaultValueHandling;
+                        property.NullValueHandling = jp.NullValueHandling;
+                        property.ItemTypeNameHandling = jp.ItemTypeNameHandling;
+                        property.ItemIsReference = jp.ItemIsReference;
+                    }
+                    else if (pd.Attributes.OfType<ChoJSONPathAttribute>().Any())
+                        property.PropertyName = pd.Attributes.OfType<ChoJSONPathAttribute>().First().JSONPath;
+
                     property.Converter = property.MemberConverter = new ChoContractResolverJsonConverter(null, _configuration.Culture, property.PropertyType, _configuration.ObjectValidationMode, member)
                     {
                         Reader = Reader,
@@ -294,7 +313,7 @@ namespace ChoETL
             if (!RaiseAfterRecordFieldLoad(rec, crs.Index, name, retValue))
                 return null;
 
-            return retValue == reader ? null : retValue;
+            return retValue == reader ? serializer.Deserialize(reader, objectType) : retValue;
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)

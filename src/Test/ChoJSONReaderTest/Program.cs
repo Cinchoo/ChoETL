@@ -22,6 +22,8 @@ using System.Xml.Serialization;
 using DescriptionAttribute = System.ComponentModel.DescriptionAttribute;
 using UnitTestHelper;
 using System.ComponentModel.DataAnnotations;
+using System.Reflection;
+using System.Windows.Data;
 
 namespace ChoJSONReaderTest
 {
@@ -3171,10 +3173,183 @@ K,L,M,N,O,P,Q,R,S,T";
             Console.WriteLine(xml.ToString());
         }
 
+        public abstract class Enumeration : IComparable
+        {
+            public string Name { get; private set; }
+
+            public int Id { get; private set; }
+
+            protected Enumeration(int id, string name)
+            {
+                Id = id;
+                Name = name;
+            }
+
+            public override string ToString() => Name;
+
+            public static IEnumerable<T> GetAll<T>() where T : Enumeration
+            {
+                var fields = typeof(T).GetFields(BindingFlags.Public |
+                                                 BindingFlags.Static |
+                                                 BindingFlags.DeclaredOnly);
+
+                return fields.Select(f => f.GetValue(null)).Cast<T>();
+            }
+
+            public override bool Equals(object obj)
+            {
+                var otherValue = obj as Enumeration;
+
+                if (otherValue == null)
+                    return false;
+
+                var typeMatches = GetType().Equals(obj.GetType());
+                var valueMatches = Id.Equals(otherValue.Id);
+
+                return typeMatches && valueMatches;
+            }
+
+            public int CompareTo(object other) => Id.CompareTo(((Enumeration)other).Id);
+
+            public override int GetHashCode()
+            {
+                return base.GetHashCode();
+            }
+
+            // Other utility methods ...
+        }
+        public class Dto
+        {
+            public string Name { get; set; }
+            [ChoTypeConverter(typeof(CardTypeConverter))]
+            public CardType CardType { get; set; }
+        }
+
+        public class StatusTypeConvertor : IChoValueConverter
+        {
+            public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                var name = value as string;
+                if (name == "Active")
+                    return StatusType.Active;
+                else
+                    return StatusType.Inactive;
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public class CardTypeConverter : IValueConverter
+        {
+            public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                var name = value as string;
+                if (name == "Amex")
+                    return CardType.Amex;
+                if (name == "MasterCard")
+                    return CardType.MasterCard;
+                else
+                    return CardType.Visa;
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                throw new NotImplementedException();
+            }
+        }
+        public class CardType : Enumeration
+        {
+            public static readonly CardType Amex = new CardType(1, "Amex");
+            public static readonly CardType Visa = new CardType(2, "Visa");
+            public static readonly CardType MasterCard = new CardType(3, "MasterCard");
+
+            public CardType(int id, string name)
+                : base(id, name)
+            {
+            }
+            public static explicit operator CardType(string name)
+            {
+                if (name == "Amex")
+                    return Amex;
+                if (name == "MasterCard")
+                    return MasterCard;
+                else
+                    return Visa;
+            }
+        }
+        public class StatusType : Enumeration
+        {
+            public static readonly StatusType Active = new StatusType(1, "Active");
+            public static readonly StatusType Inactive = new StatusType(2, "Inactive");
+
+            public StatusType(int id, string name) : base(id, name)
+            {
+
+            }
+            public static explicit operator StatusType(string name)
+            {
+                if (name == "Active")
+                    return Active;
+                else
+                    return Inactive;
+            }
+        }
+
+        static void DeserializeEnumClass()
+        {
+            string json = @"[
+{
+    ""Name"": ""Tom"",
+    ""CardType"": ""Amex""
+}
+]";
+            var x = ChoJSONReader.DeserializeText<Dto>(json).FirstOrDefault();
+            Console.WriteLine(x.Dump());
+        }
+
+        public class MoreData
+        {
+            //[ChoJSONPath("MoreData.MoreData1.Field3")]
+            public int Field3 { get; set; }
+            public int Field4 { get; set; }
+        }
+        public class Sample
+        {
+            public int Field1 { get; set; }
+            public int Field2 { get; set; }
+            [JsonProperty("MoreData.MoreData1")]
+            public MoreData MoreData { get; set; }
+            public string Field5 { get; set; }
+            //[JsonProperty("MoreData.MoreData1.Field4")]
+            //public string Field4 { get; set; }
+        }
+
+        static void JSONPathInInnerObjectTest()
+        {
+            string json = @"{
+    ""Field1"": 1234,
+    ""Field2"": 5678,
+    ""MoreData"": {
+                 ""Field3"": 9012,
+                ""Field4"": 3456,
+       ""MoreData1"": {
+                ""Field3"": 19012,
+                ""Field4"": 13456
+            }
+    },
+   ""Field5"": ""Test""
+}";
+            var rec = ChoJSONReader.DeserializeText<Sample>(json).FirstOrDefault();
+            Console.WriteLine(rec.Dump());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            JSON2XmlArrayTest();
+            JSONPathInInnerObjectTest();
         }
 
         static void SimpleTest()

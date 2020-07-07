@@ -768,6 +768,7 @@ namespace ChoETL
                 }
 
                 jToken = null;
+                jTokens = null;
                 fieldValue = null;
                 fieldConfig = kvp.Value;
                 if (Configuration.PIDict != null)
@@ -1504,7 +1505,8 @@ namespace ChoETL
                     return list;
                 }
                 else
-                    throw;
+                    return jToken.ToObject(typeof(string), jsonSerializer.Value);
+//                throw;
             }
         }
 
