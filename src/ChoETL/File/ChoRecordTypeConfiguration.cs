@@ -52,7 +52,8 @@ namespace ChoETL
                 return;
 
             if (_recordTypeCodes.ContainsKey(attr.Code))
-                throw new ChoRecordConfigurationException($"Duplicate record type '{attr.Code}' code defined in '{recordType.Name}'.");
+                return;
+                //throw new ChoRecordConfigurationException($"Duplicate record type '{attr.Code}' code defined in '{recordType.Name}'.");
 
             this[attr.Code] = recordType;
         }

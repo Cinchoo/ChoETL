@@ -9,11 +9,13 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Dynamic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace ChoETL
@@ -664,6 +666,117 @@ namespace ChoETL
             }
 
             return msg.ToString();
+        }
+    }
+
+    public class ChoJSONPathConverter : JsonConverter
+    {
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            JObject jo = JObject.Load(reader);
+            object targetObj = Activator.CreateInstance(objectType);
+
+            foreach (PropertyInfo prop in objectType.GetProperties().Where(p => p.CanRead && p.CanWrite))
+            {
+                JsonPropertyAttribute att = prop.GetCustomAttributes(true)
+                                                .OfType<JsonPropertyAttribute>()
+                                                .FirstOrDefault();
+
+                string jsonPath = att != null ? att.PropertyName : prop.Name;
+
+                if (serializer.ContractResolver is DefaultContractResolver)
+                {
+                    var resolver = (DefaultContractResolver)serializer.ContractResolver;
+                    jsonPath = resolver.GetResolvedPropertyName(jsonPath);
+                }
+
+                //if (!Regex.IsMatch(jsonPath, @"^[a-zA-Z0-9_.-]+$"))
+                //{
+                //    throw new InvalidOperationException($"JProperties of JsonPathConverter can have only letters, numbers, underscores, hiffens and dots but name was ${jsonPath}."); // Array operations not permitted
+                //}
+
+                JToken token = jo.SelectToken(jsonPath);
+                if (token != null && token.Type != JTokenType.Null)
+                {
+                    object value = token.ToObject(prop.PropertyType, serializer);
+                    prop.SetValue(targetObj, value, null);
+                }
+            }
+
+            return targetObj;
+
+            //var jo = JObject.Load(reader);
+            //object targetObj = existingValue ?? Activator.CreateInstance(objectType);
+
+            //foreach (var prop in objectType.GetProperties().Where(p => p.CanRead))
+            //{
+            //    var pathAttribute = prop.GetCustomAttributes(true).OfType<JsonPropertyAttribute>().FirstOrDefault();
+            //    var converterAttribute = prop.GetCustomAttributes(true).OfType<JsonConverterAttribute>().FirstOrDefault();
+
+            //    string jsonPath = pathAttribute?.PropertyName ?? prop.Name;
+            //    var token = jo.SelectToken(jsonPath);
+
+            //    if (token != null && token.Type != JTokenType.Null)
+            //    {
+            //        bool done = false;
+
+            //        if (converterAttribute != null)
+            //        {
+            //            var args = converterAttribute.ConverterParameters ?? Array.Empty<object>();
+            //            var converter = Activator.CreateInstance(converterAttribute.ConverterType, args) as JsonConverter;
+            //            if (converter != null && converter.CanRead)
+            //            {
+            //                using (var sr = new StringReader(token.ToString()))
+            //                using (var jr = new JsonTextReader(sr))
+            //                {
+            //                    var value = converter.ReadJson(jr, prop.PropertyType, prop.GetValue(targetObj), serializer);
+            //                    if (prop.CanWrite)
+            //                    {
+            //                        prop.SetValue(targetObj, value);
+            //                    }
+            //                    done = true;
+            //                }
+            //            }
+            //        }
+
+            //        if (!done)
+            //        {
+            //            if (prop.CanWrite)
+            //            {
+            //                object value = token.ToObject(prop.PropertyType, serializer);
+            //                prop.SetValue(targetObj, value);
+            //            }
+            //            else
+            //            {
+            //                using (var sr = new StringReader(token.ToString()))
+            //                {
+            //                    serializer.Populate(sr, prop.GetValue(targetObj));
+            //                }
+            //            }
+            //        }
+            //    }
+            //}
+
+            //return targetObj;
+        }
+
+        /// <remarks>
+        /// CanConvert is not called when <see cref="JsonConverterAttribute">JsonConverterAttribute</see> is used.
+        /// </remarks>
+        public override bool CanConvert(Type objectType) => false;
+
+        public override bool CanRead => true;
+
+        public override bool CanWrite => false;
+
+        public override void WriteJson
+        (
+            JsonWriter writer,
+            object value,
+            JsonSerializer serializer
+        )
+        {
+            throw new NotImplementedException();
         }
     }
 }

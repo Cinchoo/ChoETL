@@ -347,7 +347,7 @@ namespace ChoETL
                                 ChoETLFramework.HandleException(ref ex);
                                 if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                                 {
-                                    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                                    ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
                                 }
                                 else if (Configuration.ErrorMode == ChoErrorMode.ReportAndContinue)
                                 {
@@ -355,7 +355,7 @@ namespace ChoETL
                                         throw;
                                     else
                                     {
-                                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                                        ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
                                     }
                                 }
                                 else

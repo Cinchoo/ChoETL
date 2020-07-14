@@ -3312,7 +3312,7 @@ K,L,M,N,O,P,Q,R,S,T";
 
         public class MoreData
         {
-            //[ChoJSONPath("MoreData.MoreData1.Field3")]
+            //[ChoJSONPath("MoreData1.Field3")]
             public int Field3 { get; set; }
             public int Field4 { get; set; }
         }
@@ -3320,7 +3320,6 @@ K,L,M,N,O,P,Q,R,S,T";
         {
             public int Field1 { get; set; }
             public int Field2 { get; set; }
-            [JsonProperty("MoreData.MoreData1")]
             public MoreData MoreData { get; set; }
             public string Field5 { get; set; }
             //[JsonProperty("MoreData.MoreData1.Field4")]
@@ -3334,7 +3333,7 @@ K,L,M,N,O,P,Q,R,S,T";
     ""Field2"": 5678,
     ""MoreData"": {
                  ""Field3"": 9012,
-                ""Field4"": 3456,
+                ""Field3"": 3456,
        ""MoreData1"": {
                 ""Field3"": 19012,
                 ""Field4"": 13456
@@ -3346,10 +3345,99 @@ K,L,M,N,O,P,Q,R,S,T";
             Console.WriteLine(rec.Dump());
         }
 
+        public abstract class Instrument
+        {
+            public string Ticker { get; set; }
+            public string Name { get; set; }
+            public string Market { get; set; }
+            public string Locale { get; set; }
+            public string Currency { get; set; }
+            public bool Active { get; set; }
+            public string PrimaryExch { get; set; }
+            public DateTimeOffset Updated { get; set; }
+        }
+
+        public class Stock : Instrument
+        {
+            public string Type { get; set; }
+            [ChoJSONPath("$.codes.cik")]
+            public string CIK { get; set; }
+            [ChoJSONPath("$.codes.figiuid")]
+            public string FIGIUID { get; set; }
+            [ChoJSONPath("$.codes.scfigi")]
+            public string SCFIGI { get; set; }
+            [ChoJSONPath("$.codes.cfigi")]
+            public string CFIGI { get; set; }
+            [ChoJSONPath("$.codes.figi")]
+            public string FIGI { get; set; }
+        }
+
+        public class ForeignExchange : Instrument
+        {
+            [ChoJSONPath("$.attrs.base")]
+            public string BaseCurrency { get; set; }
+        }
+
+        static void DesrializeMultipleTypes()
+        {
+            string json = @"[
+  {
+    ""ticker"": ""AAPL"",
+    ""name"": ""Apple Inc."",
+    ""market"": ""STOCKS"",
+    ""locale"": ""US"",
+    ""currency"": ""USD"",
+    ""active"": true,
+    ""primaryExch"": ""NGS"",
+    ""type"": ""cs"",
+    ""codes"": {
+      ""cik"": ""0000320193"",
+      ""figiuid"": ""EQ0010169500001000"",
+      ""scfigi"": ""BBG001S5N8V8"",
+      ""cfigi"": ""BBG000B9XRY4"",
+      ""figi"": ""BBG000B9Y5X2""
+    },
+    ""updated"": ""2019-01-15T05:21:28.437Z"",
+    ""url"": ""https://api.polygon.io/v2/reference/tickers/AAPL""
+  },
+  {
+    ""ticker"": ""$AEDAUD"",
+    ""name"": ""United Arab Emirates dirham - Australian dollar"",
+    ""market"": ""FX"",
+    ""locale"": ""G"",
+    ""currency"": ""AUD"",
+    ""active"": true,
+    ""primaryExch"": ""FX"",
+    ""updated"": ""2019-01-25T00:00:00.000Z"",
+    ""attrs"": {
+      ""currencyName"": ""Australian dollar,"",
+      ""currency"": ""AUD,"",
+      ""baseName"": ""United Arab Emirates dirham,"",
+      ""base"": ""AED""
+    },
+    ""url"": ""https://api.polygon.io/v2/tickers/$AEDAUD""
+  },
+]";
+            using (var r = ChoJSONReader<Instrument>.LoadText(json)
+                .WithCustomRecordSelector(o =>
+                {
+                    Tuple<long, JObject> j = o as Tuple<long, JObject>;
+                    if (j.Item2.SelectToken("ticker").ToString().StartsWith("$"))
+                        return typeof(ForeignExchange);
+                    else
+                        return typeof(Stock);
+                })
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
-            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            JSONPathInInnerObjectTest();
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+            DesrializeMultipleTypes();
         }
 
         static void SimpleTest()
