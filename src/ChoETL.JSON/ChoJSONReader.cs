@@ -454,6 +454,17 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoJSONReader<T> RegisterNodeConverterForType<ModelType>(Func<object, object> selector)
+        {
+            return RegisterNodeConverterForType(typeof(ModelType), selector);
+        }
+
+        public ChoJSONReader<T> RegisterNodeConverterForType(Type type, Func<object, object> selector)
+        {
+            Configuration.RegisterNodeConverterForType(type, selector);
+            return this;
+        }
+
         public ChoJSONReader<T> ErrorMode(ChoErrorMode mode)
         {
             Configuration.ErrorMode = mode;

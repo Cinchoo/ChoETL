@@ -323,6 +323,8 @@ namespace ChoETL
                         if (Configuration.AreAllFieldTypesNull && Configuration.AutoDiscoverFieldTypes && Configuration.MaxScanRows > 0 && recCount <= Configuration.MaxScanRows)
                         {
                             buffer.Add(rec);
+                            if (recFieldTypes == null)
+                                recFieldTypes = Configuration.FixedLengthRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
                             RaiseRecordFieldTypeAssessment(recFieldTypes, (IDictionary<string, object>)rec, recCount == Configuration.MaxScanRows);
                             if (recCount == Configuration.MaxScanRows || e.Peek == null)
                             {
@@ -511,8 +513,8 @@ namespace ChoETL
 
                     if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
                     {
-                        if (kvp.Value.FieldType == null)
-                            kvp.Value.FieldType = typeof(string);
+                        //if (kvp.Value.FieldType == null)
+                        //    kvp.Value.FieldType = typeof(string);
                     }
                     else
                     {

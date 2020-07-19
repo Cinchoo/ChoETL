@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq;
@@ -22,6 +23,7 @@ namespace ChoETL
     public class ChoJSONRecordConfiguration : ChoFileRecordConfiguration
     {
         internal readonly Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>> JSONRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>>();
+        public readonly Dictionary<Type, Func<object, object>> NodeConvertersForType = new Dictionary<Type, Func<object, object>>();
 
         public bool AllowComplexJSONPath
         {
@@ -79,10 +81,7 @@ namespace ChoETL
 
                         _jsonSerializerSettings = new JsonSerializerSettings();
                         _jsonSerializerSettings.ContractResolver = jsonResolver;
-                        _jsonSerializerSettings.Converters = new List<JsonConverter>()
-                        {
-                            new ExpandoObjectConverter()
-                        };
+                        _jsonSerializerSettings.Converters = GetJSONConverters();
                     }
 
                     return _jsonSerializerSettings;
@@ -95,6 +94,21 @@ namespace ChoETL
                     _formatting = _jsonSerializerSettings.Formatting;
             }
         }
+
+        private List<JsonConverter> GetJSONConverters()
+        {
+            List<JsonConverter> converters = new List<JsonConverter>();
+            converters.Add(new ExpandoObjectConverter());
+
+            foreach (var kvp in NodeConvertersForType)
+            {
+                if (kvp.Value == null) continue;
+                converters.Add(Activator.CreateInstance(typeof(ChoJSONNodeConverter<>).MakeGenericType(kvp.Key), kvp.Value) as JsonConverter);
+            }
+
+            return converters;
+        }
+
         private Lazy<JsonSerializer> _JsonSerializer = null;
         public JsonSerializer JsonSerializer
         {
@@ -594,6 +608,24 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoJSONRecordConfiguration RegisterNodConverterForType<ModelType>(Func<object, object> selector)
+        {
+            return RegisterNodeConverterForType(typeof(ModelType), selector);
+        }
+
+        public ChoJSONRecordConfiguration RegisterNodeConverterForType(Type type, Func<object, object> selector)
+        {
+            if (type == null || selector == null)
+                return this;
+
+            if (NodeConvertersForType.ContainsKey(type))
+                NodeConvertersForType[type] = selector;
+            else
+                NodeConvertersForType.Add(type, selector);
+
+            return this;
+        }
+
         public ChoJSONRecordConfiguration Configure(Action<ChoJSONRecordConfiguration> action)
         {
             if (action != null)
@@ -875,6 +907,25 @@ namespace ChoETL
         {
             base.MapRecordFields(recordTypes);
             return this;
+        }
+    }
+
+    public class ChoJSONNodeConverter<T> : JsonConverter<T>
+    {
+        private Func<object, object> _converter;
+        public ChoJSONNodeConverter(Func<object, object> converter)
+        {
+            _converter = converter;
+        }
+
+        public override T ReadJson(JsonReader reader, Type objectType, T existingValue, bool hasExistingValue, JsonSerializer serializer)
+        {
+            return (T)_converter?.Invoke(new { reader, objectType, existingValue, hasExistingValue, serializer }.ToDynamic());
+        }
+
+        public override void WriteJson(JsonWriter writer, T value, JsonSerializer serializer)
+        {
+            _converter?.Invoke(new { writer, value, serializer }.ToDynamic());
         }
     }
 }

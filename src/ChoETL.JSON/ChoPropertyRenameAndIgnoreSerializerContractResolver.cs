@@ -65,6 +65,7 @@ namespace ChoETL
                     property.Converter = property.MemberConverter = new ChoContractResolverJsonConverter(dict[property.UnderlyingName] as ChoFileRecordFieldConfiguration, _configuration.Culture,
                         property.PropertyType, _configuration.ObjectValidationMode, member)
                     {
+                        Configuration = _configuration as ChoFileRecordConfiguration,
                         Reader = Reader,
                         CallbackRecordFieldRead = CallbackRecordFieldRead,
                          Writer = Writer,
@@ -77,6 +78,7 @@ namespace ChoETL
                 var fc = _configuration.RecordFieldConfigurations.First(f => f.DeclaringMember == propertyFullName) as ChoFileRecordFieldConfiguration;
                 property.Converter = property.MemberConverter = new ChoContractResolverJsonConverter(fc, _configuration.Culture, property.PropertyType, _configuration.ObjectValidationMode, member)
                 {
+                    Configuration = _configuration as ChoFileRecordConfiguration,
                     Reader = Reader,
                     CallbackRecordFieldRead = CallbackRecordFieldRead,
                     Writer = Writer,
@@ -91,6 +93,7 @@ namespace ChoETL
                 var fc = _configuration.RecordFieldConfigurations.First(f => f.Name == propertyFullName) as ChoFileRecordFieldConfiguration;
                 property.MemberConverter = new ChoContractResolverJsonConverter(fc, _configuration.Culture, property.PropertyType, _configuration.ObjectValidationMode, member)
                 {
+                    Configuration = _configuration as ChoFileRecordConfiguration,
                     Reader = Reader,
                     CallbackRecordFieldRead = CallbackRecordFieldRead,
                     Writer = Writer,
@@ -135,6 +138,7 @@ namespace ChoETL
 
                     property.Converter = property.MemberConverter = new ChoContractResolverJsonConverter(null, _configuration.Culture, property.PropertyType, _configuration.ObjectValidationMode, member)
                     {
+                        Configuration = _configuration as ChoFileRecordConfiguration,
                         Reader = Reader,
                         CallbackRecordFieldRead = CallbackRecordFieldRead,
                         Writer = Writer,
@@ -251,6 +255,7 @@ namespace ChoETL
         }
         public IChoNotifyRecordFieldRead CallbackRecordFieldRead { get; set; }
         public ChoReader Reader { get; set; }
+        public ChoFileRecordConfiguration Configuration { get; set; }
 
         public ChoContractResolverJsonConverter(ChoFileRecordFieldConfiguration fc, CultureInfo culture, Type objType, ChoObjectValidationMode validationMode, MemberInfo mi)
         {

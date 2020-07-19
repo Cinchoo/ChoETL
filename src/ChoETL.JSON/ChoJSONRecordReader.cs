@@ -605,6 +605,10 @@ namespace ChoETL
                 {
                     pair = new Tuple<long, JObject>(pair.Item1, Configuration.CustomNodeSelecter(pair.Item2));
                 }
+                else if (Configuration.NodeConvertersForType.ContainsKey(RecordType) && Configuration.NodeConvertersForType[RecordType] != null)
+                {
+                    pair = new Tuple<long, JObject>(pair.Item1, Configuration.NodeConvertersForType[RecordType](pair.Item2) as JObject);
+                }
 
                 if (pair.Item2 == null)
                 {
@@ -1673,34 +1677,34 @@ namespace ChoETL
             }
         }
 
-        private void HandleCollection(JToken[] jTokens, KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp)
-        {
-            if (false) //typeof(ICollection).IsAssignableFrom(kvp.Value.FieldType) && !kvp.Value.FieldType.IsArray)
-            {
-                Type itemType = kvp.Value.FieldType.GetItemType();
-                IList<object> list = new List<object>();
-                foreach (var jt in jTokens)
-                    list.Add(jt.ToObject(itemType));
+        //private void HandleCollection(JToken[] jTokens, KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp)
+        //{
+        //    if (false) //typeof(ICollection).IsAssignableFrom(kvp.Value.FieldType) && !kvp.Value.FieldType.IsArray)
+        //    {
+        //        Type itemType = kvp.Value.FieldType.GetItemType();
+        //        IList<object> list = new List<object>();
+        //        foreach (var jt in jTokens)
+        //            list.Add(jt.ToObject(itemType));
 
-                MethodInfo method = GetType().GetMethod("CloneListAs", BindingFlags.NonPublic | BindingFlags.Instance);
-                MethodInfo genericMethod = method.MakeGenericMethod(itemType);
-                fieldValue = genericMethod.Invoke(this, new[] { list });
-            }
-            else
-            {
-                List<object> list = new List<object>();
-                foreach (var jt in jTokens)
-                {
-                    if (fieldConfig.CustomSerializer != null)
-                        list.Add(fieldConfig.CustomSerializer(jt));
-                    else
-                    {
-                        list.Add(ToObject(jt, kvp.Value.FieldType, kvp.Value.UseJSONSerialization));
-                    }
-                }
-                fieldValue = list.ToArray();
-            }
-        }
+        //        MethodInfo method = GetType().GetMethod("CloneListAs", BindingFlags.NonPublic | BindingFlags.Instance);
+        //        MethodInfo genericMethod = method.MakeGenericMethod(itemType);
+        //        fieldValue = genericMethod.Invoke(this, new[] { list });
+        //    }
+        //    else
+        //    {
+        //        List<object> list = new List<object>();
+        //        foreach (var jt in jTokens)
+        //        {
+        //            if (fieldConfig.CustomSerializer != null)
+        //                list.Add(fieldConfig.CustomSerializer(jt));
+        //            else
+        //            {
+        //                list.Add(ToObject(jt, kvp.Value.FieldType, kvp.Value.UseJSONSerialization));
+        //            }
+        //        }
+        //        fieldValue = list.ToArray();
+        //    }
+        //}
 
         private List<T> CloneListAs<T>(IList<object> source)
         {

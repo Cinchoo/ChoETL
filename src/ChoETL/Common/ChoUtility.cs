@@ -372,6 +372,16 @@ namespace ChoETL
             sr.Write(byteData, 0, byteData.Length);
         }
 
+        public static dynamic ToDynamic(this object value)
+        {
+            IDictionary<string, object> expando = new ExpandoObject();
+
+            foreach (PropertyDescriptor property in TypeDescriptor.GetProperties(value.GetType()))
+                expando.Add(property.Name, property.GetValue(value));
+
+            return expando as ExpandoObject;
+        }
+
         public static dynamic ToDynamicObject(this object src,
             bool shallowDynamic = false,
             Func<IDictionary<string, object>> dynamicFactory = null
@@ -1346,13 +1356,23 @@ namespace ChoETL
         public static object CastObjectTo(this object @this, Type type, object defaultValue = null, 
             ChoTypeConverterFormatSpec typeConverterFormatSpec = null)
         {
+            if (type == null)
+                return @this;
+
             if (typeConverterFormatSpec == null)
                 typeConverterFormatSpec = ChoTypeConverterFormatSpec.Instance;
 
             if (@this == null || @this == DBNull.Value)
                 return defaultValue == null ? type.Default() : defaultValue;
+            else if (type != typeof(object) && type.IsAssignableFrom(@this.GetType()))
+                return @this;
             else if (@this is string && ((string)@this).IsNullOrWhiteSpace())
-                return defaultValue == null ? type.Default() : defaultValue;
+            {
+                if (type == typeof(string))
+                    return @this;
+                else
+                    return defaultValue == null ? type.Default() : defaultValue;
+            }
             else
             {
                 Type targetType = type;

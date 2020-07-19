@@ -3434,10 +3434,80 @@ K,L,M,N,O,P,Q,R,S,T";
             }
         }
 
+        public class CTest
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+            public List<Class2> Details { get; set; }
+        }
+
+        public class Class2
+        {
+            public int Id { get; set; }
+            public int Data1 { get; set; }
+        }
+
+        static void ConditionalSelectionsOfNodes()
+        {
+            string json = @"[
+{
+  ""id"":5,
+  ""name"":""test"",
+  ""details"":[
+    {
+      ""id"":12,
+      ""data1"":0.25
+    },
+    {
+      ""id"":0,
+      ""data1"":0.0
+    },
+  ]
+},
+{
+  ""id"":0,
+  ""name"":""test"",
+  ""details"":[
+    {
+      ""id"":12,
+      ""data1"":0.25
+    },
+    {
+      ""id"":0,
+      ""data1"":0.0
+    },
+  ]
+}
+]";
+            using (var r = ChoJSONReader<CTest>.LoadText(json)
+                .RegisterNodeConverterForType<CTest>(o => (((JObject)o)["id"]).CastTo<int>() > 0 ? o : null)
+                .RegisterNodeConverterForType<List<Class2>>(o =>
+                {
+                    dynamic x = o as dynamic;
+                    var list = new List<Class2>();
+
+                    while (x.reader.Read() && x.reader.TokenType != JsonToken.EndArray)
+                    {
+                        if (x.reader.TokenType == JsonToken.StartObject)
+                        {
+                            var item = x.serializer.Deserialize<Class2>(x.reader);
+                            if (item.Id != 0)
+                                list.Add(item);
+                        }
+                    }
+                    return list;
+                })
+            //.WithCustomNodeSelector(o => o["id"].CastTo<int>() > 0 ? o : null)
+            )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            DesrializeMultipleTypes();
+            ConditionalSelectionsOfNodes();
         }
 
         static void SimpleTest()

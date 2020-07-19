@@ -130,8 +130,11 @@ namespace ChoETL
             bool recordIgnored = false;
             try
             {
-                foreach (object record in records)
+                object record = null;
+                foreach (object rec1 in records)
                 {
+                    record = rec1;
+
                     _index++;
 
                     if (!isFirstRec)
@@ -250,65 +253,85 @@ namespace ChoETL
 
                         try
                         {
-                            if (!Configuration.UseJSONSerialization)
+                            bool skip = false;
+                            if (Configuration.NodeConvertersForType.ContainsKey(RecordType) && Configuration.NodeConvertersForType[RecordType] != null)
+                                record = Configuration.NodeConvertersForType[RecordType](record);
+
+                            if (record == null)
                             {
-                                if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
-                                    record.DoObjectLevelValidation(Configuration, Configuration.JSONRecordFieldConfigurations);
-
-                                if (ToText(_index, record, out recText))
-                                {
-                                    if (!recText.IsNullOrEmpty())
-                                    {
-                                        if (!SupportMultipleContent)
-                                            sw.Write("{1}{0}", Indent(recText), EOLDelimiter);
-                                        else
-                                        {
-                                            if (Configuration.SingleElement.Value)
-                                            {
-                                                if (!Configuration.IgnoreNodeName && !Configuration.NodeName.IsNullOrWhiteSpace())
-                                                    sw.Write(Indent(recText));
-                                                else
-                                                    sw.Write(Unindent(recText));
-                                            }
-                                            else
-                                            {
-                                                if (_index == 1)
-                                                    sw.Write("{0}", Indent(recText));
-                                                else
-                                                    sw.Write("{1}{0}", Indent(recText), EOLDelimiter);
-                                            }
-                                        }
-
-                                        if (!RaiseAfterRecordWrite(record, _index, recText))
-                                            yield break;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.Off) != ChoObjectValidationMode.Off)
-                                    record.DoObjectLevelValidation(Configuration, Configuration.JSONRecordFieldConfigurations);
-
-                                recText = JsonConvert.SerializeObject(record, Configuration.Formatting, Configuration.JsonSerializerSettings);
-                                if (!SupportMultipleContent)
-                                    sw.Write("{1}{0}", Indent(recText), EOLDelimiter);
+                                if (Configuration.NullValueHandling == ChoNullValueHandling.Ignore)
+                                    continue;
+                                else if (Configuration.NullValueHandling == ChoNullValueHandling.Default)
+                                    record = ChoActivator.CreateInstance(Configuration.RecordType);
                                 else
                                 {
-                                    if (Configuration.SingleElement.Value)
+                                    recText = "{{{0}}}".FormatString(EOLDelimiter);
+                                    skip = true;
+                                }
+                            }
+
+                            if (!skip)
+                            {
+                                if (!Configuration.UseJSONSerialization)
+                                {
+                                    if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
+                                        record.DoObjectLevelValidation(Configuration, Configuration.JSONRecordFieldConfigurations);
+
+                                    if (ToText(_index, record, out recText))
                                     {
-                                        sw.Write(Unindent(recText));
-                                    }
-                                    else
-                                    {
-                                        if (_index == 1)
-                                            sw.Write("{0}", Indent(recText));
-                                        else
-                                            sw.Write("{1}{0}", Indent(recText), EOLDelimiter);
+                                        if (!recText.IsNullOrEmpty())
+                                        {
+                                            if (!SupportMultipleContent)
+                                                sw.Write("{1}{0}", Indent(recText), EOLDelimiter);
+                                            else
+                                            {
+                                                if (Configuration.SingleElement.Value)
+                                                {
+                                                    if (!Configuration.IgnoreNodeName && !Configuration.NodeName.IsNullOrWhiteSpace())
+                                                        sw.Write(Indent(recText));
+                                                    else
+                                                        sw.Write(Unindent(recText));
+                                                }
+                                                else
+                                                {
+                                                    if (_index == 1)
+                                                        sw.Write("{0}", Indent(recText));
+                                                    else
+                                                        sw.Write("{1}{0}", Indent(recText), EOLDelimiter);
+                                                }
+                                            }
+
+                                            if (!RaiseAfterRecordWrite(record, _index, recText))
+                                                yield break;
+                                        }
                                     }
                                 }
+                                else
+                                {
+                                    if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.Off) != ChoObjectValidationMode.Off)
+                                        record.DoObjectLevelValidation(Configuration, Configuration.JSONRecordFieldConfigurations);
 
-                                if (!RaiseAfterRecordWrite(record, _index, recText))
-                                    yield break;
+                                    recText = JsonConvert.SerializeObject(record, Configuration.Formatting, Configuration.JsonSerializerSettings);
+                                    if (!SupportMultipleContent)
+                                        sw.Write("{1}{0}", Indent(recText), EOLDelimiter);
+                                    else
+                                    {
+                                        if (Configuration.SingleElement.Value)
+                                        {
+                                            sw.Write(Unindent(recText));
+                                        }
+                                        else
+                                        {
+                                            if (_index == 1)
+                                                sw.Write("{0}", Indent(recText));
+                                            else
+                                                sw.Write("{1}{0}", Indent(recText), EOLDelimiter);
+                                        }
+                                    }
+
+                                    if (!RaiseAfterRecordWrite(record, _index, recText))
+                                        yield break;
+                                }
                             }
                         }
                         //catch (ChoParserException)
@@ -377,18 +400,6 @@ namespace ChoETL
             }
 
             recText = null;
-            if (rec == null)
-            {
-                if (Configuration.NullValueHandling == ChoNullValueHandling.Ignore)
-                    return false;
-                else if (Configuration.NullValueHandling == ChoNullValueHandling.Default)
-                    rec = ChoActivator.CreateInstance(Configuration.RecordType);
-                else
-                {
-                    recText = "{{{0}}}".FormatString(EOLDelimiter);
-                    return true;
-                }
-            }
 
             StringBuilder msg = new StringBuilder();
             object fieldValue = null;
@@ -740,7 +751,7 @@ namespace ChoETL
         private string SerializeObject(object target, bool? useJSONSerialization = null)
         {
             bool lUseJSONSerialization = useJSONSerialization == null ? Configuration.UseJSONSerialization : useJSONSerialization.Value;
-            if (lUseJSONSerialization)
+            if (true) //lUseJSONSerialization)
                 return JsonConvert.SerializeObject(target, Configuration.Formatting, Configuration.JsonSerializerSettings);
             else
             {

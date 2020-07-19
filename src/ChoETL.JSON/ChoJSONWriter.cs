@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -295,6 +296,23 @@ namespace ChoETL
         }
 
         #region Fluent API
+
+        public ChoJSONWriter<T> RegisterNodeConverterForType<ModelType>(Func<object, object> selector)
+        {
+            return RegisterNodeConverterForType(typeof(ModelType), selector);
+        }
+
+        public ChoJSONWriter<T> RegisterNodeConverterForType(Type type, Func<object, object> selector)
+        {
+            Configuration.RegisterNodeConverterForType(type, selector);
+            return this;
+        }
+
+        public ChoJSONWriter<T> RegisterNodeSelectorForType(Type type, Func<object, object> selector)
+        {
+            Configuration.RegisterNodeConverterForType(type, selector);
+            return this;
+        }
 
         public ChoJSONWriter<T> NullValueHandling(ChoNullValueHandling value = ChoNullValueHandling.Default)
         {

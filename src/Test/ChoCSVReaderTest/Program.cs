@@ -4284,10 +4284,44 @@ Indoor Advertisi Llc,00000000000011,CO MA L00";
             }
         }
 
+        static void SpecialCSVTest()
+        {
+            string csv = @"A, B
+X , 27
+Y , 27
+S, 58 M
+S, T% x 100
+, 121, 86, 100, 168, 128, 111, 22, 82, 129, 127, 106, 69, 51, 55, 80, 26, 47, 61, 44, 52, 62, 80, 37, 65, 55, 57
+105, 125, 129, 156, 114, 93, 85, 96, 58, 54, 33, 19, 69, 86, 79, 124, 75, 59, 33, 53, 42, 66, 66, 94, 96, 113, 92
+189, 156, 91, 127, 178, 117, 85, 129, 72, 38, 86, 77, 94, 75, 71, 17, 49, 39, 48, 84, 64, 54, 81, 37, 45, 80, 80
+105, 149, 134, 134, 151, 91, 153, 101, 64, 43, 37, 51, 78, 64, 27, 15, 23, 41, 79, 116, 161, 98, 105, 66, 98, 95, 28
+122, 98, 113, 114, 159, 114, 63, 79, 50, 52, 59, 30, 43, 94, 63, 9, 52, 68, 59, 66, 89, 107, 65, 53, 185, 62, 24
+57, 75, 39, 75, 44, 44, 30, 59, 44, 62, 88, 57, 32, 111, 16, 8, 44, 38, 29, 68, 73, 52, 27, 26, 82, 47, 49
+101, 64, 48, 34, 45, 90, 105, 56, 37, 37, 51, 47, 51, 60, 30, 30, 27, 66, 75, 80, 134, 86, 28, 30, 106, 64, 61
+61, 129, 100, 44, 108, 131, 123, 77, 96, 76, 62, 68, 56, 48, 61, 30, 83, 125, 87, 44, 21, 67, 56, 29, 71, 54, 50";
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithMaxScanRows(1)
+                .Setup(s => s.SkipUntil += (o, e) =>
+                {
+                    e.Skip = e.Index <= 5;
+                })
+                .Configure(c => c.IgnoreFieldValueMode = ChoIgnoreFieldValueMode.None)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+                //List<double> l = new List<double>();
+                //foreach (var rec in r)
+                //{
+                //    l.AddRange(((object[])rec.ValuesArray).Select(v => v.CastTo<int>() / 100.0).ToArray());
+                //}
+            }
+        }
         static void Main(string[] args)
         {
-            //ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            FadaSignTest();
+            ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
+            SpecialCSVTest();
             return;
 
             CSV2ComplexObject();

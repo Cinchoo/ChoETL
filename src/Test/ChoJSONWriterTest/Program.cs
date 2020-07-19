@@ -817,11 +817,79 @@ namespace ChoJSONWriterTest
 
         }
 
+        public class CTest
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+            public List<Class2> Details { get; set; }
+        }
+
+        public class Class2
+        {
+            public int Id { get; set; }
+            public int Data1 { get; set; }
+        }
+        static void ConditionalSelectionsOfNodes()
+        {
+            StringBuilder json = new StringBuilder();
+
+            using (var w = new ChoJSONWriter<CTest>(json)
+                .RegisterNodeConverterForType<CTest>(o => (((CTest)o).Id > 0 ? o : null))
+                .RegisterNodeConverterForType<List<Class2>>(o =>
+                {
+                    dynamic x = o as dynamic;
+                    x.serializer.Serialize(x.writer, ((List<Class2>)x.value).Where(c => c.Id != 0).ToArray());
+                    return null;
+                })
+            )
+            {
+                w.Write(new CTest
+                {
+                    Id = 1,
+                    Name = "Tom",
+                    Details = new List<Class2>
+                    {
+                        new Class2
+                        {
+                            Id = 0,
+                            Data1 = 1
+                        },
+                        new Class2
+                        {
+                            Id = 10,
+                            Data1 = 2
+                        }
+
+                    }
+                });
+                w.Write(new CTest
+                {
+                    Id = 20,
+                    Name = "Tom",
+                    Details = new List<Class2>
+                    {
+                        new Class2
+                        {
+                            Id = 0,
+                            Data1 = 1
+                        },
+                        new Class2
+                        {
+                            Id = 10,
+                            Data1 = 2
+                        }
+
+                    }
+                });
+            }
+            Console.WriteLine(json.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            POCOWriteTest();
+            ConditionalSelectionsOfNodes();
             return;
 
             StringBuilder json = new StringBuilder();
