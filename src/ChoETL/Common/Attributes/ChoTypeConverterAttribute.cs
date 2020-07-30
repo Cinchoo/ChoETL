@@ -99,4 +99,19 @@
             }
         }
     }
+
+    public class ChoCustomSerializerAttribute : ChoTypeConverterAttribute
+    {
+        #region Constructors
+
+        public ChoCustomSerializerAttribute(Type converterType) : base(converterType)
+        {
+        }
+
+        public ChoCustomSerializerAttribute(string typeConverterTypeName) : this(ChoType.GetType(typeConverterTypeName))
+        {
+        }
+
+        #endregion Constructors
+    }
 }

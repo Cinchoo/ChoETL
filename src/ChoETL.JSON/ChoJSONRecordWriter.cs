@@ -353,7 +353,7 @@ namespace ChoETL
                                 else
                                 {
                                     recordIgnored = true;
-                                    ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                                    //ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
                                 }
                             }
                             else
@@ -633,6 +633,8 @@ namespace ChoETL
                 {
                     fieldText = fieldValue as string;
                 }
+                else if (fieldConfig.PropCustomSerializer != null)
+                    fieldText = ChoCustomSerializer.Serialize(fieldValue, typeof(string), fieldConfig.PropCustomSerializer, fieldConfig.PropCustomSerializerParams, Configuration.Culture, fieldConfig.Name) as string;
                 else
                 {
                     Type ft = fieldValue == null ? typeof(object) : fieldValue.GetType();

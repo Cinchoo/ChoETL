@@ -32,6 +32,12 @@ namespace ChoETL
             }
         }
 
+        public bool ThrowAndStopOnMissingCSVColumn
+        {
+            get;
+            set;
+        }
+
         public bool AutoDetectDelimiter
         {
             get;
@@ -269,6 +275,8 @@ namespace ChoETL
         protected override void Init(Type recordType)
         {
             base.Init(recordType);
+
+            ThrowAndStopOnMissingCSVColumn = true;
 
             ChoCSVRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoCSVRecordObjectAttribute>(recordType);
             if (recObjAttr != null)
@@ -700,6 +708,10 @@ namespace ChoETL
                     //Load Converters
                     fc.PropConverters = ChoTypeDescriptor.GetTypeConverters(fc.PI);
                     fc.PropConverterParams = ChoTypeDescriptor.GetTypeConverterParams(fc.PI);
+
+                    //Load Custom Serializer
+                    fc.PropCustomSerializer = ChoTypeDescriptor.GetCustomSerializer(fc.PI);
+                    fc.PropCustomSerializerParams = ChoTypeDescriptor.GetCustomSerializerParams(fc.PI);
 
                 }
             }

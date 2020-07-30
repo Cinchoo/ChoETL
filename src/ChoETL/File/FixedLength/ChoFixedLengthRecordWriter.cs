@@ -330,7 +330,7 @@ namespace ChoETL
                                         throw;
                                     else
                                     {
-                                        ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                                        //ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
                                     }
                                 }
                                 else

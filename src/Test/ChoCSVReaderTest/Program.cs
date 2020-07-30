@@ -4318,10 +4318,94 @@ S, T% x 100
                 //}
             }
         }
+
+        public class EmployeeZ
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+        }
+
+        static void HeaderNotMatchTest()
+        {
+            string csv = @"Id, Name1
+1, Tom
+2, Mark";
+
+            using (var r = ChoCSVReader<EmployeeZ>.LoadText(csv)
+                .WithFirstLineHeader()
+                .ThrowAndStopOnMissingCSVColumn(false)
+                //.ThrowAndStopOnMissingField(false)
+                .Setup(s => s.RecordLoadError += (o, e) =>
+                {
+                    Console.WriteLine(e.Exception.Message);
+                    if (e.Exception is ChoMissingRecordFieldException)
+                    {
+                        e.Handled = true;
+                        var obj = e.Record as EmployeeZ;
+                        obj.Name = "XXX";
+                    }
+                    else
+                        e.Handled = true;
+                })
+                //.ThrowAndStopOnMissingField()
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+        public class EmployeeY
+        {
+            public int id { get; set; }
+            public string Name { get; set; }
+            public string Status { get; set; }
+
+        }
+        static void MissingDataTest()
+        {
+            string csv = @"Id, Name, Status
+1, Tom, Active
+2, Mark";
+
+            using (var r = ChoCSVReader<EmployeeY>.LoadText(csv)
+                .WithFirstLineHeader()
+                .Setup(s => s.RecordLoadError += (o, e) =>
+                {
+                    Console.WriteLine(e.Exception.Message);
+                    if (e.Exception is ChoMissingRecordFieldException)
+                        e.Handled = false;
+                    else
+                        e.Handled = true;
+                }))
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+
+            return;
+
+//            string csv = @"Id, Name
+//1, Tom
+//2";
+
+//            using (var r = ChoCSVReader<EmployeeZ>.LoadText(csv)
+//                .WithFirstLineHeader()
+//                .Setup(s => s.RecordLoadError += (o, e) =>
+//                {
+//                    Console.WriteLine(e.Exception.Message);
+//                    e.Handled = true;
+//                })
+//                //.ThrowAndStopOnMissingField()
+//                )
+//            {
+//                foreach (var rec in r)
+//                    Console.WriteLine(rec.Dump());
+//            }
+        }
+
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            SpecialCSVTest();
+            HeaderNotMatchTest();
             return;
 
             CSV2ComplexObject();
@@ -4354,13 +4438,13 @@ S, T% x 100
             }
             return;
 
-    //        foreach (var p in new ChoCSVReader("Sample2.csv").WithFirstLineHeader()
-    //.Configure(c => c.TreatCurrencyAsDecimal = true)
-    ////.Configure(c => c.MaxScanRows = 10)
-    //)
-    //        {
-    //            Console.WriteLine(p.Dump());
-    //        }
+            //        foreach (var p in new ChoCSVReader("Sample2.csv").WithFirstLineHeader()
+            //.Configure(c => c.TreatCurrencyAsDecimal = true)
+            ////.Configure(c => c.MaxScanRows = 10)
+            //)
+            //        {
+            //            Console.WriteLine(p.Dump());
+            //        }
             return;
             ReadAndCloseTest();
             return;
@@ -5684,7 +5768,7 @@ Cassawaw"} },
         //[ChoCSVRecordField(3, FieldName = "Address")]
         //public string Address { get; set; }
 
-            [ChoCSVRecordField]
+        [ChoCSVRecordField]
         public string City { get; set; }
 
         public bool AfterRecordFieldLoad(object target, long index, string propName, object value)

@@ -166,6 +166,9 @@ namespace ChoETL
                     fc.PropConverters = ChoTypeDescriptor.GetTypeConverters(fc.PI);
                     fc.PropConverterParams = ChoTypeDescriptor.GetTypeConverterParams(fc.PI);
 
+                    //Load Custom Serializer
+                    fc.PropCustomSerializer = ChoTypeDescriptor.GetCustomSerializer(fc.PI);
+                    fc.PropCustomSerializerParams = ChoTypeDescriptor.GetCustomSerializerParams(fc.PI);
                 }
 
                 PropertyNames = PDDict.Keys.ToArray();

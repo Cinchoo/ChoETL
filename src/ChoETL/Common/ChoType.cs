@@ -2538,16 +2538,58 @@
 
         #region GetDeclaringMethod Overrides
 
-        public static object GetMemberObjectMatchingType(string declaringMember, object rec)
+        private static readonly object _objCachePadLock = new object();
+        private static readonly Dictionary<Type, object> _objCache = new Dictionary<Type, object>();
+        public static object GetMemberObjectMatchingType(string declaringMember, object rec, params object[] args)
         {
             if (declaringMember == null)
                 return null;
 
-            if (declaringMember.Contains("."))
+            try
             {
-                int index = declaringMember.IndexOf(".");
-                Type type = ChoType.GetType(declaringMember.Substring(0, index));
-                return type == null ? null : Activator.CreateInstance(type);
+                if (declaringMember.Contains("."))
+                {
+                    int index = declaringMember.IndexOf(".");
+                    Type type = ChoType.GetType(declaringMember.Substring(0, index));
+                    if (type == null)
+                        return null;
+                    else
+                    {
+                        lock (_objCachePadLock)
+                        {
+                            if (!_objCache.ContainsKey(type))
+                            {
+                                object o = null;
+                                try
+                                {
+                                    o = ChoActivator.CreateInstance(type, null);
+                                }
+                                catch { }
+
+                                _objCache.Add(type, o);
+                            }
+
+                            return _objCache[type];
+                        }
+                    }
+                }
+                else
+                {
+                    if (ChoType.HasSetProperty(rec.GetType(), declaringMember))
+                    {
+                        var mo = ChoType.GetPropertyValue(rec, declaringMember);
+                        if (mo == null)
+                        {
+                            ChoType.SetPropertyValue(rec, declaringMember, ChoActivator.CreateInstance(ChoType.GetMemberType(rec.GetType(), declaringMember)));
+                            mo = ChoType.GetPropertyValue(rec, declaringMember);
+                        }
+                        return mo;
+                    }
+                }
+            }
+            catch
+            {
+
             }
             return null;
         }

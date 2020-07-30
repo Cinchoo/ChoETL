@@ -583,6 +583,110 @@
 
         #endregion GetTypeConverter Overloads (internal)
 
+        #region GetCustomSerializer Overloads
+
+        public static object GetCustomSerializer(MemberInfo memberInfo)
+        {
+            if (memberInfo == null)
+                return null;
+
+            object[] typeConverters = GetCustomSerializers(memberInfo);
+            if (typeConverters == null || typeConverters.Length == 0)
+                return null;
+
+            return typeConverters[0];
+        }
+
+
+        public static object[] GetCustomSerializers(MemberInfo memberInfo)
+        {
+            if (memberInfo == null)
+                return null;
+
+            object[] tcs = null;
+            Type typeConverterAttribute = typeof(ChoCustomSerializerAttribute);
+
+            int index = 0;
+            SortedList<int, object> queue = new SortedList<int, object>();
+            SortedList<int, object> paramsQueue = new SortedList<int, object>();
+            foreach (Attribute attribute in GetPropetyAttributes<ChoCustomSerializerAttribute>(memberInfo.ReflectedType, memberInfo.Name))  //ChoType.GetMemberAttributesByBaseType(memberInfo, typeof(ChoCustomSerializerAttribute)))
+            {
+                ChoCustomSerializerAttribute converterAttribute = (ChoCustomSerializerAttribute)attribute;
+                if (converterAttribute != null)
+                {
+                    if (converterAttribute.PriorityInternal == null)
+                    {
+                        queue.Add(index, converterAttribute.CreateInstance());
+                        paramsQueue.Add(index, converterAttribute.ParametersArray);
+                        index++;
+                    }
+                    else
+                    {
+                        queue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.CreateInstance());
+                        paramsQueue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.ParametersArray);
+                    }
+                }
+            }
+
+
+            if (queue.Count > 0)
+                return queue.Values.ToArray();
+
+            return EmptyTypeConverters;
+        }
+
+        public static object GetCustomSerializerParams(MemberInfo memberInfo)
+        {
+            if (memberInfo == null)
+                return null;
+
+            object[] typeConverters = GetCustomSerializersParams(memberInfo);
+            if (typeConverters == null || typeConverters.Length == 0)
+                return null;
+
+            return typeConverters[0];
+        }
+
+
+        public static object[] GetCustomSerializersParams(MemberInfo memberInfo)
+        {
+            if (memberInfo == null)
+                return null;
+
+            object[] tcs = null;
+            Type typeConverterAttribute = typeof(ChoCustomSerializerAttribute);
+
+            int index = 0;
+            SortedList<int, object> queue = new SortedList<int, object>();
+            SortedList<int, object> paramsQueue = new SortedList<int, object>();
+            foreach (Attribute attribute in GetPropetyAttributes<ChoCustomSerializerAttribute>(memberInfo.ReflectedType, memberInfo.Name))  //ChoType.GetMemberAttributesByBaseType(memberInfo, typeof(ChoCustomSerializerAttribute)))
+            {
+                ChoCustomSerializerAttribute converterAttribute = (ChoCustomSerializerAttribute)attribute;
+                if (converterAttribute != null)
+                {
+                    if (converterAttribute.PriorityInternal == null)
+                    {
+                        queue.Add(index, converterAttribute.CreateInstance());
+                        paramsQueue.Add(index, converterAttribute.ParametersArray);
+                        index++;
+                    }
+                    else
+                    {
+                        queue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.CreateInstance());
+                        paramsQueue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.ParametersArray);
+                    }
+                }
+            }
+
+
+            if (queue.Count > 0)
+                return paramsQueue.Values.ToArray();
+
+            return EmptyParams;
+        }
+
+        #endregion
+
         #endregion Shared Members (Public)
     }
 }

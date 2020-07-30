@@ -3504,10 +3504,188 @@ K,L,M,N,O,P,Q,R,S,T";
                     Console.WriteLine(rec.Dump());
             }
         }
+
+        static void JSON2DataTable2()
+        {
+            string json = @"{
+    ""data"": {
+        ""utime"": ""2020-07-22 16:02:39.628"",
+        ""record"": [
+            {
+                ""samt"": 0.0,
+                ""itms"": [
+                    {
+                        ""num"": 1.0,
+                        ""itm_det"": {
+                            ""samt"": 0.0,
+                            ""csamt"": 0.5,
+                            ""rt"": 18.0,
+                            ""txval"": 15000.0,
+                            ""camt"": 0.0,
+                            ""iamt"": 2700.0
+                        }
+                    }
+                ],
+                ""val"": 20000.01,
+                ""txval"": 15000.0,
+                ""camt"": 0.0,
+                ""inum"": ""Manjusha-GSTR1"",
+                ""iamt"": 2700.0,
+                ""csamt"": 0.5,
+                ""inv_typ"": ""R"",
+                ""pos"": ""12"",
+                ""idt"": ""16-07-2017"",
+                ""rchrg"": ""N"",
+                ""chksum"": ""23bd7b0296c66900d9b89a7af16facf08bd68a9aa7e0ddb7c7f9aa8d5dd1431e"",
+                ""ctin"": ""27GSPMH0781G1ZK"",
+                ""cfs"": ""Y""
+            }
+        ],
+        ""ttl_record"": 8,
+        ""fp"": ""062018"",
+        ""gstin"": ""33AIYPV3847J1ZC""
+    },
+    ""meta"": {
+        ""form"": ""6a"",
+        ""level"": ""L2"",
+        ""fp"": ""062018"",
+        ""section"": ""b2b"",
+        ""gstin"": ""33AIYPV3847J1ZC"",
+        ""flush"": ""false""
+    }
+}";
+
+            var dt = ChoJSONReader.LoadText(json).AsDataTable();
+            Console.WriteLine(dt.Dump());
+        }
+
+        public class GeographyPoint
+        {
+            public int Latitude { get; }
+            public int Longitude { get; }
+
+            public GeographyPoint(int lat, int lon)
+            {
+                Latitude = lat;
+                Longitude = lon;
+            }
+        }
+
+        public class LookUpData
+        {
+            [DataMember]
+            public string Id { get; set; }
+            [DataMember]
+            [ChoCustomSerializer(typeof(GeographyPointConverter))]
+            public GeographyPoint Location { get; set; }
+        }
+        public class GeographyPointConverter : IChoValueConverter
+        {
+            public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                return new GeographyPoint(1, 1);
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                throw new NotImplementedException();
+            }
+        }
+        static void CustomObjectInstance()
+        {
+            string json = @"{
+    ""Id"": ""123"",
+    ""Location"": {
+      ""Latitude"": 1,
+      ""Longitude"": -1,
+      }
+  }";
+
+            //ChoActivator.Factory = (t, args) =>
+            //{
+            //    if (t == typeof(GeographyPoint))
+            //        return new GeographyPoint(0, 0);
+            //    else
+            //        return null;
+            //};
+
+            using (var r = ChoJSONReader<LookUpData>.LoadText(json)
+                //.WithField(f => f.Id)
+                //.WithField(f => f.Location, customSerializer: o => o)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void ProgramaticSetup()
+        {
+            string json = @"{
+   ""getUsers"":[
+      {
+         ""UserInformation"":{
+            ""Id"":1111122,
+            ""firstName"":""*****1"",
+            ""UserType"":{
+               ""name"":""CP""
+            },
+            ""primaryState"":""MA"",
+            ""otherState"":[
+               ""MA"",
+               ""BA""
+            ],
+            ""createdAt"":""2019-04-21 08:57:53""
+         }
+      },
+      {
+         ""UserInformation"":{
+            ""Id"":3333,
+            ""firstName"":""*****3"",
+            ""UserType"":{
+               ""name"":""CPP""
+            },
+            ""primaryState"":""MPA"",
+            ""otherState"":[
+               ""KL"",
+               ""TN""
+            ],
+            ""createdAt"":null
+         }
+      }
+   ]
+}";
+
+            StringBuilder csv = new StringBuilder();
+
+            var config = new ChoJSONRecordConfiguration();
+            config.JSONPath = "$..getUsers[*].UserInformation";
+            config.AllowComplexJSONPath = true;
+
+            config.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration("Id"));
+            config.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration("FirstName"));
+            config.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration("UserType", "$.UserType.name"));
+            config.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration("primaryState"));
+            config.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration("otherState", "$.otherState[*]") { FieldType = typeof(string[]) });
+            config.JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration("createdAt"));
+
+            using (var r = ChoJSONReader.LoadText(json, config))
+            {
+                using (var w = new ChoCSVWriter(csv).WithFirstLineHeader()
+                    .UseNestedKeyFormat(false)
+                    )
+                    w.Write(r);
+            }
+
+            Console.WriteLine(csv.ToString());
+
+
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            ConditionalSelectionsOfNodes();
+            ProgramaticSetup();
         }
 
         static void SimpleTest()

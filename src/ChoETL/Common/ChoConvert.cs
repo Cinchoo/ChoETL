@@ -509,4 +509,44 @@ namespace ChoETL
             return attr != null ? attr.ObjectValidationMode : ChoObjectValidationMode.Off;
         }
     }
+
+    public static class ChoCustomSerializer
+    {
+        public static object Deserialize(object value, Type targetType, object serializer = null, object serializerParams = null, CultureInfo culture = null, string propName = null)
+        {
+            Type type = value == null ? typeof(object) : value.GetType();
+            if (serializer is TypeConverter)
+            {
+                TypeConverter typeConverter = serializer as TypeConverter;
+                if (typeConverter.CanConvertFrom(type))
+                    value = typeConverter.ConvertFrom((ITypeDescriptorContext)null, culture, value);
+            }
+#if !NETSTANDARD2_0
+            else if (serializer is IValueConverter)
+                value = ((IValueConverter)serializer).Convert(value, targetType, (object)serializerParams, culture);
+#endif
+            else if (serializer is IChoValueConverter)
+                value = ((IChoValueConverter)serializer).Convert(value, targetType, (object)serializerParams, culture);
+
+            return value;
+        }
+
+        public static object Serialize(object value, Type targetType, object serializer = null, object serializerParams = null, CultureInfo culture = null, string propName = null)
+        {
+            if (serializer is TypeConverter)
+            {
+                TypeConverter typeConverter = serializer as TypeConverter;
+                if (typeConverter.CanConvertTo(targetType))
+                    value = typeConverter.ConvertTo((ITypeDescriptorContext)null, culture, value, targetType);
+            }
+#if !NETSTANDARD2_0
+            else if (serializer is IValueConverter)
+                value = ((IValueConverter)serializer).ConvertBack(value, targetType, (object)serializerParams, culture);
+#endif
+            else if (serializer is IChoValueConverter)
+                value = ((IChoValueConverter)serializer).ConvertBack(value, targetType, (object)serializerParams, culture);
+
+            return value;
+        }
+    }
 }

@@ -146,6 +146,8 @@ namespace ChoETL
         internal PropertyDescriptor PD;
         public object[] PropConverters;
         public object[] PropConverterParams;
+        public object PropCustomSerializer;
+        public object PropCustomSerializerParams;
 
         public ChoRecordFieldConfiguration(string name, ChoRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)
         {

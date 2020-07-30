@@ -433,8 +433,8 @@ namespace ChoETL
                         throw;
                     else
                     {
-                        ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
-                        rec = null;
+                        //ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                        //rec = null;
                     }
                 }
                 else
@@ -452,8 +452,8 @@ namespace ChoETL
                             throw;
                         else
                         {
-                            ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
-                            rec = null;
+                            //ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                            //rec = null;
                         }
                     }
                     else
@@ -550,6 +550,10 @@ namespace ChoETL
                             fieldConfig.PI = pi;
                             fieldConfig.PropConverters = ChoTypeDescriptor.GetTypeConverters(fieldConfig.PI);
                             fieldConfig.PropConverterParams = ChoTypeDescriptor.GetTypeConverterParams(fieldConfig.PI);
+
+                            //Load Custom Serializer
+                            fieldConfig.PropCustomSerializer = ChoTypeDescriptor.GetCustomSerializer(fieldConfig.PI);
+                            fieldConfig.PropCustomSerializerParams = ChoTypeDescriptor.GetCustomSerializerParams(fieldConfig.PI);
                         }
 
                         if (pi != null)

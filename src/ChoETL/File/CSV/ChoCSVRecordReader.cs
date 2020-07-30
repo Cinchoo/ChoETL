@@ -597,8 +597,8 @@ namespace ChoETL
                         throw;
                     else
                     {
-                        ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
-                        rec = null;
+                        //ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                        //rec = null;
                     }
                 }
                 else
@@ -615,8 +615,8 @@ namespace ChoETL
                             throw;
                         else
                         {
-                            ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
-                            rec = null;
+                            //ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                            //rec = null;
                         }
                     }
                     else
@@ -644,6 +644,7 @@ namespace ChoETL
             return fnv;
         }
 
+        private const string MISSING_VALUE = "^MISSING_VALUE$";
         private void ToFieldNameValues(Dictionary<string, object> fnv, string[] fieldValues)
         {
             if (_fieldNames == null)
@@ -654,8 +655,8 @@ namespace ChoETL
             {
                 if (index - 1 < fieldValues.Length)
                     fnv[name] = fieldValues[index - 1];
-                //else
-                //    fnv[name] = String.Empty;
+                else
+                    fnv[name] = MISSING_VALUE;
 
                 index++;
             }
@@ -733,10 +734,10 @@ namespace ChoETL
                                     }
                                 }
 
-                                if (fieldValue == null)
+                                if (fieldValue == null || fieldValue.ToNString() == MISSING_VALUE)
                                 {
                                     if (Configuration.ThrowAndStopOnMissingField)
-                                        throw new ChoMissingRecordFieldException("Missing '{0}' field in CSV file.".FormatString(fieldConfig.FieldName));
+                                        throw new ChoMissingRecordFieldException("Missing '{0}' field value in CSV file.".FormatString(fieldConfig.FieldName));
                                     else
                                         fieldValue = null; // fieldNameValues;
 
@@ -834,6 +835,10 @@ namespace ChoETL
                             fieldConfig.PI = pi;
                             fieldConfig.PropConverters = ChoTypeDescriptor.GetTypeConverters(fieldConfig.PI);
                             fieldConfig.PropConverterParams = ChoTypeDescriptor.GetTypeConverterParams(fieldConfig.PI);
+
+                            //Load Custom Serializer
+                            fieldConfig.PropCustomSerializer = ChoTypeDescriptor.GetCustomSerializer(fieldConfig.PI);
+                            fieldConfig.PropCustomSerializerParams = ChoTypeDescriptor.GetCustomSerializerParams(fieldConfig.PI);
                         }
 
                         if (pi != null)
@@ -1188,25 +1193,37 @@ namespace ChoETL
                 }
             }
 
-            if (Configuration.ColumnCountStrict)
+            if (Configuration.FileHeaderConfiguration.HasHeaderRecord && !Configuration.FileHeaderConfiguration.IgnoreHeader)
             {
-                if (_fieldNames.Length != Configuration.CSVRecordFieldConfigurations.Count)
-                    throw new ChoParserException("Incorrect number of field headers found. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.CSVRecordFieldConfigurations.Count, _fieldNames.Length));
-
-                string[] foundList = Configuration.CSVRecordFieldConfigurations.Select(i => i.FieldName).Except(_fieldNames, Configuration.FileHeaderConfiguration.StringComparer).ToArray();
-                if (foundList.Any())
-                    throw new ChoParserException("Header name(s) [{0}] are not found in file header.".FormatString(String.Join(",", foundList)));
-            }
-
-            if (Configuration.ColumnOrderStrict)
-            {
-                int colIndex = 0;
-                foreach (string fieldName in Configuration.CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Select(i => i.FieldName))
+                if (Configuration.ThrowAndStopOnMissingCSVColumn)
                 {
-                    if (!Configuration.FileHeaderConfiguration.IsEqual(_fieldNames[colIndex], fieldName))
-                        throw new ChoParserException("Incorrect CSV column order found. Expected [{0}] CSV column at '{1}' location.".FormatString(fieldName, colIndex + 1));
+                    foreach (string fieldName in Configuration.CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Select(i => i.FieldName))
+                    {
+                        if (!_fieldNames.Contains(fieldName, Configuration.FileHeaderConfiguration.StringComparer))
+                            throw new ChoMissingCSVColumnException("Missing '{0}' CSV column in CSV file.".FormatString(fieldName));
+                    }
+                }
 
-                    colIndex++;
+                if (Configuration.ColumnCountStrict)
+                {
+                    if (_fieldNames.Length != Configuration.CSVRecordFieldConfigurations.Count)
+                        throw new ChoParserException("Incorrect number of field headers found. Expected [{0}] fields. Found [{1}] fields.".FormatString(Configuration.CSVRecordFieldConfigurations.Count, _fieldNames.Length));
+
+                    string[] foundList = Configuration.CSVRecordFieldConfigurations.Select(i => i.FieldName).Except(_fieldNames, Configuration.FileHeaderConfiguration.StringComparer).ToArray();
+                    if (foundList.Any())
+                        throw new ChoParserException("Header name(s) [{0}] are not found in file header.".FormatString(String.Join(",", foundList)));
+                }
+
+                if (Configuration.ColumnOrderStrict)
+                {
+                    int colIndex = 0;
+                    foreach (string fieldName in Configuration.CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Select(i => i.FieldName))
+                    {
+                        if (!Configuration.FileHeaderConfiguration.IsEqual(_fieldNames[colIndex], fieldName))
+                            throw new ChoParserException("Incorrect CSV column order found. Expected [{0}] CSV column at '{1}' location.".FormatString(fieldName, colIndex + 1));
+
+                        colIndex++;
+                    }
                 }
             }
         }
@@ -1360,6 +1377,10 @@ namespace ChoETL
             else if (_callbackRecordRead != null)
             {
                 return ChoFuncEx.RunWithIgnoreError(() => _callbackRecordRead.RecordLoadError(target, pair.Item1, pair.Item2, ex), false);
+            }
+            else if (ex is ChoMissingRecordFieldException)
+            {
+                return !Configuration.ThrowAndStopOnMissingField;
             }
             return true;
         }

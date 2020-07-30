@@ -298,8 +298,8 @@ namespace ChoETL
                         throw;
                     else
                     {
-                        ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
-                        rec = null;
+                        //ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                        //rec = null;
                     }
                 }
                 else

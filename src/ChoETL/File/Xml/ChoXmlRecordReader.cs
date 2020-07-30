@@ -484,8 +484,8 @@ namespace ChoETL
                         throw;
                     else
                     {
-                        ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
-                        rec = null;
+                        //ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                        //rec = null;
                     }
                 }
                 else
@@ -502,8 +502,8 @@ namespace ChoETL
                             throw;
                         else
                         {
-                            ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
-                            rec = null;
+                            //ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                            //rec = null;
                         }
                     }
                     else
@@ -594,6 +594,8 @@ namespace ChoETL
                             value = Normalize(fieldConfig.CustomSerializer(node));
                         else if (RaiseRecordFieldDeserialize(rec, pair.Item1, kvp.Key, ref value))
                             value = Normalize(value);
+                        else if (fieldConfig.PropCustomSerializer != null)
+                            value = Normalize(ChoCustomSerializer.Deserialize(value, fieldConfig.FieldType, fieldConfig.PropCustomSerializer, fieldConfig.PropCustomSerializerParams, Configuration.Culture, fieldConfig.Name));
 
                         if (value is XElement)
                         {
@@ -628,6 +630,8 @@ namespace ChoETL
                             fieldValue = Normalize(fieldConfig.CustomSerializer(xNodes));
                         else if (RaiseRecordFieldDeserialize(rec, pair.Item1, kvp.Key, ref value))
                             fieldValue = Normalize(value);
+                        else if (fieldConfig.PropCustomSerializer != null)
+                            fieldValue = Normalize(ChoCustomSerializer.Deserialize(value, fieldConfig.FieldType, fieldConfig.PropCustomSerializer, fieldConfig.PropCustomSerializerParams, Configuration.Culture, fieldConfig.Name));
                         else
                         {
                             //object[] xNodes = ((IEnumerable)node.XPathEvaluate(fieldConfig.XPath, Configuration.NamespaceManager)).OfType<object>().ToArray();
@@ -1033,6 +1037,10 @@ namespace ChoETL
                             fieldConfig.PI = pi;
                             fieldConfig.PropConverters = ChoTypeDescriptor.GetTypeConverters(fieldConfig.PI);
                             fieldConfig.PropConverterParams = ChoTypeDescriptor.GetTypeConverterParams(fieldConfig.PI);
+
+                            //Load Custom Serializer
+                            fieldConfig.PropCustomSerializer = ChoTypeDescriptor.GetCustomSerializer(fieldConfig.PI);
+                            fieldConfig.PropCustomSerializerParams = ChoTypeDescriptor.GetCustomSerializerParams(fieldConfig.PI);
                         }
 
                         if (pi != null)

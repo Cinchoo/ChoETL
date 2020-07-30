@@ -846,6 +846,12 @@ namespace ChoETL
             return this;
         }
 
+        public ChoCSVReader<T> ThrowAndStopOnMissingCSVColumn(bool flag = true)
+        {
+            Configuration.ThrowAndStopOnMissingCSVColumn = flag;
+            return this;
+        }
+
         public ChoCSVReader<T> Configure(Action<ChoCSVRecordConfiguration> action)
         {
             if (action != null)

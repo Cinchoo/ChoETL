@@ -30,4 +30,28 @@ namespace ChoETL
         {
         }
     }
+
+    [Serializable]
+    public class ChoMissingCSVColumnException : ChoMissingRecordFieldException
+    {
+        public ChoMissingCSVColumnException()
+            : base()
+        {
+        }
+
+        public ChoMissingCSVColumnException(string message)
+            : base(message)
+        {
+        }
+
+        public ChoMissingCSVColumnException(string message, Exception e)
+            : base(message, e)
+        {
+        }
+
+        protected ChoMissingCSVColumnException(SerializationInfo si, StreamingContext sc)
+            : base(si, sc)
+        {
+        }
+    }
 }

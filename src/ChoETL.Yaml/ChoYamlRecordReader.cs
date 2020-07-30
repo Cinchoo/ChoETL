@@ -544,8 +544,8 @@ namespace ChoETL
                         throw;
                     else
                     {
-                        ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
-                        rec = null;
+                        //ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                        //rec = null;
                     }
                 }
                 else
@@ -562,8 +562,8 @@ namespace ChoETL
                             throw;
                         else
                         {
-                            ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
-                            rec = null;
+                            //ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring record...".FormatString(ex.Message));
+                            //rec = null;
                         }
                     }
                     else
@@ -691,6 +691,8 @@ namespace ChoETL
                         fieldValue = fieldConfig.CustomSerializer(v1);
                     else if (RaiseRecordFieldDeserialize(rec, pair.Item1, kvp.Key, ref v1))
                         fieldValue = v1;
+                    else if (fieldConfig.PropCustomSerializer != null)
+                        fieldValue = ChoCustomSerializer.Deserialize(v1, fieldConfig.FieldType, fieldConfig.PropCustomSerializer, fieldConfig.PropCustomSerializerParams, Configuration.Culture, fieldConfig.Name);
                     else
                     {
                         if (fieldConfig.FieldType == null)
@@ -846,6 +848,10 @@ namespace ChoETL
                             fieldConfig.PI = pi;
                             fieldConfig.PropConverters = ChoTypeDescriptor.GetTypeConverters(fieldConfig.PI);
                             fieldConfig.PropConverterParams = ChoTypeDescriptor.GetTypeConverterParams(fieldConfig.PI);
+
+                            //Load Custom Serializer
+                            //fieldConfig.PropCustomSerializer = ChoTypeDescriptor.GetCustomSerializer(fieldConfig.PI);
+                            //fieldConfig.PropCustomSerializerParams = ChoTypeDescriptor.GetCustomSerializerParams(fieldConfig.PI);
                         }
 
                         if (pi != null)
