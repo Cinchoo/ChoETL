@@ -885,11 +885,66 @@ namespace ChoJSONWriterTest
             Console.WriteLine(json.ToString());
         }
 
+        public class TestObj
+        {
+            [JsonProperty("full_name")]
+            public string Name { get; set; }
+
+
+            public City City { get; set; } = new City();
+        }
+
+        public class City
+        {
+            [JsonProperty("city_name")]
+            public string Name { get; set; }
+            [JsonProperty("zip")]
+            public string ZIP { get; set; }
+            [JsonProperty("country")]
+            public Country Country { get; set; }
+        }
+
+        public class Country
+        {
+            public string Name { get; set; }
+        }
+
+        static void FlattenJson()
+        {
+            StringBuilder json = new StringBuilder();
+
+            using (var w = new ChoJSONWriter<TestObj>(json)
+                .MapRecordFields<City>()
+                .ClearFields()
+                .WithField(f => f.Name, fieldName: "full_name")
+                .WithField(f => f.City.Name, fieldName: "city_name")
+                .WithField(f => f.City.ZIP, fieldName: "zip")
+                .WithField(f => f.City.Country.Name, fieldName: "country")
+                )
+            {
+                w.Write(new TestObj
+                {
+                    Name = "Tom",
+                    City =
+                    {
+                        Name = "NYC",
+                        ZIP = "100010",
+                        Country = new Country
+                        {
+                            Name = "USA"
+                        }
+                    }
+                });
+            }
+
+            Console.WriteLine(json.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            ConditionalSelectionsOfNodes();
+            FlattenJson();
             return;
 
             StringBuilder json = new StringBuilder();

@@ -569,6 +569,7 @@ namespace ChoETL
                 }
             }
 
+            rec = rootRec;
             return true;
         }
 

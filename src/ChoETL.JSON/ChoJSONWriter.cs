@@ -586,14 +586,23 @@ namespace ChoETL
 
         public ChoJSONWriter<T> MapRecordFields<T1>()
         {
-            Configuration.MapRecordFields<T1>();
+            if (typeof(T) == typeof(T1))
+                Configuration.MapRecordFields<T1>();
+            else
+                Configuration.MapRecordFieldsForType(typeof(T1));
+
             return this;
         }
 
         public ChoJSONWriter<T> MapRecordFields(Type recordType)
         {
             if (recordType != null)
-                Configuration.MapRecordFields(recordType);
+            {
+                if (typeof(T) == recordType)
+                    Configuration.MapRecordFields(recordType);
+                else
+                    Configuration.MapRecordFieldsForType(recordType);
+            }
 
             return this;
         }

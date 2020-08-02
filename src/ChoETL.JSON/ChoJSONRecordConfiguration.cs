@@ -576,7 +576,7 @@ namespace ChoETL
                 fieldConfig.Validate(this);
 
             //Check field position for duplicate
-            string[] dupFields = JSONRecordFieldConfigurations.GroupBy(i => i.Name)
+            string[] dupFields = JSONRecordFieldConfigurations.GroupBy(i => i.FieldName)
                 .Where(g => g.Count() > 1)
                 .Select(g => g.Key).ToArray();
 
@@ -697,7 +697,7 @@ namespace ChoETL
             var fqm = field.GetFullyQualifiedMemberName();
 
             ChoJSONRecordFieldConfiguration cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(),
-                pd, fqm, subType == typeof(T) ? null : subType);
+                pd, fqm, null /* subType == typeof(T) ? null : subType */);
             mapper?.Invoke(new ChoJSONRecordFieldConfigurationMap(cf));
             return this;
         }
@@ -718,12 +718,12 @@ namespace ChoETL
                 if (subRecordType != null)
                     MapRecordFieldsForType(subRecordType);
 
-                string fnTrim = name.NTrim();
+                string fnTrim = fieldName.IsNullOrWhiteSpace() ? name.NTrim() : fieldName;
                 ChoJSONRecordFieldConfiguration fc = null;
                 PropertyDescriptor pd = null;
-                if (JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                if (JSONRecordFieldConfigurations.Any(o => o.FieldName == fnTrim))
                 {
-                    fc = JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+                    fc = JSONRecordFieldConfigurations.Where(o => o.FieldName == fnTrim).First();
                     JSONRecordFieldConfigurations.Remove(fc);
                 }
                 else if (subRecordType != null)
@@ -781,6 +781,8 @@ namespace ChoETL
             {
                 MapRecordFieldsForType(subType);
                 var fc = new ChoJSONRecordFieldConfiguration(propertyName, attr, otherAttrs);
+                fc.PropertyDescriptor = pd;
+                fc.DeclaringMember = fqm;
                 AddFieldForType(subType, fc);
 
                 return fc;
@@ -790,7 +792,11 @@ namespace ChoETL
                 if (!JSONRecordFieldConfigurations.Any(fc => fc.Name == propertyName))
                     JSONRecordFieldConfigurations.Add(new ChoJSONRecordFieldConfiguration(propertyName, attr, otherAttrs));
 
-                return JSONRecordFieldConfigurations.First(fc => fc.Name == propertyName);
+                var nfc = JSONRecordFieldConfigurations.First(fc => fc.Name == propertyName);
+                nfc.PropertyDescriptor = pd;
+                nfc.DeclaringMember = fqm;
+
+                return nfc;
             }
         }
 

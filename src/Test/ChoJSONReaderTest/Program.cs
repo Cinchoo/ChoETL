@@ -3682,10 +3682,49 @@ K,L,M,N,O,P,Q,R,S,T";
 
         }
 
+        public class InsertIntoDbEntity
+        {
+            public string tableName { get; set; }
+            public InsertIntoDbColumnsValuesEntity columnsValues { get; set; }
+
+            public InsertIntoDbEntity()
+            {
+                columnsValues = new InsertIntoDbColumnsValuesEntity();
+            }
+        }
+
+        public class InsertIntoDbColumnsValuesEntity
+        {
+            public Dictionary<string, string> columnsValues { get; set; }
+        }
+
+        static void JSONTest1()
+        {
+            string json = @"{
+    ""tableName"": ""ApiTestTbl"",
+    ""columnsValues"": {
+        ""test1"": ""value1"",
+        ""column2"": ""value2""
+    }
+}";
+
+            var config = new ChoJSONRecordConfiguration<InsertIntoDbEntity>();
+            config.Map(f => f.tableName);
+            config.Map(f => f.columnsValues.columnsValues, "$..columnsValues");
+
+            using (var r = ChoJSONReader<InsertIntoDbEntity>.LoadText(json, config)
+                //.WithField(f => f.columnsValues.columnsValues, jsonPath: "$..columnsValues")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            ProgramaticSetup();
+            JSONTest1();
         }
 
         static void SimpleTest()

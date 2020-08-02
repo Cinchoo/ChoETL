@@ -153,23 +153,64 @@ namespace ChoETL
                                         keyValueSeparator = fc.KeyValueSeparator;
                                 }
 
-                                object key = null;
-                                object value = null;
-                                foreach (var kvp in ((string)fieldValue).ToKeyValuePairs(itemSeparator, keyValueSeparator))
+                                if (fieldValue is string)
                                 {
-                                    key = null;
-                                    value = null;
-                                    if (fieldConfig.KeyConverters.IsNullOrEmpty())
-                                        key = ChoConvert.ConvertFrom(kvp.Key, keyType, null, null, fcParams, culture);
-                                    else
-                                        key = ChoConvert.ConvertFrom(kvp.Key, keyType, null, fieldConfig.KeyConverters.ToArray(), fcParams, culture);
-                                    if (fieldConfig.ValueConverters.IsNullOrEmpty())
-                                        value = ChoConvert.ConvertFrom(kvp.Value, valueType, null, null, fcParams, culture);
-                                    else
-                                        value = ChoConvert.ConvertFrom(kvp.Value, valueType, null, fieldConfig.ValueConverters.ToArray(), fcParams, culture);
+                                    object key = null;
+                                    object value = null;
+                                    foreach (var kvp in ((string)fieldValue).ToKeyValuePairs(itemSeparator, keyValueSeparator))
+                                    {
+                                        key = null;
+                                        value = null;
+                                        if (fieldConfig.KeyConverters.IsNullOrEmpty())
+                                            key = ChoConvert.ConvertFrom(kvp.Key, keyType, null, null, fcParams, culture);
+                                        else
+                                            key = ChoConvert.ConvertFrom(kvp.Key, keyType, null, fieldConfig.KeyConverters.ToArray(), fcParams, culture);
+                                        if (fieldConfig.ValueConverters.IsNullOrEmpty())
+                                            value = ChoConvert.ConvertFrom(kvp.Value, valueType, null, null, fcParams, culture);
+                                        else
+                                            value = ChoConvert.ConvertFrom(kvp.Value, valueType, null, fieldConfig.ValueConverters.ToArray(), fcParams, culture);
 
-                                    if (key != null)
-                                        dict.Add(key, value);
+                                        if (key != null)
+                                            dict.Add(key, value);
+                                    }
+                                }
+                                else if (typeof(IDictionary<string, object>).IsAssignableFrom(fieldValue.GetType()))
+                                {
+                                    object key1 = null;
+                                    object value1 = null;
+                                    foreach (var kvp in ((IDictionary<string, object>)fieldValue))
+                                    {
+                                        if (fieldConfig.KeyConverters.IsNullOrEmpty())
+                                            key1 = ChoConvert.ConvertFrom(kvp.Key, keyType, null, null, fcParams, culture);
+                                        else
+                                            key1 = ChoConvert.ConvertFrom(kvp.Key, keyType, null, fieldConfig.KeyConverters.ToArray(), fcParams, culture);
+                                        if (fieldConfig.ValueConverters.IsNullOrEmpty())
+                                            value1 = ChoConvert.ConvertFrom(kvp.Value, valueType, null, null, fcParams, culture);
+                                        else
+                                            value1 = ChoConvert.ConvertFrom(kvp.Value, valueType, null, fieldConfig.ValueConverters.ToArray(), fcParams, culture);
+
+                                        if (key1 != null)
+                                            dict.Add(key1, value1);
+                                    }
+                                }
+                                else if (fieldValue is IDictionary)
+                                {
+                                    object key1 = null;
+                                    object value1 = null;
+                                    foreach (var lkey in ((IDictionary)fieldValue).Keys)
+                                    {
+                                        if (fieldConfig.KeyConverters.IsNullOrEmpty())
+                                            key1 = ChoConvert.ConvertFrom(lkey, keyType, null, null, fcParams, culture);
+                                        else
+                                            key1 = ChoConvert.ConvertFrom(lkey, keyType, null, fieldConfig.KeyConverters.ToArray(), fcParams, culture);
+                                        if (fieldConfig.ValueConverters.IsNullOrEmpty())
+                                            value1 = ChoConvert.ConvertFrom(((IDictionary)fieldValue)[lkey], valueType, null, null, fcParams, culture);
+                                        else
+                                            value1 = ChoConvert.ConvertFrom(((IDictionary)fieldValue)[lkey], valueType, null, fieldConfig.ValueConverters.ToArray(), fcParams, culture);
+
+                                        if (key1 != null)
+                                            dict.Add(key1, value1);
+                                    }
                                 }
                             }
                             else

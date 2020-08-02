@@ -4401,11 +4401,51 @@ S, T% x 100
 //            }
         }
 
+        static void NestedColumnSeparatorTest()
+        {
+            using (var csv = new ChoCSVReader("nested.csv").WithFirstLineHeader().Configure(c => c.NestedColumnSeparator = '/'))
+            {
+                foreach (var x in csv) Console.WriteLine(x.DumpAsJson());
+            }
+        }
+
+        static void FluentAPIMappingTest()
+        {
+            string csv = @"Id, Name
+
+2, Mark";
+
+            var c = new ChoCSVRecordConfiguration<EmployeeZ>();
+            c.Map(m => m.Id, m => m.DefaultValue("YY"));
+            c.Map(m => m.Name, m => m.FallbackValue("XX"));
+
+            using (var r = ChoCSVReader<EmployeeZ>.LoadText(csv, c)
+                .WithFirstLineHeader()
+                .ThrowAndStopOnMissingCSVColumn(false)
+                .ThrowAndStopOnMissingField(false)
+                //.Setup(s => s.RecordLoadError += (o, e) =>
+                //{
+                //    Console.WriteLine(e.Exception.Message);
+                //    if (e.Exception is ChoMissingRecordFieldException)
+                //    {
+                //        e.Handled = true;
+                //        var obj = e.Record as EmployeeZ;
+                //        obj.Name = "XXX";
+                //    }
+                //    else
+                //        e.Handled = true;
+                //})
+                //.ThrowAndStopOnMissingField()
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            HeaderNotMatchTest();
             return;
 
             CSV2ComplexObject();

@@ -2128,9 +2128,13 @@ namespace ChoETL
             }
         }
 
-        public static readonly DataContractJsonSerializerSettings jsonSettings = new DataContractJsonSerializerSettings { UseSimpleDictionaryFormat = true };
-
+        public static readonly DataContractJsonSerializerSettings _jsonSettings = new DataContractJsonSerializerSettings { UseSimpleDictionaryFormat = true, EmitTypeInformation = EmitTypeInformation.Never };
         public static string DumpAsJson(this object target, Encoding encoding = null)
+        {
+            return DumpAsJson(target, encoding, null);
+        }
+
+        public static string DumpAsJson(this object target, Encoding encoding, DataContractJsonSerializerSettings jsonSettings)
         {
             if (target == null)
                 return String.Empty;
@@ -2142,10 +2146,10 @@ namespace ChoETL
                 using (var writer = JsonReaderWriterFactory.CreateJsonWriter(
                    ms, encoding, true, true, "  "))
                 {
-                    DataContractJsonSerializer serializer = new DataContractJsonSerializer(target.GetType(), jsonSettings);
+                    DataContractJsonSerializer serializer = new DataContractJsonSerializer(target.GetType(), jsonSettings == null ? _jsonSettings : jsonSettings);
 
-                    if (target.GetType().IsDynamicType())
-                        serializer = new DataContractJsonSerializer(typeof(IDictionary<string, object>), jsonSettings);
+                    //if (target.GetType().IsDynamicType())
+                    //    serializer = new DataContractJsonSerializer(typeof(IDictionary<string, object>), jsonSettings);
 
                     serializer.WriteObject(writer, target);
                     writer.Flush();

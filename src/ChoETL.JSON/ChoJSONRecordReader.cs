@@ -1148,6 +1148,7 @@ namespace ChoETL
             //    rec = AssignDefaultsToNullableMembers(rec);
             //}
 
+            rec = rootRec;
             return true;
         }
 
