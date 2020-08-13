@@ -786,7 +786,10 @@ namespace ChoETL
 
                     jTokens = node.SelectTokens(kvp.Value.JSONPath).ToArray();
                     if (!fieldConfig.FieldType.IsCollection())
+                    {
                         jToken = jTokens.FirstOrDefault();
+                        jTokens = null;
+                    }
                     if (jToken == null)
                     {
                         if (Configuration.ColumnCountStrict)
@@ -848,10 +851,17 @@ namespace ChoETL
                     {
                         if (fieldConfig.FieldType == null)
                         {
-                            if (!fieldConfig.IsArray && fieldValue is JToken[])
+                            if (!fieldConfig.IsArray)
                             {
-                                fieldValue = ((JToken[])fieldValue).FirstOrDefault();
-                                if (fieldValue is JArray)
+                                if (fieldValue is JToken[])
+                                {
+                                    fieldValue = ((JToken[])fieldValue).FirstOrDefault();
+                                    if (fieldValue is JArray)
+                                    {
+                                        fieldValue = ((JArray)fieldValue).FirstOrDefault();
+                                    }
+                                }
+                                else if (fieldValue is JArray)
                                 {
                                     fieldValue = ((JArray)fieldValue).FirstOrDefault();
                                 }
