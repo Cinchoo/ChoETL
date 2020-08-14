@@ -68,10 +68,11 @@ namespace ChoETL
             try
             {
 				object obj = Factory != null ? Factory(objType, args) : null;
-				if (obj == null)
-					obj = Activator.CreateInstance(objType, args);
-
-				obj.Initialize();
+                if (obj == null)
+                {
+                    obj = Activator.CreateInstance(objType, args);
+                    obj.Initialize();
+                }
                 return obj;
             }
             catch (TargetInvocationException ex)
