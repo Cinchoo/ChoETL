@@ -851,7 +851,7 @@ namespace ChoETL
                     {
                         if (fieldConfig.FieldType == null)
                         {
-                            if (!fieldConfig.IsArray)
+                            if (!Configuration.IsArray(fieldConfig))
                             {
                                 if (fieldValue is JToken[])
                                 {

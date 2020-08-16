@@ -134,6 +134,11 @@ namespace ChoETL
                     //else
                         continue;
                 }
+                else if (!(value is string))
+                {
+                    fieldTypes[key] = value.GetType();
+                    continue;
+                }
 
                 bool boolValue;
                 long lresult = 0;

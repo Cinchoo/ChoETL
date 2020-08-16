@@ -3721,10 +3721,79 @@ K,L,M,N,O,P,Q,R,S,T";
             }
         }
 
+        static void JSON2CSV2()
+        {
+            string json = @"{
+""GpsLocation"": {
+        ""Equipment"": [
+            {
+                ""EquipmentId"": ""EQ00001"",
+                ""InquiryValue"": [
+                    ""IV00001""
+                ],
+                ""Timestamp"": ""2020-02-01 01:01:01.01"",
+            },
+            {
+                ""EquipmentId"": ""EQ00002"",
+                ""InquiryValue"": [
+                    ""IV00002""
+                ],
+                ""Timestamp"": ""2020-01-01 01:01:01.01""
+            }
+        ]
+    }
+}";
+
+            StringBuilder csv = new StringBuilder();
+
+            using (var r = ChoJSONReader.LoadText(json)
+                .WithJSONPath("$.GpsLocation.Equipment")
+                .WithField("EquipmentId")
+                .WithField("InquiryValue", jsonPath: "InquiryValue[0]")
+                .WithField("Timestamp", fieldType: typeof(DateTime))
+                )
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader())
+                    w.Write(r);
+            }
+            Console.WriteLine(csv.ToString());
+        }
+
+        static void Sample42Test()
+        {
+            StringBuilder csv = new StringBuilder();
+            using (var r = new ChoJSONReader("sample42.json"))
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithDelimiter("|")
+                    .WithFirstLineHeader())
+                {
+                    w.Write(r.SelectMany(r1 => 
+                        ((Array)r1.Data).Cast<dynamic>()
+                        .SelectMany(d => ((Array)d.Process).Cast<dynamic>()
+                        .SelectMany(p => ((Array)p.Detail).Cast<dynamic>()
+                        .Select(d1 => new
+                                    {
+                                        r1.Comment,
+                                        r1.File,
+                                        Data_0_DataID = d.DataID,
+                                        Data_0_Process_StartDate = p.StartDate,
+                                        Data_0_Process_Detail = d1
+                                    })
+                                )
+                            )
+                        )
+                    );
+                }
+            }
+            Console.WriteLine(csv.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            JSONTest1();
+            Sample42Test();
         }
 
         static void SimpleTest()

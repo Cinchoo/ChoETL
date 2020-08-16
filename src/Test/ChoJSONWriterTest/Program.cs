@@ -940,11 +940,37 @@ namespace ChoJSONWriterTest
             Console.WriteLine(json.ToString());
         }
 
+        public class InputModel
+        {
+            public string Id { get; set; }
+            [DisplayFormat(DataFormatString = "yyyy-MM-dd hh:mm")]
+            public DateTime? ArrivalDate { get; set; }
+            public string origin { get; set; }
+        }
+
+        static void CustomDateTimeFormatTest()
+        {
+            StringBuilder json = new StringBuilder();
+
+            using (var w = new ChoJSONWriter<InputModel>(json)
+                )
+            {
+                w.Write(new InputModel
+                {
+                    Id = "1",
+                    ArrivalDate = DateTime.Now,
+                    origin = "NYC"
+                });
+            }
+
+            Console.WriteLine(json.ToString());
+
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            FlattenJson();
+            CustomDateTimeFormatTest();
             return;
 
             StringBuilder json = new StringBuilder();

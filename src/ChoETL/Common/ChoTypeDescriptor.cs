@@ -165,7 +165,7 @@
                     foreach (var mn in propName.SplitNTrim(".").Where(m => !m.IsNullOrWhiteSpace()))
                     {
                         pd = GetAllPropetiesForType(subType).Where(p => p.Name == mn).FirstOrDefault();
-                        if (subType == null)
+                        if (pd == null || subType == null)
                             break;
                         subType = pd.PropertyType.GetUnderlyingType().GetItemType();
                     }

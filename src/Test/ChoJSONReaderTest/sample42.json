@@ -1,0 +1,91 @@
+﻿{
+    "Comment": "this is json file.",
+    "File": {
+        "Version": "1.0",
+        "FileTransfer": {
+            "CreateDate": "10-08-2020"
+        }
+    },
+    "Data": [
+        {
+            "DataID": "A50000",
+            "Process": [
+                {
+                    "StartDate": "01-07-2020",
+                    "Detail": [
+                        {
+                            "Type": "C",
+                            "Result": {
+                                "Success": true,
+                                "ExamineBy": "Desmond"
+                            },
+                            "Execution": [
+                                {
+                                    "Description": null,
+                                    "ExcecuteBy": "Alice"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "D",
+                            "Result": {
+                                "Success": false,
+                                "ExamineBy": "Desmond"
+                            },
+                            "Execution": [
+                                {
+                                    "Description": "description here",
+                                    "ExcecuteBy": "Alice"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "StartDate": "02-07-2020",
+                    "Detail": [
+                        {
+                            "Type": "G",
+                            "Result": {
+                                "Success": true,
+                                "ExamineBy": "Dan"
+                            },
+                            "Execution": [
+                                {
+                                    "Description": null,
+                                    "ExcecuteBy": "Alice"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "H",
+                            "Result": {
+                                "Success": true,
+                                "ExamineBy": "Dan"
+                            },
+                          "Execution": [
+                            {
+                              "Description": "description here",
+                              "ExcecuteBy": "Alice"
+                            }
+                          ]
+                        },
+                        {
+                            "Type": "J",
+                            "Result": {
+                                "Success": false,
+                                "ExamineBy": "Dan"
+                            },
+                            "Execution": [
+                                {
+                                    "Description": "description here",
+                                    "ExcecuteBy": "Alice"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

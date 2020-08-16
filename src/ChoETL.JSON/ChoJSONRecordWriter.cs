@@ -660,7 +660,7 @@ namespace ChoETL
                             if (fieldConfig.NullValue == null)
                             {
                                 if (fieldConfig.FieldType == null || fieldConfig.FieldType == typeof(object))
-                                    fieldText = !fieldConfig.IsArray ? "null" : "[]";
+                                    fieldText = !Configuration.IsArray(fieldConfig) ? "null" : "[]";
                                 else
                                     fieldText = !typeof(IList).IsAssignableFrom(fieldConfig.FieldType) ? "null" : "[]";
                             }

@@ -25,6 +25,12 @@ namespace ChoETL
         internal readonly Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>> JSONRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>>();
         public readonly Dictionary<Type, Func<object, object>> NodeConvertersForType = new Dictionary<Type, Func<object, object>>();
 
+        public bool? DefaultArrayHandling
+        {
+            get;
+            set;
+        }
+
         public bool AllowComplexJSONPath
         {
             get;
@@ -93,6 +99,14 @@ namespace ChoETL
                 if (value != null && _formatting == null)
                     _formatting = _jsonSerializerSettings.Formatting;
             }
+        }
+
+        internal bool IsArray(ChoJSONRecordFieldConfiguration fc)
+        {
+            if (fc == null || fc.IsArray == null)
+                return DefaultArrayHandling == null ? false : DefaultArrayHandling.Value;
+            else
+                return fc.IsArray.Value;
         }
 
         private List<JsonConverter> GetJSONConverters()
@@ -215,6 +229,7 @@ namespace ChoETL
                 return JsonSerializerSettings == null ? null : JsonSerializer.Create(JsonSerializerSettings);
             });
 
+            DefaultArrayHandling = true;
             JSONRecordFieldConfigurations = new List<ChoJSONRecordFieldConfiguration>();
 
             Formatting = Newtonsoft.Json.Formatting.Indented;
@@ -708,7 +723,7 @@ namespace ChoETL
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null,
-            string formatText = null, bool isArray = true, string nullValue = null, Type recordType = null,
+            string formatText = null, bool? isArray = null, string nullValue = null, Type recordType = null,
             Type subRecordType = null, Func<JObject, Type> fieldTypeSelector = null)
         {
             ChoGuard.ArgumentNotNull(recordType, nameof(recordType));

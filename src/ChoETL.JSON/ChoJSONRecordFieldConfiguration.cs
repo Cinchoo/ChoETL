@@ -22,7 +22,7 @@ namespace ChoETL
             set;
         }
 
-        public bool IsArray
+        public bool? IsArray
         {
             get;
             set;
@@ -57,7 +57,7 @@ namespace ChoETL
 
         internal ChoJSONRecordFieldConfiguration(string name, ChoJSONRecordFieldAttribute attr = null, Attribute[] otherAttrs = null) : base(name, attr, otherAttrs)
         {
-            IsArray = false;
+            //IsArray = false;
             FieldName = name;
             if (attr != null)
             {

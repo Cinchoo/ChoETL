@@ -164,7 +164,7 @@ namespace ChoETL
         {
             if (record is DataTable)
             {
-                Write(record as DataTable);
+                Write(record as DataTable); 
                 return;
             }
             else if (record is IDataReader)
