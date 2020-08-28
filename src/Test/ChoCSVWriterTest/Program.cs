@@ -1643,10 +1643,38 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             Console.WriteLine(csv.ToString());
         }
 
+        public static void CreateCSVFile()
+        {
+            List<dynamic> objs = new List<dynamic>();
+
+            for (int i = 0; i < 100; i++)
+            {
+                dynamic rec = new ExpandoObject();
+                rec.val1 = '1';
+                rec.val2 = '2';
+                rec.val3 = '3';
+                rec.val4 = '4';
+                objs.Add(rec);
+            }
+
+            ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration
+            {
+                Encoding = Encoding.Default
+            };
+
+            using (var parser = new ChoCSVWriter(@"C:\Temp\t.txt", config).WithFirstLineHeader())
+            {
+                parser.Write(objs);
+            }
+        }
+
         static void Main(string[] args)
         {
+            //AppDomain.CurrentDomain.FirstChanceException += (sender, eventArgs) => { Console.WriteLine("FirstChanceException: " + eventArgs.Exception.ToString()); };
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            QuickDynamicTest();
+
+            for (int i = 0; i < 100; i++)
+                CreateCSVFile();
             return;
 
             ChoDynamicObjectSettings.UseOrderedDictionary = false;

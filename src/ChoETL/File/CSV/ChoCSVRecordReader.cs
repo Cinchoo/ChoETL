@@ -521,7 +521,8 @@ namespace ChoETL
             IDictionary<string, object> dict = rec as IDictionary<string, object>;
             dynamic dict1 = new ChoDynamicObject(dict.ToDictionary(kvp => Configuration.RecordFieldConfigurationsDict[kvp.Key].FieldName, kvp => kvp.Value));
 
-            return dict1.ConvertToNestedObject(Configuration.NestedColumnSeparator == null ? '/' : Configuration.NestedColumnSeparator.Value);
+            return dict1.ConvertToNestedObject(Configuration.NestedColumnSeparator == null ? '/' : Configuration.NestedColumnSeparator.Value, Configuration.ArrayIndexSeparator,
+                Configuration.AllowNestedArrayConversion);
         }
 
         private object ConvertToArrayMemebersIfApplicable(object rec, bool headerLineFound)

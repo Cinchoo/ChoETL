@@ -4443,9 +4443,38 @@ S, T% x 100
             }
         }
 
+        static void CSV2JSONWithArraySupport()
+        {
+            string csv = @"id;name;conditions/section_0;conditions/property_0;conditions/operator_0;conditions/value_0;conditions/section_1;conditions/property_1;conditions/operator_1;conditions/value_1
+acf12d17-058e-451e-8449-60948055f6af;TEST1;Item;type;Equal;flight;Data;airlineCode;Equal;DL";
+
+            StringBuilder json = new StringBuilder();
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithDelimiter(";")
+                .WithFirstLineHeader()
+                .NestedColumnSeparator('/')
+                //.AutoArrayDiscovery()
+                .ArrayIndexSeparator('_')
+                )
+            {
+                using (var w = new ChoJSONWriter(json))
+                {
+                    w.Write(r.Select(r1 => new
+                    {
+                        r1.id,
+                        r1.name,
+                        conditions = r1.conditions.Zip()
+                    }));
+                }
+            }
+
+            Console.WriteLine(json.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
+            CSV2JSONWithArraySupport();
             return;
 
             CSV2ComplexObject();

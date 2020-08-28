@@ -63,7 +63,7 @@ namespace ChoETL
             return expando;
         }
 
-        public static dynamic ConvertToNestedObject(this object @this, char separator = '/',
+        public static dynamic ConvertToNestedObject(this object @this, char separator = '/', char? arrayIndexSeparator = null, bool allowNestedConversion = true,
             int maxArraySize = 100)
         {
             if (separator == ChoCharEx.NUL)
@@ -141,7 +141,9 @@ namespace ChoETL
                     root.Add(kvp.Key, kvp.Value);
             }
 
-            return root as ChoDynamicObject;
+            return arrayIndexSeparator == null ? root : root.ConvertMembersToArrayIfAny(arrayIndexSeparator.Value, allowNestedConversion);
+
+            //return root as ChoDynamicObject;
         }
 
         public static dynamic ConvertMembersToArrayIfAny(this object @this, char separator = '_', bool allowNestedConversion = true)

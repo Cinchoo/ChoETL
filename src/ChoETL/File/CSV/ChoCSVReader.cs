@@ -487,6 +487,7 @@ namespace ChoETL
                 throw new ArgumentException("Invalid array index separator passed.");
 
             Configuration.ArrayIndexSeparator = value;
+            Configuration.AllowNestedArrayConversion = true;
             return this;
         }
 

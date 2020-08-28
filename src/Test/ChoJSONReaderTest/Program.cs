@@ -3789,11 +3789,50 @@ K,L,M,N,O,P,Q,R,S,T";
             }
             Console.WriteLine(csv.ToString());
         }
+        public class CreateRequest
+        {
+            public long code { get; set; }
+            public string message { get; set; }
+            [JsonProperty("class")]
+            public string class1 { get; set; }
+            public string key { get; set; }
+            public Fields fields { get; set; }
+        }
+        public class Fields
+        {
+            [JsonProperty("ref")]
+            public string refe { get; set; }
+            public string org_id { get; set; }
+        }
 
+        static void DesrializeSelectiveNode()
+        {
+            string json = @"{
+    ""objects"": {
+        ""UserRequest::567"": {
+            ""code"": 1,
+            ""message"": ""created"",
+            ""class"": ""UserRequest"",
+            ""key"": ""567"",
+            ""fields"": {
+                ""ref"": ""R-000567"",
+                ""org_id"": ""4""
+            }
+        }
+    }
+}";
+            using (var r = ChoJSONReader<CreateRequest>.LoadText(json)
+                .WithJSONPath("$.objects.*", true)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            Sample42Test();
+            DesrializeSelectiveNode();
         }
 
         static void SimpleTest()

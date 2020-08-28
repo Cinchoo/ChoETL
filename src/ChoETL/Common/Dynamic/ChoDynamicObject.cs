@@ -247,9 +247,9 @@ namespace ChoETL
             return ChoExpandoObjectEx.ConvertMembersToArrayIfAny(this, separator, allowNestedConversion);
         }
 
-        public dynamic ConvertToNestedObject(char separator = '/')
+        public dynamic ConvertToNestedObject(char separator = '/', char? arrayIndexSeparator = null, bool allowNestedArrayConversion = true)
         {
-            return ChoExpandoObjectEx.ConvertToNestedObject(this, separator);
+            return ChoExpandoObjectEx.ConvertToNestedObject(this, separator, arrayIndexSeparator, allowNestedArrayConversion);
         }
 
         public dynamic ConvertToFlattenObject(char? nestedKeySeparator = null, bool ignoreDictionaryFieldPrefix = false)
@@ -1416,6 +1416,58 @@ namespace ChoETL
             }
 
             return obj;
+        }
+
+        public dynamic[] Zip()
+        {
+            List<dynamic> result = new List<dynamic>();
+            var kvpDict = _kvpDict;
+
+            if (kvpDict == null)
+                return result.ToArray();
+
+            int index = 0;
+            int length = 0;
+            foreach (var kvp in kvpDict)
+            {
+                var value = kvp.Value as IList;
+                if (value != null)
+                    length = length < value.Count ? value.Count : length;
+            }
+
+            while (index < length)
+            {
+                ChoDynamicObject obj = new ChoDynamicObject();
+                foreach (var kvp in kvpDict)
+                {
+                    var value = kvp.Value as IList;
+
+                    if (value == null)
+                    {
+                        if (index == 0)
+                            obj.Add(kvp.Key, kvp.Value);
+                        else
+                            obj.Add(kvp.Key, null);
+                    }
+                    else
+                    {
+                        if (index < value.Count)
+                        {
+                            obj.Add(kvp.Key, value[index]);
+                        }
+                        else
+                        {
+                            obj.Add(kvp.Key, null);
+                        }
+                    }
+
+                }
+
+                result.Add(obj);
+                index++;
+            }
+
+            return result.ToArray();
         }
 
         private string _prefix = null;
