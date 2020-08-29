@@ -441,7 +441,7 @@ namespace ChoETL
                     {
                         ((ChoDynamicObject)dict).DynamicObjectName = ChoDynamicObject.DefaultName;
                     }
-                    fieldNames = dict.Flatten(Configuration.NestedColumnSeparator).ToDictionary().Keys.ToArray();
+                    fieldNames = dict.Flatten(Configuration.NestedColumnSeparator).ToArray().ToDictionary().Keys.ToArray();
                 }
                 else
                     fieldNames = dict.Keys.ToArray();
