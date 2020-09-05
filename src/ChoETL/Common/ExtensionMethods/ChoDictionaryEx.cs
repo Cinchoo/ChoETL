@@ -335,7 +335,15 @@ namespace ChoETL
                         yield return tuple;
                 }
                 else if (kvp.Value == null || kvp.Value.GetType().IsSimple())
-                    yield return new KeyValuePair<string, object>(key == null ? kvp.Key.ToString() : "{0}{2}{1}".FormatString(key, kvp.Key.ToString(), nestedKeySeparator), kvp.Value);
+                {
+                    if (key == null)
+                    {
+                        yield return new KeyValuePair<string, object>("Key", kvp.Key);
+                        yield return new KeyValuePair<string, object>("Value", kvp.Value);
+                    }
+                    else
+                        yield return new KeyValuePair<string, object>(key == null ? kvp.Key.ToString() : "{0}{2}{1}".FormatString(key, kvp.Key.ToString(), nestedKeySeparator), kvp.Value);
+                }
                 else
                 {
                     if (key == null)

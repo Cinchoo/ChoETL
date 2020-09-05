@@ -158,7 +158,8 @@ namespace ChoETL
                     Configuration.SingleDocument = true;
                 _writer.WriteTo(_textWriter, ((IEnumerable)record).AsTypedEnumerable<T>().OfType<object>()).Loop();
             }
-            else if (record != null && (!record.GetType().IsDynamicType() && record is IDictionary))
+            else if (record != null && !(/*!record.GetType().IsDynamicType() && record is IDictionary*/ record.GetType() == typeof(ExpandoObject) || typeof(IDynamicMetaObjectProvider).IsAssignableFrom(record.GetType()) || record.GetType() == typeof(object) || record.GetType().IsAnonymousType())
+                && (typeof(IDictionary).IsAssignableFrom(record.GetType()) || (record.GetType().IsGenericType && record.GetType().GetGenericTypeDefinition() == typeof(IDictionary<,>))))
             {
                 if (Configuration.SingleDocument == null)
                     Configuration.SingleDocument = true;

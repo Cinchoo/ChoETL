@@ -22,6 +22,7 @@ using System.Data.SqlClient;
 using DescriptionAttribute = System.ComponentModel.DescriptionAttribute;
 using RangeAttribute = System.ComponentModel.DataAnnotations.RangeAttribute;
 using UnitTestHelper;
+using System.Runtime.Serialization;
 #if !NETSTANDARD2_0
 using System.Windows.Data;
 #endif
@@ -4471,10 +4472,67 @@ acf12d17-058e-451e-8449-60948055f6af;TEST1;Item;type;Equal;flight;Data;airlineCo
             Console.WriteLine(json.ToString());
         }
 
+        [DataContract]
+        public class Employee2
+        {
+            public string Name { get; set; }
+        }
+
+        [DataContract]
+        public class Manager2 : Employee2
+        {
+            [DataMember]
+            public double Salary { get; set; }
+            [DataMember]
+            public string Department { get; set; }
+        }
+
+        static void DictionaryTest()
+        {
+            string csv = @"Key,Name,Salary,Department
+1,Tom,10000,IT
+2,Tom,10000,IT";
+
+            Dictionary<string, Manager2> recs = new Dictionary<string, Manager2>();
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                )
+            {
+                foreach (var rec in r.ToDictionary(r1 => r1.Key, r1 => new Manager2
+                {
+                    Name = r1.Name,
+                    Salary = ChoUtility.CastTo<double>(r1.Salary),
+                    Department = r1.Department
+                }))
+
+                    Console.WriteLine(rec.DumpAsJson());
+            }
+        }
+
+        static void JSON2CSV()
+        {
+            string json = @"{""Serilog"" : {
+""MinimumLevel"" : "" Debug"" ,
+""WriteTo"" : 
+  {
+    ""Name"" : "" RollingFile"" ,
+    ""Args"" : {
+      ""formatter"" : "" Serilog.Formatting.Json.JsonFormatter, Serilog"" ,
+      ""pathFormat"" : "" C:\\Logs\\logConfig-{Date}.txt"" 
+    }
+  }
+}}";
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Flatten(':').Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            CSV2JSONWithArraySupport();
+            JSON2CSV();
             return;
 
             CSV2ComplexObject();
