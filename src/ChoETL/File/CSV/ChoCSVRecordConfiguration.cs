@@ -1489,6 +1489,11 @@ namespace ChoETL
 
     public class ChoCSVRecordConfiguration<T> : ChoCSVRecordConfiguration
     {
+        public ChoCSVRecordConfiguration()
+        {
+            MapRecordFields<T>();
+        }
+
         public new ChoCSVRecordConfiguration<T> ClearFields()
         {
             base.ClearFields();

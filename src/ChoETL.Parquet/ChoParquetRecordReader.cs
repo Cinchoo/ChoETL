@@ -284,6 +284,7 @@ namespace ChoETL
                 }
 
                 rec = recType.IsDynamicType() ? new ChoDynamicObject() { ThrowExceptionIfPropNotExists = true } : ChoActivator.CreateInstance(recType);
+                RecordType = recType;
             }
             else if (Configuration.IsDynamicObject)
                 rec = Configuration.IsDynamicObject ? new ChoDynamicObject() { ThrowExceptionIfPropNotExists = true } : ChoActivator.CreateInstance(RecordType);

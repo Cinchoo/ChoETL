@@ -1292,6 +1292,11 @@ namespace ChoETL
 
     public class ChoParquetRecordConfiguration<T> : ChoParquetRecordConfiguration
     {
+        public ChoParquetRecordConfiguration()
+        {
+            MapRecordFields<T>();
+        }
+
         public new ChoParquetRecordConfiguration<T> ClearFields()
         {
             base.ClearFields();

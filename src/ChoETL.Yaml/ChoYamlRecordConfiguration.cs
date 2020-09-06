@@ -785,6 +785,11 @@ namespace ChoETL
 
     public class ChoYamlRecordConfiguration<T> : ChoYamlRecordConfiguration
     {
+        public ChoYamlRecordConfiguration()
+        {
+            MapRecordFields<T>();
+        }
+
         public new ChoYamlRecordConfiguration<T> ClearFields()
         {
             base.ClearFields();

@@ -676,6 +676,11 @@ namespace ChoETL
 
     public class ChoFixedLengthRecordConfiguration<T> : ChoFixedLengthRecordConfiguration
     {
+        public ChoFixedLengthRecordConfiguration()
+        {
+            MapRecordFields<T>();
+        }
+
         public new ChoFixedLengthRecordConfiguration<T> ClearFields()
         {
             base.ClearFields();

@@ -589,6 +589,7 @@ namespace ChoETL
                 }
 
                 rec = recType.IsDynamicType() ? new ChoDynamicObject() { ThrowExceptionIfPropNotExists = true } : ChoActivator.CreateInstance(recType);
+                RecordType = recType;
             }
             else if (!Configuration.UseJSONSerialization || Configuration.IsDynamicObject)
                 rec = Configuration.IsDynamicObject ? new ChoDynamicObject() { ThrowExceptionIfPropNotExists = true } : ChoActivator.CreateInstance(RecordType);
@@ -617,8 +618,8 @@ namespace ChoETL
                 }
 
                 if (!Configuration.UseJSONSerialization
-                    && !typeof(ICollection).IsAssignableFrom(Configuration.RecordType)
-                    && !(Configuration.RecordType.IsGenericType && Configuration.RecordType.GetGenericTypeDefinition() == typeof(ICollection<>))
+                    && !typeof(ICollection).IsAssignableFrom(RecordType)
+                    && !(RecordType.IsGenericType && RecordType.GetGenericTypeDefinition() == typeof(ICollection<>))
                     )
                 {
                     if (!FillRecord(ref rec, pair))
@@ -781,9 +782,8 @@ namespace ChoETL
                 rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
 
                 //fieldValue = dictValues[kvp.Key];
-                if (!kvp.Value.JSONPath.IsNullOrWhiteSpace())
+                if (!kvp.Value.JSONPath.IsNullOrWhiteSpace() && kvp.Value.JSONPath != kvp.Value.FieldName)
                 {
-
                     jTokens = node.SelectTokens(kvp.Value.JSONPath).ToArray();
                     if (!fieldConfig.FieldType.IsCollection())
                     {

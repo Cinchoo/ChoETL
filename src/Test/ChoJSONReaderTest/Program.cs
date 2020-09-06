@@ -3829,10 +3829,162 @@ K,L,M,N,O,P,Q,R,S,T";
                     Console.WriteLine(rec.Dump());
             }
         }
+
+        public interface IShape
+        {
+
+        }
+        public class Polygon 
+        {
+            [JsonProperty("coordinates")]
+            public double[][][] Coords { get; set; }
+        }
+
+        public class Point 
+        {
+            [JsonProperty("coordinates")]
+            public double[] Coords { get; set; }
+        }
+
+        static void DesrializeMoreThanOneType1()
+        {
+            string polyJson = @"{
+  ""geom"": {
+    ""coordinates"": [
+      [
+        [
+          0.07666021585464479,
+          51.49331798632394
+        ],
+        [
+          0.07707864046096803,
+          51.49337476490021
+        ],
+        [
+          0.07717519998550416,
+          51.49315433003204
+        ],
+        [
+          0.07676750421524049,
+          51.49309087131179
+        ],
+        [
+          0.07666021585464479,
+          51.49331798632394
+        ]
+      ]
+    ],
+    ""type"": ""Polygon""
+  }
+}
+";
+            var config = new ChoJSONRecordConfiguration()
+                .Configure(c => c.JSONPath = "$.geom")
+                .Configure(c => c.SupportsMultiRecordTypes = true)
+                .Configure(c => c.RecordSelector = o => {
+                    var tuple = o as Tuple<long, JObject>;
+                    var jObj = tuple.Item2;
+
+                    if (jObj["type"].ToString() == "Polygon")
+                        return typeof(Polygon);
+                    else
+                        return typeof(Point);
+                    })
+                ;
+
+            object rec = ChoJSONReader.DeserializeText(polyJson, null, config).FirstOrDefault();
+            Console.WriteLine(rec.Dump());
+
+            string pointJson = @"{
+    ""geom"": {
+        ""coordinates"": [
+            -0.00203667,
+            51.51020028
+        ],
+        ""type"": ""Point""
+    }
+}";
+
+            rec = ChoJSONReader.DeserializeText(pointJson, null, config).FirstOrDefault();
+            Console.WriteLine(rec.Dump());
+
+        }
+
+        public class Geom
+        {
+            //[JsonProperty("coordinates")]
+            public double[] Coords { get; set; }
+
+            [JsonProperty("type")]
+            public string Type { get; set; }
+        }
+
+        static void DesrializeMoreThanOneType()
+        {
+            string polyJson = @"{
+  ""geom"": {
+    ""coordinates"": [
+      [
+        [
+          0.07666021585464479,
+          51.49331798632394
+        ],
+        [
+          0.07707864046096803,
+          51.49337476490021
+        ],
+        [
+          0.07717519998550416,
+          51.49315433003204
+        ],
+        [
+          0.07676750421524049,
+          51.49309087131179
+        ],
+        [
+          0.07666021585464479,
+          51.49331798632394
+        ]
+      ]
+    ],
+    ""type"": ""Polygon""
+  }
+}
+";
+            var config = new ChoJSONRecordConfiguration<Geom>()
+                .Configure(c => c.JSONPath = "$.geom")
+                .Map(f => f.Coords, m => m.CustomSerializer(o => {
+                    var jObj = o as JObject;
+                    var type = jObj["type"].ToString();
+
+                    if (type == "Polygon")
+                        return jObj["coordinates"].ToObject<double[][][]>().SelectMany(x1 => x1.SelectMany(x2 => x2)).ToArray();
+                    else
+                        return jObj["coordinates"].ToObject<double[]>();
+                })
+                    )
+                ;
+            object rec = ChoJSONReader.DeserializeText<Geom>(polyJson, null, config).FirstOrDefault();
+            Console.WriteLine(rec.Dump());
+
+            string pointJson = @"{
+    ""geom"": {
+        ""coordinates"": [
+            -0.00203667,
+            51.51020028
+        ],
+        ""type"": ""Point""
+    }
+}";
+
+            rec = ChoJSONReader.DeserializeText<Geom>(pointJson, null, config).FirstOrDefault();
+            Console.WriteLine(rec.Dump());
+
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            DesrializeSelectiveNode();
+            DesrializeMoreThanOneType();
         }
 
         static void SimpleTest()

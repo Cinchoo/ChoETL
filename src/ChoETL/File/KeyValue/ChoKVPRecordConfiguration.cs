@@ -506,6 +506,11 @@ namespace ChoETL
 
     public class ChoKVPRecordConfiguration<T> : ChoKVPRecordConfiguration
     {
+        public ChoKVPRecordConfiguration()
+        {
+            MapRecordFields<T>();
+        }
+
         public new ChoKVPRecordConfiguration<T> ClearFields()
         {
             base.ClearFields();

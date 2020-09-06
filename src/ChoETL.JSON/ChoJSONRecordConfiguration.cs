@@ -857,6 +857,11 @@ namespace ChoETL
 
     public class ChoJSONRecordConfiguration<T> : ChoJSONRecordConfiguration
     {
+        public ChoJSONRecordConfiguration()
+        {
+            MapRecordFields<T>();
+        }
+
         public new ChoJSONRecordConfiguration<T> ClearFields()
         {
             base.ClearFields();

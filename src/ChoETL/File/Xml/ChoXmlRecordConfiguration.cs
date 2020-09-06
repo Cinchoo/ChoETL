@@ -871,6 +871,11 @@ namespace ChoETL
 
     public class ChoXmlRecordConfiguration<T> : ChoXmlRecordConfiguration
     {
+        public ChoXmlRecordConfiguration()
+        {
+            MapRecordFields<T>();
+        }
+
         public new ChoXmlRecordConfiguration<T> ClearFields()
         {
             base.ClearFields();
