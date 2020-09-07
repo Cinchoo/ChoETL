@@ -961,7 +961,12 @@ namespace ChoETL
                                     var array = isJArray ? ((JArray)((JToken[])fieldValue)[0]).ToArray() : (JToken[])fieldValue;
                                     foreach (var ele in array)
                                     {
-                                        object fv = DeserializeNode(ele, itemType, fieldConfig);
+                                        object fv = null;
+                                        if (fieldConfig.ItemConverter == null)
+                                            fv = DeserializeNode(ele, itemType, fieldConfig);
+                                        else
+                                            fv = RaiseItemConverter(fieldConfig, ele);
+
                                         list.Add(fv);
                                     }
                                     fieldValue = list.ToArray();
@@ -1173,7 +1178,7 @@ namespace ChoETL
             catch
             {
                 if (fieldConfig.ItemConverter != null)
-                    value = RaiseItemConverter(config, value);
+                    value = RaiseItemConverter(config, jtoken);
                 else
                     throw;
             }
@@ -1321,11 +1326,11 @@ namespace ChoETL
         {
             if (fieldConfig.ItemConverter != null)
             {
-                if (fieldValue is IList)
-                {
-                    fieldValue = ((IList)fieldValue).Cast(fieldConfig.ItemConverter);
-                }
-                else
+                //if (fieldValue is IList)
+                //{
+                //    fieldValue = ((IList)fieldValue).Cast(fieldConfig.ItemConverter);
+                //}
+                //else
                     fieldValue = fieldConfig.ItemConverter(fieldValue);
             }
             else

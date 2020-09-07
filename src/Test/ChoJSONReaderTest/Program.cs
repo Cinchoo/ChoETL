@@ -3981,10 +3981,140 @@ K,L,M,N,O,P,Q,R,S,T";
             Console.WriteLine(rec.Dump());
 
         }
+
+        public class StaticCar
+        {
+            public static StaticCar Instance = new StaticCar();
+
+            public int Id { get; set; }
+            public string Name { get; set; }
+            public string Brand { get; set; }
+
+            private StaticCar()
+            {
+
+            }
+        }
+
+        static void StaticClassSerialization()
+        {
+            string carJson = @"
+    [
+        {
+            ""Id"": 1,
+            ""Name"": ""Polo"",
+            ""Brand"": ""Volkswagen""
+        },
+        {
+            ""Id"": 2,
+            ""Name"": ""328"",
+            ""Brand"": ""BMW""
+        }
+    ]";
+            ChoActivator.Factory = (t, args) =>
+            {
+                return StaticCar.Instance;
+            };
+
+            foreach (var c in ChoJSONReader.DeserializeText(carJson).Select(o => o.ConvertToObject(typeof(StaticCar))))
+                Console.WriteLine(ChoUtility.Dump(c));
+        }
+
+        public class Item1
+        {
+            [ChoJSONPath("$.Value.[0]")]
+            public string Key { get; set; }
+            [ChoJSONPath("$.Value.[1][0]")]
+            public string Value { get; set; }
+        }
+
+        static void DeseializeArrayToObjects()
+        {
+            string json = @"[
+  [
+    ""NameA"",
+    [
+      ""AAA""
+    ]
+  ],
+  [
+    ""NameB"",
+    [
+      ""BBB""
+    ]
+  ],
+  [
+    ""NameC"",
+    [
+      ""CCC""
+    ]
+  ]
+]";
+            var recs = ChoJSONReader.DeserializeText<Item1>(json);
+            foreach (var rec in recs)
+                Console.WriteLine(rec.Dump());
+
+            using (var r = ChoJSONReader<Item1>.LoadText(json)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        public class DbRowObject
+        {
+            public string Item1 { get; set; }
+        }
+
+        public class DbObject
+        {
+            [ChoJSONPath("database_id")]
+            public int DbId { get; set; }
+            [ChoJSONPath("row_count")]
+            public int RowCount { get; set; }
+            [ChoJSONPath("data.rows[*]")]
+            public List<DbRowObject> DbRows { get; set; }
+        }
+
+        static void DeserializeInnerArrayToObjects()
+        {
+            string json = @"{
+""database_id"": 9,
+""row_count"": 2,
+""data"": {
+    ""rows"": [
+        [
+            ""242376_dpi65990"",
+            ""ppo"",
+            ""2020-08-01T00:00:00.000Z"",
+            8,
+            8
+        ],
+        [
+            ""700328_dpi66355"",
+            ""ppo"",
+            ""2020-08-01T00:00:00.000Z"",
+            9,
+            6
+        ]
+    ]
+  }
+}";
+
+            using (var r = ChoJSONReader<DbObject>.LoadText(json)
+                .WithField(f => f.DbRows, jsonPath: "data.rows[*]", itemConverter: o => new DbRowObject { Item1 = ((JToken)o)[0].CastTo<string>() })
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            DesrializeMoreThanOneType();
+            DeserializeInnerArrayToObjects();
         }
 
         static void SimpleTest()
