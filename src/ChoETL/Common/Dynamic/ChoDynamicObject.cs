@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -1560,6 +1561,34 @@ namespace ChoETL
 
     public static class ChoDynamicObjectEx
     {
+        public static IEnumerable<dynamic> AsDynamicEnumerable(this DataTable dt)
+        {
+            if (dt == null)
+                yield break;
+
+            Dictionary<string, object> dict = new Dictionary<string, object>();
+            foreach (var dr in dt.Rows.Cast<DataRow>())
+            {
+                for (int i = 0; i < dt.Columns.Count; i++)
+                    dict.Add(dt.Columns[i].ColumnName, dr[dt.Columns[i]]);
+
+                yield return new ChoDynamicObject(dict);
+            }
+        }
+
+        public static IEnumerable<dynamic> AsDynamicEnumerable(this IDataReader dr)
+        {
+            if (dr == null)
+                yield break;
+
+            while (dr.Read())
+            {
+                var dict = Enumerable.Range(0, dr.FieldCount)
+                                 .ToDictionary(dr.GetName, dr.GetValue);
+                yield return new ChoDynamicObject(dict);
+            }
+        }
+
         public static T ToObject<T>(this ChoDynamicObject obj)
             where T : class, new()
         {
