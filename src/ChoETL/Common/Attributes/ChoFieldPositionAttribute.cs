@@ -16,4 +16,15 @@ namespace ChoETL
             Position = position;
         }
     }
+
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+    public class ChoArrayIndexAttribute : Attribute
+    {
+        public readonly int Position;
+
+        public ChoArrayIndexAttribute(int position)
+        {
+            Position = position;
+        }
+    }
 }

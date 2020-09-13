@@ -11,6 +11,38 @@ namespace ChoETL
 {
     public static class ChoJSONExtensions
     {
+        public static JToken SerializeToJToken(this JsonSerializer serializer, object value)
+        {
+            Type vt = value != null ? value.GetType() : typeof(object);
+            var conv = serializer.Converters.Where(c => c.GetType().Name == $"{vt.Name}Converter" || (c.GetType().IsGenericType && c.GetType().GetGenericArguments()[0] == vt)).FirstOrDefault();
+
+            JToken t = null;
+            if (conv == null)
+            {
+                t = JToken.FromObject(value, serializer);
+            }
+            else
+            {
+                t = JToken.Parse(JsonConvert.SerializeObject(value, serializer.Formatting, conv));
+            }
+            return t;
+        }
+
+        public static object DeserializeObject(this JsonSerializer serializer, JsonReader reader, Type objType)
+        {
+            var conv = serializer.Converters.Where(c => c.GetType().Name == $"{objType.Name}Converter" || (c.GetType().IsGenericType && c.GetType().GetGenericArguments()[0] == objType)).FirstOrDefault();
+
+            JToken t = null;
+            if (conv == null)
+            {
+                return serializer.Deserialize(reader, objType);
+            }
+            else
+            {
+                return JsonConvert.DeserializeObject(JObject.ReadFrom(reader).ToString(), objType, conv);
+            }
+        }
+
         public static string DumpAsJson(this DataTable table, Formatting formatting = Formatting.Indented)
         {
             if (table == null)

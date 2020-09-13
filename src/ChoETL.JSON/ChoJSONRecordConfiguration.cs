@@ -87,7 +87,7 @@ namespace ChoETL
 
                         _jsonSerializerSettings = new JsonSerializerSettings();
                         _jsonSerializerSettings.ContractResolver = jsonResolver;
-                        _jsonSerializerSettings.Converters = GetJSONConverters();
+                        //_jsonSerializerSettings.Converters = GetJSONConverters();
                     }
 
                     return _jsonSerializerSettings;
@@ -117,16 +117,20 @@ namespace ChoETL
             foreach (var kvp in NodeConvertersForType)
             {
                 if (kvp.Value == null) continue;
-                converters.Add(Activator.CreateInstance(typeof(ChoJSONNodeConverter<>).MakeGenericType(kvp.Key), kvp.Value) as JsonConverter);
+                converters.Add(ChoActivator.CreateInstance(typeof(ChoJSONNodeConverter<>).MakeGenericType(kvp.Key), kvp.Value) as JsonConverter);
+
+                ChoTypeConverter.Global.Add(kvp.Key, ChoActivator.CreateInstance(typeof(ChoJSONTypeConverter<>).MakeGenericType(kvp.Key), kvp.Value) as IChoValueConverter);
             }
 
             return converters;
         }
 
         private Lazy<JsonSerializer> _JsonSerializer = null;
+        private JsonSerializer _externalJsonSerializer = null;
         public JsonSerializer JsonSerializer
         {
-            get { return _JsonSerializer.Value; }
+            get { return _externalJsonSerializer == null ? _JsonSerializer.Value : _externalJsonSerializer; }
+            set { _externalJsonSerializer = value; }
         }
 
         [DataMember]
@@ -447,7 +451,9 @@ namespace ChoETL
                         }
                         else
                         {
-                            var obj = new ChoJSONRecordFieldConfiguration(pd.Name, (string)null);
+                            var obj = new ChoJSONRecordFieldConfiguration(pd.Name, ChoTypeDescriptor.GetPropetyAttribute<ChoJSONRecordFieldAttribute>(pd),
+                                pd.Attributes.OfType<Attribute>().ToArray());
+
                             obj.FieldType = pt;
                             obj.PropertyDescriptor = pd;
                             obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
@@ -523,6 +529,9 @@ namespace ChoETL
 
         public override void Validate(object state)
         {
+            if (_jsonSerializerSettings != null)
+                _jsonSerializerSettings.Converters = GetJSONConverters();
+
             if (RecordType != null)
             {
                 Init(RecordType);
@@ -740,27 +749,31 @@ namespace ChoETL
                 {
                     fc = JSONRecordFieldConfigurations.Where(o => o.FieldName == fnTrim).First();
                     JSONRecordFieldConfigurations.Remove(fc);
+                    pd = ChoTypeDescriptor.GetNestedProperty(recordType, fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
                 }
                 else if (subRecordType != null)
                     pd = ChoTypeDescriptor.GetNestedProperty(subRecordType, fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
                 else
                     pd = ChoTypeDescriptor.GetNestedProperty(recordType, fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
 
-                var nfc = new ChoJSONRecordFieldConfiguration(fnTrim, jsonPath)
+                var nfc = new ChoJSONRecordFieldConfiguration(fnTrim, pd != null ? ChoTypeDescriptor.GetPropetyAttribute<ChoJSONRecordFieldAttribute>(pd) : null,
+                                pd != null ? pd.Attributes.OfType<Attribute>().ToArray() : null)
                 {
-                    FieldType = fieldType,
-                    FieldValueTrimOption = fieldValueTrimOption,
-                    FieldName = fieldName.IsNullOrWhiteSpace() ? name : fieldName,
-                    ValueConverter = valueConverter,
-                    CustomSerializer = customSerializer,
-                    DefaultValue = defaultValue,
-                    FallbackValue = fallbackValue,
-                    FormatText = formatText,
-                    ItemConverter = itemConverter,
-                    IsArray = isArray,
-                    NullValue = nullValue,
-                    FieldTypeSelector = fieldTypeSelector,
                 };
+                nfc.JSONPath = !jsonPath.IsNullOrWhiteSpace() ? jsonPath : nfc.JSONPath;
+                nfc.FieldType = fieldType != null ? fieldType : nfc.FieldType;
+                nfc.FieldValueTrimOption = fieldValueTrimOption;
+                nfc.FieldName = fieldName.IsNullOrWhiteSpace() ? (name.IsNullOrWhiteSpace() ? nfc.FieldName : name) : fieldName;
+                nfc.ValueConverter = valueConverter != null ? valueConverter : nfc.ValueConverter;
+                nfc.CustomSerializer = customSerializer != null ? customSerializer : nfc.CustomSerializer;
+                nfc.DefaultValue = defaultValue != null ? defaultValue : nfc.DefaultValue;
+                nfc.FallbackValue = fallbackValue != null ? fallbackValue : nfc.FallbackValue;
+                nfc.FormatText = !formatText.IsNullOrWhiteSpace() ? formatText : nfc.FormatText;
+                nfc.ItemConverter = itemConverter != null ? itemConverter : nfc.ItemConverter;
+                nfc.IsArray = isArray != null ? isArray : nfc.IsArray;
+                nfc.NullValue = !nullValue.IsNullOrWhiteSpace() ? nullValue : nfc.NullValue;
+                nfc.FieldTypeSelector = fieldTypeSelector != null ? fieldTypeSelector : nfc.FieldTypeSelector;
+
                 if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
                 {
                     nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
@@ -951,7 +964,41 @@ namespace ChoETL
 
         public override void WriteJson(JsonWriter writer, T value, JsonSerializer serializer)
         {
-            _converter?.Invoke(new { writer, value, serializer }.ToDynamic());
+            var x = _converter?.Invoke(new { writer, value, serializer }.ToDynamic());
+            if (x != null)
+                writer.WriteRaw(x.ToString());
+        }
+    }
+
+    public interface IChoJSONConverter
+    {
+        JsonReader Reader { get; set; }
+        JsonWriter Writer { get; set; }
+        JsonSerializer Serializer { get; set; }
+    }
+
+    public class ChoJSONTypeConverter<T> : IChoValueConverter, IChoJSONConverter
+    {
+        public JsonReader Reader { get; set; }
+        public JsonWriter Writer { get; set; }
+        public JsonSerializer Serializer { get; set; }
+
+        private Func<object, object> _converter;
+
+        public ChoTypeConverter(Func<object, object> converter)
+        {
+            _converter = converter;
+        }
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return (T)_converter?.Invoke(new { reader = Reader, targetType, value, hasExistingValue = false, serializer = Serializer }.ToDynamic());
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            _converter?.Invoke(new { writer = Writer, value, serializer = Serializer }.ToDynamic());
+            return null;
         }
     }
 }

@@ -84,26 +84,29 @@ namespace ChoETL
             object obj1 = value;
             if (targetType == (Type)null)
                 return value;
-            if (targetType == typeof(object))
-                return value;
+            //if (targetType == typeof(object))
+            //    return value;
             if (culture == null)
                 culture = ChoConvert.DefaultCulture;
 
-            if (sourceObject is IChoConvertible && !propName.IsNullOrWhiteSpace())
+            if (targetType != typeof(object))
             {
-                var convObject = sourceObject as IChoConvertible;
-                object convPropValue = null;
-                if (convObject.Convert(propName, value, culture, out convPropValue))
-                    return convPropValue;
-            }
+                if (sourceObject is IChoConvertible && !propName.IsNullOrWhiteSpace())
+                {
+                    var convObject = sourceObject as IChoConvertible;
+                    object convPropValue = null;
+                    if (convObject.Convert(propName, value, culture, out convPropValue))
+                        return convPropValue;
+                }
 
-            if (value is ICollection && !typeof(ICollection).IsAssignableFrom(targetType))
-            {
-                value = ((IEnumerable)value).FirstOrDefault<object>();
-            }
-            if (value != null && typeof(IList).IsAssignableFrom(targetType) && !(value is IList))
-            {
-                value = new object[] { value };
+                if (value is ICollection && !typeof(ICollection).IsAssignableFrom(targetType))
+                {
+                    value = ((IEnumerable)value).FirstOrDefault<object>();
+                }
+                if (value != null && typeof(IList).IsAssignableFrom(targetType) && !(value is IList))
+                {
+                    value = new object[] { value };
+                }
             }
 
             Type type = value == null ? typeof(object) : value.GetType();
@@ -136,6 +139,9 @@ namespace ChoETL
                     //if (value != obj1)
                     //    return value;
                 }
+
+                if (targetType == typeof(object))
+                    return value;
 
                 if (value == null)
                     return origType.Default();

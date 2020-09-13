@@ -56,6 +56,7 @@
     <Compile Include="..\ChoETL\ChoEnums.cs" Link="ChoEnums.cs" />
     <Compile Include="..\ChoETL\ChoWriter.cs" Link="ChoWriter.cs" />
     <Compile Include="..\ChoETL\ChoTextFileExternalSorter.cs" Link="ChoTextFileExternalSorter.cs" />
+    <Compile Include="..\ChoETL\Common\Attributes\ChoSourceTypeAttribute.cs" Link="Common\Attributes\ChoSourceTypeAttribute.cs" />
     <Compile Include="..\ChoETL\Common\Attributes\ChoDefaultValueAttribute.cs" Link="Common\Attributes\ChoDefaultValueAttribute.cs" />
     <Compile Include="..\ChoETL\Common\Attributes\ChoKeyValueTypeAttribute.cs" Link="Common\Attributes\ChoKeyValueTypeAttribute.cs" />
     <Compile Include="..\ChoETL\Common\ChoDisposable.cs" Link="Common\ChoDisposable.cs" />

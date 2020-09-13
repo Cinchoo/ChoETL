@@ -16,6 +16,8 @@ using System.Text;
 using System.Threading.Tasks;
 using DescriptionAttribute = System.ComponentModel.DescriptionAttribute;
 using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json.Linq;
+using static ChoJSONWriterTest.Program;
 
 namespace ChoJSONWriterTest
 {
@@ -966,11 +968,187 @@ namespace ChoJSONWriterTest
             Console.WriteLine(json.ToString());
 
         }
+
+
+        public class DbRowObject
+        {
+            [ChoArrayIndex(0)]
+            public string Item1 { get; set; }
+        }
+
+        public class Data
+        {
+            [ChoSourceType(typeof(string[]))]
+            [ChoTypeConverter(typeof(ChoArrayToObjectConverter))]
+            public DbRowObject[] DbRows { get; set; }
+        }
+
+        public class DbObject
+        {
+            [ChoJSONPath("database_id")]
+            public int DbId { get; set; }
+            [ChoJSONPath("row_count")]
+            public int RowCount { get; set; }
+            [ChoJSONPath("data.rows[*]")]
+            public Data Data { get; set; }
+        }
+
+        static void SerializeInnerObjectsToArray()
+        {
+            string json1 = @"{
+""database_id"": 9,
+""row_count"": 2,
+""data"": {
+    ""rows"": [
+        [
+            ""242376_dpi65990"",
+            ""ppo"",
+            ""2020-08-01T00:00:00.000Z"",
+            8,
+            8
+        ],
+        [
+            ""700328_dpi66355"",
+            ""ppo"",
+            ""2020-08-01T00:00:00.000Z"",
+            9,
+            6
+        ]
+    ]
+  }
+}";
+
+            StringBuilder json = new StringBuilder();
+            using (var w = new ChoJSONWriter<DbObject>(json)
+                //.WithField(f => f.DbRows, jsonPath: "data.rows[*]")
+                //.WithField(f => f.DbRows, m => m.Configure(c => c.AddConverter(ChoArrayToObjectConverter.Instance)))
+                )
+            {
+                w.Write(new DbObject
+                {
+                    DbId = 9,
+                    RowCount = 2,
+                    Data = new Data
+                    {
+                        DbRows = new DbRowObject[]
+                        {
+                            new DbRowObject
+                            {
+                                Item1 = "242376_dpi65990"
+                            }
+                        }
+                    }
+                });
+            }
+
+            Console.WriteLine(json.ToString());
+        }
+
+        public class Location
+        {
+            public string Name { get; set; }
+            public LocationList Locations { get; set; }
+        }
+
+        // Note: LocationList is simply a subclass of a List<T>
+        // which then adds an IsExpanded property for use by the UI.
+        public class LocationList : List<Location>
+        {
+            [JsonProperty("IsExpanded")]
+            public bool IsExpanded { get; set; }
+        }
+
+        public class RootViewModel
+        {
+            [JsonProperty("RootLocations")]
+            public LocationList RootLocations { get; set; }
+        }
+
+        static void SerializeNestedObjectOfList()
+        {
+            StringBuilder json = new StringBuilder();
+
+            var c = new LocationListJsonConverter();
+            ChoTypeConverter.Global.Add(typeof(LocationList), c);
+
+            ChoJSONRecordConfiguration config = new ChoJSONRecordConfiguration();
+            config.JsonSerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+            config.JsonSerializerSettings.Formatting = Formatting.Indented;
+
+            using (var w = new ChoJSONWriter<RootViewModel>(json, config)
+                //.Configure(c => c.RootName = "Locations")
+                .SupportMultipleContent()
+                .UseJsonSerialization()
+                .RegisterNodeConverterForType<LocationList>(s =>
+                {
+                    dynamic input = s as dynamic;
+                    var locationList = input.value as LocationList;
+
+                    JObject jLocationList = new JObject();
+
+                    if (locationList.IsExpanded)
+                        jLocationList.Add("IsExpanded", true);
+                    else
+                        jLocationList.Add("IsExpanded", false);
+
+                    if (locationList.Count > 0)
+                    {
+                        var jLocations = new JArray();
+
+                        foreach (var location in locationList)
+                        {
+                            var v = JObject.FromObject(location, config.JsonSerializer);
+                            if (v != null)
+                            jLocations.Add(v);
+                        }
+
+                        jLocationList.Add("Items", jLocations);
+
+                    }
+
+                    return jLocationList;
+                })
+                //.WithField(f => f.RootLocations, m => m.CustomSerializer(s =>
+                //{
+                //}))
+                //.WithField(f => f.DbRows, jsonPath: "data.rows[*]")
+                //.WithField(f => f.DbRows, m => m.Configure(c => c.AddConverter(ChoArrayToObjectConverter.Instance)))
+                )
+            {
+                var l1 = new LocationList
+                {
+                    IsExpanded = false,
+                };
+                l1.Add(new Location
+                {
+                    Name = "First Floor"
+                });
+
+                var l = new LocationList
+                {
+                    IsExpanded = true,
+                };
+
+                l.Add(new Location
+                {
+                    Name = "Main Residence",
+                    Locations = l1
+                });
+
+                w.Write(new RootViewModel
+                {
+                    RootLocations = l
+                });
+            }
+
+            Console.WriteLine(json.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            CustomDateTimeFormatTest();
+            SerializeNestedObjectOfList();
             return;
 
             StringBuilder json = new StringBuilder();
@@ -2281,6 +2459,105 @@ namespace ChoJSONWriterTest
         public string Name { get; set; }
 
         public List<EmployeeRecSimple1> SubEmployeeRecSimple1;
+    }
+
+    public class LocationListJsonConverter : IChoValueConverter
+    {
+        public JsonSerializer Serializer { get; set; }
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            var locationList = value as LocationList;
+
+            JObject jLocationList = new JObject();
+
+            if (locationList.IsExpanded)
+                jLocationList.Add("IsExpanded", true);
+
+            if (locationList.Count > 0)
+            {
+                var jLocations = new JArray();
+
+                foreach (var location in locationList)
+                {
+                    jLocations.Add(JObject.FromObject(location, new JsonSerializer()));
+                }
+
+                jLocationList.Add("Locations", jLocations);
+
+            }
+
+            return jLocationList.ToString();
+
+        }
+
+        protected virtual object Deserialize(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            if (value != null && value.GetType().IsCollectionType())
+            {
+                if (targetType != typeof(object) && !targetType.IsSimple() && !typeof(ICollection).IsAssignableFrom(targetType))
+                {
+                    IList coll = value as IList;
+                    var itemType = value.GetType().GetItemType();
+                    if (itemType.IsSimple())
+                    {
+                        value = ChoActivator.CreateInstance(targetType);
+                        foreach (var p in ChoTypeDescriptor.GetProperties<ChoArrayIndexAttribute>(targetType).Select(pd => new { pd, a = ChoTypeDescriptor.GetPropetyAttribute<ChoArrayIndexAttribute>(pd) })
+                            .GroupBy(g => g.a.Position).Select(g => g.First()).Where(g => g.a.Position >= 0).OrderBy(g => g.a.Position))
+                        {
+                            if (p.a.Position < coll.Count)
+                            {
+                                ChoType.SetPropertyValue(value, p.pd.Name, coll[p.a.Position]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return value;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            var locationList = value as LocationList;
+
+            JObject jLocationList = new JObject();
+
+            if (locationList.IsExpanded)
+                jLocationList.Add("IsExpanded", true);
+
+            if (locationList.Count > 0)
+            {
+                var jLocations = new JArray();
+
+                foreach (var location in locationList)
+                {
+                    jLocations.Add(JObject.FromObject(location, Serializer == null ? new JsonSerializer() : Serializer));
+                }
+
+                jLocationList.Add("Locations", jLocations);
+
+            }
+
+            return jLocationList;
+        }
+
+        protected virtual object Serialize(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        {
+            IList result = ChoActivator.CreateInstance(typeof(IList<>).MakeGenericType(targetType)) as IList;
+
+            if (value != null && !value.GetType().IsCollectionType())
+            {
+                if (targetType == typeof(object) || targetType.IsSimple())
+                {
+                    foreach (var p in ChoTypeDescriptor.GetProperties(value.GetType()).Where(pd => ChoTypeDescriptor.GetPropetyAttribute<ChoIgnoreMemberAttribute>(pd) == null))
+                    {
+                        result.Add(ChoConvert.ConvertTo(ChoType.GetPropertyValue(value, p.Name), targetType, culture));
+                    }
+                }
+            }
+
+            return result.OfType<object>().ToArray();
+        }
     }
 }
 

@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -235,7 +236,7 @@ namespace ChoETL
                                     sw.Write("[");
                                 else
                                 {
-                                    sw.Write($"{{{EOLDelimiter}{Indent(Configuration.RootName.NTrim())}: [");
+                                    sw.Write($"{{{EOLDelimiter}{Indent(ToJSONToken(Configuration.RootName.NTrim()))}: [");
                                 }
                             }
                             else
@@ -311,7 +312,14 @@ namespace ChoETL
                                     if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.Off) != ChoObjectValidationMode.Off)
                                         record.DoObjectLevelValidation(Configuration, Configuration.JSONRecordFieldConfigurations);
 
-                                    recText = JsonConvert.SerializeObject(record, Configuration.Formatting, Configuration.JsonSerializerSettings);
+                                    //StringBuilder json = new StringBuilder();
+                                    //using (StringWriter sw1 = new StringWriter(json))
+                                    //using (JsonWriter jw = new JsonTextWriter(sw1))
+                                    //{
+                                    //    Configuration.JsonSerializer.Serialize(jw, record);
+                                    //}
+                                    //recText = json.ToString(); // Configuration.JsonSerializer.Serialize(record, Configuration.Formatting, Configuration.JsonSerializerSettings);
+                                    recText = Configuration.JsonSerializer.SerializeToJToken(record).ToNString();
                                     if (!SupportMultipleContent)
                                         sw.Write("{1}{0}", Indent(recText), EOLDelimiter);
                                     else
@@ -726,6 +734,11 @@ namespace ChoETL
             return true;
         }
 
+        private string ToJSONToken(string name)
+        {
+            return $"\"{name.NTrim()}\"";
+        }
+
         private string Indent(string value, int indentValue = 1)
         {
             if (value == null)
@@ -754,7 +767,8 @@ namespace ChoETL
         {
             bool lUseJSONSerialization = useJSONSerialization == null ? Configuration.UseJSONSerialization : useJSONSerialization.Value;
             if (true) //lUseJSONSerialization)
-                return JsonConvert.SerializeObject(target, Configuration.Formatting, Configuration.JsonSerializerSettings);
+                return Configuration.JsonSerializer.SerializeToJToken(target).ToNString();
+                //return JsonConvert.SerializeObject(target, Configuration.Formatting, Configuration.JsonSerializerSettings);
             else
             {
                 //return JsonConvert.SerializeObject(target, Configuration.Formatting);

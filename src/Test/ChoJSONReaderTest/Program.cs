@@ -3769,18 +3769,18 @@ K,L,M,N,O,P,Q,R,S,T";
                     .WithDelimiter("|")
                     .WithFirstLineHeader())
                 {
-                    w.Write(r.SelectMany(r1 => 
+                    w.Write(r.SelectMany(r1 =>
                         ((Array)r1.Data).Cast<dynamic>()
                         .SelectMany(d => ((Array)d.Process).Cast<dynamic>()
                         .SelectMany(p => ((Array)p.Detail).Cast<dynamic>()
                         .Select(d1 => new
-                                    {
-                                        r1.Comment,
-                                        r1.File,
-                                        Data_0_DataID = d.DataID,
-                                        Data_0_Process_StartDate = p.StartDate,
-                                        Data_0_Process_Detail = d1
-                                    })
+                        {
+                            r1.Comment,
+                            r1.File,
+                            Data_0_DataID = d.DataID,
+                            Data_0_Process_StartDate = p.StartDate,
+                            Data_0_Process_Detail = d1
+                        })
                                 )
                             )
                         )
@@ -3834,13 +3834,13 @@ K,L,M,N,O,P,Q,R,S,T";
         {
 
         }
-        public class Polygon 
+        public class Polygon
         {
             [JsonProperty("coordinates")]
             public double[][][] Coords { get; set; }
         }
 
-        public class Point 
+        public class Point
         {
             [JsonProperty("coordinates")]
             public double[] Coords { get; set; }
@@ -3881,7 +3881,8 @@ K,L,M,N,O,P,Q,R,S,T";
             var config = new ChoJSONRecordConfiguration()
                 .Configure(c => c.JSONPath = "$.geom")
                 .Configure(c => c.SupportsMultiRecordTypes = true)
-                .Configure(c => c.RecordSelector = o => {
+                .Configure(c => c.RecordSelector = o =>
+                {
                     var tuple = o as Tuple<long, JObject>;
                     var jObj = tuple.Item2;
 
@@ -3889,7 +3890,7 @@ K,L,M,N,O,P,Q,R,S,T";
                         return typeof(Polygon);
                     else
                         return typeof(Point);
-                    })
+                })
                 ;
 
             object rec = ChoJSONReader.DeserializeText(polyJson, null, config).FirstOrDefault();
@@ -3953,7 +3954,8 @@ K,L,M,N,O,P,Q,R,S,T";
 ";
             var config = new ChoJSONRecordConfiguration<Geom>()
                 .Configure(c => c.JSONPath = "$.geom")
-                .Map(f => f.Coords, m => m.CustomSerializer(o => {
+                .Map(f => f.Coords, m => m.CustomSerializer(o =>
+                {
                     var jObj = o as JObject;
                     var type = jObj["type"].ToString();
 
@@ -4064,6 +4066,7 @@ K,L,M,N,O,P,Q,R,S,T";
 
         public class DbRowObject
         {
+            [ChoArrayIndex(0)]
             public string Item1 { get; set; }
         }
 
@@ -4074,7 +4077,9 @@ K,L,M,N,O,P,Q,R,S,T";
             [ChoJSONPath("row_count")]
             public int RowCount { get; set; }
             [ChoJSONPath("data.rows[*]")]
-            public List<DbRowObject> DbRows { get; set; }
+            [ChoSourceType(typeof(string[]))]
+            [ChoTypeConverter(typeof(ChoArrayToObjectConverter))]
+            public DbRowObject[] DbRows { get; set; }
         }
 
         static void DeserializeInnerArrayToObjects()
@@ -4103,7 +4108,8 @@ K,L,M,N,O,P,Q,R,S,T";
 }";
 
             using (var r = ChoJSONReader<DbObject>.LoadText(json)
-                .WithField(f => f.DbRows, jsonPath: "data.rows[*]", itemConverter: o => new DbRowObject { Item1 = ((JToken)o)[0].CastTo<string>() })
+                //.WithField(f => f.DbRows, jsonPath: "data.rows[*]")
+                //.WithField(f => f.DbRows, m => m.Configure(c => c.AddConverter(ChoArrayToObjectConverter.Instance)))
                 )
             {
                 foreach (var rec in r)
@@ -4111,10 +4117,178 @@ K,L,M,N,O,P,Q,R,S,T";
             }
         }
 
+        public class Data
+        {
+            public int Sts { get; set; }
+            public int TMtd { get; set; }
+            public int SId { get; set; }
+            public int T { get; set; }
+            public int CCSr { get; set; }
+            public int TId { get; set; }
+            public int UId { get; set; }
+            public int NPro { get; set; }
+            [ChoJSONPath("^P*")]
+            public List<Element> PValues { get; set; }
+        }
+
+        public class Element
+        {
+            public string SKUId { get; set; }
+            public int Q { get; set; }
+        }
+
+        static void DesrializeSomeMembersToCollection()
+        {
+            string json = @"{
+  ""Sts"": 1,
+  ""TMtd"": 2,
+  ""SId"": 215,
+  ""T"": 1599453168,
+  ""CCSr"": 98972,
+  ""TId"": 492,
+  ""UId"": 1687,
+  ""NPro"": 3,
+  ""P1"": {
+    ""SKUId"": ""006920180209601"",
+    ""Q"": 1
+  },
+  ""P2"": {
+    ""SKUId"": ""006954767430522"",
+    ""Q"": 1
+  },
+  ""P3"": {
+    ""SKUId"": ""006954767410623"",
+    ""Q"": 1
+  }
+}";
+
+            using (var r = ChoJSONReader<Data>.LoadText(json)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+
+        public class Data1
+        {
+            //public int Sts { get; set; }
+            //public int TMtd { get; set; }
+            //public int SId { get; set; }
+            //public int T { get; set; }
+            //public int CCSr { get; set; }
+            //public int TId { get; set; }
+            //public int UId { get; set; }
+            //public int NPro { get; set; }
+            public List<Element> P1 { get; set; }
+        }
+
+        static void DesrializeListOrObject()
+        {
+            string json = @"{
+  ""P1"":[],
+  ""Sts"": 1,
+  ""TMtd"": 2,
+  ""SId"": 215,
+  ""T"": 1599453168,
+  ""CCSr"": 98972,
+  ""TId"": 492,
+  ""UId"": 1687,
+  ""NPro"": 3,
+}";
+
+            using (var r = ChoJSONReader<Data1>.LoadText(json)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        public class Location
+        {
+            public string Name { get; set; }
+            public LocationList Locations { get; set; }
+        }
+
+        // Note: LocationList is simply a subclass of a List<T>
+        // which then adds an IsExpanded property for use by the UI.
+        public class LocationList : List<Location>
+        {
+            [JsonProperty("IsExpanded")]
+            public bool IsExpanded { get; set; }
+        }
+
+        public class RootViewModel
+        {
+            public string Test { get; set; }
+            [JsonProperty("RootLocations")]
+            public LocationList RootLocations { get; set; }
+        }
+
+        static void DeserializeNestedObjectOfList()
+        {
+            string json = @"{
+    ""Test"": ""x"",
+  ""RootLocations"": {
+    ""IsExpanded"": true,
+    ""Locations"": [
+      {
+        ""Name"": ""Main Residence"",
+        ""Locations"": {
+          ""IsExpanded"": false,
+          ""Locations"": [
+            {
+              ""Name"": ""First Floor"",
+              ""Locations"": null
+            }
+          ]
+        }
+      }
+    ]
+  }
+}";
+            ChoJSONRecordConfiguration config = new ChoJSONRecordConfiguration();
+            config.JsonSerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+
+            using (var r = ChoJSONReader<RootViewModel>.LoadText(json, config)
+                              .RegisterNodeConverterForType<LocationList>(s =>
+                              {
+                                  dynamic input = s as dynamic;
+                                  var reader = input.reader;
+                                  var serializer = input.serializer;
+
+                                  var locationList = (input.existingValue as LocationList) ?? new LocationList();
+                                  var jLocationList = JObject.ReadFrom(reader);
+
+                                  try
+                                  {
+                                      locationList.IsExpanded = (bool)(jLocationList["IsExpanded"] ?? false);
+                                      var jLocations = jLocationList["Locations"];
+                                      if (jLocations != null)
+                                      {
+                                          foreach (var jLocation in jLocations)
+                                          {
+                                              var location = serializer.Deserialize<Location>(new JTokenReader(jLocation));
+                                              locationList.Add(location);
+                                          }
+                                      }
+                                  }
+                                  catch { return null; }
+
+                                  return locationList;
+                              }))
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            DeserializeInnerArrayToObjects();
+            DesrializeSomeMembersToCollection();
         }
 
         static void SimpleTest()

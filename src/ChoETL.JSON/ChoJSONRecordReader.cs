@@ -13,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace ChoETL
@@ -257,15 +258,15 @@ namespace ChoETL
                 return false;
 
             var tokens1 = jsonPath.SplitNTrim(".");
-            if (String.Join("/", tokens1) == "~")
+            if (tokens1.Length == 1 && tokens1[0].StartsWith("~"))
             {
-                tokens = new string[] { "*" };
+                tokens = new string[] { tokens1[0].Substring(1).Length == 0 ? "*" : tokens1[0].Substring(1) };
                 dictKey = true;
                 return true;
             }
-            else if (String.Join("/", tokens1) == "^")
+            else if (tokens1.Length == 1 && tokens1[0].StartsWith("^"))
             {
-                tokens = new string[] { "*" };
+                tokens = new string[] { tokens1[0].Substring(1).Length == 0 ? "*" : tokens1[0].Substring(1) };
                 dictValue = true;
                 return true;
             }
@@ -731,6 +732,69 @@ namespace ChoETL
             return result;
         }
 
+        public IEnumerable<JToken> SelectTokens(JObject node, string path)
+        {
+            bool dictKey = false;
+            bool dictValue = false;
+            string[] tokens = null;
+            if (IsSimpleJSONPath(path, out tokens, out dictKey, out dictValue))
+            {
+                if (dictKey)
+                {
+                    var match = tokens.FirstOrDefault();
+                    foreach (var dict in ToCollections(node))
+                    {
+                        var input = tokens.FirstOrDefault();
+                        var regex = new Regex(ChoWildcard.WildcardToRegex(input), RegexOptions.Compiled);
+                        foreach (var kvp in dict)
+                        {
+                            if (input == "*")
+                            {
+                                foreach (var j in ToJObjects(new JToken[] { new JValue(kvp.Key) }))
+                                    yield return j;
+                            }
+                            else if (regex.IsMatch(kvp.Key))
+                            {
+                                foreach (var j in ToJObjects(new JToken[] { new JValue(kvp.Key) }))
+                                    yield return j;
+                            }
+                        }
+                    }
+                }
+                else if (dictValue)
+                {
+                    var input = tokens.FirstOrDefault();
+                    var regex = new Regex(ChoWildcard.WildcardToRegex(input), RegexOptions.Compiled);
+                    foreach (var dict in ToCollections(node))
+                    {
+                        foreach (var kvp in dict)
+                        {
+                            if (input == "*")
+                            {
+                                foreach (var j in ToJObjects(new JToken[] { kvp.Value is JToken ? (JToken)kvp.Value : new JValue(kvp.Value) }))
+                                    yield return j;
+                            }
+                            else if (regex.IsMatch(kvp.Key))
+                            {
+                                foreach (var j in ToJObjects(new JToken[] { kvp.Value is JToken ? (JToken)kvp.Value : new JValue(kvp.Value) }))
+                                    yield return j;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (var n in node.SelectTokens(path))
+                        yield return n;
+                }
+            }
+            else
+            {
+                foreach (var n in node.SelectTokens(path))
+                    yield return n;
+            }
+        }
+
         object fieldValue = null;
         ChoJSONRecordFieldConfiguration fieldConfig = null;
         PropertyInfo pi = null;
@@ -784,8 +848,8 @@ namespace ChoETL
                 //fieldValue = dictValues[kvp.Key];
                 if (!kvp.Value.JSONPath.IsNullOrWhiteSpace() && kvp.Value.JSONPath != kvp.Value.FieldName)
                 {
-                    jTokens = node.SelectTokens(kvp.Value.JSONPath).ToArray();
-                    if (!fieldConfig.FieldType.IsCollection())
+                    jTokens = SelectTokens(node, kvp.Value.JSONPath).ToArray();
+                    if (fieldConfig.FieldType != typeof(object) && !fieldConfig.FieldType.IsCollection())
                     {
                         jToken = jTokens.FirstOrDefault();
                         jTokens = null;
@@ -869,7 +933,7 @@ namespace ChoETL
                         }
                         else
                         {
-                            if (!fieldConfig.FieldType.IsCollection() && fieldValue is JToken[])
+                            if (fieldConfig.FieldType != typeof(object) && !fieldConfig.FieldType.IsCollection() && fieldValue is JToken[])
                             {
                                 fieldValue = ((JToken[])fieldValue).FirstOrDefault();
                                 //if (fieldValue is JArray)
@@ -1449,6 +1513,12 @@ namespace ChoETL
                 bool lUseJSONSerialization = useJSONSerialization == null ? Configuration.UseJSONSerialization : useJSONSerialization.Value;
                 if (true) //lUseJSONSerialization)
                 {
+
+                    if (config.HasConverters())
+                        type = config.SourceType != null ? config.SourceType : typeof(object);
+                    else
+                        type = config.SourceType != null ? config.SourceType : type;
+
                     return JTokenToObject(jToken, type, _se);
                 }
                 else

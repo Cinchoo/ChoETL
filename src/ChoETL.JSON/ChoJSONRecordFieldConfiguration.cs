@@ -1,8 +1,10 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -65,6 +67,70 @@ namespace ChoETL
                 JSONPath = attr.JSONPath;
                 UseJSONSerialization = attr.UseJSONSerializationInternal;
                 FieldName = attr.FieldName.IsNullOrWhiteSpace() ? Name.NTrim() : attr.FieldName.NTrim();
+            }
+            if (otherAttrs != null)
+            {
+                var sa = otherAttrs.OfType<ChoSourceTypeAttribute>().FirstOrDefault();
+                if (sa != null)
+                    SourceType = sa.Type;
+
+                StringLengthAttribute slAttr = otherAttrs.OfType<StringLengthAttribute>().FirstOrDefault();
+                if (slAttr != null && slAttr.MaximumLength > 0)
+                    Size = slAttr.MaximumLength;
+                ChoUseJSONSerializationAttribute sAttr = otherAttrs.OfType<ChoUseJSONSerializationAttribute>().FirstOrDefault();
+                if (sAttr != null)
+                    UseJSONSerialization = sAttr.Flag;
+                ChoJSONPathAttribute jpAttr = otherAttrs.OfType<ChoJSONPathAttribute>().FirstOrDefault();
+                if (jpAttr != null)
+                    JSONPath = jpAttr.JSONPath;
+
+                JsonPropertyAttribute jAttr = otherAttrs.OfType<JsonPropertyAttribute>().FirstOrDefault();
+                if (jAttr != null && !jAttr.PropertyName.IsNullOrWhiteSpace())
+                {
+                    FieldName = jAttr.PropertyName;
+                    JSONPath = jAttr.PropertyName;
+                    Order = jAttr.Order;
+                }
+                else
+                {
+                    DisplayNameAttribute dnAttr = otherAttrs.OfType<DisplayNameAttribute>().FirstOrDefault();
+                    if (dnAttr != null && !dnAttr.DisplayName.IsNullOrWhiteSpace())
+                    {
+                        FieldName = dnAttr.DisplayName.Trim();
+                    }
+                    else
+                    {
+                        DisplayAttribute dpAttr = otherAttrs.OfType<DisplayAttribute>().FirstOrDefault();
+                        if (dpAttr != null)
+                        {
+                            if (!dpAttr.ShortName.IsNullOrWhiteSpace())
+                                FieldName = dpAttr.ShortName;
+                            else if (!dpAttr.Name.IsNullOrWhiteSpace())
+                                FieldName = dpAttr.Name;
+
+                            Order = dpAttr.Order;
+                        }
+                        else
+                        {
+                            ColumnAttribute clAttr = otherAttrs.OfType<ColumnAttribute>().FirstOrDefault();
+                            if (clAttr != null)
+                            {
+                                Order = clAttr.Order;
+                                if (!clAttr.Name.IsNullOrWhiteSpace())
+                                    FieldName = clAttr.Name;
+                            }
+                        }
+                    }
+                }
+                DisplayFormatAttribute dfAttr = otherAttrs.OfType<DisplayFormatAttribute>().FirstOrDefault();
+                if (dfAttr != null && !dfAttr.DataFormatString.IsNullOrWhiteSpace())
+                {
+                    FormatText = dfAttr.DataFormatString;
+                }
+                if (dfAttr != null && !dfAttr.NullDisplayText.IsNullOrWhiteSpace())
+                {
+                    NullValue = dfAttr.NullDisplayText;
+                }
             }
         }
 

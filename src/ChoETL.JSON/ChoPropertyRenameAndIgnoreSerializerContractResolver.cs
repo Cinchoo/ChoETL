@@ -285,6 +285,12 @@ namespace ChoETL
             var rec = ChoType.GetMemberObjectMatchingType(crs.Name, crs.Record);
             var name = ChoType.GetFieldName(crs.Name);
 
+            var st = ChoType.GetMemberAttribute(_mi, typeof(ChoSourceTypeAttribute)) as ChoSourceTypeAttribute;
+            if (st != null && st.Type != null)
+                _objType = st.Type;
+            if (_fc != null && _fc.SourceType != null)
+                _objType = _fc.SourceType;
+
             retValue = reader;
             if (!RaiseBeforeRecordFieldLoad(rec, crs.Index, name, ref retValue))
             {
@@ -328,8 +334,9 @@ namespace ChoETL
             var crs = Writer.ContractResolverState;
             if (crs == null)
             {
-                JToken t = JToken.FromObject(value);
+                var t = serializer.SerializeToJToken(value);
                 t.WriteTo(writer);
+                //serializer.Serialize(writer, value);
                 return;
             }
             var fc = crs.FieldConfig;
@@ -337,6 +344,12 @@ namespace ChoETL
 
             var rec = ChoType.GetMemberObjectMatchingType(crs.Name, crs.Record);
             var name = ChoType.GetFieldName(crs.Name);
+
+            var st = ChoType.GetMemberAttribute(_mi, typeof(ChoSourceTypeAttribute)) as ChoSourceTypeAttribute;
+            if (st != null && st.Type != null)
+                _objType = st.Type;
+            if (_fc != null && _fc.SourceType != null)
+                _objType = _fc.SourceType;
 
             if (RaiseBeforeRecordFieldWrite(rec, crs.Index, name, ref value))
             {
@@ -349,7 +362,7 @@ namespace ChoETL
                     {
                         if (_fc.ValueConverter == null)
                         {
-                            JToken t = JToken.FromObject(value);
+                            var t = serializer.SerializeToJToken(value);
                             t.WriteTo(writer);
                         }
                         else
@@ -358,7 +371,7 @@ namespace ChoETL
                             ValidateOnWrite(ref retValue);
 
                             //ChoETLRecordHelper.DoMemberLevelValidation(retValue, _fc.Name, _fc, _validationMode);
-                            JToken t = JToken.FromObject(retValue);
+                            JToken t = JToken.FromObject(retValue, serializer);
                             t.WriteTo(writer);
                         }
                     }
@@ -366,7 +379,7 @@ namespace ChoETL
                     {
                         object retValue = _fc.CustomSerializer(writer);
                         ValidateOnWrite(ref retValue);
-                        JToken t = JToken.FromObject(retValue);
+                        JToken t = JToken.FromObject(retValue, serializer);
                         t.WriteTo(writer);
                     }
                 }
@@ -377,12 +390,12 @@ namespace ChoETL
 
                     if (ValidateOnWrite(ref value))
                     {
-                        JToken t = JToken.FromObject(value);
+                        var t = serializer.SerializeToJToken(value);
                         t.WriteTo(writer);
                     }
                     else
                     {
-                        JToken t = JToken.FromObject(null);
+                        JToken t = JToken.FromObject(null, serializer);
                         t.WriteTo(writer);
                     }
                 }
@@ -391,7 +404,7 @@ namespace ChoETL
             }
             else
             {
-                JToken t = JToken.FromObject(null);
+                JToken t = JToken.FromObject(null, serializer);
                 t.WriteTo(writer);
             }
         }

@@ -17,6 +17,12 @@ namespace ChoETL
     [DataContract]
     public abstract class ChoRecordFieldConfiguration
     {
+        public Type SourceType
+        {
+            get;
+            set;
+        }
+
         [DataMember]
         public string Name
         {
@@ -171,6 +177,11 @@ namespace ChoETL
         private void Initialize()
         {
             Name = Name.NTrim().FixName();
+        }
+
+        public bool HasConverters()
+        {
+            return Converters != null && Converters.Count > 0;
         }
 
 #if !NETSTANDARD2_0

@@ -207,7 +207,7 @@
             if (pd == null)
                 return null;
             else
-                return pd.Attributes.OfType<T>().First();
+                return pd.Attributes.OfType<T>().FirstOrDefault();
         }
 
         public static IEnumerable<T> GetPropetyAttributes<T>(PropertyDescriptor pd)

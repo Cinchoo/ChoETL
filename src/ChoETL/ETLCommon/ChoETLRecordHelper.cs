@@ -102,7 +102,7 @@ namespace ChoETL
                 fieldValue = fieldConfig.ValueConverter(fieldValue);
             else
             {
-                if (fieldValue != null && fieldConfig.PI.PropertyType != null
+                if (fieldValue != null && fieldConfig.PI.PropertyType != null && fieldConfig.PI.PropertyType != typeof(object)
                     && fieldConfig.PI.PropertyType.IsAssignableFrom(fieldValue.GetType()))
                 {
 
@@ -516,12 +516,13 @@ namespace ChoETL
             {
                 if (fieldConfig.Converters.IsNullOrEmpty())
                 {
+                    Type fieldType = fieldConfig.SourceType == null ? fieldConfig.FieldType : fieldConfig.SourceType;
                     if (fieldConfig.PropConverters.IsNullOrEmpty())
                     {
-                        fieldValue = ChoConvert.ConvertTo(fieldValue, nativeType ? fieldConfig.FieldType : fieldValue == null ? typeof(string) : fieldValue.GetType(), null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                        fieldValue = ChoConvert.ConvertTo(fieldValue, nativeType ? fieldType : fieldValue == null ? typeof(string) : fieldValue.GetType(), null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
                     }
                     else
-                        fieldValue = ChoConvert.ConvertTo(fieldValue, nativeType ? fieldConfig.FieldType : typeof(string), null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                        fieldValue = ChoConvert.ConvertTo(fieldValue, nativeType ? fieldType : typeof(string), null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
                 }
                 else
                 {
