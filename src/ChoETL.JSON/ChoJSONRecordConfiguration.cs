@@ -985,7 +985,7 @@ namespace ChoETL
 
         private Func<object, object> _converter;
 
-        public ChoTypeConverter(Func<object, object> converter)
+        public ChoJSONTypeConverter(Func<object, object> converter)
         {
             _converter = converter;
         }
