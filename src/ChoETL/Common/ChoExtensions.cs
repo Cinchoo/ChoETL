@@ -941,7 +941,7 @@ namespace ChoETL
 
         public static object Default(this Type type)
         {
-            if (type.IsValueType)
+            if (type != null && type.IsValueType)
                 return ChoActivator.CreateInstance(type);
             return (object)null;
         }
