@@ -1480,7 +1480,7 @@ namespace ChoETL
                     case JTokenType.String:
                         return (string)jToken;
                     case JTokenType.Integer:
-                        return (int)jToken;
+                        return (long)jToken;
                     case JTokenType.Float:
                         return (float)jToken;
                     case JTokenType.Date:
@@ -2028,7 +2028,7 @@ namespace ChoETL
         private bool RaiseRecordFieldLoadError(object target, long index, string propName, ref object value, Exception ex)
         {
             bool retValue = false;
-            object state = null;
+            object state = value;
             if (Reader != null && Reader.HasRecordFieldLoadErrorSubscribed)
             {
                 retValue = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseRecordFieldLoadError(target, index, propName, ref state, ex), false);
