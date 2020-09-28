@@ -48,7 +48,7 @@ namespace ChoETL
             if (ConvertBackCode.IsNullOrWhiteSpace())
                 return value;
 
-            if (this.ConvertOperation == null)
+            if (this.ConvertBackOperation == null)
             {
                 this.ConvertBackOperation = ConstructOperation(ConvertBackCode, value, targetType);
             }
