@@ -1,0 +1,41 @@
+﻿[
+  {
+    "DigiKeyPartNumber": "296-19853-1-ND",
+    "Packaging": "Tape & Reel (TR)",
+    "Part_Status": "Active",
+    "Type": "Transceiver",
+    "Protocol": "RS232",
+    "Number_of_Drivers_Receivers": "2/2",
+    "Duplex": "Full",
+    "Receiver_Hysteresis": "300mV",
+    "Data_Rate": "250kbps",
+    "Voltage_Supply": "3V ~ 5.5V",
+    "Operating_Temperature": "-40°C ~ 85°C",
+    "Mounting_Type": "Surface Mount",
+    "Package_Case": "16-SSOP (0.209\", 5.30mm Width)",
+    "Supplier_Device_Package": "16-SSOP",
+    "Base_Part_Number": "MAX323"
+  },
+  {
+    "DigiKeyPartNumber": "495-77678-ND",
+    "Packaging": "Bulk",
+    "Part_Status": "Active",
+    "Capacitance": "47000µF",
+    "Tolerance": "±20%",
+    "Voltage_Rated": "40V",
+    "ESR_Equivalent_Series_Resistance_": "12mOhm @ 100Hz",
+    "Lifetime_Temp_": "12000 Hrs @ 85°C",
+    "Operating_Temperature": "-40°C ~ 85°C",
+    "Polarization": "Polar",
+    "Ratings": "-",
+    "Applications": "General Purpose",
+    "Ripple_Current_Low_Frequency": "13A @ 100Hz",
+    "Impedance": "10 mOhms",
+    "Lead_Spacing": "0.874\" (22.20mm)",
+    "Size_Dimension": "2.032\" Dia (51.60mm)",
+    "Height_Seated_Max_": "3.177\" (80.70mm)",
+    "Surface_Mount_Land_Size": "-",
+    "Mounting_Type": "Chassis Mount",
+    "Package_Case": "Radial, Can - Screw Terminals"
+  }
+]

@@ -75,6 +75,7 @@ namespace ChoETL
                 ExcelField = attr.ExcelField;
                 FieldName = attr.FieldName.IsNullOrWhiteSpace() ? Name : attr.FieldName;
                 AltFieldNames = attr.AltFieldNames.IsNullOrWhiteSpace() ? AltFieldNames : attr.AltFieldNames;
+                Optional = attr.Optional;
             }
         }
 

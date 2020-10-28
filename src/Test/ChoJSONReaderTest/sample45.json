@@ -1,0 +1,24 @@
+﻿{
+  "success": 1,
+  "method": "getTrades",
+  "5183": {
+    "buy_amount": "0.00455636",
+    "buy_currency": "BTC"
+  },
+  "6962": {
+    "buy_amount": "52.44700000",
+    "buy_currency": "IOT"
+  },
+  "6963": {
+    "buy_amount": "383.54300000",
+    "buy_currency": "TNT"
+  },
+  "6964": {
+    "buy_amount": "3412.50000000",
+    "buy_currency": "FUN"
+  },
+  "6965": {
+    "buy_amount": "539.45000000",
+    "buy_currency": "XLM"
+  }
+}

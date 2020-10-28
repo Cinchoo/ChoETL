@@ -12,6 +12,11 @@ namespace ChoETL
     [DataContract]
     public abstract class ChoFileRecordFieldConfiguration : ChoRecordFieldConfiguration
     {
+        public bool Optional
+        {
+            get;
+            set;
+        }
         public int Order
         {
             get;

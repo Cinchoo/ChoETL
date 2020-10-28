@@ -471,7 +471,7 @@ namespace ChoETL
             Func<dynamic, object> valueSelector = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null,
-            string formatText = null, string nullValue = null,
+            string formatText = null, bool optional = false, string nullValue = null,
             bool excelField = false)
             where TClass : class
         {
@@ -480,7 +480,7 @@ namespace ChoETL
 
             return WithField(field.GetMemberName(), position, field.GetPropertyType(), quoteField, fillChar, fieldValueJustification, truncate,
                 fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue,
-                field.GetFullyQualifiedMemberName(), formatText, nullValue, excelField, field.GetReflectedType());
+                field.GetFullyQualifiedMemberName(), formatText, optional, nullValue, excelField, field.GetReflectedType());
         }
 
         public ChoCSVWriter<T> WithFieldForType<TClass>(Expression<Func<TClass, object>> field, bool? quoteField = null,
@@ -490,7 +490,7 @@ namespace ChoETL
             Func<dynamic, object> valueSelector = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null,
-            string formatText = null, string nullValue = null,
+            string formatText = null, bool optional = false, string nullValue = null,
             bool excelField = false)
             where TClass : class
         {
@@ -499,7 +499,7 @@ namespace ChoETL
 
             return WithField(field.GetMemberName(), (int?)null, field.GetPropertyType(), quoteField, fillChar, fieldValueJustification, truncate,
                 fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue,
-                field.GetFullyQualifiedMemberName(), formatText, nullValue, excelField, field.GetReflectedType());
+                field.GetFullyQualifiedMemberName(), formatText, optional, nullValue, excelField, field.GetReflectedType());
         }
 
         public ChoCSVWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoCSVRecordFieldConfigurationMap> setup)
@@ -530,7 +530,7 @@ namespace ChoETL
             Func<dynamic, object> valueSelector = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null,
-            string formatText = null, string nullValue = null,
+            string formatText = null, bool optional = false, string nullValue = null,
             bool excelField = false)
         {
             if (field == null)
@@ -538,7 +538,7 @@ namespace ChoETL
 
             return WithField(field.GetMemberName(), position, field.GetPropertyType(), quoteField, fillChar, fieldValueJustification, truncate,
                 fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue,
-                field.GetFullyQualifiedMemberName(), formatText, nullValue, excelField);
+                field.GetFullyQualifiedMemberName(), formatText, optional, nullValue, excelField);
         }
 
         public ChoCSVWriter<T> WithField<TField>(Expression<Func<T, TField>> field, bool? quoteField = null,
@@ -548,7 +548,7 @@ namespace ChoETL
             Func<dynamic, object> valueSelector = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null,
-            string formatText = null, string nullValue = null,
+            string formatText = null, bool optional = false, string nullValue = null,
             bool excelField = false)
         {
             if (field == null)
@@ -556,7 +556,7 @@ namespace ChoETL
 
             return WithField(field.GetMemberName(), (int?)null, field.GetPropertyType(), quoteField, fillChar, fieldValueJustification, truncate,
                 fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue,
-                field.GetFullyQualifiedMemberName(), formatText, nullValue, excelField);
+                field.GetFullyQualifiedMemberName(), formatText, optional, nullValue, excelField);
         }
 
         public ChoCSVWriter<T> WithField(string name, Type fieldType = null, bool? quoteField = null, char? fillChar = null,
@@ -566,12 +566,12 @@ namespace ChoETL
             Func<dynamic, object> valueSelector = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null,
-            string formatText = null, string nullValue = null,
+            string formatText = null, bool optional = false, string nullValue = null,
             bool excelField = false)
         {
             return WithField(name, null, fieldType, quoteField, fillChar, fieldValueJustification,
                 truncate, fieldName, valueConverter, valueSelector, headerSelector,
-                defaultValue, fallbackValue, null, formatText, nullValue, excelField);
+                defaultValue, fallbackValue, null, formatText, optional, nullValue, excelField);
         }
 
         private ChoCSVWriter<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null, char? fillChar = null,
@@ -581,7 +581,7 @@ namespace ChoETL
             Func<dynamic, object> valueSelector = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null,
-            string fullyQualifiedMemberName = null, string formatText = null, string nullValue = null,
+            string fullyQualifiedMemberName = null, string formatText = null, bool optional = false, string nullValue = null,
             bool excelField = false, Type subRecordType = null)
         {
             if (!name.IsNullOrEmpty())
@@ -593,7 +593,7 @@ namespace ChoETL
                 }
 
                 Configuration.WithField(name, position, fieldType, quoteField, null, fieldName,
-                    valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue, null, fullyQualifiedMemberName, formatText,
+                    valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue, null, fullyQualifiedMemberName, formatText, optional,
                     nullValue, excelField, typeof(T), subRecordType, fieldValueJustification);
             }
 

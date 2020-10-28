@@ -174,7 +174,7 @@ namespace ChoETL
                                             dict.Add(key, value);
                                     }
                                 }
-                                else if (typeof(IDictionary<string, object>).IsAssignableFrom(fieldValue.GetType()))
+                                else if (fieldValue != null && typeof(IDictionary<string, object>).IsAssignableFrom(fieldValue.GetType()))
                                 {
                                     object key1 = null;
                                     object value1 = null;

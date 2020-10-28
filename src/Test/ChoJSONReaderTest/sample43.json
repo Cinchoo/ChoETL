@@ -1,0 +1,191 @@
+﻿{
+  "status": "succeeded",
+  "createdDateTime": "2020-05-28T05:13:21Z",
+  "lastUpdatedDateTime": "2020-05-28T05:13:22Z",
+  "analyzeResult": {
+    "version": "3.1.0",
+    "readResults": [
+      {
+        "page": 1,
+        "language": "en",
+        "angle": 0.8551,
+        "width": 2661,
+        "height": 1901,
+        "unit": "pixel",
+        "lines": [
+          {
+            "boundingBox": [
+              67,
+              646,
+              2582,
+              713,
+              2580,
+              876,
+              67,
+              821
+            ],
+            "text": "The quick brown fox jumps",
+            "words": [
+              {
+                "boundingBox": [
+                  143,
+                  650,
+                  435,
+                  661,
+                  436,
+                  823,
+                  144,
+                  824
+                ],
+                "text": "The",
+                "confidence": 0.958
+              },
+              {
+                "boundingBox": [
+                  540,
+                  665,
+                  926,
+                  679,
+                  926,
+                  825,
+                  541,
+                  823
+                ],
+                "text": "quick",
+                "confidence": 0.57
+              },
+              {
+                "boundingBox": [
+                  1125,
+                  686,
+                  1569,
+                  700,
+                  1569,
+                  838,
+                  1125,
+                  828
+                ],
+                "text": "brown",
+                "confidence": 0.799
+              },
+              {
+                "boundingBox": [
+                  1674,
+                  703,
+                  1966,
+                  711,
+                  1966,
+                  851,
+                  1674,
+                  841
+                ],
+                "text": "fox",
+                "confidence": 0.442
+              },
+              {
+                "boundingBox": [
+                  2083,
+                  714,
+                  2580,
+                  725,
+                  2579,
+                  876,
+                  2083,
+                  855
+                ],
+                "text": "jumps",
+                "confidence": 0.878
+              }
+            ]
+          },
+          {
+            "boundingBox": [
+              187,
+              1062,
+              485,
+              1056,
+              486,
+              1120,
+              189,
+              1126
+            ],
+            "text": "over",
+            "words": [
+              {
+                "boundingBox": [
+                  190,
+                  1064,
+                  439,
+                  1059,
+                  441,
+                  1122,
+                  192,
+                  1126
+                ],
+                "text": "over",
+                "confidence": 0.37
+              }
+            ]
+          },
+          {
+            "boundingBox": [
+              664,
+              1008,
+              1973,
+              1023,
+              1969,
+              1178,
+              664,
+              1154
+            ],
+            "text": "the lazy dog!",
+            "words": [
+              {
+                "boundingBox": [
+                  668,
+                  1008,
+                  923,
+                  1015,
+                  923,
+                  1146,
+                  669,
+                  1117
+                ],
+                "text": "the",
+                "confidence": 0.909
+              },
+              {
+                "boundingBox": [
+                  1107,
+                  1018,
+                  1447,
+                  1023,
+                  1445,
+                  1178,
+                  1107,
+                  1162
+                ],
+                "text": "lazy",
+                "confidence": 0.853
+              },
+              {
+                "boundingBox": [
+                  1639,
+                  1024,
+                  1974,
+                  1023,
+                  1971,
+                  1170,
+                  1636,
+                  1178
+                ],
+                "text": "dog!",
+                "confidence": 0.41
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

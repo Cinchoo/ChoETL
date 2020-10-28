@@ -182,8 +182,9 @@ namespace ChoETL
             {
                 bool dictKey = false;
                 bool dictValue = false;
+                bool dict1 = false;
                 string[] tokens = null;
-                if (!Configuration.AllowComplexJSONPath && IsSimpleJSONPath(Configuration.JSONPath, out tokens, out dictKey, out dictValue))
+                if (!Configuration.AllowComplexJSONPath && IsSimpleJSONPath(Configuration.JSONPath, out tokens, out dictKey, out dictValue, out dict1))
                 {
                     foreach (var jo in StreamElements(sr, tokens))
                     {
@@ -208,6 +209,10 @@ namespace ChoETL
                                         yield return j;
                                 }
                             }
+                        }
+                        else if (dict1)
+                        {
+                            yield return jo;
                         }
                         else
                             yield return jo;
@@ -244,10 +249,11 @@ namespace ChoETL
             }
         }
 
-        private bool IsSimpleJSONPath(string jsonPath, out string[] tokens, out bool dictKey, out bool dictValue)
+        private bool IsSimpleJSONPath(string jsonPath, out string[] tokens, out bool dictKey, out bool dictValue, out bool dict)
         {
             dictKey = false;
             dictValue = false;
+            dict = false;
             tokens = null;
 
             if (jsonPath.StartsWith("$"))
@@ -268,6 +274,12 @@ namespace ChoETL
             {
                 tokens = new string[] { tokens1[0].Substring(1).Length == 0 ? "*" : tokens1[0].Substring(1) };
                 dictValue = true;
+                return true;
+            }
+            else if (tokens1.Length == 1 && tokens1[0].StartsWith("*"))
+            {
+                tokens = new string[] { tokens1[0].Substring(1).Length == 0 ? "*" : tokens1[0].Substring(1) };
+                dict = true;
                 return true;
             }
 
@@ -736,8 +748,9 @@ namespace ChoETL
         {
             bool dictKey = false;
             bool dictValue = false;
+            bool dict1 = false;
             string[] tokens = null;
-            if (IsSimpleJSONPath(path, out tokens, out dictKey, out dictValue))
+            if (IsSimpleJSONPath(path, out tokens, out dictKey, out dictValue, out dict1))
             {
                 if (dictKey)
                 {
@@ -781,6 +794,10 @@ namespace ChoETL
                             }
                         }
                     }
+                }
+                else if (dict1)
+                {
+                    yield return node;
                 }
                 else
                 {
@@ -1584,7 +1601,15 @@ namespace ChoETL
                             return jToken.ToObject(objectType, jsonSerializer.Value);
                     }
                     else
-                        return jToken.ToObject(objectType, jsonSerializer.Value);
+                    {
+                        var JObject = jToken as JObject;
+                        if (JObject != null && JObject.Properties().Count() == 1 && JObject.ContainsKey("Value"))
+                        {
+                            return ChoUtility.CastObjectTo(JObject["Value"], objectType);
+                        }
+                        else
+                            return jToken.ToObject(objectType, jsonSerializer.Value);
+                    }
                 }
             }
             catch

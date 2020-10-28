@@ -27,6 +27,12 @@ namespace ChoETL
             set;
         }
 
+        public bool Optional
+        {
+            get;
+            set;
+        }
+
         public ChoCSVRecordFieldAttribute()
         {
         }

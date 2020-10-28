@@ -82,6 +82,10 @@
     <None Include="sample21.json" />
     <None Include="sample20.json" />
     <None Include="sample33Expected.csv" />
+    <None Include="sample46.json" />
+    <None Include="sample45.json" />
+    <None Include="sample44.json" />
+    <None Include="sample43.json" />
     <None Include="sample42.json" />
     <None Include="sample41.json" />
     <None Include="sf_city_lots.json" />

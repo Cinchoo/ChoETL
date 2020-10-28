@@ -673,7 +673,7 @@ namespace ChoETL
             bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
             string fieldName = null, Func<object, object> valueConverter = null,
             Func<dynamic, object> valueSelector = null, Func<string> headerSelector = null,
-            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
+            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null, bool optional = false,
             string nullValue = null, bool excelField = false)
             where TClass : class
         {
@@ -682,14 +682,14 @@ namespace ChoETL
 
             return WithField(field.GetMemberName(), position, field.GetPropertyType(), quoteField, fieldValueTrimOption, fieldName, valueConverter,
                 valueSelector, headerSelector, defaultValue, fallbackValue, altFieldNames,
-                field.GetFullyQualifiedMemberName(), formatText, nullValue, excelField, field.GetReflectedType());
+                field.GetFullyQualifiedMemberName(), formatText, optional, nullValue, excelField, field.GetReflectedType());
         }
 
         public ChoCSVReader<T> WithFieldForType<TClass>(Expression<Func<TClass, object>> field,
             bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
             string fieldName = null, Func<object, object> valueConverter = null,
             Func<dynamic, object> valueSelector = null, Func<string> headerSelector = null,
-            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
+            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null, bool optional = false,
             string nullValue = null, bool excelField = false)
             where TClass : class
         {
@@ -698,7 +698,7 @@ namespace ChoETL
 
             return WithField(field.GetMemberName(), (int?)null, field.GetPropertyType(), quoteField, fieldValueTrimOption, fieldName, valueConverter,
                 valueSelector, headerSelector, defaultValue, fallbackValue, altFieldNames,
-                field.GetFullyQualifiedMemberName(), formatText, nullValue, excelField, field.GetReflectedType());
+                field.GetFullyQualifiedMemberName(), formatText, optional, nullValue, excelField, field.GetReflectedType());
         }
 
         public ChoCSVReader<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoCSVRecordFieldConfigurationMap> setup)
@@ -726,7 +726,7 @@ namespace ChoETL
             bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
             string fieldName = null, Func<object, object> valueConverter = null,
             Func<dynamic, object> valueSelector = null, Func<string> headerSelector = null,
-            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
+            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null, bool optional = false,
             string nullValue = null, bool excelField = false)
         {
             if (field == null)
@@ -734,14 +734,15 @@ namespace ChoETL
 
             return WithField(field.GetMemberName(), (int?)null, field.GetPropertyType(), quoteField, fieldValueTrimOption, fieldName, valueConverter,
                 valueSelector, headerSelector, defaultValue, fallbackValue, altFieldNames,
-                field.GetFullyQualifiedMemberName(), formatText, nullValue, excelField, field.GetReflectedType());
+                field.GetFullyQualifiedMemberName(), formatText, optional, nullValue, excelField, field.GetReflectedType());
         }
 
         public ChoCSVReader<T> WithField<TField>(Expression<Func<T, TField>> field, int? position, 
             bool? quoteField = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
             string fieldName = null, Func<object, object> valueConverter = null,
             Func<dynamic, object> valueSelector = null, Func<string> headerSelector = null,
-            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null, 
+            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null, bool optional = false,
+            string nullValue = null,
             bool excelField = false)
         {
             if (field == null)
@@ -749,30 +750,30 @@ namespace ChoETL
 
             return WithField(field.GetMemberName(), position, field.GetPropertyType(), quoteField, fieldValueTrimOption, fieldName, 
                 valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue, altFieldNames,
-                field.GetFullyQualifiedMemberName(), formatText, excelField, field.GetReflectedType());
+                field.GetFullyQualifiedMemberName(), formatText, optional, nullValue, excelField, field.GetReflectedType());
         }
 
         public ChoCSVReader<T> WithField(string name, Type fieldType = null, bool? quoteField = null, 
             ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, 
             Func<object, object> valueConverter = null,
             Func<dynamic, object> valueSelector = null, Func<string> headerSelector = null,
-            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
+            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null, bool optional = false,
             string nullValue = null, bool excelField = false, Type subRecordType = null)
         {
             return WithField(name, null, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, 
                 valueSelector, headerSelector,
-                defaultValue, fallbackValue, altFieldNames, formatText, nullValue, excelField, subRecordType);
+                defaultValue, fallbackValue, altFieldNames, formatText, optional, nullValue, excelField, subRecordType);
         }
 
         public ChoCSVReader<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null, 
             ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, 
             Func<object, object> valueConverter = null,
             Func<dynamic, object> valueSelector = null, Func<string> headerSelector = null,
-            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
+            object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null, bool optional = false,
             string nullValue = null, bool excelField = false, Type subRecordType = null)
         {
             return WithField(name, position, fieldType, quoteField, fieldValueTrimOption, fieldName, valueConverter, valueSelector, headerSelector,
-                defaultValue, fallbackValue, altFieldNames, null, formatText, nullValue, excelField, subRecordType);
+                defaultValue, fallbackValue, altFieldNames, null, formatText, optional, nullValue, excelField, subRecordType);
         }
 
         private ChoCSVReader<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null, 
@@ -780,7 +781,7 @@ namespace ChoETL
             Func<object, object> valueConverter = null,
             Func<dynamic, object> valueSelector = null, Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, 
-            string fullyQualifiedMemberName = null, string formatText = null,
+            string fullyQualifiedMemberName = null, string formatText = null, bool optional = false,
             string nullValue = null, bool excelField = false, Type subRecordType = null)
         {
             if (!name.IsNullOrEmpty())
@@ -792,7 +793,7 @@ namespace ChoETL
                 }
 
                 Configuration.WithField(name, position, fieldType, quoteField, fieldValueTrimOption, fieldName,
-                    valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue, altFieldNames, fullyQualifiedMemberName, formatText,
+                    valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue, altFieldNames, fullyQualifiedMemberName, formatText, optional,
                     nullValue, excelField, typeof(T), subRecordType);
             }
 

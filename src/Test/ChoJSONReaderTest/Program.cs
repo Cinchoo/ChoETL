@@ -2087,7 +2087,7 @@ K,L,M,N,O,P,Q,R,S,T";
         {
             StringBuilder csv = new StringBuilder();
             using (var r = new ChoJSONReader("sample35.json")
-                .WithJSONPath("$..Results[*]")
+                .WithJSONPath("$..Results")
                 )
             {
                 var r1 = r.FlattenBy("owners", "address");
@@ -4285,10 +4285,290 @@ K,L,M,N,O,P,Q,R,S,T";
             }
 
         }
+
+        static void BigIntTest()
+        {
+            string json = @"[{ ""column_one"": ""value"", ""column_two"": 200, ""column_three"": 3000000000, ""column_four"": ""value_2"" }]";
+
+            StringBuilder csv = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(json)
+                .Setup(s => s.BeforeRecordFieldLoad += (o, e) =>
+                {
+                    if (e.PropertyName == "column_three")
+                    {
+                        e.Source = (int)((JValue)e.Source).Value;
+                    }
+                })
+                )
+            {
+                using (var w = new ChoCSVWriter(csv).WithFirstLineHeader())
+                {
+                    w.Write(r);
+                }
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+        static void DiscoverHeaderTest()
+        {
+            string json = @"[
+{
+""column_a"": 1,
+""column_b"": 2,
+""column_c"": 3
+},
+{
+""column_a"": 11,
+""column_x"": ""not present in first item"",
+""column_c"": 33
+}
+]";
+
+            StringBuilder csv = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(json)
+                .UseJsonSerialization()
+                )
+            {
+                using (var w = new ChoCSVWriter(csv).WithFirstLineHeader()
+                    .ThrowAndStopOnMissingField(false)
+                    .WithMaxScanRows(2))
+                {
+                    w.Write(r);
+                }
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
+        static void JSON2CSV3()
+        {
+            StringBuilder csv = new StringBuilder();
+            using (var p = new ChoJSONReader("sample43.json")
+                .WithJSONPath("$..readResults")
+                )
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithField("FileName", fieldName: "File Name")
+                    .WithField("page")
+                    .WithField("text")
+                    .WithField("words")
+                    .WithField("confidence")
+                    .WithFirstLineHeader()
+                    )
+                {
+                    w.Write(p
+                        .SelectMany(r1 => ((dynamic[])r1.lines).SelectMany(r2 => ((dynamic[])r2.words).Select(r3 => new
+                        {
+                            FileName = "file.json",
+                            r1.page,
+                            r2.text,
+                            words = r3.text,
+                            r3.confidence
+                        }))));
+                }
+            }
+
+            Console.WriteLine(csv.ToString());
+            return;
+
+            using (var p = new ChoJSONReader("sample43.json")
+                .WithJSONPath("$..readResults")
+                )
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    )
+                {
+                    w.Write(p
+                        .SelectMany(r1 => ((dynamic[])r1.lines)
+                        .Select(r2 => new
+                        {
+                            r1.page,
+                            r2.text,
+                            words = String.Join(",", ((dynamic[])r2.words).Select(s1 => s1.text)),
+                            confidence = ((dynamic[])r2.words).Select(s1 => (double)s1.confidence).Average()
+                        })));
+                }
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
+        static void JSON2CSV4()
+        {
+            StringBuilder csv = new StringBuilder();
+            using (var p = new ChoJSONReader("sample44.json")
+                .WithJSONPath("$..readResults")
+                )
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithField("FileName", fieldName: "Field Name")
+                    .WithField("Page", fieldName: "Page")
+                    .WithField("PracticeName", fieldName: "Practice Name")
+                    .WithField("OwnerFullName", fieldName: "Owner FullName")
+                    .WithField("OwnerEmail", fieldName: "Owner Email")
+                    .WithFirstLineHeader()
+                    )
+                {
+                    w.Write(p
+                        .Select(r1 =>
+                        {
+                            var lines = (dynamic[])r1.lines;
+                            return new
+                            {
+                                FileName = "file1.json",
+                                Page = r1.page,
+                                PracticeName = lines[2].text,
+                                OwnerFullName = lines[4].text,
+                                OwnerEmail = lines[6].text,
+                            };
+                        }
+                ));
+                }
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
+        static void ReadSpacedHeaderCSV()
+        {
+            string csv = @"Field Name,Page,Practice Name,Owner FullName,Owner Email
+file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                    .WithField("FileName", fieldName: "Field Name")
+                    .WithField("Page", fieldName: "Page")
+                    .WithField("PracticeName", fieldName: "Practice Name")
+                    .WithField("OwnerFullName", fieldName: "Owner FullName")
+                    .WithField("OwnerEmail", fieldName: "Owner Email")
+                .WithFirstLineHeader())
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void JArray2CSV()
+        {
+            string json = @"[
+{
+""column_a"": 1,
+""column_b"": 2,
+""column_c"": 3
+},
+{
+""column_a"": 11,
+""column_b"": 21,
+""column_c"": 31
+}
+]";
+
+            StringBuilder csv = new StringBuilder();
+            using (var r = ChoJSONReader.LoadJTokens(JArray.Parse(json)))
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    )
+                    w.Write(r);
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
+        public class Sample45
+        {
+            public IDictionary<string, object> TransactionsDict { get; set; }
+            [JsonProperty("success")]
+            public long Success { get; set; }
+            [JsonProperty("method")]
+            public string Method { get; set; }
+            [ChoTypeConverter(typeof(TransactionKeyConverter))]
+            [ChoSourceType(typeof(string))]
+            public List<int> TransactionsKeys { get; set; }
+            [ChoTypeConverter(typeof(TransactionConverter))]
+            public List<Transaction> Transactions { get; set; }
+        }
+
+        public class Transaction
+        {
+            [JsonProperty("buy_amount")]
+            public decimal? BuyAmount { get; set; }
+            [JsonProperty("buy_currency")]
+            public string BuyCurrency { get; set; }
+        }
+
+        public class TransactionKeyConverter : IChoValueConverter
+        {
+            public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                return ((IEnumerable)value).Cast<string>().Where(i => i.IsNumber()).CastEnumerable<int>().ToList();
+                throw new NotImplementedException();
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public class TransactionConverter : IChoValueConverter
+        {
+            public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                return ((IEnumerable)value).OfType<Transaction>().ToList();
+                throw new NotImplementedException();
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        static void Sample45Test()
+        {
+            using (var r = new ChoJSONReader<Sample45>("sample45.json")
+                .WithField(f => f.TransactionsDict, jsonPath: "$.*")
+                .WithField(f => f.TransactionsKeys, jsonPath: "~*")
+                .WithField(f => f.Transactions, jsonPath: "$^*", itemConverter: o =>
+                {
+                    var JObject = o as JObject;
+                    if (JObject != null && JObject.Properties().Count() == 1 && JObject.ContainsKey("Value"))
+                    {
+                        return null;
+                    }
+                    else
+                        return JObject.ToObject<Transaction>();
+                })
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void Sample46Test()
+        {
+            StringBuilder csv = new StringBuilder();
+            using (var r = new ChoJSONReader("sample46.json")
+                .UseJsonSerialization()
+            )
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    .ThrowAndStopOnMissingField(false)
+                    .WithMaxScanRows(2)
+                    )
+                    w.Write(r);
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            DesrializeSomeMembersToCollection();
+            Sample46Test();
         }
 
         static void SimpleTest()

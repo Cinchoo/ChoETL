@@ -1198,7 +1198,7 @@ namespace ChoETL
             {
                 if (Configuration.ThrowAndStopOnMissingCSVColumn)
                 {
-                    foreach (string fieldName in Configuration.CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Select(i => i.FieldName))
+                    foreach (string fieldName in Configuration.CSVRecordFieldConfigurations.Where(i => !i.Optional).OrderBy(i => i.FieldPosition).Select(i => i.FieldName))
                     {
                         if (!_fieldNames.Contains(fieldName, Configuration.FileHeaderConfiguration.StringComparer))
                             throw new ChoMissingCSVColumnException("Missing '{0}' CSV column in CSV file.".FormatString(fieldName));

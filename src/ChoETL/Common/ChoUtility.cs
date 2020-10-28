@@ -2282,6 +2282,8 @@ namespace ChoETL
                 return true;
             else if (typeof(IList).IsAssignableFrom(type))
                 return true;
+            //else if (typeof(IDictionary).IsAssignableFrom(type))
+            //    return true;
             else
                 return false;
         }

@@ -4529,10 +4529,162 @@ acf12d17-058e-451e-8449-60948055f6af;TEST1;Item;type;Equal;flight;Data;airlineCo
             }
         }
 
+        static void CheckIfCSVFileIsEmpty1()
+        {
+            string csv = @"Id, Name";
+//1, Tom";
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader())
+            {
+                var IsCSVEmpty = r.Count() == 0;
+                Console.WriteLine($"Is CSV file empty?: {IsCSVEmpty}");
+            }
+        }
+
+        static void CheckIfCSVFileIsEmpty2()
+        {
+            string csv = @"Id, Name";
+//1, Tom";
+
+            bool IsCSVEmpty = true;
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .Setup(s => s.BeforeRecordLoad += (o, e) => IsCSVEmpty = false)
+                )
+            {
+                foreach (var rec in r)
+                {
+
+                }
+            }
+
+            Console.WriteLine($"Is CSV file empty?: {IsCSVEmpty}");
+        }
+
+
+        static void CheckIfCSVFileIsEmpty3()
+        {
+            string csv = @"Id, Name";
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                )
+            {
+                //Initialize IsCSVEmpty to true
+                r.Context.IsCSVEmpty = true;
+
+                //Subscribe to before record event
+                r.BeforeRecordLoad += (o, e) =>
+                {
+                    var reader = o as ChoReader;
+
+                    //Set IsCSVEmpty to false, since this event gets called for each row
+                    reader.Context.IsCSVEmpty = false;
+                };
+
+                //loop throw record to load csv file
+                foreach (var rec in r)
+                {
+
+                }
+
+                Console.WriteLine($"Is CSV file empty?: {r.Context.IsCSVEmpty}");
+            }
+        }
+
+        static void CombineCSVFields1()
+        {
+            string csv = @"Date,Time
+""8/3/2020"",""14:58:48""
+""8/3/2020"",""14:58:48""
+""8/3/2020"",""14:58:48""
+""8/3/2020"",""16:41:10""
+""8/3/2020"",""16:41:13""";
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .QuoteAllFields()
+                .WithFirstLineHeader()
+                .WithField("Date")
+                .WithField("Time")
+                .WithField("DateTime", valueSelector: o =>
+                {
+                    var da = o as dynamic;
+                    return Convert.ToDateTime($"{da.Date} {da.Time}");
+                }, optional: true)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void CombineCSVFields2()
+        {
+            string csv = @"Date,Time
+""8/3/2020"",""14:58:48""
+""8/3/2020"",""14:58:48""
+""8/3/2020"",""14:58:48""
+""8/3/2020"",""16:41:10""
+""8/3/2020"",""16:41:13""";
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .QuoteAllFields()
+                .WithFirstLineHeader()
+                .WithField("Date")
+                .WithField("Time")
+                .ThrowAndStopOnMissingCSVColumn(false)
+                .WithField("DateTime", valueSelector: o =>
+                {
+                    var da = o as dynamic;
+                    return Convert.ToDateTime($"{da.Date} {da.Time}");
+                })
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void CombineCSVFields3()
+        {
+            string csv = @"Date,Time
+""8/3/2020"",""14:58:48""
+""8/3/2020"",""14:58:48""
+""8/3/2020"",""14:58:48""
+""8/3/2020"",""16:41:10""
+""8/3/2020"",""16:41:13""";
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .QuoteAllFields()
+                .WithFirstLineHeader()
+                )
+            {
+                foreach (var rec in r.Select(da => Convert.ToDateTime($"{da.Date} {da.Time}")))
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void DuplicateFieldsTest()
+        {
+            string csv = @"Key,Name,Salary,Name
+1,Tom,10000,IT
+2,Tom,10000,IT";
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader(true)
+                .WithFields("Key","Name","Salary", "Dept")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            JSON2CSV();
+            DuplicateFieldsTest();
             return;
 
             CSV2ComplexObject();

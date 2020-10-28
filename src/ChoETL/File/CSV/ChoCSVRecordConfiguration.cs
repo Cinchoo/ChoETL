@@ -587,6 +587,8 @@ namespace ChoETL
 
             if (!ignoreAttrs && pd != null)
             {
+                obj.Optional = pd.Attributes.OfType<OptionalFieldAttribute>().Any();
+
                 StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
                 if (slAttr != null && slAttr.MaximumLength > 0)
                     obj.Size = slAttr.MaximumLength;
@@ -870,7 +872,7 @@ namespace ChoETL
                 PDDict.Add(fc.FieldName, fc.PropertyDescriptor);
             }
 
-            RecordFieldConfigurationsDict = CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName, FileHeaderConfiguration.StringComparer);
+            RecordFieldConfigurationsDict = CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name, FileHeaderConfiguration.StringComparer);
             //RecordFieldConfigurationsDictGroup = RecordFieldConfigurationsDict.GroupBy(kvp => kvp.Key.Contains(".") ? kvp.Key.SplitNTrim(".").First() : kvp.Key).ToDictionary(i => i.Key, i => i.ToArray());
             RecordFieldConfigurationsDict2 = CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName, FileHeaderConfiguration.StringComparer);
 
@@ -1080,7 +1082,7 @@ namespace ChoETL
             Func<object, object> valueConverter = null,
             Func<dynamic, object> valueSelector = null, Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null,
-            string fullyQualifiedMemberName = null, string formatText = null,
+            string fullyQualifiedMemberName = null, string formatText = null, bool optional = false,
             string nullValue = null, bool excelField = false, Type recordType = null, Type subRecordType = null,
             ChoFieldValueJustification? fieldValueJustification = null)
         {
@@ -1138,6 +1140,7 @@ namespace ChoETL
                     FallbackValue = fallbackValue,
                     AltFieldNames = altFieldNames,
                     FormatText = formatText,
+                    Optional = optional,
                     NullValue = nullValue,
                     ExcelField = excelField
                 };
@@ -1188,6 +1191,13 @@ namespace ChoETL
                 //return CSVRecordFieldConfigurations.First(fc => fc.Name == propertyName);
                 if (fqm == null)
                     fqm = propertyName;
+
+                if (CSVRecordFieldConfigurations.Any(o => o.Name == propertyName))
+                {
+                    var fc1 = CSVRecordFieldConfigurations.Where(o => o.Name == propertyName).First();
+                    if (fc1 != null)
+                        return fc1;
+                }
 
                 propertyName = propertyName.SplitNTrim(".").LastOrDefault();
                 if (!CSVRecordFieldConfigurations.Any(fc => fc.DeclaringMember == fqm && fc.ArrayIndex == null))
