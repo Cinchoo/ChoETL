@@ -223,9 +223,21 @@ namespace ChoETL
                     if (!Configuration.AllowComplexJSONPath)
                         throw new JsonException("Complex JSON path not supported.");
 
-                    foreach (var t in ToJObjects(JObject.Load(sr).SelectTokens(Configuration.JSONPath)))
+                    IEnumerable<JObject> result = null;
+                    try
                     {
-                        yield return t;
+                        result = ToJObjects(JObject.Load(sr).SelectTokens(Configuration.JSONPath));
+                    }
+                    catch
+                    {
+                        result = ToJObjects(JArray.Load(sr).SelectTokens(Configuration.JSONPath));
+                    }
+                    if (result != null)
+                    {
+                        foreach (var t in result)
+                        {
+                            yield return t;
+                        }
                     }
 
                     //while (sr.Read())
@@ -866,7 +878,7 @@ namespace ChoETL
                 if (!kvp.Value.JSONPath.IsNullOrWhiteSpace() && kvp.Value.JSONPath != kvp.Value.FieldName)
                 {
                     jTokens = SelectTokens(node, kvp.Value.JSONPath).ToArray();
-                    if (fieldConfig.FieldType != typeof(object) && !fieldConfig.FieldType.IsCollection())
+                    if (fieldConfig.FieldType != typeof(object) && !fieldConfig.FieldType.IsCollection() && jTokens != null)
                     {
                         jToken = jTokens.FirstOrDefault();
                         jTokens = null;
@@ -885,6 +897,10 @@ namespace ChoETL
                             throw new ChoParserException("No matching '{0}' field found.".FormatString(fieldConfig.FieldName));
                         //else
                         //    jToken = node;
+                    }
+                    if (fieldConfig.FieldType != typeof(object) && !fieldConfig.FieldType.IsCollection() && jToken != null)
+                    {
+                        jToken = jToken is JArray ? ((JArray)jToken).FirstOrDefault() : jToken;
                     }
                 }
 

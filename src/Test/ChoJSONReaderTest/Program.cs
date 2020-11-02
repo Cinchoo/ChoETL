@@ -4068,6 +4068,14 @@ K,L,M,N,O,P,Q,R,S,T";
         {
             [ChoArrayIndex(0)]
             public string Item1 { get; set; }
+            [ChoArrayIndex(1)]
+            public string Item2 { get; set; }
+            [ChoArrayIndex(2)]
+            public string Item3 { get; set; }
+            [ChoArrayIndex(3)]
+            public int Item4 { get; set; }
+            [ChoArrayIndex(4)]
+            public int Item5 { get; set; }
         }
 
         public class DbObject
@@ -4565,10 +4573,82 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             Console.WriteLine(csv.ToString());
         }
 
+        public class TO_JsonPunches
+        {
+            public string EmployeeID { get; set; }
+            public string MatchedDateTime { get; set; }
+        }
+
+        static void Sample46ATest()
+        {
+            string json = @"
+[
+    {
+        ""RequestID"": 12345,
+        ""Status"": 100,
+        ""ResponseMessage"": ""API Call Successful"",
+        ""ResponseData"": [
+            {
+                ""EmployeeID"": ""1824"",
+                ""MatchedDateTime"": [
+                    ""20 Oct 2020 06:41:45 AM""
+                ]
+            },
+            {
+                ""EmployeeID"": ""1214"",
+                ""MatchedDateTime"": [
+                    ""20 Oct 2020 06:05:03 AM""
+                ]
+            }
+        ]
+    }
+]";
+
+            //var results = ChoJSONReader<TO_JsonPunches>.LoadText(json).WithJSONPath("$.ResponseData").ToArray();
+
+            using (var r = ChoJSONReader<TO_JsonPunches>.LoadText(json)
+                .WithJSONPath("$..ResponseData[*]", true)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        public class Order
+        {
+            public string orderNo { get; set; }
+            public string customerNo { get; set; }
+            [ChoJSONPath("items[*]")]
+            [ChoSourceType(typeof(string[]))]
+            [ChoTypeConverter(typeof(ChoArrayToObjectConverter))]
+            public OrderItem[] items { get; set; }
+        }
+
+        public class OrderItem
+        {
+            [ChoArrayIndex(0)]
+            public int itemId { get; set; }
+            [ChoArrayIndex(1)]
+            public decimal price { get; set; }
+            [ChoArrayIndex(2)]
+            public decimal quantity { get; set; }
+        }
+
+        static void Sample47Test()
+        {
+            using (var r = new ChoJSONReader<Order>("sample47.json")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            Sample46Test();
+            Sample47Test();
         }
 
         static void SimpleTest()
