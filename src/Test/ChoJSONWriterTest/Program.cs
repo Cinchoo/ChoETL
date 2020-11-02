@@ -1144,11 +1144,56 @@ namespace ChoJSONWriterTest
             Console.WriteLine(json.ToString());
         }
 
+        public class Order
+        {
+            public string orderNo { get; set; }
+            public string customerNo { get; set; }
+            [ChoJSONPath("items[*]")]
+            [ChoSourceType(typeof(object[]))]
+            [ChoTypeConverter(typeof(ChoArrayToObjectConverter))]
+            public OrderItem[] items { get; set; }
+        }
+
+        public class OrderItem
+        {
+            [ChoArrayIndex(0)]
+            public int itemId { get; set; }
+            [ChoArrayIndex(1)]
+            public decimal price { get; set; }
+            [ChoArrayIndex(2)]
+            public decimal quantity { get; set; }
+        }
+
+        static void ObjectMemberToArrayTest()
+        {
+            StringBuilder json = new StringBuilder();
+            using (var w = new ChoJSONWriter<Order>(json))
+            {
+                w.Write(new Order
+                {
+                    orderNo = "1",
+                    customerNo = "10",
+                    items = new OrderItem[]
+                    {
+                        new OrderItem
+                        {
+                            itemId = 1,
+                            price = 100.1m,
+                            quantity = 5
+                        }
+                    }
+                });
+            }
+
+            Console.WriteLine(json.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            SerializeNestedObjectOfList();
+            ObjectMemberToArrayTest();
+
             return;
 
             StringBuilder json = new StringBuilder();

@@ -27,4 +27,12 @@ namespace ChoETL
             Position = position;
         }
     }
+
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+    public class ChoArrayAttribute : Attribute
+    {
+        public ChoArrayAttribute()
+        {
+        }
+    }
 }

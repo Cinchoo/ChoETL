@@ -42,7 +42,7 @@ namespace ChoETL
                 {
                     IList coll = value as IList;
                     var itemType = value.GetType().GetItemType();
-                    if (itemType.IsSimple())
+                    if (itemType == typeof(object) || itemType.IsSimple())
                     {
                         value = ChoActivator.CreateInstance(targetType);
                         foreach (var p in ChoTypeDescriptor.GetProperties<ChoArrayIndexAttribute>(targetType).Select(pd => new { pd, a = ChoTypeDescriptor.GetPropetyAttribute<ChoArrayIndexAttribute>(pd) })

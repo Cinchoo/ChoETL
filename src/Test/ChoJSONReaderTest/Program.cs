@@ -4620,7 +4620,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public string orderNo { get; set; }
             public string customerNo { get; set; }
             [ChoJSONPath("items[*]")]
-            [ChoSourceType(typeof(string[]))]
+            [ChoSourceType(typeof(object[]))]
             [ChoTypeConverter(typeof(ChoArrayToObjectConverter))]
             public OrderItem[] items { get; set; }
         }
