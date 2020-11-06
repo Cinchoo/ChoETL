@@ -195,7 +195,7 @@ namespace ChoETL
             return root as ChoDynamicObject;
         }
 
-        public static dynamic ConvertToFlattenObject(this object @this, char? nestedKeySeparator = null, bool ignoreDictionaryFieldPrefix = false)
+        public static dynamic ConvertToFlattenObject(this object @this, char? nestedKeySeparator = null, char? arrayIndexSeparator = null, bool ignoreDictionaryFieldPrefix = false)
         {
             //if (@this == null || !@this.GetType().IsDynamicType())
             //    return @this;
@@ -204,7 +204,7 @@ namespace ChoETL
             if (dict == null)
                 return dict;
             else
-                return new ChoDynamicObject(dict.Flatten(nestedKeySeparator, ignoreDictionaryFieldPrefix).ToDictionary());
+                return new ChoDynamicObject(dict.Flatten(nestedKeySeparator, arrayIndexSeparator, ignoreDictionaryFieldPrefix).ToDictionary());
         }
 
         private static object GetDynamicMember(object obj, string memberName)

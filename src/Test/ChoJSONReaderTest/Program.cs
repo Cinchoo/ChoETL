@@ -4645,10 +4645,108 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
+        public class StringifiedModel
+        {
+            public string Id { get; set; }
+            public Dictionary<string, string> Foo { get; set; }
+        }
+
+        static void DesrializeStringifiedText()
+        {
+            using (var r = new ChoJSONReader<StringifiedModel>("sample48.json")
+                .WithField(f => f.Id)
+                .WithField(f => f.Foo, valueConverter: o => JsonConvert.DeserializeObject((o as string).Replace(@"\""", @""""), typeof(Dictionary<string, string>)))
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void DesrializeStringifiedText1()
+        {
+            using (var r = new ChoJSONReader<StringifiedModel>("sample48.json")
+                .Setup(s => s.BeforeRecordFieldLoad += (o, e) =>
+                {
+                    if (e.PropertyName == nameof(StringifiedModel.Foo))
+                    {
+                        e.Source = new JValue(e.Source.ToString().Replace(@"\""", @""""));
+                    }
+                })
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void JSON2CSVViceVersa()
+        {
+            string json = @"
+{
+  ""str1"": ""aaa"",
+  ""num1"": 1,
+  ""boolean1"": true,
+  ""object1"": {
+    ""str2"": ""bbb"",
+    ""num2"": 2,
+    ""boolean2"": false
+  },
+  ""list1"": [
+    ""ccc"",
+    ""ddd"",
+    ""eee""
+  ],
+  ""list2"": [
+    1,
+    2,
+    3
+  ],
+  ""list3"": [
+    true,
+    false,
+    true
+  ]
+}";
+
+            StringBuilder csv = new StringBuilder();
+            using (var p = ChoJSONReader.LoadText(json)
+                .UseJsonSerialization()
+                )
+            {
+                using (var w = new ChoCSVWriter(csv)
+                .WithFirstLineHeader()
+                .NestedColumnSeparator('.')
+                .ArrayIndexSeparator('_')
+                )
+                {
+                    w.Write(p);
+                }
+            }
+            Console.WriteLine(csv.ToString());
+
+
+            StringBuilder json1 = new StringBuilder();
+            using (var r = ChoCSVReader.LoadText(csv.ToString())
+                .WithFirstLineHeader()
+                .NestedColumnSeparator('.')
+                .ArrayIndexSeparator('_')
+                .WithMaxScanRows(2)
+                )
+            {
+                using (var w = new ChoJSONWriter(json1)
+                    )
+                {
+                    w.Write(r);
+                }
+            }
+            Console.WriteLine(json1.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            Sample47Test();
+            JSON2CSVViceVersa();
         }
 
         static void SimpleTest()

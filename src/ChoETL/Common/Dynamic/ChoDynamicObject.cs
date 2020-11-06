@@ -253,9 +253,9 @@ namespace ChoETL
             return ChoExpandoObjectEx.ConvertToNestedObject(this, separator, arrayIndexSeparator, allowNestedArrayConversion);
         }
 
-        public dynamic ConvertToFlattenObject(char? nestedKeySeparator = null, bool ignoreDictionaryFieldPrefix = false)
+        public dynamic ConvertToFlattenObject(char? nestedKeySeparator = null, char? arrayIndexSeparator = null, bool ignoreDictionaryFieldPrefix = false)
         {
-            return ChoExpandoObjectEx.ConvertToFlattenObject(this, nestedKeySeparator, ignoreDictionaryFieldPrefix);
+            return ChoExpandoObjectEx.ConvertToFlattenObject(this, nestedKeySeparator, arrayIndexSeparator, ignoreDictionaryFieldPrefix);
         }
 
         public string GetDescription(string name)
@@ -1039,9 +1039,9 @@ namespace ChoETL
             return Keys;
         }
 
-        public ChoDynamicObject Flatten(char? nestedKeySeparator = null, Func<string, string> columnMap = null, StringComparer cmp = null)
+        public ChoDynamicObject Flatten(char? nestedKeySeparator = null, char? arrayIndexSeparator = null, bool ignoreDictionaryFieldPrefix = false, Func<string, string> columnMap = null, StringComparer cmp = null)
         {
-            _kvpDict = _kvpDict.Flatten(nestedKeySeparator).GroupBy(kvp => columnMap == null || columnMap(kvp.Key).IsNullOrWhiteSpace() ? kvp.Key : columnMap(kvp.Key)).ToDictionary(kvp => columnMap == null || columnMap(kvp.Key).IsNullOrWhiteSpace() ? kvp.Key : columnMap(kvp.Key), kvp => kvp.First().Value,
+            _kvpDict = _kvpDict.Flatten(nestedKeySeparator, arrayIndexSeparator, ignoreDictionaryFieldPrefix).GroupBy(kvp => columnMap == null || columnMap(kvp.Key).IsNullOrWhiteSpace() ? kvp.Key : columnMap(kvp.Key)).ToDictionary(kvp => columnMap == null || columnMap(kvp.Key).IsNullOrWhiteSpace() ? kvp.Key : columnMap(kvp.Key), kvp => kvp.First().Value,
                 cmp == null ? StringComparer.InvariantCultureIgnoreCase : cmp);
             return this;
         }

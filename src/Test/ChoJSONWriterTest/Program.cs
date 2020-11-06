@@ -1148,7 +1148,6 @@ namespace ChoJSONWriterTest
         {
             public string orderNo { get; set; }
             public string customerNo { get; set; }
-            [ChoJSONPath("items[*]")]
             [ChoSourceType(typeof(object[]))]
             [ChoTypeConverter(typeof(ChoArrayToObjectConverter))]
             public OrderItem[] items { get; set; }
@@ -1188,11 +1187,37 @@ namespace ChoJSONWriterTest
             Console.WriteLine(json.ToString());
         }
 
+        static void AppendFile()
+        {
+            using (var sw = new StreamWriter("append.json", true))
+            {
+                using (var w = new ChoJSONWriter<Order>(sw))
+                {
+                    w.Write(new Order
+                    {
+                        orderNo = "1",
+                        customerNo = "10",
+                        items = new OrderItem[]
+                        {
+                        new OrderItem
+                        {
+                            itemId = 1,
+                            price = 100.1m,
+                            quantity = 5
+                        }
+                        }
+                    });
+                }
+            }
+
+            Console.WriteLine(File.ReadAllText("append.json"));
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            ObjectMemberToArrayTest();
+            AppendFile();
 
             return;
 
