@@ -1,0 +1,60 @@
+﻿{
+  "LocationDistance": {
+    "Header": [
+      [
+        "Abstände",
+        "Eingangslager",
+        "Zone A",
+        "Zone B",
+        "Zone C",
+        "Zone D",
+        "Zone E",
+        "Zone F",
+        "Zone G",
+        "Zone H",
+        "Ausgangslager"
+      ]
+    ],
+    "Body": [
+      {
+        "Abstände": "Eingangslager",
+        "Eingangslager": 0,
+        "Zone A": 20,
+        "Zone B": 32,
+        "Zone C": 44,
+        "Zone D": 45,
+        "Zone E": 50,
+        "Zone F": 45,
+        "Zone G": 35,
+        "Zone H": 10,
+        "Ausgangslager": 40
+      },
+      {
+        "Abstände": "Zone A",
+        "Eingangslager": 20,
+        "Zone A": 0,
+        "Zone B": 12,
+        "Zone C": 24,
+        "Zone D": 35,
+        "Zone E": 40,
+        "Zone F": 30,
+        "Zone G": 24,
+        "Zone H": 12,
+        "Ausgangslager": 30
+      },
+      {
+        "Abstände": "Zone B",
+        "Eingangslager": 32,
+        "Zone A": 12,
+        "Zone B": 0,
+        "Zone C": 12,
+        "Zone D": 22,
+        "Zone E": 30,
+        "Zone F": 24,
+        "Zone G": 30,
+        "Zone H": 17,
+        "Ausgangslager": 45
+      }
+    ]
+  }
+}

@@ -807,8 +807,13 @@ namespace ChoETL
                         else
                         {
                             var en = kvp.Key.ToSingular();
-                            innerXml1 = Regex.Replace(innerXml1, @"<\w+", $"<{en}");
-                            innerXml1 = Regex.Replace(innerXml1, @"</\w+", $"</{en}");
+                            var eleName1 = GetElementName(innerXml1);
+
+                            if (!eleName1.IsNullOrWhiteSpace())
+                            {
+                                innerXml1 = Regex.Replace(innerXml1, $"<{eleName1}", $"<{en}");
+                                innerXml1 = Regex.Replace(innerXml1, $"</{eleName1}", $"</{en}");
+                            }
 
                             if (fieldConfig.IsArray == null || fieldConfig.IsArray.Value)
                             {
@@ -874,6 +879,13 @@ namespace ChoETL
             recText = recText.RemoveXmlNamespaces(); // Regex.Replace(recText, @"\sxmlns[^""]+""[^""]+""", String.Empty);
 
             return true;
+        }
+
+        private string GetElementName(string xml)
+        {
+            Regex regEx = new Regex(@"<(\w+)");
+            var match = regEx.Match(xml);
+            return !match.Success ? null : match.Groups[1].Value;
         }
 
         private string XmlNamespaceElementName(string name, string nsPrefix = null, XNamespace xs = null)

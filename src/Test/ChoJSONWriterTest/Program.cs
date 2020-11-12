@@ -782,7 +782,7 @@ namespace ChoJSONWriterTest
 
                 Address = new Address1
                 {
-                    Street = "1 Main Street",
+                    Street = "1 f Street",
                     City = "NYC"
                 }
             };
@@ -1213,11 +1213,51 @@ namespace ChoJSONWriterTest
             Console.WriteLine(File.ReadAllText("append.json"));
         }
 
+        public class SensitiveInfo
+        {
+            public string Id { get; set; }
+            public string Name { get; set; }
+            public string AccountNumber { get; set; }
+
+            public Dictionary<string, string> SensitiveDict { get; set; }
+        }
+
+        static void SensitiveInfoSerialization()
+        {
+            StringBuilder json = new StringBuilder();
+
+            using (var w = new ChoJSONWriter<SensitiveInfo>(json)
+                .WithField(f => f.Id)
+                .WithField(f => f.Name)
+                .WithField(f => f.AccountNumber, valueConverter: o => String.Join("", ((string)o).Reverse()))
+                .WithField(f => f.SensitiveDict, valueConverter: o =>
+                {
+                    var dict = o as Dictionary<string, string>;
+                    dict.Remove("1");
+                    return dict;
+                })
+                )
+            {
+                w.Write(new SensitiveInfo
+                {
+                    Id = "1",
+                    Name = "Tom",
+                    AccountNumber = "12345",
+                    SensitiveDict = new Dictionary<string, string>
+                    {
+                        { "1", "11" },
+                        { "2", "22" }
+                    }
+                });
+            }
+
+            Console.WriteLine(json.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-
-            AppendFile();
+            SensitiveInfoSerialization();
 
             return;
 

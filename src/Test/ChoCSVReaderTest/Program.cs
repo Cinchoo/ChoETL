@@ -4681,10 +4681,46 @@ acf12d17-058e-451e-8449-60948055f6af;TEST1;Item;type;Equal;flight;Data;airlineCo
             }
         }
 
+        static void CSV2Xml()
+        {
+            string csv = @"ID;name;addresses;street;streetNR
+1;peter;;streetTest;58784
+1;peter;;street2;04512";
+
+            StringBuilder xml = new StringBuilder();
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .WithDelimiter(";")
+                )
+            {
+                var items = r.GroupBy(r1 => r1.ID).Select(r2 => new
+                {
+                    ID = r2.Key,
+                    Name = r2.First().name,
+                    Address = r2.Select(r3 => new { Street = r3.street, plz = r3.streetNR }).ToArray()
+                }).ToArray();
+
+                using (var w = new ChoXmlWriter(xml)
+                    .IgnoreRootName()
+                    )
+                    w.Write(items);
+
+                    //foreach (var rec in r.GroupBy(r1 => r1.ID).Select(r2 => new
+                    //{
+                    //    ID = r2.Key,
+                    //    Name = r2.First().name,
+                    //    Address = r2.Select(r3 => new { r3.street, plz = r3.streetNR }).ToArray()
+                    //}))
+                    //    Console.WriteLine(rec.Dump());
+            }
+
+            Console.WriteLine(xml.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            DuplicateFieldsTest();
+            CSV2Xml();
             return;
 
             CSV2ComplexObject();

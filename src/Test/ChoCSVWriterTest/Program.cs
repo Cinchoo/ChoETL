@@ -1670,11 +1670,47 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             }
         }
 
+        public class AddressObject
+        {
+            [DisplayName("City")]
+            public string City { get; set; }
+            public string Road { get; set; }
+            public int RoadNumber { get; set; }
+        }
+
+        public class LocationRow
+        {
+            public Guid RowId { get; set; }
+            public AddressObject Address { get; set; }
+            public double? Latitude { get; set; }
+            public double? Longitude { get; set; }
+        }
+
+        static void WriteEmptyColumnWhenNestedObjectIsNull()
+        {
+            StringBuilder csv = new StringBuilder();
+
+            using (var w = new ChoCSVWriter<LocationRow>(csv)
+                .WithFirstLineHeader()
+                .Configure(c => c.UseNestedKeyFormat = false)
+                )
+            {
+                w.Write(new LocationRow
+                {
+                    RowId = Guid.NewGuid(),
+                    Latitude = 10,
+                    Longitude = 1
+                });
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
         static void Main(string[] args)
         {
             //AppDomain.CurrentDomain.FirstChanceException += (sender, eventArgs) => { Console.WriteLine("FirstChanceException: " + eventArgs.Exception.ToString()); };
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            DictionaryTest();
+            WriteEmptyColumnWhenNestedObjectIsNull();
             //TestDictionary();
             return;
 

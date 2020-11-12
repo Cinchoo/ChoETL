@@ -4743,10 +4743,170 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             Console.WriteLine(json1.ToString());
         }
 
+        public static void CreateLargeJSONFile()
+        {
+            string json = @"{
+  ""type"": ""Feature"",
+  ""id"": 0,
+  ""properties"": { ""ID_0"": 136 },
+  ""geometry"": {
+  ""type"": ""Polygon"",
+  ""coordinates"": [
+      [
+        [ 102.911849975585938, 1.763612031936702 ],
+        [ 102.911430358886832, 1.763888001442069 ]
+      ]
+    ]
+  }
+}";
+            bool first = true;
+            using (var w = new StreamWriter("large.json"))
+            {
+                w.WriteLine("{");
+                w.WriteLine(@"""features"":");
+                w.WriteLine("[");
+
+                for (int i = 0; i < 1000000; i++)
+                {
+                    if (first)
+                    {
+                        first = false;
+                        w.Write(json);
+                    }
+                    else
+                    {
+                        w.WriteLine(",");
+                        w.Write(json);
+                    }
+                }
+
+                w.WriteLine("");
+                w.WriteLine("]");
+
+                w.WriteLine("}");
+            }
+        }
+
+        static void ReadLargeFile()
+        {
+            string json = @"
+{
+  ""type"": ""FeatureCollection"",
+  ""name"": ""MYS_adm2"",
+  ""crs"": {
+    ""type"": ""name"",
+    ""properties"": { ""name"": ""urn:ogc:def:crs:OGC:1.3:CRS84"" }
+  },
+  ""features"": [
+    {
+      ""type"": ""Feature"",
+      ""id"": 0,
+      ""properties"": { ""ID_0"": 136 },
+      ""geometry"": {
+        ""type"": ""Polygon"",
+        ""coordinates"": [
+          [
+            [ 102.911849975585938, 1.763612031936702 ],
+            [ 102.911430358886832, 1.763888001442069 ]
+          ]
+        ]
+      }
+    },
+    {
+      ""type"": ""Feature"",
+      ""id"": 1,
+      ""properties"": { ""ID_0"": 136 },
+      ""geometry"": {
+        ""type"": ""MultiPolygon"",
+        ""coordinates"": [
+          [
+            [
+              [ 103.556556701660156, 1.455448031425533 ],
+              [ 103.555900573730582, 1.455950021743831 ]
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}";
+            using (var r = new ChoJSONReader("large.json")
+                .WithJSONPath("$.features")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+
+        }
+
+        static void Sample49Test()
+        {
+            using (var r = new ChoJSONReader("sample49.json")
+                .WithJSONPath("$.LocationDistance.Body")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Zone_A);
+            }
+        }
+
+        static void DeserializeTest()
+        {
+            string json = @"
+{
+  ""type"": ""FeatureCollection"",
+  ""name"": ""MYS_adm2"",
+  ""crs"": {
+    ""type"": ""name"",
+    ""properties"": { ""name"": ""urn:ogc:def:crs:OGC:1.3:CRS84"" }
+  },
+  ""features"": [
+    {
+      ""type"": ""Feature"",
+      ""id"": 0,
+      ""properties"": { ""ID_0"": 136 },
+      ""geometry"": {
+        ""type"": ""Polygon"",
+        ""coordinates"": [
+          [
+            [ 102.911849975585938, 1.763612031936702 ],
+            [ 102.911430358886832, 1.763888001442069 ]
+          ]
+        ]
+      }
+    },
+    {
+      ""type"": ""Feature"",
+      ""id"": 1,
+      ""properties"": { ""ID_0"": 136 },
+      ""geometry"": {
+        ""type"": ""MultiPolygon"",
+        ""coordinates"": [
+          [
+            [
+              [ 103.556556701660156, 1.455448031425533 ],
+              [ 103.555900573730582, 1.455950021743831 ]
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}";
+            foreach (var rec in ChoJSONReader.DeserializeText(json, "$.features"))
+            {
+                Console.WriteLine(rec.Dump());
+
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            JSON2CSVViceVersa();
+
+            //CreateLargeJSONFile();
+            DeserializeTest();
         }
 
         static void SimpleTest()
