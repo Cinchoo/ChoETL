@@ -299,7 +299,19 @@ namespace ChoETL
                 fieldValue = null;
                 fieldText = String.Empty;
                 if (Configuration.PIDict != null)
-                    Configuration.PIDict.TryGetValue(kvp.Key, out pi);
+                {
+                    // if FieldName is set
+                    if (!string.IsNullOrEmpty(fieldConfig.FieldName))
+                    {
+                        // match using FieldName
+                        Configuration.PIDict.TryGetValue(fieldConfig.FieldName, out pi);
+                    }
+                    else
+                    {
+                        // otherwise match usign the property name
+                        Configuration.PIDict.TryGetValue(kvp.Key, out pi);
+                    }
+                }
                 rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
 
                 if (Configuration.ThrowAndStopOnMissingField)
@@ -460,6 +472,8 @@ namespace ChoETL
 
                 bool isSimple = true;
 
+                Type ft = fieldValue == null ? typeof(object) : fieldValue.GetType();
+
                 if (fieldConfig.CustomSerializer != null)
                     fieldText = fieldConfig.CustomSerializer(fieldValue) as string;
                 else if (RaiseRecordFieldSerialize(rec, index, kvp.Key, ref fieldValue))
@@ -468,8 +482,6 @@ namespace ChoETL
                     fieldText = ChoCustomSerializer.Serialize(fieldValue, typeof(string), fieldConfig.PropCustomSerializer, fieldConfig.PropCustomSerializerParams, Configuration.Culture, fieldConfig.Name) as string;
                 else
                 {
-                    Type ft = fieldValue == null ? typeof(object) : fieldValue.GetType();
-
                     //if (fieldConfig.IgnoreFieldValue(fieldValue))
                     //    fieldText = null;
 
@@ -533,6 +545,8 @@ namespace ChoETL
 
                     if (RecordType.IsSimple())
                         objValue = JsonConvert.DeserializeObject<IList<object>>(json);
+                    else if (typeof(IList).IsAssignableFrom(ft))
+                        objValue = JsonConvert.DeserializeObject<IList>(json);
                     else
                         objValue = JsonConvert.DeserializeObject<IDictionary<string, object>>(json);
                 }

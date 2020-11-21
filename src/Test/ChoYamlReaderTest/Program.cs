@@ -555,11 +555,25 @@ users:
             }
         }
 
+        static void DeserializeEscapedChar()
+        {
+            string yaml = @"0.1 : Value 1
+0.2 : Value 2
+0.3 : Value 3";
+
+            using (var r = ChoYamlReader.LoadText(yaml)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            SelectiveNodeTest1();
+            DeserializeEscapedChar();
         }
     }
 }

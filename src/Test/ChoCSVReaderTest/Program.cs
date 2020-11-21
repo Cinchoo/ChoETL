@@ -4717,10 +4717,38 @@ acf12d17-058e-451e-8449-60948055f6af;TEST1;Item;type;Equal;flight;Data;airlineCo
             Console.WriteLine(xml.ToString());
         }
 
+        [ChoCSVRecordObject(delimiter: ",", ErrorMode = ChoErrorMode.ThrowAndStop)]
+        [ChoCSVFileHeader()]
+        public class Model
+        {
+            [ChoCSVRecordField(FieldName = "FirstHeader")]
+            public string FirstHeader { get; set; }
+
+            [ChoCSVRecordField(FieldName = "Second header")]
+            public string SecondHeader { get; set; }
+        }
+
+
+        static void LoadCSVByFieldNames()
+        {
+            string csv = @"FirstHeader,Second header
+1,Tom
+2,Mark";
+
+            using (var r = ChoCSVReader<Model>.LoadText(csv)
+                .WithFirstLineHeader(true)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            CSV2Xml();
+            LoadCSVByFieldNames();
             return;
 
             CSV2ComplexObject();

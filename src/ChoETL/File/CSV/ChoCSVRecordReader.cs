@@ -521,7 +521,7 @@ namespace ChoETL
             IDictionary<string, object> dict = rec as IDictionary<string, object>;
             dynamic dict1 = new ChoDynamicObject(dict.ToDictionary(kvp => Configuration.RecordFieldConfigurationsDict[kvp.Key].FieldName, kvp => kvp.Value));
 
-            return dict1.ConvertToNestedObject(Configuration.NestedColumnSeparator == null ? '/' : Configuration.NestedColumnSeparator.Value, Configuration.ArrayIndexSeparator,
+            return dict1.ConvertToNestedObject(Configuration.NestedColumnSeparator == null ? '/' : Configuration.NestedColumnSeparator.Value, Configuration.ArrayIndexSeparator, null,
                 Configuration.AllowNestedArrayConversion);
         }
 
@@ -701,8 +701,22 @@ namespace ChoETL
 
                 fieldValue = null;
                 fieldConfig = kvp.Value;
+
+                //ChoCSVRecordReader can't find property by FieldName #118
                 if (Configuration.PIDict != null)
-                    Configuration.PIDict.TryGetValue(kvp.Key, out pi);
+                {
+                    // if FieldName is set
+                    if (!string.IsNullOrEmpty(fieldConfig.FieldName))
+                    {
+                        // match using FieldName
+                        Configuration.PIDict.TryGetValue(fieldConfig.FieldName, out pi);
+                    }
+                    else
+                    {
+                        // otherwise match usign the property name
+                        Configuration.PIDict.TryGetValue(kvp.Key, out pi);
+                    }
+                }
 
                 rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec, fieldConfig);
                 if (rec == null)

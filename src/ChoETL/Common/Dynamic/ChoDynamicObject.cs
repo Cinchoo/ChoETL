@@ -243,14 +243,52 @@ namespace ChoETL
             _kvpDict.Add(newKey, value);
         }
 
-        public dynamic ConvertMembersToArrayIfAny(char separator = '_', bool allowNestedConversion = true)
+        public dynamic ExpandArrayToObjects(Func<int, string> keyGenerator = null)
         {
-            return ChoExpandoObjectEx.ConvertMembersToArrayIfAny(this, separator, allowNestedConversion);
+            var max = _kvpDict.Values.OfType<IList>().Max(v => v != null ? v.Count : 0);
+            if (max == 0)
+                return this;
+
+            Dictionary<string, object> list = new Dictionary<string, object>();
+            for (int index = 0; index < max; index++)
+            {
+                Dictionary<string, object> ele = new Dictionary<string, object>();
+                foreach (var kvp in _kvpDict)
+                {
+                    var value = kvp.Value != null && kvp.Value is IList && index < ((IList)kvp.Value).Count ? ((IList)kvp.Value)[index] : null;
+                    ele.Add(kvp.Key, value);
+                }
+
+                list.Add(keyGenerator == null ? index.ToString() : keyGenerator(index), new ChoDynamicObject(ele));
+            }
+
+            return new ChoDynamicObject(list);
         }
 
-        public dynamic ConvertToNestedObject(char separator = '/', char? arrayIndexSeparator = null, bool allowNestedArrayConversion = true)
+        public dynamic Transpose()
         {
-            return ChoExpandoObjectEx.ConvertToNestedObject(this, separator, arrayIndexSeparator, allowNestedArrayConversion);
+            var ret = ChoUtility.Transpose((IDictionary<string, object>)this);
+            return new ChoDynamicObject(ret.GroupBy(g => g.Key.ToNString(), StringComparer.OrdinalIgnoreCase).ToDictionary(kvp => kvp.Key.ToNString(), kvp => (object)kvp.Last(), StringComparer.OrdinalIgnoreCase));
+        }
+
+        public dynamic ConvertMembersToArrayIfAny(char? arrayStartIndexSeparator = null, char? arrayEndIndexSeparator = null, bool allowNestedConversion = true)
+        {
+            return ChoExpandoObjectEx.ConvertMembersToArrayIfAny(this, arrayStartIndexSeparator, arrayEndIndexSeparator, allowNestedConversion);
+        }
+
+        public dynamic ConvertToNestedObject(char separator = '/', char? arrayStartIndexSeparator = null, char? arrayEndIndexSeparator = null, bool allowNestedArrayConversion = true)
+        {
+            return ChoExpandoObjectEx.ConvertToNestedObject(this, separator, arrayStartIndexSeparator, arrayEndIndexSeparator, allowNestedArrayConversion);
+        }
+
+        public dynamic ConvertMembersToArrayIfAny(char? arrayIndexSeparator, bool allowNestedConversion = true)
+        {
+            return ChoExpandoObjectEx.ConvertMembersToArrayIfAny(this, arrayIndexSeparator, null, allowNestedConversion);
+        }
+
+        public dynamic ConvertToNestedObject(char separator, char? arrayIndexSeparator, bool allowNestedArrayConversion = true)
+        {
+            return ChoExpandoObjectEx.ConvertToNestedObject(this, separator, arrayIndexSeparator, null, allowNestedArrayConversion);
         }
 
         public dynamic ConvertToFlattenObject(char? nestedKeySeparator = null, char? arrayIndexSeparator = null, bool ignoreDictionaryFieldPrefix = false)

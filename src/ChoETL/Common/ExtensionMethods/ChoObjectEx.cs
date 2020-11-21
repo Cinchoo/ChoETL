@@ -315,6 +315,32 @@ namespace ChoETL
                 return target.ToDictionary();
         }
 
+
+        public static Dictionary<TKey, T> ToDictionaryFromObject<T, TKey>(this T target, Func<T, TKey> keySelector)
+        {
+            if (target == null || keySelector == null)
+                return null;
+
+            Dictionary<TKey, T> dict = new Dictionary<TKey, T>();
+            TKey key = keySelector(target);
+            dict.Add(key, target);
+
+            return dict;
+        }
+
+        public static Dictionary<TKey, TValue> ToDictionaryFromObject<T, TKey, TValue>(this T target, Func<T, TKey> keySelector, Func<T, TValue> valueSelector)
+        {
+            if (target == null || keySelector == null || valueSelector == null)
+                return null;
+
+            Dictionary<TKey, TValue> dict = new Dictionary<TKey, TValue>();
+            TKey key = keySelector(target);
+            TValue value = valueSelector(target);
+            dict.Add(key, value);
+
+            return dict;
+        }
+
         public static Dictionary<string, object> ToDictionary(this object target, string propName = null)
         {
             if (target == null)

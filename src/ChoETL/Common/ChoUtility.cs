@@ -117,10 +117,11 @@ namespace ChoETL
         //}
 
 
-        public static ChoDynamicObject Transpose(this ChoDynamicObject dict)
-        {
-            return new ChoDynamicObject(Transpose((IDictionary<string, object>)dict).GroupBy(g => g.Key.ToNString(), StringComparer.OrdinalIgnoreCase).ToDictionary(kvp => kvp.Key.ToNString(), kvp => (object)kvp.Last(), StringComparer.OrdinalIgnoreCase));
-        }
+        //public static ChoDynamicObject Transpose(this ChoDynamicObject dict)
+        //{
+        //    var dict1 = Transpose((IDictionary<string, object>)dict);
+        //    return new ChoDynamicObject(dict1.GroupBy(g => g.Key.ToNString(), StringComparer.OrdinalIgnoreCase).ToDictionary(kvp => kvp.Key.ToNString(), kvp => (object)kvp.Last(), StringComparer.OrdinalIgnoreCase));
+        //}
 
         public static IEnumerable<ChoDynamicObject> Transpose(this IEnumerable<object> dicts, bool treatFirstItemAsHeader = true)
         {

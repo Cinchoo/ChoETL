@@ -63,7 +63,7 @@ namespace ChoETL
             return expando;
         }
 
-        public static dynamic ConvertToNestedObject(this object @this, char separator = '/', char? arrayIndexSeparator = null, bool allowNestedConversion = true,
+        public static dynamic ConvertToNestedObject(this object @this, char separator = '/', char? arrayStartIndexSeparator = null, char? arrayEndIndexSeparator = null, bool allowNestedConversion = true,
             int maxArraySize = 100)
         {
             if (separator == ChoCharEx.NUL)
@@ -141,15 +141,19 @@ namespace ChoETL
                     root.Add(kvp.Key, kvp.Value);
             }
 
-            return arrayIndexSeparator == null ? root : root.ConvertMembersToArrayIfAny(arrayIndexSeparator.Value, allowNestedConversion);
+            return root.ConvertMembersToArrayIfAny(arrayStartIndexSeparator, arrayEndIndexSeparator, allowNestedConversion);
 
             //return root as ChoDynamicObject;
         }
 
-        public static dynamic ConvertMembersToArrayIfAny(this object @this, char separator = '_', bool allowNestedConversion = true)
+        public static dynamic ConvertMembersToArrayIfAny(this object @this, char? startSeparator = null, char? endSeparator = null, bool allowNestedConversion = true)
         {
-            if (separator == ChoCharEx.NUL)
-                throw new ArgumentException("Invalid separator passed.");
+            if (startSeparator == null || startSeparator.Value == ChoCharEx.NUL)
+            {
+                startSeparator = '[';
+                if (endSeparator == null || endSeparator.Value == ChoCharEx.NUL)
+                    endSeparator = ']';
+            }
 
             if (@this == null)
                 return @this;
@@ -162,15 +166,18 @@ namespace ChoETL
             object value = null;
             foreach (var kvp in expandoDic)
             {
-                var pos = kvp.Key.LastIndexOf(separator);
-                value = allowNestedConversion ? ConvertMembersToArrayIfAny(kvp.Value, separator, allowNestedConversion) : kvp.Value;
+                value = allowNestedConversion ? ConvertMembersToArrayIfAny(kvp.Value, startSeparator, endSeparator, allowNestedConversion) : kvp.Value;
 
+                var pos = kvp.Key.LastIndexOf(startSeparator.Value);
                 if (pos <= 0)
                     root.Add(kvp.Key, value);
                 else
                 {
                     var key = kvp.Key.Substring(0, pos);
                     var indexValue = kvp.Key.Substring(pos + 1);
+                    if (endSeparator != null && indexValue.IndexOf(endSeparator.Value) >= 0)
+                        indexValue = indexValue.Substring(0, indexValue.IndexOf(endSeparator.Value));
+
                     int index = 0;
 
                     if (!int.TryParse(indexValue, out index))

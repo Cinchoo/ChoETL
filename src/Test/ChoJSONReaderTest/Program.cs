@@ -4901,12 +4901,53 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
+        static void ExpandJSON()
+        {
+            string json = @"
+{
+""person/account/id"":""01"",
+""person/account/user_name"":""admin"",
+""person/account/last_name"":""John"",
+""person/account/first_name"":""Doe"",
+""person/account/email"":""jdoe@emaail.com"",
+""person/account/access"":[""admin"", ""regulator"", ""superuser""],
+""person/address/address1"":""123 Street"",
+""person/address/address2"":"""",
+""person/address/city"":""Detroit"",
+""person/address/state"":""ST"",
+""posts/post_id[0]"":""1"",
+""posts/post_date_publication[0]"":""2020-10-27"",
+""posts/post_content[0]"":""test 1 post."",
+""posts/post_id[1]"":""2"",
+""posts/post_date_publication[1]"":""2020-10-27"",
+""posts/post_content[1]"":""test 2 post.""
+}";
+
+            StringBuilder outJson = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                using (var w = new ChoJSONWriter(outJson))
+                    w.Write(r.OfType<ChoDynamicObject>().Select(r1 =>
+                    {
+                        var rec = r1.ConvertToNestedObject('/');
+                        return new
+                        {
+                            person = rec.person,
+                            posts = rec.posts.ExpandArrayToObjects((Func<int, string>)(i => $"I{i}"))
+                        };
+                    }));
+            }
+
+            Console.WriteLine(outJson.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
             //CreateLargeJSONFile();
-            DeserializeTest();
+            //JSON2CSVViceVersa();
+            ExpandJSON();
         }
 
         static void SimpleTest()

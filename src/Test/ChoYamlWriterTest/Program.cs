@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
@@ -237,9 +238,38 @@ namespace ChoYamlWriterTest
             Console.WriteLine(yaml.ToString());
         }
 
+        public class MethodCall
+        {
+            public string MethodName { get; set; }
+            public List<object> Arguments { get; set; }
+        }
+
+        static void CustomSerialization()
+        {
+            StringBuilder yaml = new StringBuilder();
+            using (var w = new ChoYamlWriter(yaml)
+                )
+            {
+                var rec = new MethodCall
+                {
+                    MethodName = "someName",
+                    Arguments = new List<object>
+                    {
+                        "arg1",
+                        "arg2"
+                    }
+                }.ToDictionaryFromObject(o => o.MethodName, o => o.Arguments);
+
+                w.Write(rec);
+            }
+
+            Console.WriteLine(yaml.ToString());
+        }
+
         static void Main(string[] args)
         {
-            POCOTest();
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
+            CustomSerialization();
         }
     }
 }

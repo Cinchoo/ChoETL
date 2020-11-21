@@ -131,6 +131,12 @@ namespace ChoETL
             set;
         }
         [DataMember]
+        public bool AllowNestedArrayConversion
+        {
+            get;
+            set;
+        }
+        [DataMember]
         public bool IgnoreDictionaryFieldPrefix
         {
             get;

@@ -479,7 +479,19 @@ namespace ChoETL
                 fieldValue = null;
                 fieldText = String.Empty;
                 if (Configuration.PIDict != null)
-                    Configuration.PIDict.TryGetValue(kvp.Key, out pi);
+                {
+                    // if FieldName is set
+                    if (!string.IsNullOrEmpty(fieldConfig.FieldName))
+                    {
+                        // match using FieldName
+                        Configuration.PIDict.TryGetValue(fieldConfig.FieldName, out pi);
+                    }
+                    else
+                    {
+                        // otherwise match usign the property name
+                        Configuration.PIDict.TryGetValue(kvp.Key, out pi);
+                    }
+                }
 
                 rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
 
