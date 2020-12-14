@@ -85,6 +85,11 @@ namespace ChoETL
             var schema = new Schema(sf.Values.ToArray());
             using (var parquetWriter = new ParquetWriter(schema, sw.BaseStream, Configuration.ParquetOptions, Configuration.Append))
             {
+                parquetWriter.CompressionMethod = Configuration.CompressionMethod;
+                parquetWriter.CompressionLevel = Configuration.CompressionLevel;
+                if (Configuration.CustomMetadata != null)
+                    parquetWriter.CustomMetadata = Configuration.CustomMetadata;
+
                 // create a new row group in the file
                 using (ParquetRowGroupWriter groupWriter = parquetWriter.CreateRowGroup())
                 {

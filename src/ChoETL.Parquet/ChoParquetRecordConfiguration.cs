@@ -26,6 +26,9 @@ namespace ChoETL
         {
             get;
         }
+        public CompressionMethod CompressionMethod { get; set; }
+        public int CompressionLevel { get; set; }
+        public IReadOnlyDictionary<string, string> CustomMetadata { get; set; }
 
         public bool Append
         {
