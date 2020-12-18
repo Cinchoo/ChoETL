@@ -90,7 +90,7 @@ namespace ChoETL
             if (_isDisposed)
                 return;
 
-            _writer.Dispose();
+            _writer.Dispose(_streamWriter);
 
             _isDisposed = true;
             if (_closeStreamOnDispose)

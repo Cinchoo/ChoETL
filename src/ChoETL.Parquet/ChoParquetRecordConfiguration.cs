@@ -706,8 +706,8 @@ namespace ChoETL
                     throw new ChoRecordConfigurationException("Duplicate field name(s) [Name: {0}] found.".FormatString(String.Join(",", dupFields)));
             }
 
-            PIDict = new Dictionary<string, System.Reflection.PropertyInfo>();
-            PDDict = new Dictionary<string, PropertyDescriptor>();
+            PIDict = new Dictionary<string, System.Reflection.PropertyInfo>(StringComparer.InvariantCultureIgnoreCase);
+            PDDict = new Dictionary<string, PropertyDescriptor>(StringComparer.InvariantCultureIgnoreCase);
             foreach (var fc in ParquetRecordFieldConfigurations)
             {
                 if (fc.PropertyDescriptor == null && !IsDynamicObject)

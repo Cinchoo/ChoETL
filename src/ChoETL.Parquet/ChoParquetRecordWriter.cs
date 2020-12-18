@@ -69,14 +69,24 @@ namespace ChoETL
             //Configuration.Validate();
         }
 
-        public void Dispose()
+        public void Dispose(StreamWriter sw)
         {
-            StreamWriter sw = _sw as StreamWriter;
             if (sw != null)
             {
                 WriteAllRecords(sw);
                 RaiseEndWrite(sw);
             }
+        }
+
+        public void Dispose()
+        {
+            Dispose(_sw as StreamWriter);
+            //StreamWriter sw = _sw as StreamWriter;
+            //if (sw != null)
+            //{
+            //    WriteAllRecords(sw);
+            //    RaiseEndWrite(sw);
+            //}
         }
 
         private void WriteAllRecords(StreamWriter sw)
@@ -93,10 +103,13 @@ namespace ChoETL
                 // create a new row group in the file
                 using (ParquetRowGroupWriter groupWriter = parquetWriter.CreateRowGroup())
                 {
-                    foreach (KeyValuePair<string, ChoParquetRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict.OrderBy(kvp => kvp.Value.Priority))
+                    if (Configuration.RecordFieldConfigurationsDict != null)
                     {
-                        var column = new DataColumn(sf[kvp.Key], GetFieldValues(kvp.Key, kvp.Value.FieldType).Cast(GetParquetType(kvp.Value.FieldType)));
-                        groupWriter.WriteColumn(column);
+                        foreach (KeyValuePair<string, ChoParquetRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict.OrderBy(kvp => kvp.Value.Priority))
+                        {
+                            var column = new DataColumn(sf[kvp.Key], GetFieldValues(kvp.Key, kvp.Value.FieldType).Cast(GetParquetType(kvp.Value.FieldType)));
+                            groupWriter.WriteColumn(column);
+                        }
                     }
                 }
             }
@@ -143,10 +156,16 @@ namespace ChoETL
         private IDictionary<string, DataField> GetSchemaFields()
         {
             IDictionary<string, DataField> fields = new Dictionary<string, DataField>();
-            foreach (KeyValuePair<string, ChoParquetRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict.OrderBy(kvp => kvp.Value.Priority))
+            if (Configuration.RecordFieldConfigurationsDict != null)
             {
-                fields.Add(kvp.Key, GetDataField(kvp.Value.FieldName, GetParquetType(kvp.Value.FieldType)));
+                foreach (KeyValuePair<string, ChoParquetRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict.OrderBy(kvp => kvp.Value.Priority))
+                {
+                    fields.Add(kvp.Key, GetDataField(kvp.Value.FieldName, GetParquetType(kvp.Value.FieldType)));
+                }
             }
+            else
+                fields.Add("Empty", GetDataField("Empty", typeof(string)));
+
             return fields;
         }
 
