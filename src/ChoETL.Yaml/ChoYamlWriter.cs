@@ -85,6 +85,12 @@ namespace ChoETL
             //_closeStreamOnDispose = true;
         }
 
+        public void Flush()
+        {
+            if (_textWriter != null)
+                _textWriter.Flush();
+        }
+
         public void Dispose()
         {
             Dispose(false);

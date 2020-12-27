@@ -3,9 +3,16 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ChoETL
 {
+    public class ChoCSVRecordFieldConfigurationMap<T> : ChoCSVRecordFieldConfigurationMap
+    {
+        internal ChoCSVRecordFieldConfigurationMap(ChoCSVRecordFieldConfiguration config) : base(config)
+        {
+        }
+    }
+
     public class ChoCSVRecordFieldConfigurationMap
     {
-        private readonly ChoCSVRecordFieldConfiguration _config;
+        protected readonly ChoCSVRecordFieldConfiguration _config;
 
         public ChoCSVRecordFieldConfiguration Value
         {

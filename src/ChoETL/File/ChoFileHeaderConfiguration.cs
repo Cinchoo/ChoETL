@@ -35,6 +35,12 @@ namespace ChoETL
             get;
             set;
         }
+        [DataMember]
+        public bool KeepColumnsWithEmptyHeader
+        {
+            get;
+            set;
+        }
         public bool? QuoteAllHeaders
         {
             get;

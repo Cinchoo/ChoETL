@@ -426,8 +426,8 @@ namespace ChoETL
                 if (dupFields.Length > 0 /* && !IgnoreDuplicateFields */)
                     throw new ChoRecordConfigurationException("Duplicate field name(s) [Name: {0}] found.".FormatString(String.Join(",", dupFields)));
 
-                PIDict = new Dictionary<string, System.Reflection.PropertyInfo>();
-                PDDict = new Dictionary<string, PropertyDescriptor>();
+                PIDict = new Dictionary<string, System.Reflection.PropertyInfo>(FileHeaderConfiguration.StringComparer);
+                PDDict = new Dictionary<string, PropertyDescriptor>(FileHeaderConfiguration.StringComparer);
                 foreach (var fc in KVPRecordFieldConfigurations)
                 {
                     var pd1 = fc.DeclaringMember.IsNullOrWhiteSpace() ? ChoTypeDescriptor.GetProperty(RecordType, fc.Name)

@@ -520,8 +520,8 @@ namespace ChoETL
                     throw new ChoRecordConfigurationException("Found '{0}' record field out of bounds of record length.".FormatString(f.FieldName));
             }
 
-            PIDict = new Dictionary<string, System.Reflection.PropertyInfo>();
-            PDDict = new Dictionary<string, PropertyDescriptor>();
+            PIDict = new Dictionary<string, System.Reflection.PropertyInfo>(FileHeaderConfiguration.StringComparer);
+            PDDict = new Dictionary<string, PropertyDescriptor>(FileHeaderConfiguration.StringComparer);
             foreach (var fc in FixedLengthRecordFieldConfigurations)
             {
                 var pd1 = fc.DeclaringMember.IsNullOrWhiteSpace() ? ChoTypeDescriptor.GetProperty(RecordType, fc.Name)

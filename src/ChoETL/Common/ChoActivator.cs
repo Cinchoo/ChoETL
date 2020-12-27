@@ -40,6 +40,10 @@ namespace ChoETL
                     {
                         obj = Activator.CreateInstance(typeof(List<>).MakeGenericType(objType.GetGenericArguments()));
                     }
+                    else if (objType.IsGenericType && objType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                    {
+                        obj = Activator.CreateInstance(typeof(List<>).MakeGenericType(objType.GetGenericArguments()));
+                    }
                     else if (objType == typeof(string))
                     {
                         return String.Empty;

@@ -4941,13 +4941,217 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             Console.WriteLine(outJson.ToString());
         }
 
+        static void JSON2CSV_Issue120()
+        {
+            string json = @"{
+	""name"": ""Fruits"",
+	""date"": ""2020-05-26"",
+	""counts"": 2,
+	""reports"": {
+		""Fruit days (4344) 05-26-2020"": {
+			""name"": ""Orange, Fresh"",
+			""reportName"": ""Oranges 4344 05-26-2020"",
+			""fruitNumber"": ""4344"",
+			""date"": ""05-26-2020"",
+			""status"": ""on sale"",
+			""fresh"": true
+		},
+		""Fruit days (2821) 05-28-2020"": {
+			""name"": ""Apple, Fresh"",
+			""reportName"": ""Apples 2821 05-26-2020"",
+			""fruitNumber"": ""2821"",
+			""date"": ""05-28-2020"",
+			""status"": ""on sale"",
+			""fresh"": true
+		},
+	}
+}";
+
+            StringBuilder csv = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                var recs = r
+                        .SelectMany(r1 => ((IDictionary<string, object>)r1.reports)
+                        .Select((r2, i) =>
+                        {
+                            string name = null;
+                            string date = null;
+                            long? counts = null;
+                            if (i == 0)
+                            {
+                                name = r1.name;
+                                date = r1.date;
+                                counts = r1.counts;
+                            }
+                            else
+                            {
+                            }
+
+                            dynamic ret = new ChoDynamicObject();
+                            ret.name = name;
+                            ret.date = date;
+                            ret.counts = counts;
+                            ret["reports__|"] = r2.Key;
+
+                            foreach (var kvp in (IDictionary<string, object>)r2.Value)
+                            {
+                                ret[$"reports__|_{kvp.Key}"] = kvp.Value;
+                            }
+                            return ret;
+                        }
+                        ));
+
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    .QuoteAllFields()
+                    .ConfigureHeader(c => c.QuoteAllHeaders = true)
+                    )
+                    w.Write(recs);
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
+        public class ResultData
+        {
+            [JsonProperty(PropertyName = "Id")]
+            public string Id { get; set; }
+
+            [JsonProperty(PropertyName = "Results")]
+            public IEnumerable<Result1> Results { get; set; }
+        }
+
+        public class Result1
+        {
+            public string Name { get; set; }
+            public string Value { get; set; }
+        }
+
+        static void JSON2CSV5()
+        {
+            string json = @"{
+  ""Id"": ""839c0a09-f2d0-4f29-9cce-bc022d3511b5"",
+  ""Results"": [
+    {
+      ""Name"": ""ABC"",
+      ""Value"": ""5""
+    },
+    {
+      ""Name"": ""CDE"",
+      ""Value"": ""2""
+    }
+  ]
+}";
+            StringBuilder csv = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(json)
+                .UseJsonSerialization()
+                )
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    .Configure(c => c.IgnoreDictionaryFieldPrefix = true)
+                    )
+                {
+                    w.Write(r.Select(r1 => new
+                    {
+                        r1.Id,
+                        Results = ((IList)r1.Results).OfType<IDictionary<string, object>>().ToDictionary(kvp => kvp.Values.First(), kvp => kvp.Values.Skip(1).FirstOrDefault())
+                    }));
+                }
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
+        static void JSON2CSV6()
+        {
+            string json = @"{
+  ""Id"": ""839c0a09-f2d0-4f29-9cce-bc022d3511b5"",
+  ""Results"": [
+    {
+      ""Name"": ""ABC"",
+      ""Value"": ""5""
+    },
+    {
+      ""Name"": ""CDE"",
+      ""Value"": ""2""
+    }
+  ]
+}";
+            StringBuilder csv = new StringBuilder();
+            using (var r = ChoJSONReader<ResultData>.LoadText(json)
+                .UseJsonSerialization()
+                )
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    .Configure(c => c.IgnoreDictionaryFieldPrefix = true)
+                    )
+                {
+                    w.Write(r.Select(r1 => new
+                    {
+                        r1.Id,
+                        Results = r1.Results.ToDictionary(kvp => kvp.Name, kvp => kvp.Value)
+                    }));
+                }
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
+        public class ResultDataX
+        {
+            [JsonProperty(PropertyName = "Id")]
+            public string Id { get; set; }
+
+            [JsonProperty(PropertyName = "Results")]
+            public IEnumerable<ResultX> Results { get; set; }
+        }
+
+        public class ResultX : IResultX
+        {
+            public string Name { get; set; }
+            public string Value { get; set; }
+        }
+
+        public interface IResultX
+        {
+
+        }
+
+        static void InterfaceTest1()
+        {
+            string json = @"{
+  ""Id"": ""839c0a09-f2d0-4f29-9cce-bc022d3511b5"",
+  ""Results"": [
+    {
+      ""Name"": ""ABC"",
+      ""Value"": ""5""
+    },
+    {
+      ""Name"": ""CDE"",
+      ""Value"": ""2""
+    }
+  ]
+}";
+            StringBuilder csv = new StringBuilder();
+            using (var r = ChoJSONReader<ResultDataX>.LoadText(json)
+                .WithField(f => f.Results, itemConverter: o => o)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+            InterfaceTest1();
 
             //CreateLargeJSONFile();
             //JSON2CSVViceVersa();
-            ExpandJSON();
         }
 
         static void SimpleTest()

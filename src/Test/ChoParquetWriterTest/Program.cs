@@ -159,7 +159,7 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
 }
 ";
             using (var r = ChoJSONReader<Facility>.LoadText(json)
-                .WithJSONPath("$..facilities", false)
+                .WithJSONPath("$..facilities[*]", true)
                 )
             {
                 var x = r.Select(r1 => { r1.Location = new Point(100); return r1; }).ToArray();
@@ -185,9 +185,10 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
 
         static void SerializeArray()
         {
-            using (var w = new ChoParquetWriter("SerializeArray.parquet"))
+            using (var w = new ChoParquetWriter<int>("SerializeArray.parquet"))
             {
                 w.Write(new int[] { 1, 2 });
+                w.Write(new int[] { 3, 4 });
             }
         }
 
@@ -226,16 +227,27 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
     new DateTime(2010, 2, 10, 10, 0, 0, DateTimeKind.Utc)
 };
 
-            using (var w = new ChoParquetWriter("DateTimeTest.parquet"))
+            using (var w = new ChoParquetWriter<DateTime>("DateTimeTest.parquet"))
                 w.Write(dateList);
+        }
+
+        static void EmptyFileTest()
+        {
+            using (var w = new ChoParquetWriter("EmptyFile.parquet"))
+            {
+                //w.Write((dynamic)null);
+            }
         }
 
         static void Main(string[] args)
         {
+            SerializeArray();
+            return;
+
+            EmptyFileTest();
             EnumTest();
             QuickTest();
             Test1();
-            EnumTest();
             CSVArrayToParquet();
             JSON2Parquet1();
             SerializeValue();

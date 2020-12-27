@@ -834,8 +834,8 @@ namespace ChoETL
                 }
             }
 
-            PIDict = new Dictionary<string, System.Reflection.PropertyInfo>();
-            PDDict = new Dictionary<string, PropertyDescriptor>();
+            PIDict = new Dictionary<string, System.Reflection.PropertyInfo>(FileHeaderConfiguration.StringComparer);
+            PDDict = new Dictionary<string, PropertyDescriptor>(FileHeaderConfiguration.StringComparer);
             foreach (var fc in CSVRecordFieldConfigurations)
             {
                 if (fc.PropertyDescriptor == null && !IsDynamicObject)
@@ -982,7 +982,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVRecordConfiguration Map<T, TField>(Expression<Func<T, TField>> field, Action<ChoCSVRecordFieldConfigurationMap> mapper = null)
+        public ChoCSVRecordConfiguration Map<T, TField>(Expression<Func<T, TField>> field, Action<ChoCSVRecordFieldConfigurationMap<T>> mapper = null)
         {
             var subType = field.GetReflectedType();
             var fn = field.GetMemberName();
@@ -991,7 +991,7 @@ namespace ChoETL
 
             var cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoCSVRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(), 
                 pd, fqm/*, subType == typeof(T) ? null : subType*/);
-            mapper?.Invoke(new ChoCSVRecordFieldConfigurationMap(cf));
+            mapper?.Invoke(new ChoCSVRecordFieldConfigurationMap<T>(cf));
             return this;
         }
 

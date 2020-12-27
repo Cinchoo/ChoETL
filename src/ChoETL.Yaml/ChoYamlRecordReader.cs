@@ -721,7 +721,8 @@ namespace ChoETL
                         }
                         else
                         {
-                            if (!fieldConfig.FieldType.IsCollection() && fieldValue is IDictionary[])
+                            if (!fieldConfig.FieldType.IsCollection() && !fieldConfig.FieldType.IsGenericList()
+                                    && !fieldConfig.FieldType.IsGenericEnumerable() && fieldValue is IDictionary[])
                             {
                                 fieldValue = ((IDictionary[])fieldValue).FirstOrDefault();
                                 //if (fieldValue is JArray)
@@ -778,28 +779,36 @@ namespace ChoETL
                                 if (!typeof(IDictionary).IsAssignableFrom(itemType))
                                     fieldValue = DeserializeNode((IDictionary)fieldValue, itemType, fieldConfig);
                             }
-                            //else if (fieldValue is JArray)
-                            //{
-                            //    if (typeof(JArray).IsAssignableFrom(itemType))
-                            //    {
-
-                            //    }
-                            //    else if (fieldConfig.FieldType.GetUnderlyingType().IsCollection())
-                            //    {
-                            //        itemType = fieldConfig.FieldType.GetUnderlyingType().GetItemType().GetUnderlyingType();
-                            //        foreach (var ele in (JArray)fieldValue)
-                            //        {
-                            //            object fv = DeserializeNode(ele, itemType, fieldConfig);
-                            //            list.Add(fv);
-                            //        }
-                            //        fieldValue = list.ToArray();
-                            //    }
-                            //    else
-                            //    {
-                            //        var fi = ((JArray)fieldValue).FirstOrDefault();
-                            //        fieldValue = DeserializeNode(fi, itemType, fieldConfig);
-                            //    }
-                            //}
+                            else if (fieldValue is IList)
+                            {
+                                if (fieldConfig.FieldType.GetUnderlyingType().IsCollection())
+                                {
+                                    itemType = fieldConfig.FieldType.GetUnderlyingType().GetItemType().GetUnderlyingType();
+                                    if (itemType.IsSimpleSpecial())
+                                    {
+                                        foreach (var ele in ((IList)fieldValue))
+                                        {
+                                            object fv = DeserializeNode(ele, itemType, fieldConfig);
+                                            list.Add(fv);
+                                        }
+                                        fieldValue = list.ToArray();
+                                    }
+                                    else
+                                    {
+                                        foreach (var ele in ((IList)fieldValue).OfType<IDictionary>())
+                                        {
+                                            object fv = DeserializeNode(ele, itemType, fieldConfig);
+                                            list.Add(fv);
+                                        }
+                                        fieldValue = list.ToArray();
+                                    }
+                                }
+                                else
+                                {
+                                    var fi = ((IList)fieldValue).OfType<IDictionary>().FirstOrDefault();
+                                    fieldValue = DeserializeNode(fi, itemType, fieldConfig);
+                                }
+                            }
                             else if (fieldValue is IDictionary[])
                             {
                                 itemType = fieldConfig.FieldType.GetUnderlyingType().GetItemType().GetUnderlyingType();
@@ -1008,6 +1017,14 @@ namespace ChoETL
             }
 
             return value;
+        }
+
+        private object DeserializeNode(object yamlNode, Type type, ChoYamlRecordFieldConfiguration config)
+        {
+            if (fieldConfig.ItemConverter != null)
+                return RaiseItemConverter(config, yamlNode);
+            else
+                return yamlNode;
         }
 
         private object AssignDefaultsToNullableMembers(object target, bool isTop = true)

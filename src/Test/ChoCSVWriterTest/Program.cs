@@ -572,6 +572,7 @@ $1.00";
                 new EmployeeRecSimple1() { Id = 21, Name = "Jack in ,Da Box" }
             };
             actual = ChoCSVWriter<EmployeeRecSimple1>.ToTextAll(objs);
+            Console.WriteLine(actual);
             Assert.AreEqual(expected, actual);
         }
 
@@ -1706,11 +1707,97 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             Console.WriteLine(csv.ToString());
         }
 
+        public class ResultData
+        {
+            [JsonProperty(PropertyName = "Id")]
+            public string Id { get; set; }
+
+            [JsonProperty(PropertyName = "Results")]
+            public IEnumerable<Result> Results { get; set; }
+        }
+
+        public class Result
+        {
+            public string Name { get; set; }
+            public string Value { get; set; }
+        }
+
+        static void ComplexType2CSV()
+        {
+            StringBuilder csv = new StringBuilder();
+
+            var rec1 = new ResultData
+            {
+                Id = "1",
+                Results = new List<Result>
+                {
+                    new Result
+                    {
+                        Name = "Key1",
+                        Value = "Value1"
+                    },
+                    new Result
+                    {
+                        Name = "Key2",
+                        Value = "Value2"
+                    },
+                    new Result
+                    {
+                        Name = "Key3",
+                        Value = "Value3"
+                    },
+                }
+            };
+            var rec2 = new ResultData
+            {
+                Id = "2",
+                Results = new List<Result>
+                {
+                    new Result
+                    {
+                        Name = "Key1",
+                        Value = "Value1"
+                    },
+                    new Result
+                    {
+                        Name = "Key2",
+                        Value = "Value2"
+                    },
+                    new Result
+                    {
+                        Name = "Key3",
+                        Value = "Value3"
+                    },
+                }
+            };
+
+            var recs = new List<ResultData>
+            {
+                rec1, rec2
+            };
+
+            //var dict = rec1.Results.ToDictionary(kvp => kvp.Name, kvp => kvp.Value);
+            using (var w = new ChoCSVWriter(csv)
+                .WithFirstLineHeader()
+                .UseNestedKeyFormat()
+                .Configure(c => c.IgnoreDictionaryFieldPrefix = true)
+                )
+            {
+                w.Write(recs.Select(r => new
+                {
+                    r.Id,
+                    Results = r.Results.ToDictionary(kvp => kvp.Name, kvp => kvp.Value)
+                }));
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
         static void Main(string[] args)
         {
             //AppDomain.CurrentDomain.FirstChanceException += (sender, eventArgs) => { Console.WriteLine("FirstChanceException: " + eventArgs.Exception.ToString()); };
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            WriteEmptyColumnWhenNestedObjectIsNull();
+            ComplexType2CSV();
             //TestDictionary();
             return;
 

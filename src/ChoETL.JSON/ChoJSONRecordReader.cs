@@ -890,7 +890,10 @@ namespace ChoETL
                 if (!kvp.Value.JSONPath.IsNullOrWhiteSpace() && kvp.Value.JSONPath != kvp.Value.FieldName)
                 {
                     jTokens = SelectTokens(node, kvp.Value.JSONPath).ToArray();
-                    if (fieldConfig.FieldType != typeof(object) && !fieldConfig.FieldType.IsCollection() && jTokens != null)
+                    if (fieldConfig.FieldType != typeof(object) && !fieldConfig.FieldType.IsCollection() 
+                        && !fieldConfig.FieldType.IsGenericList()
+                        && !fieldConfig.FieldType.IsGenericEnumerable()
+                        && jToken != null)
                     {
                         jToken = jTokens.FirstOrDefault();
                         jTokens = null;
@@ -910,7 +913,11 @@ namespace ChoETL
                         //else
                         //    jToken = node;
                     }
-                    if (fieldConfig.FieldType != typeof(object) && !fieldConfig.FieldType.IsCollection() && jToken != null)
+
+                    if (fieldConfig.FieldType != typeof(object) && !fieldConfig.FieldType.IsCollection() 
+                        && !fieldConfig.FieldType.IsGenericList()
+                        && !fieldConfig.FieldType.IsGenericEnumerable()
+                        && jToken != null)
                     {
                         jToken = jToken is JArray ? ((JArray)jToken).FirstOrDefault() : jToken;
                     }
@@ -978,7 +985,8 @@ namespace ChoETL
                         }
                         else
                         {
-                            if (fieldConfig.FieldType != typeof(object) && !fieldConfig.FieldType.IsCollection() && fieldValue is JToken[])
+                            if (fieldConfig.FieldType != typeof(object) && !fieldConfig.FieldType.IsCollection() && !fieldConfig.FieldType.IsGenericList()
+                                && !fieldConfig.FieldType.IsGenericEnumerable() && fieldValue is JToken[])
                             {
                                 fieldValue = ((JToken[])fieldValue).FirstOrDefault();
                                 //if (fieldValue is JArray)
@@ -1642,7 +1650,7 @@ namespace ChoETL
             }
             catch
             {
-                if (objectType.IsGenericList())
+                if (objectType.IsGenericList() || objectType.IsGenericEnumerable())
                 {
                     IList list = ChoActivator.CreateInstance(objectType) as IList;
 

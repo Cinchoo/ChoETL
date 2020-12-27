@@ -1116,7 +1116,10 @@ namespace ChoETL
                         foreach (string header in headers)
                         {
                             if (header.IsNullOrWhiteSpace())
-                                newHeaders.Add("_Column{0}".FormatString(++index));
+                            {
+                                if (Configuration.FileHeaderConfiguration.KeepColumnsWithEmptyHeader)
+                                    newHeaders.Add("_Column{0}".FormatString(++index));
+                            }
                             else
                                 newHeaders.Add(header);
                         }

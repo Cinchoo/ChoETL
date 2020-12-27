@@ -119,7 +119,7 @@ namespace ChoETL
             if (!IsDynamicObject)
             {
                 //PIDict = ChoType.GetProperties(RecordType).ToDictionary(p => p.Name);
-                PDDict = new Dictionary<string, PropertyDescriptor>();
+                PDDict = new Dictionary<string, PropertyDescriptor>(StringComparer.InvariantCultureIgnoreCase);
                 if (PIDict != null)
                 {
                     foreach (var fn in PIDict.Keys)

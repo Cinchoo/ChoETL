@@ -4744,11 +4744,111 @@ acf12d17-058e-451e-8449-60948055f6af;TEST1;Item;type;Equal;flight;Data;airlineCo
             }
         }
 
+        static void CSV2JSON3()
+        {
+            string csv = @"id,personal_information/empid, personal_information/name
+1,2,Edd";
+
+            StringBuilder json = new StringBuilder();
+            using (var w = new ChoJSONWriter(json))
+            {
+                using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
+                    .Configure(c => c.NestedColumnSeparator = '/')
+                    .WithMaxScanRows(1)
+                    )
+                    w.Write(r);
+            }
+            Console.WriteLine(json.ToString());
+        }
+
+        public class EmployeeA
+        {
+            public int id { get; set; }
+            public string Name { get; set; }
+            public EmpStatus Status { get; set; }
+
+        }
+
+        public enum EmpStatus { Active, Inactive };
+
+        static void CaptureError1()
+        {
+            string csv = @"Id, Name, Status
+1, Tom, Active
+2, Mark, Active1";
+
+            using (var r = ChoCSVReader<EmployeeA>.LoadText(csv)
+                .WithFirstLineHeader()
+                .ErrorMode(ChoErrorMode.ThrowAndStop)
+                //.Setup(s => s.RecordLoadError += (o, e) =>
+                //{
+                //    Console.WriteLine(e.Exception.Message);
+                //    //if (e.Exception is ChoMissingRecordFieldException)
+                //    //    e.Handled = false;
+                //    //else
+                //    e.Handled = true;
+                //})
+                )
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+
+        }
+
+        static void Issue123()
+        {
+            string csv = @"ERROR_CODE|ERROR_DESCRIPTION|IS_FILE_ERROR|ERROR_SEVERITY|FILE_NAME|
+F1004|File is a duplicate|TRUE|ERROR|TEST_VISITS_IA_270084601_20201202192520.csv|";
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .QuoteAllFields().WithFirstLineHeader(false).WithDelimiter("|")
+                .Configure(c => c.FileHeaderConfiguration.IgnoreColumnsWithEmptyHeader = true)
+                )
+            {
+                foreach (var rec in r)
+                {
+                    //rec.Remove("_Column1");
+                    Console.WriteLine(rec.Dump());
+                }
+            }
+        }
+
+
+        public class EmployeeB
+        {
+            public int id { get; set; }
+            public string Name { get; set; }
+            public double Salary { get; set; }
+
+        }
+
+        static void DoubleValueWithExponentFormat()
+        {
+            string csv = @"Id, Name, Salary
+1, Tom, ""3,27E+11""
+2, Mark, ""10,27E+11""";
+
+            using (var r = ChoCSVReader<EmployeeB>.LoadText(csv)
+                .WithFirstLineHeader()
+                .QuoteAllFields()
+                .ErrorMode(ChoErrorMode.ThrowAndStop)
+                //.Setup(s => s.RecordLoadError += (o, e) =>
+                //{
+                //    Console.WriteLine(e.Exception.Message);
+                //    //if (e.Exception is ChoMissingRecordFieldException)
+                //    //    e.Handled = false;
+                //    //else
+                //    e.Handled = true;
+                //})
+                )
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+
+        }
 
         static void Main(string[] args)
         {
-            ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            LoadCSVByFieldNames();
+            ChoETLFrxBootstrap.TraceLevel = TraceLevel.Verbose;
+            DoubleValueWithExponentFormat();
             return;
 
             CSV2ComplexObject();

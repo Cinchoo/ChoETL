@@ -675,7 +675,8 @@ namespace ChoETL
                                             fieldValue = fXElement.Value;
                                     }
                                 }
-                                else if (fieldConfig.FieldType.IsCollection())
+                                else if (fieldConfig.FieldType.IsCollection() || fieldConfig.FieldType.IsGenericList()
+                                    || fieldConfig.FieldType.IsGenericEnumerable())
                                 {
                                     List<object> list = new List<object>();
                                     Type itemType = fieldConfig.FieldType.GetItemType().GetUnderlyingType();
@@ -797,7 +798,8 @@ namespace ChoETL
                                                     fieldValue = Normalize(fXElement.NilAwareValue());
                                             }
                                         }
-                                        else if (fieldConfig.FieldType.IsCollection())
+                                        else if (fieldConfig.FieldType.IsCollection() || fieldConfig.FieldType.IsGenericList()
+                                            || fieldConfig.FieldType.IsGenericEnumerable())
                                         {
                                             List<object> list = new List<object>();
                                             Type itemType = fieldConfig.FieldType.GetItemType().GetUnderlyingType();
@@ -882,7 +884,8 @@ namespace ChoETL
                                                     fieldValue = fXElement.Value;
                                             }
                                         }
-                                        else if (fieldConfig.FieldType.IsCollection())
+                                        else if (fieldConfig.FieldType.IsCollection() || fieldConfig.FieldType.IsGenericList()
+                                            || fieldConfig.FieldType.IsGenericEnumerable())
                                         {
                                             List<object> list = new List<object>();
                                             Type itemType = fieldConfig.FieldType.GetItemType().GetUnderlyingType();

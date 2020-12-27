@@ -927,6 +927,14 @@ namespace ChoETL
             }));
         }
 
+        public static bool IsGenericEnumerable(this Type type)
+        {
+            if (type.IsGenericType)
+                return type.GetGenericTypeDefinition() == typeof(IEnumerable<>);
+
+            return false;
+        }
+
         public static bool IsNullableType(this Type type)
         {
             return type != (Type)null && type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>).GetGenericTypeDefinition();

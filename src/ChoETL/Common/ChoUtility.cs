@@ -1526,13 +1526,21 @@ namespace ChoETL
             if (type.IsArray)
                 return type.GetElementType();
 
-            foreach (Type @interface in type.GetInterfaces())
+            if (type.IsGenericEnumerable())
             {
-                if (@interface.IsGenericType)
+                if (type.GetGenericArguments().Length > 0)
+                    return type.GetGenericArguments()[0];
+            }
+            else
+            {
+                foreach (Type @interface in type.GetInterfaces())
                 {
-                    if (@interface.GetGenericTypeDefinition() == typeof(ICollection<>) && type.GetGenericArguments().Length > 0)
+                    if (@interface.IsGenericType)
                     {
-                        return type.GetGenericArguments()[0];
+                        if (@interface.GetGenericTypeDefinition() == typeof(ICollection<>) && type.GetGenericArguments().Length > 0)
+                        {
+                            return type.GetGenericArguments()[0];
+                        }
                     }
                 }
             }

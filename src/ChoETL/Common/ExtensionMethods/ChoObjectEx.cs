@@ -307,10 +307,10 @@ namespace ChoETL
         {
             if (target == null)
                 return null;
-            else if (target.GetType().IsSimpleSpecial())
-                return target.ToNString();
             else if (target.GetType().IsSimple())
                 return target;
+            else if (target.GetType().IsSimpleSpecial())
+                return target.ToNString();
             else
                 return target.ToDictionary();
         }

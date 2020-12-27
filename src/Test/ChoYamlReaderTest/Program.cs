@@ -169,7 +169,7 @@ namespace ChoYamlReaderTest
         static void YamlPathTest()
         {
             StringBuilder json = new StringBuilder();
-            using (var r = ChoYamlReader< Item>.LoadText(yamlText2)
+            using (var r = ChoYamlReader<Item>.LoadText(yamlText2)
                 .WithYamlPath("$items[*]")
                 .IgnoreFieldValueMode(ChoIgnoreFieldValueMode.Empty)
                 //.Configure(c => c.StringComparer = StringComparer.CurrentCulture)
@@ -467,7 +467,7 @@ Gender: Male
         }
         static void Yaml2XmlTest()
         {
-    string yaml = @"
+            string yaml = @"
 emps:
     - id: 1
       name: Tom
@@ -569,11 +569,52 @@ users:
             }
 
         }
+
+        public class UserScoreX
+        {
+            public int id { get; set; }
+            public int value { get; set; }
+        }
+
+        public class UserInfoX
+        {
+            public string name { get; set; }
+            public string teamname { get; set; }
+            public string email { get; set; }
+            public int[] players { get; set; }
+            public UserScoreX[] scores { get; set; }
+        }
+
+        static void SelectiveNodeTestX()
+        {
+            string yaml = @"
+users:
+    - name: 1
+      teamname: Tom
+      email: tom@gmail.com
+      players: [1, 2]
+      scores:
+        - id: 1
+          value: 100
+        - id: 2
+          value: 200
+";
+            using (var r = ChoYamlReader<UserInfoX>.LoadText(yaml)
+                .WithYamlPath("$.users[*]")
+                .WithField(f => f.scores, itemConverter: o => o)
+            )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            DeserializeEscapedChar();
+            SelectiveNodeTestX();
         }
     }
 }
+
