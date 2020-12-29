@@ -97,5 +97,13 @@ namespace ChoETL
                 return _defaultTypeConverters.ContainsKey(type);
             }
         }
+
+        public object GetConverter(Type type)
+        {
+            if (Contains(type))
+                return _defaultTypeConverters[type];
+            else
+                return null;
+        }
     }
 }

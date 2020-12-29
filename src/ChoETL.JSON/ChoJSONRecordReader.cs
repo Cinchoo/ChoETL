@@ -890,7 +890,7 @@ namespace ChoETL
                 if (!kvp.Value.JSONPath.IsNullOrWhiteSpace() && kvp.Value.JSONPath != kvp.Value.FieldName)
                 {
                     jTokens = SelectTokens(node, kvp.Value.JSONPath).ToArray();
-                    if (fieldConfig.FieldType != typeof(object) && !fieldConfig.FieldType.IsCollection() 
+                    if (fieldConfig.FieldType != null && fieldConfig.FieldType != typeof(object) && !fieldConfig.FieldType.IsCollection() 
                         && !fieldConfig.FieldType.IsGenericList()
                         && !fieldConfig.FieldType.IsGenericEnumerable()
                         && jToken != null)
@@ -914,7 +914,7 @@ namespace ChoETL
                         //    jToken = node;
                     }
 
-                    if (fieldConfig.FieldType != typeof(object) && !fieldConfig.FieldType.IsCollection() 
+                    if (fieldConfig.FieldType != null && fieldConfig.FieldType != typeof(object) && !fieldConfig.FieldType.IsCollection() 
                         && !fieldConfig.FieldType.IsGenericList()
                         && !fieldConfig.FieldType.IsGenericEnumerable()
                         && jToken != null)
@@ -985,7 +985,7 @@ namespace ChoETL
                         }
                         else
                         {
-                            if (fieldConfig.FieldType != typeof(object) && !fieldConfig.FieldType.IsCollection() && !fieldConfig.FieldType.IsGenericList()
+                            if (fieldConfig.FieldType != null && fieldConfig.FieldType != typeof(object) && !fieldConfig.FieldType.IsCollection() && !fieldConfig.FieldType.IsGenericList()
                                 && !fieldConfig.FieldType.IsGenericEnumerable() && fieldValue is JToken[])
                             {
                                 fieldValue = ((JToken[])fieldValue).FirstOrDefault();

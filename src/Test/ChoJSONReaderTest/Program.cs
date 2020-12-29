@@ -5145,10 +5145,62 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 
         }
 
+        static void CustomeDictKeyTypeTest()
+        {
+            string json = @"
+{
+  ""7:00AM"": 1,
+  ""8:00AM"": 2,
+  ""9:00AM"": 3.
+}";
+
+            using (var r = ChoJSONReader<Dictionary<DateTime, int>>.LoadText(json)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+
+        }
+
+        static void DeserializeAnonymousType()
+        {
+            string json = @"
+{
+""Data"":[
+    {
+        ""Customer"":""C1"",
+        ""ID"":""11111"",
+        ""Desc"":""Row 1"",
+        ""Price"":""123456""
+    },
+    {
+        ""Customer"":""C2"",
+        ""ID"":""22222"",
+        ""Desc"":""Row 2"",
+        ""Price"":""789012""
+    },
+    {
+        ""Customer"":""C3"",
+        ""ID"":""33333"",
+        ""Desc"":""Row 3"",
+        ""Price"":""345678""
+    }
+],
+""Success"":true
+}";
+            var x = new { Data = default(DataTable), Success = false };
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(new { Data = ((IEnumerable)rec.data).AsDataTable(), Success = rec.Success }.Dump());
+            }
+
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            InterfaceTest1();
+            CustomeDictKeyTypeTest();
 
             //CreateLargeJSONFile();
             //JSON2CSVViceVersa();

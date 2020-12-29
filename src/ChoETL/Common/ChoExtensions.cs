@@ -909,6 +909,8 @@ namespace ChoETL
 
         public static Type GetEnumerableType(this Type type)
         {
+            if (type == null) return (Type)null;
+
             foreach (Type type1 in type.GetInterfaces())
             {
                 if (type1.IsGenericType && type1.GetGenericTypeDefinition() == typeof(IEnumerable<>))
@@ -919,6 +921,8 @@ namespace ChoETL
 
         public static bool IsGenericList(this Type type)
         {
+            if (type == null) return false;
+
             return Enumerable.Any<Type>((IEnumerable<Type>)type.GetInterfaces(), (Func<Type, bool>)(t =>
             {
                 if (t.IsGenericType)
@@ -929,6 +933,8 @@ namespace ChoETL
 
         public static bool IsGenericEnumerable(this Type type)
         {
+            if (type == null) return false;
+
             if (type.IsGenericType)
                 return type.GetGenericTypeDefinition() == typeof(IEnumerable<>);
 

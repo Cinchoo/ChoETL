@@ -608,7 +608,56 @@ users:
                     Console.WriteLine(rec.Dump());
             }
         }
+        public class Root
+        {
+            public PeopleInfo people { get; set; }
+            public CityInfo[] cities{ get; set; }
+        }
+        public class PeopleInfo
+        {
+            public string id { get; set; }
+            public string name { get; set; }
+        }
 
+        public class CityInfo
+        {
+            public string id { get; set; }
+            public string city { get; set; }
+            public string state { get; set; }
+            public string country { get; set; }
+        }
+
+        static void TestTwoLists()
+        {
+            string yaml = @"
+creation: 2020-12-26
+author: YannZeRookie
+people:
+  - id: 1
+    name: Tom
+  - id: 2
+    name: Mark
+cities:
+  - id: 1
+    city: San Francisco
+    state: CA
+    country: USA
+  - id: 2
+    city: Palo Alto
+    state: CA
+    country: USA
+  - id: 3
+    city: Minneapolis
+    state: MN
+    country: USA
+";
+            using (var r = ChoYamlReader<Root>.LoadText(yaml)
+            )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;

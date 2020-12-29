@@ -568,41 +568,69 @@ namespace ChoETL
                     dest = src;
                 else
                 {
-                    Dictionary<string, PropertyDescriptor> destMembers = ChoTypeDescriptor.GetProperties<T>(dest.GetType()).ToDictionary(pd => pd.Name, StringComparer.CurrentCultureIgnoreCase);
-                    //Set default values to all members
-                    if (defaultValueCallback != null)
+                    if (dest is IDictionary)
                     {
-                        foreach (string mn in destMembers.Keys)
+                        if (!dest.GetType().IsGenericType)
                         {
-                            ChoType.ConvertNSetMemberValue(dest, mn, defaultValueCallback(mn, destMembers[mn].PropertyType));
+                            var dest1 = dest as IDictionary;
+                            foreach (var key in ((IDictionary<string, object>)src).Keys)
+                            {
+                                dest1.Add(key, ((IDictionary<string, object>)src)[key]);
+                            }
+                        }
+                        else
+                        {
+                            var keyType = dest.GetType().GetGenericArguments()[0];
+                            var valueType = dest.GetType().GetGenericArguments()[1];
+
+                            var keyConverter = ChoTypeConverter.Global.GetConverter(keyType);
+                            var valueConverter = ChoTypeConverter.Global.GetConverter(valueType);
+
+                            var dest1 = dest as IDictionary;
+                            foreach (var key in ((IDictionary<string, object>)src).Keys)
+                            {
+                                dest1.Add(ChoConvert.ConvertTo(key, keyType, null, keyConverter != null ? new object[] { keyConverter } : null, null, null), 
+                                    ChoConvert.ConvertTo(((IDictionary<string, object>)src)[key], valueType, null, valueConverter != null ? new object[] { valueConverter } : null, null, null));
+                            }
                         }
                     }
-
-                    Dictionary<string, PropertyDescriptor> srcMembers = ChoTypeDescriptor.GetProperties<T>(src.GetType()).ToDictionary(pd => pd.Name, StringComparer.CurrentCultureIgnoreCase);
-                    foreach (string mn in srcMembers.Keys)
+                    else
                     {
-                        try
+                        Dictionary<string, PropertyDescriptor> destMembers = ChoTypeDescriptor.GetProperties<T>(dest.GetType()).ToDictionary(pd => pd.Name, StringComparer.CurrentCultureIgnoreCase);
+                        //Set default values to all members
+                        if (defaultValueCallback != null)
                         {
-                            if (!destMembers.ContainsKey(mn)) continue;
-                            ChoType.ConvertNSetMemberValue(dest, mn, ChoType.GetMemberValue(src, mn));
-                        }
-                        catch (Exception ex)
-                        {
-                            if (fallbackValueCallback != null)
+                            foreach (string mn in destMembers.Keys)
                             {
-                                try
-                                {
-                                    ChoType.ConvertNSetMemberValue(dest, mn, fallbackValueCallback(mn, destMembers[mn].PropertyType));
-                                }
-                                catch
-                                {
-                                    throw new ApplicationException("Clone: Error assigning value for '{0}' member. {1}".FormatString(ChoType.GetMemberName(destMembers[mn]), ex.Message));
-                                }
+                                ChoType.ConvertNSetMemberValue(dest, mn, defaultValueCallback(mn, destMembers[mn].PropertyType));
                             }
-                            else
-                                throw new ApplicationException("Clone: Error assigning value for '{0}' member. {1}".FormatString(ChoType.GetMemberName(destMembers[mn]), ex.Message));
                         }
 
+                        foreach (string mn in ((IDictionary<string, object>)src).Keys)
+                        {
+                            try
+                            {
+                                if (!destMembers.ContainsKey(mn)) continue;
+                                ChoType.ConvertNSetMemberValue(dest, mn, ChoType.GetMemberValue(src, mn));
+                            }
+                            catch (Exception ex)
+                            {
+                                if (fallbackValueCallback != null)
+                                {
+                                    try
+                                    {
+                                        ChoType.ConvertNSetMemberValue(dest, mn, fallbackValueCallback(mn, destMembers[mn].PropertyType));
+                                    }
+                                    catch
+                                    {
+                                        throw new ApplicationException("Clone: Error assigning value for '{0}' member. {1}".FormatString(ChoType.GetMemberName(destMembers[mn]), ex.Message));
+                                    }
+                                }
+                                else
+                                    throw new ApplicationException("Clone: Error assigning value for '{0}' member. {1}".FormatString(ChoType.GetMemberName(destMembers[mn]), ex.Message));
+                            }
+
+                        }
                     }
                 }
             }
@@ -2207,8 +2235,8 @@ namespace ChoETL
                                 {
                                     object kvpKey = valueType.GetProperty("Key").GetValue(item, null);
                                     object kvpValue = valueType.GetProperty("Value").GetValue(item, null);
-                                    arrMsg.AppendFormat("Key: {0} [Type: {2}]{1}", ToStringEx(kvpKey), Environment.NewLine, kvpValue == null ? "UNKNOWN" : kvpValue.GetType().Name);
-                                    arrMsg.AppendFormat("Value: {0}{1}", ToStringEx(kvpValue), Environment.NewLine);
+                                    arrMsg.AppendFormat("Key: {0} [Type: {2}]{1}", ToStringEx(kvpKey), Environment.NewLine, kvpKey == null ? "UNKNOWN" : kvpKey.GetType().Name);
+                                    arrMsg.AppendFormat("Value: {0} [Type: {2}]{1}", ToStringEx(kvpValue), Environment.NewLine, kvpValue == null ? "UNKNOWN" : kvpValue.GetType().Name);
                                     count++;
                                     continue;
                                 }
@@ -2240,10 +2268,10 @@ namespace ChoETL
             else
             {
                 //Check if ToString is overridden
-                if (!target.GetType().IsOverrides("ToString"))
+                if (target.GetType().IsAnonymousType() || !target.GetType().IsOverrides("ToString"))
                 {
                     BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Instance;
-                    ChoStringMsgBuilder msg = new ChoStringMsgBuilder(String.Format("{0} State", target.GetType().FullName));
+                    ChoStringMsgBuilder msg = new ChoStringMsgBuilder(String.Format("{0} State", target.GetType().IsAnonymousType() ? "Anonymous Type" : target.GetType().FullName));
 
                     //MemberInfo[] memberInfos = target.GetType().GetMembers(bindingFlags /*BindingFlags.Public | BindingFlags.Instance /*| BindingFlags.DeclaredOnly*/ /*| BindingFlags.GetField | BindingFlags.GetProperty*/);
                     IEnumerable<MemberInfo> memberInfos = ChoType.GetGetFieldsNProperties(target.GetType(), bindingFlags);
@@ -2287,6 +2315,8 @@ namespace ChoETL
 
         public static bool IsCollection(this Type type)
         {
+            if (type == null) return false;
+
             if (typeof(Array).IsAssignableFrom(type))
                 return true;
             else if (typeof(IList).IsAssignableFrom(type))
