@@ -29,7 +29,7 @@ namespace ChoManifoldWriterTest
             ChoXmlSettings.Reset();
         }
 
-        [Test]
+        //[Test]
         public static void ToTextTest()
         {
             string expected = @"Raj     Mar212
@@ -57,7 +57,7 @@ namespace ChoManifoldWriterTest
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void QuickTest()
         {
             string expected = @"Raj     Mar212

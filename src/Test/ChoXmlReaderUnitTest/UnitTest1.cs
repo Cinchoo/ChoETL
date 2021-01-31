@@ -6,7 +6,7 @@ namespace ChoXmlReaderUnitTest
     [TestFixture]
     public class UnitTest1
     {
-        [Test]
+        //[Test]
         public void ComplexTest1()
         {
             string xml = @"<SalesLead>

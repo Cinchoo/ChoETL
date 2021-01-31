@@ -176,6 +176,11 @@ namespace ChoETL
 
                         if (recText == null)
                             continue;
+                        else if (recText.Length > 0)
+                        {
+                            sw.Write(recText);
+                            continue;
+                        }
 
                         try
                         {

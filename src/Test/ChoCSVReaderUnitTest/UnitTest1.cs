@@ -32,7 +32,7 @@ namespace ChoCSVReaderUnitTest
                 return $"{Id}. {Name}.";
             }
         }
-        [Test]
+        //[Test]
         public void POCOTest1()
         {
             System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("us-en");
@@ -48,7 +48,7 @@ namespace ChoCSVReaderUnitTest
             Assert.IsTrue(true);
         }
 
-        [Test]
+        //[Test]
         public void AsDataReaderTest()
         {
             System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("us-en");

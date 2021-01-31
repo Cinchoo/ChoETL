@@ -289,11 +289,51 @@ namespace ChoXmlWriterTest
             Console.WriteLine(xml.ToString());
         }
 
+        static void Test2()
+        {
+            StringBuilder xml = new StringBuilder();
+
+            using (var parser = new ChoXmlWriter(xml).WithXPath("//ticket//Employees/Employee")
+                )
+            {
+                parser.Write(new object[] { new { Id = 1, Name = "Mark" }, new { Id = 1, Name = "Mark" } });
+            }
+
+            Console.WriteLine(xml.ToString());
+        }
+
+        static void ListTest()
+        {
+            StringBuilder xml = new StringBuilder();
+
+            using (var w = new ChoXmlWriter<string>(xml).UseXmlSerialization().WithXPath("t1/t2/r4/t5/Employees/Employee"))
+            {
+                w.Write(new List<string> { "Tom", "Mark" });
+            }
+
+            Console.WriteLine(xml.ToString());
+
+        }
+
+        static void DictTest()
+        {
+            StringBuilder xml = new StringBuilder();
+
+            using (var w = new ChoXmlWriter(xml).UseXmlSerialization().WithXPath("Employees/Employee"))
+            {
+                w.Write(new Dictionary<int, string> { { 1, "Tom" }, { 2, "Mark" } });
+            }
+
+            Console.WriteLine(xml.ToString());
+
+        }
+
         static void Main(string[] args)
         { 
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            CustomMemberSerialization();
+            DictTest();
+
             return;
 
             JSON2XmlDateTimeTest();
@@ -318,7 +358,7 @@ namespace ChoXmlWriterTest
             ChoXmlSettings.Reset();
         }
 
-        [Test]
+        //[Test]
         public static void JSON2XmlDateTimeTest()
         {
             string actual;
@@ -345,7 +385,7 @@ namespace ChoXmlWriterTest
 
             Assert.AreEqual(json, actual);
         }
-        [Test]
+        //[Test]
         public static void CustomStringArrayTest()
         {
             string expected = @"<Root>
@@ -382,7 +422,7 @@ namespace ChoXmlWriterTest
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void CustomMemberSerialization()
         {
             string expected = @"<Choices>
@@ -467,7 +507,7 @@ namespace ChoXmlWriterTest
             //Console.WriteLine(ChoXmlWriter.ToText<Choice>(new Choice { Options = new[] { "op 1", "op 2" } }));
         }
 
-        [Test]
+        //[Test]
         public static void CustomSerialization()
         {
             string expected = @"<Root>
@@ -513,7 +553,7 @@ namespace ChoXmlWriterTest
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void KVPTest()
         {
             StringBuilder msg = new StringBuilder();
@@ -535,7 +575,7 @@ namespace ChoXmlWriterTest
             Assert.Fail("Not sure, whats expected");
         }
 
-        [Test]
+        //[Test]
         public static void Sample7Test()
         {
 
@@ -555,7 +595,7 @@ namespace ChoXmlWriterTest
             FileAssert.AreEqual(FileNameSample7ExpectedXML, FileNameSample7ActualXML);
         }
 
-        [Test]
+        //[Test]
         public static void SaveStringList()
         {
             string expected = @"<Root>
@@ -581,7 +621,7 @@ namespace ChoXmlWriterTest
             actual =msg.ToString();
         }
 
-        [Test]
+        //[Test]
         public static void SaveDict()
         {
             string expected = @"<DictionaryEntries>
@@ -612,7 +652,7 @@ namespace ChoXmlWriterTest
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void DataTableTest()
         {
             Assert.Fail("Make database testable.");
@@ -632,7 +672,7 @@ namespace ChoXmlWriterTest
             }
         }
         
-        [Test]
+        //[Test]
         public static void DataReaderTest()
         {
             Assert.Fail("Make database testable.");
@@ -648,7 +688,7 @@ namespace ChoXmlWriterTest
         }
 
 
-        [Test]
+        //[Test]
         public static void ConfigFirstTest()
         {
             string expected = @"<Employees>
@@ -702,7 +742,7 @@ namespace ChoXmlWriterTest
         public static string FileNameSample7JSON => "sample7.json";
         public static string FileNameSample7ExpectedXML => "sample7Expected.xml";
         public static string FileNameSample7ActualXML => "sample7Actual.xml";
-        [Test]
+        //[Test]
         public static void QuickPOCOTest()
         {
             List<EmployeeRecSimple> objs = new List<EmployeeRecSimple>();
@@ -746,7 +786,7 @@ namespace ChoXmlWriterTest
             //}
         }
 
-        [Test]
+        //[Test]
         public static void QuickDynamicTest()
         {
             string expected = @"<Employees>
@@ -754,7 +794,7 @@ namespace ChoXmlWriterTest
     <Id>1</Id>
     <Name>Mark</Name>
     <IsActive>true</IsActive>
-    <Message><![CDATA[Test]]></Message>
+    <Message><![CDATA//[Test]]></Message>
     <Array>
     <anyType xmlns:q1=""http://www.w3.org/2001/XMLSchema"" p3:type=""q1:int"" xmlns:p3=""http://www.w3.org/2001/XMLSchema-instance"">1</anyType>
     <anyType xmlns:q2=""http://www.w3.org/2001/XMLSchema"" p3:type=""q2:string"" xmlns:p3=""http://www.w3.org/2001/XMLSchema-instance"">abc</anyType>
@@ -778,7 +818,7 @@ namespace ChoXmlWriterTest
     <Id>2</Id>
     <Name>Jason</Name>
     <IsActive>true</IsActive>
-    <Message><![CDATA[Test]]></Message>
+    <Message><![CDATA//[Test]]></Message>
   </Employee>
 </Employees>";
             string actual = null;

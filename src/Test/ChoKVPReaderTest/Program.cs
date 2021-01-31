@@ -67,7 +67,7 @@ namespace ChoKVPReaderTest
             ChoXmlSettings.Reset();
         }
 
-        [Test]
+        //[Test]
         public static void QuickTest()
         {
             using (var r = new ChoKVPReader(FileNameSampleICS))
@@ -86,7 +86,7 @@ namespace ChoKVPReaderTest
 
         }
 
-        [Test]
+        //[Test]
         public static void LoadINIFileTest()
         {
             List<object> expected = new List<object>
@@ -138,7 +138,7 @@ namespace ChoKVPReaderTest
             CollectionAssert.AreEqual(expected, actual.ToList());
         }
 
-        [Test]
+        //[Test]
         public static void LoadTest()
         {
             Assert.Warn(@"Original file ""C:\Users\raj\Documents\GitHub\ChoETL\src\Test\ChoKVPReaderTest\Maldives Holidays Calendar.ics"" not found. Used Copy (2) instead. Please check.");
@@ -781,7 +781,7 @@ new ChoDynamicObject {
         
         public static string FileNameHellenicINI => "hellenic.ini";
 
-        [Test]
+        //[Test]
         public static void ConvertToCSVTest()
         {
             Assert.Warn(@"Original file ""C: \Users\raj\Documents\GitHub\ChoETL\src\Test\ChoKVPReaderTest\Maldives Holidays Calendar.ics"" not found. Used Copy (2) instead. Please check.");
@@ -802,7 +802,7 @@ new ChoDynamicObject {
             FileAssert.AreEqual(FileNameConvertToCSVTestExpectedCSV, FileNameConvertToCSVTestActualCSV);
         }
 
-        [Test]
+        //[Test]
         public static void ConvertToCSVWithHeaderTest()
         {
             Assert.Warn(@"Original File ""C: \Users\raj\Documents\GitHub\ChoETL\src\Test\ChoKVPReaderTest\Maldives Holidays Calendar.ics"" not found. Used Copy (2) instead. Please check.");
@@ -823,7 +823,7 @@ new ChoDynamicObject {
             FileAssert.AreEqual(FileNameConvertToCSVWithHeaderTestExpectedCSV, FileNameConvertToCSVWithHeaderTestActualCSV);
         }
 
-        [Test]
+        //[Test]
         public static void LoadPOCOTest()
         {
             Assert.Warn(@"Original file ""C:\Users\raj\Documents\GitHub\ChoETL\src\Test\ChoKVPReaderTest\Maldives Holidays Calendar.ics"" not found. Used Copy (2) instead. Please check.");
@@ -845,7 +845,7 @@ new ChoDynamicObject {
             // TODO: Move line 426 to 432 in file ChoKVPRecordReader should solve that problem
         }
 
-        [Test]
+        //[Test]
         public static void QuickDynamicTest()
         {
             List<object> expected = new List<object>

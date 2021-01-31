@@ -113,7 +113,7 @@ namespace ChoCSVSqlDbImportSample
         //    }
 
         //}
-        [Test]
+        //[Test]
         public static void POCOSortUsingSqlServer()
         {
             long? rowsLoaded = null;
@@ -133,7 +133,7 @@ namespace ChoCSVSqlDbImportSample
             Assert.Multiple(() => { Assert.AreEqual(rowsLoaded, 101,"Rows loaded"); FileAssert.AreEqual(FileNamePOCOSortUsingSqlServerExpectedTXT, FileNamePOCOSortUsingSqlServerTestTXT); });
         }
 
-        [Test]
+        //[Test]
         public static void SortUsingSqlServer()
         {
             long? rowsLoaded = null;
@@ -153,7 +153,7 @@ namespace ChoCSVSqlDbImportSample
             Assert.Multiple(() => { Assert.AreEqual(rowsLoaded, 101, "Rows loaded"); FileAssert.AreEqual(FileNameSortUsingSqlServerExpectedTXT, FileNameSortUsingSqlServerTestTXT); });
         }
 
-        [Test]
+        //[Test]
         public static void POCOSortUsingSqlServerUsingBcp()
         {
             long? rowsLoaded = null;
@@ -186,7 +186,7 @@ namespace ChoCSVSqlDbImportSample
         //            dw.Write(dr.AsEnumerable().StageOnSqlServerUsingBcp().AsTypedEnumerable<dynamic>().OrderByDescending());
         //    }
         //}
-        [Test]
+        //[Test]
         public static void BcpDataFile()
         {
             string connectionstring = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True";
@@ -240,7 +240,7 @@ namespace ChoCSVSqlDbImportSample
             Console.ReadLine();
         }
 
-        [Test]
+        //[Test]
         public static void BcpDataFile1()
         {
             long? rowsCopied = null;
@@ -275,7 +275,7 @@ namespace ChoCSVSqlDbImportSample
             Assert.Multiple(() => { Assert.AreEqual(10, sQLRowsCopiedEventFireCount); Assert.AreEqual(100, rowsCopied); });
         }
 
-        [Test]
+        //[Test]
         public static void SortByCity()
         {
             List<Customer> expected = new List<Customer> {
@@ -461,7 +461,7 @@ new Customer { Id = 60, Street = "4852 Chaparral Court", City = "Snohomish", Zip
             public DbSet<Customer> Customers { get; set; }
         }
 
-        [Test]
+        //[Test]
         public static void LoadDataFile()
         {
             int recordsAffected;

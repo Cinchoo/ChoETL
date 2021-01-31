@@ -263,7 +263,7 @@ namespace ChoCSVReaderTest
         public static string FileNameSolarTempCSV => "SolarTemp.csv";
         public static string FileNameZipCodesExCSV => "ZipCodesEx.csv";
 
-        [Test]
+        //[Test]
         public static void ConvertToNestedObjects()
         {
             string expected = "[\r\n {\r\n  \"id\": \"0\",\r\n  \"name\": \"Test123\",\r\n  \"category\": {\r\n    \"0\": \"15\",\r\n    \"name\": \"Cat123\",\r\n    \"subcategory\": {\r\n      \"id\": \"10\",\r\n      \"name\": \"SubCat123\"\r\n    }\r\n  },\r\n  \"description\": \"Desc123\"\r\n }\r\n]";
@@ -385,7 +385,7 @@ namespace ChoCSVReaderTest
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void NestedQuotes()
         {
             List<ChoDynamicObject> expected = new List<ChoDynamicObject> {
@@ -511,7 +511,7 @@ namespace ChoCSVReaderTest
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void ReportEmptyLines()
         {
             List<ChoDynamicObject> expected = new List<ChoDynamicObject> {
@@ -612,7 +612,7 @@ namespace ChoCSVReaderTest
             }
         }
 
-        [Test]
+        //[Test]
         public static void QuoteValueTest()
         {
             List<ChoDynamicObject> expected = new List<ChoDynamicObject> {
@@ -657,7 +657,7 @@ namespace ChoCSVReaderTest
             [StringLength(150)]
             public string Email { get; set; }
         }
-        [Test]
+        //[Test]
         public static void Sample1()
         {
             using (var r = new StreamReader(ChoPath.GetFullPath(FileNameSample1CSV)))
@@ -677,7 +677,7 @@ namespace ChoCSVReaderTest
             }
         }
 
-        [Test]
+        //[Test]
         public static void Pontos()
         {
             List<string> expected = new List<string> {
@@ -745,7 +745,7 @@ somethingdownhere,thisisthelastuser,andthisisthelastpassword
             }
             CollectionAssert.AreEqual(expected, actual);
         }
-        [Test]
+        //[Test]
         public static void MergeCSV1()
         {
             string expected = @"Id	Name	City
@@ -789,7 +789,7 @@ somethingdownhere,thisisthelastuser,andthisisthelastpassword
             Assert.AreEqual(expected, csv3.ToString());
         }
 
-        [Test]
+        //[Test]
         public static void Test1()
         {
             //string csv = @"4.1,AB,2018-02-16 15:41:39,152,36,""{""A"":{ ""a1"":""A1""},,20";
@@ -889,7 +889,7 @@ new ChoDynamicObject{ {"Column1","2011.01.07"},{"Column2", new DateTime(2011,1,7
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void DiffCSV()
         {
             string csv1 = @"Id, Name, City
@@ -1157,7 +1157,7 @@ Date,Count
             }
             CollectionAssert.AreEqual(expected, actual);
         }
-        [Test]
+        //[Test]
         public static void POCOSort()
         {
             using (var dr = new ChoCSVReader<EmployeeRec>(FileNameTestCSV).WithFirstLineHeader()
@@ -1170,7 +1170,7 @@ Date,Count
                 //}
             }
         }
-        [Test]
+        //[Test]
         public static void DynamicSort()
         {
             using (var dr = new ChoCSVReader(FileNameTestCSV).WithFirstLineHeader())
@@ -1182,7 +1182,7 @@ Date,Count
             }
         }
 
-        [Test]
+        //[Test]
         public static void CharDiscTest()
         {
             List<ChoDynamicObject> expected = new List<ChoDynamicObject>() {
@@ -1303,7 +1303,7 @@ Date,Count
             Console.WriteLine(csvOut.ToString());
         }
 
-        [Test]
+        //[Test]
         public static void Sample10()
         {
             string expected = "[\r\n {\r\n  \"institution_id\": \"88\",\r\n  \"UNITID\": \"209612\",\r\n  \"school_id\": \"65\",\r\n  \"gss_code\": \"823\",\r\n  \"year\": \"2015\",\r\n  \"Institution_Name\": \"Pacific University\",\r\n  \"hdg_inst\": \"1\",\r\n  \"toc_code\": \"2\"\r\n },\r\n {\r\n  \"institution_id\": \"606\",\r\n  \"UNITID\": \"122612\",\r\n  \"school_id\": \"752\",\r\n  \"gss_code\": \"202\",\r\n  \"year\": \"2015\",\r\n  \"Institution_Name\": \"University of San Francisco\",\r\n  \"hdg_inst\": \"2\",\r\n  \"toc_code\": \"2\"\r\n },\r\n {\r\n  \"institution_id\": \"606\",\r\n  \"UNITID\": \"122612\",\r\n  \"school_id\": \"752\",\r\n  \"gss_code\": \"401\",\r\n  \"year\": \"2015\",\r\n  \"Institution_Name\": \"University of San Francisco\",\r\n  \"hdg_inst\": \"2\",\r\n  \"toc_code\": \"2\"\r\n }\r\n]";
@@ -1460,7 +1460,7 @@ Date,Count
             public string value { get; set; }
         }
 
-        [Test]
+        //[Test]
         public static void Sample20()
         {
             DataTable expected = new DataTable();
@@ -1778,7 +1778,7 @@ a,0,1,2-Data";
             // TODO: Change simple string compare to better JSON content compare
         }
 
-        [Test]
+        //[Test]
         public static void DoubleQuotesFix()
         {
             List<ChoDynamicObject> expected = new List<ChoDynamicObject> {
@@ -1795,7 +1795,7 @@ a,0,1,2-Data";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample5()
         {
             DataTable expected = new DataTable();
@@ -1826,7 +1826,7 @@ a,0,1,2-Data";
             UnitTestHelper.DataTableAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample6()
         {
             DataTable expected = new DataTable();
@@ -1867,7 +1867,7 @@ a,0,1,2-Data";
             UnitTestHelper.DataTableAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample61()
         {
             DataTable expected = new DataTable();
@@ -1902,7 +1902,7 @@ a,0,1,2-Data";
             UnitTestHelper.DataTableAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void SepInValueTest()
         {
             List<ChoDynamicObject> expected = new List<ChoDynamicObject> {
@@ -1958,7 +1958,7 @@ a,0,1,2-Data";
             }
         }
 
-        [Test]
+        //[Test]
         public static void TransposeTest()
         {
             string expected = @"A1;A2;A3;A4;A5
@@ -1992,7 +1992,7 @@ A5;B5;C5;D5;E5
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void TransposeTest1()
         {
             string expected = @"a1,a2,a3,a4,a5
@@ -2018,7 +2018,7 @@ a7,b7,c7,d7,e7
             string actual = sb.ToString();
             Assert.AreEqual(expected, actual);
         }
-        [Test]
+        //[Test]
         public static void FixNewLine()
         {
             List<ChoDynamicObject> expected = new List<ChoDynamicObject> {
@@ -2135,7 +2135,7 @@ D,World Name , LLC,2018-01-20,BUY";
             }
         }
 
-        [Test]
+        //[Test]
         public static void NestedObjectIgnoreFirstLineHeaderTest()
         {
             // During changing to NUnit-Tests found error when using WithFirstLineHeader(true)
@@ -2154,7 +2154,7 @@ D,World Name , LLC,2018-01-20,BUY";
                 x = p.ToList(); // Iterate
         }
 
-        [Test]
+        //[Test]
         public static void NestedObjectTest()
         {
             AccountBalance[] expected = new AccountBalance[]
@@ -2278,7 +2278,7 @@ Value 1,""Value2 a, Value 2b"",""Value3 a, Value 3b"",Value 4,Value 5";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void OddTest1()
         {
             List<ChoDynamicObject> expected = new List<ChoDynamicObject> {
@@ -2342,7 +2342,7 @@ v-dakash@catalysis.com,""HEY""? Tester, 12345789,""Catalysis"", LLC., Enterprise
             }
         }
 
-        [Test]
+        //[Test]
         public static void TestX()
         {
             List<EmployeeX> expected = new List<EmployeeX>{
@@ -2441,7 +2441,7 @@ ID, Name
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void RenameCol()
         {
             string expected = @"Test1,Test2
@@ -2466,7 +2466,7 @@ ID, Name
             Assert.AreEqual(expected, csvOut.ToString());
         }
 
-        [Test]
+        //[Test]
         public static void RenameCol1()
         {
             string expected = @"Test,Test2
@@ -2658,7 +2658,7 @@ ID			DATE		AMOUNT	QUANTITY	ID
 
 
 
-        [Test]
+        //[Test]
         public static void LargeNoOfColumnsTest()
         {
             throw new Exception(@"File C:\Users\nraj39\Downloads\ETLsampletest.csv not found");
@@ -2675,7 +2675,7 @@ ID			DATE		AMOUNT	QUANTITY	ID
             }
         }
 
-        [Test]
+        //[Test]
         public static void BoolIssue()
         {
             string csvIn = FileNameSampleDataCSV; // TODO: File SampleData.csv have to be added to project. Current directory is C:\Users\nraj39\Downloads\ which could not be accessed by other contributors
@@ -2694,7 +2694,7 @@ ID			DATE		AMOUNT	QUANTITY	ID
             }
         }
 
-        [Test]
+        //[Test]
         public static void BcpTest()
         {
             string connectionString = @"Data Source=(LocalDB)\MSSQLLocalDb;Initial Catalog=EFSample.SchoolContext;Integrated Security=True";
@@ -2707,7 +2707,7 @@ ID			DATE		AMOUNT	QUANTITY	ID
                 p.Bcp(connectionString, "Teachers");
         }
 
-        [Test]
+        //[Test]
         public static void ZipCodeBcpTest()
         {
             string connectionString = @"Data Source=(LocalDB)\MSSQLLocalDb;Initial Catalog=EFSample.SchoolContext;Integrated Security=True";
@@ -2725,7 +2725,7 @@ ID			DATE		AMOUNT	QUANTITY	ID
 
         }
 
-        [Test]
+        //[Test]
         public static void ZipCodeLoadTest()
         {
             string connectionString = @"Data Source=(LocalDB)\MSSQLLocalDb;Initial Catalog=EFSample.SchoolContext;Integrated Security=True";
@@ -2858,7 +2858,7 @@ ID			DATE		AMOUNT	QUANTITY	ID
             }
         }
 
-        [Test]
+        //[Test]
         public static void NestedCSV1()
         {
             List<FooBar> expectedFromReader = new List<FooBar> {
@@ -2957,7 +2957,7 @@ ID			DATE		AMOUNT	QUANTITY	ID
             //Console.WriteLine(csvOut.ToString());
         }
 
-        [Test]
+        //[Test]
         public static void DisposeOnForEach()
         {
             List<ChoDynamicObject> expected = new List<ChoDynamicObject> {
@@ -2973,7 +2973,7 @@ ID			DATE		AMOUNT	QUANTITY	ID
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void GetRecordsAsDictionaryTest()
         {
             List<string> expected = new List<string> {
@@ -3015,7 +3015,7 @@ Mark, Hartigan";
 
             CollectionAssert.AreEqual(expected, actual);
         }
-        [Test]
+        //[Test]
         public static void UnicodeTest()
         {
             string expected = "[\r\n {\r\n  \"Endereço_4\": \"1\",\r\n  \"Endereço_5\": \"11\"\r\n },\r\n {\r\n  \"Endereço_4\": \"2\",\r\n  \"Endereço_5\": \"22\"\r\n }\r\n]";
@@ -3050,7 +3050,7 @@ Mark, Hartigan";
             }
         }
 
-        [Test]
+        //[Test]
         public static void SolarTemp()
         {
             List<ChoDynamicObject> expected = new List<ChoDynamicObject> {
@@ -3280,7 +3280,7 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
             }
         }
 
-        [Test]
+        //[Test]
         public static void CSV2ComplexObj()
         {
             List<StudentInfo> expected = new List<StudentInfo>() {
@@ -3456,7 +3456,7 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
             Console.WriteLine(json.ToString());
         }
 
-        [Test]
+        //[Test]
         public static void MultiRecordTypeTest()
         {
             List<object> expected = new List<object> {
@@ -5160,7 +5160,7 @@ F1004|File is a duplicate|TRUE|ERROR|TEST_VISITS_IA_270084601_20201202192520.csv
             // TODO: Change simple string compare to better XML content compare
         }
 
-        [Test]
+        //[Test]
         public static void HierarchyCSV()
         {
             string expected = "{\r\n  \"players\": [\r\n    {\r\n      \"Id\": 2938,\r\n      \"Sea\": 2018,\r\n      \"First\": \"David\",\r\n      \"Last\": \"Bush\",\r\n      \"Team\": null,\r\n      \"Coll\": \"Stanford\",\r\n      \"Num\": 19,\r\n      \"Age\": 21,\r\n      \"Hgt\": 76,\r\n      \"Wgt\": 212,\r\n      \"Pos\": \"QB\",\r\n      \"Attr\": {\r\n        \"Str\": 68,\r\n        \"Agi\": 55\r\n      },\r\n      \"Per\": {\r\n        \"Lea\": 34,\r\n        \"Wor\": 71\r\n      },\r\n      \"Skills\": {\r\n        \"WR\": 0,\r\n        \"TE\": 0\r\n      },\r\n      \"Flg\": \"None\",\r\n      \"Trait\": \"None\"\r\n    }\r\n  ]\r\n}";
@@ -5187,7 +5187,7 @@ F1004|File is a duplicate|TRUE|ERROR|TEST_VISITS_IA_270084601_20201202192520.csv
             CollectionAssert.AreEqual(zipSortCodeDict, zipSortCodeDict2);
         }
 
-        [Test]
+        //[Test]
         public static void MergeCSV()
         {
             using (var p = new ChoCSVReader(FileNameMergeInputCSV).WithFirstLineHeader())
@@ -5325,7 +5325,7 @@ F1004|File is a duplicate|TRUE|ERROR|TEST_VISITS_IA_270084601_20201202192520.csv
             public string COMPANY_NAME { get; set; }
         }
 
-        [Test]
+        //[Test]
         public static void QuotedCSVTest()
         {
             List<string> expected = new List<string> { "Bbc Worldwide Labs, Bounce Republic Ltd", "Broadcast Media" };
@@ -5358,7 +5358,7 @@ F1004|File is a duplicate|TRUE|ERROR|TEST_VISITS_IA_270084601_20201202192520.csv
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void ErrorHandling()
         {
             throw new Exception("Don't know whats expected. Event not raised. Maybe a destroyed test case. EmployeeRec is referenced 6 times. Why use a second reader?");
@@ -5416,7 +5416,7 @@ F1004|File is a duplicate|TRUE|ERROR|TEST_VISITS_IA_270084601_20201202192520.csv
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void MultiLineColumnValue()
         {
             List<ChoDynamicObject> expected = new List<ChoDynamicObject> {
@@ -5478,7 +5478,7 @@ Cassawaw"} },
             }
         }
 
-        [Test]
+        //[Test]
         public static void QuickDynamicTest()
         {
             List<ChoDynamicObject> expected = new List<ChoDynamicObject> {
@@ -5906,7 +5906,7 @@ Cassawaw"} },
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void AsDataReaderTest()
         {
             List<string> expected = new List<string>()
@@ -5943,7 +5943,7 @@ Cassawaw"} },
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void AsDataTableTest()
         {
             List<string> expected = new List<string>()

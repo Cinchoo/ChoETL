@@ -30,7 +30,7 @@ namespace ChoManifoldReaderTest
 
         public static string FileNameMasterDetailTXT => "MasterDetail.txt";
 
-        [Test]
+        //[Test]
         public static void MasterDetailTest()
         {
             List<object> expected = new List<object>
@@ -108,7 +108,7 @@ namespace ChoManifoldReaderTest
             }
         }
 
-        [Test]
+        //[Test]
         public static void QuickTest()
         {
             List<object> expected = new List<object>
@@ -145,7 +145,7 @@ namespace ChoManifoldReaderTest
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void QuickPOCOTest()
         {
             List<object> expected = new List<object>
@@ -181,7 +181,7 @@ namespace ChoManifoldReaderTest
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        ////[Test]
         public static void LoadTest()
         {
             List<object> expected = new List<object>

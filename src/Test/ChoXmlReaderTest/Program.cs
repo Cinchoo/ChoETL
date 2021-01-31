@@ -1007,7 +1007,7 @@ xmlns:nc=""http://niem.gov/niem/niem-core/2.0"" xmlns:mark=""urn:mark:ecf:extens
             ChoXmlSettings.Reset();
         }
 
-        [Test]
+        //[Test]
         public static void Xml2CSV2()
         {
             string expected = @"CentreName,Country,CustomerId,DOB,Email,ExpiryDate
@@ -1034,7 +1034,7 @@ Corporate Office,Egypt,988915,01/03/1986,hesh.a.metwally@gmail.com,7/1/2020 11:3
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Xml2CSV1()
         {
             string expected = @"ARandomRoot-ARandomLOne-Id,ARandomRoot-ARandomLOne-OtherId,ARandomRoot-AnotherRandomLOne-ARandomLTwo-ARandomLTree-NumberOfElements,ARandomRoot-AnotherRandomLOne-ARandomLTwo-ARandomLTree-ARandomLFour-RandomDataOne,ARandomRoot-AnotherRandomLOne-ARandomLTwo-ARandomLTree-ARandomLFour-RandomDataTwo
@@ -1099,7 +1099,7 @@ Corporate Office,Egypt,988915,01/03/1986,hesh.a.metwally@gmail.com,7/1/2020 11:3
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample50Test()
         {
             string expected = @"targetMarketAttributes/targetMarket,targetMarketAttributes/alternateItemIdentificationList/alternateItemIdentification/0/agency,targetMarketAttributes/alternateItemIdentificationList/alternateItemIdentification/0/id,targetMarketAttributes/alternateItemIdentificationList/alternateItemIdentification/1/agency,targetMarketAttributes/alternateItemIdentificationList/alternateItemIdentification/1/id,targetMarketAttributes/shortDescriptionList/shortDescription/lang,targetMarketAttributes/shortDescriptionList/shortDescription/#text,targetMarketAttributes/productDescriptionList/productDescription/lang,targetMarketAttributes/productDescriptionList/productDescription/#text,targetMarketAttributes/additionalDescriptionList/additionalDescription/lang,targetMarketAttributes/additionalDescriptionList/additionalDescription/#text,targetMarketAttributes/isDispatchUnitList/isDispatchUnit,targetMarketAttributes/isInvoiceUnitList/isInvoiceUnit,targetMarketAttributes/isOrderableUnitList/isOrderableUnit,targetMarketAttributes/packagingMarkedReturnable,targetMarketAttributes/minimumTradeItemLifespanFromProductionList/minimumTradeItemLifespanFromProduction,targetMarketAttributes/nonGTINPalletHi,targetMarketAttributes/nonGTINPalletTi,targetMarketAttributes/numberOfItemsPerPallet,targetMarketAttributes/hasBatchNumber,targetMarketAttributes/productMarkedRecyclable,targetMarketAttributes/depth/uom,targetMarketAttributes/depth/#text,targetMarketAttributes/height/uom,targetMarketAttributes/height/#text,targetMarketAttributes/width/uom,targetMarketAttributes/width/#text,targetMarketAttributes/grossWeight/uom,targetMarketAttributes/grossWeight/#text,targetMarketAttributes/netWeight/uom,targetMarketAttributes/netWeight/#text,targetMarketAttributes/totalUnitsPerCase,targetMarketAttributes/preDefinedFlex/alternateClassificationList/alternateClassification/0/code,targetMarketAttributes/preDefinedFlex/alternateClassificationList/alternateClassification/0/scheme,targetMarketAttributes/preDefinedFlex/alternateClassificationList/alternateClassification/1/code,targetMarketAttributes/preDefinedFlex/alternateClassificationList/alternateClassification/1/scheme,targetMarketAttributes/preDefinedFlex/alternateClassificationList/alternateClassification/2/code,targetMarketAttributes/preDefinedFlex/alternateClassificationList/alternateClassification/2/scheme,targetMarketAttributes/preDefinedFlex/alternateClassificationList/alternateClassification/3/code,targetMarketAttributes/preDefinedFlex/alternateClassificationList/alternateClassification/3/scheme,targetMarketAttributes/preDefinedFlex/alternateClassificationList/alternateClassification/4/code,targetMarketAttributes/preDefinedFlex/alternateClassificationList/alternateClassification/4/scheme,targetMarketAttributes/preDefinedFlex/brandOwnerAdditionalTradeItemIdentificationList/brandOwnerAdditionalTradeItemIdentification/brandOwnerAdditionalIdType,targetMarketAttributes/preDefinedFlex/brandOwnerAdditionalTradeItemIdentificationList/brandOwnerAdditionalTradeItemIdentification/brandOwnerAdditionalIdValue,targetMarketAttributes/preDefinedFlex/consumerSalesConditionList/consumerSalesCondition,targetMarketAttributes/preDefinedFlex/countryOfOriginList/countryOfOrigin,targetMarketAttributes/preDefinedFlex/dataCarrierList/dataCarrierTypeCode,targetMarketAttributes/preDefinedFlex/donationIdentificationNumberMarked,targetMarketAttributes/preDefinedFlex/doesTradeItemContainLatex,targetMarketAttributes/preDefinedFlex/exemptFromFDAPreMarketAuthorization,targetMarketAttributes/preDefinedFlex/fDA510KPremarketAuthorization,targetMarketAttributes/preDefinedFlex/fDAMedicalDeviceListingList/fDAMedicalDeviceListing,targetMarketAttributes/preDefinedFlex/gs1TradeItemIdentificationKey/code,targetMarketAttributes/preDefinedFlex/gs1TradeItemIdentificationKey/value,targetMarketAttributes/preDefinedFlex/isTradeItemManagedByManufactureDate,targetMarketAttributes/preDefinedFlex/manufacturerList/manufacturer/gln,targetMarketAttributes/preDefinedFlex/manufacturerDeclaredReusabilityType,targetMarketAttributes/preDefinedFlex/mRICompatibilityCode,targetMarketAttributes/preDefinedFlex/serialNumberLocationCodeList/serialNumberLocationCode,targetMarketAttributes/preDefinedFlex/tradeChannelList/tradeChannel,targetMarketAttributes/preDefinedFlex/tradeItemContactInfoList/tradeItemContactInfo/availableTime/lang,targetMarketAttributes/preDefinedFlex/tradeItemContactInfoList/tradeItemContactInfo/availableTime/#text,targetMarketAttributes/preDefinedFlex/tradeItemContactInfoList/tradeItemContactInfo/contactInfoGLN,targetMarketAttributes/preDefinedFlex/tradeItemContactInfoList/tradeItemContactInfo/contactType,targetMarketAttributes/preDefinedFlex/tradeItemContactInfoList/tradeItemContactInfo/targetMarketCommunicationChannel/communicationChannelList/communicationChannel/communicationChannelCode,targetMarketAttributes/preDefinedFlex/uDIDDeviceCount
@@ -1150,7 +1150,7 @@ US,Example,31321,Example,1,en,Example,en,Example,en,Example,No,No,No,No,1825,0,0
             }
         }
 
-        [Test]
+        //[Test]
         public static void SoapMsgTest()
         {
             List<object> expected = new List<object>
@@ -1184,7 +1184,7 @@ US,Example,31321,Example,1,en,Example,en,Example,en,Example,No,No,No,No,1825,0,0
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void DefaultNSTest1()
         {
             List<object> expected = new List<object>
@@ -1222,7 +1222,7 @@ US,Example,31321,Example,1,en,Example,en,Example,en,Example,No,No,No,No,1825,0,0
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void DefaultNSTest()
         {
             string xml = @"<SyncInvoice xmlns=""http://schema.infor.com/InforOAGIS/2"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xsi:schemaLocation=""SyncInvoice.xsd"" languageCode=""IT"" />";
@@ -1236,7 +1236,7 @@ US,Example,31321,Example,1,en,Example,en,Example,en,Example,No,No,No,No,1825,0,0
             }
         }
 
-        [Test]
+        //[Test]
         public static void TestXml1()
         {
             List<object> expected = new List<object>
@@ -1296,7 +1296,7 @@ US,Example,31321,Example,1,en,Example,en,Example,en,Example,No,No,No,No,1825,0,0
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void XmlToJSON2_1()
         {
             List<object> expected = new List<object>
@@ -1331,7 +1331,7 @@ US,Example,31321,Example,1,en,Example,en,Example,en,Example,No,No,No,No,1825,0,0
 
             CollectionAssert.AreEqual(expected, actual);
         }
-        [Test]
+        //[Test]
         public static void XmlToJSON2_2()
         {
             string expected = @"{
@@ -1361,7 +1361,7 @@ US,Example,31321,Example,1,en,Example,en,Example,en,Example,No,No,No,No,1825,0,0
             actual = sb.ToString();
             Assert.AreEqual(expected, actual);
         }
-        [Test]
+        //[Test]
         public static void XmlToJSON3()
         {
             string expected = @"properties_Guid,properties_ProcessType,properties_Description
@@ -1423,7 +1423,7 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void CSVToXmlTest()
         {
             string expected = @"<Employees>
@@ -1480,7 +1480,7 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void MultipleXmlNS()
         {
             List<object> expected = new List<object>
@@ -1553,7 +1553,7 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void XmlToJSON1_1()
         {
             string expected = @"[
@@ -1616,7 +1616,7 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void XmlToJSON1_2()
         {
             string expected = @"<ContrastDoseReport>
@@ -1710,7 +1710,7 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
             }
         }
 
-        [Test]
+        //[Test]
         public static void ComplexTest1()
         {
             List<object> expected = new List<object>
@@ -1822,7 +1822,7 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
             }
         }
 
-        [Test]
+        //[Test]
         public static void Test71()
         {
             List<object> expected = new List<object>
@@ -1888,7 +1888,7 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
             }
         }
 
-        [Test]
+        //[Test]
         public static void TestPlanTest()
         {
             List<object> expected = new List<object>
@@ -1908,7 +1908,7 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void XmlToJSONKVP()
         {
             string expected = @"<List`1s>
@@ -1968,7 +1968,7 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
             Assert.Warn("I am not sure, if this is the original XmlToJSONKVP test.");
         }
 
-        [Test]
+        //[Test]
         public static void Sample49Test()
         {
             string expected = @"[
@@ -2010,7 +2010,7 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample48Test()
         {
             DataTable expected = new DataTable();
@@ -2041,7 +2041,7 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
             DataTableAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void XmlNSTest()
         {
             List<object> expected = new List<object>
@@ -2077,7 +2077,7 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void XmlToJSONNumberTest()
         {
             string xml = @"<Report xmlns:json=""http://james.newtonking.com/projects/json"">
@@ -2093,7 +2093,7 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
             Assert.Warn("Console.WriteLine(ChoJSONWriter.ToTextAll(x)); works");
         }
 
-        [Test]
+        //[Test]
         public static void Sample22Test()
         {
             DataTable expected = new DataTable();
@@ -2150,7 +2150,7 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
             DataTableAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample21Test()
         {
             DataTable expected = new DataTable();
@@ -2232,7 +2232,7 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
             }
         }
 
-        [Test]
+        //[Test]
         public static void Sample20()
         {
             List<object> expected = new List<object>
@@ -2253,7 +2253,7 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void NSTest()
         {
             string xml = @"<ns3:Test_Service xmlns:ns3=""http://www.CCKS.org/XRT/Form"">
@@ -2314,7 +2314,7 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
             Assert.Fail("Not sure, how to test");
         }
 
-        [Test]
+        //[Test]
         public static void CDATATest()
         {
             string expected = @"[
@@ -2344,7 +2344,7 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample46()
         {
             string expected = @"overallResult,test
@@ -2431,7 +2431,7 @@ Passed,ChoETL.ChoDynamicObject";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample45()
         {
             string expected = @"ObjectName,PrincipalType,DisplayName,RoleDefBindings
@@ -2517,7 +2517,7 @@ Documents2,Group,,";
             }
         }
 
-        [Test]
+        //[Test]
         public static void Sample44()
         {
             string expected = @"{
@@ -2620,7 +2620,7 @@ Documents2,Group,,";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample43()
         {
             string expected = @"[
@@ -2677,7 +2677,7 @@ Documents2,Group,,";
             Console.WriteLine(sb.ToString());
         }
 
-        [Test]
+        //[Test]
         public static void Sample42()
         {
             string expected = @"[
@@ -2726,7 +2726,7 @@ Documents2,Group,,";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample41()
         {
             string expected = @"{
@@ -2763,7 +2763,7 @@ Documents2,Group,,";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample40()
         {
             string expected = @"[
@@ -2814,7 +2814,7 @@ Documents2,Group,,";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample39()
         {
             string expected = @"forecast_conditions_day_of_week data,forecast_conditions_low data,forecast_conditions_high data,forecast_conditions_icon data,forecast_conditions_condition data
@@ -2861,7 +2861,7 @@ Mon,32,45,/ig/images/weather/sunny.gif,Clear";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample38()
         {
             string expected = @"results_field,results_something,results_name
@@ -2909,7 +2909,7 @@ Mon,32,45,/ig/images/weather/sunny.gif,Clear";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample37()
         {
             string expected = @"[
@@ -2954,7 +2954,7 @@ Mon,32,45,/ig/images/weather/sunny.gif,Clear";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample36()
         {
             string expected = @"<DataRows>
@@ -2995,7 +2995,7 @@ Mon,32,45,/ig/images/weather/sunny.gif,Clear";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample35()
         {
             string expected = @"A_TempFZ1_Set,A_TempHZ2_Set,A_TempHZ3_Set
@@ -3026,7 +3026,7 @@ Mon,32,45,/ig/images/weather/sunny.gif,Clear";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample34()
         {
             string expected = @"{
@@ -3060,7 +3060,7 @@ Mon,32,45,/ig/images/weather/sunny.gif,Clear";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample33()
         {
             List<object> expected = new List<object>
@@ -3110,7 +3110,7 @@ Mon,32,45,/ig/images/weather/sunny.gif,Clear";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample32()
         {
             List<object> expected = new List<object>
@@ -3149,7 +3149,7 @@ Mon,32,45,/ig/images/weather/sunny.gif,Clear";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample31()
         {
             List<object> expected = new List<object>
@@ -3175,7 +3175,7 @@ Mon,32,45,/ig/images/weather/sunny.gif,Clear";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample30()
         {
             StringBuilder msg = new StringBuilder();
@@ -3210,7 +3210,7 @@ Mon,32,45,/ig/images/weather/sunny.gif,Clear";
             FileAssert.AreEqual(FileNameSample30ExpectedJSON, FileNameSample30ActualJSON);
         }
 
-        [Test]
+        //[Test]
         public static void JSONArrayTest()
         {
             string expected = @"""ApplicationCrediential"": {
@@ -3262,7 +3262,7 @@ Mon,32,45,/ig/images/weather/sunny.gif,Clear";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample22()
         {
             List<object> expected = new List<object>
@@ -3303,7 +3303,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample20Test()
         {
             string expected = @"""GetItemRequest"": {
@@ -3335,7 +3335,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample21()
         {
             
@@ -3401,7 +3401,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample19()
         {
             List<object> expected = new List<object>
@@ -3431,7 +3431,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample18()
         {
             using (var p = new ChoXmlReader(FileNameSample18XML)
@@ -3483,7 +3483,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
             public int ID { get; set; }
         }
 
-        [Test]
+        //[Test]
         public static void NoEncodeTest()
         {
             List<object> expected = new List<object>
@@ -3506,7 +3506,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
         }
 
 
-        [Test]
+        //[Test]
         public static void Sample17()
         {
             List<object> expected = new List<object>
@@ -3589,7 +3589,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
         public static string FileNamePivot1XML => "Pivot1.xml";
 
 
-        [Test]
+        //[Test]
         public static void HTMLTableToCSV()
         {
             using (var cr = new ChoCSVWriter(FileNameHTMLTableToCSVActualCSV).WithFirstLineHeader())
@@ -3612,7 +3612,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
             FileAssert.AreEqual(FileNameHTMLTableToCSVExpectedCSV, FileNameHTMLTableToCSVActualCSV);
         }
 
-        [Test]
+        //[Test]
         public static void BulkLoad1()
         {
             Assert.Fail(@"Database file C:\USERS\NRAJ39\DOWNLOADS\ADVENTUREWORKS2012_DATA.MDF not attached.");
@@ -3659,7 +3659,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
 
         }
 
-        [Test]
+        //[Test]
         public static void Sample16()
         {
             List<object> expected = new List<object>
@@ -3680,7 +3680,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample12()
         {
             List<object> expected = new List<object>
@@ -3703,7 +3703,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void DynamicXmlTest()
         {
             string expected = @"<Item1 Id=""100"" Name=""Raj"">
@@ -3744,7 +3744,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample15()
         {
             List<object> expected = new List<object>
@@ -3766,7 +3766,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample14()
         {
             using (var w = new ChoXmlWriter(FileNameSample14ActualXML))
@@ -3792,7 +3792,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
             Assert.Fail("Missing Book with id 101, but source-xml is a valid xml");
         }
 
-        [Test]
+        //[Test]
         public static void NullableTest()
         {
             object expected = new Item { Number = 100, ItemName = "TestName1", ItemId = 1 };
@@ -3808,7 +3808,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Pivot1()
         {
             string expected = @"Column1,Column2,Column3
@@ -3830,7 +3830,7 @@ A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
             // I am not sure, if that is correct;
         }
 
-        [Test]
+        //[Test]
         public static void Sample6()
         {
             List<object> expected = new List<object>
@@ -3916,7 +3916,7 @@ A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void XmlNullTest()
         {
             using (var parser = new ChoXmlReader(FileNameSample13XML)
@@ -3942,7 +3942,7 @@ A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
             </Employees>
         ";
 
-        [Test]
+        //[Test]
         public static void XmlToCSVSample7()
         {
             using (var parser = new ChoXmlReader(FileNameSample7XML).WithXPath("/UpdateDB/Transaction")
@@ -3959,7 +3959,7 @@ A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
             FileAssert.AreEqual(FileNameXmlToCSVSample7ExpectedCSV, FileNameXmlToCSVSample7ActualCSV);
         }
 
-        [Test]
+        //[Test]
         public static void XmlToCSVSample6()
         {
             using (var parser = new ChoXmlReader(FileNameSample6XML).WithXPath("JobApplications")
@@ -3984,7 +3984,7 @@ A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
         }
 
 
-        [Test]
+        //[Test]
         public static void XmlToCSVSample5()
         {
             using (var parser = new ChoXmlReader(FileNameSample5XML).WithXPath("/PRICE")
@@ -3997,7 +3997,7 @@ A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
             FileAssert.AreEqual(FileNameXmlToCSVSample5ExpectedCSV, FileNameXmlToCSVSample5ActualCSV);
         }
 
-        [Test]
+        //[Test]
         public static void Sample8Test()
         {
             using (var parser = new ChoXmlReader(FileNameSample8XML).WithXPath("/root/data")
@@ -4014,7 +4014,7 @@ A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
             FileAssert.AreEqual(FileNameSample8ExpectedJSON, FileNameSample8ActualJSON);
         }
 
-        [Test]
+        //[Test]
         public static void Sample9Test()
         {
             string expected = @"[
@@ -4066,7 +4066,7 @@ A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
 
             Assert.AreEqual(expected, actual);
         }
-        [Test]
+        //[Test]
         public static void Sample10Test()
         {
             List<object> expected = new List<object>
@@ -4104,7 +4104,7 @@ A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample11Test()
         {
             List<object> expected = new List<object>
@@ -4201,7 +4201,7 @@ A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
             public List<VariableData> VariableData { get; set; }
         }
 
-        [Test]
+        //[Test]
         public static void JSONToXmlSample4()
         {
             using (var parser = new ChoJSONReader<ProductionOrderFile>(FileNameJSONToXmlSample4JSON).Configure(c => c.UseJSONSerialization = true)
@@ -4214,7 +4214,7 @@ A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
             FileAssert.AreEqual(FileNameJSONToXmlSample4ExpectedXML, FileNameJSONToXmlSample4ActualXML);
         }
 
-        [Test]
+        //[Test]
         public static void XmlToJSONSample4()
         {
             using (var parser = new ChoXmlReader<ProductionOrderFile>(FileNameSample4XML).WithXPath("/").Configure(c => c.UseXmlSerialization = true)
@@ -4251,7 +4251,7 @@ A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
             //}
         }
 
-        [Test]
+        //[Test]
         public static void XmlToCSVSample3()
         {
             using (var parser = ChoXmlReader.LoadXElements(XDocument.Load(FileNameSample3XML).XPathSelectElements("//member[name='table']/value/array/data/value"))
@@ -4271,7 +4271,7 @@ A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
             FileAssert.AreEqual(FileNameXmlToCSVSample3ExpectedCSV, FileNameXmlToCSVSample3ActualCSV);
         }
 
-        [Test]
+        //[Test]
         public static void XmlToCSVSample2()
         {
             using (var parser = new ChoXmlReader(FileNameSample2XML)
@@ -4309,7 +4309,7 @@ A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
             FileAssert.AreEqual(FileNameXmlToCSVSample2ExpectedCSV, FileNameXmlToCSVSample2ActualCSV);
         }
 
-        [Test]
+        //[Test]
         public static void XmlToCSVSample()
         {
             using (var parser = new ChoXmlReader(FileNameSampleXML).WithXPath("Attributes/Attribute")
@@ -4328,7 +4328,7 @@ A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
 
         }
 
-        [Test]
+        //[Test]
         public static void ToDataTable()
         {
             DataTable expected = new DataTable();
@@ -4356,7 +4356,7 @@ A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
             DataTableAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void LoadTest()
         {
             Assert.Fail(@"File C:\temp\EPAXMLDownload1.xml not found.");
@@ -4375,7 +4375,7 @@ A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
             Console.ReadLine();
         }
 
-        [Test]
+        //[Test]
         public static void LoadTextTest()
         {
             List<object> expected = new List<object>
@@ -4393,7 +4393,7 @@ A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void POCOTest()
         {
             List<object> expected = new List<object>
@@ -4422,7 +4422,7 @@ A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void ConfigFirstDynamicTest()
         {
             List<object> expected = new List<object>
@@ -4456,7 +4456,7 @@ A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void QuickTest()
         {
             List<object> expected = new List<object>
@@ -4485,7 +4485,7 @@ A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void CodeFirstTest()
         {
             List<object> expected = new List<object>
@@ -4515,7 +4515,7 @@ A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void QuickTestWithXmlNS()
         {
             List<object> expected = new List<object>

@@ -295,6 +295,12 @@ namespace ChoETL
             }
         }
 
+        internal static bool IsSimpleXmlPath(string xmlPath)
+        {
+            string[] tokens = null;
+            return IsSimpleXmlPath(xmlPath, out tokens);
+        }
+
         private static bool IsSimpleXmlPath(string xmlPath, out string[] tokens)
         {
             tokens = null;

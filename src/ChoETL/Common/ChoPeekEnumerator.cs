@@ -20,7 +20,14 @@ namespace ChoETL
 
         public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
 
-        public ChoPeekEnumerator(IEnumerable<T> enumerable, Func<T, bool?> filterFunc = null)
+        public ChoPeekEnumerator(IEnumerable<T> enumerable)
+        {
+            ChoGuard.ArgumentNotNull(enumerable, "enumerable");
+            _enumerable = enumerable;
+            Reset();
+        }
+
+        public ChoPeekEnumerator(IEnumerable<T> enumerable, Func<T, bool?> filterFunc)
         {
             ChoGuard.ArgumentNotNull(enumerable, "enumerable");
             _enumerable = enumerable;
@@ -30,7 +37,8 @@ namespace ChoETL
 
             Reset();
         }
-        public ChoPeekEnumerator(IEnumerable<T> enumerable, Func<T, Tuple<bool?, T>> filterFuncEx = null)
+
+        public ChoPeekEnumerator(IEnumerable<T> enumerable, Func<T, Tuple<bool?, T>> filterFuncEx)
         {
             ChoGuard.ArgumentNotNull(enumerable, "enumerable");
             _enumerable = enumerable;

@@ -35,6 +35,7 @@ namespace ChoETL
         private Lazy<List<object>> _recBuffer = null;
         private Lazy<bool> BeginWrite = null;
         private object _sw = null;
+        private int _indent = 0;
 
         public ChoXmlRecordConfiguration Configuration
         {
@@ -89,7 +90,16 @@ namespace ChoETL
                 {
                     if (!Configuration.RootName.IsNullOrWhiteSpace() && !Configuration.IgnoreRootName)
                     {
-                        sw.Write("{1}{0}".FormatString(XmlNamespaceEndElementText(Configuration.XmlNamespaceManager.Value, Configuration.RootName, Configuration.DefaultNamespacePrefix, Configuration.NS), EOLDelimiter));
+                        sw.Write("{1}{0}".FormatString(Indent(XmlNamespaceEndElementText(Configuration.XmlNamespaceManager.Value,
+                            Configuration.RootName, Configuration.DefaultNamespacePrefix, Configuration.NS), _indent--), EOLDelimiter));
+
+                        if (!Configuration.DocumentElements.IsNullOrEmpty())
+                        {
+                            foreach (var e in Configuration.DocumentElements.Reverse())
+                            {
+                                sw.Write(Indent("{0}<{1}>".FormatString(EOLDelimiter, e), _indent--));
+                            }
+                        }
                     }
                 }
             }
@@ -111,10 +121,24 @@ namespace ChoETL
             _recBuffer.Value.Clear();
 
             foreach (var rec in arr)
-                yield return rec;
+                yield return Marshall(rec);
 
             while (records.MoveNext())
-                yield return records.Current;
+                yield return Marshall(records.Current);
+        }
+
+        Type marshallType = null;
+        private object Marshall(object rec)
+        {
+            if (rec == null)
+                return rec;
+
+            if (rec.GetType().IsGenericType && rec.GetType().GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+            {
+                return Activator.CreateInstance(typeof(ChoKeyValuePair<,>).MakeGenericType(rec.GetType().GetGenericArguments()), rec);
+            }
+            else
+                return rec;
         }
 
         private object GetFirstNotNullRecord(IEnumerator<object> recEnum)
@@ -134,6 +158,7 @@ namespace ChoETL
             return null;
         }
 
+        bool _firstElement = true;
         public override IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null)
         {
             _sw = writer;
@@ -216,10 +241,35 @@ namespace ChoETL
                                 if (!BeginWrite.Value)
                                     yield break;
 
+                                bool first = true;
                                 if (!Configuration.RootName.IsNullOrWhiteSpace() && !Configuration.IgnoreRootName)
                                 {
-                                    sw.Write("{0}".FormatString(XmlNamespaceStartElementText(Configuration.XmlNamespaceManager.Value,
-                                        Configuration.RootName, Configuration.DefaultNamespacePrefix, Configuration.NS)));
+                                    if (!Configuration.DocumentElements.IsNullOrEmpty())
+                                    {
+                                        foreach (var e in Configuration.DocumentElements)
+                                        {
+                                            if (first)
+                                            {
+                                                first = false;
+                                                sw.Write("{0}".FormatString(XmlNamespaceStartElementText(Configuration.XmlNamespaceManager.Value,
+                                                    e, Configuration.DefaultNamespacePrefix, Configuration.NS)));
+                                            }
+                                            else
+                                            {
+                                                sw.Write(Indent("{0}<{1}>".FormatString(EOLDelimiter, e), ++_indent));
+                                            }
+                                        }
+                                    }
+
+                                    if (first)
+                                    {
+                                        sw.Write("{0}".FormatString(XmlNamespaceStartElementText(Configuration.XmlNamespaceManager.Value,
+                                            Configuration.RootName, Configuration.DefaultNamespacePrefix, Configuration.NS)));
+                                    }
+                                    else
+                                    {
+                                        sw.Write(Indent("{0}<{1}>".FormatString(EOLDelimiter, Configuration.RootName), ++_indent));
+                                    }
                                 }
                             }
                         }
@@ -249,9 +299,20 @@ namespace ChoETL
 
                         if (recText == null)
                             continue;
+                        else if (recText.Length > 0)
+                        {
+                            sw.Write(recText);
+                            continue;
+                        }
 
                         try
                         {
+                            string eolDelimiter = null;
+                            if (_firstElement)
+                                _firstElement = false;
+                            else
+                                eolDelimiter = EOLDelimiter;
+
                             if (!Configuration.UseXmlSerialization)
                             {
                                 if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
@@ -261,13 +322,13 @@ namespace ChoETL
                                 {
                                     if (!recText.IsNullOrEmpty())
                                     {
-                                        if (!Configuration.IgnoreRootName)
+                                        if (Configuration.IgnoreRootName)
                                         {
-                                            sw.Write("{1}{0}", recText, EOLDelimiter);
+                                            sw.Write("{1}{0}", recText, eolDelimiter);
                                         }
                                         else
                                         {
-                                            sw.Write(recText);
+                                            sw.Write("{1}{0}", Indent(recText, _indent + 1), EOLDelimiter);
                                         }
                                     }
 
@@ -277,11 +338,14 @@ namespace ChoETL
                             }
                             else
                             {
+                                eolDelimiter = EOLDelimiter;
+
                                 if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.Off) != ChoObjectValidationMode.Off)
                                     record.DoObjectLevelValidation(Configuration, Configuration.XmlRecordFieldConfigurations);
 
                                 if (record != null)
                                 {
+                                    string innerXml1 = null;
                                     if (_se.Value != null)
                                     {
                                         XmlWriterSettings settings = new XmlWriterSettings();
@@ -294,12 +358,36 @@ namespace ChoETL
                                         {
                                             _se.Value.Serialize(xw, record);
                                         }
-
-                                        sw.Write(EOLDelimiter);
-                                        sw.Write(Indent(xml.ToString().RemoveXmlNamespaces()));
+                                        innerXml1 = xml.ToString();
                                     }
                                     else
-                                        sw.Write("{1}{0}", Indent(ChoUtility.XmlSerialize(record, null, EOLDelimiter, Configuration.NullValueHandling).RemoveXmlNamespaces()), EOLDelimiter);
+                                    {
+                                        innerXml1 = ChoUtility.XmlSerialize(record, null, eolDelimiter, Configuration.NullValueHandling).RemoveXmlNamespaces();
+                                    }
+
+                                    if (!Configuration.IgnoreNodeName && !Configuration.NodeName.IsNullOrWhiteSpace())
+                                    {
+                                        if (_beginNSTagRegex.Match(innerXml1).Success)
+                                        {
+                                            innerXml1 = _beginNSTagRegex.Replace(innerXml1, delegate (Match m)
+                                            {
+                                                return "<" + Configuration.NodeName + m.Groups[2].Value;
+                                            });
+                                        }
+                                        else
+                                        {
+                                            innerXml1 = _beginTagRegex.Replace(innerXml1, delegate (Match m)
+                                            {
+                                                return "<" + Configuration.NodeName + m.Groups[2].Value;
+                                            });
+                                        }
+                                        innerXml1 = _endTagRegex.Replace(innerXml1, delegate (Match m)
+                                        {
+                                            return m.Groups[1].Value + "</{0}>".FormatString(Configuration.NodeName);
+                                        });
+                                    }
+                                    sw.Write(eolDelimiter);
+                                    sw.Write(Indent(innerXml1, _indent + 1));
 
                                     if (!RaiseAfterRecordWrite(record, _index, null))
                                         yield break;
@@ -349,20 +437,20 @@ namespace ChoETL
             }
         }
 
-        private string Indent(string value, int indentValue = 2)
+        private string Indent(string value, int indentValue = 1)
         {
             if (value == null)
                 return value;
 
-            return Configuration.Formatting == Formatting.Indented ? value.Indent(indentValue, Configuration.IndentChar.ToString()) : value;
+            return Configuration.Formatting == Formatting.Indented ? value.Indent(Configuration.Indent * indentValue, Configuration.IndentChar.ToString()) : value;
         }
 
-        private string Unindent(string value, int indentValue = 2)
+        private string Unindent(string value, int indentValue = 1)
         {
             if (value == null)
                 return value;
 
-            return Configuration.Formatting == Formatting.Indented ? value.Unindent(indentValue, Configuration.IndentChar.ToString()) : value;
+            return Configuration.Formatting == Formatting.Indented ? value.Unindent(Configuration.Indent * indentValue, Configuration.IndentChar.ToString()) : value;
         }
 
         private string EOLDelimiter
@@ -433,13 +521,13 @@ namespace ChoETL
                     rec = ChoActivator.CreateInstance(config.RecordType);
                 else if (config.NullValueHandling == ChoNullValueHandling.Empty)
                 {
-                    recText = Indent(@"<{0}/>".FormatString(XmlNamespaceElementName(GetNodeName(index, rec), Configuration.DefaultNamespacePrefix)), config.Indent * 1);
+                    recText = Indent(@"<{0}/>".FormatString(XmlNamespaceElementName(GetNodeName(index, rec), Configuration.DefaultNamespacePrefix)), _indent + 1);
                     return true;
                 }
                 else
                 {
                     recText = Indent(@"<{0} xmlns:xsi=""{1}"" xsi:nil=""true"" />".FormatString(XmlNamespaceElementName(GetNodeName(index, rec), Configuration.DefaultNamespacePrefix), ChoXmlSettings.XmlSchemaInstanceNamespace
-                                ), config.Indent * 1);
+                                ), _indent + 1);
                     return true;
                 }
             }
@@ -627,14 +715,14 @@ namespace ChoETL
                 if (fieldConfig.CustomSerializer != null)
                 {
                     recText = fieldConfig.CustomSerializer(fieldValue) as string;
-                    recText = Indent(recText);
+                    //recText = Indent(recText);
                     return true;
                 }
 
                 if (RaiseRecordFieldSerialize(rec, index, kvp.Key, ref fieldValue) && fieldValue is string)
                 {
                     recText = fieldValue as string;
-                    recText = Indent(recText);
+                    //recText = Indent(recText);
                     return true;
                 }
 
@@ -873,7 +961,8 @@ namespace ChoETL
                 if (!config.TurnOffXmlFormatting)
                     innerXml1 = FormatXml(innerXml1);
             }
-            recText = config.IgnoreRootName ? innerXml1 : Indent(innerXml1, config.Indent);
+            //recText = config.IgnoreRootName ? innerXml1 : Indent(innerXml1, config.Indent);
+            recText = innerXml1;
 
             //Remove namespaces
             recText = recText.RemoveXmlNamespaces(); // Regex.Replace(recText, @"\sxmlns[^""]+""[^""]+""", String.Empty);
@@ -1082,7 +1171,7 @@ namespace ChoETL
                 try
                 {
                     return XElement.Parse($"<root>{xml}</root>").ToString(SaveOptions.OmitDuplicateNamespaces)
-                        .Replace($"<root>{Environment.NewLine}", null).Replace($"{Environment.NewLine}</root>", null)
+                        .Replace($"<root>{EOLDelimiter}", null).Replace($"{EOLDelimiter}</root>", null)
                         .Replace($"<root>", null).Replace($"</root>", null)
                         .Unindent(2, " ");
                 }
@@ -1104,112 +1193,112 @@ namespace ChoETL
             // Display the result.
             return sw.ToString();
         }
-        private string SerializeObject(string propName, object value, Attribute[] attrs)
-        {
-            ChoXmlRecordConfiguration config = null;
+        //private string SerializeObject(string propName, object value, Attribute[] attrs)
+        //{
+        //    ChoXmlRecordConfiguration config = null;
 
-            string recText = null;
-            if (value is IList)
-            {
-                Type itemType = value.GetType().GetItemType().GetUnderlyingType();
-                if (!itemType.IsSimple())
-                {
-                    config = new ChoXmlRecordConfiguration(value.GetType().GetItemType().GetUnderlyingType());
-                    config.Validate(null);
-                }
-                else
-                    config = Configuration;
+        //    string recText = null;
+        //    if (value is IList)
+        //    {
+        //        Type itemType = value.GetType().GetItemType().GetUnderlyingType();
+        //        if (!itemType.IsSimple())
+        //        {
+        //            config = new ChoXmlRecordConfiguration(value.GetType().GetItemType().GetUnderlyingType());
+        //            config.Validate(null);
+        //        }
+        //        else
+        //            config = Configuration;
 
-                string arrElementName = propName;
-                string itemName = propName.ToSingular();
+        //        string arrElementName = propName;
+        //        string itemName = propName.ToSingular();
 
-                StringBuilder msg = new StringBuilder();
+        //        StringBuilder msg = new StringBuilder();
 
-                msg.AppendFormat("<{0}>{1}", arrElementName, config.EOLDelimiter);
-                foreach (var item in (IList)value)
-                {
-                    if (itemType.IsSimple())
-                    {
-                        recText = Indent("<{0}>{1}</{0}>{2}".FormatString(itemName, item.ToString(), config.EOLDelimiter), config.Indent);
-                    }
-                    else
-                        ToText(0, item, config, out recText);
+        //        msg.AppendFormat("<{0}>", arrElementName);
+        //        foreach (var item in (IList)value)
+        //        {
+        //            if (itemType.IsSimple())
+        //            {
+        //                recText = "{2}<{0}>{1}</{0}>".FormatString(itemName, item.ToString(), config.EOLDelimiter);
+        //            }
+        //            else
+        //                ToText(0, item, config, out recText);
 
-                    msg.Append(recText + config.EOLDelimiter);
-                }
-                msg.AppendFormat("</{0}>{1}", arrElementName, config.EOLDelimiter);
+        //            msg.Append(Indent(recText));
+        //        }
+        //        msg.AppendFormat("{1}</{0}>", arrElementName, config.EOLDelimiter);
 
-                recText = msg.ToString();
-            }
-            else if (value is IDictionary)
-            {
-                Type[] arguments = value.GetType().GetGenericArguments();
-                Type keyType = arguments[0].GetUnderlyingType();
-                Type valueType = arguments[1].GetUnderlyingType();
-                ChoXmlRecordConfiguration keyConfig = Configuration;
-                ChoXmlRecordConfiguration valueConfig = Configuration;
-                if (!keyType.IsSimple())
-                {
-                    config = new ChoXmlRecordConfiguration(keyType);
-                    config.Validate(null);
-                }
-                if (!valueType.IsSimple())
-                {
-                    config = new ChoXmlRecordConfiguration(valueType);
-                    config.Validate(null);
-                }
+        //        recText = msg.ToString();
+        //    }
+        //    else if (value is IDictionary)
+        //    {
+        //        Type[] arguments = value.GetType().GetGenericArguments();
+        //        Type keyType = arguments[0].GetUnderlyingType();
+        //        Type valueType = arguments[1].GetUnderlyingType();
+        //        ChoXmlRecordConfiguration keyConfig = Configuration;
+        //        ChoXmlRecordConfiguration valueConfig = Configuration;
+        //        if (!keyType.IsSimple())
+        //        {
+        //            config = new ChoXmlRecordConfiguration(keyType);
+        //            config.Validate(null);
+        //        }
+        //        if (!valueType.IsSimple())
+        //        {
+        //            config = new ChoXmlRecordConfiguration(valueType);
+        //            config.Validate(null);
+        //        }
 
-                string arrElementName = propName;
-                string itemName = propName.ToSingular();
-                string keyElementName = "Key";
-                string valueElementName = "Value";
+        //        string arrElementName = propName;
+        //        string itemName = propName.ToSingular();
+        //        string keyElementName = "Key";
+        //        string valueElementName = "Value";
 
-                StringBuilder msg = new StringBuilder();
+        //        StringBuilder msg = new StringBuilder();
 
-                msg.AppendFormat("<{0}>{1}", arrElementName, config.EOLDelimiter);
-                foreach (var key in ((IDictionary)value).Keys)
-                {
-                    if (keyType.IsSimple())
-                    {
-                        recText = Indent("<{0}>{1}</{0}>{2}".FormatString(keyElementName, key.ToString(), config.EOLDelimiter), config.Indent);
-                    }
-                    else
-                    {
-                        ToText(0, key, config, out recText);
-                        recText = Indent("<{1}>{0}{2}{0}</{1}>".FormatString(config.EOLDelimiter, keyElementName, recText), config.Indent);
-                    }
+        //        msg.AppendFormat("<{0}>", arrElementName);
+        //        foreach (var key in ((IDictionary)value).Keys)
+        //        {
+        //            if (keyType.IsSimple())
+        //            {
+        //                recText = "{2}<{0}>{1}</{0}>".FormatString(keyElementName, key.ToString(), config.EOLDelimiter);
+        //            }
+        //            else
+        //            {
+        //                ToText(0, key, config, out recText);
+        //                recText = "{0}<{1}>{0}{2}{0}</{1}>".FormatString(config.EOLDelimiter, keyElementName, recText.Indent());
+        //            }
 
-                    msg.Append(recText + config.EOLDelimiter);
+        //            msg.Append(Indent(recText));
 
-                    object dictValue = ((IDictionary)value)[key];
-                    if (valueType.IsSimple())
-                    {
-                        recText = Indent("<{0}>{1}</{0}>{2}".FormatString(valueElementName, dictValue.ToString(), config.EOLDelimiter), config.Indent);
-                    }
-                    else
-                    {
-                        ToText(0, dictValue, config, out recText);
-                        recText = Indent("<{1}>{0}{2}{0}</{1}>".FormatString(config.EOLDelimiter, valueElementName, recText), config.Indent);
-                    }
-                    msg.Append(recText + config.EOLDelimiter);
-                }
-                msg.AppendFormat("</{0}>{1}", arrElementName, config.EOLDelimiter);
+        //            object dictValue = ((IDictionary)value)[key];
+        //            if (valueType.IsSimple())
+        //            {
+        //                recText = "<{0}>{1}</{0}>{2}".FormatString(valueElementName, dictValue.ToString(), config.EOLDelimiter);
+        //            }
+        //            else
+        //            {
+        //                ToText(0, dictValue, config, out recText);
+        //                recText = Indent("<{1}>{0}{2}{0}</{1}>".FormatString(config.EOLDelimiter, valueElementName, recText), config.Indent);
+        //            }
+        //            msg.Append(recText);
+        //        }
+        //        msg.AppendFormat("{1}</{0}>", arrElementName, config.EOLDelimiter);
 
-                recText = msg.ToString();
+        //        recText = msg.ToString();
 
-            }
-            else
-            {
-                config = new ChoXmlRecordConfiguration(value.GetType().GetUnderlyingType());
-                config.Validate(null);
+        //    }
+        //    else
+        //    {
+        //        config = new ChoXmlRecordConfiguration(value.GetType().GetUnderlyingType());
+        //        config.Validate(null);
 
-                ToText(0, value, config, out recText);
-            }
-            if (config != null)
-                return Unindent(recText, config.Indent);
-            else
-                return recText;
-        }
+        //        ToText(0, value, config, out recText);
+        //    }
+        //    if (config != null)
+        //        return Unindent(recText, config.Indent);
+        //    else
+        //        return recText;
+        //}
 
         private ChoFieldValueJustification GetFieldValueJustification(ChoFieldValueJustification? fieldValueJustification, Type fieldType)
         {

@@ -136,6 +136,11 @@ namespace ChoETL
                 StringComparer = StringComparer.Create(Culture == null ? CultureInfo.CurrentCulture : Culture, IgnoreCase);
             }
         }
+        internal string[] DocumentElements
+        {
+            get;
+            set;
+        }
         [DataMember]
         public string RootName
         {
@@ -488,8 +493,20 @@ namespace ChoETL
             }
             else
             {
-                RootName = RootName.IsNullOrWhiteSpace() ? XPath.SplitNTrim("/").Where(t => !t.IsNullOrWhiteSpace() && t.NTrim() != "." && t.NTrim() != ".." && t.NTrim() != "*").FirstOrDefault() : RootName;
-                NodeName = NodeName.IsNullOrWhiteSpace() ? XPath.SplitNTrim("/").Where(t => !t.IsNullOrWhiteSpace() && t.NTrim() != "." && t.NTrim() != ".." && t.NTrim() != "*").Skip(1).FirstOrDefault() : NodeName;
+                if (ChoXmlNodeEx.IsSimpleXmlPath(XPath))
+                {
+                    var t1 = XPath.SplitNTrim("/").Where(t => !t.IsNullOrWhiteSpace() && t.NTrim() != "." && t.NTrim() != ".." && t.NTrim() != "*").ToArray();
+                    if (RootName.IsNullOrWhiteSpace())
+                    {
+                        if (t1.Length >= 2)
+                            RootName = t1.Skip(t1.Length - 2).FirstOrDefault();
+                    }
+                    NodeName = NodeName.IsNullOrWhiteSpace() ? t1.LastOrDefault() : NodeName;
+                    if (t1.Length > 2)
+                    {
+                        DocumentElements = t1.Reverse().Skip(2).Reverse().ToArray();
+                    }
+                }
             }
 
             string rootName = null;

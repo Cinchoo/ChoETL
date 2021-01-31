@@ -33,7 +33,7 @@ namespace ChoXmlToCSVSample
         public static string FileNameTest2ActualCSV => "Test2Actual.csv";
         public static string FileNameTest2ExpectedCSV => "Test2Expected.csv";
         public static string FileNameSample2XML => "sample2.xml";
-        [Test]
+        //[Test]
         public static void Sample2()
         {
             List<object> expected = new List<object>
@@ -100,7 +100,7 @@ namespace ChoXmlToCSVSample
                 CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Test2()
         {
             using (var csvWriter = new ChoCSVWriter(FileNameTest2ActualCSV).WithFirstLineHeader())
@@ -112,7 +112,7 @@ namespace ChoXmlToCSVSample
             FileAssert.AreEqual(FileNameTest2ExpectedCSV, FileNameTest2ActualCSV);
         }
 
-        [Test]
+        //[Test]
         public static void Test1()
         {
             string _xml = @"

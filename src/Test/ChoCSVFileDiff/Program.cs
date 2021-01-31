@@ -30,7 +30,7 @@ namespace ChoCSVFileDiff
             ChoXmlSettings.Reset();
         }
 
-        [Test]
+        //[Test]
         public static void TestPlanetDiff()
         { 
             var input1 = new ChoCSVReader(FileNamePlanets1CSV).WithFirstLineHeader();

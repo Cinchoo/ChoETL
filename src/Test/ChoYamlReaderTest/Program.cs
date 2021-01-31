@@ -658,11 +658,49 @@ cities:
                     Console.WriteLine(rec.Dump());
             }
         }
+
+        class OwnerData
+        {
+            public PossessionData[] Possessions { get; set; }
+        }
+
+        class PossessionData
+        {
+            public string Type { get; set; }
+            public IDictionary<string, object> Description { get; set; }
+        }
+
+        static void ReadDynamicData()
+        {
+            string yaml = @"
+possessions:
+- type: car
+  description:
+    color: blue
+    doors: 4
+- type: computer
+  description:
+    disk: 1 TB
+    memory: 16 MB
+";
+            using (var parser = ChoYamlReader<OwnerData>.LoadText(yaml))
+            {
+                foreach (var e in parser)
+                {
+                    string carColor = (string)e.Possessions[0].Description["color"];   // blue
+                    foreach (var p in e.Possessions)
+                    {
+                        Console.WriteLine(p.Description.Dump());
+                    }
+                }
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            SelectiveNodeTestX();
+            ReadDynamicData();
         }
     }
 }

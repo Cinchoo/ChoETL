@@ -1,38 +1,21 @@
 ﻿{
-  "sourceFolder": "/home",
-  "destinationFolder": "/home/billy/my-test-case",
-  "scenarios": [
+  "email": "email@email.com",
+  "financial_status": "paid",
+  "name": "#CCC94440",
+  "line_items": [
     {
-      "name": "first-scenario",
-      "alterations": [
-        {
-          "tableExtension": "ln",
-          "alterations": [
-            {
-              "type": "copy-line",
-              "sourceLineIndex": 0,
-              "destinationLineIndex": 0
-            },
-            {
-              "type": "cell-change",
-              "sourceLineIndex": 0,
-              "columnName": "FAKE_COL",
-              "newValue": "NEW_Value1"
-            }
-          ]
-        },
-        {
-          "tableExtension": "env",
-          "alterations": [
-            {
-              "type": "cell-change",
-              "sourceLineIndex": 0,
-              "columnName": "ID",
-              "newValue": 10
-            }
-          ]
-        }
-      ]
+      "title": "item0",
+      "quantity": 3
+    },
+    {
+      "title": "item1",
+      "quantity": 2
+    }
+  ],
+  "shipping_lines": [
+    {
+      "title": "Free Shipping",
+      "price": "0.00"
     }
   ]
 }

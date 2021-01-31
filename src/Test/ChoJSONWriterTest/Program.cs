@@ -1322,7 +1322,7 @@ namespace ChoJSONWriterTest
             ChoXmlSettings.Reset();
         }
 
-        [Test]
+        //[Test]
         public static void CustomLabel()
         {
             string expected = @"{
@@ -1399,7 +1399,7 @@ namespace ChoJSONWriterTest
             public int Strenght { get; set; }
         }
 
-        [Test]
+        //[Test]
         public static void DictionaryTest()
         {
             string expected = @"[
@@ -1433,7 +1433,7 @@ namespace ChoJSONWriterTest
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void CSVToJSON1()
         {
             string expected = @"[
@@ -1510,7 +1510,7 @@ namespace ChoJSONWriterTest
             public string Message { get; set; }
 
         }
-        [Test]
+        //[Test]
         public static void ListTest()
         {
             string expected = @"[
@@ -1535,7 +1535,7 @@ namespace ChoJSONWriterTest
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void CustomFormat2()
         {
             string expected = @"[
@@ -1562,7 +1562,7 @@ namespace ChoJSONWriterTest
             actual = sb.ToString();
         }
 
-        [Test]
+        //[Test]
         public static void CustomFormat1()
         {
             string expected = @"[
@@ -1692,7 +1692,7 @@ namespace ChoJSONWriterTest
             public int goals { get; set; }
             public float percentage { get; set; }
         }
-        [Test]
+        //[Test]
         public static void Sample50()
         {
             string expected = @"{
@@ -1857,7 +1857,7 @@ namespace ChoJSONWriterTest
             }
         }
 
-        [Test]
+        //[Test]
         public static void Nested2NestedObjectTest()
         {
             Customer expected = new Customer { Id = 123, UserName = "fflintstone", Address = new AddressModel { Address = "345 Cave Stone Road", Address2 = "", City = "Bedrock" } };
@@ -1883,7 +1883,7 @@ namespace ChoJSONWriterTest
 
         #endregion Nested2NestedObjectTest
 
-        [Test]
+        //[Test]
         public static void NestedObjectTest()
         {
             Customer expected = new Customer { Id = 123, UserName = "fflintstone", Address = new AddressModel { Address = "345 Cave Stone Road", Address2 = "", City = "Bedrock" } };
@@ -1909,7 +1909,7 @@ namespace ChoJSONWriterTest
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void CombineJSONTest()
         {
             string expected = @"[
@@ -2001,7 +2001,7 @@ namespace ChoJSONWriterTest
             }
         }
 
-        [Test]
+        //[Test]
         public static void ComplexObjTest()
         {
             string expected = @"[
@@ -2040,7 +2040,7 @@ namespace ChoJSONWriterTest
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void EnumTest()
         {
             string expected = @"[
@@ -2063,7 +2063,7 @@ namespace ChoJSONWriterTest
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void EnumLoadTest()
         {
             List<object> expected = new List<object>
@@ -2088,7 +2088,7 @@ namespace ChoJSONWriterTest
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void IPAddressTest()
         {
             using (var jr = new ChoJSONWriter<SomeOuterObject>(FileNameIPAddressTestActualJSON)
@@ -2104,7 +2104,7 @@ namespace ChoJSONWriterTest
 
         }
 
-        [Test]
+        //[Test]
         public static void NestedJSONFile()
         {
             var dataMapperModels = new List<DataMapper>();
@@ -2218,7 +2218,7 @@ namespace ChoJSONWriterTest
         public static string FileNameSaveStringListActualJSON => "SaveStringListActual.json";
         public static string FileNameSaveStringListExpectedJSON => "SaveStringListExpected.json";
 
-        [Test]
+        //[Test]
         public static void Sample7Read()
         {
             List<object> expected = new List<object>
@@ -2266,7 +2266,7 @@ namespace ChoJSONWriterTest
 
             CollectionAssert.AreEqual(expected, actual);
         }
-        [Test]
+        //[Test]
         public static void Sample7Write()
         {
             List<object> expected = new List<object>
@@ -2300,7 +2300,7 @@ namespace ChoJSONWriterTest
         public static string FileNamePOCOTestExpectedJSON => "POCOTestExpected.json";
 
 
-        [Test]
+        //[Test]
         public static void ConvertAllDataWithNativetype()
         {
             using (var jw = new ChoJSONWriter(FileNameSampleActualJSON))
@@ -2320,7 +2320,7 @@ namespace ChoJSONWriterTest
 
             FileAssert.AreEqual(FileNameSampleExpectedJSON, FileNameSampleActualJSON);
         }
-        [Test]
+        //[Test]
         public static void SaveDict()
         {
             Dictionary<int, string> list = new Dictionary<int, string>();
@@ -2336,7 +2336,7 @@ namespace ChoJSONWriterTest
 
             FileAssert.AreEqual(FileNameSaveDictExpectedJSON, FileNameSaveDictActualJSON);
         }
-        [Test]
+        //[Test]
         public static void SaveStringList()
         {
             //List<EmpType?> list = new List<EmpType?>();
@@ -2361,7 +2361,7 @@ namespace ChoJSONWriterTest
             FileAssert.AreEqual(FileNameSaveStringListExpectedJSON, FileNameSaveStringListActualJSON);
         }
 
-        [Test]
+        //[Test]
         public static void DataTableTest()
         {
             StringBuilder sb = new StringBuilder();
@@ -2386,7 +2386,7 @@ namespace ChoJSONWriterTest
             //Assert.Fail("Make database testable");
         }
 
-        [Test]
+        //[Test]
         public static void DataReaderTest()
         {
             //string connectionstring = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True";
@@ -2405,7 +2405,7 @@ namespace ChoJSONWriterTest
             Assert.Fail("Make database testable");
         }
 
-        [Test]
+        //[Test]
         public static void POCOTest()
         {
             List<EmployeeRecSimple1> objs = new List<EmployeeRecSimple1>();
@@ -2433,7 +2433,7 @@ namespace ChoJSONWriterTest
             FileAssert.AreEqual(FileNamePOCOTestExpectedJSON, FileNamePOCOTestActualJSON);
         }
 
-        [Test]
+        //[Test]
         public static void DynamicTest()
         {
             List<ExpandoObject> objs = new List<ExpandoObject>();

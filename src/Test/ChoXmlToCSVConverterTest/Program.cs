@@ -26,7 +26,7 @@ namespace ChoXmlToCSVConverterTest
             ChoXmlSettings.Reset();
         }
 
-        [Test]
+        //[Test]
         public static void XMLToCSVConverterTest()
         {
             using (var xmlReader = new ChoXmlReader("Users.xml")

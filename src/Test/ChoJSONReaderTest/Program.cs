@@ -363,7 +363,7 @@ namespace ChoJSONReaderTest
             public string Street { get; set; }
         }
 
-        [Test]
+        //[Test]
         public static void Test()
         {
             Assert.Ignore("Where is the testcase for ChoJSONReader ?");
@@ -598,7 +598,7 @@ namespace ChoJSONReaderTest
             }
         }
 
-        [Test]
+        //[Test]
         public static void GetKeyTest()
         {
             List<object> expected = new List<object>
@@ -627,7 +627,7 @@ namespace ChoJSONReaderTest
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample18()
         {
             using (var csv = new ChoCSVWriter(FileNameSample18TestCSV).WithFirstLineHeader())
@@ -866,7 +866,7 @@ namespace ChoJSONReaderTest
                 return hashCode;
             }
         }
-        [Test]
+        //[Test]
         public static void ArrayTest()
         {
             List<object> expected = new List<object>
@@ -897,7 +897,7 @@ namespace ChoJSONReaderTest
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void JSONToXmlTest()
         {
             string expected = @"<dynamic>
@@ -1087,7 +1087,7 @@ namespace ChoJSONReaderTest
             }
         }
 
-        [Test]
+        //[Test]
         public static void Sample25Test()
         {
             //using (var p = new ChoJSONReader("sample26.json"))
@@ -1113,7 +1113,7 @@ namespace ChoJSONReaderTest
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void LoadTest1()
         {
             Assert.Fail(@"File C:\Users\nraj39\Downloads\ratings.json not found");
@@ -1193,7 +1193,7 @@ namespace ChoJSONReaderTest
             }
         }
 
-        [Test]
+        //[Test]
         public static void Test3()
         {
             List<object> expected = new List<object>
@@ -1252,7 +1252,7 @@ namespace ChoJSONReaderTest
             //CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample29_1()
         {
             List<object> expected = new List<object>
@@ -1293,7 +1293,7 @@ namespace ChoJSONReaderTest
             [ChoJSONRecordField]
             public bool Active { get; set; }
         }
-        [Test]
+        //[Test]
         public static void Issue42()
         {
             string expected = @"Id,Name,CreatedAt,UpdatedAt,Active
@@ -1341,7 +1341,7 @@ namespace ChoJSONReaderTest
             //Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample31Test()
         {
             DataTable expected = new DataTable();
@@ -1440,7 +1440,7 @@ namespace ChoJSONReaderTest
             var x = JsonConvert.DeserializeObject<Dictionary<string, Output[]>[]>(File.ReadAllText("TestData1.json"));
         }
 
-        [Test]
+        //[Test]
         public static void TestData2()
         {
             string expected = @"Column1,Column2,Column3,Column4,Column5,Column6,Column7,Column8,Column9,Column10
@@ -1472,7 +1472,7 @@ K,L,M,N,O,P,Q,R,S,T";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void DuplicateNames()
         {
             string csv = @"Id, Name, 
@@ -1546,7 +1546,7 @@ K,L,M,N,O,P,Q,R,S,T";
             }
         }
 
-        [Test]
+        //[Test]
         public static void ChildLoad()
         {
             List<object> expected = new List<object> {
@@ -1578,7 +1578,7 @@ K,L,M,N,O,P,Q,R,S,T";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample32Test()
         {
             StringBuilder msg = new StringBuilder();
@@ -1687,7 +1687,7 @@ K,L,M,N,O,P,Q,R,S,T";
 
         }
 
-        [Test]
+        //[Test]
         public static void ArrayItemsTest()
         {
             DataTable expected = new DataTable();
@@ -1832,7 +1832,7 @@ K,L,M,N,O,P,Q,R,S,T";
             }
         }
 
-        [Test]
+        //[Test]
         public static void Sample33Test()
         {
             //StringBuilder csvErrors = new StringBuilder();
@@ -1928,7 +1928,7 @@ K,L,M,N,O,P,Q,R,S,T";
             }
         }
 
-        [Test]
+        //[Test]
         public static void PolyTypeTest()
         {
             List<object> expected = new List<object>
@@ -5197,10 +5197,55 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
         }
+
+        static void JSON2CSV7()
+        {
+            string json = @"
+{
+  ""email"": ""email@email.com"",
+  ""financial_status"": ""paid"",
+  ""name"": ""#CCC94440"",
+  ""line_items"": [
+    {
+      ""title"": ""item0"",
+      ""quantity"": 3
+    },
+    {
+      ""title"": ""item1"",
+      ""quantity"": 2
+    }
+  ],
+  ""shipping_lines"": [
+    {
+      ""title"": ""Free Shipping"",
+      ""price"": ""1.00""
+    }
+  ]
+}
+";
+
+            StringBuilder csv = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                using (var w = new ChoCSVWriter(csv).WithFirstLineHeader())
+                    w.Write(r.SelectMany(r1 => ((dynamic[])r1.line_Items)
+                    .Select(r2 => new
+                    {
+                        r1.email,
+                        r1.financial_status,
+                        r1.name,
+                        r2.title,
+                        price = ((dynamic[])r1.shipping_lines)[0].price
+                    }
+                    )));
+            }
+            Console.WriteLine(csv.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            CustomeDictKeyTypeTest();
+            JSON2CSV7();
 
             //CreateLargeJSONFile();
             //JSON2CSVViceVersa();
@@ -5347,7 +5392,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
-        [Test]
+        //[Test]
         public static void DictTest1()
         {
             List<RegistrantInfo> expected = new List<RegistrantInfo>
@@ -5408,7 +5453,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public List<string> Categories { get; set; }
         }
 
-        [Test]
+        //[Test]
         public static void SingleOrArrayItemTest()
         {
             List<object> expected = new List<object>
@@ -5489,7 +5534,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 return -131595806 + new ArrayEqualityComparer<Int32>().GetHashCode(Indices);
             }
         }
-        [Test]
+        //[Test]
         public static void Sample50()
         {
             List<object> expected = new List<object>
@@ -5523,7 +5568,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 
         }
 
-        [Test]
+        //[Test]
         public static void RecordSelectTest()
         {
             List<Vehicle> expected = new List<Vehicle>
@@ -5607,7 +5652,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public string updated_at { get; set; }
         }
 
-        [Test]
+        //[Test]
         public static void JSON2CSV()
         {
             string expected = @"name,age,cars_car1,cars_car2,cars_car3,cars_Country_0,cars_Country_1
@@ -5649,7 +5694,7 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void LargeJSON()
         {
             List<object> expected = new List<object>
@@ -5706,7 +5751,7 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
         }
 
 
-        [Test]
+        //[Test]
         public static void Sample28_1()
         {
             List<object> expected = new List<object> {
@@ -5745,7 +5790,7 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
             }
         }
 
-        [Test]
+        //[Test]
         public static void Sample27_1()
         {
             List<object> expected = new List<object> {
@@ -5786,7 +5831,7 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
                 return hashCode;
             }
         }
-        [Test]
+        //[Test]
         public static void Sample26_2()
         {
             List<object> expected = new List<object>
@@ -5819,7 +5864,7 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample26_1()
         {
             foreach (var rec in new ChoJSONReader(FileNameSample26JSON)
@@ -5869,7 +5914,7 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
             }
         }
 
-        [Test]
+        //[Test]
         public static void DictTest()
         {
             List<Dictionary<string, LevelBonus>> expected = new List<Dictionary<string, LevelBonus>> { new Dictionary<string, LevelBonus>() };
@@ -5901,7 +5946,7 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void PartialJSONFileTest()
         {
             string json = @"{
@@ -5922,7 +5967,7 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
             Assert.Fail("Not sure, what to test. Throws Newtonsoft-Exception. What should the Parameter ErrorMode do?");
         }
 
-        [Test]
+        //[Test]
         public static void TestCountToppings()
         {
             List<object> expected = new List<object>
@@ -5972,7 +6017,7 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
                 return hashCode;
             }
         }
-        [Test]
+        //[Test]
         public static void LoadChildren()
         {
             List<object> expected = new List<object>
@@ -6039,7 +6084,7 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
             }
         }
 
-        [Test]
+        //[Test]
         public static void GuidTest()
         {
             List<object> expected = new List<object>
@@ -6078,7 +6123,7 @@ John,30,Ford,BMW,Fiat,USA,Mexico";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void ReformatJSON()
         {
             string expected = @"contactName,quantity,description,invoiceNumber
@@ -6121,7 +6166,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Bcp()
         {
             Assert.Ignore("This is not a JSONReader test");
@@ -6146,7 +6191,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             }
         }
 
-        [Test]
+        //[Test]
         public static void XmlTypeTest()
         {
             ChoDynamicObject expected = new ChoDynamicObject {
@@ -6200,7 +6245,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
                 return hashCode;
             }
         }
-        [Test]
+        //[Test]
         public static void StringNodeTest()
         {
             List<object> expected = new List<object>
@@ -6270,7 +6315,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
                 return hashCode;
             }
         }
-        [Test]
+        //[Test]
         public static void VarySchemas()
         {
             List<object> expected = new List<object>
@@ -6316,7 +6361,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
 
             CollectionAssert.AreEqual(expected, actual);
         }
-        [Test]
+        //[Test]
         public static void JSONToDataset()
         {
             DataTable expected1 = new DataTable();
@@ -6364,7 +6409,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             DataTableAssert.AreEqual(expected2, dt2);
         }
 
-        [Test]
+        //[Test]
         public static void Sample24Test()
         {
             //var rec = ChoJSONReader.Deserialize("sample24.json");
@@ -6436,7 +6481,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             }
         }
 
-        [Test]
+        //[Test]
         public static void MSFTQuooteToCSV()
         {
             DateTime dt19700101 = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -6481,7 +6526,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
         }
 
 
-        [Test]
+        //[Test]
         public static void JsonToXmlSoap()
         {
             string expectedXML = @"<soap:Envelope xmlns:soap=""http://schemas.xmlsoap.org/soap/envelope/"">
@@ -6756,7 +6801,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             public int? Count { get; set; }
         }
 
-        [Test]
+        //[Test]
         public static void JSON2XmlAndViceVersa()
         {
             string json = @"{
@@ -6804,7 +6849,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             }
         }
 
-        [Test]
+        //[Test]
         public static void Test2()
         {
             List<object> expected = new List<object>
@@ -7426,7 +7471,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
                 return hashCode;
             }
         }
-        [Test]
+        //[Test]
         public static void GetUSDEURTest()
         {
 
@@ -7481,7 +7526,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             }
         }
 
-        [Test]
+        //[Test]
         public static void Test1()
         {
             Detail expected = new Detail { Name = "John", Job = "Receptionist" };
@@ -7512,7 +7557,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void CountNodes()
         {
             int expected = 2;
@@ -7652,7 +7697,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             }
         }
 
-        [Test]
+        //[Test]
         public static void Sample100()
         {
             List<object> expected = new List<object>
@@ -7731,7 +7776,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             public string list_type { get; set; }
             public List<string> attribute_list { get; set; }
         }
-        [Test]
+        //[Test]
         public static void ListOfStringTest()
         {
             List<object> expected = new List<object>
@@ -7755,7 +7800,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void ArrayToDataTableTest()
         {
             DataTable expected = new DataTable();
@@ -7876,7 +7921,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
 
             DataTableAssert.AreEqual(expected, actual);
         }
-        [Test]
+        //[Test]
         public static void DataTableTest()
         {
             DataTable expected = new DataTable();
@@ -7971,7 +8016,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
                 return hashCode;
             }
         }
-        [Test]
+        //[Test]
         public static void SelectiveFieldsTest()
         {
             List<object> expected = new List<object>
@@ -8036,7 +8081,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
 
             CollectionAssert.AreEqual(expected, actual);
         }
-        [Test]
+        //[Test]
         public static void NSTest()
         {
             string expected = @"<ns3:Test_Service xmlns:ns3=""http://www.CCKS.org/XRT/Form"">
@@ -8226,7 +8271,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             }
         }
 
-        [Test]
+        //[Test]
         public static void BookingInfoTest()
         {
             FlightInfo expected = new FlightInfo
@@ -8315,7 +8360,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             Assert.AreEqual(expected, x);
         }
 
-        [Test]
+        //[Test]
         public static void JsonToString()
         {
             string expected = @"wide, outstretched, width,breadth, town, street,earth, country, greatness. wife, the mistress of the house, wide agricultural tract, waste land the land which is not suitabie for cultivation.";
@@ -8346,7 +8391,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Colors2DataTable()
         {
             Assert.Fail("I am not sure, how the output should be");
@@ -8373,7 +8418,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             DataTableAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample43()
         {
             List<object> expected = new List<object>
@@ -8438,7 +8483,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             }
         }
 
-        [Test]
+        //[Test]
         public static void Sample42()
         {
             List<object> expected = new List<object>
@@ -8489,7 +8534,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample41()
         {
             List<object> expected = new List<object>
@@ -8536,7 +8581,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             //}
         }
 
-        [Test]
+        //[Test]
         public static void Sample40()
         {
             object[] expected = new object[] { new ChoDynamicObject {
@@ -8577,7 +8622,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             public object Value { get; set; }
         }
 
-        [Test]
+        //[Test]
         public static void Sample39()
         {
             string expected = @"[
@@ -8650,7 +8695,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample38()
         {
             var testJson = @"{'entry1': {
@@ -8701,7 +8746,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             }
         }
 
-        [Test]
+        //[Test]
         public static void Sample37()
         {
             List<object> expected = new List<object>
@@ -8750,7 +8795,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample36()
         {
             string json = @"{
@@ -8813,7 +8858,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             Assert.Fail("I am not sure, what is expected");
         }
 
-        [Test]
+        //[Test]
         public static void Sample35()
         {
             List<object> expected = new List<object>
@@ -8834,7 +8879,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample34()
         {
             string json = @"{
@@ -8889,7 +8934,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             }
         }
 
-        [Test]
+        //[Test]
         public static void Sample33()
         {
             Issue expected = new Issue { id = 1, project_id = 1, project_name = "name of project" };
@@ -8910,7 +8955,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             Assert.AreEqual(expected, issue);
         }
 
-        [Test]
+        //[Test]
         public static void Sample32()
         {
             string expected = @"Value_0_SRNO,Value_0_STK_IDN,Value_0_CERTIMG,Value_1_SRNO,Value_1_STK_IDN,Value_1_CERTIMG,Value_2_SRNO,Value_2_STK_IDN,Value_2_CERTIMG
@@ -8943,7 +8988,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample31()
         {
             string expected = @"<Root>
@@ -9017,7 +9062,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
 
             Assert.AreEqual(expected, actual);
         }
-        [Test]
+        //[Test]
         public static void Sample30()
         {
             string expected = @"<XElement>
@@ -9122,7 +9167,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample29()
         {
             string expected = @"<RSS xmlns:jwplayer=""http://support.jwplayer.com/customer/portal/articles/1403635-media-format-reference#feeds"" version=""2.0"">
@@ -9215,7 +9260,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample28()
         {
             string expected = @"<Root>
@@ -9279,7 +9324,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
 
             Assert.AreEqual(expected, actual);
         }
-        [Test]
+        //[Test]
         public static void Sample27()
         {
             string expected = @"<cars>
@@ -9344,7 +9389,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample26()
         {
             string expected = @"<x1:Root xmlns:x1=""http://unknwn"">
@@ -9390,7 +9435,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample25()
         {
             string expected = @"Value
@@ -9461,7 +9506,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample24()
         {
             string expected = @"[
@@ -9498,7 +9543,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
             Assert.Fail("Are the surrounding []-brackets ([ at beginning and ] at end) are really necessary? They are not in the source!! Remove this Assert if OK");
         }
 
-        [Test]
+        //[Test]
         public static void Sample23()
         {
             string expected = @"<Root>
@@ -9605,7 +9650,7 @@ Company,2,Beer Old 49.5 DIN KEG,C6188372";
 
             Assert.AreEqual(expected, actual);
         }
-        [Test]
+        //[Test]
         public static void Sample22()
         {
             string expected = @"Value_0_item_1,Value_0_item_2,Value_0_item_3,Value_0_item_4_0,Value_0_item_4_1,Value_0_item_5_sub_item_1,Value_0_item_5_sub_item_2_0,Value_0_item_5_sub_item_2_1,Value_1_item_1,Value_1_item_2,Value_1_item_4_0,Value_1_item_4_1,Value_1_item_4_2,Value_1_item_4_3,Value_1_item_4_4,Value_1_item_5_sub_item_1,Value_1_item_5_sub_item_2_0,Value_1_item_5_sub_item_2_1,Value_2_item_1,Value_2_item_2,Value_2_item_4_0,Value_2_item_4_1,Value_2_item_4_2,Value_2_item_4_3,Value_2_item_4_4,Value_2_item_5_sub_item_1,Value_2_item_5_sub_item_2_0,Value_2_item_5_sub_item_2_1,Value_3_item_1,Value_3_item_2,Value_3_item_4_0,Value_3_item_4_1,Value_3_item_5_sub_item_1,Value_3_item_5_sub_item_2_0,Value_3_item_5_sub_item_2_1,Value_4_item_1,Value_4_item_2,Value_4_item_4_0,Value_4_item_4_1,Value_4_item_5_sub_item_1,Value_4_item_5_sub_item_2_0,Value_4_item_5_sub_item_2_1,Value_5_item_1,Value_5_item_2,Value_5_item_4_0,Value_5_item_4_1,Value_5_item_5_sub_item_1,Value_5_item_5_sub_item_2_0,Value_5_item_5_sub_item_2_1,Value_6_item_1,Value_6_item_2,Value_6_item_4_0,Value_6_item_4_1,Value_6_item_5_sub_item_1,Value_6_item_5_sub_item_2_0,Value_6_item_5_sub_item_2_1
@@ -9701,7 +9746,7 @@ value_11,value_12,value_13,sub_value_14,sub_value_15,sub_item_value_11,sub_item_
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample21()
         {
             string expected = @"[
@@ -9738,7 +9783,7 @@ value_11,value_12,value_13,sub_value_14,sub_value_15,sub_item_value_11,sub_item_
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample20()
         {
             string expected = @"Account_Number
@@ -9776,7 +9821,7 @@ ABC24689753";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample19()
         {
             var expected = new[]
@@ -9938,7 +9983,7 @@ ABC24689753";
         public static string FileNameColorsJSON => "colors.json";
         public static string FileNameEmpJSON => "Emp.json";
 
-        [Test]
+        //[Test]
         public static void Sample17()
         {
             List<object> expected = new List<object>
@@ -9967,7 +10012,7 @@ ABC24689753";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample16()
         {
             using (var p = new ChoJSONReader(FileNameSample16JSON)
@@ -9987,7 +10032,7 @@ ABC24689753";
             FileAssert.AreEqual(FileNameSample16ExpectedCSV, FileNameSample16TestCSV);
         }
 
-        [Test]
+        //[Test]
         public static void Sample15()
         {
             Dictionary<string, string>[] expected = new Dictionary<string, string>[]
@@ -10013,7 +10058,7 @@ ABC24689753";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample14()
         {
             List<object> expected = new List<object> {
@@ -10053,7 +10098,7 @@ ABC24689753";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample14b()
         {
             List<object> expected = new List<object> {
@@ -10089,7 +10134,7 @@ ABC24689753";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample13()
         {
             List<object> expected = new List<object> {
@@ -10109,7 +10154,7 @@ ABC24689753";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample12()
         {
             List<object> expected = new List<object>
@@ -10141,7 +10186,7 @@ ABC24689753";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample11()
         {
             List<object> expected = new List<object>
@@ -10179,7 +10224,7 @@ ABC24689753";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample10()
         {
             List<object> expected = new List<object>
@@ -10215,7 +10260,7 @@ ABC24689753";
             }
         }
 
-        [Test]
+        //[Test]
         public static void Sample9()
         {
             List<object> expected = new List<object>
@@ -10248,7 +10293,7 @@ ABC24689753";
             }
         }
 
-        [Test]
+        //[Test]
         public static void Sample8()
         {
             List<object> expected = new List<object>
@@ -10283,7 +10328,7 @@ ABC24689753";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample7()
         {
             List<object> expected = new List<object>
@@ -10335,7 +10380,7 @@ ABC24689753";
             }
         }
 
-        [Test]
+        //[Test]
         public static void IgnoreItems()
         {
             List<object> expected = new List<object>
@@ -10356,7 +10401,7 @@ ABC24689753";
 
             CollectionAssert.AreEqual(expected, actual);
         }
-        [Test]
+        //[Test]
         public static void KVPTest()
         {
             List<object> expected = new List<object> { "OBJ1", "OBJ2" };
@@ -10373,7 +10418,7 @@ ABC24689753";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Sample4()
         {
             using (var jr = new ChoJSONReader(FileNameSample4JSON).Configure(c => c.UseJSONSerialization = true))
@@ -10469,7 +10514,7 @@ ABC24689753";
             Assert.Fail("Sample4Expected.csv not added, because of failed enumeration");
         }
 
-        [Test]
+        //[Test]
         public static void Sample3()
         {
             using (var jr = new ChoJSONReader<MyObjectType>(FileNameSample3JSON).WithJSONPath("$.menu")
@@ -10485,7 +10530,7 @@ ABC24689753";
             FileAssert.AreEqual(FileNameSample3ExpectedXML, FileNameSample3TestXML);
         }
 
-        [Test]
+        //[Test]
         public static void Sample2()
         {
             using (var csv = new ChoCSVWriter(FileNameSample2TestCSV) { TraceSwitch = ChoETLFramework.TraceSwitchOff }.WithFirstLineHeader())
@@ -10500,7 +10545,7 @@ ABC24689753";
             FileAssert.AreEqual(FileNameSample2ExpectedCSV, FileNameSample2TestCSV);
         }
 
-        [Test]
+        //[Test]
         public static void Sample1()
         {
             using (var csv = new ChoCSVWriter(FileNameSample1TestCSV) { TraceSwitch = ChoETLFramework.TraceSwitchOff }.WithFirstLineHeader())
@@ -10525,7 +10570,7 @@ ABC24689753";
             }
             return list.ToArray();
         }
-        [Test]
+        //[Test]
         public static void JsonToXml()
         {
             Assert.Fail("File companies.json not found");
@@ -10541,7 +10586,7 @@ ABC24689753";
             //FileAssert.AreEqual(FileNameJsonToXmlExpectedXML, FileNameJsonToXmlTestXML);
         }
 
-        [Test]
+        //[Test]
         public static void JsonToCSV()
         {
             Assert.Fail("File companies.json not found");
@@ -10556,7 +10601,7 @@ ABC24689753";
             //FileAssert.AreEqual(FileNameJsonToCSVExpectedCSV, FileNameJsonToCSVTestCSV);
         }
 
-        [Test]
+        //[Test]
         public static void LoadTest()
         {
             Assert.Fail("File companies.json not found");
@@ -10588,7 +10633,7 @@ ABC24689753";
             [ChoJSONRecordField(JSONPath = "$.products")]
             public Product[] Products { get; set; }
         }
-        [Test]
+        //[Test]
         public static void QuickLoad()
         {
             List<object> expected = new List<object>
@@ -10604,7 +10649,7 @@ ABC24689753";
             CollectionAssert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void POCOTest()
         {
             List<EmployeeRec> expected = new List<EmployeeRec>
@@ -10634,7 +10679,7 @@ ABC24689753";
 
             CollectionAssert.AreEqual(expected, actual);
         }
-        [Test]
+        //[Test]
         public static void StorePOCOTest()
         {
             List<object> expected = new List<object>
@@ -10663,7 +10708,7 @@ ABC24689753";
                 CollectionAssert.AreEqual(expected, actual);
             }
         }
-        [Test]
+        //[Test]
         public static void StorePOCONodeLoadTest()
         {
             List<object> expected = new List<object>
@@ -10696,7 +10741,7 @@ ABC24689753";
 
             CollectionAssert.AreEqual(expected, actual);
         }
-        [Test]
+        //[Test]
         public static void QuickLoadTest()
         {
             List<object> expected = new List<object>
@@ -10724,7 +10769,7 @@ ABC24689753";
             }
             CollectionAssert.AreEqual(expected, actual);
         }
-        [Test]
+        //[Test]
         public static void QuickLoadSerializationTest()
         {
             List<object> expected = new List<object>

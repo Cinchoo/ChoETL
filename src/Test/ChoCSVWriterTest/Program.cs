@@ -43,7 +43,7 @@ namespace ChoCSVWriterTest
             [ChoCSVRecordField(3, FieldName = "current_year")]
             public int CurrentYear { get; set; }
         }
-        [Test]
+        //[Test]
         public static void CSVWithQuotes()
         {
             // TODO: Check missing usage of ChoTypeConverterFormatSpec.Instance.DateTimeFormat
@@ -65,7 +65,7 @@ namespace ChoCSVWriterTest
 
         }
 
-        [Test]
+        //[Test]
         public static void IntArrayTest()
         {
             List<string> expectedList = new List<string>();
@@ -113,7 +113,7 @@ namespace ChoCSVWriterTest
             public string Volume { get; set; }
         }
 
-        [Test]
+        //[Test]
         public static void NestedObjects()
         {
             // TODO: Check missing usage of ChoTypeConverterFormatSpec.Instance.DateTimeFormat
@@ -162,7 +162,7 @@ ABC,59045599," + DateTime.Today.ToString("d") + "," + DateTime.Today.AddDays(2).
             public string Department { get; set; }
         }
 
-        [Test]
+        //[Test]
         public static void InheritanceTest()
         {
             Assert.Fail("Test does not return. A worker-thread dies and main-thread stays in Wait at line w.Write(o1).");
@@ -212,7 +212,7 @@ ABC,59045599," + DateTime.Today.ToString("d") + "," + DateTime.Today.AddDays(2).
             public int Apartment { get; set; }
         }
 
-        [Test]
+        //[Test]
         public static void Sample3()
         {
             string expected = @"SiteID,House,Street,City,State,Apartment
@@ -242,7 +242,7 @@ ABC,59045599," + DateTime.Today.ToString("d") + "," + DateTime.Today.AddDays(2).
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void ListTest()
         {
             string expected = @"Value
@@ -273,7 +273,7 @@ $1.00";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void DictionaryTest()
         {
             string expected = @"Key,Value
@@ -308,7 +308,7 @@ $1.00";
             public string ReferenceNo { get; set; }
             public string Parent { get; set; }
         }
-        [Test]
+        //[Test]
         public static void ListPOCOTest()
         {
             // TODO: Check missing usage of ChoTypeConverterFormatSpec.Instance.DateTimeFormat
@@ -327,7 +327,7 @@ $1.00";
             FileAssert.AreEqual(FileNameListPOCOTestExpectedCSV, FileNameListPOCOTestTestCSV);
         }
 
-        [Test]
+        //[Test]
         public static void WriteSpecificColumns()
         {
             string expected = @"ID, House
@@ -357,7 +357,7 @@ $1.00";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void TestListOfInt()
         {
             string expected = @"Id
@@ -380,7 +380,7 @@ $1.00";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void TestListOfInt1()
         {
             string expected = @"Id
@@ -407,7 +407,7 @@ $1.00";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void TestHashtable()
         {
             string expected = @"Id,Name
@@ -437,7 +437,7 @@ $1.00";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void TestDictionary()
         {
             string expected = @"Key,Name,Salary,Department
@@ -463,7 +463,7 @@ $1.00";
         }
 
 
-        [Test]
+        //[Test]
         public static void AnonymousTypeTest()
         {
             string expected = @"Id,Name
@@ -492,7 +492,7 @@ $1.00";
             public string City { get; set; }
         }
 
-        [Test]
+        //[Test]
         public static void HierTest()
         {
             string expected = @"Id,Name,Role,City
@@ -508,7 +508,7 @@ $1.00";
         }
 
 
-        [Test]
+        //[Test]
         public static void SelectiveFieldPOCOTest()
         {
             string expected = @"Id,Name
@@ -558,7 +558,7 @@ $1.00";
             [ChoCSVRecordField(2)] public string Name { get; set; }
         }
 
-        [Test]
+        //[Test]
         public static void QuotesIssue()
         {
             string expected = @"Id,Name
@@ -576,7 +576,7 @@ $1.00";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void QuotesIssue1()
         {
             string expected = @"20,John Smith
@@ -592,7 +592,7 @@ $1.00";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void ReadNWrite()
         {
             string expected = @"1,Tom,NY
@@ -620,7 +620,7 @@ $1.00";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void Issue45()
         {
             string expected = @"DateOfBirth,Email,FirstName,FundDeposits,LastName,PhoneNumber,Source,State
@@ -663,7 +663,7 @@ $1.00";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void ValidateSchema()
         {
             string expected = @"Id,Name,Address
@@ -736,7 +736,7 @@ $1.00";
             public string CourseName { get; set; }
         }
 
-        [Test]
+        //[Test]
         public static void ComplexObjToCSV()
         {
             string expected = @"K2,CreId_1,CreName_1,Id,SId,StdName,Sub_1,Sub_2,Sub_3,Teacher.Id,Teacher.Name,K01
@@ -784,7 +784,7 @@ B,c1,Math1,100,1,Mark,Physics,,,100,Tom,";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void DataReaderTest()
         {
             string csv = @"Id, Name, Address2
@@ -808,7 +808,7 @@ B,c1,Math1,100,1,Mark,Physics,,,100,Tom,";
             FileAssert.AreEqual(FileNameDataReaderTestExpectedCSV, FileNameDataReaderTestTestCSV);
         }
 
-        [Test]
+        //[Test]
         public static void Pivot()
         {
             string expected = @"Name,Foo,Bar
@@ -831,7 +831,7 @@ Age,24,19";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void LargeXmlToCSV()
         {
             Assert.Fail(@"Cannot find file C:\Users\nraj39\Downloads\Loan\dblp.xml");
@@ -868,7 +868,7 @@ Age,24,19";
         {
         }
 
-        [Test]
+        //[Test]
         public static void LargeJSON2CSV()
         {
             Assert.Fail(@"Cannot find file C:\Users\nraj39\Downloads\Loan\rows.json");
@@ -887,7 +887,7 @@ Age,24,19";
             }
         }
 
-        [Test]
+        //[Test]
         public static void JSON2CSVTest1()
         {
             string expected = @"data_getUsers_0_userProfileDetail_userStatus_name,data_getUsers_0_userProfileDetail_userStatusDate,data_getUsers_0_userProfileDetail_lastAttestationDate,data_getUsers_0_userInformation_Id,data_getUsers_0_userInformation_lastName,data_getUsers_0_userInformation_suffix,data_getUsers_0_userInformation_gender,data_getUsers_0_userInformation_birthDate,data_getUsers_0_userInformation_ssn,data_getUsers_0_userInformation_ethnicity,data_getUsers_0_userInformation_languagesSpoken,data_getUsers_0_userInformation_personalEmail,data_getUsers_0_userInformation_otherNames,data_getUsers_0_userInformation_userType_name,data_getUsers_0_userInformation_primaryuserState,data_getUsers_0_userInformation_otheruserState_0,data_getUsers_0_userInformation_practiceSetting,data_getUsers_0_userInformation_primaryEmail
@@ -938,7 +938,7 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void JSON2CSVTest2()
         {
             string expected = @"personalInformation_userId,personalInformation_firstName,personalInformation_languagesSpoken_0_name,personalInformation_languagesSpoken_1_name,personalInformation_languagesSpoken_2_name,personalInformation_state
@@ -1143,7 +1143,7 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void JSON2CSVTest3()
         {
             Assert.Fail(@"Cannot find file C:\Users\nraj39\Downloads\Loan\test1.json");
@@ -1886,7 +1886,7 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             //ToTextTest();
         }
 
-        [Test]
+        //[Test]
         public static void SaveStringList()
         {
             // TODO: Check missing usage of ChoTypeConverterFormatSpec.Instance.DateTimeFormat
@@ -1907,7 +1907,7 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void QuickDynamicTest()
         {
             ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "dd MM yyyy";
@@ -1954,7 +1954,7 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             //Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void DateTimeDynamicTest()
         {
             string expected = @"Id,Name,JoinedDate,IsActive,Salary
@@ -1995,7 +1995,7 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void BoolTest()
         {
             // TODO: Check missing usage of ChoTypeConverterFormatSpec.Instance.DateTimeFormat
@@ -2056,7 +2056,7 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             Contract = 2
         }
 
-        [Test]
+        //[Test]
         public static void EnumTest()
         {
             string expected = @"Id,Name,JoinedDate,IsActive,Salary,Status
@@ -2106,7 +2106,7 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             public ChoCurrency Salary { get; set; }
         }
 
-        [Test]
+        //[Test]
         public static void CurrencyPOCOTest()
         {
             string expected = @"Id,Name,Salary
@@ -2141,7 +2141,7 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void CurrencyDynamicTest()
         {
             // TODO: Check missing usage of ChoTypeConverterFormatSpec.Instance.DateTimeFormat
@@ -2188,7 +2188,7 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void FormatSpecDynamicTest()
         {
             string expected = @"Id,Name,JoinedDate,IsActive,Salary
@@ -2230,7 +2230,7 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void FormatSpecTest()
         {
             string expected = @"Shape,Id,Name,JoinedDate,Salary,IsActive,Status
@@ -2270,7 +2270,7 @@ Circle,200,Lou,10/23/1990,$0.00,N," + "\0";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void WriteDataTableTest()
         {
             string expected = @"Id,Name
@@ -2310,7 +2310,7 @@ Circle,200,Lou,10/23/1990,$0.00,N," + "\0";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void WriteDataReaderTest()
         {
             string expected = @"Id,Name
@@ -2348,7 +2348,7 @@ Circle,200,Lou,10/23/1990,$0.00,N," + "\0";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void ToTextTest()
         {
             
@@ -2394,7 +2394,7 @@ Circle,10,Mark,1/1/0001 12:00:00 AM,$0.00,No," + "\0";
             // TODO: 2 subsequent calls of ChoCSVWriter.ToText(objs[0]) delivers different results. Check required
         }
 
-        [Test]
+        //[Test]
         public static void CodeFirstWithDeclarativeApproachWriteRecords()
         {
             string expected = @"Shape,Id,Name,JoinedDate,Salary,IsActive,Status
@@ -2439,7 +2439,7 @@ Circle,200,Lou,1/1/0001 12:00:00 AM,$0.00,false," + "\0";
             // TODO: Check if export for IsActive should be false or 0
         }
 
-        [Test]
+        //[Test]
         public static void CodeFirstWithDeclarativeApproachWriteRecordsToFile()
         {
             // TODO: Check missing usage of ChoTypeConverterFormatSpec.Instance.DateTimeFormat
@@ -2469,7 +2469,7 @@ Circle,200,Lou,1/1/0001 12:00:00 AM,$0.00,false," + "\0";
             FileAssert.AreEqual(FileNameCodeFirstWithDeclarativeApproachWriteRecordsToFileExpectedCSV, FileNameCodeFirstWithDeclarativeApproachWriteRecordsToFileTestCSV);
         }
 
-        [Test]
+        //[Test]
         public static void ConfigFirstApproachWriteDynamicRecordsToFile()
         {
             ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
@@ -2498,7 +2498,7 @@ Circle,200,Lou,1/1/0001 12:00:00 AM,$0.00,false," + "\0";
             FileAssert.AreEqual(FileNameConfigFirstApproachWriteDynamicRecordsToFileExpectedCSV, FileNameConfigFirstApproachWriteDynamicRecordsToFileTestCSV);
         }
 
-        [Test]
+        //[Test]
         public static void ConfigFirstApproachWriteRecordsToFile()
         {
             ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
@@ -2548,7 +2548,7 @@ Circle,200,Lou,1/1/0001 12:00:00 AM,$0.00,false," + "\0";
         public static string FileNameSaveStringListTestCSV => "SaveStringListTest.csv";
         //
 
-        [Test]
+        //[Test]
         public static void CodeFirstApproachWriteRecordsToFile()
         {
             List<EmployeeRecSimple> objs = new List<EmployeeRecSimple>();
@@ -2570,7 +2570,7 @@ Circle,200,Lou,1/1/0001 12:00:00 AM,$0.00,false," + "\0";
             FileAssert.AreEqual(FileNameCodeFirstApproachWriteRecordsToFileExpectedCSV, FileNameCodeFirstApproachWriteRecordsToFileTestCSV);
         }
 
-        [Test]
+        //[Test]
         public static void DataFirstApproachWriteSingleRecordToFile()
         {
             using (var parser = new ChoCSVWriter(FileNameDataFirstApproachWriteSingleRecordToFileTestCSV))
@@ -2588,7 +2588,7 @@ Circle,200,Lou,1/1/0001 12:00:00 AM,$0.00,false," + "\0";
             FileAssert.AreEqual(FileNameDataFirstApproachWriteSingleRecordToFileExpectedCSV, FileNameDataFirstApproachWriteSingleRecordToFileTestCSV);
         }
 
-        [Test]
+        //[Test]
         public static void DataFirstApproachWriteSingleRecord()
         {
             string expected = @"1,Mark
@@ -2618,7 +2618,7 @@ Circle,200,Lou,1/1/0001 12:00:00 AM,$0.00,false," + "\0";
             Assert.AreEqual(expected, actual);
         }
 
-        [Test]
+        //[Test]
         public static void DataFirstApproachWriteListOfRecordsToFile()
         {
             List<ExpandoObject> objs = new List<ExpandoObject>();
@@ -2639,7 +2639,7 @@ Circle,200,Lou,1/1/0001 12:00:00 AM,$0.00,false," + "\0";
             FileAssert.AreEqual(FileNameDataFirstApproachWriteListOfRecordsToFileExpectedCSV, FileNameDataFirstApproachWriteListOfRecordsToFileTestCSV);
         }
 
-        [Test]
+        //[Test]
         public static void DataFirstApproachWriteListOfRecords()
         {
             string expected = @"1,Mark
