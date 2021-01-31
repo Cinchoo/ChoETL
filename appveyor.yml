@@ -15,9 +15,5 @@ build:
 test_script:
 - cmd: >-
     OpenCover.Console.exe -register:administrator -target:"nunit3-console.exe" -targetargs:".\src\Test\ChoCSVReaderTest\bin\Debug\ChoCSVReaderTest.exe .\src\Test\ChoCSVFileDiff\bin\Debug\ChoCSVFileDiff.exe .\src\Test\ChoCSVReaderUnitTest\bin\Debug\ChoCSVReaderUnitTest.dll .\src\Test\ChoCSVSqlDbImportSample\bin\Debug\ChoCSVSqlDbImportSample.exe .\src\Test\ChoCSVWriterTest\bin\Debug\ChoCSVWriterTest.exe .\src\Test\ChoFixedLengthReaderTest\bin\Debug\ChoFixedLengthReaderTest.exe .\src\Test\ChoFixedLengthWriterTest\bin\Debug\ChoFixedLengthWriterTest.exe .\src\Test\ChoJSONReaderTest\bin\Debug\ChoJSONReaderTest.exe .\src\Test\ChoJSONWriterTest\bin\Debug\ChoJSONWriterTest.exe .\src\Test\ChoKVPReaderTest\bin\Debug\ChoKVPReaderTest.exe .\src\Test\ChoManifoldReaderTest\bin\Debug\ChoManifoldReaderTest.exe .\src\Test\ChoManifoldWriterTest\bin\Debug\ChoManifoldWriterTest.exe .\src\Test\ChoXmlReaderTest\bin\Debug\ChoXmlReaderTest.exe .\src\Test\ChoXmlToCSVConverterTest\bin\Debug\ChoXmlToCSVConverterTest.exe .\src\Test\ChoXmlToCSVSample\bin\Debug\ChoXmlToCSVSample.exe .\src\Test\ChoXmlWriterTest\bin\Debug\ChoXmlWriterTest.exe" -filter:"+[*]* -[*Test]*" -output:"coverage.xml"
-after_test:
-- ps: |
-    $env:PATH = 'C:\msys64\usr\bin;' + $env:PATH
-      Invoke-WebRequest -Uri 'https://codecov.io/bash' -OutFile codecov.sh
-      bash codecov.sh -f "coverage.xml"
+
       
