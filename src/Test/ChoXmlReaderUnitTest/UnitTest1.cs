@@ -1,4 +1,7 @@
 ﻿using System;
+using System.IO;
+using System.Net;
+using ChoETL;
 using NUnit.Framework;
 
 namespace ChoXmlReaderUnitTest
@@ -15,6 +18,20 @@ namespace ChoXmlReaderUnitTest
          <Name part=""last"">Bar</Name>
     </Customer>
 </SalesLead>";
+        }
+        public void Test1()
+        {
+            HttpWebRequest request = HttpWebRequest.Create("https://www.wired.com/feed/") as HttpWebRequest;
+
+            using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
+            using (Stream responseStream = response.GetResponseStream())
+                foreach (var item in new ChoXmlReader(responseStream))
+                {
+                    Console.WriteLine(item.ToStringEx());
+                }
+
+            Console.WriteLine("Done.");
+            Console.ReadLine();
         }
     }
 }
