@@ -15,14 +15,18 @@ namespace ChoWEIRDRSSFeedReaderTest
     {
         static void Main(string[] args)
         {
+        }
+
+        private static void Test1()
+        {
             HttpWebRequest request = HttpWebRequest.Create("https://www.wired.com/feed/") as HttpWebRequest;
 
             using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
             using (Stream responseStream = response.GetResponseStream())
-            foreach (var item in new ChoXmlReader(responseStream))
-            {
-                Console.WriteLine(item.ToStringEx());
-            }
+                foreach (var item in new ChoXmlReader(responseStream))
+                {
+                    Console.WriteLine(item.ToStringEx());
+                }
 
             Console.WriteLine("Done.");
             Console.ReadLine();

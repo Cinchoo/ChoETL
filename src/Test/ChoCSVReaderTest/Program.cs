@@ -5280,8 +5280,8 @@ F1004|File is a duplicate|TRUE|ERROR|TEST_VISITS_IA_270084601_20201202192520.csv
             }
         }
         //[Test]
-        [TestCase(true)]
-        [TestCase(false)]
+        //[TestCase(true)]
+        //[TestCase(false)]
         public static void CultureSpecificDateTimeTest(bool setCorrectCulture)
         {
             List<Transaction> expected = new List<Transaction>
