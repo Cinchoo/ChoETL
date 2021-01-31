@@ -29,10 +29,16 @@ namespace ChoXmlToCSVConverterTest
         [Test]
         public static void XMLToCSVConverterTest()
         {
-            using (var xmlReader = new ChoXmlReader("Users.xml"))
+            using (var xmlReader = new ChoXmlReader("Users.xml")
+                .WithXPath("users/user")
+                )
             {
-                using (var csvWriter = new ChoCSVWriter("Users.csv").WithFirstLineHeader().
-                    WithField("Id", fieldPosition: 1).WithField("last_name", fieldName: "Name", fieldPosition: 10).ThrowAndStopOnMissingField())
+                //foreach (var rec in xmlReader)
+                //    Console.WriteLine(rec.Dump());
+                //return;
+                using (var csvWriter = new ChoCSVWriter("Users.csv").WithFirstLineHeader()
+                    .Configure(c => c.UseNestedKeyFormat = false)
+                    .WithField("Id").WithField("last_name", fieldName: "Name").ThrowAndStopOnMissingField())
                     csvWriter.Write(xmlReader);
             }
         }
