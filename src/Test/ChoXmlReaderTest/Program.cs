@@ -19,6 +19,7 @@ using System.Data.SqlClient;
 using UnitTestHelper;
 using System.Data;
 using Newtonsoft.Json.Linq;
+using System.Net;
 
 namespace ChoXmlReaderTest
 {
@@ -1005,6 +1006,20 @@ xmlns:nc=""http://niem.gov/niem/niem-core/2.0"" xmlns:mark=""urn:mark:ecf:extens
             // Needs to be reset because of some tests changes these settings
             ChoTypeConverterFormatSpec.Instance.Reset();
             ChoXmlSettings.Reset();
+        }
+        public void Test1()
+        {
+            HttpWebRequest request = HttpWebRequest.Create("https://www.wired.com/feed/") as HttpWebRequest;
+
+            using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
+            using (Stream responseStream = response.GetResponseStream())
+                foreach (var item in new ChoXmlReader(responseStream))
+                {
+                    Console.WriteLine(item.ToStringEx());
+                }
+
+            Console.WriteLine("Done.");
+            Console.ReadLine();
         }
 
         //[Test]
