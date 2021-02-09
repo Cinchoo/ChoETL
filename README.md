@@ -76,21 +76,21 @@ https://github.com/Cinchoo/ChoETL/wiki
 
 #### Base Library
 
-+ [Nuget (.NET Framework)](https://www.nuget.org/packages/ChoETL/)
-+ [Nuget (.NET Core)](https://www.nuget.org/packages/ChoETL.NETStandard/)
++ [Nuget (.NET Framework)](https://www.nuget.org/packages/ChoETL/) [![NuGet](https://img.shields.io/nuget/v/ChoETL.svg)](https://www.nuget.org/packages/ChoETL/)
++ [Nuget (.NET Core)](https://www.nuget.org/packages/ChoETL.NETStandard/) [![NuGet](https://img.shields.io/nuget/v/ChoETL.NETStandard.svg)](https://www.nuget.org/packages/ChoETL.NETStandard/)
 
 #### JSON Plug-In
 
-+ [Nuget (.NET Framework)](https://www.nuget.org/packages/ChoETL.JSON/)
-+ [Nuget (.NET Core)](https://www.nuget.org/packages/ChoETL.JSON.NETStandard/)
++ [Nuget (.NET Framework)](https://www.nuget.org/packages/ChoETL.JSON/) [![NuGet](https://img.shields.io/nuget/v/ChoETL.JSON.svg)](https://www.nuget.org/packages/ChoETL.JSON/)
++ [Nuget (.NET Core)](https://www.nuget.org/packages/ChoETL.JSON.NETStandard/) [![NuGet](https://img.shields.io/nuget/v/ChoETL.JSON.NETStandard.svg)](https://www.nuget.org/packages/ChoETL.JSON.NETStandard/)
 
 #### Parquet Plug-In
 
-+ [Nuget (.NET Framework / .NET Core)](https://www.nuget.org/packages/ChoETL.Parquet/)
++ [Nuget (.NET Framework / .NET Core)](https://www.nuget.org/packages/ChoETL.Parquet/) [![NuGet](https://img.shields.io/nuget/v/ChoETL.Parquet.svg)](https://www.nuget.org/packages/ChoETL.Parquet/)
 
 #### Yaml Plug-In
 
-+ [Nuget (.NET Framework / .NET Core)](https://www.nuget.org/packages/ChoETL.Yaml/)
++ [Nuget (.NET Framework / .NET Core)](https://www.nuget.org/packages/ChoETL.Yaml/) [![NuGet](https://img.shields.io/nuget/v/ChoETL.Yaml.svg)](https://www.nuget.org/packages/ChoETL.Yaml/)
 
 
 If this project help you reduce time to develop, you can give me a cup of coffee :)
