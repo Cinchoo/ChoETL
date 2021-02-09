@@ -9,7 +9,7 @@
  
 [![Join the chat at https://gitter.im/ChoETL/Lobby](https://badges.gitter.im/ChoETL/Lobby.svg)](https://gitter.im/ChoETL/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build status](https://ci.appveyor.com/api/projects/status/6ktkagfa67vbn9ys?svg=true)](https://ci.appveyor.com/project/Cinchoo/choetl)
-
+[![github](https://img.shields.io/github/stars/Cinchoo/ChoETL.svg)]()
 
 An ETL framework for .NET 
 
@@ -19,11 +19,11 @@ Cinchoo ETL is a code-based ETL framework for extracting data from multiple sour
 
 ## Install
 
-To install Cinchoo ETL (.NET Framework), run the following command in the Package Manager Console
+To install Cinchoo ETL (.NET Framework), run the following command in the Package Manager Console [![NuGet](https://img.shields.io/nuget/v/ChoETL.svg)](https://www.nuget.org/packages/ChoETL/)
 
     PM> Install-Package ChoETL
 
-To install Cinchoo ETL (.NET Standard), run the following command in the Package Manager Console
+To install Cinchoo ETL (.NET Standard / .NET Core), run the following command in the Package Manager Console [![NuGet](https://img.shields.io/nuget/v/ChoETL.NETStandard.svg)](https://www.nuget.org/packages/ChoETL.NETStandard/)
 
     PM> Install-Package ChoETL.NETStandard
     
