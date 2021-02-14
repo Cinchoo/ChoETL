@@ -225,6 +225,8 @@ namespace ChoETL
             if (_isDisposed)
                 return;
 
+            _yamlObjects = null;
+            _yamlDocObjects = null;
             _isDisposed = true;
             if (_closeStreamOnDispose)
             {

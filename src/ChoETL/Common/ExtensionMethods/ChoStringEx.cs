@@ -577,7 +577,6 @@ namespace ChoETL
         {
             return (T)ToObjectFromXml(element, typeof(T), overrides, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling, NS, defaultNSPrefix);
         }
-
         public static object ToObjectFromXml(this XElement element, Type type, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null, bool retainXmlAttributesAsNative = true,
             ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore, string NS = null, string defaultNSPrefix = null, ChoXmlNamespaceManager nsMgr = null)
         {
@@ -600,6 +599,9 @@ namespace ChoETL
             {
                 using (StringReader reader = new StringReader(element.GetOuterXml()))
                 {
+                    if (ChoUtility.HasXmlSerializer(type))
+                        return ChoUtility.GetXmlSerializer(type).Deserialize(reader);
+
                     if (overrides == null)
                     {
                         if (ChoType.GetAttribute<XmlRootAttribute>(type) == null)
@@ -636,7 +638,7 @@ namespace ChoETL
                             overrides.Add(type, xattribs);
                         }
                     }
-                    XmlSerializer serializer = overrides != null ? new XmlSerializer(type, overrides) : new XmlSerializer(type);
+                    XmlSerializer serializer = ChoUtility.GetXmlSerializer(type, overrides); // overrides != null ? new XmlSerializer(type, overrides) : new XmlSerializer(type);
                     return serializer.Deserialize(reader);
                 }
             }

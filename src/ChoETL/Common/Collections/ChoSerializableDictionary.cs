@@ -31,8 +31,8 @@ namespace ChoETL
 
         public void ReadXml(System.Xml.XmlReader reader)
         {
-            XmlSerializer keySerializer = new XmlSerializer(typeof(TKey));
-            XmlSerializer valueSerializer = new XmlSerializer(typeof(TValue));
+            XmlSerializer keySerializer = ChoUtility.GetXmlSerializer(typeof(TKey)); // new XmlSerializer(typeof(TKey));
+            XmlSerializer valueSerializer = ChoUtility.GetXmlSerializer(typeof(TValue));  //new XmlSerializer(typeof(TValue));
 
             bool wasEmpty = reader.IsEmptyElement;
             reader.Read();
@@ -62,8 +62,8 @@ namespace ChoETL
 
         public void WriteXml(System.Xml.XmlWriter writer)
         {
-            XmlSerializer keySerializer = new XmlSerializer(typeof(TKey));
-            XmlSerializer valueSerializer = new XmlSerializer(typeof(TValue));
+            XmlSerializer keySerializer = ChoUtility.GetXmlSerializer(typeof(TKey)); // new XmlSerializer(typeof(TKey));
+            XmlSerializer valueSerializer = ChoUtility.GetXmlSerializer(typeof(TValue));  //new XmlSerializer(typeof(TValue));
 
             foreach (TKey key in this.Keys)
             {

@@ -5242,10 +5242,28 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             Console.WriteLine(csv.ToString());
         }
 
+        [ChoJSONPath("$.error")]
+        public class Error2
+        {
+            public long id { get; set; }
+            public string code { get; set; }
+            public string message { get; set; }
+            public long? qty { get; set; }
+
+        }
+        static void StringToLongTest()
+        {
+            string json = @"
+{""error"":[{""id"":""15006"",""code"":""Error CODE"",""message"":""Error Message"",""qty"":""""}]}";
+
+            var err = ChoJSONReader.DeserializeText<Error2>(json).FirstOrDefault();
+            Console.WriteLine(err.Dump());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            JSON2CSV7();
+            StringToLongTest();
 
             //CreateLargeJSONFile();
             //JSON2CSVViceVersa();

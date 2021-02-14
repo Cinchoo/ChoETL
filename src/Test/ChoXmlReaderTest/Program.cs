@@ -432,7 +432,30 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            Soap2JSONTest();
+            MemoryTest();
+        }
+
+        public class Item
+        {
+            public int ItemId { get; set; }
+            public string ItemName { get; set; }
+            public int? Number { get; set; }
+        }
+
+        static void MemoryTest()
+        {
+            string xml = @"<?xml version=""1.0""?>
+    <Item Number = ""100"" ItemName = ""TestName1"" ItemId = ""1"" />";
+
+            XDocument doc = XDocument.Parse(xml);
+
+            var i = 0;
+            while (i < 1000000)
+            {
+                var entity = ChoXmlReader<Item>.LoadXElement(doc.Root);
+                Console.WriteLine(entity.Dump());
+                i++;
+            }
         }
 
         static void Soap2JSONTest()
@@ -713,7 +736,7 @@ xmlns:nc=""http://niem.gov/niem/niem-core/2.0"" xmlns:mark=""urn:mark:ecf:extens
                 .WithXPath("//nc:IdentificationID/text()")
                 )
             {
-                    Console.WriteLine(r.Select(kvp => kvp.Value).ToArray().Dump());
+                Console.WriteLine(r.Select(kvp => kvp.Value).ToArray().Dump());
             }
         }
 
@@ -880,9 +903,9 @@ xmlns:nc=""http://niem.gov/niem/niem-core/2.0"" xmlns:mark=""urn:mark:ecf:extens
             {
                 foreach (var e in r)
                 {
-                        Console.WriteLine(e.IdAffidamento);
-                        foreach (var Pratica in e.Pratica)
-                            Console.WriteLine(Pratica.IdPratica);
+                    Console.WriteLine(e.IdAffidamento);
+                    foreach (var Pratica in e.Pratica)
+                        Console.WriteLine(Pratica.IdPratica);
                 }
             }
         }
@@ -1661,7 +1684,7 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
   </Patient>
 </ContrastDoseReport>";
             string actual = null;
-            
+
             string json = @"[
  {
   ""@id"": 1,
@@ -2029,8 +2052,8 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
         public static void Sample48Test()
         {
             DataTable expected = new DataTable();
-            expected.Columns.Add("Type",typeof(string));
-            expected.Columns.Add("Indice",typeof(Int64)).AllowDBNull = false;
+            expected.Columns.Add("Type", typeof(string));
+            expected.Columns.Add("Indice", typeof(Int64)).AllowDBNull = false;
             expected.Columns.Add("Limites_Haut");
             expected.Columns.Add("Limites_Bas");
             expected.Columns.Add("Points_Point_0_id");
@@ -2045,7 +2068,7 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
             expected.Columns.Add("Points_Point_2_X");
             expected.Columns.Add("Points_Point_2_Y");
             expected.Columns.Add("Points_Point_2_#text");
-            expected.Rows.Add("Point",859,"26.5","43.2","01","45","44","12","02","5","41","5","03","4","464","3");
+            expected.Rows.Add("Point", 859, "26.5", "43.2", "01", "45", "44", "12", "02", "5", "41", "5", "03", "4", "464", "3");
             expected.Rows.Add("Point", 256, "16.5", "12.2", "05", "6.5", "22", "5", "06", "58", "46.5", "5", "07", "98", "4.5", "6");
 
             var actual = new ChoXmlReader(FileNameSample48XML)
@@ -2103,7 +2126,7 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
 </Report>";
 
             var x = ChoXmlReader.DeserializeText(xml);
-            
+
             Console.WriteLine(x.DumpAsJson());
             Assert.Warn("Console.WriteLine(ChoJSONWriter.ToTextAll(x)); works");
         }
@@ -2112,7 +2135,7 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
         public static void Sample22Test()
         {
             DataTable expected = new DataTable();
-            expected.Columns.Add("Age",typeof(long)).AllowDBNull = false;
+            expected.Columns.Add("Age", typeof(long)).AllowDBNull = false;
             expected.Columns.Add("DateOfBirth");
             expected.Columns.Add("EmailAddress");
             expected.Columns.Add("MobilePhone_CountryCode");
@@ -2185,7 +2208,7 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
                 )
             {
                 actual = p.SelectMany(r => ((Array)r.Value).OfType<string>().Select(r1 => new { Key = r.Key, Value = r1 })).AsDataTable();
-                
+
             }
 
             DataTableAssert.AreEqual(expected, actual);
@@ -2366,7 +2389,7 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
 Passed,ChoETL.ChoDynamicObject
 Passed,ChoETL.ChoDynamicObject";
             string actual = null;
-            
+
             string xml = @"<session
     beginTime=""2018-05-11T10:37:30""
     halSerialNumber=""08J-0735""
@@ -3337,7 +3360,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
         <ConsumerSecret xsi:nil=""true""></ConsumerSecret>
     </ApplicationCrediential>
 </GetItemRequest>";
-            
+
             //ChoXmlSettings.XmlSchemaNamespace = "http://www.w3.org/2001/XMLSchema";
             using (var p = new ChoXmlReader(new StringReader(xml))
                 .WithXPath("/")
@@ -3353,7 +3376,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
         //[Test]
         public static void Sample21()
         {
-            
+
             List<object> expected = new List<object>
             {
                 @"{
@@ -3421,7 +3444,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
         {
             List<object> expected = new List<object>
             {
-                new ChoDynamicObject("WorkUnit") { { "ID", 130 }, { "EmployeeID", 3 }, { "AllocationID", 114 }, { "TaskID", 239 }, { "ProjectID", 26 }, { "ProjectName","LIK Template"} } 
+                new ChoDynamicObject("WorkUnit") { { "ID", 130 }, { "EmployeeID", 3 }, { "AllocationID", 114 }, { "TaskID", 239 }, { "ProjectID", 26 }, { "ProjectName","LIK Template"} }
             };
             List<object> actual = null;
 
@@ -3430,17 +3453,17 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
                 )
             {
                 actual = p.ToList();
-        //        //foreach (var rec in p)
-        //        //	Console.WriteLine(rec.Dump());
-        //        //return;
-        //        using (var w = new ChoCSVWriter(Console.Out)
-        //.WithFirstLineHeader()
-        //)
-        //        {
-        //            w.Write(p);
-        //        }
+                //        //foreach (var rec in p)
+                //        //	Console.WriteLine(rec.Dump());
+                //        //return;
+                //        using (var w = new ChoCSVWriter(Console.Out)
+                //.WithFirstLineHeader()
+                //)
+                //        {
+                //            w.Write(p);
+                //        }
 
-        //        Console.WriteLine();
+                //        Console.WriteLine();
             }
 
             CollectionAssert.AreEqual(expected, actual);
@@ -3711,7 +3734,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
                 foreach (dynamic rec in parser)
                 {
                     actual.Add(rec);
-//                    Console.WriteLine("{0}", rec.GetXml());
+                    //                    Console.WriteLine("{0}", rec.GetXml());
                 }
             }
 
@@ -3774,7 +3797,7 @@ dateprodend=""20180319"" heureprodend=""12:12:45"" version=""1.21"" >
                 foreach (dynamic rec in parser)
                 {
                     actual.Add(rec);
-//                    Console.WriteLine(ChoUtility.Dump(rec));
+                    //                    Console.WriteLine(ChoUtility.Dump(rec));
                 }
             }
 
@@ -3941,7 +3964,7 @@ A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
                 using (var jw = new ChoJSONWriter(FileNameXmlNullTestActualJSON))
                     //jw.Write(parser.ToArray());
                     jw.Write(new { AustrittDatum = parser.Select(x => x.AustrittDatum).ToArray() });
-                    //jw.Write(new { AustrittDatum = parser.Select(x => (string)x.AustrittDatum.ToString()).ToArray() });
+                //jw.Write(new { AustrittDatum = parser.Select(x => (string)x.AustrittDatum.ToString()).ToArray() });
             }
 
             FileAssert.AreEqual(FileNameXmlNullTestExpectedJSON, FileNameXmlNullTestActualJSON);
@@ -4347,11 +4370,11 @@ A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
         public static void ToDataTable()
         {
             DataTable expected = new DataTable();
-            expected.Columns.Add("Id",typeof(Int32)).AllowDBNull = false;
-            expected.Columns.Add("Name",typeof(string));
-            expected.Columns.Add("IsActive",typeof(bool)).AllowDBNull = false;
-            expected.Rows.Add(1,"Tom", true);
-            expected.Rows.Add(2,"Mark", false);
+            expected.Columns.Add("Id", typeof(Int32)).AllowDBNull = false;
+            expected.Columns.Add("Name", typeof(string));
+            expected.Columns.Add("IsActive", typeof(bool)).AllowDBNull = false;
+            expected.Rows.Add(1, "Tom", true);
+            expected.Rows.Add(2, "Mark", false);
 
             DataTable actual = null;
 

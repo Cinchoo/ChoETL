@@ -511,7 +511,7 @@ namespace ChoETL
             if (node == null)
                 throw new ArgumentNullException("XmlNode");
 
-            XmlSerializer serializer = new XmlSerializer(typeof(T));
+            XmlSerializer serializer = ChoUtility.GetXmlSerializer(typeof(T));  //new XmlSerializer(typeof(T));
             return (T)serializer.Deserialize(new XmlNodeReader(node));
         }
 
@@ -528,7 +528,8 @@ namespace ChoETL
             if (type == null)
                 throw new ArgumentException("Type");
 
-            XmlSerializer serializer = overrides != null ? new XmlSerializer(type, overrides) : new XmlSerializer(type);
+            //XmlSerializer serializer = overrides != null ? new XmlSerializer(type, overrides) : new XmlSerializer(type);
+            XmlSerializer serializer = ChoUtility.GetXmlSerializerWithOverrides(type, overrides);
             return serializer.Deserialize(new XmlNodeReader(node));
         }
 

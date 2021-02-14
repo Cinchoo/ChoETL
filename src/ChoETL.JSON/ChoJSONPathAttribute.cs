@@ -6,11 +6,15 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    [AttributeUsage(AttributeTargets.Property)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property)]
     public class ChoJSONPathAttribute : Attribute
     {
         public string JSONPath { get; private set; }
 
+        public bool AllowComplexJSONPath
+        {
+            get; set;
+        }
         public ChoJSONPathAttribute(string jsonPath)
         {
             JSONPath = jsonPath;

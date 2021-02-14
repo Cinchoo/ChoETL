@@ -144,6 +144,7 @@ namespace ChoETL
             RaiseEndLoad(source);
         }
 
+        private static SharpYaml.Serialization.Serializer _defaultYamlSerializer = new SharpYaml.Serialization.Serializer();
         private IEnumerable<IDictionary<string, object>> ReadYamlNodes(EventReader sr)
         {
             if (Configuration.YamlPath.IsNullOrWhiteSpace())
@@ -152,7 +153,7 @@ namespace ChoETL
 
                 do
                 {
-                    yield return new SharpYaml.Serialization.Serializer().Deserialize<IDictionary<string, object>>(sr)
+                    yield return _defaultYamlSerializer.Deserialize<IDictionary<string, object>>(sr)
                         .ToDictionary(kvp => kvp.Key, kvp => kvp.Value, Configuration.StringComparer);
                 }
                 while (!sr.Accept<StreamEnd>());
@@ -165,7 +166,7 @@ namespace ChoETL
                 {
                     bool iterateAllItems = false;
                     object value = null;
-                    new SharpYaml.Serialization.Serializer().Deserialize<IDictionary<string, object>>(sr).TrySelectValue(Configuration.StringComparer, Configuration.YamlPath, out value, out iterateAllItems);
+                    _defaultYamlSerializer.Deserialize<IDictionary<string, object>>(sr).TrySelectValue(Configuration.StringComparer, Configuration.YamlPath, out value, out iterateAllItems);
 
                     if (value is IDictionary<object, object>)
                         value = ((IDictionary<object, object>)value).ToDictionary(kvp1 => kvp1.Key.ToNString(), kvp1 => kvp1.Value, Configuration.StringComparer);

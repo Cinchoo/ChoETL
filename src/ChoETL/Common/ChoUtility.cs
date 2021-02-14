@@ -47,6 +47,81 @@ namespace ChoETL
 
         }
 
+        private static readonly object _xmlSerializersLock = new object();
+        private static readonly Dictionary<Type, XmlSerializer> _xmlSerializers = new Dictionary<Type, XmlSerializer>();
+        public static bool HasXmlSerializer(Type type)
+        {
+            lock (_xmlSerializersLock)
+            {
+                return _xmlSerializers.ContainsKey(type);
+            }
+        }
+        public static XmlSerializer GetXmlSerializer(Type type, XmlAttributeOverrides overrides = null)
+        {
+            ChoGuard.ArgumentNotNull(type, nameof(type));
+            if (_xmlSerializers.ContainsKey(type))
+                return _xmlSerializers[type];
+
+            lock (_xmlSerializersLock)
+            {
+                if (!_xmlSerializers.ContainsKey(type))
+                {
+                    XmlSerializer serializer = overrides != null ? new XmlSerializer(type, overrides) : new XmlSerializer(type);
+                    _xmlSerializers.Add(type, serializer);
+                }
+
+                return _xmlSerializers[type];
+            }
+        }
+
+        private static readonly XmlAttributeOverrides DefaultOverrides = new XmlAttributeOverrides();
+        private static readonly Dictionary<Type, Dictionary<XmlAttributeOverrides, XmlSerializer>> _xmlSerializersWithOverrides = new Dictionary<Type, Dictionary<XmlAttributeOverrides, XmlSerializer>>();
+        public static bool HasXmlSerializerWithOverrides(Type type, XmlAttributeOverrides overrides)
+        {
+            lock (_xmlSerializersLock)
+            {
+                if (overrides == null)
+                    overrides = DefaultOverrides;
+                if (_xmlSerializersWithOverrides.ContainsKey(type))
+                {
+                    return _xmlSerializersWithOverrides[type].ContainsKey(overrides);
+                }
+            }
+
+            return false;
+        }
+        public static XmlSerializer GetXmlSerializerWithOverrides(Type type, XmlAttributeOverrides overrides = null)
+        {
+            ChoGuard.ArgumentNotNull(type, nameof(type));
+            if (overrides == null)
+                overrides = DefaultOverrides;
+
+            if (_xmlSerializersWithOverrides.ContainsKey(type))
+            {
+                if (_xmlSerializersWithOverrides[type].ContainsKey(overrides))
+                    return _xmlSerializersWithOverrides[type][overrides];
+            }
+
+            lock (_xmlSerializersLock)
+            {
+                if (!_xmlSerializersWithOverrides.ContainsKey(type))
+                {
+                    _xmlSerializersWithOverrides.Add(type, new Dictionary<XmlAttributeOverrides, XmlSerializer>());
+                    XmlSerializer serializer = overrides != DefaultOverrides ? new XmlSerializer(type, overrides) : new XmlSerializer(type);
+                    _xmlSerializersWithOverrides[type].Add(overrides, serializer);
+                }
+                else
+                {
+                    if (!_xmlSerializersWithOverrides[type].ContainsKey(overrides))
+                    {
+                        XmlSerializer serializer = overrides != DefaultOverrides ? new XmlSerializer(type, overrides) : new XmlSerializer(type);
+                        _xmlSerializersWithOverrides[type].Add(overrides, serializer);
+                    }
+                }
+                return _xmlSerializersWithOverrides[type][overrides];
+            }
+        }
+
         public static IEnumerable<T> ZipEx<T1, T2, T>(this IEnumerable<T1> first,
                                     IEnumerable<T2> second, Func<T1, T2, T> operation)
         {
@@ -980,7 +1055,7 @@ namespace ChoETL
             if (node == null)
                 throw new ArgumentNullException("XmlNode");
 
-            XmlSerializer serializer = new XmlSerializer(typeof(T));
+            XmlSerializer serializer = ChoUtility.GetXmlSerializer(typeof(T));  //new XmlSerializer(typeof(T));
             return (T)serializer.Deserialize(new XmlNodeReader(node));
         }
 
@@ -998,7 +1073,8 @@ namespace ChoETL
             if (type == null)
                 throw new ArgumentException("Type");
 
-            XmlSerializer serializer = overrides != null ? new XmlSerializer(type, overrides) : new XmlSerializer(type);
+            //XmlSerializer serializer = overrides != null ? new XmlSerializer(type, overrides) : new XmlSerializer(type);
+            XmlSerializer serializer = ChoUtility.GetXmlSerializerWithOverrides(type, overrides);
             return serializer.Deserialize(new XmlNodeReader(node));
         }
 
@@ -2299,7 +2375,7 @@ namespace ChoETL
                                     memberText = Environment.NewLine + memberText.Indent();
                             }
                             else
-                                memberText = value.ToNString();
+                                memberText = value.ToNString("[NULL]");
 
                             msg.AppendFormatLine("{0}: {1}", memberInfo.Name, memberText);
                         }

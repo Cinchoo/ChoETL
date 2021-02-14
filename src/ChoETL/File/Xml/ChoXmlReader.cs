@@ -234,6 +234,7 @@ namespace ChoETL
             if (_isDisposed)
                 return;
 
+            _xElements = null;
             _isDisposed = true;
             if (_closeStreamOnDispose)
             {

@@ -198,6 +198,7 @@ namespace ChoETL
             if (_isDisposed)
                 return;
 
+            _jObjects = null;
             _isDisposed = true;
             if (_closeStreamOnDispose)
             {

@@ -285,6 +285,14 @@ namespace ChoETL
             if (recordType == null)
                 return;
 
+
+            var pd = ChoTypeDescriptor.GetTypeAttribute<ChoJSONPathAttribute>(recordType);
+            if (pd != null)
+            {
+                JSONPath = pd.JSONPath;
+                AllowComplexJSONPath = pd.AllowComplexJSONPath;
+            }
+
             ChoJSONRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoJSONRecordObjectAttribute>(recordType);
             if (recObjAttr != null)
             {

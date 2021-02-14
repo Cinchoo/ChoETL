@@ -91,7 +91,7 @@ namespace ChoETL
             else if (_configuration.RecordFieldConfigurations.Any(f => f.Name == propertyFullName))
             {
                 var fc = _configuration.RecordFieldConfigurations.First(f => f.Name == propertyFullName) as ChoFileRecordFieldConfiguration;
-                property.MemberConverter = new ChoContractResolverJsonConverter(fc, _configuration.Culture, property.PropertyType, _configuration.ObjectValidationMode, member)
+                property.Converter = property.MemberConverter = new ChoContractResolverJsonConverter(fc, _configuration.Culture, property.PropertyType, _configuration.ObjectValidationMode, member)
                 {
                     Configuration = _configuration as ChoFileRecordConfiguration,
                     Reader = Reader,
