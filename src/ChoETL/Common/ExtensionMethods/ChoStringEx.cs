@@ -1752,5 +1752,13 @@ namespace ChoETL
 
             return Regex.Replace(xml, @"\sxmlns[^""]+""[^""]+""", String.Empty);
         }
+
+        public static StringReader AsReader(this string value)
+        {
+            if (value == null)
+                return new StringReader(String.Empty);
+            else
+                return new StringReader(value);
+        }
     }
 }

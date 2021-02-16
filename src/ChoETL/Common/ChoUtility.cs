@@ -1253,7 +1253,8 @@ namespace ChoETL
 
             using (XmlWriter xtw = XmlTextWriter.Create(sr, xws ?? _xws))
             {
-                ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(target.GetType(), GetXmlOverrides(target.GetType()));
+                ChoNullNSXmlSerializer serializer = ChoNullNSXmlSerializerFactory.HasXmlSerializer(target.GetType()) ? ChoNullNSXmlSerializerFactory.GetXmlSerializer(target.GetType()) :
+                    ChoNullNSXmlSerializerFactory.GetXmlSerializer(target.GetType(), GetXmlOverrides(target.GetType()));
                 serializer.Serialize(xtw, target);
 
                 xtw.Flush();
@@ -1315,7 +1316,8 @@ namespace ChoETL
                 }
                 else
                 {
-                    ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(target.GetType(), GetXmlOverrides(target.GetType()));
+                    ChoNullNSXmlSerializer serializer = ChoNullNSXmlSerializerFactory.HasXmlSerializer(target.GetType()) ? ChoNullNSXmlSerializerFactory.GetXmlSerializer(target.GetType()) :
+     ChoNullNSXmlSerializerFactory.GetXmlSerializer(target.GetType(), GetXmlOverrides(target.GetType()));
                     serializer.Serialize(xtw, target);
                 }
 
@@ -1363,7 +1365,8 @@ namespace ChoETL
                 }
                 else
                 {
-                    ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(type, overrides);
+                    ChoNullNSXmlSerializer serializer = ChoNullNSXmlSerializerFactory.HasXmlSerializer(type) ? ChoNullNSXmlSerializerFactory.GetXmlSerializer(type) :
+                        ChoNullNSXmlSerializerFactory.GetXmlSerializer(type, overrides);
                     return serializer.Deserialize(xtw);
                 }
             }
@@ -1403,7 +1406,8 @@ namespace ChoETL
                     }
                     else
                     {
-                        ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(type, overrides);
+                        ChoNullNSXmlSerializer serializer = ChoNullNSXmlSerializerFactory.HasXmlSerializer(type) ? ChoNullNSXmlSerializerFactory.GetXmlSerializer(type) :
+                            ChoNullNSXmlSerializerFactory.GetXmlSerializer(type, overrides);
                         return serializer.Deserialize(xtw);
                     }
                 }
@@ -1433,7 +1437,8 @@ namespace ChoETL
                     }
                     else
                     {
-                        ChoNullNSXmlSerializer serializer = new ChoNullNSXmlSerializer(type, overrides);
+                        ChoNullNSXmlSerializer serializer = ChoNullNSXmlSerializerFactory.HasXmlSerializer(type) ? ChoNullNSXmlSerializerFactory.GetXmlSerializer(type) :
+                            ChoNullNSXmlSerializerFactory.GetXmlSerializer(type, overrides);
                         return serializer.Deserialize(xtw);
                     }
                 }
@@ -2767,6 +2772,37 @@ namespace ChoETL
             }
         }
     }
+
+    public static class ChoNullNSXmlSerializerFactory
+    {
+        private static readonly object _xmlSerializersLock = new object();
+        private static readonly Dictionary<Type, ChoNullNSXmlSerializer> _xmlSerializers = new Dictionary<Type, ChoNullNSXmlSerializer>();
+        public static bool HasXmlSerializer(Type type)
+        {
+            lock (_xmlSerializersLock)
+            {
+                return _xmlSerializers.ContainsKey(type);
+            }
+        }
+        public static ChoNullNSXmlSerializer GetXmlSerializer(Type type, XmlAttributeOverrides overrides = null)
+        {
+            ChoGuard.ArgumentNotNull(type, nameof(type));
+            if (_xmlSerializers.ContainsKey(type))
+                return _xmlSerializers[type];
+
+            lock (_xmlSerializersLock)
+            {
+                if (!_xmlSerializers.ContainsKey(type))
+                {
+                    ChoNullNSXmlSerializer serializer = overrides != null ? new ChoNullNSXmlSerializer(type, overrides) : new ChoNullNSXmlSerializer(type);
+                    _xmlSerializers.Add(type, serializer);
+                }
+
+                return _xmlSerializers[type];
+            }
+        }
+    }
+
     public class ChoNullNSXmlSerializer : XmlSerializer
     {
         #region Shared Data Members (Private)

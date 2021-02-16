@@ -1281,7 +1281,7 @@ namespace ChoETL
                         writer.WriteString(value.ToNString());
                     else
                     {
-                        ChoNullNSXmlSerializer valueSerializer = new ChoNullNSXmlSerializer(value.GetType());
+                        ChoNullNSXmlSerializer valueSerializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(value.GetType());
                         valueSerializer.Serialize(writer, value);
                     }
                 }
