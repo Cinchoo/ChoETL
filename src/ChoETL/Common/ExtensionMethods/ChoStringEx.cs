@@ -1027,7 +1027,7 @@ namespace ChoETL
 
         public static bool IsValidIdentifierEx(this string name)
         {
-            return Regex.IsMatch(name, @"^([a-zA-Z])([a-zA-Z_0-9\-])*$");
+            return Regex.IsMatch(name, @"^([a-zA-Z_])([a-zA-Z_0-9\-:])*$");
         }
 
         /// <summary>

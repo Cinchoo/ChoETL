@@ -130,6 +130,12 @@ namespace ChoETL
                         }
                         else if (sr.TokenType != JsonToken.EndArray)
                         {
+                            if (sr.TokenType == JsonToken.EndObject
+                                || sr.TokenType == JsonToken.EndConstructor)
+                                continue;
+                            else if (sr.TokenType == JsonToken.EndArray)
+                                break;
+
                             dynamic x = null;
                             try
                             {
@@ -139,6 +145,8 @@ namespace ChoETL
                             if (x != null)
                                 yield return x;
                         }
+                        else
+                            break;
                     }
                 }
                 if (sr.TokenType == JsonToken.StartObject)
