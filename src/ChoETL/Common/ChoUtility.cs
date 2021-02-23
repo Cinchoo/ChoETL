@@ -2349,7 +2349,7 @@ namespace ChoETL
             else
             {
                 //Check if ToString is overridden
-                if (target.GetType().IsAnonymousType() || !target.GetType().IsOverrides("ToString"))
+                if (target.GetType().IsAnonymousType() || target.GetType().GetMethod("ToString", BindingFlags.Instance | BindingFlags.DeclaredOnly | BindingFlags.Public) == null)
                 {
                     BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Instance;
                     ChoStringMsgBuilder msg = new ChoStringMsgBuilder(String.Format("{0} State", target.GetType().IsAnonymousType() ? "Anonymous Type" : target.GetType().FullName));

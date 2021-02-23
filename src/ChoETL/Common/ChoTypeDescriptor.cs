@@ -321,23 +321,24 @@
             if (memberInfo == null)
                 return null;
 
+            string mn = memberInfo.Name;
             object[] tcs = null;
-            if (_typeMemberTypeConverterCache.TryGetValue(memberInfo, out tcs))
+            lock (_typeMemberTypeConverterCacheLockObject)
             {
-                if (tcs == EmptyTypeConverters)
+                if (_typeMemberTypeConverterCache.TryGetValue(memberInfo, out tcs))
                 {
-                    Type memberType;
-                    if (!ChoType.TryGetMemberType(memberInfo, out memberType) || (memberType == null /*|| memberType.IsSimple() */))
-                        return null;
-                    _typeTypeConverterCache.TryGetValue(memberType, out tcs);
-                    return tcs;
-                }
+                    if (tcs == EmptyTypeConverters)
+                    {
+                        Type memberType;
+                        if (!ChoType.TryGetMemberType(memberInfo, out memberType) || (memberType == null /*|| memberType.IsSimple() */))
+                            return null;
+                        _typeTypeConverterCache.TryGetValue(memberType, out tcs);
+                        return tcs;
+                    }
 
-                return _typeMemberTypeConverterCache[memberInfo];
-            }
-            else
-            {
-                lock (_typeMemberTypeConverterCacheLockObject)
+                    return _typeMemberTypeConverterCache[memberInfo];
+                }
+                else
                 {
                     if (!_typeMemberTypeConverterCache.ContainsKey(memberInfo))
                     {
@@ -501,11 +502,11 @@
             if (objType == null)
                 return null;
 
-            if (_typeTypeConverterCache.ContainsKey(objType))
-                return _typeTypeConverterCache[objType];
-            else
+            lock (_typeMemberTypeConverterCacheLockObject)
             {
-                lock (_typeMemberTypeConverterCacheLockObject)
+                if (_typeTypeConverterCache.ContainsKey(objType))
+                    return _typeTypeConverterCache[objType];
+                else
                 {
                     if (!_typeTypeConverterCache.ContainsKey(objType))
                     {
@@ -513,8 +514,8 @@
                         if (ChoTypeConverter.Global.Contains(type))
                         {
                             _typeTypeConverterCache[type] = (from a1 in ChoTypeConverter.Global.GetAll()
-                                                                         where a1.Key == type
-                                                                         select a1.Value).ToArray();
+                                                             where a1.Key == type
+                                                             select a1.Value).ToArray();
                             return _typeTypeConverterCache[type];
                         }
 
