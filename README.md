@@ -2,7 +2,7 @@
 
 <!--
   Title: Cinchoo ETL
-  Description: ETL Framework for .NET (Reader / Writer for CSV, Fixed/Flat, Xml, JSON, Key-Value formatted files)
+  Description: ETL Framework for .NET (Reader / Writer for CSV, Fixed/Flat, Xml, JSON, Key-Value, Avro, Yaml formatted files)
   Author: Cinchoo
   -->
  <meta name='keywords' content='CSV, Fixed, Flat, Xml, JSON, Key-Value, KVP, Reader, Writer, Parser'>
@@ -57,9 +57,9 @@ Here are the items will be targetted on phase 1.
   7. Yaml Reader / Writer
       + [Yaml Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickYamlLoad)
       + [Yaml Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickYamlWrite)
-
-# Phase 2:
-ETL Pipelines and ETL processes are coming...
+  8. Yaml Reader / Writer
+      + [Yaml Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickAvroLoad)
+      + [Yaml Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickAvroWrite)
 
 
 ## Documentation
@@ -91,6 +91,10 @@ https://github.com/Cinchoo/ChoETL/wiki
 #### Yaml Plug-In
 
 + [Nuget (.NET Framework / .NET Core)](https://www.nuget.org/packages/ChoETL.Yaml/) [![NuGet](https://img.shields.io/nuget/v/ChoETL.Yaml.svg)](https://www.nuget.org/packages/ChoETL.Yaml/)
+
+#### Avro Plug-In
+
++ [Nuget (.NET Framework / .NET Core)](https://www.nuget.org/packages/ChoETL.Avro/) [![NuGet](https://img.shields.io/nuget/v/ChoETL.Avro.svg)](https://www.nuget.org/packages/ChoETL.Avro/)
 
 
 If this project help you reduce time to develop, you can give me a cup of coffee :)
