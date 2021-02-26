@@ -9,6 +9,7 @@ namespace ChoETL
 {
     public static class ChoActivator
     {
+        private static readonly object _padLock = new object();
 		public static Func<Type, object[], object> Factory
 		{
 			get;
@@ -29,7 +30,14 @@ namespace ChoETL
 		{
 			try
 			{
-				object obj = Factory != null ? Factory(objType, args) : null;
+                object obj = null;
+                if (Factory != null)
+                {
+                    lock (_padLock)
+                    {
+                        obj = Factory(objType, args);
+                    }
+                }
                 if (obj == null)
                 {
                     if (objType.IsGenericType && objType.GetGenericTypeDefinition() == typeof(IDictionary<,>))

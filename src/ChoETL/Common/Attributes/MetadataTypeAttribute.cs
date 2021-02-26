@@ -14,7 +14,6 @@ namespace ChoETL
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public sealed class MetadataTypeAttribute : Attribute
     {
-
         private Type _metadataClassType;
 
         public Type MetadataClassType
@@ -48,12 +47,7 @@ namespace ChoETL
         public AssociatedMetadataTypeTypeDescriptionProvider(Type type, Type associatedMetadataType)
             : this(type)
         {
-            if (associatedMetadataType == null)
-            {
-                throw new ArgumentNullException("associatedMetadataType");
-            }
-
-            _associatedMetadataType = associatedMetadataType;
+            _associatedMetadataType = associatedMetadataType ?? throw new ArgumentNullException("associatedMetadataType");
         }
 
         public override ICustomTypeDescriptor GetTypeDescriptor(Type objectType, object instance)
@@ -62,6 +56,7 @@ namespace ChoETL
             return new AssociatedMetadataTypeTypeDescriptor(baseDescriptor, objectType, _associatedMetadataType);
         }
     }
+
     internal class AssociatedMetadataTypeTypeDescriptor : CustomTypeDescriptor
     {
         private Type AssociatedMetadataType

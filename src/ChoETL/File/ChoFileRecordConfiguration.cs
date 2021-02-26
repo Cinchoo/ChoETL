@@ -217,7 +217,7 @@ namespace ChoETL
             }
         }
 
-        private Encoding _defaultEncoding = new UTF8Encoding(false);
+        private Encoding _defaultEncoding = Encoding.Default; // new UTF8Encoding(false);
         private Encoding _encoding;
         public Encoding Encoding
         {

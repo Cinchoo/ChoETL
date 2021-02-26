@@ -27,6 +27,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\ChoETL.JSON\ChoJSONConvertersCache.cs" Link="ChoJSONConvertersCache.cs" />
     <Compile Include="..\ChoETL.JSON\ChoJSONExtensions.cs" Link="ChoJSONExtensions.cs" />
     <Compile Include="..\ChoETL.JSON\ChoJSONNodeNameAttribute.cs" Link="ChoJSONNodeNameAttribute.cs" />
     <Compile Include="..\ChoETL.JSON\ChoJSONPathAttribute.cs" Link="ChoJSONPathAttribute.cs" />
@@ -42,6 +43,7 @@
     <Compile Include="..\ChoETL.JSON\ChoJSONRootNameAttribute.cs" Link="ChoJSONRootNameAttribute.cs" />
     <Compile Include="..\ChoETL.JSON\ChoJSONWriter.cs" Link="ChoJSONWriter.cs" />
     <Compile Include="..\ChoETL.JSON\ChoUseJSONSerializationAttribute.cs" Link="ChoUseJSONSerializationAttribute.cs" />
+    <Compile Include="..\ChoETL.JSON\Converters\ByteArrayConverter.cs" Link="Converters\ByteArrayConverter.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -50,6 +52,10 @@
   
   <ItemGroup>
     <ProjectReference Include="..\ChoETL.NETStandard\ChoETL.NETStandard.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Folder Include="Converters\" />
   </ItemGroup>
 
 </Project>

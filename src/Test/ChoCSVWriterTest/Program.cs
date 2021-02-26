@@ -1783,6 +1783,7 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
                 .Configure(c => c.IgnoreDictionaryFieldPrefix = true)
                 )
             {
+                w.Configuration.Encoding = Encoding.GetEncoding("windows-1254");
                 w.Write(recs.Select(r => new
                 {
                     r.Id,

@@ -19,7 +19,7 @@ namespace ChoETL
     public class ChoCSVReader<T> : ChoReader, IDisposable, IEnumerable<T>, IChoSanitizableReader, IChoMultiLineHeaderReader
         where T : class
     {
-        private TextReader _textReader;
+        private Lazy<TextReader> _textReader;
         private IEnumerable<string> _lines;
         private bool _closeStreamOnDispose = false;
         private Lazy<IEnumerator<T>> _enumerator = null;
@@ -65,7 +65,7 @@ namespace ChoETL
 
             Init();
 
-            _textReader = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
+            _textReader = new Lazy<TextReader>(() => new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
         }
 
@@ -76,7 +76,7 @@ namespace ChoETL
             Configuration = configuration;
             Init();
 
-            _textReader = textReader;
+            _textReader = new Lazy<TextReader>(() => textReader);
         }
 
         internal ChoCSVReader(IEnumerable<string> lines, ChoCSVRecordConfiguration configuration = null)
@@ -97,9 +97,9 @@ namespace ChoETL
             Init();
 
             if (inStream is MemoryStream)
-                _textReader = new StreamReader(inStream);
+                _textReader = new Lazy<TextReader>(() => new StreamReader(inStream));
             else
-                _textReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+                _textReader = new Lazy<TextReader>(() => new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize));
             //_closeStreamOnDispose = true;
         }
 
@@ -109,7 +109,7 @@ namespace ChoETL
 
             Close();
             Init();
-            _textReader = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
+            _textReader = new Lazy<TextReader>(() => new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
 
             return this;
@@ -121,7 +121,7 @@ namespace ChoETL
 
             Close();
             Init();
-            _textReader = textReader;
+            _textReader = new Lazy<TextReader>(() => textReader);
             _closeStreamOnDispose = false;
 
             return this;
@@ -134,9 +134,9 @@ namespace ChoETL
             Close();
             Init();
             if (inStream is MemoryStream)
-                _textReader = new StreamReader(inStream);
+                _textReader = new Lazy<TextReader>(() => new StreamReader(inStream));
             else
-                _textReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+                _textReader = new Lazy<TextReader>(() => new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
 
             return this;
@@ -170,7 +170,7 @@ namespace ChoETL
             {
                 if (_textReader != null)
                 {
-                    _textReader.Dispose();
+                    _textReader.Value.Dispose();
                     _textReader = null;
                 }
             }
@@ -239,7 +239,7 @@ namespace ChoETL
             rr.RowsLoaded += NotifyRowsLoaded;
             rr.MembersDiscovered += MembersDiscovered;
             rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
-            var e = _lines != null ? rr.AsEnumerable(_lines).GetEnumerator() : rr.AsEnumerable(_textReader).GetEnumerator();
+            var e = _lines != null ? rr.AsEnumerable(_lines).GetEnumerator() : rr.AsEnumerable(_textReader.Value).GetEnumerator();
             return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
         }
 
@@ -261,7 +261,7 @@ namespace ChoETL
             rr.RowsLoaded += NotifyRowsLoaded;
             rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
             rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
-            var dr = new ChoEnumerableDataReader(_lines != null ? rr.AsEnumerable(_lines) : rr.AsEnumerable(_textReader), rr);
+            var dr = new ChoEnumerableDataReader(_lines != null ? rr.AsEnumerable(_lines) : rr.AsEnumerable(_textReader.Value), rr);
             return dr;
         }
 

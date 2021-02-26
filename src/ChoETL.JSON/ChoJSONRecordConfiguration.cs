@@ -125,6 +125,12 @@ namespace ChoETL
             return converters;
         }
 
+        public bool TurnOnAutoDiscoverJsonConverters
+        {
+            get;
+            set;
+        }
+
         private Lazy<JsonSerializer> _JsonSerializer = null;
         private JsonSerializer _externalJsonSerializer = null;
         public JsonSerializer JsonSerializer
@@ -537,8 +543,17 @@ namespace ChoETL
 
         public override void Validate(object state)
         {
+            if (TurnOnAutoDiscoverJsonConverters)
+                ChoJSONConvertersCache.Init();
+
             if (_jsonSerializerSettings != null)
-                _jsonSerializerSettings.Converters = GetJSONConverters();
+            {
+                foreach (var conv in GetJSONConverters())
+                    _jsonSerializerSettings.Converters.Add(conv);
+
+                foreach (var conv in _jsonSerializerSettings.Converters)
+                    JsonSerializer.Converters.Add(conv);
+            }
 
             if (RecordType != null)
             {

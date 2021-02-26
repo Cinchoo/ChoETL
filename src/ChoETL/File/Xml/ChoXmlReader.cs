@@ -22,7 +22,7 @@ namespace ChoETL
         where T : class
     {
         //private TextReader _textReader;
-        private TextReader _sr;
+        private Lazy<TextReader> _sr;
         private XmlReader _xmlReader;
         private IEnumerable<XElement> _xElements;
         private bool _closeStreamOnDispose = false;
@@ -68,7 +68,7 @@ namespace ChoETL
                 Configuration.NamespaceManager.AddNamespace("", defaultNamespace);
 
 
-            _sr = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
+            _sr = new Lazy<TextReader>(() => new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
             //InitXml();
             _closeStreamOnDispose = true;
         }
@@ -77,7 +77,7 @@ namespace ChoETL
         {
             if (_sr != null)
             {
-                _xmlReader = XmlReader.Create(_sr,
+                _xmlReader = XmlReader.Create(_sr.Value,
                     new XmlReaderSettings() { DtdProcessing = DtdProcessing.Ignore, XmlResolver = null }, new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
             }
         }
@@ -90,7 +90,7 @@ namespace ChoETL
 
             Init();
 
-            _sr = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
+            _sr = new Lazy<TextReader>(() => new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
             //InitXml();
             _closeStreamOnDispose = true;
         }
@@ -102,7 +102,7 @@ namespace ChoETL
             Configuration = configuration;
             Init();
 
-            _sr = textReader;
+            _sr = new Lazy<TextReader>(() => textReader);
             //InitXml();
         }
 
@@ -124,9 +124,9 @@ namespace ChoETL
             Init();
 
             if (inStream is MemoryStream)
-                _sr = new StreamReader(inStream);
+                _sr = new Lazy<TextReader>(() => new StreamReader(inStream));
             else
-                _sr = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+                _sr = new Lazy<TextReader>(() => new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize));
             //InitXml();
             //_closeStreamOnDispose = true;
         }
@@ -155,7 +155,7 @@ namespace ChoETL
 
             Close();
             Init();
-            _sr = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
+            _sr = new Lazy<TextReader>(() => new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
             //InitXml();
             _closeStreamOnDispose = true;
 
@@ -168,7 +168,7 @@ namespace ChoETL
 
             Close();
             Init();
-            _sr = textReader;
+            _sr = new Lazy<TextReader>(() => textReader);
             //InitXml();
             _closeStreamOnDispose = false;
 
@@ -194,9 +194,9 @@ namespace ChoETL
             Close();
             Init();
             if (inStream is MemoryStream)
-                _sr = new StreamReader(inStream);
+                _sr = new Lazy<TextReader>(() => new StreamReader(inStream));
             else
-                _sr = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+                _sr = new Lazy<TextReader>(() => new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
 
             return this;
@@ -241,7 +241,7 @@ namespace ChoETL
                 if (_xmlReader != null)
                     _xmlReader.Dispose();
                 if (_sr != null)
-                    _sr.Dispose();
+                    _sr.Value.Dispose();
             }
 
             if (!ChoETLFrxBootstrap.IsSandboxEnvironment)

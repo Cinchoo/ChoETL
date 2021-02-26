@@ -14,7 +14,7 @@ namespace ChoETL
 {
     public class ChoParquetWriter<T> : ChoWriter, IDisposable
     {
-        private Lazy<StreamWriter> _streamWriter;
+        private StreamWriter _streamWriter;
         private bool _closeStreamOnDispose = false;
         private ChoParquetRecordWriter _writer = null;
         private bool _clearFields = false;
@@ -27,19 +27,19 @@ namespace ChoETL
             get { return Configuration.Context; }
         }
 
-        public ChoParquetRecordConfiguration Configuration
+        public ChoAvroRecordConfiguration Configuration
         {
             get;
             private set;
         }
 
-        public ChoParquetWriter(ChoParquetRecordConfiguration configuration = null)
+        public ChoParquetWriter(ChoAvroRecordConfiguration configuration = null)
         {
             Configuration = configuration;
             Init();
         }
 
-        public ChoParquetWriter(string filePath, ChoParquetRecordConfiguration configuration = null)
+        public ChoParquetWriter(string filePath, ChoAvroRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
 
@@ -47,21 +47,21 @@ namespace ChoETL
 
             Init();
 
-            _streamWriter = new Lazy<StreamWriter>(() => new StreamWriter(ChoPath.GetFullPath(filePath), false, Configuration.GetEncoding(filePath), Configuration.BufferSize));
+            _streamWriter = new StreamWriter(ChoPath.GetFullPath(filePath), false, Configuration.Encoding, Configuration.BufferSize);
             _closeStreamOnDispose = true;
         }
 
-        public ChoParquetWriter(StreamWriter streamWriter, ChoParquetRecordConfiguration configuration = null)
+        public ChoParquetWriter(StreamWriter streamWriter, ChoAvroRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNull(streamWriter, "StreamWriter");
 
             Configuration = configuration;
             Init();
 
-            _streamWriter = new Lazy<StreamWriter>(() => streamWriter);
+            _streamWriter = streamWriter;
         }
 
-        public ChoParquetWriter(Stream inStream, ChoParquetRecordConfiguration configuration = null)
+        public ChoParquetWriter(Stream inStream, ChoAvroRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNull(inStream, "Stream");
 
@@ -69,9 +69,9 @@ namespace ChoETL
             Init();
 
             if (inStream is MemoryStream)
-                _streamWriter = new Lazy<StreamWriter>(() => new StreamWriter(inStream));
+                _streamWriter = new StreamWriter(inStream);
             else
-                _streamWriter = new Lazy<StreamWriter>(() => new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize));
+                _streamWriter = new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize);
             //_closeStreamOnDispose = true;
         }
 
@@ -88,7 +88,7 @@ namespace ChoETL
         public void Flush()
         {
             if (_streamWriter != null)
-                _streamWriter.Value.Flush();
+                _streamWriter.Flush();
         }
 
         protected virtual void Dispose(bool finalize)
@@ -96,19 +96,18 @@ namespace ChoETL
             if (_isDisposed)
                 return;
 
-            if (_streamWriter != null)
-                _writer.Dispose(_streamWriter.Value);
+            _writer.Dispose(_streamWriter);
 
             _isDisposed = true;
             if (_closeStreamOnDispose)
             {
                 if (_streamWriter != null)
-                    _streamWriter.Value.Dispose();
+                    _streamWriter.Dispose();
             }
             else
             {
                 if (_streamWriter != null)
-                    _streamWriter.Value.Flush();
+                    _streamWriter.Flush();
             }
 
             if (!finalize)
@@ -119,7 +118,7 @@ namespace ChoETL
         {
             var recordType = typeof(T).GetUnderlyingType();
             if (Configuration == null)
-                Configuration = new ChoParquetRecordConfiguration(recordType);
+                Configuration = new ChoAvroRecordConfiguration(recordType);
 
             _writer = new ChoParquetRecordWriter(recordType, Configuration);
             _writer.RowsWritten += NotifyRowsWritten;
@@ -129,7 +128,7 @@ namespace ChoETL
         {
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
-            _writer.WriteTo(_streamWriter.Value, records.OfType<object>()).Loop();
+            _writer.WriteTo(_streamWriter, records.OfType<object>()).Loop();
         }
 
         public void Write(T record)
@@ -149,15 +148,15 @@ namespace ChoETL
             _writer.TraceSwitch = TraceSwitch;
             if (record is ArrayList)
             {
-                _writer.WriteTo(_streamWriter.Value, ((IEnumerable)record).AsTypedEnumerable<object>()).Loop();
+                _writer.WriteTo(_streamWriter, ((IEnumerable)record).AsTypedEnumerable<object>()).Loop();
             }
             else if (record != null && !(/*!record.GetType().IsDynamicType() && record is IDictionary*/ record.GetType() == typeof(ExpandoObject) || typeof(IDynamicMetaObjectProvider).IsAssignableFrom(record.GetType()) || record.GetType() == typeof(object) || record.GetType().IsAnonymousType())
                 && (typeof(IDictionary).IsAssignableFrom(record.GetType()) || (record.GetType().IsGenericType && record.GetType().GetGenericTypeDefinition() == typeof(IDictionary<,>))))
             {
-                _writer.WriteTo(_streamWriter.Value, ((IEnumerable)record).AsTypedEnumerable<object>()).Loop();
+                _writer.WriteTo(_streamWriter, ((IEnumerable)record).AsTypedEnumerable<object>()).Loop();
             }
             else
-                _writer.WriteTo(_streamWriter.Value, new object[] { record }).Loop();
+                _writer.WriteTo(_streamWriter, new object[] { record }).Loop();
         }
 
         private void NotifyRowsWritten(object sender, ChoRowsWrittenEventArgs e)
@@ -173,7 +172,7 @@ namespace ChoETL
 
         public ChoParquetWriter<T> ParquetOptions(Action<ParquetOptions> action)
         {
-            action?.Invoke(Configuration.ParquetOptions);
+            action?.Invoke(Configuration.AvroSerializerSettings);
             return this;
         }
 
@@ -295,7 +294,7 @@ namespace ChoETL
             {
                 int maxFieldPos = Configuration.ParquetRecordFieldConfigurations.Count > 0 ? Configuration.ParquetRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
                 PropertyDescriptor pd = null;
-                ChoParquetRecordFieldConfiguration fc = null;
+                ChoAvroRecordFieldConfiguration fc = null;
                 foreach (string fn in fieldsNames)
                 {
                     if (fn.IsNullOrEmpty())
@@ -315,7 +314,7 @@ namespace ChoETL
                     else
                         pd = ChoTypeDescriptor.GetProperty(typeof(T), fn);
 
-                    var nfc = new ChoParquetRecordFieldConfiguration(fnTrim, ++maxFieldPos) { FieldName = fn };
+                    var nfc = new ChoAvroRecordFieldConfiguration(fnTrim, ++maxFieldPos) { FieldName = fn };
                     nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
                     nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
                     if (pd != null)
@@ -498,7 +497,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoParquetWriter<T> Configure(Action<ChoParquetRecordConfiguration> action)
+        public ChoParquetWriter<T> Configure(Action<ChoAvroRecordConfiguration> action)
         {
             if (action != null)
                 action(Configuration);
@@ -557,7 +556,7 @@ namespace ChoETL
                     colType = row["DataType"] as Type;
                     //if (!colType.IsSimple()) continue;
 
-                    Configuration.ParquetRecordFieldConfigurations.Add(new ChoParquetRecordFieldConfiguration(colName, ++ordinal) { FieldType = colType });
+                    Configuration.ParquetRecordFieldConfigurations.Add(new ChoAvroRecordFieldConfiguration(colName, ++ordinal) { FieldType = colType });
                 }
             }
 
@@ -593,7 +592,7 @@ namespace ChoETL
                     colType = col.DataType;
                     //if (!colType.IsSimple()) continue;
 
-                    Configuration.ParquetRecordFieldConfigurations.Add(new ChoParquetRecordFieldConfiguration(colName, ++ordinal) { FieldType = colType });
+                    Configuration.ParquetRecordFieldConfigurations.Add(new ChoAvroRecordFieldConfiguration(colName, ++ordinal) { FieldType = colType });
                 }
             }
 
@@ -623,27 +622,27 @@ namespace ChoETL
 
     public class ChoParquetWriter : ChoParquetWriter<dynamic>
     {
-        public ChoParquetWriter(ChoParquetRecordConfiguration configuration = null)
+        public ChoParquetWriter(ChoAvroRecordConfiguration configuration = null)
             : base(configuration)
         {
 
         }
-        public ChoParquetWriter(string filePath, ChoParquetRecordConfiguration configuration = null)
+        public ChoParquetWriter(string filePath, ChoAvroRecordConfiguration configuration = null)
             : base(filePath, configuration)
         {
         }
 
-        public ChoParquetWriter(StreamWriter streamWriter, ChoParquetRecordConfiguration configuration = null)
+        public ChoParquetWriter(StreamWriter streamWriter, ChoAvroRecordConfiguration configuration = null)
             : base(streamWriter, configuration)
         {
 
         }
-        public ChoParquetWriter(Stream inStream, ChoParquetRecordConfiguration configuration = null)
+        public ChoParquetWriter(Stream inStream, ChoAvroRecordConfiguration configuration = null)
             : base(inStream, configuration)
         {
         }
 
-        public static byte[] SerializeAll(IEnumerable<dynamic> records, ChoParquetRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static byte[] SerializeAll(IEnumerable<dynamic> records, ChoAvroRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
             using (var stream = new MemoryStream())
             using (var writer = new StreamWriter(stream))
@@ -658,7 +657,7 @@ namespace ChoETL
             }
         }
 
-        public static byte[] SerializeAll<T>(IEnumerable<T> records, ChoParquetRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static byte[] SerializeAll<T>(IEnumerable<T> records, ChoAvroRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
             using (var stream = new MemoryStream())
             using (var writer = new StreamWriter(stream))
@@ -673,7 +672,7 @@ namespace ChoETL
             }
         }
 
-        public static byte[] Serialize(dynamic record, ChoParquetRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static byte[] Serialize(dynamic record, ChoAvroRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
             using (var stream = new MemoryStream())
             using (var writer = new StreamWriter(stream))
@@ -688,7 +687,7 @@ namespace ChoETL
             }
         }
 
-        public static byte[] Serialize<T>(T record, ChoParquetRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static byte[] Serialize<T>(T record, ChoAvroRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
             using (var stream = new MemoryStream())
             using (var writer = new StreamWriter(stream))

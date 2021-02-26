@@ -654,7 +654,7 @@ namespace ChoETL
 
             RecordFieldConfigurationsDict = XmlRecordFieldConfigurations.OrderBy(c => c.IsXmlAttribute).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
 
-            if (XmlRecordFieldConfigurations.Where(e => e.IsNullable).Any()
+            if (XmlRecordFieldConfigurations.Where(e => e.IsNullable.CastTo<bool>()).Any()
                 || NullValueHandling == ChoNullValueHandling.Default)
             {
                 if (NamespaceManager != null)

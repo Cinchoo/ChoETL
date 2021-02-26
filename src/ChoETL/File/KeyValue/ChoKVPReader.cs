@@ -43,7 +43,8 @@ namespace ChoETL
     public class ChoKVPReader<T> : ChoBaseKVPReader, IDisposable, IEnumerable<T>
         where T : class
     {
-        private TextReader _textReader;
+        private Lazy<TextReader> _textReader;
+        private IEnumerable<string> _lines;
         private bool _closeStreamOnDispose = false;
         private Lazy<IEnumerator<T>> _enumerator = null;
         private CultureInfo _prevCultureInfo = null;
@@ -84,7 +85,7 @@ namespace ChoETL
 
             Init();
 
-            _textReader = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
+            _textReader = new Lazy<TextReader>(() => new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
         }
 
@@ -95,7 +96,17 @@ namespace ChoETL
             Configuration = configuration;
             Init();
 
-            _textReader = textReader;
+            _textReader = new Lazy<TextReader>(() => textReader);
+        }
+
+        internal ChoKVPReader(IEnumerable<string> lines, ChoKVPRecordConfiguration configuration = null)
+        {
+            ChoGuard.ArgumentNotNull(lines, "Lines");
+
+            Configuration = configuration;
+            Init();
+
+            _lines = lines;
         }
 
         public ChoKVPReader(Stream inStream, ChoKVPRecordConfiguration configuration = null)
@@ -104,10 +115,11 @@ namespace ChoETL
 
             Configuration = configuration;
             Init();
+
             if (inStream is MemoryStream)
-                _textReader = new StreamReader(inStream);
+                _textReader = new Lazy<TextReader>(() => new StreamReader(inStream));
             else
-                _textReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+                _textReader = new Lazy<TextReader>(() => new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize));
             //_closeStreamOnDispose = true;
         }
 
@@ -117,7 +129,7 @@ namespace ChoETL
 
             Close();
             Init();
-            _textReader = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
+            _textReader = new Lazy<TextReader>(() => new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
 
             return this;
@@ -129,7 +141,7 @@ namespace ChoETL
 
             Close();
             Init();
-            _textReader = textReader;
+            _textReader = new Lazy<TextReader>(() => textReader);
             _closeStreamOnDispose = false;
 
             return this;
@@ -142,9 +154,9 @@ namespace ChoETL
             Close();
             Init();
             if (inStream is MemoryStream)
-                _textReader = new StreamReader(inStream);
+                _textReader = new Lazy<TextReader>(() => new StreamReader(inStream));
             else
-                _textReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+                _textReader = new Lazy<TextReader>(() => new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
 
             return this;
@@ -178,7 +190,7 @@ namespace ChoETL
             {
                 if (_textReader != null)
                 {
-                    _textReader.Dispose();
+                    _textReader.Value.Dispose();
                     _textReader = null;
                 }
             }
@@ -223,7 +235,15 @@ namespace ChoETL
             return LoadText(inputText, null, config, traceSwitch);
         }
 
-        internal static IEnumerator<object> LoadText(Type recType, string inputText, ChoKVPRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null)
+        public static ChoKVPReader<T> LoadLines(IEnumerable<string> inputLines, ChoKVPRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            var r = new ChoKVPReader<T>(inputLines, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
+            r._closeStreamOnDispose = true;
+
+            return r;
+        }
+
+        internal static IEnumerator<object> LoadText(Type recType, string inputText, ChoKVPRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null, ChoReader parent = null)
         {
             ChoKVPRecordReader rr = new ChoKVPRecordReader(recType, configuration);
             rr.TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitchOff : traceSwitch;
@@ -238,7 +258,7 @@ namespace ChoETL
             rr.RowsLoaded += NotifyRowsLoaded;
             rr.MembersDiscovered += MembersDiscovered;
             rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
-            var e = rr.AsEnumerable(_textReader).GetEnumerator();
+            var e = _lines != null ? rr.AsEnumerable(_lines).GetEnumerator() : rr.AsEnumerable(_textReader.Value).GetEnumerator();
             return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
         }
 
@@ -260,7 +280,7 @@ namespace ChoETL
             rr.RowsLoaded += NotifyRowsLoaded;
             rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
             rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
-            var dr = new ChoEnumerableDataReader(rr.AsEnumerable(_textReader), rr);
+            var dr = new ChoEnumerableDataReader(_lines != null ? rr.AsEnumerable(_lines) : rr.AsEnumerable(_textReader.Value), rr);
             return dr;
         }
 
@@ -329,7 +349,7 @@ namespace ChoETL
             IDictionary<string, string> columnMappings = null,
             SqlBulkCopyOptions copyOptions = SqlBulkCopyOptions.Default)
         {
-            if (columnMappings == null)
+            if (columnMappings == null || columnMappings.Count == 0)
                 columnMappings = Configuration.KVPRecordFieldConfigurations.Select(fc => fc.FieldName)
                     .ToDictionary(fn => fn, fn => fn);
 
@@ -353,7 +373,7 @@ namespace ChoETL
             SqlBulkCopyOptions copyOptions = SqlBulkCopyOptions.Default,
             SqlTransaction transaction = null)
         {
-            if (columnMappings == null)
+            if (columnMappings == null || columnMappings.Count == 0)
                 columnMappings = Configuration.KVPRecordFieldConfigurations.Select(fc => fc.FieldName)
                     .ToDictionary(fn => fn, fn => fn);
 

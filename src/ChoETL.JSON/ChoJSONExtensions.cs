@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -11,10 +12,33 @@ namespace ChoETL
 {
     public static class ChoJSONExtensions
     {
+        static ChoJSONExtensions()
+        {
+        }
+
+        private static string GetTypeConverterName(Type type)
+        {
+            if (type == null) return String.Empty;
+
+            type = type.GetUnderlyingType();
+            if (typeof(Array).IsAssignableFrom(type))
+                return $"{type.GetItemType().GetUnderlyingType().Name}ArrayConverter";
+            else if (typeof(IList).IsAssignableFrom(type))
+                return $"{type.GetItemType().GetUnderlyingType().Name}ListConverter";
+            else
+                return $"{type.Name}Converter";
+        }
+
         public static JToken SerializeToJToken(this JsonSerializer serializer, object value)
         {
             Type vt = value != null ? value.GetType() : typeof(object);
-            var conv = serializer.Converters.Where(c => c.GetType().Name == $"{vt.Name}Converter" || (c.GetType().IsGenericType && c.GetType().GetGenericArguments()[0] == vt)).FirstOrDefault();
+            var convName = GetTypeConverterName(vt);
+            var conv = serializer.Converters.Where(c => c.GetType().Name == convName || (c.GetType().IsGenericType && c.GetType().GetGenericArguments()[0] == vt)).FirstOrDefault();
+            if (conv == null && ChoJSONConvertersCache.IsInitialized)
+            {
+                if (ChoJSONConvertersCache.Contains(convName))
+                    conv = ChoJSONConvertersCache.Get(convName);
+            }
 
             JToken t = null;
             if (conv == null)
@@ -30,7 +54,13 @@ namespace ChoETL
 
         public static object DeserializeObject(this JsonSerializer serializer, JsonReader reader, Type objType)
         {
-            var conv = serializer.Converters.Where(c => c.GetType().Name == $"{objType.Name}Converter" || (c.GetType().IsGenericType && c.GetType().GetGenericArguments()[0] == objType)).FirstOrDefault();
+            var convName = GetTypeConverterName(objType);
+            var conv = serializer.Converters.Where(c => c.GetType().Name == convName || (c.GetType().IsGenericType && c.GetType().GetGenericArguments()[0] == objType)).FirstOrDefault();
+            if (conv == null && ChoJSONConvertersCache.IsInitialized)
+            {
+                if (ChoJSONConvertersCache.Contains(convName))
+                    conv = ChoJSONConvertersCache.Get(convName);
+            }
 
             JToken t = null;
             if (conv == null)

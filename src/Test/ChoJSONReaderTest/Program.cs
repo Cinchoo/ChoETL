@@ -5260,6 +5260,57 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             Console.WriteLine(err.Dump());
         }
 
+        static void JSON2CSV8()
+        {
+            var sampleJson = File.ReadAllText(@"klant.json");
+
+            StringBuilder csv = new StringBuilder();
+
+            using (var custData = ChoJSONReader.LoadText(sampleJson)
+                .WithJSONPath("$.._embedded.ngcp:customers")
+                .WithFields(new string[] {
+                    "billing_profile_definition",
+                    "billing_profile_id",
+                    "billing_profiles",
+                    "contact_id",
+                    "create_timestamp",
+                    "external_id",
+                    "id",
+                    "invoice_email_template_id",
+                    "invoice_template_id",
+                    "max_subscribers",
+                    "modify_timestamp",
+                    "passreset_email_template_id",
+                    "profile_package_id",
+                    "status",
+                    "subscriber_email_template_id",
+                    "terminate_timestamp",
+                    "type",
+                    "vat_rate"
+                })
+                )
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    .Configure(c => c.MaxScanRows = 1)
+                    .Configure(c => c.ThrowAndStopOnMissingField = false)
+                    )
+                {
+                    w.Write(custData);
+                }
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
+        static void DumpDict()
+        {
+            IDictionary<string, object> dict = new Dictionary<string, object>();
+            dict.Add("1", "2");
+            dict.Add("2", new Error2 { id = 1 });
+
+            Console.WriteLine(dict.Dump());
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;

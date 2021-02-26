@@ -47,6 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ChoJSONConvertersCache.cs" />
     <Compile Include="ChoJSONExtensions.cs" />
     <Compile Include="ChoJSONPathAttribute.cs" />
     <Compile Include="ChoPropertyRenameAndIgnoreSerializerContractResolver.cs" />
@@ -62,6 +63,7 @@
     <Compile Include="ChoJSONRecordWriter.cs" />
     <Compile Include="ChoJSONWriter.cs" />
     <Compile Include="ChoJSONRecordConfigurationMap.cs" />
+    <Compile Include="Converters\ByteArrayConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

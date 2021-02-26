@@ -1,0 +1,242 @@
+{
+   "_embedded" : {
+      "ngcp:customers" : [
+         {
+            "_links" : {
+               "collection" : {
+                  "href" : "/api/customers/"
+               },
+               "curies" : {
+                  "href" : "http://purl.org/sipwise/ngcp-api/#rel-{rel}",
+                  "name" : "ngcp",
+                  "templated" : true
+               },
+               "ngcp:balanceintervals" : [
+                  {
+                     "href" : "/api/balanceintervals/6"
+                  }
+               ],
+               "ngcp:billingprofiles" : [
+                  {
+                     "href" : "/api/billingprofiles/6"
+                  }
+               ],
+               "ngcp:calls" : [
+                  {
+                     "href" : "/api/calls/?customer_id=6"
+                  }
+               ],
+               "ngcp:customerbalances" : [
+                  {
+                     "href" : "/api/customerbalances/6"
+                  }
+               ],
+               "ngcp:customercontacts" : [
+                  {
+                     "href" : "/api/customercontacts/8"
+                  }
+               ],
+               "ngcp:customerfraudpreferences" : [
+                  {
+                     "href" : "/api/customerfraudpreferences/6"
+                  }
+               ],
+               "ngcp:customerpreferences" : [
+                  {
+                     "href" : "/api/customerpreferences/6"
+                  }
+               ],
+               "ngcp:invoiceemailtemplates" : [
+                  {
+                     "href" : "/api/emailtemplates/15"
+                  }
+               ],
+               "ngcp:invoicetemplates" : [
+                  {
+                     "href" : "/api/invoicetemplates/1"
+                  }
+               ],
+               "ngcp:journal" : [
+                  {
+                     "href" : "/api/customers/6/journal/"
+                  }
+               ],
+               "ngcp:passresetemailtemplates" : [
+                  {
+                     "href" : "/api/emailtemplates/14"
+                  }
+               ],
+               "ngcp:subscriberemailtemplates" : [
+                  {
+                     "href" : "/api/emailtemplates/13"
+                  }
+               ],
+               "profile" : {
+                  "href" : "http://purl.org/sipwise/ngcp-api/"
+               },
+               "self" : {
+                  "href" : "/api/customers/6"
+               }
+            },
+            "activate_timestamp" : null,
+            "add_vat" : false,
+            "all_billing_profiles" : [
+               {
+                  "effective_start_time" : "1970-01-01 01:00:00",
+                  "network_id" : null,
+                  "profile_id" : 6,
+                  "start" : null,
+                  "stop" : null
+               }
+            ],
+            "billing_profile_definition" : "id",
+            "billing_profile_id" : 6,
+            "billing_profiles" : [],
+            "contact_id" : 8,
+            "create_timestamp" : "2021-02-15 16:31:49",
+            "external_id" : "125125",
+            "id" : 6,
+            "invoice_email_template_id" : 15,
+            "invoice_template_id" : 1,
+            "max_subscribers" : null,
+            "modify_timestamp" : "2021-02-19 09:30:38",
+            "passreset_email_template_id" : 14,
+            "profile_package_id" : null,
+            "status" : "active",
+            "subscriber_email_template_id" : 13,
+            "terminate_timestamp" : null,
+            "type" : "sipaccount",
+            "vat_rate" : 21
+         },
+         {
+            "_links" : {
+               "collection" : {
+                  "href" : "/api/customers/"
+               },
+               "curies" : {
+                  "href" : "http://purl.org/sipwise/ngcp-api/#rel-{rel}",
+                  "name" : "ngcp",
+                  "templated" : true
+               },
+               "ngcp:balanceintervals" : [
+                  {
+                     "href" : "/api/balanceintervals/8"
+                  }
+               ],
+               "ngcp:billingprofiles" : [
+                  {
+                     "href" : "/api/billingprofiles/6"
+                  }
+               ],
+               "ngcp:calls" : [
+                  {
+                     "href" : "/api/calls/?customer_id=8"
+                  }
+               ],
+               "ngcp:customerbalances" : [
+                  {
+                     "href" : "/api/customerbalances/8"
+                  }
+               ],
+               "ngcp:customercontacts" : [
+                  {
+                     "href" : "/api/customercontacts/11"
+                  }
+               ],
+               "ngcp:customerfraudpreferences" : [
+                  {
+                     "href" : "/api/customerfraudpreferences/8"
+                  }
+               ],
+               "ngcp:customerpreferences" : [
+                  {
+                     "href" : "/api/customerpreferences/8"
+                  }
+               ],
+               "ngcp:invoiceemailtemplates" : [
+                  {
+                     "href" : "/api/emailtemplates/13"
+                  }
+               ],
+               "ngcp:invoicetemplates" : [
+                  {
+                     "href" : "/api/invoicetemplates/1"
+                  }
+               ],
+               "ngcp:journal" : [
+                  {
+                     "href" : "/api/customers/8/journal/"
+                  }
+               ],
+               "ngcp:passresetemailtemplates" : [
+                  {
+                     "href" : "/api/emailtemplates/13"
+                  }
+               ],
+               "ngcp:subscriberemailtemplates" : [
+                  {
+                     "href" : "/api/emailtemplates/13"
+                  }
+               ],
+               "profile" : {
+                  "href" : "http://purl.org/sipwise/ngcp-api/"
+               },
+               "self" : {
+                  "href" : "/api/customers/8"
+               }
+            },
+            "activate_timestamp" : null,
+            "add_vat" : true,
+            "all_billing_profiles" : [
+               {
+                  "effective_start_time" : "1970-01-01 01:00:00",
+                  "network_id" : null,
+                  "profile_id" : 6,
+                  "start" : null,
+                  "stop" : null
+               }
+            ],
+            "billing_profile_definition" : "id",
+            "billing_profile_id" : 6,
+            "billing_profiles" : [],
+            "contact_id" : 11,
+            "create_timestamp" : "2021-02-19 14:34:00",
+            "external_id" : "125124",
+            "id" : 8,
+            "invoice_email_template_id" : 13,
+            "invoice_template_id" : 1,
+            "max_subscribers" : null,
+            "modify_timestamp" : "2021-02-19 15:34:00",
+            "passreset_email_template_id" : 13,
+            "profile_package_id" : null,
+            "status" : "active",
+            "subscriber_email_template_id" : 13,
+            "terminate_timestamp" : null,
+            "type" : "sipaccount",
+            "vat_rate" : 21
+         }
+      ]
+   },
+   "_links" : {
+      "curies" : {
+         "href" : "http://purl.org/sipwise/ngcp-api/#rel-{rel}",
+         "name" : "ngcp",
+         "templated" : true
+      },
+      "ngcp:customers" : [
+         {
+            "href" : "/api/customers/6"
+         },
+         {
+            "href" : "/api/customers/8"
+         }
+      ],
+      "profile" : {
+         "href" : "http://purl.org/sipwise/ngcp-api/"
+      },
+      "self" : {
+         "href" : "/api/customers/?page=1&rows=10"
+      }
+   },
+   "total_count" : 2
+}

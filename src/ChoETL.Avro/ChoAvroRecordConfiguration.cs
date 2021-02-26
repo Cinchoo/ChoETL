@@ -1,4 +1,5 @@
-﻿using Parquet;
+﻿using Microsoft.Hadoop.Avro;
+using Microsoft.Hadoop.Avro.Container;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -17,45 +18,30 @@ using System.Threading.Tasks;
 namespace ChoETL
 {
     [DataContract]
-    public class ChoParquetRecordConfiguration : ChoFileRecordConfiguration
+    public class ChoAvroRecordConfiguration : ChoFileRecordConfiguration
     {
         private readonly Dictionary<string, dynamic> _indexMapDict = new Dictionary<string, dynamic>();
-        internal readonly Dictionary<Type, Dictionary<string, ChoParquetRecordFieldConfiguration>> ParquetRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoParquetRecordFieldConfiguration>>();
+        internal readonly Dictionary<Type, Dictionary<string, ChoAvroRecordFieldConfiguration>> AvroRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoAvroRecordFieldConfiguration>>();
 
-        public ParquetOptions ParquetOptions
+        public AvroSerializerSettings AvroSerializerSettings
         {
             get;
         }
-        public CompressionMethod CompressionMethod { get; set; }
-        public int CompressionLevel { get; set; }
-        public IReadOnlyDictionary<string, string> CustomMetadata { get; set; }
 
-        public bool Append
+        public CodecFactory CodecFactory
         {
             get;
             set;
         }
 
-        public bool IgnoreRootNodeName
+        public bool AllowNullable
         {
             get;
             set;
         }
-
-        public bool AutoArrayDiscovery
-        {
-            get;
-            set;
-        }
-
-        //public bool AllowNestedArrayConversion
-        //{
-        //    get;
-        //    set;
-        //}
 
         [DataMember]
-        public List<ChoParquetRecordFieldConfiguration> ParquetRecordFieldConfigurations
+        public List<ChoAvroRecordFieldConfiguration> AvroRecordFieldConfigurations
         {
             get;
             private set;
@@ -72,12 +58,12 @@ namespace ChoETL
             get;
             set;
         }
-        internal Dictionary<string, ChoParquetRecordFieldConfiguration> RecordFieldConfigurationsDict
+        internal Dictionary<string, ChoAvroRecordFieldConfiguration> RecordFieldConfigurationsDict
         {
             get;
             private set;
         }
-        internal Dictionary<string, ChoParquetRecordFieldConfiguration> RecordFieldConfigurationsDict2
+        internal Dictionary<string, ChoAvroRecordFieldConfiguration> RecordFieldConfigurationsDict2
         {
             get;
             private set;
@@ -92,29 +78,31 @@ namespace ChoETL
         {
             get
             {
-                foreach (var fc in ParquetRecordFieldConfigurations)
+                foreach (var fc in AvroRecordFieldConfigurations)
                     yield return fc;
             }
         }
 
         public bool IgnoreHeader { get; internal set; }
 
-        public ChoParquetRecordFieldConfiguration this[string name]
+        public ChoAvroRecordFieldConfiguration this[string name]
         {
             get
             {
-                return ParquetRecordFieldConfigurations.Where(i => i.Name == name).FirstOrDefault();
+                return AvroRecordFieldConfigurations.Where(i => i.Name == name).FirstOrDefault();
             }
         }
 
-        public ChoParquetRecordConfiguration() : this(null)
+        public ChoAvroRecordConfiguration() : this(null)
         {
         }
 
-        internal ChoParquetRecordConfiguration(Type recordType) : base(recordType)
+        internal ChoAvroRecordConfiguration(Type recordType) : base(recordType)
         {
-            ParquetOptions = new ParquetOptions();
-            ParquetRecordFieldConfigurations = new List<ChoParquetRecordFieldConfiguration>();
+            AvroSerializerSettings = new AvroSerializerSettings();
+            AvroSerializerSettings.Resolver = new ChoAvroPublicMemberContractResolver(this.AllowNullable) { Configuration = this };
+
+            AvroRecordFieldConfigurations = new List<ChoAvroRecordFieldConfiguration>();
 
             if (recordType != null)
             {
@@ -153,21 +141,21 @@ namespace ChoETL
         {
             base.Init(recordType);
 
-            ChoParquetRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoParquetRecordObjectAttribute>(recordType);
+            ChoAvroRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoAvroRecordObjectAttribute>(recordType);
             if (IgnoreFieldValueMode == null)
                 IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Empty;
 
-            if (ParquetRecordFieldConfigurations.Count == 0)
+            if (AvroRecordFieldConfigurations.Count == 0)
                 DiscoverRecordFields(recordType);
         }
 
-        public ChoParquetRecordConfiguration MapRecordFields<T>()
+        public ChoAvroRecordConfiguration MapRecordFields<T>()
         {
             DiscoverRecordFields(typeof(T));
             return this;
         }
 
-        public ChoParquetRecordConfiguration MapRecordFields(params Type[] recordTypes)
+        public ChoAvroRecordConfiguration MapRecordFields(params Type[] recordTypes)
         {
             if (recordTypes == null)
                 return this;
@@ -181,7 +169,7 @@ namespace ChoETL
         }
 
         private void DiscoverRecordFields(Type recordType, bool clear = true,
-            List<ChoParquetRecordFieldConfiguration> recordFieldConfigurations = null)
+            List<ChoAvroRecordFieldConfiguration> recordFieldConfigurations = null)
         {
             if (recordType == null)
                 return;
@@ -190,14 +178,14 @@ namespace ChoETL
                 RecordMapType = recordType;
 
             if (recordFieldConfigurations == null)
-                recordFieldConfigurations = ParquetRecordFieldConfigurations;
+                recordFieldConfigurations = AvroRecordFieldConfigurations;
 
             if (clear && recordFieldConfigurations != null)
                 recordFieldConfigurations.Clear();
 
             int position = 0;
             DiscoverRecordFields(recordType, ref position, null,
-                ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoParquetRecordFieldAttribute>().Any()).Any(), 
+                ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoAvroRecordFieldAttribute>().Any()).Any(), 
                 null, recordFieldConfigurations);
         }
 
@@ -222,7 +210,7 @@ namespace ChoETL
         }
 
         private void DiscoverRecordFields(Type recordType, ref int pos, bool clear,
-            List<ChoParquetRecordFieldConfiguration> recordFieldConfigurations = null)
+            List<ChoAvroRecordFieldConfiguration> recordFieldConfigurations = null)
         {
             if (recordType == null)
                 return;
@@ -231,34 +219,34 @@ namespace ChoETL
                 RecordMapType = recordType;
 
             if (recordFieldConfigurations == null)
-                recordFieldConfigurations = ParquetRecordFieldConfigurations;
+                recordFieldConfigurations = AvroRecordFieldConfigurations;
 
             if (clear && recordFieldConfigurations != null)
-                ClearFields(); // ParquetRecordFieldConfigurations.Clear();
+                ClearFields();
 
             DiscoverRecordFields(recordType, ref pos, null,
-                ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoParquetRecordFieldAttribute>().Any()).Any(), 
+                ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoAvroRecordFieldAttribute>().Any()).Any(), 
                 null, recordFieldConfigurations);
         }
 
         private void DiscoverRecordFields(Type recordType, ref int position, string declaringMember = null,
-            bool optIn = false, PropertyDescriptor propDesc = null, List<ChoParquetRecordFieldConfiguration> recordFieldConfigurations = null)
+            bool optIn = false, PropertyDescriptor propDesc = null, List<ChoAvroRecordFieldConfiguration> recordFieldConfigurations = null)
         {
             if (recordType == null)
                 return;
             if (!recordType.IsDynamicType())
             {
                 Type pt = null;
-                if (optIn) //ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoParquetRecordFieldAttribute>().Any()).Any())
+                if (optIn) 
                 {
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                     {
                         pt = pd.PropertyType.GetUnderlyingType();
                         if (!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
                             DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, null, recordFieldConfigurations);
-                        else if (pd.Attributes.OfType<ChoParquetRecordFieldAttribute>().Any())
+                        else if (pd.Attributes.OfType<ChoAvroRecordFieldAttribute>().Any())
                         {
-                            var obj = new ChoParquetRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoParquetRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray());
+                            var obj = new ChoAvroRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoAvroRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray());
                             obj.FieldType = pt;
                             obj.PropertyDescriptor = pd;
                             obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
@@ -279,7 +267,7 @@ namespace ChoETL
 
                             if (dnAttr == null)
                             {
-                                ChoParquetRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, null, declaringMember == null ? propDesc.GetDisplayName() : propDesc.GetDisplayName(String.Empty));
+                                ChoAvroRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, null, declaringMember == null ? propDesc.GetDisplayName() : propDesc.GetDisplayName(String.Empty));
                                 recordFieldConfigurations.Add(obj);
                             }
                             else if (dnAttr != null && dnAttr.Minimum.CastTo<int>() >= 0 && dnAttr.Maximum.CastTo<int>() > 0
@@ -291,8 +279,7 @@ namespace ChoETL
                                 {
                                     for (int range = dnAttr.Minimum.CastTo<int>(); range <= dnAttr.Maximum.CastTo<int>(); range++)
                                     {
-                                        ChoParquetRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, range);
-                                        //if (!ParquetRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
+                                        ChoAvroRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, range);
                                         recordFieldConfigurations.Add(obj);
                                     }
                                 }
@@ -309,9 +296,8 @@ namespace ChoETL
                                             }
                                             else
                                             {
-                                                ChoParquetRecordFieldConfiguration obj = NewFieldConfiguration(ref position, declaringMember, pd, range, propDesc.GetDisplayName());
+                                                ChoAvroRecordFieldConfiguration obj = NewFieldConfiguration(ref position, declaringMember, pd, range, propDesc.GetDisplayName());
 
-                                                //if (!ParquetRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
                                                 recordFieldConfigurations.Add(obj);
                                             }
                                         }
@@ -328,7 +314,7 @@ namespace ChoETL
                             ChoDictionaryKeyAttribute[] dnAttrs = propDesc.Attributes.OfType<ChoDictionaryKeyAttribute>().ToArray();
                             if (dnAttrs.IsNullOrEmpty())
                             {
-                                ChoParquetRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, null, declaringMember == null ? propDesc.GetDisplayName() : propDesc.GetDisplayName(String.Empty));
+                                ChoAvroRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, null, declaringMember == null ? propDesc.GetDisplayName() : propDesc.GetDisplayName(String.Empty));
                                 recordFieldConfigurations.Add(obj);
                             }
                             else
@@ -341,9 +327,8 @@ namespace ChoETL
                                 {
                                     if (!key.IsNullOrWhiteSpace())
                                     {
-                                        ChoParquetRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, dictKey: key);
+                                        ChoAvroRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, dictKey: key);
 
-                                        //if (!ParquetRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
                                         recordFieldConfigurations.Add(obj);
                                     }
                                 }
@@ -361,7 +346,7 @@ namespace ChoETL
                         }
                         else if (recordType.IsSimple())
                         {
-                            ChoParquetRecordFieldConfiguration obj = NewFieldConfiguration(ref position, declaringMember, propDesc);
+                            ChoAvroRecordFieldConfiguration obj = NewFieldConfiguration(ref position, declaringMember, propDesc);
                             if (!recordFieldConfigurations.Any(c => c.Name == propDesc.Name))
                                 recordFieldConfigurations.Add(obj);
                         }
@@ -395,7 +380,7 @@ namespace ChoETL
                                 }
                                 else
                                 {
-                                    ChoParquetRecordFieldConfiguration obj = NewFieldConfiguration(ref position, declaringMember, pd, null, declaringMember == null ? propDesc.GetDisplayName() : propDesc.GetDisplayName(String.Empty));
+                                    ChoAvroRecordFieldConfiguration obj = NewFieldConfiguration(ref position, declaringMember, pd, null, declaringMember == null ? propDesc.GetDisplayName() : propDesc.GetDisplayName(String.Empty));
                                     if (!recordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
                                         recordFieldConfigurations.Add(obj);
                                 }
@@ -406,31 +391,31 @@ namespace ChoETL
             }
         }
 
-        internal ChoParquetRecordFieldConfiguration NewFieldConfiguration(ref int position, string declaringMember, PropertyDescriptor pd,
-            int? arrayIndex = null, string displayName = null, string dictKey = null, bool ignoreAttrs = false, Action<ChoParquetRecordFieldConfigurationMap> mapper = null)
+        internal ChoAvroRecordFieldConfiguration NewFieldConfiguration(ref int position, string declaringMember, PropertyDescriptor pd,
+            int? arrayIndex = null, string displayName = null, string dictKey = null, bool ignoreAttrs = false, Action<ChoAvroRecordFieldConfigurationMap> mapper = null)
         {
-            ChoParquetRecordFieldConfiguration obj = null;
+            ChoAvroRecordFieldConfiguration obj = null;
 
             if (displayName.IsNullOrEmpty())
             {
                 if (pd != null)
-                    obj = new ChoParquetRecordFieldConfiguration(declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), ++position);
+                    obj = new ChoAvroRecordFieldConfiguration(declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name));
                 else
-                    obj = new ChoParquetRecordFieldConfiguration("Value", ++position);
+                    obj = new ChoAvroRecordFieldConfiguration("Value");
             }
             else if (pd != null)
             {
                 if (displayName.IsNullOrWhiteSpace())
-                    obj = new ChoParquetRecordFieldConfiguration("{0}".FormatString(pd.Name), ++position);
+                    obj = new ChoAvroRecordFieldConfiguration("{0}".FormatString(pd.Name));
                 else
-                    obj = new ChoParquetRecordFieldConfiguration("{0}.{1}".FormatString(displayName, pd.Name), ++position);
+                    obj = new ChoAvroRecordFieldConfiguration("{0}.{1}".FormatString(displayName, pd.Name));
             }
             else
-                obj = new ChoParquetRecordFieldConfiguration(displayName, ++position);
+                obj = new ChoAvroRecordFieldConfiguration(displayName);
 
             //obj.FieldName = pd != null ? pd.Name : displayName;
 
-            mapper?.Invoke(new ChoParquetRecordFieldConfigurationMap(obj));
+            mapper?.Invoke(new ChoAvroRecordFieldConfigurationMap(obj));
 
             obj.DictKey = dictKey;
             obj.ArrayIndex = arrayIndex;
@@ -446,8 +431,6 @@ namespace ChoETL
                 if (!ignoreAttrs)
                 {
                     ChoFieldPositionAttribute fpAttr = pd.Attributes.OfType<ChoFieldPositionAttribute>().FirstOrDefault();
-                    if (fpAttr != null && fpAttr.Position > 0)
-                        obj.FieldPosition = fpAttr.Position;
                 }
             }
             else
@@ -503,15 +486,13 @@ namespace ChoETL
             {
                 if (ContainsRecordConfigForType(pd.ComponentType))
                 {
-                    var st = GetRecordConfigForType(pd.ComponentType).OfType<ChoParquetRecordFieldConfiguration>();
+                    var st = GetRecordConfigForType(pd.ComponentType).OfType<ChoAvroRecordFieldConfiguration>();
                     if (st != null && st.Any(fc => fc.Name == pd.Name))
                     {
                         var f = st.FirstOrDefault(fc => fc.Name == pd.Name);
                         if (f != null)
                         {
                             obj.FieldName = f.FieldName;
-                            if (f.FieldPosition > 0 && arrayIndex == null)
-                                obj.FieldPosition = f.FieldPosition;
                         }
                     }
                 }
@@ -538,51 +519,51 @@ namespace ChoETL
             return obj;
         }
 
-        //protected override void LoadNCacheMembers(IEnumerable<ChoRecordFieldConfiguration> fcs)
-        //{
-        //    if (!IsDynamicObject)
-        //    {
-        //        string name = null;
-        //        object defaultValue = null;
-        //        object fallbackValue = null;
-        //        foreach (var fc in fcs.OfType<ChoParquetRecordFieldConfiguration>())
-        //        {
-        //            name = fc.Name;
+        protected override void LoadNCacheMembers(IEnumerable<ChoRecordFieldConfiguration> fcs)
+        {
+            if (!IsDynamicObject)
+            {
+                string name = null;
+                object defaultValue = null;
+                object fallbackValue = null;
+                foreach (var fc in fcs.OfType<ChoAvroRecordFieldConfiguration>())
+                {
+                    name = fc.Name;
 
-        //            if (!PDDict.ContainsKey(name))
-        //            {
-        //                if (!PDDict.ContainsKey(fc.FieldName))
-        //                    continue;
+                    if (!PDDict.ContainsKey(name))
+                    {
+                        if (!PDDict.ContainsKey(fc.FieldName))
+                            continue;
 
-        //                name = fc.FieldName;
-        //            }
+                        name = fc.FieldName;
+                    }
 
-        //            fc.PD = PDDict[name];
-        //            fc.PI = PIDict[name];
+                    fc.PD = PDDict[name];
+                    fc.PI = PIDict[name];
 
-        //            //Load default value
-        //            defaultValue = ChoType.GetRawDefaultValue(PDDict[name]);
-        //            if (defaultValue != null)
-        //            {
-        //                fc.DefaultValue = defaultValue;
-        //                fc.IsDefaultValueSpecified = true;
-        //            }
-        //            //Load fallback value
-        //            fallbackValue = ChoType.GetRawFallbackValue(PDDict[name]);
-        //            if (fallbackValue != null)
-        //            {
-        //                fc.FallbackValue = fallbackValue;
-        //                fc.IsFallbackValueSpecified = true;
-        //            }
+                    //Load default value
+                    defaultValue = ChoType.GetRawDefaultValue(PDDict[name]);
+                    if (defaultValue != null)
+                    {
+                        fc.DefaultValue = defaultValue;
+                        fc.IsDefaultValueSpecified = true;
+                    }
+                    //Load fallback value
+                    fallbackValue = ChoType.GetRawFallbackValue(PDDict[name]);
+                    if (fallbackValue != null)
+                    {
+                        fc.FallbackValue = fallbackValue;
+                        fc.IsFallbackValueSpecified = true;
+                    }
 
-        //            //Load Converters
-        //            fc.PropConverters = ChoTypeDescriptor.GetTypeConverters(fc.PI);
-        //            fc.PropConverterParams = ChoTypeDescriptor.GetTypeConverterParams(fc.PI);
+                    //Load Converters
+                    fc.PropConverters = ChoTypeDescriptor.GetTypeConverters(fc.PI);
+                    fc.PropConverterParams = ChoTypeDescriptor.GetTypeConverterParams(fc.PI);
 
-        //        }
-        //    }
-        //    base.LoadNCacheMembers(fcs);
-        //}
+                }
+            }
+            base.LoadNCacheMembers(fcs);
+        }
 
         public override void Validate(object state)
         {
@@ -596,31 +577,31 @@ namespace ChoETL
                 fieldNames = state as string[];
 
             if (AutoDiscoverColumns
-                && ParquetRecordFieldConfigurations.Count == 0)
+                && AvroRecordFieldConfigurations.Count == 0)
             {
                 if (RecordType != null && !IsDynamicObject /*&& RecordType != typeof(ExpandoObject)*/
-                    && ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Attributes.OfType<ChoParquetRecordFieldAttribute>().Any()).Any())
+                    && ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Attributes.OfType<ChoAvroRecordFieldAttribute>().Any()).Any())
                 {
                     MapRecordFields(RecordType);
                 }
                 else if (jObject != null)
                 {
-                    Dictionary<string, ChoParquetRecordFieldConfiguration> dict = new Dictionary<string, ChoParquetRecordFieldConfiguration>(StringComparer.CurrentCultureIgnoreCase);
+                    Dictionary<string, ChoAvroRecordFieldConfiguration> dict = new Dictionary<string, ChoAvroRecordFieldConfiguration>(StringComparer.CurrentCultureIgnoreCase);
                     string name = null;
                     int index = 0;
                     foreach (var kvp in jObject)
                     {
                         name = kvp.Key;
                         if (!dict.ContainsKey(name))
-                            dict.Add(name, new ChoParquetRecordFieldConfiguration(name, ++index));
+                            dict.Add(name, new ChoAvroRecordFieldConfiguration(name));
                         else
                         {
                             throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
                         }
                     }
 
-                    foreach (ChoParquetRecordFieldConfiguration obj in dict.Values)
-                        ParquetRecordFieldConfigurations.Add(obj);
+                    foreach (ChoAvroRecordFieldConfiguration obj in dict.Values)
+                        AvroRecordFieldConfigurations.Add(obj);
                 }
                 else if (!fieldNames.IsNullOrEmpty())
                 {
@@ -631,8 +612,8 @@ namespace ChoETL
                         if (IgnoredFields.Contains(fn))
                             continue;
 
-                        var obj = new ChoParquetRecordFieldConfiguration(fn, ++index);
-                        ParquetRecordFieldConfigurations.Add(obj);
+                        var obj = new ChoAvroRecordFieldConfiguration(fn);
+                        AvroRecordFieldConfigurations.Add(obj);
                     }
                 }
 
@@ -651,18 +632,7 @@ namespace ChoETL
             }
             else
             {
-                int maxFieldPos = ParquetRecordFieldConfigurations.Max(r => r.FieldPosition);
-                foreach (var fieldConfig in ParquetRecordFieldConfigurations)
-                {
-                    if (fieldConfig.FieldPosition > 0) continue;
-                    fieldConfig.FieldPosition = ++maxFieldPos;
-                }
             }
-
-            if (ParquetRecordFieldConfigurations.Count > 0)
-                MaxFieldPosition = ParquetRecordFieldConfigurations.Max(r => r.FieldPosition);
-            else
-                throw new ChoRecordConfigurationException("No record fields specified.");
 
             //Index map initialization
             foreach (var value in _indexMapDict.Values)
@@ -673,20 +643,8 @@ namespace ChoETL
             }
 
             //Validate each record field
-            foreach (var fieldConfig in ParquetRecordFieldConfigurations)
+            foreach (var fieldConfig in AvroRecordFieldConfigurations)
                 fieldConfig.Validate(this);
-
-            //Check if any field has 0 
-            if (ParquetRecordFieldConfigurations.Where(i => i.FieldPosition <= 0).Count() > 0)
-                throw new ChoRecordConfigurationException("Some fields contain invalid field position. All field positions must be > 0.");
-
-            //Check field position for duplicate
-            int[] dupPositions = ParquetRecordFieldConfigurations.GroupBy(i => i.FieldPosition)
-                .Where(g => g.Count() > 1)
-                .Select(g => g.Key).ToArray();
-
-            if (dupPositions.Length > 0)
-                throw new ChoRecordConfigurationException("Duplicate field position(s) [Index: {0}] found.".FormatString(String.Join(",", dupPositions)));
 
             if (false)
             {
@@ -694,11 +652,11 @@ namespace ChoETL
             else
             {
                 //Check if any field has empty names 
-                if (ParquetRecordFieldConfigurations.Where(i => i.FieldName.IsNullOrWhiteSpace()).Count() > 0)
+                if (AvroRecordFieldConfigurations.Where(i => i.FieldName.IsNullOrWhiteSpace()).Count() > 0)
                     throw new ChoRecordConfigurationException("Some fields has empty field name specified.");
 
                 //Check field names for duplicate
-                string[] dupFields = ParquetRecordFieldConfigurations.GroupBy(i => i.FieldName/*, FileHeaderConfiguration.StringComparer*/)
+                string[] dupFields = AvroRecordFieldConfigurations.GroupBy(i => i.FieldName/*, FileHeaderConfiguration.StringComparer*/)
                     .Where(g => g.Count() > 1)
                     .Select(g => g.Key).ToArray();
 
@@ -708,7 +666,7 @@ namespace ChoETL
 
             PIDict = new Dictionary<string, System.Reflection.PropertyInfo>(StringComparer.InvariantCultureIgnoreCase);
             PDDict = new Dictionary<string, PropertyDescriptor>(StringComparer.InvariantCultureIgnoreCase);
-            foreach (var fc in ParquetRecordFieldConfigurations)
+            foreach (var fc in AvroRecordFieldConfigurations)
             {
                 if (fc.PropertyDescriptor == null && !IsDynamicObject)
                 {
@@ -738,9 +696,9 @@ namespace ChoETL
                 PDDict.Add(fc.FieldName, fc.PropertyDescriptor);
             }
 
-            RecordFieldConfigurationsDict = ParquetRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName/*, FileHeaderConfiguration.StringComparer*/);
+            RecordFieldConfigurationsDict = AvroRecordFieldConfigurations.Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName/*, FileHeaderConfiguration.StringComparer*/);
             //RecordFieldConfigurationsDictGroup = RecordFieldConfigurationsDict.GroupBy(kvp => kvp.Key.Contains(".") ? kvp.Key.SplitNTrim(".").First() : kvp.Key).ToDictionary(i => i.Key, i => i.ToArray());
-            RecordFieldConfigurationsDict2 = ParquetRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName/*, FileHeaderConfiguration.StringComparer*/);
+            RecordFieldConfigurationsDict2 = AvroRecordFieldConfigurations.Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName/*, FileHeaderConfiguration.StringComparer*/);
 
             try
             {
@@ -759,7 +717,7 @@ namespace ChoETL
 
             //FCArray = RecordFieldConfigurationsDict.ToArray();
 
-            LoadNCacheMembers(ParquetRecordFieldConfigurations);
+            LoadNCacheMembers(AvroRecordFieldConfigurations);
         }
 
         private void ValidateChar(char src, string name)
@@ -774,76 +732,64 @@ namespace ChoETL
                 throw new ChoRecordConfigurationException("One of the Comments contains {0}. Not allowed.".FormatString(name));
         }
 
-        public ChoParquetRecordConfiguration ClearFields()
+        public ChoAvroRecordConfiguration ClearFields()
         {
             _indexMapDict.Clear();
-            ParquetRecordFieldConfigurationsForType.Clear();
-            ParquetRecordFieldConfigurations.Clear();
+            AvroRecordFieldConfigurationsForType.Clear();
+            AvroRecordFieldConfigurations.Clear();
             return this;
         }
 
-        public ChoParquetRecordConfiguration IgnoreField<T, TProperty>(Expression<Func<T, TProperty>> field)
+        public ChoAvroRecordConfiguration IgnoreField<T, TProperty>(Expression<Func<T, TProperty>> field)
         {
-            if (ParquetRecordFieldConfigurations.Count == 0)
+            if (AvroRecordFieldConfigurations.Count == 0)
                 MapRecordFields<T>();
 
-            var fc = ParquetRecordFieldConfigurations.Where(f => f.DeclaringMember == field.GetFullyQualifiedMemberName()).FirstOrDefault();
+            var fc = AvroRecordFieldConfigurations.Where(f => f.DeclaringMember == field.GetFullyQualifiedMemberName()).FirstOrDefault();
             if (fc != null)
-                ParquetRecordFieldConfigurations.Remove(fc);
+                AvroRecordFieldConfigurations.Remove(fc);
 
             return this;
         }
 
-        public ChoParquetRecordConfiguration IgnoreField(string fieldName)
+        public ChoAvroRecordConfiguration IgnoreField(string fieldName)
         {
-            var fc = ParquetRecordFieldConfigurations.Where(f => f.DeclaringMember == fieldName || f.FieldName == fieldName).FirstOrDefault();
+            var fc = AvroRecordFieldConfigurations.Where(f => f.DeclaringMember == fieldName || f.FieldName == fieldName).FirstOrDefault();
             if (fc != null)
-                ParquetRecordFieldConfigurations.Remove(fc);
+                AvroRecordFieldConfigurations.Remove(fc);
 
             return this;
         }
 
-        public ChoParquetRecordConfiguration Map<T, TProperty>(Expression<Func<T, TProperty>> field, int position)
-        {
-            Map(field, m => m.Position(position));
-            return this;
-        }
-
-        public ChoParquetRecordConfiguration Map<T, TProperty>(Expression<Func<T, TProperty>> field, string fieldName = null)
+        public ChoAvroRecordConfiguration Map<T, TProperty>(Expression<Func<T, TProperty>> field, string fieldName = null)
         {
             Map(field, m => m.FieldName(fieldName));
             return this;
         }
 
-        public ChoParquetRecordConfiguration Map(string propertyName, int position)
-        {
-            Map(propertyName, m => m.Position(position));
-            return this;
-        }
-
-        public ChoParquetRecordConfiguration Map(string propertyName, string fieldName)
+        public ChoAvroRecordConfiguration Map(string propertyName, string fieldName)
         {
             Map(propertyName, m => m.FieldName(fieldName));
             return this;
         }
 
-        public ChoParquetRecordConfiguration Map(string propertyName, Action<ChoParquetRecordFieldConfigurationMap> mapper = null)
+        public ChoAvroRecordConfiguration Map(string propertyName, Action<ChoAvroRecordFieldConfigurationMap> mapper = null)
         {
             var cf = GetFieldConfiguration(propertyName);
-            mapper?.Invoke(new ChoParquetRecordFieldConfigurationMap(cf));
+            mapper?.Invoke(new ChoAvroRecordFieldConfigurationMap(cf));
             return this;
         }
 
-        public ChoParquetRecordConfiguration Map<T, TField>(Expression<Func<T, TField>> field, Action<ChoParquetRecordFieldConfigurationMap> mapper = null)
+        public ChoAvroRecordConfiguration Map<T, TField>(Expression<Func<T, TField>> field, Action<ChoAvroRecordFieldConfigurationMap> mapper = null)
         {
             var subType = field.GetReflectedType();
             var fn = field.GetMemberName();
             var pd = field.GetPropertyDescriptor();
             var fqm = field.GetFullyQualifiedMemberName();
 
-            var cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoParquetRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(), 
+            var cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoAvroRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(), 
                 pd, fqm/*, subType == typeof(T) ? null : subType*/);
-            mapper?.Invoke(new ChoParquetRecordFieldConfigurationMap(cf));
+            mapper?.Invoke(new ChoAvroRecordFieldConfigurationMap(cf));
             return this;
         }
 
@@ -853,7 +799,7 @@ namespace ChoETL
                 return;
 
             if (ContainsRecordConfigForType(rt))
-                ParquetRecordFieldConfigurationsForType.Remove(rt);
+                AvroRecordFieldConfigurationsForType.Remove(rt);
         }
 
         public void MapRecordFieldsForType(Type rt)
@@ -864,35 +810,35 @@ namespace ChoETL
             if (ContainsRecordConfigForType(rt))
                 return;
 
-            List<ChoParquetRecordFieldConfiguration> recordFieldConfigurations = new List<ChoParquetRecordFieldConfiguration>();
+            List<ChoAvroRecordFieldConfiguration> recordFieldConfigurations = new List<ChoAvroRecordFieldConfiguration>();
             DiscoverRecordFields(rt, true, recordFieldConfigurations);
 
-            ParquetRecordFieldConfigurationsForType.Add(rt, recordFieldConfigurations.ToDictionary(item => item.Name, StringComparer.InvariantCultureIgnoreCase));
+            AvroRecordFieldConfigurationsForType.Add(rt, recordFieldConfigurations.ToDictionary(item => item.Name, StringComparer.InvariantCultureIgnoreCase));
         }
 
-        internal void AddFieldForType(Type rt, ChoParquetRecordFieldConfiguration rc)
+        internal void AddFieldForType(Type rt, ChoAvroRecordFieldConfiguration rc)
         {
             if (rt == null || rc == null)
                 return;
 
-            if (!ParquetRecordFieldConfigurationsForType.ContainsKey(rt))
-                ParquetRecordFieldConfigurationsForType.Add(rt, new Dictionary<string, ChoParquetRecordFieldConfiguration>(StringComparer.InvariantCultureIgnoreCase));
+            if (!AvroRecordFieldConfigurationsForType.ContainsKey(rt))
+                AvroRecordFieldConfigurationsForType.Add(rt, new Dictionary<string, ChoAvroRecordFieldConfiguration>(StringComparer.InvariantCultureIgnoreCase));
 
-            if (ParquetRecordFieldConfigurationsForType[rt].ContainsKey(rc.Name))
-                ParquetRecordFieldConfigurationsForType[rt][rc.Name] = rc;
+            if (AvroRecordFieldConfigurationsForType[rt].ContainsKey(rc.Name))
+                AvroRecordFieldConfigurationsForType[rt][rc.Name] = rc;
             else
-                ParquetRecordFieldConfigurationsForType[rt].Add(rc.Name, rc);
+                AvroRecordFieldConfigurationsForType[rt].Add(rc.Name, rc);
         }
 
         public override bool ContainsRecordConfigForType(Type rt)
         {
-            return ParquetRecordFieldConfigurationsForType.ContainsKey(rt);
+            return AvroRecordFieldConfigurationsForType.ContainsKey(rt);
         }
 
         public override ChoRecordFieldConfiguration[] GetRecordConfigForType(Type rt)
         {
             if (ContainsRecordConfigForType(rt))
-                return ParquetRecordFieldConfigurationsForType[rt].Values.ToArray();
+                return AvroRecordFieldConfigurationsForType[rt].Values.ToArray();
             else
                 return null;
         }
@@ -900,12 +846,12 @@ namespace ChoETL
         public override Dictionary<string, ChoRecordFieldConfiguration> GetRecordConfigDictionaryForType(Type rt)
         {
             if (ContainsRecordConfigForType(rt))
-                return ParquetRecordFieldConfigurationsForType[rt].ToDictionary(kvp => kvp.Key, kvp => (ChoRecordFieldConfiguration)kvp.Value);
+                return AvroRecordFieldConfigurationsForType[rt].ToDictionary(kvp => kvp.Key, kvp => (ChoRecordFieldConfiguration)kvp.Value);
             else
                 return null;
         }
 
-        public ChoParquetRecordConfiguration MapForType<T, TField>(Expression<Func<T, TField>> field, int? position = null, 
+        public ChoAvroRecordConfiguration MapForType<T, TField>(Expression<Func<T, TField>> field,
             string fieldName = null)
         {
             var subType = field.GetReflectedType();
@@ -913,12 +859,10 @@ namespace ChoETL
             var pd = field.GetPropertyDescriptor();
             var fqm = field.GetFullyQualifiedMemberName();
 
-            ChoParquetRecordFieldConfiguration cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoParquetRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(),
+            ChoAvroRecordFieldConfiguration cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoAvroRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(),
                 pd, fqm, subType);
 
-            var cf1 = new ChoParquetRecordFieldConfigurationMap(cf).FieldName(fieldName);
-            if (position != null)
-                cf1.Position(position.Value);
+            var cf1 = new ChoAvroRecordFieldConfigurationMap(cf).FieldName(fieldName);
 
             return this;
         }
@@ -943,36 +887,23 @@ namespace ChoETL
                     MapRecordFieldsForType(subRecordType);
 
                 string fnTrim = name.NTrim();
-                ChoParquetRecordFieldConfiguration fc = null;
+                ChoAvroRecordFieldConfiguration fc = null;
                 PropertyDescriptor pd = null;
-                if (ParquetRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                if (AvroRecordFieldConfigurations.Any(o => o.Name == fnTrim))
                 {
-                    fc = ParquetRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
-                    if (position == null || position <= 0)
-                        position = fc.FieldPosition;
-
-                    ParquetRecordFieldConfigurations.Remove(fc);
+                    fc = AvroRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+                    AvroRecordFieldConfigurations.Remove(fc);
                 }
                 else if (subRecordType != null)
                 {
                     pd = ChoTypeDescriptor.GetNestedProperty(subRecordType, fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
-                    if (position == null || position <= 0)
-                    {
-                        position = ParquetRecordFieldConfigurations.Count > 0 ? ParquetRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-                        position++;
-                    }
                 }
                 else
                 {
                     pd = ChoTypeDescriptor.GetNestedProperty(recordType, fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
-                    if (position == null || position <= 0)
-                    {
-                        position = ParquetRecordFieldConfigurations.Count > 0 ? ParquetRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-                        position++;
-                    }
                 }
 
-                var nfc = new ChoParquetRecordFieldConfiguration(fnTrim, position.Value)
+                var nfc = new ChoAvroRecordFieldConfiguration(fnTrim)
                 {
                     FieldType = fieldType,
                     QuoteField = quoteField,
@@ -984,7 +915,6 @@ namespace ChoETL
                     HeaderSelector = headerSelector,
                     DefaultValue = defaultValue,
                     FallbackValue = fallbackValue,
-                    AltFieldNames = altFieldNames,
                     FormatText = formatText,
                     NullValue = nullValue,
                 };
@@ -1010,19 +940,19 @@ namespace ChoETL
                 }
 
                 if (subRecordType == null)
-                    ParquetRecordFieldConfigurations.Add(nfc);
+                    AvroRecordFieldConfigurations.Add(nfc);
                 else
                     AddFieldForType(subRecordType, nfc);
             }
         }
 
-        internal ChoParquetRecordFieldConfiguration GetFieldConfiguration(string propertyName, ChoParquetRecordFieldAttribute attr = null, Attribute[] otherAttrs = null,
+        internal ChoAvroRecordFieldConfiguration GetFieldConfiguration(string propertyName, ChoAvroRecordFieldAttribute attr = null, Attribute[] otherAttrs = null,
             PropertyDescriptor pd = null, string fqm = null, Type subType = null)
         {
             if (subType != null)
             {
                 MapRecordFieldsForType(subType);
-                var fc = new ChoParquetRecordFieldConfiguration(propertyName, attr, otherAttrs);
+                var fc = new ChoAvroRecordFieldConfiguration(propertyName, attr, otherAttrs);
                 AddFieldForType(subType, fc);
 
                 return fc;
@@ -1037,14 +967,11 @@ namespace ChoETL
                     fqm = propertyName;
 
                 propertyName = propertyName.SplitNTrim(".").LastOrDefault();
-                if (!ParquetRecordFieldConfigurations.Any(fc => fc.DeclaringMember == fqm && fc.ArrayIndex == null))
+                if (!AvroRecordFieldConfigurations.Any(fc => fc.DeclaringMember == fqm && fc.ArrayIndex == null))
                 {
                     int fieldPosition = 0;
-                    fieldPosition = ParquetRecordFieldConfigurations.Count > 0 ? ParquetRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-                    fieldPosition++;
 
-                    var c = new ChoParquetRecordFieldConfiguration(propertyName, attr, otherAttrs);
-                    c.FieldPosition = fieldPosition;
+                    var c = new ChoAvroRecordFieldConfiguration(propertyName, attr, otherAttrs);
                     if (pd != null)
                     {
                         c.PropertyDescriptor = pd;
@@ -1053,21 +980,21 @@ namespace ChoETL
 
                     c.DeclaringMember = fqm;
 
-                    ParquetRecordFieldConfigurations.Add(c);
+                    AvroRecordFieldConfigurations.Add(c);
                 }
 
-                return ParquetRecordFieldConfigurations.First(fc => fc.DeclaringMember == fqm && fc.ArrayIndex == null);
+                return AvroRecordFieldConfigurations.First(fc => fc.DeclaringMember == fqm && fc.ArrayIndex == null);
             }
         }
 
-        public ChoParquetRecordConfiguration IndexMap(string fieldName, Type fieldType, int minumum, int maximum, Action<ChoParquetRecordFieldConfigurationMap> mapper = null)
+        public ChoAvroRecordConfiguration IndexMap(string fieldName, Type fieldType, int minumum, int maximum, Action<ChoAvroRecordFieldConfigurationMap> mapper = null)
         {
             IndexMapInternal(fieldName, fieldType, minumum, maximum, fieldName, fieldName, mapper);
             return this;
         }
 
-        public ChoParquetRecordConfiguration IndexMap<T, TField>(Expression<Func<T, TField>> field, int minumum,
-            int maximum, Action<ChoParquetRecordFieldConfigurationMap> mapper = null)
+        public ChoAvroRecordConfiguration IndexMap<T, TField>(Expression<Func<T, TField>> field, int minumum,
+            int maximum, Action<ChoAvroRecordFieldConfigurationMap> mapper = null)
         {
             Type fieldType = field.GetPropertyType().GetUnderlyingType();
             var fqn = field.GetFullyQualifiedMemberName();
@@ -1085,7 +1012,7 @@ namespace ChoETL
 
         internal void IndexMapInternal(string fieldName, Type fieldType, int minumum, int maximum,
             string fullyQualifiedMemberName = null, string displayName = null,
-            Action<ChoParquetRecordFieldConfigurationMap> mapper = null)
+            Action<ChoAvroRecordFieldConfigurationMap> mapper = null)
         {
             if (_indexMapDict.ContainsKey(fieldName))
                 _indexMapDict.Remove(fieldName);
@@ -1102,7 +1029,7 @@ namespace ChoETL
 
         internal void BuildIndexMap(string fieldName, Type fieldType, int minumum, int maximum,
             string fullyQualifiedMemberName = null, string displayName = null,
-            Action<ChoParquetRecordFieldConfigurationMap> mapper = null)
+            Action<ChoAvroRecordFieldConfigurationMap> mapper = null)
         {
             if (fullyQualifiedMemberName == null)
                 fullyQualifiedMemberName = fieldName;
@@ -1128,23 +1055,17 @@ namespace ChoETL
                 var itemType = recordType.GetItemType().GetUnderlyingType();
                 if (itemType.IsSimple())
                 {
-                    var fcs1 = ParquetRecordFieldConfigurations.Where(o => o.DeclaringMember == fullyQualifiedMemberName).ToArray();
-                    int priority = 0;
+                    var fcs1 = AvroRecordFieldConfigurations.Where(o => o.DeclaringMember == fullyQualifiedMemberName).ToArray();
                     foreach (var fc in fcs1)
                     {
-                        priority = fcs1.First().Priority;
                         displayName = fcs1.First().FieldName;
-                        ParquetRecordFieldConfigurations.Remove(fc);
+                        AvroRecordFieldConfigurations.Remove(fc);
                     }
 
                     for (int index = minumum; index <= maximum; index++)
                     {
-                        int fieldPosition = 0;
-                        fieldPosition = ParquetRecordFieldConfigurations.Count > 0 ? ParquetRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-                        fieldPosition++;
-
-                        var nfc = new ChoParquetRecordFieldConfiguration(fieldName, fieldPosition) { ArrayIndex = index, Priority = priority };
-                        mapper?.Invoke(new ChoParquetRecordFieldConfigurationMap(nfc));
+                        var nfc = new ChoAvroRecordFieldConfiguration(fieldName) { ArrayIndex = index };
+                        mapper?.Invoke(new ChoAvroRecordFieldConfigurationMap(nfc));
 
                         if (displayName != null)
                             nfc.FieldName = displayName;
@@ -1158,11 +1079,10 @@ namespace ChoETL
                         nfc.DeclaringMember = nfc.Name;
                         nfc.Name = lFieldName;
                         nfc.FieldName = lFieldName;
-                        nfc.FieldPosition = fieldPosition;
                         nfc.ArrayIndex = index;
 
                         nfc.FieldType = recordType;
-                        ParquetRecordFieldConfigurations.Add(nfc);
+                        AvroRecordFieldConfigurations.Add(nfc);
                     }
                 }
                 else
@@ -1170,28 +1090,27 @@ namespace ChoETL
                     int priority = 0;
 
                     //Remove collection config member
-                    var fcs1 = ParquetRecordFieldConfigurations.Where(o => o.FieldName == fqn).ToArray();
+                    var fcs1 = AvroRecordFieldConfigurations.Where(o => o.FieldName == fqn).ToArray();
                     foreach (var fc in fcs1)
                     {
-                        priority = fc.Priority;
-                        ParquetRecordFieldConfigurations.Remove(fc);
+                        AvroRecordFieldConfigurations.Remove(fc);
                     }
 
                     //Remove any unused config
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(itemType))
                     {
-                        var fcs = ParquetRecordFieldConfigurations.Where(o => o.DeclaringMember == "{0}.{1}".FormatString(fullyQualifiedMemberName, pd.Name)
+                        var fcs = AvroRecordFieldConfigurations.Where(o => o.DeclaringMember == "{0}.{1}".FormatString(fullyQualifiedMemberName, pd.Name)
                         && o.ArrayIndex != null && (o.ArrayIndex < minumum || o.ArrayIndex > maximum)).ToArray();
 
                         foreach (var fc in fcs)
-                            ParquetRecordFieldConfigurations.Remove(fc);
+                            AvroRecordFieldConfigurations.Remove(fc);
                     }
 
                     for (int index = minumum; index <= maximum; index++)
                     {
                         foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(itemType))
                         {
-                            var fc = ParquetRecordFieldConfigurations.Where(o => o.DeclaringMember == "{0}.{1}".FormatString(fullyQualifiedMemberName, pd.Name)
+                            var fc = AvroRecordFieldConfigurations.Where(o => o.DeclaringMember == "{0}.{1}".FormatString(fullyQualifiedMemberName, pd.Name)
                             && o.ArrayIndex != null && o.ArrayIndex == index).FirstOrDefault();
 
                             if (fc != null) continue;
@@ -1203,14 +1122,11 @@ namespace ChoETL
                             else
                             {
                                 int fieldPosition = 0;
-                                fieldPosition = ParquetRecordFieldConfigurations.Count > 0 ? ParquetRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-                                //fieldPosition++;
-                                ChoParquetRecordFieldConfiguration obj = NewFieldConfiguration(ref fieldPosition, fullyQualifiedMemberName, pd, index, displayName, ignoreAttrs: false,
+                                ChoAvroRecordFieldConfiguration obj = NewFieldConfiguration(ref fieldPosition, fullyQualifiedMemberName, pd, index, displayName, ignoreAttrs: false,
                                     mapper: mapper);
 
-                                obj.Priority = priority;
                                 //if (!ParquetRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
-                                ParquetRecordFieldConfigurations.Add(obj);
+                                AvroRecordFieldConfigurations.Add(obj);
                             }
                         }
                     }
@@ -1218,15 +1134,15 @@ namespace ChoETL
             }
         }
 
-        public ChoParquetRecordConfiguration DictionaryMap(string fieldName, Type fieldType,
-            string[] keys, Action<ChoParquetRecordFieldConfigurationMap> mapper = null)
+        public ChoAvroRecordConfiguration DictionaryMap(string fieldName, Type fieldType,
+            string[] keys, Action<ChoAvroRecordFieldConfigurationMap> mapper = null)
         {
             DictionaryMapInternal(fieldName, fieldType, fieldName, keys, null, mapper);
             return this;
         }
 
-        public ChoParquetRecordConfiguration DictionaryMap<T, TField>(Expression<Func<T, TField>> field,
-            string[] keys, Action<ChoParquetRecordFieldConfigurationMap> mapper = null)
+        public ChoAvroRecordConfiguration DictionaryMap<T, TField>(Expression<Func<T, TField>> field,
+            string[] keys, Action<ChoAvroRecordFieldConfigurationMap> mapper = null)
         {
             Type fieldType = field.GetPropertyType().GetUnderlyingType();
             var fqn = field.GetFullyQualifiedMemberName();
@@ -1236,44 +1152,42 @@ namespace ChoETL
             return this;
         }
 
-        internal ChoParquetRecordConfiguration DictionaryMapInternal(string fieldName, Type fieldType, string fqn,
-            string[] keys, PropertyDescriptor pd = null, Action<ChoParquetRecordFieldConfigurationMap> mapper = null)
+        internal ChoAvroRecordConfiguration DictionaryMapInternal(string fieldName, Type fieldType, string fqn,
+            string[] keys, PropertyDescriptor pd = null, Action<ChoAvroRecordFieldConfigurationMap> mapper = null)
         {
-            List<ChoParquetRecordFieldConfiguration> fcsList = new List<ChoParquetRecordFieldConfiguration>();
+            List<ChoAvroRecordFieldConfiguration> fcsList = new List<ChoAvroRecordFieldConfiguration>();
             if (fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(IDictionary<,>)
                 && typeof(string) == fieldType.GetGenericArguments()[0]
                 && keys != null && keys.Length > 0)
             {
                 //Remove collection config member
-                var fcs1 = ParquetRecordFieldConfigurations.Where(o => o.FieldName == fqn).ToArray();
+                var fcs1 = AvroRecordFieldConfigurations.Where(o => o.FieldName == fqn).ToArray();
                 foreach (var fc in fcs1)
-                    ParquetRecordFieldConfigurations.Remove(fc);
+                    AvroRecordFieldConfigurations.Remove(fc);
 
                 //Remove any unused config
-                var fcs = ParquetRecordFieldConfigurations.Where(o => o.DeclaringMember == fieldName
+                var fcs = AvroRecordFieldConfigurations.Where(o => o.DeclaringMember == fieldName
                 && !o.DictKey.IsNullOrWhiteSpace() && !keys.Contains(o.DictKey)).ToArray();
 
                 foreach (var fc in fcs)
-                    ParquetRecordFieldConfigurations.Remove(fc);
+                    AvroRecordFieldConfigurations.Remove(fc);
 
                 foreach (var key in keys)
                 {
                     if (!key.IsNullOrWhiteSpace())
                     {
-                        var fc = ParquetRecordFieldConfigurations.Where(o => o.DeclaringMember == fieldName
+                        var fc = AvroRecordFieldConfigurations.Where(o => o.DeclaringMember == fieldName
                             && !o.DictKey.IsNullOrWhiteSpace() && key == o.DictKey).FirstOrDefault();
 
                         if (fc != null) continue;
 
                         //ChoParquetRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, dictKey: key);
                         int fieldPosition = 0;
-                        fieldPosition = ParquetRecordFieldConfigurations.Count > 0 ? ParquetRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;
-                        fieldPosition++;
-                        ChoParquetRecordFieldConfiguration obj = NewFieldConfiguration(ref fieldPosition, null, pd, displayName: fieldName, dictKey: key, mapper: mapper);
+                        ChoAvroRecordFieldConfiguration obj = NewFieldConfiguration(ref fieldPosition, null, pd, displayName: fieldName, dictKey: key, mapper: mapper);
 
                         //if (!ParquetRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
                         //ParquetRecordFieldConfigurations.Add(obj);
-                        ParquetRecordFieldConfigurations.Add(obj);
+                        AvroRecordFieldConfigurations.Add(obj);
                     }
                 }
             }
@@ -1282,7 +1196,7 @@ namespace ChoETL
 
         #region Fluent API
 
-        public ChoParquetRecordConfiguration Configure(Action<ChoParquetRecordConfiguration> action)
+        public ChoAvroRecordConfiguration Configure(Action<ChoAvroRecordConfiguration> action)
         {
             if (action != null)
                 action(this);
@@ -1293,94 +1207,74 @@ namespace ChoETL
         #endregion 
     }
 
-    public class ChoParquetRecordConfiguration<T> : ChoParquetRecordConfiguration
+    public class ChoAvroRecordConfiguration<T> : ChoAvroRecordConfiguration
     {
-        public ChoParquetRecordConfiguration()
+        public ChoAvroRecordConfiguration()
         {
             MapRecordFields<T>();
         }
 
-        public new ChoParquetRecordConfiguration<T> ClearFields()
+        public new ChoAvroRecordConfiguration<T> ClearFields()
         {
             base.ClearFields();
             return this;
         }
 
-        public ChoParquetRecordConfiguration<T> Ignore<TProperty>(Expression<Func<T, TProperty>> field)
+        public ChoAvroRecordConfiguration<T> Ignore<TProperty>(Expression<Func<T, TProperty>> field)
         {
             base.IgnoreField(field);
             return this;
         }
 
-        public ChoParquetRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, int position)
-        {
-            base.Map(field, position);
-            return this;
-        }
-
-        public ChoParquetRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, string fieldName = null)
+        public ChoAvroRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, string fieldName = null)
         {
             base.Map(field, fieldName);
             return this;
         }
 
-        public ChoParquetRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field,
-            Action<ChoParquetRecordFieldConfigurationMap> setup)
+        public ChoAvroRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field,
+            Action<ChoAvroRecordFieldConfigurationMap> setup)
         {
             base.Map(field, setup);
             return this;
         }
 
-        public ChoParquetRecordConfiguration<T> MapForType<TClass>(Expression<Func<TClass, object>> field, string fieldName = null)
+        public ChoAvroRecordConfiguration<T> MapForType<TClass>(Expression<Func<TClass, object>> field, string fieldName = null)
         {
             var subType = field.GetReflectedType();
             var fn = field.GetMemberName();
             var pd = field.GetPropertyDescriptor();
             var fqm = field.GetFullyQualifiedMemberName();
 
-            ChoParquetRecordFieldConfiguration cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoParquetRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(),
+            ChoAvroRecordFieldConfiguration cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoAvroRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(),
                 pd, fqm, subType);
 
-            new ChoParquetRecordFieldConfigurationMap(cf).FieldName(fieldName);
+            new ChoAvroRecordFieldConfigurationMap(cf).FieldName(fieldName);
             return this;
         }
 
-        public ChoParquetRecordConfiguration<T> MapForType<TClass, TField>(Expression<Func<TClass, TField>> field, int position)
+        public ChoAvroRecordConfiguration<T> MapForType<TClass, TField>(Expression<Func<TClass, TField>> field, Action<ChoAvroRecordFieldConfigurationMap> mapper)
         {
             var subType = field.GetReflectedType();
             var fn = field.GetMemberName();
             var pd = field.GetPropertyDescriptor();
             var fqm = field.GetFullyQualifiedMemberName();
 
-            ChoParquetRecordFieldConfiguration cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoParquetRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(),
+            var cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoAvroRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(),
                 pd, fqm, subType);
-
-            new ChoParquetRecordFieldConfigurationMap(cf).Position(position);
+            mapper?.Invoke(new ChoAvroRecordFieldConfigurationMap(cf));
             return this;
         }
 
-        public ChoParquetRecordConfiguration<T> MapForType<TClass, TField>(Expression<Func<TClass, TField>> field, Action<ChoParquetRecordFieldConfigurationMap> mapper)
-        {
-            var subType = field.GetReflectedType();
-            var fn = field.GetMemberName();
-            var pd = field.GetPropertyDescriptor();
-            var fqm = field.GetFullyQualifiedMemberName();
-
-            var cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoParquetRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(),
-                pd, fqm, subType);
-            mapper?.Invoke(new ChoParquetRecordFieldConfigurationMap(cf));
-            return this;
-        }
-
-        public ChoParquetRecordConfiguration<T> IndexMap<TField>(Expression<Func<T, TField>> field, int minumum,
-            int maximum, Action<ChoParquetRecordFieldConfigurationMap> mapper = null)
+        public ChoAvroRecordConfiguration<T> IndexMap<TField>(Expression<Func<T, TField>> field, int minumum,
+            int maximum, Action<ChoAvroRecordFieldConfigurationMap> mapper = null)
         {
             base.IndexMap(field, minumum, maximum, mapper);
             return this;
         }
 
-        public ChoParquetRecordConfiguration<T> DictionaryMap<TField>(Expression<Func<T, TField>> field,
-            string[] keys, Action<ChoParquetRecordFieldConfigurationMap> mapper = null)
+        public ChoAvroRecordConfiguration<T> DictionaryMap<TField>(Expression<Func<T, TField>> field,
+            string[] keys, Action<ChoAvroRecordFieldConfigurationMap> mapper = null)
         {
             base.DictionaryMap(field, keys, mapper);
             return this;
@@ -1388,7 +1282,7 @@ namespace ChoETL
 
         #region Fluent API
 
-        public ChoParquetRecordConfiguration<T> Configure(Action<ChoParquetRecordConfiguration<T>> action)
+        public ChoAvroRecordConfiguration<T> Configure(Action<ChoAvroRecordConfiguration<T>> action)
         {
             if (action != null)
                 action(this);
@@ -1396,13 +1290,13 @@ namespace ChoETL
             return this;
         }
 
-        public new ChoParquetRecordConfiguration<T> MapRecordFields<TClass>()
+        public new ChoAvroRecordConfiguration<T> MapRecordFields<TClass>()
         {
             base.MapRecordFields(typeof(TClass));
             return this;
         }
 
-        public new ChoParquetRecordConfiguration<T> MapRecordFields(params Type[] recordTypes)
+        public new ChoAvroRecordConfiguration<T> MapRecordFields(params Type[] recordTypes)
         {
             base.MapRecordFields(recordTypes);
             return this;

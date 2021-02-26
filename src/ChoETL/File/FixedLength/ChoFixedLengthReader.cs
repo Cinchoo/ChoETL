@@ -19,7 +19,7 @@ namespace ChoETL
     public class ChoFixedLengthReader<T> : ChoReader, IDisposable, IEnumerable<T>, IChoSanitizableReader
         where T : class
     {
-        private TextReader _textReader;
+        private Lazy<TextReader> _textReader;
         private IEnumerable<string> _lines;
         private bool _closeStreamOnDispose = false;
         private Lazy<IEnumerator<T>> _enumerator = null;
@@ -64,7 +64,7 @@ namespace ChoETL
 
             Init();
 
-            _textReader = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
+            _textReader = new Lazy<TextReader>(() => new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
         }
 
@@ -75,7 +75,7 @@ namespace ChoETL
             Configuration = configuration;
             Init();
 
-            _textReader = textReader;
+            _textReader = new Lazy<TextReader>(() => textReader);
         }
 
         internal ChoFixedLengthReader(IEnumerable<string> lines, ChoFixedLengthRecordConfiguration configuration = null)
@@ -94,10 +94,11 @@ namespace ChoETL
 
             Configuration = configuration;
             Init();
+
             if (inStream is MemoryStream)
-                _textReader = new StreamReader(inStream);
+                _textReader = new Lazy<TextReader>(() => new StreamReader(inStream));
             else
-                _textReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+                _textReader = new Lazy<TextReader>(() => new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize));
             //_closeStreamOnDispose = true;
         }
 
@@ -107,7 +108,7 @@ namespace ChoETL
 
             Close();
             Init();
-            _textReader = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
+            _textReader = new Lazy<TextReader>(() => new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
 
             return this;
@@ -119,7 +120,7 @@ namespace ChoETL
 
             Close();
             Init();
-            _textReader = textReader;
+            _textReader = new Lazy<TextReader>(() => textReader);
             _closeStreamOnDispose = false;
 
             return this;
@@ -132,9 +133,9 @@ namespace ChoETL
             Close();
             Init();
             if (inStream is MemoryStream)
-                _textReader = new StreamReader(inStream);
+                _textReader = new Lazy<TextReader>(() => new StreamReader(inStream));
             else
-                _textReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+                _textReader = new Lazy<TextReader>(() => new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
 
             return this;
@@ -168,7 +169,7 @@ namespace ChoETL
             {
                 if (_textReader != null)
                 {
-                    _textReader.Dispose();
+                    _textReader.Value.Dispose();
                     _textReader = null;
                 }
             }
@@ -200,14 +201,6 @@ namespace ChoETL
             }
         }
 
-        public static ChoFixedLengthReader<T> LoadLines(IEnumerable<string> inputLines, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-        {
-            var r = new ChoFixedLengthReader<T>(inputLines, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
-            r._closeStreamOnDispose = true;
-
-            return r;
-        }
-
         public static ChoFixedLengthReader<T> LoadText(string inputText, Encoding encoding = null, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
             var r = new ChoFixedLengthReader<T>(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
@@ -219,6 +212,14 @@ namespace ChoETL
         public static ChoFixedLengthReader<T> LoadText(string inputText, ChoFixedLengthRecordConfiguration config, TraceSwitch traceSwitch = null)
         {
             return LoadText(inputText, null, config, traceSwitch);
+        }
+
+        public static ChoFixedLengthReader<T> LoadLines(IEnumerable<string> inputLines, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            var r = new ChoFixedLengthReader<T>(inputLines, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
+            r._closeStreamOnDispose = true;
+
+            return r;
         }
 
         internal static IEnumerator<object> LoadText(Type recType, string inputText, ChoFixedLengthRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null, ChoReader parent = null)
@@ -322,7 +323,12 @@ namespace ChoETL
             EventHandler<ChoEmptyLineEventArgs> emptyLineFound = EmptyLineFound;
             if (emptyLineFound == null)
             {
-                return true;
+                if (Configuration.IgnoreEmptyLine)
+                    return true;
+                else
+                    return false;
+
+                //throw new ChoParserException("Empty line found at [{0}] location.".FormatString(lineNo));
             }
 
             var ea = new ChoEmptyLineEventArgs(lineNo);
@@ -375,7 +381,7 @@ namespace ChoETL
             IDictionary<string, string> columnMappings = null,
             SqlBulkCopyOptions copyOptions = SqlBulkCopyOptions.Default)
         {
-            if (columnMappings == null)
+            if (columnMappings == null || columnMappings.Count == 0)
                 columnMappings = Configuration.FixedLengthRecordFieldConfigurations.Select(fc => fc.FieldName)
                     .ToDictionary(fn => fn, fn => fn);
 
@@ -399,7 +405,7 @@ namespace ChoETL
             SqlBulkCopyOptions copyOptions = SqlBulkCopyOptions.Default,
             SqlTransaction transaction = null)
         {
-            if (columnMappings == null)
+            if (columnMappings == null || columnMappings.Count == 0)
                 columnMappings = Configuration.FixedLengthRecordFieldConfigurations.Select(fc => fc.FieldName)
                     .ToDictionary(fn => fn, fn => fn);
 

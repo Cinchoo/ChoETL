@@ -16,7 +16,7 @@ namespace ChoETL
     public class ChoCSVWriter<T> : ChoWriter, IDisposable
         where T : class
     {
-        private TextWriter _textWriter;
+        private Lazy<TextWriter> _textWriter;
         private bool _closeStreamOnDispose = false;
         private ChoCSVRecordWriter _writer = null;
         private bool _clearFields = false;
@@ -54,7 +54,7 @@ namespace ChoETL
 
             Init();
 
-            _textWriter = new StreamWriter(ChoPath.GetFullPath(filePath), false, Configuration.Encoding, Configuration.BufferSize);
+            _textWriter = new Lazy<TextWriter>(() => new StreamWriter(ChoPath.GetFullPath(filePath), false, Configuration.Encoding, Configuration.BufferSize));
             _closeStreamOnDispose = true;
         }
 
@@ -65,7 +65,7 @@ namespace ChoETL
             Configuration = configuration;
             Init();
 
-            _textWriter = textWriter;
+            _textWriter = new Lazy<TextWriter>(() => textWriter);
         }
 
         public ChoCSVWriter(Stream inStream, ChoCSVRecordConfiguration configuration = null)
@@ -76,9 +76,9 @@ namespace ChoETL
             Init();
 
             if (inStream is MemoryStream)
-                _textWriter = new StreamWriter(inStream);
+                _textWriter = new Lazy<TextWriter>(() => new StreamWriter(inStream));
             else
-                _textWriter = new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize);
+                _textWriter = new Lazy<TextWriter>(() => new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize));
             //_closeStreamOnDispose = true;
         }
 
@@ -95,7 +95,7 @@ namespace ChoETL
         public void Flush()
         {
             if (_textWriter != null)
-                _textWriter.Flush();
+                _textWriter.Value.Flush();
         }
 
         protected virtual void Dispose(bool finalize)
@@ -109,12 +109,12 @@ namespace ChoETL
             if (_closeStreamOnDispose)
             {
                 if (_textWriter != null)
-                    _textWriter.Dispose();
+                    _textWriter.Value.Dispose();
             }
             else
             {
                 if (_textWriter != null)
-                    _textWriter.Flush();
+                    _textWriter.Value.Flush();
             }
 
             if (!finalize)
@@ -135,35 +135,35 @@ namespace ChoETL
         {
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
-            _writer.WriteComment(_textWriter, commentText, silent);
+            _writer.WriteComment(_textWriter.Value, commentText, silent);
         }
 
         public void WriteFields(params object[] fieldValues)
         {
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
-            _writer.WriteFields(_textWriter, fieldValues);
+            _writer.WriteFields(_textWriter.Value, fieldValues);
         }
 
         public void WriteHeader(params string[] fieldNames)
         {
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
-            _writer.WriteHeader(_textWriter, fieldNames);
+            _writer.WriteHeader(_textWriter.Value, fieldNames);
         }
 
         public void WriteCustomHeader(string header)
         {
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
-            _writer.WriteCustomHeader(_textWriter, header);
+            _writer.WriteCustomHeader(_textWriter.Value, header);
         }
 
         public void Write(IEnumerable<T> records)
         {
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
-            _writer.WriteTo(_textWriter, records).Loop();
+            _writer.WriteTo(_textWriter.Value, records).Loop();
         }
 
         public void Write(T record)
@@ -182,15 +182,15 @@ namespace ChoETL
             _writer.TraceSwitch = TraceSwitch;
             if (record is ArrayList)
             {
-                _writer.WriteTo(_textWriter, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
+                _writer.WriteTo(_textWriter.Value, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
             }
             else if (record != null && !(/*!record.GetType().IsDynamicType() && record is IDictionary*/ record.GetType() == typeof(ExpandoObject) || typeof(IDynamicMetaObjectProvider).IsAssignableFrom(record.GetType()) || record.GetType() == typeof(object) || record.GetType().IsAnonymousType())
                 && (typeof(IDictionary).IsAssignableFrom(record.GetType()) || (record.GetType().IsGenericType && record.GetType().GetGenericTypeDefinition() == typeof(IDictionary<,>))))
             {
-                _writer.WriteTo(_textWriter, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
+                _writer.WriteTo(_textWriter.Value, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
             }
             else
-                _writer.WriteTo(_textWriter, new T[] { record }).Loop();
+                _writer.WriteTo(_textWriter.Value, new T[] { record }).Loop();
         }
 
         public static string ToTextAll<TRec>(IEnumerable<TRec> records, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
@@ -238,10 +238,11 @@ namespace ChoETL
                 return reader.ReadToEnd();
             }
         }
+
         public static string ToText<TRec>(TRec record, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
             where TRec : class
         {
-            return ToTextAll(ChoEnumerable.AsEnumerable(record), configuration, traceSwitch);
+            return ToTextAll(ChoEnumerable.AsEnumerable<TRec>(record), configuration, traceSwitch);
         }
 
         internal static string ToText(object rec, ChoCSVRecordConfiguration configuration, Encoding encoding, int bufferSize, TraceSwitch traceSwitch = null)

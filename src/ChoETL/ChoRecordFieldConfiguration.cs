@@ -54,7 +54,7 @@ namespace ChoETL
             set;
         }
         [DataMember]
-        public bool IsNullable
+        public bool? IsNullable
         {
             get;
             set;
@@ -149,7 +149,7 @@ namespace ChoETL
         internal readonly List<object> KeyConverters = new List<object>();
         internal readonly List<object> ValueConverters = new List<object>();
         public PropertyInfo PI { get; set; }
-        internal PropertyDescriptor PD;
+        public PropertyDescriptor PD { get; set; }
         public object[] PropConverters;
         public object[] PropConverterParams;
         public object PropCustomSerializer;
@@ -169,7 +169,7 @@ namespace ChoETL
                 ErrorMode = attr.ErrorModeInternal;
                 IgnoreFieldValueMode = attr.IgnoreFieldValueModeInternal;
                 FieldType = attr.FieldType;
-                IsNullable = attr.IsNullable;
+                IsNullable = attr.IsNullableInternal;
                 FormatText = attr.FormatText;
             }
         }

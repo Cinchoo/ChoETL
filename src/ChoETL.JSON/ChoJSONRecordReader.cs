@@ -474,7 +474,8 @@ namespace ChoETL
             bool? skipUntil = true;
             bool? doWhile = true;
             bool abortRequested = false;
-            _se = new Lazy<JsonSerializer>(() => Configuration.JsonSerializerSettings != null ? JsonSerializer.Create(Configuration.JsonSerializerSettings) : null);
+            //_se = new Lazy<JsonSerializer>(() => Configuration.JsonSerializerSettings != null ? JsonSerializer.Create(Configuration.JsonSerializerSettings) : null);
+            _se = new Lazy<JsonSerializer>(() => Configuration.JsonSerializer);
             List<object> buffer = new List<object>();
             IDictionary<string, Type> recFieldTypes = null;
 

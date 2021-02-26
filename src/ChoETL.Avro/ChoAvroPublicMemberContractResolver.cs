@@ -1,0 +1,78 @@
+﻿using Microsoft.Hadoop.Avro;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Serialization;
+
+namespace ChoETL
+{
+    public class ChoAvroPublicMemberContractResolver : AvroPublicMemberContractResolver
+    {
+        public ChoAvroRecordConfiguration Configuration
+        {
+            get;
+            set;
+        }
+
+        public ChoAvroPublicMemberContractResolver() : base(false)
+        {
+        }
+
+        public ChoAvroPublicMemberContractResolver(bool allowNullable) : base(allowNullable)
+        {
+        }
+
+        public override MemberSerializationInfo[] ResolveMembers(Type type)
+        {
+            if (type == null)
+            {
+                throw new ArgumentNullException("type");
+            }
+
+            var fields = Enumerable.Empty<FieldInfo>();
+            //type
+            //    .GetAllFields()
+            //    .Where(f => (f.Attributes & FieldAttributes.Public) != 0 &&
+            //                (f.Attributes & FieldAttributes.Static) == 0);
+
+            var properties =
+                type.GetAllProperties()
+                    .Where(p =>
+                           (p.DeclaringType.IsAnonymous() ||
+                           p.DeclaringType.IsKeyValuePair() ||
+                           (p.CanRead && p.CanWrite && p.GetSetMethod() != null && p.GetGetMethod() != null))
+                           && p.GetCustomAttribute<ChoIgnoreMemberAttribute>() == null
+                           );
+
+            var serializedProperties = ChoType.RemoveDuplicates(properties);
+            var fds = fields
+                .Concat<MemberInfo>(serializedProperties)
+                .Select(m => new MemberSerializationInfo { Name = m.Name, MemberInfo = m, Nullable = m.GetCustomAttributes(false).OfType<NullableSchemaAttribute>().Any() })
+                .ToArray();
+
+            List<MemberSerializationInfo> result = new List<MemberSerializationInfo>();
+            if (Configuration != null)
+            {
+                foreach (var fd in fds)
+                {
+                    if (Configuration.IgnoredFields.Contains(fd.Name))
+                        continue;
+
+                    var c = Configuration.RecordFieldConfigurations.FirstOrDefault(f => f.DeclaringMember == fd.MemberInfo.Name) as ChoAvroRecordFieldConfiguration;
+                    if (c != null)
+                    {
+                        fd.Name = c.FieldName;
+                        if (c.IsNullable != null)
+                            fd.Nullable = c.IsNullable.Value;
+                    }
+
+                    result.Add(fd);
+                }
+            }
+
+            return result.ToArray();
+        }
+    }
+}

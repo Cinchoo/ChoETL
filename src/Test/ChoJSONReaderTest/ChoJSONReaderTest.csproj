@@ -56,6 +56,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="klant.json" />
     <None Include="packages.config" />
     <None Include="sample100.json" />
     <None Include="Sample16Expected.csv" />

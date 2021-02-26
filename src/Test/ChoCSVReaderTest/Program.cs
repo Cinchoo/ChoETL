@@ -5386,8 +5386,6 @@ F1004|File is a duplicate|TRUE|ERROR|TEST_VISITS_IA_270084601_20201202192520.csv
 
             using (var parser = new ChoCSVReader(FileNameIgnoreLineFileCSV).WithFirstLineHeader())
             {
-                parser.Configuration.Encoding = Encoding.BigEndianUnicode;
-
                 parser.BeforeRecordLoad += (o, e) =>
                 {
                     if (e.Source != null)

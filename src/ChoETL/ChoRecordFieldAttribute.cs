@@ -26,10 +26,11 @@ namespace ChoETL
             get;
             set;
         }
+        internal bool? IsNullableInternal;
         public bool IsNullable
         {
-            get;
-            set;
+            get { return IsNullableInternal.CastTo<bool>(); }
+            set { IsNullableInternal = value; }
         }
         public string SourceFormat
         {

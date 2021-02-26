@@ -21,7 +21,7 @@ namespace ChoETL
     public class ChoJSONReader<T> : ChoReader, IDisposable, IEnumerable<T>, IChoSerializableReader
     //where T : class
     {
-        private TextReader _textReader;
+        private Lazy<TextReader> _textReader;
         private JsonTextReader _JSONReader;
         private IEnumerable<JToken> _jObjects;
         private bool _closeStreamOnDispose = false;
@@ -59,7 +59,7 @@ namespace ChoETL
 
             Init();
 
-            _JSONReader = new JsonTextReader(new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
+            _textReader = new Lazy<TextReader>(() => new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
         }
 
@@ -70,7 +70,7 @@ namespace ChoETL
             Configuration = configuration;
             Init();
 
-            _textReader = textReader;
+            _textReader = new Lazy<TextReader>(() => textReader);
         }
 
         public ChoJSONReader(JsonTextReader JSONReader, ChoJSONRecordConfiguration configuration = null)
@@ -91,9 +91,9 @@ namespace ChoETL
             Init();
 
             if (inStream is MemoryStream)
-                _textReader = new StreamReader(inStream);
+                _textReader = new Lazy<TextReader>(() => new StreamReader(inStream));
             else
-                _textReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+                _textReader = new Lazy<TextReader>(() => new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize));
             //_closeStreamOnDispose = true;
         }
 
@@ -121,7 +121,7 @@ namespace ChoETL
 
             Close();
             Init();
-            _textReader = new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
+            _textReader = new Lazy<TextReader>(() => new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
 
             return this;
@@ -133,7 +133,7 @@ namespace ChoETL
 
             Close();
             Init();
-            _textReader = textReader;
+            _textReader = new Lazy<TextReader>(() => textReader);
             _closeStreamOnDispose = false;
 
             return this;
@@ -158,9 +158,9 @@ namespace ChoETL
             Close();
             Init();
             if (inStream is MemoryStream)
-                _textReader = new StreamReader(inStream);
+                _textReader = new Lazy<TextReader>(() => new StreamReader(inStream));
             else
-                _textReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+                _textReader = new Lazy<TextReader>(() => new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
 
             return this;
@@ -203,7 +203,7 @@ namespace ChoETL
             if (_closeStreamOnDispose)
             {
                 if (_textReader != null)
-                    _textReader.Dispose();
+                    _textReader.Value.Dispose();
                 if (_JSONReader != null)
                     _JSONReader.Close();
             }
@@ -292,7 +292,7 @@ namespace ChoETL
             {
                 ChoJSONRecordReader rr = new ChoJSONRecordReader(typeof(T), Configuration);
                 if (_textReader != null)
-                    _JSONReader = Create(_textReader);
+                    _JSONReader = Create(_textReader.Value);
 
                 rr.Reader = this;
                 rr.TraceSwitch = TraceSwitch;

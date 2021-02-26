@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="@COPY $(ProjectDir)*.avro $(TargetDir)" />
+  </Target>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\ChoETL.Avro\ChoETL.Avro.csproj" />
+    <ProjectReference Include="..\..\ChoETL.JSON.NETStandard\ChoETL.JSON.NETStandard.csproj" />
+  </ItemGroup>
+
+</Project>

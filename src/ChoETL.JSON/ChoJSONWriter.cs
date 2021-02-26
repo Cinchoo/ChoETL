@@ -19,7 +19,7 @@ namespace ChoETL
     public class ChoJSONWriter<T> : ChoWriter, IChoSerializableWriter, IDisposable
         //where T : class
     {
-        private TextWriter _textWriter;
+        private Lazy<TextWriter> _textWriter;
         private bool _closeStreamOnDispose = false;
         private ChoJSONRecordWriter _writer = null;
         private bool _clearFields = false;
@@ -58,7 +58,7 @@ namespace ChoETL
 
             Init();
 
-            _textWriter = new StreamWriter(ChoPath.GetFullPath(filePath), false, Configuration.Encoding, Configuration.BufferSize);
+            _textWriter = new Lazy<TextWriter>(() => new StreamWriter(ChoPath.GetFullPath(filePath), false, Configuration.Encoding, Configuration.BufferSize));
             _closeStreamOnDispose = true;
         }
 
@@ -69,7 +69,7 @@ namespace ChoETL
             Configuration = configuration;
             Init();
 
-            _textWriter = textWriter;
+            _textWriter = new Lazy<TextWriter>(() => textWriter);
         }
 
         public ChoJSONWriter(Stream inStream, ChoJSONRecordConfiguration configuration = null)
@@ -79,9 +79,9 @@ namespace ChoETL
             Configuration = configuration;
             Init();
             if (inStream is MemoryStream)
-                _textWriter = new StreamWriter(inStream);
+                _textWriter = new Lazy<TextWriter>(() => new StreamWriter(inStream));
             else
-                _textWriter = new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize);
+                _textWriter = new Lazy<TextWriter>(() => new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize));
             //_closeStreamOnDispose = true;
         }
 
@@ -93,7 +93,7 @@ namespace ChoETL
         public void Flush()
         {
             if (_textWriter != null)
-                _textWriter.Flush();
+                _textWriter.Value.Flush();
         }
 
         protected virtual void Dispose(bool finalize)
@@ -102,18 +102,18 @@ namespace ChoETL
                 return;
 
             _isDisposed = true;
-            if (_writer != null)
+            if (_writer != null && _textWriter != null)
                 _writer.EndWrite(_textWriter);
 
             if (_closeStreamOnDispose)
             {
                 if (_textWriter != null)
-                    _textWriter.Dispose();
+                    _textWriter.Value.Dispose();
             }
             else
             {
                 if (_textWriter != null)
-                    _textWriter.Flush();
+                    _textWriter.Value.Flush();
             }
 
             if (!finalize)
@@ -139,7 +139,7 @@ namespace ChoETL
         {
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
-            _writer.WriteTo(_textWriter, records.OfType<object>()).Loop();
+            _writer.WriteTo(_textWriter.Value, records.OfType<object>()).Loop();
         }
 
         public void Write(T record)
@@ -161,19 +161,19 @@ namespace ChoETL
             {
                 if (Configuration.SingleElement == null)
                     Configuration.SingleElement = true;
-                _writer.WriteTo(_textWriter, ((IEnumerable)record).AsTypedEnumerable<T>().OfType<object>()).Loop();
+                _writer.WriteTo(_textWriter.Value, ((IEnumerable)record).AsTypedEnumerable<T>().OfType<object>()).Loop();
             }
             else if (record != null && !(/*!record.GetType().IsDynamicType() && record is IDictionary*/ record.GetType() == typeof(ExpandoObject) || typeof(IDynamicMetaObjectProvider).IsAssignableFrom(record.GetType()) || record.GetType() == typeof(object) || record.GetType().IsAnonymousType())
                 && (typeof(IDictionary).IsAssignableFrom(record.GetType()) || (record.GetType().IsGenericType && record.GetType().GetGenericTypeDefinition() == typeof(IDictionary<,>))))
             {
                 if (Configuration.SingleElement == null)
                     Configuration.SingleElement = true;
-                _writer.WriteTo(_textWriter, new object[] { record }).Loop();
+                _writer.WriteTo(_textWriter.Value, new object[] { record }).Loop();
             }
             else
             {
                 if (Configuration.SingleElement == null) Configuration.SingleElement = true;
-                _writer.WriteTo(_textWriter, new object[] { record }).Loop();
+                _writer.WriteTo(_textWriter.Value, new object[] { record }).Loop();
             }
         }
 

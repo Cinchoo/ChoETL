@@ -19,7 +19,7 @@ namespace ChoETL
         where T : class
     {
         private bool _isDisposed = false;
-        private TextWriter _textWriter;
+        private Lazy<TextWriter> _textWriter;
         private bool _closeStreamOnDispose = false;
         private ChoXmlRecordWriter _writer = null;
         private bool _clearFields = false;
@@ -57,7 +57,7 @@ namespace ChoETL
 
             Init();
 
-            _textWriter = new StreamWriter(ChoPath.GetFullPath(filePath), false, Configuration.Encoding, Configuration.BufferSize);
+            _textWriter = new Lazy<TextWriter>(() => new StreamWriter(ChoPath.GetFullPath(filePath), false, Configuration.Encoding, Configuration.BufferSize));
             _closeStreamOnDispose = true;
         }
 
@@ -68,7 +68,7 @@ namespace ChoETL
             Configuration = configuration;
             Init();
 
-            _textWriter = textWriter;
+            _textWriter = new Lazy<TextWriter>(() => textWriter);
         }
 
         public ChoXmlWriter(Stream inStream, ChoXmlRecordConfiguration configuration = null)
@@ -78,9 +78,9 @@ namespace ChoETL
             Configuration = configuration;
             Init();
             if (inStream is MemoryStream)
-                _textWriter = new StreamWriter(inStream);
+                _textWriter = new Lazy<TextWriter>(() => new StreamWriter(inStream));
             else
-                _textWriter = new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize);
+                _textWriter = new Lazy<TextWriter>(() => new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize));
             //_closeStreamOnDispose = true;
         }
 
@@ -92,7 +92,7 @@ namespace ChoETL
         public void Flush()
         {
             if (_textWriter != null)
-                _textWriter.Flush();
+                _textWriter.Value.Flush();
         }
 
         protected virtual void Dispose(bool finalize)
@@ -106,12 +106,12 @@ namespace ChoETL
             if (_closeStreamOnDispose)
             {
                 if (_textWriter != null)
-                    _textWriter.Dispose();
+                    _textWriter.Value.Dispose();
             }
             else
             {
                 if (_textWriter != null)
-                    _textWriter.Flush();
+                    _textWriter.Value.Flush();
             }
 
             if (!finalize)
@@ -136,7 +136,7 @@ namespace ChoETL
         {
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
-            _writer.WriteTo(_textWriter, records).Loop();
+            _writer.WriteTo(_textWriter.Value, records).Loop();
         }
 
         public void Write(T record)
@@ -156,15 +156,15 @@ namespace ChoETL
             _writer.TraceSwitch = TraceSwitch;
             if (record is ArrayList)
             {
-                _writer.WriteTo(_textWriter, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
+                _writer.WriteTo(_textWriter.Value, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
             }
             else if (record != null && !(/*!record.GetType().IsDynamicType() && record is IDictionary*/ record.GetType() == typeof(ExpandoObject) || typeof(IDynamicMetaObjectProvider).IsAssignableFrom(record.GetType()) || record.GetType() == typeof(object) || record.GetType().IsAnonymousType())
                 && (typeof(IDictionary).IsAssignableFrom(record.GetType()) || (record.GetType().IsGenericType && record.GetType().GetGenericTypeDefinition() == typeof(IDictionary<,>))))
             {
-                _writer.WriteTo(_textWriter, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
+                _writer.WriteTo(_textWriter.Value, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
             }
             else
-                _writer.WriteTo(_textWriter, new T[] { record }).Loop();
+                _writer.WriteTo(_textWriter.Value, new T[] { record }).Loop();
         }
 
         public static string ToText<TRec>(TRec record, ChoXmlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null, string xpath = null)
@@ -568,7 +568,7 @@ namespace ChoETL
         public ChoXmlWriter<T> WithXmlElementField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
             Func<object, object> valueConverter = null, 
             Func<object, object> customSerializer = null,
-            bool isNullable = false,
+            bool? isNullable = null,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string formatText = null,
             string nullValue = null)
         {
@@ -583,7 +583,7 @@ namespace ChoETL
         public ChoXmlWriter<T> WithXmlElementField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
             string fieldName = null, Func<object, object> valueConverter = null, 
             Func<object, object> customSerializer = null,
-            bool isNullable = false,
+            bool? isNullable = null,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string formatText = null,
             string nullValue = null)
         {
@@ -595,7 +595,7 @@ namespace ChoETL
         private ChoXmlWriter<T> WithXmlElementField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
             string fieldName = null, Func<object, object> valueConverter = null, 
             Func<object, object> customSerializer = null,
-            bool isNullable = false,
+            bool? isNullable = null,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = true, 
             string fullyQualifiedMemberName = null, string formatText = null,
             string nullValue = null)
@@ -609,7 +609,7 @@ namespace ChoETL
         public ChoXmlWriter<T> WithXmlAttributeField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
             Func<object, object> valueConverter = null, 
             Func<object, object> customSerializer = null,
-            bool isNullable = false,
+            bool? isNullable = null,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string formatText = null,
             string nullValue = null)
         {
@@ -624,7 +624,7 @@ namespace ChoETL
         public ChoXmlWriter<T> WithXmlAttributeField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
             string fieldName = null, Func<object, object> valueConverter = null, 
             Func<object, object> customSerializer = null,
-            bool isNullable = false,
+            bool? isNullable = null,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string formatText = null,
             string nullValue = null)
         {
@@ -635,7 +635,7 @@ namespace ChoETL
         private ChoXmlWriter<T> WithXmlAttributeField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
             string fieldName = null, Func<object, object> valueConverter = null, 
             Func<object, object> customSerializer = null,
-            bool isNullable = false,
+            bool? isNullable = null,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = true, 
             string fullyQualifiedMemberName = null, string formatText = null,
             string nullValue = null)
@@ -671,7 +671,7 @@ namespace ChoETL
             bool isXmlAttribute = false, bool isAnyXmlNode = false, string fieldName = null,
             Func<object, object> valueConverter = null, 
             Func<object, object> customSerializer = null,
-            bool isNullable = false,
+            bool? isNullable = null,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string formatText = null,
             string nullValue = null)
         {
@@ -686,7 +686,7 @@ namespace ChoETL
         public ChoXmlWriter<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
             bool isXmlAttribute = false, bool isAnyXmlNode = false, string fieldName = null, Func<object, object> valueConverter = null, 
             Func<object, object> customSerializer = null,
-            bool isNullable = false,
+            bool? isNullable = null,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = true, string formatText = null,
             string nullValue = null)
         {
@@ -697,7 +697,7 @@ namespace ChoETL
         private ChoXmlWriter<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
             bool isXmlAttribute = false, bool isAnyXmlNode = false, string fieldName = null, Func<object, object> valueConverter = null, 
             Func<object, object> customSerializer = null,
-            bool isNullable = false,
+            bool? isNullable = null,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = true, 
             string fullyQualifiedMemberName = null, string formatText = null,
             string nullValue = null)
