@@ -57,9 +57,9 @@ Here are the items will be targetted on phase 1.
   7. Yaml Reader / Writer
       + [Yaml Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickYamlLoad)
       + [Yaml Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickYamlWrite)
-  8. Yaml Reader / Writer
-      + [Yaml Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickAvroLoad)
-      + [Yaml Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickAvroWrite)
+  8. Avro Reader / Writer
+      + [Avro Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickAvroLoad)
+      + [Avro Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickAvroWrite)
 
 
 ## Documentation
