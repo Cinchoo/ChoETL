@@ -1,4 +1,5 @@
-﻿using Microsoft.Hadoop.Avro.Container;
+﻿using Microsoft.Hadoop.Avro;
+using Microsoft.Hadoop.Avro.Container;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,6 +12,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -24,6 +26,9 @@ namespace ChoETL
         private IChoRecordFieldSerializable _callbackRecordSeriablizable;
         private bool _configCheckDone = false;
         internal ChoReader Reader = null;
+        private object _sr = null;
+        private object _avroSerializer = null;
+        private object _avroReader = null;
 
         public ChoAvroRecordConfiguration Configuration
         {
@@ -45,54 +50,164 @@ namespace ChoETL
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
         }
 
-        public IEnumerable<T> AsEnumerable<T>(object source, Func<object, bool?> filterFunc = null)
+        private bool IsDynamicType
+        {
+            get
+            {
+                return RecordType.IsDynamicType();
+            }
+        }
+
+        private object CreateAvroSerializer<T>()
+        {
+            if (_avroSerializer == null)
+            {
+                if (_avroReader != null && _avroReader is ChoAvroReader<T>)
+                    _avroSerializer = ((ChoAvroReader<T>)_avroReader).AvroSerializer;
+                
+                if (_avroSerializer == null)
+                    _avroSerializer = AvroSerializer.Create<T>(Configuration.AvroSerializerSettings);
+            }
+
+            return _avroSerializer as IAvroSerializer<T>;
+        }
+
+        private object CreateAvroReader<T>(StreamReader sr)
+        {
+            if (IsDynamicType)
+            {
+                if (Configuration.RecordSchema.IsNullOrWhiteSpace())
+                    return AvroContainer.CreateGenericReader(sr.BaseStream, Configuration.LeaveOpen, Configuration.CodecFactory != null ? Configuration.CodecFactory : new CodecFactory());
+                else
+                    return AvroContainer.CreateGenericReader(Configuration.RecordSchema, sr.BaseStream, Configuration.LeaveOpen, new CodecFactory());
+            }
+            else
+            {
+                if (Configuration.CodecFactory != null)
+                    return AvroContainer.CreateReader<T>(sr.BaseStream, Configuration.LeaveOpen, Configuration.AvroSerializerSettings, Configuration.CodecFactory);
+                else
+                    return AvroContainer.CreateReader<T>(sr.BaseStream, Configuration.LeaveOpen, Configuration.AvroSerializerSettings, new CodecFactory());
+            }
+        }
+
+        public IEnumerable<object> AsEnumerable<T>(object source, Func<object, bool?> filterFunc = null)
         {
             if (source == null)
                 yield break;
 
-            IAvroReader<T> sr = source as IAvroReader<T>;
-            ChoGuard.ArgumentNotNull(sr, "AvroReader");
+            Configuration.Init();
 
-            InitializeRecordConfiguration(Configuration);
-
-            if (!RaiseBeginLoad(sr))
-                yield break;
-
-            foreach (var item in AsEnumerable(ReadObjects<T>(sr).OfType<object>(), TraceSwitch, filterFunc))
+            StreamReader sr = null;
+            if (source is Lazy<StreamReader>)
             {
-                yield return (T)item;
-            }
+                var lsr = source as Lazy<StreamReader>;
+                ChoGuard.ArgumentNotNull(lsr, "StreamReader");
 
-            RaiseEndLoad(sr);
+                _sr = sr = lsr.Value;
+
+                if (!Configuration.UseAvroSerializer)
+                {
+                    if (_avroReader == null)
+                    {
+                        _avroReader = CreateAvroReader<T>(sr);
+                    }
+                }
+                else
+                {
+                    _avroSerializer = CreateAvroSerializer<T>();
+                }
+
+                InitializeRecordConfiguration(Configuration);
+
+                if (!RaiseBeginLoad(sr))
+                    yield break;
+
+                if (_avroReader != null)
+                {
+                    foreach (var item in AsEnumerable(ReadObjects<T>(_avroReader).OfType<object>(), TraceSwitch, filterFunc))
+                    {
+                        yield return item;
+                    }
+                }
+                else
+                {
+                    foreach (var item in AsEnumerable(ReadObjects<T>(sr, _avroSerializer as IAvroSerializer<T>).OfType<object>(), TraceSwitch, filterFunc))
+                    {
+                        yield return item;
+                    }
+                }
+
+                RaiseEndLoad(sr);
+            }
+            else
+            {
+                _avroReader = source as IAvroReader<T>;
+                if (_avroReader == null)
+                    throw new ChoParserException("Missing valid reader object passed.");
+
+                InitializeRecordConfiguration(Configuration);
+
+                if (!RaiseBeginLoad(_avroReader))
+                    yield break;
+
+                foreach (var item in AsEnumerable(ReadObjects<T>(_avroReader as IAvroReader<T>).OfType<object>(), TraceSwitch, filterFunc))
+                {
+                    yield return item;
+                }
+
+                RaiseEndLoad(_avroReader);
+            }
         }
 
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
         {
-            if (source == null)
-                yield break;
-
-            object sr = source as IAvroReader<object>;
-            ChoGuard.ArgumentNotNull(sr, "AvroReader");
-
-            InitializeRecordConfiguration(Configuration);
-
-            if (!RaiseBeginLoad(sr))
-                yield break;
-
-            //foreach (var item in AsEnumerable(ReadObjects(sr), TraceSwitch, filterFunc))
-            //{
-            //    yield return item;
-            //}
-
-            RaiseEndLoad(sr);
+            throw new NotImplementedException();
         }
 
-        private IEnumerable<T> ReadObjects<T>(IAvroReader<T> sr, Func<object, bool?> filterFunc = null)
+        private IEnumerable<object> ReadObjects<T>(StreamReader sr, IAvroSerializer<T> avroSerializer, Func<object, bool?> filterFunc = null)
         {
-            using (var streamReader = new SequentialReader<T>(sr))
+            while (true)
             {
-                foreach (var item in streamReader.Objects)
-                    yield return item;
+                object obj = null;
+                try
+                {
+                    obj = avroSerializer.Deserialize(sr.BaseStream);
+
+                    if (IsDynamicType)
+                        obj  = new ChoDynamicObject(obj as Dictionary<string, object>);
+                }
+                catch (System.OverflowException)
+                {
+                    break;
+                }
+                catch (SerializationException sEx)
+                {
+                    if (sEx.Message.StartsWith("Invalid integer value in the input stream"))
+                        break;
+                    throw;
+                }
+
+                yield return obj;
+            }
+        }
+
+        private IEnumerable<object> ReadObjects<T>(object avroReader, Func<object, bool?> filterFunc = null)
+        {
+            if (avroReader is IAvroReader<T>)
+            {
+                using (var streamReader = new SequentialReader<T>(avroReader as IAvroReader<T>))
+                {
+                    foreach (var item in streamReader.Objects)
+                        yield return item;
+                }
+            }
+            else if (avroReader is IAvroReader<object>)
+            {
+                using (var streamReader = new SequentialReader<object>(avroReader as IAvroReader<object>))
+                {
+                    foreach (var item in streamReader.Objects)
+                        yield return ToDynamicObject(item);
+                }
             }
         }
 
@@ -136,15 +251,7 @@ namespace ChoETL
 
                 if (!_configCheckDone)
                 {
-                    if (Configuration.SupportsMultiRecordTypes && Configuration.RecordSelector != null && !Configuration.RecordTypeMapped)
-                    {
-                    }
-                    else
-                        Configuration.Validate(pair);
-                    var dict = Configuration.AvroRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
-                    if (Configuration.MaxScanRows == 0)
-                        RaiseMembersDiscovered(dict);
-                    Configuration.UpdateFieldTypesIfAny(dict);
+                    Configuration.Validate(pair);
                     _configCheckDone = true;
                 }
 
@@ -158,33 +265,7 @@ namespace ChoETL
                 if (rec == null)
                     continue;
 
-                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
-                {
-                    if (Configuration.AreAllFieldTypesNull && Configuration.AutoDiscoverFieldTypes && Configuration.MaxScanRows > 0 && counter <= Configuration.MaxScanRows)
-                    {
-                        buffer.Add(rec);
-                        if (recFieldTypes == null)
-                            recFieldTypes = Configuration.AvroRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
-                        RaiseRecordFieldTypeAssessment(recFieldTypes, (IDictionary<string, object>)rec, counter == Configuration.MaxScanRows);
-                        if (counter == Configuration.MaxScanRows)
-                        {
-                            Configuration.UpdateFieldTypesIfAny(recFieldTypes);
-                            var dict = recFieldTypes = Configuration.AvroRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
-                            RaiseMembersDiscovered(dict);
-
-                            foreach (object rec1 in buffer)
-                                yield return new ChoDynamicObject(MigrateToNewSchema(rec1 as IDictionary<string, object>, recFieldTypes));
-
-                            buffer.Clear();
-                        }
-                    }
-                    else
-                    {
-                        yield return rec;
-                    }
-                }
-                else
-                    yield return rec;
+                yield return rec;
 
                 if (Configuration.NotifyAfter > 0 && pair.Item1 % Configuration.NotifyAfter == 0)
                 {
@@ -204,19 +285,6 @@ namespace ChoETL
                 }
             }
 
-            if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
-            {
-                if (buffer.Count > 0)
-                {
-                    Configuration.UpdateFieldTypesIfAny(recFieldTypes);
-                    var dict = recFieldTypes = Configuration.AvroRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
-                    RaiseMembersDiscovered(dict);
-
-                    foreach (object rec1 in buffer)
-                        yield return new ChoDynamicObject(MigrateToNewSchema(rec1 as IDictionary<string, object>, recFieldTypes));
-                }
-            }
-
             if (!abortRequested && pair != null)
                 RaisedRowsLoaded(pair.Item1);
         }
@@ -231,32 +299,6 @@ namespace ChoETL
                 rec = RecordType.CreateInstanceAndDefaultToMembers(Configuration.RecordFieldConfigurationsDict.ToDictionary(kvp => kvp.Key, kvp => kvp.Value as ChoRecordFieldConfiguration));
                 return true;
             }
-
-            if (Configuration.SupportsMultiRecordTypes && Configuration.RecordSelector != null)
-            {
-                Type recType = Configuration.RecordSelector(pair);
-                if (recType == null)
-                {
-                    if (Configuration.IgnoreIfNoRecordTypeFound)
-                    {
-                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, $"No record type found for [{pair.Item1}] line to parse.");
-                        return true;
-                    }
-                    else
-                        throw new ChoParserException($"No record type found for [{pair.Item1}] line to parse.");
-                }
-
-                if (!Configuration.RecordTypeMapped)
-                {
-                    Configuration.MapRecordFields(recType);
-                    Configuration.Validate(null);
-                }
-
-                rec = recType.IsDynamicType() ? new ChoDynamicObject() { ThrowExceptionIfPropNotExists = true } : ChoActivator.CreateInstance(recType);
-                RecordType = recType;
-            }
-            else if (Configuration.IsDynamicObject)
-                rec = Configuration.IsDynamicObject ? new ChoDynamicObject() { ThrowExceptionIfPropNotExists = true } : ChoActivator.CreateInstance(RecordType);
 
             try
             {
@@ -277,8 +319,11 @@ namespace ChoETL
                     return true;
                 }
 
-                if (!FillRecord(ref rec, pair))
-                    return false;
+                rec = pair.Item2;
+                if (rec is AvroRecord)
+                {
+                    rec = ToDynamicObject(rec as AvroRecord);
+                }
 
                 if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
                     rec.DoObjectLevelValidation(Configuration, Configuration.AvroRecordFieldConfigurations);
@@ -334,270 +379,19 @@ namespace ChoETL
             return true;
         }
 
-        object fieldValue = null;
-        ChoAvroRecordFieldConfiguration fieldConfig = null;
-        PropertyInfo pi = null;
-
-        private bool FillRecord(ref object rec, Tuple<long, object> pair)
+        private object ToDynamicObject(object rec)
         {
-            long lineNo;
+            if (!(rec is AvroRecord))
+                return rec;
 
-            lineNo = pair.Item1;
-            var node = pair.Item2;
+            var output = new ChoDynamicObject();
 
-            fieldValue = null;
-            fieldConfig = null;
-            pi = null;
+            var avroRec = ((AvroRecord)rec);
+            var schema = avroRec.Schema;
+            foreach (var f in schema.Fields)
+                output.Add(f.Name, ToDynamicObject(avroRec[f.Name]));
 
-            rec = pair.Item2;
-            /*
-            object rootRec = rec;
-            foreach (KeyValuePair<string, ChoAvroRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
-            {
-                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
-                {
-                    if (Configuration.IgnoredFields.Contains(kvp.Key))
-                        continue;
-                }
-
-                fieldValue = null;
-                fieldConfig = kvp.Value;
-                if (Configuration.PIDict != null)
-                {
-                    // if FieldName is set
-                    if (!string.IsNullOrEmpty(fieldConfig.FieldName))
-                    {
-                        // match using FieldName
-                        Configuration.PIDict.TryGetValue(fieldConfig.FieldName, out pi);
-                    }
-                    else
-                    {
-                        // otherwise match usign the property name
-                        Configuration.PIDict.TryGetValue(kvp.Key, out pi);
-                    }
-                }
-
-                rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
-
-                if (!node.ContainsKey(kvp.Value.FieldName))
-                {
-                    if (Configuration.ColumnCountStrict)
-                        throw new ChoParserException("No matching '{0}' field found.".FormatString(fieldConfig.FieldName));
-                }
-
-                fieldValue = node[kvp.Value.FieldName];
-
-                if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
-                    continue;
-                try
-                {
-                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
-                    {
-                    }
-                    else
-                    {
-                        if (pi != null)
-                            kvp.Value.FieldType = pi.PropertyType;
-                        else
-                            kvp.Value.FieldType = typeof(string);
-                    }
-
-                    object v1 = node;
-                    if (fieldConfig.CustomSerializer != null)
-                        fieldValue = fieldConfig.CustomSerializer(v1);
-                    else if (RaiseRecordFieldDeserialize(rec, pair.Item1, kvp.Key, ref v1))
-                        fieldValue = v1;
-                    else if (fieldConfig.PropCustomSerializer != null)
-                        fieldValue = ChoCustomSerializer.Deserialize(v1, fieldConfig.FieldType, fieldConfig.PropCustomSerializer, fieldConfig.PropCustomSerializerParams, Configuration.Culture, fieldConfig.Name);
-                    else
-                    {
-                        if (!node.ContainsKey(kvp.Value.FieldName))
-                        {
-                            if (Configuration.ColumnCountStrict)
-                                throw new ChoParserException("No matching '{0}' field found.".FormatString(fieldConfig.FieldName));
-                        }
-                        else
-                            fieldValue = node[kvp.Value.FieldName];
-                    }
-
-                    bool ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
-                    if (ignoreFieldValue)
-                        fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
-
-                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
-                    {
-                        var dict = rec as IDictionary<string, Object>;
-
-                        dict.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
-
-                        if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
-                            dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
-                    }
-                    else
-                    {
-                        if (Configuration.SupportsMultiRecordTypes)
-                        {
-                            ChoType.TryGetProperty(rec.GetType(), kvp.Key, out pi);
-                            //*** TODO
-                            //fieldConfig.PI = pi;
-                            //fieldConfig.PropConverters = ChoTypeDescriptor.GetTypeConverters(fieldConfig.PI);
-                            //fieldConfig.PropConverterParams = ChoTypeDescriptor.GetTypeConverterParams(fieldConfig.PI);
-                        }
-
-                        if (pi != null)
-                            rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
-                        else if (RecordType.IsSimple())
-                            rec = ChoConvert.ConvertTo(fieldValue, RecordType, Configuration.Culture);
-                        else
-                            throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(kvp.Key, ChoType.GetTypeName(rec)));
-
-                        if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
-                            rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
-                    }
-
-                    if (!RaiseAfterRecordFieldLoad(rec, pair.Item1, kvp.Key, fieldValue))
-                        return false;
-                }
-                catch (ChoParserException)
-                {
-                    Reader.IsValid = false;
-                    throw;
-                }
-                catch (ChoMissingRecordFieldException)
-                {
-                    Reader.IsValid = false;
-                    if (Configuration.ThrowAndStopOnMissingField)
-                        throw;
-                }
-                catch (Exception ex)
-                {
-                    Reader.IsValid = false;
-                    ChoETLFramework.HandleException(ref ex);
-
-                    if (fieldConfig.ErrorMode == ChoErrorMode.ThrowAndStop)
-                        throw;
-
-                    try
-                    {
-                        if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
-                        {
-                            var dict = rec as IDictionary<string, Object>;
-
-                            if (dict.SetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
-                                dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
-                            else if (dict.SetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture))
-                                dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
-                            else if (ex is ValidationException)
-                                throw;
-                            else
-                                throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
-                        }
-                        else if (pi != null)
-                        {
-                            if (rec.SetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture))
-                                rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
-                            else if (rec.SetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture))
-                                rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
-                            else if (ex is ValidationException)
-                                throw;
-                            else
-                                throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
-                        }
-                        else
-                            throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
-                    }
-                    catch (Exception innerEx)
-                    {
-                        if (ex == innerEx.InnerException || ex is ValidationException)
-                        {
-                            if (fieldConfig.ErrorMode == ChoErrorMode.IgnoreAndContinue)
-                            {
-                                continue;
-                            }
-                            else
-                            {
-                                if (!RaiseRecordFieldLoadError(rec, pair.Item1, kvp.Key, ref fieldValue, ex))
-                                {
-                                    if (ex is ValidationException)
-                                        throw;
-
-                                    throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
-                                }
-                                else
-                                {
-                                    try
-                                    {
-                                        if (Configuration.IsDynamicObject)
-                                        {
-                                            var dict = rec as IDictionary<string, Object>;
-
-                                            dict.ConvertNSetMemberValue(kvp.Key, fieldConfig, ref fieldValue, Configuration.Culture);
-                                        }
-                                        else
-                                        {
-                                            if (pi != null)
-                                                rec.ConvertNSetMemberValue(kvp.Key, fieldConfig, ref fieldValue, Configuration.Culture);
-                                            else
-                                                throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(kvp.Key, ChoType.GetTypeName(rec)));
-                                        }
-                                    }
-                                    catch { }
-                                }
-                            }
-                        }
-                        else
-                        {
-                            throw new ChoReaderException("Failed to assign '{0}' fallback value to '{1}' field.".FormatString(fieldValue, fieldConfig.FieldName), innerEx);
-                        }
-                    }
-                }
-            }
-
-            rec = rootRec;
-            */
-            return true;
-        }
-
-        private string CleanFieldValue(ChoFileRecordFieldConfiguration config, Type fieldType, string fieldValue)
-        {
-            if (fieldValue == null) return fieldValue;
-
-            ChoFieldValueTrimOption fieldValueTrimOption = config.GetFieldValueTrimOptionForRead(fieldType, Configuration.FieldValueTrimOption);
-
-            switch (fieldValueTrimOption)
-            {
-                case ChoFieldValueTrimOption.Trim:
-                    fieldValue = fieldValue.Trim();
-                    break;
-                case ChoFieldValueTrimOption.TrimStart:
-                    fieldValue = fieldValue.TrimStart();
-                    break;
-                case ChoFieldValueTrimOption.TrimEnd:
-                    fieldValue = fieldValue.TrimEnd();
-                    break;
-            }
-
-            if (config.Size != null)
-            {
-                if (fieldValue.Length > config.Size.Value)
-                {
-                    if (!config.Truncate)
-                        throw new ChoParserException("Incorrect field value length found for '{0}' member [Expected: {1}, Actual: {2}].".FormatString(config.FieldName, config.Size.Value, fieldValue.Length));
-                    else
-                    {
-                        if (fieldValueTrimOption == ChoFieldValueTrimOption.TrimStart)
-                            fieldValue = fieldValue.Right(config.Size.Value);
-                        else
-                            fieldValue = fieldValue.Substring(0, config.Size.Value);
-                    }
-                }
-            }
-            if (fieldValue.StartsWith(@"""") && fieldValue.EndsWith(@""""))
-            {
-                fieldValue = fieldValue.Substring(1, fieldValue.Length - 2);
-            }
-
-            return System.Net.WebUtility.HtmlDecode(fieldValue);
+            return output;
         }
 
         #region Event Raisers

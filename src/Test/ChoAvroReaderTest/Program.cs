@@ -1,6 +1,7 @@
 ﻿using ChoETL;
 using Microsoft.Hadoop.Avro;
 using Microsoft.Hadoop.Avro.Container;
+using Microsoft.Hadoop.Avro.Schema;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -36,31 +37,208 @@ namespace ChoAvroReaderTest
 
         static void Main(string[] args)
         {
-            POCOTest();
+            //POCOTest();
+            SerializeAndDeserializeDynamicTest();
         }
 
-        static void POCOTest()
+        static void SerializeAndDeserializeDynamicTest()
         {
             string path = "AvroSampleReflection.avro";
+            //SerializeDynamicSampleFile(path);
 
-            SerializeSampleFile(path);
-            StringBuilder json = new StringBuilder();
-            using (var r = new ChoAvroReader<SensorData>(path)
+            var dict = new Dictionary<string, object>();
+            dict.Add("1", 3);
+            dict.Add("2", new Location { Room = 243, Floor = 1 });
+
+            ChoAvroRecordConfiguration config = null;
+            AvroSerializerSettings sett1 = null;
+            using (var w = new ChoAvroWriter(path)
+                .WithAvroSerializer(AvroSerializer.Create<Dictionary<string, object>>(new AvroSerializerSettings() { Resolver = new ChoAvroPublicMemberContractResolver() }))
+                .Configure(c => c.KnownTypes = new List<Type> { typeof(Location), typeof(string), typeof(int) })
+                //.Configure(c => c.UseAvroSerializer = true)
+                //.Configure(c => c.AvroSerializerSettings.Resolver = new AvroDataContractResolverEx())
                 )
             {
+                sett1 = w.Configuration.AvroSerializerSettings;
+                config = w.Configuration;
+
+                w.Write(dict);
+                w.Write(dict);
+                w.Write(dict);
+            }
+            //var sett = new AvroSerializerSettings();
+            //sett.Resolver = new ChoAvroPublicMemberContractResolver(); // false) { Configuration = config };
+            //sett.KnownTypes = new List<Type> { typeof(Location), typeof(string), typeof(int) };
+            //var avroSerializer = AvroSerializer.Create<Dictionary<string, object>>(sett1);
+            //using (var r = new StreamReader(path))
+            //{
+            //    var rec = avroSerializer.Deserialize(r.BaseStream);
+            //    var rec2 = avroSerializer.Deserialize(r.BaseStream);
+            //    var rec3 = avroSerializer.Deserialize(r.BaseStream);
+            //    Console.WriteLine(rec.Dump());
+            //    Console.WriteLine(rec2.Dump());
+            //    Console.WriteLine(rec3.Dump());
+            //    //var rec4 = avroSerializer.Deserialize(r);
+            //}
+
+            StringBuilder json = new StringBuilder();
+            using (var r = new ChoAvroReader(path)
+                .Configure(c => c.KnownTypes = new List<Type> { typeof(Location), typeof(string), typeof(int) })
+                .Configure(c => c.UseAvroSerializer = true)
+                //.Configure(c => c.AvroSerializerSettings = sett1)
+                .Configure(c => c.NestedColumnSeparator = '_')
+                )
+            {
+                //var dt = r.AsDataTable();
+                //Console.WriteLine(dt.Dump());
+                //return;
+                //foreach (var rec in r)
+                //{
+                //    Console.WriteLine(rec.Dump());
+                //}
+                //return;
                 using (var w = new ChoJSONWriter(json)
                     .Configure(c => c.TurnOnAutoDiscoverJsonConverters = true)
                     )
                 {
                     w.Write(r);
-                    //foreach (var rec in r)
-                    //    Console.WriteLine(rec.Dump());
                 }
             }
             Console.WriteLine(json.ToString());
         }
 
-        public static void SerializeSampleFile(string path)
+        static void POCOTest()
+        {
+            string path = "AvroPOCOSample1.avro";
+
+            //SerializePOCOSampleFile(path);
+
+            //var sett = new AvroSerializerSettings();
+            //sett.Resolver = new ChoAvroPublicMemberContractResolver();
+            //sett.KnownTypes = new List<Type> { typeof(Location), typeof(string) };
+            //var avroSerializer = AvroSerializer.Create<SensorData>(sett);
+
+            //using (var buffer = new StreamReader(File.OpenRead(path)))
+            //{
+            //    var actual1 = avroSerializer.Deserialize(buffer.BaseStream);
+            //    var actual2 = avroSerializer.Deserialize(buffer.BaseStream);
+
+            //    Console.WriteLine(actual1.Dump());
+            //}
+            //return;
+            var testData = new List<SensorData>
+                        {
+                            new SensorData { Value = new byte[] { 1, 2, 3, 4, 5 }, Position = new Location { Room = 243, Floor = 1 } },
+                            new SensorData { Value = new byte[] { 6, 7, 8, 9 }, Position = new Location { Room = 244, Floor = 1 } }
+                        };
+
+            using (var w = new ChoAvroWriter<SensorData>(path)
+                )
+            {
+                //w.Write(testData);
+                w.Write(new SensorData { Value = new byte[] { 1, 2, 3, 4, 5 }, Position = new Location { Room = 243, Floor = 1 } });
+                w.Write(new SensorData { Value = new byte[] { 6, 7, 8, 9 }, Position = new Location { Room = 244, Floor = 1 } });
+            }
+
+            StringBuilder json = new StringBuilder();
+            using (var r = new ChoAvroReader<SensorData>(path)
+                //.WithAvroSerializer(AvroSerializer.Create<Dictionary<string, object>>(new AvroSerializerSettings()))
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+                return;
+                using (var w = new ChoJSONWriter(json)
+                    .Configure(c => c.TurnOnAutoDiscoverJsonConverters = true)
+                    )
+                {
+                    w.Write(r);
+                }
+            }
+            Console.WriteLine(json.ToString());
+        }
+
+        public static void SerializeDynamicSampleFile(string path)
+        {
+            Console.WriteLine("SERIALIZATION USING GENERIC RECORD AND AVRO OBJECT CONTAINER FILES\n");
+
+            Console.WriteLine("Defining the Schema and creating Sample Data Set...");
+
+            //Define the schema in JSON
+            const string Schema = @"{
+                                ""type"":""record"",
+                                ""name"":""Microsoft.Hadoop.Avro.Specifications.SensorData"",
+                                ""fields"":
+                                    [
+                                        { 
+                                            ""name"":""Location"", 
+                                            ""type"":
+                                                {
+                                                    ""type"":""record"",
+                                                    ""name"":""Microsoft.Hadoop.Avro.Specifications.Location"",
+                                                    ""fields"":
+                                                        [
+                                                            { ""name"":""Floor"", ""type"":""int"" },
+                                                            { ""name"":""Room"", ""type"":""int"" }
+                                                        ]
+                                                }
+                                        },
+                                        { ""name"":""Value"", ""type"":""bytes"" }
+                                    ]
+                            }";
+
+            //Create a generic serializer based on the schema
+            var serializer = AvroSerializer.CreateGeneric(Schema);
+            var rootSchema = serializer.WriterSchema as RecordSchema;
+
+            //Create a generic record to represent the data
+            var testData = new List<AvroRecord>();
+
+            dynamic expected1 = new AvroRecord(rootSchema);
+            dynamic location1 = new AvroRecord(rootSchema.GetField("Location").TypeSchema);
+            location1.Floor = 1;
+            location1.Room = 243;
+            expected1.Location = location1;
+            expected1.Value = new byte[] { 1, 2, 3, 4, 5 };
+            testData.Add(expected1);
+
+            dynamic expected2 = new AvroRecord(rootSchema);
+            dynamic location2 = new AvroRecord(rootSchema.GetField("Location").TypeSchema);
+            location2.Floor = 1;
+            location2.Room = 244;
+            expected2.Location = location2;
+            expected2.Value = new byte[] { 6, 7, 8, 9 };
+            testData.Add(expected2);
+
+            //Serializing and saving data to file
+            //Create a MemoryStream buffer
+            using (var buffer = new MemoryStream())
+            {
+                Console.WriteLine("Serializing Sample Data Set...");
+
+                //Create a SequentialWriter instance for type SensorData which can serialize a sequence of SensorData objects to stream
+                //Data will not be compressed (Null compression codec)
+                using (var writer = AvroContainer.CreateGenericWriter(Schema, buffer, Codec.Null))
+                {
+                    using (var streamWriter = new SequentialWriter<object>(writer, 24))
+                    {
+                        // Serialize the data to stream using the sequential writer
+                        testData.ForEach(streamWriter.Write);
+                    }
+                }
+
+                Console.WriteLine("Saving serialized data to file...");
+
+                //Save stream to file
+                if (!WriteFile(buffer, path))
+                {
+                    Console.WriteLine("Error during file operation. Quitting method");
+                    return;
+                }
+            }
+        }
+
+        public static void SerializePOCOSampleFile(string path)
         {
             Console.WriteLine("SERIALIZATION USING REFLECTION AND AVRO OBJECT CONTAINER FILES\n");
 
@@ -70,6 +248,10 @@ namespace ChoAvroReaderTest
                             new SensorData { Value = new byte[] { 1, 2, 3, 4, 5 }, Position = new Location { Room = 243, Floor = 1 } },
                             new SensorData { Value = new byte[] { 6, 7, 8, 9 }, Position = new Location { Room = 244, Floor = 1 } }
                         };
+
+            using (var w = new ChoAvroWriter<SensorData>(path))
+                w.Write(testData);
+            return;
 
             var sett = new AvroSerializerSettings();
             sett.Resolver = new AvroPublicMemberContractResolver();

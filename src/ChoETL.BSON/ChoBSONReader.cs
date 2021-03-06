@@ -1,5 +1,5 @@
-﻿using Microsoft.Hadoop.Avro;
-using Microsoft.Hadoop.Avro.Container;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Bson;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -18,11 +18,11 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public class ChoAvroReader<T> : ChoReader, IDisposable, IEnumerable<T>, IChoSerializableReader
+    public class ChoBSONReader<T> : ChoReader, IDisposable, IEnumerable<T>, IChoSerializableReader
     //where T : class
     {
         private Lazy<StreamReader> _sr;
-        private object _avroReader;
+        private BsonDataReader _bsonReader;
         private bool _closeStreamOnDispose = false;
         private Lazy<IEnumerator<T>> _enumerator = null;
         private CultureInfo _prevCultureInfo = null;
@@ -32,21 +32,20 @@ namespace ChoETL
         public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
         public event EventHandler<ChoRecordFieldTypeAssessmentEventArgs> RecordFieldTypeAssessment;
         private bool _isDisposed = false;
-        internal object AvroSerializer = null;
 
-        public ChoAvroRecordConfiguration Configuration
+        public ChoBSONRecordConfiguration Configuration
         {
             get;
             private set;
         }
 
-        public ChoAvroReader(ChoAvroRecordConfiguration configuration = null)
+        public ChoBSONReader(ChoBSONRecordConfiguration configuration = null)
         {
             Configuration = configuration;
             Init();
         }
 
-        public ChoAvroReader(string filePath, ChoAvroRecordConfiguration configuration = null)
+        public ChoBSONReader(string filePath, ChoBSONRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
 
@@ -54,31 +53,21 @@ namespace ChoETL
 
             Init();
 
-            _sr = new Lazy<StreamReader>(() => new StreamReader(ChoPath.GetFullPath(filePath)));
+            _sr = new Lazy<StreamReader>(() => new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
         }
 
-        public ChoAvroReader(IAvroReader<T> avroReader, ChoAvroRecordConfiguration configuration = null)
+        public ChoBSONReader(BsonDataReader bsonReader, ChoBSONRecordConfiguration configuration = null)
         {
-            ChoGuard.ArgumentNotNull(avroReader, "AvroReader");
+            ChoGuard.ArgumentNotNull(bsonReader, "BsonReader");
 
             Configuration = configuration;
             Init();
 
-            _avroReader = avroReader;
+            _bsonReader = bsonReader;
         }
 
-        protected ChoAvroReader(IAvroReader<Dictionary<string, object>> avroReader, ChoAvroRecordConfiguration configuration = null)
-        {
-            ChoGuard.ArgumentNotNull(avroReader, "AvroReader");
-
-            Configuration = configuration;
-            Init();
-
-            _avroReader = avroReader;
-        }
-
-        public ChoAvroReader(Stream inStream, ChoAvroRecordConfiguration configuration = null)
+        public ChoBSONReader(Stream inStream, ChoBSONRecordConfiguration configuration = null)
         {
             ChoGuard.ArgumentNotNull(inStream, "Stream");
 
@@ -92,7 +81,7 @@ namespace ChoETL
             //_closeStreamOnDispose = true;
         }
 
-        public virtual ChoAvroReader<T> Load(string filePath)
+        public ChoBSONReader<T> Load(string filePath)
         {
             ChoGuard.ArgumentNotNullOrEmpty(filePath, "FilePath");
 
@@ -104,7 +93,7 @@ namespace ChoETL
             return this;
         }
 
-        public virtual ChoAvroReader<T> Load(StreamReader sr)
+        public ChoBSONReader<T> Load(StreamReader sr)
         {
             ChoGuard.ArgumentNotNull(sr, "StreamReader");
 
@@ -116,19 +105,19 @@ namespace ChoETL
             return this;
         }
 
-        public virtual ChoAvroReader<T> Load(IAvroReader<T> avroReader)
+        public ChoBSONReader<T> Load(BsonDataReader bsonReader)
         {
-            ChoGuard.ArgumentNotNull(avroReader, "AvroReader");
+            ChoGuard.ArgumentNotNull(bsonReader, "bsonReader");
 
             Close();
             Init();
-            _avroReader = avroReader;
+            _bsonReader = bsonReader;
             _closeStreamOnDispose = false;
 
             return this;
         }
 
-        public virtual ChoAvroReader<T> Load(Stream inStream)
+        public ChoBSONReader<T> Load(Stream inStream)
         {
             ChoGuard.ArgumentNotNull(inStream, "Stream");
 
@@ -171,6 +160,8 @@ namespace ChoETL
             {
                 if (_sr != null)
                     _sr.Value.Dispose();
+                if (_bsonReader != null)
+                    _bsonReader.Close();
             }
 
             if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
@@ -188,7 +179,7 @@ namespace ChoETL
 
             var recordType = typeof(T).GetUnderlyingType();
             if (Configuration == null)
-                Configuration = new ChoAvroRecordConfiguration(recordType);
+                Configuration = new ChoBSONRecordConfiguration(recordType);
             else
                 Configuration.RecordType = recordType;
             Configuration.IsDynamicObject = Configuration.RecordType.IsDynamicType();
@@ -200,25 +191,24 @@ namespace ChoETL
             }
         }
 
+        private BsonDataReader Create(StreamReader sr)
+        {
+            return new BsonDataReader(sr.BaseStream);
+        }
+
         public IEnumerator<T> GetEnumerator()
         {
-            ChoAvroRecordReader rr = new ChoAvroRecordReader(typeof(T), Configuration);
+            ChoBSONRecordReader rr = new ChoBSONRecordReader(typeof(T), Configuration);
+            if (_sr != null)
+                _bsonReader = Create(_sr.Value);
+
             rr.Reader = this;
             rr.TraceSwitch = TraceSwitch;
             rr.RowsLoaded += NotifyRowsLoaded;
             rr.MembersDiscovered += MembersDiscovered;
             rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
-
-            if (typeof(T) == typeof(object))
-            {
-                IEnumerator<object> e = _avroReader != null ? rr.AsEnumerable<Dictionary<string, object>>(_avroReader).GetEnumerator() : rr.AsEnumerable<Dictionary<string, object>>(_sr).GetEnumerator();
-                return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)((object)e.Current), () => Dispose()).GetEnumerator();
-            }
-            else
-            {
-                IEnumerator<object> e = _avroReader != null ? rr.AsEnumerable<T>(_avroReader).GetEnumerator() : rr.AsEnumerable<T>(_sr).GetEnumerator();
-                return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
-            }
+            var e = rr.AsEnumerable<T>(_bsonReader).GetEnumerator();
+            return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -296,7 +286,7 @@ namespace ChoETL
 
         public void AddBcpColumnMappings(SqlBulkCopy bcp)
         {
-            foreach (var fn in Configuration.AvroRecordFieldConfigurations.Select(fc => fc.FieldName))
+            foreach (var fn in Configuration.BSONRecordFieldConfigurations.Select(fc => fc.FieldName))
                 bcp.ColumnMappings.Add(new SqlBulkCopyColumnMapping(fn, fn));
         }
 
@@ -307,7 +297,7 @@ namespace ChoETL
             SqlBulkCopyOptions copyOptions = SqlBulkCopyOptions.Default)
         {
             if (columnMappings == null)
-                columnMappings = Configuration.AvroRecordFieldConfigurations.Select(fc => fc.FieldName)
+                columnMappings = Configuration.BSONRecordFieldConfigurations.Select(fc => fc.FieldName)
                     .ToDictionary(fn => fn, fn => fn);
 
             AsDataReader((d) =>
@@ -323,6 +313,7 @@ namespace ChoETL
             }).Bcp(connectionString, tableName, batchSize, notifyAfter, timeoutInSeconds,
                 rowsCopied, columnMappings, copyOptions);
         }
+
         public void Bcp(SqlConnection connection, string tableName,
             int batchSize = 0, int notifyAfter = 0, int timeoutInSeconds = 0,
             Action<object, SqlRowsCopiedEventArgs> rowsCopied = null,
@@ -331,7 +322,7 @@ namespace ChoETL
             SqlTransaction transaction = null)
         {
             if (columnMappings == null)
-                columnMappings = Configuration.AvroRecordFieldConfigurations.Select(fc => fc.FieldName)
+                columnMappings = Configuration.BSONRecordFieldConfigurations.Select(fc => fc.FieldName)
                     .ToDictionary(fn => fn, fn => fn);
 
             AsDataReader((d) =>
@@ -350,77 +341,44 @@ namespace ChoETL
 
         #region Fluent API
 
-        public ChoAvroReader<T> AvroSerializerSettings(Action<AvroSerializerSettings> action)
+        public ChoBSONReader<T> AvroSerializerSettings(Action<JsonSerializerSettings> action)
         {
-            action?.Invoke(Configuration.AvroSerializerSettings);
+            action?.Invoke(Configuration.JsonSerializerSettings);
             return this;
         }
 
-        public ChoAvroReader<T> KnownTypes(params Type[] types)
-        {
-            if (types != null)
-                Configuration.KnownTypes = types.ToList();
-
-            return this;
-        }
-
-        public ChoAvroReader<T> UseAvroSerializer(bool flag = true)
-        {
-            Configuration.UseAvroSerializer = flag;
-            return this;
-        }
-
-        public virtual ChoAvroReader<T> WithAvroSerializer(IAvroSerializer<T> avroSerializer)
-        {
-            AvroSerializer = avroSerializer;
-            Configuration.UseAvroSerializer = true;
-            return this;
-        }
-
-        public ChoAvroReader<T> WithRecordSchema(string schema)
-        {
-            Configuration.RecordSchema = schema;
-            return this;
-        }
-
-        public ChoAvroReader<T> WithCodecFactory(CodecFactory cf)
-        {
-            Configuration.CodecFactory = cf;
-            return this;
-        }
-
-        public ChoAvroReader<T> ErrorMode(ChoErrorMode mode)
+        public ChoBSONReader<T> ErrorMode(ChoErrorMode mode)
         {
             Configuration.ErrorMode = mode;
             return this;
         }
 
-        public ChoAvroReader<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
+        public ChoBSONReader<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
         {
             spec?.Invoke(Configuration.TypeConverterFormatSpec);
             return this;
         }
 
-        public ChoAvroReader<T> NotifyAfter(long rowsLoaded)
+        public ChoBSONReader<T> NotifyAfter(long rowsLoaded)
         {
             Configuration.NotifyAfter = rowsLoaded;
             return this;
         }
 
-        public ChoAvroReader<T> ClearFields()
+        public ChoBSONReader<T> ClearFields()
         {
             Configuration.ClearFields();
             _clearFields = true;
             return this;
         }
 
-        public ChoAvroReader<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
+        public ChoBSONReader<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
         {
             Configuration.IgnoreField(field);
             return this;
         }
 
-        public ChoAvroReader<T> IgnoreField(string fieldName)
+        public ChoBSONReader<T> IgnoreField(string fieldName)
         {
             if (!fieldName.IsNullOrWhiteSpace())
             {
@@ -431,8 +389,8 @@ namespace ChoETL
                     Configuration.MapRecordFields(Configuration.RecordType);
                 }
                 fnTrim = fieldName.NTrim();
-                if (Configuration.AvroRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-                    Configuration.AvroRecordFieldConfigurations.Remove(Configuration.AvroRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+                if (Configuration.BSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                    Configuration.BSONRecordFieldConfigurations.Remove(Configuration.BSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
                 else
                     Configuration.IgnoredFields.Add(fieldName);
             }
@@ -440,7 +398,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoAvroReader<T> WithFields<TField>(params Expression<Func<T, TField>>[] fields)
+        public ChoBSONReader<T> WithFields<TField>(params Expression<Func<T, TField>>[] fields)
         {
             if (fields != null)
             {
@@ -450,13 +408,13 @@ namespace ChoETL
             return this;
         }
 
-        public ChoAvroReader<T> WithFields(params string[] fieldsNames)
+        public ChoBSONReader<T> WithFields(params string[] fieldsNames)
         {
             string fnTrim = null;
             if (!fieldsNames.IsNullOrEmpty())
             {
                 PropertyDescriptor pd = null;
-                ChoAvroRecordFieldConfiguration fc = null;
+                ChoBSONRecordFieldConfiguration fc = null;
                 foreach (string fn in fieldsNames)
                 {
                     if (fn.IsNullOrEmpty())
@@ -469,15 +427,15 @@ namespace ChoETL
                     }
 
                     fnTrim = fn.NTrim();
-                    if (Configuration.AvroRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                    if (Configuration.BSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
                     {
-                        fc = Configuration.AvroRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
-                        Configuration.AvroRecordFieldConfigurations.Remove(Configuration.AvroRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+                        fc = Configuration.BSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+                        Configuration.BSONRecordFieldConfigurations.Remove(Configuration.BSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
                     }
                     else
                         pd = ChoTypeDescriptor.GetProperty(typeof(T), fn);
 
-                    var nfc = new ChoAvroRecordFieldConfiguration(fnTrim) { FieldName = fn };
+                    var nfc = new ChoBSONRecordFieldConfiguration(fnTrim) { FieldName = fn };
                     nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
                     nfc.DeclaringMember = fc != null ? fc.DeclaringMember : null;
                     if (pd != null)
@@ -486,20 +444,20 @@ namespace ChoETL
                             nfc.FieldType = pd.PropertyType;
                     }
 
-                    Configuration.AvroRecordFieldConfigurations.Add(nfc);
+                    Configuration.BSONRecordFieldConfigurations.Add(nfc);
                 }
             }
 
             return this;
         }
 
-        public ChoAvroReader<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoAvroRecordFieldConfigurationMap> setup)
+        public ChoBSONReader<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoBSONRecordFieldConfigurationMap> setup)
         {
             Configuration.Map(field, setup);
             return this;
         }
 
-        public ChoAvroReader<T> WithField(string name, Action<ChoAvroRecordFieldConfigurationMap> mapper)
+        public ChoBSONReader<T> WithField(string name, Action<ChoBSONRecordFieldConfigurationMap> mapper)
         {
             if (!name.IsNullOrWhiteSpace())
             {
@@ -514,7 +472,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoAvroReader<T> WithField<TField>(Expression<Func<T, TField>> field, string fieldName)
+        public ChoBSONReader<T> WithField<TField>(Expression<Func<T, TField>> field, string fieldName)
         {
             if (field == null)
                 return this;
@@ -522,12 +480,12 @@ namespace ChoETL
             return WithField(field.GetMemberName(), (int?)null, fieldName: fieldName);
         }
 
-        public ChoAvroReader<T> WithField(string name)
+        public ChoBSONReader<T> WithField(string name)
         {
             return WithField(name, null);
         }
 
-        private ChoAvroReader<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null,
+        private ChoBSONReader<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null,
             ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
             Func<object, object> valueConverter = null,
             Func<dynamic, object> valueSelector = null, Func<string> headerSelector = null,
@@ -551,14 +509,14 @@ namespace ChoETL
             return this;
         }
 
-        public ChoAvroReader<T> Configure(Action<ChoAvroRecordConfiguration> action)
+        public ChoBSONReader<T> Configure(Action<ChoBSONRecordConfiguration> action)
         {
             if (action != null)
                 action(Configuration);
 
             return this;
         }
-        public ChoAvroReader<T> Setup(Action<ChoAvroReader<T>> action)
+        public ChoBSONReader<T> Setup(Action<ChoBSONReader<T>> action)
         {
             if (action != null)
                 action(this);
@@ -568,7 +526,7 @@ namespace ChoETL
 
         #endregion Fluent API
 
-        ~ChoAvroReader()
+        ~ChoBSONReader()
         {
             try
             {
@@ -578,137 +536,44 @@ namespace ChoETL
         }
     }
 
-    public class ChoAvroReader : ChoAvroReader<dynamic>
+    public static class ChoBSONReader
     {
-        public ChoAvroReader(ChoAvroRecordConfiguration configuration = null) : base(configuration)
-        {
-        }
-
-        public ChoAvroReader(string filePath, ChoAvroRecordConfiguration configuration = null)
-            : base(filePath, configuration)
-        {
-        }
-
-        public ChoAvroReader(IAvroReader<Dictionary<string, object>> avroReader, ChoAvroRecordConfiguration configuration = null)
-            : base(avroReader, configuration)
-        {
-        }
-
-        public ChoAvroReader(Stream inStream, ChoAvroRecordConfiguration configuration = null)
-            : base(inStream, configuration)
-        {
-        }
-
-        public override ChoAvroReader<dynamic> Load(string filePath)
-        {
-            return base.Load(filePath);
-        }
-
-        public override ChoAvroReader<dynamic> Load(StreamReader sr)
-        {
-            return base.Load(sr);
-        }
-
-        public override ChoAvroReader<dynamic> Load(IAvroReader<dynamic> avroReader)
-        {
-            return base.Load(avroReader);
-        }
-
-        public override ChoAvroReader<dynamic> Load(Stream inStream)
-        {
-            return base.Load(inStream);
-        }
-
-        #region Fluent API
-
-        public override ChoAvroReader<dynamic> WithAvroSerializer(IAvroSerializer<dynamic> avroSerializer)
-        {
-            throw new NotSupportedException("Use WithAvroSerializer(IAvroSerializer<Dictionary<string, object>> avroSerializer) instead.");
-        }
-
-        public ChoAvroReader<dynamic> WithAvroSerializer(IAvroSerializer<Dictionary<string, object>> avroSerializer)
-        {
-            AvroSerializer = avroSerializer;
-            Configuration.UseAvroSerializer = true;
-            return this;
-        }
-        
-        #endregion Fluent API
-
         public static IEnumerable<T> Deserialize<T>(string filePath, TraceSwitch traceSwitch = null)
         //where T : class, new()
         {
-            var configuration = new ChoAvroRecordConfiguration();
+            var configuration = new ChoBSONRecordConfiguration();
             return Deserialize<T>(filePath, configuration, traceSwitch);
         }
 
-        public static IEnumerable<T> Deserialize<T>(string filePath, ChoAvroRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static IEnumerable<T> Deserialize<T>(string filePath, ChoBSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         //where T : class, new()
         {
             if (configuration == null)
-                configuration = new ChoAvroRecordConfiguration(typeof(T));
+                configuration = new ChoBSONRecordConfiguration(typeof(T));
 
             if (configuration != null)
             {
             }
-            return new ChoAvroReader<T>(filePath, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
-        }
-
-        public static IEnumerable<dynamic> Deserialize(string filePath, TraceSwitch traceSwitch = null)
-        //where T : class, new()
-        {
-            var configuration = new ChoAvroRecordConfiguration();
-            return Deserialize(filePath, configuration, traceSwitch);
-        }
-
-        public static IEnumerable<dynamic> Deserialize(string filePath, ChoAvroRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-        //where T : class, new()
-        {
-            if (configuration == null)
-                configuration = new ChoAvroRecordConfiguration();
-
-            if (configuration != null)
-            {
-            }
-            return new ChoAvroReader(filePath, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
+            return new ChoBSONReader<T>(filePath, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
         }
 
         public static IEnumerable<T> Deserialize<T>(Stream inStream, TraceSwitch traceSwitch = null)
         //where T : class, new()
         {
-            var configuration = new ChoAvroRecordConfiguration();
+            var configuration = new ChoBSONRecordConfiguration();
             return Deserialize<T>(inStream, configuration, traceSwitch);
         }
 
-        public static IEnumerable<T> Deserialize<T>(Stream inStream, ChoAvroRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        public static IEnumerable<T> Deserialize<T>(Stream inStream, ChoBSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         //where T : class, new()
         {
             if (configuration == null)
-                configuration = new ChoAvroRecordConfiguration(typeof(T));
+                configuration = new ChoBSONRecordConfiguration(typeof(T));
 
             if (configuration != null)
             {
             }
-            return new ChoAvroReader<T>(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
-        }
-
-        public static IEnumerable<dynamic> Deserialize(Stream inStream, TraceSwitch traceSwitch = null)
-        //where T : class, new()
-        {
-            var configuration = new ChoAvroRecordConfiguration();
-            return Deserialize(inStream, configuration, traceSwitch);
-        }
-
-        public static IEnumerable<dynamic> Deserialize(Stream inStream, ChoAvroRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
-        //where T : class, new()
-        {
-            if (configuration == null)
-                configuration = new ChoAvroRecordConfiguration();
-
-            if (configuration != null)
-            {
-            }
-            return new ChoAvroReader(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
+            return new ChoBSONReader<T>(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
         }
     }
 }

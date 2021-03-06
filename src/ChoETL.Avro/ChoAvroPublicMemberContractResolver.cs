@@ -24,6 +24,11 @@ namespace ChoETL
         {
         }
 
+        public override IEnumerable<Type> GetKnownTypes(Type type)
+        {
+            return Configuration != null ? Configuration.KnownTypes : null;
+        }
+
         public override MemberSerializationInfo[] ResolveMembers(Type type)
         {
             if (type == null)
@@ -52,9 +57,9 @@ namespace ChoETL
                 .Select(m => new MemberSerializationInfo { Name = m.Name, MemberInfo = m, Nullable = m.GetCustomAttributes(false).OfType<NullableSchemaAttribute>().Any() })
                 .ToArray();
 
-            List<MemberSerializationInfo> result = new List<MemberSerializationInfo>();
             if (Configuration != null)
             {
+                List<MemberSerializationInfo> result = new List<MemberSerializationInfo>();
                 foreach (var fd in fds)
                 {
                     if (Configuration.IgnoredFields.Contains(fd.Name))
@@ -70,9 +75,18 @@ namespace ChoETL
 
                     result.Add(fd);
                 }
+                return result.ToArray();
             }
+            else
+                return fds.ToArray();
+        }
 
-            return result.ToArray();
+        public override TypeSerializationInfo ResolveType(Type type)
+        {
+            if (type == typeof(object))
+                return base.ResolveType(typeof(string));
+            else
+                return base.ResolveType(type);
         }
     }
 }

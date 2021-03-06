@@ -1794,11 +1794,40 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             Console.WriteLine(csv.ToString());
         }
 
+        class MyClass
+        {
+            public long A { get; set; }
+            public long B { get; set; }
+            public long C { get; set; }
+            public string Data { get; set; }
+        }
+
+        static void TestIssue134()
+        {
+            StringBuilder csv = new StringBuilder();
+
+            using (var w = new ChoCSVWriter<MyClass>(csv)
+                .WithFirstLineHeader()
+                .Configure(c => c.QuoteChar = '`')
+                )
+            {
+                w.Write(new MyClass
+                {
+                    A = 1,
+                    B = 2,
+                    C = 3,
+                    Data = @"{ ""key"": ""value""}"
+                });
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
         static void Main(string[] args)
         {
             //AppDomain.CurrentDomain.FirstChanceException += (sender, eventArgs) => { Console.WriteLine("FirstChanceException: " + eventArgs.Exception.ToString()); };
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            ComplexType2CSV();
+            TestIssue134();
             //TestDictionary();
             return;
 

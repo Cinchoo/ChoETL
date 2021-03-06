@@ -1,5 +1,4 @@
-﻿using Microsoft.Hadoop.Avro;
-using Microsoft.Hadoop.Avro.Container;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -18,67 +17,18 @@ using System.Threading.Tasks;
 namespace ChoETL
 {
     [DataContract]
-    public class ChoAvroRecordConfiguration : ChoFileRecordConfiguration
+    public class ChoBSONRecordConfiguration : ChoFileRecordConfiguration
     {
         private readonly Dictionary<string, dynamic> _indexMapDict = new Dictionary<string, dynamic>();
-        internal readonly Dictionary<Type, Dictionary<string, ChoAvroRecordFieldConfiguration>> AvroRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoAvroRecordFieldConfiguration>>();
+        internal readonly Dictionary<Type, Dictionary<string, ChoBSONRecordFieldConfiguration>> AvroRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoBSONRecordFieldConfiguration>>();
 
-        private readonly Lazy<bool> _initializer = null;
-
-        private AvroSerializerSettings _defaultAvroSerializerSettings = new AvroSerializerSettings();
-        private AvroSerializerSettings _avroSerializerSettings = null;
-        public AvroSerializerSettings AvroSerializerSettings
-        {
-            get { return _avroSerializerSettings == null ? _defaultAvroSerializerSettings : _avroSerializerSettings; }
-            set { _avroSerializerSettings = value; }
-        }
-        internal object AvroSerializer
+        public JsonSerializerSettings JsonSerializerSettings
         {
             get;
-            set;
-        }
-        public ICollection<Type> KnownTypes { get; set; } = new HashSet<Type>();
-
-        public int SyncNumberOfObjects { get; set; }
-
-        public bool UseAvroSerializer
-        {
-            get;
-            set;
-        }
-
-        public string RecordSchema
-        {
-            get;
-            set;
-        }
-
-        public bool LeaveOpen
-        {
-            get;
-            set;
-        }
-
-        public CodecFactory CodecFactory
-        {
-            get;
-            set;
-        }
-
-        public Codec Codec
-        {
-            get;
-            set;
-        }
-
-        public bool AllowNullable
-        {
-            get;
-            set;
         }
 
         [DataMember]
-        public List<ChoAvroRecordFieldConfiguration> AvroRecordFieldConfigurations
+        public List<ChoBSONRecordFieldConfiguration> BSONRecordFieldConfigurations
         {
             get;
             private set;
@@ -95,12 +45,12 @@ namespace ChoETL
             get;
             set;
         }
-        internal Dictionary<string, ChoAvroRecordFieldConfiguration> RecordFieldConfigurationsDict
+        internal Dictionary<string, ChoBSONRecordFieldConfiguration> RecordFieldConfigurationsDict
         {
             get;
             private set;
         }
-        internal Dictionary<string, ChoAvroRecordFieldConfiguration> RecordFieldConfigurationsDict2
+        internal Dictionary<string, ChoBSONRecordFieldConfiguration> RecordFieldConfigurationsDict2
         {
             get;
             private set;
@@ -115,71 +65,82 @@ namespace ChoETL
         {
             get
             {
-                foreach (var fc in AvroRecordFieldConfigurations)
+                foreach (var fc in BSONRecordFieldConfigurations)
                     yield return fc;
             }
         }
 
         public bool IgnoreHeader { get; internal set; }
 
-        public ChoAvroRecordFieldConfiguration this[string name]
+        public ChoBSONRecordFieldConfiguration this[string name]
         {
             get
             {
-                return AvroRecordFieldConfigurations.Where(i => i.Name == name).FirstOrDefault();
+                return BSONRecordFieldConfigurations.Where(i => i.Name == name).FirstOrDefault();
             }
         }
 
-        public ChoAvroRecordConfiguration() : this(null)
+        public ChoBSONRecordConfiguration() : this(null)
         {
         }
 
-        internal ChoAvroRecordConfiguration(Type recordType) : base(recordType)
+        internal ChoBSONRecordConfiguration(Type recordType) : base(recordType)
         {
-            AvroRecordFieldConfigurations = new List<ChoAvroRecordFieldConfiguration>();
+            JsonSerializerSettings = new JsonSerializerSettings();
+            BSONRecordFieldConfigurations = new List<ChoBSONRecordFieldConfiguration>();
 
             if (recordType != null)
             {
                 Init(recordType);
             }
-            NestedColumnSeparator = '_';
-            UseAvroSerializer = true;
-            SyncNumberOfObjects = 24;
 
+            //RecordSelector = new Func<object, Type>((value) =>
+            //{
+            //    Tuple<long, string> kvp = value as Tuple<long, string>;
+            //    string line = kvp.Item2;
+            //    if (line.IsNullOrEmpty()) return RecordTypeConfiguration.DefaultRecordType;
 
-            _initializer = new Lazy<bool>(() =>
-            {
-                AvroSerializerSettings.Resolver = new ChoAvroPublicMemberContractResolver(this.AllowNullable) { Configuration = this };
-                if (KnownTypes != null && KnownTypes.Count > 0)
-                    AvroSerializerSettings.KnownTypes = KnownTypes;
-                return true;
-            });
-        }
+            //    if (RecordTypeCodeExtractor != null)
+            //    {
+            //        string rt = RecordTypeCodeExtractor(line);
+            //        return RecordTypeConfiguration[rt];
+            //    }
+            //    else
+            //    {
+            //        if (RecordTypeConfiguration.Position <= 0)
+            //            return RecordTypeConfiguration.DefaultRecordType;
 
-        internal void Init()
-        {
-            var result = _initializer.Value;
+            //        string[] fieldValues = line.Split(Delimiter, StringSplitOptions, QuoteChar);
+            //        if (fieldValues.Length > 0 && RecordTypeConfiguration.Position - 1 < fieldValues.Length)
+            //        {
+            //            if (RecordTypeConfiguration.Contains(fieldValues[RecordTypeConfiguration.Position - 1]))
+            //                return RecordTypeConfiguration[fieldValues[RecordTypeConfiguration.Position - 1]];
+            //        }
+
+            //        return RecordTypeConfiguration.DefaultRecordType;
+            //    }
+            //});
         }
 
         protected override void Init(Type recordType)
         {
             base.Init(recordType);
 
-            ChoAvroRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoAvroRecordObjectAttribute>(recordType);
+            ChoBSONRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoBSONRecordObjectAttribute>(recordType);
             if (IgnoreFieldValueMode == null)
                 IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Empty;
 
-            if (AvroRecordFieldConfigurations.Count == 0)
+            if (BSONRecordFieldConfigurations.Count == 0)
                 DiscoverRecordFields(recordType);
         }
 
-        public ChoAvroRecordConfiguration MapRecordFields<T>()
+        public ChoBSONRecordConfiguration MapRecordFields<T>()
         {
             DiscoverRecordFields(typeof(T));
             return this;
         }
 
-        public ChoAvroRecordConfiguration MapRecordFields(params Type[] recordTypes)
+        public ChoBSONRecordConfiguration MapRecordFields(params Type[] recordTypes)
         {
             if (recordTypes == null)
                 return this;
@@ -193,7 +154,7 @@ namespace ChoETL
         }
 
         private void DiscoverRecordFields(Type recordType, bool clear = true,
-            List<ChoAvroRecordFieldConfiguration> recordFieldConfigurations = null)
+            List<ChoBSONRecordFieldConfiguration> recordFieldConfigurations = null)
         {
             if (recordType == null)
                 return;
@@ -202,14 +163,14 @@ namespace ChoETL
                 RecordMapType = recordType;
 
             if (recordFieldConfigurations == null)
-                recordFieldConfigurations = AvroRecordFieldConfigurations;
+                recordFieldConfigurations = BSONRecordFieldConfigurations;
 
             if (clear && recordFieldConfigurations != null)
                 recordFieldConfigurations.Clear();
 
             int position = 0;
             DiscoverRecordFields(recordType, ref position, null,
-                ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoAvroRecordFieldAttribute>().Any()).Any(),
+                ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoBSONRecordFieldAttribute>().Any()).Any(), 
                 null, recordFieldConfigurations);
         }
 
@@ -234,7 +195,7 @@ namespace ChoETL
         }
 
         private void DiscoverRecordFields(Type recordType, ref int pos, bool clear,
-            List<ChoAvroRecordFieldConfiguration> recordFieldConfigurations = null)
+            List<ChoBSONRecordFieldConfiguration> recordFieldConfigurations = null)
         {
             if (recordType == null)
                 return;
@@ -243,34 +204,34 @@ namespace ChoETL
                 RecordMapType = recordType;
 
             if (recordFieldConfigurations == null)
-                recordFieldConfigurations = AvroRecordFieldConfigurations;
+                recordFieldConfigurations = BSONRecordFieldConfigurations;
 
             if (clear && recordFieldConfigurations != null)
                 ClearFields();
 
             DiscoverRecordFields(recordType, ref pos, null,
-                ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoAvroRecordFieldAttribute>().Any()).Any(),
+                ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoBSONRecordFieldAttribute>().Any()).Any(), 
                 null, recordFieldConfigurations);
         }
 
         private void DiscoverRecordFields(Type recordType, ref int position, string declaringMember = null,
-            bool optIn = false, PropertyDescriptor propDesc = null, List<ChoAvroRecordFieldConfiguration> recordFieldConfigurations = null)
+            bool optIn = false, PropertyDescriptor propDesc = null, List<ChoBSONRecordFieldConfiguration> recordFieldConfigurations = null)
         {
             if (recordType == null)
                 return;
             if (!recordType.IsDynamicType())
             {
                 Type pt = null;
-                if (optIn)
+                if (optIn) 
                 {
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                     {
                         pt = pd.PropertyType.GetUnderlyingType();
                         if (!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
                             DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, null, recordFieldConfigurations);
-                        else if (pd.Attributes.OfType<ChoAvroRecordFieldAttribute>().Any())
+                        else if (pd.Attributes.OfType<ChoBSONRecordFieldAttribute>().Any())
                         {
-                            var obj = new ChoAvroRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoAvroRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray());
+                            var obj = new ChoBSONRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoBSONRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray());
                             obj.FieldType = pt;
                             obj.PropertyDescriptor = pd;
                             obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
@@ -291,7 +252,7 @@ namespace ChoETL
 
                             if (dnAttr == null)
                             {
-                                ChoAvroRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, null, declaringMember == null ? propDesc.GetDisplayName() : propDesc.GetDisplayName(String.Empty));
+                                ChoBSONRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, null, declaringMember == null ? propDesc.GetDisplayName() : propDesc.GetDisplayName(String.Empty));
                                 recordFieldConfigurations.Add(obj);
                             }
                             else if (dnAttr != null && dnAttr.Minimum.CastTo<int>() >= 0 && dnAttr.Maximum.CastTo<int>() > 0
@@ -303,7 +264,7 @@ namespace ChoETL
                                 {
                                     for (int range = dnAttr.Minimum.CastTo<int>(); range <= dnAttr.Maximum.CastTo<int>(); range++)
                                     {
-                                        ChoAvroRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, range);
+                                        ChoBSONRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, range);
                                         recordFieldConfigurations.Add(obj);
                                     }
                                 }
@@ -320,7 +281,7 @@ namespace ChoETL
                                             }
                                             else
                                             {
-                                                ChoAvroRecordFieldConfiguration obj = NewFieldConfiguration(ref position, declaringMember, pd, range, propDesc.GetDisplayName());
+                                                ChoBSONRecordFieldConfiguration obj = NewFieldConfiguration(ref position, declaringMember, pd, range, propDesc.GetDisplayName());
 
                                                 recordFieldConfigurations.Add(obj);
                                             }
@@ -338,7 +299,7 @@ namespace ChoETL
                             ChoDictionaryKeyAttribute[] dnAttrs = propDesc.Attributes.OfType<ChoDictionaryKeyAttribute>().ToArray();
                             if (dnAttrs.IsNullOrEmpty())
                             {
-                                ChoAvroRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, null, declaringMember == null ? propDesc.GetDisplayName() : propDesc.GetDisplayName(String.Empty));
+                                ChoBSONRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, null, declaringMember == null ? propDesc.GetDisplayName() : propDesc.GetDisplayName(String.Empty));
                                 recordFieldConfigurations.Add(obj);
                             }
                             else
@@ -351,7 +312,7 @@ namespace ChoETL
                                 {
                                     if (!key.IsNullOrWhiteSpace())
                                     {
-                                        ChoAvroRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, dictKey: key);
+                                        ChoBSONRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, dictKey: key);
 
                                         recordFieldConfigurations.Add(obj);
                                     }
@@ -370,7 +331,7 @@ namespace ChoETL
                         }
                         else if (recordType.IsSimple())
                         {
-                            ChoAvroRecordFieldConfiguration obj = NewFieldConfiguration(ref position, declaringMember, propDesc);
+                            ChoBSONRecordFieldConfiguration obj = NewFieldConfiguration(ref position, declaringMember, propDesc);
                             if (!recordFieldConfigurations.Any(c => c.Name == propDesc.Name))
                                 recordFieldConfigurations.Add(obj);
                         }
@@ -404,7 +365,7 @@ namespace ChoETL
                                 }
                                 else
                                 {
-                                    ChoAvroRecordFieldConfiguration obj = NewFieldConfiguration(ref position, declaringMember, pd, null, declaringMember == null ? propDesc.GetDisplayName() : propDesc.GetDisplayName(String.Empty));
+                                    ChoBSONRecordFieldConfiguration obj = NewFieldConfiguration(ref position, declaringMember, pd, null, declaringMember == null ? propDesc.GetDisplayName() : propDesc.GetDisplayName(String.Empty));
                                     if (!recordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
                                         recordFieldConfigurations.Add(obj);
                                 }
@@ -415,31 +376,31 @@ namespace ChoETL
             }
         }
 
-        internal ChoAvroRecordFieldConfiguration NewFieldConfiguration(ref int position, string declaringMember, PropertyDescriptor pd,
-            int? arrayIndex = null, string displayName = null, string dictKey = null, bool ignoreAttrs = false, Action<ChoAvroRecordFieldConfigurationMap> mapper = null)
+        internal ChoBSONRecordFieldConfiguration NewFieldConfiguration(ref int position, string declaringMember, PropertyDescriptor pd,
+            int? arrayIndex = null, string displayName = null, string dictKey = null, bool ignoreAttrs = false, Action<ChoBSONRecordFieldConfigurationMap> mapper = null)
         {
-            ChoAvroRecordFieldConfiguration obj = null;
+            ChoBSONRecordFieldConfiguration obj = null;
 
             if (displayName.IsNullOrEmpty())
             {
                 if (pd != null)
-                    obj = new ChoAvroRecordFieldConfiguration(declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name));
+                    obj = new ChoBSONRecordFieldConfiguration(declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name));
                 else
-                    obj = new ChoAvroRecordFieldConfiguration("Value");
+                    obj = new ChoBSONRecordFieldConfiguration("Value");
             }
             else if (pd != null)
             {
                 if (displayName.IsNullOrWhiteSpace())
-                    obj = new ChoAvroRecordFieldConfiguration("{0}".FormatString(pd.Name));
+                    obj = new ChoBSONRecordFieldConfiguration("{0}".FormatString(pd.Name));
                 else
-                    obj = new ChoAvroRecordFieldConfiguration("{0}.{1}".FormatString(displayName, pd.Name));
+                    obj = new ChoBSONRecordFieldConfiguration("{0}.{1}".FormatString(displayName, pd.Name));
             }
             else
-                obj = new ChoAvroRecordFieldConfiguration(displayName);
+                obj = new ChoBSONRecordFieldConfiguration(displayName);
 
             //obj.FieldName = pd != null ? pd.Name : displayName;
 
-            mapper?.Invoke(new ChoAvroRecordFieldConfigurationMap(obj));
+            mapper?.Invoke(new ChoBSONRecordFieldConfigurationMap(obj));
 
             obj.DictKey = dictKey;
             obj.ArrayIndex = arrayIndex;
@@ -510,7 +471,7 @@ namespace ChoETL
             {
                 if (ContainsRecordConfigForType(pd.ComponentType))
                 {
-                    var st = GetRecordConfigForType(pd.ComponentType).OfType<ChoAvroRecordFieldConfiguration>();
+                    var st = GetRecordConfigForType(pd.ComponentType).OfType<ChoBSONRecordFieldConfiguration>();
                     if (st != null && st.Any(fc => fc.Name == pd.Name))
                     {
                         var f = st.FirstOrDefault(fc => fc.Name == pd.Name);
@@ -550,7 +511,7 @@ namespace ChoETL
                 string name = null;
                 object defaultValue = null;
                 object fallbackValue = null;
-                foreach (var fc in fcs.OfType<ChoAvroRecordFieldConfiguration>())
+                foreach (var fc in fcs.OfType<ChoBSONRecordFieldConfiguration>())
                 {
                     name = fc.Name;
 
@@ -591,11 +552,6 @@ namespace ChoETL
 
         public override void Validate(object state)
         {
-            if (UseAvroSerializer)
-                ChoETLLog.Info("Using Avro Serializer...");
-            else
-                ChoETLLog.Info("Using Avro Sequencial Writer...");
-
             base.Validate(state);
 
             string[] fieldNames = null;
@@ -606,31 +562,31 @@ namespace ChoETL
                 fieldNames = state as string[];
 
             if (AutoDiscoverColumns
-                && AvroRecordFieldConfigurations.Count == 0)
+                && BSONRecordFieldConfigurations.Count == 0)
             {
                 if (RecordType != null && !IsDynamicObject /*&& RecordType != typeof(ExpandoObject)*/
-                    && ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Attributes.OfType<ChoAvroRecordFieldAttribute>().Any()).Any())
+                    && ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Attributes.OfType<ChoBSONRecordFieldAttribute>().Any()).Any())
                 {
                     MapRecordFields(RecordType);
                 }
                 else if (jObject != null)
                 {
-                    Dictionary<string, ChoAvroRecordFieldConfiguration> dict = new Dictionary<string, ChoAvroRecordFieldConfiguration>(StringComparer.CurrentCultureIgnoreCase);
+                    Dictionary<string, ChoBSONRecordFieldConfiguration> dict = new Dictionary<string, ChoBSONRecordFieldConfiguration>(StringComparer.CurrentCultureIgnoreCase);
                     string name = null;
                     int index = 0;
                     foreach (var kvp in jObject)
                     {
                         name = kvp.Key;
                         if (!dict.ContainsKey(name))
-                            dict.Add(name, new ChoAvroRecordFieldConfiguration(name));
+                            dict.Add(name, new ChoBSONRecordFieldConfiguration(name));
                         else
                         {
                             throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));
                         }
                     }
 
-                    foreach (ChoAvroRecordFieldConfiguration obj in dict.Values)
-                        AvroRecordFieldConfigurations.Add(obj);
+                    foreach (ChoBSONRecordFieldConfiguration obj in dict.Values)
+                        BSONRecordFieldConfigurations.Add(obj);
                 }
                 else if (!fieldNames.IsNullOrEmpty())
                 {
@@ -641,8 +597,8 @@ namespace ChoETL
                         if (IgnoredFields.Contains(fn))
                             continue;
 
-                        var obj = new ChoAvroRecordFieldConfiguration(fn);
-                        AvroRecordFieldConfigurations.Add(obj);
+                        var obj = new ChoBSONRecordFieldConfiguration(fn);
+                        BSONRecordFieldConfigurations.Add(obj);
                     }
                 }
 
@@ -672,7 +628,7 @@ namespace ChoETL
             }
 
             //Validate each record field
-            foreach (var fieldConfig in AvroRecordFieldConfigurations)
+            foreach (var fieldConfig in BSONRecordFieldConfigurations)
                 fieldConfig.Validate(this);
 
             if (false)
@@ -681,11 +637,11 @@ namespace ChoETL
             else
             {
                 //Check if any field has empty names 
-                if (AvroRecordFieldConfigurations.Where(i => i.FieldName.IsNullOrWhiteSpace()).Count() > 0)
+                if (BSONRecordFieldConfigurations.Where(i => i.FieldName.IsNullOrWhiteSpace()).Count() > 0)
                     throw new ChoRecordConfigurationException("Some fields has empty field name specified.");
 
                 //Check field names for duplicate
-                string[] dupFields = AvroRecordFieldConfigurations.GroupBy(i => i.FieldName/*, FileHeaderConfiguration.StringComparer*/)
+                string[] dupFields = BSONRecordFieldConfigurations.GroupBy(i => i.FieldName/*, FileHeaderConfiguration.StringComparer*/)
                     .Where(g => g.Count() > 1)
                     .Select(g => g.Key).ToArray();
 
@@ -695,7 +651,7 @@ namespace ChoETL
 
             PIDict = new Dictionary<string, System.Reflection.PropertyInfo>(StringComparer.InvariantCultureIgnoreCase);
             PDDict = new Dictionary<string, PropertyDescriptor>(StringComparer.InvariantCultureIgnoreCase);
-            foreach (var fc in AvroRecordFieldConfigurations)
+            foreach (var fc in BSONRecordFieldConfigurations)
             {
                 if (fc.PropertyDescriptor == null && !IsDynamicObject)
                 {
@@ -725,9 +681,9 @@ namespace ChoETL
                 PDDict.Add(fc.FieldName, fc.PropertyDescriptor);
             }
 
-            RecordFieldConfigurationsDict = AvroRecordFieldConfigurations.Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName/*, FileHeaderConfiguration.StringComparer*/);
+            RecordFieldConfigurationsDict = BSONRecordFieldConfigurations.Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName/*, FileHeaderConfiguration.StringComparer*/);
             //RecordFieldConfigurationsDictGroup = RecordFieldConfigurationsDict.GroupBy(kvp => kvp.Key.Contains(".") ? kvp.Key.SplitNTrim(".").First() : kvp.Key).ToDictionary(i => i.Key, i => i.ToArray());
-            RecordFieldConfigurationsDict2 = AvroRecordFieldConfigurations.Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName/*, FileHeaderConfiguration.StringComparer*/);
+            RecordFieldConfigurationsDict2 = BSONRecordFieldConfigurations.Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName/*, FileHeaderConfiguration.StringComparer*/);
 
             try
             {
@@ -746,7 +702,7 @@ namespace ChoETL
 
             //FCArray = RecordFieldConfigurationsDict.ToArray();
 
-            LoadNCacheMembers(AvroRecordFieldConfigurations);
+            LoadNCacheMembers(BSONRecordFieldConfigurations);
         }
 
         private void ValidateChar(char src, string name)
@@ -761,64 +717,64 @@ namespace ChoETL
                 throw new ChoRecordConfigurationException("One of the Comments contains {0}. Not allowed.".FormatString(name));
         }
 
-        public ChoAvroRecordConfiguration ClearFields()
+        public ChoBSONRecordConfiguration ClearFields()
         {
             _indexMapDict.Clear();
             AvroRecordFieldConfigurationsForType.Clear();
-            AvroRecordFieldConfigurations.Clear();
+            BSONRecordFieldConfigurations.Clear();
             return this;
         }
 
-        public ChoAvroRecordConfiguration IgnoreField<T, TProperty>(Expression<Func<T, TProperty>> field)
+        public ChoBSONRecordConfiguration IgnoreField<T, TProperty>(Expression<Func<T, TProperty>> field)
         {
-            if (AvroRecordFieldConfigurations.Count == 0)
+            if (BSONRecordFieldConfigurations.Count == 0)
                 MapRecordFields<T>();
 
-            var fc = AvroRecordFieldConfigurations.Where(f => f.DeclaringMember == field.GetFullyQualifiedMemberName()).FirstOrDefault();
+            var fc = BSONRecordFieldConfigurations.Where(f => f.DeclaringMember == field.GetFullyQualifiedMemberName()).FirstOrDefault();
             if (fc != null)
-                AvroRecordFieldConfigurations.Remove(fc);
+                BSONRecordFieldConfigurations.Remove(fc);
 
             return this;
         }
 
-        public ChoAvroRecordConfiguration IgnoreField(string fieldName)
+        public ChoBSONRecordConfiguration IgnoreField(string fieldName)
         {
-            var fc = AvroRecordFieldConfigurations.Where(f => f.DeclaringMember == fieldName || f.FieldName == fieldName).FirstOrDefault();
+            var fc = BSONRecordFieldConfigurations.Where(f => f.DeclaringMember == fieldName || f.FieldName == fieldName).FirstOrDefault();
             if (fc != null)
-                AvroRecordFieldConfigurations.Remove(fc);
+                BSONRecordFieldConfigurations.Remove(fc);
 
             return this;
         }
 
-        public ChoAvroRecordConfiguration Map<T, TProperty>(Expression<Func<T, TProperty>> field, string fieldName = null)
+        public ChoBSONRecordConfiguration Map<T, TProperty>(Expression<Func<T, TProperty>> field, string fieldName = null)
         {
             Map(field, m => m.FieldName(fieldName));
             return this;
         }
 
-        public ChoAvroRecordConfiguration Map(string propertyName, string fieldName)
+        public ChoBSONRecordConfiguration Map(string propertyName, string fieldName)
         {
             Map(propertyName, m => m.FieldName(fieldName));
             return this;
         }
 
-        public ChoAvroRecordConfiguration Map(string propertyName, Action<ChoAvroRecordFieldConfigurationMap> mapper = null)
+        public ChoBSONRecordConfiguration Map(string propertyName, Action<ChoBSONRecordFieldConfigurationMap> mapper = null)
         {
             var cf = GetFieldConfiguration(propertyName);
-            mapper?.Invoke(new ChoAvroRecordFieldConfigurationMap(cf));
+            mapper?.Invoke(new ChoBSONRecordFieldConfigurationMap(cf));
             return this;
         }
 
-        public ChoAvroRecordConfiguration Map<T, TField>(Expression<Func<T, TField>> field, Action<ChoAvroRecordFieldConfigurationMap> mapper = null)
+        public ChoBSONRecordConfiguration Map<T, TField>(Expression<Func<T, TField>> field, Action<ChoBSONRecordFieldConfigurationMap> mapper = null)
         {
             var subType = field.GetReflectedType();
             var fn = field.GetMemberName();
             var pd = field.GetPropertyDescriptor();
             var fqm = field.GetFullyQualifiedMemberName();
 
-            var cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoAvroRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(),
+            var cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoBSONRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(), 
                 pd, fqm/*, subType == typeof(T) ? null : subType*/);
-            mapper?.Invoke(new ChoAvroRecordFieldConfigurationMap(cf));
+            mapper?.Invoke(new ChoBSONRecordFieldConfigurationMap(cf));
             return this;
         }
 
@@ -839,19 +795,19 @@ namespace ChoETL
             if (ContainsRecordConfigForType(rt))
                 return;
 
-            List<ChoAvroRecordFieldConfiguration> recordFieldConfigurations = new List<ChoAvroRecordFieldConfiguration>();
+            List<ChoBSONRecordFieldConfiguration> recordFieldConfigurations = new List<ChoBSONRecordFieldConfiguration>();
             DiscoverRecordFields(rt, true, recordFieldConfigurations);
 
             AvroRecordFieldConfigurationsForType.Add(rt, recordFieldConfigurations.ToDictionary(item => item.Name, StringComparer.InvariantCultureIgnoreCase));
         }
 
-        internal void AddFieldForType(Type rt, ChoAvroRecordFieldConfiguration rc)
+        internal void AddFieldForType(Type rt, ChoBSONRecordFieldConfiguration rc)
         {
             if (rt == null || rc == null)
                 return;
 
             if (!AvroRecordFieldConfigurationsForType.ContainsKey(rt))
-                AvroRecordFieldConfigurationsForType.Add(rt, new Dictionary<string, ChoAvroRecordFieldConfiguration>(StringComparer.InvariantCultureIgnoreCase));
+                AvroRecordFieldConfigurationsForType.Add(rt, new Dictionary<string, ChoBSONRecordFieldConfiguration>(StringComparer.InvariantCultureIgnoreCase));
 
             if (AvroRecordFieldConfigurationsForType[rt].ContainsKey(rc.Name))
                 AvroRecordFieldConfigurationsForType[rt][rc.Name] = rc;
@@ -880,7 +836,7 @@ namespace ChoETL
                 return null;
         }
 
-        public ChoAvroRecordConfiguration MapForType<T, TField>(Expression<Func<T, TField>> field,
+        public ChoBSONRecordConfiguration MapForType<T, TField>(Expression<Func<T, TField>> field,
             string fieldName = null)
         {
             var subType = field.GetReflectedType();
@@ -888,10 +844,10 @@ namespace ChoETL
             var pd = field.GetPropertyDescriptor();
             var fqm = field.GetFullyQualifiedMemberName();
 
-            ChoAvroRecordFieldConfiguration cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoAvroRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(),
+            ChoBSONRecordFieldConfiguration cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoBSONRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(),
                 pd, fqm, subType);
 
-            var cf1 = new ChoAvroRecordFieldConfigurationMap(cf).FieldName(fieldName);
+            var cf1 = new ChoBSONRecordFieldConfigurationMap(cf).FieldName(fieldName);
 
             return this;
         }
@@ -916,12 +872,12 @@ namespace ChoETL
                     MapRecordFieldsForType(subRecordType);
 
                 string fnTrim = name.NTrim();
-                ChoAvroRecordFieldConfiguration fc = null;
+                ChoBSONRecordFieldConfiguration fc = null;
                 PropertyDescriptor pd = null;
-                if (AvroRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                if (BSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
                 {
-                    fc = AvroRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
-                    AvroRecordFieldConfigurations.Remove(fc);
+                    fc = BSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+                    BSONRecordFieldConfigurations.Remove(fc);
                 }
                 else if (subRecordType != null)
                 {
@@ -932,7 +888,7 @@ namespace ChoETL
                     pd = ChoTypeDescriptor.GetNestedProperty(recordType, fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
                 }
 
-                var nfc = new ChoAvroRecordFieldConfiguration(fnTrim)
+                var nfc = new ChoBSONRecordFieldConfiguration(fnTrim)
                 {
                     FieldType = fieldType,
                     QuoteField = quoteField,
@@ -969,19 +925,19 @@ namespace ChoETL
                 }
 
                 if (subRecordType == null)
-                    AvroRecordFieldConfigurations.Add(nfc);
+                    BSONRecordFieldConfigurations.Add(nfc);
                 else
                     AddFieldForType(subRecordType, nfc);
             }
         }
 
-        internal ChoAvroRecordFieldConfiguration GetFieldConfiguration(string propertyName, ChoAvroRecordFieldAttribute attr = null, Attribute[] otherAttrs = null,
+        internal ChoBSONRecordFieldConfiguration GetFieldConfiguration(string propertyName, ChoBSONRecordFieldAttribute attr = null, Attribute[] otherAttrs = null,
             PropertyDescriptor pd = null, string fqm = null, Type subType = null)
         {
             if (subType != null)
             {
                 MapRecordFieldsForType(subType);
-                var fc = new ChoAvroRecordFieldConfiguration(propertyName, attr, otherAttrs);
+                var fc = new ChoBSONRecordFieldConfiguration(propertyName, attr, otherAttrs);
                 AddFieldForType(subType, fc);
 
                 return fc;
@@ -996,11 +952,11 @@ namespace ChoETL
                     fqm = propertyName;
 
                 propertyName = propertyName.SplitNTrim(".").LastOrDefault();
-                if (!AvroRecordFieldConfigurations.Any(fc => fc.DeclaringMember == fqm && fc.ArrayIndex == null))
+                if (!BSONRecordFieldConfigurations.Any(fc => fc.DeclaringMember == fqm && fc.ArrayIndex == null))
                 {
                     int fieldPosition = 0;
 
-                    var c = new ChoAvroRecordFieldConfiguration(propertyName, attr, otherAttrs);
+                    var c = new ChoBSONRecordFieldConfiguration(propertyName, attr, otherAttrs);
                     if (pd != null)
                     {
                         c.PropertyDescriptor = pd;
@@ -1009,21 +965,21 @@ namespace ChoETL
 
                     c.DeclaringMember = fqm;
 
-                    AvroRecordFieldConfigurations.Add(c);
+                    BSONRecordFieldConfigurations.Add(c);
                 }
 
-                return AvroRecordFieldConfigurations.First(fc => fc.DeclaringMember == fqm && fc.ArrayIndex == null);
+                return BSONRecordFieldConfigurations.First(fc => fc.DeclaringMember == fqm && fc.ArrayIndex == null);
             }
         }
 
-        public ChoAvroRecordConfiguration IndexMap(string fieldName, Type fieldType, int minumum, int maximum, Action<ChoAvroRecordFieldConfigurationMap> mapper = null)
+        public ChoBSONRecordConfiguration IndexMap(string fieldName, Type fieldType, int minumum, int maximum, Action<ChoBSONRecordFieldConfigurationMap> mapper = null)
         {
             IndexMapInternal(fieldName, fieldType, minumum, maximum, fieldName, fieldName, mapper);
             return this;
         }
 
-        public ChoAvroRecordConfiguration IndexMap<T, TField>(Expression<Func<T, TField>> field, int minumum,
-            int maximum, Action<ChoAvroRecordFieldConfigurationMap> mapper = null)
+        public ChoBSONRecordConfiguration IndexMap<T, TField>(Expression<Func<T, TField>> field, int minumum,
+            int maximum, Action<ChoBSONRecordFieldConfigurationMap> mapper = null)
         {
             Type fieldType = field.GetPropertyType().GetUnderlyingType();
             var fqn = field.GetFullyQualifiedMemberName();
@@ -1041,7 +997,7 @@ namespace ChoETL
 
         internal void IndexMapInternal(string fieldName, Type fieldType, int minumum, int maximum,
             string fullyQualifiedMemberName = null, string displayName = null,
-            Action<ChoAvroRecordFieldConfigurationMap> mapper = null)
+            Action<ChoBSONRecordFieldConfigurationMap> mapper = null)
         {
             if (_indexMapDict.ContainsKey(fieldName))
                 _indexMapDict.Remove(fieldName);
@@ -1058,7 +1014,7 @@ namespace ChoETL
 
         internal void BuildIndexMap(string fieldName, Type fieldType, int minumum, int maximum,
             string fullyQualifiedMemberName = null, string displayName = null,
-            Action<ChoAvroRecordFieldConfigurationMap> mapper = null)
+            Action<ChoBSONRecordFieldConfigurationMap> mapper = null)
         {
             if (fullyQualifiedMemberName == null)
                 fullyQualifiedMemberName = fieldName;
@@ -1076,7 +1032,7 @@ namespace ChoETL
             Type recordType = fieldType;
             var fqn = fieldName;
 
-            if ((recordType.IsGenericType && recordType.GetGenericTypeDefinition() == typeof(IList<>) || typeof(IList).IsAssignableFrom(recordType))
+            if ((recordType.IsGenericType && recordType.GetGenericTypeDefinition() == typeof(IList<>) || typeof(IList).IsAssignableFrom(recordType)) 
                 && !typeof(ArrayList).IsAssignableFrom(recordType)
                 && minumum >= 0 && maximum >= 0 && minumum <= maximum
                 /*&& !fieldType.IsInterface*/)
@@ -1084,17 +1040,17 @@ namespace ChoETL
                 var itemType = recordType.GetItemType().GetUnderlyingType();
                 if (itemType.IsSimple())
                 {
-                    var fcs1 = AvroRecordFieldConfigurations.Where(o => o.DeclaringMember == fullyQualifiedMemberName).ToArray();
+                    var fcs1 = BSONRecordFieldConfigurations.Where(o => o.DeclaringMember == fullyQualifiedMemberName).ToArray();
                     foreach (var fc in fcs1)
                     {
                         displayName = fcs1.First().FieldName;
-                        AvroRecordFieldConfigurations.Remove(fc);
+                        BSONRecordFieldConfigurations.Remove(fc);
                     }
 
                     for (int index = minumum; index <= maximum; index++)
                     {
-                        var nfc = new ChoAvroRecordFieldConfiguration(fieldName) { ArrayIndex = index };
-                        mapper?.Invoke(new ChoAvroRecordFieldConfigurationMap(nfc));
+                        var nfc = new ChoBSONRecordFieldConfiguration(fieldName) { ArrayIndex = index };
+                        mapper?.Invoke(new ChoBSONRecordFieldConfigurationMap(nfc));
 
                         if (displayName != null)
                             nfc.FieldName = displayName;
@@ -1111,7 +1067,7 @@ namespace ChoETL
                         nfc.ArrayIndex = index;
 
                         nfc.FieldType = recordType;
-                        AvroRecordFieldConfigurations.Add(nfc);
+                        BSONRecordFieldConfigurations.Add(nfc);
                     }
                 }
                 else
@@ -1119,27 +1075,27 @@ namespace ChoETL
                     int priority = 0;
 
                     //Remove collection config member
-                    var fcs1 = AvroRecordFieldConfigurations.Where(o => o.FieldName == fqn).ToArray();
+                    var fcs1 = BSONRecordFieldConfigurations.Where(o => o.FieldName == fqn).ToArray();
                     foreach (var fc in fcs1)
                     {
-                        AvroRecordFieldConfigurations.Remove(fc);
+                        BSONRecordFieldConfigurations.Remove(fc);
                     }
 
                     //Remove any unused config
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(itemType))
                     {
-                        var fcs = AvroRecordFieldConfigurations.Where(o => o.DeclaringMember == "{0}.{1}".FormatString(fullyQualifiedMemberName, pd.Name)
+                        var fcs = BSONRecordFieldConfigurations.Where(o => o.DeclaringMember == "{0}.{1}".FormatString(fullyQualifiedMemberName, pd.Name)
                         && o.ArrayIndex != null && (o.ArrayIndex < minumum || o.ArrayIndex > maximum)).ToArray();
 
                         foreach (var fc in fcs)
-                            AvroRecordFieldConfigurations.Remove(fc);
+                            BSONRecordFieldConfigurations.Remove(fc);
                     }
 
                     for (int index = minumum; index <= maximum; index++)
                     {
                         foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(itemType))
                         {
-                            var fc = AvroRecordFieldConfigurations.Where(o => o.DeclaringMember == "{0}.{1}".FormatString(fullyQualifiedMemberName, pd.Name)
+                            var fc = BSONRecordFieldConfigurations.Where(o => o.DeclaringMember == "{0}.{1}".FormatString(fullyQualifiedMemberName, pd.Name)
                             && o.ArrayIndex != null && o.ArrayIndex == index).FirstOrDefault();
 
                             if (fc != null) continue;
@@ -1151,11 +1107,11 @@ namespace ChoETL
                             else
                             {
                                 int fieldPosition = 0;
-                                ChoAvroRecordFieldConfiguration obj = NewFieldConfiguration(ref fieldPosition, fullyQualifiedMemberName, pd, index, displayName, ignoreAttrs: false,
+                                ChoBSONRecordFieldConfiguration obj = NewFieldConfiguration(ref fieldPosition, fullyQualifiedMemberName, pd, index, displayName, ignoreAttrs: false,
                                     mapper: mapper);
 
                                 //if (!ParquetRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
-                                AvroRecordFieldConfigurations.Add(obj);
+                                BSONRecordFieldConfigurations.Add(obj);
                             }
                         }
                     }
@@ -1163,15 +1119,15 @@ namespace ChoETL
             }
         }
 
-        public ChoAvroRecordConfiguration DictionaryMap(string fieldName, Type fieldType,
-            string[] keys, Action<ChoAvroRecordFieldConfigurationMap> mapper = null)
+        public ChoBSONRecordConfiguration DictionaryMap(string fieldName, Type fieldType,
+            string[] keys, Action<ChoBSONRecordFieldConfigurationMap> mapper = null)
         {
             DictionaryMapInternal(fieldName, fieldType, fieldName, keys, null, mapper);
             return this;
         }
 
-        public ChoAvroRecordConfiguration DictionaryMap<T, TField>(Expression<Func<T, TField>> field,
-            string[] keys, Action<ChoAvroRecordFieldConfigurationMap> mapper = null)
+        public ChoBSONRecordConfiguration DictionaryMap<T, TField>(Expression<Func<T, TField>> field,
+            string[] keys, Action<ChoBSONRecordFieldConfigurationMap> mapper = null)
         {
             Type fieldType = field.GetPropertyType().GetUnderlyingType();
             var fqn = field.GetFullyQualifiedMemberName();
@@ -1181,42 +1137,42 @@ namespace ChoETL
             return this;
         }
 
-        internal ChoAvroRecordConfiguration DictionaryMapInternal(string fieldName, Type fieldType, string fqn,
-            string[] keys, PropertyDescriptor pd = null, Action<ChoAvroRecordFieldConfigurationMap> mapper = null)
+        internal ChoBSONRecordConfiguration DictionaryMapInternal(string fieldName, Type fieldType, string fqn,
+            string[] keys, PropertyDescriptor pd = null, Action<ChoBSONRecordFieldConfigurationMap> mapper = null)
         {
-            List<ChoAvroRecordFieldConfiguration> fcsList = new List<ChoAvroRecordFieldConfiguration>();
+            List<ChoBSONRecordFieldConfiguration> fcsList = new List<ChoBSONRecordFieldConfiguration>();
             if (fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(IDictionary<,>)
                 && typeof(string) == fieldType.GetGenericArguments()[0]
                 && keys != null && keys.Length > 0)
             {
                 //Remove collection config member
-                var fcs1 = AvroRecordFieldConfigurations.Where(o => o.FieldName == fqn).ToArray();
+                var fcs1 = BSONRecordFieldConfigurations.Where(o => o.FieldName == fqn).ToArray();
                 foreach (var fc in fcs1)
-                    AvroRecordFieldConfigurations.Remove(fc);
+                    BSONRecordFieldConfigurations.Remove(fc);
 
                 //Remove any unused config
-                var fcs = AvroRecordFieldConfigurations.Where(o => o.DeclaringMember == fieldName
+                var fcs = BSONRecordFieldConfigurations.Where(o => o.DeclaringMember == fieldName
                 && !o.DictKey.IsNullOrWhiteSpace() && !keys.Contains(o.DictKey)).ToArray();
 
                 foreach (var fc in fcs)
-                    AvroRecordFieldConfigurations.Remove(fc);
+                    BSONRecordFieldConfigurations.Remove(fc);
 
                 foreach (var key in keys)
                 {
                     if (!key.IsNullOrWhiteSpace())
                     {
-                        var fc = AvroRecordFieldConfigurations.Where(o => o.DeclaringMember == fieldName
+                        var fc = BSONRecordFieldConfigurations.Where(o => o.DeclaringMember == fieldName
                             && !o.DictKey.IsNullOrWhiteSpace() && key == o.DictKey).FirstOrDefault();
 
                         if (fc != null) continue;
 
                         //ChoParquetRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, dictKey: key);
                         int fieldPosition = 0;
-                        ChoAvroRecordFieldConfiguration obj = NewFieldConfiguration(ref fieldPosition, null, pd, displayName: fieldName, dictKey: key, mapper: mapper);
+                        ChoBSONRecordFieldConfiguration obj = NewFieldConfiguration(ref fieldPosition, null, pd, displayName: fieldName, dictKey: key, mapper: mapper);
 
                         //if (!ParquetRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
                         //ParquetRecordFieldConfigurations.Add(obj);
-                        AvroRecordFieldConfigurations.Add(obj);
+                        BSONRecordFieldConfigurations.Add(obj);
                     }
                 }
             }
@@ -1225,7 +1181,7 @@ namespace ChoETL
 
         #region Fluent API
 
-        public ChoAvroRecordConfiguration Configure(Action<ChoAvroRecordConfiguration> action)
+        public ChoBSONRecordConfiguration Configure(Action<ChoBSONRecordConfiguration> action)
         {
             if (action != null)
                 action(this);
@@ -1236,74 +1192,74 @@ namespace ChoETL
         #endregion 
     }
 
-    public class ChoAvroRecordConfiguration<T> : ChoAvroRecordConfiguration
+    public class ChoBSONRecordConfiguration<T> : ChoBSONRecordConfiguration
     {
-        public ChoAvroRecordConfiguration()
+        public ChoBSONRecordConfiguration()
         {
             MapRecordFields<T>();
         }
 
-        public new ChoAvroRecordConfiguration<T> ClearFields()
+        public new ChoBSONRecordConfiguration<T> ClearFields()
         {
             base.ClearFields();
             return this;
         }
 
-        public ChoAvroRecordConfiguration<T> Ignore<TProperty>(Expression<Func<T, TProperty>> field)
+        public ChoBSONRecordConfiguration<T> Ignore<TProperty>(Expression<Func<T, TProperty>> field)
         {
             base.IgnoreField(field);
             return this;
         }
 
-        public ChoAvroRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, string fieldName = null)
+        public ChoBSONRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, string fieldName = null)
         {
             base.Map(field, fieldName);
             return this;
         }
 
-        public ChoAvroRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field,
-            Action<ChoAvroRecordFieldConfigurationMap> setup)
+        public ChoBSONRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field,
+            Action<ChoBSONRecordFieldConfigurationMap> setup)
         {
             base.Map(field, setup);
             return this;
         }
 
-        public ChoAvroRecordConfiguration<T> MapForType<TClass>(Expression<Func<TClass, object>> field, string fieldName = null)
+        public ChoBSONRecordConfiguration<T> MapForType<TClass>(Expression<Func<TClass, object>> field, string fieldName = null)
         {
             var subType = field.GetReflectedType();
             var fn = field.GetMemberName();
             var pd = field.GetPropertyDescriptor();
             var fqm = field.GetFullyQualifiedMemberName();
 
-            ChoAvroRecordFieldConfiguration cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoAvroRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(),
+            ChoBSONRecordFieldConfiguration cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoBSONRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(),
                 pd, fqm, subType);
 
-            new ChoAvroRecordFieldConfigurationMap(cf).FieldName(fieldName);
+            new ChoBSONRecordFieldConfigurationMap(cf).FieldName(fieldName);
             return this;
         }
 
-        public ChoAvroRecordConfiguration<T> MapForType<TClass, TField>(Expression<Func<TClass, TField>> field, Action<ChoAvroRecordFieldConfigurationMap> mapper)
+        public ChoBSONRecordConfiguration<T> MapForType<TClass, TField>(Expression<Func<TClass, TField>> field, Action<ChoBSONRecordFieldConfigurationMap> mapper)
         {
             var subType = field.GetReflectedType();
             var fn = field.GetMemberName();
             var pd = field.GetPropertyDescriptor();
             var fqm = field.GetFullyQualifiedMemberName();
 
-            var cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoAvroRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(),
+            var cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoBSONRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(),
                 pd, fqm, subType);
-            mapper?.Invoke(new ChoAvroRecordFieldConfigurationMap(cf));
+            mapper?.Invoke(new ChoBSONRecordFieldConfigurationMap(cf));
             return this;
         }
 
-        public ChoAvroRecordConfiguration<T> IndexMap<TField>(Expression<Func<T, TField>> field, int minumum,
-            int maximum, Action<ChoAvroRecordFieldConfigurationMap> mapper = null)
+        public ChoBSONRecordConfiguration<T> IndexMap<TField>(Expression<Func<T, TField>> field, int minumum,
+            int maximum, Action<ChoBSONRecordFieldConfigurationMap> mapper = null)
         {
             base.IndexMap(field, minumum, maximum, mapper);
             return this;
         }
 
-        public ChoAvroRecordConfiguration<T> DictionaryMap<TField>(Expression<Func<T, TField>> field,
-            string[] keys, Action<ChoAvroRecordFieldConfigurationMap> mapper = null)
+        public ChoBSONRecordConfiguration<T> DictionaryMap<TField>(Expression<Func<T, TField>> field,
+            string[] keys, Action<ChoBSONRecordFieldConfigurationMap> mapper = null)
         {
             base.DictionaryMap(field, keys, mapper);
             return this;
@@ -1311,7 +1267,7 @@ namespace ChoETL
 
         #region Fluent API
 
-        public ChoAvroRecordConfiguration<T> Configure(Action<ChoAvroRecordConfiguration<T>> action)
+        public ChoBSONRecordConfiguration<T> Configure(Action<ChoBSONRecordConfiguration<T>> action)
         {
             if (action != null)
                 action(this);
@@ -1319,13 +1275,13 @@ namespace ChoETL
             return this;
         }
 
-        public new ChoAvroRecordConfiguration<T> MapRecordFields<TClass>()
+        public new ChoBSONRecordConfiguration<T> MapRecordFields<TClass>()
         {
             base.MapRecordFields(typeof(TClass));
             return this;
         }
 
-        public new ChoAvroRecordConfiguration<T> MapRecordFields(params Type[] recordTypes)
+        public new ChoBSONRecordConfiguration<T> MapRecordFields(params Type[] recordTypes)
         {
             base.MapRecordFields(recordTypes);
             return this;

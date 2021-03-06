@@ -779,6 +779,10 @@ namespace ChoETL
             : base(txtReader, configuration)
         {
         }
+        public ChoJSONReader(JsonTextReader txtReader, ChoJSONRecordConfiguration configuration = null)
+            : base(txtReader, configuration)
+        {
+        }
         public ChoJSONReader(Stream inStream, ChoJSONRecordConfiguration configuration = null)
             : base(inStream, configuration)
         {
@@ -996,6 +1000,36 @@ namespace ChoETL
         //where T : class, new()
         {
             return new ChoJSONReader<T>(jObject, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public static IEnumerable<T> Deserialize<T>(JsonTextReader jr, string jsonPath, TraceSwitch traceSwitch = null)
+        //where T : class, new()
+        {
+            var configuration = new ChoJSONRecordConfiguration();
+            configuration.JSONPath = jsonPath;
+            return Deserialize<T>(jr, configuration, traceSwitch);
+        }
+
+        public static IEnumerable<T> Deserialize<T>(JsonTextReader jr, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        //where T : class, new()
+        {
+            if (configuration == null)
+                configuration = new ChoJSONRecordConfiguration(typeof(T));
+
+            return new ChoJSONReader<T>(jr, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
+        }
+
+        public static IEnumerable<dynamic> Deserialize(JsonTextReader jr, string jsonPath, TraceSwitch traceSwitch = null)
+        {
+            var configuration = new ChoJSONRecordConfiguration();
+            configuration.JSONPath = jsonPath;
+            return Deserialize(jr, configuration, traceSwitch);
+        }
+
+        public static IEnumerable<dynamic> Deserialize(JsonTextReader jr, ChoJSONRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        //where T : class, new()
+        {
+            return new ChoJSONReader(jr, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
         }
     }
 }

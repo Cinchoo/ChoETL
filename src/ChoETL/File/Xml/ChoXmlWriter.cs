@@ -101,8 +101,9 @@ namespace ChoETL
                 return;
 
             _isDisposed = true;
-            if (_writer != null)
-                _writer.EndWrite(_textWriter);
+            if (_writer != null && _textWriter != null)
+                _writer.EndWrite(_textWriter.Value);
+
             if (_closeStreamOnDispose)
             {
                 if (_textWriter != null)

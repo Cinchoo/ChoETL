@@ -86,9 +86,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoYamlReaderTest", "..\Tes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoYamlWriterTest", "..\Test\ChoYamlWriterTest\ChoYamlWriterTest.csproj", "{A2CE2DD3-6E0D-45D3-A808-D76A345A60C0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoETL.Avro", "..\ChoETL.Avro\ChoETL.Avro.csproj", "{63079F87-EDD1-421E-9470-AEB21A9EB20C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoETL.Avro", "..\ChoETL.Avro\ChoETL.Avro.csproj", "{63079F87-EDD1-421E-9470-AEB21A9EB20C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoAvroReaderTest", "..\Test\ChoAvroReaderTest\ChoAvroReaderTest.csproj", "{0EE24502-D868-42AF-9C36-105BBF3294EB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoAvroReaderTest", "..\Test\ChoAvroReaderTest\ChoAvroReaderTest.csproj", "{0EE24502-D868-42AF-9C36-105BBF3294EB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
