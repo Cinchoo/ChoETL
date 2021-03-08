@@ -58,7 +58,7 @@ namespace ChoETL
 
             Init();
 
-            _textWriter = new Lazy<TextWriter>(() => new StreamWriter(ChoPath.GetFullPath(filePath), false, Configuration.Encoding, Configuration.BufferSize));
+            _textWriter = new Lazy<TextWriter>(() => new StreamWriter(filePath, false, Configuration.Encoding, Configuration.BufferSize));
             _closeStreamOnDispose = true;
         }
 

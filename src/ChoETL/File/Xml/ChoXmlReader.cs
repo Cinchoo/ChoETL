@@ -68,7 +68,7 @@ namespace ChoETL
                 Configuration.NamespaceManager.AddNamespace("", defaultNamespace);
 
 
-            _sr = new Lazy<TextReader>(() => new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
+            _sr = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
             //InitXml();
             _closeStreamOnDispose = true;
         }
@@ -90,7 +90,7 @@ namespace ChoETL
 
             Init();
 
-            _sr = new Lazy<TextReader>(() => new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
+            _sr = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
             //InitXml();
             _closeStreamOnDispose = true;
         }
@@ -155,7 +155,7 @@ namespace ChoETL
 
             Close();
             Init();
-            _sr = new Lazy<TextReader>(() => new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
+            _sr = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
             //InitXml();
             _closeStreamOnDispose = true;
 

@@ -54,7 +54,7 @@ namespace ChoETL
 
             Init();
 
-            _sr = new Lazy<StreamReader>(() => new StreamReader(ChoPath.GetFullPath(filePath)));
+            _sr = new Lazy<StreamReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
         }
 
@@ -98,7 +98,7 @@ namespace ChoETL
 
             Close();
             Init();
-            _sr = new Lazy<StreamReader>(() => new StreamReader(ChoPath.GetFullPath(filePath), Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
+            _sr = new Lazy<StreamReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
 
             return this;
