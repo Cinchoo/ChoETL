@@ -4845,10 +4845,32 @@ F1004|File is a duplicate|TRUE|ERROR|TEST_VISITS_IA_270084601_20201202192520.csv
 
         }
 
+        public class Issue135Rec
+        {
+            [ChoCSVRecordField(FieldName = "split Payment Data", QuoteField = false)]
+            public string SplitPaymentData { get; set; }
+        }
+
+        static void Issue135()
+        {
+            string csv = @"SomeField1, Split Payment Data
+value1,""{""""split.amount"""":""""1794"""",""""split.currencyCode"""":""""USD"""",""""split.nrOfItems"""":""""1""""}""
+";
+            using (var r = ChoCSVReader<Issue135Rec>.LoadText(csv)
+                .WithFirstLineHeader()
+                .QuoteAllFields(true)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Verbose;
-            DoubleValueWithExponentFormat();
+            Issue135();
             return;
 
             CSV2ComplexObject();

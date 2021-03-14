@@ -663,6 +663,35 @@ namespace ChoETL
             }
         }
 
+        private string[] GetFieldValues(string line)
+        {
+            if ((Configuration.QuoteAllFields != null && Configuration.QuoteAllFields.Value) || !Configuration.CSVRecordFieldConfigurations.Any(f => f.QuoteField != null && f.QuoteField.Value))
+                return line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, !Configuration.QuoteAllFields.GetValueOrDefault(false) ? ChoCharEx.NUL : Configuration.QuoteChar, Configuration.QuoteEscapeChar);
+            else
+            {
+                List<string> fvs = new List<string>();
+                int maxPos = Configuration.RecordFieldConfigurationsDict.Max(f => f.Value.FieldPosition);
+                for (int pos = 0; pos <= maxPos; pos++)
+                {
+                    var fc = Configuration.RecordFieldConfigurationsDict.Where(f => f.Value.FieldPosition == pos).Select(f => f.Value).FirstOrDefault();
+                    bool quoteField = false;
+                    if (fc != null)
+                        quoteField = fc.QuoteField.GetValueOrDefault(false);
+
+                    var tokens = line.Split(Configuration.Delimiter, Configuration.StringSplitOptions,
+                        !quoteField ? ChoCharEx.NUL : Configuration.QuoteChar, Configuration.QuoteEscapeChar);
+                    if (!tokens.IsNullOrEmpty())
+                    {
+                        var fv = tokens.First();
+                        fvs.Add(fv);
+                        line = line.RightOf(fv + Configuration.Delimiter);
+                    }
+                }
+
+                return fvs.ToArray();
+            }
+        }
+
         private bool FillRecord(object rec, Tuple<long, string> pair)
         {
             long lineNo;
@@ -671,7 +700,7 @@ namespace ChoETL
             lineNo = pair.Item1;
             line = pair.Item2;
 
-            string[] fieldValues = line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, !Configuration.QuoteAllFields.GetValueOrDefault(false) ? ChoCharEx.NUL : Configuration.QuoteChar, Configuration.QuoteEscapeChar);
+            string[] fieldValues = GetFieldValues(line); // line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, !Configuration.QuoteAllFields.GetValueOrDefault(false) ? ChoCharEx.NUL : Configuration.QuoteChar, Configuration.QuoteEscapeChar);
             if (Configuration.ColumnCountStrict)
             {
                 if (fieldValues.Length != Configuration.CSVRecordFieldConfigurations.Count)
