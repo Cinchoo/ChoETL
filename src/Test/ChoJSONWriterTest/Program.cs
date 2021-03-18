@@ -1254,10 +1254,55 @@ namespace ChoJSONWriterTest
             Console.WriteLine(json.ToString());
         }
 
+        public class DriverInformationX
+        {
+            [ChoIgnoreMember]
+            public string DriverID { get; set; }
+            public string Branch { get; set; }
+        }
+
+        public class PersonX
+        {
+            public string FirstName { get; set; }
+            public string LastName { get; set; }
+            public DriverInformationX Info { get; set; }
+
+            [ChoIgnoreMember]
+            public string FullName
+            {
+                get { return FirstName + " " + LastName; }
+            }
+        }
+
+        static void IgnoreNestedProperty()
+        {
+            PersonX person = new PersonX
+            {
+                FirstName = "Dennis",
+                LastName = "Deepwater-Diver",
+
+                Info = new DriverInformationX
+                {
+                    DriverID = "N022323 2323",
+                    Branch = "NYC"
+                }
+            };
+
+            Console.WriteLine(ChoJSONWriter.Serialize<PersonX>(person));
+
+            StringBuilder json = new StringBuilder();
+            using (var w = new ChoJSONWriter<PersonX>(json))
+            {
+                w.Write(person);
+            }
+
+            Console.WriteLine(json.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            SensitiveInfoSerialization();
+            IgnoreNestedProperty();
 
             return;
 

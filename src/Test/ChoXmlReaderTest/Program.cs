@@ -432,8 +432,44 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            MemoryTest();
+            ElementsToArray();
         }
+
+        [ChoXmlRecordObject(XPath = "/")]
+        public class ABCX
+        {
+            [ChoXmlNodeRecordField(XPath = "/Header/Date")]
+            public string Header { get; set; }
+            [ChoXmlNodeRecordField(XPath = "/Document")]
+            public string[] Document { get; set; }
+        }
+
+        static void ElementsToArray()
+        {
+            string xml = @"<?xml version=""1.0"" encoding=""UTF-8""?>
+<ABC>
+  <Header>
+    <Date>2020-03-20T09:08:29Z</Date>
+    <Code>A101</Code>    
+  </Header>
+  <Document>
+    <AAA>Test Data 123</AAA>
+    <BBB>Test Date 456</BBB>
+  </Document>
+</ABC>";
+
+            using (var r = ChoXmlReader<ABCX>.LoadText(xml)
+                //.WithXPath("/")
+                //.WithField("Date", xPath: "/Header/Date")
+                //.WithField("Code", xPath: "/Header/Code")
+                //.WithField("Document", xPath: "/Document", fieldType: typeof(string[]))
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
 
         public class Item
         {

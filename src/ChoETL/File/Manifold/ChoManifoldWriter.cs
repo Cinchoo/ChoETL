@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public class ChoManifoldWriter : ChoWriter, IDisposable
+    public class ChoManifoldWriter : ChoWriter, IDisposable, IChoManifoldWriter
     {
         private TextWriter _textWriter;
         private bool _closeStreamOnDispose = false;
@@ -19,6 +19,7 @@ namespace ChoETL
         public event EventHandler<ChoRowsWrittenEventArgs> RowsWritten;
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
         private bool _isDisposed = false;
+        public event EventHandler<ChoRecordConfigurationConstructArgs> AfterRecordConfigurationConstruct;
 
         public override dynamic Context
         {
@@ -159,6 +160,16 @@ namespace ChoETL
                 rowsWrittenEvent(this, e);
         }
 
+        public void RaiseAfterRecordConfigurationConstruct(Type recordType, ChoRecordConfiguration config)
+        {
+            EventHandler<ChoRecordConfigurationConstructArgs> afterRecordConfigurationConstruct = AfterRecordConfigurationConstruct;
+            if (afterRecordConfigurationConstruct == null)
+                return;
+
+            var ea = new ChoRecordConfigurationConstructArgs(recordType, config);
+            afterRecordConfigurationConstruct(this, ea);
+        }
+
         #region Fluent API
 
         public ChoManifoldWriter NotifyAfter(long rowsWritten)
@@ -222,5 +233,10 @@ namespace ChoETL
             }
             catch { }
         }
+    }
+
+    internal interface IChoManifoldWriter
+    {
+        void RaiseAfterRecordConfigurationConstruct(Type recordType, ChoRecordConfiguration config);
     }
 }

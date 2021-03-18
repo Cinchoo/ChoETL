@@ -194,6 +194,18 @@ namespace ChoETL
             return new XElement(xmlDocument.Name.LocalName, xmlDocument.Elements().Select(el => RemoveAllNamespaces(el)));
         }
 
+        public static dynamic GetXmlttributesFromDeclaration(this XmlReader xmlReader)
+        {
+            dynamic obj = new ChoDynamicObject();
+            if (xmlReader.Read())
+            {
+                obj.XmlVersion = xmlReader.GetAttribute("version");
+                obj.XmlEncoding = xmlReader.GetAttribute("encoding");
+            }
+
+            return obj;
+        }
+
         public static IEnumerable<XElement> GetXmlElements(this XmlReader xmlReader, string xPath, XmlNamespaceManager nsMgr,
             bool allowComplexXmlPath = false)
         {

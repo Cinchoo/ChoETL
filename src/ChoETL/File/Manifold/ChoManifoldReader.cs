@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public class ChoManifoldReader : ChoReader, IDisposable, IEnumerable
+    public class ChoManifoldReader : ChoReader, IDisposable, IEnumerable, IChoManifoldReader
     {
         private TextReader _textReader;
         private bool _closeStreamOnDispose = false;
@@ -22,6 +22,7 @@ namespace ChoETL
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
         public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
         private bool _isDisposed = false;
+        public event EventHandler<ChoRecordConfigurationConstructArgs> AfterRecordConfigurationConstruct;
 
         public ChoManifoldRecordConfiguration Configuration
         {
@@ -226,6 +227,16 @@ namespace ChoETL
             }
         }
 
+        public void RaiseAfterRecordConfigurationConstruct(Type recordType, ChoRecordConfiguration config)
+        {
+            EventHandler<ChoRecordConfigurationConstructArgs> afterRecordConfigurationConstruct = AfterRecordConfigurationConstruct;
+            if (afterRecordConfigurationConstruct == null)
+                return;
+
+            var ea = new ChoRecordConfigurationConstructArgs(recordType, config);
+            afterRecordConfigurationConstruct(this, ea);
+        }
+
         #region Fluent API
 
         public ChoManifoldReader NotifyAfter(long rowsLoaded)
@@ -291,5 +302,10 @@ namespace ChoETL
             }
             catch { }
         }
+    }
+
+    internal interface IChoManifoldReader
+    {
+        void RaiseAfterRecordConfigurationConstruct(Type recordType, ChoRecordConfiguration config);
     }
 }

@@ -183,12 +183,24 @@ namespace ChoETL
             {
                 ChoFileRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoFileRecordObjectAttribute>(recordType);
                 if (recObjAttr == null || recObjAttr is ChoCSVRecordObjectAttribute)
+                {
                     Configuration[recordType] = new ChoCSVRecordConfiguration(recordType);
+                    RaiseAfterRecordConfigurationConstruct(recordType, Configuration[recordType]);
+                }
                 else if (recObjAttr is ChoFixedLengthRecordObjectAttribute)
+                {
                     Configuration[recordType] = new ChoFixedLengthRecordConfiguration(recordType);
+                    RaiseAfterRecordConfigurationConstruct(recordType, Configuration[recordType]);
+                }
             }
 
             return Configuration[recordType];
+        }
+
+        public void RaiseAfterRecordConfigurationConstruct(Type recordType, ChoRecordConfiguration config)
+        {
+            if (Writer is IChoManifoldWriter)
+                ((IChoManifoldWriter)Writer).RaiseAfterRecordConfigurationConstruct(recordType, config);
         }
 
         private bool RaiseBeginWrite(object state)

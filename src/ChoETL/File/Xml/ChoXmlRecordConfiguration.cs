@@ -101,9 +101,8 @@ namespace ChoETL
             get;
             set;
         }
-        [DataMember]
-        public string XmlVersion
-        { get; set; }
+        public string XmlEncoding { get; set; }
+        public string XmlVersion { get; set; }
         [DataMember]
         public bool OmitXmlDeclaration { get; set; }
         internal Dictionary<string, ChoXmlRecordFieldConfiguration> RecordFieldConfigurationsDict
@@ -281,6 +280,7 @@ namespace ChoETL
             ChoXmlRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoXmlRecordObjectAttribute>(recordType);
             if (recObjAttr != null)
             {
+                XPath = recObjAttr.XPath;
             }
 
             if (XmlRecordFieldConfigurations.Count == 0)

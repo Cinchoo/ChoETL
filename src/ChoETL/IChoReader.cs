@@ -287,4 +287,24 @@ namespace ChoETL
             LineNo = lineNo;
         }
     }
+
+    public class ChoRecordConfigurationConstructArgs : EventArgs
+    {
+        public Type RecordType
+        {
+            get;
+            private set;
+        }
+        public ChoRecordConfiguration Configuration
+        {
+            get;
+            private set;
+        }
+
+        public ChoRecordConfigurationConstructArgs(Type recordType, ChoRecordConfiguration config)
+        {
+            recordType = recordType;
+            Configuration = config;
+        }
+    }
 }

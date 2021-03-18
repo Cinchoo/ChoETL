@@ -77,6 +77,10 @@ namespace ChoETL
             if (!RaiseBeginLoad(sr))
                 yield break;
 
+            var d = sr.GetXmlttributesFromDeclaration();
+            Configuration.XmlEncoding = d.XmlEncoding;
+            Configuration.XmlVersion = d.XmlVersion;
+
             foreach (var item in AsEnumerable(sr.GetXmlElements(Configuration.XPath, Configuration.NamespaceManager,
                 Configuration.AllowComplexXmlPath), TraceSwitch, filterFunc))
             {
