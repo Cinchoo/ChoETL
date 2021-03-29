@@ -9,6 +9,6 @@ namespace ChoETL
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
     public class ChoXmlRecordObjectAttribute : ChoFileRecordObjectAttribute
     {
-        public string XPath { get; set; }
+        public string XPath { get; set; } = "/";
     }
 }

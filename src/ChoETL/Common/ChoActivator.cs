@@ -9,6 +9,8 @@ namespace ChoETL
 {
     public static class ChoActivator
     {
+        private static readonly object _objCachePadLock = new object();
+        private static readonly Dictionary<Type, object> _objCache = new Dictionary<Type, object>();
         private static readonly object _padLock = new object();
 		public static Func<Type, object[], object> Factory
 		{
@@ -20,8 +22,29 @@ namespace ChoETL
         {
             ChoUtility.Init();
         }
+        public static T CreateInstanceNCache<T>()
+        {
+            return (T)CreateInstanceNCache(typeof(T));
+        } 
 
-		public static T CreateInstance<T>()
+        public static object CreateInstanceNCache(Type objType, params object[] args)
+        {
+            if (_objCache.ContainsKey(objType))
+                return _objCache[objType];
+
+            lock (_objCachePadLock)
+            {
+                if (_objCache.ContainsKey(objType))
+                    return _objCache[objType];
+
+                var obj = CreateInstance(objType, args);
+                _objCache.Add(objType, obj);
+
+                return obj;
+            }
+        }
+
+        public static T CreateInstance<T>()
 		{
 			return (T)CreateInstance(typeof(T));
 		}

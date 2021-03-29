@@ -28,6 +28,7 @@ namespace ChoETL
         private Lazy<Serializer> _se;
         internal ChoReader Reader = null;
         private Lazy<List<YamlNode>> _recBuffer = null;
+        private Lazy<SharpYaml.Serialization.Serializer> _defaultYamlSerializer = null;
 
         public override Type RecordType
         {
@@ -71,6 +72,7 @@ namespace ChoETL
                 else
                     return new List<YamlNode>();
             });
+            _defaultYamlSerializer = new Lazy<Serializer>(() => new SharpYaml.Serialization.Serializer(Configuration.YamlSerializerSettings));
         }
 
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
@@ -144,7 +146,6 @@ namespace ChoETL
             RaiseEndLoad(source);
         }
 
-        private static SharpYaml.Serialization.Serializer _defaultYamlSerializer = new SharpYaml.Serialization.Serializer();
         private IEnumerable<IDictionary<string, object>> ReadYamlNodes(EventReader sr)
         {
             if (Configuration.YamlPath.IsNullOrWhiteSpace())
@@ -153,7 +154,7 @@ namespace ChoETL
 
                 do
                 {
-                    yield return _defaultYamlSerializer.Deserialize<IDictionary<string, object>>(sr)
+                    yield return _defaultYamlSerializer.Value.Deserialize<IDictionary<string, object>>(sr)
                         .ToDictionary(kvp => kvp.Key, kvp => kvp.Value, Configuration.StringComparer);
                 }
                 while (!sr.Accept<StreamEnd>());
@@ -166,7 +167,7 @@ namespace ChoETL
                 {
                     bool iterateAllItems = false;
                     object value = null;
-                    _defaultYamlSerializer.Deserialize<IDictionary<string, object>>(sr).TrySelectValue(Configuration.StringComparer, Configuration.YamlPath, out value, out iterateAllItems);
+                    _defaultYamlSerializer.Value.Deserialize<IDictionary<string, object>>(sr).TrySelectValue(Configuration.StringComparer, Configuration.YamlPath, out value, out iterateAllItems);
 
                     if (value is IDictionary<object, object>)
                         value = ((IDictionary<object, object>)value).ToDictionary(kvp1 => kvp1.Key.ToNString(), kvp1 => kvp1.Value, Configuration.StringComparer);
@@ -1005,13 +1006,21 @@ namespace ChoETL
         {
             object value = null;
             type = type == null ? fieldConfig.FieldType : type;
+
+            if (fieldConfig.ItemRecordTypeSelector != null || typeof(IChoRecordTypeSelector).IsAssignableFrom(RecordType))
+            {
+                var rt = RaiseRecordTypeSelector(config, value);
+                if (rt != null)
+                    type = rt;
+            }
+
             try
             {
                 value = ToObject(yamlNode, type, config.UseYamlSerialization, config);
             }
             catch
             {
-                if (fieldConfig.ItemConverter != null)
+                if (fieldConfig.ItemConverter != null || typeof(IChoItemConvertable).IsAssignableFrom(RecordType))
                     value = RaiseItemConverter(config, value);
                 else
                     throw;
@@ -1168,19 +1177,43 @@ namespace ChoETL
         {
             if (fieldConfig.ItemConverter != null)
             {
-                if (fieldValue is IList)
-                {
-                    fieldValue = ((IList)fieldValue).Cast(fieldConfig.ItemConverter);
-                }
-                else
+                //if (fieldValue is IList)
+                //{
+                //    fieldValue = ((IList)fieldValue).Cast(fieldConfig.ItemConverter);
+                //}
+                //else
                     fieldValue = fieldConfig.ItemConverter(fieldValue);
             }
             else
             {
-
+                if (typeof(IChoItemConvertable).IsAssignableFrom(RecordType))
+                {
+                    var rec = ChoActivator.CreateInstanceNCache(RecordType);
+                    if (rec is IChoItemConvertable)
+                        fieldValue = ((IChoItemConvertable)rec).ItemConvert(fieldConfig.Name, fieldConfig);
+                }
             }
 
             return fieldValue;
+        }
+
+        private Type RaiseRecordTypeSelector(ChoYamlRecordFieldConfiguration fieldConfig, object fieldValue)
+        {
+            if (fieldConfig.ItemRecordTypeSelector != null)
+            {
+                return fieldConfig.ItemRecordTypeSelector(fieldValue);
+            }
+            else
+            {
+                if (typeof(IChoRecordTypeSelector).IsAssignableFrom(RecordType))
+                {
+                    var rec = ChoActivator.CreateInstanceNCache(RecordType);
+                    if (rec is IChoRecordTypeSelector)
+                        return ((IChoRecordTypeSelector)rec).SelectRecordType(fieldConfig.Name, fieldConfig);
+                }
+            }
+
+            return null;
         }
 
         private bool FillIfKeyValueObject(object rec, IDictionary<string, object> yamlNode)

@@ -128,6 +128,8 @@ namespace ChoETL
             var recordType = typeof(T).GetUnderlyingType();
             if (Configuration == null)
                 Configuration = new ChoXmlRecordConfiguration(recordType);
+            else
+                Configuration.RecordType = recordType;
 
             _writer = new ChoXmlRecordWriter(recordType, Configuration);
             _writer.RowsWritten += NotifyRowsWritten;
@@ -188,7 +190,7 @@ namespace ChoETL
 
             if (configuration == null)
             {
-                configuration = new ChoXmlRecordConfiguration();
+                configuration = new ChoXmlRecordConfiguration(typeof(TRec));
                 configuration.IgnoreRootName = true;
                 configuration.RootName = null;
             }

@@ -1184,13 +1184,20 @@ namespace ChoETL
                 return target;
             if (typeof(IList).IsAssignableFrom(recordType))
             {
+#if NETSTANDARD2_0
+                return target;
+#else
                 return ((IList)target).Cast((t) =>
                 {
                     return SerializeObjectMembers(t, false);
                 });
+#endif
             }
             if (typeof(IDictionary).IsAssignableFrom(recordType))
             {
+#if NETSTANDARD2_0
+                return target;
+#else
                 return ((IDictionary)target).Cast((t) =>
                 {
                     var key = t.Key;
@@ -1200,6 +1207,7 @@ namespace ChoETL
                     value = SerializeObjectMembers(value, false);
                     return new KeyValuePair<object, object>(key, value);
                 });
+#endif
             }
 
             if (typeof(IEnumerable).IsAssignableFrom(recordType))
@@ -1345,7 +1353,7 @@ namespace ChoETL
             return System.Net.WebUtility.HtmlDecode(fieldValue);
         }
 
-        #region Event Raisers
+#region Event Raisers
 
         private bool RaiseBeginLoad(object state)
         {
@@ -1548,7 +1556,7 @@ namespace ChoETL
             return retValue;
         }
 
-        #endregion Event Raisers
+#endregion Event Raisers
 
         private bool RaiseRecordFieldDeserialize(object target, long index, string propName, ref object value)
         {

@@ -129,6 +129,8 @@ namespace ChoETL
             var recordType = typeof(T).GetUnderlyingType();
             if (Configuration == null)
                 Configuration = new ChoYamlRecordConfiguration(recordType);
+            else
+                Configuration.RecordType = recordType;
 
             _writer = new ChoYamlRecordWriter(recordType, Configuration);
             _writer.Writer = this;
@@ -196,7 +198,7 @@ namespace ChoETL
             }
 
             if (configuration == null)
-                configuration = new ChoYamlRecordConfiguration();
+                configuration = new ChoYamlRecordConfiguration(typeof(TRec));
 
             if (configuration.SingleDocument == null) configuration.SingleDocument = true;
             return ToTextAll(ChoEnumerable.AsEnumerable<TRec>(record), configuration, traceSwitch, yamlPath);
@@ -300,6 +302,12 @@ namespace ChoETL
         }
 
         #region Fluent API
+
+        public ChoYamlWriter<T> UseYamlSerialization(bool flag = true)
+        {
+            Configuration.UseYamlSerialization = flag;
+            return this;
+        }
 
         public ChoYamlWriter<T> ReuseSerializerObject(bool flag = true)
         {

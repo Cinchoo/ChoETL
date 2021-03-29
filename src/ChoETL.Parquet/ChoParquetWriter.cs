@@ -120,6 +120,8 @@ namespace ChoETL
             var recordType = typeof(T).GetUnderlyingType();
             if (Configuration == null)
                 Configuration = new ChoParquetRecordConfiguration(recordType);
+            else
+                Configuration.RecordType = recordType;
 
             _writer = new ChoParquetRecordWriter(recordType, Configuration);
             _writer.RowsWritten += NotifyRowsWritten;

@@ -129,6 +129,8 @@ namespace ChoETL
             var recordType = typeof(T).GetUnderlyingType();
             if (Configuration == null)
                 Configuration = new ChoJSONRecordConfiguration(recordType);
+            else
+                Configuration.RecordType = recordType;
 
             _writer = new ChoJSONRecordWriter(recordType, Configuration);
             _writer.Writer = this;
@@ -195,7 +197,7 @@ namespace ChoETL
             }
 
             if (configuration == null)
-                configuration = new ChoJSONRecordConfiguration();
+                configuration = new ChoJSONRecordConfiguration(typeof(TRec));
 
             configuration.IgnoreRootName = true;
             configuration.RootName = null;

@@ -2541,37 +2541,50 @@ ID, Name
 
             ChoETLFrxBootstrap.Log = (s) => Trace.WriteLine(s);
 
-            string csv = @"* Select	d  : 02:02:12 20 MAR 2017						
-* Shippi	g Date >= 01/20/2017 ; Shipping Dat	<= 03/20/2017	; Shipping	Branch = 2	9,15,19,21,22,	5,26,27,2	,29,30,31,
-********	***********************************	**************	**********	**********	**************	*********	**********
+//            string csv = @"* Select	d  : 02:02:12 20 MAR 2017						
+//* Shippi	g Date >= 01/20/2017 ; Shipping Dat	<= 03/20/2017	; Shipping	Branch = 2	9,15,19,21,22,	5,26,27,2	,29,30,31,
+//********	***********************************	**************	**********	**********	**************	*********	**********
                             
-CUSTOMER	CUSTOMER NAME	INVOICE ID	PURCHASE	PRODUCT ID	PURCHASED	PURCHASED	LOCATION
-ID			DATE		AMOUNT	QUANTITY	ID
-22160	MANSFIELD BROTHERS HEATING & AIR	sss.001	02/08/2017	193792	69.374	2	30
-27849	OWSLEY SUPPLY LLC  - EQUIPMENT	sss.001	03/14/2017	123906	70.409	1	2
-27849	OWSLEY SUPPLY LLC  - EQUIPMENT	sss.001	03/14/2017	40961	10.000	1	2
-16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	116511	63.016	1	15
-16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	116511	-63.016	-1	15
-16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	122636	30.748	1	15
-16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	137661	432.976	1	15
-16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	137661	-432.976	-1	15";
+//CUSTOMER	CUSTOMER NAME	INVOICE ID	PURCHASE	PRODUCT ID	PURCHASED	PURCHASED	LOCATION
+//ID			DATE		AMOUNT	QUANTITY	ID
+//22160	MANSFIELD BROTHERS HEATING & AIR	sss.001	02/08/2017	193792	69.374	2	30
+//27849	OWSLEY SUPPLY LLC  - EQUIPMENT	sss.001	03/14/2017	123906	70.409	1	2
+//27849	OWSLEY SUPPLY LLC  - EQUIPMENT	sss.001	03/14/2017	40961	10.000	1	2
+//16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	116511	63.016	1	15
+//16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	116511	-63.016	-1	15
+//16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	122636	30.748	1	15
+//16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	137661	432.976	1	15
+//16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	137661	-432.976	-1	15";
 
-            foreach (var rec in ChoCSVReader.LoadText(csv)
-                .HeaderLineAt(6)
-                .WithDelimiter("\t")
-                .WithMaxScanRows(3)
-                .WithField("CustomerId")
-                .WithField("CustomerName")
-                .WithField("InvoiceId")
-                .WithField("PurchaseDate")
-                .WithField("ProductId")
-                .WithField("PurchasedAmount")
-                .WithField("PurchasedQuantity")
-                .WithField("LocationId")
-                )
-                actual.Add(rec);
-            //                Console.WriteLine(rec.Dump());
-            CollectionAssert.AreEqual(expected, actual);
+            string csv = @"Meeting Summary
+Total Number of Participants	4 
+Meeting Title	Test 
+Meeting Start Time	3/11/2021, 12:57:48 PM 
+Meeting End Time	3/11/2021, 1:28:13 PM 
+
+Full Name	Join Time	Leave Time	Duration	Email	Role 
+Smith, John.	3/11/2021, 12:57:48 PM	3/11/2021, 1:28:08 PM	30m 20s	TEST39@test.com	Presenter 
+Marshall, Micah D.	3/11/2021, 12:59:11 PM	3/11/2021, 1:28:07 PM	28m 56s	TEST18@test.com	Presenter 
+Hugh, Grant V.	3/11/2021, 1:00:08 PM	3/11/2021, 1:28:13 PM	28m 5s	TEST5@test.com	Organizer 
+Cole, Brad R.	3/11/2021, 1:27:03 PM 3/11/2021, 1:28:07 PM	1m 4s	TEST4@test.COM	Presenter";
+
+            try
+            {
+                foreach (var rec in ChoCSVReader.LoadText(csv)
+                    .HeaderLineAt(7)
+                    .WithDelimiter("\t")
+                    .ConfigureHeader(h => h.HasHeaderRecord = true)
+                    )
+                {
+                    Console.WriteLine(rec["Full Name"]);
+                    Console.WriteLine(rec["Join Time"]);
+                }
+                //CollectionAssert.AreEqual(expected, actual);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
 
         //public partial class EmployeeRec
@@ -4870,7 +4883,7 @@ value1,""{""""split.amount"""":""""1794"""",""""split.currencyCode"""":""""USD""
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Verbose;
-            Issue135();
+            Tab1Test();
             return;
 
             CSV2ComplexObject();

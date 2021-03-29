@@ -96,6 +96,11 @@ namespace ChoETL
             get;
             set;
         }
+        public Func<object, Type> ItemRecordTypeSelector
+        {
+            get;
+            set;
+        }
 
         [IgnoreDataMember]
         public bool IsDefaultValueSpecified

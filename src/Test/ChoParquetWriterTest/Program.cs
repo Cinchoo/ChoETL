@@ -239,9 +239,30 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
             }
         }
 
+        public class Employee
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+        }
+
+        static void ReadNWrite()
+        {
+            List<Employee> objs = new List<Employee>();
+            objs.Add(new Employee() { Id = 1, Name = "Tom" });
+            objs.Add(new Employee() { Id = 2, Name = "Mark" });
+
+            using (var parser = new ChoParquetWriter("Emp.parquet"))
+            {
+                parser.Write(objs);
+            }
+
+            foreach (var e in new ChoParquetReader("Emp.parquet"))
+                Console.WriteLine("Id: " + e.Id + " Name: " + e.Name);
+        }
+
         static void Main(string[] args)
         {
-            SerializeArray();
+            ReadNWrite();
             return;
 
             EmptyFileTest();

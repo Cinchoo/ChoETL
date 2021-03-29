@@ -144,6 +144,8 @@ namespace ChoETL
             var recordType = typeof(T).GetUnderlyingType();
             if (Configuration == null)
                 Configuration = new ChoAvroRecordConfiguration(recordType);
+            else
+                Configuration.RecordType = recordType;
 
             _writer = new ChoAvroRecordWriter(recordType, Configuration);
             _writer.RowsWritten += NotifyRowsWritten;

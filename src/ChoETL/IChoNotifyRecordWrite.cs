@@ -40,4 +40,14 @@ namespace ChoETL
     {
         string GetFieldName(string declaringMemberName, string memberName, char separator, int index);
     }
+
+    public interface IChoItemConvertable
+    {
+        object ItemConvert(string propName, object value);
+    }
+
+    public interface IChoRecordTypeSelector
+    {
+        Type SelectRecordType(string propName, object value);
+    }
 }

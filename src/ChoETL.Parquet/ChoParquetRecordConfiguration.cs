@@ -815,15 +815,15 @@ namespace ChoETL
             return this;
         }
 
-        public ChoParquetRecordConfiguration Map(string propertyName, int position)
+        public ChoParquetRecordConfiguration Map(string propertyName, int position, Type fieldType = null)
         {
-            Map(propertyName, m => m.Position(position));
+            Map(propertyName, m => m.Position(position).FieldType(fieldType));
             return this;
         }
 
-        public ChoParquetRecordConfiguration Map(string propertyName, string fieldName)
+        public ChoParquetRecordConfiguration Map(string propertyName, string fieldName = null, Type fieldType = null)
         {
-            Map(propertyName, m => m.FieldName(fieldName));
+            Map(propertyName, m => m.FieldName(fieldName).FieldType(fieldType));
             return this;
         }
 

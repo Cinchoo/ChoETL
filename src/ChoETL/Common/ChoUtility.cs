@@ -463,7 +463,18 @@ namespace ChoETL
             Func<IDictionary<string, object>> dynamicFactory = null
             )
         {
+            return ToDynamicObject(src, shallowDynamic, dynamicFactory, new HashSet<object>());
+        }
+
+        private static dynamic ToDynamicObject(this object src,
+            bool shallowDynamic = false,
+            Func<IDictionary<string, object>> dynamicFactory = null,
+            HashSet<object> objectGraph = null
+            )
+        {
             if (src == null) return new ChoDynamicObject();
+            if (objectGraph.Contains(src)) return null;
+            objectGraph.Add(src);
 
             //if (src.GetType().IsSimple())
             //    return src;
@@ -492,7 +503,7 @@ namespace ChoETL
                         if (rec.GetType().IsSimple())
                             list.Add(rec);
                         else
-                            list.Add(ToDynamicObject(rec, shallowDynamic, dynamicFactory));
+                            list.Add(ToDynamicObject(rec, shallowDynamic, dynamicFactory, objectGraph));
                     }
                 }
                 return list.ToArray();
@@ -511,7 +522,7 @@ namespace ChoETL
                     if (key.GetType().IsSimple())
                         dict.Add(keyObj, valueObj);
                     else
-                        dict.Add(keyObj, ToDynamicObject(valueObj, shallowDynamic, dynamicFactory));
+                        dict.Add(keyObj, ToDynamicObject(valueObj, shallowDynamic, dynamicFactory, objectGraph));
                 }
                 return dict;
             }
@@ -534,7 +545,7 @@ namespace ChoETL
                             else if (propValue.GetType().IsSimple())
                                 expando.Add(pd.Name, propValue);
                             else
-                                expando.Add(pd.Name, ToDynamicObject(propValue, shallowDynamic, dynamicFactory));
+                                expando.Add(pd.Name, ToDynamicObject(propValue, shallowDynamic, dynamicFactory, objectGraph));
                         }
                     }
                     catch (Exception ex)

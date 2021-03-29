@@ -963,15 +963,15 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVRecordConfiguration Map(string propertyName, int position)
+        public ChoCSVRecordConfiguration Map(string propertyName, int position, Type fieldType = null)
         {
-            Map(propertyName, m => m.Position(position));
+            Map(propertyName, m => m.Position(position).FieldType(fieldType));
             return this;
         }
 
-        public ChoCSVRecordConfiguration Map(string propertyName, string fieldName)
+        public ChoCSVRecordConfiguration Map(string propertyName, string fieldName, Type fieldType = null)
         {
-            Map(propertyName, m => m.FieldName(fieldName));
+            Map(propertyName, m => m.FieldName(fieldName).FieldType(fieldType));
             return this;
         }
 

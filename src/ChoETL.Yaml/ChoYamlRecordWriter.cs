@@ -273,7 +273,7 @@ namespace ChoETL
             recText = null;
             if (Configuration.UseYamlSerialization)
             {
-                recText = new Serializer().Serialize(rec, rec.GetType());
+                recText = Configuration.YamlSerializer.Serialize(rec);
                 return true;
             }
             StringBuilder msg = new StringBuilder();

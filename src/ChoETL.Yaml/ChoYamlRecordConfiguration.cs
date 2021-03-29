@@ -107,6 +107,7 @@ namespace ChoETL
                         {
                             new ExpandoObjectConverter()
                         };
+                        //_jsonSerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Serialize;
                     }
 
                     return _jsonSerializerSettings;
@@ -619,9 +620,9 @@ namespace ChoETL
             return this;
         }
 
-        public ChoYamlRecordConfiguration Map(string propertyName, string YamlPath = null, string fieldName = null)
+        public ChoYamlRecordConfiguration Map(string propertyName, string yamlPath = null, string fieldName = null, Type fieldType = null)
         {
-            Map(propertyName, m => m.YamlPath(YamlPath).FieldName(fieldName));
+            Map(propertyName, m => m.YamlPath(yamlPath).FieldName(fieldName).FieldType(fieldType));
             return this;
         }
 
@@ -632,9 +633,9 @@ namespace ChoETL
             return this;
         }
         
-        public ChoYamlRecordConfiguration Map<T, TProperty>(Expression<Func<T, TProperty>> field, string YamlPath = null, string fieldName = null)
+        public ChoYamlRecordConfiguration Map<T, TProperty>(Expression<Func<T, TProperty>> field, string yamlPath = null, string fieldName = null)
         {
-            Map(field, m => m.YamlPath(YamlPath).FieldName(fieldName));
+            Map(field, m => m.YamlPath(yamlPath).FieldName(fieldName));
             return this;
         }
 
@@ -653,7 +654,7 @@ namespace ChoETL
 
         #endregion Fluent API
 
-        internal void WithField(string name, string YamlPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
+        internal void WithField(string name, string yamlPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null,
@@ -680,7 +681,7 @@ namespace ChoETL
                 else
                     pd = ChoTypeDescriptor.GetNestedProperty(recordType, fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
 
-                var nfc = new ChoYamlRecordFieldConfiguration(fnTrim, YamlPath)
+                var nfc = new ChoYamlRecordFieldConfiguration(fnTrim, yamlPath)
                 {
                     FieldType = fieldType,
                     FieldValueTrimOption = fieldValueTrimOption,
@@ -802,9 +803,9 @@ namespace ChoETL
             return this;
         }
 
-        public ChoYamlRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, string YamlPath = null, string fieldName = null)
+        public ChoYamlRecordConfiguration<T> Map<TProperty>(Expression<Func<T, TProperty>> field, string yamlPath = null, string fieldName = null)
         {
-            base.Map(field, YamlPath, fieldName);
+            base.Map(field, yamlPath, fieldName);
             return this;
         }
 
@@ -814,7 +815,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoYamlRecordConfiguration<T> MapForType<TClass>(Expression<Func<TClass, object>> field, string YamlPath = null, string fieldName = null)
+        public ChoYamlRecordConfiguration<T> MapForType<TClass>(Expression<Func<TClass, object>> field, string yamlPath = null, string fieldName = null)
         {
             var subType = field.GetReflectedType();
             var fn = field.GetMemberName();
@@ -824,7 +825,7 @@ namespace ChoETL
             ChoYamlRecordFieldConfiguration cf = GetFieldConfiguration(fn, pd.Attributes.OfType<ChoYamlRecordFieldAttribute>().FirstOrDefault(), pd.Attributes.OfType<Attribute>().ToArray(),
                 pd, fqm, subType);
 
-            new ChoYamlRecordFieldConfigurationMap(cf).FieldName(fieldName).YamlPath(YamlPath);
+            new ChoYamlRecordFieldConfigurationMap(cf).FieldName(fieldName).YamlPath(yamlPath);
 
             return this;
         }

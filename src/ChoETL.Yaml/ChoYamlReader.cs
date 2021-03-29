@@ -517,11 +517,11 @@ namespace ChoETL
         //    return this;
         //}
 
-        //public ChoYamlReader<T> UseYamlSerialization(bool flag = true)
-        //{
-        //    Configuration.UseYamlSerialization = flag;
-        //    return this;
-        //}
+        public ChoYamlReader<T> UseYamlSerialization(bool flag = true)
+        {
+            Configuration.UseYamlSerialization = flag;
+            return this;
+        }
 
         public ChoYamlReader<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
         {

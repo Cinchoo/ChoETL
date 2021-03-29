@@ -126,6 +126,8 @@ namespace ChoETL
             var recordType = typeof(T).ResolveRecordType();
             if (Configuration == null)
                 Configuration = new ChoCSVRecordConfiguration(recordType);
+            else
+                Configuration.RecordType = recordType;
 
             _writer = new ChoCSVRecordWriter(recordType, Configuration);
             _writer.RowsWritten += NotifyRowsWritten;

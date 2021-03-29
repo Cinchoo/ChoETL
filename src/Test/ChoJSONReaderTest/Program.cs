@@ -5311,10 +5311,60 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 
             Console.WriteLine(dict.Dump());
         }
+
+        class ClassToDeserialize : IChoItemConvertable
+        {
+            public string Foo { get; set; }
+            [ChoJSONPath("$.Bar[*]")]
+            public List<IBarX> Bar { get; set; }
+
+            public object ItemConvert(string propName, object value)
+            {
+                return new PersonX();
+            }
+        }
+        interface IBarX
+        {
+            string Type { get; }
+        }
+
+        class PersonX : IBarX
+        {
+            public string Type => "Person";
+            public string Name { get; set; }
+            public int Age { get; set; }
+            public string Country { get; set; }
+        }
+
+        class ItemX : IBarX
+        {
+            public string Type { get; set; }
+            public int Year { get; set; }
+        }
+
+        static void ConditionalDeserializationOfItems()
+        {
+            string json = @"{
+  ""Foo"": ""Whatever"",
+  ""Bar"": [
+   { ""Name"": ""Enrico"", ""Age"": 33, ""Country"": ""Italy"" }, { ""Type"": ""Video"", ""Year"": 2004 },
+   { ""Name"": ""Sam"", ""Age"": 18, ""Country"": ""USA"" }, { ""Type"": ""Book"", ""Year"": 1980 }
+  ]
+}";
+
+            using (var r = ChoJSONReader<ClassToDeserialize>.LoadText(json)
+                .WithField(f => f.Foo)
+                .WithField(f => f.Bar, jsonPath: "$.Bar[*]")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            StringToLongTest();
+            ConditionalDeserializationOfItems();
 
             //CreateLargeJSONFile();
             //JSON2CSVViceVersa();

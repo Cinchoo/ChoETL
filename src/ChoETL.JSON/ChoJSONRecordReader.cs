@@ -1049,6 +1049,13 @@ namespace ChoETL
                             }
                             else if (fieldValue is JToken)
                             {
+                                if (fieldConfig.ItemRecordTypeSelector != null || typeof(IChoRecordTypeSelector).IsAssignableFrom(RecordType))
+                                {
+                                    var rt = RaiseRecordTypeSelector(fieldConfig, fieldValue);
+                                    if (rt != null)
+                                        itemType = rt;
+                                }
+
                                 if (!typeof(JToken).IsAssignableFrom(itemType))
                                     fieldValue = DeserializeNode((JToken)fieldValue, itemType, fieldConfig);
                             }
@@ -1063,6 +1070,12 @@ namespace ChoETL
                                     itemType = fieldConfig.FieldType.GetUnderlyingType().GetItemType().GetUnderlyingType();
                                     foreach (var ele in (JArray)fieldValue)
                                     {
+                                        if (fieldConfig.ItemRecordTypeSelector != null || typeof(IChoRecordTypeSelector).IsAssignableFrom(RecordType))
+                                        {
+                                            var rt = RaiseRecordTypeSelector(fieldConfig, ele);
+                                            if (rt != null)
+                                                itemType = rt;
+                                        }
                                         object fv = DeserializeNode(ele, itemType, fieldConfig);
                                         list.Add(fv);
                                     }
@@ -1071,12 +1084,19 @@ namespace ChoETL
                                 else
                                 {
                                     var fi = ((JArray)fieldValue).FirstOrDefault();
+                                    if (fieldConfig.ItemRecordTypeSelector != null || typeof(IChoRecordTypeSelector).IsAssignableFrom(RecordType))
+                                    {
+                                        var rt = RaiseRecordTypeSelector(fieldConfig, fi);
+                                        if (rt != null)
+                                            itemType = rt;
+                                    }
                                     fieldValue = DeserializeNode(fi, itemType, fieldConfig);
                                 }
                             }
                             else if (fieldValue is JToken[])
                             {
                                 itemType = fieldConfig.FieldType.GetUnderlyingType().GetItemType().GetUnderlyingType();
+
                                 if (typeof(JToken[]).IsAssignableFrom(itemType))
                                 {
 
@@ -1087,8 +1107,15 @@ namespace ChoETL
                                     var array = isJArray ? ((JArray)((JToken[])fieldValue)[0]).ToArray() : (JToken[])fieldValue;
                                     foreach (var ele in array)
                                     {
+                                        if (fieldConfig.ItemRecordTypeSelector != null || typeof(IChoRecordTypeSelector).IsAssignableFrom(RecordType))
+                                        {
+                                            var rt = RaiseRecordTypeSelector(fieldConfig, ele);
+                                            if (rt != null)
+                                                itemType = rt;
+                                        }
+
                                         object fv = null;
-                                        if (fieldConfig.ItemConverter == null)
+                                        if (fieldConfig.ItemConverter == null || !typeof(IChoItemConvertable).IsAssignableFrom(RecordType))
                                             fv = DeserializeNode(ele, itemType, fieldConfig);
                                         else
                                             fv = RaiseItemConverter(fieldConfig, ele);
@@ -1100,27 +1127,14 @@ namespace ChoETL
                                 else
                                 {
                                     var fi = ((JToken[])fieldValue).FirstOrDefault();
+                                    if (fieldConfig.ItemRecordTypeSelector != null || typeof(IChoRecordTypeSelector).IsAssignableFrom(RecordType))
+                                    {
+                                        var rt = RaiseRecordTypeSelector(fieldConfig, fi);
+                                        if (rt != null)
+                                            itemType = rt;
+                                    }
                                     fieldValue = DeserializeNode(fi, itemType, fieldConfig);
                                 }
-
-
-                                //if (fi is JArray && !itemType.IsCollection())
-                                //                     {
-                                //                         fieldValue = ToObject(fi, itemType);
-                                //	fieldValue = RaiseItemConverter(fieldConfig, fieldValue);
-                                //}
-                                //else
-                                //                     {
-                                //                         foreach (var ele in (JToken[])fieldValue)
-                                //                         {
-                                //		object fv = ToObject(ele, itemType);
-                                //		if (fieldConfig.ItemConverter != null)
-                                //			fv = fieldConfig.ItemConverter(fv);
-
-                                //		list.Add(fv);
-                                //	}
-                                //                         fieldValue = list.ToArray();
-                                //                     }
                             }
                         }
                     }
@@ -1297,13 +1311,14 @@ namespace ChoETL
         {
             object value = null;
             type = type == null ? fieldConfig.FieldType : type;
+
             try
             {
                 value = ToObject(jtoken, type, config.UseJSONSerialization, config);
             }
             catch
             {
-                if (fieldConfig.ItemConverter != null)
+                if (fieldConfig.ItemConverter != null || typeof(IChoItemConvertable).IsAssignableFrom(RecordType))
                     value = RaiseItemConverter(config, jtoken);
                 else
                     throw;
@@ -1461,10 +1476,34 @@ namespace ChoETL
             }
             else
             {
-
+                if (typeof(IChoItemConvertable).IsAssignableFrom(RecordType))
+                {
+                    var rec = ChoActivator.CreateInstanceNCache(RecordType);
+                    if (rec is IChoItemConvertable)
+                        fieldValue = ((IChoItemConvertable)rec).ItemConvert(fieldConfig.Name, fieldConfig);
+                }
             }
 
             return fieldValue;
+        }
+
+        private Type RaiseRecordTypeSelector(ChoJSONRecordFieldConfiguration fieldConfig, object fieldValue)
+        {
+            if (fieldConfig.ItemRecordTypeSelector != null)
+            {
+                return fieldConfig.ItemRecordTypeSelector(fieldValue);
+            }
+            else
+            {
+                if (typeof(IChoRecordTypeSelector).IsAssignableFrom(RecordType))
+                {
+                    var rec = ChoActivator.CreateInstanceNCache(RecordType);
+                    if (rec is IChoRecordTypeSelector)
+                        return ((IChoRecordTypeSelector)rec).SelectRecordType(fieldConfig.Name, fieldConfig);
+                }
+            }
+
+            return null;
         }
 
         private bool FillIfKeyValueObject(object rec, JToken jObject)

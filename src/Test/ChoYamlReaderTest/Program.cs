@@ -696,11 +696,69 @@ possessions:
             }
         }
 
+        public class Book
+        {
+            public string Title { get; set; }
+            public List<Author> Authors { get; set; }
+        }
+
+        public class Author
+        {
+            public string Name { get; set; }
+            public List<Book> Books { get; set; }
+        }
+
+        static void CircularRefRead()
+        {
+            List<Book> books1 = new List<Book> { new Book() { Title = "title1", Authors = new List<Author>() } };
+            Author author1 = new Author()
+            {
+                Name = "name1",
+                Books = books1
+            };
+            books1[0].Authors.Add(author1);
+
+            var settings = new SerializerSettings { EmitAlias = true, EmitShortTypeName = true };
+            var serializer = new Serializer(settings);
+            var text = serializer.Serialize(author1);
+            Console.WriteLine(text);
+
+            StringBuilder yaml1 = new StringBuilder();
+            var cf = new ChoYamlRecordConfiguration() { UseYamlSerialization = true };
+            cf.YamlSerializerSettings.EmitTags = true;
+            Console.WriteLine(ChoYamlWriter.Serialize<Author>(author1, cf));
+            return;
+
+            string yaml = @"
+&o0 !ChoYamlReaderTest.Program+Author
+Name: name1
+Books:
+  - Title: title1
+    Authors:
+      - *o0
+";
+            //var settings = new SerializerSettings { EmitAlias = true, EmitShortTypeName = true };
+            //settings.RegisterAssembly(typeof(Author).Assembly);
+            //settings.RegisterTagMapping("!o0", typeof(Author), true);
+            //var serializer = new Serializer(settings);
+            //var text = serializer.Deserialize(yaml, typeof(Author));
+            //Console.WriteLine(text.Dump());
+
+
+//            using (var r = ChoYamlReader<Author>.LoadText(yaml)
+//                .YamlSerializerSettings(y => y.RegisterAssembly(typeof(Author).Assembly))
+//)
+//            {
+//                foreach (var rec in r)
+//                    Console.WriteLine(rec.Dump());
+//            }
+
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            ReadDynamicData();
+            CircularRefRead();
         }
     }
 }

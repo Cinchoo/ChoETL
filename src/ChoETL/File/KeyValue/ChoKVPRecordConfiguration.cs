@@ -183,9 +183,9 @@ namespace ChoETL
             return this;
         }
 
-        public ChoKVPRecordConfiguration Map(string propertyName, string fieldName)
+        public ChoKVPRecordConfiguration Map(string propertyName, string fieldName = null, Type fieldType = null)
         {
-            Map(propertyName, m => m.FieldName(fieldName));
+            Map(propertyName, m => m.FieldName(fieldName).FieldType(fieldType));
             return this;
         }
 

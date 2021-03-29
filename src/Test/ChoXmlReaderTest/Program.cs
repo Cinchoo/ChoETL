@@ -432,7 +432,37 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            ElementsToArray();
+            Test100();
+        }
+
+        public class Root
+        {
+            [ChoXmlNodeRecordField(XPath = "//property1")]
+            public string[] Properties { get; set; }
+            [ChoXmlNodeRecordField(XPath = "//amount/*")]
+            public double[] Amounts { get; set; }
+        }
+
+        static void Test100()
+        {
+            string xml = @"<root>
+ <property1>a</property1>
+ <property1>b</property1>
+ <property1>c</property1>
+ <amount>
+  <EUR type=""integer"">1000</EUR>
+  <USD type=""integer"">1100</USD>
+ </amount>
+</root>";
+
+            using (var r = ChoXmlReader<Root>.LoadText(xml)
+                .WithXPath("/")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+
         }
 
         [ChoXmlRecordObject(XPath = "/")]

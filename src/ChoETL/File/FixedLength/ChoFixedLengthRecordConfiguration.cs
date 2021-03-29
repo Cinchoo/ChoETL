@@ -198,9 +198,9 @@ namespace ChoETL
             return this;
         }
 
-        public ChoFixedLengthRecordConfiguration Map(string propertyName, int startIndex, int size)
+        public ChoFixedLengthRecordConfiguration Map(string propertyName, int startIndex, int size, string fieldName, Type fieldType = null)
         {
-            Map(propertyName, m => m.StartIndex(startIndex).Size(size));
+            Map(propertyName, m => m.StartIndex(startIndex).Size(size).FieldName(fieldName).FieldType(fieldType));
             return this;
         }
 

@@ -717,9 +717,9 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONRecordConfiguration Map(string propertyName, string jsonPath = null, string fieldName = null)
+        public ChoJSONRecordConfiguration Map(string propertyName, string jsonPath = null, string fieldName = null, Type fieldType = null)
         {
-            Map(propertyName, m => m.JSONPath(jsonPath).FieldName(fieldName));
+            Map(propertyName, m => m.JSONPath(jsonPath).FieldName(fieldName).FieldType(fieldType));
             return this;
         }
 
@@ -756,7 +756,7 @@ namespace ChoETL
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null,
             string formatText = null, bool? isArray = null, string nullValue = null, Type recordType = null,
-            Type subRecordType = null, Func<JObject, Type> fieldTypeSelector = null)
+            Type subRecordType = null, Func<JObject, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null)
         {
             ChoGuard.ArgumentNotNull(recordType, nameof(recordType));
 
@@ -796,6 +796,7 @@ namespace ChoETL
                 nfc.IsArray = isArray != null ? isArray : nfc.IsArray;
                 nfc.NullValue = !nullValue.IsNullOrWhiteSpace() ? nullValue : nfc.NullValue;
                 nfc.FieldTypeSelector = fieldTypeSelector != null ? fieldTypeSelector : nfc.FieldTypeSelector;
+                nfc.ItemRecordTypeSelector = itemTypeSelector != null ? itemTypeSelector : nfc.ItemRecordTypeSelector;
 
                 if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
                 {

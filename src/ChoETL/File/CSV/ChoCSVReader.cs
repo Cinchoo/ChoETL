@@ -951,9 +951,11 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVReader<T> HeaderLineAt(long value)
+        public ChoCSVReader<T> HeaderLineAt(long value, bool ignoreHeader = false)
         {
             Configuration.FileHeaderConfiguration.HeaderLineAt = value;
+            Configuration.FileHeaderConfiguration.HasHeaderRecord = true;
+            Configuration.FileHeaderConfiguration.IgnoreHeader = ignoreHeader;
             return this;
         }
 
