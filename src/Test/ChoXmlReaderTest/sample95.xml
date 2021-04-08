@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<mlm:bagMutaties xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:ml="http://www.kadaster.nl/schemas/mutatielevering-generiek/1.0"
+xmlns:gml="http://www.opengis.net/gml/3.2"
+xmlns:selecties-extract="http://www.kadaster.nl/schemas/lvbag/extract-selecties/v20200601"
+xmlns:mlm="http://www.kadaster.nl/schemas/lvbag/extract-deelbestand-mutaties-lvc/v20200601"
+xmlns:nen5825="www.kadaster.nl/schemas/lvbag/imbag/nen5825/v20200601"
+xmlns:KenmerkInOnderzoek="www.kadaster.nl/schemas/lvbag/imbag/kenmerkinonderzoek/v20200601"
+xmlns:DatatypenNEN3610="www.kadaster.nl/schemas/lvbag/imbag/datatypennen3610/v20200601"
+xmlns:Historie="www.kadaster.nl/schemas/lvbag/imbag/historie/v20200601"
+xmlns:Objecten="www.kadaster.nl/schemas/lvbag/imbag/objecten/v20200601"
+xmlns:Objecten-ref="www.kadaster.nl/schemas/lvbag/imbag/objecten-ref/v20200601"
+xsi:schemaLocation="http://www.kadaster.nl/schemas/lvbag/extract-deelbestand-mutaties-lvc/v20200601 http://www.kadaster.nl/schemas/lvbag/extract-deelbestand-mutaties-lvc/v20200601/BagvsExtractDeelbestandMutatieLvc-2.1.0.xsd">
+  <mlm:bagInfo>
+    <selecties-extract:Gebied-Registratief>
+      <selecties-extract:Gebied-NLD />
+    </selecties-extract:Gebied-Registratief>
+  </mlm:bagInfo>
+</mlm:bagMutaties>

@@ -206,18 +206,62 @@ namespace ChoETL
             return obj;
         }
 
-        public static IEnumerable<XElement> GetXmlElements(this XmlReader xmlReader, string xPath, XmlNamespaceManager nsMgr,
-            bool allowComplexXmlPath = false)
+        public static void LoadNameSpaces(XmlReader xmlReader, ChoXmlNamespaceTable nsTable)
         {
+            if (nsTable == null)
+                return;
+            if (nsTable.IsLoaded)
+                return;
+            if (xmlReader.AttributeCount <= 0)
+                return;
+
+            nsTable.IsLoaded = true;
+
+                // Read the attributes
+                while (xmlReader.MoveToNextAttribute())
+                {
+                    var nodeName = xmlReader.Name;
+                    if (!nodeName.StartsWith("xmlns:"))
+                        continue;
+                    nsTable.NamespaceTable.Add(nodeName.Substring(6), xmlReader.Value);
+                }
+        }
+
+        public static void LoadNameSpaces(XElement element, ChoXmlNamespaceTable nsTable)
+        {
+            if (nsTable == null)
+                return;
+            if (nsTable.IsLoaded)
+                return;
+
+            nsTable.IsLoaded = true;
+            foreach (var attr in element.Attributes())
+            {
+                var nodeName = attr.Name.ToString();
+                if (!nodeName.StartsWith("xmlns:"))
+                    continue;
+                nsTable.NamespaceTable.Add(nodeName.Substring(6), attr.Value);
+            }
+        }
+
+        public static IEnumerable<XElement> GetXmlElements(this XmlReader xmlReader, string xPath, XmlNamespaceManager nsMgr,
+            bool allowComplexXmlPath = false, Action<ChoXmlNamespaceTable> nsTableCallback = null)
+        {
+            ChoXmlNamespaceTable nsTable = new ChoXmlNamespaceTable();
             //if (xPath.IsNullOrWhiteSpace()) yield break;
             if (!xPath.IsNullOrWhiteSpace() && (xPath == "/" || xPath == "//"))
             {
                 string rootNodeName = null;
                 if (xmlReader.MoveToContent() == XmlNodeType.Element)
                     rootNodeName = xmlReader.Name;
-                yield return XElement.ReadFrom(xmlReader)
-                      as XElement;
 
+                var ele = XElement.ReadFrom(xmlReader)
+                      as XElement;
+                LoadNameSpaces(ele, nsTable);
+                if (nsTableCallback != null)
+                    nsTableCallback(nsTable);
+
+                yield return ele;
             }
             else if (xPath.IsNullOrWhiteSpace() || xPath == "//*" || xPath == "./*" || xPath == "/*")
             {
@@ -226,6 +270,8 @@ namespace ChoETL
                     // first element is the root element
                     if (xmlReader.NodeType == XmlNodeType.Element)
                     {
+                        LoadNameSpaces(xmlReader, nsTable);
+                        nsTableCallback?.Invoke(nsTable);
                         break;
                     }
                 }
@@ -292,6 +338,8 @@ namespace ChoETL
                         throw new XmlException("Complex Xml path not supported.");
 
                     var document = XDocument.Load(xmlReader);
+                    LoadNameSpaces(document.Root, nsTable);
+                    nsTableCallback?.Invoke(nsTable);
                     foreach (var ele in ((IEnumerable<object>)document.XPathEvaluate(xPath, nsMgr)))
                     {
                         if (ele is XElement)
@@ -1301,5 +1349,24 @@ namespace ChoETL
         }
 
         #endregion
+    }
+
+    public class ChoXmlNamespaceTable
+    {
+        public bool IsLoaded
+        {
+            get;
+            set;
+        }
+        public IDictionary<string, string> NamespaceTable
+        {
+            get;
+            private set;
+        }
+
+        public ChoXmlNamespaceTable()
+        {
+            NamespaceTable = new Dictionary<string, string>();
+        }
     }
 }

@@ -22,7 +22,7 @@ namespace ChoETL
         where T : class
     {
         //private TextReader _textReader;
-        private Lazy<TextReader> _sr;
+        private Lazy<TextReader> _textReader;
         private XmlReader _xmlReader;
         private IEnumerable<XElement> _xElements;
         private bool _closeStreamOnDispose = false;
@@ -68,16 +68,16 @@ namespace ChoETL
                 Configuration.NamespaceManager.AddNamespace("", defaultNamespace);
 
 
-            _sr = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
+            _textReader = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
             //InitXml();
             _closeStreamOnDispose = true;
         }
 
         private void InitXml()
         {
-            if (_sr != null)
+            if (_textReader != null)
             {
-                _xmlReader = XmlReader.Create(_sr.Value,
+                _xmlReader = XmlReader.Create(_textReader.Value,
                     new XmlReaderSettings() { DtdProcessing = DtdProcessing.Ignore, XmlResolver = null }, new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
             }
         }
@@ -90,7 +90,7 @@ namespace ChoETL
 
             Init();
 
-            _sr = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
+            _textReader = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
             //InitXml();
             _closeStreamOnDispose = true;
         }
@@ -102,7 +102,7 @@ namespace ChoETL
             Configuration = configuration;
             Init();
 
-            _sr = new Lazy<TextReader>(() => textReader);
+            _textReader = new Lazy<TextReader>(() => textReader);
             //InitXml();
         }
 
@@ -124,9 +124,9 @@ namespace ChoETL
             Init();
 
             if (inStream is MemoryStream)
-                _sr = new Lazy<TextReader>(() => new StreamReader(inStream));
+                _textReader = new Lazy<TextReader>(() => new StreamReader(inStream));
             else
-                _sr = new Lazy<TextReader>(() => new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize));
+                _textReader = new Lazy<TextReader>(() => new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize));
             //InitXml();
             //_closeStreamOnDispose = true;
         }
@@ -155,7 +155,7 @@ namespace ChoETL
 
             Close();
             Init();
-            _sr = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
+            _textReader = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
             //InitXml();
             _closeStreamOnDispose = true;
 
@@ -168,7 +168,7 @@ namespace ChoETL
 
             Close();
             Init();
-            _sr = new Lazy<TextReader>(() => textReader);
+            _textReader = new Lazy<TextReader>(() => textReader);
             //InitXml();
             _closeStreamOnDispose = false;
 
@@ -194,9 +194,9 @@ namespace ChoETL
             Close();
             Init();
             if (inStream is MemoryStream)
-                _sr = new Lazy<TextReader>(() => new StreamReader(inStream));
+                _textReader = new Lazy<TextReader>(() => new StreamReader(inStream));
             else
-                _sr = new Lazy<TextReader>(() => new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize));
+                _textReader = new Lazy<TextReader>(() => new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
 
             return this;
@@ -240,8 +240,8 @@ namespace ChoETL
             {
                 if (_xmlReader != null)
                     _xmlReader.Dispose();
-                if (_sr != null)
-                    _sr.Value.Dispose();
+                if (_textReader != null)
+                    _textReader.Value.Dispose();
             }
 
             if (!ChoETLFrxBootstrap.IsSandboxEnvironment)

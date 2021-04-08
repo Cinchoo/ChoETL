@@ -137,7 +137,7 @@ namespace ChoETL
         {
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
-            _writer.WriteComment(_textWriter, commentText, silent);
+            _writer.WriteComment(_textWriter.Value, commentText, silent);
         }
 
         public void WriteHeader(string header)

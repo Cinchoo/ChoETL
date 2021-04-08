@@ -82,7 +82,7 @@ namespace ChoETL
             Configuration.XmlVersion = d.XmlVersion;
 
             foreach (var item in AsEnumerable(sr.GetXmlElements(Configuration.XPath, Configuration.NamespaceManager,
-                Configuration.AllowComplexXmlPath), TraceSwitch, filterFunc))
+                Configuration.AllowComplexXmlPath, (nsTable) => Configuration.XmlNamespaceTable = Configuration.XmlNamespaceTable == null ? nsTable : Configuration.XmlNamespaceTable), TraceSwitch, filterFunc))
             {
                 yield return item;
             }

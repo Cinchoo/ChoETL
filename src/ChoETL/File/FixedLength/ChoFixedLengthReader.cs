@@ -238,7 +238,7 @@ namespace ChoETL
             rr.RowsLoaded += NotifyRowsLoaded;
             rr.MembersDiscovered += MembersDiscovered;
             rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
-            var e = _lines != null ? rr.AsEnumerable(_lines).GetEnumerator() : rr.AsEnumerable(_textReader).GetEnumerator();
+            var e = _lines != null ? rr.AsEnumerable(_lines).GetEnumerator() : rr.AsEnumerable(_textReader.Value).GetEnumerator();
             return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
         }
 
@@ -260,7 +260,7 @@ namespace ChoETL
             rr.RowsLoaded += NotifyRowsLoaded;
             rr.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
             rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
-            var dr = new ChoEnumerableDataReader(_lines != null ? rr.AsEnumerable(_lines) : rr.AsEnumerable(_textReader), rr);
+            var dr = new ChoEnumerableDataReader(_lines != null ? rr.AsEnumerable(_lines) : rr.AsEnumerable(_textReader.Value), rr);
             return dr;
         }
 

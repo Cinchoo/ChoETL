@@ -208,6 +208,8 @@ namespace ChoETL
             }
         }
 
+        internal ChoXmlNamespaceTable XmlNamespaceTable { get; set; }
+
         public readonly dynamic Context = new ChoDynamicObject();
 
         internal bool IsComplexXPathUsed = true;
@@ -263,6 +265,11 @@ namespace ChoETL
             xconfig.XmlSerializer = XmlSerializer;
             xconfig.NullValueHandling = NullValueHandling;
             xconfig.IgnoreCase = IgnoreCase;
+        }
+
+        public IDictionary<string, string> GetXmlNamespacesInScope()
+        {
+            return XmlNamespaceTable != null ? XmlNamespaceTable.NamespaceTable : null;
         }
 
         public ChoXmlRecordConfiguration Clone(Type recordType = null)

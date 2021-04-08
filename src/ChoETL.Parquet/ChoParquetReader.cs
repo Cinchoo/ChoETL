@@ -20,7 +20,7 @@ namespace ChoETL
     public class ChoParquetReader<T> : ChoReader, IDisposable, IEnumerable<T>, IChoSerializableReader
     //where T : class
     {
-        private Lazy<StreamReader> _sr;
+        private Lazy<StreamReader> _streamReader;
         private ParquetReader _parquetReader;
         private bool _closeStreamOnDispose = false;
         private Lazy<IEnumerator<T>> _enumerator = null;
@@ -52,7 +52,7 @@ namespace ChoETL
 
             Init();
 
-            _sr = new Lazy<StreamReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
+            _streamReader = new Lazy<StreamReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
         }
 
@@ -74,9 +74,9 @@ namespace ChoETL
             Init();
 
             if (inStream is MemoryStream)
-                _sr = new Lazy<StreamReader>(() => new StreamReader(inStream));
+                _streamReader = new Lazy<StreamReader>(() => new StreamReader(inStream));
             else
-                _sr = new Lazy<StreamReader>(() => new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize));
+                _streamReader = new Lazy<StreamReader>(() => new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize));
             //_closeStreamOnDispose = true;
         }
 
@@ -86,7 +86,7 @@ namespace ChoETL
 
             Close();
             Init();
-            _sr = new Lazy<StreamReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
+            _streamReader = new Lazy<StreamReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
 
             return this;
@@ -98,7 +98,7 @@ namespace ChoETL
 
             Close();
             Init();
-            _sr = new Lazy<StreamReader>(() => sr);
+            _streamReader = new Lazy<StreamReader>(() => sr);
             _closeStreamOnDispose = false;
 
             return this;
@@ -123,9 +123,9 @@ namespace ChoETL
             Close();
             Init();
             if (inStream is MemoryStream)
-                _sr = new Lazy<StreamReader>(() => new StreamReader(inStream));
+                _streamReader = new Lazy<StreamReader>(() => new StreamReader(inStream));
             else
-                _sr = new Lazy<StreamReader>(() => new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize));
+                _streamReader = new Lazy<StreamReader>(() => new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
 
             return this;
@@ -157,8 +157,8 @@ namespace ChoETL
             _isDisposed = true;
             if (_closeStreamOnDispose)
             {
-                if (_sr != null)
-                    _sr.Value.Dispose();
+                if (_streamReader != null)
+                    _streamReader.Value.Dispose();
                 if (_parquetReader != null)
                     _parquetReader.Dispose();
             }
@@ -214,8 +214,8 @@ namespace ChoETL
         public IEnumerator<T> GetEnumerator()
         {
             ChoParquetRecordReader rr = new ChoParquetRecordReader(typeof(T), Configuration);
-            if (_sr != null)
-                _parquetReader = Create(_sr.Value);
+            if (_streamReader != null)
+                _parquetReader = Create(_streamReader.Value);
 
             rr.Reader = this;
             rr.TraceSwitch = TraceSwitch;

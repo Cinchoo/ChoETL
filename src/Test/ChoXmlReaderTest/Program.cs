@@ -432,7 +432,20 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            Test100();
+            ReadAllNS();
+        }
+
+        static void ReadAllNS()
+        {
+            using (var r = new ChoXmlReader("sample95.xml")
+                )
+            {
+                foreach (var rec in r)
+                {
+                    Console.WriteLine(r.Configuration.GetXmlNamespacesInScope().Dump());
+                    Console.WriteLine(rec.Dump());
+                }
+            }
         }
 
         public class Root

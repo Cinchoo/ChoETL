@@ -120,7 +120,7 @@ namespace ChoETL
             if (_isDisposed)
                 return;
 
-            if (_streamWriter != null)
+            if (_writer != null)
                 _writer.Dispose<T>();
 
             _isDisposed = true;
@@ -166,9 +166,9 @@ namespace ChoETL
             else
             {
                 if (typeof(T) == typeof(object))
-                    _writer.WriteTo<Dictionary<string, object>>(_streamWriter, records.OfType<object>()).Loop();
+                    _writer.WriteTo<Dictionary<string, object>>(_streamWriter.Value, records.OfType<object>()).Loop();
                 else
-                    _writer.WriteTo<T>(_streamWriter, records.OfType<object>()).Loop();
+                    _writer.WriteTo<T>(_streamWriter.Value, records.OfType<object>()).Loop();
             }
         }
 
@@ -189,9 +189,9 @@ namespace ChoETL
             _writer.TraceSwitch = TraceSwitch;
 
             if (typeof(T) == typeof(object))
-                _writer.WriteTo<Dictionary<string, object>>(_streamWriter, new object[] { record }).Loop();
+                _writer.WriteTo<Dictionary<string, object>>(_streamWriter.Value, new object[] { record }).Loop();
             else
-                _writer.WriteTo<T>(_streamWriter, new object[] { record }).Loop();
+                _writer.WriteTo<T>(_streamWriter.Value, new object[] { record }).Loop();
         }
 
         private void NotifyRowsWritten(object sender, ChoRowsWrittenEventArgs e)
