@@ -23,7 +23,7 @@ namespace ChoETL
     {
         //private TextReader _textReader;
         private Lazy<TextReader> _textReader;
-        private XmlReader _xmlReader;
+        private Lazy<XmlReader> _xmlReader;
         private IEnumerable<XElement> _xElements;
         private bool _closeStreamOnDispose = false;
         private Lazy<IEnumerator<T>> _enumerator = null;
@@ -77,8 +77,26 @@ namespace ChoETL
         {
             if (_textReader != null)
             {
-                _xmlReader = XmlReader.Create(_textReader.Value,
-                    new XmlReaderSettings() { DtdProcessing = DtdProcessing.Ignore, XmlResolver = null }, new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
+                _xmlReader = new Lazy<XmlReader>(() => {
+                    if (Configuration.NamespaceManager != null)
+                    {
+                        if (Configuration.XmlNamespaceManager != null)
+                        {
+                            foreach (var kvp in Configuration.XmlNamespaceManager.Value.NSDict)
+                            {
+                                Configuration.NamespaceManager.AddNamespace(kvp.Key, kvp.Value);
+                            }
+                        }
+                        if (!Configuration.NamespaceManager.HasNamespace("xsi"))
+                            Configuration.NamespaceManager.AddNamespace("xsi", ChoXmlSettings.XmlSchemaInstanceNamespace);
+                        if (!Configuration.NamespaceManager.HasNamespace("xsd"))
+                            Configuration.NamespaceManager.AddNamespace("xsd", ChoXmlSettings.XmlSchemaNamespace);
+                    }
+
+                    return XmlReader.Create(_textReader.Value,
+                        new XmlReaderSettings() { DtdProcessing = DtdProcessing.Ignore, XmlResolver = null }, new XmlParserContext(null, Configuration.NamespaceManager, null, XmlSpace.None));
+                }
+                );
             }
         }
 
@@ -113,7 +131,7 @@ namespace ChoETL
             Configuration = configuration;
             Init();
 
-            _xmlReader = xmlReader;
+            _xmlReader = new Lazy<XmlReader>(() => xmlReader);
         }
 
         public ChoXmlReader(Stream inStream, ChoXmlRecordConfiguration configuration = null)
@@ -181,7 +199,7 @@ namespace ChoETL
 
             Close();
             Init();
-            _xmlReader = xmlReader;
+            _xmlReader = new Lazy<XmlReader>(() => xmlReader);
             _closeStreamOnDispose = false;
 
             return this;
@@ -239,7 +257,7 @@ namespace ChoETL
             if (_closeStreamOnDispose)
             {
                 if (_xmlReader != null)
-                    _xmlReader.Dispose();
+                    _xmlReader.Value.Dispose();
                 if (_textReader != null)
                     _textReader.Value.Dispose();
             }
@@ -331,7 +349,7 @@ namespace ChoETL
                 rr.RowsLoaded += NotifyRowsLoaded;
                 rr.MembersDiscovered += MembersDiscovered;
                 rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
-                var e = rr.AsEnumerable(_xmlReader).GetEnumerator();
+                var e = rr.AsEnumerable(_xmlReader.Value).GetEnumerator();
                 return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
             }
             else
@@ -546,6 +564,17 @@ namespace ChoETL
         public ChoXmlReader<T> WithXmlNamespace(string prefix, string uri)
         {
             Configuration.NamespaceManager.AddNamespace(prefix, uri);
+
+            return this;
+        }
+
+        public ChoXmlReader<T> WithXmlNamespaces(IDictionary<string, string> ns)
+        {
+            if (ns != null)
+            {
+                foreach (var kvp in ns)
+                    Configuration.NamespaceManager.AddNamespace(kvp.Key, kvp.Value);
+            }
 
             return this;
         }

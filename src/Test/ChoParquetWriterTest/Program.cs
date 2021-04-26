@@ -259,10 +259,64 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
             foreach (var e in new ChoParquetReader("Emp.parquet"))
                 Console.WriteLine("Id: " + e.Id + " Name: " + e.Name);
         }
+        public class MyData
+        {
+            public Health Health { get; set; }
+            public Safety Safety { get; set; }
+            public List<Climate> Climate { get; set; }
+        }
+        public class Health
+        {
+            public int Id { get; set; }
+            public bool Status { get; set; }
+        }
+        public class Safety
+        {
+            public int Id { get; set; }
+            public bool Status { get; set; }
+        }
+        public class Climate
+        {
+            public int Id { get; set; }
+            public bool Status { get; set; }
+        }
+
+        static void Json2Parquet()
+        {
+            string json = @"
+[{
+	""Health"": {
+		""Id"": 99,
+		""Status"": false
+	},
+	""Safety"": {
+		""Id"": 3,
+		""Fire"": 1
+	},
+	""Climate"": [{
+		""Id"": 0,
+		""State"": 2
+	}]
+}]";
+
+            using (var r = ChoJSONReader<MyData>.LoadText(json)
+                .UseJsonSerialization())
+            {
+                //using (var w = new ChoParquetWriter("MyData.parquet")
+                //    //.UseNestedKeyFormat()
+                //    )
+                //{
+                //    w.Write(r.Select(rec1 => rec1.ToDictionary().Flatten().ToDictionary()));
+                //}
+
+                var x = ChoParquetWriter.SerializeAll(r.Select(rec1 => rec1.ToDictionary().Flatten().ToDictionary()));
+                File.WriteAllBytes("MyData1.parquet", x);
+            }
+        }
 
         static void Main(string[] args)
         {
-            ReadNWrite();
+            Json2Parquet();
             return;
 
             EmptyFileTest();

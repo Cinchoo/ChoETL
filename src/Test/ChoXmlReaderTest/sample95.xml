@@ -10,7 +10,7 @@ xmlns:DatatypenNEN3610="www.kadaster.nl/schemas/lvbag/imbag/datatypennen3610/v20
 xmlns:Historie="www.kadaster.nl/schemas/lvbag/imbag/historie/v20200601"
 xmlns:Objecten="www.kadaster.nl/schemas/lvbag/imbag/objecten/v20200601"
 xmlns:Objecten-ref="www.kadaster.nl/schemas/lvbag/imbag/objecten-ref/v20200601"
-xsi:schemaLocation="http://www.kadaster.nl/schemas/lvbag/extract-deelbestand-mutaties-lvc/v20200601 http://www.kadaster.nl/schemas/lvbag/extract-deelbestand-mutaties-lvc/v20200601/BagvsExtractDeelbestandMutatieLvc-2.1.0.xsd">
+xsi:schemaLocation="http://www.kadaster.nl/schemas/lvbag/extract-deelbestand-mutaties-lvc/v20200601/BagvsExtractDeelbestandMutatieLvc-2.1.0.xsd">
   <mlm:bagInfo>
     <selecties-extract:Gebied-Registratief>
       <selecties-extract:Gebied-NLD />

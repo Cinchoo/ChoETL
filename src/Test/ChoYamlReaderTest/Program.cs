@@ -754,11 +754,42 @@ Books:
 //            }
 
         }
+
+        public class ConfigOne
+        {
+            public string Name { get; set; }
+            public string Stuff { get; set; }
+        }
+
+        static void SelectiveNodeLoad()
+        {
+            string yaml = @"
+config_one:
+  name: foo
+  stuff: value
+
+config_two:
+  name: bar
+  random: value
+";
+
+            Console.WriteLine(ChoYamlReader.DeserializeText<ConfigOne>(yaml, "config_one").FirstOrDefault().Dump());
+            return;
+            using (var r = ChoYamlReader<ConfigOne>.LoadText(yaml)
+                .WithYamlPath("config_one")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            CircularRefRead();
+            SelectiveNodeLoad();
         }
     }
 }

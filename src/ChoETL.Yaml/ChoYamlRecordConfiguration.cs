@@ -530,8 +530,8 @@ namespace ChoETL
                 }
             }
 
-            if (YamlRecordFieldConfigurations.Count <= 0)
-                throw new ChoRecordConfigurationException("No record fields specified.");
+            //if (YamlRecordFieldConfigurations.Count <= 0)
+            //    throw new ChoRecordConfigurationException("No record fields specified.");
 
             //Validate each record field
             foreach (var fieldConfig in YamlRecordFieldConfigurations)

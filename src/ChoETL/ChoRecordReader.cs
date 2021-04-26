@@ -108,7 +108,10 @@ namespace ChoETL
             foreach (var kvp in rec)
             {
                 //newRec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
-                newRec.Add(kvp.Key, kvp.Value.CastObjectTo(recTypes[kvp.Key]));
+                if (recTypes.ContainsKey(kvp.Key))
+                    newRec.Add(kvp.Key, kvp.Value.CastObjectTo(recTypes[kvp.Key]));
+                else
+                    newRec.Add(kvp.Key, typeof(ChoDynamicObject));
             }
             return newRec;
         }

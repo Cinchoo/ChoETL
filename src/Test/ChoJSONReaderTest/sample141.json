@@ -1,0 +1,42 @@
+﻿{
+  "Latitude": "10.00",
+  "Longitude": "11.00",
+  "Floor": [
+    {
+      "Floor ID": "FL01",
+      "Toilet": [
+        {
+          "Sink": "Test",
+          "Handdryer": "Test",
+          "Urinal": "10"
+        },
+        {
+          "Sink": "5",
+          "Handdryer": "Test",
+          "Urinal": "Test"
+        }
+      ]
+    },
+    {
+      "Floor ID": "FL02",
+      "Floor Level": "Level 2",
+      "Floor Name": "Floor2",
+      "Cubicles": {
+        "Desk Type": "20",
+        "Foot Rest": "30",
+        "Separator Type": "Test"
+      }
+    }
+  ],
+  "Elevator": [
+    {
+      "Number": "Elevator1"
+    },
+    {
+      "Number": "Elevator2",
+      "Led Light": {
+        "Number": "123"
+      }
+    }
+  ]
+}

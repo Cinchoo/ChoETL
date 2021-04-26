@@ -672,6 +672,21 @@ namespace ChoETL
                             rec = pair.Item2;
                         else
                             rec = JsonConvert.DeserializeObject<ExpandoObject>(pair.Item2.ToString(), Configuration.JsonSerializerSettings);
+
+                        //Remove any ignore fields
+                        if (Configuration.IgnoredFields.Count != 0)
+                        {
+                            IDictionary<string, object> rec1 = rec as IDictionary<string, object>;
+                            if (rec1 != null)
+                            {
+                                foreach (var fd in Configuration.IgnoredFields)
+                                {
+                                    if (rec1.ContainsKey(fd))
+                                        rec1.Remove(fd);
+                                }
+                            }
+                        }
+
                         if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.Off) != ChoObjectValidationMode.Off)
                             rec.DoObjectLevelValidation(Configuration, Configuration.JSONRecordFieldConfigurations);
                     }
@@ -899,7 +914,7 @@ namespace ChoETL
                 if (!kvp.Value.JSONPath.IsNullOrWhiteSpace() && kvp.Value.JSONPath != kvp.Value.FieldName)
                 {
                     jTokens = SelectTokens(node, kvp.Value.JSONPath).ToArray();
-                    if (fieldConfig.FieldType != null && fieldConfig.FieldType != typeof(object) && !fieldConfig.FieldType.IsCollection() 
+                    if (fieldConfig.FieldType != null && fieldConfig.FieldType != typeof(object) && !fieldConfig.FieldType.IsCollection()
                         && !fieldConfig.FieldType.IsGenericList()
                         && !fieldConfig.FieldType.IsGenericEnumerable()
                         && jToken != null)
@@ -907,6 +922,7 @@ namespace ChoETL
                         jToken = jTokens.FirstOrDefault();
                         jTokens = null;
                     }
+
                     if (jToken == null)
                     {
                         if (Configuration.ColumnCountStrict)
@@ -923,12 +939,25 @@ namespace ChoETL
                         //    jToken = node;
                     }
 
-                    if (fieldConfig.FieldType != null && fieldConfig.FieldType != typeof(object) && !fieldConfig.FieldType.IsCollection() 
+                    if (fieldConfig.FieldType != null && fieldConfig.FieldType != typeof(object) && !fieldConfig.FieldType.IsCollection()
                         && !fieldConfig.FieldType.IsGenericList()
                         && !fieldConfig.FieldType.IsGenericEnumerable()
                         && jToken != null)
                     {
                         jToken = jToken is JArray ? ((JArray)jToken).FirstOrDefault() : jToken;
+                    }
+                    else if (fieldConfig.FieldType != null && fieldConfig.FieldType != typeof(object) && (fieldConfig.FieldType.IsCollection()
+         || fieldConfig.FieldType.IsGenericList()
+         || fieldConfig.FieldType.IsGenericEnumerable())
+         && jToken != null)
+                    {
+                        var itemType = fieldConfig.FieldType.GetUnderlyingType().GetItemType().GetUnderlyingType();
+                        if (itemType.IsSimple())
+                        {
+
+                        }
+                        else
+                            jTokens = new JToken[] { jToken };
                     }
                 }
 
@@ -1103,7 +1132,7 @@ namespace ChoETL
                                 }
                                 else if (fieldConfig.FieldType.GetUnderlyingType().IsCollection())
                                 {
-                                    var isJArray = ((JToken[])fieldValue).Length == 1 && ((JToken[])fieldValue)[0] is JArray;
+                                    var isJArray = false; // ((JToken[])fieldValue).Length == 1 && ((JToken[])fieldValue)[0] is JArray;
                                     var array = isJArray ? ((JArray)((JToken[])fieldValue)[0]).ToArray() : (JToken[])fieldValue;
                                     foreach (var ele in array)
                                     {

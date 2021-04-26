@@ -615,8 +615,8 @@ namespace ChoETL
                 }
             }
 
-            if (JSONRecordFieldConfigurations.Count <= 0)
-                throw new ChoRecordConfigurationException("No record fields specified.");
+            //if (JSONRecordFieldConfigurations.Count <= 0)
+            //    throw new ChoRecordConfigurationException("No record fields specified.");
 
             //Validate each record field
             foreach (var fieldConfig in JSONRecordFieldConfigurations)

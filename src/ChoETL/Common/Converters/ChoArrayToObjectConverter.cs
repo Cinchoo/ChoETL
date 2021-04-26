@@ -50,7 +50,7 @@ namespace ChoETL
                         {
                             if (p.a.Position < coll.Count)
                             {
-                                ChoType.ConvertNSetPropertyValue(value, p.pd.Name, coll[p.a.Position]);
+                                ChoType.ConvertNSetPropertyValue(value, p.pd.Name, coll[p.a.Position], culture);
                             }
                         }
                     }

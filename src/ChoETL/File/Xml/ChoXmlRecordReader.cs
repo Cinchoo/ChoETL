@@ -119,7 +119,7 @@ namespace ChoETL
                         if (ele != null)
                         {
                             var fcs = Configuration.DiscoverRecordFieldsFromXElement(ele);
-                            var diff = fcs.Where(fc => !Configuration.XmlRecordFieldConfigurations.Any(fc1 => fc1.Name == fc.Name)).ToArray();
+                            var diff = fcs.Where(fc => !Configuration.XmlRecordFieldConfigurations.Any(fc1 => fc1.FieldName == fc.FieldName)).ToArray();
                             Configuration.XmlRecordFieldConfigurations.AddRange(diff);
                         }
 
@@ -179,7 +179,7 @@ namespace ChoETL
             {
                 string name = pair.Item2.Name.ToString();
                 var recType = _xmlTypeCache.Value.ContainsKey(name) && _xmlTypeCache.Value[name] != null ? _xmlTypeCache.Value[name] : RecordType;
-                return pair.Item2.ToObjectFromXml(recType);
+                return pair.Item2.ToObjectFromXml(recType, nsMgr: Configuration.XmlNamespaceManager.Value);
             }
         }
 
@@ -269,7 +269,18 @@ namespace ChoETL
                     {
                         buffer.Add(rec);
                         if (recFieldTypes == null)
-                            recFieldTypes = Configuration.XmlRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
+                        {
+                            string[] dupFields = Configuration.XmlRecordFieldConfigurations.GroupBy(i => i.FieldName)
+                                .Where(g => g.Count() > 1)
+                                .Select(g => g.Key).ToArray();
+                            if (dupFields.Length > 0)
+                            {
+                                throw new ChoRecordConfigurationException("Duplicate field name(s) [Name: {0}] found.".FormatString(String.Join(",", dupFields)));
+                            }
+
+                            recFieldTypes = Configuration.XmlRecordFieldConfigurations.GroupBy(i => i.FieldName).Select(g => new { FieldName = g.Key, FieldType = g.First().FieldType })
+                                .ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
+                        }
                         RaiseRecordFieldTypeAssessment(recFieldTypes, (IDictionary<string, object>)rec, counter == Configuration.MaxScanRows);
                         if (counter == Configuration.MaxScanRows)
                         {

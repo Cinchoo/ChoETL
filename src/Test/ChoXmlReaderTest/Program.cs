@@ -432,20 +432,109 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            ReadAllNS();
+            GenerateXmlFromDatatable();
+        }
+
+        static void GenerateXmlFromDatatable()
+        {
+            using (var r = new ChoXmlReader("sample92.xml")
+                .WithMaxScanNodes(2)
+                .WithXPath("Order")
+                )
+            {
+                var dt = r.AsDataTable();
+                StringBuilder xml = new StringBuilder();
+
+                using (var w = new ChoXmlWriter(xml))
+                {
+                    w.Write(dt);
+                }
+
+                Console.WriteLine(xml.ToString());
+            }
+        }
+
+        static void TransformXml()
+        {
+            string xml = @"<root>
+       <lastname>Mark</lastname>
+       <firstname>Tom</firstname>
+       <student>
+          <id>1234</id>
+          <ssn>123-21-2234</ssn>
+       </student>
+    </root>";
+
+            StringBuilder outXml = new StringBuilder();
+            using (var r = ChoXmlReader.LoadText(xml)
+                .WithXPath("/"))
+            {
+                using (var w = new ChoXmlWriter(outXml)
+                    .IgnoreRootName()
+                    .Configure(c => c.NodeName = "root"))
+                {
+                    w.Write(r.Select(r1 => new
+                    {
+                        r1.lastName,
+                        r1.firstName,
+                        studentId = r1.student.id,
+                        studentSsn = r1.student.ssn
+                    }));
+                }
+            }
+            Console.WriteLine(outXml.ToString());
+        }
+
+        [XmlRoot("bagInfo", Namespace = "http://www.kadaster.nl/schemas/lvbag/extract-deelbestand-mutaties-lvc/v20200601")]
+        public class bagInfo
+        {
+            [XmlElement("Gebied-Registratief", Namespace = "http://www.kadaster.nl/schemas/lvbag/extract-selecties/v20200601")]
+            public GebiedRegistratief GebiedRegistratief { get; set; }
+        }
+
+        public class GebiedRegistratief
+        {
         }
 
         static void ReadAllNS()
         {
-            using (var r = new ChoXmlReader("sample95.xml")
+            IDictionary<string, string> ns = null;
+            using (var r = new ChoXmlReader<bagInfo>("sample95.xml")
+            )
+            {
+                var rec = r.FirstOrDefault();
+                ns = r.Configuration.GetXmlNamespacesInScope();
+            }
+            using (var r = new ChoXmlReader<bagInfo>("sample95.xml")
+                .UseXmlSerialization()
+                .WithXmlNamespaces(ns)
                 )
             {
                 foreach (var rec in r)
                 {
+                    ns = r.Configuration.GetXmlNamespacesInScope();
                     Console.WriteLine(r.Configuration.GetXmlNamespacesInScope().Dump());
                     Console.WriteLine(rec.Dump());
                 }
             }
+
+            StringBuilder xml = new StringBuilder();
+            using (var w = new ChoXmlWriter<bagInfo>(xml)
+                .WithXmlNamespaces(ns)
+                .WithDefaultNamespacePrefix("mlm")
+                .UseXmlSerialization()
+                .WithRootName("bagMutaties")
+                .Configure(c => c.OmitXmlDeclaration = false)
+                .Configure(c => c.Encoding = Encoding.UTF8)
+                .Configure(c => c.XmlVersion = "1.2")
+                )
+            {
+                w.Write(new bagInfo
+                {
+                });
+            }
+
+            Console.WriteLine(xml.ToString());
         }
 
         public class Root

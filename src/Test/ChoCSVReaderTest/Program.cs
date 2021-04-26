@@ -4878,12 +4878,33 @@ value1,""{""""split.amount"""":""""1794"""",""""split.currencyCode"""":""""USD""
                     Console.WriteLine(rec.Dump());
             }
         }
+        public class VisitExport
+        {
+            public int? Count { get; set; }
+            public string CustomerName { get; set; }
+            public string CustomerAddress { get; set; }
+        }
 
+        static void CheckCSVFileValid()
+        {
+            string csv = @"Count, CustomerName, CustomerAddress1
+1, Mark, 1 Main St";
+
+            using (var r = ChoCSVReader<VisitExport>.LoadText(csv)
+                .ThrowAndStopOnMissingField()
+                .ColumnCountStrict()
+                .WithFirstLineHeader()
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Verbose;
-            Tab1Test();
+            CheckCSVFileValid();
             return;
 
             CSV2ComplexObject();

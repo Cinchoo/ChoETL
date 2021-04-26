@@ -463,6 +463,17 @@ namespace ChoETL
             return this;
         }
 
+        public ChoXmlWriter<T> WithXmlNamespaces(IDictionary<string, string> ns)
+        {
+            if (ns != null)
+            {
+                foreach (var kvp in ns)
+                    Configuration.NamespaceManager.AddNamespace(kvp.Key, kvp.Value);
+            }
+
+            return this;
+        }
+
         public ChoXmlWriter<T> WithDefaultXmlNamespace(string prefix, string uri)
         {
             WithXmlNamespace(prefix, uri);
@@ -833,13 +844,14 @@ namespace ChoETL
                 }
             }
 
+            var ordinals = Configuration.XmlRecordFieldConfigurations.ToDictionary(c => c.Name, c => dr.HasColumn(c.Name) ? dr.GetOrdinal(c.Name) : -1);
             while (dr.Read())
             {
                 expandoDic.Clear();
 
-                foreach (var fc in Configuration.XmlRecordFieldConfigurations)
+                foreach (var fc in ordinals)
                 {
-                    expandoDic.Add(fc.Name, dr[fc.Name]);
+                    expandoDic.Add(fc.Key, fc.Value == -1 ? null : dr[fc.Value]);
                 }
 
                 Write(expando);

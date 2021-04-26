@@ -50,7 +50,7 @@ namespace ChoETL
 
             }
         }
-        private static string _XmlNamespace ;
+        private static string _XmlNamespace;
         public static string XmlNamespace
         {
             get { return _XmlNamespace; }
@@ -217,14 +217,20 @@ namespace ChoETL
 
             nsTable.IsLoaded = true;
 
-                // Read the attributes
-                while (xmlReader.MoveToNextAttribute())
+            // Read the attributes
+            while (xmlReader.MoveToNextAttribute())
+            {
+                var nodeName = xmlReader.Name;
+                if (!nodeName.StartsWith("xmlns:"))
                 {
-                    var nodeName = xmlReader.Name;
-                    if (!nodeName.StartsWith("xmlns:"))
-                        continue;
-                    nsTable.NamespaceTable.Add(nodeName.Substring(6), xmlReader.Value);
+                    if (nodeName.StartsWith("xsi:"))
+                        nsTable.NamespaceTable.Add(nodeName, xmlReader.Value);
+
+                    continue;
                 }
+
+                nsTable.NamespaceTable.Add(nodeName.Substring(6), xmlReader.Value);
+            }
         }
 
         public static void LoadNameSpaces(XElement element, ChoXmlNamespaceTable nsTable)

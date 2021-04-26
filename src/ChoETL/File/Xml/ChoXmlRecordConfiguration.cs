@@ -626,8 +626,8 @@ namespace ChoETL
                 }
             }
 
-            if (XmlRecordFieldConfigurations.Count <= 0)
-                throw new ChoRecordConfigurationException("No record fields specified.");
+            //if (XmlRecordFieldConfigurations.Count <= 0)
+            //    throw new ChoRecordConfigurationException("No record fields specified.");
 
             //Validate each record field
             foreach (var fieldConfig in XmlRecordFieldConfigurations)
@@ -666,6 +666,13 @@ namespace ChoETL
             {
                 if (NamespaceManager != null)
                 {
+                    if (XmlNamespaceManager != null)
+                    {
+                        foreach (var kvp in XmlNamespaceManager.Value.NSDict)
+                        {
+                            NamespaceManager.AddNamespace(kvp.Key, kvp.Value);
+                        }
+                    }
                     if (!NamespaceManager.HasNamespace("xsi"))
                         NamespaceManager.AddNamespace("xsi", ChoXmlSettings.XmlSchemaInstanceNamespace);
                     if (!NamespaceManager.HasNamespace("xsd"))
@@ -851,6 +858,38 @@ namespace ChoETL
             return this;
         }
 
+        public ChoXmlRecordConfiguration WithXmlNamespace(string prefix, string uri)
+        {
+            NamespaceManager.AddNamespace(prefix, uri);
+
+            return this;
+        }
+
+        public ChoXmlRecordConfiguration WithXmlNamespaces(IDictionary<string, string> ns)
+        {
+            if (ns != null)
+            {
+                foreach (var kvp in ns)
+                    NamespaceManager.AddNamespace(kvp.Key, kvp.Value);
+            }
+
+            return this;
+        }
+
+        public ChoXmlRecordConfiguration WithDefaultXmlNamespace(string prefix, string uri)
+        {
+            WithXmlNamespace(prefix, uri);
+            WithDefaultNamespacePrefix(prefix);
+            return this;
+        }
+
+        public ChoXmlRecordConfiguration WithDefaultNamespacePrefix(string prefix)
+        {
+            DefaultNamespacePrefix = prefix;
+
+            return this;
+        }
+
         public ChoXmlRecordConfiguration Map(string propertyName, string xPath = null, string fieldName = null, Type fieldType = null)
         {
             Map(propertyName, m => m.XPath(xPath).FieldName(fieldName).FieldType(fieldType));
@@ -1015,7 +1054,12 @@ namespace ChoETL
                     if (!config.DoNotEmitXmlNamespace && kvp.Key == "xml")
                         continue;
 
-                    msg.AppendFormat(@" xmlns:{0}=""{1}""", kvp.Key, kvp.Value);
+                    if (kvp.Key.Contains(":"))
+                    {
+                        msg.AppendFormat(@" {0}=""{1}""", kvp.Key, kvp.Value);
+                    }
+                    else
+                        msg.AppendFormat(@" xmlns:{0}=""{1}""", kvp.Key, kvp.Value);
                 }
             }
         

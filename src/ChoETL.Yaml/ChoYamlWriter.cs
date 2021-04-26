@@ -610,13 +610,14 @@ namespace ChoETL
                 }
             }
 
+            var ordinals = Configuration.YamlRecordFieldConfigurations.ToDictionary(c => c.Name, c => dr.HasColumn(c.Name) ? dr.GetOrdinal(c.Name) : -1);
             while (dr.Read())
             {
                 expandoDic.Clear();
 
-                foreach (var fc in Configuration.YamlRecordFieldConfigurations)
+                foreach (var fc in ordinals)
                 {
-                    expandoDic.Add(fc.Name, dr[fc.Name]);
+                    expandoDic.Add(fc.Key, fc.Value == -1 ? null : dr[fc.Value]);
                 }
 
                 Write(expando);

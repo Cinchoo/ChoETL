@@ -173,21 +173,44 @@ namespace ChoETL
                 yield break;
 
             string field = fields.First();
-            if (!dict.ContainsKey(field) && !(dict[field] is IDictionary<string, object>))
+            if (!dict.ContainsKey(field))
                 yield break;
+            //else if (!(dict[field] is IDictionary<string, object>))
+            //    yield break;
             else
             {
-                foreach (IDictionary<string, object> child in (IEnumerable)dict[field])
+                var ele = dict[field];
+                if (ele is IList)
                 {
-                    var dest1 = dest.Clone();
-                    dest1.Merge(child);
-                    dest1.Remove(field);
-                    if (fields.Skip(1).Count() == 0)
-                        yield return dest1;
-                    else
+                    foreach (IDictionary<string, object> child in (IEnumerable)dict[field])
                     {
-                        foreach (var ret in FlattenByInternal(child, dest1, fields.Skip(1).ToArray()))
-                            yield return ret;
+                        var dest1 = dest.Clone();
+                        dest1.Merge(child);
+                        dest1.Remove(field);
+                        if (fields.Skip(1).Count() == 0)
+                            yield return dest1;
+                        else
+                        {
+                            foreach (var ret in FlattenByInternal(child, dest1, fields.Skip(1).ToArray()))
+                                yield return ret;
+                        }
+                    }
+                }
+                else
+                {
+                    IDictionary<string, object> child = ele as IDictionary<string, object>;
+                    if (child != null)
+                    {
+                        var dest1 = dest.Clone();
+                        dest1.Merge(child);
+                        dest1.Remove(field);
+                        if (fields.Skip(1).Count() == 0)
+                            yield return dest1;
+                        else
+                        {
+                            foreach (var ret in FlattenByInternal(child, dest1, fields.Skip(1).ToArray()))
+                                yield return ret;
+                        }
                     }
                 }
             }

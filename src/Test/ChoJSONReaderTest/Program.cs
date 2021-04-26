@@ -4080,14 +4080,14 @@ K,L,M,N,O,P,Q,R,S,T";
 
         public class DbObject
         {
-            [ChoJSONPath("database_id")]
-            public int DbId { get; set; }
-            [ChoJSONPath("row_count")]
-            public int RowCount { get; set; }
             [ChoJSONPath("data.rows[*]")]
             [ChoSourceType(typeof(string[]))]
             [ChoTypeConverter(typeof(ChoArrayToObjectConverter))]
             public DbRowObject[] DbRows { get; set; }
+            [ChoJSONPath("database_id")]
+            public int DbId { get; set; }
+            [ChoJSONPath("row_count")]
+            public int RowCount { get; set; }
         }
 
         static void DeserializeInnerArrayToObjects()
@@ -5361,10 +5361,225 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                     Console.WriteLine(rec.Dump());
             }
         }
+
+        static void JSON2CSV9()
+        {
+            string json = @"
+[
+  {
+    ""id"": 1,
+    ""name"": ""Mike"",
+    ""features"": {
+      ""colors"": [
+        ""blue""
+      ],
+      ""sizes"": [
+        ""big""
+      ]
+    }
+  },
+  {
+    ""id"": 1,
+    ""name"": ""Jose"",
+    ""features"": {
+      ""colors"": [
+        ""blue"",
+        ""red""
+      ],
+      ""sizes"": [
+        ""big"",
+        ""small""
+      ]
+    }
+  }
+]";
+
+            StringBuilder csv = new StringBuilder();
+
+            using (var r = ChoJSONReader.LoadText(json)
+                )
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    .WithMaxScanRows(2)
+                    .ThrowAndStopOnMissingField(false)
+                    )
+                {
+                    w.Write(r);
+                }
+            }
+            Console.WriteLine(csv.ToString());
+        }
+
+        public class fooRoot1
+        {
+            //[ChoJSONPath("Value")]
+            [ChoSourceType(typeof(object[]))]
+            [ChoTypeConverter(typeof(ChoArrayToObjectConverter))]
+            public foo1[] Value { get; set; }
+        }
+
+
+        public class foo1
+        {
+            [ChoArrayIndex(0)]
+            public long prop1 { get; set; }
+            [ChoArrayIndex(1)]
+            public double prop2 { get; set; }
+        }
+
+        static void ArrayToObjects()
+        {
+            string json = @"
+[
+    [
+        1618170480000,
+        ""59594.60000000"",
+        ""59625.00000000"",
+        ""59557.13000000"",
+        ""59595.05000000"",
+        ""32.64148000"",
+        1618170539999,
+        ""1945185.17004597"",
+        1209,
+        ""14.78751100"",
+        ""881221.83660417"",
+        ""0""
+    ],
+    [
+        1618170540000,
+        ""59595.05000000"",
+        ""59669.81000000"",
+        ""59564.22000000"",
+        ""59630.16000000"",
+        ""27.45082600"",
+        1618170599999,
+        ""1636424.61486602"",
+        1066,
+        ""10.24907000"",
+        ""610941.51532090"",
+        ""0""
+    ]
+]";
+
+            using (var r = ChoJSONReader<fooRoot1>.LoadText(json)
+                //.WithJSONPath("$")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(ChoUtility.Dump(rec));
+            }
+        }
+
+        static void Issue141()
+        {
+            StringBuilder csv = new StringBuilder();
+
+            using (var r = new ChoJSONReader("sample141.json")
+                .IgnoreField("Elevator")
+                .UseJsonSerialization()
+                )
+            {
+                var r1 = r.FlattenBy("Floor", "Toilet");
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    .ThrowAndStopOnMissingField(false)
+                    .WithMaxScanRows(2)
+                    )
+                    w.Write(r1);
+            }
+
+            Console.WriteLine(csv.ToString());
+            csv.Clear();
+            using (var r = new ChoJSONReader("sample141.json")
+                      .IgnoreField("Elevator")
+                    .UseJsonSerialization()
+                      )
+            {
+                var r1 = r.FlattenBy("Floor", "Cubicles");
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    .ThrowAndStopOnMissingField(false)
+                    .WithMaxScanRows(2)
+                    )
+                    w.Write(r1);
+            }
+
+            Console.WriteLine(csv.ToString());
+            csv.Clear();
+            using (var r = new ChoJSONReader("sample141.json")
+                .WithJSONPath("$..Elevator")
+                .UseJsonSerialization()
+                  )
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    .ThrowAndStopOnMissingField(false)
+                    .WithMaxScanRows(2)
+                    )
+                    w.Write(r);
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
+        static void Issue141x()
+        {
+            StringBuilder csv = new StringBuilder();
+
+            List<dynamic> objs = new List<dynamic>();
+            using (var w = new ChoCSVWriter(csv)
+            .WithFirstLineHeader()
+            .ThrowAndStopOnMissingField(false)
+            .WithMaxScanRows(10)
+            .UseNestedKeyFormat()
+            .NestedColumnSeparator('_')
+            )
+            {
+                using (var r = new ChoJSONReader("sample141.json")
+                    .IgnoreField("Elevator")
+                    .UseJsonSerialization()
+                    )
+                {
+                    var r1 = r.FlattenBy("Floor", "Toilet");
+                    objs.AddRange(r1.ToArray());
+                }
+
+                //Console.WriteLine(csv.ToString());
+                //csv.Clear();
+                using (var r = new ChoJSONReader("sample141.json")
+                      .IgnoreField("Elevator")
+                    .UseJsonSerialization()
+                      )
+                {
+                    var r1 = r.FlattenBy("Floor", "Cubicles");
+                    objs.AddRange(r1.ToArray());
+                }
+
+                //Console.WriteLine(csv.ToString());
+                //csv.Clear();
+                using (var r = new ChoJSONReader("sample141.json")
+                    .WithJSONPath("$..Elevator")
+                    .UseJsonSerialization()
+                      )
+                {
+                    objs.AddRange(r.ToArray());
+                }
+
+                w.Write(objs);
+            }
+            
+            Console.WriteLine(csv.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            ConditionalDeserializationOfItems();
+            Issue141x();
+            return;
+            //JSON2CSV9();
+            ArrayToObjects();
+            //DeserializeInnerArrayToObjects();
 
             //CreateLargeJSONFile();
             //JSON2CSVViceVersa();
