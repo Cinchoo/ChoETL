@@ -428,6 +428,8 @@ namespace ChoETL
             bool isFirst = true;
             object rootRec = rec;
 
+            bool hasTypeConverter = false;
+            bool isJSONObject = true;
             if (!Configuration.IgnoreNodeName)
             {
                 if (Configuration.SupportMultipleContent == null || !Configuration.SupportMultipleContent.Value)
@@ -451,301 +453,348 @@ namespace ChoETL
                 }
             }
             else if (!RecordType.IsSimple())
-                msg.AppendFormat("{{{0}", EOLDelimiter);
-
-            foreach (KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict.OrderBy(kvp => kvp.Value.Order))
             {
-                //if (Configuration.IsDynamicObject)
+                //Has typeconverter specified
+                if (ChoTypeConverter.Global.Contains(rec.GetNType()))
+                {
+                    var tc = ChoTypeConverter.Global.GetConverter(rec.GetNType());
+                    if (tc != null)
+                    {
+                        hasTypeConverter = true;
+                        if (Configuration.SourceType != null)
+                            rec = ChoConvert.ConvertTo(rec, Configuration.SourceType, rec, new object[] { tc }, null, Configuration.Culture, null);
+                        else
+                            rec = ChoConvert.ConvertTo(rec, typeof(ExpandoObject), rec, new object[] { tc }, null, Configuration.Culture, null);
+                    }
+                }
+
+                //if (Configuration.RecordFieldConfigurationsDict.Count == 1)
                 //{
-                if (Configuration.IgnoredFields.Contains(kvp.Key))
-                    continue;
+                //    var fc = Configuration.RecordFieldConfigurationsDict.First().Value;
+                //    if (fc != null && fc.PropConverters != null && fc.PropConverters.OfType<IChoValueOnlyConverter>().Any())
+                //        isJSONObject = false;
+
                 //}
-
-                fieldConfig = kvp.Value;
-                fieldName = fieldConfig.FieldName;
-                fieldValue = null;
-                fieldText = String.Empty;
-                if (Configuration.PIDict != null)
+                if (!hasTypeConverter)
                 {
-                    // if FieldName is set
-                    if (!string.IsNullOrEmpty(fieldConfig.FieldName))
-                    {
-                        // match using FieldName
-                        Configuration.PIDict.TryGetValue(fieldConfig.FieldName, out pi);
-                    }
-                    else
-                    {
-                        // otherwise match usign the property name
-                        Configuration.PIDict.TryGetValue(kvp.Key, out pi);
-                    }
+                    if (isJSONObject)
+                        msg.AppendFormat("{{{0}", EOLDelimiter);
                 }
-                rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
+            }
 
-                if (Configuration.ThrowAndStopOnMissingField)
+            if (!hasTypeConverter)
+            {
+                foreach (KeyValuePair<string, ChoJSONRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict.OrderBy(kvp => kvp.Value.Order))
                 {
-                    if (Configuration.IsDynamicObject)
-                    {
-                        var dict = rec.ToDynamicObject() as IDictionary<string, Object>;
-                        if (!dict.ContainsKey(kvp.Key))
-                            throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' JSON node.".FormatString(fieldConfig.FieldName));
-                    }
-                    else
-                    {
-                        if (pi == null)
-                        {
-                            if (!RecordType.IsSimple())
-                                throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' JSON node.".FormatString(fieldConfig.FieldName));
-                        }
-                    }
-                }
+                    //if (Configuration.IsDynamicObject)
+                    //{
+                    if (Configuration.IgnoredFields.Contains(kvp.Key))
+                        continue;
+                    //}
 
-                try
-                {
-                    if (Configuration.IsDynamicObject)
+                    fieldConfig = kvp.Value;
+                    fieldName = fieldConfig.FieldName;
+                    fieldValue = null;
+                    fieldText = String.Empty;
+                    if (Configuration.PIDict != null)
                     {
-                        IDictionary<string, Object> dict = rec.ToDynamicObject() as IDictionary<string, Object>;
-                        fieldValue = dict[kvp.Key]; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
-                        if (rec is ChoDynamicObject)
+                        // if FieldName is set
+                        if (!string.IsNullOrEmpty(fieldConfig.FieldName))
                         {
-                            if (((ChoDynamicObject)rec).IsAttribute(fieldName)
-                                && Configuration.EnableXmlAttributePrefix)
-                                fieldName = "@{0}".FormatString(fieldName);
-                        }
-
-                        if (kvp.Value.FieldType == null)
-                        {
-                            if (rec is ChoDynamicObject)
-                            {
-                                var dobj = rec as ChoDynamicObject;
-                                kvp.Value.FieldType = dobj.GetMemberType(kvp.Key);
-                            }
-                            if (kvp.Value.FieldType == null)
-                            {
-                                if (ElementType == null)
-                                    kvp.Value.FieldType = typeof(object);
-                                else
-                                    kvp.Value.FieldType = ElementType;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (pi != null)
-                        {
-                            fieldValue = ChoType.GetPropertyValue(rec, pi);
-                            if (kvp.Value.FieldType == null)
-                                kvp.Value.FieldType = pi.PropertyType;
+                            // match using FieldName
+                            Configuration.PIDict.TryGetValue(fieldConfig.FieldName, out pi);
                         }
                         else
-                            kvp.Value.FieldType = typeof(string);
+                        {
+                            // otherwise match usign the property name
+                            Configuration.PIDict.TryGetValue(kvp.Key, out pi);
+                        }
                     }
+                    rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
 
-                    //Discover default value, use it if null
-                    //if (fieldValue == null)
-                    //{
-                    //    if (fieldConfig.IsDefaultValueSpecified)
-                    //        fieldValue = fieldConfig.DefaultValue;
-                    //}
-                    bool ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
-                    if (ignoreFieldValue)
-                        fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
-
-                    if (!RaiseBeforeRecordFieldWrite(rec, index, kvp.Key, ref fieldValue))
-                        return false;
-
-                    if (fieldConfig.ValueConverter != null)
-                        fieldValue = fieldConfig.ValueConverter(fieldValue);
-                    else if (RecordType.IsSimple())
-                        fieldValue = rec;
-                    else
-                        rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, true);
-
-                    if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.MemberLevel)
-                        rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
-
-                    if (!RaiseAfterRecordFieldWrite(rec, index, kvp.Key, fieldValue))
-                        return false;
-                }
-                catch (ChoParserException)
-                {
-                    throw;
-                }
-                catch (ChoMissingRecordFieldException)
-                {
                     if (Configuration.ThrowAndStopOnMissingField)
-                        throw;
-                }
-                catch (Exception ex)
-                {
-                    ChoETLFramework.HandleException(ref ex);
-
-                    if (fieldConfig.ErrorMode == ChoErrorMode.ThrowAndStop)
-                        throw;
+                    {
+                        if (Configuration.IsDynamicObject)
+                        {
+                            var dict = rec.ToDynamicObject() as IDictionary<string, Object>;
+                            if (!dict.ContainsKey(kvp.Key))
+                                throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' JSON node.".FormatString(fieldConfig.FieldName));
+                        }
+                        else
+                        {
+                            if (pi == null)
+                            {
+                                if (!RecordType.IsSimple())
+                                    throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' JSON node.".FormatString(fieldConfig.FieldName));
+                            }
+                        }
+                    }
 
                     try
                     {
                         if (Configuration.IsDynamicObject)
                         {
-                            var dict = rec.ToDynamicObject() as IDictionary<string, Object>;
-
-                            if (dict.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
-                                dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
-                            else if (dict.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
-                                dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
-                            else
+                            IDictionary<string, Object> dict = rec.ToDynamicObject() as IDictionary<string, Object>;
+                            fieldValue = dict[kvp.Key]; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
+                            if (rec is ChoDynamicObject)
                             {
-                                var ex1 = new ChoWriterException($"Failed to write '{fieldValue}' value for '{fieldConfig.FieldName}' member.", ex);
-                                fieldValue = null;
-                                throw ex1;
+                                if (((ChoDynamicObject)rec).IsAttribute(fieldName)
+                                    && Configuration.EnableXmlAttributePrefix)
+                                    fieldName = "@{0}".FormatString(fieldName);
                             }
-                        }
-                        else if (pi != null)
-                        {
-                            if (rec.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
-                                rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
-                            else if (rec.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
-                                rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
-                            else
+
+                            if (kvp.Value.FieldType == null)
                             {
-                                var ex1 = new ChoWriterException($"Failed to write '{fieldValue}' value for '{fieldConfig.FieldName}' member.", ex);
-                                fieldValue = null;
-                                throw ex1;
+                                if (rec is ChoDynamicObject)
+                                {
+                                    var dobj = rec as ChoDynamicObject;
+                                    kvp.Value.FieldType = dobj.GetMemberType(kvp.Key);
+                                }
+                                if (kvp.Value.FieldType == null)
+                                {
+                                    if (ElementType == null)
+                                        kvp.Value.FieldType = typeof(object);
+                                    else
+                                        kvp.Value.FieldType = ElementType;
+                                }
                             }
                         }
                         else
                         {
-                            var ex1 = new ChoWriterException($"Failed to write '{fieldValue}' value for '{fieldConfig.FieldName}' member.", ex);
-                            fieldValue = null;
-                            throw ex1;
-                        }
-                    }
-                    catch (Exception innerEx)
-                    {
-                        if (ex == innerEx.InnerException)
-                        {
-                            if (fieldConfig.ErrorMode == ChoErrorMode.IgnoreAndContinue)
+                            if (pi != null)
                             {
-                                continue;
+                                fieldValue = ChoType.GetPropertyValue(rec, pi);
+                                if (kvp.Value.FieldType == null)
+                                    kvp.Value.FieldType = pi.PropertyType;
                             }
                             else
-                            {
-                                if (!RaiseRecordFieldWriteError(rec, index, kvp.Key, ref fieldValue, ex))
-                                    throw new ChoWriterException($"Failed to write '{fieldValue}' value of '{kvp.Key}' member.", ex);
-                            }
+                                kvp.Value.FieldType = typeof(string);
                         }
-                        else
-                        {
-                            throw new ChoWriterException("Failed to use '{0}' fallback value for '{1}' member.".FormatString(fieldValue, kvp.Key), innerEx);
-                        }
-                    }
-                }
 
-                Writer.ContractResolverState = new ChoContractResolverState
-                {
-                    Name = kvp.Key,
-                    Index = index,
-                    Record = rec,
-                    FieldConfig = kvp.Value
-                };
-					
-                bool isSimple = true;
-
-                if (fieldConfig.CustomSerializer != null)
-                {
-                    fieldText = fieldConfig.CustomSerializer(fieldValue) as string;
-                }
-                else if (RaiseRecordFieldSerialize(rec, index, kvp.Key, ref fieldValue))
-                {
-                    fieldText = fieldValue as string;
-                }
-                else if (fieldConfig.PropCustomSerializer != null)
-                    fieldText = ChoCustomSerializer.Serialize(fieldValue, typeof(string), fieldConfig.PropCustomSerializer, fieldConfig.PropCustomSerializerParams, Configuration.Culture, fieldConfig.Name) as string;
-                else
-                {
-                    Type ft = fieldValue == null ? typeof(object) : fieldValue.GetType();
-                    if (fieldConfig.IgnoreFieldValue(fieldValue))
-                        fieldText = null;
-                    else if (fieldValue == null)
-                    {
-                        //if (fieldConfig.FieldType == null || fieldConfig.FieldType == typeof(object))
+                        //Discover default value, use it if null
+                        //if (fieldValue == null)
                         //{
-                        //    if (fieldConfig.NullValue == null)
-                        //        fieldText = !fieldConfig.IsArray ? "null" : "[]";
-                        //    else
-                        //        fieldText = fieldConfig.NullValue;
+                        //    if (fieldConfig.IsDefaultValueSpecified)
+                        //        fieldValue = fieldConfig.DefaultValue;
                         //}
-                        if (Configuration.NullValueHandling == ChoNullValueHandling.Ignore)
-                            fieldText = null;
-                        else if (Configuration.NullValueHandling == ChoNullValueHandling.Default)
-                            fieldText = JsonConvert.SerializeObject(ChoActivator.CreateInstance(fieldConfig.FieldType), Configuration.Formatting, Configuration.JsonSerializerSettings);
-                        else if (Configuration.NullValueHandling == ChoNullValueHandling.Empty && fieldConfig.FieldType == typeof(string))
-                            fieldText = String.Empty;
+                        bool ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
+                        if (ignoreFieldValue)
+                            fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
+
+                        if (!RaiseBeforeRecordFieldWrite(rec, index, kvp.Key, ref fieldValue))
+                            return false;
+
+                        if (fieldConfig.ValueConverter != null)
+                            fieldValue = fieldConfig.ValueConverter(fieldValue);
+                        else if (RecordType.IsSimple())
+                            fieldValue = rec;
                         else
+                            rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, true);
+
+                        if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.MemberLevel)
+                            rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
+
+                        if (!RaiseAfterRecordFieldWrite(rec, index, kvp.Key, fieldValue))
+                            return false;
+                    }
+                    catch (ChoParserException)
+                    {
+                        throw;
+                    }
+                    catch (ChoMissingRecordFieldException)
+                    {
+                        if (Configuration.ThrowAndStopOnMissingField)
+                            throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        ChoETLFramework.HandleException(ref ex);
+
+                        if (fieldConfig.ErrorMode == ChoErrorMode.ThrowAndStop)
+                            throw;
+
+                        try
                         {
-                            if (fieldConfig.NullValue == null)
+                            if (Configuration.IsDynamicObject)
                             {
-                                if (fieldConfig.FieldType == null || fieldConfig.FieldType == typeof(object))
-                                    fieldText = !Configuration.IsArray(fieldConfig) ? "null" : "[]";
+                                var dict = rec.ToDynamicObject() as IDictionary<string, Object>;
+
+                                if (dict.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                                    dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
+                                else if (dict.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                                    dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
                                 else
-                                    fieldText = !typeof(IList).IsAssignableFrom(fieldConfig.FieldType) ? "null" : "[]";
+                                {
+                                    var ex1 = new ChoWriterException($"Failed to write '{fieldValue}' value for '{fieldConfig.FieldName}' member.", ex);
+                                    fieldValue = null;
+                                    throw ex1;
+                                }
+                            }
+                            else if (pi != null)
+                            {
+                                if (rec.GetFallbackValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                                    rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
+                                else if (rec.GetDefaultValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue))
+                                    rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
+                                else
+                                {
+                                    var ex1 = new ChoWriterException($"Failed to write '{fieldValue}' value for '{fieldConfig.FieldName}' member.", ex);
+                                    fieldValue = null;
+                                    throw ex1;
+                                }
                             }
                             else
-                                fieldText = fieldConfig.NullValue;
+                            {
+                                var ex1 = new ChoWriterException($"Failed to write '{fieldValue}' value for '{fieldConfig.FieldName}' member.", ex);
+                                fieldValue = null;
+                                throw ex1;
+                            }
+                        }
+                        catch (Exception innerEx)
+                        {
+                            if (ex == innerEx.InnerException)
+                            {
+                                if (fieldConfig.ErrorMode == ChoErrorMode.IgnoreAndContinue)
+                                {
+                                    continue;
+                                }
+                                else
+                                {
+                                    if (!RaiseRecordFieldWriteError(rec, index, kvp.Key, ref fieldValue, ex))
+                                        throw new ChoWriterException($"Failed to write '{fieldValue}' value of '{kvp.Key}' member.", ex);
+                                }
+                            }
+                            else
+                            {
+                                throw new ChoWriterException("Failed to use '{0}' fallback value for '{1}' member.".FormatString(fieldValue, kvp.Key), innerEx);
+                            }
                         }
                     }
-                    else if (ft == typeof(string) || ft == typeof(char))
-                        fieldText = JsonConvert.SerializeObject(NormalizeFieldValue(kvp.Key, fieldValue.ToString(), kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType, Configuration.FieldValueTrimOption)),
-                            Configuration.Formatting, Configuration.JsonSerializerSettings);
-                    else if (ft == typeof(DateTime) || ft == typeof(TimeSpan))
-                        fieldText = JsonConvert.SerializeObject(fieldValue, Configuration.Formatting, Configuration.JsonSerializerSettings);
-                    else if (ft.IsEnum)
-                    {
-                        fieldText = JsonConvert.SerializeObject(fieldValue, Configuration.Formatting, Configuration.JsonSerializerSettings);
-                    }
-                    else if (ft == typeof(ChoCurrency))
-                        fieldText = "\"{0}\"".FormatString(fieldValue.ToString());
-                    else if (ft == typeof(bool))
-                        fieldText = JsonConvert.SerializeObject(fieldValue, Configuration.Formatting, Configuration.JsonSerializerSettings);
-                    else if (ft.IsNumeric())
-                        fieldText = fieldValue.ToString();
-                    else
-                        isSimple = false;
-                }
 
-                if (fieldText != null)
-                {
-                    if (isFirst)
+                    Writer.ContractResolverState = new ChoContractResolverState
                     {
-                        if (RecordType.IsSimple())
-                        {
-                            msg.AppendFormat(fieldText);
-                        }
-                        else
-                        {
-                            msg.AppendFormat("{2}\"{0}\":{1}", fieldName, isSimple ? " {0}".FormatString(fieldText) :
-                                Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization)).Substring(1),
-                                Indent(String.Empty));
-                        }
+                        Name = kvp.Key,
+                        Index = index,
+                        Record = rec,
+                        FieldConfig = kvp.Value
+                    };
+
+                    bool isSimple = true;
+
+                    if (fieldConfig.CustomSerializer != null)
+                    {
+                        fieldText = fieldConfig.CustomSerializer(fieldValue) as string;
                     }
+                    else if (RaiseRecordFieldSerialize(rec, index, kvp.Key, ref fieldValue))
+                    {
+                        fieldText = fieldValue as string;
+                    }
+                    else if (fieldConfig.PropCustomSerializer != null)
+                        fieldText = ChoCustomSerializer.Serialize(fieldValue, typeof(string), fieldConfig.PropCustomSerializer, fieldConfig.PropCustomSerializerParams, Configuration.Culture, fieldConfig.Name) as string;
                     else
                     {
-                        if (RecordType.IsSimple())
+                        Type ft = fieldValue == null ? typeof(object) : fieldValue.GetType();
+                        if (fieldConfig.IgnoreFieldValue(fieldValue))
+                            fieldText = null;
+                        else if (fieldValue == null)
                         {
-                            msg.AppendFormat($",{fieldText}");
+                            //if (fieldConfig.FieldType == null || fieldConfig.FieldType == typeof(object))
+                            //{
+                            //    if (fieldConfig.NullValue == null)
+                            //        fieldText = !fieldConfig.IsArray ? "null" : "[]";
+                            //    else
+                            //        fieldText = fieldConfig.NullValue;
+                            //}
+                            if (Configuration.NullValueHandling == ChoNullValueHandling.Ignore)
+                                fieldText = null;
+                            else if (Configuration.NullValueHandling == ChoNullValueHandling.Default)
+                                fieldText = JsonConvert.SerializeObject(ChoActivator.CreateInstance(fieldConfig.FieldType), Configuration.Formatting, Configuration.JsonSerializerSettings);
+                            else if (Configuration.NullValueHandling == ChoNullValueHandling.Empty && fieldConfig.FieldType == typeof(string))
+                                fieldText = String.Empty;
+                            else
+                            {
+                                if (fieldConfig.NullValue == null)
+                                {
+                                    if (fieldConfig.FieldType == null || fieldConfig.FieldType == typeof(object))
+                                        fieldText = !Configuration.IsArray(fieldConfig) ? "null" : "[]";
+                                    else
+                                        fieldText = !typeof(IList).IsAssignableFrom(fieldConfig.FieldType) ? "null" : "[]";
+                                }
+                                else
+                                    fieldText = fieldConfig.NullValue;
+                            }
+                        }
+                        else if (ft == typeof(string) || ft == typeof(char))
+                            fieldText = JsonConvert.SerializeObject(NormalizeFieldValue(kvp.Key, fieldValue.ToString(), kvp.Value.Size, kvp.Value.Truncate, false, GetFieldValueJustification(kvp.Value.FieldValueJustification, kvp.Value.FieldType), GetFillChar(kvp.Value.FillChar, kvp.Value.FieldType), false, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType, Configuration.FieldValueTrimOption)),
+                                Configuration.Formatting, Configuration.JsonSerializerSettings);
+                        else if (ft == typeof(DateTime) || ft == typeof(TimeSpan))
+                            fieldText = JsonConvert.SerializeObject(fieldValue, Configuration.Formatting, Configuration.JsonSerializerSettings);
+                        else if (ft.IsEnum)
+                        {
+                            fieldText = JsonConvert.SerializeObject(fieldValue, Configuration.Formatting, Configuration.JsonSerializerSettings);
+                        }
+                        else if (ft == typeof(ChoCurrency))
+                            fieldText = "\"{0}\"".FormatString(fieldValue.ToString());
+                        else if (ft == typeof(bool))
+                            fieldText = JsonConvert.SerializeObject(fieldValue, Configuration.Formatting, Configuration.JsonSerializerSettings);
+                        else if (ft.IsNumeric())
+                            fieldText = fieldValue.ToString();
+                        else
+                            isSimple = false;
+                    }
+
+                    if (fieldText != null)
+                    {
+                        if (isFirst)
+                        {
+                            if (RecordType.IsSimple())
+                            {
+                                msg.AppendFormat(fieldText);
+                            }
+                            else
+                            {
+                                //if (fieldConfig.PropConverters != null && fieldConfig.PropConverters.OfType<IChoValueOnlyConverter>().Any())
+                                //{
+                                //    msg.AppendFormat(Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization)).Substring(1));
+                                //}
+                                //else
+                                //{
+                                msg.AppendFormat("{2}\"{0}\":{1}", fieldName, isSimple ? " {0}".FormatString(fieldText) :
+                                    Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization)).Substring(1),
+                                    Indent(String.Empty));
+                                //}
+                            }
                         }
                         else
                         {
-                            msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldName, isSimple ? " {0}".FormatString(fieldText) :
-                                Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization)).Substring(1),
-                                EOLDelimiter, Indent(String.Empty));
+                            if (RecordType.IsSimple())
+                            {
+                                msg.AppendFormat($",{fieldText}");
+                            }
+                            else
+                            {
+                                msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldName, isSimple ? " {0}".FormatString(fieldText) :
+                                    Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization)).Substring(1),
+                                    EOLDelimiter, Indent(String.Empty));
+                            }
                         }
+                        isFirst = false;
                     }
-                    isFirst = false;
                 }
+            }
+            else
+            {
+                msg.Append(Indent(SerializeObject(rec, Configuration.UseJSONSerialization)));
             }
 
             if (!RecordType.IsSimple())
-                msg.AppendFormat("{0}}}", EOLDelimiter);
+            {
+                if (!hasTypeConverter)
+                {
+                    if (isJSONObject)
+                        msg.AppendFormat("{0}}}", EOLDelimiter);
+                }
+            }
             recText = Configuration.IgnoreNodeName ? Unindent(msg.ToString()) : msg.ToString();
 
             return true;

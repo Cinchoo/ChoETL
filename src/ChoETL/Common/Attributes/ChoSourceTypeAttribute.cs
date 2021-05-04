@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    [AttributeUsage(AttributeTargets.Property)]
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Class)]
     public class ChoSourceTypeAttribute : Attribute
     {
         public Type Type { get; private set; }

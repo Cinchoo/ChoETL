@@ -24,4 +24,9 @@ namespace ChoETL
     {
         object ExtractValue(string name, string fieldName, object value, CultureInfo culture);
     }
+
+    public interface IChoCollectionConverter
+    {
+
+    }
 }

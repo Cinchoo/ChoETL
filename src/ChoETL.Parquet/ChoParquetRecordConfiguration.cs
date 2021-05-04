@@ -282,14 +282,14 @@ namespace ChoETL
                                 ChoParquetRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, null, declaringMember == null ? propDesc.GetDisplayName() : propDesc.GetDisplayName(String.Empty));
                                 recordFieldConfigurations.Add(obj);
                             }
-                            else if (dnAttr != null && dnAttr.Minimum.CastTo<int>() >= 0 && dnAttr.Maximum.CastTo<int>() > 0
+                            else if (dnAttr != null && dnAttr.Minimum.CastTo<int>() >= 0 && dnAttr.Maximum.CastTo<int>() >= 0
                                 && dnAttr.Minimum.CastTo<int>() <= dnAttr.Maximum.CastTo<int>())
                             {
                                 recordType = recordType.GetItemType().GetUnderlyingType();
 
                                 if (recordType.IsSimple())
                                 {
-                                    for (int range = dnAttr.Minimum.CastTo<int>(); range <= dnAttr.Maximum.CastTo<int>(); range++)
+                                    for (int range = dnAttr.Minimum.CastTo<int>(); range < dnAttr.Maximum.CastTo<int>(); range++)
                                     {
                                         ChoParquetRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, range);
                                         //if (!ParquetRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
@@ -298,7 +298,7 @@ namespace ChoETL
                                 }
                                 else
                                 {
-                                    for (int range = dnAttr.Minimum.CastTo<int>(); range <= dnAttr.Maximum.CastTo<int>(); range++)
+                                    for (int range = dnAttr.Minimum.CastTo<int>(); range < dnAttr.Maximum.CastTo<int>(); range++)
                                     {
                                         foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                                         {
@@ -1075,7 +1075,7 @@ namespace ChoETL
 
             if ((fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(IList<>) || typeof(IList).IsAssignableFrom(fieldType))
                 && !typeof(ArrayList).IsAssignableFrom(fieldType)
-                && minumum >= 0 && maximum >= 0 && minumum <= maximum)
+                && minumum >= 0 /*&& maximum >= 0 && minumum <= maximum*/)
             {
                 IndexMapInternal(fqn, fieldType, minumum, maximum,
                     field.GetFullyQualifiedMemberName(), field.GetPropertyDescriptor().GetDisplayName(), mapper);
@@ -1137,7 +1137,7 @@ namespace ChoETL
                         ParquetRecordFieldConfigurations.Remove(fc);
                     }
 
-                    for (int index = minumum; index <= maximum; index++)
+                    for (int index = minumum; index < maximum; index++)
                     {
                         int fieldPosition = 0;
                         fieldPosition = ParquetRecordFieldConfigurations.Count > 0 ? ParquetRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;

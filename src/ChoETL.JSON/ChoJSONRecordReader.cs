@@ -651,7 +651,42 @@ namespace ChoETL
                     return true;
                 }
 
-                if (!Configuration.UseJSONSerialization
+                bool hasTypeConverter = false;
+                if (ChoTypeConverter.Global.Contains(rec.GetNType()))
+                {
+                    var tc = ChoTypeConverter.Global.GetConverter(rec.GetNType());
+                    if (tc != null)
+                    {
+                        hasTypeConverter = true;
+
+                        var JObject = pair.Item2 as JObject;
+                        if (JObject != null && JObject.Properties().Count() == 1 && JObject.ContainsKey("Value"))
+                        {
+                            if (Configuration.SourceType != null)
+                            {
+                                rec = ChoConvert.ConvertFrom(JsonConvert.DeserializeObject(JObject["Value"].ToString(), Configuration.SourceType, Configuration.JsonSerializerSettings), Configuration.RecordType,
+                                    null, new object[] { tc });
+                            }
+                            else
+                            {
+                                rec = ChoConvert.ConvertFrom(JObject["Value"], Configuration.RecordType, null, new object[] { tc });
+                            }
+                        }
+                        else
+                        {
+                            if (Configuration.SourceType != null)
+                                rec = ChoConvert.ConvertFrom(JsonConvert.DeserializeObject(JObject.ToString(), Configuration.SourceType, Configuration.JsonSerializerSettings), Configuration.RecordType,
+                                    null, new object[] { tc });
+                            else
+                                rec = ChoConvert.ConvertFrom(JObject, Configuration.RecordType,
+                                    null, new object[] { tc });
+                        }
+
+                        return true;
+                    }
+                }
+
+                if (!hasTypeConverter && !Configuration.UseJSONSerialization
                     && !typeof(ICollection).IsAssignableFrom(RecordType)
                     && !(RecordType.IsGenericType && RecordType.GetGenericTypeDefinition() == typeof(ICollection<>))
                     )
@@ -1132,7 +1167,7 @@ namespace ChoETL
                                 }
                                 else if (fieldConfig.FieldType.GetUnderlyingType().IsCollection())
                                 {
-                                    var isJArray = false; // ((JToken[])fieldValue).Length == 1 && ((JToken[])fieldValue)[0] is JArray;
+                                    var isJArray = ((JToken[])fieldValue).Length == 1 && ((JToken[])fieldValue)[0] is JArray;
                                     var array = isJArray ? ((JArray)((JToken[])fieldValue)[0]).ToArray() : (JToken[])fieldValue;
                                     foreach (var ele in array)
                                     {

@@ -17,7 +17,7 @@
     <PackageTags>ETL c# .NET CSV Xml JSON Flat</PackageTags>
     <PackageReleaseNotes>.NET Standard version</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Version>1.2.1.14</Version>
+    <Version>1.2.1.15</Version>
     <AssemblyName>ChoETL.Core</AssemblyName>
     <RootNamespace>ChoETL</RootNamespace>
     <SignAssembly>true</SignAssembly>
@@ -45,6 +45,7 @@
     <Compile Include="..\ChoETL\Common\Collections\ChoOrderedDictionary.cs" Link="Common\Collections\ChoOrderedDictionary.cs" />
     <Compile Include="..\ChoETL\Common\Collections\ChoSerializableDictionary.cs" Link="Common\Collections\ChoSerializableDictionary.cs" />
     <Compile Include="..\ChoETL\Common\Converters\ChoCDATAToStringConverter.cs" Link="Common\Converters\ChoCDATAToStringConverter.cs" />
+    <Compile Include="..\ChoETL\Common\Converters\ChoArrayToObjectConverter.cs" Link="Common\Converters\ChoArrayToObjectConverter.cs" />
     <Compile Include="..\ChoETL\Common\ExtensionMethods\ChoEnumerableEx.cs" Link="Common\ExtensionMethods\ChoEnumerableEx.cs" />
     <Compile Include="..\ChoETL\Common\ExtensionMethods\Linq\ChoLeftJoin.cs" Link="Common\ExtensionMethods\Linq\ChoLeftJoin.cs" />
     <Compile Include="..\ChoETL\Common\IChoConvertible.cs" Link="Common\IChoConvertible.cs" />

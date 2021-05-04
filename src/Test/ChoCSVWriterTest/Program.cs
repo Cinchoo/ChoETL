@@ -1281,7 +1281,7 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
         {
             public string Id { get; set; }
             public string Name { get; set; }
-            [Range(0, 1)]
+            [Range(0, 2)]
             public Course1[] Courses { get; set; }
 
             public StudentInfo1()
@@ -1324,12 +1324,13 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
 
             using (var w = new ChoCSVWriter<StudentInfo1>(csv)
                 .WithFirstLineHeader()
-                .ClearFields()
+                //.ClearFields()
                 .WithField(o => o.Id)
-                .WithField(o => o.Name)
+                //.WithField(o => o.Name)
                 //.WithField(o => o.Courses.FirstOrDefault().CourseId, fieldName: "CreId")
                 //.WithFieldForType<Course1>(o => o.CourseId, fieldName: "CreId")
-                //.Index(o => o.Courses, 0, 1)
+                .Index(o => o.Courses, 0, -1)
+                .WithMaxScanRows(2)
                 )
             {
                 w.Write(rec);
@@ -1341,7 +1342,9 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
 
         class UserFavourites
         {
+            [ChoCSVRecordField]
             public int Id { get; set; }
+            [ChoCSVRecordField]
             public string Title { get; set; }
 
             public override string ToString()
@@ -1351,16 +1354,17 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
         }
         class UserAndValues : IChoArrayItemFieldNameOverrideable
         {
-            //[ChoCSVRecordField]
+            [ChoCSVRecordField]
             public int UserID { get; set; }
-            //[ChoCSVRecordField]
+            [ChoCSVRecordField]
             public string FirstName { get; set; }
-            //[ChoCSVRecordField]
+            [ChoCSVRecordField]
             public string LastName { get; set; }
             [ChoTypeConverter(typeof(MyListConverter))]
-            //[ChoCSVRecordField(QuoteField = false)]
-            ///[Range(1,2)]
+            [ChoCSVRecordField(QuoteField = false)]
+            //[Range(1, 2)]
             public List<UserFavourites> Favourites { get; set; }
+            [ChoCSVRecordField]
             public UserFavourites SelectedUserFavourites { get; set; }
 
             public string GetFieldName(string declaringMemberName, string memberName, char separator, int index)
@@ -1434,23 +1438,23 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
                 }
             };
 
-            var c = new ChoCSVRecordConfiguration<UserAndValues>()
-                .WithFirstLineHeader()
-                .Map(f => f.UserID)
-                .Map(f => f.FirstName)
-                .Map(f => f.LastName)
-                .Map(f => f.SelectedUserFavourites.Title)
-                ;
+            //var c = new ChoCSVRecordConfiguration<UserAndValues>()
+            //    .WithFirstLineHeader()
+            //    .Map(f => f.UserID)
+            //    .Map(f => f.FirstName)
+            //    .Map(f => f.LastName)
+            //    .Map(f => f.SelectedUserFavourites.Title)
+            //    ;
 
             StringBuilder csv = new StringBuilder();
-            using (var w = new ChoCSVWriter<UserAndValues>(csv, c)
-                //.WithFirstLineHeader()
+            using (var w = new ChoCSVWriter<UserAndValues>(csv/*, c*/)
+                .WithFirstLineHeader()
                 //.ClearFields()
                 //.WithField(f => f.UserID)
                 //.WithField(f => f.FirstName)
                 //.WithField(f => f.LastName)
                 //.WithField(f => f.SelectedUserFavourites.Title)
-                //.WithField(f => f.Favourites, headerSelector: () => "x, y, z, a")
+                //.WithField(f => f.Favourites, headerSelector: () => "x, y, z, a", quoteField: false)
                 )
             {
                 w.Write(rec1);
@@ -1827,7 +1831,7 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
         {
             //AppDomain.CurrentDomain.FirstChanceException += (sender, eventArgs) => { Console.WriteLine("FirstChanceException: " + eventArgs.Exception.ToString()); };
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            TestIssue134();
+            ArrayWriteTest();
             //TestDictionary();
             return;
 

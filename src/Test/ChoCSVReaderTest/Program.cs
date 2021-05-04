@@ -4901,10 +4901,82 @@ value1,""{""""split.amount"""":""""1794"""",""""split.currencyCode"""":""""USD""
             }
         }
 
+        public class Channel
+        {
+            [JsonProperty("id")]
+            public int Id { get; set; }
+
+            [JsonProperty("name")]
+            public string Name { get; set; }
+
+            [JsonProperty("alias")]
+            public string Alias { get; set; }
+
+            [JsonProperty("value")]
+            public double Value { get; set; }
+
+            [JsonProperty("status")]
+            public int Status { get; set; }
+
+            [JsonProperty("valid")]
+            public bool Valid { get; set; }
+
+            [JsonProperty("description")]
+            [DisplayName("description")]
+            public string Description { get; set; }
+        }
+
+        public class Datum
+        {
+            [JsonProperty("datetime")]
+            public string Datetime { get; set; }
+
+            [JsonProperty("channels")]
+            [Range(0, 3)]
+            public Channel[] Channels { get; set; }
+        }
+
+        public class StationDetailsCall : Container
+        {
+            [JsonProperty("stationId")]
+            public int StationId { get; set; }
+
+            [JsonProperty("data")]
+            [Range(0, 1)]
+            public Datum[] Data { get; set; }
+        }
+
+        static void Json2CSV()
+        {
+            StationDetailsCall station = new StationDetailsCall();
+            station.StationId = 1;
+            station.Data = new Datum[] {
+     new Datum() { Channels = new Channel[] { new Channel() { Id = 1, Name = "name1" }, new Channel() { Id = 2, Name = "name2" } }, Datetime = DateTime.Now.ToString() },
+     new Datum() { Channels = new Channel[] { new Channel() { Id = 3, Name = "name3" }, new Channel() { Id = 4, Name = "name4" } }, Datetime = DateTime.Now.ToString() },
+};
+            
+           
+            //var rec = ChoType.GetDeclaringRecord("Data.Channels.Id", station, 0);
+            //Console.WriteLine(rec.Dump());
+            //return;
+
+            var csv = new StringBuilder();
+            string json = JsonConvert.SerializeObject(station);
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                using (var w = new ChoCSVWriter<StationDetailsCall>(csv).WithFirstLineHeader().UseNestedKeyFormat(true).ThrowAndStopOnMissingField(false)
+                    .IgnoreField(f => f.Components.Count)
+                    )
+                {
+                    w.Write(station);
+                }
+            }
+            Console.WriteLine(csv.ToString());
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Verbose;
-            CheckCSVFileValid();
+            Json2CSV();
             return;
 
             CSV2ComplexObject();

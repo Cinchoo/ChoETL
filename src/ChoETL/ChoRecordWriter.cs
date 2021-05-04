@@ -50,9 +50,9 @@ namespace ChoETL
 
         public abstract IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null);
 
-        protected object GetDeclaringRecord(string declaringMember, object rec)
+        protected object GetDeclaringRecord(string declaringMember, object rec, int? arrayIndex = null)
         {
-            return ChoType.GetDeclaringRecord(declaringMember, rec);
+            return ChoType.GetDeclaringRecord(declaringMember, rec, arrayIndex);
         }
     }
 }

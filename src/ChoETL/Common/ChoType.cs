@@ -2625,15 +2625,15 @@
                 return declaringMember;
         }
 
-        public static object GetDeclaringRecord(string declaringMember, object rec)
+        public static object GetDeclaringRecord(string declaringMember, object rec, int? arrayIndex = null)
         {
             if (declaringMember == null)
                 return rec;
 
-            return GetDeclaringRecord(rec, declaringMember);
+            return GetDeclaringRecord(rec, declaringMember, arrayIndex);
         }
 
-        private static object GetDeclaringRecord(object src, string propName, bool leaf = true)
+        private static object GetDeclaringRecord(object src, string propName, int? arrayIndex = null, bool leaf = true)
         {
             if (src == null) return null; // throw new ArgumentException("Value cannot be null.", "src");
             if (propName == null) throw new ArgumentException("Value cannot be null.", "propName");
@@ -2641,14 +2641,27 @@
             if (propName.Contains("."))//complex type nested
             {
                 var temp = propName.Split(new char[] { '.' }, 2);
-                return GetDeclaringRecord(GetDeclaringRecord(src, temp[0], false), temp[1]);
+                return GetDeclaringRecord(GetDeclaringRecord(src, temp[0], arrayIndex, false), temp[1], arrayIndex);
             }
             else
             {
-                var prop = src.GetType().GetProperty(propName);
+                var prop = src is IList ? src.GetType().GetItemType().GetProperty(propName) : src.GetType().GetProperty(propName);
                 if (!leaf && prop != null)
                 {
-                    var obj = prop.GetValue(src, null);
+                    object obj = null;
+                    if (src is IList)
+                    {
+                        if (arrayIndex != null)
+                        {
+                            obj = ((IList)src).OfType<object>().Skip(arrayIndex.Value).FirstOrDefault();
+                            obj = prop.GetValue(obj, null);
+                        }
+                    }
+                    else
+                    {
+                        obj = prop.GetValue(src, null);
+                    }
+
                     if (obj == null)
                     {
                         if (typeof(Array).IsAssignableFrom(prop.PropertyType))

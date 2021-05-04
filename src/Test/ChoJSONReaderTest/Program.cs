@@ -5413,19 +5413,78 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 
         public class fooRoot1
         {
-            //[ChoJSONPath("Value")]
+            [ChoJSONPath("Value[*]")]
             [ChoSourceType(typeof(object[]))]
-            [ChoTypeConverter(typeof(ChoArrayToObjectConverter))]
+            [ChoTypeConverter(typeof(ChoArrayToObjectsConverter))]
             public foo1[] Value { get; set; }
         }
 
-
+        [ChoSourceType(typeof(object[]))]
+        [ChoTypeConverter(typeof(ChoArrayToObjectConverter))]
         public class foo1
         {
             [ChoArrayIndex(0)]
             public long prop1 { get; set; }
             [ChoArrayIndex(1)]
             public double prop2 { get; set; }
+        }
+
+        static void ArrayToObjects1()
+        {
+            string json = @"
+[
+  {
+    ""Value"": [
+      [
+        1618170480000,
+        ""59594.60000000"",
+        ""59625.00000000"",
+        ""59557.13000000"",
+        ""59595.05000000"",
+        ""32.64148000"",
+        1618170539999,
+        ""1945185.17004597"",
+        1209,
+        ""14.78751100"",
+        ""881221.83660417"",
+        ""0""
+      ],
+      [
+        1618170540000,
+        ""59595.05000000"",
+        ""59669.81000000"",
+        ""59564.22000000"",
+        ""59630.16000000"",
+        ""27.45082600"",
+        1618170599999,
+        ""1636424.61486602"",
+        1066,
+        ""10.24907000"",
+        ""610941.51532090"",
+        ""0""
+      ]
+    ]
+  }
+]";
+
+            StringBuilder jsonOutput = new StringBuilder();
+            using (var r = ChoJSONReader<fooRoot1>.LoadText(json)
+                //.UseJsonSerialization()
+                //.WithJSONPath("$", true)
+                )
+            {
+                var x = r.ToArray();
+                foreach (var rec in x)
+                    Console.WriteLine(ChoUtility.Dump(rec));
+
+                using (var w = new ChoJSONWriter<fooRoot1>(jsonOutput)
+                    )
+                {
+                    w.Write(x);
+                }
+            }
+
+            Console.WriteLine(jsonOutput.ToString());
         }
 
         static void ArrayToObjects()
@@ -5462,13 +5521,24 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
     ]
 ]";
 
-            using (var r = ChoJSONReader<fooRoot1>.LoadText(json)
-                //.WithJSONPath("$")
+            StringBuilder jsonOutput = new StringBuilder();
+            using (var r = ChoJSONReader<foo1>.LoadText(json)
+                //.UseJsonSerialization()
+                //.WithJSONPath("$", true)
                 )
             {
-                foreach (var rec in r)
+                var x = r.ToArray();
+                foreach (var rec in x)
                     Console.WriteLine(ChoUtility.Dump(rec));
+
+                using (var w = new ChoJSONWriter<foo1>(jsonOutput)
+                    )
+                {
+                    w.Write(x);
+                }
             }
+
+            Console.WriteLine(jsonOutput.ToString());
         }
 
         static void Issue141()
@@ -5525,58 +5595,105 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 
         static void Issue141x()
         {
-            StringBuilder csv = new StringBuilder();
-
+            string jsonFilePath = "sample141.json";
             List<dynamic> objs = new List<dynamic>();
-            using (var w = new ChoCSVWriter(csv)
-            .WithFirstLineHeader()
-            .ThrowAndStopOnMissingField(false)
-            .WithMaxScanRows(10)
-            .UseNestedKeyFormat()
-            .NestedColumnSeparator('_')
-            )
+            using (var r = new ChoJSONReader(jsonFilePath)
+                .IgnoreField("Elevator")
+                .UseJsonSerialization()
+                )
             {
-                using (var r = new ChoJSONReader("sample141.json")
-                    .IgnoreField("Elevator")
-                    .UseJsonSerialization()
-                    )
-                {
-                    var r1 = r.FlattenBy("Floor", "Toilet");
-                    objs.AddRange(r1.ToArray());
-                }
+                var r1 = r.FlattenBy("Floor", "Toilet");
+                objs.AddRange(r1.ToArray());
+            }
+            using (var r = new ChoJSONReader(jsonFilePath)
+                .IgnoreField("Elevator")
+                .UseJsonSerialization()
+                )
+            {
+                var r1 = r.FlattenBy("Floor", "Cubicles");
+                objs.AddRange(r1.ToArray());
+            }
 
-                //Console.WriteLine(csv.ToString());
-                //csv.Clear();
-                using (var r = new ChoJSONReader("sample141.json")
-                      .IgnoreField("Elevator")
-                    .UseJsonSerialization()
-                      )
-                {
-                    var r1 = r.FlattenBy("Floor", "Cubicles");
-                    objs.AddRange(r1.ToArray());
-                }
+            using (var r = new ChoJSONReader(jsonFilePath)
+                .WithJSONPath("$..Elevator")
+                .UseJsonSerialization()
+                )
+            {
+                objs.AddRange(r.ToArray());
+            }
 
-                //Console.WriteLine(csv.ToString());
-                //csv.Clear();
-                using (var r = new ChoJSONReader("sample141.json")
-                    .WithJSONPath("$..Elevator")
-                    .UseJsonSerialization()
-                      )
-                {
-                    objs.AddRange(r.ToArray());
-                }
+            StringBuilder csv = new StringBuilder();
+            using (var w = new ChoCSVWriter(csv)
+                .WithFirstLineHeader()
+                .ThrowAndStopOnMissingField(false)
+                .WithMaxScanRows(10)
+                )
+            {
 
                 w.Write(objs);
             }
-            
+
             Console.WriteLine(csv.ToString());
+        }
+
+        public enum ResponseStatus { ok, fail };
+
+        public class JsonJsonStatusReport
+        {
+            public ResponseStatus ResponseStatus { get; set; }
+            public int NumberOfPages { get; set; }
+            public JsonJsonStatusReportData[] Data { get; set; }
+        }
+
+        public class JsonJsonStatusReportData
+        {
+            public string Name { get; set; }
+            public string BookingDate { get; set; }
+        }
+
+        static void CustomDateTimeReadTest()
+        {
+            string json = @"
+{
+  ""response"": ""ok"",
+  ""numberofpages"": 4,
+  ""data"": [
+    {
+      ""name"": ""user1"",
+      ""bookingdate"": ""24/05/2019""
+    },
+    {
+      ""name"": ""user2"",
+      ""bookingdate"": ""24/05/2019""
+    },
+    {
+      ""name"": ""user3"",
+      ""bookingdate"": ""4/03/2020""
+    },
+    {
+      ""name"": ""user4"",
+      ""bookingdate"": ""00:00""
+    }
+  ]
+}";
+
+            using (var r = ChoJSONReader<JsonJsonStatusReport>.LoadText(json)
+                .UseJsonSerialization()
+                .WithFieldForType<JsonJsonStatusReportData>(f => f.BookingDate, formatText: "dd/MM/yyyy")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+
         }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            Issue141x();
+            ArrayToObjects();
             return;
+            JSON2CSV9();
             //JSON2CSV9();
             ArrayToObjects();
             //DeserializeInnerArrayToObjects();

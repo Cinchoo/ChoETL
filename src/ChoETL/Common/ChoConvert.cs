@@ -89,6 +89,12 @@ namespace ChoETL
             if (culture == null)
                 culture = ChoConvert.DefaultCulture;
 
+            bool collectionConvertersFound = false;
+            if (converters != null)
+            {
+                collectionConvertersFound = converters.OfType<IChoCollectionConverter>().Any();
+            }
+
             if (targetType != typeof(object))
             {
                 if (sourceObject is IChoConvertible && !propName.IsNullOrWhiteSpace())
@@ -99,13 +105,16 @@ namespace ChoETL
                         return convPropValue;
                 }
 
-                if (value is ICollection && !typeof(ICollection).IsAssignableFrom(targetType))
+                if (!collectionConvertersFound)
                 {
-                    value = ((IEnumerable)value).FirstOrDefault<object>();
-                }
-                if (value != null && typeof(IList).IsAssignableFrom(targetType) && !(value is IList))
-                {
-                    value = new object[] { value };
+                    if (value is ICollection && !typeof(ICollection).IsAssignableFrom(targetType))
+                    {
+                        value = ((IEnumerable)value).FirstOrDefault<object>();
+                    }
+                    if (value != null && typeof(IList).IsAssignableFrom(targetType) && !(value is IList))
+                    {
+                        value = new object[] { value };
+                    }
                 }
             }
 

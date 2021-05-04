@@ -506,7 +506,7 @@ namespace ChoETL
                     }
                 }
 
-                rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
+                rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec, fieldConfig.ArrayIndex);
 
                 if (!isInit)
                 {

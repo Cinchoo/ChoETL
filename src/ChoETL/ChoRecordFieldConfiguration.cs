@@ -47,11 +47,12 @@ namespace ChoETL
             get { return FieldType != null ? FieldType.FullName : null; }
             set { FieldType = value != null ? Type.GetType(value) : null; }
         }
+        private Type _fieldType;
         [DataMember]
         public Type FieldType
         {
-            get;
-            set;
+            get { return SourceType == null ? _fieldType : SourceType; }
+            set { _fieldType = value; }
         }
         [DataMember]
         public bool? IsNullable

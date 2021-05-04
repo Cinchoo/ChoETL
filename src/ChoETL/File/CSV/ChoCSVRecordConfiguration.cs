@@ -406,14 +406,14 @@ namespace ChoETL
                                 ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, null, declaringMember == null ? propDesc.GetDisplayName() : propDesc.GetDisplayName(String.Empty));
                                 recordFieldConfigurations.Add(obj);
                             }
-                            else if (dnAttr != null && dnAttr.Minimum.CastTo<int>() >= 0 && dnAttr.Maximum.CastTo<int>() > 0
+                            else if (dnAttr != null && dnAttr.Minimum.CastTo<int>() >= 0 && dnAttr.Maximum.CastTo<int>() >= 0
                                 && dnAttr.Minimum.CastTo<int>() <= dnAttr.Maximum.CastTo<int>())
                             {
                                 recordType = recordType.GetItemType().GetUnderlyingType();
 
                                 if (recordType.IsSimple())
                                 {
-                                    for (int range = dnAttr.Minimum.CastTo<int>(); range <= dnAttr.Maximum.CastTo<int>(); range++)
+                                    for (int range = dnAttr.Minimum.CastTo<int>(); range < dnAttr.Maximum.CastTo<int>(); range++)
                                     {
                                         ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, range);
                                         //if (!CSVRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
@@ -422,14 +422,14 @@ namespace ChoETL
                                 }
                                 else
                                 {
-                                    for (int range = dnAttr.Minimum.CastTo<int>(); range <= dnAttr.Maximum.CastTo<int>(); range++)
+                                    for (int range = dnAttr.Minimum.CastTo<int>(); range < dnAttr.Maximum.CastTo<int>(); range++)
                                     {
                                         foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                                         {
                                             pt = pd.PropertyType.GetUnderlyingType();
                                             if (pt != typeof(object) && !pt.IsSimple() /*&& !typeof(IEnumerable).IsAssignableFrom(pt)*/)
                                             {
-                                                //DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, pd);
+                                                DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, pd, recordFieldConfigurations);
                                             }
                                             else
                                             {
@@ -1232,7 +1232,7 @@ namespace ChoETL
 
             if ((fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(IList<>) || typeof(IList).IsAssignableFrom(fieldType))
                 && !typeof(ArrayList).IsAssignableFrom(fieldType)
-                && minumum >= 0 && maximum >= 0 && minumum <= maximum)
+                && minumum >= 0 /*&& maximum >= 0 && minumum <= maximum*/)
             {
                 IndexMapInternal(fqn, fieldType, minumum, maximum,
                     field.GetFullyQualifiedMemberName(), field.GetPropertyDescriptor().GetDisplayName(), mapper);
@@ -1244,18 +1244,23 @@ namespace ChoETL
             string fullyQualifiedMemberName = null, string displayName = null,
             Action<ChoCSVRecordFieldConfigurationMap> mapper = null)
         {
-            if (_indexMapDict.ContainsKey(fieldName))
-                _indexMapDict.Remove(fieldName);
-            _indexMapDict.AddOrUpdate(fieldName, new
+            if ((fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(IList<>) || typeof(IList).IsAssignableFrom(fieldType))
+    && !typeof(ArrayList).IsAssignableFrom(fieldType)
+    && minumum >= 0 /*&& maximum >= 0 && minumum <= maximum*/)
             {
-                fieldType,
-                minumum,
-                maximum,
-                fieldName,
-                displayName,
-                mapper
-            });
 
+                if (_indexMapDict.ContainsKey(fieldName))
+                    _indexMapDict.Remove(fieldName);
+                _indexMapDict.AddOrUpdate(fieldName, new
+                {
+                    fieldType,
+                    minumum,
+                    maximum,
+                    fieldName,
+                    displayName,
+                    mapper
+                });
+            }
             WithFirstLineHeader();
         }
 
@@ -1296,7 +1301,7 @@ namespace ChoETL
                         CSVRecordFieldConfigurations.Remove(fc);
                     }
 
-                    for (int index = minumum; index <= maximum; index++)
+                    for (int index = minumum; index < maximum; index++)
                     {
                         int fieldPosition = 0;
                         fieldPosition = CSVRecordFieldConfigurations.Count > 0 ? CSVRecordFieldConfigurations.Max(f => f.FieldPosition) : 0;

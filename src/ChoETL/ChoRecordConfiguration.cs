@@ -9,6 +9,10 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
+#if !NETSTANDARD2_0
+using System.Windows.Data;
+#endif
+
 namespace ChoETL
 {
     [DataContract]
@@ -64,6 +68,11 @@ namespace ChoETL
             get;
             set;
         }
+        public Type SourceType
+        {
+            get;
+            set;
+        }
         [DataMember]
         public long NotifyAfter { get; set; }
 
@@ -100,6 +109,26 @@ namespace ChoETL
         {
             if (recordType == null)
                 return;
+
+            var tc = recordType.GetCustomAttribute(typeof(ChoTypeConverterAttribute)) as ChoTypeConverterAttribute;
+            if (tc != null)
+            {
+                var c = tc.CreateInstance();
+                if (c is IChoValueConverter)
+                    ChoTypeConverter.Global.Add(recordType, c as IChoValueConverter);
+                else if (c is TypeConverter)
+                    ChoTypeConverter.Global.Add(recordType, c as TypeConverter);
+#if !NETSTANDARD2_0
+                else if (c is IValueConverter)
+                    ChoTypeConverter.Global.Add(recordType, c as IValueConverter);
+#endif
+            }
+
+            var st = recordType.GetCustomAttribute(typeof(ChoSourceTypeAttribute)) as ChoSourceTypeAttribute;
+            if (st != null)
+            {
+                SourceType = st.Type;
+            }
 
             _recObject = new Lazy<object>(() => ChoActivator.CreateInstance(RecordType));
             ChoRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoRecordObjectAttribute>(recordType);

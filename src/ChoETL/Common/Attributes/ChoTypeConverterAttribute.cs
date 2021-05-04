@@ -86,7 +86,10 @@
             //else if (ChoType.HasConstructor(ConverterType, new object[] { String.Empty }))
             //    return ChoType.CreateInstance(ConverterType, new object[] { ParametersArray != null && ParametersArray.Length > 0 ? ParametersArray[0] : String.Empty });
             //else
+            if (ParametersArray == null || ParametersArray.Length == 0)
                 return ChoActivator.CreateInstance(ConverterType);
+            else
+                return ChoActivator.CreateInstance(ConverterType, ParametersArray);
         }
 
         #endregion Instance Members (Internal)
