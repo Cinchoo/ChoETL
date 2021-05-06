@@ -1751,7 +1751,7 @@ namespace ChoETL
             if (xml == null)
                 return xml;
 
-            return Regex.Replace(xml, @"\sxmlns[^""]+""[^""]+""", String.Empty);
+            return Regex.Replace(xml, @"\sxmlns[^""]+""[^""]*""", String.Empty);
         }
 
         public static StringReader AsReader(this string value)

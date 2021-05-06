@@ -1,0 +1,88 @@
+﻿{
+   "invoice": {
+      "issuer": {
+         "vatNumber": "888888888",
+         "country": "GR",
+         "branch": "1"
+      },
+      "counterpart": {
+         "vatNumber": "999999999",
+         "country": "GR",
+         "branch": "0",
+         "address": {
+            "postalCode": "12345",
+            "city": "TEST"
+         }
+      },
+      "invoiceHeader": {
+         "series": "A",
+         "aa": "101",
+         "issueDate": "2021-04-27",
+         "invoiceType": "1.1",
+         "currency": "EUR"
+      },
+      "paymentMethods": {
+         "paymentMethodDetails": {
+            "type": "3",
+            "amount": "1760.00",
+            "paymentMethodInfo": "Payment Method Info..."
+         }
+      },
+      "invoiceDetails": [
+         {
+            "lineNumber": "1",
+            "netValue": "1000.00",
+            "vatCategory": "1",
+            "vatAmount": "240.00",
+            "discountOption": "true",
+            "incomeClassification": {
+               "classificationType": "E3_561_001",
+               "classificationCategory": "category1_2",
+               "amount": "1000.00"
+            }
+         },
+        {
+          "lineNumber": "2",
+          "netValue": "500.00",
+          "vatCategory": "1",
+          "vatAmount": "120.00",
+          "discountOption": "true",
+          "incomeClassification": {
+            "classificationType": "E3_561_001",
+            "classificationCategory": "category1_3",
+            "amount": "500.00"
+          }
+        }
+      ],
+      "taxesTotals": {
+         "taxes": {
+            "taxType": "1",
+            "taxCategory": "2",
+            "underlyingValue": "500.00",
+            "taxAmount": "100.00"
+         }
+      },
+      "invoiceSummary": {
+         "totalNetValue": "1500.00",
+         "totalVatAmount": "360.00",
+         "totalWithheldAmount": "100.00",
+         "totalFeesAmount": "0.00",
+         "totalStampDutyAmount": "0.00",
+         "totalOtherTaxesAmount": "0.00",
+         "totalDeductionsAmount": "0.00",
+         "totalGrossValue": "1760.00",
+         "incomeClassification": [
+            {
+               "classificationType": "E3_561_001",
+               "classificationCategory": "category1_2",
+               "amount": "1000.00"
+            },
+            {
+               "classificationType": "E3_561_001",
+               "classificationCategory": "category1_3",
+               "amount": "500.00"
+            }
+         ]
+      }
+   }
+}

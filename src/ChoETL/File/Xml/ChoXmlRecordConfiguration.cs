@@ -209,6 +209,7 @@ namespace ChoETL
         }
 
         internal ChoXmlNamespaceTable XmlNamespaceTable { get; set; }
+        public bool UseXmlArray { get; set; }
 
         public readonly dynamic Context = new ChoDynamicObject();
 
@@ -1058,6 +1059,8 @@ namespace ChoETL
                     {
                         msg.AppendFormat(@" {0}=""{1}""", kvp.Key, kvp.Value);
                     }
+                    else if (String.Compare(kvp.Key, "xmlns", true) == 0)
+                        msg.AppendFormat(@" xmlns=""{1}""", kvp.Key, kvp.Value);
                     else
                         msg.AppendFormat(@" xmlns:{0}=""{1}""", kvp.Key, kvp.Value);
                 }

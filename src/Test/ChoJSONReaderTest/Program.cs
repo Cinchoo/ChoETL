@@ -5688,11 +5688,66 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 
         }
 
+        static void Json2Xml50()
+        {
+            StringBuilder xml = new StringBuilder();
+            using (var r = new ChoJSONReader("sample50.json"))
+            {
+                using (var w = new ChoXmlWriter(xml)
+                    .WithRootName("InvoicesDoc")
+                    .IgnoreNodeName()
+                    .WithXmlNamespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")
+                    .WithXmlNamespace("", "http://www.aade.gr/myDATA/invoice/v1.0")
+                    .WithXmlNamespace("icls", "https://www.aade.gr/myDATA/incomeClassificaton/v1.0")
+                    .WithXmlNamespace("ecls", "https://www.aade.gr/myDATA/expensesClassificaton/v1.0")
+                    .WithXmlNamespace("xsi:schemaLocation", "http://www.aade.gr/myDATA/invoice/v1.0/InvoicesDoc-v0.6.xsd")
+                    )
+                    w.Write(r.Select(r1 =>
+                    {
+                        foreach (var id in r1.invoice.invoiceDetails)
+                            id.incomeClassification.AddNamespace("icls", "https://www.aade.gr/myDATA/incomeClassificaton/v1.0", true);
+                        foreach (var ic in r1.invoice.invoiceSummary.incomeClassification)
+                            ic.AddNamespace("icls", "https://www.aade.gr/myDATA/incomeClassificaton/v1.0", true);
+
+                        return r1;
+                    }));
+
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.Dump());
+            }
+
+            Console.WriteLine(xml.ToString());
+        }
+
+        public class Customer2
+        {
+            [ChoJSONPath("$..CustomerID.value")]
+            public string CustomerID { get; set; }
+            [ChoJSONPath("$..CustomerCurrencyID.value")]
+            public string CustomerCurrencyID { get; set; }
+        }
+
+        static void JSONTest2()
+        {
+            string json = @"
+{
+    ""CustomerID"": {
+        ""value"": ""EXAMPLE""
+    },
+    ""CustomerCurrencyID"": {
+        ""value"": ""USD""
+    }
+}";
+
+            var rec = ChoJSONReader.DeserializeText<Customer2>(json).FirstOrDefault();
+            Console.WriteLine(rec.Dump());
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            ArrayToObjects();
+            JSONTest2();
             return;
+
             JSON2CSV9();
             //JSON2CSV9();
             ArrayToObjects();

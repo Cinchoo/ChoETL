@@ -240,6 +240,8 @@ namespace ChoETL
 
             var value = _kvpDict[oldKey];
             _kvpDict.Remove(oldKey);
+            if (value is ChoDynamicObject)
+                ((ChoDynamicObject)value).DynamicObjectName = newKey;
             _kvpDict.Add(newKey, value);
         }
 
@@ -1112,7 +1114,7 @@ namespace ChoETL
         }
 
         public string GetXml(string tag = null, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Empty, string nsPrefix = null,
-            bool emitDataType = false, string EOLDelimiter = null)
+            bool emitDataType = false, string EOLDelimiter = null, bool useXmlArray = false)
         {
             if (EOLDelimiter == null)
                 EOLDelimiter = Environment.NewLine;
@@ -1162,7 +1164,7 @@ namespace ChoETL
                     value = this[key];
                     var x = IsCDATA(key);
 
-                    GetXml(msg, value, key, nullValueHandling, nsPrefix, IsCDATA(key), emitDataType, EOLDelimiter: EOLDelimiter);
+                    GetXml(msg, value, key, nullValueHandling, nsPrefix, IsCDATA(key), emitDataType, EOLDelimiter: EOLDelimiter, useXmlArray: useXmlArray);
                 }
                 msg.AppendFormat("{0}</{1}>", EOLDelimiter, tag);
             }
@@ -1196,14 +1198,14 @@ namespace ChoETL
         }
 
         private void GetXml(StringBuilder msg, object value, string key, ChoNullValueHandling nullValueHandling, string nsPrefix = null, 
-            bool isCDATA = false, bool emitDataType = false, string EOLDelimiter = null)
+            bool isCDATA = false, bool emitDataType = false, string EOLDelimiter = null, bool useXmlArray = true)
         {
             if (EOLDelimiter == null)
                 EOLDelimiter = Environment.NewLine;
 
             if (value is ChoDynamicObject)
             {
-                msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(((ChoDynamicObject)value).GetXml(((ChoDynamicObject)value).NName, nullValueHandling, nsPrefix, EOLDelimiter: EOLDelimiter), EOLDelimiter));
+                msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(((ChoDynamicObject)value).GetXml(((ChoDynamicObject)value).NName, nullValueHandling, nsPrefix, EOLDelimiter: EOLDelimiter, useXmlArray: useXmlArray), EOLDelimiter));
             }
             else
             {
@@ -1220,18 +1222,23 @@ namespace ChoETL
                     }
                     else
                     {
-                        key = value is IList ? key.ToPlural() != key ? key.ToPlural() : key.Length > 1 && key.EndsWith("s", StringComparison.InvariantCultureIgnoreCase) ? key : "{0}s".FormatString(key) : key;
-                        msg.AppendFormat("{0}{1}", EOLDelimiter, Indent("<{0}>".FormatString(key), EOLDelimiter));
+                        if (useXmlArray)
+                        {
+                            key = value is IList ? key.ToPlural() != key ? key.ToPlural() : key.Length > 1 && key.EndsWith("s", StringComparison.InvariantCultureIgnoreCase) ? key : "{0}s".FormatString(key) : key;
+                            msg.AppendFormat("{0}{1}", EOLDelimiter, Indent("<{0}>".FormatString(key), EOLDelimiter));
+                        }
                         if (value is IList)
                         {
                             foreach (var collValue in ((IList)value).OfType<ChoDynamicObject>())
                             {
-                                msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(collValue.GetXml(collValue.NName == DefaultName ? key.ToSingular() : collValue.NName, nullValueHandling, nsPrefix, EOLDelimiter: EOLDelimiter), EOLDelimiter));
+                                msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(collValue.GetXml(collValue.NName == DefaultName ? (useXmlArray ? key.ToSingular() : key) : collValue.NName, nullValueHandling, nsPrefix, EOLDelimiter: EOLDelimiter, useXmlArray: useXmlArray), EOLDelimiter));
                             }
                         }
                         else
-                            msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(ChoUtility.XmlSerialize(value), EOLDelimiter, 2));
-                        msg.AppendFormat("{0}{1}", EOLDelimiter, Indent("</{0}>".FormatString(key), EOLDelimiter));
+                            msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(ChoUtility.XmlSerialize(value, null, EOLDelimiter, nullValueHandling, nsPrefix, emitDataType, useXmlArray), EOLDelimiter, 2));
+
+                        if (useXmlArray)
+                            msg.AppendFormat("{0}{1}", EOLDelimiter, Indent("</{0}>".FormatString(key), EOLDelimiter));
                     }
                 }
                 else
@@ -1510,22 +1517,26 @@ namespace ChoETL
         }
 
         private string _prefix = null;
-        public ChoDynamicObject AddNamespace(string prefix, string uri)
+        public ChoDynamicObject AddNamespace(string prefix, string uri, bool childrenOnly = false)
         {
             ChoGuard.ArgumentNotNullOrEmpty(prefix, nameof(prefix));
             ChoGuard.ArgumentNotNullOrEmpty(uri, nameof(uri));
 
             SetAttribute("@xmlns:{0}".FormatString(prefix), uri);
-            AddPrefixNS(prefix);
+            AddPrefixNS(prefix, childrenOnly);
             return this;
         }
 
-        private void AddPrefixNS(string prefix)
+        private void AddPrefixNS(string prefix, bool childrenOnly = false)
         {
-            _prefix = prefix;
             _kvpDict = PrefixNS(prefix, _kvpDict);
-            if (!_prefix.IsNullOrWhiteSpace())
-                DynamicObjectName = "{0}:{1}".FormatString(prefix, DynamicObjectName.IndexOf(":") > 0 ? DynamicObjectName.Substring(DynamicObjectName.IndexOf(":") + 1) : DynamicObjectName);
+
+            if (!childrenOnly)
+            {
+                _prefix = prefix;
+                if (!_prefix.IsNullOrWhiteSpace())
+                    DynamicObjectName = "{0}:{1}".FormatString(prefix, DynamicObjectName.IndexOf(":") > 0 ? DynamicObjectName.Substring(DynamicObjectName.IndexOf(":") + 1) : DynamicObjectName);
+            }
         }
 
         private object PrefixNS(string prefix, object value)

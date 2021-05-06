@@ -362,7 +362,8 @@ namespace ChoETL
                                     }
                                     else
                                     {
-                                        innerXml1 = ChoUtility.XmlSerialize(record, null, eolDelimiter, Configuration.NullValueHandling).RemoveXmlNamespaces();
+                                        innerXml1 = ChoUtility.XmlSerialize(record, null, eolDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix, Configuration.EmitDataType,
+                                            useXmlArray: Configuration.UseXmlArray).RemoveXmlNamespaces();
                                     }
 
                                     if (!Configuration.IgnoreNodeName && !Configuration.NodeName.IsNullOrWhiteSpace())
@@ -811,7 +812,8 @@ namespace ChoETL
                         else if (config.NullValueHandling == ChoNullValueHandling.Default)
                         {
                             rec = ChoActivator.CreateInstance(config.RecordType);
-                            innerXml = ChoUtility.XmlSerialize(rec, null, EOLDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix);
+                            innerXml = ChoUtility.XmlSerialize(rec, null, EOLDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix, Configuration.EmitDataType,
+                                useXmlArray: Configuration.UseXmlArray);
                             if (_beginNSTagRegex.Match(innerXml1).Success)
                             {
                                 innerXml = _beginNSTagRegex.Replace(innerXml, delegate (Match m)
@@ -869,7 +871,8 @@ namespace ChoETL
                     }
                     else
                     {
-                        innerXml1 = ChoUtility.XmlSerialize(kvp.Value, null, EOLDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix, Configuration.EmitDataType);
+                        innerXml1 = ChoUtility.XmlSerialize(kvp.Value, null, EOLDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix, Configuration.EmitDataType,
+                            useXmlArray: Configuration.UseXmlArray);
 
                         if (!kvp.Value.GetType().IsArray && !typeof(IList).IsAssignableFrom(kvp.Value.GetType()))
                         {
@@ -1135,7 +1138,8 @@ namespace ChoETL
 
             try
             {
-                XmlTextReader txtReader = new XmlTextReader(strXml, XmlNodeType.Element, parserContext);
+                //strXml = strXml.Replace("<ecls:issuer>", @"<ecls:issuer xmlns:ecls=""https://www.aade.gr/myDATA/incomeClassificaton/v1.0"">");
+                var txtReader = new XmlTextReader(strXml, XmlNodeType.Element, parserContext);
                 es = new XElement[] { XElement.Load(txtReader) };
             }
             catch

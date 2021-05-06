@@ -1288,7 +1288,7 @@ namespace ChoETL
         }
 
         public static string XmlSerialize(object target, XmlWriterSettings xws = null, string separator = null, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore,
-            string nsPrefix = null, bool emitDataType = false)
+            string nsPrefix = null, bool emitDataType = false, bool useXmlArray = false)
         {
             if (xws == null)
             {
@@ -1311,7 +1311,7 @@ namespace ChoETL
             {
                 if (((IList)target).Count > 0)
                 {
-                    var xml = ((IList)target).OfType<object>().Select(o => XmlSerialize(o, xws, separator, nullValueHandling, nsPrefix, emitDataType)).Aggregate((current, next) => "{0}{1}{2}".FormatString(current, separator, next));
+                    var xml = ((IList)target).OfType<object>().Select(o => XmlSerialize(o, xws, separator, nullValueHandling, nsPrefix, emitDataType, useXmlArray)).Aggregate((current, next) => "{0}{1}{2}".FormatString(current, separator, next));
                     //return $"<dynamics>{xml}</dynamics>";
                     return xml;
                 }
@@ -1323,7 +1323,7 @@ namespace ChoETL
             {
                 if (target is ChoDynamicObject)
                 {
-                    xtw.WriteRaw(((ChoDynamicObject)target).GetXml(null, nullValueHandling, nsPrefix, emitDataType, EOLDelimiter: separator));
+                    xtw.WriteRaw(((ChoDynamicObject)target).GetXml(null, nullValueHandling, nsPrefix, emitDataType, EOLDelimiter: separator, useXmlArray: useXmlArray));
                 }
                 else
                 {
