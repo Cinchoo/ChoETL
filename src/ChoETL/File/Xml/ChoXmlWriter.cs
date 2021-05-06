@@ -458,7 +458,10 @@ namespace ChoETL
 
         public ChoXmlWriter<T> WithXmlNamespace(string prefix, string uri)
         {
-            Configuration.NamespaceManager.AddNamespace(prefix, uri);
+            if (String.Compare(prefix, "xmlns") == 0)
+                Configuration.NamespaceManager.AddNamespace("", uri);
+            else
+                Configuration.NamespaceManager.AddNamespace(prefix, uri);
 
             return this;
         }
@@ -468,7 +471,7 @@ namespace ChoETL
             if (ns != null)
             {
                 foreach (var kvp in ns)
-                    Configuration.NamespaceManager.AddNamespace(kvp.Key, kvp.Value);
+                    WithXmlNamespace(kvp.Key, kvp.Value);
             }
 
             return this;
