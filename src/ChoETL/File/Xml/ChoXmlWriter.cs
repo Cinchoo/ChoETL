@@ -456,6 +456,11 @@ namespace ChoETL
             return this;
         }
 
+        public ChoXmlWriter<T> WithXmlNamespace(string uri)
+        {
+            return WithXmlNamespace("", uri);
+        }
+
         public ChoXmlWriter<T> WithXmlNamespace(string prefix, string uri)
         {
             if (String.Compare(prefix, "xmlns") == 0)

@@ -561,6 +561,11 @@ namespace ChoETL
             return this;
         }
 
+        public ChoXmlReader<T> WithXmlNamespace(string uri)
+        {
+            return WithXmlNamespace("", uri);
+        }
+
         public ChoXmlReader<T> WithXmlNamespace(string prefix, string uri)
         {
             if (String.Compare(prefix, "xmlns") == 0)
