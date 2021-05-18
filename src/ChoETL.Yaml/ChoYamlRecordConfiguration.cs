@@ -659,7 +659,9 @@ namespace ChoETL
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null,
             string formatText = null, bool isArray = true, string nullValue = null, Type recordType = null,
-            Type subRecordType = null, Func<IDictionary<string, object>, Type> fieldTypeSelector = null)
+            Type subRecordType = null, Func<IDictionary<string, object>, Type> fieldTypeSelector = null,
+            Func<object, Type> itemRecordTypeSelector = null
+            )
         {
             ChoGuard.ArgumentNotNull(recordType, nameof(recordType));
 
@@ -695,6 +697,7 @@ namespace ChoETL
                     IsArray = isArray,
                     NullValue = nullValue,
                     FieldTypeSelector = fieldTypeSelector,
+                    ItemRecordTypeSelector = itemRecordTypeSelector,
                 };
                 if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
                 {

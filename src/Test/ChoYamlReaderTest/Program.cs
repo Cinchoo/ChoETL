@@ -785,11 +785,170 @@ config_two:
 
         }
 
+        static void Test2()
+        {
+            string yaml = @"
+gc:
+  - clean:
+      - location: blah blah
+        pattern: blah
+      - location: blah blah
+        pattern: blah
+    dependencies:
+      location: blah
+  - solution:
+      results: blah
+      framework: blah
+    test:
+      configuration: blah
+      results: blah blah
+";
+
+            using (var r = ChoYamlReader.LoadText(yaml))
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        [ChoYamlRecordObject]
+        public class Root142
+        {
+            [ChoYamlRecordField(FieldName = "version")]
+            public string Version { get; set; }
+
+            [ChoYamlRecordField(FieldName = "test")]
+            public Tester test { get; set; }
+
+            [ChoYamlRecordField(FieldName = "test2")]
+            public Tester test2 { get; set; }
+
+            [ChoYamlRecordField(FieldName = "config")]
+            public Config Exas { get; set; }
+
+        }
+
+        public class Tester
+        {
+            [ChoYamlRecordField(FieldName = "cnf.assit")]
+            public string Assit { get; set; }
+
+            [ChoYamlRecordField(FieldName = "cnf.language")]
+            public string Lang { get; set; } = "English";
+
+            [ChoYamlRecordField(FieldName = "cnf.enable")]
+            public string Layout { get; set; } = "model.two";
+
+        }
+
+        public class Config
+        {
+            [ChoYamlRecordField(FieldName = "cnf.assit")]
+            public string Assit { get; set; }
+
+            [ChoYamlRecordField(FieldName = "cnf.language")]
+            public string Lang { get; set; } = "English";
+
+            [ChoYamlRecordField(FieldName = "cnf.enable")]
+            public string Model { get; set; } = "model.five";
+        }
+
+        static void Issue142()
+        {
+            string yaml = @"
+version: 1.00
+
+test:
+    cnf.assit: Test1
+    cnf.language: English1
+    cnf.enable: Default1
+
+test2:
+    cnf.assit: Test2
+    cnf.language: English2
+    cnf.enable: Default2
+
+config:
+    cnf.assit: CCC
+    cnf.language: English
+    cnf.enable: Default
+";
+            ChoYamlRecordConfiguration config = new ChoYamlRecordConfiguration();
+            config.ErrorMode = ChoErrorMode.ReportAndContinue;
+            config.Encoding = Encoding.UTF8;
+
+            using (var parser = ChoYamlReader<Root142>.LoadText(yaml, config))
+            {
+                foreach (var e in parser)
+                {
+                    Console.WriteLine(e.Dump());
+                }
+            }
+        }
+
+        public class Auto
+        {
+            public string Description { get; set; }
+            public string Name { get; set; }
+            public List<IVehicle> Vehicles { get; set; }
+        }
+
+        public interface IVehicle
+        {
+            string Type { get; set; }
+            string Make { get; set; }
+        }
+
+        public class Car : IVehicle
+        {
+            public string Type { get; set; }
+            public string Make { get; set; }
+        }
+
+        public class Truck : IVehicle
+        {
+            public string Type { get; set; }
+            public string Make { get; set; }
+        }
+
+        static void InterfaceTest()
+        {
+            string yaml = @"
+Description: All automobiles
+Name: All autos
+Vehicles: 
+    - type: Car
+      make: BMW
+    - type: Truck
+      make: Volvo
+";
+
+            //ChoYamlReader.DeserializeText<Auto>(yaml, configuration:
+            //    new ChoYamlRecordConfiguration().Map<Auto, Auto.F>(f => f.Vehicles, m => m))
+            using (var parser = ChoYamlReader<Auto>.LoadText(yaml)
+                .WithField(f => f.Vehicles, itemRecordTypeSelector: (o) =>
+                {
+                    dynamic rec = ChoDynamicObject.New(o as IDictionary<object, object>);
+                    if (rec.type == "Car")
+                        return typeof(Car);
+                    else
+                        return typeof(Truck);
+                })
+                )
+            {
+                foreach (var e in parser)
+                {
+                    Console.WriteLine(e.Dump());
+                }
+            }
+
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            SelectiveNodeLoad();
+            InterfaceTest();
         }
     }
 }

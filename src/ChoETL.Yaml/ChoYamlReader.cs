@@ -669,7 +669,7 @@ namespace ChoETL
         public ChoYamlReader<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoYamlRecordFieldConfigurationMap> mapper)
         {
             ClearFieldsIf();
-            
+
             if (!field.GetMemberName().IsNullOrWhiteSpace())
                 Configuration.Map(field.GetMemberName(), mapper);
             return this;
@@ -680,23 +680,29 @@ namespace ChoETL
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null,
-            string nullValue = null, Func<IDictionary<string, object>, Type> fieldTypeSelector = null)
+            string nullValue = null, Func<IDictionary<string, object>, Type> fieldTypeSelector = null,
+            Func<object, Type> itemRecordTypeSelector = null
+           )
         {
             if (field == null)
                 return this;
 
             return WithField(field.GetMemberName(), yamlPath, field.GetPropertyType(), fieldValueTrimOption, fieldName, valueConverter, itemConverter,
-                customSerializer, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, true, nullValue, null, fieldTypeSelector);
+                customSerializer, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, true, nullValue, null, fieldTypeSelector,
+                itemRecordTypeSelector);
         }
 
         public ChoYamlReader<T> WithField(string name, string yamlPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null, bool isArray = true,
-            string nullValue = null, Func<IDictionary<string, object>, Type> fieldTypeSelector = null)
+            string nullValue = null, Func<IDictionary<string, object>, Type> fieldTypeSelector = null,
+            Func<object, Type> itemRecordTypeSelector = null
+            )
         {
             return WithField(name, yamlPath, fieldType, fieldValueTrimOption, fieldName, valueConverter, itemConverter,
-                customSerializer, defaultValue, fallbackValue, null, formatText, isArray, nullValue, null, fieldTypeSelector);
+                customSerializer, defaultValue, fallbackValue, null, formatText, isArray, nullValue, null, fieldTypeSelector,
+                itemRecordTypeSelector);
         }
 
         private ChoYamlReader<T> WithField(string name, string yamlPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
@@ -704,7 +710,9 @@ namespace ChoETL
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null,
             string formatText = null, bool isArray = true, string nullValue = null,
-            Type subRecordType = null, Func<IDictionary<string, object>, Type> fieldTypeSelector = null)
+            Type subRecordType = null, Func<IDictionary<string, object>, Type> fieldTypeSelector = null,
+            Func<object, Type> itemRecordTypeSelector = null
+            )
         {
             if (!name.IsNullOrEmpty())
             {
@@ -712,7 +720,7 @@ namespace ChoETL
 
                 Configuration.WithField(name, yamlPath, fieldType, fieldValueTrimOption, fieldName,
                     valueConverter, itemConverter, customSerializer, defaultValue, fallbackValue, fullyQualifiedMemberName, formatText,
-                    isArray, nullValue, typeof(T), subRecordType, fieldTypeSelector);
+                    isArray, nullValue, typeof(T), subRecordType, fieldTypeSelector, itemRecordTypeSelector);
             }
             return this;
         }

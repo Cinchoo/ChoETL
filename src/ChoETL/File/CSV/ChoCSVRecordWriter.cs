@@ -499,7 +499,7 @@ namespace ChoETL
                         // match using FieldName
                         Configuration.PIDict.TryGetValue(fieldConfig.FieldName, out pi);
                     }
-                    else
+                    if (pi == null)
                     {
                         // otherwise match usign the property name
                         Configuration.PIDict.TryGetValue(kvp.Key, out pi);

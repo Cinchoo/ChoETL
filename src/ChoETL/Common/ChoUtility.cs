@@ -2359,8 +2359,21 @@ namespace ChoETL
             }
             else
             {
+                bool hasToStringMethod = false;
+                try
+                {
+                    if (target.GetType().GetMethod("ToString", BindingFlags.Instance | BindingFlags.DeclaredOnly | BindingFlags.Public) == null)
+                        hasToStringMethod = false;
+                    else
+                        hasToStringMethod = true;
+                }
+                catch (AmbiguousMatchException)
+                {
+                    hasToStringMethod = true;
+                }
+
                 //Check if ToString is overridden
-                if (target.GetType().IsAnonymousType() || target.GetType().GetMethod("ToString", BindingFlags.Instance | BindingFlags.DeclaredOnly | BindingFlags.Public) == null)
+                if (target.GetType().IsAnonymousType() || !hasToStringMethod)
                 {
                     BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Instance;
                     ChoStringMsgBuilder msg = new ChoStringMsgBuilder(String.Format("{0} State", target.GetType().IsAnonymousType() ? "Anonymous Type" : target.GetType().FullName));

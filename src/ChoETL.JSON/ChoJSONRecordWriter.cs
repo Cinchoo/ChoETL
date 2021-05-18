@@ -504,7 +504,7 @@ namespace ChoETL
                             // match using FieldName
                             Configuration.PIDict.TryGetValue(fieldConfig.FieldName, out pi);
                         }
-                        else
+                        if (pi == null)
                         {
                             // otherwise match usign the property name
                             Configuration.PIDict.TryGetValue(kvp.Key, out pi);
@@ -713,7 +713,11 @@ namespace ChoETL
                                 fieldText = String.Empty;
                             else
                             {
-                                if (fieldConfig.NullValue == null)
+                                var nullValue = fieldConfig.NullValue;
+                                if (nullValue == null)
+                                    nullValue = Configuration.NullValue;
+
+                                if (nullValue == null)
                                 {
                                     if (fieldConfig.FieldType == null || fieldConfig.FieldType == typeof(object))
                                         fieldText = !Configuration.IsArray(fieldConfig) ? "null" : "[]";
@@ -721,7 +725,7 @@ namespace ChoETL
                                         fieldText = !typeof(IList).IsAssignableFrom(fieldConfig.FieldType) ? "null" : "[]";
                                 }
                                 else
-                                    fieldText = fieldConfig.NullValue;
+                                    fieldText = "\"{0}\"".FormatString(nullValue);
                             }
                         }
                         else if (ft == typeof(string) || ft == typeof(char))

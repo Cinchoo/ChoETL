@@ -5698,6 +5698,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                     .IgnoreNodeName()
                     .WithXmlNamespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")
                     .WithXmlNamespace("", "http://www.aade.gr/myDATA/invoice/v1.0")
+                    .WithXmlNamespace("", "http://www.aade.gr/myDATA/invoice/v1.0")
                     .WithXmlNamespace("icls", "https://www.aade.gr/myDATA/incomeClassificaton/v1.0")
                     .WithXmlNamespace("ecls", "https://www.aade.gr/myDATA/expensesClassificaton/v1.0")
                     .WithXmlNamespace("xsi:schemaLocation", "http://www.aade.gr/myDATA/invoice/v1.0/InvoicesDoc-v0.6.xsd")
@@ -5745,7 +5746,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            JSONTest2();
+            ConditionalDeserializationOfItems();
             return;
 
             JSON2CSV9();

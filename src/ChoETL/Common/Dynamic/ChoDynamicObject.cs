@@ -777,13 +777,30 @@ namespace ChoETL
             }
         }
 
+        public static ChoDynamicObject New(IDictionary<object, object> dict)
+        {
+            Dictionary<string, object> dict1 = new Dictionary<string, object>();
+            if (dict != null)
+            {
+                foreach (var kvp in dict)
+                {
+                    if (!dict1.ContainsKey(kvp.Key.ToNString()))
+                        dict1.Add(kvp.Key.ToNString(), kvp.Value);
+                }
+            }
+            return new ChoDynamicObject(dict1);
+        }
+
         public static ChoDynamicObject New(Func<IEnumerable<KeyValuePair<string, object>>> func)
         {
             Dictionary<string, object> dict = new Dictionary<string, object>();
             if (func != null)
             {
                 foreach (var kvp in func())
-                    dict.Add(kvp.Key, kvp.Value);
+                {
+                    if (!dict.ContainsKey(kvp.Key))
+                        dict.Add(kvp.Key, kvp.Value);
+                }
             }
             return new ChoDynamicObject(dict);
         }

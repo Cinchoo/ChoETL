@@ -936,7 +936,7 @@ namespace ChoETL
                         // match using FieldName
                         Configuration.PIDict.TryGetValue(fieldConfig.FieldName, out pi);
                     }
-                    else
+                    if (pi == null)
                     {
                         // otherwise match usign the property name
                         Configuration.PIDict.TryGetValue(kvp.Key, out pi);
@@ -1375,6 +1375,13 @@ namespace ChoETL
         {
             object value = null;
             type = type == null ? fieldConfig.FieldType : type;
+
+            if (fieldConfig.ItemRecordTypeSelector != null || typeof(IChoRecordTypeSelector).IsAssignableFrom(RecordType))
+            {
+                var rt = RaiseRecordTypeSelector(config, jtoken);
+                if (rt != null)
+                    type = rt;
+            }
 
             try
             {

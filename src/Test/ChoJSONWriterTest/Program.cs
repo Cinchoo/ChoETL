@@ -1299,10 +1299,37 @@ namespace ChoJSONWriterTest
             Console.WriteLine(json.ToString());
         }
 
+        static void CSV2JsonIssue143()
+        {
+            string csv = @"Id, First Name
+1, Tom
+2, ";
+
+            StringBuilder json = new StringBuilder();
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader())
+            {
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.Dump());
+                //return;
+                using (var w = new ChoJSONWriter(json)
+                    .IgnoreFieldValueMode(ChoIgnoreFieldValueMode.None)
+                    .Configure(c => c.DefaultArrayHandling = false)
+                    //.Configure(c => c.NullValue = "")
+                    )
+                {
+                    w.Write(r);
+                }
+            }
+
+            Console.WriteLine(json.ToString());
+
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            IgnoreNestedProperty();
+            CSV2JsonIssue143();
 
             return;
 

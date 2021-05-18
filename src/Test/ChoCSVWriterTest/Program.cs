@@ -1827,11 +1827,40 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             Console.WriteLine(csv.ToString());
         }
 
+        public class Resource
+        {
+            [ChoCSVRecordField]
+            public int Id { get; set; }
+            [ChoCSVRecordField]
+            public string Name { get; set; }
+            [ChoCSVRecordField(Size = 10, FieldValueJustification = ChoFieldValueJustification.Right, FillChar = '^', QuoteField = true)]
+            public string Zip { get; set; }
+        }
+
+        static void SizeAndAlignTest()
+        {
+            StringBuilder csv = new StringBuilder();
+
+            using (var w = new ChoCSVWriter<Resource>(csv)
+                .WithFirstLineHeader()
+                )
+            {
+                w.Write(new Resource
+                {
+                    Id = 1,
+                    Name = "Mark",
+                    Zip = "10010"
+                });
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
         static void Main(string[] args)
         {
             //AppDomain.CurrentDomain.FirstChanceException += (sender, eventArgs) => { Console.WriteLine("FirstChanceException: " + eventArgs.Exception.ToString()); };
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            ArrayWriteTest();
+            SizeAndAlignTest();
             //TestDictionary();
             return;
 

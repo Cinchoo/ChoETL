@@ -631,7 +631,7 @@ namespace ChoETL
                         // match using FieldName
                         Configuration.PIDict.TryGetValue(fieldConfig.FieldName, out pi);
                     }
-                    else
+                    if (pi == null)
                     {
                         // otherwise match usign the property name
                         Configuration.PIDict.TryGetValue(kvp.Key, out pi);
@@ -1009,7 +1009,7 @@ namespace ChoETL
 
             if (fieldConfig.ItemRecordTypeSelector != null || typeof(IChoRecordTypeSelector).IsAssignableFrom(RecordType))
             {
-                var rt = RaiseRecordTypeSelector(config, value);
+                var rt = RaiseRecordTypeSelector(config, yamlNode);
                 if (rt != null)
                     type = rt;
             }
@@ -1021,7 +1021,7 @@ namespace ChoETL
             catch
             {
                 if (fieldConfig.ItemConverter != null || typeof(IChoItemConvertable).IsAssignableFrom(RecordType))
-                    value = RaiseItemConverter(config, value);
+                    value = RaiseItemConverter(config, yamlNode);
                 else
                     throw;
             }

@@ -110,12 +110,31 @@ namespace ChoETL
                 {
                     if (pd.Attributes.OfType<DefaultValueAttribute>().Any())
                         property.DefaultValue = pd.Attributes.OfType<DefaultValueAttribute>().First().Value;
-                    if (pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any())
-                        property.Order = pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().First().Order;
+                    if (pd.Attributes.OfType<ChoFileRecordFieldAttribute>().Any())
+                    {
+                        var jp = pd.Attributes.OfType<ChoFileRecordFieldAttribute>().First();
+
+                        property.Order = jp.Order;
+                        property.PropertyName = jp.FieldName;
+                    }
                     else if (pd.Attributes.OfType<DisplayAttribute>().Any())
-                        property.Order = pd.Attributes.OfType<DisplayAttribute>().First().Order;
+                    {
+                        var jp = pd.Attributes.OfType<DisplayAttribute>().First();
+
+                        property.Order = jp.Order;
+                        if (!jp.ShortName.IsNullOrWhiteSpace())
+                            property.PropertyName = jp.ShortName.Trim();
+                        else if (!jp.Name.IsNullOrWhiteSpace())
+                            property.PropertyName = jp.Name.Trim();
+                    }
                     else if (pd.Attributes.OfType<ColumnAttribute>().Any())
-                        property.Order = pd.Attributes.OfType<ColumnAttribute>().First().Order;
+                    {
+                        var jp = pd.Attributes.OfType<ColumnAttribute>().First();
+
+                        property.Order = jp.Order;
+                        if (!jp.Name.IsNullOrWhiteSpace())
+                            property.PropertyName = jp.Name.Trim();
+                    }
 
                     if (pd.Attributes.OfType<JsonPropertyAttribute>().Any())
                     {
