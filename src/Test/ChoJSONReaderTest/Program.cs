@@ -5507,17 +5507,6 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
     ],
     [
         1618170540000,
-        ""59595.05000000"",
-        ""59669.81000000"",
-        ""59564.22000000"",
-        ""59630.16000000"",
-        ""27.45082600"",
-        1618170599999,
-        ""1636424.61486602"",
-        1066,
-        ""10.24907000"",
-        ""610941.51532090"",
-        ""0""
     ]
 ]";
 
@@ -5743,15 +5732,72 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             var rec = ChoJSONReader.DeserializeText<Customer2>(json).FirstOrDefault();
             Console.WriteLine(rec.Dump());
         }
+
+        public class PropertyModel
+        {
+            public string Name { get; set; }
+            public bool IsConfigProperty { get; set; }
+            public bool DisplayProperty { get; set; }
+            public string Default { get; set; }
+        }
+
+        static void SerializeZeroToNullIssue()
+        {
+            string json = @"
+{
+  ""name"":""Some name"",
+  ""isConfigProperty"":true,
+  ""displayProperty"":false,
+  ""default"":""0""
+}";
+
+            using (var r = ChoJSONReader<PropertyModel>.LoadText(json)
+                .UseJsonSerialization()
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        public class Metadata
+        {
+            public string id { get; set; }
+            public string uri { get; set; }
+            public string type { get; set; }
+        }
+
+        public class Result51
+        {
+            public Metadata metadata { get; set; }
+            public string ID { get; set; }
+            public string Value1 { get; set; }
+            public string Value2 { get; set; }
+            public string Value3 { get; set; }
+        }
+
+        static void ReadJsonOneItemAtATime()
+        {
+            using (var r = new ChoJSONReader<Result51>("sample51.json")
+                .WithJSONPath("$..d.results")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            ConditionalDeserializationOfItems();
+            ArrayToObjects();
+            return;
+
+            ReadJsonOneItemAtATime();
             return;
 
             JSON2CSV9();
             //JSON2CSV9();
-            ArrayToObjects();
             //DeserializeInnerArrayToObjects();
 
             //CreateLargeJSONFile();

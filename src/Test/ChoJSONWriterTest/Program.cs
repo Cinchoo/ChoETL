@@ -1307,6 +1307,7 @@ namespace ChoJSONWriterTest
 
             StringBuilder json = new StringBuilder();
             using (var r = ChoCSVReader.LoadText(csv)
+                .WithMaxScanRows(1)
                 .WithFirstLineHeader())
             {
                 //foreach (var rec in r)
@@ -1314,8 +1315,9 @@ namespace ChoJSONWriterTest
                 //return;
                 using (var w = new ChoJSONWriter(json)
                     .IgnoreFieldValueMode(ChoIgnoreFieldValueMode.None)
-                    .Configure(c => c.DefaultArrayHandling = false)
+                    //.Configure(c => c.DefaultArrayHandling = false)
                     //.Configure(c => c.NullValue = "")
+                    .WithMaxScanNodes(1)
                     )
                 {
                     w.Write(r);

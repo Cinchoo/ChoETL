@@ -2293,6 +2293,22 @@ namespace ChoETL
             return ToStringEx(target);
         }
 
+        private static string GetMemberType(object target, string name, object value)
+        {
+            if (value != null)
+                return value.GetType().Name;
+
+            if (target is ChoDynamicObject)
+            {
+                var dobj = target as ChoDynamicObject;
+                var mt = dobj.GetMemberType(name);
+                if (mt != null)
+                    return mt.Name;
+            }
+
+            return "UNKNOWN";
+        }
+
         public static string ToStringEx(this object target)
         {
             if (target == null) return String.Empty;
@@ -2328,7 +2344,7 @@ namespace ChoETL
                                     object kvpKey = valueType.GetProperty("Key").GetValue(item, null);
                                     object kvpValue = valueType.GetProperty("Value").GetValue(item, null);
                                     arrMsg.AppendFormat("Key: {0} [Type: {2}]{1}", ToStringEx(kvpKey), Environment.NewLine, kvpKey == null ? "UNKNOWN" : kvpKey.GetType().Name);
-                                    arrMsg.AppendFormat("Value: {0} [Type: {2}]{1}", ToStringEx(kvpValue), Environment.NewLine, kvpValue == null ? "UNKNOWN" : kvpValue.GetType().Name);
+                                    arrMsg.AppendFormat("Value: {0} [Type: {2}]{1}", ToStringEx(kvpValue), Environment.NewLine, GetMemberType(target, kvpKey.ToNString(), kvpValue)); // ( "UNKNOWN" ) : kvpValue.GetType().Name);
                                     count++;
                                     continue;
                                 }

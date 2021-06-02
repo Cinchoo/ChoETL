@@ -10,4 +10,8 @@
     <ProjectReference Include="..\..\ChoETL.Parquet\ChoETL.Parquet.csproj" />
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="COPY /Y $(ProjectDir)*.json $(TargetDir)&#xD;&#xA;REM COPY /Y $(ProjectDir)*.csv $(TargetDir)" />
+  </Target>
+
 </Project>

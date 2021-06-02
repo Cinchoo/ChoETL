@@ -136,7 +136,13 @@ namespace ChoETL
                 foreach (var rec in _records)
                 {
                     if (ft == typeof(DateTime))
-                        fv.Add(new DateTimeOffset(rec[key], TimeSpan.Zero));
+                    {
+                        //fv.Add(new DateTimeOffset(rec[key], TimeSpan.Zero));
+                        DateTime dt = rec[key];
+                        dt = DateTime.SpecifyKind(dt, DateTimeKind.Local);
+                        DateTimeOffset dto = dt;
+                        fv.Add(dto);
+                    }
                     else if (ft == typeof(ChoCurrency))
                     {
                         var curr = (ChoCurrency)rec[key];
@@ -574,6 +580,13 @@ namespace ChoETL
                                 else
                                     kvp.Value.FieldType = fieldValue.GetType();
                             }
+                        }
+                        else if (kvp.Value.FieldType == typeof(object))
+                        {
+                            var dobj = rec as ChoDynamicObject;
+                            var ft = dobj.GetMemberType(kvp.Key);
+                            if (ft != null)
+                                kvp.Value.FieldType = ft;
                         }
                     }
                     else

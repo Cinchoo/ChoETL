@@ -112,6 +112,12 @@ namespace ChoETL
                     newRec.Add(kvp.Key, kvp.Value.CastObjectTo(recTypes[kvp.Key]));
                 else
                     newRec.Add(kvp.Key, typeof(ChoDynamicObject));
+
+                if (kvp.Value == null)
+                {
+                    var dobj = newRec as ChoDynamicObject;
+                    dobj.SetMemberType(kvp.Key, recTypes[kvp.Key]);
+                }
             }
             return newRec;
         }

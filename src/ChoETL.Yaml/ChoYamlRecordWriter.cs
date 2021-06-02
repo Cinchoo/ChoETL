@@ -362,6 +362,13 @@ namespace ChoETL
                                     kvp.Value.FieldType = ElementType;
                             }
                         }
+                        else if (kvp.Value.FieldType == typeof(object))
+                        {
+                            var dobj = rec as ChoDynamicObject;
+                            var ft1 = dobj.GetMemberType(kvp.Key);
+                            if (ft1 != null)
+                                kvp.Value.FieldType = ft1;
+                        }
                     }
                     else
                     {
