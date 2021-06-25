@@ -1022,9 +1022,14 @@ namespace ChoETL
                                     if (objs.Count() == ((IList)fieldValue).Count && firstName != null
                                         && objs.All(o => o.DynamicObjectName == firstName))
                                     {
-                                        string key1 = firstName.ToPlural();
-                                        if (key1 == firstName)
-                                            key1 = "{0}s".FormatString(firstName);
+                                        string key1 = firstName;
+
+                                        if (!Configuration.IsTurnOffPluralization(fieldConfig))
+                                        {
+                                            key1 = key1.ToPlural();
+                                            if (key1 == firstName)
+                                                key1 = "{0}s".FormatString(firstName);
+                                        }
                                         dict.ConvertNSetMemberValue(key1, kvp.Value, ref fieldValue, Configuration.Culture);
                                     }
                                     else

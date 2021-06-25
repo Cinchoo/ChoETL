@@ -1,0 +1,22 @@
+﻿<Root>
+	<Transaction>
+		<JID>1</JID>
+		<TransactionID>0005932053</TransactionID>
+		<Period>5</Period>
+	</Transaction>
+	<Transaction>
+		<JID>1</JID>
+		<TransactionID>0005932054</TransactionID>
+		<Period>8</Period>
+	</Transaction>
+	<Transaction>
+		<JID>2</JID>
+		<TransactionID>0005932053</TransactionID>
+		<Period>2</Period>
+	</Transaction>
+	<Transaction>
+		<JID>2</JID>
+		<TransactionID>0005932053</TransactionID>
+		<Period>4</Period>
+	</Transaction>
+</Root>

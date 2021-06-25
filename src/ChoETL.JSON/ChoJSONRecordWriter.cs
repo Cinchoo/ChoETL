@@ -751,7 +751,15 @@ namespace ChoETL
                         else if (ft.IsNumeric())
                             fieldText = fieldValue.ToString();
                         else
+                        {
+                            bool isArray = Configuration.IsArray(fieldConfig);
+                            if (!(fieldValue is IList) && isArray)
+                            {
+                                fieldValue = new object[] { fieldValue };
+                            }
+
                             isSimple = false;
+                        }
                     }
 
                     if (fieldText != null)

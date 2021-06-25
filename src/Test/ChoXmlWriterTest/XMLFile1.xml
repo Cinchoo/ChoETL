@@ -1,0 +1,10 @@
+﻿<Root>
+	<Journals>
+		<JournalID>1</JournalID>
+		<Description>BKI- 1</Description>
+	</Journals>
+	<Journals>
+		<JournalID>2</JournalID>
+		<Description>BKI- 2</Description>
+	</Journals>
+</Root>

@@ -1,0 +1,92 @@
+﻿{
+  "d": {
+    "results": [
+      {
+        "__metadata": {
+          "uri": "myuri.com",
+          "type": "String"
+        },
+        "jobNumber": "123456789",
+        "numberVacancy": "1",
+        "some_obj": {
+          "__metadata": {
+            "uri": "myuri.com",
+            "type": "String"
+          },
+          "code": "000012356"
+        },
+        "anothernested": {
+          "results": [
+            {
+              "__metadata": {
+                "uri": "myuri.com",
+                "type": "String"
+              },
+              "picklistLabels": {
+                "results": [
+                  {
+                    "__metadata": {
+                      "uri": "myuri.com",
+                      "type": "String"
+                    },
+                    "label": "Casual"
+                  },
+                  {
+                    "__metadata": {
+                      "uri": "myuri.com",
+                      "type": "String"
+                    },
+                    "label": "Casual"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "__metadata": {
+          "uri": "myuri.com",
+          "type": "String"
+        },
+        "jobNumber": "987654321",
+        "numberVacancy": "1",
+        "some_obj": {
+          "__metadata": {
+            "uri": "myuri.com",
+            "type": "String"
+          },
+          "code": "000012356"
+        },
+        "anothernested": {
+          "results": [
+            {
+              "__metadata": {
+                "uri": "myuri.com",
+                "type": "String"
+              },
+              "picklistLabels": {
+                "results": [
+                  {
+                    "__metadata": {
+                      "uri": "myuri.com",
+                      "type": "String"
+                    },
+                    "label": "Casual"
+                  },
+                  {
+                    "__metadata": {
+                      "uri": "myuri.com",
+                      "type": "String"
+                    },
+                    "label": "Casual"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

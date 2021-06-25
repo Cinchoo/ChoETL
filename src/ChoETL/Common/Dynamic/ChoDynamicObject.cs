@@ -20,6 +20,7 @@ namespace ChoETL
     public static class ChoDynamicObjectSettings
     {
         public static bool UseOrderedDictionary = true;
+        public static char KeySeparator = '.';
     }
 
     [Serializable]
@@ -131,6 +132,12 @@ namespace ChoETL
             set;
         }
 
+        public bool? UseXmlArray
+        {
+            get;
+            set;
+        }
+
         #endregion Instance Members
 
         #region Constructors
@@ -188,6 +195,9 @@ namespace ChoETL
 
         public ChoDynamicObject(Func<IDictionary<string, object>> func, bool watchChange = false)
         {
+            if (ChoDynamicObjectSettings.KeySeparator != ChoCharEx.NUL)
+                _keySeparator = ChoDynamicObjectSettings.KeySeparator.ToString();
+
             if (DynamicObjectName.IsNullOrWhiteSpace())
                 DynamicObjectName = DefaultName;
             ThrowExceptionIfPropNotExists = false;
@@ -526,7 +536,7 @@ namespace ChoETL
                 return false;
 
             IDictionary<string, object> kvpDict = _kvpDict;
-            if (key.Contains("."))
+            if (key.Contains(_keySeparator))
             {
                 if (ContainsNestedProperty(key))
                     return true;
@@ -542,7 +552,7 @@ namespace ChoETL
         private bool ContainsNestedProperty(string key)
         {
             var current = _kvpDict;
-            var subKeys = key.SplitNTrim(".");
+            var subKeys = key.SplitNTrim(_keySeparator);
             foreach (var subKey in subKeys.Take(subKeys.Length - 1))
             {
                 if (subKey.IsNullOrWhiteSpace())
@@ -1239,6 +1249,9 @@ namespace ChoETL
                     }
                     else
                     {
+                        if (UseXmlArray != null)
+                            useXmlArray = UseXmlArray.Value;
+
                         if (useXmlArray)
                         {
                             key = value is IList ? key.ToPlural() != key ? key.ToPlural() : key.Length > 1 && key.EndsWith("s", StringComparison.InvariantCultureIgnoreCase) ? key : "{0}s".FormatString(key) : key;

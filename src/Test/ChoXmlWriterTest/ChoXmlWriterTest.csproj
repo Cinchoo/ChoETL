@@ -75,6 +75,8 @@
   <ItemGroup>
     <Content Include="QuickPOCOTestExpected.xml" />
     <Content Include="sample7Expected.xml" />
+    <Content Include="XMLFile1.xml" />
+    <Content Include="XMLFile2.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

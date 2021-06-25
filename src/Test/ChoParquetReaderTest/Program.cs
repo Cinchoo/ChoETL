@@ -2,6 +2,7 @@
 using System;
 using System.Data;
 using System.Text;
+using System.Linq;
 
 namespace ChoParquetReaderTest
 {
@@ -54,10 +55,19 @@ namespace ChoParquetReaderTest
             Console.WriteLine(csv.ToString());
         }
 
+        static void ReadParquet52()
+        {
+using (var r = new ChoParquetReader("myData52.parquet"))
+{
+    foreach (var rec in r.Take(1))
+        Console.WriteLine(rec.Dump());
+}
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            DataTableTest();
+            ReadParquet52();
         }
     }
 }

@@ -39,6 +39,11 @@ namespace ChoETL
             get;
             set;
         }
+        public bool? TurnOffPluralization
+        {
+            get;
+            set;
+        }
 
         [DataMember]
         public List<ChoXmlRecordFieldConfiguration> XmlRecordFieldConfigurations
@@ -937,6 +942,19 @@ namespace ChoETL
 
             return XmlRecordFieldConfigurations.First(fc => fc.Name == propertyName);
         }
+
+        internal bool IsTurnOffPluralization(ChoXmlRecordFieldConfiguration fc)
+        {
+            if (fc.TurnOffPluralization == null)
+            {
+                if (TurnOffPluralization != null)
+                    return TurnOffPluralization.Value;
+            }
+            else
+                return fc.TurnOffPluralization.Value;
+
+            return false;
+        }
     }
 
     public class ChoXmlRecordConfiguration<T> : ChoXmlRecordConfiguration
@@ -1071,5 +1089,6 @@ namespace ChoETL
 
             return msg.ToString();
         }
+
     }
 }

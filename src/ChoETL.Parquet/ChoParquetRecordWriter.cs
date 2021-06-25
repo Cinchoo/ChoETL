@@ -139,8 +139,7 @@ namespace ChoETL
                     {
                         //fv.Add(new DateTimeOffset(rec[key], TimeSpan.Zero));
                         DateTime dt = rec[key];
-                        dt = DateTime.SpecifyKind(dt, DateTimeKind.Local);
-                        DateTimeOffset dto = dt;
+                        DateTimeOffset dto = ToDateTimeOffset(dt);
                         fv.Add(dto);
                     }
                     else if (ft == typeof(ChoCurrency))
@@ -157,6 +156,13 @@ namespace ChoETL
                 }
             }
             return fv.ToArray();
+        }
+
+        public DateTimeOffset ToDateTimeOffset(DateTime dateTime)
+        {
+            return dateTime.ToUniversalTime() <= DateTimeOffset.MinValue.UtcDateTime
+                       ? DateTimeOffset.MinValue
+                       : new DateTimeOffset(dateTime);
         }
 
         private IDictionary<string, DataField> GetSchemaFields()

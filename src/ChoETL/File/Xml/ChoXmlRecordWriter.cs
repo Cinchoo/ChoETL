@@ -548,6 +548,7 @@ namespace ChoETL
             Dictionary<string, object> attrs = new Dictionary<string, object>();
             Dictionary<string, object> elems = new Dictionary<string, object>();
             HashSet<string> CDATAs = new HashSet<string>();
+            var useXmlArray = false;
 
             foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in GetOrderedKVP(config))
             {
@@ -562,6 +563,11 @@ namespace ChoETL
                 fieldText = String.Empty;
                 if (config.PIDict != null)
                     config.PIDict.TryGetValue(kvp.Key, out pi);
+
+                if (fieldConfig.IsArray == null)
+                    useXmlArray = Configuration.UseXmlArray;
+                else
+                    useXmlArray = fieldConfig.IsArray.Value;
 
                 rec = GetDeclaringRecord(kvp.Value.DeclaringMember, rootRec);
 
@@ -820,7 +826,7 @@ namespace ChoETL
                         {
                             rec = ChoActivator.CreateInstance(config.RecordType);
                             innerXml = ChoUtility.XmlSerialize(rec, null, EOLDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix, Configuration.EmitDataType,
-                                useXmlArray: Configuration.UseXmlArray);
+                                useXmlArray: useXmlArray);
                             if (_beginNSTagRegex.Match(innerXml1).Success)
                             {
                                 innerXml = _beginNSTagRegex.Replace(innerXml, delegate (Match m)
@@ -879,7 +885,7 @@ namespace ChoETL
                     else
                     {
                         innerXml1 = ChoUtility.XmlSerialize(kvp.Value, null, EOLDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix, Configuration.EmitDataType,
-                            useXmlArray: Configuration.UseXmlArray);
+                            useXmlArray: useXmlArray);
 
                         if (!kvp.Value.GetType().IsArray && !typeof(IList).IsAssignableFrom(kvp.Value.GetType()))
                         {
@@ -913,7 +919,7 @@ namespace ChoETL
                                 innerXml1 = Regex.Replace(innerXml1, $"</{eleName1}", $"</{en}");
                             }
 
-                            if (fieldConfig.IsArray == null || fieldConfig.IsArray.Value)
+                            if (useXmlArray)
                             {
                                 string eleName = XmlNamespaceElementName(kvp.Key.ToSingular(), Configuration.DefaultNamespacePrefix);
                                 innerXml1 = innerXml1.Replace("<dynamic>", "<{0}>".FormatString(eleName));
@@ -1152,7 +1158,7 @@ namespace ChoETL
             catch
             {
                 XmlTextReader txtReader = new XmlTextReader($"<root>{strXml}</root>", XmlNodeType.Element, parserContext);
-                es = XElement.Load(txtReader).Descendants().ToArray();
+                es = XElement.Load(txtReader).Elements().ToArray();
             }
             if (xs != null)
             {

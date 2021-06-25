@@ -328,11 +328,51 @@ namespace ChoXmlWriterTest
 
         }
 
+        static void MergeXml()
+        {
+            IDictionary<string, dynamic[]> lookup = null;
+            using (var r2 = new ChoXmlReader("XMLFile2.xml")
+                .WithXPath("//Transaction")
+                )
+            {
+                lookup = r2.GroupBy(rec1 => (string)rec1.JID).ToDictionary(lu => lu.Key, lu => lu.ToArray());
+            }
+
+            dynamic[] nodes = null;
+            using (var r1 = new ChoXmlReader("XMLFile1.xml")
+                .WithXPath("//Journals")
+                )
+            {
+                nodes = r1.ToArray();
+            }
+
+            foreach (var rec in nodes)
+            {
+                if (lookup.ContainsKey((string)rec.JournalID))
+                {
+                    rec.Add("Transactions", lookup[(string)rec.JournalID]);
+                }
+            }
+
+            foreach (var rec in nodes)
+                Console.WriteLine(rec.Dump());
+
+            StringBuilder xml = new StringBuilder();
+            using (var w = new ChoXmlWriter(xml)
+                .Configure(c => c.UseXmlArray = false)
+                )
+            {
+                w.Write(nodes);
+            }
+
+            Console.WriteLine(xml.ToString());
+        }
+
         static void Main(string[] args)
         { 
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            DictTest();
+            MergeXml();
 
             return;
 

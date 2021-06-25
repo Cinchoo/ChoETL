@@ -5787,10 +5787,54 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
+        static void Sample53Test()
+        {
+            using (var r = new ChoJSONReader("sample53.json")
+                .WithJSONPath("$..d.results")
+                .Configure(c => c.NestedColumnSeparator = '/')
+                )
+            {
+                var dt = r.AsDataTable();
+                Console.WriteLine(dt.Dump());
+            }
+        }
+
+        static void Xml2JSONWithSingleOrArrayNode()
+        {
+            string xml = @"
+<export_person>
+<person>
+<fname>James</fname>
+<lname>Williams</lname>
+ <dept_details>
+     <name>Engineering</name>
+     <address>117, street</address>
+  </dept_details>
+</person>
+</export_person>";
+
+            StringBuilder json = new StringBuilder();
+            using (var r = ChoXmlReader.LoadText(xml)
+                //.Configure(c => c.UseXmlArray = false)
+                //.Configure(c => c.TurnOffPluralization = true)
+                )
+            {
+                using (var w = new ChoJSONWriter(json)
+                    .Configure(c => c.DefaultArrayHandling = false)
+                    )
+                {
+                    w.Write(r);
+                }
+
+            }
+
+            Console.WriteLine(json.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            ArrayToObjects();
+            Xml2JSONWithSingleOrArrayNode();
             return;
 
             ReadJsonOneItemAtATime();

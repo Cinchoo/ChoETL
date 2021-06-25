@@ -49,6 +49,11 @@ namespace ChoETL
             get;
             set;
         }
+        public bool? TurnOffPluralization
+        {
+            get;
+            set;
+        }
         public bool? IsArray
         {
             get;
