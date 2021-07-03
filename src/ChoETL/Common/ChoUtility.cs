@@ -1288,7 +1288,8 @@ namespace ChoETL
         }
 
         public static string XmlSerialize(object target, XmlWriterSettings xws = null, string separator = null, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore,
-            string nsPrefix = null, bool emitDataType = false, bool useXmlArray = false)
+            string nsPrefix = null, bool emitDataType = false, bool useXmlArray = false,
+            XmlSerializerNamespaces ns = null)
         {
             if (xws == null)
             {
@@ -1327,9 +1328,12 @@ namespace ChoETL
                 }
                 else
                 {
+                    if (ns == null)
+                        ns = new XmlSerializerNamespaces();
+
                     ChoNullNSXmlSerializer serializer = ChoNullNSXmlSerializerFactory.HasXmlSerializer(target.GetType()) ? ChoNullNSXmlSerializerFactory.GetXmlSerializer(target.GetType()) :
      ChoNullNSXmlSerializerFactory.GetXmlSerializer(target.GetType(), GetXmlOverrides(target.GetType()));
-                    serializer.Serialize(xtw, target);
+                    serializer.Serialize(xtw, target, ns);
                 }
 
                 xtw.Flush();

@@ -10,6 +10,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -110,6 +111,7 @@ namespace ChoETL
         public string XmlVersion { get; set; }
         [DataMember]
         public bool OmitXmlDeclaration { get; set; }
+        public bool OmitXsiNamespace { get; set; }
         internal Dictionary<string, ChoXmlRecordFieldConfiguration> RecordFieldConfigurationsDict
         {
             get;
@@ -1013,11 +1015,16 @@ namespace ChoETL
     {
         public readonly IDictionary<string, string> NSDict;
         public readonly XmlNamespaceManager NSMgr;
+        public readonly XmlSerializerNamespaces XmlSerializerNamespaces;
 
         public ChoXmlNamespaceManager(XmlNamespaceManager nsMgr)
         {
             NSMgr = nsMgr;
             NSDict = nsMgr.GetNamespacesInScope(XmlNamespaceScope.All);
+
+            XmlSerializerNamespaces = new XmlSerializerNamespaces();
+            foreach (var kvp in NSDict)
+                XmlSerializerNamespaces.Add(kvp.Key, kvp.Value);
         }
 
         public string GetPrefixOfNamespace(string ns)
@@ -1072,6 +1079,8 @@ namespace ChoETL
                 {
                     if (!config.DoNotEmitXmlNamespace && kvp.Key == "xml")
                         continue;
+                    if (!config.OmitXsiNamespace && kvp.Key == "xsi")
+                        continue;
 
                     if (kvp.Key.Contains(":"))
                     {
@@ -1083,9 +1092,18 @@ namespace ChoETL
                         msg.AppendFormat(@" xmlns:{0}=""{1}""", kvp.Key, kvp.Value);
                 }
             }
-        
-            if (config.UseXmlSerialization && !msg.ToString().Contains("xmlns:xsi"))
-                msg.AppendFormat(@" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""");
+
+            if (config.UseXmlSerialization)
+            {
+                if (!msg.ToString().Contains("xmlns:xsi"))
+                {
+                    if (!config.OmitXsiNamespace)
+                        msg.AppendFormat(@" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""");
+                }
+                else
+                {
+                }
+            }
 
             return msg.ToString();
         }

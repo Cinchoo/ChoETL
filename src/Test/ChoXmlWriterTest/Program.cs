@@ -32,7 +32,7 @@ namespace ChoXmlWriterTest
 
     [TestFixture]
     [SetCulture("en-US")] // TODO: Check if correct culture is used
-    class Program
+    public class Program
     {
 
         public static void JSON2XML()
@@ -368,11 +368,57 @@ namespace ChoXmlWriterTest
             Console.WriteLine(xml.ToString());
         }
 
+        //[XmlRoot(ElementName = "readCase", Namespace = "http://tempuri")]
+        public class ReadCase
+        {
+            //[XmlElement(ElementName = "versionAsOf", Namespace = "http://tempuri")]
+            public BaseUtcTimeStamp VersionAsOf { get; set; }
+        }
+        public struct BaseUtcTimeStamp
+        {
+            private string _utcTimestamp;
+            [XmlText]
+            public string UtcTimestamp { get => _utcTimestamp; set { } } // set is needed for XmlSerializer
+
+            public BaseUtcTimeStamp(DateTime utcDateTime)
+            {
+                //if (utcDateTime.Kind != DateTimeKind.Utc)
+                //{
+                //    throw new ArgumentException("Given dateTime must be Utc.");
+                //}
+
+                _utcTimestamp = utcDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ");
+            }
+        }
+
+        static void XmlTextTest()
+        {
+            StringBuilder xml = new StringBuilder();
+
+            using (var w = new ChoXmlWriter<ReadCase>(xml)
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                //.UseXmlSerialization()
+                //.WithDefaultNamespacePrefix("case")
+                //.WithXmlNamespace("case", "http://tempuri")
+                //.WithNodeName("xxx")
+                //.WithRootName("zzz")
+                .Configure(c => c.OmitXsiNamespace = true)
+                )
+            {
+                w.Write(new ReadCase
+                {
+                    VersionAsOf = new BaseUtcTimeStamp(DateTime.Now)
+                });
+            }
+
+            Console.WriteLine(xml.ToString());
+        }
+
         static void Main(string[] args)
         { 
-            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            MergeXml();
+            XmlTextTest();
 
             return;
 

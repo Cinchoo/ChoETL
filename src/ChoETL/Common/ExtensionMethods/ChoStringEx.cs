@@ -1746,11 +1746,17 @@ namespace ChoETL
             return text;
         }
 
+        public static string ReplaceXmlNodeName(this string xml, string newNodeName, bool removeNSPrefix = false)
+        {
+            if (newNodeName.IsNullOrWhiteSpace()) return xml;
+
+            return xml;
+        }
+
         public static string RemoveXmlNamespaces(this string xml)
         {
             if (xml == null)
                 return xml;
-
             return Regex.Replace(xml, @"\sxmlns[^""]+""[^""]*""", String.Empty);
         }
 

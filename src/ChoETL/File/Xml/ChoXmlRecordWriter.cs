@@ -27,7 +27,8 @@ namespace ChoETL
         private bool _configCheckDone = false;
         private long _index = 0;
         private Lazy<XmlSerializer> _se = null;
-        private readonly Regex _beginNSTagRegex = new Regex(@"^(<\w+\:\w+)(.*)", RegexOptions.Compiled | RegexOptions.Multiline);
+        private readonly Regex _beginNSTagRegex = new Regex(@"^(<\w+)\:(\w+)(.*)", RegexOptions.Compiled | RegexOptions.Multiline);
+        private readonly Regex _endNSTagRegex = new Regex(@"(.*)(</\w+)\:(\w+)$", RegexOptions.Compiled | RegexOptions.Multiline);
         private readonly Regex _beginTagRegex = new Regex(@"^(<\w+)(.*)", RegexOptions.Compiled | RegexOptions.Multiline);
         private readonly Regex _endTagRegex = new Regex("(.*)(</.*>)$", RegexOptions.Compiled | RegexOptions.Multiline);
         internal ChoWriter Writer = null;
@@ -363,29 +364,12 @@ namespace ChoETL
                                     else
                                     {
                                         innerXml1 = ChoUtility.XmlSerialize(record, null, eolDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix, Configuration.EmitDataType,
-                                            useXmlArray: Configuration.UseXmlArray).RemoveXmlNamespaces();
+                                            useXmlArray: Configuration.UseXmlArray, ns: Configuration.XmlNamespaceManager.Value.XmlSerializerNamespaces).RemoveXmlNamespaces();
                                     }
 
                                     if (!Configuration.IgnoreNodeName && !Configuration.NodeName.IsNullOrWhiteSpace())
                                     {
-                                        if (_beginNSTagRegex.Match(innerXml1).Success)
-                                        {
-                                            innerXml1 = _beginNSTagRegex.Replace(innerXml1, delegate (Match m)
-                                            {
-                                                return "<" + Configuration.NodeName + m.Groups[2].Value;
-                                            });
-                                        }
-                                        else
-                                        {
-                                            innerXml1 = _beginTagRegex.Replace(innerXml1, delegate (Match m)
-                                            {
-                                                return "<" + Configuration.NodeName + m.Groups[2].Value;
-                                            });
-                                        }
-                                        innerXml1 = _endTagRegex.Replace(innerXml1, delegate (Match m)
-                                        {
-                                            return m.Groups[1].Value + "</{0}>".FormatString(Configuration.NodeName);
-                                        });
+                                        innerXml1 = ReplaceXmlNodeIfAppl(innerXml1, Configuration.NodeName);
                                     }
                                     sw.Write(eolDelimiter);
                                     sw.Write(Indent(innerXml1, _indent + 1));
@@ -436,6 +420,49 @@ namespace ChoETL
             {
                 System.Threading.Thread.CurrentThread.CurrentCulture = prevCultureInfo;
             }
+        }
+
+        private string ReplaceXmlNodeIfAppl(string xml, string nodeName)
+        {
+            if (_beginNSTagRegex.Match(xml).Success)
+            {
+                xml = _beginNSTagRegex.Replace(xml, delegate (Match m)
+                {
+                    return m.Groups[1].Value + ":" + nodeName + m.Groups[3].Value;
+                });
+                xml = _endNSTagRegex.Replace(xml, delegate (Match m)
+                {
+                    return m.Groups[2].Value + "</{0}:{1}>".FormatString(m.Groups[1].Value, nodeName);
+                });
+            }
+            else
+            {
+                if (Configuration.DefaultNamespacePrefix.IsNullOrWhiteSpace())
+                {
+                    xml = _beginTagRegex.Replace(xml, delegate (Match m)
+                    {
+                        return "<" + nodeName + m.Groups[2].Value;
+                    });
+                    xml = _endTagRegex.Replace(xml, delegate (Match m)
+                    {
+                        return m.Groups[1].Value + "</{0}>".FormatString(nodeName);
+                    });
+                }
+                else
+                {
+                    xml = _beginTagRegex.Replace(xml, delegate (Match m)
+                    {
+                        return "<" + XmlNamespaceElementName(nodeName, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
+                    });
+                    xml = _endTagRegex.Replace(xml, delegate (Match m)
+                    {
+                        return m.Groups[1].Value + "</{0}>".FormatString(XmlNamespaceElementName(nodeName, Configuration.DefaultNamespacePrefix));
+                    });
+
+
+                }
+            }
+            return xml;
         }
 
         private string Indent(string value, int indentValue = 1)
@@ -826,25 +853,28 @@ namespace ChoETL
                         {
                             rec = ChoActivator.CreateInstance(config.RecordType);
                             innerXml = ChoUtility.XmlSerialize(rec, null, EOLDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix, Configuration.EmitDataType,
-                                useXmlArray: useXmlArray);
-                            if (_beginNSTagRegex.Match(innerXml1).Success)
-                            {
-                                innerXml = _beginNSTagRegex.Replace(innerXml, delegate (Match m)
-                                {
-                                    return "<" + XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
-                                });
-                            }
-                            else
-                            {
-                                innerXml = _beginTagRegex.Replace(innerXml, delegate (Match m)
-                                {
-                                    return "<" + XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
-                                });
-                            }
-                            innerXml = _endTagRegex.Replace(innerXml, delegate (Match thisMatch)
-                            {
-                                return "</{0}>".FormatString(XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix));
-                            });
+                                useXmlArray: useXmlArray, ns: Configuration.XmlNamespaceManager.Value.XmlSerializerNamespaces);
+
+                            innerXml1 = ReplaceXmlNodeIfAppl(innerXml1, kvp.Key);
+
+                            //if (_beginNSTagRegex.Match(innerXml1).Success)
+                            //{
+                            //    innerXml = _beginNSTagRegex.Replace(innerXml, delegate (Match m)
+                            //    {
+                            //        return "<" + XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
+                            //    });
+                            //}
+                            //else
+                            //{
+                            //    innerXml = _beginTagRegex.Replace(innerXml, delegate (Match m)
+                            //    {
+                            //        return "<" + XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
+                            //    });
+                            //}
+                            //innerXml = _endTagRegex.Replace(innerXml, delegate (Match thisMatch)
+                            //{
+                            //    return "</{0}>".FormatString(XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix));
+                            //});
                         }
                         else if (config.NullValueHandling == ChoNullValueHandling.Empty)
                         {
@@ -885,28 +915,30 @@ namespace ChoETL
                     else
                     {
                         innerXml1 = ChoUtility.XmlSerialize(kvp.Value, null, EOLDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix, Configuration.EmitDataType,
-                            useXmlArray: useXmlArray);
+                            useXmlArray: useXmlArray, ns: Configuration.XmlNamespaceManager.Value.XmlSerializerNamespaces);
 
                         if (!kvp.Value.GetType().IsArray && !typeof(IList).IsAssignableFrom(kvp.Value.GetType()))
                         {
-                            if (_beginNSTagRegex.Match(innerXml1).Success)
-                            {
-                                innerXml1 = _beginNSTagRegex.Replace(innerXml1, delegate (Match m)
-                                {
-                                    return "<" + XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
-                                });
-                            }
-                            else
-                            {
-                                innerXml1 = _beginTagRegex.Replace(innerXml1, delegate (Match m)
-                                {
-                                    return "<" + XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
-                                });
-                            }
-                            innerXml1 = _endTagRegex.Replace(innerXml1, delegate (Match m)
-                            {
-                                return m.Groups[1].Value + "</{0}>".FormatString(XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix));
-                            });
+                            innerXml1 = ReplaceXmlNodeIfAppl(innerXml1, kvp.Key);
+
+                            //if (_beginNSTagRegex.Match(innerXml1).Success)
+                            //{
+                            //    innerXml1 = _beginNSTagRegex.Replace(innerXml1, delegate (Match m)
+                            //    {
+                            //        return "<" + XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
+                            //    });
+                            //}
+                            //else
+                            //{
+                            //    innerXml1 = _beginTagRegex.Replace(innerXml1, delegate (Match m)
+                            //    {
+                            //        return "<" + XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
+                            //    });
+                            //}
+                            //innerXml1 = _endTagRegex.Replace(innerXml1, delegate (Match m)
+                            //{
+                            //    return m.Groups[1].Value + "</{0}>".FormatString(XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix));
+                            //});
                         }
                         else
                         {
@@ -1164,8 +1196,12 @@ namespace ChoETL
             {
                 foreach (var e in es)
                 {
-                    var nsAttr = new XAttribute(XNamespace.Xmlns + nsPrefix, xs);
-                    e.Add(nsAttr);
+                    try
+                    {
+                        var nsAttr = new XAttribute(XNamespace.Xmlns + nsPrefix, xs);
+                        e.Add(nsAttr);
+                    }
+                    catch { }
                     foreach (XElement ce in e.DescendantsAndSelf())
                         ce.Name = xs + ce.Name.LocalName;
                     //if (!Configuration.IgnoreRootName)
