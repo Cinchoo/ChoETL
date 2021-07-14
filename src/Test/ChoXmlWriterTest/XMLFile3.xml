@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" standalone="yes"?>
+<NewDataSet>
+	<Company>
+		<Title>Seph</Title>
+		<Commentary>blah-blah</Commentary>
+		<Worker1>Bill</Worker1>
+		<Worker2>Fill</Worker2>
+	</Company>
+	<JobDetails>
+		<JobNum>1</JobNum>
+		<Detail1>Sport</Detail1>
+		<Detail2>Physical</Detail2>
+	</JobDetails>
+	<JobDetails>
+		<JobNum>2</JobNum>
+		<Detail1>Mailman</Detail1>
+		<Detail2>pastoral</Detail2>
+	</JobDetails>
+</NewDataSet>

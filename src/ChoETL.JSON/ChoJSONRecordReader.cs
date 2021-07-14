@@ -1061,7 +1061,8 @@ namespace ChoETL
                             if (fieldConfig.FieldType != null && fieldConfig.FieldType != typeof(object) && !fieldConfig.FieldType.IsCollection() && !fieldConfig.FieldType.IsGenericList()
                                 && !fieldConfig.FieldType.IsGenericEnumerable() && fieldValue is JToken[])
                             {
-                                fieldValue = ((JToken[])fieldValue).FirstOrDefault();
+                                if (!fieldConfig.HasConverters())
+                                    fieldValue = ((JToken[])fieldValue).FirstOrDefault();
                                 //if (fieldValue is JArray)
                                 //{
                                 //    fieldValue = ((JArray)fieldValue).FirstOrDefault();
@@ -1092,7 +1093,10 @@ namespace ChoETL
                         else if (fieldConfig.FieldType == typeof(string) || fieldConfig.FieldType.IsSimple())
                         {
                             if (fieldValue is JToken[])
-                                fieldValue = ((JToken[])fieldValue).FirstOrDefault();
+                            {
+                                if (!fieldConfig.HasConverters())
+                                    fieldValue = ((JToken[])fieldValue).FirstOrDefault();
+                            }
 
                             if (fieldValue is JToken)
                             {

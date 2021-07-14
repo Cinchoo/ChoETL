@@ -589,10 +589,13 @@ namespace ChoETL
                         }
                         else if (kvp.Value.FieldType == typeof(object))
                         {
-                            var dobj = rec as ChoDynamicObject;
-                            var ft = dobj.GetMemberType(kvp.Key);
-                            if (ft != null)
-                                kvp.Value.FieldType = ft;
+                            if (rec is ChoDynamicObject)
+                            {
+                                var dobj = rec as ChoDynamicObject;
+                                var ft = dobj.GetMemberType(kvp.Key);
+                                if (ft != null)
+                                    kvp.Value.FieldType = ft;
+                            }
                         }
                     }
                     else

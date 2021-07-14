@@ -5831,10 +5831,126 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             Console.WriteLine(json.ToString());
         }
 
+        public class RECORD_PHOTO
+        {
+            public string ROWW { get; set; }
+            public string ALBUMID { get; set; }
+            public string LINK { get; set; }
+        }
+
+        static void SortAndDatatable()
+        {
+            string json = @"{
+  ""RECORDS"": [
+    {
+      ""ROWW"": ""279166"",
+      ""ALBUMID"": ""3"",
+      ""LINK"": ""https://...1""
+    },
+    {
+      ""ROWW"": ""279165"",
+      ""ALBUMID"": ""1"",
+      ""LINK"": ""https://...2""
+    },
+    {
+      ""ROWW"": ""279164"",
+      ""ALBUMID"": ""2"",
+      ""LINK"": ""https://...3""
+    }]
+}";
+
+            using (var r = ChoJSONReader<RECORD_PHOTO>.LoadText(json)
+                .WithJSONPath("$..RECORDS")
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                )
+            {
+                var dt = r.OrderBy(rec => rec.ROWW).AsDataTable();
+                Console.WriteLine(dt.Dump());
+            }
+        }
+
+        public class Questions
+        {
+            public Class1[] Property1 { get; set; }
+        }
+
+        public class Class1
+        {
+            public object Answer { get; set; }
+            public int QuestionId { get; set; }
+            public string Title { get; set; }
+            public string AnswerType { get; set; }
+        }
+
+        static void MultipleValues()
+        {
+            string json = @"[
+  {
+    ""Answer"": true,
+    ""QuestionId"": 55,
+    ""Title"": ""Are you Married?"",
+    ""AnswerType"": ""Boolean""
+  },
+  {
+    ""Answer"": {
+      ""Id"": ""1"",
+      ""Description"": ""Female"",
+      ""Reference"": ""F"",
+      ""ArchiveDate"": null,
+      ""ParentId"": null,
+      ""OptionType"": {
+        ""Id"": 40,
+        ""Type"": ""dropdown""
+      }
+    },
+    ""QuestionId"": 778,
+    ""Title"": ""Gender"",
+    ""AnswerType"": ""Option""
+  }
+]";
+
+            using (var r = ChoJSONReader<Class1>.LoadText(json)
+                )
+            {
+                foreach (var rec in r)
+                {
+                    Console.WriteLine(rec.Answer.GetType());
+
+                    Console.WriteLine(rec.Dump());
+                }
+            }
+        }
+        public class PlayersDTO
+        {
+            [ChoJSONPath("$..player")]
+            [ChoTypeConverter(typeof(ChoCustomExprConverter), Parameters = @"'a => String.Join(ChoETL.ChoUtility.CastEnumerable<string>(a), ""|"")'")]
+            public string Players { get; set; }
+            public string Team { get; set; }
+        }
+
+        static void JSONIssue147()
+        {
+            using (var r = new ChoJSONReader("issue147.json")
+                .WithField("Players", valueConverter: o => String.Join(",", (IEnumerable<object>)o), jsonPath: "$..Players[*].player")
+                .WithField("Substitute", valueConverter: o => o != null ? String.Join(",", (IEnumerable<object>)o) : null, jsonPath: "$..Substitute[*].player")
+                .WithField("Team")
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                )
+            {
+                var dt = r.AsDataTable();
+                Console.WriteLine(dt.Dump());
+                return;
+                foreach (var rec in r)
+                {
+                    Console.WriteLine(rec.Dump());
+                }
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            Xml2JSONWithSingleOrArrayNode();
+            JSONIssue147();
             return;
 
             ReadJsonOneItemAtATime();

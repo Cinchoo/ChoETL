@@ -11,9 +11,9 @@ using System.Windows.Data;
 namespace ChoETL
 {
 #if !NETSTANDARD2_0
-    public class ChoCustomExprConverter : IValueConverter
+    public class ChoCustomExprConverter : IValueConverter, IChoCollectionConverter
 #else
-    public class ChoCustomExprConverter : IChoValueConverter
+    public class ChoCustomExprConverter : IChoValueConverter, IChoCollectionConverter
 #endif
     {
         public Delegate ConvertOperation { get; private set; }

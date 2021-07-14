@@ -1,0 +1,35 @@
+﻿[
+  {
+    "Players": [
+      {
+        "player": "a"
+      },
+      {
+        "player": "b"
+      }
+    ],
+    "Team": "Title"
+  },
+  {
+    "Players": [
+      {
+        "player": "a"
+      },
+      {
+        "player": "b"
+      },
+      {
+        "player": "c"
+      }
+    ],
+    "Substitute": [
+      {
+        "player": "d"
+      },
+      {
+        "player": "e"
+      }
+    ],
+    "Team": "Title"
+  }
+] 

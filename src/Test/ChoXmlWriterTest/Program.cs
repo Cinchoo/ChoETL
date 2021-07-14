@@ -414,11 +414,45 @@ namespace ChoXmlWriterTest
             Console.WriteLine(xml.ToString());
         }
 
+
+        static void Xml3Test()
+        {
+            StringBuilder csv1 = new StringBuilder();
+            //using (var r = new ChoXmlReader("XmlFile3.xml")
+            //    .WithXPath("/Company")
+            //    )
+            //{
+            //    using (var w = new ChoCSVWriter(csv1)
+            //        .WithFirstLineHeader()
+            //        .Configure(c => c.IgnoreRootNodeName = true)
+            //        )
+            //        w.Write(r);
+            //}
+
+            StringBuilder csv2 = new StringBuilder();
+            using (var r = new ChoXmlReader("XmlFile3.xml")
+                .WithXPath("/JobDetails")
+                )
+            {
+                var arr = r.ToArray();
+                using (var w = new ChoCSVWriter(csv2)
+                    .WithFirstLineHeader()
+                    .Configure(c => c.IgnoreRootNodeName = true)
+                    )
+                    w.Write(arr);
+            }
+
+            string combinedCSV = csv1.ToString() + Environment.NewLine + csv2.ToString();
+
+            Console.WriteLine(combinedCSV);
+        }
+
+
         static void Main(string[] args)
         { 
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            XmlTextTest();
+            Xml3Test();
 
             return;
 

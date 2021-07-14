@@ -385,7 +385,9 @@ namespace ChoETL
                 if (s is IDictionary<string, object>)
                     dict = ((IDictionary<string, object>)s).Flatten(Configuration.NestedColumnSeparator == null ? '_' : Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToDictionary();
                 else
+                {
                     dict = s.ToDictionary().Flatten(Configuration.NestedColumnSeparator == null ? '_' : Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToDictionary();
+                }
 
                 selector?.Invoke(dict);
 

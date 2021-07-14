@@ -681,13 +681,16 @@ namespace ChoETL
                                 }
                                 else if (fieldConfig.FieldType == typeof(string) || fieldConfig.FieldType.IsSimple())
                                 {
-                                    XAttribute fXElement = fXAttributes.FirstOrDefault();
-                                    if (fXElement != null)
+                                    if (!fieldConfig.HasConverters())
                                     {
-                                        if (fieldConfig.ItemConverter != null)
-                                            fieldValue = Normalize(fieldConfig.ItemConverter(fXElement));
-                                        else
-                                            fieldValue = fXElement.Value;
+                                        XAttribute fXElement = fXAttributes.FirstOrDefault();
+                                        if (fXElement != null)
+                                        {
+                                            if (fieldConfig.ItemConverter != null)
+                                                fieldValue = Normalize(fieldConfig.ItemConverter(fXElement));
+                                            else
+                                                fieldValue = fXElement.Value;
+                                        }
                                     }
                                 }
                                 else if (fieldConfig.FieldType.IsCollection() || fieldConfig.FieldType.IsGenericList()
@@ -714,14 +717,17 @@ namespace ChoETL
                                 }
                                 else
                                 {
-                                    XAttribute fXElement = fXAttributes.FirstOrDefault();
-                                    if (fXElement != null)
+                                    if (!fieldConfig.HasConverters())
                                     {
-                                        if (fieldConfig.ItemConverter != null)
-                                            fieldValue = Normalize(fieldConfig.ItemConverter(fXElement));
-                                        else
+                                        XAttribute fXElement = fXAttributes.FirstOrDefault();
+                                        if (fXElement != null)
                                         {
-                                            fieldValue = Normalize(fXElement.Value);
+                                            if (fieldConfig.ItemConverter != null)
+                                                fieldValue = Normalize(fieldConfig.ItemConverter(fXElement));
+                                            else
+                                            {
+                                                fieldValue = Normalize(fXElement.Value);
+                                            }
                                         }
                                     }
                                 }
@@ -804,13 +810,16 @@ namespace ChoETL
                                         }
                                         else if (fieldConfig.FieldType == typeof(string) || fieldConfig.FieldType.IsSimple())
                                         {
-                                            XElement fXElement = fXElements.FirstOrDefault();
-                                            if (fXElement != null)
+                                            if (!fieldConfig.HasConverters())
                                             {
-                                                if (fieldConfig.ItemConverter != null)
-                                                    fieldValue = Normalize(fieldConfig.ItemConverter(fXElement));
-                                                else
-                                                    fieldValue = Normalize(fXElement.NilAwareValue());
+                                                XElement fXElement = fXElements.FirstOrDefault();
+                                                if (fXElement != null)
+                                                {
+                                                    if (fieldConfig.ItemConverter != null)
+                                                        fieldValue = Normalize(fieldConfig.ItemConverter(fXElement));
+                                                    else
+                                                        fieldValue = Normalize(fXElement.NilAwareValue());
+                                                }
                                             }
                                         }
                                         else if (fieldConfig.FieldType.IsCollection() || fieldConfig.FieldType.IsGenericList()
@@ -844,17 +853,20 @@ namespace ChoETL
                                         }
                                         else
                                         {
-                                            XElement fXElement = fXElements.FirstOrDefault(); //.SelectMany(e => e.Elements()).FirstOrDefault();
-                                            if (fXElement != null)
+                                            if (!fieldConfig.HasConverters())
                                             {
-                                                if (fieldConfig.ItemConverter != null)
-                                                    fieldValue = Normalize(fieldConfig.ItemConverter(fXElement));
-                                                else
+                                                XElement fXElement = fXElements.FirstOrDefault(); //.SelectMany(e => e.Elements()).FirstOrDefault();
+                                                if (fXElement != null)
                                                 {
-                                                    fieldValue = Normalize(fXElement.ToObjectFromXml(fieldConfig.FieldType, GetXmlOverrides(fieldConfig),
-                                                        Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace,
-                                                        Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative, ChoNullValueHandling.Ignore, Configuration.XmlNamespaceManager.Value.GetFirstDefaultNamespace(),
-                                                        defaultNSPrefix: Configuration.DefaultNamespacePrefix, nsMgr: Configuration.XmlNamespaceManager.Value));
+                                                    if (fieldConfig.ItemConverter != null)
+                                                        fieldValue = Normalize(fieldConfig.ItemConverter(fXElement));
+                                                    else
+                                                    {
+                                                        fieldValue = Normalize(fXElement.ToObjectFromXml(fieldConfig.FieldType, GetXmlOverrides(fieldConfig),
+                                                            Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace,
+                                                            Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative, ChoNullValueHandling.Ignore, Configuration.XmlNamespaceManager.Value.GetFirstDefaultNamespace(),
+                                                            defaultNSPrefix: Configuration.DefaultNamespacePrefix, nsMgr: Configuration.XmlNamespaceManager.Value));
+                                                    }
                                                 }
                                             }
                                         }
@@ -890,13 +902,16 @@ namespace ChoETL
                                         }
                                         else if (fieldConfig.FieldType == typeof(string) || fieldConfig.FieldType.IsSimple())
                                         {
-                                            XText fXElement = xTexts.FirstOrDefault();
-                                            if (fXElement != null)
+                                            if (!fieldConfig.HasConverters())
                                             {
-                                                if (fieldConfig.ItemConverter != null)
-                                                    fieldValue = fieldConfig.ItemConverter(fXElement);
-                                                else
-                                                    fieldValue = fXElement.Value;
+                                                XText fXElement = xTexts.FirstOrDefault();
+                                                if (fXElement != null)
+                                                {
+                                                    if (fieldConfig.ItemConverter != null)
+                                                        fieldValue = fieldConfig.ItemConverter(fXElement);
+                                                    else
+                                                        fieldValue = fXElement.Value;
+                                                }
                                             }
                                         }
                                         else if (fieldConfig.FieldType.IsCollection() || fieldConfig.FieldType.IsGenericList()
@@ -923,14 +938,17 @@ namespace ChoETL
                                         }
                                         else
                                         {
-                                            XText fXElement = xTexts.FirstOrDefault();
-                                            if (fXElement != null)
+                                            if (!fieldConfig.HasConverters())
                                             {
-                                                if (fieldConfig.ItemConverter != null)
-                                                    fieldValue = fieldConfig.ItemConverter(fXElement);
-                                                else
+                                                XText fXElement = xTexts.FirstOrDefault();
+                                                if (fXElement != null)
                                                 {
-                                                    fieldValue = fXElement.Value;
+                                                    if (fieldConfig.ItemConverter != null)
+                                                        fieldValue = fieldConfig.ItemConverter(fXElement);
+                                                    else
+                                                    {
+                                                        fieldValue = fXElement.Value;
+                                                    }
                                                 }
                                             }
                                         }

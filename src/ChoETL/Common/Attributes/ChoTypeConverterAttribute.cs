@@ -89,7 +89,16 @@
             if (ParametersArray == null || ParametersArray.Length == 0)
                 return ChoActivator.CreateInstance(ConverterType);
             else
-                return ChoActivator.CreateInstance(ConverterType, ParametersArray);
+            {
+                try
+                {
+                    return ChoActivator.CreateInstance(ConverterType, ParametersArray);
+                }
+                catch
+                {
+                    return ChoActivator.CreateInstance(ConverterType);
+                }
+            }
         }
 
         #endregion Instance Members (Internal)

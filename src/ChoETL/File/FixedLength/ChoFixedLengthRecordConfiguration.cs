@@ -156,6 +156,8 @@ namespace ChoETL
             }
         }
 
+        public bool IgnoreRootNodeName { get; set; }
+
         internal void UpdateFieldTypesIfAny(IDictionary<string, Type> dict)
         {
             if (dict == null || RecordFieldConfigurationsDict == null)

@@ -514,7 +514,14 @@ namespace ChoETL
                     if (Configuration.IsDynamicObject)
                         dict = rec.ToDynamicObject() as IDictionary<string, Object>;
                     if (Configuration.IsDynamicObject && Configuration.UseNestedKeyFormat)
+                    {
+                        if (Configuration.IgnoreRootNodeName && dict is ChoDynamicObject)
+                        {
+                            ((ChoDynamicObject)dict).DynamicObjectName = ChoDynamicObject.DefaultName;
+                        }
+
                         dict = dict.Flatten(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix).ToArray().ToDictionary();
+                    }
                 }
 
                 if (Configuration.ThrowAndStopOnMissingField)
@@ -567,10 +574,13 @@ namespace ChoETL
                         }
                         else if (kvp.Value.FieldType == typeof(object))
                         {
-                            var dobj = rec as ChoDynamicObject;
-                            var ft = dobj.GetMemberType(kvp.Key);
-                            if (ft != null)
-                                kvp.Value.FieldType = ft;
+                            if (rec is ChoDynamicObject)
+                            {
+                                var dobj = rec as ChoDynamicObject;
+                                var ft = dobj.GetMemberType(kvp.Key);
+                                if (ft != null)
+                                    kvp.Value.FieldType = ft;
+                            }
                         }
                     }
                     else

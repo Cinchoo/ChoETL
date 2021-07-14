@@ -187,7 +187,9 @@ namespace ChoETL
 
         public bool HasConverters()
         {
-            return Converters != null && Converters.Count > 0;
+            return (Converters != null && Converters.Count > 0)
+                || (PropConverters != null && PropConverters.Length > 0)
+                || ValueConverter != null;
         }
 
 #if !NETSTANDARD2_0
