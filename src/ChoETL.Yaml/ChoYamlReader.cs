@@ -93,7 +93,15 @@ namespace ChoETL
             if (inStream is MemoryStream)
                 _textReader = new Lazy<TextReader>(() => new StreamReader(inStream));
             else
-                _textReader = new Lazy<TextReader>(() => new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize));
+            {
+                _textReader = new Lazy<TextReader>(() =>
+                {
+                    if (Configuration.DetectEncodingFromByteOrderMarks == null)
+                        return new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+                    else
+                        return new StreamReader(inStream, Encoding.Default, Configuration.DetectEncodingFromByteOrderMarks.Value, Configuration.BufferSize);
+                });
+            }
             //_closeStreamOnDispose = true;
         }
 
@@ -178,8 +186,17 @@ namespace ChoETL
             if (inStream is MemoryStream)
                 _textReader = new Lazy<TextReader>(() => new StreamReader(inStream));
             else
-                _textReader = new Lazy<TextReader>(() => new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize));
-            _closeStreamOnDispose = true;
+            {
+                _textReader = new Lazy<TextReader>(() =>
+                {
+                    if (Configuration.DetectEncodingFromByteOrderMarks == null)
+                        return new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+                    else
+                        return new StreamReader(inStream, Encoding.Default, Configuration.DetectEncodingFromByteOrderMarks.Value, Configuration.BufferSize);
+                });
+            }
+
+            //_closeStreamOnDispose = true;
 
             return this;
         }
@@ -486,6 +503,12 @@ namespace ChoETL
         }
 
         #region Fluent API
+
+        public ChoYamlReader<T> DetectEncodingFromByteOrderMarks(bool value = true)
+        {
+            Configuration.DetectEncodingFromByteOrderMarks = value;
+            return this;
+        }
 
         public ChoYamlReader<T> ReuseSerializerObject(bool flag = true)
         {

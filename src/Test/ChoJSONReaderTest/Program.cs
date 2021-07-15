@@ -24,6 +24,7 @@ using UnitTestHelper;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using System.Windows.Data;
+using System.Net;
 
 namespace ChoJSONReaderTest
 {
@@ -5947,10 +5948,33 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
+        static void ReadLargeFile1()
+        {
+            WebClient wc = new WebClient();
+            var sr = wc.OpenRead("https://margincalculator.angelbroking.com/OpenAPI_File/files/OpenAPIScripMaster.json");
+
+            //using (var textReader = new StreamReader(sr))
+            {
+                using (var r = new ChoJSONReader(new StreamReader(sr))
+                    //.DetectEncodingFromByteOrderMarks(true)
+                    )
+                {
+                    var items = r.Where(rec1 => ((string)rec1.symbol).StartsWith("BANKNIFTY")).ToArray();
+                    foreach (var rec in items)
+                    {
+                        Console.WriteLine(rec.Dump());
+                    }
+
+                    Console.WriteLine(items.Length);
+                }
+            }
+        }
+
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            JSONIssue147();
+            ReadLargeFile1();
             return;
 
             ReadJsonOneItemAtATime();

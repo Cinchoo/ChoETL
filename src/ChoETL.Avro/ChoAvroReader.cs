@@ -88,7 +88,15 @@ namespace ChoETL
             if (inStream is MemoryStream)
                 _sr = new Lazy<StreamReader>(() => new StreamReader(inStream));
             else
-                _sr = new Lazy<StreamReader>(() => new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize));
+            {
+                _sr = new Lazy<StreamReader>(() =>
+                {
+                    if (Configuration.DetectEncodingFromByteOrderMarks == null)
+                        return new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+                    else
+                        return new StreamReader(inStream, Encoding.Default, Configuration.DetectEncodingFromByteOrderMarks.Value, Configuration.BufferSize);
+                });
+            }
             //_closeStreamOnDispose = true;
         }
 
@@ -137,8 +145,16 @@ namespace ChoETL
             if (inStream is MemoryStream)
                 _sr = new Lazy<StreamReader>(() => new StreamReader(inStream));
             else
-                _sr = new Lazy<StreamReader>(() => new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize));
-            _closeStreamOnDispose = true;
+            {
+                _sr = new Lazy<StreamReader>(() =>
+                {
+                    if (Configuration.DetectEncodingFromByteOrderMarks == null)
+                        return new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+                    else
+                        return new StreamReader(inStream, Encoding.Default, Configuration.DetectEncodingFromByteOrderMarks.Value, Configuration.BufferSize);
+                });
+            }
+            //_closeStreamOnDispose = true;
 
             return this;
         }
@@ -349,6 +365,12 @@ namespace ChoETL
         }
 
         #region Fluent API
+
+        public ChoAvroReader<T> DetectEncodingFromByteOrderMarks(bool value = true)
+        {
+            Configuration.DetectEncodingFromByteOrderMarks = value;
+            return this;
+        }
 
         public ChoAvroReader<T> AvroSerializerSettings(Action<AvroSerializerSettings> action)
         {

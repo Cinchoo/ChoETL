@@ -13,7 +13,7 @@ namespace ChoETL
 {
     public class ChoManifoldWriter : ChoWriter, IDisposable, IChoManifoldWriter
     {
-        private TextWriter _textWriter;
+        private Lazy<TextWriter> _textWriter;
         private bool _closeStreamOnDispose = false;
         private ChoManifoldRecordWriter _writer = null;
         public event EventHandler<ChoRowsWrittenEventArgs> RowsWritten;
@@ -52,7 +52,7 @@ namespace ChoETL
 
             Init();
 
-            _textWriter = new StreamWriter(filePath, false, Configuration.Encoding, Configuration.BufferSize);
+            _textWriter = new Lazy<TextWriter>(() => new StreamWriter(filePath, false, Configuration.Encoding, Configuration.BufferSize));
             _closeStreamOnDispose = true;
         }
 
@@ -63,7 +63,7 @@ namespace ChoETL
             Configuration = configuration;
             Init();
 
-            _textWriter = textWriter;
+            _textWriter = new Lazy<TextWriter>(() => textWriter);
         }
 
         public ChoManifoldWriter(Stream inStream, ChoManifoldRecordConfiguration configuration = null)
@@ -73,9 +73,9 @@ namespace ChoETL
             Configuration = configuration;
             Init();
             if (inStream is MemoryStream)
-                _textWriter = new StreamWriter(inStream);
+                _textWriter = new Lazy<TextWriter>(() => new StreamWriter(inStream));
             else
-                _textWriter = new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize);
+                _textWriter = new Lazy<TextWriter>(() => new StreamWriter(inStream, Configuration.Encoding, Configuration.BufferSize));
             _closeStreamOnDispose = true;
         }
 
@@ -98,7 +98,10 @@ namespace ChoETL
             if (_closeStreamOnDispose)
             {
                 if (_textWriter != null)
-                    _textWriter.Dispose();
+                {
+                    _textWriter.Value.Dispose();
+                    _textWriter = null;
+                }
             }
 
             if (!finalize)
@@ -119,14 +122,14 @@ namespace ChoETL
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
             foreach (object rec in records)
-                _writer.WriteTo(_textWriter, new object[] { rec }).Loop();
+                _writer.WriteTo(_textWriter.Value, new object[] { rec }).Loop();
         }
 
         public void Write(object record)
         {
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
-            _writer.WriteTo(_textWriter, new object[] { record }).Loop();
+            _writer.WriteTo(_textWriter.Value, new object[] { record }).Loop();
         }
 
         public static string ToText(object record, TraceSwitch traceSwitch = null)

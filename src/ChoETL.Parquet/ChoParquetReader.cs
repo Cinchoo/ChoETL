@@ -76,7 +76,15 @@ namespace ChoETL
             if (inStream is MemoryStream)
                 _streamReader = new Lazy<StreamReader>(() => new StreamReader(inStream));
             else
-                _streamReader = new Lazy<StreamReader>(() => new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize));
+            {
+                _streamReader = new Lazy<StreamReader>(() =>
+                {
+                    if (Configuration.DetectEncodingFromByteOrderMarks == null)
+                        return new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+                    else
+                        return new StreamReader(inStream, Encoding.Default, Configuration.DetectEncodingFromByteOrderMarks.Value, Configuration.BufferSize);
+                });
+            }
             //_closeStreamOnDispose = true;
         }
 
@@ -354,6 +362,12 @@ namespace ChoETL
         }
 
         #region Fluent API
+
+        public ChoParquetReader<T> DetectEncodingFromByteOrderMarks(bool value = true)
+        {
+            Configuration.DetectEncodingFromByteOrderMarks = value;
+            return this;
+        }
 
         public ChoParquetReader<T> ParquetOptions(Action<ParquetOptions> action)
         {

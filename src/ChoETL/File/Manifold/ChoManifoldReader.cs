@@ -15,7 +15,7 @@ namespace ChoETL
 {
     public class ChoManifoldReader : ChoReader, IDisposable, IEnumerable, IChoManifoldReader
     {
-        private TextReader _textReader;
+        private Lazy<TextReader> _textReader;
         private bool _closeStreamOnDispose = false;
         private Lazy<IEnumerator> _enumerator = null;
         private CultureInfo _prevCultureInfo = null;
@@ -49,7 +49,7 @@ namespace ChoETL
 
             Init();
 
-            _textReader = new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
+            _textReader = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
         }
 
@@ -60,7 +60,7 @@ namespace ChoETL
             Configuration = configuration;
             Init();
 
-            _textReader = textReader;
+            _textReader = new Lazy<TextReader>(() => textReader);
         }
 
         public ChoManifoldReader(Stream inStream, ChoManifoldRecordConfiguration configuration = null)
@@ -70,9 +70,17 @@ namespace ChoETL
             Configuration = configuration;
             Init();
             if (inStream is MemoryStream)
-                _textReader = new StreamReader(inStream);
+                _textReader = new Lazy<TextReader>(() => new StreamReader(inStream));
             else
-                _textReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+            {
+                _textReader = new Lazy<TextReader>(() =>
+                {
+                    if (Configuration.DetectEncodingFromByteOrderMarks == null)
+                        return new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+                    else
+                        return new StreamReader(inStream, Encoding.Default, Configuration.DetectEncodingFromByteOrderMarks.Value, Configuration.BufferSize);
+                });
+            }
             _closeStreamOnDispose = true;
         }
 
@@ -82,7 +90,7 @@ namespace ChoETL
 
             Close();
             Init();
-            _textReader = new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
+            _textReader = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
             _closeStreamOnDispose = true;
 
             return this;
@@ -94,7 +102,7 @@ namespace ChoETL
 
             Close();
             Init();
-            _textReader = textReader;
+            _textReader = new Lazy<TextReader>(() => textReader);
             _closeStreamOnDispose = false;
 
             return this;
@@ -107,10 +115,19 @@ namespace ChoETL
             Close();
             Init();
             if (inStream is MemoryStream)
-                _textReader = new StreamReader(inStream);
+                _textReader = new Lazy<TextReader>(() => new StreamReader(inStream));
             else
-                _textReader = new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
-            _closeStreamOnDispose = true;
+            {
+                _textReader = new Lazy<TextReader>(() =>
+                {
+                    if (Configuration.DetectEncodingFromByteOrderMarks == null)
+                        return new StreamReader(inStream, Configuration.GetEncoding(inStream), false, Configuration.BufferSize);
+                    else
+                        return new StreamReader(inStream, Encoding.Default, Configuration.DetectEncodingFromByteOrderMarks.Value, Configuration.BufferSize);
+                });
+            }
+
+            //_closeStreamOnDispose = true;
 
             return this;
         }
@@ -143,7 +160,7 @@ namespace ChoETL
             {
                 if (_textReader != null)
                 {
-                    _textReader.Dispose();
+                    _textReader.Value.Dispose();
                     _textReader = null;
                 }
             }
@@ -175,7 +192,7 @@ namespace ChoETL
             rr.Reader = this;
             rr.TraceSwitch = TraceSwitch;
             rr.RowsLoaded += NotifyRowsLoaded;
-            return rr.AsEnumerable(_textReader).GetEnumerator();
+            return rr.AsEnumerable(_textReader.Value).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

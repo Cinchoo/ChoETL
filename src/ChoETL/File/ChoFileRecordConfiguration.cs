@@ -49,6 +49,11 @@ namespace ChoETL
             get;
             set;
         }
+        public bool? DetectEncodingFromByteOrderMarks
+        {
+            get;
+            set;
+        }
         public string Comment
         {
             set
@@ -255,6 +260,7 @@ namespace ChoETL
             //Encoding = Encoding.UTF8;
             if (QuoteEscapeChar == null)
                 QuoteEscapeChar = '\0';
+            //DetectEncodingFromByteOrderMarks = true;
         }
 
         protected override void Init(Type recordType)
@@ -341,6 +347,14 @@ namespace ChoETL
                     Encoding = _defaultEncoding;
                     ChoETLLog.Error("Error finding encoding in file. Default to UTF8.");
                     ChoETLLog.Error(ex.Message);
+                }
+                finally
+                {
+                    try
+                    {
+                        inStream.Position = 0;
+                    }
+                    catch { }
                 }
             }
 
