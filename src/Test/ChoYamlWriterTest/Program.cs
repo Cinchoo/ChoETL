@@ -266,10 +266,43 @@ namespace ChoYamlWriterTest
             Console.WriteLine(yaml.ToString());
         }
 
+
+        public class MethodCall1
+        {
+            public string MethodName { get; set; }
+            public List<object> Arguments { get; set; }
+            [ChoFallbackValue("x")]
+            [ChoDefaultValue("x")]
+            public object barray { get; set; }
+        }
+
+        static void IgnoreFailedMembers()
+        {
+            StringBuilder yaml = new StringBuilder();
+            using (var w = new ChoYamlWriter<MethodCall1>(yaml)
+                )
+            {
+                var rec = new MethodCall1
+                {
+                    MethodName = "someName",
+                    Arguments = new List<object>
+                    {
+                        "arg1",
+                        "arg2"
+                    },
+                    barray = new EntryPointNotFoundException()
+                };
+
+                w.Write(rec);
+            }
+
+            Console.WriteLine(yaml.ToString());
+        }
+
         static void Main(string[] args)
         {
-            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            CustomSerialization();
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Verbose;
+            IgnoreFailedMembers();
         }
     }
 }

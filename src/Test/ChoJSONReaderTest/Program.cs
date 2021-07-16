@@ -5932,6 +5932,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
         static void JSONIssue147()
         {
             using (var r = new ChoJSONReader("issue147.json")
+                .WithField("Extra")
                 .WithField("Players", valueConverter: o => String.Join(",", (IEnumerable<object>)o), jsonPath: "$..Players[*].player")
                 .WithField("Substitute", valueConverter: o => o != null ? String.Join(",", (IEnumerable<object>)o) : null, jsonPath: "$..Substitute[*].player")
                 .WithField("Team")
@@ -5945,6 +5946,45 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 {
                     Console.WriteLine(rec.Dump());
                 }
+            }
+        }
+
+        public class MyModel
+        {
+            [JsonProperty("session_id")]
+            public string SessionId { get; set; }
+            [JsonProperty("title_id_type")]
+            public string TitleIdType { get; set; }
+            [JsonProperty("event_step")]
+            public int EventStep { get; set; }
+        }
+
+
+        static void ReadJsonWithTypeIn()
+        {
+            string json = @"
+{
+    ""session_id"":{""string"":""zQUQ/Xqj4YEV:1626216925:3""},
+    ""title_id_type"":{""string"":""server""},
+    ""event_name"":{""string"":""achievement""},
+    ""event_type"":{""string"":""server""},
+    ""event_step"":{""int"":9},
+    ""level"":{""string"":""35""},
+    ""country"":{""string"":""CA""}
+}";
+
+            using (var r = ChoJSONReader<MyModel>.LoadText(json)
+                .Setup(s => s.BeforeRecordFieldLoad += (o, e) =>
+                {
+                    JObject jo = e.Source as JObject;
+                    var prop = jo.First.ToObject<JProperty>();
+                    e.Source = prop.Value;
+                })
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
             }
         }
 
@@ -5974,7 +6014,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            ReadLargeFile1();
+            ReadJsonWithTypeIn();
             return;
 
             ReadJsonOneItemAtATime();
