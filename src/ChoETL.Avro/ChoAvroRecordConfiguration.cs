@@ -142,7 +142,7 @@ namespace ChoETL
             {
                 Init(recordType);
             }
-            NestedColumnSeparator = '_';
+            NestedColumnSeparator = ChoETLSettings.NestedKeySeparator;
             UseAvroSerializer = true;
             SyncNumberOfObjects = 24;
 
@@ -524,7 +524,7 @@ namespace ChoETL
 
             if (arrayIndex != null)
             {
-                var arrayIndexSeparator = ArrayIndexSeparator == null ? '_' : ArrayIndexSeparator.Value;
+                var arrayIndexSeparator = ArrayIndexSeparator == null ? ChoETLSettings.ArrayIndexSeparator : ArrayIndexSeparator.Value;
 
                 if (_recObject.Value is IChoArrayItemFieldNameOverrideable)
                 {

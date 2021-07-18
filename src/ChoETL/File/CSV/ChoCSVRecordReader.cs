@@ -534,7 +534,7 @@ namespace ChoETL
 
             IDictionary<string, object> dict = rec as IDictionary<string, object>;
             dynamic dict1 = new ChoDynamicObject(dict.ToDictionary(kvp => Configuration.RecordFieldConfigurationsDict[kvp.Key].FieldName, kvp => kvp.Value));
-            return dict1.ConvertMembersToArrayIfAny(Configuration.ArrayIndexSeparator == null ? '_' : Configuration.ArrayIndexSeparator.Value,
+            return dict1.ConvertMembersToArrayIfAny(Configuration.ArrayIndexSeparator == null ? ChoETLSettings.ArrayIndexSeparator : Configuration.ArrayIndexSeparator.Value,
                 Configuration.AllowNestedArrayConversion);
         }
 
@@ -951,6 +951,7 @@ namespace ChoETL
                         {
                             if (fieldConfig.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                             {
+                                ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring field...".FormatString(ex.Message));
                                 continue;
                             }
                             else
@@ -1221,7 +1222,7 @@ namespace ChoETL
                     throw new ChoRecordConfigurationException("Duplicate field name(s) [Name: {0}] found.".FormatString(String.Join(",", dupFields)));
                 else
                 {
-                    var arrayIndexSeparator = Configuration.ArrayIndexSeparator == ChoCharEx.NUL ? '_' : Configuration.ArrayIndexSeparator;
+                    var arrayIndexSeparator = Configuration.ArrayIndexSeparator == ChoCharEx.NUL ? ChoETLSettings.ArrayIndexSeparator : Configuration.ArrayIndexSeparator;
                     _fieldNames = _fieldNames.GroupBy(i => i, Configuration.FileHeaderConfiguration.StringComparer)
                                         .Select(g =>
                                         {

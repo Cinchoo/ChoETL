@@ -223,19 +223,47 @@ namespace ChoETL
         }
         private static T[] ConvertToArray<T>(Array input)
         {
-            return input.Cast<T>().ToArray(); // Using LINQ for simplicity
+            try
+            {
+                return input.Cast<T>().ToArray(); // Using LINQ for simplicity
+            }
+            catch
+            {
+                return input.OfType<object>().Select(o => o.ToNString()).CastEnumerable<T>().ToArray();
+            }
         }
         private static List<T> ConvertToList<T>(Array input)
         {
-            return input.Cast<T>().ToList(); // Using LINQ for simplicity
+            try
+            {
+                return input.Cast<T>().ToList(); // Using LINQ for simplicity
+            }
+            catch
+            {
+                return input.OfType<object>().Select(o => o.ToNString()).CastEnumerable<T>().ToList();
+            }
         }
         private static T[] ConvertListToArray<T>(IList input)
         {
-            return input.Cast<T>().ToArray(); // Using LINQ for simplicity
+            try
+            {
+                return input.Cast<T>().ToArray(); // Using LINQ for simplicity
+            }
+            catch
+            {
+                return input.OfType<object>().Select(o => o.ToNString()).CastEnumerable<T>().ToArray();
+            }
         }
         private static List<T> ConvertListToList<T>(IList input)
         {
-            return input.Cast<T>().ToList(); // Using LINQ for simplicity
+            try
+            {
+                return input.Cast<T>().ToList(); // Using LINQ for simplicity
+            }
+            catch
+            {
+                return input.OfType<object>().Select(o => o.ToNString()).CastEnumerable<T>().ToList();
+            }
         }
 
         private static bool TryConvertXPlicit(object value, Type destinationType, string operatorMethodName, ref object result)

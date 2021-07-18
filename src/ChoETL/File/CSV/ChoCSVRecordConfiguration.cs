@@ -645,7 +645,7 @@ namespace ChoETL
 
             if (arrayIndex != null)
             {
-                var arrayIndexSeparator = ArrayIndexSeparator == null ? '_' : ArrayIndexSeparator.Value;
+                var arrayIndexSeparator = ArrayIndexSeparator == null ? ChoETLSettings.ArrayIndexSeparator : ArrayIndexSeparator.Value;
 
                 if (_recObject.Value is IChoArrayItemFieldNameOverrideable)
                 {
@@ -816,7 +816,7 @@ namespace ChoETL
                                             .Where(g => g.Count() > 1)
                                             .ToArray();
 
-                        var arrayIndexSeparator = ArrayIndexSeparator == ChoCharEx.NUL ? '_' : ArrayIndexSeparator;
+                        var arrayIndexSeparator = ArrayIndexSeparator == ChoCharEx.NUL ? ChoETLSettings.ArrayIndexSeparator : ArrayIndexSeparator;
                         int index = AutoIncrementStartIndex;
                         string fieldName = null;
                         foreach (var grp in dupFieldConfigs)

@@ -293,6 +293,14 @@ namespace ChoETL
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             object retValue = null;
+            try
+            {
+                retValue = JObject.Load(reader);
+            }
+            catch
+            {
+                retValue = serializer.Deserialize(reader, objectType);
+            }
 
             var crs = Reader.ContractResolverState;
             if (crs == null)
@@ -310,42 +318,65 @@ namespace ChoETL
             if (_fc != null && _fc.SourceType != null)
                 _objType = _fc.SourceType;
 
-            retValue = reader;
             if (!RaiseBeforeRecordFieldLoad(rec, crs.Index, name, ref retValue))
             {
                 if (_fc != null)
                 {
-                    if (_fc.CustomSerializer == null)
+
+                    if (_fc.CustomSerializer == null && retValue is JObject)
                     {
                         if (_fc.ValueConverter == null)
-                            retValue = serializer.Deserialize(reader, objectType);
+                        {
+                          if (retValue is JObject)
+                                retValue = ((JObject)retValue).ToObject(objectType);
+                        }
                         else
-                            retValue = _fc.ValueConverter(serializer.Deserialize(reader, typeof(string)));
+                            retValue = _fc.ValueConverter(retValue);
                     }
                     else
                     {
-                        retValue = _fc.CustomSerializer(reader);
+                        retValue = _fc.CustomSerializer(retValue);
                     }
 
-                    ValidateORead(ref retValue);
                     //ChoETLRecordHelper.DoMemberLevelValidation(retValue, _fc.Name, _fc, _validationMode);
 
-                    if (retValue != null)
-                        retValue = ChoConvert.ConvertFrom(retValue, objectType, null, _fc.PropConverters, _fc.PropConverterParams, _culture);
-                }
-                else
-                {
-                    retValue = serializer.Deserialize(reader, objectType);
-                    ValidateORead(ref retValue);
+                    if (retValue is JObject && ChoTypeDescriptor.GetTypeConverters(_mi).IsNullOrEmpty())
+                        retValue = ((JObject)retValue).ToObject(objectType);
 
                     if (retValue != null)
                         retValue = ChoConvert.ConvertFrom(retValue, objectType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
+
+                    ValidateORead(ref retValue);
                 }
+                else
+                {
+                    if (retValue != null)
+                    {
+                        if (retValue is JObject && ChoTypeDescriptor.GetTypeConverters(_mi).IsNullOrEmpty())
+                            retValue = ((JObject)retValue).ToObject(objectType);
+
+                        retValue = ChoConvert.ConvertFrom(retValue, objectType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
+                    }
+
+                    ValidateORead(ref retValue);
+                }
+            }
+            else
+            {
+                if (retValue != null)
+                {
+                    if (retValue is JObject && ChoTypeDescriptor.GetTypeConverters(_mi).IsNullOrEmpty())
+                        retValue = ((JObject)retValue).ToObject(objectType);
+                        
+                    retValue = ChoConvert.ConvertFrom(retValue, objectType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
+                }
+
+                ValidateORead(ref retValue);
             }
             if (!RaiseAfterRecordFieldLoad(rec, crs.Index, name, retValue))
                 return null;
 
-            return retValue == reader ? serializer.Deserialize(reader, objectType) : retValue;
+            return retValue; // == reader ? serializer.Deserialize(reader, objectType) : retValue;
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)

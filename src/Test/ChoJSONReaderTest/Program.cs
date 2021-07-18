@@ -5949,7 +5949,68 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
+        public class KeyValueConverter : IChoValueConverter
+        {
+            public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                if (value is JProperty)
+                {
+                    var jo = value as JProperty;
+                    return jo != null ? jo.Value : null;
+                }
+                else if (value is JObject)
+                {
+                    JObject jo = value as JObject;
+                    var prop = jo.First.ToObject<JProperty>();
+                    return prop.Value.ToObject(targetType);
+                }
+                return null;
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                throw new NotImplementedException();
+            }
+
+        }
+        public class Root
+        {
+            public string key { get; set; }
+            public MyModel value { get; set; }
+        }
         public class MyModel
+        {
+            [JsonProperty("session_id")]
+            [ChoTypeConverter(typeof(KeyValueConverter))]
+            public string SessionId { get; set; }
+            [ChoTypeConverter(typeof(KeyValueConverter))]
+            [JsonProperty("title_id_type")]
+            public string TitleIdType { get; set; }
+            [ChoTypeConverter(typeof(KeyValueConverter))]
+            [JsonProperty("event_step")]
+            public int EventStep { get; set; }
+            [JsonProperty("country")]
+            [ChoTypeConverter(typeof(KeyValueConverter))]
+            public string Country { get; set; }
+            [ChoTypeConverter(typeof(KeyValueConverter))]
+            [JsonProperty("event_params")]
+            public Dictionary<string, string> EventParams { get; set; }
+            [ChoTypeConverter(typeof(KeyValueConverter))]
+            [JsonProperty("device_id_map")]
+            public Dictionary<string, string> DeviceIdMap { get; set; }
+            [ChoTypeConverter(typeof(KeyValueConverter))]
+            [JsonProperty("experiment_id_list")]
+            public string[] ExperimentIdList { get; set; }
+            [JsonProperty("experiment_id_list1")]
+            [ChoTypeConverter(typeof(KeyValueConverter))]
+            public int[] ExperimentIdList1 { get; set; }
+        }
+        public class Root1
+        {
+            public string key { get; set; }
+            public MyModel1 value { get; set; }
+        }
+        public class MyModel1
         {
             [JsonProperty("session_id")]
             public string SessionId { get; set; }
@@ -5957,28 +6018,60 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public string TitleIdType { get; set; }
             [JsonProperty("event_step")]
             public int EventStep { get; set; }
+            [JsonProperty("country")]
+            public string Country { get; set; }
+            [JsonProperty("event_params")]
+            public Dictionary<string, string> EventParams { get; set; }
+            [JsonProperty("device_id_map")]
+            public Dictionary<string, string> DeviceIdMap { get; set; }
+            [JsonProperty("experiment_id_list")]
+            public string[] ExperimentIdList { get; set; }
+            [JsonProperty("experiment_id_list1")]
+            public int[] ExperimentIdList1 { get; set; }
         }
-
-
         static void ReadJsonWithTypeIn()
         {
             string json = @"
-{
-    ""session_id"":{""string"":""zQUQ/Xqj4YEV:1626216925:3""},
-    ""title_id_type"":{""string"":""server""},
-    ""event_name"":{""string"":""achievement""},
-    ""event_type"":{""string"":""server""},
-    ""event_step"":{""int"":9},
-    ""level"":{""string"":""35""},
-    ""country"":{""string"":""CA""}
-}";
+[
+  {
+    ""key"": null,
+    ""value"": {
+      ""session_id"": { ""string"": ""pFEe0KByL/Df:3170:5"" },
+      ""title_id_type"": { ""string"": ""server"" },
+      ""event_name"": { ""string"": ""achievement"" },
+      ""event_type"": { ""string"": ""server"" },
+      ""event_step"": { ""int"": 8 },
+      ""country"": { ""string"": ""US"" },
+      ""event_params"": {
+        ""map"": {
+          ""cdur"": ""416"",
+          ""gdur"": ""416"",
+          ""sdur"": ""416"",
+          ""tdur"": ""0"",
+          ""type"": ""challenge"",
+          ""percent"": ""100"",
+          ""status"": ""expired""
+        }
+      },
+      ""device_id_map"": { ""map"": {} },
+      ""experiment_id_list"": { ""array"": [""a"", ""b""] },
+      ""experiment_id_list1"": { ""array"": [1, 2] },
+    }
+  }
+]";
 
-            using (var r = ChoJSONReader<MyModel>.LoadText(json)
+            using (var r = ChoJSONReader<Root>.LoadText(json)
                 .Setup(s => s.BeforeRecordFieldLoad += (o, e) =>
                 {
                     JObject jo = e.Source as JObject;
-                    var prop = jo.First.ToObject<JProperty>();
-                    e.Source = prop.Value;
+                    if (jo != null)
+                    {
+                        if (e.PropertyName != "value")
+                        {
+                            var prop = jo.First.ToObject<JProperty>();
+                            e.Source = prop.Value;
+                        }
+                    }
                 })
                 .ErrorMode(ChoErrorMode.IgnoreAndContinue)
                 )
@@ -6011,10 +6104,92 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
         }
 
 
+        public class CardLegalities
+        {
+            [JsonProperty("lang")]
+            public string Lang { get; set; }
+
+            [JsonProperty("set")]
+            public string Set { get; set; }
+
+            [JsonProperty("set_name")]
+            public string SetName { get; set; }
+
+            [JsonProperty("collector_number")]
+            public string CollectorNumber { get; set; }
+
+            [JsonProperty("name")]
+            public string Name { get; set; }
+
+            /// <summary>
+            /// An object describing the legality of this card in different formats
+            /// </summary>
+            [JsonProperty("legalities")]
+            public Legalities Legalities { get; set; }
+        }
+
+        public class Legalities
+        {
+            [JsonProperty("standard")]
+            public string Standard { get; set; }
+
+            [JsonProperty("future")]
+            public string Future { get; set; }
+
+            [JsonProperty("historic")]
+            public string Historic { get; set; }
+
+            [JsonProperty("gladiator")]
+            public string Gladiator { get; set; }
+
+            [JsonProperty("pioneer")]
+            public string Pioneer { get; set; }
+
+            [JsonProperty("modern")]
+            public string Modern { get; set; }
+
+            [JsonProperty("legacy")]
+            public string Legacy { get; set; }
+
+            [JsonProperty("pauper")]
+            public string Pauper { get; set; }
+
+            [JsonProperty("vintage")]
+            public string Vintage { get; set; }
+
+            [JsonProperty("penny")]
+            public string Penny { get; set; }
+
+            [JsonProperty("commander")]
+            public string Commander { get; set; }
+
+            [JsonProperty("brawl")]
+            public string Brawl { get; set; }
+
+            [JsonProperty("duel")]
+            public string Duel { get; set; }
+
+            [JsonProperty("oldschool")]
+            public string Oldschool { get; set; }
+
+            [JsonProperty("premodern")]
+            public string Premodern { get; set; }
+        }
+
+        static void Issue148()
+        {
+            ChoETLSettings.NestedKeySeparator = '.';
+            using (var r = new ChoJSONReader<CardLegalities>("issue148.json")
+                )
+            {
+                var dt = r.AsDataTable();
+                Console.WriteLine(dt.Dump());
+            }
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            ReadJsonWithTypeIn();
+            Issue148();
             return;
 
             ReadJsonOneItemAtATime();

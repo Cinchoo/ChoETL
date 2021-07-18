@@ -1103,7 +1103,7 @@ namespace ChoETL
                                 fieldValue = DeserializeNode((JToken)fieldValue, typeof(string) /*fieldConfig.FieldType*/, fieldConfig);
                             }
                         }
-                        else
+                        else if (!fieldConfig.HasConverters())
                         {
                             List<object> list = new List<object>();
                             Type itemType = fieldConfig.FieldType.GetUnderlyingType();
@@ -1125,7 +1125,9 @@ namespace ChoETL
                                 }
 
                                 if (!typeof(JToken).IsAssignableFrom(itemType))
+                                {
                                     fieldValue = DeserializeNode((JToken)fieldValue, itemType, fieldConfig);
+                                }
                             }
                             else if (fieldValue is JArray)
                             {
@@ -1315,6 +1317,7 @@ namespace ChoETL
                         {
                             if (fieldConfig.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                             {
+                                ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring field...".FormatString(ex.Message));
                                 continue;
                             }
                             else

@@ -226,7 +226,7 @@ namespace ChoETL
 
         private static IEnumerable<KeyValuePair<string, object>> Flatten(this IList list, string pkey, char? nestedKeySeparator = null, char? arrayIndexSeparator = null, bool ignoreDictionaryFieldPrefix = false)
         {
-            nestedKeySeparator = nestedKeySeparator == null ? '_' : nestedKeySeparator;
+            nestedKeySeparator = nestedKeySeparator == null ? ChoETLSettings.NestedKeySeparator : nestedKeySeparator;
             int index = 0;
             string key = null;
 
@@ -263,7 +263,7 @@ namespace ChoETL
             if (dict == null)
                 yield break;
 
-            nestedKeySeparator = nestedKeySeparator == null ? '_' : nestedKeySeparator;
+            nestedKeySeparator = nestedKeySeparator == null ? ChoETLSettings.NestedKeySeparator : nestedKeySeparator;
             foreach (var dkey in dict.Keys)
             {
                 string dKey = dkey.ToNString();
@@ -318,7 +318,7 @@ namespace ChoETL
             if (dict == null)
                 yield break;
 
-            nestedKeySeparator = nestedKeySeparator == null ? '_' : nestedKeySeparator;
+            nestedKeySeparator = nestedKeySeparator == null ? ChoETLSettings.NestedKeySeparator : nestedKeySeparator;
             foreach (var kvp in dict)
             {
                 if (kvp.Value is IDictionary<string, object>)

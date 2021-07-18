@@ -17,10 +17,43 @@ using System.Xml.Serialization;
 
 namespace ChoETL
 {
+    public static class ChoETLSettings
+    {
+        private static char _keySeparator = '.';
+        public static char KeySeparator
+        {
+            get { return _keySeparator; }
+            set
+            {
+                if (value != ChoCharEx.NUL)
+                    _keySeparator = value;
+            }
+        }
+        private static char _nestedKeySeparator = '_';
+        public static char NestedKeySeparator
+        {
+            get { return _nestedKeySeparator; }
+            set
+            {
+                if (value != ChoCharEx.NUL)
+                    _nestedKeySeparator = value;
+            }
+        }
+        private static char _arrayIndexSeparator = '_';
+        public static char ArrayIndexSeparator
+        {
+            get { return _arrayIndexSeparator; }
+            set
+            {
+                if (value != ChoCharEx.NUL)
+                    _arrayIndexSeparator = value;
+            }
+        }
+    }
+
     public static class ChoDynamicObjectSettings
     {
         public static bool UseOrderedDictionary = true;
-        public static char KeySeparator = '.';
     }
 
     [Serializable]
@@ -195,8 +228,8 @@ namespace ChoETL
 
         public ChoDynamicObject(Func<IDictionary<string, object>> func, bool watchChange = false)
         {
-            if (ChoDynamicObjectSettings.KeySeparator != ChoCharEx.NUL)
-                _keySeparator = ChoDynamicObjectSettings.KeySeparator.ToString();
+            if (ChoETLSettings.KeySeparator != ChoCharEx.NUL)
+                _keySeparator = ChoETLSettings.KeySeparator.ToString();
 
             if (DynamicObjectName.IsNullOrWhiteSpace())
                 DynamicObjectName = DefaultName;

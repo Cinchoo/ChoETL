@@ -91,9 +91,9 @@ namespace ChoETL
 
         }
 
-        public static void ConvertNSetMemberValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, ref object fieldValue, CultureInfo culture)
+        public static bool ConvertMemberValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, ref object fieldValue, CultureInfo culture)
         {
-            if (fieldConfig.PI == null) return;
+            if (fieldConfig.PI == null) return false;
 
             if (fieldValue is ChoDynamicObject)
                 ((ChoDynamicObject)fieldValue).DynamicObjectName = fn;
@@ -148,7 +148,7 @@ namespace ChoETL
                                 {
                                     var fc = fieldConfig as ChoCSVRecordFieldConfiguration;
                                     if (!fc.ItemSeparator.IsNull())
-                                        itemSeparator = fc.ItemSeparator ;
+                                        itemSeparator = fc.ItemSeparator;
                                     if (!fc.KeyValueSeparator.IsNull())
                                         keyValueSeparator = fc.KeyValueSeparator;
                                 }
@@ -220,7 +220,7 @@ namespace ChoETL
                             fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), fcParams, culture);
                     }
 
-                    return;
+                    return false;
                 }
                 else if (typeof(IList).IsAssignableFrom(fieldConfig.PI.PropertyType))
                 {
@@ -256,7 +256,7 @@ namespace ChoETL
                                 list.Add(fieldValue);
                             }
                         }
-                        return;
+                        return false;
                     }
                     else
                     {
@@ -306,7 +306,13 @@ namespace ChoETL
                         fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), fcParams, culture);
                 }
             }
-            ChoType.SetPropertyValue(rec, fieldConfig.PI, fieldValue);
+            return true;
+        }
+
+        public static void ConvertNSetMemberValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, ref object fieldValue, CultureInfo culture)
+        {
+            if (ConvertMemberValue(rec, fn, fieldConfig, ref fieldValue, culture))
+                ChoType.SetPropertyValue(rec, fieldConfig.PI, fieldValue);
         }
 
         private static object[] GetPropertyConvertersParams(ChoRecordFieldConfiguration fieldConfig)
