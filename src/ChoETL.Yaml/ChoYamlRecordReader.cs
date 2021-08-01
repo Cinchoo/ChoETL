@@ -20,6 +20,8 @@ namespace ChoETL
 {
     internal class ChoYamlRecordReader : ChoRecordReader
     {
+        private const string TYPED_VALUE = "##VALUE##";
+
         private IChoNotifyFileRead _callbackFileRead;
         private IChoNotifyRecordRead _callbackRecordRead;
         private IChoNotifyRecordFieldRead _callbackRecordFieldRead;
@@ -72,7 +74,7 @@ namespace ChoETL
                 else
                     return new List<YamlNode>();
             });
-            _defaultYamlSerializer = new Lazy<Serializer>(() => new SharpYaml.Serialization.Serializer(Configuration.YamlSerializerSettings));
+            _defaultYamlSerializer = new Lazy<Serializer>(() => Configuration.YamlSerializer); // new SharpYaml.Serialization.Serializer(Configuration.YamlSerializerSettings));
         }
 
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
@@ -154,8 +156,12 @@ namespace ChoETL
 
                 do
                 {
-                    yield return _defaultYamlSerializer.Value.Deserialize<IDictionary<string, object>>(sr)
-                        .ToDictionary(kvp => kvp.Key, kvp => kvp.Value, Configuration.StringComparer);
+                    var value = _defaultYamlSerializer.Value.Deserialize<object>(sr);
+                    if (value is IDictionary<string, object>)
+                        yield return ((IDictionary<string, object>)value)
+                            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value, Configuration.StringComparer);
+                    else
+                        yield return new Dictionary<string, object>() { { TYPED_VALUE, value } };
                 }
                 while (!sr.Accept<StreamEnd>());
             }
@@ -593,6 +599,19 @@ namespace ChoETL
             lineNo = pair.Item1;
             node = pair.Item2;
 
+            if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+            {
+
+            }
+            else
+            {
+                if (node.Count == 1 && node.ContainsKey(TYPED_VALUE))
+                {
+                    rec = node[TYPED_VALUE];
+                    return true;
+                }
+            }
+
             fieldValue = null;
             fieldConfig = null;
             pi = null;
@@ -747,7 +766,7 @@ namespace ChoETL
                                 List<object> arr = new List<object>();
                                 foreach (var ele in (IDictionary[])fieldValue)
                                 {
-                                    object fv = DeserializeNode(ele, null, fieldConfig);
+                                    object fv = DeserializeNode(ele, null, fieldConfig, true);
                                     arr.Add(fv);
                                 }
 
@@ -761,7 +780,7 @@ namespace ChoETL
 
                             if (fieldValue is IDictionary)
                             {
-                                fieldValue = DeserializeNode((IDictionary)fieldValue, typeof(string) /*fieldConfig.FieldType*/, fieldConfig);
+                                fieldValue = DeserializeNode((IDictionary)fieldValue, typeof(string) /*fieldConfig.FieldType*/, fieldConfig, true);
                             }
                         }
                         else
@@ -799,7 +818,7 @@ namespace ChoETL
                                     {
                                         foreach (var ele in ((IList)fieldValue).OfType<IDictionary>())
                                         {
-                                            object fv = DeserializeNode(ele, itemType, fieldConfig);
+                                            object fv = DeserializeNode(ele, itemType, fieldConfig, true);
                                             list.Add(fv);
                                         }
                                         fieldValue = list.ToArray();
@@ -808,7 +827,7 @@ namespace ChoETL
                                 else
                                 {
                                     var fi = ((IList)fieldValue).OfType<IDictionary>().FirstOrDefault();
-                                    fieldValue = DeserializeNode(fi, itemType, fieldConfig);
+                                    fieldValue = DeserializeNode(fi, itemType, fieldConfig, true);
                                 }
                             }
                             else if (fieldValue is IDictionary[])
@@ -824,7 +843,7 @@ namespace ChoETL
                                     //var array = isJArray ? ((JArray)((YamlNode[])fieldValue)[0]).ToArray() : (YamlNode[])fieldValue;
                                     foreach (var ele in (IDictionary[])fieldValue)
                                     {
-                                        object fv = DeserializeNode(ele, itemType, fieldConfig);
+                                        object fv = DeserializeNode(ele, itemType, fieldConfig, true);
                                         list.Add(fv);
                                     }
                                     fieldValue = list.ToArray();
@@ -832,7 +851,7 @@ namespace ChoETL
                                 else
                                 {
                                     var fi = ((IDictionary[])fieldValue).FirstOrDefault();
-                                    fieldValue = DeserializeNode(fi, itemType, fieldConfig);
+                                    fieldValue = DeserializeNode(fi, itemType, fieldConfig, true);
                                 }
                             }
                         }
@@ -1003,7 +1022,7 @@ namespace ChoETL
             }
         }
 
-        private object DeserializeNode(IDictionary yamlNode, Type type, ChoYamlRecordFieldConfiguration config)
+        private object DeserializeNode(IDictionary yamlNode, Type type, ChoYamlRecordFieldConfiguration config, bool isCollectionItem = false)
         {
             object value = null;
             type = type == null ? fieldConfig.FieldType : type;
@@ -1015,16 +1034,16 @@ namespace ChoETL
                     type = rt;
             }
 
-            try
-            {
-                value = ToObject(yamlNode, type, config.UseYamlSerialization, config);
-            }
-            catch
+            if (isCollectionItem)
             {
                 if (fieldConfig.ItemConverter != null || typeof(IChoItemConvertable).IsAssignableFrom(RecordType))
                     value = RaiseItemConverter(config, yamlNode);
                 else
-                    throw;
+                    value = ToObject(yamlNode, type, config.UseYamlSerialization, config);
+            }
+            else
+            {
+                    value = ToObject(yamlNode, type, config.UseYamlSerialization, config);
             }
 
             return value;

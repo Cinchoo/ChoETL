@@ -43,7 +43,7 @@ namespace ChoParquetReaderTest
                 )
             {
                 var dt = r.AsDataTable("x");
-                Console.WriteLine(ChoJSONWriter.ToText(dt ));
+                Console.WriteLine(ChoJSONWriter.ToText(dt));
                 return;
                 using (var w = new ChoCSVWriter(csv)
                     .WithFirstLineHeader()
@@ -57,11 +57,11 @@ namespace ChoParquetReaderTest
 
         static void ReadParquet52()
         {
-using (var r = new ChoParquetReader("myData52.parquet"))
-{
-    foreach (var rec in r.Take(1))
-        Console.WriteLine(rec.Dump());
-}
+            using (var r = new ChoParquetReader("myData52.parquet"))
+            {
+                foreach (var rec in r.Take(1))
+                    Console.WriteLine(rec.Dump());
+            }
         }
 
         static void Main(string[] args)

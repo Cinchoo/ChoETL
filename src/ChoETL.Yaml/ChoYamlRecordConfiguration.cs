@@ -14,7 +14,10 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using SharpYaml;
+using SharpYaml.Events;
 using SharpYaml.Serialization;
+using SharpYaml.Serialization.Serializers;
 
 namespace ChoETL
 {
@@ -569,6 +572,12 @@ namespace ChoETL
         }
 
         #region Fluent API
+
+        public ChoYamlRecordConfiguration WithTagMapping(string tagName, Type tagType, bool isAlias = false)
+        {
+            YamlSerializerSettings.RegisterTagMapping(tagName, tagType, isAlias);
+            return this;
+        }
 
         public ChoYamlRecordConfiguration ConfigureYamlSerializerSettings(Action<SerializerSettings> settings)
         {

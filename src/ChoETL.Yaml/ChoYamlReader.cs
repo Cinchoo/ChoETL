@@ -504,6 +504,12 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoYamlReader<T> WithTagMapping(string tagName, Type tagType, bool isAlias = false)
+        {
+            Configuration.WithTagMapping(tagName, tagType, isAlias);
+            return this;
+        }
+
         public ChoYamlReader<T> DetectEncodingFromByteOrderMarks(bool value = true)
         {
             Configuration.DetectEncodingFromByteOrderMarks = value;

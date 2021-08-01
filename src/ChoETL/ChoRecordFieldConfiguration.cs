@@ -185,6 +185,16 @@ namespace ChoETL
             Name = Name.NTrim().FixName();
         }
 
+        public object[] GetConverters()
+        {
+            if (PropConverters.IsNullOrEmpty())
+                return PropConverters;
+            else if (Converters != null)
+                return Converters.ToArray();
+            else
+                return null;
+        }
+
         public bool HasConverters()
         {
             return (Converters != null && Converters.Count > 0)

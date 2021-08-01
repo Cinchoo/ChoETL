@@ -303,6 +303,12 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoYamlWriter<T> WithTagMapping(string tagName, Type tagType, bool isAlias = false)
+        {
+            Configuration.WithTagMapping(tagName, tagType, isAlias);
+            return this;
+        }
+
         public ChoYamlWriter<T> UseYamlSerialization(bool flag = true)
         {
             Configuration.UseYamlSerialization = flag;

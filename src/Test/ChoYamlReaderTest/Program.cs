@@ -944,11 +944,135 @@ Vehicles:
 
         }
 
+        public class Thing
+        {
+            public string Type { get; set; }
+            public string Name { get; set; }
+            public string DisplayName { get; set; }
+
+            public List<IComponentX> Components { get; set; }
+        }
+
+        public class Thing1
+        {
+            public string Type { get; set; }
+            public string Name { get; set; }
+            public string DisplayName { get; set; }
+
+            public List<IComponentX> Components { get; set; }
+        }
+
+        public interface IComponentX { }
+
+        public class Explosive : IComponentX
+        {
+            public int Damage { get; set; }
+            public int Range { get; set; }
+        }
+        public class Burnable : IComponentX
+        {
+            public int FlameSize { get; set; }
+            public int HealthThreshold { get; set; }
+        }
+
+        static void DeserializeSubClassedItems()
+        {
+            string yaml = @"
+Type: Item
+Name: fuel_cansiter
+DisplayName: Fuel Canister
+Sprite: fuel_canister_1
+MaxStackSize: 10
+MaxHP: 15
+Value: 30
+Components:
+      - Explosive:
+        - Damage: 10
+        - Range: 25
+      - Burnable:
+        - FlameSize: 10
+        - HealthThreshold: 0.4
+";
+
+
+            using (var r = ChoYamlReader<Thing>.LoadText(yaml)
+                .WithField(f => f.Components, itemConverter: (o) =>
+                {
+                    dynamic rec = ChoDynamicObject.New(o as IDictionary<object, object>);
+                    if (rec.ContainsKey(nameof(Explosive)))
+                    {
+                        IList list = rec.Explosive.ToArray();
+                        var dict = list.OfType<IDictionary<object, object>>().SelectMany(d => d.ToList()).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+                        return dict.ConvertToObject(typeof(Explosive));
+                    }
+                    else if (rec.ContainsKey(nameof(Burnable)))
+                    {
+                        IList list = rec.Burnable.ToArray();
+                        var dict = list.OfType<IDictionary<object, object>>().SelectMany(d => d.ToList()).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+                        return dict.ConvertToObject(typeof(Burnable));
+                    }
+                    else
+                        return null;
+                })
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void DeserializeTypedYaml()
+        {
+            string yaml = @"
+!Item
+Name: fuel_cansiter
+DisplayName: Fuel Canister
+Components:
+      - !Explosive
+        Damage: 10
+        Range: 25
+      - !Burnable
+        FlameSize: 10
+        HealthThreshold: 6
+";
+
+
+            List<Thing1> list = null;
+            using (var r = ChoYamlReader<Thing1>.LoadText(yaml)
+                .WithTagMapping("!Item", typeof(Thing1))
+                .WithTagMapping("!Explosive", typeof(Explosive))
+                .WithTagMapping("!Burnable", typeof(Burnable))
+                )
+            {
+                list = r.ToList();
+                foreach (var rec in list)
+                    Console.WriteLine(rec.Dump());
+            }
+
+            StringBuilder yamlOut = new StringBuilder();
+            using (var w = new ChoYamlWriter<Thing1>(yamlOut)
+                .WithTagMapping("!Item", typeof(Thing1))
+                .WithTagMapping("!Explosive", typeof(Explosive))
+                .WithTagMapping("!Burnable", typeof(Burnable))
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                .Configure(c => c.YamlSerializerSettings.EmitTags = true)
+                .UseYamlSerialization()
+                )
+            {
+                w.Write(list);
+            }
+
+            Console.WriteLine(yamlOut.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            InterfaceTest();
+            //DeserializeSubClassedItems();
+            DeserializeTypedYaml();
         }
     }
 }

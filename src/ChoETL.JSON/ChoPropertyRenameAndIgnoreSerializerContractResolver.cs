@@ -201,9 +201,9 @@ namespace ChoETL
             if (_configuration != null && _configuration.ContainsRecordConfigForType(type))
             {
                 var dict = _configuration.GetRecordConfigDictionaryForType(type);
-                if (dict != null && dict.ContainsKey(jsonPropertyName))
+                if (dict != null && dict.ContainsKey(propertyName))
                 {
-                    newJsonPropertyName = ((ChoFileRecordFieldConfiguration)dict[jsonPropertyName]).FieldName;
+                    newJsonPropertyName = ((ChoFileRecordFieldConfiguration)dict[propertyName]).FieldName;
                     return true;
                 }
             }
@@ -290,6 +290,35 @@ namespace ChoETL
             return true;
         }
 
+        private ChoJSONRecordFieldConfiguration GetFieldConfiguration(Type rt, string fn)
+        {
+            if (Configuration != null)
+            {
+                var lrt = Configuration.GetRecordConfigDictionaryForType(rt);
+                if (lrt != null)
+                {
+                    if (lrt.ContainsKey(fn))
+                        return lrt[fn] as ChoJSONRecordFieldConfiguration;
+                }
+                else
+                {
+                    return Configuration.RecordFieldConfigurations.Select(fc => fc.Name == fn).OfType<ChoJSONRecordFieldConfiguration>().FirstOrDefault();
+                }
+            }
+            return null;
+        }
+
+        private object[] GetTypeConverters(Type rt, string fn)
+        {
+            var fc = _fc == null ? GetFieldConfiguration(rt, fn) : _fc;
+            var conv = fc.GetConverters();
+            if (fc == null)
+            {
+                conv = ChoTypeDescriptor.GetTypeConverters(_mi);
+            }
+            return conv;
+        }
+
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             object retValue = null;
@@ -311,6 +340,10 @@ namespace ChoETL
 
             var rec = ChoType.GetMemberObjectMatchingType(crs.Name, crs.Record);
             var name = ChoType.GetFieldName(crs.Name);
+            if (_fc == null)
+            {
+                _fc = GetFieldConfiguration(rec.GetType(), name);
+            }
 
             var st = ChoType.GetMemberAttribute(_mi, typeof(ChoSourceTypeAttribute)) as ChoSourceTypeAttribute;
             if (st != null && st.Type != null)
@@ -322,7 +355,6 @@ namespace ChoETL
             {
                 if (_fc != null)
                 {
-
                     if (_fc.CustomSerializer == null && retValue is JObject)
                     {
                         if (_fc.ValueConverter == null)
@@ -340,22 +372,29 @@ namespace ChoETL
 
                     //ChoETLRecordHelper.DoMemberLevelValidation(retValue, _fc.Name, _fc, _validationMode);
 
-                    if (retValue is JObject && ChoTypeDescriptor.GetTypeConverters(_mi).IsNullOrEmpty())
+                    if (retValue is JObject && GetTypeConverters(_objType, name).IsNullOrEmpty()) //  ChoTypeDescriptor.GetTypeConverters(_mi).IsNullOrEmpty())
                         retValue = ((JObject)retValue).ToObject(objectType);
 
                     if (retValue != null)
-                        retValue = ChoConvert.ConvertFrom(retValue, objectType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
-
+                    {
+                        if (_fc != null)
+                            ChoETLRecordHelper.ConvertMemberValue(rec, name, _fc, ref retValue, _culture);
+                        else
+                            retValue = ChoConvert.ConvertFrom(retValue, objectType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
+                    }
                     ValidateORead(ref retValue);
                 }
                 else
                 {
                     if (retValue != null)
                     {
-                        if (retValue is JObject && ChoTypeDescriptor.GetTypeConverters(_mi).IsNullOrEmpty())
+                        if (retValue is JObject && GetTypeConverters(_objType, name).IsNullOrEmpty())
                             retValue = ((JObject)retValue).ToObject(objectType);
 
-                        retValue = ChoConvert.ConvertFrom(retValue, objectType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
+                        if (_fc != null)
+                            ChoETLRecordHelper.ConvertMemberValue(rec, name, _fc, ref retValue, _culture);
+                        else
+                            retValue = ChoConvert.ConvertFrom(retValue, objectType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
                     }
 
                     ValidateORead(ref retValue);
@@ -365,10 +404,13 @@ namespace ChoETL
             {
                 if (retValue != null)
                 {
-                    if (retValue is JObject && ChoTypeDescriptor.GetTypeConverters(_mi).IsNullOrEmpty())
+                    if (retValue is JObject && GetTypeConverters(_objType, name).IsNullOrEmpty())
                         retValue = ((JObject)retValue).ToObject(objectType);
-                        
-                    retValue = ChoConvert.ConvertFrom(retValue, objectType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
+
+                    if (_fc != null)
+                        ChoETLRecordHelper.ConvertMemberValue(rec, name, _fc, ref retValue, _culture); 
+                    else
+                        retValue = ChoConvert.ConvertFrom(retValue, objectType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
                 }
 
                 ValidateORead(ref retValue);
@@ -394,6 +436,10 @@ namespace ChoETL
 
             var rec = ChoType.GetMemberObjectMatchingType(crs.Name, crs.Record);
             var name = ChoType.GetFieldName(crs.Name);
+            if (_fc == null)
+            {
+                _fc = GetFieldConfiguration(rec.GetType(), name);
+            }
 
             var st = ChoType.GetMemberAttribute(_mi, typeof(ChoSourceTypeAttribute)) as ChoSourceTypeAttribute;
             if (st != null && st.Type != null)
@@ -405,8 +451,13 @@ namespace ChoETL
             {
                 if (_fc != null)
                 {
-                    if (value != null && _objType != null)
-                        value = ChoConvert.ConvertTo(value, _objType, null, _fc.PropConverters, _fc.PropConverterParams, _culture);
+                    if (_fc != null)
+                        ChoETLRecordHelper.GetNConvertMemberValue(rec, name, _fc, _culture, ref value);
+                    else
+                    {
+                        if (value != null && _objType != null)
+                            value = ChoConvert.ConvertTo(value, _objType, null, _fc.PropConverters, _fc.PropConverterParams, _culture);
+                    }
 
                     if (_fc.CustomSerializer == null)
                     {
@@ -435,8 +486,13 @@ namespace ChoETL
                 }
                 else
                 {
-                    if (value != null && _objType != null)
-                        value = ChoConvert.ConvertTo(value, _objType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
+                    if (_fc != null)
+                        ChoETLRecordHelper.GetNConvertMemberValue(rec, name, _fc, _culture, ref value);
+                    else
+                    {
+                        if (value != null && _objType != null)
+                            value = ChoConvert.ConvertTo(value, _objType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
+                    }
 
                     if (ValidateOnWrite(ref value))
                     {

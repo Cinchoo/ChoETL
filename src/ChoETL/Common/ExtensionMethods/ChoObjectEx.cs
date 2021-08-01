@@ -226,29 +226,37 @@ namespace ChoETL
                 return ((IDictionary<string, object>)source).ToObject(type);
             else
             {
-                Type sourceType = source.GetType();
-                object target = ChoActivator.CreateInstance(type);
-                string key = null;
-                object value = null;
-
-                foreach (var p in ChoType.GetProperties(type))
+                if (source is IDictionary)
                 {
-                    if (p.GetCustomAttribute<ChoIgnoreMemberAttribute>() != null)
-                        continue;
-
-                    key = p.Name;
-                    var attr = p.GetCustomAttribute<ChoPropertyAttribute>();
-                    if (attr != null && !attr.Name.IsNullOrWhiteSpace())
-                        key = attr.Name.NTrim();
-
-                    if (!ChoType.HasProperty(sourceType, key))
-                        continue;
-                    value = ChoType.GetPropertyValue(source, key);
-
-                    p.SetValue(target, value.CastObjectTo(p.PropertyType));
+                    var dict = ((IDictionary)source).ToDictionary();
+                    return dict.ToObject(type);
                 }
+                else
+                {
+                    Type sourceType = source.GetType();
+                    object target = ChoActivator.CreateInstance(type);
+                    string key = null;
+                    object value = null;
 
-                return target;
+                    foreach (var p in ChoType.GetProperties(type))
+                    {
+                        if (p.GetCustomAttribute<ChoIgnoreMemberAttribute>() != null)
+                            continue;
+
+                        key = p.Name;
+                        var attr = p.GetCustomAttribute<ChoPropertyAttribute>();
+                        if (attr != null && !attr.Name.IsNullOrWhiteSpace())
+                            key = attr.Name.NTrim();
+
+                        if (!ChoType.HasProperty(sourceType, key))
+                            continue;
+                        value = ChoType.GetPropertyValue(source, key);
+
+                        p.SetValue(target, value.CastObjectTo(p.PropertyType));
+                    }
+
+                    return target;
+                }
             }
         }
 

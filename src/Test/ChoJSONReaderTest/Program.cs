@@ -6060,7 +6060,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
   }
 ]";
 
-            using (var r = ChoJSONReader<Root>.LoadText(json)
+            using (var r = ChoJSONReader<Root1>.LoadText(json)
                 .Setup(s => s.BeforeRecordFieldLoad += (o, e) =>
                 {
                     JObject jo = e.Source as JObject;
@@ -6073,7 +6073,6 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                         }
                     }
                 })
-                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
                 )
             {
                 foreach (var rec in r)
@@ -6086,20 +6085,17 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             WebClient wc = new WebClient();
             var sr = wc.OpenRead("https://margincalculator.angelbroking.com/OpenAPI_File/files/OpenAPIScripMaster.json");
 
-            //using (var textReader = new StreamReader(sr))
+            using (var r = new ChoJSONReader(new StreamReader(sr))
+                //.DetectEncodingFromByteOrderMarks(true)
+                )
             {
-                using (var r = new ChoJSONReader(new StreamReader(sr))
-                    //.DetectEncodingFromByteOrderMarks(true)
-                    )
+                var items = r.Where(rec1 => ((string)rec1.symbol).StartsWith("BANKNIFTY")).ToArray();
+                foreach (var rec in items)
                 {
-                    var items = r.Where(rec1 => ((string)rec1.symbol).StartsWith("BANKNIFTY")).ToArray();
-                    foreach (var rec in items)
-                    {
-                        Console.WriteLine(rec.Dump());
-                    }
-
-                    Console.WriteLine(items.Length);
+                    Console.WriteLine(rec.Dump());
                 }
+
+                Console.WriteLine(items.Length);
             }
         }
 
@@ -6130,7 +6126,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 
         public class Legalities
         {
-            [JsonProperty("standard")]
+            [JsonProperty("standard1")]
             public string Standard { get; set; }
 
             [JsonProperty("future")]
@@ -6176,16 +6172,146 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public string Premodern { get; set; }
         }
 
-        static void Issue148()
+        static void Issue148a()
         {
             ChoETLSettings.NestedKeySeparator = '.';
-            using (var r = new ChoJSONReader<CardLegalities>("issue148.json")
+            using (var r = new ChoJSONReader<CardLegalities>("issue148a.json")
+                .WithFieldForType<Legalities>(f => f.Standard, fieldName: "standard")
                 )
             {
                 var dt = r.AsDataTable();
                 Console.WriteLine(dt.Dump());
             }
         }
+
+        public class RECORD_PHOTO1
+        {
+            public string ROWW { get; set; }
+            public string ALBUMID { get; set; }
+            public string LINK { get; set; }
+        }
+
+        [ChoMetadataRefType(typeof(RECORD_PHOTO1))]
+        public class RECORD_PHOTO1_META_DATA
+        {
+            public string ROWW { get; set; }
+            public string ALBUMID { get; set; }
+            [JsonIgnore]
+            public string LINK { get; set; }
+        }
+
+
+        static void ExcludePropertyAtRuntime1()
+        {
+            string json = @"{
+  ""RECORDS"": [
+    {
+      ""ROWW"": ""279166"",
+      ""ALBUMID"": ""3"",
+      ""LINK"": ""https://...1""
+    },
+    {
+      ""ROWW"": ""279165"",
+      ""ALBUMID"": ""1"",
+      ""LINK"": ""https://...2""
+    },
+    {
+      ""ROWW"": ""279164"",
+      ""ALBUMID"": ""2"",
+      ""LINK"": ""https://...3""
+    }]
+}";
+
+            using (var r = ChoJSONReader<RECORD_PHOTO1>.LoadText(json)
+                .WithJSONPath("$..RECORDS")
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                )
+            {
+                var dt = r.OrderBy(rec => rec.ROWW).AsDataTable();
+                Console.WriteLine(dt.Dump());
+            }
+        }
+
+        public class RECORD_PHOTO2
+        {
+            public string ROWW { get; set; }
+            public string ALBUMID { get; set; }
+            public string LINK { get; set; }
+        }
+
+        static void MapFieldNameDynamically()
+        {
+            string json = @"{
+  ""RECORDS"": [
+    {
+      ""ROW"": ""279166"",
+      ""ALBUMID"": ""3"",
+      ""LINK"": ""https://...1""
+    },
+    {
+      ""ROW"": ""279165"",
+      ""ALBUMID"": ""1"",
+      ""LINK"": ""https://...2""
+    },
+    {
+      ""ROW"": ""279164"",
+      ""ALBUMID"": ""2"",
+      ""LINK"": ""https://...3""
+    }]
+}";
+
+            var cfg = new ChoJSONRecordConfiguration<RECORD_PHOTO2>();
+            cfg.Map(r => r.ROWW, fieldName: "ROW");
+            using (var r = ChoJSONReader<RECORD_PHOTO1>.LoadText(json, cfg)
+                .WithJSONPath("$..RECORDS")
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                )
+            {
+                var dt = r.OrderBy(rec => rec.ROWW).AsDataTable();
+                Console.WriteLine(dt.Dump());
+            }
+        }
+
+        static void Issue148()
+        {
+            StringBuilder csv = new StringBuilder();
+
+            var csvRecordConfiguration = new ChoCSVRecordConfiguration
+            {
+                Delimiter = "|",
+                AutoDiscoverColumns = true,
+                AutoDiscoverFieldTypes = true,
+                ThrowAndStopOnMissingField = false,
+                IgnoredFields = { "@odata.etag" },
+                FileHeaderConfiguration = new ChoCSVFileHeaderConfiguration
+                {
+                    IgnoreColumnsWithEmptyHeader = true,
+                    HasHeaderRecord = true
+                }
+            };
+            var jsonRecordConfiguration = new ChoJSONRecordConfiguration
+            {
+                UseJSONSerialization = true,
+            };
+
+            using (var r = new ChoJSONReader("Issue148.json", jsonRecordConfiguration)
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                )
+            {
+                //foreach (var rec in r)
+                //    Console.WriteLine(ChoUtility.Dump(rec));
+                //return;
+                using (var w = new ChoCSVWriter(csv, csvRecordConfiguration)
+                    .WithFirstLineHeader()
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                    )
+                {
+                    w.Write(r);
+                }
+            }
+            Console.WriteLine(csv.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
