@@ -160,6 +160,11 @@ namespace ChoETL
                     if (value is IDictionary<string, object>)
                         yield return ((IDictionary<string, object>)value)
                             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value, Configuration.StringComparer);
+                    else if (value is IDictionary)
+                    {
+                        yield return ((IDictionary<object, object>)value)
+                            .ToDictionary(kvp => kvp.Key.ToNString(), kvp => kvp.Value, Configuration.StringComparer);
+                    }
                     else
                         yield return new Dictionary<string, object>() { { TYPED_VALUE, value } };
                 }

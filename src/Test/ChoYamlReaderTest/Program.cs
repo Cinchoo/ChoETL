@@ -1067,12 +1067,36 @@ Components:
             Console.WriteLine(yamlOut.ToString());
         }
 
+        static void RemoveYamlField()
+        {
+            string yaml = @"
+field1: 'test1'
+field2: 'test2'
+field3: 'test3'
+";
+
+            StringBuilder yamlOut = new StringBuilder();
+
+            using (var r = ChoYamlReader.LoadText(yaml))
+            {
+                using (var w = new ChoYamlWriter(yamlOut))
+                    w.Write(r.Select(rec =>
+                    {
+                        rec.Remove("field2"); return rec;
+                    }
+                    ));
+            }
+
+            Console.WriteLine(yamlOut.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            //DeserializeSubClassedItems();
-            DeserializeTypedYaml();
+            //DeserializeTypedYaml();
+            DeserializeSubClassedItems();
+            RemoveYamlField();
         }
     }
 }
