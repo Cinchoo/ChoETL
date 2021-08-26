@@ -246,7 +246,7 @@ namespace ChoETL
                     else
                         Configuration.Validate(pair);
                     var dict = Configuration.XmlRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
-                    if (Configuration.MaxScanRows == 0)
+                    //if (Configuration.MaxScanRows == 0)
                         RaiseMembersDiscovered(dict);
                     Configuration.UpdateFieldTypesIfAny(dict);
                     _configCheckDone = true;
@@ -833,7 +833,7 @@ namespace ChoETL
                                             //    fXElements = fXElements.SelectMany(e => e.Elements()).ToArray();
                                             //}
 
-                                            foreach (var ele in fXElements)
+                                            foreach (var ele in fXElements.Take(1).Elements())
                                             {
                                                 if (fieldConfig.ItemConverter != null)
                                                     list.Add(Normalize(fieldConfig.ItemConverter(ele)));

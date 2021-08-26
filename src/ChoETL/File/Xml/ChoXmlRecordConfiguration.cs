@@ -292,6 +292,13 @@ namespace ChoETL
         {
             base.Init(recordType);
 
+            var pd = ChoTypeDescriptor.GetTypeAttribute<ChoXPathAttribute>(recordType);
+            if (pd != null)
+            {
+                XPath = pd.XPath;
+                AllowComplexXmlPath = pd.AllowComplexXmlPath;
+            }
+
             ChoXmlRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoXmlRecordObjectAttribute>(recordType);
             if (recObjAttr != null)
             {
@@ -417,13 +424,19 @@ namespace ChoETL
                         }
                         else
                         {
-                            var obj = new ChoXmlRecordFieldConfiguration(pd.Name, $"/{pd.Name}|/@{pd.Name}");
+                            var obj = new ChoXmlRecordFieldConfiguration(pd.Name, null/*$"/{pd.Name}|/@{pd.Name}"*/);
                             obj.FieldType = pt;
                             obj.PropertyDescriptor = pd;
                             obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
                             StringLengthAttribute slAttr = pd.Attributes.OfType<StringLengthAttribute>().FirstOrDefault();
                             if (slAttr != null && slAttr.MaximumLength > 0)
                                 obj.Size = slAttr.MaximumLength;
+                            ChoUseXmlSerializationAttribute sAttr = pd.Attributes.OfType<ChoUseXmlSerializationAttribute>().FirstOrDefault();
+                            if (sAttr != null)
+                                obj.UseXmlSerialization = sAttr.Flag;
+                            ChoXPathAttribute xpAttr = pd.Attributes.OfType<ChoXPathAttribute>().FirstOrDefault();
+                            if (xpAttr != null)
+                                obj.XPath = xpAttr.XPath;
 
                             XmlElementAttribute xAttr = pd.Attributes.OfType<XmlElementAttribute>().FirstOrDefault();
                             if (xAttr != null && !xAttr.ElementName.IsNullOrWhiteSpace())
@@ -433,7 +446,7 @@ namespace ChoETL
                             else
                             {
                                 XmlAttributeAttribute xaAttr = pd.Attributes.OfType<XmlAttributeAttribute>().FirstOrDefault();
-                                if (xAttr != null && !xaAttr.AttributeName.IsNullOrWhiteSpace())
+                                if (xaAttr != null && !xaAttr.AttributeName.IsNullOrWhiteSpace())
                                 {
                                     obj.FieldName = xaAttr.AttributeName;
                                 }
@@ -581,6 +594,9 @@ namespace ChoETL
                         if (fn.StartsWith("_"))
                         {
                             string fn1 = fn.Substring(1);
+                            if (!DefaultNamespacePrefix.IsNullOrWhiteSpace())
+                                fn1 = $"{DefaultNamespacePrefix}:{fn1}";
+
                             var obj = new ChoXmlRecordFieldConfiguration(fn, xPath: $"./{fn1}");
                             obj.FieldName = fn1;
                             obj.IsXmlAttribute = true;
@@ -589,6 +605,8 @@ namespace ChoETL
                         else if (fn.EndsWith("_"))
                         {
                             string fn1 = fn.Substring(0, fn.Length - 1);
+                            if (!DefaultNamespacePrefix.IsNullOrWhiteSpace())
+                                fn1 = $"{DefaultNamespacePrefix}:{fn1}";
                             var obj = new ChoXmlRecordFieldConfiguration(fn, xPath: $"./{fn1}");
                             obj.FieldName = fn1;
                             obj.IsXmlCDATA = true;
@@ -596,7 +614,10 @@ namespace ChoETL
                         }
                         else
                         {
-                            var obj = new ChoXmlRecordFieldConfiguration(fn, xPath: $"./{fn}");
+                            string fn1 = fn;
+                            if (!DefaultNamespacePrefix.IsNullOrWhiteSpace())
+                                fn1 = $"{DefaultNamespacePrefix}:{fn1}";
+                            var obj = new ChoXmlRecordFieldConfiguration(fn, xPath: $"./{fn1}");
                             XmlRecordFieldConfigurations.Add(obj);
                         }
                     }
@@ -609,13 +630,20 @@ namespace ChoETL
                 foreach (var fc in XmlRecordFieldConfigurations)
                 {
                     if (fc.IsArray == null)
+                    {
                         fc.IsArray = typeof(ICollection).IsAssignableFrom(fc.FieldType);
+                    }
 
                     if (fc.FieldName.IsNullOrWhiteSpace())
                         fc.FieldName = fc.Name;
 
                     if (fc.XPath.IsNullOrWhiteSpace())
-                        fc.XPath = $"/{fc.FieldName}|/@{fc.FieldName}";
+                    {
+                        if (DefaultNamespacePrefix.IsNullOrWhiteSpace())
+                            fc.XPath = $"/{fc.FieldName}|/@{fc.FieldName}";
+                        else
+                            fc.XPath = $"/{DefaultNamespacePrefix}:{fc.FieldName}|/@{fc.FieldName}";
+                    }
                     else
                     {
                         if (fc.XPath == fc.FieldName
@@ -656,7 +684,13 @@ namespace ChoETL
                 var pd1 = fc.DeclaringMember.IsNullOrWhiteSpace() ? ChoTypeDescriptor.GetProperty(RecordType, fc.Name)
                     : ChoTypeDescriptor.GetProperty(RecordType, fc.DeclaringMember);
                 if (pd1 != null)
+                {
                     fc.PropertyDescriptor = pd1;
+
+                    ChoXmlArrayAttribute slAttr = pd1.Attributes.OfType<ChoXmlArrayAttribute>().FirstOrDefault();
+                    if (slAttr != null)
+                        fc.IsArray = slAttr.Flag;
+                }
 
                 if (fc.PropertyDescriptor == null)
                     fc.PropertyDescriptor = TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Name == fc.Name).FirstOrDefault();
@@ -1024,7 +1058,13 @@ namespace ChoETL
 
             XmlSerializerNamespaces = new XmlSerializerNamespaces();
             foreach (var kvp in NSDict)
-                XmlSerializerNamespaces.Add(kvp.Key, kvp.Value);
+            {
+                try
+                {
+                    XmlSerializerNamespaces.Add(kvp.Key, kvp.Value);
+                }
+                catch { }
+            }
         }
 
         public string GetPrefixOfNamespace(string ns)

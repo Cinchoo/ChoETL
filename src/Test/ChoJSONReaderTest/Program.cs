@@ -2139,11 +2139,12 @@ K,L,M,N,O,P,Q,R,S,T";
             StringBuilder csv = new StringBuilder();
 
             using (var r = new ChoJSONReader("sample36.json")
-                .WithJSONPath("$..products[*]")
+                .WithJSONPath("$..products[*]", true)
                 )
             {
                 using (var w = new ChoCSVWriter(csv)
                     .WithFirstLineHeader()
+                    .Configure(c => c.IgnoreDictionaryFieldPrefix = true)
                     )
                 {
                     w.Write(r);
@@ -4268,20 +4269,22 @@ K,L,M,N,O,P,Q,R,S,T";
                                   var reader = input.reader;
                                   var serializer = input.serializer;
 
-                                  var locationList = (input.existingValue as LocationList) ?? new LocationList();
-                                  var jLocationList = JObject.ReadFrom(reader);
+                                  var locationList = new LocationList();
+                                  var jLocationList = ((JToken[])input.value)[0] as JObject;
 
                                   try
                                   {
                                       locationList.IsExpanded = (bool)(jLocationList["IsExpanded"] ?? false);
-                                      var jLocations = jLocationList["Locations"];
+                                      var jLocations = jLocationList["Locations"] as JArray;
                                       if (jLocations != null)
                                       {
-                                          foreach (var jLocation in jLocations)
-                                          {
-                                              var location = serializer.Deserialize<Location>(new JTokenReader(jLocation));
-                                              locationList.Add(location);
-                                          }
+                                          locationList.AddRange(jLocations.ToObject<List<Location>>());
+
+                                          //foreach (var jLocation in jLocations)
+                                          //{
+                                          //    var location = jLocation.ToObject<Location>();// serializer.Deserialize<Location>(new JTokenReader(jLocation));
+                                          //    locationList.Add(location);
+                                          //}
                                       }
                                   }
                                   catch { return null; }
@@ -6312,10 +6315,79 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             Console.WriteLine(csv.ToString());
         }
 
+        public struct D3Point //: IEquatable<D3Point>
+        {
+            public static readonly D3Point Null = new D3Point(0, 0, 0);
+
+            public double X { get; private set; }
+            public double Y { get; private set; }
+            public double Z { get; private set; }
+
+            public D3Point(double coordinateX, double coordinateY, double coordinateZ)
+            {
+                X = coordinateX;
+                Y = coordinateY;
+                Z = coordinateZ;
+            }
+        }
+
+        static void StructDeserialization()
+        {
+            string json = @"
+{
+  ""X"": 1262.6051066219518,
+  ""Y"": -25972.229375190014,
+  ""Z"": -299.99999999999994
+}";
+
+            using (var r = ChoJSONReader<D3Point>.LoadText(json)
+                .RegisterNodeConverterForType<D3Point>(o =>
+                {
+                    dynamic input = o as dynamic;
+                    dynamic jo = input.value as JObject;
+
+                    D3Point rec = new D3Point((double)jo.X, (double)jo.Y, (double)jo.Z);
+
+                    return rec;
+                })
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+
+        static void FlattenJSON1()
+        {
+            StringBuilder csv = new StringBuilder();
+
+            using (var r = new ChoJSONReader("sample54.json")
+                .Configure(c => c.FlattenNode = true)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+                return;
+                using (var w = new ChoCSVWriter(csv)
+                    .WithFirstLineHeader()
+                    .Configure(c => c.IgnoreDictionaryFieldPrefix = true)
+                    )
+                {
+                    w.Write(r);
+                }
+            }
+
+            Console.WriteLine(csv.ToString());
+        }
+
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            Issue148();
+
+            //DeserializeNestedObjectOfList();
+            FlattenJSON1();
             return;
 
             ReadJsonOneItemAtATime();

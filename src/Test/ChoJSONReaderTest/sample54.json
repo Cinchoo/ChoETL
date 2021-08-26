@@ -1,0 +1,80 @@
+﻿[
+  {
+    "student": "Bob",
+    "subjects": [
+      {
+        "subjectname": "English",
+        "marks": [
+          {
+            "type": "essay",
+            "grade": "A"
+          },
+          {
+            "type": "vocabulary",
+            "grade": "B"
+          },
+          {
+            "type": "spoken",
+            "grade": "C"
+          }
+        ]
+      },
+      {
+        "subjectname": "French",
+        "marks": [
+          {
+            "type": "essay",
+            "grade": "B"
+          },
+          {
+            "type": "vocabulary",
+            "grade": "A"
+          },
+          {
+            "type": "spoken",
+            "grade": "B"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "student": "Mark",
+    "subjects": [
+      {
+        "subjectname": "Dutch",
+        "marks": [
+          {
+            "type": "essay",
+            "grade": "C"
+          },
+          {
+            "type": "vocabulary",
+            "grade": "B"
+          },
+          {
+            "type": "spoken",
+            "grade": "A"
+          }
+        ]
+      },
+      {
+        "subjectname": "Mandrian",
+        "marks": [
+          {
+            "type": "essay",
+            "grade": "C"
+          },
+          {
+            "type": "vocabulary",
+            "grade": "C"
+          },
+          {
+            "type": "spoken",
+            "grade": "C"
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -20,6 +20,7 @@ using UnitTestHelper;
 using System.Data;
 using Newtonsoft.Json.Linq;
 using System.Net;
+using System.Runtime.Serialization;
 
 namespace ChoXmlReaderTest
 {
@@ -430,9 +431,235 @@ namespace ChoXmlReaderTest
     {
         static void Main(string[] args)
         {
-            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Verbose;
 
-            GenerateXmlFromDatatable();
+            Xml2JSON1();
+        }
+
+        [Serializable]
+        public class ChoEazyCopyPropertyReplacer : IChoKeyValuePropertyReplacer
+        {
+            public static readonly ChoEazyCopyPropertyReplacer Instance = new ChoEazyCopyPropertyReplacer();
+
+            #region Instance Data Members (Private)
+
+            private readonly Dictionary<string, string> _availPropeties = new Dictionary<string, string>()
+            {
+                { "SRC_DIR", "Source Directory." },
+                { "DEST_DIR", "Destination Directory." },
+            };
+
+            #endregion Instance Data Members (Private)
+
+            public string SourceDirectory { get; set; }
+            public string DestinationDirectory { get; set; }
+
+            #region IChoPropertyReplacer Members
+
+            public bool ContainsProperty(string propertyName)
+            {
+                if (_availPropeties.ContainsKey(propertyName))
+                    return true;
+
+                return false;
+            }
+
+            public string ReplaceProperty(string propertyName, string format)
+            {
+                if (String.IsNullOrEmpty(propertyName))
+                    return propertyName;
+
+                switch (propertyName)
+                {
+                    case "SRC_DIR":
+                        return SourceDirectory;
+                    case "DEST_DIR":
+                        return DestinationDirectory;
+                    default:
+                        return propertyName;
+                }
+            }
+
+            #endregion
+
+            #region IChoPropertyReplacer Members
+
+            public IEnumerable<KeyValuePair<string, string>> AvailablePropeties
+            {
+                get
+                {
+                    foreach (KeyValuePair<string, string> keyValue in _availPropeties)
+                        yield return keyValue;
+                }
+            }
+
+            public string Name
+            {
+                get { return this.GetType().FullName; }
+            }
+
+            public string GetPropertyDescription(string propertyName)
+            {
+                if (_availPropeties.ContainsKey(propertyName))
+                    return _availPropeties[propertyName];
+                else
+                    return null;
+            }
+
+            #endregion
+        }
+
+        [DataContract(Name = "Person")]
+        [XmlRoot("Person", Namespace = "http://schemas.datacontract.org/2004/07/Workflows.MassTransit.Hosting.Serialization")]
+        public sealed class PersonY
+        {
+            [DataMember]
+            public string Name { get; set; }
+
+            [DataMember]
+            [XmlArray]
+            [XmlArrayItem(Namespace = "http://schemas.microsoft.com/2003/10/Serialization/Arrays" )]
+            public List<int> Numbers { get; set; }
+        }
+
+        static void Xml2JSON1()
+        {
+            string xml = @"<Person xmlns:i=""http://www.w3.org/2001/XMLSchema-instance"" xmlns=""http://schemas.datacontract.org/2004/07/Workflows.MassTransit.Hosting.Serialization"">
+    <Name>Test</Name>
+    <Numbers xmlns:d2p1=""http://schemas.microsoft.com/2003/10/Serialization/Arrays"">
+        <d2p1:int>1</d2p1:int>
+        <d2p1:int>2</d2p1:int>
+        <d2p1:int>3</d2p1:int>
+    </Numbers>
+</Person>";
+
+            StringBuilder xml1 = new StringBuilder();
+            using (var w = new ChoXmlWriter(xml1)
+                    .WithXmlNamespace("", "http://schemas.datacontract.org/2004/07/Workflows.MassTransit.Hosting.Serialization")
+                    .WithXmlNamespace("d2p1", "http://schemas.microsoft.com/2003/10/Serialization/Arrays")
+                    .IgnoreRootName()
+                    .UseXmlSerialization()
+                )
+            {
+                using (var r = ChoXmlReader<PersonY>.LoadText(xml)
+                    .WithXPath("//")
+                    .UseXmlSerialization()
+                    //.WithXmlNamespace("x", "http://schemas.datacontract.org/2004/07/Workflows.MassTransit.Hosting.Serialization")
+                    .WithXmlNamespace("x", "http://schemas.datacontract.org/2004/07/Workflows.MassTransit.Hosting.Serialization")
+                    //.WithXmlNamespace("d2p1", "http://schemas.microsoft.com/2003/10/Serialization/Arrays")
+                    .Configure(c => c.DefaultNamespacePrefix = "x")
+                    .WithField(f => f.Numbers, isArray: false)
+                    )
+                {
+                    w.Write(r);
+
+                    //foreach (var rec in r)
+                    //    Console.WriteLine(rec.Dump());
+                }
+            }
+
+             Console.WriteLine(xml1.ToString());
+        }
+
+        [DataContract(Name = "Person")]
+        //[XmlRoot(Namespace = "http://schemas.datacontract.org/2004/07/Workflows.MassTransit.Hosting.Serialization")]
+        public sealed class PersonX
+        {
+            [DataMember]
+            //[XmlElement(Namespace = "http://schemas.datacontract.org/2004/07/Workflows.MassTransit.Hosting.Serialization")]
+            public string Name { get; set; }
+
+            [DataMember]
+            public List<int> Numbers { get; set; }
+        }
+
+        static void Xml2JSON()
+        {
+            PersonX person = new PersonX
+            {
+                Name = "Test",
+                Numbers = new List<int> { 1, 2, 3 }
+            };
+
+            StringBuilder xml = new StringBuilder();
+            using (var w = new ChoXmlWriter<PersonX>(xml)
+                .IgnoreRootName()
+                )
+            {
+                w.Write(person);
+            }
+
+            Console.WriteLine(xml.ToString());
+
+            using (var r = ChoXmlReader<PersonX>.LoadText(xml.ToString())
+                .WithXPath("//")
+                .WithField(f => f.Numbers, isArray: false)
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                )
+            {
+                StringBuilder json = new StringBuilder();
+                using (var w = new ChoJSONWriter(json))
+                    w.Write(r);
+
+                Console.WriteLine(json.ToString());
+                return;
+                    foreach (var rec in r)
+                        Console.WriteLine(rec.Dump());
+            }
+
+//                string xml = @"<PersonX xmlns:i=""http://www.w3.org/2001/XMLSchema-instance"" xmlns=""http://schemas.datacontract.org/2004/07/Workflows.MassTransit.Hosting.Serialization"">
+//    <Name>Test</Name>
+//    <Numbers xmlns:d2p1=""http://schemas.microsoft.com/2003/10/Serialization/Arrays"">
+//        <d2p1:int>1</d2p1:int>
+//        <d2p1:int>2</d2p1:int>
+//        <d2p1:int>3</d2p1:int>
+//    </Numbers>
+//</PersonX>";
+
+//            using (var r = ChoXmlReader<PersonX>.LoadText(xml)
+//                .WithXPath("//")
+//                .WithXmlNamespace("d2p1", "http://schemas.microsoft.com/2003/10/Serialization/Arrays")
+//                .WithXmlNamespace("", "http://schemas.datacontract.org/2004/07/Workflows.MassTransit.Hosting.Serialization")
+//                .WithXmlNamespace("i", "http://www.w3.org/2001/XMLSchema-instance")
+//                )
+//            {
+//                foreach (var rec in r)
+//                    Console.WriteLine(rec.Dump());
+//            }
+        }
+
+        public class Emp1
+        {
+            public string Name { get; set; }
+            [ChoXPath("State/@Description")]
+            public string StateDescription { get; set; }
+            public string State{ get; set; }
+        }
+        static void Xml2Json1()
+        {
+            string xml = @"<Employee>
+    <Name>Mark</Name>
+    <State>GA</State>
+</Employee>";
+
+            StringBuilder json = new StringBuilder();
+            using (var r = ChoXmlReader<Emp1>.LoadText(xml)
+                .WithXPath("//")
+                )
+            {
+                using (var w = new ChoJSONWriter<Emp1>(json)
+                    .SupportMultipleContent()
+                    .IgnoreFieldValueMode(ChoIgnoreFieldValueMode.None)
+                    //.UseJsonSerialization()
+                    )
+                    w.Write(r.First());
+
+                Console.WriteLine(json.ToString());
+                return;
+
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
         }
 
         static void GenerateXmlFromDatatable()

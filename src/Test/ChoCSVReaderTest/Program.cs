@@ -4973,10 +4973,36 @@ value1,""{""""split.amount"""":""""1794"""",""""split.currencyCode"""":""""USD""
             }
             Console.WriteLine(csv.ToString());
         }
+
+        static void Issue151()
+        {
+            string csv = @"Id, Name
+1, Tom
+2, Mark
+3, Smith";
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .WithMaxScanRows(5)
+                .ErrorMode(ChoErrorMode.ReportAndContinue)
+                )
+            {
+                var dr = r.AsDataReader();
+
+                var dt = new DataTable();
+                dt.Load(dr);
+                Console.WriteLine(dt.Dump());
+                return;
+
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
         static void Main(string[] args)
         {
-            ChoETLFrxBootstrap.TraceLevel = TraceLevel.Verbose;
-            Json2CSV();
+            ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
+            Issue151();
             return;
 
             CSV2ComplexObject();

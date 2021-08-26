@@ -25,6 +25,12 @@ namespace ChoETL
         internal readonly Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>> JSONRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>>();
         public readonly Dictionary<Type, Func<object, object>> NodeConvertersForType = new Dictionary<Type, Func<object, object>>();
 
+        public bool FlattenNode
+        {
+            get;
+            set;
+        }
+
         public bool? DefaultArrayHandling
         {
             get;
@@ -1001,7 +1007,7 @@ namespace ChoETL
         JsonSerializer Serializer { get; set; }
     }
 
-    public class ChoJSONTypeConverter<T> : IChoValueConverter, IChoJSONConverter
+    public class ChoJSONTypeConverter<T> : IChoValueConverter, IChoJSONConverter, IChoCollectionConverter
     {
         public JsonReader Reader { get; set; }
         public JsonWriter Writer { get; set; }

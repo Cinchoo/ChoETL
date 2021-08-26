@@ -464,6 +464,23 @@ namespace ChoETL
 
         }
 
+        private IEnumerable<JObject> FlattenNodeIfOn(IEnumerable<JObject> jObjects)
+        {
+            if (Configuration.FlattenNode)
+            {
+                foreach (var jo in jObjects)
+                {
+                    foreach (var jo1 in jo.Flatten().OfType<JObject>())
+                        yield return (JObject)jo1;
+                }
+            }
+            else
+            {
+                foreach (var jo in jObjects)
+                    yield return jo;
+            }
+        }
+
         private IEnumerable<object> AsEnumerable(IEnumerable<JObject> jObjects, TraceSwitch traceSwitch, Func<object, bool?> filterFunc = null)
         {
             TraceSwitch = traceSwitch;
@@ -479,7 +496,7 @@ namespace ChoETL
             List<object> buffer = new List<object>();
             IDictionary<string, Type> recFieldTypes = null;
 
-            foreach (var obj in jObjects)
+            foreach (var obj in FlattenNodeIfOn(jObjects))
             {
                 pair = new Tuple<long, JObject>(++counter, obj);
                 skip = false;
@@ -512,7 +529,7 @@ namespace ChoETL
                     else
                         Configuration.Validate(pair);
                     var dict = Configuration.JSONRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
-                    if (Configuration.MaxScanRows == 0)
+                    //if (Configuration.MaxScanRows == 0)
                         RaiseMembersDiscovered(dict);
                     Configuration.UpdateFieldTypesIfAny(dict);
                     _configCheckDone = true;
@@ -640,10 +657,10 @@ namespace ChoETL
                 {
                     pair = new Tuple<long, JObject>(pair.Item1, Configuration.CustomNodeSelecter(pair.Item2));
                 }
-                else if (Configuration.NodeConvertersForType.ContainsKey(RecordType) && Configuration.NodeConvertersForType[RecordType] != null)
-                {
-                    pair = new Tuple<long, JObject>(pair.Item1, Configuration.NodeConvertersForType[RecordType](pair.Item2) as JObject);
-                }
+                //else if (Configuration.NodeConvertersForType.ContainsKey(RecordType) && Configuration.NodeConvertersForType[RecordType] != null)
+                //{
+                //    pair = new Tuple<long, JObject>(pair.Item1, Configuration.NodeConvertersForType[RecordType](pair.Item2) as JObject);
+                //}
 
                 if (pair.Item2 == null)
                 {

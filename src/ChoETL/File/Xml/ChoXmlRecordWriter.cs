@@ -371,8 +371,20 @@ namespace ChoETL
                                     {
                                         innerXml1 = ReplaceXmlNodeIfAppl(innerXml1, Configuration.NodeName);
                                     }
-                                    sw.Write(eolDelimiter);
-                                    sw.Write(Indent(innerXml1, _indent + 1));
+                                    if (Configuration.IgnoreRootName)
+                                    {
+                                        var nsMgr = Configuration.XmlNamespaceManager.Value;
+                                        //Add namespace to node 
+                                        innerXml1 = innerXml1.InsertXmlNamespaces(nsMgr.ToString(Configuration));
+                                    }
+
+                                    if (Configuration.IgnoreRootName)
+                                        sw.Write(innerXml1);
+                                    else
+                                    {
+                                        sw.Write(eolDelimiter);
+                                        sw.Write(Indent(innerXml1, _indent + 1));
+                                    }
 
                                     if (!RaiseAfterRecordWrite(record, _index, null))
                                         yield break;
@@ -1017,6 +1029,11 @@ namespace ChoETL
 
             //Remove namespaces
             recText = recText.RemoveXmlNamespaces(); // Regex.Replace(recText, @"\sxmlns[^""]+""[^""]+""", String.Empty);
+            if (Configuration.IgnoreRootName)
+            {
+                //Add namespace to node 
+                recText = recText.InsertXmlNamespaces(nsMgr.ToString(Configuration));
+            }
 
             return true;
         }

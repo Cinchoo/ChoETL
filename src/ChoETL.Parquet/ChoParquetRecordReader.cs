@@ -172,7 +172,7 @@ namespace ChoETL
                         else
                             Configuration.Validate(pair);
                         var dict = Configuration.ParquetRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
-                        if (Configuration.MaxScanRows == 0)
+                        //if (Configuration.MaxScanRows == 0)
                             RaiseMembersDiscovered(dict);
                         Configuration.UpdateFieldTypesIfAny(dict);
                         _configCheckDone = true;

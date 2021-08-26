@@ -16,6 +16,51 @@ namespace ChoETL
         {
         }
 
+        public static JToken Flatten(this string json)
+        {
+            JToken input = JToken.Parse(json);
+            return Flatten(input);
+        }
+
+        public static JToken Flatten(this JToken input)
+        {
+            var res = new JArray();
+            foreach (var obj in GetFlattenedObjects(input))
+                res.Add(obj);
+            return res;
+        }
+
+        private static IEnumerable<JToken> GetFlattenedObjects(JToken token, IEnumerable<JProperty> otherProperties = null)
+        {
+            if (token is JObject obj)
+            {
+                var children = obj.Children<JProperty>().GroupBy(prop => prop.Value?.Type == JTokenType.Array).ToDictionary(gr => gr.Key);
+                if (children.TryGetValue(false, out var directProps))
+                    otherProperties = otherProperties?.Concat(directProps) ?? directProps; 
+
+                if (children.TryGetValue(true, out var ChildCollections))
+                {
+                    foreach (var childObj in ChildCollections.SelectMany(childColl => childColl.Values()).SelectMany(childColl => GetFlattenedObjects(childColl, otherProperties)))
+                        yield return childObj;
+                }
+                else 
+                {
+                    var res = new JObject();
+                    if (otherProperties != null)
+                        foreach (var prop in otherProperties)
+                            res.Add(prop);
+                    yield return res;
+                }
+            }
+            else if (token is JArray arr)
+            {
+                foreach (var co in token.Children().SelectMany(c => GetFlattenedObjects(c, otherProperties)))
+                    yield return co;
+            }
+            else
+                throw new NotImplementedException(token.GetType().Name);
+        }
+
         private static string GetTypeConverterName(Type type)
         {
             if (type == null) return String.Empty;

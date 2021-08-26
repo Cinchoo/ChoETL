@@ -1760,6 +1760,14 @@ namespace ChoETL
             return Regex.Replace(xml, @"\sxmlns[^""]+""[^""]*""", String.Empty);
         }
 
+        public static string InsertXmlNamespaces(this string xml, string nsText)
+        {
+            if (xml == null || nsText.IsNullOrWhiteSpace())
+                return xml;
+            var x= Regex.Replace(xml, @"(<\S+)(>.*)", $"$1{nsText}$2", RegexOptions.Singleline);
+            return x;
+        }
+
         public static StringReader AsReader(this string value)
         {
             if (value == null)
