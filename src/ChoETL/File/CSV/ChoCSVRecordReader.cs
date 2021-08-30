@@ -1243,7 +1243,7 @@ namespace ChoETL
 
             if (Configuration.FileHeaderConfiguration.HasHeaderRecord && !Configuration.FileHeaderConfiguration.IgnoreHeader)
             {
-                if (Configuration.ThrowAndStopOnMissingCSVColumn)
+                if (Configuration.ThrowAndStopOnMissingField) // Configuration.ThrowAndStopOnMissingCSVColumn)
                 {
                     foreach (string fieldName in Configuration.CSVRecordFieldConfigurations.Where(i => !i.Optional).OrderBy(i => i.FieldPosition).Select(i => i.FieldName))
                     {

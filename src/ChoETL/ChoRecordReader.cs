@@ -104,7 +104,7 @@ namespace ChoETL
 
         protected virtual IDictionary<string, object> MigrateToNewSchema(IDictionary<string, object> rec, IDictionary<string, Type> recTypes)
         {
-            IDictionary<string, object> newRec = new Dictionary<string, object>();
+            IDictionary<string, object> newRec = new ChoDynamicObject(); //  new Dictionary<string, object>();
             foreach (var kvp in rec)
             {
                 //newRec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);

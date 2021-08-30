@@ -4999,10 +4999,41 @@ value1,""{""""split.amount"""":""""1794"""",""""split.currencyCode"""":""""USD""
             }
         }
 
+
+        static void CalcField()
+        {
+            string csv = @"Id, FirstName, LastName
+1, Tom, Smith
+2, Mark, Hartigan
+3, Smith, Paul";
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .WithMaxScanRows(5)
+                .WithField("Id")
+                .WithField("Name", valueSelector: o => o.FirstName + o.LastName)
+                //.ThrowAndStopOnMissingCSVColumn(false)
+                .ThrowAndStopOnMissingField(false)
+                .ErrorMode(ChoErrorMode.ReportAndContinue)
+                )
+            {
+                //var dr = r.AsDataReader();
+
+                //var dt = new DataTable();
+                //dt.Load(dr);
+                //Console.WriteLine(dt.Dump());
+                //return;
+
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            Issue151();
+            CalcField();
             return;
 
             CSV2ComplexObject();
