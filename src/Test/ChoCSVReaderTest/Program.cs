@@ -4347,8 +4347,8 @@ S, T% x 100
 
             using (var r = ChoCSVReader<EmployeeZ>.LoadText(csv)
                 .WithFirstLineHeader()
-                .ThrowAndStopOnMissingCSVColumn(false)
-                //.ThrowAndStopOnMissingField(false)
+                //.ThrowAndStopOnMissingCSVColumn(false)
+                .ThrowAndStopOnMissingField(false)
                 .Setup(s => s.RecordLoadError += (o, e) =>
                 {
                     Console.WriteLine(e.Exception.Message);
@@ -4435,7 +4435,7 @@ S, T% x 100
 
             using (var r = ChoCSVReader<EmployeeZ>.LoadText(csv, c)
                 .WithFirstLineHeader()
-                .ThrowAndStopOnMissingCSVColumn(false)
+                //.ThrowAndStopOnMissingCSVColumn(false)
                 .ThrowAndStopOnMissingField(false)
                 //.Setup(s => s.RecordLoadError += (o, e) =>
                 //{
@@ -4646,7 +4646,7 @@ acf12d17-058e-451e-8449-60948055f6af;TEST1;Item;type;Equal;flight;Data;airlineCo
                 .WithFirstLineHeader()
                 .WithField("Date")
                 .WithField("Time")
-                .ThrowAndStopOnMissingCSVColumn(false)
+                //.ThrowAndStopOnMissingCSVColumn(false)
                 .WithField("DateTime", valueSelector: o =>
                 {
                     var da = o as dynamic;
