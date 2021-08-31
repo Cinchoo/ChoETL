@@ -2541,20 +2541,20 @@ ID, Name
 
             ChoETLFrxBootstrap.Log = (s) => Trace.WriteLine(s);
 
-//            string csv = @"* Select	d  : 02:02:12 20 MAR 2017						
-//* Shippi	g Date >= 01/20/2017 ; Shipping Dat	<= 03/20/2017	; Shipping	Branch = 2	9,15,19,21,22,	5,26,27,2	,29,30,31,
-//********	***********************************	**************	**********	**********	**************	*********	**********
-                            
-//CUSTOMER	CUSTOMER NAME	INVOICE ID	PURCHASE	PRODUCT ID	PURCHASED	PURCHASED	LOCATION
-//ID			DATE		AMOUNT	QUANTITY	ID
-//22160	MANSFIELD BROTHERS HEATING & AIR	sss.001	02/08/2017	193792	69.374	2	30
-//27849	OWSLEY SUPPLY LLC  - EQUIPMENT	sss.001	03/14/2017	123906	70.409	1	2
-//27849	OWSLEY SUPPLY LLC  - EQUIPMENT	sss.001	03/14/2017	40961	10.000	1	2
-//16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	116511	63.016	1	15
-//16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	116511	-63.016	-1	15
-//16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	122636	30.748	1	15
-//16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	137661	432.976	1	15
-//16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	137661	-432.976	-1	15";
+            //            string csv = @"* Select	d  : 02:02:12 20 MAR 2017						
+            //* Shippi	g Date >= 01/20/2017 ; Shipping Dat	<= 03/20/2017	; Shipping	Branch = 2	9,15,19,21,22,	5,26,27,2	,29,30,31,
+            //********	***********************************	**************	**********	**********	**************	*********	**********
+
+            //CUSTOMER	CUSTOMER NAME	INVOICE ID	PURCHASE	PRODUCT ID	PURCHASED	PURCHASED	LOCATION
+            //ID			DATE		AMOUNT	QUANTITY	ID
+            //22160	MANSFIELD BROTHERS HEATING & AIR	sss.001	02/08/2017	193792	69.374	2	30
+            //27849	OWSLEY SUPPLY LLC  - EQUIPMENT	sss.001	03/14/2017	123906	70.409	1	2
+            //27849	OWSLEY SUPPLY LLC  - EQUIPMENT	sss.001	03/14/2017	40961	10.000	1	2
+            //16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	116511	63.016	1	15
+            //16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	116511	-63.016	-1	15
+            //16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	122636	30.748	1	15
+            //16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	137661	432.976	1	15
+            //16794	ALEXANDER GILMORE dba AL'S HEATING	sss.001	01/25/2017	137661	-432.976	-1	15";
 
             string csv = @"Meeting Summary
 Total Number of Participants	4 
@@ -4396,23 +4396,23 @@ S, T% x 100
 
             return;
 
-//            string csv = @"Id, Name
-//1, Tom
-//2";
+            //            string csv = @"Id, Name
+            //1, Tom
+            //2";
 
-//            using (var r = ChoCSVReader<EmployeeZ>.LoadText(csv)
-//                .WithFirstLineHeader()
-//                .Setup(s => s.RecordLoadError += (o, e) =>
-//                {
-//                    Console.WriteLine(e.Exception.Message);
-//                    e.Handled = true;
-//                })
-//                //.ThrowAndStopOnMissingField()
-//                )
-//            {
-//                foreach (var rec in r)
-//                    Console.WriteLine(rec.Dump());
-//            }
+            //            using (var r = ChoCSVReader<EmployeeZ>.LoadText(csv)
+            //                .WithFirstLineHeader()
+            //                .Setup(s => s.RecordLoadError += (o, e) =>
+            //                {
+            //                    Console.WriteLine(e.Exception.Message);
+            //                    e.Handled = true;
+            //                })
+            //                //.ThrowAndStopOnMissingField()
+            //                )
+            //            {
+            //                foreach (var rec in r)
+            //                    Console.WriteLine(rec.Dump());
+            //            }
         }
 
         static void NestedColumnSeparatorTest()
@@ -4545,7 +4545,7 @@ acf12d17-058e-451e-8449-60948055f6af;TEST1;Item;type;Equal;flight;Data;airlineCo
         static void CheckIfCSVFileIsEmpty1()
         {
             string csv = @"Id, Name";
-//1, Tom";
+            //1, Tom";
 
             using (var r = ChoCSVReader.LoadText(csv)
                 .WithFirstLineHeader())
@@ -4558,7 +4558,7 @@ acf12d17-058e-451e-8449-60948055f6af;TEST1;Item;type;Equal;flight;Data;airlineCo
         static void CheckIfCSVFileIsEmpty2()
         {
             string csv = @"Id, Name";
-//1, Tom";
+            //1, Tom";
 
             bool IsCSVEmpty = true;
             using (var r = ChoCSVReader.LoadText(csv)
@@ -4686,7 +4686,7 @@ acf12d17-058e-451e-8449-60948055f6af;TEST1;Item;type;Equal;flight;Data;airlineCo
 
             using (var r = ChoCSVReader.LoadText(csv)
                 .WithFirstLineHeader(true)
-                .WithFields("Key","Name","Salary", "Dept")
+                .WithFields("Key", "Name", "Salary", "Dept")
                 )
             {
                 foreach (var rec in r)
@@ -4718,13 +4718,13 @@ acf12d17-058e-451e-8449-60948055f6af;TEST1;Item;type;Equal;flight;Data;airlineCo
                     )
                     w.Write(items);
 
-                    //foreach (var rec in r.GroupBy(r1 => r1.ID).Select(r2 => new
-                    //{
-                    //    ID = r2.Key,
-                    //    Name = r2.First().name,
-                    //    Address = r2.Select(r3 => new { r3.street, plz = r3.streetNR }).ToArray()
-                    //}))
-                    //    Console.WriteLine(rec.Dump());
+                //foreach (var rec in r.GroupBy(r1 => r1.ID).Select(r2 => new
+                //{
+                //    ID = r2.Key,
+                //    Name = r2.First().name,
+                //    Address = r2.Select(r3 => new { r3.street, plz = r3.streetNR }).ToArray()
+                //}))
+                //    Console.WriteLine(rec.Dump());
             }
 
             Console.WriteLine(xml.ToString());
@@ -4954,8 +4954,8 @@ value1,""{""""split.amount"""":""""1794"""",""""split.currencyCode"""":""""USD""
      new Datum() { Channels = new Channel[] { new Channel() { Id = 1, Name = "name1" }, new Channel() { Id = 2, Name = "name2" } }, Datetime = DateTime.Now.ToString() },
      new Datum() { Channels = new Channel[] { new Channel() { Id = 3, Name = "name3" }, new Channel() { Id = 4, Name = "name4" } }, Datetime = DateTime.Now.ToString() },
 };
-            
-           
+
+
             //var rec = ChoType.GetDeclaringRecord("Data.Channels.Id", station, 0);
             //Console.WriteLine(rec.Dump());
             //return;

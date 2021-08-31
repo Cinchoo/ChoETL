@@ -158,17 +158,31 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
     ]
 }
 ";
-            using (var r = ChoJSONReader<Facility>.LoadText(json)
+            using (var r = ChoJSONReader.LoadText(json)
                 .WithJSONPath("$..facilities[*]", true)
+                .WithField("id")
+                .WithField("createdAt", fieldType: typeof(DateTimeOffset), valueConverter: o => DateTimeOffset.Now)
+                    .ErrorMode(ChoErrorMode.IgnoreAndContinue)
                 )
             {
-                var x = r.Select(r1 => { r1.Location = new Point(100); return r1; }).ToArray();
-                using (var w = new ChoParquetWriter<Facility>("JSON2Parquet1.parquet")
-                    .IgnoreField("Location.IsEmpty")
+                using (var w = new ChoParquetWriter("JSON2Parquet1.parquet")
+                    .ErrorMode(ChoErrorMode.IgnoreAndContinue)
                     )
                 {
-                    w.Write(x);
+                    w.Write(r);
                 }
+                return;
+
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+                return;
+                //var x = r.Select(r1 => { r1.Location = new Point(100); return r1; }).ToArray();
+                //using (var w = new ChoParquetWriter<Facility>("JSON2Parquet1.parquet")
+                //    .IgnoreField("Location.IsEmpty")
+                //    )
+                //{
+                //    w.Write(x);
+                //}
             }
         }
 
@@ -222,7 +236,7 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
         {
             IList<DateTime> dateList = new List<DateTime>
 {
-    new DateTime(2009, 12, 7, 23, 10, 0, DateTimeKind.Utc),
+    new DateTime(2009, 12, 7), //, 23, 10, 0, DateTimeKind.Utc),
     new DateTime(2010, 1, 1, 9, 0, 0, DateTimeKind.Utc),
     new DateTime(2010, 2, 10, 10, 0, 0, DateTimeKind.Utc)
 };
@@ -327,6 +341,9 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
 
         static void Main(string[] args)
         {
+            JSON2Parquet1();
+            return;
+
             JsonToParquet52();
             return;
 

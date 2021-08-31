@@ -372,12 +372,26 @@ namespace ChoETL
                     if (key == null)
                     {
                         yield return new KeyValuePair<string, object>("Key", kvp.Key);
-                        foreach (var tuple in Flatten(kvp.Value.ToDynamicObject() as IDictionary<string, object>, null, nestedKeySeparator, ignoreDictionaryFieldPrefix))
-                            yield return tuple;
+                        if (kvp.Value != null)
+                        {
+                            if (!kvp.Value.GetType().IsSimple())
+                            {
+                                foreach (var tuple in Flatten(kvp.Value.ToDynamicObject() as IDictionary<string, object>, null, nestedKeySeparator, ignoreDictionaryFieldPrefix))
+                                    yield return tuple;
+                            }
+                        }
                     }
                     else
-                        foreach (var tuple in Flatten(kvp.Value.ToDynamicObject() as IDictionary<string, object>, key == null ? kvp.Key : "{0}{2}{1}".FormatString(key, kvp.Key, nestedKeySeparator), nestedKeySeparator, arrayIndexSeparator, ignoreDictionaryFieldPrefix))
-                            yield return tuple;
+                    {
+                        if (kvp.Value != null)
+                        {
+                            if (!kvp.Value.GetType().IsSimple())
+                            {
+                                foreach (var tuple in Flatten(kvp.Value.ToDynamicObject() as IDictionary<string, object>, key == null ? kvp.Key : "{0}{2}{1}".FormatString(key, kvp.Key, nestedKeySeparator), nestedKeySeparator, arrayIndexSeparator, ignoreDictionaryFieldPrefix))
+                                    yield return tuple;
+                            }
+                        }
+                    }
                 }
             }
         }

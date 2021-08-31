@@ -1069,6 +1069,7 @@ namespace ChoETL
                 || typeof(string) == type
                 || type.IsEnum
                 || typeof(DateTime) == type
+                || typeof(DateTimeOffset) == type
                 || typeof(BigInteger) == type
                 || typeof(ChoCurrency) == type
                 || typeof(Decimal) == type
