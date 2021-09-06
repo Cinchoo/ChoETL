@@ -1,0 +1,48 @@
+﻿{
+  "system": {
+    "created": "2021-08-01T13:33:37.123Z",
+    "by": "web"
+  },
+  "location": {
+    "id": 100,
+    "country": "DE"
+  },
+  "order": [
+    {
+      "OrderID": 22,
+      "OrderName": "Soda",
+      "OrderArticles": [
+        {
+          "Size": 33,
+          "ProductName": "Coke",
+          "ProductId": "999"
+        },
+        {
+          "Size": 66,
+          "ProductName": "Fanta",
+          "ProductId": "888"
+        },
+        {
+          "Size": 50,
+          "ProductName": "Pepsi",
+          "ProductId": "444"
+        }
+      ],
+      "ProcessedId": 1001,
+      "Date": "2021-08-02"
+    },
+    {
+      "OrderID": 23,
+      "OrderName": "Beverage",
+      "OrderArticles": [
+        {
+          "Size": 44,
+          "ProductName": "Coke",
+          "ProductId": "999"
+        }
+      ],
+      "ProcessedId": 1002,
+      "Date": "2021-08-03"
+    }
+  ]
+}

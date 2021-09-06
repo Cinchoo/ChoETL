@@ -22,15 +22,15 @@ namespace ChoETL
             return Flatten(input);
         }
 
-        public static JToken Flatten(this JToken input)
+        public static JToken Flatten(this JToken input, bool ignorePrefix = false)
         {
             var res = new JArray();
-            foreach (var obj in GetFlattenedObjects(input))
+            foreach (var obj in GetFlattenedObjects(input, null, ignorePrefix))
                 res.Add(obj);
             return res;
         }
 
-        private static IEnumerable<JToken> GetFlattenedObjects(JToken token, IEnumerable<JProperty> otherProperties = null)
+        private static IEnumerable<JToken> GetFlattenedObjects(JToken token, IEnumerable<JProperty> otherProperties = null, bool ignorePrefix = false)
         {
             if (token is JObject obj)
             {
@@ -40,7 +40,7 @@ namespace ChoETL
 
                 if (children.TryGetValue(true, out var ChildCollections))
                 {
-                    foreach (var childObj in ChildCollections.SelectMany(childColl => childColl.Values()).SelectMany(childColl => GetFlattenedObjects(childColl, otherProperties)))
+                    foreach (var childObj in ChildCollections.SelectMany(childColl => childColl.Values()).SelectMany(childColl => GetFlattenedObjects(childColl, otherProperties, ignorePrefix)))
                         yield return childObj;
                 }
                 else 
@@ -54,7 +54,7 @@ namespace ChoETL
             }
             else if (token is JArray arr)
             {
-                foreach (var co in token.Children().SelectMany(c => GetFlattenedObjects(c, otherProperties)))
+                foreach (var co in token.Children().SelectMany(c => GetFlattenedObjects(c, otherProperties, ignorePrefix)))
                     yield return co;
             }
             else

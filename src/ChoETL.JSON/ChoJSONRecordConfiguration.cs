@@ -92,7 +92,8 @@ namespace ChoETL
                         var jsonResolver = new ChoPropertyRenameAndIgnoreSerializerContractResolver(this);
 
                         _jsonSerializerSettings = new JsonSerializerSettings();
-                        _jsonSerializerSettings.ContractResolver = jsonResolver;
+                        if (!UseJSONSerialization)
+                            _jsonSerializerSettings.ContractResolver = jsonResolver;
                         //_jsonSerializerSettings.Converters = GetJSONConverters();
                     }
 

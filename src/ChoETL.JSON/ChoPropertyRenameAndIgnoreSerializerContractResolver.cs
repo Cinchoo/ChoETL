@@ -322,6 +322,13 @@ namespace ChoETL
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             object retValue = null;
+
+            var crs = Reader.ContractResolverState;
+            if (crs == null)
+            {
+                return serializer.Deserialize(reader, objectType);
+            }
+
             try
             {
                 retValue = JObject.Load(reader);
@@ -330,10 +337,6 @@ namespace ChoETL
             {
                 retValue = serializer.Deserialize(reader, objectType);
             }
-
-            var crs = Reader.ContractResolverState;
-            if (crs == null)
-                return serializer.Deserialize(reader, objectType);
 
             var fc = crs.FieldConfig;
             crs.Name = _fc == null ? _mi.GetFullName() : crs.Name;

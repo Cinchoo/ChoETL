@@ -3762,6 +3762,155 @@ K,L,M,N,O,P,Q,R,S,T";
             Console.WriteLine(csv.ToString());
         }
 
+        public class OrderSystem
+        {
+            [JsonProperty("created")]
+            public string Created { get; set; }
+
+            [JsonProperty("by")]
+            public string By { get; set; }
+        }
+
+        public class OrderLocation
+        {
+            [JsonProperty("id")]
+            public int Id { get; set; }
+
+            [JsonProperty("country")]
+            public string Country { get; set; }
+        }
+
+        public class OrderArticle
+        {
+            [JsonProperty("Size")]
+            public int Size { get; set; }
+
+            [JsonProperty("ProductName")]
+            public string ProductName { get; set; }
+
+            [JsonProperty("ProductId")]
+            public string ProductId { get; set; }
+        }
+
+        public class Order
+        {
+            [JsonProperty("OrderID")]
+            public int OrderID { get; set; }
+
+            [JsonProperty("OrderName")]
+            public string OrderName { get; set; }
+
+            [JsonProperty("OrderArticles")]
+            public List<OrderArticle> OrderArticles { get; set; }
+
+            [JsonProperty("ProcessedId")]
+            public int ProcessedId { get; set; }
+
+            [JsonProperty("Date")]
+            public string Date { get; set; }
+        }
+
+        public class OrderRoot
+        {
+            [JsonProperty("system")]
+            public OrderSystem System { get; set; }
+
+            [JsonProperty("location")]
+            public OrderLocation Location { get; set; }
+
+            [JsonProperty("order")]
+            public List<Order> Orders { get; set; }
+        }
+
+        static void Sample55Test()
+        {
+            StringBuilder csv = new StringBuilder();
+            using (var r = new ChoJSONReader<OrderRoot>("sample55.json")
+                .UseJsonSerialization()
+                )
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithDelimiter(";")
+                    .WithFirstLineHeader())
+                {
+                    w.Write(r.SelectMany(root =>
+                        root.Orders
+                        .SelectMany(order => order.OrderArticles
+                        .Select(orderarticle => new
+                        {
+                            root.System.Created,
+                            root.System.By,
+                            root.Location.Id,
+                            order.OrderID,
+                            order.OrderName,
+                            orderarticle.Size,
+                            orderarticle.ProductName,
+                            orderarticle.ProductId,
+                        })
+                            )
+                        )
+                    );
+                }
+            }
+            Console.WriteLine(csv.ToString());
+        }
+        static void Sample55Test2()
+        {
+            StringBuilder csv = new StringBuilder();
+            using (var r = new ChoJSONReader("sample55.json")
+                .WithField("created", jsonPath: "$..system.created", isArray: false, fieldType: typeof(string))
+                .WithField("by", jsonPath: "$..system.by", isArray: false)
+                .WithField("id", jsonPath: "$..location.id", isArray: false)
+                .WithField("country", jsonPath: "$..location.country", isArray: false)
+                .WithField("OrderID")
+                .WithField("OrderName")
+                .WithField("Size")
+                .WithField("ProductName")
+                .WithField("ProductId")
+                .Configure(c => c.FlattenNode = true)
+                )
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithDelimiter(";")
+                    .WithFirstLineHeader())
+                {
+                    w.Write(r);
+                }
+            }
+            Console.WriteLine(csv.ToString());
+        }
+
+        static void Sample55Test1()
+        {
+            StringBuilder csv = new StringBuilder();
+            using (var r = new ChoJSONReader("sample55.json"))
+            {
+                using (var w = new ChoCSVWriter(csv)
+                    .WithDelimiter(";")
+                    .WithFirstLineHeader())
+                {
+                    w.Write(r.SelectMany(root =>
+                        ((Array)root.order).Cast<dynamic>()
+                        .SelectMany(order => ((Array)order.OrderArticles).Cast<dynamic>()
+                        .Select(orderarticle => new
+                        {
+                            created = ((DateTime)root.system.created).ToString("yyyy-MM-ddThh:mm:ss.fffZ"),
+                            root.system.by,
+                            root.location.id,
+                            order.OrderID,
+                            order.OrderName,
+                            orderarticle.Size,
+                            orderarticle.ProductName,
+                            orderarticle.ProductId,
+                        })
+                            )
+                        )
+                    );
+                }
+            }
+            Console.WriteLine(csv.ToString());
+        }
+
         static void Sample42Test()
         {
             StringBuilder csv = new StringBuilder();
@@ -4216,7 +4365,7 @@ K,L,M,N,O,P,Q,R,S,T";
             }
         }
 
-        public class Location
+        public class Location1
         {
             public string Name { get; set; }
             public LocationList Locations { get; set; }
@@ -4224,7 +4373,7 @@ K,L,M,N,O,P,Q,R,S,T";
 
         // Note: LocationList is simply a subclass of a List<T>
         // which then adds an IsExpanded property for use by the UI.
-        public class LocationList : List<Location>
+        public class LocationList : List<Location1>
         {
             [JsonProperty("IsExpanded")]
             public bool IsExpanded { get; set; }
@@ -4278,7 +4427,7 @@ K,L,M,N,O,P,Q,R,S,T";
                                       var jLocations = jLocationList["Locations"] as JArray;
                                       if (jLocations != null)
                                       {
-                                          locationList.AddRange(jLocations.ToObject<List<Location>>());
+                                          locationList.AddRange(jLocations.ToObject<List<Location1>>());
 
                                           //foreach (var jLocation in jLocations)
                                           //{
@@ -4619,7 +4768,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
-        public class Order
+        public class Order1
         {
             public string orderNo { get; set; }
             public string customerNo { get; set; }
@@ -4641,7 +4790,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 
         static void Sample47Test()
         {
-            using (var r = new ChoJSONReader<Order>("sample47.json")
+            using (var r = new ChoJSONReader<Order1>("sample47.json")
                 )
             {
                 foreach (var rec in r)
@@ -6387,7 +6536,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
             //DeserializeNestedObjectOfList();
-            FlattenJSON1();
+            Sample55Test();
             return;
 
             ReadJsonOneItemAtATime();
