@@ -22,6 +22,11 @@ namespace ChoETL
     public class ChoXmlRecordConfiguration : ChoFileRecordConfiguration
     {
         internal readonly Lazy<ChoXmlNamespaceManager> XmlNamespaceManager;
+        public bool FlattenNode
+        {
+            get;
+            set;
+        }
 
         public bool TurnOffAutoCorrectXNames
         {

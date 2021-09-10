@@ -433,7 +433,7 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Verbose;
 
-            Xml2JSON1();
+            CurrencyDynamicTest();
         }
 
         [Serializable]
@@ -935,10 +935,13 @@ namespace ChoXmlReaderTest
 
             using (var r = ChoXmlReader.LoadText(xml)
                 .WithMaxScanNodes(10)
+                .Configure(c => c.FlattenNode = true)
                 )
             {
                 foreach (var rec in r)
+                {
                     Console.WriteLine(rec.Dump());
+                }
             }
         }
 

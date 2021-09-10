@@ -64,6 +64,25 @@ namespace ChoETL
             });
         }
 
+        private IEnumerable<XElement> FlattenNodeIfOn(IEnumerable<XElement> elements)
+        {
+            return elements;
+
+            //if (Configuration.FlattenNode)
+            //{
+            //    foreach (var e in elements)
+            //    {
+            //        foreach (var jo1 in e.Flatten().OfType<XElement>())
+            //            yield return (XElement)jo1;
+            //    }
+            //}
+            //else
+            //{
+            //    foreach (var e in elements)
+            //        yield return e;
+            //}
+        }
+
         public override IEnumerable<object> AsEnumerable(object source, Func<object, bool?> filterFunc = null)
         {
             if (source == null)
@@ -203,7 +222,7 @@ namespace ChoETL
                 Configuration.NamespaceManager.AddNamespace("x", Configuration.NamespaceManager.DefaultNamespace);
             }
 
-            foreach (XElement el in ReadNodes(xElements))
+            foreach (XElement el in ReadNodes(FlattenNodeIfOn(xElements)))
             {
                 if (!_nsInitialized)
                 {

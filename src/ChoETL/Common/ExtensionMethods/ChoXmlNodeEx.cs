@@ -271,16 +271,16 @@ namespace ChoETL
             }
             else if (xPath.IsNullOrWhiteSpace() || xPath == "//*" || xPath == "./*" || xPath == "/*")
             {
-                while (xmlReader.Read())
-                {
-                    // first element is the root element
-                    if (xmlReader.NodeType == XmlNodeType.Element)
-                    {
-                        LoadNameSpaces(xmlReader, nsTable);
-                        nsTableCallback?.Invoke(nsTable);
-                        break;
-                    }
-                }
+                //while (xmlReader.Read())
+                //{
+                //    // first element is the root element
+                //    if (xmlReader.NodeType == XmlNodeType.Element)
+                //    {
+                //        LoadNameSpaces(xmlReader, nsTable);
+                //        nsTableCallback?.Invoke(nsTable);
+                //        break;
+                //    }
+                //}
                 bool isEmpty;
                 // Empty element?
                 isEmpty = xmlReader.IsEmptyElement;
@@ -290,6 +290,11 @@ namespace ChoETL
                 {
                     // Read the root start element
                     xmlReader.ReadStartElement();
+                    if (xmlReader.NodeType == XmlNodeType.Element)
+                    {
+                        LoadNameSpaces(xmlReader, nsTable);
+                        nsTableCallback?.Invoke(nsTable);
+                    }
 
                     do
                     {

@@ -3482,7 +3482,7 @@ K,L,M,N,O,P,Q,R,S,T";
 }
 ]";
             using (var r = ChoJSONReader<CTest>.LoadText(json)
-                .RegisterNodeConverterForType<CTest>(o => (((JObject)o)["id"]).CastTo<int>() > 0 ? o : null)
+                .RegisterNodeConverterForType<CTest>(o => ((int)((dynamic)o).id) > 0 ? o : null)
                 .RegisterNodeConverterForType<List<Class2>>(o =>
                 {
                     dynamic x = o as dynamic;
@@ -6536,7 +6536,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
             //DeserializeNestedObjectOfList();
-            Sample55Test();
+            ConditionalSelectionsOfNodes();
             return;
 
             ReadJsonOneItemAtATime();
