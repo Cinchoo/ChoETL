@@ -173,7 +173,8 @@ namespace ChoETL
                 else if (treatCurrencyAsDecimal && Decimal.TryParse(value.ToNString(), NumberStyles.Currency, CultureInfo.CurrentCulture, out decResult))
                     fieldType = typeof(Decimal);
                 else if (!RecordConfiguration.TypeConverterFormatSpec.DateTimeFormat.IsNullOrWhiteSpace()
-                        && ChoDateTime.TryParseExact(value.ToNString(), RecordConfiguration.TypeConverterFormatSpec.DateTimeFormat, CultureInfo.CurrentCulture, out dtResult))
+                        && ChoDateTime.TryParseExact(value.ToNString(), RecordConfiguration.TypeConverterFormatSpec.DateTimeFormat, CultureInfo.CurrentCulture, 
+                        RecordConfiguration.TypeConverterFormatSpec.DateTimeStyles, out dtResult))
                     fieldType = typeof(DateTime);
                 else if (DateTime.TryParse(value.ToNString(), out dtResult))
                     fieldType = typeof(DateTime);

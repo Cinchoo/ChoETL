@@ -17,7 +17,7 @@ namespace ChoETL
 
         protected override string Write(IEnumerable<T> run)
         {
-            var file = Path.GetTempFileName();
+            var file = ChoPath.GetTempFileName();
             using (var writer = new FileStream(file, FileMode.Create, FileAccess.Write, FileShare.None))
             {
                 new BinaryFormatter().Serialize(writer, run.ToArray());

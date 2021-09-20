@@ -1856,11 +1856,39 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             Console.WriteLine(csv.ToString());
         }
 
+
+        public static void ExternalSortTest()
+        {
+            string csv = @"Id, Name, City
+1, Tom, NY
+2, Mark, NJ
+3, Lou, FL
+4, Smith, PA
+5, Raj, DC
+";
+
+            StringBuilder csvOut = new StringBuilder();
+            using (var r = ChoCSVReader.LoadText(csv)
+                       .WithFirstLineHeader()
+                   )
+            {
+                using (var w = new ChoCSVWriter(csvOut)
+                       .WithFirstLineHeader()
+                       )
+                {
+                    w.Write(r.ExternalSort(new ChoLamdaComparer<dynamic>((e1, e2) => String.Compare(e1.Name, e2.Name))));
+                }
+            }
+
+            Console.WriteLine(csvOut.ToString());
+        }
+
+
         static void Main(string[] args)
         {
             //AppDomain.CurrentDomain.FirstChanceException += (sender, eventArgs) => { Console.WriteLine("FirstChanceException: " + eventArgs.Exception.ToString()); };
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            SizeAndAlignTest();
+            ExternalSortTest();
             //TestDictionary();
             return;
 

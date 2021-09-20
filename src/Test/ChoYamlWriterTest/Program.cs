@@ -299,10 +299,37 @@ namespace ChoYamlWriterTest
             Console.WriteLine(yaml.ToString());
         }
 
+
+        public static void ExternalSortTest()
+        {
+            string csv = @"Id, Name, City
+1, Tom, NY
+2, Mark, NJ
+3, Lou, FL
+4, Smith, PA
+5, Raj, DC
+";
+
+            StringBuilder csvOut = new StringBuilder();
+            using (var r = ChoCSVReader.LoadText(csv)
+                       .WithFirstLineHeader()
+                   )
+            {
+                using (var w = new ChoCSVWriter(csvOut)
+                       .WithFirstLineHeader()
+                       )
+                {
+                    w.Write(r.ExternalSort((e1, e2) => String.Compare(e1.Name, e2.Name)));
+                }
+            }
+
+            Console.WriteLine(csvOut.ToString());
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Verbose;
-            IgnoreFailedMembers();
+            ExternalSortTest();
         }
     }
 }

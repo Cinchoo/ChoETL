@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
+using System.Security.Permissions;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -57,7 +58,7 @@ namespace ChoETL
     }
 
     [Serializable]
-    public class ChoDynamicObject : DynamicObject, IDictionary<string, object> //, IList<object>, IList //, IXmlSerializable
+    public class ChoDynamicObject : DynamicObject, IDictionary<string, object>, ISerializable //, IList<object>, IList //, IXmlSerializable
     {
         public const string DefaultName = "dynamic";
         private string _keySeparator = ".";
@@ -264,6 +265,14 @@ namespace ChoETL
                     }, null, (long)TimeSpan.FromSeconds(pollIntervalInSec).TotalMilliseconds, Timeout.Infinite);
                 }
             });
+        }
+
+        protected ChoDynamicObject(SerializationInfo info, StreamingContext context)
+        {
+            foreach (SerializationEntry entry in info)
+            {
+                _kvpDict.Add(entry.Name, entry.Value);
+            }
         }
 
         #endregion Constructors
@@ -1661,6 +1670,15 @@ namespace ChoETL
         public object ConvertToObject(Type type)
         {
             return ChoObjectEx.ConvertToObject(this, type);
+        }
+
+        [SecurityPermissionAttribute(SecurityAction.Demand, SerializationFormatter = true)]
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            foreach (KeyValuePair<string, object> kvp in _kvpDict)
+            {
+                info.AddValue(kvp.Key, kvp.Value);
+            }
         }
     }
 

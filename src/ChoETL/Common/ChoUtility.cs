@@ -2738,6 +2738,19 @@ namespace ChoETL
             return sorter.Sort(unsorted);
         }
 
+        public static IEnumerable<T> ExternalSort<T>(this IEnumerable<T> unsorted, Func<T, T, int> comparer, int capacity = 10000, int mergeCount = 10)
+        {
+            ChoTextFileExternalSorter<T> sorter = new ChoTextFileExternalSorter<T>(new ChoLamdaComparer<T>(comparer), capacity, mergeCount);
+            return sorter.Sort(unsorted);
+        }
+
+        public static IEnumerable<dynamic> ExternalSort(this IEnumerable<dynamic> unsorted, Func<dynamic, dynamic, int> comparer, 
+            int capacity = 10000, int mergeCount = 10)
+        {
+            ChoTextFileExternalSorter<dynamic> sorter = new ChoTextFileExternalSorter<dynamic>(new ChoLamdaComparer<dynamic>(comparer), capacity, mergeCount);
+            return sorter.Sort(unsorted);
+        }
+
         // Convenience overloads are not included only most general one
         public static IEnumerable<T> OrderedMerge<T>(
           this IEnumerable<IEnumerable<T>> sources,

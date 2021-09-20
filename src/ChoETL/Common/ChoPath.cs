@@ -69,5 +69,25 @@ namespace ChoETL
             else
                 return Path.GetFullPath(path);
         }
+
+        public static Func<string> TempFileNameGenerator = null;
+        public static Action<string> TempFileNameGeneratorLog = null;
+
+        public static string GetTempFileName()
+        {
+            string tmpFileName = null;
+            var tempFileNameGenerator = TempFileNameGenerator;
+            if (tempFileNameGenerator != null)
+                tmpFileName = tempFileNameGenerator();
+            
+            if (tmpFileName.IsNullOrWhiteSpace())
+                tmpFileName = Path.GetTempFileName();
+
+            var tempFileNameGeneratorLog = TempFileNameGeneratorLog;
+            if (tempFileNameGeneratorLog != null)
+                tempFileNameGeneratorLog(tmpFileName);
+
+            return tmpFileName;
+        }
     }
 }
