@@ -2244,9 +2244,9 @@ K,L,M,N,O,P,Q,R,S,T";
         static void InterfaceTest()
         {
             string json = @"{
-    ""$type"": ""ChoJSONReaderTest.Program+Person1, ChoJSONReaderTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"",
+    ""$type"": ""ChoJSONReaderTest.Program+Person1, ChoJSONReaderTest"",
     ""Profession"": {
-        ""$type"": ""ChoJSONReaderTest.Program+Programming, ChoJSONReaderTest, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"",
+        ""$type"": ""ChoJSONReaderTest.Program+Programming1, ChoJSONReaderTest"",
         ""JobTitle"": ""Software Developer"",
         ""FavoriteLanguage"": ""C#""
     }
@@ -2254,7 +2254,9 @@ K,L,M,N,O,P,Q,R,S,T";
 
             foreach (var rec in ChoJSONReader<Person1>.LoadText(json)
                 .Configure(c => c.UseJSONSerialization = true)
-                .Configure(c => c.JsonSerializerSettings.TypeNameHandling = TypeNameHandling.All)
+                .Configure(c => c.JsonSerializerSettings.TypeNameHandling = TypeNameHandling.Objects)
+                .UseDefaultContractResolver()
+                .Configure(c => c.UnknownType = typeof(Programming))
                 )
                 Console.WriteLine(rec.Dump());
         }
@@ -6536,7 +6538,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
             //DeserializeNestedObjectOfList();
-            ConditionalSelectionsOfNodes();
+            InterfaceTest();
             return;
 
             ReadJsonOneItemAtATime();

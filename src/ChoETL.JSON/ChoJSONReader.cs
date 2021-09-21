@@ -769,6 +769,12 @@ namespace ChoETL
             return this;
         }
 
+        public ChoJSONReader<T> UseDefaultContractResolver(bool flag = true)
+        {
+            Configuration.UseDefaultContractResolver(flag);
+            return this;
+        }
+
         #endregion Fluent API
 
         ~ChoJSONReader()

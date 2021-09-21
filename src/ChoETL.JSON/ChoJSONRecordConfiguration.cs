@@ -43,6 +43,18 @@ namespace ChoETL
             set;
         }
 
+        public Type UnknownType
+        {
+            get;
+            set;
+        }
+
+        public Func<JObject, object> UnknownTypeConverter
+        {
+            get;
+            set;
+        }
+
         [DataMember]
         public List<ChoJSONRecordFieldConfiguration> JSONRecordFieldConfigurations
         {
@@ -371,6 +383,19 @@ namespace ChoETL
             DiscoverRecordFields(recordTypes.Where(rt => rt != null).FirstOrDefault());
             foreach (var rt in recordTypes.Where(rt => rt != null).Skip(1))
                 DiscoverRecordFields(rt, false, JSONRecordFieldConfigurations);
+            return this;
+        }
+
+        public ChoJSONRecordConfiguration UseDefaultContractResolver(bool flag = true)
+        {
+            if (flag)
+            {
+                var jsonResolver = new ChoPropertyRenameAndIgnoreSerializerContractResolver(this);
+                JsonSerializerSettings.ContractResolver = jsonResolver;
+            }
+            else
+                JsonSerializerSettings.ContractResolver = null;
+
             return this;
         }
 
@@ -976,6 +1001,12 @@ namespace ChoETL
         public new ChoJSONRecordConfiguration<T> MapRecordFields(params Type[] recordTypes)
         {
             base.MapRecordFields(recordTypes);
+            return this;
+        }
+
+        public new ChoJSONRecordConfiguration<T> UseDefaultContractResolver(bool flag = true)
+        {
+            base.UseDefaultContractResolver(flag);
             return this;
         }
     }

@@ -319,6 +319,20 @@ namespace ChoETL
             return conv;
         }
 
+        public static JsonReader CopyReaderForObject(JsonReader reader, JToken jToken)
+        {
+            // create reader and copy over settings
+            JsonReader jTokenReader = jToken.CreateReader();
+            jTokenReader.Culture = reader.Culture;
+            jTokenReader.DateFormatString = reader.DateFormatString;
+            jTokenReader.DateParseHandling = reader.DateParseHandling;
+            jTokenReader.DateTimeZoneHandling = reader.DateTimeZoneHandling;
+            jTokenReader.FloatParseHandling = reader.FloatParseHandling;
+            jTokenReader.MaxDepth = reader.MaxDepth;
+            jTokenReader.SupportMultipleContent = reader.SupportMultipleContent;
+            return jTokenReader;
+        }
+
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             object retValue = null;
@@ -326,7 +340,29 @@ namespace ChoETL
             var crs = Reader.ContractResolverState;
             if (crs == null)
             {
-                return serializer.Deserialize(reader, objectType);
+                var jo = JObject.Load(reader);
+                try
+                {
+                    using (var jObjectReader = CopyReaderForObject(reader, jo))
+                    {
+                        return serializer.Deserialize(jObjectReader, objectType);
+                    }
+                    //return serializer.Deserialize(reader, objectType);
+                }
+                catch
+                {
+                    var c = Configuration as ChoJSONRecordConfiguration;
+                    if (c != null)
+                    {
+                        var ut = c.UnknownType;
+                        var utc = c.UnknownTypeConverter;
+                        if (utc != null)
+                            return utc(jo);
+                        else if (ut != null)
+                            return jo.ToObject(ut);
+                    }
+                    return jo;
+                }
             }
 
             try

@@ -616,6 +616,12 @@ namespace ChoETL
             return this;
         }
 
+        public ChoJSONWriter<T> UseDefaultContractResolver(bool flag = true)
+        {
+            Configuration.UseDefaultContractResolver(flag);
+            return this;
+        }
+
         #endregion Fluent API
 
         public void Write(IDataReader dr)
