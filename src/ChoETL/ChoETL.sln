@@ -90,9 +90,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoETL.Avro", "..\ChoETL.Av
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoAvroReaderTest", "..\Test\ChoAvroReaderTest\ChoAvroReaderTest.csproj", "{0EE24502-D868-42AF-9C36-105BBF3294EB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoETL.SQLite.NETStandard", "..\ChoETL.SQLite.NETStandard\ChoETL.SQLite.NETStandard.csproj", "{5A83961F-08DA-4461-8CDF-8DB03B8591D1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoETL.SQLite.Core", "..\ChoETL.SQLite.NETStandard\ChoETL.SQLite.Core.csproj", "{5A83961F-08DA-4461-8CDF-8DB03B8591D1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoETL.SQLite.NETStandard.Test", "..\Test\ChoETL.SQLite.NETStandard.Test\ChoETL.SQLite.NETStandard.Test.csproj", "{B5F0B626-712F-416B-AD01-7D9F57595CB7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoETL.SQLite.Core.Test", "..\Test\ChoETL.SQLite.NETStandard.Test\ChoETL.SQLite.Core.Test.csproj", "{B5F0B626-712F-416B-AD01-7D9F57595CB7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

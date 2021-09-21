@@ -1,14 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\ChoETL.JSON.NETStandard\ChoETL.JSON.NETStandard.csproj" />
     <ProjectReference Include="..\..\ChoETL.NETStandard\ChoETL.NETStandard.csproj" />
-    <ProjectReference Include="..\..\ChoETL.SQLite.NETStandard\ChoETL.SQLite.NETStandard.csproj" />
+    <ProjectReference Include="..\..\ChoETL.SQLite.NETStandard\ChoETL.SQLite.Core.csproj" />
   </ItemGroup>
 
 </Project>
