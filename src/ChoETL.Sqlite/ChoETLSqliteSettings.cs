@@ -11,15 +11,13 @@ namespace ChoETL
         public static readonly ChoETLSqliteSettings Instance = new ChoETLSqliteSettings();
 
         public string DatabaseFilePath = "local.db";
-        public string TableName = "TmpTable";
+        public string TableName = null;
         public Dictionary<Type, string> ColumnDataMapper = ChoSqlTableHelper.ColumnDataMapper.Value;
 
         public void Validate()
         {
             if (DatabaseFilePath.IsNullOrWhiteSpace())
                 throw new ArgumentNullException("DatabaseFilePath");
-            if (TableName.IsNullOrWhiteSpace())
-                throw new ArgumentNullException("TableName");
         }
     }
 }

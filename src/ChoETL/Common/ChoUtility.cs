@@ -2292,6 +2292,14 @@ namespace ChoETL
             }
         }
 
+        public static void Print(this object target, TextWriter writer = null)
+        {
+            if (writer != null)
+                writer.WriteLine(ToStringEx(target));
+            else
+                Console.WriteLine(ToStringEx(target));
+        }
+
         public static string Dump(this object target)
         {
             return ToStringEx(target);
@@ -2330,7 +2338,7 @@ namespace ChoETL
                 return target.ToString();
             else if (target is IEnumerable)
             {
-                if (!target.GetType().IsOverrides("ToString"))
+                if (typeof(IQueryable).IsAssignableFrom(target.GetType()) || !target.GetType().IsOverrides("ToString"))
                 {
                     StringBuilder arrMsg = new StringBuilder();
 

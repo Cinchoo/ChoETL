@@ -6532,13 +6532,53 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             Console.WriteLine(csv.ToString());
         }
 
+        public class ExtDataObj
+        {
+            public string SessionId { get; set; }
+            [JsonExtensionData]
+            public Dictionary<string, JToken> Others { get; set; }
+        }
+
+        static void JsonExtensionDataTest()
+        {
+            string json = @"
+{
+    ""sessionId"": ""sesh1"",
+    ""instrumentId"": ""DEMO"",
+    ""clientId"": ""a100"",
+    ""assignedToType"": ""Client"",
+    ""completeDate"": ""2/3/19"",
+    ""answerStyle"": ""byValue"",
+    ""Q1"": ""This is a long test text message of the testering."",
+    ""Q2"": ""2"",
+    ""Q3"": ""2|3|1"",
+    ""Q4"": 9
+}
+";
+            using (var r = ChoJSONReader<ExtDataObj>.LoadText(json)
+                .UseJsonSerialization()
+                )
+            {
+                using (var w = new ChoJSONWriter<ExtDataObj>(Console.Out)
+                    .UseJsonSerialization()
+                    .SupportMultipleContent()
+                    .SingleElement()
+                    )
+                    w.Write(r);
+                return;
+                r.Print();
+                return;
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
             //DeserializeNestedObjectOfList();
-            InterfaceTest();
+            JsonExtensionDataTest();
             return;
 
             ReadJsonOneItemAtATime();

@@ -59,9 +59,9 @@ namespace ChoETL
                 sqliteSettings.Validate();
 
             if (typeof(T).IsDynamicType())
-                sqliteSettings.TableName = sqliteSettings.TableName.IsNullOrWhiteSpace() ? "Table" : sqliteSettings.TableName;
+                sqliteSettings.TableName = sqliteSettings.TableName.IsNullOrWhiteSpace() ? "TmpTable" : sqliteSettings.TableName;
             else
-                sqliteSettings.TableName = typeof(T).Name;
+                sqliteSettings.TableName = sqliteSettings.TableName.IsNullOrWhiteSpace() ? typeof(T).Name : sqliteSettings.TableName;
 
             return sqliteSettings;
         }

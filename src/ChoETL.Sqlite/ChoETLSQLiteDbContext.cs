@@ -20,8 +20,8 @@ namespace ChoETL
         {
             Database.Log = new Action<string>((m) =>
             {
-                if (ChoETLFramework.TraceSwitch.TraceInfo)
-                    Console.WriteLine(m);
+                //if (ChoETLFramework.TraceSwitch.TraceInfo)
+                //    Console.WriteLine(m);
                 ChoETLLog.Info(m);
             });
             Database.SetInitializer<ChoETLSQLiteDbContext<T>>(null);
