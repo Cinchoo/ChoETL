@@ -536,6 +536,18 @@ namespace ChoETL
                 if (fc.PropertyDescriptor == null)
                     continue;
 
+                if (!IsDynamicObject)
+                {
+                    if (fc.PropertyDescriptor != null)
+                    {
+                        if (!UseNestedKeyFormat)
+                        {
+                            if (fc.FieldName.Contains(".") && fc.DeclaringMember == fc.FieldName)
+                                fc.FieldName = fc.PropertyDescriptor.Name;
+                        }
+                    }
+                }
+
                 PIDict.Add(fc.Name, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
                 PDDict.Add(fc.Name, fc.PropertyDescriptor);
             }

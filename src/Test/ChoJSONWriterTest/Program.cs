@@ -1328,10 +1328,53 @@ namespace ChoJSONWriterTest
 
         }
 
+        public class ClassA
+        {
+            public string Identifier { get; set; }
+            public ClassB ClassBItem { get; set; }
+        }
+
+        public class ClassB
+        {
+            public string Name { get; set; }
+            public string Description { get; set; }
+        }
+
+        static void FlattenXml()
+        {
+            StringBuilder csv = new StringBuilder();
+            using (var w = new ChoCSVWriter<ClassA>(csv)
+                .Configure(c => c.UseNestedKeyFormat = false)
+                .WithFirstLineHeader()
+                )
+            {
+                w.Write(new ClassA
+                {
+                    Identifier = "1",
+                    ClassBItem = new ClassB
+                    {
+                        Name = "Name",
+                        Description = "Desc"
+                    }
+                });
+            }
+            using (var r = ChoCSVReader.LoadText(csv.ToString())
+                .WithFirstLineHeader())
+            {
+                using (var w = new ChoXmlWriter(Console.Out)
+                    .IgnoreRootName()
+                    .WithNodeName("ClassA")
+                    )
+                {
+                    w.Write(r);
+                }
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            CSV2JsonIssue143();
+            FlattenXml();
 
             return;
 

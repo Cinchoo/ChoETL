@@ -433,9 +433,37 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Verbose;
 
-            CurrencyDynamicTest();
+            ParseXml5();
         }
 
+        public class MyObject
+        {
+            public int Number { get; set; }
+            public string Name { get; set; }
+            public int intProp { get; set; }
+            public string stringProp { get; set; }
+            public double doubleProp { get; set; }
+            [ChoXPath("/MyChildObj")]
+            public List<MyChildObject> myChildObjects { get; set; }
+        }
+
+        public class MyChildObject
+        {
+            public int Number { get; set; }
+            public string Name { get; set; }
+            public int childIntProp { get; set; }
+            public string childStringProp { get; set; }
+        }
+
+        static void ParseXml5()
+        {
+            using (var r = new ChoXmlReader<MyObject>("XmlFile5.xml")
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
         [Serializable]
         public class ChoEazyCopyPropertyReplacer : IChoKeyValuePropertyReplacer
         {

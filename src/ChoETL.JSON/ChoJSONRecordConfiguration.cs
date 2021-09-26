@@ -258,7 +258,7 @@ namespace ChoETL
                 return JsonSerializerSettings == null ? null : JsonSerializer.Create(JsonSerializerSettings);
             });
 
-            DefaultArrayHandling = true;
+            DefaultArrayHandling = recordType == null || recordType.IsDynamicType() ? true : false;
             JSONRecordFieldConfigurations = new List<ChoJSONRecordFieldConfiguration>();
 
             Formatting = Newtonsoft.Json.Formatting.Indented;

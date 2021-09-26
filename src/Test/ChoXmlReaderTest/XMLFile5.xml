@@ -1,0 +1,42 @@
+﻿<?xml version="1.0"?>
+<myobjectlist objectCount = "3">
+	<myobject Number = "0" Name="My First Object" MyChildObectsCount = "2">
+		<intProp>5</intProp>
+		<stringProp>Str1</stringProp>
+		<doubleProp>35.1</doubleProp>
+		<MyChildObj Number = "100" Name = "My first child object">
+			<childIntProp>1</childIntProp>
+			<childStringProp>CStr1</childStringProp>
+		</MyChildObj>
+		<MyChildObj Number = "120" Name = "My child object">
+			<childIntProp>15</childIntProp>
+			<childStringProp>CStr2</childStringProp>
+		</MyChildObj>
+	</myobject>
+	<myobject Number = "145" Name="My second Object" MyChildObectsCount = "1">
+		<intProp>96</intProp>
+		<stringProp>Str2</stringProp>
+		<doubleProp>+Inf</doubleProp>
+		<MyChildObj Number = "250" Name = "This's child object">
+			<childIntProp>62</childIntProp>
+			<childStringProp>CStr3</childStringProp>
+		</MyChildObj>
+	</myobject>
+	<myobject Number = "261" Name="My last Object" MyChildObectsCount = "3">
+		<intProp>9</intProp>
+		<stringProp>Str45</stringProp>
+		<doubleProp>1.6449635e+07</doubleProp>
+		<MyChildObj Number = "150" Name = "Almost last child object">
+			<childIntProp>-1</childIntProp>
+			<childStringProp>CStr41</childStringProp>
+		</MyChildObj>
+		<MyChildObj Number = "680" Name = "Prelast child object">
+			<childIntProp>72</childIntProp>
+			<childStringProp>CStr42</childStringProp>
+		</MyChildObj>
+		<MyChildObj Number = "127" Name = "Last child object">
+			<childIntProp>64</childIntProp>
+			<childStringProp>CStr222</childStringProp>
+		</MyChildObj>
+	</myobject>
+</myobjectlist>

@@ -850,6 +850,11 @@ namespace ChoETL
                         if (fc.FieldType == null)
                             fc.FieldType = pd.PropertyType.GetUnderlyingType();
                     }
+                    if (!UseNestedKeyFormat)
+                    {
+                        if (pd != null && fc.FieldName.Contains("."))
+                            fc.FieldName = pd.Name;
+                    }
                 }
 
                 var pd1 = fc.DeclaringMember.IsNullOrWhiteSpace() ? ChoTypeDescriptor.GetProperty(RecordType, fc.Name)
@@ -861,6 +866,18 @@ namespace ChoETL
                     fc.PropertyDescriptor = TypeDescriptor.GetProperties(RecordType).AsTypedEnumerable<PropertyDescriptor>().Where(pd => pd.Name == fc.Name).FirstOrDefault();
                 if (fc.PropertyDescriptor == null)
                     continue;
+
+                if (!IsDynamicObject)
+                {
+                    if (fc.PropertyDescriptor != null)
+                    {
+                        if (!UseNestedKeyFormat)
+                        {
+                            if (fc.FieldName.Contains(".") && fc.DeclaringMember == fc.FieldName)
+                                fc.FieldName = fc.PropertyDescriptor.Name;
+                        }
+                    }
+                }
 
                 PIDict.Add(fc.FieldName, fc.PropertyDescriptor.ComponentType.GetProperty(fc.PropertyDescriptor.Name));
                 PDDict.Add(fc.FieldName, fc.PropertyDescriptor);

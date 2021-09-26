@@ -145,6 +145,7 @@
     <Content Include="sample.xml" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Content Include="XMLFile5.xml" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

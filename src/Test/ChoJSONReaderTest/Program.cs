@@ -6578,7 +6578,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
             //DeserializeNestedObjectOfList();
-            JsonExtensionDataTest();
+            Sample55Test2();
             return;
 
             ReadJsonOneItemAtATime();
