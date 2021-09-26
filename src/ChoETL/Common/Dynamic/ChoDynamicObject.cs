@@ -1055,6 +1055,23 @@ namespace ChoETL
             }
         }
 
+        public T GetValue<T>(string key)
+        {
+            return ChoUtility.CastTo<T>(this[key]);
+        }
+
+
+        public object GetValue(string key)
+        {
+            return this[key];
+        }
+
+        public void SetValue(string key, object value)
+        {
+            if (ContainsKey(key))
+                this[key] = value;
+        }
+
         public bool ContainsKey(string key)
         {
             return ContainsProperty(key);
@@ -1167,6 +1184,11 @@ namespace ChoETL
         public string DumpAsJson()
         {
             return ChoUtility.DumpAsJson(this);
+        }
+
+        public void Print(TextWriter writer = null)
+        {
+            ChoUtility.Print(this, writer);
         }
 
         public XmlSchema GetSchema()

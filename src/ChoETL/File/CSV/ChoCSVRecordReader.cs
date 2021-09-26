@@ -631,10 +631,10 @@ namespace ChoETL
 
         private Dictionary<string, object> InitFieldNameValuesDict()
         {
-            if (_fieldNames == null)
-                return null;
-
             Dictionary<string, object> fnv = new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer);
+            if (_fieldNames == null)
+                return fnv;
+
             foreach (var name in _fieldNames)
             {
                 if (fnv.ContainsKey(name))
@@ -648,18 +648,27 @@ namespace ChoETL
         private const string MISSING_VALUE = "^MISSING_VALUE$";
         private void ToFieldNameValues(Dictionary<string, object> fnv, string[] fieldValues)
         {
-            if (_fieldNames == null)
-                return;
-
-            long index = 1;
-            foreach (var name in _fieldNames)
+            if (_fieldNames != null)
             {
-                if (index - 1 < fieldValues.Length)
-                    fnv[name] = fieldValues[index - 1];
-                else
-                    fnv[name] = MISSING_VALUE;
+                long index = 1;
+                foreach (var name in _fieldNames)
+                {
+                    if (index - 1 < fieldValues.Length)
+                        fnv[name] = fieldValues[index - 1];
+                    else
+                        fnv[name] = MISSING_VALUE;
 
-                index++;
+                    index++;
+                }
+            }
+            else if (fieldValues != null)
+            {
+                long index = 1;
+                foreach (var value in fieldValues)
+                {
+                    fnv[$"Column{index}"] = value;
+                    index++;
+                }
             }
         }
 

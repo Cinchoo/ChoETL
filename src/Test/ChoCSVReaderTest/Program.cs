@@ -5029,11 +5029,33 @@ value1,""{""""split.amount"""":""""1794"""",""""split.currencyCode"""":""""USD""
             }
         }
 
+        public class EyeExcitation
+        {
+            public int Dt { get; set; }
+            public double[] Leds { get; set; } = new double[6];
+        }
+
+        static void CSVToArrayColumn()
+        {
+            string csv = @"Dt, LED1 R, LED2 R, LED3 R
+0, 1, 2, 3
+1, 0.5, 0.7, 5";
+
+            using (var r = ChoCSVReader< EyeExcitation>.LoadText(csv)
+                .WithFirstLineHeader()
+                .ThrowAndStopOnMissingField(false)
+                .WithField(f => f.Dt)
+                .WithField(f => f.Leds, valueSelector: v => new double[] { v.GetValue<double>("LED1 R")})
+                )
+            {
+                r.Print();
+            }
+        }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            CalcField();
+            CSVToArrayColumn();
             return;
 
             CSV2ComplexObject();
