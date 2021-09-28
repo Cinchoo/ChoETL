@@ -407,10 +407,10 @@ namespace ChoETL
             return this;
         }
 
-        public ChoAvroWriter<T> Configure(Action<ChoAvroRecordConfiguration> action)
+        public ChoAvroWriter<T> Configure(Action<ChoAvroRecordConfiguration<T>> action)
         {
             if (action != null)
-                action(Configuration);
+                action((ChoAvroRecordConfiguration<T>)Configuration);
 
             return this;
         }
@@ -562,6 +562,14 @@ namespace ChoETL
         {
             AvroSerializer = avroSerializer;
             Configuration.UseAvroSerializer = true;
+            return this;
+        }
+
+        public ChoAvroWriter Configure(Action<ChoAvroRecordConfiguration> action)
+        {
+            if (action != null)
+                action(Configuration);
+
             return this;
         }
 

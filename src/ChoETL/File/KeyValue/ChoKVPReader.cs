@@ -632,10 +632,10 @@ namespace ChoETL
             return this;
         }
 
-        public ChoKVPReader<T> Configure(Action<ChoKVPRecordConfiguration> action)
+        public ChoKVPReader<T> Configure(Action<ChoKVPRecordConfiguration<T>> action)
         {
             if (action != null)
-                action(Configuration);
+                action((ChoKVPRecordConfiguration<T>)Configuration);
 
             return this;
         }
@@ -678,6 +678,58 @@ namespace ChoETL
         public ChoKVPReader(Stream inStream, ChoKVPRecordConfiguration configuration = null)
             : base(inStream, configuration)
         {
+        }
+
+        public static IEnumerable<dynamic> DeserializeText(string inputText, Encoding encoding = null, ChoKVPRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            return new ChoKVPReader<dynamic>(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.ToArray();
+        }
+
+        public static IEnumerable<T> DeserializeText<T>(string inputText, Encoding encoding = null, ChoKVPRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+            where T : class, new()
+        {
+            return new ChoKVPReader<T>(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.ToArray();
+        }
+
+        public static IEnumerable<dynamic> Deserialize(string filePath, ChoKVPRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            return new ChoKVPReader<dynamic>(filePath, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.ToArray();
+        }
+
+        public static IEnumerable<T> Deserialize<T>(string filePath, ChoKVPRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+            where T : class, new()
+        {
+            return new ChoKVPReader<T>(filePath, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.ToArray();
+        }
+
+        public static IEnumerable<dynamic> Deserialize(TextReader textReader, ChoKVPRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            return new ChoKVPReader<dynamic>(textReader, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.ToArray();
+        }
+
+        public static IEnumerable<T> Deserialize<T>(TextReader textReader, ChoKVPRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+            where T : class, new()
+        {
+            return new ChoKVPReader<T>(textReader, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.ToArray();
+        }
+
+        public static IEnumerable<dynamic> Deserialize(Stream inStream, ChoKVPRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+        {
+            return new ChoKVPReader<dynamic>(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.ToArray();
+        }
+
+        public static IEnumerable<T> Deserialize<T>(Stream inStream, ChoKVPRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
+            where T : class, new()
+        {
+            return new ChoKVPReader<T>(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.ToArray();
+        }
+
+        public ChoKVPReader Configure(Action<ChoKVPRecordConfiguration> action)
+        {
+            if (action != null)
+                action(Configuration);
+
+            return this;
         }
     }
     public class ChoKVPEventArgs : EventArgs

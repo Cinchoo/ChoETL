@@ -733,10 +733,10 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONReader<T> Configure(Action<ChoJSONRecordConfiguration> action)
+        public ChoJSONReader<T> Configure(Action<ChoJSONRecordConfiguration<T>> action)
         {
             if (action != null)
-                action(Configuration);
+                action((ChoJSONRecordConfiguration<T>)Configuration);
 
             return this;
         }
@@ -1059,6 +1059,14 @@ namespace ChoETL
         //where T : class, new()
         {
             return new ChoJSONReader(jr, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
+        }
+
+        public ChoJSONReader Configure(Action<ChoJSONRecordConfiguration> action)
+        {
+            if (action != null)
+                action(Configuration);
+
+            return this;
         }
     }
 }

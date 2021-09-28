@@ -930,10 +930,10 @@ namespace ChoETL
             return this;
         }
 
-        public ChoXmlReader<T> Configure(Action<ChoXmlRecordConfiguration> action)
+        public ChoXmlReader<T> Configure(Action<ChoXmlRecordConfiguration<T>> action)
         {
             if (action != null)
-                action(Configuration);
+                action((ChoXmlRecordConfiguration<T>)Configuration);
 
             return this;
         }
@@ -1250,6 +1250,14 @@ namespace ChoETL
             where T : class, new()
         {
             return new ChoXmlReader<T>(xElement, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public ChoXmlReader Configure(Action<ChoXmlRecordConfiguration> action)
+        {
+            if (action != null)
+                action(Configuration);
+
+            return this;
         }
     }
 }

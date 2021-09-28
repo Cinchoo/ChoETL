@@ -577,10 +577,10 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONWriter<T> Configure(Action<ChoJSONRecordConfiguration> action)
+        public ChoJSONWriter<T> Configure(Action<ChoJSONRecordConfiguration<T>> action)
         {
             if (action != null)
-                action(Configuration);
+                action((ChoJSONRecordConfiguration<T>)Configuration);
 
             return this;
         }
@@ -787,6 +787,14 @@ namespace ChoETL
         public static string Serialize<T>(T record, JsonSerializerSettings jsonSerializerSettings, TraceSwitch traceSwitch = null)
         {
             return ToText(record, new ChoJSONRecordConfiguration().Configure(c => c.JsonSerializerSettings = jsonSerializerSettings).Configure(c => c.UseJSONSerialization = true), traceSwitch);
+        }
+
+        public ChoJSONWriter Configure(Action<ChoJSONRecordConfiguration> action)
+        {
+            if (action != null)
+                action(Configuration);
+
+            return this;
         }
 
         ~ChoJSONWriter()

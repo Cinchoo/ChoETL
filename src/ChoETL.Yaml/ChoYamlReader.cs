@@ -768,10 +768,10 @@ namespace ChoETL
             return this;
         }
 
-        public ChoYamlReader<T> Configure(Action<ChoYamlRecordConfiguration> action)
+        public ChoYamlReader<T> Configure(Action<ChoYamlRecordConfiguration<T>> action)
         {
             if (action != null)
-                action(Configuration);
+                action((ChoYamlRecordConfiguration<T>)Configuration);
 
             return this;
         }
@@ -1078,6 +1078,14 @@ namespace ChoETL
         public static T Deserialize<T>(YamlStream yamlStream, ChoYamlRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
             return new ChoYamlReader<T>(yamlStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.FirstOrDefault();
+        }
+
+        public ChoYamlReader Configure(Action<ChoYamlRecordConfiguration> action)
+        {
+            if (action != null)
+                action(Configuration);
+
+            return this;
         }
     }
 }

@@ -688,10 +688,10 @@ namespace ChoETL
             return this;
         }
 
-        public ChoParquetReader<T> Configure(Action<ChoParquetRecordConfiguration> action)
+        public ChoParquetReader<T> Configure(Action<ChoParquetRecordConfiguration<T>> action)
         {
             if (action != null)
-                action(Configuration);
+                action((ChoParquetRecordConfiguration<T>)Configuration);
 
             return this;
         }
@@ -843,6 +843,14 @@ namespace ChoETL
             {
             }
             return new ChoParquetReader<T>(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
+        }
+
+        public ChoParquetReader Configure(Action<ChoParquetRecordConfiguration> action)
+        {
+            if (action != null)
+                action(Configuration);
+
+            return this;
         }
     }
 }

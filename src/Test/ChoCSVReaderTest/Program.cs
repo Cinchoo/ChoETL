@@ -5041,7 +5041,11 @@ value1,""{""""split.amount"""":""""1794"""",""""split.currencyCode"""":""""USD""
 0, 1, 2, 3
 1, 0.5, 0.7, 5";
 
-            using (var r = ChoCSVReader< EyeExcitation>.LoadText(csv)
+            using (var r = ChoCSVReader<EyeExcitation>.LoadText(csv)
+                .Configure(c =>
+                {
+                    c.Map(f => f.Dt, 0);
+                })
                 .WithFirstLineHeader()
                 .ThrowAndStopOnMissingField(false)
                 .WithField(f => f.Dt)

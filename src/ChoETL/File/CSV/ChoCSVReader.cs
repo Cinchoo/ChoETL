@@ -877,10 +877,10 @@ namespace ChoETL
         //    return this;
         //}
 
-        public ChoCSVReader<T> Configure(Action<ChoCSVRecordConfiguration> action)
+        public ChoCSVReader<T> Configure(Action<ChoCSVRecordConfiguration<T>> action)
         {
             if (action != null)
-                action(Configuration);
+                action((ChoCSVRecordConfiguration<T>)Configuration);
 
             return this;
         }
@@ -1068,6 +1068,13 @@ namespace ChoETL
             where T : class, new()
         {
             return new ChoCSVReader<T>(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.ToArray();
+        }
+        public ChoCSVReader Configure(Action<ChoCSVRecordConfiguration> action)
+        {
+            if (action != null)
+                action(Configuration);
+
+            return this;
         }
     }
 

@@ -645,10 +645,10 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVWriter<T> Configure(Action<ChoCSVRecordConfiguration> action)
+        public ChoCSVWriter<T> Configure(Action<ChoCSVRecordConfiguration<T>> action)
         {
             if (action != null)
-                action(Configuration);
+                action((ChoCSVRecordConfiguration<T>) Configuration);
 
             return this;
         }
@@ -816,6 +816,13 @@ namespace ChoETL
             where T : class
         {
             return ToText<T>(record, configuration, traceSwitch);
+        }
+        public ChoCSVWriter Configure(Action<ChoCSVRecordConfiguration> action)
+        {
+            if (action != null)
+                action(Configuration);
+
+            return this;
         }
     }
 }

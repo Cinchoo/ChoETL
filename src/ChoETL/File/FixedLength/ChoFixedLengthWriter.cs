@@ -502,10 +502,10 @@ namespace ChoETL
             return this;
         }
 
-        public ChoFixedLengthWriter<T> Configure(Action<ChoFixedLengthRecordConfiguration> action)
+        public ChoFixedLengthWriter<T> Configure(Action<ChoFixedLengthRecordConfiguration<T>> action)
         {
             if (action != null)
-                action(Configuration);
+                action((ChoFixedLengthRecordConfiguration<T>)Configuration);
 
             return this;
         }
@@ -675,6 +675,14 @@ namespace ChoETL
             where T : class
         {
             return ToText<T>(record, configuration, traceSwitch);
+        }
+
+        public ChoFixedLengthWriter Configure(Action<ChoFixedLengthRecordConfiguration> action)
+        {
+            if (action != null)
+                action(Configuration);
+
+            return this;
         }
     }
 }

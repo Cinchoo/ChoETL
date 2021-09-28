@@ -794,10 +794,10 @@ namespace ChoETL
             return this;
         }
 
-        public ChoXmlWriter<T> Configure(Action<ChoXmlRecordConfiguration> action)
+        public ChoXmlWriter<T> Configure(Action<ChoXmlRecordConfiguration<T>> action)
         {
             if (action != null)
-                action(Configuration);
+                action((ChoXmlRecordConfiguration<T>)Configuration);
 
             return this;
         }
@@ -966,6 +966,14 @@ namespace ChoETL
             where T : class
         {
             return ToText<T>(record, configuration, traceSwitch);
+        }
+
+        public ChoXmlWriter Configure(Action<ChoXmlRecordConfiguration> action)
+        {
+            if (action != null)
+                action(Configuration);
+
+            return this;
         }
     }
 
