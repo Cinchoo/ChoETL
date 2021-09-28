@@ -675,11 +675,11 @@ namespace ChoETL
                         {
                             if (first)
                             {
-                                sb.Append(NormalizeFieldValue(kvp.Key, item.ToNString(), null, false, null, ChoFieldValueJustification.None, ChoCharEx.NUL));
+                                sb.Append(NormalizeFieldValue(kvp.Key, item.ToNString(), null, false, null, ChoFieldValueJustification.None, ChoCharEx.NUL, false, kvp.Value.NullValue, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType, Configuration.FieldValueTrimOption), fieldConfig));
                                 first = false;
                             }
                             else
-                                sb.Append(NormalizeFieldValue(kvp.Key, item.ToNString(), null, false, null, ChoFieldValueJustification.None, ChoCharEx.NUL));
+                                sb.Append(NormalizeFieldValue(kvp.Key, item.ToNString(), null, false, null, ChoFieldValueJustification.None, ChoCharEx.NUL, false, kvp.Value.NullValue, kvp.Value.GetFieldValueTrimOption(kvp.Value.FieldType, Configuration.FieldValueTrimOption), fieldConfig));
                         }
                         fieldText = sb.ToString();
                     }
@@ -819,19 +819,211 @@ namespace ChoETL
             return msg.ToString();
         }
 
+        private char[] searchStrings = null;
+        bool quoteValue = false;
         private string NormalizeFieldValue(string fieldName, string fieldValue, int? size, bool truncate, bool? quoteField,
-            ChoFieldValueJustification fieldValueJustification, char fillChar, bool isHeader = false, string nullValue = null, 
-            ChoFieldValueTrimOption? fieldValueTrimOption = null)
+    ChoFieldValueJustification fieldValueJustification, char fillChar, bool isHeader = false, string nullValue = null,
+    ChoFieldValueTrimOption? fieldValueTrimOption = null, ChoFixedLengthRecordFieldConfiguration fieldConfig = null,
+    bool ignoreCheckDelimiter = false)
         {
             string lFieldValue = fieldValue;
             bool retValue = false;
+            quoteValue = quoteField != null ? quoteField.Value : false;
 
             if (retValue)
                 return lFieldValue;
 
             if (fieldValue.IsNull())
                 fieldValue = String.Empty;
+
+            if (fieldValue.StartsWith(Configuration.QuoteChar.ToString()) && fieldValue.EndsWith(Configuration.QuoteChar.ToString()))
+            {
+
+            }
+            else
+            {
+                if (quoteField == null)
+                {
+                    if (searchStrings == null)
+                        searchStrings = (Configuration.QuoteChar.ToString() /*+ Configuration.Delimiter*/ + Configuration.EOLDelimiter).ToArray();
+
+                    if (fieldValue.IndexOfAny(searchStrings) >= 0)
+                    {
+                        //******** ORDER IMPORTANT *********
+
+                        //Fields that contain double quote characters must be surounded by double-quotes, and the embedded double-quotes must each be represented by a pair of consecutive double quotes.
+                        if (fieldValue.IndexOf(Configuration.QuoteChar) >= 0)
+                        {
+                            if (!Configuration.EscapeQuoteAndDelimiter)
+                            {
+                                //fieldValue = fieldValue.Replace(Configuration.QuoteChar.ToString(), Configuration.DoubleQuoteChar);
+                            }
+                            else
+                            {
+                                fieldValue = fieldValue.Replace(Configuration.QuoteChar.ToString(), "\\{0}".FormatString(Configuration.QuoteChar));
+                                quoteValue = true;
+                            }
+                        }
+
+                        /*
+                        if (!ignoreCheckDelimiter && fieldValue.IndexOf(Configuration.Delimiter) >= 0)
+                        {
+                            if (isHeader)
+                            {
+                                if (fieldConfig == null || fieldConfig.ValueSelector == null)
+                                    throw new ChoParserException("Field header '{0}' value contains delimiter character.".FormatString(fieldName));
+                            }
+                            else
+                            {
+                                //Fields with embedded commas must be delimited with double-quote characters.
+                                if (Configuration.EscapeQuoteAndDelimiter)
+                                    fieldValue = fieldValue.Replace(Configuration.Delimiter, "\\{0}".FormatString(Configuration.Delimiter));
+
+                                quoteValue = true;
+                                //throw new ChoParserException("Field '{0}' value contains delimiter character.".FormatString(fieldName));
+                            }
+                        }
+                        */
+                        if (fieldValue.IndexOf(Configuration.EOLDelimiter) >= 0)
+                        {
+                            if (isHeader)
+                                throw new ChoParserException("Field header '{0}' value contains EOL delimiter character.".FormatString(fieldName));
+                            else
+                            {
+                                //A field that contains embedded line-breaks must be surounded by double-quotes
+                                //if (Configuration.EscapeQuoteAndDelimiters)
+                                //    fieldValue = fieldValue.Replace(Configuration.EOLDelimiter, "\\{0}".FormatString(Configuration.EOLDelimiter));
+
+                                quoteValue = true;
+                                //throw new ChoParserException("Field '{0}' value contains EOL delimiter character.".FormatString(fieldName));
+                            }
+                        }
+                    }
+
+                    if (!isHeader)
+                    {
+                        //Fields with leading or trailing spaces must be delimited with double-quote characters.
+                        if (!fieldValue.IsNullOrWhiteSpace() && (char.IsWhiteSpace(fieldValue[0]) || char.IsWhiteSpace(fieldValue[fieldValue.Length - 1])))
+                        {
+                            quoteValue = true;
+                        }
+                    }
+                }
+                else
+                {
+                    if (fieldValue.IndexOf(Configuration.QuoteChar) >= 0)
+                    {
+                        if (!Configuration.EscapeQuoteAndDelimiter)
+                        {
+                        }
+                        else
+                            fieldValue = fieldValue.Replace(Configuration.QuoteChar.ToString(), "\\{0}".FormatString(Configuration.QuoteChar));
+                    }
+                    quoteValue = quoteField.Value;
+                }
+            }
+            //}
+            //else
+            //{
+            //    if (fieldValue.StartsWith(Configuration.QuoteChar.ToString()) && fieldValue.EndsWith(Configuration.QuoteChar.ToString()))
+            //    {
+
+            //    }
+            //    else
+            //    {
+            //        //Fields that contain double quote characters must be surrounded by double-quotes, and the embedded double-quotes must each be represented by a pair of consecutive double quotes.
+            //        if (fieldValue.IndexOf(Configuration.QuoteChar) >= 0)
+            //        {
+            //            fieldValue = "{1}{0}{1}".FormatString(fieldValue.Replace(Configuration.QuoteChar.ToString(), Configuration.DoubleQuoteChar), Configuration.QuoteChar);
+            //        }
+            //        else
+            //            fieldValue = "{1}{0}{1}".FormatString(fieldValue, Configuration.QuoteChar);
+            //    }
+            //}
+
+            //if (quoteValue)
+            //	size = size - 2;
+
+            if (fieldValue.IsNullOrEmpty())
+            {
+                if (nullValue != null)
+                    fieldValue = nullValue;
+            }
+
+            if (fieldConfig != null && fieldConfig.ValueSelector != null)
+                quoteValue = false;
+
+            if (quoteValue)
+            {
+                if (fieldValue.Contains(Configuration.QuoteChar))
+                {
+                    if (!Configuration.EscapeQuoteAndDelimiter)
+                        fieldValue = fieldValue.Replace(Configuration.QuoteChar.ToString(), Configuration.DoubleQuoteChar);
+                }
+            }
+
+            if (size != null)
+            {
+                if (quoteValue)
+                    size = size.Value - 2;
+
+                if (size <= 0)
+                    return String.Empty;
+
+                if (fieldValue.Length < size.Value)
+                {
+                    if (fillChar != ChoCharEx.NUL)
+                    {
+                        if (fieldValueJustification == ChoFieldValueJustification.Right)
+                            fieldValue = fieldValue.PadLeft(size.Value, fillChar);
+                        else if (fieldValueJustification == ChoFieldValueJustification.Left)
+                            fieldValue = fieldValue.PadRight(size.Value, fillChar);
+                    }
+                }
+                else if (fieldValue.Length > size.Value)
+                {
+                    if (truncate)
+                    {
+                        if (fieldValueTrimOption != null)
+                        {
+                            if (fieldValueTrimOption == ChoFieldValueTrimOption.TrimStart)
+                                fieldValue = fieldValue.Right(size.Value);
+                            else
+                                fieldValue = fieldValue.Substring(0, size.Value);
+                        }
+                        else
+                            fieldValue = fieldValue.Substring(0, size.Value);
+                    }
+                    else
+                    {
+                        if (isHeader)
+                            throw new ApplicationException("Field header value length overflowed for '{0}' member [Expected: {1}, Actual: {2}].".FormatString(fieldName, size, fieldValue.Length));
+                        else
+                            throw new ApplicationException("Field value length overflowed for '{0}' member [Expected: {1}, Actual: {2}].".FormatString(fieldName, size, fieldValue.Length));
+                    }
+                }
+            }
+
+            if (quoteValue)
+            {
+                fieldValue = "{1}{0}{1}".FormatString(fieldValue, Configuration.QuoteChar);
+            }
+            return fieldValue;
+        }
+
+        private string NormalizeFieldValue1(string fieldName, string fieldValue, int? size, bool truncate, bool? quoteField,
+            ChoFieldValueJustification fieldValueJustification, char fillChar, bool isHeader = false, string nullValue = null, 
+            ChoFieldValueTrimOption? fieldValueTrimOption = null)
+        {
+            string lFieldValue = fieldValue;
+            bool retValue = false;
             bool quoteValue = quoteField != null ? quoteField.Value : false;
+
+            if (retValue)
+                return lFieldValue;
+
+            if (fieldValue.IsNull())
+                fieldValue = String.Empty;
 
             if (quoteField == null || !quoteField.Value)
             {

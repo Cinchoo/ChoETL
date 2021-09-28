@@ -484,9 +484,41 @@ EDSON EDUARD MOZART                      1286664 500-34";
                     Console.WriteLine(rec.Dump());
             }
         }
+
+        public class EmpRec
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+            public string Address { get; set; }
+            public string Age { get; set; }
+        }
+
+        static void QuoteValueTest()
+        {
+            List<EmpRec> employees = new List<EmpRec>()
+{
+    new EmpRec() { Id = 20, Name = "John Smith",  Address = "PO BOX 12165", Age = "25" },
+    new EmpRec() { Id = 21, Name = "Bob Kevin", Address = "123 NEW LIVERPOOL RD \"APT 12\"", Age = "30" },
+    new EmpRec() { Id = 22, Name = "Jack Robert", Address = "PO BOX 123", Age = "40" }
+};
+            using (var w = new ChoFixedLengthWriter<EmpRec>(Console.Out)
+                .WithFirstLineHeader()
+                .Configure(c => c.EscapeQuoteAndDelimiter = false)
+                //.Configure(c => c.QuoteChar = '`')
+                .WithField(f => f.Id, 1, 10)
+                .WithField(f => f.Name, 11, 25)
+                .WithField(f => f.Address, 36, 25, quoteField: false)
+                .WithField(f => f.Age, 61, 10)
+                )
+            {
+                w.Write(employees);
+            }
+        }
+
         static void Main(string[] args)
         {
-            Sample1Test();
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
+            QuoteValueTest();
             return;
 
             AABillingTest();

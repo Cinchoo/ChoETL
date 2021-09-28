@@ -5042,10 +5042,6 @@ value1,""{""""split.amount"""":""""1794"""",""""split.currencyCode"""":""""USD""
 1, 0.5, 0.7, 5";
 
             using (var r = ChoCSVReader<EyeExcitation>.LoadText(csv)
-                .Configure(c =>
-                {
-                    c.QuoteChar = '\'';
-                })
                 .WithFirstLineHeader()
                 .ThrowAndStopOnMissingField(false)
                 .WithField(f => f.Dt)
@@ -5059,7 +5055,7 @@ value1,""{""""split.amount"""":""""1794"""",""""split.currencyCode"""":""""USD""
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            CSVToArrayColumn();
+            CalcField();
             return;
 
             CSV2ComplexObject();

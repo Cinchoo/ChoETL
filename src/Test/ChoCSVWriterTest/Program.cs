@@ -1899,9 +1899,11 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
     new EmpRec() { Id = 21, Name = "Bob Kevin", Address = "123 NEW LIVERPOOL RD \"APT 12\"", Age = "30" },
     new EmpRec() { Id = 22, Name = "Jack Robert", Address = "PO BOX 123", Age = "40" }
 };
-            using (var w = new ChoFixedLengthWriter<EmpRec>(Console.Out)
+            using (var w = new ChoCSVWriter<EmpRec>(Console.Out)
                 .WithFirstLineHeader()
-                .Configure(c => c.QuoteChar = '\0')
+                .Configure(c => c.EscapeQuoteAndDelimiter = false)
+                //.Configure(c => c.QuoteChar = '`')
+                .WithField(f => f.Address)
                 )
             {
                 w.Write(employees);

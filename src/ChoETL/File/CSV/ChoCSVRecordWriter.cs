@@ -941,11 +941,14 @@ namespace ChoETL
                         if (fieldValue.IndexOf(Configuration.QuoteChar) >= 0)
                         {
                             if (!Configuration.EscapeQuoteAndDelimiter)
-                                fieldValue = fieldValue.Replace(Configuration.QuoteChar.ToString(), Configuration.DoubleQuoteChar);
+                            {
+                                //fieldValue = fieldValue.Replace(Configuration.QuoteChar.ToString(), Configuration.DoubleQuoteChar);
+                            }
                             else
+                            {
                                 fieldValue = fieldValue.Replace(Configuration.QuoteChar.ToString(), "\\{0}".FormatString(Configuration.QuoteChar));
-
-                            quoteValue = true;
+                                quoteValue = true;
+                            }
                         }
 
                         if (!ignoreCheckDelimiter && fieldValue.IndexOf(Configuration.Delimiter) >= 0)
@@ -992,7 +995,31 @@ namespace ChoETL
                     }
                 }
                 else
+                {
+                    if (fieldValue.IndexOf(Configuration.QuoteChar) >= 0)
+                    {
+                        if (!Configuration.EscapeQuoteAndDelimiter)
+                        {
+                        }
+                        else
+                            fieldValue = fieldValue.Replace(Configuration.QuoteChar.ToString(), "\\{0}".FormatString(Configuration.QuoteChar));
+                    }
+                    if (!ignoreCheckDelimiter && fieldValue.IndexOf(Configuration.Delimiter) >= 0)
+                    {
+                        if (isHeader)
+                        {
+                            if (fieldConfig == null || fieldConfig.ValueSelector == null)
+                                throw new ChoParserException("Field header '{0}' value contains delimiter character.".FormatString(fieldName));
+                        }
+                        else
+                        {
+                            //Fields with embedded commas must be delimited with double-quote characters.
+                            if (Configuration.EscapeQuoteAndDelimiter)
+                                fieldValue = fieldValue.Replace(Configuration.Delimiter, "\\{0}".FormatString(Configuration.Delimiter));
+                        }
+                    }
                     quoteValue = quoteField.Value;
+                }
             }
             //}
             //else
@@ -1067,16 +1094,18 @@ namespace ChoETL
             //quotes are quoted and doubled (excel) i.e. 15" -> field1,"15""",field3
             if (fieldValue.Contains(Configuration.QuoteChar))
             {
-                fieldValue = fieldValue.Replace(Configuration.QuoteChar.ToString(), Configuration.DoubleQuoteChar);
-
-                if (!isHeader)
+                if (fieldConfig != null && fieldConfig.ExcelField)
                 {
-                    if (fieldConfig != null && fieldConfig.ExcelField)
+                    fieldValue = fieldValue.Replace(Configuration.QuoteChar.ToString(), Configuration.DoubleQuoteChar);
+
+                    if (!isHeader)
                     {
                         if (Configuration.QuoteChar == '"')
                             fieldValue = $"={fieldValue}";
                         else
                             fieldValue = $"=\"{fieldValue}\"";
+
+                        quoteValue = false;
                     }
                 }
             }
@@ -1092,8 +1121,15 @@ namespace ChoETL
                 quoteValue = false;
 
             if (quoteValue)
-                fieldValue = "{1}{0}{1}".FormatString(fieldValue, Configuration.QuoteChar);
+            {
+                if (fieldValue.Contains(Configuration.QuoteChar))
+                {
+                    if (!Configuration.EscapeQuoteAndDelimiter)
+                        fieldValue = fieldValue.Replace(Configuration.QuoteChar.ToString(), Configuration.DoubleQuoteChar);
+                }
 
+                fieldValue = "{1}{0}{1}".FormatString(fieldValue, Configuration.QuoteChar);
+            }
             return fieldValue;
         }
 
