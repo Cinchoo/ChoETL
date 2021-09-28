@@ -557,10 +557,10 @@ namespace ChoETL
             return this;
         }
 
-        public ChoYamlWriter<T> Configure(Action<ChoYamlRecordConfiguration<T>> action)
+        public ChoYamlWriter<T> Configure(Action<ChoYamlRecordConfiguration> action)
         {
             if (action != null)
-                action((ChoYamlRecordConfiguration<T>)Configuration);
+                action(Configuration);
 
             return this;
         }
@@ -751,14 +751,6 @@ namespace ChoETL
         public static string Serialize<T>(T record, JsonSerializerSettings jsonSerializerSettings, TraceSwitch traceSwitch = null)
         {
             return ToText(record, new ChoYamlRecordConfiguration(), traceSwitch);
-        }
-
-        public ChoYamlWriter Configure(Action<ChoYamlRecordConfiguration> action)
-        {
-            if (action != null)
-                action(Configuration);
-
-            return this;
         }
 
         ~ChoYamlWriter()

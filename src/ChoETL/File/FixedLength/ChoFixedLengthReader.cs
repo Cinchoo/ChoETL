@@ -674,10 +674,10 @@ namespace ChoETL
             return this;
         }
 
-        public ChoFixedLengthReader<T> Configure(Action<ChoFixedLengthRecordConfiguration<T>> action)
+        public ChoFixedLengthReader<T> Configure(Action<ChoFixedLengthRecordConfiguration> action)
         {
             if (action != null)
-                action((ChoFixedLengthRecordConfiguration<T>)Configuration);
+                action(Configuration);
 
             return this;
         }
@@ -865,14 +865,6 @@ namespace ChoETL
             where T : class, new()
         {
             return new ChoFixedLengthReader<T>(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.ToArray();
-        }
-
-        public ChoFixedLengthReader Configure(Action<ChoFixedLengthRecordConfiguration> action)
-        {
-            if (action != null)
-                action(Configuration);
-
-            return this;
         }
     }
 }

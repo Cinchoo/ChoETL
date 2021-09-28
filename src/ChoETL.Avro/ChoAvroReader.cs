@@ -573,10 +573,10 @@ namespace ChoETL
             return this;
         }
 
-        public ChoAvroReader<T> Configure(Action<ChoAvroRecordConfiguration<T>> action)
+        public ChoAvroReader<T> Configure(Action<ChoAvroRecordConfiguration> action)
         {
             if (action != null)
-                action((ChoAvroRecordConfiguration<T>)Configuration);
+                action(Configuration);
 
             return this;
         }
@@ -731,14 +731,6 @@ namespace ChoETL
             {
             }
             return new ChoAvroReader(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch };
-        }
-
-        public ChoAvroReader Configure(Action<ChoAvroRecordConfiguration> action)
-        {
-            if (action != null)
-                action(Configuration);
-
-            return this;
         }
     }
 }

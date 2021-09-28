@@ -1883,12 +1883,36 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             Console.WriteLine(csvOut.ToString());
         }
 
+        public class EmpRec
+        { 
+            public int Id { get; set; }
+            public string Name { get; set; }
+            public string Address { get; set; }
+            public string Age { get; set; }
+        }
+
+        static void QuoteValueTest()
+        {
+            List<EmpRec> employees = new List<EmpRec>()
+{
+    new EmpRec() { Id = 20, Name = "John Smith",  Address = "PO BOX 12165", Age = "25" },
+    new EmpRec() { Id = 21, Name = "Bob Kevin", Address = "123 NEW LIVERPOOL RD \"APT 12\"", Age = "30" },
+    new EmpRec() { Id = 22, Name = "Jack Robert", Address = "PO BOX 123", Age = "40" }
+};
+            using (var w = new ChoFixedLengthWriter<EmpRec>(Console.Out)
+                .WithFirstLineHeader()
+                .Configure(c => c.QuoteChar = '\0')
+                )
+            {
+                w.Write(employees);
+            }
+        }
 
         static void Main(string[] args)
         {
             //AppDomain.CurrentDomain.FirstChanceException += (sender, eventArgs) => { Console.WriteLine("FirstChanceException: " + eventArgs.Exception.ToString()); };
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            ExternalSortTest();
+            QuoteValueTest();
             //TestDictionary();
             return;
 

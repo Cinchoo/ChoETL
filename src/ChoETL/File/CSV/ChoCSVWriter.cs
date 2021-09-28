@@ -644,15 +644,13 @@ namespace ChoETL
             Configuration.ThrowAndStopOnMissingField = flag;
             return this;
         }
-
-        public ChoCSVWriter<T> Configure(Action<ChoCSVRecordConfiguration<T>> action)
+        public ChoCSVWriter<T> Configure(Action<ChoCSVRecordConfiguration> action)
         {
             if (action != null)
-                action((ChoCSVRecordConfiguration<T>) Configuration);
+                action(Configuration);
 
             return this;
         }
-
         public ChoCSVWriter<T> Setup(Action<ChoCSVWriter<T>> action)
         {
             if (action != null)
@@ -816,13 +814,6 @@ namespace ChoETL
             where T : class
         {
             return ToText<T>(record, configuration, traceSwitch);
-        }
-        public ChoCSVWriter Configure(Action<ChoCSVRecordConfiguration> action)
-        {
-            if (action != null)
-                action(Configuration);
-
-            return this;
         }
     }
 }

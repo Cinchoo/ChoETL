@@ -500,10 +500,10 @@ namespace ChoETL
             return this;
         }
 
-        public ChoParquetWriter<T> Configure(Action<ChoParquetRecordConfiguration<T>> action)
+        public ChoParquetWriter<T> Configure(Action<ChoParquetRecordConfiguration> action)
         {
             if (action != null)
-                action((ChoParquetRecordConfiguration<T>)Configuration);
+                action(Configuration);
 
             return this;
         }
@@ -704,14 +704,6 @@ namespace ChoETL
                 stream.Position = 0;
                 return stream.ToArray();
             }
-        }
-
-        public ChoParquetWriter Configure(Action<ChoParquetRecordConfiguration> action)
-        {
-            if (action != null)
-                action(Configuration);
-
-            return this;
         }
     }
 }

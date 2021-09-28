@@ -632,10 +632,10 @@ namespace ChoETL
             return this;
         }
 
-        public ChoKVPReader<T> Configure(Action<ChoKVPRecordConfiguration<T>> action)
+        public ChoKVPReader<T> Configure(Action<ChoKVPRecordConfiguration> action)
         {
             if (action != null)
-                action((ChoKVPRecordConfiguration<T>)Configuration);
+                action(Configuration);
 
             return this;
         }
@@ -723,15 +723,8 @@ namespace ChoETL
         {
             return new ChoKVPReader<T>(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.ToArray();
         }
-
-        public ChoKVPReader Configure(Action<ChoKVPRecordConfiguration> action)
-        {
-            if (action != null)
-                action(Configuration);
-
-            return this;
-        }
     }
+
     public class ChoKVPEventArgs : EventArgs
     {
         public string RecText
