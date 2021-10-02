@@ -639,8 +639,15 @@ namespace ChoETL
                             overrides.Add(type, xattribs);
                         }
                     }
-                    XmlSerializer serializer = ChoUtility.GetXmlSerializer(type, overrides); // overrides != null ? new XmlSerializer(type, overrides) : new XmlSerializer(type);
-                    return serializer.Deserialize(reader);
+                    if (ChoXmlConvert.HasConverters(type))
+                    {
+                        return ChoXmlConvert.ToObject(type, element.GetInnerXml());
+                    }
+                    else
+                    {
+                        XmlSerializer serializer = ChoUtility.GetXmlSerializer(type, overrides); // overrides != null ? new XmlSerializer(type, overrides) : new XmlSerializer(type);
+                        return serializer.Deserialize(reader);
+                    }
                 }
             }
         }

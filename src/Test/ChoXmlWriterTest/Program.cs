@@ -447,12 +447,77 @@ namespace ChoXmlWriterTest
             Console.WriteLine(combinedCSV);
         }
 
+        [Serializable]
+        public class TimespanClass
+        {
+            public int Id { get; set; }
+            //[XmlElement(Type = typeof(XmlTimeSpan))] 
+            public TimeSpan TimeSinceLastEvent { get; set; }
+        }
 
+        static void TimeSpanTest()
+        {
+            StringBuilder xml = new StringBuilder();
+            using (var w = new ChoXmlWriter<TimespanClass>(xml)
+                //.UseXmlSerialization()
+                )
+            {
+                w.Write(new TimespanClass
+                {
+                    Id = 1,
+                    TimeSinceLastEvent = TimeSpan.FromDays(1)
+                });
+            }
+
+            Console.WriteLine(xml.ToString());
+            using (var r = new ChoXmlReader<TimespanClass>(xml)
+                //.UseXmlSerialization()
+                )
+            {
+                r.Print();
+            }
+        }
+        public class XmlTimeSpan
+        {
+            private const long TICKS_PER_MS = TimeSpan.TicksPerMillisecond;
+
+            private TimeSpan m_value = TimeSpan.Zero;
+
+            public XmlTimeSpan() { }
+            public XmlTimeSpan(TimeSpan source) { m_value = source; }
+
+            public static implicit operator TimeSpan?(XmlTimeSpan o)
+            {
+                return o == null ? default(TimeSpan?) : o.m_value;
+            }
+
+            public static implicit operator XmlTimeSpan(TimeSpan? o)
+            {
+                return o == null ? null : new XmlTimeSpan(o.Value);
+            }
+
+            public static implicit operator TimeSpan(XmlTimeSpan o)
+            {
+                return o == null ? default(TimeSpan) : o.m_value;
+            }
+
+            public static implicit operator XmlTimeSpan(TimeSpan o)
+            {
+                return o == default(TimeSpan) ? null : new XmlTimeSpan(o);
+            }
+
+            [XmlText]
+            public long Default
+            {
+                get { return m_value.Ticks / TICKS_PER_MS; }
+                set { m_value = new TimeSpan(value * TICKS_PER_MS); }
+            }
+        }
         static void Main(string[] args)
         { 
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            Xml3Test();
+            TimeSpanTest();
 
             return;
 

@@ -118,6 +118,7 @@
     <Compile Include="Common\ExtensionMethods\ChoDateTime.cs" />
     <Compile Include="Common\ExtensionMethods\Linq\ChoLeftJoin.cs" />
     <Compile Include="Common\IChoConvertible.cs" />
+    <Compile Include="Common\Xml\ChoXmlConvert.cs" />
     <Compile Include="File\CSV\ChoCSVRecordFieldConfigurationMap.cs" />
     <Compile Include="File\CSV\ChoCSVRecordTypeConfiguration.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthRecordConfigurationMap.cs" />

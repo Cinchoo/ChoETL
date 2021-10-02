@@ -308,7 +308,7 @@ namespace ChoETL
 
         private EventReader Create(TextReader textReader)
         {
-            var r = new EventReader(new Parser(textReader));
+            var r = new EventReader(Parser.CreateParser(textReader));
             return r;
         }
 

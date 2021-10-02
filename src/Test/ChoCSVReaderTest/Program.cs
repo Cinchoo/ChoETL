@@ -5051,11 +5051,41 @@ value1,""{""""split.amount"""":""""1794"""",""""split.currencyCode"""":""""USD""
                 r.Print();
             }
         }
+        static void PositionNeutralCSVLoad()
+        {
+            string csv1 = @"Id, Name, City
+1, Tom, NY
+2, Mark, NJ
+3, Lou, FL
+4, Smith, PA
+5, Raj, DC
+";
+
+            string csv2 = @"Name, Id, City
+Tom, 1, NY
+Mark, 2, NJ
+Lou, 3, FL
+Smith, 4, PA
+Raj, 5, DC
+";
+
+            ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Id"));
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("Name"));
+            config.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration("City"));
+            config.WithFirstLineHeader();
+
+            using (var r = ChoCSVReader.LoadText(csv2, config))
+            {
+                r.Print();
+            }
+        }
+
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            CalcField();
+            PositionNeutralCSVLoad();
             return;
 
             CSV2ComplexObject();

@@ -6573,12 +6573,45 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
+        static void JsonArrayToSingleCSVColumn()
+        {
+            string json = @"
+[
+  {
+    ""id"": 1234,
+    ""states"": [
+      ""PA"",
+      ""VA""
+    ]
+  },
+  {
+    ""id"": 1235,
+    ""states"": [
+      ""CA"",
+      ""DE"",
+      ""MD""
+    ]
+    }
+]";
+
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                using (var w = new ChoCSVWriter(Console.Out)
+                    .WithFirstLineHeader()
+                    .Configure(c => c.UseNestedKeyFormat = false)
+                    .Configure(c => c.ArrayValueSeparator = '-')
+                    )
+                {
+                    w.Write(r);
+                }
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
             //DeserializeNestedObjectOfList();
-            Sample55Test2();
             return;
 
             ReadJsonOneItemAtATime();

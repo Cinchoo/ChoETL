@@ -1331,6 +1331,7 @@ namespace ChoETL
                     if (ns == null)
                         ns = new XmlSerializerNamespaces();
 
+                    target = ChoXmlConvert.ToString(target);
                     ChoNullNSXmlSerializer serializer = ChoNullNSXmlSerializerFactory.HasXmlSerializer(target.GetType()) ? ChoNullNSXmlSerializerFactory.GetXmlSerializer(target.GetType()) :
      ChoNullNSXmlSerializerFactory.GetXmlSerializer(target.GetType(), GetXmlOverrides(target.GetType()));
                     serializer.Serialize(xtw, target, ns);
@@ -1382,7 +1383,9 @@ namespace ChoETL
                 {
                     ChoNullNSXmlSerializer serializer = ChoNullNSXmlSerializerFactory.HasXmlSerializer(type) ? ChoNullNSXmlSerializerFactory.GetXmlSerializer(type) :
                         ChoNullNSXmlSerializerFactory.GetXmlSerializer(type, overrides);
-                    return serializer.Deserialize(xtw);
+                    var o = serializer.Deserialize(xtw);
+                    o = ChoXmlConvert.ToObject(type, o);
+                    return o;
                 }
             }
         }
@@ -1423,7 +1426,9 @@ namespace ChoETL
                     {
                         ChoNullNSXmlSerializer serializer = ChoNullNSXmlSerializerFactory.HasXmlSerializer(type) ? ChoNullNSXmlSerializerFactory.GetXmlSerializer(type) :
                             ChoNullNSXmlSerializerFactory.GetXmlSerializer(type, overrides);
-                        return serializer.Deserialize(xtw);
+                        var o = serializer.Deserialize(xtw);
+                        o = ChoXmlConvert.ToObject(type, o);
+                        return o;
                     }
                 }
             }
@@ -1454,7 +1459,9 @@ namespace ChoETL
                     {
                         ChoNullNSXmlSerializer serializer = ChoNullNSXmlSerializerFactory.HasXmlSerializer(type) ? ChoNullNSXmlSerializerFactory.GetXmlSerializer(type) :
                             ChoNullNSXmlSerializerFactory.GetXmlSerializer(type, overrides);
-                        return serializer.Deserialize(xtw);
+                        var o = serializer.Deserialize(xtw);
+                        o = ChoXmlConvert.ToObject(type, o);
+                        return o;
                     }
                 }
             }
@@ -2390,7 +2397,7 @@ namespace ChoETL
                 bool hasToStringMethod = false;
                 try
                 {
-                    if (target.GetType().GetMethod("ToString", BindingFlags.Instance | BindingFlags.DeclaredOnly | BindingFlags.Public) == null)
+                    if (target.GetType().GetMethods(BindingFlags.Instance | BindingFlags.DeclaredOnly | BindingFlags.Public).FirstOrDefault(m => m.Name == "ToString") == null)
                         hasToStringMethod = false;
                     else
                         hasToStringMethod = true;
@@ -2876,6 +2883,8 @@ namespace ChoETL
 
         #endregion
 
+        public Type Type { get; private set; }
+
         #region Constructors
 
         static ChoNullNSXmlSerializer()
@@ -2886,31 +2895,37 @@ namespace ChoETL
         public ChoNullNSXmlSerializer(Type type)
             : base(type)
         {
+            Type = type;
         }
 
         public ChoNullNSXmlSerializer(XmlTypeMapping xmlTypeMapping)
             : base(xmlTypeMapping)
         {
+            Type = Type.GetType(xmlTypeMapping.TypeName);
         }
 
         public ChoNullNSXmlSerializer(Type type, string defaultNamespace)
             : base(type, defaultNamespace)
         {
+            Type = type;
         }
 
         public ChoNullNSXmlSerializer(Type type, Type[] extraTypes)
             : base(type, extraTypes)
         {
+            Type = type;
         }
 
         public ChoNullNSXmlSerializer(Type type, XmlAttributeOverrides overrides)
             : base(type, overrides)
         {
+            Type = type;
         }
 
         public ChoNullNSXmlSerializer(Type type, XmlRootAttribute root)
             : base(type, root)
         {
+            Type = type;
         }
 
         public ChoNullNSXmlSerializer(Type type, XmlAttributeOverrides overrides, Type[] extraTypes, XmlRootAttribute root, string defaultNamespace)
@@ -2922,62 +2937,38 @@ namespace ChoETL
 
         #region XmlSerialier Overrides (Public)
 
-        //
-        // Summary:
-        //     Serializes the specified System.Object and writes the XML document to a file
-        //     using the specified System.IO.Stream.
-        //
-        // Parameters:
-        //   stream:
-        //     The System.IO.Stream used to write the XML document.
-        //
-        //   o:
-        //     The System.Object to serialize.
-        //
-        // Exceptions:
-        //   System.InvalidOperationException:
-        //     An error occurred during serialization. The original exception is available
-        //     using the System.Exception.InnerException property.
         public new void Serialize(Stream stream, object o)
         {
             base.Serialize(stream, o, _xmlnsEmpty);
         }
-        //
-        // Summary:
-        //     Serializes the specified System.Object and writes the XML document to a file
-        //     using the specified System.IO.TextWriter.
-        //
-        // Parameters:
-        //   textWriter:
-        //     The System.IO.TextWriter used to write the XML document.
-        //
-        //   o:
-        //     The System.Object to serialize.
+        public new void Serialize(Stream stream, object o, XmlSerializerNamespaces namespaces)
+        {
+            base.Serialize(stream, o, _xmlnsEmpty);
+        }
         public new void Serialize(TextWriter textWriter, object o)
         {
             base.Serialize(textWriter, o, _xmlnsEmpty);
         }
-        //
-        // Summary:
-        //     Serializes the specified System.Object and writes the XML document to a file
-        //     using the specified System.Xml.XmlWriter.
-        //
-        // Parameters:
-        //   xmlWriter:
-        //     The System.xml.XmlWriter used to write the XML document.
-        //
-        //   o:
-        //     The System.Object to serialize.
-        //
-        // Exceptions:
-        //   System.InvalidOperationException:
-        //     An error occurred during serialization. The original exception is available
-        //     using the System.Exception.InnerException property.
+        public new void Serialize(TextWriter textWriter, object o, XmlSerializerNamespaces namespaces)
+        {
+            base.Serialize(textWriter, o, _xmlnsEmpty);
+        }
         public new void Serialize(XmlWriter xmlWriter, object o)
         {
             base.Serialize(xmlWriter, o, _xmlnsEmpty);
         }
-
+        public new void Serialize(XmlWriter xmlWriter, object o, XmlSerializerNamespaces namespaces)
+        {
+            base.Serialize(xmlWriter, o, _xmlnsEmpty);
+        }
+        public new void Serialize(XmlWriter xmlWriter, object o, XmlSerializerNamespaces namespaces, string encodingStyle, string id)
+        {
+            base.Serialize(xmlWriter, o, _xmlnsEmpty, encodingStyle, id);
+        }
+        public new void Serialize(XmlWriter xmlWriter, object o, XmlSerializerNamespaces namespaces, string encodingStyle)
+        {
+            base.Serialize(xmlWriter, o, _xmlnsEmpty, encodingStyle);
+        }
         #endregion
     }
 }

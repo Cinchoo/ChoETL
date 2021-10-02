@@ -17,7 +17,7 @@
     <PackageTags>ETL c# .NET CSV Xml JSON Flat</PackageTags>
     <PackageReleaseNotes>.NET Standard version</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Version>1.2.1.25</Version>
+    <Version>1.2.1.26-alpha</Version>
     <AssemblyName>ChoETL.Core</AssemblyName>
     <RootNamespace>ChoETL</RootNamespace>
     <SignAssembly>true</SignAssembly>
@@ -107,6 +107,7 @@
     <Compile Include="..\ChoETL\Common\Validators\ChoCustomCodeValidatorAttribute.cs" Link="Common\Validators\ChoCustomCodeValidatorAttribute.cs" />
     <Compile Include="..\ChoETL\Common\Validators\ChoCustomExprValidatorAttribute.cs" Link="Common\Validators\ChoCustomExprValidatorAttribute.cs" />
     <Compile Include="..\ChoETL\Common\Xml\ChoCDATA.cs" Link="Common\Xml\ChoCDATA.cs" />
+    <Compile Include="..\ChoETL\Common\Xml\ChoXmlConvert.cs" Link="Common\Xml\ChoXmlConvert.cs" />
     <Compile Include="..\ChoETL\ETLCommon\IChoETLNameableObject.cs" Link="ETLCommon\IChoETLNameableObject.cs" />
     <Compile Include="..\ChoETL\File\ChoRecordFieldTypeAssessmentEventArgs.cs" Link="File\ChoRecordFieldTypeAssessmentEventArgs.cs" />
     <Compile Include="..\ChoETL\File\ChoRowsWrittenEventArgs.cs" Link="File\ChoRowsWrittenEventArgs.cs" />

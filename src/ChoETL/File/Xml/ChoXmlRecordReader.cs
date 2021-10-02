@@ -829,13 +829,15 @@ namespace ChoETL
                                         }
                                         else if (fieldConfig.FieldType == typeof(string) || fieldConfig.FieldType.IsSimple())
                                         {
-                                            if (!fieldConfig.HasConverters())
+                                            if (true) //!fieldConfig.HasConverters())
                                             {
                                                 XElement fXElement = fXElements.FirstOrDefault();
                                                 if (fXElement != null)
                                                 {
                                                     if (fieldConfig.ItemConverter != null)
                                                         fieldValue = Normalize(fieldConfig.ItemConverter(fXElement));
+                                                    else if (fieldConfig.ValueConverter != null)
+                                                        fieldValue = Normalize(fieldConfig.ValueConverter(fXElement));
                                                     else
                                                         fieldValue = Normalize(fXElement.NilAwareValue());
                                                 }
@@ -872,13 +874,15 @@ namespace ChoETL
                                         }
                                         else
                                         {
-                                            if (!fieldConfig.HasConverters())
+                                            if (true) //!fieldConfig.HasConverters())
                                             {
                                                 XElement fXElement = fXElements.FirstOrDefault(); //.SelectMany(e => e.Elements()).FirstOrDefault();
                                                 if (fXElement != null)
                                                 {
                                                     if (fieldConfig.ItemConverter != null)
                                                         fieldValue = Normalize(fieldConfig.ItemConverter(fXElement));
+                                                    else if (fieldConfig.ValueConverter != null)
+                                                        fieldValue = Normalize(fieldConfig.ValueConverter(fXElement));
                                                     else
                                                     {
                                                         fieldValue = Normalize(fXElement.ToObjectFromXml(fieldConfig.FieldType, GetXmlOverrides(fieldConfig),

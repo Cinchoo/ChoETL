@@ -261,7 +261,6 @@ namespace ChoETL
             if (QuoteEscapeChar == null)
                 QuoteEscapeChar = '\0';
             //DetectEncodingFromByteOrderMarks = true;
-            EscapeQuoteAndDelimiter = true;
         }
 
         protected override void Init(Type recordType)
