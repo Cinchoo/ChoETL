@@ -6606,11 +6606,83 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 }
             }
         }
+        public class Rootobject
+        {
+            public string formatVersion { get; set; }
+            [ChoJSONPath("$..matrix[*][*]")]
+            public List<IMatrix> matrix { get; set; }
+            public Summary summary { get; set; }
+        }
+
+        public interface IMatrix
+        {
+
+        }
+
+        public class Summary
+        {
+            public int successfulRoutes { get; set; }
+            public int totalRoutes { get; set; }
+        }
+
+        public class Matrix1 : IMatrix
+        {
+            public int statusCode { get; set; }
+            public Response response { get; set; }
+            //public Detailederror detailedError { get; set; }
+        }
+
+        public class Matrix2 : IMatrix
+        {
+            public int statusCode { get; set; }
+            public string response { get; set; }
+            public Detailederror detailedError { get; set; }
+        }
+
+        public class Response
+        {
+            public RouteSummary routeSummary { get; set; }
+        }
+
+        public class RouteSummary
+        {
+            public int lengthInMeters { get; set; }
+        }
+
+        public class Detailederror
+        {
+            public string message { get; set; }
+            public string code { get; set; }
+        }
+
+        static void DeserializeToConcreteClasses()
+        {
+            using (var r = new ChoJSONReader<Rootobject>("sample56.json")
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                //.WithField(f => f.formatVersion)
+                .WithField(f => f.matrix, itemTypeSelector : o =>
+                {
+                    dynamic dobj = o as dynamic;
+                    switch ((int)dobj.statusCode)
+                    {
+                        case 200:
+                          return typeof(Matrix1);
+                        default:
+                            return typeof(Matrix2);
+                    }
+                })
+                //.WithField(f => f.summary)
+                //.UseJsonSerialization()
+                )
+            {
+                r.Print();
+            }
+        }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-
+            DeserializeToConcreteClasses();
             //DeserializeNestedObjectOfList();
             return;
 

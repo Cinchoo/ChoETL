@@ -311,6 +311,9 @@ namespace ChoETL
         private object[] GetTypeConverters(Type rt, string fn)
         {
             var fc = _fc == null ? GetFieldConfiguration(rt, fn) : _fc;
+            if (fc == null)
+                return null;
+
             var conv = fc.GetConverters();
             if (fc == null)
             {

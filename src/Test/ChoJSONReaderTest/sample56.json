@@ -1,0 +1,111 @@
+﻿{
+  "formatVersion": "0.0.1",
+  "matrix": [
+    [
+      {
+        "statusCode": 200,
+        "response": {
+          "routeSummary": {
+            "lengthInMeters": 95028,
+            "travelTimeInSeconds": 4581,
+            "trafficDelayInSeconds": 0,
+            "trafficLengthInMeters": 0,
+            "departureTime": "2021-10-03T09:48:17+01:00",
+            "arrivalTime": "2021-10-03T11:04:38+01:00"
+          }
+        }
+      },
+      {
+        "statusCode": 200,
+        "response": {
+          "routeSummary": {
+            "lengthInMeters": 97955,
+            "travelTimeInSeconds": 4928,
+            "trafficDelayInSeconds": 0,
+            "trafficLengthInMeters": 0,
+            "departureTime": "2021-10-03T09:48:17+01:00",
+            "arrivalTime": "2021-10-03T11:10:25+01:00"
+          }
+        }
+      }
+    ],
+    [
+      {
+        "statusCode": 200,
+        "response": {
+          "routeSummary": {
+            "lengthInMeters": 105077,
+            "travelTimeInSeconds": 4725,
+            "trafficDelayInSeconds": 0,
+            "trafficLengthInMeters": 0,
+            "departureTime": "2021-10-03T09:48:17+01:00",
+            "arrivalTime": "2021-10-03T11:07:01+01:00"
+          }
+        }
+      },
+      {
+        "statusCode": 200,
+        "response": {
+          "routeSummary": {
+            "lengthInMeters": 108004,
+            "travelTimeInSeconds": 5072,
+            "trafficDelayInSeconds": 0,
+            "trafficLengthInMeters": 0,
+            "departureTime": "2021-10-03T09:48:17+01:00",
+            "arrivalTime": "2021-10-03T11:12:48+01:00"
+          }
+        }
+      }
+    ],
+    [
+      {
+        "statusCode": 200,
+        "response": {
+          "routeSummary": {
+            "lengthInMeters": 103661,
+            "travelTimeInSeconds": 4624,
+            "trafficDelayInSeconds": 0,
+            "trafficLengthInMeters": 0,
+            "departureTime": "2021-10-03T09:48:17+01:00",
+            "arrivalTime": "2021-10-03T11:05:21+01:00"
+          }
+        }
+      },
+      {
+        "statusCode": 200,
+        "response": {
+          "routeSummary": {
+            "lengthInMeters": 106588,
+            "travelTimeInSeconds": 4971,
+            "trafficDelayInSeconds": 0,
+            "trafficLengthInMeters": 0,
+            "departureTime": "2021-10-03T09:48:17+01:00",
+            "arrivalTime": "2021-10-03T11:11:08+01:00"
+          }
+        }
+      }
+    ],
+    [
+      {
+        "statusCode": 400,
+        "response": "Engine error while executing route request: MAP_MATCHING_FAILURE: Origin (0, 0)",
+        "detailedError": {
+          "message": "Engine error while executing route request: MAP_MATCHING_FAILURE: Origin (0, 0)",
+          "code": "MAP_MATCHING_FAILURE"
+        }
+      },
+      {
+        "statusCode": 400,
+        "response": "Engine error while executing route request: MAP_MATCHING_FAILURE: Origin (0, 0)",
+        "detailedError": {
+          "message": "Engine error while executing route request: MAP_MATCHING_FAILURE: Origin (0, 0)",
+          "code": "MAP_MATCHING_FAILURE"
+        }
+      }
+    ]
+  ],
+  "summary": {
+    "successfulRoutes": 6,
+    "totalRoutes": 8
+  }
+}

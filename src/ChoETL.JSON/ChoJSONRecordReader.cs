@@ -1201,13 +1201,24 @@ namespace ChoETL
                                                 itemType = rt;
                                         }
 
-                                        object fv = null;
-                                        if (fieldConfig.ItemConverter == null || !typeof(IChoItemConvertable).IsAssignableFrom(RecordType))
-                                            fv = DeserializeNode(ele, itemType, fieldConfig);
-                                        else
-                                            fv = RaiseItemConverter(fieldConfig, ele);
+                                        try
+                                        {
+                                            object fv = null;
+                                            if (fieldConfig.ItemConverter == null || !typeof(IChoItemConvertable).IsAssignableFrom(RecordType))
+                                                fv = DeserializeNode(ele, itemType, fieldConfig);
+                                            else
+                                                fv = RaiseItemConverter(fieldConfig, ele);
 
-                                        list.Add(fv);
+                                            list.Add(fv);
+                                        }
+                                        catch (Exception ex)
+                                        { 
+                                            if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
+                                            {
+                                                ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring item in the field...".FormatString(ex.Message));
+                                                continue;
+                                            }
+                                        }
                                     }
                                     fieldValue = list.ToArray();
                                 }

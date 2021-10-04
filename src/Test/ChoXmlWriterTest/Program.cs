@@ -451,7 +451,7 @@ namespace ChoXmlWriterTest
         public class TimespanClass
         {
             public int Id { get; set; }
-            //[XmlElement(Type = typeof(XmlTimeSpan))] 
+            [XmlElement(Type = typeof(XmlTimeSpan))] 
             public TimeSpan TimeSinceLastEvent { get; set; }
         }
 
@@ -459,7 +459,7 @@ namespace ChoXmlWriterTest
         {
             StringBuilder xml = new StringBuilder();
             using (var w = new ChoXmlWriter<TimespanClass>(xml)
-                //.UseXmlSerialization()
+                .UseXmlSerialization()
                 )
             {
                 w.Write(new TimespanClass
@@ -471,7 +471,7 @@ namespace ChoXmlWriterTest
 
             Console.WriteLine(xml.ToString());
             using (var r = new ChoXmlReader<TimespanClass>(xml)
-                //.UseXmlSerialization()
+                .UseXmlSerialization()
                 )
             {
                 r.Print();
