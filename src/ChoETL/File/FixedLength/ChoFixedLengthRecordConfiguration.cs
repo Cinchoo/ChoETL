@@ -98,7 +98,7 @@ namespace ChoETL
             RecordTypeConfiguration = new ChoFixedLengthRecordTypeConfiguration();
             RecordTypeConfiguration.DefaultRecordType = recordType;
 
-            RecordSelector = new Func<object, Type>((value) =>
+            RecordTypeSelector = new Func<object, Type>((value) =>
             {
                 Tuple<long, string> kvp = value as Tuple<long, string>;
                 string line = kvp.Item2;

@@ -124,7 +124,7 @@ namespace ChoManifoldReaderTest
             using (var writer = new StreamWriter(stream))
             using (var parser = new ChoManifoldReader(reader))
             {
-                parser.Configuration.RecordSelector = (l) => typeof(ExpandoObject);
+                parser.Configuration.RecordTypeSelector = (l) => typeof(ExpandoObject);
                 parser.Configuration[typeof(ExpandoObject)] = new ChoCSVRecordConfiguration();
 
                 writer.WriteLine("Id,Name,Salary");
@@ -161,7 +161,7 @@ namespace ChoManifoldReaderTest
             using (var writer = new StreamWriter(stream))
             using (var parser = new ChoManifoldReader(reader))
             {
-                parser.Configuration.RecordSelector = (l) => typeof(EmployeeRecWithCurrency);
+                parser.Configuration.RecordTypeSelector = (l) => typeof(EmployeeRecWithCurrency);
                 //parser.Configuration[typeof(ExpandoObject)] = new ChoCSVRecordConfiguration();
 
                 writer.WriteLine("1,Carl,1000");

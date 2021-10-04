@@ -4034,7 +4034,7 @@ K,L,M,N,O,P,Q,R,S,T";
             var config = new ChoJSONRecordConfiguration()
                 .Configure(c => c.JSONPath = "$.geom")
                 .Configure(c => c.SupportsMultiRecordTypes = true)
-                .Configure(c => c.RecordSelector = o =>
+                .Configure(c => c.RecordTypeSelector = o =>
                 {
                     var tuple = o as Tuple<long, JObject>;
                     var jObj = tuple.Item2;
@@ -6655,7 +6655,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public string code { get; set; }
         }
 
-        static void DeserializeToConcreteClasses()
+        static void DeserializeChildrenToConcreteClasses()
         {
             using (var r = new ChoJSONReader<Rootobject>("sample56.json")
                 .ErrorMode(ChoErrorMode.IgnoreAndContinue)
@@ -6679,10 +6679,77 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
+        static void DeserializeToConcreteClasses()
+        {
+            using (var r = new ChoJSONReader<IMatrix>("sample57.json")
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                .Configure(c => c.RecordTypeSelector = o =>
+                {
+                    dynamic dobj = o as dynamic;
+                    switch ((int)dobj.Item2.statusCode)
+                    {
+                        case 200:
+                            return typeof(Matrix1);
+                        default:
+                            return typeof(Matrix2);
+                    }
+                })
+                .Configure(c => c.SupportsMultiRecordTypes = true)
+                )
+            {
+                r.Print();
+            }
+        }
+
+        public interface IGalleryItem
+        {
+        }
+
+        public class GalleryItem : IGalleryItem
+        {
+            public string id { get; set; }
+            public string title { get; set; }
+            public bool is_album { get; set; }
+        }
+
+        public class GalleryAlbum : GalleryItem
+        {
+            public int images_count { get; set; }
+            public List<GalleryImage> images { get; set; }
+        }
+
+        public class GalleryImage
+        {
+            public string id { get; set; }
+            public string link { get; set; }
+        }
+
+        static void DeserializeToConcreteClasses1()
+        {
+            using (var r = new ChoJSONReader<IGalleryItem>("Issue151.json")
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                .Configure(c => c.RecordTypeSelector = o =>
+                {
+                    dynamic dobj = o as dynamic;
+                    switch ((bool)dobj.Item2.is_album)
+                    {
+                        case true:
+                            return typeof(GalleryAlbum);
+                        default:
+                            return typeof(GalleryItem);
+                    }
+                })
+                .Configure(c => c.SupportsMultiRecordTypes = true)
+                )
+            {
+                foreach (var rec in r)
+                    Console.Write(rec.Dump());
+            }
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            DeserializeToConcreteClasses();
+            DeserializeToConcreteClasses1();
             //DeserializeNestedObjectOfList();
             return;
 

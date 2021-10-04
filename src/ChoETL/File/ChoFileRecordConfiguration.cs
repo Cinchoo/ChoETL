@@ -13,11 +13,11 @@ namespace ChoETL
     [DataContract]
     public abstract class ChoFileRecordConfiguration : ChoRecordConfiguration
     {
-        private Func<object, Type> _recordSelector = null;
-        public Func<object, Type> RecordSelector
+        private Func<object, Type> _recordTypeSelector = null;
+        public Func<object, Type> RecordTypeSelector
         {
-            get { return _recordSelector; }
-            set { if (value == null) return; _recordSelector = value; }
+            get { return _recordTypeSelector; }
+            set { if (value == null) return; _recordTypeSelector = value; }
         }
         private Func<string, string> _recordTypeCodeExtractor = null;
         public Func<string, string> RecordTypeCodeExtractor

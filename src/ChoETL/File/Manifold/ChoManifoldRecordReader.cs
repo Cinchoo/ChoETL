@@ -49,7 +49,7 @@ namespace ChoETL
             if (sr is StreamReader)
                 ((StreamReader)sr).Seek(0, SeekOrigin.Begin);
 
-            if (Configuration.RecordSelector == null)
+            if (Configuration.RecordTypeSelector == null)
                 throw new ChoRecordConfigurationException("Missing record selector.");
 
             if (!RaiseBeginLoad(sr))
@@ -171,7 +171,7 @@ namespace ChoETL
                         yield break;
                     }
 
-                    Type recType = Configuration.RecordSelector(pair.Item2);
+                    Type recType = Configuration.RecordTypeSelector(pair.Item2);
                     if (recType == null)
                     {
                         if (Configuration.IgnoreIfNoRecordParserExists)

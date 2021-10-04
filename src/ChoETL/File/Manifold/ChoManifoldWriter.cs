@@ -189,7 +189,7 @@ namespace ChoETL
 
         public ChoManifoldWriter WithRecordSelector(Func<object, Type> recordSelector)
         {
-            Configuration.RecordSelector = recordSelector;
+            Configuration.RecordTypeSelector = recordSelector;
             return this;
         }
 

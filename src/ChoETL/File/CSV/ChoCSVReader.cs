@@ -929,7 +929,7 @@ namespace ChoETL
         public ChoCSVReader<T> WithCustomRecordSelector(Func<object, Type> recordSelector)
         {
             Configuration.SupportsMultiRecordTypes = true;
-            Configuration.RecordSelector = recordSelector;
+            Configuration.RecordTypeSelector = recordSelector;
             return this;
         }
 

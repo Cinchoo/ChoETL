@@ -238,7 +238,7 @@ namespace ChoETL
             RecordTypeConfiguration = new ChoCSVRecordTypeConfiguration();
             RecordTypeConfiguration.DefaultRecordType = recordType;
 
-            RecordSelector = new Func<object, Type>((value) =>
+            RecordTypeSelector = new Func<object, Type>((value) =>
             {
                 Tuple<long, string> kvp = value as Tuple<long, string>;
                 string line = kvp.Item2;
@@ -919,7 +919,7 @@ namespace ChoETL
 
             if (RecordTypeConfiguration != null)
             {
-                if (RecordSelector == null && RecordTypeCodeExtractor == null)
+                if (RecordTypeSelector == null && RecordTypeCodeExtractor == null)
                 {
                 }
             }

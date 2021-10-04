@@ -259,7 +259,7 @@ namespace ChoETL
 
                 if (!_configCheckDone)
                 {
-                    if (Configuration.SupportsMultiRecordTypes && Configuration.RecordSelector != null && !Configuration.RecordTypeMapped)
+                    if (Configuration.SupportsMultiRecordTypes && Configuration.RecordTypeSelector != null && !Configuration.RecordTypeMapped)
                     {
                     }
                     else
@@ -420,9 +420,9 @@ namespace ChoETL
                 return true;
             }
 
-            if (Configuration.SupportsMultiRecordTypes && Configuration.RecordSelector != null)
+            if (Configuration.SupportsMultiRecordTypes && Configuration.RecordTypeSelector != null)
             {
-                Type recType = Configuration.RecordSelector(pair);
+                Type recType = Configuration.RecordTypeSelector(pair);
                 if (recType == null)
                 {
                     if (Configuration.IgnoreIfNoRecordTypeFound)

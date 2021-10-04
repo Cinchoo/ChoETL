@@ -2567,9 +2567,20 @@
                 if (declaringMember.Contains("."))
                 {
                     int index = declaringMember.IndexOf(".");
+                    string member = declaringMember.Substring(index + 1);
                     Type type = ChoType.GetType(declaringMember.Substring(0, index));
                     if (type == null)
                         return null;
+                    else if (type != rec.GetType() && ChoType.HasSetProperty(rec.GetType(), member))
+                    {
+                        var mo = ChoType.GetPropertyValue(rec, member);
+                        if (mo == null)
+                        {
+                            ChoType.SetPropertyValue(rec, member, ChoActivator.CreateInstance(ChoType.GetMemberType(rec.GetType(), member)));
+                            mo = ChoType.GetPropertyValue(rec, member);
+                        }
+                        return mo;
+                    }
                     else
                     {
                         lock (_objCachePadLock)

@@ -59,6 +59,7 @@
     <None Include="Issue147.json" />
     <None Include="Issue148a.json" />
     <None Include="Issue148.json" />
+    <None Include="Issue151.json" />
     <None Include="klant.json" />
     <None Include="packages.config" />
     <None Include="sample100.json" />
@@ -66,6 +67,7 @@
     <None Include="Sample18Expected.csv" />
     <None Include="Sample2Expected.csv" />
     <None Include="sample48.json" />
+    <None Include="sample57.json" />
     <None Include="sample56.json" />
     <None Include="sample55.json" />
     <None Include="sample54.json" />

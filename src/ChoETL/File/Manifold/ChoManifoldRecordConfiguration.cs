@@ -87,7 +87,7 @@ namespace ChoETL
             FileHeaderConfiguration = new ChoManifoldFileHeaderConfiguration(Culture);
             RecordTypeConfiguration = new ChoManifoldRecordTypeConfiguration();
 
-            RecordSelector = new Func<object, Type>((value) =>
+            RecordTypeSelector = new Func<object, Type>((value) =>
             {
                 string line = value as string;
                 if (line.IsNullOrEmpty()) return RecordTypeConfiguration.DefaultRecordType;
@@ -148,7 +148,7 @@ namespace ChoETL
 
             if (RecordTypeConfiguration != null)
             {
-                if (RecordSelector == null && RecordTypeCodeExtractor == null)
+                if (RecordTypeSelector == null && RecordTypeCodeExtractor == null)
                 {
                     if (RecordTypeConfiguration.StartIndex < 0)
                         throw new ChoRecordConfigurationException("RecordTypeConfiguration start index must be >= 0.");
