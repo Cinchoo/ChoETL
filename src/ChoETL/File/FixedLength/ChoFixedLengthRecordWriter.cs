@@ -905,7 +905,8 @@ namespace ChoETL
                         //Fields with leading or trailing spaces must be delimited with double-quote characters.
                         if (!fieldValue.IsNullOrWhiteSpace() && (char.IsWhiteSpace(fieldValue[0]) || char.IsWhiteSpace(fieldValue[fieldValue.Length - 1])))
                         {
-                            quoteValue = true;
+                            if (Configuration.QuoteLeadingAndTrailingSpaces)
+                                quoteValue = true;
                         }
                     }
                 }

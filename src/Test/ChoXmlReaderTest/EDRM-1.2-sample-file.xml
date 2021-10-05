@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Root RootFilePath="/temp/" MajorVersion="1" MinorVersion="2" Locale="US" Description="Test Case" DataInterchangeType="Update" CaseId="Case1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation='EDRM-1.2.xsd'
+>
+  <Fields>
+    <Field Key="A" Name="Doc Identifier" DataType="FixedLengthText" MaxLength="255"/>
+    <Field Key="B" Name="Group ID" DataType="FixedLengthText" MaxLength="255"/>
+    <Field Key="C" Name="Full Folder Path" DataType="FixedLengthText" MaxLength="255"/>
+    <Field Key="D" Name="Custodian" DataType="FixedLengthText" MaxLength="255"/>
+    <Field Key="E" Name="Email Author" DataType="LongText" EDRMFieldMap="From"/>
+    <Field Key="F" Name="Email BCC" DataType="LongText" EDRMFieldMap="BCC"/>
+    <Field Key="G" Name="Email CC" DataType="LongText" EDRMFieldMap="CC"/>
+    <Field Key="H" Name="Email Sent Date" DataType="DateTime" EDRMFieldMap="DateSent"/>
+    <Field Key="I" Name="Email Subject" DataType="LongText" EDRMFieldMap="Subject"/>
+    <Field Key="J" Name="Email To" DataType="LongText" EDRMFieldMap="To"/>
+    <Field Key="K" Name="Parent Doc ID" DataType="FixedLengthText" MaxLength="255"/>
+    <Field Key="L" Name="Responsiveness" DataType="SingleChoiceList">
+      <Choices>
+        <Choice Key="C1" Name="Responsive"/>
+        <Choice Key="C2" Name="Not Sure"/>
+        <Choice Key="C3" Name="Not Responsive"/>
+      </Choices>
+    </Field>
+    <Field Key="M" Name="Issues" DataType="MultipleChoiceList">
+      <Choices Delimiter=";">
+        <Choice Key="C1" Name="Issue 1">
+          <Choice Key="C2" Name="Issue - Child 1"/>
+        </Choice>
+        <Choice Key="C3" Name="Issue 2">
+          <Choice Key="C4" Name="Issue - Child 1"/>
+        </Choice>
+      </Choices>
+    </Field>
+    <Field Key="N" Name="Extracted Text" DataType="LongText" IsTextPointer="1"/>
+  </Fields>  
+  <Batch name="Sample Batch">
+    <Documents>
+      <Document MimeType="text/plain" DocType="Text File" DocID="1"/>
+      <Document MimeType="text/plain" DocType="Text File 2" DocID="2">
+        <Tags>
+          <Tag TagValue="Tag Value??" TagName="Tag Name??" TagDataType="LongText" ModifiedBy="Jane Doe"/>
+        </Tags>
+        <Files>
+          <File FileType="7bit ASCII Doc">
+            <ExternalFile MergeFileNum="0" MergeFileCount="0" Hash="1234567890" FileSize="1000" FilePath="c:\" FileName="data.txt"/>
+          </File>
+        </Files>
+        <Reviews>
+          <Review ReviewId="1">
+            <Tag TagValue="Tag Value??" TagName="Tag Name??"
+            TagDataType="LongText" ModifiedBy="Jane Doe"/>
+          </Review>
+        </Reviews>
+        <Locations>
+          <Location>
+            <Custodian xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema" xsi:type="xs:string">
+              John Doe
+            </Custodian>
+            <LocationURI>ATL</LocationURI>
+	  <Description>None</Description>	    
+          </Location>
+        </Locations>
+      </Document>
+      <Document MimeType="text/plain" DocType="Text File 3" DocID="3">
+        <FieldValues>
+          <A>DOC00000</A>
+          <B>14B833B7794C67D86E49F71433C45FEC</B>
+          <C>Jane\Inbox</C>
+          <D>Jane</D>
+          <E>Ed@email.com</E>
+          <F>Smith@email.com;Eric@email.com</F>
+          <G>Scott@email.com;Cindy@email.com;Sarah@email.com</G>
+          <H>2002-10-25</H>
+          <I>Meeting Minutes</I>
+          <J>Jane@email.com</J>
+          <K></K>
+          <L>C1</L>
+          <M>C1;C2</M>
+          <N>file://server1/my documents/extractedtext/1.txt</N>
+        </FieldValues>
+        <Files>
+          <File FileType="Text">
+            <InlineContent>This is sample inline content.</InlineContent>
+          </File>
+          <File FileType="Native">
+            <ExternalFile FilePath="c:\" FileName="sample.doc" FileSize="32768" Hash="987654321" HashType="SHA-1"/>
+          </File>
+        </Files>
+        <Reviews>
+          <Review ReviewId="2">
+            <FieldValues>
+              <L>C1</L>
+            </FieldValues>
+          </Review>
+        </Reviews>
+        <CustomDocumentInfo>
+          <SampleTag1>
+            This tag contains custom document info.
+            <SampleTag1A>This is nested customer info.</SampleTag1A>
+            <SampleTag1B>This is additional nested customer info.</SampleTag1B>
+          </SampleTag1>
+          <SampleTag2>This is more custom document info.</SampleTag2>
+        </CustomDocumentInfo>
+      </Document>
+    </Documents>
+    <Relationships>
+      <Relationship Type="NearDupe" ParentDocId="2" ChildDocId="1" />
+    </Relationships>
+    <Folders>
+      <Folder FolderParentName="" FolderName="SampleFolder">
+        <Folder FolderParentName="SampleFolder" FolderName="SampleFolder2">
+        </Folder>
+        <Document DocId="1"/>
+        <Document DocId="2"/>
+      </Folder>
+    </Folders>
+  </Batch>
+</Root>
+

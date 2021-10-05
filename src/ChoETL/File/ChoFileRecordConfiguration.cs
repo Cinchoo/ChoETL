@@ -130,6 +130,12 @@ namespace ChoETL
             set;
         }
         [DataMember]
+        public bool QuoteLeadingAndTrailingSpaces
+        {
+            get;
+            set;
+        }
+        [DataMember]
         public char? NestedColumnSeparator
         {
             get;

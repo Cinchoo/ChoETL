@@ -74,6 +74,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="EDRM-1.2-sample-file.xml" />
     <Content Include="JSONToXmlSample4Expected.xml" />
     <Content Include="Pivot1.xml" />
     <Content Include="sample14Expected.xml" />

@@ -433,7 +433,19 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Verbose;
 
-            ParseXml5();
+            ERDMXmlToDataTable();
+        }
+
+        static void ERDMXmlToDataTable()
+        {
+            using (var r = new ChoXmlReader("EDRM-1.2-sample-file.xml")
+                .WithXPath("//")
+                )
+            {
+                var dt = r.AsDataTable();
+
+                dt.Print();
+            }
         }
 
         public class MyObject
