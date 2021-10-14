@@ -149,109 +149,114 @@ namespace ChoETL
                     continue;
                 }
 
-                bool boolValue;
-                long lresult = 0;
-                double dresult = 0;
-                decimal decResult = 0;
-                DateTime dtResult;
-                ChoCurrency currResult = 0;
-                Guid guidResult;
-                bool treatCurrencyAsDecimal = RecordConfiguration.TypeConverterFormatSpec.TreatCurrencyAsDecimal;
-
-                if (ChoBoolean.TryParse(value.ToNString(), out boolValue))
-                    fieldType = typeof(bool);
-                else if (Guid.TryParse(value.ToNString(), out guidResult))
-                    fieldType = typeof(Guid);
-                else if (!value.ToNString().Contains(ci.NumberFormat.NumberDecimalSeparator) && long.TryParse(value.ToNString(), out lresult))
-                    fieldType = typeof(long);
-                else if (double.TryParse(value.ToNString(), out dresult))
-                    fieldType = typeof(double);
-                else if (decimal.TryParse(value.ToNString(), out decResult))
-                    fieldType = typeof(decimal);
-                else if (!treatCurrencyAsDecimal && ChoCurrency.TryParse(value.ToNString(), out currResult))
-                    fieldType = typeof(ChoCurrency);
-                else if (treatCurrencyAsDecimal && Decimal.TryParse(value.ToNString(), NumberStyles.Currency, CultureInfo.CurrentCulture, out decResult))
-                    fieldType = typeof(Decimal);
-                else if (!RecordConfiguration.TypeConverterFormatSpec.DateTimeFormat.IsNullOrWhiteSpace()
-                        && ChoDateTime.TryParseExact(value.ToNString(), RecordConfiguration.TypeConverterFormatSpec.DateTimeFormat, CultureInfo.CurrentCulture, 
-                        RecordConfiguration.TypeConverterFormatSpec.DateTimeStyles, out dtResult))
-                    fieldType = typeof(DateTime);
-                else if (DateTime.TryParse(value.ToNString(), out dtResult))
-                    fieldType = typeof(DateTime);
-                else
+                fieldType = ChoFieldTypeAssessor.Instance.AssessType(value, RecordConfiguration.TypeConverterFormatSpec, ci);
+                if (fieldType == null)
                 {
-                    if (value.ToNString().Length == 1)
-                        fieldType = typeof(char);
+                    bool boolValue;
+                    long lresult = 0;
+                    double dresult = 0;
+                    decimal decResult = 0;
+                    DateTime dtResult;
+                    ChoCurrency currResult = 0;
+                    Guid guidResult;
+                    bool treatCurrencyAsDecimal = RecordConfiguration.TypeConverterFormatSpec.TreatCurrencyAsDecimal;
+
+                    if (ChoBoolean.TryParse(value.ToNString(), out boolValue))
+                        fieldType = typeof(bool);
+                    else if (Guid.TryParse(value.ToNString(), out guidResult))
+                        fieldType = typeof(Guid);
+                    else if (!value.ToNString().Contains(ci.NumberFormat.NumberDecimalSeparator) && long.TryParse(value.ToNString(), out lresult))
+                        fieldType = typeof(long);
+                    else if (double.TryParse(value.ToNString(), out dresult))
+                        fieldType = typeof(double);
+                    else if (decimal.TryParse(value.ToNString(), out decResult))
+                        fieldType = typeof(decimal);
+                    else if (!treatCurrencyAsDecimal && ChoCurrency.TryParse(value.ToNString(), out currResult))
+                        fieldType = typeof(ChoCurrency);
+                    else if (treatCurrencyAsDecimal && Decimal.TryParse(value.ToNString(), NumberStyles.Currency, CultureInfo.CurrentCulture, out decResult))
+                        fieldType = typeof(Decimal);
+                    else if (!RecordConfiguration.TypeConverterFormatSpec.DateTimeFormat.IsNullOrWhiteSpace()
+                            && ChoDateTime.TryParseExact(value.ToNString(), RecordConfiguration.TypeConverterFormatSpec.DateTimeFormat, CultureInfo.CurrentCulture,
+                            RecordConfiguration.TypeConverterFormatSpec.DateTimeStyles, out dtResult))
+                        fieldType = typeof(DateTime);
+                    else if (DateTime.TryParse(value.ToNString(), out dtResult))
+                        fieldType = typeof(DateTime);
+                    else
+                    {
+                        if (value.ToNString().Length == 1)
+                            fieldType = typeof(char);
+                        else
+                            fieldType = typeof(string);
+                    }
+
+                    if (fieldType == typeof(string))
+                        fieldTypes[key] = fieldType;
+                    else if (fieldType == typeof(ChoCurrency))
+                    {
+                        if (fieldTypes[key] == null)
+                            fieldTypes[key] = fieldType;
+                        else if (fieldTypes[key] != typeof(ChoCurrency))
+                            fieldTypes[key] = typeof(string);
+                    }
+                    else if (fieldType == typeof(Guid))
+                    {
+                        if (fieldTypes[key] == null)
+                            fieldTypes[key] = fieldType;
+                        else if (fieldTypes[key] != typeof(Guid))
+                            fieldTypes[key] = typeof(string);
+                    }
+                    else if (fieldType == typeof(DateTime))
+                    {
+                        if (fieldTypes[key] == null)
+                            fieldTypes[key] = fieldType;
+                        else if (fieldTypes[key] != typeof(DateTime))
+                            fieldTypes[key] = typeof(string);
+                    }
+                    else if (fieldType == typeof(decimal))
+                    {
+                        if (fieldTypes[key] == null)
+                            fieldTypes[key] = fieldType;
+                        else if (fieldTypes[key] == typeof(DateTime))
+                            fieldTypes[key] = typeof(string);
+                        else if (fieldTypes[key] == typeof(double)
+                            || fieldTypes[key] == typeof(long)
+                            || fieldTypes[key] == typeof(bool))
+                            fieldTypes[key] = fieldType;
+                    }
+                    else if (fieldType == typeof(double))
+                    {
+                        if (fieldTypes[key] == null)
+                            fieldTypes[key] = fieldType;
+                        else if (fieldTypes[key] == typeof(DateTime))
+                            fieldTypes[key] = typeof(string);
+                        else if (fieldTypes[key] == typeof(long)
+                            || fieldTypes[key] == typeof(bool))
+                            fieldTypes[key] = fieldType;
+                    }
+                    else if (fieldType == typeof(long))
+                    {
+                        if (fieldTypes[key] == null)
+                            fieldTypes[key] = fieldType;
+                        else if (fieldTypes[key] == typeof(DateTime))
+                            fieldTypes[key] = typeof(string);
+                        else if (fieldTypes[key] == typeof(bool))
+                            fieldTypes[key] = fieldType;
+                    }
+                    else if (fieldType == typeof(bool))
+                    {
+                        if (fieldTypes[key] == null)
+                            fieldTypes[key] = fieldType;
+                    }
+                    else if (fieldType == typeof(char))
+                    {
+                        if (fieldTypes[key] == null)
+                            fieldTypes[key] = fieldType;
+                    }
                     else
                         fieldType = typeof(string);
                 }
-
-                if (fieldType == typeof(string))
-                    fieldTypes[key] = fieldType;
-                else if (fieldType == typeof(ChoCurrency))
-                {
-                    if (fieldTypes[key] == null)
-                        fieldTypes[key] = fieldType;
-                    else if (fieldTypes[key] != typeof(ChoCurrency))
-                        fieldTypes[key] = typeof(string);
-                }
-                else if (fieldType == typeof(Guid))
-                {
-                    if (fieldTypes[key] == null)
-                        fieldTypes[key] = fieldType;
-                    else if (fieldTypes[key] != typeof(Guid))
-                        fieldTypes[key] = typeof(string);
-                }
-                else if (fieldType == typeof(DateTime))
-                {
-                    if (fieldTypes[key] == null)
-                        fieldTypes[key] = fieldType;
-                    else if (fieldTypes[key] != typeof(DateTime))
-                        fieldTypes[key] = typeof(string);
-                }
-                else if (fieldType == typeof(decimal))
-                {
-                    if (fieldTypes[key] == null)
-                        fieldTypes[key] = fieldType;
-                    else if (fieldTypes[key] == typeof(DateTime))
-                        fieldTypes[key] = typeof(string);
-                    else if (fieldTypes[key] == typeof(double)
-                        || fieldTypes[key] == typeof(long)
-                        || fieldTypes[key] == typeof(bool))
-                        fieldTypes[key] = fieldType;
-                }
-                else if (fieldType == typeof(double))
-                {
-                    if (fieldTypes[key] == null)
-                        fieldTypes[key] = fieldType;
-                    else if (fieldTypes[key] == typeof(DateTime))
-                        fieldTypes[key] = typeof(string);
-                    else if (fieldTypes[key] == typeof(long)
-                        || fieldTypes[key] == typeof(bool))
-                        fieldTypes[key] = fieldType;
-                }
-                else if (fieldType == typeof(long))
-                {
-                    if (fieldTypes[key] == null)
-                        fieldTypes[key] = fieldType;
-                    else if (fieldTypes[key] == typeof(DateTime))
-                        fieldTypes[key] = typeof(string);
-                    else if (fieldTypes[key] == typeof(bool))
-                        fieldTypes[key] = fieldType;
-                }
-                else if (fieldType == typeof(bool))
-                {
-                    if (fieldTypes[key] == null)
-                        fieldTypes[key] = fieldType;
-                }
-                else if (fieldType == typeof(char))
-                {
-                    if (fieldTypes[key] == null)
-                        fieldTypes[key] = fieldType;
-                }
-                else
-                    fieldType = typeof(string);
             }
+
             if (isLastScanRow)
             {
                 foreach (var key in fieldTypes.Keys.ToArray())

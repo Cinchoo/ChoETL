@@ -17,7 +17,7 @@
     <PackageTags>ETL c# .NET CSV Xml JSON Flat</PackageTags>
     <PackageReleaseNotes>.NET Standard version</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Version>1.2.1.26</Version>
+    <Version>1.2.1.28</Version>
     <AssemblyName>ChoETL.Core</AssemblyName>
     <RootNamespace>ChoETL</RootNamespace>
     <SignAssembly>true</SignAssembly>
@@ -67,6 +67,7 @@
     <Compile Include="..\ChoETL\Common\Attributes\ChoDefaultValueAttribute.cs" Link="Common\Attributes\ChoDefaultValueAttribute.cs" />
     <Compile Include="..\ChoETL\Common\Attributes\ChoKeyValueTypeAttribute.cs" Link="Common\Attributes\ChoKeyValueTypeAttribute.cs" />
     <Compile Include="..\ChoETL\Common\ChoDisposable.cs" Link="Common\ChoDisposable.cs" />
+    <Compile Include="..\ChoETL\Common\ChoFieldTypeAssessor.cs" Link="Common\ChoFieldTypeAssessor.cs" />
     <Compile Include="..\ChoETL\Common\ChoEnum.cs" Link="Common\ChoEnum.cs" />
     <Compile Include="..\ChoETL\Common\ChoEnumTypeCache.cs" Link="Common\ChoEnumTypeCache.cs" />
     <Compile Include="..\ChoETL\Common\ChoExternalSorter.cs" Link="Common\ChoExternalSorter.cs" />

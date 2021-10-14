@@ -713,8 +713,8 @@ namespace ChoCSVReaderTest
                 //.Configure(c => c.TypeConverterFormatSpec.TreatCurrencyAsDecimal = false)
                 .QuoteAllFields()
                 //.WithMaxScanRows(2)
-                .WithField("Cust_ID")
-                .WithField("Salary", fieldType: typeof(Decimal))
+                //.WithField("Cust_ID")
+                //.WithField("Salary", fieldType: typeof(Decimal))
                 //.Configure(c => c.MaxScanRows = 10)
                 )
             {
@@ -5081,10 +5081,57 @@ Raj, 5, DC
             }
         }
 
+        static void BackslashTest1()
+        {
+            string csv = @"c1,c2,c3
+A,""A\B\"",C
+A,B,C
+A, B, C";
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .QuoteAllFields()
+                )
+            {
+                using (var w = new ChoJSONWriter(Console.Out)
+                    )
+                    w.Write(r);
+            }
+        }
+
+
+        static void BackslashTest()
+        {
+            string csv = @"column1,column2,column3
+Row1Column0,""Row1\Column2\"",Row1Column3
+Row2Column0,""Row2
+Column2"",Row2Column3
+Row3Column0,Row3Column2,Row3Column3";
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .MayContainEOLInData(true)
+                .ThrowAndStopOnMissingField(false)
+                .MayHaveQuotedFields()
+                //.Configure(c => c.QuoteEscapeChar = '\\')
+                )
+            {
+                //r.Print();
+                //return;
+                using (var w = new ChoJSONWriter(Console.Out)
+                    //.Configure(c => c.DefaultArrayHandling = false)
+                    .UseJsonSerialization()
+                    )
+                    w.Write(r);
+            }
+        }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
+            BackslashTest();
+            return;
+
             PositionNeutralCSVLoad();
             return;
 

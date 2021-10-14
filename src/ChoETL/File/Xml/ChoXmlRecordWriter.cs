@@ -782,6 +782,15 @@ namespace ChoETL
                     return true;
                 }
 
+                if (fieldConfig.IgnoreFieldValue(fieldValue))
+                {
+                    recText = null;
+                    return true;
+                }
+
+                if (fieldValue == null)
+                    fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
+
                 if (fieldValue == null && fieldConfig.NullValue != null)
                     fieldValue = fieldConfig.NullValue;
 

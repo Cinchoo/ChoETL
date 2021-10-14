@@ -786,7 +786,8 @@ namespace ChoETL
             return sb.ToString(0, sb.Length - (delimCandidatePosition == delim.Length ? delim.Length : 0));
         }
 
-        public static IEnumerable<string> ReadLines(this TextReader reader, string EOLDelimiter = null, char quoteChar = ChoCharEx.NUL, bool mayContainEOLInData = false, int maxLineSize = 32768)
+        public static IEnumerable<string> ReadLines(this TextReader reader, string EOLDelimiter = null, char quoteChar = ChoCharEx.NUL, bool mayContainEOLInData = false, int maxLineSize = 32768,
+            char escapeChar = ChoCharEx.Backslash)
         {
             ChoGuard.ArgumentNotNull(reader, "TextReader");
             EOLDelimiter = EOLDelimiter ?? Environment.NewLine;
@@ -819,7 +820,7 @@ namespace ChoETL
             CircularBuffer<char> delim_buffer = new CircularBuffer<char>(EOLDelimiter.Length);
             while (reader.Peek() >= 0)
             {
-                isPrevEscape = c == ChoCharEx.Backslash;
+                isPrevEscape = c == escapeChar;
                 c = (char)reader.Read();
                 delim_buffer.Enqueue(c);
                 if (quoteChar != ChoCharEx.NUL && quoteChar == c)

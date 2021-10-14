@@ -605,6 +605,12 @@ namespace ChoETL
             return this;
         }
 
+        public ChoCSVReader<T> MayHaveQuotedFields(bool flag = true, char quoteChar = '"')
+        {
+            QuoteAllFields(flag, quoteChar);
+            return this;
+        }
+
         public ChoCSVReader<T> ClearFields()
         {
             Configuration.ClearFields();

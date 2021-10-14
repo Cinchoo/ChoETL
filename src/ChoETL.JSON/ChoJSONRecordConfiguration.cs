@@ -25,6 +25,12 @@ namespace ChoETL
         internal readonly Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>> JSONRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>>();
         public readonly Dictionary<Type, Func<object, object>> NodeConvertersForType = new Dictionary<Type, Func<object, object>>();
 
+        public string LineBreakChars
+        {
+            get;
+            set;
+        }
+
         public bool FlattenNode
         {
             get;
@@ -261,6 +267,7 @@ namespace ChoETL
             DefaultArrayHandling = recordType == null || recordType.IsDynamicType() ? true : false;
             JSONRecordFieldConfigurations = new List<ChoJSONRecordFieldConfiguration>();
 
+            LineBreakChars = Environment.NewLine;
             Formatting = Newtonsoft.Json.Formatting.Indented;
             if (recordType != null)
             {

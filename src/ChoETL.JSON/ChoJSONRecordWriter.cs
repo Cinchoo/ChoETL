@@ -705,9 +705,12 @@ namespace ChoETL
                     {
                         Type ft = fieldValue == null ? typeof(object) : fieldValue.GetType();
                         if (fieldConfig.IgnoreFieldValue(fieldValue))
+                        {
                             fieldText = null;
+                        }
                         else if (fieldValue == null)
                         {
+                            fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
                             //if (fieldConfig.FieldType == null || fieldConfig.FieldType == typeof(object))
                             //{
                             //    if (fieldConfig.NullValue == null)
@@ -1185,7 +1188,7 @@ namespace ChoETL
                         if (isHeader)
                             throw new ChoParserException("Field header '{0}' value contains EOL delimiter character.".FormatString(fieldName));
                         else
-                            fieldValue = "\"{0}\"".FormatString(fieldValue);
+                            fieldValue = fieldValue.Replace(EOLDelimiter, Configuration.LineBreakChars); // "\"{0}\"".FormatString(fieldValue);
                     }
                 }
             }

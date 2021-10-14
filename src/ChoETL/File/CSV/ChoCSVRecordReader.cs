@@ -119,7 +119,7 @@ namespace ChoETL
 
         private IEnumerable<string> ReadLines(TextReader sr)
         {
-            var recEnum = sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, Configuration.MayContainEOLInData, Configuration.MaxLineSize).GetEnumerator();
+            var recEnum = sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, Configuration.MayContainEOLInData, Configuration.MaxLineSize, Configuration.QuoteEscapeChar == null ? ChoCharEx.Backslash : Configuration.QuoteEscapeChar.Value).GetEnumerator();
             AutoDetectDelimiterIfAny(recEnum);
             CalcFieldMaxCountIfApplicable(_recBuffer.Value.ToArray());
 
@@ -130,7 +130,7 @@ namespace ChoETL
             foreach (var rec in arr)
                 yield return rec;
 
-            foreach (var line in sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, Configuration.MayContainEOLInData, Configuration.MaxLineSize))
+            foreach (var line in sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, Configuration.MayContainEOLInData, Configuration.MaxLineSize, Configuration.QuoteEscapeChar == null ? ChoCharEx.Backslash : Configuration.QuoteEscapeChar.Value))
                 yield return line;
         }
 

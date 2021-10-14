@@ -6746,10 +6746,55 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                     Console.Write(rec.Dump());
             }
         }
+
+        static void LoadDuplicateKeys()
+        {
+            string json = @"
+{
+    ""Quotes"": {
+        ""Quote"": {
+            ""Text"": ""Hi""
+        },
+        ""Quote"": {
+            ""Text"": ""Hello""
+        }
+    }
+}";
+
+            using (var r = ChoJSONReader.LoadText(json)
+                )
+            {
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
+            }
+        }
+
+        static void FlattenJSON()
+        {
+            string json = @"
+{
+    ""First Name"" : ""Steve"",
+    ""Last Name"" : ""Williams"",
+    ""Age"" : 20,
+    ""Employement Details"" : {
+        ""Organization"" : ""Google"",
+        ""SalaryReceived"" : 25000,
+        ""Designation"" : ""Senior Engineer""
+    }
+}";
+
+            using (var r = ChoJSONReader.LoadText(json)
+                )
+            {
+                using (var w = new ChoJSONWriter(Console.Out))
+                    w.Write(r.FlattenBy("Employement Details"));
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            DeserializeToConcreteClasses1();
+            FlattenJSON();
             //DeserializeNestedObjectOfList();
             return;
 
