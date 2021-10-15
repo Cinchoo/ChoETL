@@ -1523,9 +1523,9 @@ namespace ChoETL
                     else if (targetType == typeof(Type))
                     {
                         if (@this is string)
-                            return Convert.ChangeType(Type.GetType(@this as string), targetType);
+                            return Type.GetType(@this as string);  // Convert.ChangeType(Type.GetType(@this as string), targetType);
                         else
-                            return Convert.ChangeType(@this, targetType);
+                            return ChoConvert.ConvertFrom(@this, targetType);
                     }
                     else if (targetType == typeof(bool))
                     {
@@ -1533,7 +1533,7 @@ namespace ChoETL
                         if (ChoBoolean.TryParse(@this.ToNString(), out bResult))
                             return bResult;
                         else
-                            return Convert.ChangeType(@this, targetType);
+                            return ChoConvert.ConvertFrom(@this, targetType);
                     }
                     else if (targetType == typeof(Guid))
                     {
@@ -1541,7 +1541,7 @@ namespace ChoETL
                         if (Guid.TryParse(@this.ToNString(), out guidResult))
                             return guidResult;
                         else
-                            return Convert.ChangeType(@this, targetType);
+                            return ChoConvert.ConvertFrom(@this, targetType);
                     }
                     else if (targetType == typeof(DateTime))
                     {
@@ -1550,7 +1550,7 @@ namespace ChoETL
                             && ChoDateTime.TryParseExact(@this.ToNString(), typeConverterFormatSpec.DateTimeFormat, CultureInfo.CurrentCulture, out dtResult))
                             return dtResult;
                         else
-                            return Convert.ChangeType(@this, targetType);
+                            return ChoConvert.ConvertFrom(@this, targetType);
                     }
                     else if (targetType == typeof(ChoCurrency))
                     {
@@ -1558,7 +1558,7 @@ namespace ChoETL
                         if (ChoCurrency.TryParse(@this.ToNString(), out cyResult))
                             return cyResult;
                         else
-                            return Convert.ChangeType(@this, targetType);
+                            return ChoConvert.ConvertFrom(@this, targetType);
                     }
                     else if (targetType == typeof(Decimal))
                     {
@@ -1566,10 +1566,10 @@ namespace ChoETL
                         if (typeConverterFormatSpec.TreatCurrencyAsDecimal && Decimal.TryParse(@this.ToNString(), NumberStyles.Currency, CultureInfo.CurrentCulture, out decResult))
                             return decResult;
                         else
-                            return Convert.ChangeType(@this, targetType);
+                            return ChoConvert.ConvertFrom(@this, targetType);
                     }
                     else
-                        return Convert.ChangeType(@this, targetType);
+                        return ChoConvert.ConvertFrom(@this, targetType);
                 }
                 catch
                 {

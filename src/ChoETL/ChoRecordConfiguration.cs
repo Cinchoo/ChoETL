@@ -25,6 +25,12 @@ namespace ChoETL
             get { return _typeConverterFormatSpec == null ? ChoTypeConverterFormatSpec.Instance : _typeConverterFormatSpec; }
             set { _typeConverterFormatSpec = value; }
         }
+        private ChoFieldTypeAssessor _fieldTypeAssessor = null;
+        public ChoFieldTypeAssessor FieldTypeAssessor
+        {
+            get { return _fieldTypeAssessor == null ? ChoFieldTypeAssessor.Instance : _fieldTypeAssessor; }
+            set { _fieldTypeAssessor = value; }
+        }
         public Type RecordType
         {
             get;

@@ -149,7 +149,9 @@ namespace ChoETL
                     continue;
                 }
 
-                fieldType = ChoFieldTypeAssessor.Instance.AssessType(value, RecordConfiguration.TypeConverterFormatSpec, ci);
+                if (RecordConfiguration.FieldTypeAssessor != null)
+                    fieldType = RecordConfiguration.FieldTypeAssessor.AssessType(value, RecordConfiguration.TypeConverterFormatSpec, ci);
+
                 if (fieldType == null)
                 {
                     bool boolValue;
@@ -189,72 +191,73 @@ namespace ChoETL
                             fieldType = typeof(string);
                     }
 
-                    if (fieldType == typeof(string))
-                        fieldTypes[key] = fieldType;
-                    else if (fieldType == typeof(ChoCurrency))
-                    {
-                        if (fieldTypes[key] == null)
-                            fieldTypes[key] = fieldType;
-                        else if (fieldTypes[key] != typeof(ChoCurrency))
-                            fieldTypes[key] = typeof(string);
-                    }
-                    else if (fieldType == typeof(Guid))
-                    {
-                        if (fieldTypes[key] == null)
-                            fieldTypes[key] = fieldType;
-                        else if (fieldTypes[key] != typeof(Guid))
-                            fieldTypes[key] = typeof(string);
-                    }
-                    else if (fieldType == typeof(DateTime))
-                    {
-                        if (fieldTypes[key] == null)
-                            fieldTypes[key] = fieldType;
-                        else if (fieldTypes[key] != typeof(DateTime))
-                            fieldTypes[key] = typeof(string);
-                    }
-                    else if (fieldType == typeof(decimal))
-                    {
-                        if (fieldTypes[key] == null)
-                            fieldTypes[key] = fieldType;
-                        else if (fieldTypes[key] == typeof(DateTime))
-                            fieldTypes[key] = typeof(string);
-                        else if (fieldTypes[key] == typeof(double)
-                            || fieldTypes[key] == typeof(long)
-                            || fieldTypes[key] == typeof(bool))
-                            fieldTypes[key] = fieldType;
-                    }
-                    else if (fieldType == typeof(double))
-                    {
-                        if (fieldTypes[key] == null)
-                            fieldTypes[key] = fieldType;
-                        else if (fieldTypes[key] == typeof(DateTime))
-                            fieldTypes[key] = typeof(string);
-                        else if (fieldTypes[key] == typeof(long)
-                            || fieldTypes[key] == typeof(bool))
-                            fieldTypes[key] = fieldType;
-                    }
-                    else if (fieldType == typeof(long))
-                    {
-                        if (fieldTypes[key] == null)
-                            fieldTypes[key] = fieldType;
-                        else if (fieldTypes[key] == typeof(DateTime))
-                            fieldTypes[key] = typeof(string);
-                        else if (fieldTypes[key] == typeof(bool))
-                            fieldTypes[key] = fieldType;
-                    }
-                    else if (fieldType == typeof(bool))
-                    {
-                        if (fieldTypes[key] == null)
-                            fieldTypes[key] = fieldType;
-                    }
-                    else if (fieldType == typeof(char))
-                    {
-                        if (fieldTypes[key] == null)
-                            fieldTypes[key] = fieldType;
-                    }
-                    else
-                        fieldType = typeof(string);
                 }
+
+                if (fieldType == typeof(string))
+                    fieldTypes[key] = fieldType;
+                else if (fieldType == typeof(ChoCurrency))
+                {
+                    if (fieldTypes[key] == null)
+                        fieldTypes[key] = fieldType;
+                    else if (fieldTypes[key] != typeof(ChoCurrency))
+                        fieldTypes[key] = typeof(string);
+                }
+                else if (fieldType == typeof(Guid))
+                {
+                    if (fieldTypes[key] == null)
+                        fieldTypes[key] = fieldType;
+                    else if (fieldTypes[key] != typeof(Guid))
+                        fieldTypes[key] = typeof(string);
+                }
+                else if (fieldType == typeof(DateTime))
+                {
+                    if (fieldTypes[key] == null)
+                        fieldTypes[key] = fieldType;
+                    else if (fieldTypes[key] != typeof(DateTime))
+                        fieldTypes[key] = typeof(string);
+                }
+                else if (fieldType == typeof(decimal))
+                {
+                    if (fieldTypes[key] == null)
+                        fieldTypes[key] = fieldType;
+                    else if (fieldTypes[key] == typeof(DateTime))
+                        fieldTypes[key] = typeof(string);
+                    else if (fieldTypes[key] == typeof(double)
+                        || fieldTypes[key] == typeof(long)
+                        || fieldTypes[key] == typeof(bool))
+                        fieldTypes[key] = fieldType;
+                }
+                else if (fieldType == typeof(double))
+                {
+                    if (fieldTypes[key] == null)
+                        fieldTypes[key] = fieldType;
+                    else if (fieldTypes[key] == typeof(DateTime))
+                        fieldTypes[key] = typeof(string);
+                    else if (fieldTypes[key] == typeof(long)
+                        || fieldTypes[key] == typeof(bool))
+                        fieldTypes[key] = fieldType;
+                }
+                else if (fieldType == typeof(long))
+                {
+                    if (fieldTypes[key] == null)
+                        fieldTypes[key] = fieldType;
+                    else if (fieldTypes[key] == typeof(DateTime))
+                        fieldTypes[key] = typeof(string);
+                    else if (fieldTypes[key] == typeof(bool))
+                        fieldTypes[key] = fieldType;
+                }
+                else if (fieldType == typeof(bool))
+                {
+                    if (fieldTypes[key] == null)
+                        fieldTypes[key] = fieldType;
+                }
+                else if (fieldType == typeof(char))
+                {
+                    if (fieldTypes[key] == null)
+                        fieldTypes[key] = fieldType;
+                }
+                else
+                    fieldTypes[key] = typeof(string);
             }
 
             if (isLastScanRow)

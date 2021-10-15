@@ -255,7 +255,7 @@
             }
         }
 
-        public static void RegisterConverters(MemberInfo memberInfo, TypeConverter[] typeConverters)
+        private static void RegisterConverters(MemberInfo memberInfo, TypeConverter[] typeConverters)
         {
             ChoGuard.ArgumentNotNull(memberInfo, "MemberInfo");
 
