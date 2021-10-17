@@ -21,12 +21,6 @@ namespace ChoETL
         public new bool IsDefaultValueSpecified { get; internal set; }
         public new bool IsFallbackValueSpecified { get; internal set; }
 
-        internal PropertyDescriptor PropertyDescriptor
-        {
-            get;
-            set;
-        }
-
         public ChoAvroRecordFieldConfiguration(string name) : this(name, null)
         {
         }

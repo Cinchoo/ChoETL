@@ -93,7 +93,10 @@ namespace ChoETL
 
         public static bool ConvertMemberValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, ref object fieldValue, CultureInfo culture)
         {
-            if (fieldConfig.PI == null) return false;
+            if (fieldConfig.PD == null)
+                fieldConfig.PD = fieldConfig.PropertyDescriptor;
+
+            if (fieldConfig.PD == null) return false;
 
             if (fieldValue is ChoDynamicObject)
                 ((ChoDynamicObject)fieldValue).DynamicObjectName = fn;
@@ -102,26 +105,28 @@ namespace ChoETL
                 fieldValue = fieldConfig.ValueConverter(fieldValue);
             else
             {
-                if (fieldValue != null && fieldConfig.PI.PropertyType != null && fieldConfig.PI.PropertyType != typeof(object)
-                    && fieldConfig.PI.PropertyType.IsAssignableFrom(fieldValue.GetType()))
+                if (fieldValue != null && fieldConfig.PD.PropertyType != null && fieldConfig.PD.PropertyType != typeof(object)
+                    && fieldConfig.PD.PropertyType.IsAssignableFrom(fieldValue.GetType()))
                 {
 
                 }
-                else if (fieldConfig.PI.PropertyType.IsGenericType && (fieldConfig.PI.PropertyType.GetGenericTypeDefinition() == typeof(Dictionary<,>) || fieldConfig.PI.PropertyType.GetGenericTypeDefinition() == typeof(IDictionary<,>))
-                        /*&& typeof(string) == fieldConfig.PI.PropertyType.GetGenericArguments()[0]*/)
+                else if (fieldConfig.PD.PropertyType.IsGenericType && (fieldConfig.PD.PropertyType.GetGenericTypeDefinition() == typeof(Dictionary<,>) || fieldConfig.PD.PropertyType.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+                        /*&& typeof(string) == fieldConfig.PD.PropertyType.GetGenericArguments()[0]*/)
                 {
-                    IDictionary dict = ChoType.GetPropertyValue(rec, fieldConfig.PI) as IDictionary;
+                    //IDictionary dict = ChoType.GetPropertyValue(rec, fieldConfig.PD) as IDictionary;
+                    IDictionary dict = fieldConfig.PD.GetValue(rec) as IDictionary;
                     if (dict == null)
                     {
                         dict = (IDictionary)Activator.CreateInstance(fieldConfig.FieldType);
-                        ChoType.SetPropertyValue(rec, fieldConfig.PI, dict);
+                        fieldConfig.PD.SetValue(rec, dict);
+                        //ChoType.SetPropertyValue(rec, fieldConfig.PD, dict);
                     }
 
                     if (fieldConfig is ChoFileRecordFieldConfiguration && !((ChoFileRecordFieldConfiguration)fieldConfig).DictKey.IsNullOrWhiteSpace())
                     {
                         if (!dict.Contains(fn))
                         {
-                            var valueType = fieldConfig.PI.PropertyType.GetGenericArguments()[1];
+                            var valueType = fieldConfig.PD.PropertyType.GetGenericArguments()[1];
                             object[] fcParams = GetPropertyConvertersParams(fieldConfig);
                             if (fieldConfig.ValueConverters.IsNullOrEmpty())
                                 fieldValue = ChoConvert.ConvertFrom(fieldValue, valueType, null, null, fcParams, culture);
@@ -138,8 +143,8 @@ namespace ChoETL
                         {
                             if (fieldConfig.PropConverters.IsNullOrEmpty())
                             {
-                                var keyType = fieldConfig.PI.PropertyType.GetGenericArguments()[0];
-                                var valueType = fieldConfig.PI.PropertyType.GetGenericArguments()[1];
+                                var keyType = fieldConfig.PD.PropertyType.GetGenericArguments()[0];
+                                var valueType = fieldConfig.PD.PropertyType.GetGenericArguments()[1];
 
                                 char itemSeparator = ';';
                                 char keyValueSeparator = '=';
@@ -214,22 +219,24 @@ namespace ChoETL
                                 }
                             }
                             else
-                                fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, fcParams, culture);
+                                fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PD.PropertyType, null, fieldConfig.PropConverters, fcParams, culture);
                         }
                         else
-                            fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), fcParams, culture);
+                            fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PD.PropertyType, null, fieldConfig.Converters.ToArray(), fcParams, culture);
                     }
 
                     return false;
                 }
-                else if (typeof(IList).IsAssignableFrom(fieldConfig.PI.PropertyType))
+                else if (typeof(IList).IsAssignableFrom(fieldConfig.PD.PropertyType))
                 {
-                    var itemType = fieldConfig.PI.PropertyType.GetItemType();
-                    IList list = ChoType.GetPropertyValue(rec, fieldConfig.PI) as IList;
+                    var itemType = fieldConfig.PD.PropertyType.GetItemType();
+                    //IList list = ChoType.GetPropertyValue(rec, fieldConfig.PD) as IList;
+                    IList list = fieldConfig.PD.GetValue(rec) as IList;
                     if (list == null && !fieldConfig.FieldType.IsArray)
                     {
                         list = (IList)Activator.CreateInstance(fieldConfig.FieldType);
-                        ChoType.SetPropertyValue(rec, fieldConfig.PI, list);
+                        //ChoType.SetPropertyValue(rec, fieldConfig.PD, list);
+                        fieldConfig.PD.SetValue(rec, list);
                     }
 
                     if (((ChoFileRecordFieldConfiguration)fieldConfig).ArrayIndex != null)
@@ -285,25 +292,25 @@ namespace ChoETL
                                             result.Add(ChoConvert.ConvertFrom(item, itemType, null, fieldConfig.ItemConverters.ToArray(), fcParams, culture));
                                     }
                                 }
-                                if (fieldConfig.PI.PropertyType.IsArray)
+                                if (fieldConfig.PD.PropertyType.IsArray)
                                     fieldValue = result.ToArray();
                                 else
                                     fieldValue = result;
                             }
                             else
-                                fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, fcParams, culture);
+                                fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PD.PropertyType, null, fieldConfig.PropConverters, fcParams, culture);
                         }
                         else
-                            fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), fcParams, culture);
+                            fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PD.PropertyType, null, fieldConfig.Converters.ToArray(), fcParams, culture);
                     }
                 }
                 else
                 {
                     object[] fcParams = GetPropertyConvertersParams(fieldConfig);
                     if (fieldConfig.Converters.IsNullOrEmpty())
-                        fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, fcParams, culture);
+                        fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PD.PropertyType, null, fieldConfig.PropConverters, fcParams, culture);
                     else
-                        fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), fcParams, culture);
+                        fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.PD.PropertyType, null, fieldConfig.Converters.ToArray(), fcParams, culture);
                 }
             }
             return true;
@@ -311,8 +318,14 @@ namespace ChoETL
 
         public static void ConvertNSetMemberValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, ref object fieldValue, CultureInfo culture)
         {
+            if (fieldConfig.PD == null)
+                fieldConfig.PD = fieldConfig.PropertyDescriptor;
+
+            if (fieldConfig.PD == null) return;
+
             if (ConvertMemberValue(rec, fn, fieldConfig, ref fieldValue, culture))
-                ChoType.SetPropertyValue(rec, fieldConfig.PI, fieldValue);
+                fieldConfig.PD.SetValue(rec, fieldValue);
+                //ChoType.SetPropertyValue(rec, fieldConfig.PI, fieldValue);
         }
 
         private static object[] GetPropertyConvertersParams(ChoRecordFieldConfiguration fieldConfig)
@@ -333,17 +346,20 @@ namespace ChoETL
             {
                 return ((IDictionary<string, object>)rec).SetFallbackValue(fn, fieldConfig, culture);
             }
+            if (fieldConfig.PD == null)
+                fieldConfig.PD = fieldConfig.PropertyDescriptor;
 
             //Set fallback value to member
-            if (fieldConfig.PI != null)
+            if (fieldConfig.PD != null)
             {
                 object fieldValue = null;
                 if (fieldConfig.Converters.IsNullOrEmpty())
-                    fieldValue = ChoConvert.ConvertFrom(fieldConfig.FallbackValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                    fieldValue = ChoConvert.ConvertFrom(fieldConfig.FallbackValue, fieldConfig.PD.PropertyType, null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
                 else
-                    fieldValue = ChoConvert.ConvertFrom(fieldConfig.FallbackValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), null, culture);
+                    fieldValue = ChoConvert.ConvertFrom(fieldConfig.FallbackValue, fieldConfig.PD.PropertyType, null, fieldConfig.Converters.ToArray(), null, culture);
 
-                ChoType.SetPropertyValue(rec, fieldConfig.PI, fieldValue);
+                //ChoType.SetPropertyValue(rec, fieldConfig.PD, fieldValue);
+                fieldConfig.PD.SetValue(rec, fieldValue);
             }
             return true;
         }
@@ -357,17 +373,20 @@ namespace ChoETL
             {
                 return ((IDictionary<string, object>)rec).SetDefaultValue(fn, fieldConfig, culture);
             }
+            if (fieldConfig.PD == null)
+                fieldConfig.PD = fieldConfig.PropertyDescriptor;
 
-            if (fieldConfig.PI != null)
+            if (fieldConfig.PD != null)
             {
                 //Set default value to member
                 object fieldValue = null;
                 if (fieldConfig.Converters.IsNullOrEmpty())
-                    fieldValue = ChoConvert.ConvertFrom(fieldConfig.DefaultValue, fieldConfig.PI.PropertyType, null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                    fieldValue = ChoConvert.ConvertFrom(fieldConfig.DefaultValue, fieldConfig.PD.PropertyType, null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
                 else
-                    fieldValue = ChoConvert.ConvertFrom(fieldConfig.DefaultValue, fieldConfig.PI.PropertyType, null, fieldConfig.Converters.ToArray(), null, culture);
+                    fieldValue = ChoConvert.ConvertFrom(fieldConfig.DefaultValue, fieldConfig.PD.PropertyType, null, fieldConfig.Converters.ToArray(), null, culture);
 
-                ChoType.SetPropertyValue(rec, fieldConfig.PI, fieldValue);
+                //ChoType.SetPropertyValue(rec, fieldConfig.PI, fieldValue);
+                fieldConfig.PD.SetValue(rec, fieldValue);
             }
             return true;
         }
@@ -458,12 +477,14 @@ namespace ChoETL
             }
             else
             {
-                if (fieldConfig.PI != null)
+                if (fieldConfig.PD == null)
+                    fieldConfig.PD = fieldConfig.PropertyDescriptor;
+                if (fieldConfig.PD != null)
                 {
                     if (fieldConfig.Validators.IsNullOrEmpty())
-                        ChoValidator.ValidateFor(rec, fieldConfig.PI);
+                        ChoValidator.ValidateFor(rec, fieldConfig.PD);
                     else
-                        ChoValidator.ValidateFor(ChoType.GetPropertyValue(rec, fieldConfig.PI), fn, fieldConfig.Validators);
+                        ChoValidator.ValidateFor(fieldConfig.PD.GetValue(rec), fn, fieldConfig.Validators);
                 }
             }
         }

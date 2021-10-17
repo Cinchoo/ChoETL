@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Reflection;
@@ -199,6 +200,48 @@ namespace ChoETL
                     aggEx = new ValidationException("Failed to validate.");
             }
 
+            return result;
+        }
+
+        public static void ValidateFor(this object @this, PropertyDescriptor mi)
+        {
+            Exception aggEx = null;
+            IsValidFor(@this, mi, out aggEx);
+            if (aggEx != null)
+                throw aggEx;
+        }
+
+        public static bool IsValidFor(this object @this, PropertyDescriptor mi, out Exception aggEx)
+        {
+            aggEx = null;
+            ChoGuard.ArgumentNotNullOrEmpty(@this, "Target");
+
+            if (@this == null)
+                return true;
+
+            var results = new List<ValidationResult>();
+            object surrObj = ChoMetadataObjectCache.Default.GetMetadataObject(@this);
+            bool result = false;
+
+            if (surrObj is IChoValidatable)
+            {
+                result = ((IChoValidatable)surrObj).TryValidateFor(@this, mi.Name, results);
+            }
+            else
+            {
+                var context = new ValidationContext(@this, null, null);
+                context.MemberName = mi.Name;
+
+                result = Validator.TryValidateValue(mi.GetValue(@this), context, results, ChoTypeDescriptor.GetPropetyAttributes<ValidationAttribute>(ChoTypeDescriptor.GetProperty<ValidationAttribute>(@this.GetType(), mi.Name)));
+            }
+
+            if (!result)
+            {
+                if (results.Count > 0)
+                    aggEx = new ValidationException("Failed to validate '{0}' member. {2}{1}".FormatString(mi.Name, ToString(results), Environment.NewLine));
+                else
+                    aggEx = new ValidationException("Failed to valudate.");
+            }
             return result;
         }
 

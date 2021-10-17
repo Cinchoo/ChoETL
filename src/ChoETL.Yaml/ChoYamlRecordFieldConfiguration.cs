@@ -37,12 +37,6 @@ namespace ChoETL
             get;
             set;
         }
-
-        internal PropertyDescriptor PropertyDescriptor
-        {
-            get;
-            set;
-        }
         private Func<IDictionary<string, object>, Type> _fieldTypeSelector = null;
         public Func<IDictionary<string, object>, Type> FieldTypeSelector
         {

@@ -144,7 +144,7 @@ namespace ChoETL
             get;
             set;
         }
-        internal PropertyDescriptor PropertyDescriptor
+        public PropertyDescriptor PropertyDescriptor
         {
             get;
             set;

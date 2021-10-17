@@ -59,11 +59,6 @@ namespace ChoETL
             get;
             set;
         }
-        internal PropertyDescriptor PropertyDescriptor
-        {
-            get;
-            set;
-        }
 
         public ChoParquetRecordFieldConfiguration(string name) : this(name, null)
         {

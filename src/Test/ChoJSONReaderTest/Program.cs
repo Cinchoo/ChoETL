@@ -6791,6 +6791,10 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
+        public class ProductRoot
+        {
+            public ProductX Product { get; set; }
+        }
         public partial class ProductX //: IChoNotifyRecordFieldRead
         {
             public string SKU { get; set; }
@@ -6842,8 +6846,14 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 }";
 
             Dictionary<string, string> dict = new Dictionary<string, string> { { "mappingKey1", "mappingValue1" }, { "mappingKey2", "mappingValue2" }, { "mappingKey3", "mappingValue3" }, { "mappingKey4", "mappingValue4" } };
-            using (var r = ChoJSONReader< ProductX>.LoadText(json)
-                .WithJSONPath("$..Product")
+            Dictionary<string, string> dictOut = new Dictionary<string, string> 
+            { 
+                { "mappingValue1", "mappingKey1" }, 
+                { "mappingValue2", "mappingKey2" }, 
+                { "mappingValue3", "mappingKey3" }, 
+                { "mappingValue4", "mappingKey4" } 
+            };
+            using (var r = ChoJSONReader<ProductRoot>.LoadText(json)
                 .UseJsonSerialization()
                 .UseDefaultContractResolver()
                 //.WithField(f => f.SKU, valueConverter: o =>
@@ -6858,12 +6868,34 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 //})
                 .Setup(s => s.BeforeRecordFieldLoad += (o, e) =>
                 {
-                    //e.Source = "X";
+                    var v = e.Source as string;
+                    if (v.StartsWith("{") && v.EndsWith("}"))
+                    {
+                        v = v.Substring(1, v.Length - 2);
+                        if (dict.ContainsKey(v))
+                            e.Source = dict[v];
+                    }
                 })
                 .ErrorMode(ChoErrorMode.IgnoreAndContinue)
                 )
             {
-                r.Print();
+                //r.Print();
+
+                using (var w = new ChoJSONWriter<ProductRoot>(Console.Out)
+                    .SupportMultipleContent()
+                    .SingleElement()
+                    .UseJsonSerialization()
+                    .UseDefaultContractResolver()
+                    .Setup(s => s.BeforeRecordFieldWrite += (o, e) =>
+                    {
+                        var v = e.Source as string;
+                        if (dictOut.ContainsKey(v))
+                            e.Source = $"{{{dictOut[v]}}}";
+                    })
+                    )
+                {
+                    w.Write(r);
+                }
             }
         }
 

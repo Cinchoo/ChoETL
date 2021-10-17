@@ -40,11 +40,6 @@ namespace ChoETL
             get;
             set;
         }
-        internal PropertyDescriptor PropertyDescriptor
-        {
-            get;
-            set;
-        }
         private Func<JObject, Type> _fieldTypeSelector = null;
         public Func<JObject, Type> FieldTypeSelector
         {
