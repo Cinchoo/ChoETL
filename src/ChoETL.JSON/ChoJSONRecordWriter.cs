@@ -314,6 +314,12 @@ namespace ChoETL
                                 }
                                 else
                                 {
+                                    Writer.ContractResolverState = new ChoContractResolverState
+                                    {
+                                        Index = _index,
+                                        Record = ChoActivator.CreateInstanceNCache(RecordType),
+                                    };
+
                                     if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.Off) != ChoObjectValidationMode.Off)
                                         record.DoObjectLevelValidation(Configuration, Configuration.JSONRecordFieldConfigurations);
 

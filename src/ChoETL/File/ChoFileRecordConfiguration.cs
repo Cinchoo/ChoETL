@@ -182,6 +182,7 @@ namespace ChoETL
             set;
         }
         public bool UseNestedKeyFormat { get; set; }
+        public bool TurnOffContractResolverState { get; set; }
 
         internal string BackslashQuote = @"\""";
         internal string DoubleQuoteChar = @"""""";

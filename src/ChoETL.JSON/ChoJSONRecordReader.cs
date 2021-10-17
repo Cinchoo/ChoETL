@@ -716,6 +716,12 @@ namespace ChoETL
                 }
                 else
                 {
+                    Reader.ContractResolverState = new ChoContractResolverState
+                    {
+                        Index = pair.Item1,
+                        Record = ChoActivator.CreateInstanceNCache(RecordType),
+                    };
+
                     //rec = _se.Value != null ? pair.Item2.ToObject(RecordType, _se.Value) : pair.Item2.ToObject(RecordType);
                     //if (Configuration.IsDynamicObject)
                     if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)

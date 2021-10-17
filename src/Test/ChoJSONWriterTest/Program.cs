@@ -1146,7 +1146,7 @@ namespace ChoJSONWriterTest
 
         public class Order
         {
-            public string orderNo { get; set; }
+            public int orderNo { get; set; }
             public string customerNo { get; set; }
             [ChoSourceType(typeof(object[]))]
             [ChoTypeConverter(typeof(ChoArrayToObjectConverter))]
@@ -1165,12 +1165,14 @@ namespace ChoJSONWriterTest
 
         static void ObjectMemberToArrayTest()
         {
-            StringBuilder json = new StringBuilder();
-            using (var w = new ChoJSONWriter<Order>(json))
+            using (var w = new ChoJSONWriter<Order>(Console.Out)
+                .UseJsonSerialization()
+                .UseDefaultContractResolver()
+                )
             {
                 w.Write(new Order
                 {
-                    orderNo = "1",
+                    orderNo = 1,
                     customerNo = "10",
                     items = new OrderItem[]
                     {
@@ -1183,8 +1185,6 @@ namespace ChoJSONWriterTest
                     }
                 });
             }
-
-            Console.WriteLine(json.ToString());
         }
 
         static void AppendFile()
@@ -1195,7 +1195,7 @@ namespace ChoJSONWriterTest
                 {
                     w.Write(new Order
                     {
-                        orderNo = "1",
+                        orderNo = 1,
                         customerNo = "10",
                         items = new OrderItem[]
                         {
@@ -1374,7 +1374,7 @@ namespace ChoJSONWriterTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            FlattenXml();
+            ObjectMemberToArrayTest();
 
             return;
 

@@ -6791,10 +6791,86 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
+        public partial class ProductX //: IChoNotifyRecordFieldRead
+        {
+            public string SKU { get; set; }
+
+            public StandardProductID StandardProductID { get; set; }
+
+            public Condition Condition { get; set; }
+
+            public bool AfterRecordFieldLoad(object target, long index, string propName, object value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool BeforeRecordFieldLoad(object target, long index, string propName, ref object value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool RecordFieldLoadError(object target, long index, string propName, ref object value, Exception ex)
+            {
+                throw new NotImplementedException();
+            }
+        }
+        public class StandardProductID
+        {
+            public string Type { get; set; }
+
+            public string Value { get; set; }
+        }
+        public class Condition
+        {
+            public string ConditionType { get; set; }
+        }
+
+        static void TokenReplacementTest()
+        {
+            string json = @"
+{
+  ""Product"": {
+    ""SKU"": ""{mappingKey1}"",
+    ""StandardProductID"": {
+      ""Type"": ""{mappingKey2}"",
+      ""Value"": ""{mappingKey3}""
+    },
+    ""Condition"": {
+      ""ConditionType"": ""{mappingKey4}""
+    }
+  }
+}";
+
+            Dictionary<string, string> dict = new Dictionary<string, string> { { "mappingKey1", "mappingValue1" }, { "mappingKey2", "mappingValue2" }, { "mappingKey3", "mappingValue3" }, { "mappingKey4", "mappingValue4" } };
+            using (var r = ChoJSONReader< ProductX>.LoadText(json)
+                .WithJSONPath("$..Product")
+                .UseJsonSerialization()
+                .UseDefaultContractResolver()
+                //.WithField(f => f.SKU, valueConverter: o =>
+                //{
+                //    var v = o as string;
+                //    if (v.StartsWith("{") && v.EndsWith("}"))
+                //        v = v.Substring(1, v.Length - 2);
+                //    if (dict.ContainsKey(v))
+                //        return dict[v];
+                //    else
+                //        return o;
+                //})
+                .Setup(s => s.BeforeRecordFieldLoad += (o, e) =>
+                {
+                    //e.Source = "X";
+                })
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                )
+            {
+                r.Print();
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            FlattenJSON();
+            TokenReplacementTest();
             //DeserializeNestedObjectOfList();
             return;
 
