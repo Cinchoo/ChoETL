@@ -3824,7 +3824,7 @@ K,L,M,N,O,P,Q,R,S,T";
             public List<Order> Orders { get; set; }
         }
 
-        static void Sample55Test()
+        static void Sample55Test1()
         {
             StringBuilder csv = new StringBuilder();
             using (var r = new ChoJSONReader<OrderRoot>("sample55.json")
@@ -3882,7 +3882,7 @@ K,L,M,N,O,P,Q,R,S,T";
             Console.WriteLine(csv.ToString());
         }
 
-        static void Sample55Test1()
+        static void Sample55Test()
         {
             StringBuilder csv = new StringBuilder();
             using (var r = new ChoJSONReader("sample55.json"))
@@ -6899,10 +6899,70 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
+        public static void Json2Xml51()
+        {
+            string json = @"
+[
+    {
+        ""firstName"": ""John"",
+        ""lastName"": ""Smith"",
+        ""age"": 25,
+        ""address"": {
+            ""streetAddress"": ""21 2nd Street"",
+            ""city"": ""New York"",
+            ""state"": ""NY"",
+            ""postalCode"": ""10021""
+        },
+        ""phoneNumber"": [
+            {
+                ""type"": ""home"",
+                ""number"": ""212 555-1234""
+            },
+            {
+                ""type"": ""fax"",
+                ""number"": ""646 555-4567""
+            }
+        ]
+    },
+    {
+        ""firstName"": ""Tom"",
+        ""lastName"": ""Mark"",
+        ""age"": 50,
+        ""address"": {
+            ""streetAddress"": ""10 Main Street"",
+            ""city"": ""Edison"",
+            ""state"": ""NJ"",
+            ""postalCode"": ""08837""
+        },
+        ""phoneNumber"": [
+            {
+                ""type"": ""home"",
+                ""number"": ""732 555-1234""
+            },
+            {
+                ""type"": ""fax"",
+                ""number"": ""609 555-4567""
+            }
+        ]
+    }
+]
+";
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                using (var w = new ChoXmlWriter(Console.Out)
+                    .UseXmlSerialization()
+                    .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                       )
+                {
+                    w.Write(r);
+                }
+            }
+
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            TokenReplacementTest();
+            Json2Xml51();
             //DeserializeNestedObjectOfList();
             return;
 

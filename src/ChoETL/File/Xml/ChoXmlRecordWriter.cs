@@ -27,10 +27,10 @@ namespace ChoETL
         private bool _configCheckDone = false;
         private long _index = 0;
         private Lazy<XmlSerializer> _se = null;
-        private readonly Regex _beginNSTagRegex = new Regex(@"^(<\w+)\:(\w+)(.*)", RegexOptions.Compiled | RegexOptions.Multiline);
-        private readonly Regex _endNSTagRegex = new Regex(@"(.*)(</\w+)\:(\w+)$", RegexOptions.Compiled | RegexOptions.Multiline);
-        private readonly Regex _beginTagRegex = new Regex(@"^(<\w+)(.*)", RegexOptions.Compiled | RegexOptions.Multiline);
-        private readonly Regex _endTagRegex = new Regex("(.*)(</.*>)$", RegexOptions.Compiled | RegexOptions.Multiline);
+        private readonly Regex _beginNSTagRegex = new Regex(@"^(<\w+)\:(\w+)(.*)", RegexOptions.Compiled /*| RegexOptions.Multiline*/);
+        private readonly Regex _endNSTagRegex = new Regex(@"(.*)(</\w+)\:(\w+)$", RegexOptions.Compiled /*| RegexOptions.Multiline*/);
+        private readonly Regex _beginTagRegex = new Regex(@"^(<\w+)(.*)", RegexOptions.Compiled /*| RegexOptions.Multiline*/);
+        private readonly Regex _endTagRegex = new Regex("(.*)(</.*>)$", RegexOptions.Compiled /*| RegexOptions.Multiline*/);
         internal ChoWriter Writer = null;
         internal Type ElementType = null;
         private Lazy<List<object>> _recBuffer = null;
@@ -441,11 +441,11 @@ namespace ChoETL
                 xml = _beginNSTagRegex.Replace(xml, delegate (Match m)
                 {
                     return m.Groups[1].Value + ":" + nodeName + m.Groups[3].Value;
-                });
+                }, 1);
                 xml = _endNSTagRegex.Replace(xml, delegate (Match m)
                 {
                     return m.Groups[2].Value + "</{0}:{1}>".FormatString(m.Groups[1].Value, nodeName);
-                });
+                }, 1);
             }
             else
             {
@@ -454,22 +454,22 @@ namespace ChoETL
                     xml = _beginTagRegex.Replace(xml, delegate (Match m)
                     {
                         return "<" + nodeName + m.Groups[2].Value;
-                    });
+                    }, 1);
                     xml = _endTagRegex.Replace(xml, delegate (Match m)
                     {
                         return m.Groups[1].Value + "</{0}>".FormatString(nodeName);
-                    });
+                    }, 1);
                 }
                 else
                 {
                     xml = _beginTagRegex.Replace(xml, delegate (Match m)
                     {
                         return "<" + XmlNamespaceElementName(nodeName, Configuration.DefaultNamespacePrefix) + m.Groups[2].Value;
-                    });
+                    }, 1);
                     xml = _endTagRegex.Replace(xml, delegate (Match m)
                     {
                         return m.Groups[1].Value + "</{0}>".FormatString(XmlNamespaceElementName(nodeName, Configuration.DefaultNamespacePrefix));
-                    });
+                    }, 1);
 
 
                 }
