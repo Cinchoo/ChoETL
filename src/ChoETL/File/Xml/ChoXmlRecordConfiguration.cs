@@ -520,6 +520,12 @@ namespace ChoETL
                 }
                 else if (!IsDynamicObject && !typeof(IChoScalarObject).IsAssignableFrom(RecordType))
                 {
+                    XmlRootAttribute rootAttr = ChoType.GetAttribute<XmlRootAttribute>(RecordType);
+                    if (rootAttr != null && NodeName.IsNullOrWhiteSpace())
+                    {
+                        NodeName = rootAttr.ElementName;
+                    }
+
                     NodeName = NodeName.IsNullOrWhiteSpace() ? RecordType.Name : NodeName;
                     RootName = RootName.IsNullOrWhiteSpace() ? NodeName.ToPlural() : RootName;
                 }
