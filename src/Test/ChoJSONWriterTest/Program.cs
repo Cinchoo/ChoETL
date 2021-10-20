@@ -1371,10 +1371,31 @@ namespace ChoJSONWriterTest
             }
         }
 
+        public static void DoubleQuoteIssue()
+        {
+            string csv = @"FirstName,LastName,Street,City,State,Zip 
+""John """"Da Man"""""",Repici,120 Jefferson St.,Riverside, NJ,08075 
+John,Doe,120 jefferson st.,Riverside, NJ, 08075 
+Jack,McGinnis,220 hobo Av.,Phila, PA,09119 
+Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234 
+,Blankman,,SomeTown, SD, 00298 
+""Joan """"the bone"""", Anne"",Jet,""9th, at Terrace plc"",Desert City,CO,00123";
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                   .WithFirstLineHeader()
+                   .MayHaveQuotedFields()
+                   )
+            {
+                using (var w = new ChoJSONWriter(Console.Out)
+                       //.UseJsonSerialization()
+                      )
+                    w.Write(r);
+            }
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            ObjectMemberToArrayTest();
+            DoubleQuoteIssue();
 
             return;
 

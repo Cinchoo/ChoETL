@@ -10,6 +10,10 @@
   </Target>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Azure.Management.DataFactory" Version="4.26.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\ChoETL.Avro\ChoETL.Avro.csproj" />
     <ProjectReference Include="..\..\ChoETL.JSON.NETStandard\ChoETL.JSON.NETStandard.csproj" />
   </ItemGroup>

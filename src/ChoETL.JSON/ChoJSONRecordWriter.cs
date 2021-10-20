@@ -1249,8 +1249,10 @@ namespace ChoETL
             //return fieldValue.StartsWith("<![CDATA[") ? fieldValue : System.Net.WebUtility.HtmlEncode(fieldValue);
 
             //escape quotes
-            if (fieldValue.Contains('"'))
-                fieldValue = fieldValue.Replace(@"""", @"\""");
+            //if (fieldValue.Contains('"'))
+            //{
+            //    fieldValue = fieldValue.Replace(@"""", @"\""");
+            //}
 
             return fieldValue;
         }

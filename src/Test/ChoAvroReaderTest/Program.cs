@@ -1,4 +1,5 @@
 ﻿using ChoETL;
+using Microsoft.Azure.Management.DataFactory.Models;
 using Microsoft.Hadoop.Avro;
 using Microsoft.Hadoop.Avro.Container;
 using Microsoft.Hadoop.Avro.Schema;
@@ -37,8 +38,34 @@ namespace ChoAvroReaderTest
 
         static void Main(string[] args)
         {
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
             //POCOTest();
-            SerializeAndDeserializeDynamicTest();
+            TwitterSnappyAvroTest();
+        }
+
+        static void TwitterSnappyAvroTest()
+        {
+            using (var r = new ChoAvroReader("twitter.snappy.avro")
+                .Configure(c => c.UseAvroSerializer = false)
+                .Configure(c => c.Codec = new CodecFactory().Create(AvroCompressionCodec.Snappy))
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                )
+            {
+                foreach (var rec in r)
+                    rec.Print();
+            }
+        }
+
+        static void TwitterAvroTest()
+        {
+            using (var r = new ChoAvroReader("twitter.avro")
+                .Configure(c => c.UseAvroSerializer = false)
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                )
+            {
+                foreach (var rec in r)
+                    rec.Print();
+            }
         }
 
         static void SerializeAndDeserializeDynamicTest()
