@@ -3560,7 +3560,7 @@ K,L,M,N,O,P,Q,R,S,T";
 }";
 
             var dt = ChoJSONReader.LoadText(json).AsDataTable();
-            Console.WriteLine(dt.Dump());
+            dt.Print();
         }
 
         public class GeographyPoint
@@ -6962,7 +6962,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            Json2Xml51();
+            JSON2DataTable2();
             //DeserializeNestedObjectOfList();
             return;
 

@@ -431,9 +431,62 @@ namespace ChoXmlReaderTest
     {
         static void Main(string[] args)
         {
-            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Verbose;
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            ERDMXmlToDataTable();
+            UseComplexXPath();
+        }
+
+        public static void UseComplexXPath()
+        {
+            string xml = @"<?xml version='1.0' encoding='UTF-8'?>
+        <m:properties xmlns:m=""http://schemas.microsoft.com/ado/2007/08/dataservices/metadata"" xmlns:d=""http://schemas.microsoft.com/ado/2007/08/dataservices"">
+            <d:Guid>fizeofnpj-dzeifjzenf-ezfizef</d:Guid>
+            <d:ObjectId>6000009251</d:ObjectId>
+            <d:ProcessType>ZMIN</d:ProcessType>
+            <d:ProcessTypeTxt>Incident</d:ProcessTypeTxt>
+            <d:Description>Test 2</d:Description>
+            <d:IntroText>Incident (IT Service Management)</d:IntroText>
+            <d:CreatedAtDateFormatted>08.05.18</d:CreatedAtDateFormatted>
+            <d:ChangedAtDateFormatted>08.05.18</d:ChangedAtDateFormatted>
+            <d:PostingDate>2018-05-08T00:00:00</d:PostingDate>
+            <d:ChangedAtDate>2018-05-08T00:00:00</d:ChangedAtDate>
+            <d:Priority>2</d:Priority>
+            <d:PriorityTxt>2: High</d:PriorityTxt>
+            <d:PriorityState>None</d:PriorityState>
+            <d:Concatstatuser>New</d:Concatstatuser>
+            <d:ActionRequired>false</d:ActionRequired>
+            <d:StillOpen>true</d:StillOpen>
+            <d:Icon />
+            <d:SoldToPartyName />
+            <d:ServiceTeamName />
+            <d:PersonRespName />
+            <d:CategoryTxt>Change - Interface - Evolutive Maintenance</d:CategoryTxt>
+            <d:ConfigItemTxt />
+            <d:SAPComponent>BC-BCS-VAS</d:SAPComponent>
+        </m:properties>
+";
+
+            var nsManager = new XmlNamespaceManager(new NameTable());
+            //register mapping of prefix to namespace uri 
+            nsManager.AddNamespace("m", "http://schemas.microsoft.com/ado/2007/08/dataservices/metadata");
+            nsManager.AddNamespace("d", "http://schemas.microsoft.com/ado/2007/08/dataservices");
+
+            StringBuilder csv = new StringBuilder();
+            using (var p = ChoXmlReader.LoadText(xml)
+                  .WithXmlNamespaceManager(nsManager)
+                  .WithXPath("/m:properties")
+                  .WithField("Value", "d:Guid | d:ObjectId")
+                  .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                )
+            {
+                //p.Print();
+                //return;
+                using (var w = new ChoCSVWriter(Console.Out)
+                    .WithFirstLineHeader()
+                    )
+                    w.Write(p);
+            }
+
         }
 
         static void ERDMXmlToDataTable()
@@ -1887,16 +1940,17 @@ fizeofnpj-dzeifjzenf-ezfizef,ZMIN,Test 2";
                   .WithField("Guid", xPath: "d:Guid")
                   .WithField("ProcessType", xPath: "d:ProcessType")
                   .WithField("Description", xPath: "d:Description")
+                  .ErrorMode(ChoErrorMode.IgnoreAndContinue)
                 )
             {
-                using (var w = new ChoCSVWriter(csv)
+                p.Print();
+                return;
+                using (var w = new ChoCSVWriter(Console.Out)
                     .WithFirstLineHeader()
                     )
                     w.Write(p);
             }
 
-            actual = csv.ToString();
-            Assert.AreEqual(expected, actual);
         }
 
         //[Test]

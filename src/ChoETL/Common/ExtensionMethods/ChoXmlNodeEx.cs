@@ -253,6 +253,7 @@ namespace ChoETL
         public static IEnumerable<XElement> GetXmlElements(this XmlReader xmlReader, string xPath, XmlNamespaceManager nsMgr,
             bool allowComplexXmlPath = false, Action<ChoXmlNamespaceTable> nsTableCallback = null)
         {
+            xmlReader.MoveToContent();
             ChoXmlNamespaceTable nsTable = new ChoXmlNamespaceTable();
             //if (xPath.IsNullOrWhiteSpace()) yield break;
             if (!xPath.IsNullOrWhiteSpace() && (xPath == "/" || xPath == "//"))
@@ -435,8 +436,15 @@ namespace ChoETL
                 }
                 else
                 {
-                    while (reader.ReadToFollowing(elementName))
+                    if (reader.NodeType == XmlNodeType.Element && reader.Name == elementName)
+                    {
                         yield return (XElement)XNode.ReadFrom(reader);
+                    }
+                    else
+                    {
+                        while (reader.ReadToFollowing(elementName))
+                            yield return (XElement)XNode.ReadFrom(reader);
+                    }
                 }
             }
             else
@@ -472,10 +480,18 @@ namespace ChoETL
                 }
                 else
                 {
-                    while (reader.ReadToDescendant(elementName))
+                    if (reader.NodeType == XmlNodeType.Element && reader.Name == elementName)
                     {
                         foreach (var i in StreamElements(reader, elementNames.Skip(1).ToArray()))
                             yield return i;
+                    }
+                    else
+                    {
+                        while (reader.ReadToDescendant(elementName))
+                        {
+                            foreach (var i in StreamElements(reader, elementNames.Skip(1).ToArray()))
+                                yield return i;
+                        }
                     }
                 }
             }
