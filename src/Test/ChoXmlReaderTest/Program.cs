@@ -483,6 +483,7 @@ namespace ChoXmlReaderTest
                 //return;
                 using (var w = new ChoCSVWriter(Console.Out)
                     .WithFirstLineHeader()
+                    .Configure(c => c.IgnoreDictionaryFieldPrefix = true)
                     )
                     w.Write(p);
             }
