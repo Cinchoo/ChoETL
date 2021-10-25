@@ -386,10 +386,10 @@ namespace ChoETL
                             {
                                 if (!attr.FieldName.IsNullOrWhiteSpace())
                                 {
-                                    attr.XPath = $"/{attr.FieldName}|/@{attr.FieldName}";
+                                    attr.XPath = $"{attr.FieldName}|@{attr.FieldName}";
                                 }
                                 else
-                                    attr.XPath = xPath = $"/{pd.Name}|/@{pd.Name}";
+                                    attr.XPath = xPath = $"{pd.Name}|@{pd.Name}";
                                 IsComplexXPathUsed = true;
                             }
                             else
@@ -403,9 +403,9 @@ namespace ChoETL
                             if (obj.XPath.IsNullOrWhiteSpace())
                             {
                                 if (!obj.FieldName.IsNullOrWhiteSpace())
-                                    obj.XPath = $"/{obj.FieldName}|/@{obj.FieldName}";
+                                    obj.XPath = $"{obj.FieldName}|@{obj.FieldName}";
                                 else
-                                    obj.XPath = $"/{obj.Name}|/@{obj.Name}";
+                                    obj.XPath = $"{obj.Name}|@{obj.Name}";
                             }
 
                             obj.FieldType = pd.PropertyType.GetUnderlyingType();
@@ -583,6 +583,9 @@ namespace ChoETL
             else
                 fieldNames = state as string[];
 
+            if (fieldNames != null && XmlRecordFieldConfigurations.Count > 0 && IsDynamicObject)
+                XmlRecordFieldConfigurations.Clear();
+
             if (AutoDiscoverColumns
                 && XmlRecordFieldConfigurations.Count == 0)
             {
@@ -651,15 +654,15 @@ namespace ChoETL
                     if (fc.XPath.IsNullOrWhiteSpace())
                     {
                         if (DefaultNamespacePrefix.IsNullOrWhiteSpace())
-                            fc.XPath = $"/{fc.FieldName}|/@{fc.FieldName}";
+                            fc.XPath = $"{fc.FieldName}|@{fc.FieldName}";
                         else
-                            fc.XPath = $"/{DefaultNamespacePrefix}:{fc.FieldName}|/@{fc.FieldName}";
+                            fc.XPath = $"{DefaultNamespacePrefix}:{fc.FieldName}|@{fc.FieldName}";
                     }
                     else
                     {
                         if (fc.XPath == fc.FieldName
-                            || fc.XPath == $"/{fc.FieldName}" || fc.XPath == $"/{fc.FieldName}" || fc.XPath == $"/{fc.FieldName}"
-                            || fc.XPath == $"/@{fc.FieldName}" || fc.XPath == $"/@{fc.FieldName}" || fc.XPath == $"/@{fc.FieldName}"
+                            || fc.XPath == $"{fc.FieldName}" || fc.XPath == $"{fc.FieldName}" || fc.XPath == $"{fc.FieldName}"
+                            || fc.XPath == $"@{fc.FieldName}" || fc.XPath == $"@{fc.FieldName}" || fc.XPath == $"@{fc.FieldName}"
                             )
                         {
 
@@ -758,7 +761,7 @@ namespace ChoETL
                 if (name.IsValidXNode(DefaultNamespacePrefix))
                 {
                     if (!dict.ContainsKey(name))
-                        dict.Add(name, new ChoXmlRecordFieldConfiguration(attr.Name.LocalName, $"/@{name}") { FieldName = name }); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//@{name}" : $"//@{DefaultNamespace}" + ":" + $"{name}") { IsXmlAttribute = true });
+                        dict.Add(name, new ChoXmlRecordFieldConfiguration(attr.Name.LocalName, $"@{name}") { FieldName = name }); // DefaultNamespace.IsNullOrWhiteSpace() ? $"//@{name}" : $"//@{DefaultNamespace}" + ":" + $"{name}") { IsXmlAttribute = true });
                     else
                     {
                         throw new ChoRecordConfigurationException("Duplicate field(s) [Name(s): {0}] found.".FormatString(name));

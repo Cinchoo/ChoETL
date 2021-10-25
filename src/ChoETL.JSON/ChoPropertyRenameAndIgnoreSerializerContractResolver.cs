@@ -373,7 +373,7 @@ namespace ChoETL
         {
             object retValue = null;
 
-            var crs = Reader.ContractResolverState;
+            var crs = Reader != null ? Reader.ContractResolverState : null;
             if (Configuration.TurnOffContractResolverState)
                 crs = null;
 
@@ -513,7 +513,7 @@ namespace ChoETL
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            var crs = Writer.ContractResolverState;
+            var crs = Writer != null ? Writer.ContractResolverState : null;
             if (Configuration.TurnOffContractResolverState)
                 crs = null;
             if (crs == null)

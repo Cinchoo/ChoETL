@@ -2299,6 +2299,11 @@ namespace ChoETL
             }
         }
 
+        //public static void Print(this object target, OutputFormat format,  TextWriter writer = null)
+        //{
+
+        //}
+
         public static void Print(this object target, TextWriter writer = null)
         {
             if (writer != null)

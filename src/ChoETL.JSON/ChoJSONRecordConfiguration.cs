@@ -608,6 +608,9 @@ namespace ChoETL
             else
                 fieldNames = state as string[];
 
+            if (fieldNames != null && JSONRecordFieldConfigurations.Count > 0 && IsDynamicObject)
+                JSONRecordFieldConfigurations.Clear();
+
             if (AutoDiscoverColumns
                 && JSONRecordFieldConfigurations.Count == 0)
             {

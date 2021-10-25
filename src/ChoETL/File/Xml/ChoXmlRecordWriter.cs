@@ -183,6 +183,14 @@ namespace ChoETL
                 if (notNullRecord == null)
                     yield break;
 
+                if (Configuration.FlattenNode)
+                {
+                    if (RecordType.IsDynamicType())
+                        records = records.Select(r => r.ConvertToFlattenObject(Configuration.NestedKeySeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix));
+                    else
+                        records = records.Select(r => r.ToDynamicObject().ConvertToFlattenObject(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix));
+                }
+
                 foreach (object record in GetRecords(recEnum))
                 {
                     _index++;
@@ -438,6 +446,7 @@ namespace ChoETL
         {
             if (_beginNSTagRegex.Match(xml).Success)
             {
+                return xml;
                 xml = _beginNSTagRegex.Replace(xml, delegate (Match m)
                 {
                     return m.Groups[1].Value + ":" + nodeName + m.Groups[3].Value;
@@ -470,8 +479,6 @@ namespace ChoETL
                     {
                         return m.Groups[1].Value + "</{0}>".FormatString(XmlNamespaceElementName(nodeName, Configuration.DefaultNamespacePrefix));
                     }, 1);
-
-
                 }
             }
             return xml;
@@ -840,6 +847,8 @@ namespace ChoETL
                 ele = NewXElement(nsMgr, nodeName, Configuration.DefaultNamespacePrefix, Configuration.NS);
                 foreach (var kvp in attrs)
                 {
+                    if (!IsValidXItem(kvp.Key)) continue;
+
                     object value = kvp.Value;
                     if (value == null)
                     {
@@ -849,10 +858,12 @@ namespace ChoETL
                             value = String.Empty;
                     }
 
-                    ele.Add(new XAttribute(kvp.Key, value));
+                    ele.Add(CreateXAttribute(kvp.Key, kvp.Value, Configuration.XmlNamespaceManager.Value, Configuration.DefaultNamespacePrefix));
                 }
-                foreach (var kvp in elems.Where(e => e.Key.StartsWith("@")))
+                foreach (var kvp in elems.Where(e => e.Key.StartsWith("@")).Select(e => new { Key = e.Key.Replace("@", ""), e.Value }))
                 {
+                    if (!IsValidXItem(kvp.Key)) continue;
+
                     object value = kvp.Value;
                     if (value == null)
                     {
@@ -862,10 +873,12 @@ namespace ChoETL
                             value = String.Empty;
                     }
 
-                    ele.Add(new XAttribute(kvp.Key.Replace("@", ""), value));
+                    ele.Add(CreateXAttribute(kvp.Key, kvp.Value, Configuration.XmlNamespaceManager.Value, Configuration.DefaultNamespacePrefix));
                 }
                 foreach (var kvp in elems.Where(e => !e.Key.StartsWith("@")))
                 {
+                    if (!IsValidXItem(kvp.Key)) continue;
+
                     if (kvp.Value == null)
                     {
                         string innerXml = null;
@@ -944,7 +957,6 @@ namespace ChoETL
                         if (!kvp.Value.GetType().IsArray && !typeof(IList).IsAssignableFrom(kvp.Value.GetType()))
                         {
                             innerXml1 = ReplaceXmlNodeIfAppl(innerXml1, kvp.Key);
-
                             //if (_beginNSTagRegex.Match(innerXml1).Success)
                             //{
                             //    innerXml1 = _beginNSTagRegex.Replace(innerXml1, delegate (Match m)
@@ -1045,6 +1057,19 @@ namespace ChoETL
             }
 
             return true;
+        }
+
+        private bool IsValidXItem(string name)
+        {
+            string prefix = name.Contains(":") ? name.SplitNTrim(":").First() : null;
+            name = name.Contains(":") ? name.SplitNTrim(":").Skip(1).First() : name;
+
+            return prefix != "xmlns";
+        }
+
+        private XAttribute CreateXAttribute(string name, object value, ChoXmlNamespaceManager nsMgr, string defaultNSPrefix)
+        {
+            return new XAttribute(name, value);
         }
 
         private string GetElementName(string xml)
@@ -1225,14 +1250,20 @@ namespace ChoETL
             {
                 foreach (var e in es)
                 {
-                    try
+                    if (e.Name.NamespaceName.IsNullOrEmpty())
                     {
-                        var nsAttr = new XAttribute(XNamespace.Xmlns + nsPrefix, xs);
-                        e.Add(nsAttr);
+                        try
+                        {
+                            var nsAttr = new XAttribute(XNamespace.Xmlns + nsPrefix, xs);
+                            e.Add(nsAttr);
+                        }
+                        catch { }
                     }
-                    catch { }
                     foreach (XElement ce in e.DescendantsAndSelf())
-                        ce.Name = xs + ce.Name.LocalName;
+                    {
+                        if (ce.Name.NamespaceName.IsNullOrEmpty())
+                            ce.Name = xs + ce.Name.LocalName;
+                    }
                     //if (!Configuration.IgnoreRootName)
                     //{
                     //	e.Attribute(XNamespace.Xmlns + nsPrefix).Remove();

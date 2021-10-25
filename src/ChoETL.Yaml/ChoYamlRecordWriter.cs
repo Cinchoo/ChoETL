@@ -103,6 +103,14 @@ namespace ChoETL
             bool recordIgnored = false;
             try
             {
+                if (Configuration.FlattenNode)
+                {
+                    if (RecordType.IsDynamicType())
+                        records = records.Select(r => r.ConvertToFlattenObject(Configuration.NestedKeySeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix));
+                    else
+                        records = records.Select(r => r.ToDynamicObject().ConvertToFlattenObject(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix));
+                }
+
                 foreach (object record in records)
                 {
                     _index++;

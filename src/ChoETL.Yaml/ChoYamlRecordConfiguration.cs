@@ -39,7 +39,11 @@ namespace ChoETL
         //    get;
         //    set;
         //}
-
+        public bool FlattenNode
+        {
+            get;
+            set;
+        }
         [DataMember]
         public List<ChoYamlRecordFieldConfiguration> YamlRecordFieldConfigurations
         {
@@ -488,6 +492,9 @@ namespace ChoETL
                 yamlNode = ((Tuple<long, IDictionary<string, object>>)state).Item2;
             else
                 fieldNames = state as string[];
+
+            if (fieldNames != null && YamlRecordFieldConfigurations.Count > 0 && IsDynamicObject)
+                YamlRecordFieldConfigurations.Clear();
 
             if (AutoDiscoverColumns
                 && YamlRecordFieldConfigurations.Count == 0)

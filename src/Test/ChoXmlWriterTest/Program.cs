@@ -252,7 +252,7 @@ namespace ChoXmlWriterTest
                 .WithFirstLineHeader())
             {
                 using (var w = new ChoXmlWriter(xml)
-                    .ErrorMode(ChoErrorMode.ThrowAndStop)
+                    .ErrorMode(ChoErrorMode.IgnoreAndContinue)
                     //.IgnoreRootName()
                     //.IgnoreNodeName()
                     //.Configure(c => c.Formatting = System.Xml.Formatting.None)
@@ -513,11 +513,79 @@ namespace ChoXmlWriterTest
                 set { m_value = new TimeSpan(value * TICKS_PER_MS); }
             }
         }
+        public static void Xml2Json1()
+        {
+            string xml = @"<AdapterCards>
+    <cards type=""MCS"">
+        <card>
+            <id>id1</id>
+            <description>desc1</description>
+            <mccode>code1</mccode>
+        </card>
+        <card>
+            <id>id2</id>
+            <description>desc2</description>
+            <mccode>code2</mccode>
+        </card>
+    </cards>
+    <cards type=""MCM"">
+        <card>
+            <id>id3</id>
+            <description>desc3</description>
+            <mccode>code3</mccode>
+        </card>
+        <card>
+            <id>id4</id>
+            <description>desc4</description>
+            <mccode>code4</mccode>
+        </card>
+    </cards>
+    <cards type=""F""/>
+    <cards type=""B""/>
+</AdapterCards>";
+
+            using (var r = ChoXmlReader.LoadText(xml)
+                   .WithXPath("//cards")
+                   )
+            {
+                using (var w = new ChoJSONWriter(Console.Out)
+                    .Configure(c => c.FlattenNode = true)
+                    .Configure(c => c.IgnoreDictionaryFieldPrefix = true)
+                      )
+                    w.Write(r);
+                //w.Write(r.Select(r1 => r1.ConvertToFlattenObject(true)));
+            }
+        }
+
+        public static void WriteElemetsWithDifferentNS()
+        {
+            dynamic item = new ChoDynamicObject("item");
+            item.AddNamespace("foo", "http://temp.com");
+            item.name = "Mark";
+            item.code = "code-123";
+
+            dynamic sub1 = new ChoDynamicObject("sub");
+            sub1.AddNamespace("foo1", "http://temp1.com");
+            sub1.name = "Tom";
+            sub1.address = "101 Main St.";
+
+            item.sub1 = sub1;
+
+            using (var w = new ChoXmlWriter(Console.Out)
+                   .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                   .WithXmlNamespace("foo", "http://temp.com")
+                   .WithXmlNamespace("foo1", "http://temp.com")
+                   )
+            {
+                w.Write(item);
+            }
+        }
+
         static void Main(string[] args)
         { 
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            TimeSpanTest();
+            WriteElemetsWithDifferentNS();
 
             return;
 

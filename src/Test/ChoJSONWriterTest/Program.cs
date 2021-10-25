@@ -1392,10 +1392,104 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
                     w.Write(r);
             }
         }
+        public static void SurroundArrayAsObject()
+        {
+            string xml = @"<AdapterCards>
+    <cards type=""MCS"">
+        <card>
+            <id>id1</id>
+            <description>desc1</description>
+            <mccode>code1</mccode>
+        </card>
+        <card>
+            <id>id2</id>
+            <description>desc2</description>
+            <mccode>code2</mccode>
+        </card>
+    </cards>
+    <cards type=""MCM"">
+        <card>
+            <id>id3</id>
+            <description>desc3</description>
+            <mccode>code3</mccode>
+        </card>
+        <card>
+            <id>id4</id>
+            <description>desc4</description>
+            <mccode>code4</mccode>
+        </card>
+    </cards>
+    <cards type=""F""/>
+    <cards type=""B""/>
+</AdapterCards>";
+
+            using (var r = ChoXmlReader.LoadText(xml)
+                   .WithXPath("//cards")
+                   )
+            {
+                using (var w = new ChoJSONWriter(Console.Out)
+                    //.Configure(c => c.SingleElement = true)
+                    .UseJsonSerialization()
+                    .UseDefaultContractResolver()
+                      )
+                    w.Write(r.SelectMany(r1 => ((dynamic[])r1.cards ?? new dynamic[] { }).Select(c => new { r1.type, c.id, c.description, c.mccode })));
+            }
+        }
+        public static void FlattenComplexObject()
+        {
+            string json = @"[
+  {
+    ""ID"": ""1"",
+    ""Name"": ""C1"",
+    ""Branches"": [
+      {
+        ""City"": ""New York"",
+        ""Country"": ""USA""
+      },{
+        ""City"": ""California"",
+        ""Country"": ""USA""
+      }
+    ]
+  },
+  {
+    ""ID"": ""2"",
+    ""Name"": ""C2"",
+    ""Branches"": [
+      {
+        ""City"": ""Mexico City"",
+        ""Country"": ""Mexico""
+      },
+]
+  }
+]";
+            StringBuilder csv = new StringBuilder();
+            using (var r = ChoJSONReader<Company>.LoadText(json).ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                   )
+            {
+                using (var w = new ChoJSONWriter<Company>(Console.Out)
+                    .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                    .Configure(c => c.FlattenNode = true)
+                    .Configure(c => c.ThrowAndStopOnMissingField = false)
+                    )
+                    w.Write(r);
+            }
+        }
+        public class Company
+        {
+            public string ID { get; set; }
+            public string Name { get; set; }
+            public List<Branch> Branches { get; set; }
+        }
+
+        public class Branch
+        {
+            public string City { get; set; }
+            public string Country { get; set; }
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            DoubleQuoteIssue();
+            FlattenComplexObject();
 
             return;
 

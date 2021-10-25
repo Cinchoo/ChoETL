@@ -25,7 +25,6 @@ namespace ChoETL
             get { return _recordTypeCodeExtractor; }
             set { _recordTypeCodeExtractor = value; }
         }
-
         [DataMember]
         public bool IgnoreIfNoRecordTypeFound
         {
@@ -155,6 +154,12 @@ namespace ChoETL
         }
         [DataMember]
         public char? ArrayIndexSeparator
+        {
+            get;
+            set;
+        }
+        [DataMember]
+        public char? NestedKeySeparator
         {
             get;
             set;

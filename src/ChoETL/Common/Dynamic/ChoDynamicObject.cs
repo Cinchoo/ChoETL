@@ -345,6 +345,11 @@ namespace ChoETL
             return ChoExpandoObjectEx.ConvertToNestedObject(this, separator, arrayIndexSeparator, null, allowNestedArrayConversion);
         }
 
+        public dynamic ConvertToFlattenObject(bool ignoreDictionaryFieldPrefix)
+        {
+            return ChoExpandoObjectEx.ConvertToFlattenObject(this, null, null, ignoreDictionaryFieldPrefix);
+        }
+
         public dynamic ConvertToFlattenObject(char? nestedKeySeparator = null, char? arrayIndexSeparator = null, bool ignoreDictionaryFieldPrefix = false)
         {
             return ChoExpandoObjectEx.ConvertToFlattenObject(this, nestedKeySeparator, arrayIndexSeparator, ignoreDictionaryFieldPrefix);

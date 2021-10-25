@@ -433,9 +433,119 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            UseComplexXPath();
+            Json2XMLWithNS();
+        }
+        public static void Json2XMLWithNS()
+        {
+            //dynamic root = new ChoDynamicObject("item");
+
+            //root.name = "item #1";
+            //root.code = "item #2";
+
+            //dynamic image = new ChoDynamicObject("image");
+            //image.AddNamespace("i", "http://i.com");
+            //image.url = "http://www.test.com/bar.jpg";
+
+            //root.AddNamespace("foo", "http://temp.com");
+
+            //root.image = image;
+            //Console.WriteLine(root.GetXml());
+            //return;
+            string json = @"
+		{
+		  'item': {
+			'name': 'item #1',
+			'code': 'itm-123',
+			'image': {
+			  '@url': 'http://www.test.com/bar.jpg'
+			}
+		  }
+		}";
+
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                using (var w = new ChoXmlWriter(Console.Out)
+                    .IgnoreRootName()
+                    .IgnoreNodeName()
+                    .WithDefaultXmlNamespace("foo", "http://temp.com")
+                    .WithXmlNamespace("test", "http://test.com")
+                    )
+                {
+                    w.Write(r);
+                }
+            }
         }
 
+        public static void LoadSubnodeWithDifferentNS()
+        {
+            string json = @"
+		{
+		  'item': {
+			'name': 'item #1',
+			'code': 'itm-123',
+			'image': {
+			  '@url': 'http://www.test.com/bar.jpg'
+			}
+		  }
+		}";
+
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                using (var w = new ChoXmlWriter(Console.Out)
+                    .IgnoreRootName()
+                    .IgnoreNodeName()
+                    .WithDefaultXmlNamespace("foo", "http://temp.com")
+                    )
+                {
+                    w.Write(r);
+                }
+            }
+        }
+
+        public static void DateTimeHandling()
+        {
+            string xml = @"<?xml version=""1.0""?>
+<catalog>
+    <book id=""1"" date=""2012-02-01"">
+        <title>XML Developer's Guide</title>
+        <price>44.95</price>
+        <description>
+            An in-depth look at creating applications
+            with XML.
+        </description>
+    </book>
+    <book id=""2"" date=""2013-30-11"">
+        <author>Mark Colsberg</author>
+        <title>Dolor sit amet</title>
+        <price>5.95</price>
+        <description>Lorem ipsum</description>
+    </book>
+</catalog>";
+
+            ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "yyyy-dd-MM";
+            using (var r = ChoXmlReader<Book>.LoadText(xml)
+                   .WithXPath("//catalog/book", true)
+                   .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                   )
+            {
+                foreach (var rec in r)
+                    rec.Print();
+            }
+        }
+
+        public class Book
+        {
+            [XmlAttribute("id")]
+            public int Id { get; set; }
+            [XmlAttribute("date")]
+            public DateTime Date { get; set; }
+            [XmlElement("author")]
+            public string Author { get; set; }
+            [XmlElement("price")]
+            public double Price { get; set; }
+            [XmlElement("title")]
+            public string Title { get; set; }
+        }
         public static void UseComplexXPath()
         {
             string xml = @"<?xml version='1.0' encoding='UTF-8'?>
