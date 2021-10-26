@@ -1684,7 +1684,7 @@ namespace ChoETL
             if (kvpDict == null)
                 return kvpDict;
 
-            return kvpDict.ToDictionary(kvp => kvp.Key.StartsWith("@xmlns", StringComparison.InvariantCultureIgnoreCase) ? kvp.Key : "{0}:{1}".FormatString(prefix, kvp.Key.IndexOf(":") > 0 ? kvp.Key.Substring(kvp.Key.IndexOf(":") + 1) : kvp.Key),
+            return kvpDict.ToDictionary(kvp => kvp.Key.StartsWith("@xmlns", StringComparison.InvariantCultureIgnoreCase) || IsAttribute(kvp.Key) ? kvp.Key : "{0}:{1}".FormatString(prefix, kvp.Key.IndexOf(":") > 0 ? kvp.Key.Substring(kvp.Key.IndexOf(":") + 1) : kvp.Key),
                 kvp => PrefixNS(prefix, kvp.Value));
         }
 

@@ -1506,15 +1506,18 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
 
         public class PersonWithEnum
         {
-            [ChoTypeConverter(typeof(ChoEnumConverter), Parameters = "EnumFormat=Name;Format=D")]
+            //[ChoTypeConverter(typeof(ChoEnumConverter), Parameters = "EnumFormat=Description;Format=D")]
             public Title PersonTitle { get; set; }
             public string Name { get; set; }
         }
 
         public enum Title
         {
+            [Description("Student Desc")]
             STUDENT,
+            [Description("Teacher Desc")]
             TEACHER,
+            [Description("Director Desc")]
             DIRECTOR
         }
 
@@ -1526,7 +1529,7 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
                 Name = "Dave"
             };
 
-            //ChoTypeConverterFormatSpec.Instance.EnumFormat = ChoEnumFormatSpec.Name;
+            ChoTypeConverterFormatSpec.Instance.EnumFormat = ChoEnumFormatSpec.Description;
             using (var w = new ChoJSONWriter<PersonWithEnum>(Console.Out)
                 .UseJsonSerialization()
                 .UseDefaultContractResolver()

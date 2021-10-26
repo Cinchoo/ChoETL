@@ -581,11 +581,44 @@ namespace ChoXmlWriterTest
             }
         }
 
+        public static void AddDifferentNamespaceToSubnode()
+        {
+            string json = @"
+		{
+		  'item': {
+			'name': 'item #1',
+			'code': 'itm-123',
+			'image': {
+			  '@url': 'http://www.test.com/bar.jpg'
+			}
+		  }
+		}";
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                using (var w = new ChoXmlWriter(Console.Out)
+                    .IgnoreRootName()
+                    .IgnoreNodeName()
+                    .WithDefaultXmlNamespace("foo", "http://temp.com")
+                    .WithXmlNamespace("f", "http://foo.com").ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                    )
+                {
+                    w.Write(r.Select(rec =>
+                    {
+                        rec.item.image.AddNamespace("f", "http://foo.com");
+                        return rec;
+                    }
+                                    )
+                           );
+                }
+            }
+        }
         static void Main(string[] args)
         { 
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            WriteElemetsWithDifferentNS();
+            AddDifferentNamespaceToSubnode();
 
             return;
 
