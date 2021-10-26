@@ -493,7 +493,7 @@ namespace ChoETL
             else
                 fieldNames = state as string[];
 
-            if (fieldNames != null && YamlRecordFieldConfigurations.Count > 0 && IsDynamicObject)
+            if (fieldNames != null && YamlRecordFieldConfigurations.Count > 0 && FlattenNode)
                 YamlRecordFieldConfigurations.Clear();
 
             if (AutoDiscoverColumns

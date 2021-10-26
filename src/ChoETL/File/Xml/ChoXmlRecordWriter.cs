@@ -37,6 +37,7 @@ namespace ChoETL
         private Lazy<bool> BeginWrite = null;
         private object _sw = null;
         private int _indent = 0;
+        private bool _rowScanComplete = false;
 
         public ChoXmlRecordConfiguration Configuration
         {
@@ -158,6 +159,18 @@ namespace ChoETL
             }
             return null;
         }
+        private string[] GetFields(List<object> records)
+        {
+            string[] fieldNames = null;
+            var record = new Dictionary<string, object>();
+            foreach (var r in records.Select(r => (IDictionary<string, Object>)r.ToDynamicObject()))
+            {
+                record.Merge(r);
+            }
+
+            fieldNames = record.Keys.ToArray();
+            return fieldNames;
+        }
 
         bool _firstElement = true;
         public override IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null)
@@ -176,19 +189,53 @@ namespace ChoETL
             if (!Configuration.OmitXmlDeclaration)
                 sw.Write("{0}{1}", GetXmlDeclaration(), EOLDelimiter);
 
+            long recCount = 0;
+            string[] combinedFieldNames = null;
             try
             {
                 var recEnum = records.GetEnumerator();
+
+                if (Configuration.FlattenNode)
+                {
+                    if (RecordType.IsDynamicType())
+                        recEnum = GetRecords(recEnum).Select(r => r.ConvertToFlattenObject(Configuration.NestedKeySeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix)).GetEnumerator();
+                    else
+                        recEnum = GetRecords(recEnum).Select(r => r.ToDynamicObject().ConvertToFlattenObject(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix)).GetEnumerator();
+                }
+
                 object notNullRecord = GetFirstNotNullRecord(recEnum);
                 if (notNullRecord == null)
                     yield break;
 
                 if (Configuration.FlattenNode)
                 {
-                    if (RecordType.IsDynamicType())
-                        records = records.Select(r => r.ConvertToFlattenObject(Configuration.NestedKeySeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix));
-                    else
-                        records = records.Select(r => r.ToDynamicObject().ConvertToFlattenObject(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix));
+                    if (Configuration.MaxScanRows > 0 && !_rowScanComplete)
+                    {
+                        //List<string> fns = new List<string>();
+                        foreach (object record1 in GetRecords(recEnum))
+                        {
+                            recCount++;
+
+                            if (record1 != null)
+                            {
+                                if (recCount <= Configuration.MaxScanRows)
+                                {
+                                    if (!record1.GetType().IsDynamicType())
+                                        throw new ChoParserException("Invalid record found.");
+
+                                    _recBuffer.Value.Add(record1);
+
+                                    if (recCount == Configuration.MaxScanRows)
+                                    {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        _rowScanComplete = true;
+                        combinedFieldNames = GetFields(_recBuffer.Value).ToArray();
+                    }
                 }
 
                 foreach (object record in GetRecords(recEnum))

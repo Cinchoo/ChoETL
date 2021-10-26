@@ -583,7 +583,7 @@ namespace ChoETL
             else
                 fieldNames = state as string[];
 
-            if (fieldNames != null && XmlRecordFieldConfigurations.Count > 0 && IsDynamicObject)
+            if (fieldNames != null && XmlRecordFieldConfigurations.Count > 0 && FlattenNode)
                 XmlRecordFieldConfigurations.Clear();
 
             if (AutoDiscoverColumns

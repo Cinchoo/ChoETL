@@ -25,9 +25,10 @@ namespace ChoETL
         private long _index = 0;
         internal ChoWriter Writer = null;
         internal Type ElementType = null;
-        //private Lazy<List<object>> _recBuffer = null;
+        private Lazy<List<object>> _recBuffer = null;
         private Lazy<bool> BeginWrite = null;
         private object _sw = null;
+        private bool _rowScanComplete = false;
 
         public ChoYamlRecordConfiguration Configuration
         {
@@ -46,19 +47,19 @@ namespace ChoETL
             _callbackRecordSeriablizable = ChoMetadataObjectCache.CreateMetadataObject<IChoRecordFieldSerializable>(recordType);
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
 
-            //_recBuffer = new Lazy<List<object>>(() =>
-            //{
-            //    if (Writer != null)
-            //    {
-            //        var b = Writer.Context.ContainsKey("RecBuffer") ? Writer.Context.RecBuffer : null;
-            //        if (b == null)
-            //            Writer.Context.RecBuffer = new List<object>();
+            _recBuffer = new Lazy<List<object>>(() =>
+            {
+                if (Writer != null)
+                {
+                    var b = Writer.Context.ContainsKey("RecBuffer") ? Writer.Context.RecBuffer : null;
+                    if (b == null)
+                        Writer.Context.RecBuffer = new List<object>();
 
-            //        return Writer.Context.RecBuffer;
-            //    }
-            //    else
-            //        return new List<object>();
-            //}, true);
+                    return Writer.Context.RecBuffer;
+                }
+                else
+                    return new List<object>();
+            }, true);
 
             //Configuration.Validate();
 
@@ -78,6 +79,50 @@ namespace ChoETL
 
             RaiseEndWrite(sw);
         }
+
+        private IEnumerable<object> GetRecords(IEnumerator<object> records)
+        {
+            //object x = Writer != null ? Writer.Context.RecBuffer : null;
+            var arr = _recBuffer.Value.ToArray();
+            _recBuffer.Value.Clear();
+
+            foreach (var rec in arr)
+                yield return rec;
+
+
+            while (records.MoveNext())
+                yield return records.Current;
+        }
+        private string[] GetFields(List<object> records)
+        {
+            string[] fieldNames = null;
+            var record = new Dictionary<string, object>();
+            foreach (var r in records.Select(r => (IDictionary<string, Object>)r.ToDynamicObject()))
+            {
+                record.Merge(r);
+            }
+
+            fieldNames = record.Keys.ToArray();
+            return fieldNames;
+        }
+
+        private object GetFirstNotNullRecord(IEnumerator<object> recEnum)
+        {
+            if (Writer.Context.FirstNotNullRecord != null)
+                return Writer.Context.FirstNotNullRecord;
+
+            while (recEnum.MoveNext())
+            {
+                _recBuffer.Value.Add(recEnum.Current);
+                if (recEnum.Current != null)
+                {
+                    Writer.Context.FirstNotNullRecord = recEnum.Current;
+                    return Writer.Context.FirstNotNullRecord;
+                }
+            }
+            return null;
+        }
+
 
         public override IEnumerable<object> WriteTo(object writer, IEnumerable<object> records, Func<object, bool> predicate = null)
         {
@@ -101,14 +146,53 @@ namespace ChoETL
 
             string recText = String.Empty;
             bool recordIgnored = false;
+            long recCount = 0;
+            string[] combinedFieldNames = null;
             try
             {
+                var recEnum = records.GetEnumerator();
+
                 if (Configuration.FlattenNode)
                 {
                     if (RecordType.IsDynamicType())
-                        records = records.Select(r => r.ConvertToFlattenObject(Configuration.NestedKeySeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix));
+                        recEnum = GetRecords(recEnum).Select(r => r.ConvertToFlattenObject(Configuration.NestedKeySeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix)).GetEnumerator();
                     else
-                        records = records.Select(r => r.ToDynamicObject().ConvertToFlattenObject(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix));
+                        recEnum = GetRecords(recEnum).Select(r => r.ToDynamicObject().ConvertToFlattenObject(Configuration.NestedColumnSeparator, Configuration.ArrayIndexSeparator, Configuration.IgnoreDictionaryFieldPrefix)).GetEnumerator();
+                }
+
+                object notNullRecord = GetFirstNotNullRecord(recEnum);
+                if (notNullRecord == null)
+                    yield break;
+
+                if (Configuration.FlattenNode)
+                {
+                    if (Configuration.MaxScanRows > 0 && !_rowScanComplete)
+                    {
+                        //List<string> fns = new List<string>();
+                        foreach (object record1 in GetRecords(recEnum))
+                        {
+                            recCount++;
+
+                            if (record1 != null)
+                            {
+                                if (recCount <= Configuration.MaxScanRows)
+                                {
+                                    if (!record1.GetType().IsDynamicType())
+                                        throw new ChoParserException("Invalid record found.");
+
+                                    _recBuffer.Value.Add(record1);
+
+                                    if (recCount == Configuration.MaxScanRows)
+                                    {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        _rowScanComplete = true;
+                        combinedFieldNames = GetFields(_recBuffer.Value).ToArray();
+                    }
                 }
 
                 foreach (object record in records)

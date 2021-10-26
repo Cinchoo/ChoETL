@@ -1445,10 +1445,8 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
       {
         ""City"": ""New York"",
         ""Country"": ""USA""
-      },{
-        ""City"": ""California"",
-        ""Country"": ""USA""
-      }
+      },
+
     ]
   },
   {
@@ -1459,10 +1457,13 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
         ""City"": ""Mexico City"",
         ""Country"": ""Mexico""
       },
-]
+	  {
+        ""City"": ""California"",
+        ""Country"": ""USA""
+      }
+	]
   }
 ]";
-            StringBuilder csv = new StringBuilder();
             using (var r = ChoJSONReader<Company>.LoadText(json).ErrorMode(ChoErrorMode.IgnoreAndContinue)
                    )
             {
@@ -1470,6 +1471,22 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
                     .ErrorMode(ChoErrorMode.IgnoreAndContinue)
                     .Configure(c => c.FlattenNode = true)
                     .Configure(c => c.ThrowAndStopOnMissingField = false)
+                    .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                    .Configure(c => c.DefaultArrayHandling = false)
+                    .WithMaxScanNodes(3)
+                    )
+                    w.Write(r);
+            }
+            using (var r = ChoJSONReader.LoadText(json).ErrorMode(ChoErrorMode.IgnoreAndContinue)
+            )
+            {
+                using (var w = new ChoJSONWriter(Console.Out)
+                    .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                    .Configure(c => c.FlattenNode = true)
+                    .Configure(c => c.ThrowAndStopOnMissingField = false)
+                    .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                    .Configure(c => c.DefaultArrayHandling = false)
+                    .WithMaxScanNodes(3)
                     )
                     w.Write(r);
             }
@@ -1488,7 +1505,7 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
         }
         static void Main(string[] args)
         {
-            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
             FlattenComplexObject();
 
             return;
