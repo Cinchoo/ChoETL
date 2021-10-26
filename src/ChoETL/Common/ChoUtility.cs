@@ -984,6 +984,40 @@ namespace ChoETL
             return (T)Enum.Parse(typeof(T), value);
         }
 
+        public static T GetValueFor<T>(this object array, string key, int? index = null, T defaultValue = default(T))
+        {
+            Type type = typeof(T).GetUnderlyingType();
+            if (array is IDictionary<string, string>)
+            {
+                IDictionary<string, string> dict = array as IDictionary<string, string>;
+                if (dict.ContainsKey(key))
+                {
+                    var value = dict[key].ToNString();
+                    try
+                    {
+                        if (type.IsEnum)
+                        {
+                            if (Enum.IsDefined(type, value))
+                                return (T)Enum.Parse(type, value);
+                            else
+                                return defaultValue;
+                        }
+                        return (T)Convert.ChangeType(value, type);
+                    }
+                    catch
+                    {
+                        return defaultValue;
+                    }
+
+                }
+            }
+            else if (index != null)
+            {
+                return GetValueAt<T>(array, index.Value, defaultValue);
+            }
+            return defaultValue;
+        }
+
         public static T GetValueAt<T>(this object array, int index, T defaultValue = default(T))
         {
             Type type = typeof(T).GetUnderlyingType();

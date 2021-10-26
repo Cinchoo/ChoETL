@@ -45,7 +45,7 @@ namespace ChoETL
         {
             if ((value != null && value.GetType().IsEnum))
             {
-                ChoEnumFormatSpec EnumFormat = parameter.GetValueAt(0, ChoTypeConverterFormatSpec.Instance.EnumFormat);
+                ChoEnumFormatSpec EnumFormat = parameter.GetValueFor("EnumFormat", 0, ChoTypeConverterFormatSpec.Instance.EnumFormat);
                 switch (EnumFormat)
                 {
                     case ChoEnumFormatSpec.Name:
@@ -53,10 +53,10 @@ namespace ChoETL
                     case ChoEnumFormatSpec.Description:
                         return ChoEnum.ToDescription((Enum)value);
                     default:
-                        string ft = parameter.GetValueAt<string>(0);
+                        string ft = parameter.GetValueFor<string>("Format", 1);
                         if (ft.IsNullOrWhiteSpace())
                         {
-                            return ((Enum)value).ToString("D");
+                            return (int)value; // ((Enum)value).ToString("D");
                         }
                         else
                         {

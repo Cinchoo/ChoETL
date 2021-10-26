@@ -358,13 +358,13 @@
                                 if (converterAttribute.PriorityInternal == null)
                                 {
                                     queue.Add(index, converterAttribute.CreateInstance());
-                                    paramsQueue.Add(index, converterAttribute.ParametersArray);
+                                    paramsQueue.Add(index, converterAttribute.ParametersObject);
                                     index++;
                                 }
                                 else
                                 {
                                     queue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.CreateInstance());
-                                    paramsQueue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.ParametersArray);
+                                    paramsQueue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.ParametersObject);
                                 }
                             }
                         }
@@ -443,13 +443,13 @@
                     if (converterAttribute.PriorityInternal == null)
                     {
                         queue.Add(index, converterAttribute.CreateInstance());
-                        paramsQueue.Add(index, converterAttribute.ParametersArray);
+                        paramsQueue.Add(index, converterAttribute.ParametersObject);
                         index++;
                     }
                     else
                     {
                         queue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.CreateInstance());
-                        paramsQueue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.ParametersArray);
+                        paramsQueue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.ParametersObject);
                     }
                 }
             }
@@ -480,13 +480,13 @@
                     if (converterAttribute.PriorityInternal == null)
                     {
                         queue.Add(index, converterAttribute.CreateInstance());
-                        paramsQueue.Add(index, converterAttribute.ParametersArray);
+                        paramsQueue.Add(index, converterAttribute.ParametersObject);
                         index++;
                     }
                     else
                     {
                         queue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.CreateInstance());
-                        paramsQueue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.ParametersArray);
+                        paramsQueue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.ParametersObject);
                     }
                 }
             }
@@ -618,13 +618,13 @@
                     if (converterAttribute.PriorityInternal == null)
                     {
                         queue.Add(index, converterAttribute.CreateInstance());
-                        paramsQueue.Add(index, converterAttribute.ParametersArray);
+                        paramsQueue.Add(index, converterAttribute.ParametersObject);
                         index++;
                     }
                     else
                     {
                         queue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.CreateInstance());
-                        paramsQueue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.ParametersArray);
+                        paramsQueue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.ParametersObject);
                     }
                 }
             }
@@ -668,13 +668,13 @@
                     if (converterAttribute.PriorityInternal == null)
                     {
                         queue.Add(index, converterAttribute.CreateInstance());
-                        paramsQueue.Add(index, converterAttribute.ParametersArray);
+                        paramsQueue.Add(index, converterAttribute.ParametersObject);
                         index++;
                     }
                     else
                     {
                         queue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.CreateInstance());
-                        paramsQueue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.ParametersArray);
+                        paramsQueue.Add(converterAttribute.PriorityInternal.Value, converterAttribute.ParametersObject);
                     }
                 }
             }

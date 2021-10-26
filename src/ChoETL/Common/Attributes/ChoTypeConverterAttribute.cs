@@ -28,7 +28,19 @@
             get { return _converterType; }
         }
 
+        internal object ParametersObject
+        {
+            get
+            {
+                if (ParametersDict != null && ParametersDict.Count > 0)
+                    return ParametersDict;
+                else
+                    return ParametersArray;
+            }
+        }
         internal object[] ParametersArray { get; set; }
+
+        internal IDictionary<string, string> ParametersDict { get; set; }
 
         private string _parameters;
         public string Parameters
@@ -40,7 +52,14 @@
                 {
                     _parameters = value;
                     if (value != null)
-                        ParametersArray = value.SplitNTrim(",", ChoStringSplitOptions.None, '\'').AsTypedEnumerable<object>().ToArray();
+                    {
+                        if (value.Contains("="))
+                        {
+                            ParametersDict = value.ToKeyValuePairs().ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.InvariantCultureIgnoreCase);
+                        }
+                        else
+                            ParametersArray = value.SplitNTrim(new char[] { ',', ';' }, ChoStringSplitOptions.None, '\'').AsTypedEnumerable<object>().ToArray();
+                    }
                     else
                         ParametersArray = null;
                 }
@@ -81,22 +100,36 @@
             if (ConverterType == null)
                 return null;
 
-            //if (ChoGuard.IsArgumentNotNullOrEmpty(Parameters) && ChoType.HasConstructor(ConverterType, ParametersArray))
-            //    return ChoType.CreateInstance(ConverterType, ParametersArray);
+            //if (ChoGuard.IsArgumentNotNullOrEmpty(Parameters) && ChoType.HasConstructor(ConverterType, ParametersArray1))
+            //    return ChoType.CreateInstance(ConverterType, ParametersArray1);
             //else if (ChoType.HasConstructor(ConverterType, new object[] { String.Empty }))
-            //    return ChoType.CreateInstance(ConverterType, new object[] { ParametersArray != null && ParametersArray.Length > 0 ? ParametersArray[0] : String.Empty });
+            //    return ChoType.CreateInstance(ConverterType, new object[] { ParametersArray1 != null && ParametersArray1.Length > 0 ? ParametersArray1[0] : String.Empty });
             //else
-            if (ParametersArray == null || ParametersArray.Length == 0)
+            if ((ParametersArray == null || ParametersArray.Length == 0) && (ParametersDict == null || ParametersDict.Count == 0))
                 return ChoActivator.CreateInstance(ConverterType);
             else
             {
-                try
+                if (ParametersDict != null || ParametersDict.Count > 0)
                 {
-                    return ChoActivator.CreateInstance(ConverterType, ParametersArray);
+                    try
+                    {
+                        return ChoActivator.CreateInstance(ConverterType, ParametersDict);
+                    }
+                    catch
+                    {
+                        return ChoActivator.CreateInstance(ConverterType);
+                    }
                 }
-                catch
+                else
                 {
-                    return ChoActivator.CreateInstance(ConverterType);
+                    try
+                    {
+                        return ChoActivator.CreateInstance(ConverterType, ParametersArray);
+                    }
+                    catch
+                    {
+                        return ChoActivator.CreateInstance(ConverterType);
+                    }
                 }
             }
         }

@@ -126,12 +126,12 @@ namespace ChoETL
 
                 if (converters != null && converters.Length > 0)
                 {
-                    object[] objArray = (object[])null;
+                    object objArray = null;
                     for (int index = 0; index < converters.Length; ++index)
                     {
                         object obj2 = converters[index];
                         if (parameters != null && parameters.Length > 0)
-                            objArray = parameters[index] as object[];
+                            objArray = parameters[index];
                         if (obj2 is TypeConverter)
                         {
                             TypeConverter typeConverter = obj2 as TypeConverter;
@@ -383,7 +383,7 @@ namespace ChoETL
                         return convPropValue;
                 }
 
-                object[] objArray = (object[])null;
+                object objArray = null;
                 if (converters.IsNullOrEmpty())
                     converters = ChoTypeDescriptor.GetTypeConvertersForType(type);
 
@@ -393,7 +393,7 @@ namespace ChoETL
                     {
                         object obj2 = converters[index];
                         if (parameters != null && parameters.Length > 0)
-                            objArray = parameters[index] as object[];
+                            objArray = parameters[index];
                         if (obj2 is TypeConverter)
                         {
                             TypeConverter typeConverter = obj2 as TypeConverter;

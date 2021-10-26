@@ -1503,10 +1503,43 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
             public string City { get; set; }
             public string Country { get; set; }
         }
+
+        public class PersonWithEnum
+        {
+            [ChoTypeConverter(typeof(ChoEnumConverter), Parameters = "EnumFormat=Name;Format=D")]
+            public Title PersonTitle { get; set; }
+            public string Name { get; set; }
+        }
+
+        public enum Title
+        {
+            STUDENT,
+            TEACHER,
+            DIRECTOR
+        }
+
+        static void SerializeEnumAsInt()
+        {
+            PersonWithEnum first = new PersonWithEnum()
+            {
+                PersonTitle = Title.STUDENT,
+                Name = "Dave"
+            };
+
+            //ChoTypeConverterFormatSpec.Instance.EnumFormat = ChoEnumFormatSpec.Name;
+            using (var w = new ChoJSONWriter<PersonWithEnum>(Console.Out)
+                .UseJsonSerialization()
+                .UseDefaultContractResolver()
+                )
+            {
+                w.Write(first);
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            FlattenComplexObject();
+            SerializeEnumAsInt();
 
             return;
 
