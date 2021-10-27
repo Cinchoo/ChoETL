@@ -435,27 +435,35 @@ namespace ChoETL
 
             if ((configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
             {
-                if (configuration.HasConfigValidators)
+                if (configuration.Validator == null)
                 {
-                    IDictionary<string, Object> dict = null;
-                    if (recObject is IDictionary<string, object>)
-                        dict = recObject as IDictionary<string, Object>;
+                    if (configuration.HasConfigValidators)
+                    {
+                        IDictionary<string, Object> dict = null;
+                        if (recObject is IDictionary<string, object>)
+                            dict = recObject as IDictionary<string, Object>;
+                        else
+                        {
+                            dict = new Dictionary<string, object>();
+
+                            foreach (var pd in configuration.PIDict.Values)
+                            {
+                                dict.Add(pd.Name, ChoType.GetPropertyValue(recObject, pd));
+                            }
+                        }
+
+                        ChoValidator.Validate(dict, configuration.ValDict);
+                    }
                     else
                     {
-                        dict = new Dictionary<string, object>();
-
-                        foreach (var pd in configuration.PIDict.Values)
-                        {
-                            dict.Add(pd.Name, ChoType.GetPropertyValue(recObject, pd));
-                        }
+                        if (!configuration.IsDynamicObject)
+                            ChoValidator.Validate(recObject);
                     }
-
-                    ChoValidator.Validate(dict, configuration.ValDict);
                 }
                 else
                 {
-                    if (!configuration.IsDynamicObject)
-                        ChoValidator.Validate(recObject);
+                    if (recObject != null && configuration.Validator(recObject))
+                        throw new ValidationException("Failed to validate '{0}' object. {1}".FormatString(recObject.GetType().FullName, Environment.NewLine));
                 }
             }
         }
@@ -463,7 +471,15 @@ namespace ChoETL
         public static void DoMemberLevelValidation(this IDictionary<string, object> dict, string fn, ChoRecordFieldConfiguration fieldConfig, ChoObjectValidationMode vm)
         {
             if (!fieldConfig.Validators.IsNullOrEmpty() && (vm & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
-                ChoValidator.ValidateFor(dict[fn], fn, fieldConfig.Validators);
+            {
+                if (fieldConfig.Validator == null)
+                    ChoValidator.ValidateFor(dict[fn], fn, fieldConfig.Validators);
+                else
+                {
+                    if (!fieldConfig.Validator(dict[fn]))
+                        throw new ValidationException("Failed to validate '{0}' member. {1}".FormatString(fn, Environment.NewLine));
+                }
+            }
         }
 
         public static void DoMemberLevelValidation(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, ChoObjectValidationMode vm)
@@ -477,14 +493,22 @@ namespace ChoETL
             }
             else
             {
-                if (fieldConfig.PD == null)
-                    fieldConfig.PD = fieldConfig.PropertyDescriptor;
-                if (fieldConfig.PD != null)
+                if (fieldConfig.Validator == null)
                 {
-                    if (fieldConfig.Validators.IsNullOrEmpty())
-                        ChoValidator.ValidateFor(rec, fieldConfig.PD);
-                    else
-                        ChoValidator.ValidateFor(fieldConfig.PD.GetValue(rec), fn, fieldConfig.Validators);
+                    if (fieldConfig.PD == null)
+                        fieldConfig.PD = fieldConfig.PropertyDescriptor;
+                    if (fieldConfig.PD != null)
+                    {
+                        if (fieldConfig.Validators.IsNullOrEmpty())
+                            ChoValidator.ValidateFor(rec, fieldConfig.PD);
+                        else
+                            ChoValidator.ValidateFor(fieldConfig.PD.GetValue(rec), fn, fieldConfig.Validators);
+                    }
+                }
+                else
+                {
+                    if (!fieldConfig.Validator(fieldConfig.PD.GetValue(rec)))
+                        throw new ValidationException("Failed to validate '{0}' member. {1}".FormatString(fn, Environment.NewLine));
                 }
             }
         }

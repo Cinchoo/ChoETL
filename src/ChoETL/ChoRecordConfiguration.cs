@@ -20,6 +20,11 @@ namespace ChoETL
     {
         protected Lazy<object> _recObject;
         private ChoTypeConverterFormatSpec _typeConverterFormatSpec = null;
+        public Func<object, bool> Validator
+        {
+            get;
+            set;
+        }
         public ChoTypeConverterFormatSpec TypeConverterFormatSpec
         {
             get { return _typeConverterFormatSpec == null ? ChoTypeConverterFormatSpec.Instance : _typeConverterFormatSpec; }

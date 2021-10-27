@@ -5237,10 +5237,27 @@ Mrs,24.3,N,100247,CUXXX,email@gmail.com,User,Test,Test User,17/09/1957,64,DAILIE
             }
         }
 
+        static void ValidateSample()
+        {
+            string csv = @"Id, Name, City
+1, Tom, Austin
+2, Mark, New York";
+
+            using (var r = ChoCSVReader<Emp>.LoadText(csv)
+                .WithFirstLineHeader()
+                .ErrorMode(ChoErrorMode.ReportAndContinue)
+                .Configure(c => c.ObjectValidationMode = ChoObjectValidationMode.MemberLevel)
+                .WithField(f => f.Id, m => m.Value.Validator = v => false)
+                )
+            {
+                r.Print();
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            ConvertDecimal();
+            ValidateSample();
             return;
 
             PositionNeutralCSVLoad();

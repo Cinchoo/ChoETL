@@ -17,6 +17,11 @@ namespace ChoETL
     [DataContract]
     public abstract class ChoRecordFieldConfiguration
     {
+        public Func<object, bool> Validator
+        {
+            get;
+            set;
+        }
         public Type SourceType
         {
             get;

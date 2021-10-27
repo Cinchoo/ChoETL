@@ -589,7 +589,8 @@ namespace ChoXmlWriterTest
 			'name': 'item #1',
 			'code': 'itm-123',
 			'image': {
-			  '@url': 'http://www.test.com/bar.jpg'
+			  '@url': 'http://www.test.com/bar.jpg',
+              'title': 'bar'
 			}
 		  }
 		}";
@@ -600,13 +601,13 @@ namespace ChoXmlWriterTest
                 using (var w = new ChoXmlWriter(Console.Out)
                     .IgnoreRootName()
                     .IgnoreNodeName()
-                    .WithDefaultXmlNamespace("foo", "http://temp.com")
-                    .WithXmlNamespace("f", "http://foo.com").ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                    .WithDefaultXmlNamespace("foo", "http://foo.com")
+                    .WithXmlNamespace("temp", "http://temp.com").ErrorMode(ChoErrorMode.IgnoreAndContinue)
                     )
                 {
                     w.Write(r.Select(rec =>
                     {
-                        rec.item.image.AddNamespace("f", "http://foo.com");
+                        rec.item.image.AddNamespace("temp", "http://tem1p.com");
                         return rec;
                     }
                                     )
