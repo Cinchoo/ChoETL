@@ -1808,22 +1808,29 @@ namespace ChoETL
                     }
                 }
             }
-            catch
+            catch (Exception outerEx)
             {
-                if (objectType.IsGenericList() || objectType.IsGenericEnumerable())
+                try
                 {
-                    IList list = ChoActivator.CreateInstance(objectType) as IList;
+                    if (objectType.IsGenericList() || objectType.IsGenericEnumerable())
+                    {
+                        IList list = ChoActivator.CreateInstance(objectType) as IList;
 
-                    Type itemType = objectType.GetItemType();
-                    if (jsonSerializer == null || jsonSerializer.Value == null)
-                        list.Add(jToken.ToObject(itemType));
+                        Type itemType = objectType.GetItemType();
+                        if (jsonSerializer == null || jsonSerializer.Value == null)
+                            list.Add(jToken.ToObject(itemType));
+                        else
+                            list.Add(jToken.ToObject(itemType, jsonSerializer.Value));
+
+                        return list;
+                    }
                     else
-                        list.Add(jToken.ToObject(itemType, jsonSerializer.Value));
-
-                    return list;
+                        return jToken.ToObject(typeof(string), jsonSerializer.Value);
                 }
-                else
-                    return jToken.ToObject(typeof(string), jsonSerializer.Value);
+                catch
+                {
+                    throw outerEx;
+                }
 //                throw;
             }
         }

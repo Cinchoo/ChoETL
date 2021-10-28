@@ -6959,10 +6959,140 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
         }
+
+
+        public class Aggregates
+        {
+            [JsonProperty("ticker")]
+            public string Ticker { get; set; }
+
+            [JsonProperty("queryCount")]
+            public int QueryCount { get; set; }
+
+            [JsonProperty("resultsCount")]
+            public int ResultsCount { get; set; }
+
+            [JsonProperty("adjusted")]
+            public bool Adjusted { get; set; }
+
+            [JsonProperty("results")]
+            public List<IQuote> Aggregatelist { get; set; }
+
+            [JsonProperty("status")]
+            public string Status { get; set; }
+
+            [JsonProperty("request_id")]
+            public string RequestId { get; set; }
+
+            [JsonProperty("count")]
+            public int Count { get; set; }
+        }
+
+        public class Aggregate
+        {
+            /// <summary>
+            /// The trading volume of the symbol in the given time period.
+            /// </summary>
+            [JsonProperty("v")]
+            public object Volume { get; set; }
+
+            /// <summary>
+            /// The volume weighted average price.
+            /// </summary>
+            [JsonProperty("vw")]
+            public double VolumeWeightedw { get; set; }
+
+            /// <summary>
+            /// The open price for the symbol in the given time period.
+            /// </summary>
+            [JsonProperty("o")]
+            public double Open { get; set; }
+
+            /// <summary>
+            /// The close price for the symbol in the given time period.
+            /// </summary>
+            [JsonProperty("c")]
+            public double Close { get; set; }
+
+            /// <summary>
+            /// The highest price for the symbol in the given time period.
+            /// </summary>
+            [JsonProperty("h")]
+            public double High { get; set; }
+
+            /// <summary>
+            /// The lowest price for the symbol in the given time period.
+            /// </summary>
+            [JsonProperty("l")]
+            public double Low { get; set; }
+
+            /// <summary>
+            /// The Unix Msec timestamp for the start of the aggregate window.
+            /// </summary>
+            [JsonProperty("t")]
+            public long StartTime { get; set; }
+
+            /// <summary>
+            /// The number of transactions in the aggregate window.
+            /// </summary>
+            [JsonProperty("n")]
+            public int TransactionsNum { get; set; }
+        }
+        [ChoMetadataRefType(typeof(Quote))]
+        public class QuoteRef
+        {
+            [JsonProperty("t")]
+            public DateTime Date { get; set; }
+            [JsonProperty("o")]
+            public decimal Open { get; set; }
+            [JsonProperty("h")]
+            public decimal High { get; set; }
+            [JsonProperty("l")]
+            public decimal Low { get; set; }
+            [JsonProperty("c")]
+            public decimal Close { get; set; }
+            [JsonProperty("v")]
+            public decimal Volume { get; set; }
+        }
+        public class Quote : IQuote
+        {
+            public DateTime Date { get; set; }
+            public decimal Open { get; set; }
+            public decimal High { get; set; }
+            public decimal Low { get; set; }
+            public decimal Close { get; set; }
+            public decimal Volume { get; set; }
+        }
+        public interface IQuote
+        {
+            DateTime Date { get; }
+            decimal Open { get; }
+            decimal High { get; }
+            decimal Low { get; }
+            decimal Close { get; }
+            decimal Volume { get; }
+        }
+        static void MapToDifferentType()
+        {
+            using (var r = new ChoJSONReader<Aggregates>("sample58.json")
+                //.UseJsonSerialization()
+                .WithField(f => f.Aggregatelist, fieldTypeSelector: o => typeof(List<Quote>))
+                .WithFieldForType<Quote>(f => f.Date, valueConverter: o =>
+                {
+                    var dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+                    return dtDateTime.AddMilliseconds(o.CastTo<long>()).ToLocalTime();
+                })
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                )
+            {
+                r.Print();
+            }
+        }
+        
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            TokenReplacementTest();
+            MapToDifferentType();
             //DeserializeNestedObjectOfList();
             return;
 

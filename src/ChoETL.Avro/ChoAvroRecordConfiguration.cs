@@ -1119,7 +1119,7 @@ namespace ChoETL
                     int priority = 0;
 
                     //Remove collection config member
-                    var fcs1 = AvroRecordFieldConfigurations.Where(o => o.FieldName == fqn).ToArray();
+                    var fcs1 = AvroRecordFieldConfigurations.Where(o => o.Name == fqn).ToArray();
                     foreach (var fc in fcs1)
                     {
                         AvroRecordFieldConfigurations.Remove(fc);
@@ -1190,7 +1190,7 @@ namespace ChoETL
                 && keys != null && keys.Length > 0)
             {
                 //Remove collection config member
-                var fcs1 = AvroRecordFieldConfigurations.Where(o => o.FieldName == fqn).ToArray();
+                var fcs1 = AvroRecordFieldConfigurations.Where(o => o.Name == fqn).ToArray();
                 foreach (var fc in fcs1)
                     AvroRecordFieldConfigurations.Remove(fc);
 

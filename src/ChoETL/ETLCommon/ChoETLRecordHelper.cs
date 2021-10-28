@@ -232,9 +232,9 @@ namespace ChoETL
                     var itemType = fieldConfig.PD.PropertyType.GetItemType();
                     //IList list = ChoType.GetPropertyValue(rec, fieldConfig.PD) as IList;
                     IList list = fieldConfig.PD.GetValue(rec) as IList;
-                    if (list == null && !fieldConfig.FieldType.IsArray)
+                    if (list == null && !fieldConfig.PD.PropertyType.IsArray) //fieldConfig.FieldType.IsArray)
                     {
-                        list = (IList)Activator.CreateInstance(fieldConfig.FieldType);
+                        list = (IList)Activator.CreateInstance(fieldConfig.PD.PropertyType); // fieldConfig.FieldType);
                         //ChoType.SetPropertyValue(rec, fieldConfig.PD, list);
                         fieldConfig.PD.SetValue(rec, list);
                     }

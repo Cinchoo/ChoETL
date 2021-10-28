@@ -810,9 +810,9 @@ namespace ChoETL
                 string fnTrim = fieldName.IsNullOrWhiteSpace() ? name.NTrim() : fieldName;
                 ChoJSONRecordFieldConfiguration fc = null;
                 PropertyDescriptor pd = null;
-                if (JSONRecordFieldConfigurations.Any(o => o.FieldName == fnTrim))
+                if (JSONRecordFieldConfigurations.Any(o => o.Name == fnTrim))
                 {
-                    fc = JSONRecordFieldConfigurations.Where(o => o.FieldName == fnTrim).First();
+                    fc = JSONRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
                     JSONRecordFieldConfigurations.Remove(fc);
                     pd = ChoTypeDescriptor.GetNestedProperty(recordType, fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
                 }
@@ -828,7 +828,7 @@ namespace ChoETL
                 nfc.JSONPath = !jsonPath.IsNullOrWhiteSpace() ? jsonPath : nfc.JSONPath;
                 nfc.FieldType = fieldType != null ? fieldType : nfc.FieldType;
                 nfc.FieldValueTrimOption = fieldValueTrimOption;
-                nfc.FieldName = fieldName.IsNullOrWhiteSpace() ? (name.IsNullOrWhiteSpace() ? nfc.FieldName : name) : fieldName;
+                nfc.FieldName = !fieldName.IsNullOrWhiteSpace() ? fieldName : (!nfc.FieldName.IsNullOrWhiteSpace() ? nfc.FieldName : name);
                 nfc.ValueConverter = valueConverter != null ? valueConverter : nfc.ValueConverter;
                 nfc.CustomSerializer = customSerializer != null ? customSerializer : nfc.CustomSerializer;
                 nfc.DefaultValue = defaultValue != null ? defaultValue : nfc.DefaultValue;

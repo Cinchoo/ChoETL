@@ -1170,7 +1170,7 @@ namespace ChoETL
                     int priority = 0;
 
                     //Remove collection config member
-                    var fcs1 = ParquetRecordFieldConfigurations.Where(o => o.FieldName == fqn).ToArray();
+                    var fcs1 = ParquetRecordFieldConfigurations.Where(o => o.Name == fqn).ToArray();
                     foreach (var fc in fcs1)
                     {
                         priority = fc.Priority;
@@ -1245,7 +1245,7 @@ namespace ChoETL
                 && keys != null && keys.Length > 0)
             {
                 //Remove collection config member
-                var fcs1 = ParquetRecordFieldConfigurations.Where(o => o.FieldName == fqn).ToArray();
+                var fcs1 = ParquetRecordFieldConfigurations.Where(o => o.Name == fqn).ToArray();
                 foreach (var fc in fcs1)
                     ParquetRecordFieldConfigurations.Remove(fc);
 

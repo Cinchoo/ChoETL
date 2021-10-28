@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics;
 using System.Dynamic;
 using System.Globalization;
 using System.IO;
@@ -35,6 +36,7 @@ namespace ChoETL
         }
         public IChoNotifyRecordFieldRead CallbackRecordFieldRead { get; set; }
         public ChoReader Reader { get; set; }
+        public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
 
         public ChoPropertyRenameAndIgnoreSerializerContractResolver(ChoFileRecordConfiguration configuration)
         {
@@ -58,7 +60,9 @@ namespace ChoETL
             if (IsIgnored(property.DeclaringType, property.PropertyName, property.UnderlyingName, propertyFullName))
             {
                 property.ShouldSerialize = i => false;
+                property.ShouldDeserialize = i => false;
                 property.Ignored = true;
+                return property;
             }
 
             if (IsRenamed(property.DeclaringType, property.PropertyName, property.UnderlyingName, propertyFullName, out var newJsonPropertyName))
@@ -66,6 +70,7 @@ namespace ChoETL
                 if (!newJsonPropertyName.IsNullOrWhiteSpace())
                     property.PropertyName = newJsonPropertyName;
             }
+            RemapToRefTypePropertiesIfAny(property.DeclaringType, propertyName, property);
 
             ChoFileRecordFieldConfiguration fc = null;
             var rfc = _configuration.RecordFieldConfigurations.ToArray();
@@ -202,6 +207,38 @@ namespace ChoETL
             return property;
         }
 
+        private void RemapToRefTypePropertiesIfAny(Type type, string propertyName, JsonProperty prop)
+        {
+            var pd = ChoTypeDescriptor.GetProperty(type, propertyName);
+            if (pd != null)
+            {
+                var jattr = pd.Attributes.OfType<JsonPropertyAttribute>().FirstOrDefault();
+                if (jattr != null && !jattr.PropertyName.IsNullOrWhiteSpace())
+                {
+                    prop.ItemReferenceLoopHandling = jattr.ItemReferenceLoopHandling;
+                    prop.Required = jattr.Required;
+                    prop.Order = jattr.Order;
+                    prop.IsReference = jattr.IsReference;
+                    prop.TypeNameHandling = jattr.TypeNameHandling;
+                    prop.ObjectCreationHandling = jattr.ObjectCreationHandling;
+                    prop.ReferenceLoopHandling = jattr.ItemReferenceLoopHandling;
+                    prop.DefaultValueHandling = jattr.DefaultValueHandling;
+                    prop.NullValueHandling = jattr.NullValueHandling;
+                    //prop.NamingStrategyParameters = jattr.NamingStrategyParameters;
+                    //prop.NamingStrategyType = jattr.NamingStrategyType;
+                    try
+                    {
+                        if (jattr.ItemConverterType != null)
+                            prop.ItemConverter = ChoActivator.CreateInstance(jattr.ItemConverterType, jattr.ItemConverterParameters) as JsonConverter;
+                    }
+                    catch { }
+                    prop.ItemTypeNameHandling = jattr.ItemTypeNameHandling;
+                    prop.ItemIsReference = jattr.ItemIsReference;
+
+                }
+            }
+        }
+
         private bool IsIgnored(Type type, string jsonPropertyName, string propertyName, string propertyFullName)
         {
             if (_configuration.IgnoredFields.Contains(propertyFullName) || _configuration.IgnoredFields.Contains(propertyName))
@@ -252,6 +289,12 @@ namespace ChoETL
             var pd = ChoTypeDescriptor.GetProperty(type, propertyName);
             if (pd != null)
             {
+                var jattr = pd.Attributes.OfType<JsonPropertyAttribute>().FirstOrDefault();
+                if (jattr != null && !jattr.PropertyName.IsNullOrWhiteSpace())
+                {
+                    newJsonPropertyName = jattr.PropertyName.Trim();
+                    return true;
+                }
                 var attr = pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().FirstOrDefault();
                 if (attr != null && !attr.FieldName.IsNullOrWhiteSpace())
                 {
@@ -304,6 +347,7 @@ namespace ChoETL
         public IChoNotifyRecordFieldRead CallbackRecordFieldRead { get; set; }
         public ChoReader Reader { get; set; }
         public ChoFileRecordConfiguration Configuration { get; set; }
+        public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
 
         public ChoContractResolverJsonConverter(ChoFileRecordFieldConfiguration fc, CultureInfo culture, Type objType, ChoObjectValidationMode validationMode, MemberInfo mi)
         {
@@ -377,7 +421,12 @@ namespace ChoETL
             if (Configuration.TurnOffContractResolverState)
                 crs = null;
 
-            if (crs == null)
+            if (_fc == null)
+            {
+                _fc = GetFieldConfiguration(_mi.ReflectedType, _mi.Name);
+            }
+
+            if (crs == null || _fc == null)
             {
                 try
                 {
@@ -412,103 +461,142 @@ namespace ChoETL
             }
             else
             {
+                crs.Name = _fc.Name;
+                crs.FieldConfig = _fc;
+                crs.Record = ChoActivator.CreateInstanceNCache(_mi.ReflectedType);
+
+                Type mt = ChoType.GetMemberType(_mi);
+                var name = ChoType.GetFieldName(crs.Name);
+                var rec = ChoType.GetMemberObjectMatchingType(name, crs.Record);
+
                 try
                 {
-                    retValue = JObject.Load(reader);
-                }
-                catch
-                {
-                    retValue = serializer.Deserialize(reader, objectType);
-                }
-            }
-
-            if (_fc == null)
-            {
-                _fc = GetFieldConfiguration(_mi.ReflectedType, _mi.Name);
-            }
-
-            crs.Name = _fc.Name;
-            crs.FieldConfig = _fc;
-            crs.Record = ChoActivator.CreateInstanceNCache(_mi.ReflectedType);
-
-            Type mt = ChoType.GetMemberType(_mi);
-            var name = ChoType.GetFieldName(crs.Name);
-            var rec = ChoType.GetMemberObjectMatchingType(name, crs.Record);
-
-            var st = ChoType.GetMemberAttribute(_mi, typeof(ChoSourceTypeAttribute)) as ChoSourceTypeAttribute;
-            if (st != null && st.Type != null)
-                _objType = st.Type;
-            if (_fc != null && _fc.SourceType != null)
-                _objType = _fc.SourceType;
-
-            if (!RaiseBeforeRecordFieldLoad(crs.Record, crs.Index, name, ref retValue))
-            {
-                if (_fc != null)
-                {
-                    if (_fc.CustomSerializer == null && retValue is JObject)
+                    try
+                    {
+                        retValue = JObject.Load(reader);
+                    }
+                    catch
                     {
                         if (_fc.ValueConverter == null)
+                            retValue = serializer.Deserialize(reader, objectType);
+                        else
                         {
-                            if (retValue is JObject)
+                            retValue = serializer.Deserialize(reader, typeof(string));
+                            retValue = _fc.ValueConverter(retValue);
+                        }
+
+                    }
+
+                    var st = ChoType.GetMemberAttribute(_mi, typeof(ChoSourceTypeAttribute)) as ChoSourceTypeAttribute;
+                    if (st != null && st.Type != null)
+                        _objType = st.Type;
+                    if (_fc != null && _fc.SourceType != null)
+                        _objType = _fc.SourceType;
+
+                    if (!RaiseBeforeRecordFieldLoad(crs.Record, crs.Index, name, ref retValue))
+                    {
+                        if (_fc != null)
+                        {
+                            if (_fc.CustomSerializer == null && retValue is JObject)
+                            {
+                                if (_fc.ValueConverter == null)
+                                {
+                                    if (retValue is JObject)
+                                        retValue = ((JObject)retValue).ToObject(objectType);
+                                }
+                                else
+                                    retValue = _fc.ValueConverter(retValue);
+                            }
+                            else
+                            {
+                                retValue = _fc.CustomSerializer(retValue);
+                            }
+
+                            //ChoETLRecordHelper.DoMemberLevelValidation(retValue, _fc.Name, _fc, _validationMode);
+
+                            if (retValue is JObject && GetTypeConverters(_objType, name).IsNullOrEmpty()) //  ChoTypeDescriptor.GetTypeConverters(_mi).IsNullOrEmpty())
                                 retValue = ((JObject)retValue).ToObject(objectType);
+
+                            if (retValue != null)
+                            {
+                                if (_fc != null)
+                                    ChoETLRecordHelper.ConvertMemberValue(rec, name, _fc, ref retValue, _culture);
+                                else
+                                    retValue = ChoConvert.ConvertFrom(retValue, objectType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
+                            }
+                            ValidateORead(ref retValue);
                         }
                         else
-                            retValue = _fc.ValueConverter(retValue);
+                        {
+                            if (retValue != null)
+                            {
+                                if (retValue is JObject && GetTypeConverters(_objType, name).IsNullOrEmpty())
+                                    retValue = ((JObject)retValue).ToObject(objectType);
+
+                                if (_fc != null)
+                                    ChoETLRecordHelper.ConvertMemberValue(rec, name, _fc, ref retValue, _culture);
+                                else
+                                    retValue = ChoConvert.ConvertFrom(retValue, objectType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
+                            }
+
+                            ValidateORead(ref retValue);
+                        }
                     }
                     else
                     {
-                        retValue = _fc.CustomSerializer(retValue);
+                        if (retValue != null)
+                        {
+                            if (retValue is JObject && GetTypeConverters(_objType, name).IsNullOrEmpty())
+                                retValue = ((JObject)retValue).ToObject(objectType);
+
+                            if (_fc != null)
+                                ChoETLRecordHelper.ConvertMemberValue(rec, name, _fc, ref retValue, _culture);
+                            else
+                                retValue = ChoConvert.ConvertFrom(retValue, objectType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
+                        }
+
+                        ValidateORead(ref retValue);
                     }
-
-                    //ChoETLRecordHelper.DoMemberLevelValidation(retValue, _fc.Name, _fc, _validationMode);
-
-                    if (retValue is JObject && GetTypeConverters(_objType, name).IsNullOrEmpty()) //  ChoTypeDescriptor.GetTypeConverters(_mi).IsNullOrEmpty())
-                        retValue = ((JObject)retValue).ToObject(objectType);
-
-                    if (retValue != null)
-                    {
-                        if (_fc != null)
-                            ChoETLRecordHelper.ConvertMemberValue(rec, name, _fc, ref retValue, _culture);
-                        else
-                            retValue = ChoConvert.ConvertFrom(retValue, objectType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
-                    }
-                    ValidateORead(ref retValue);
+                    if (!RaiseAfterRecordFieldLoad(rec, crs.Index, name, retValue))
+                        return null;
                 }
-                else
+                catch (ChoParserException)
                 {
-                    if (retValue != null)
-                    {
-                        if (retValue is JObject && GetTypeConverters(_objType, name).IsNullOrEmpty())
-                            retValue = ((JObject)retValue).ToObject(objectType);
-
-                        if (_fc != null)
-                            ChoETLRecordHelper.ConvertMemberValue(rec, name, _fc, ref retValue, _culture);
-                        else
-                            retValue = ChoConvert.ConvertFrom(retValue, objectType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
-                    }
-
-                    ValidateORead(ref retValue);
+                    Reader.IsValid = false;
+                    throw;
                 }
-            }
-            else
-            {
-                if (retValue != null)
+                catch (ChoMissingRecordFieldException)
                 {
-                    if (retValue is JObject && GetTypeConverters(_objType, name).IsNullOrEmpty())
-                        retValue = ((JObject)retValue).ToObject(objectType);
+                    Reader.IsValid = false;
+                    if (Configuration.ThrowAndStopOnMissingField)
+                        throw;
+                }
+                catch (Exception ex)
+                {
+                    Reader.IsValid = false;
+                    ChoETLFramework.HandleException(ref ex);
 
-                    if (_fc != null)
-                        ChoETLRecordHelper.ConvertMemberValue(rec, name, _fc, ref retValue, _culture);
+                    if (_fc.ErrorMode == ChoErrorMode.ThrowAndStop)
+                        throw;
+
+                    if (_fc.ErrorMode == ChoErrorMode.IgnoreAndContinue)
+                    {
+                        ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring field...".FormatString(ex.Message));
+                    }
                     else
-                        retValue = ChoConvert.ConvertFrom(retValue, objectType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
+                    {
+                        if (!RaiseRecordFieldLoadError(rec, crs.Index, name, ref retValue, ex))
+                        {
+                            throw;
+                        }
+                        else
+                        {
+                        }
+                    }
                 }
 
-                ValidateORead(ref retValue);
+                return retValue; // == reader ? serializer.Deserialize(reader, objectType) : retValue;}
             }
-            if (!RaiseAfterRecordFieldLoad(rec, crs.Index, name, retValue))
-                return null;
-
-            return retValue; // == reader ? serializer.Deserialize(reader, objectType) : retValue;
         }
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
