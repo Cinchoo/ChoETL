@@ -48,7 +48,19 @@ namespace ChoETL
             Type mt = pd.PropertyType;
             if (mt.IsSimple())
                 return true;
+            else
+            {
+                bool disableImplcityOp = false;
+                if (ChoTypeDescriptor.GetTypeAttribute<ChoTurnOffImplicitOpsAttribute>(mt) != null)
+                    disableImplcityOp = ChoTypeDescriptor.GetTypeAttribute<ChoTurnOffImplicitOpsAttribute>(mt).Flag;
 
+                if (!disableImplcityOp)
+                {
+                    Type to = null;
+                    if (mt.CanCastToPrimitiveType(out to))
+                        return true;
+                }
+            }
             return false;
         }
 

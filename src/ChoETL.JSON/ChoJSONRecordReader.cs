@@ -1803,6 +1803,19 @@ namespace ChoETL
                         {
                             return ChoUtility.CastObjectTo(JObject["Value"], objectType);
                         }
+                        else if (jToken is JValue)
+                        {
+                            var value = jToken as JValue;
+
+                            try
+                            {
+                                return ChoConvert.ConvertTo(value.Value, objectType);
+                            }
+                            catch
+                            {
+                                return jToken.ToObject(objectType, jsonSerializer.Value);
+                            }
+                        }
                         else
                             return jToken.ToObject(objectType, jsonSerializer.Value);
                     }

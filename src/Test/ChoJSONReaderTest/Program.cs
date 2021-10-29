@@ -7085,14 +7085,112 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 .ErrorMode(ChoErrorMode.IgnoreAndContinue)
                 )
             {
-                r.Print();
+                var x = r.ToArray();
+                x.Print();
+
+                using (var w = new ChoJSONWriter(Console.Out)
+                        .WithFieldForType<Quote>(f => f.Date, valueConverter: o =>
+                        {
+                            return 1234;
+                        })
+                    )
+                    w.Write(x);
             }
         }
         
+        public class GraphItem
+        {
+            [JsonProperty("id")]
+            public int Id { get; set; }
+            [JsonExtensionData]
+            public Dictionary<string, JToken> Fields { get; set; }
+        }
+
+        static void ConvertAdditionalFieldToPOCO()
+        {
+            string json = @"[
+  {
+    ""id"": ""1001"",
+    ""fields"": {
+      ""Column"": ""true"",
+      ""Column2"": ""value2"",
+      ""Column3"": ""65""
+    },
+     ""name"": ""Tom""
+ },
+  {
+    ""id"": ""1002"",
+    ""fields"": {
+      ""Column"": ""true"",
+      ""Column2"": ""value2"",
+      ""Column3"": ""65""
+    }
+  }
+]
+";
+            using (var r = ChoJSONReader< GraphItem>.LoadText(json)
+                .UseJsonSerialization()
+                )
+            {
+                r.Print();
+            }
+
+        }
+        [ChoTurnOffImplicitOps(false)]
+        public struct SofT<T>
+        {
+            //[JsonProperty]
+            public T TValue { get; set; }
+
+            public static implicit operator SofT<T>(string jtoken)
+            {
+                return new SofT<T>()
+                {
+                    TValue = (T)Convert.ChangeType(jtoken, typeof(T))
+                };
+            }
+
+            public static implicit operator string(SofT<T> soft)
+            {
+                return soft.TValue?.ToString() ?? "";
+            }
+        }
+
+
+        [JsonObject(MemberSerialization.OptIn)]
+        public class Something
+        {
+            [JsonProperty]
+            public SofT<int> TestStructInt { get; set; }
+
+            [JsonProperty]
+            public SofT<decimal> TestStructDecimal { get; set; }
+        }
+
+        public static void ImplicitValueCoversion()
+        {
+            var json = "{ \"TestStructInt\" : \"12\", \"TestStructDecimal\" : \"3.45\"}";
+            using (var r = ChoJSONReader<Something>.LoadText(json))
+            {
+                using (var w = new ChoJSONWriter<Something>(Console.Out)
+                    .UseJsonSerialization()
+                    .UseDefaultContractResolver()
+                    .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                    )
+                    w.Write(r);
+
+                //r.Print();
+            }
+            return;
+            var modelDeserialised = JsonConvert.DeserializeObject<Something>(json);
+            var modelReserialised = JsonConvert.SerializeObject(modelDeserialised);
+            Console.WriteLine(modelReserialised);
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            MapToDifferentType();
+            ImplicitValueCoversion();
             //DeserializeNestedObjectOfList();
             return;
 

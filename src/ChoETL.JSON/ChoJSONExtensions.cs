@@ -85,6 +85,23 @@ namespace ChoETL
                     conv = ChoJSONConvertersCache.Get(convName);
             }
 
+            if (value != null)
+            {
+                if (!value.GetType().IsSimple())
+                {
+                    bool disableImplcityOp = false;
+                    if (ChoTypeDescriptor.GetTypeAttribute<ChoTurnOffImplicitOpsAttribute>(value.GetType()) != null)
+                        disableImplcityOp = ChoTypeDescriptor.GetTypeAttribute<ChoTurnOffImplicitOpsAttribute>(value.GetType()).Flag;
+
+                    if (!disableImplcityOp)
+                    {
+                        Type to = null;
+                        if (value.GetType().CanCastToPrimitiveType(out to))
+                            value = ChoConvert.ConvertTo(value, to);
+                    }
+                }
+            }
+
             JToken t = null;
             if (conv == null)
             {
