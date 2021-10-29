@@ -74,6 +74,14 @@ namespace ChoETL
                 return $"{type.Name}Converter";
         }
 
+        public  static string JTokenToString(this JToken jt)
+        {
+            if (jt != null && jt.Type == JTokenType.String)
+                return $"\"{jt.ToNString()}\"";
+            else
+                return jt.ToNString();
+        }
+
         public static JToken SerializeToJToken(this JsonSerializer serializer, object value)
         {
             Type vt = value != null ? value.GetType() : typeof(object);

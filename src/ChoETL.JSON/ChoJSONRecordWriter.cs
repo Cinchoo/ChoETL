@@ -422,7 +422,7 @@ namespace ChoETL
                                     //    Configuration.JsonSerializer.Serialize(jw, record);
                                     //}
                                     //recText = json.ToString(); // Configuration.JsonSerializer.Serialize(record, Configuration.Formatting, Configuration.JsonSerializerSettings);
-                                    recText = Configuration.JsonSerializer.SerializeToJToken(record).ToNString();
+                                    recText = Configuration.JsonSerializer.SerializeToJToken(record).JTokenToString();
                                     if (!SupportMultipleContent)
                                         sw.Write("{1}{0}", Indent(recText), EOLDelimiter);
                                     else
@@ -956,7 +956,7 @@ namespace ChoETL
         {
             bool lUseJSONSerialization = useJSONSerialization == null ? Configuration.UseJSONSerialization : useJSONSerialization.Value;
             if (true) //lUseJSONSerialization)
-                return Configuration.JsonSerializer.SerializeToJToken(target).ToNString();
+                return Configuration.JsonSerializer.SerializeToJToken(target).JTokenToString();
             //return JsonConvert.SerializeObject(target, Configuration.Formatting, Configuration.JsonSerializerSettings);
             else
             {
