@@ -7190,10 +7190,93 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             Console.WriteLine(modelReserialised);
         }
 
+        static void OutputEntireArrayToColumn()
+        {
+            string json = @"{
+  ""FirstName"": ""something"",
+  ""SomeProperties"": [
+    { ""lala"": ""a"" },
+    { ""lala"": ""b"" },
+  ]
+}";
+
+            using (var r = ChoJSONReader.LoadText(json)
+                .WithField("SomeProperties", customSerializer: o => o.ToNString().Replace(Environment.NewLine, String.Empty).Replace("  ", String.Empty))
+                )
+            {
+                using (var w = new ChoCSVWriter(Console.Out)
+                    .WithFirstLineHeader()
+                    )
+                {
+                    w.Write(r);
+                }
+
+            }
+        }
+
+        public class Settings
+        {
+            [JsonProperty("id")]
+            public string Id { get; set; }
+
+            [JsonProperty("type")]
+            public string Type { get; set; }
+
+            [JsonProperty("content")]
+            public ContentStructure Content { get; set; }
+        }
+
+
+        public struct ContentStructure
+        {
+            public Content ContentClass;
+            public string ContentString;
+
+            public static implicit operator ContentStructure(Content content) => new ContentStructure { ContentClass = content };
+            public static implicit operator ContentStructure(string @string) => new ContentStructure { ContentString = @string };
+            public static implicit operator Content(ContentStructure contentStruct) => contentStruct.ContentClass;
+        }
+
+
+        public class Content
+        {
+            [JsonProperty("id")]
+            public string Id { get; set; }
+
+            [JsonProperty("duration")]
+            public long Duration { get; set; }
+        }
+
+        static void DeserializeToContentStruct()
+        {
+            string json = @"{
+    ""id"": ""any_id"",
+    ""type"": ""any_type"",
+    ""content"": {
+        ""id"": ""any_id"",
+        ""duration"": 1000
+    }
+}";
+
+            using (var r = ChoJSONReader<Settings>.LoadText(json)
+                //.UseJsonSerialization()
+                //.UseDefaultContractResolver()
+                )
+            {
+                r.Print();
+                return;
+                using (var w = new ChoJSONWriter<Settings>(Console.Out)
+                    //.UseJsonSerialization()
+                    //.UseDefaultContractResolver()
+                    )
+                    w.Write(r);
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            ImplicitValueCoversion();
+            DeserializeToContentStruct();
             //DeserializeNestedObjectOfList();
             return;
 

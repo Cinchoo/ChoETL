@@ -106,6 +106,20 @@ namespace ChoETL
                         Type to = null;
                         if (value.GetType().CanCastToPrimitiveType(out to))
                             value = ChoConvert.ConvertTo(value, to);
+                        else if (value.GetType().GetImplicitTypeCastBackOps().Any())
+                        {
+                            var castTypes = value.GetType().GetImplicitTypeCastBackOps();
+
+                            foreach (var ct in castTypes)
+                            {
+                                try
+                                {
+                                    value = ChoConvert.ConvertTo(value, ct);
+                                    break;
+                                }
+                                catch { }
+                            }
+                        }
                     }
                 }
             }

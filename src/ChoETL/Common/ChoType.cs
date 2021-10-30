@@ -3166,5 +3166,23 @@
                 });
 
         }
+
+        public static IList<Type> GetImplicitTypeCastOps(this Type definedOn)
+        {
+            return definedOn.GetMethods(BindingFlags.Public | BindingFlags.Static)
+                .Where(mi => mi.Name == "op_Implicit")
+                .Select(mi => mi.GetParameters().FirstOrDefault())
+                .Where(pi => pi != null)
+                .Select(pi => pi.ParameterType).ToList();
+        }
+
+        public static IList<Type> GetImplicitTypeCastBackOps(this Type definedOn)
+        {
+            return definedOn.GetMethods(BindingFlags.Public | BindingFlags.Static)
+                .Where(mi => mi.Name == "op_Implicit")
+                .Select(mi => new { pi = mi.GetParameters().FirstOrDefault(), retParam = mi.ReturnType })
+                .Where(pair => pair.pi != null && pair.pi.ParameterType == definedOn)
+                .Select(pair => pair.retParam).ToList();
+        }
     }
 }

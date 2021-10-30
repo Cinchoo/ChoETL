@@ -1799,6 +1799,28 @@ namespace ChoETL
                     else
                     {
                         var JObject = jToken as JObject;
+
+                        bool disableImplcityOp = false;
+                        if (ChoTypeDescriptor.GetTypeAttribute<ChoTurnOffImplicitOpsAttribute>(objectType) != null)
+                            disableImplcityOp = ChoTypeDescriptor.GetTypeAttribute<ChoTurnOffImplicitOpsAttribute>(objectType).Flag;
+
+                        if (!disableImplcityOp)
+                        {
+                            if (jToken is JToken)
+                            {
+                                var castTypes = objectType.GetImplicitTypeCastOps();
+
+                                foreach (var ct in castTypes)
+                                {
+                                    try
+                                    {
+                                        return jToken.ToObject(ct);
+                                    }
+                                    catch { }
+                                }
+                            }
+                        }
+
                         if (JObject != null && JObject.Properties().Count() == 1 && JObject.ContainsKey("Value"))
                         {
                             return ChoUtility.CastObjectTo(JObject["Value"], objectType);

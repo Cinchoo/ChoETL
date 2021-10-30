@@ -59,6 +59,8 @@ namespace ChoETL
                     Type to = null;
                     if (mt.CanCastToPrimitiveType(out to))
                         return true;
+                    else if (mt.GetImplicitTypeCastOps().Any())
+                        return true;
                 }
             }
             return false;
@@ -504,6 +506,30 @@ namespace ChoETL
                         _objType = st.Type;
                     if (_fc != null && _fc.SourceType != null)
                         _objType = _fc.SourceType;
+                    else if (_objType.GetImplicitTypeCastOps().Any())
+                    {
+                        bool disableImplcityOp = false;
+                        if (ChoTypeDescriptor.GetTypeAttribute<ChoTurnOffImplicitOpsAttribute>(_objType) != null)
+                            disableImplcityOp = ChoTypeDescriptor.GetTypeAttribute<ChoTurnOffImplicitOpsAttribute>(_objType).Flag;
+
+                        if (!disableImplcityOp)
+                        {
+                            if (retValue is JToken)
+                            {
+                                var castTypes = _objType.GetImplicitTypeCastOps();
+
+                                foreach (var ct in castTypes)
+                                {
+                                    try
+                                    {
+                                        retValue = ((JToken)retValue).ToObject(ct);
+                                        break;
+                                    }
+                                    catch { }
+                                }
+                            }
+                        }
+                    }
 
                     if (!RaiseBeforeRecordFieldLoad(crs.Record, crs.Index, name, ref retValue))
                     {

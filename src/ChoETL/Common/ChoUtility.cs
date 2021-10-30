@@ -1177,7 +1177,7 @@ namespace ChoETL
             return target == null ? defaultValue == null ? String.Empty : defaultValue.ToString() : target.ToString();
         }
 
-        public static string Serialize<T>(this T obj)
+        public static string SerializeToText<T>(this T obj)
         {
             var serializer = new DataContractSerializer(obj.GetType());
             using (var writer = new StringWriter())
@@ -1187,7 +1187,7 @@ namespace ChoETL
                 return writer.ToString();
             }
         }
-        public static T Deserialize<T>(this string serialized)
+        public static T DeserializeFromText<T>(this string serialized)
         {
             var serializer = new DataContractSerializer(typeof(T));
             using (var reader = new StringReader(serialized))

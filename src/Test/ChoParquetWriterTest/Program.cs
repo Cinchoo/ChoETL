@@ -106,11 +106,16 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
 1,Tom,Dick,Harry";
 
             using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
-                //.Configure(c => c.AutoArrayDiscovery = true)
-                //.Configure(c => c.ArrayIndexSeparator = '/')
+                .Configure(c => c.AutoArrayDiscovery = true)
+                .Configure(c => c.ArrayIndexSeparator = '/')
                 )
             {
-                using (var w = new ChoParquetWriter("CSVArrayToParquet.parquet"))
+                using (var w = new ChoParquetWriter("CSVArrayToParquet.parquet")
+                    .Configure(c => c.UseNestedKeyFormat = false)
+                    .WithField("id")
+                    .WithField("name")
+                    .WithField("friends", fieldType: typeof(byte[]), valueConverter: o => o.Serialize())
+                    )
                 {
                     w.Write(r);
                 }
@@ -341,7 +346,7 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
 
         static void Main(string[] args)
         {
-            JSON2Parquet1();
+            CSVArrayToParquet();
             return;
 
             JsonToParquet52();
