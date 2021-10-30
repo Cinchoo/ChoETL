@@ -3171,17 +3171,27 @@
         {
             return definedOn.GetMethods(BindingFlags.Public | BindingFlags.Static)
                 .Where(mi => mi.Name == "op_Implicit")
-                .Select(mi => mi.GetParameters().FirstOrDefault())
-                .Where(pi => pi != null)
-                .Select(pi => pi.ParameterType).ToList();
+                .Select(mi =>
+                {
+                    var ordAttr = mi.GetCustomAttributes().OfType<ChoOrderedAttribute>().FirstOrDefault();
+                    return new { order = ordAttr != null ? ordAttr.Order : 0, pi = mi.GetParameters().FirstOrDefault() };
+                })
+                .Where(pair => pair.pi != null)
+                .OrderBy(pair => pair.order)
+                .Select(pair => pair.pi.ParameterType).ToList();
         }
 
         public static IList<Type> GetImplicitTypeCastBackOps(this Type definedOn)
         {
             return definedOn.GetMethods(BindingFlags.Public | BindingFlags.Static)
                 .Where(mi => mi.Name == "op_Implicit")
-                .Select(mi => new { pi = mi.GetParameters().FirstOrDefault(), retParam = mi.ReturnType })
+                .Select(mi =>
+                {
+                    var ordAttr = mi.GetCustomAttributes().OfType<ChoOrderedAttribute>().FirstOrDefault();
+                    return new { order = ordAttr != null ? ordAttr.Order : 0, pi = mi.GetParameters().FirstOrDefault(), retParam = mi.ReturnType };
+                })
                 .Where(pair => pair.pi != null && pair.pi.ParameterType == definedOn)
+                .OrderBy(pair => pair.order)
                 .Select(pair => pair.retParam).ToList();
         }
     }
