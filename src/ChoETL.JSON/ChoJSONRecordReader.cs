@@ -530,7 +530,7 @@ namespace ChoETL
                         Configuration.Validate(pair);
                     var dict = Configuration.JSONRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType);
                     //if (Configuration.MaxScanRows == 0)
-                        RaiseMembersDiscovered(dict);
+                    RaiseMembersDiscovered(dict);
                     Configuration.UpdateFieldTypesIfAny(dict);
                     _configCheckDone = true;
                 }
@@ -1218,7 +1218,7 @@ namespace ChoETL
                                             list.Add(fv);
                                         }
                                         catch (Exception ex)
-                                        { 
+                                        {
                                             if (Configuration.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                                             {
                                                 ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring item in the field...".FormatString(ex.Message));
@@ -1584,7 +1584,7 @@ namespace ChoETL
                 //    fieldValue = ((IList)fieldValue).Cast(fieldConfig.ItemConverter);
                 //}
                 //else
-                    fieldValue = fieldConfig.ItemConverter(fieldValue);
+                fieldValue = fieldConfig.ItemConverter(fieldValue);
             }
             else
             {
@@ -1684,7 +1684,7 @@ namespace ChoETL
 
         private object ToObject(JToken jToken, Type type, bool? useJSONSerialization = null, ChoJSONRecordFieldConfiguration config = null)
         {
-            if (type == null || type.IsDynamicType())
+            if (type == null || (type.IsDynamicType() && useJSONSerialization == null)) 
             {
                 switch (jToken.Type)
                 {
@@ -1866,7 +1866,7 @@ namespace ChoETL
                 {
                     throw outerEx;
                 }
-//                throw;
+                //                throw;
             }
         }
 

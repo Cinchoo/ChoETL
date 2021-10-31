@@ -7273,10 +7273,99 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
+        public class Menu
+
+        {
+            public string Header { get; set; }
+            public Dictionary<string, object>[] Items { get; set; }
+        }
+        public class MenuItem
+        {
+            public string Name { get; set; }
+            public string Label { get; set; }
+        }
+
+        static void LoadKeyValueToItem()
+        {
+            string json = @"{
+  ""menu"": {
+    ""header"": ""SVG Viewer"",
+    ""items"": [
+      { ""0"": ""Open"" },
+      {
+        ""1"": ""OpenNew"",
+        ""label"": ""Open New""
+      },
+      null,
+      {
+        ""2"": ""ZoomIn"",
+        ""label"": ""Zoom In""
+      },
+      {
+        ""3"": ""ZoomOut"",
+        ""label"": ""Zoom Out""
+      },
+      {
+        ""4"": ""OriginalView"",
+        ""label"": ""Original View""
+      },
+      null,
+      { ""5"": ""Quality"" },
+      { ""6"": ""Pause"" },
+      { ""7"": ""Mute"" },
+      null,
+      {
+        ""8"": ""Find"",
+        ""label"": ""Find...""
+      },
+      {
+        ""9"": ""FindAgain"",
+        ""label"": ""Find Again""
+      },
+      { ""10"": ""Copy"" },
+      {
+        ""11"": ""CopyAgain"",
+        ""label"": ""Copy Again""
+      },
+      {
+        ""12"": ""CopySVG"",
+        ""label"": ""Copy SVG""
+      },
+      {
+        ""13"": ""ViewSVG"",
+        ""label"": ""View SVG""
+      },
+      {
+        ""14"": ""ViewSource"",
+        ""label"": ""View Source""
+      },
+      {
+        ""15"": ""SaveAs"",
+        ""label"": ""Save As""
+      },
+      null,
+      { ""16"": ""Help"" },
+      {
+        ""17"": ""About"",
+        ""label"": ""About Adobe CVG Viewer...""
+      }
+    ]
+  }
+}";
+
+            using (var r = ChoJSONReader<Menu>.LoadText(json)
+                .WithJSONPath("$..menu")
+                .WithField(f => f.Items, mapper: m => m.Value.UseJSONSerialization = true)
+                )
+            {
+                r.Print();
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            MapToDifferentType();
+            LoadKeyValueToItem();
             //DeserializeNestedObjectOfList();
             return;
 

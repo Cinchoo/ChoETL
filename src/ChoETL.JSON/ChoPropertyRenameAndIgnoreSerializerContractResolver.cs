@@ -71,6 +71,7 @@ namespace ChoETL
             var property = base.CreateProperty(member, memberSerialization);
             var propertyFullName = member.GetFullName();
             var propertyName = member.Name;
+            
             if (IsIgnored(property.DeclaringType, property.PropertyName, property.UnderlyingName, propertyFullName))
             {
                 property.ShouldSerialize = i => false;
