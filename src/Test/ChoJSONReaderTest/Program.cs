@@ -7276,7 +7276,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            DeserializeToContentStruct();
+            MapToDifferentType();
             //DeserializeNestedObjectOfList();
             return;
 
