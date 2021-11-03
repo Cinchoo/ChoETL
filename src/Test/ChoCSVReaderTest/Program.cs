@@ -5254,10 +5254,72 @@ Mrs,24.3,N,100247,CUXXX,email@gmail.com,User,Test,Test User,17/09/1957,64,DAILIE
             }
         }
 
+        static void MergeDifferentCSV()
+        {
+            string csv1 = @"col1, col2, col3
+val1, val2, val3
+val11, val21, val31";
+
+            string csv2 = @"col1, col3
+val4, val5
+val41, val51";
+
+            string csv3 = @"col1, col4
+val6, val7
+val61, val71";
+
+
+            ChoCSVRecordConfiguration config = null;
+            List<object> items = new List<object>();
+            using (var r1 = ChoCSVReader.LoadText(csv1).WithFirstLineHeader())
+            {
+                using (var r2 = ChoCSVReader.LoadText(csv2).WithFirstLineHeader())
+                {
+                    using (var r3 = ChoCSVReader.LoadText(csv3).WithFirstLineHeader())
+                    {
+                        items.Add(r1.First());
+                        items.Add(r2.First());
+                        items.Add(r3.First());
+                    }
+                }
+            }
+
+            StringBuilder csv = new StringBuilder();
+            using (var w = new ChoCSVWriter(csv)
+               .WithFirstLineHeader()
+               .WithMaxScanRows(5)
+               .ThrowAndStopOnMissingField(false)
+              )
+            {
+                w.Write(items);
+
+                //Capture configuration for later use to merge CSV files
+                config = w.Configuration;
+            }
+
+            using (var r1 = ChoCSVReader.LoadText(csv1).WithFirstLineHeader())
+            {
+                using (var r2 = ChoCSVReader.LoadText(csv2).WithFirstLineHeader())
+                {
+                    using (var r3 = ChoCSVReader.LoadText(csv3).WithFirstLineHeader())
+                    {
+
+                        using (var w = new ChoCSVWriter(Console.Out, config)
+                               .WithFirstLineHeader()
+                              )
+                        {
+                            w.Write(Enumerable.Concat(r1, r2).Concat(r3));
+                        }
+                    }
+                }
+            }
+
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            ValidateSample();
+            MergeDifferentCSV();
             return;
 
             PositionNeutralCSVLoad();

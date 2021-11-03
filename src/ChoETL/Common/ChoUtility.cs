@@ -984,57 +984,108 @@ namespace ChoETL
             return (T)Enum.Parse(typeof(T), value);
         }
 
-        public static T GetValueFor<T>(this object array, string key, int? index = null, T defaultValue = default(T))
+        public static object GetValueFor(this object array, string key, int? index = null)
+        {
+            return GetValueFor<object>(array, key, index);
+        }
+
+        public static T GetValueFor<T>(this object array, object key, int? index = null, T defaultValue = default(T))
         {
             Type type = typeof(T).GetUnderlyingType();
-            if (array is IDictionary<string, string>)
+            if (array is IDictionary)
             {
-                IDictionary<string, string> dict = array as IDictionary<string, string>;
-                if (dict.ContainsKey(key))
+                object value = null;
+                IDictionary dict = array as IDictionary;
+
+                if (index != null)
                 {
-                    var value = dict[key].ToNString();
+                    var lkey = dict.Keys.GetValueAt(index.Value);
+                    if (lkey != null)
+                        key = lkey;
+                }
+
+                if (key != null && dict.Contains(key))
+                {
+                    value = dict[key];
+                }
+
+                if (value != null)
+                {
                     try
                     {
-                        if (type.IsEnum)
-                        {
-                            if (Enum.IsDefined(type, value))
-                                return (T)Enum.Parse(type, value);
-                            else
-                                return defaultValue;
-                        }
-                        return (T)Convert.ChangeType(value, type);
+                        return ParseValue(type, value, defaultValue);
                     }
                     catch
                     {
                         return defaultValue;
                     }
-
                 }
             }
             else if (index != null)
             {
-                return GetValueAt<T>(array, index.Value, defaultValue);
+                return GetValueAt(array, index.Value, defaultValue);
             }
+
             return defaultValue;
         }
 
+        private static T ParseValue<T>(Type type, object value, T defaultValue)
+        {
+            if (type.IsEnum)
+            {
+                if (Enum.IsDefined(type, value.ToString()))
+                    return (T)Enum.Parse(type, value.ToString());
+                else
+                    return defaultValue;
+            }
+            return (T)Convert.ChangeType(value, type);
+        }
+
+        public static object GetValueAt(this object array, int index)
+        {
+            return GetValueAt<object>(array, index);
+        }
         public static T GetValueAt<T>(this object array, int index, T defaultValue = default(T))
         {
             Type type = typeof(T).GetUnderlyingType();
-            if (array is IList)
+            if (array is IDictionary)
+            {
+                return GetValueFor(array, null, index, defaultValue);
+            }
+            else if (array is IList)
             {
                 if (index < ((IList)array).Count)
                 {
                     try
                     {
-                        if (type.IsEnum)
+                        return ParseValue(type, ((IList)array)[index], defaultValue);
+                    }
+                    catch
+                    {
+                        return defaultValue;
+                    }
+                }
+                else
+                    return defaultValue;
+            }
+            else if (array is ICollection)
+            {
+                var count = ((ICollection)array).Count;
+                if (index < count)
+                {
+                    try
+                    {
+                        int count1 = 0;
+                        object val = null;
+                        foreach (var rec in (ICollection)array)
                         {
-                            if (Enum.IsDefined(type, ((IList)array)[index].ToNString()))
-                                return (T)Enum.Parse(type, ((IList)array)[index].ToNString());
-                            else
-                                return defaultValue;
+                            val = rec;
+                            if (count1 == index)
+                                break;
+                            count1++;
                         }
-                        return (T)Convert.ChangeType(((IList)array)[index], type);
+
+                        return ParseValue(type, val, defaultValue);
                     }
                     catch
                     {
@@ -1149,6 +1200,15 @@ namespace ChoETL
                 yield break;
 
             yield return source;
+        }
+
+        public static IEnumerable<object> ConvertToEnumerable(params object[] source)
+        {
+            if (source == null)
+                yield break;
+
+            foreach (var src in source)
+                yield return src;
         }
 
         public static IEnumerable<T> AsTypedEnumerable<T>(this IEnumerable source, T firstItem = default(T))

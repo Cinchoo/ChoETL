@@ -7277,7 +7277,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 
         {
             public string Header { get; set; }
-            public Dictionary<string, object>[] Items { get; set; }
+            public MenuItem[] Items { get; set; }
         }
         public class MenuItem
         {
@@ -7355,7 +7355,34 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 
             using (var r = ChoJSONReader<Menu>.LoadText(json)
                 .WithJSONPath("$..menu")
-                .WithField(f => f.Items, mapper: m => m.Value.UseJSONSerialization = true)
+                .Setup(s => s.BeforeRecordFieldLoad += (o, e) =>
+                {
+                    if (e.PropertyName == "Items")
+                    {
+                        JArray src = e.Source.GetValueAt<JArray>(0) as JArray;
+                        JArray ret = new JArray();
+                        if (src != null)
+                        {
+                            foreach (var jo in src.OfType<JObject>().Select(o1 => o1.ToObject<Dictionary<string, string>>()))
+                            {
+                                ret.Add(JToken.FromObject(new { Name = jo.GetValueAt<string>(0), Label = jo.GetValueAt<string>(1) }));
+                            }
+                        }
+                        e.Source = new JToken[] { ret };
+                    }
+                })
+                //.WithFieldForType<MenuItem>(f => f.Name, customSerializer: o =>
+                //{
+                //    JObject obj = o as JObject;
+                //    if (obj != null)
+                //    {
+                //        IDictionary<string, object> dict = obj.ToObject<IDictionary<string, object>>();
+                //        if (dict != null && dict.Count > 0)
+                //            return dict.First().Value;
+                //    }
+                //    return "";
+                //}
+                //)
                 )
             {
                 r.Print();
