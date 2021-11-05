@@ -207,6 +207,40 @@ namespace ChoETL
                 || ValueConverter != null;
         }
 
+        public Type GetSourceTypeFromConvertersIfAny()
+        {
+            Type srcType = null;
+            if (PropConverters != null)
+            {
+                foreach (var c in PropConverters.Where(c1 => c1 != null))
+                {
+                    var attr = ChoType.GetCustomAttribute<ChoSourceTypeAttribute>(c.GetType(), true);
+                    if (attr != null)
+                    {
+                        srcType = attr.Type;
+                        if (srcType != null)
+                            return srcType;
+                    }
+                }
+            }
+
+            if (Converters != null)
+            {
+                foreach (var c in Converters.Where(c1 => c1 != null))
+                {
+                    var attr = c.GetType().GetCustomAttribute(typeof(ChoSourceTypeAttribute)) as ChoSourceTypeAttribute;
+                    if (attr != null)
+                    {
+                        srcType = attr.Type;
+                        if (srcType != null)
+                            return srcType;
+                    }
+                }
+            }
+
+            return null;
+        }
+
 #if !NETSTANDARD2_0
         public void AddConverter(IValueConverter converter)
         {

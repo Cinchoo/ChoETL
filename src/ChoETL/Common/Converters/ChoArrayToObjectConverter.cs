@@ -13,6 +13,7 @@ using System.Windows.Data;
 namespace ChoETL
 {
     //[ChoTypeConverter(typeof(Array))]
+    [ChoNativeType(typeof(string[]))]
 #if !NETSTANDARD2_0
     public class ChoArrayToObjectConverter : IValueConverter //, IChoCollectionConverter
 #else
@@ -30,7 +31,7 @@ namespace ChoETL
                 result.Add(Deserialize(value, itemType, parameter, culture));
             }
 
-            return result.First();
+            return result.FirstOrDefault();
         }
 
         protected virtual object Deserialize(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)

@@ -16,4 +16,11 @@ namespace ChoETL
             Type = type;
         }
     }
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Class)]
+    public class ChoNativeTypeAttribute : ChoSourceTypeAttribute
+    {
+        public ChoNativeTypeAttribute(Type type) : base(type)
+        {
+        }
+    }
 }

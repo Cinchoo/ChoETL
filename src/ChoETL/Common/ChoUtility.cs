@@ -1699,20 +1699,20 @@ namespace ChoETL
                     else if (targetType == typeof(Type))
                     {
                         if (@this is string)
-                            return (T)Convert.ChangeType(Type.GetType(@this as string), typeof(T));
+                            return (T)ChoConvert.ChangeType(Type.GetType(@this as string), typeof(T));
                         else
-                            return (T)Convert.ChangeType(@this, typeof(T));
+                            return (T)ChoConvert.ChangeType(@this, typeof(T));
                     }
                     else if (targetType == typeof(bool))
                     {
                         bool bResult;
                         if (ChoBoolean.TryParse(@this.ToNString(), out bResult))
-                            return (T)Convert.ChangeType(bResult, typeof(T));
+                            return (T)ChoConvert.ChangeType(bResult, typeof(T));
 
-                        return (T)Convert.ChangeType(@this, typeof(T));
+                        return (T)ChoConvert.ChangeType(@this, typeof(T));
                     }
                     else
-                        return (T)Convert.ChangeType(@this, typeof(T));
+                        return (T)ChoConvert.ChangeType(@this, typeof(T));
                 }
                 catch
                 {

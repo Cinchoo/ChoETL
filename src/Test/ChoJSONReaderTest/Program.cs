@@ -4234,7 +4234,6 @@ K,L,M,N,O,P,Q,R,S,T";
         public class DbObject
         {
             [ChoJSONPath("data.rows[*]")]
-            [ChoSourceType(typeof(string[]))]
             [ChoTypeConverter(typeof(ChoArrayToObjectConverter))]
             public DbRowObject[] DbRows { get; set; }
             [ChoJSONPath("database_id")]
@@ -4270,12 +4269,15 @@ K,L,M,N,O,P,Q,R,S,T";
 
             using (var r = ChoJSONReader<DbObject>.LoadText(json)
                 //.WithField(f => f.DbRows, jsonPath: "data.rows[*]")
-                //.WithField(f => f.DbRows, m => m.Configure(c => c.AddConverter(ChoArrayToObjectConverter.Instance)))
+                //.WithField(f => f.DbRows, m => m.Configure(c => c.AddConverter(ChoArrayToObjectConverter.Instance)).Configure(c => c.JSONPath = "data.rows[*]"))
                 )
             {
                 //foreach (var rec in r)
                 //    Console.WriteLine(rec.Dump());
-                using (var w = new ChoJSONWriter(Console.Out))
+                //return;
+                using (var w = new ChoJSONWriter<DbObject>(Console.Out)
+                    //.WithField(f => f.DbRows, m => m.Configure(c => c.AddConverter(ChoArrayToObjectConverter.Instance)))
+                    )
                     w.Write(r);
             }
         }
