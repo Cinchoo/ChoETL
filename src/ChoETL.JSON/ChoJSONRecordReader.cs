@@ -1126,7 +1126,7 @@ namespace ChoETL
                                 fieldValue = DeserializeNode((JToken)fieldValue, typeof(string) /*fieldConfig.FieldType*/, fieldConfig);
                             }
                         }
-                        else if (!fieldConfig.HasConverters())
+                        else if (fieldConfig.SourceType != null || !fieldConfig.HasConverters())
                         {
                             List<object> list = new List<object>();
                             Type itemType = fieldConfig.FieldType.GetUnderlyingType();

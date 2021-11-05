@@ -4273,8 +4273,10 @@ K,L,M,N,O,P,Q,R,S,T";
                 //.WithField(f => f.DbRows, m => m.Configure(c => c.AddConverter(ChoArrayToObjectConverter.Instance)))
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.Dump());
+                using (var w = new ChoJSONWriter(Console.Out))
+                    w.Write(r);
             }
         }
 
@@ -7392,7 +7394,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            LoadKeyValueToItem();
+            DeserializeInnerArrayToObjects();
             //DeserializeNestedObjectOfList();
             return;
 

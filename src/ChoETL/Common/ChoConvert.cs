@@ -129,21 +129,49 @@ namespace ChoETL
                     object objArray = null;
                     for (int index = 0; index < converters.Length; ++index)
                     {
-                        object obj2 = converters[index];
+                        object conv = converters[index];
                         if (parameters != null && parameters.Length > 0)
                             objArray = parameters[index];
-                        if (obj2 is TypeConverter)
+
+                        if (value is IList && !typeof(IChoCollectionConverter).IsAssignableFrom(conv.GetType()))
                         {
-                            TypeConverter typeConverter = obj2 as TypeConverter;
-                            if (typeConverter.CanConvertFrom(type))
-                                value = typeConverter.ConvertFrom((ITypeDescriptorContext)null, culture, value);
-                        }
+                            List<object> retValue = new List<object>();
+                            object lVal = null;
+                            foreach (var item in (IList)value)
+                            {
+                                if (conv is TypeConverter)
+                                {
+                                    TypeConverter typeConverter = conv as TypeConverter;
+                                    if (typeConverter.CanConvertFrom(type))
+                                        lVal = typeConverter.ConvertFrom((ITypeDescriptorContext)null, culture, item);
+                                }
 #if !NETSTANDARD2_0
-                        else if (obj2 is IValueConverter)
-                            value = ((IValueConverter)obj2).Convert(value, targetType, (object)objArray, culture);
+                                else if (conv is IValueConverter)
+                                    lVal = ((IValueConverter)conv).Convert(item, targetType, (object)objArray, culture);
 #endif
-                        else if (obj2 is IChoValueConverter)
-                            value = ((IChoValueConverter)obj2).Convert(value, targetType, (object)objArray, culture);
+                                else if (conv is IChoValueConverter)
+                                    lVal = ((IChoValueConverter)conv).Convert(item, targetType, (object)objArray, culture);
+
+                                retValue.Add(lVal);
+                            }
+
+                            value = retValue.ToArray();
+                        }
+                        else
+                        {
+                            if (conv is TypeConverter)
+                            {
+                                TypeConverter typeConverter = conv as TypeConverter;
+                                if (typeConverter.CanConvertFrom(type))
+                                    value = typeConverter.ConvertFrom((ITypeDescriptorContext)null, culture, value);
+                            }
+#if !NETSTANDARD2_0
+                            else if (conv is IValueConverter)
+                                value = ((IValueConverter)conv).Convert(value, targetType, (object)objArray, culture);
+#endif
+                            else if (conv is IChoValueConverter)
+                                value = ((IChoValueConverter)conv).Convert(value, targetType, (object)objArray, culture);
+                        }
                     }
                     //if (value != obj1)
                     //    return value;
@@ -391,21 +419,51 @@ namespace ChoETL
                 {
                     for (int index = 0; index < converters.Length; ++index)
                     {
-                        object obj2 = converters[index];
+                        object conv = converters[index];
                         if (parameters != null && parameters.Length > 0)
                             objArray = parameters[index];
-                        if (obj2 is TypeConverter)
+
+
+                        if (value is IList && !typeof(IChoCollectionConverter).IsAssignableFrom(conv.GetType()))
                         {
-                            TypeConverter typeConverter = obj2 as TypeConverter;
-                            if (typeConverter.CanConvertTo(targetType))
-                                value = typeConverter.ConvertTo((ITypeDescriptorContext)null, culture, value, targetType);
-                        }
+                            List<object> retValue = new List<object>();
+                            object lVal = null;
+                            foreach (var item in (IList)value)
+                            {
+                                if (conv is TypeConverter)
+                                {
+                                    TypeConverter typeConverter = conv as TypeConverter;
+                                    if (typeConverter.CanConvertFrom(type))
+                                        lVal = typeConverter.ConvertTo((ITypeDescriptorContext)null, culture, item, targetType.GetItemType());
+                                }
 #if !NETSTANDARD2_0
-                        else if (obj2 is IValueConverter)
-                            value = ((IValueConverter)obj2).ConvertBack(value, targetType, (object)objArray, culture);
+                                else if (conv is IValueConverter)
+                                    lVal = ((IValueConverter)conv).ConvertBack(item, targetType, (object)objArray, culture);
 #endif
-                        else if (obj2 is IChoValueConverter)
-                            value = ((IChoValueConverter)obj2).ConvertBack(value, targetType, (object)objArray, culture);
+                                else if (conv is IChoValueConverter)
+                                    lVal = ((IChoValueConverter)conv).ConvertBack(item, targetType, (object)objArray, culture);
+
+                                retValue.Add(lVal);
+                            }
+
+                            value = retValue.ToArray();
+                        }
+                        else
+                        {
+                            if (conv is TypeConverter)
+                            {
+                                TypeConverter typeConverter = conv as TypeConverter;
+                                if (typeConverter.CanConvertFrom(type))
+                                    value = typeConverter.ConvertTo((ITypeDescriptorContext)null, culture, value, targetType);
+                            }
+#if !NETSTANDARD2_0
+                            else if (conv is IValueConverter)
+                                value = ((IValueConverter)conv).ConvertBack(value, targetType, (object)objArray, culture);
+#endif
+                            else if (conv is IChoValueConverter)
+                                value = ((IChoValueConverter)conv).ConvertBack(value, targetType, (object)objArray, culture);
+                        }
+
                     }
                     if (obj1 != value)
                         return value;

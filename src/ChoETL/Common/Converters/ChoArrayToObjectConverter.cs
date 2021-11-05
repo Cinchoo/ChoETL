@@ -14,9 +14,9 @@ namespace ChoETL
 {
     //[ChoTypeConverter(typeof(Array))]
 #if !NETSTANDARD2_0
-    public class ChoArrayToObjectConverter : IValueConverter, IChoCollectionConverter
+    public class ChoArrayToObjectConverter : IValueConverter //, IChoCollectionConverter
 #else
-    public class ChoArrayToObjectConverter : IChoValueConverter, IChoCollectionConverter
+    public class ChoArrayToObjectConverter : IChoValueConverter //, IChoCollectionConverter
 #endif
     {
         public static readonly ChoArrayToObjectConverter Instance = new ChoArrayToObjectConverter();
