@@ -1032,9 +1032,26 @@ namespace ChoETL
         {
         }
 
+        public static IEnumerable<dynamic> DeserializeText(string inputText, bool firstLineHeader)
+        {
+            if (firstLineHeader)
+                return DeserializeText(inputText, null, new ChoCSVRecordConfiguration().WithFirstLineHeader());
+            else
+                return DeserializeText(inputText);
+        }
+
         public static IEnumerable<dynamic> DeserializeText(string inputText, Encoding encoding = null, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
             return new ChoCSVReader<dynamic>(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.ToArray();
+        }
+
+        public static IEnumerable<T> DeserializeText<T>(string inputText, bool firstLineHeader)
+            where T : class, new()
+        {
+            if (firstLineHeader)
+                return DeserializeText<T>(inputText, null, new ChoCSVRecordConfiguration().WithFirstLineHeader());
+            else
+                return DeserializeText<T>(inputText);
         }
 
         public static IEnumerable<T> DeserializeText<T>(string inputText, Encoding encoding = null, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
@@ -1043,9 +1060,26 @@ namespace ChoETL
             return new ChoCSVReader<T>(inputText.ToStream(encoding), configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.ToArray();
         }
 
+        public static IEnumerable<dynamic> Deserialize(string filePath, bool firstLineHeader)
+        {
+            if (firstLineHeader)
+                return Deserialize(filePath, new ChoCSVRecordConfiguration().WithFirstLineHeader());
+            else
+                return Deserialize(filePath);
+        }
+
         public static IEnumerable<dynamic> Deserialize(string filePath, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
             return new ChoCSVReader<dynamic>(filePath, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.ToArray();
+        }
+
+        public static IEnumerable<T> Deserialize<T>(string filePath, bool firstLineHeader)
+            where T : class, new()
+        {
+            if (firstLineHeader)
+                return Deserialize<T>(filePath, new ChoCSVRecordConfiguration().WithFirstLineHeader());
+            else
+                return Deserialize<T>(filePath);
         }
 
         public static IEnumerable<T> Deserialize<T>(string filePath, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
@@ -1054,9 +1088,26 @@ namespace ChoETL
             return new ChoCSVReader<T>(filePath, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.ToArray();
         }
 
+        public static IEnumerable<dynamic> Deserialize(TextReader textReader, bool firstLineHeader)
+        {
+            if (firstLineHeader)
+                return Deserialize(textReader, new ChoCSVRecordConfiguration().WithFirstLineHeader());
+            else
+                return Deserialize(textReader);
+        }
+
         public static IEnumerable<dynamic> Deserialize(TextReader textReader, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
             return new ChoCSVReader<dynamic>(textReader, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.ToArray();
+        }
+
+        public static IEnumerable<T> Deserialize<T>(TextReader textReader, bool firstLineHeader)
+            where T : class, new()
+        {
+            if (firstLineHeader)
+                return Deserialize<T>(textReader, new ChoCSVRecordConfiguration().WithFirstLineHeader());
+            else
+                return Deserialize<T>(textReader);
         }
 
         public static IEnumerable<T> Deserialize<T>(TextReader textReader, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
@@ -1065,9 +1116,26 @@ namespace ChoETL
             return new ChoCSVReader<T>(textReader, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.ToArray();
         }
 
+        public static IEnumerable<dynamic> Deserialize(Stream inStream, bool firstLineHeader)
+        {
+            if (firstLineHeader)
+                return Deserialize(inStream, new ChoCSVRecordConfiguration().WithFirstLineHeader());
+            else
+                return Deserialize(inStream);
+        }
+
         public static IEnumerable<dynamic> Deserialize(Stream inStream, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
         {
             return new ChoCSVReader<dynamic>(inStream, configuration) { TraceSwitch = traceSwitch == null ? ChoETLFramework.TraceSwitch : traceSwitch }.ToArray();
+        }
+
+        public static IEnumerable<T> Deserialize<T>(Stream inStream, bool firstLineHeader)
+            where T : class, new()
+        {
+            if (firstLineHeader)
+                return Deserialize<T>(inStream, new ChoCSVRecordConfiguration().WithFirstLineHeader());
+            else
+                return Deserialize<T>(inStream);
         }
 
         public static IEnumerable<T> Deserialize<T>(Stream inStream, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)

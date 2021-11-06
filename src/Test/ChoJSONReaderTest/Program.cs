@@ -4212,8 +4212,10 @@ K,L,M,N,O,P,Q,R,S,T";
             using (var r = ChoJSONReader<Item1>.LoadText(json)
                 )
             {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
+                //foreach (var rec in r)
+                //    Console.WriteLine(rec.Dump());
+                using (var w = new ChoJSONWriter<Item1>(Console.Out))
+                    w.Write(r);
             }
         }
 
@@ -4268,7 +4270,7 @@ K,L,M,N,O,P,Q,R,S,T";
 }";
 
             using (var r = ChoJSONReader<DbObject>.LoadText(json)
-                //.WithField(f => f.DbRows, jsonPath: "data.rows[*]")
+                //.WithField(f => f.DbRows, m => m.Configure(c  => c.UseJSONSerialization = true))
                 //.WithField(f => f.DbRows, m => m.Configure(c => c.AddConverter(ChoArrayToObjectConverter.Instance)).Configure(c => c.JSONPath = "data.rows[*]"))
                 )
             {
@@ -7396,7 +7398,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            DeserializeInnerArrayToObjects();
+            MapToDifferentType();
             //DeserializeNestedObjectOfList();
             return;
 
