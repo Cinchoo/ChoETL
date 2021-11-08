@@ -144,6 +144,11 @@ namespace ChoETL
             get;
             set;
         }
+        public string Name
+        {
+            get { return DynamicObjectName; }
+            set { DynamicObjectName = value; }
+        }
         [ChoIgnoreMember]
         public int PollIntervalInSec
         {
@@ -1194,6 +1199,11 @@ namespace ChoETL
         public void Print(TextWriter writer = null)
         {
             ChoUtility.Print(this, writer);
+        }
+
+        public void PrintAsJson(TextWriter writer = null)
+        {
+            ChoUtility.PrintAsJson(this, writer);
         }
 
         public XmlSchema GetSchema()

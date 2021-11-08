@@ -801,7 +801,7 @@ namespace ChoETL
                                             || fieldConfig.FieldType == typeof(object)
                                             || fieldConfig.FieldType.GetItemType() == typeof(object))
                                         {
-                                            if (fXElements.Length == 1)
+                                            if ( fXElements.Length == 1)
                                             {
                                                 if (fieldConfig.ItemConverter != null)
                                                     fieldValue = fieldConfig.ItemConverter(fXElements[0]);

@@ -2393,10 +2393,13 @@ namespace ChoETL
             }
         }
 
-        //public static void Print(this object target, OutputFormat format,  TextWriter writer = null)
-        //{
-
-        //}
+        public static void PrintAsJson(this object target, TextWriter writer = null)
+        {
+            if (writer != null)
+                writer.WriteLine(DumpAsJson(target));
+            else
+                Console.WriteLine(DumpAsJson(target));
+        }
 
         public static void Print(this object target, TextWriter writer = null)
         {

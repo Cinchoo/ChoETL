@@ -20,6 +20,8 @@ namespace ChoETL
 
     public static class ChoString
     {
+        public static Func<string, bool?> IsTextPlural = null;
+
         public static string IdentifierSeparator 
         {
             get;
@@ -411,6 +413,14 @@ namespace ChoETL
         public static bool IsPlural(this string text, List<string> invariants)
         {
             if (invariants != null && invariants.Contains(text)) return true;
+
+            var isTextPlural = IsTextPlural;
+            if (isTextPlural != null)
+            {
+                var result = isTextPlural(text);
+                if (result != null)
+                    return result.Value;
+            }
 
             if (_pluralRegex1.IsMatch(text)
                 || _pluralRegex2.IsMatch(text)

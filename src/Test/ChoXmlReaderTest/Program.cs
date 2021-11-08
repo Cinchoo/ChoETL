@@ -433,7 +433,70 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            Json2XMLWithNS();
+            ReadSubNode();
+        }
+
+        static void ReadSubNode()
+        {
+            string xml1 = @"<?xml version=""1.0"" encoding=""utf-8""?>
+  <response>
+   <error>
+    <errorcode>1002</errorcode>
+    <errortext>there is already an open session</errortext>
+   </error>
+</response>";
+
+            string xml3 = @"<response>
+	<returncode></returncode>
+	<data>
+		<vessels>
+			<vessel>
+				<id>1</id>
+				<name>v1</name>
+			</vessel>
+		</vessels>
+	</data>
+</response>";
+            string xml4 = @"<response>
+	<returncode></returncode>
+	<data>
+		<vessels>
+			<vessel>
+				<id>1</id>
+				<name>v1</name>
+			</vessel>
+			<vessel>
+				<id>2</id>
+				<name>v2</name>
+			</vessel>
+		</vessels>
+	</data>
+</response>";
+
+            using (var r1 = ChoXmlReader.LoadText(xml3)
+                .WithXPath("//response")
+                .WithField("error", xPath: "//error")
+                //.WithField("returncode", xPath: "//returncode")
+                .WithField("data", xPath: "/data")
+              )
+            {
+                var rec = r1.FirstOrDefault();
+
+                if (rec != null)
+                {
+                    if (rec.error != null)
+                        rec.error.Print();
+                    //if (rec.returncode != null)
+                    //{
+                    //    //rec.returncode.Print();
+                    //}
+                    if (rec.data != null)
+                    {
+                        foreach (var v in rec.data.vessels)
+                            Console.WriteLine(v.DumpAsJson());
+                    }
+                }
+            }
         }
         public static void Json2XMLWithNS()
         {
@@ -722,7 +785,7 @@ namespace ChoXmlReaderTest
 
             [DataMember]
             [XmlArray]
-            [XmlArrayItem(Namespace = "http://schemas.microsoft.com/2003/10/Serialization/Arrays" )]
+            [XmlArrayItem(Namespace = "http://schemas.microsoft.com/2003/10/Serialization/Arrays")]
             public List<int> Numbers { get; set; }
         }
 
@@ -762,7 +825,7 @@ namespace ChoXmlReaderTest
                 }
             }
 
-             Console.WriteLine(xml1.ToString());
+            Console.WriteLine(xml1.ToString());
         }
 
         [DataContract(Name = "Person")]
@@ -807,29 +870,29 @@ namespace ChoXmlReaderTest
 
                 Console.WriteLine(json.ToString());
                 return;
-                    foreach (var rec in r)
-                        Console.WriteLine(rec.Dump());
+                foreach (var rec in r)
+                    Console.WriteLine(rec.Dump());
             }
 
-//                string xml = @"<PersonX xmlns:i=""http://www.w3.org/2001/XMLSchema-instance"" xmlns=""http://schemas.datacontract.org/2004/07/Workflows.MassTransit.Hosting.Serialization"">
-//    <Name>Test</Name>
-//    <Numbers xmlns:d2p1=""http://schemas.microsoft.com/2003/10/Serialization/Arrays"">
-//        <d2p1:int>1</d2p1:int>
-//        <d2p1:int>2</d2p1:int>
-//        <d2p1:int>3</d2p1:int>
-//    </Numbers>
-//</PersonX>";
+            //                string xml = @"<PersonX xmlns:i=""http://www.w3.org/2001/XMLSchema-instance"" xmlns=""http://schemas.datacontract.org/2004/07/Workflows.MassTransit.Hosting.Serialization"">
+            //    <Name>Test</Name>
+            //    <Numbers xmlns:d2p1=""http://schemas.microsoft.com/2003/10/Serialization/Arrays"">
+            //        <d2p1:int>1</d2p1:int>
+            //        <d2p1:int>2</d2p1:int>
+            //        <d2p1:int>3</d2p1:int>
+            //    </Numbers>
+            //</PersonX>";
 
-//            using (var r = ChoXmlReader<PersonX>.LoadText(xml)
-//                .WithXPath("//")
-//                .WithXmlNamespace("d2p1", "http://schemas.microsoft.com/2003/10/Serialization/Arrays")
-//                .WithXmlNamespace("", "http://schemas.datacontract.org/2004/07/Workflows.MassTransit.Hosting.Serialization")
-//                .WithXmlNamespace("i", "http://www.w3.org/2001/XMLSchema-instance")
-//                )
-//            {
-//                foreach (var rec in r)
-//                    Console.WriteLine(rec.Dump());
-//            }
+            //            using (var r = ChoXmlReader<PersonX>.LoadText(xml)
+            //                .WithXPath("//")
+            //                .WithXmlNamespace("d2p1", "http://schemas.microsoft.com/2003/10/Serialization/Arrays")
+            //                .WithXmlNamespace("", "http://schemas.datacontract.org/2004/07/Workflows.MassTransit.Hosting.Serialization")
+            //                .WithXmlNamespace("i", "http://www.w3.org/2001/XMLSchema-instance")
+            //                )
+            //            {
+            //                foreach (var rec in r)
+            //                    Console.WriteLine(rec.Dump());
+            //            }
         }
 
         public class Emp1
@@ -837,7 +900,7 @@ namespace ChoXmlReaderTest
             public string Name { get; set; }
             [ChoXPath("State/@Description")]
             public string StateDescription { get; set; }
-            public string State{ get; set; }
+            public string State { get; set; }
         }
         static void Xml2Json1()
         {

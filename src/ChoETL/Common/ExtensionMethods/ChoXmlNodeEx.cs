@@ -1157,7 +1157,7 @@ namespace ChoETL
             {
                 foreach (var kvp in element.Elements().GroupBy(e => e.Name.LocalName).Select(g => new { Name = g.Key, Value = g.ToArray() }))
                 {
-                    if (kvp.Value.Length == 1 && !kvp.Value.First().IsJsonArray(jsonSchemaNS))
+                    if (kvp.Value.Length == 1 && !kvp.Value.First().IsJsonArray(jsonSchemaNS) && !kvp.Name.IsPlural())
                     {
                         XElement subElement = kvp.Value.First();
 
