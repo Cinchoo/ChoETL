@@ -2375,6 +2375,9 @@ namespace ChoETL
 
             encoding = encoding == null ? Encoding.UTF8 : encoding;
 
+            if (target is IEnumerable)
+                target = ((IEnumerable)target).OfType<object>().ToArray();
+
             using (MemoryStream ms = new MemoryStream())
             {
                 using (var writer = JsonReaderWriterFactory.CreateJsonWriter(

@@ -46,7 +46,6 @@ namespace ChoETL
             private set;
         }
 
-
         public ChoXmlReader(StringBuilder sb, ChoXmlRecordConfiguration configuration = null) : this(new StringReader(sb.ToString()), configuration)
         {
 

@@ -245,6 +245,7 @@ namespace ChoETL
 
             XmlRecordFieldConfigurations = new List<ChoXmlRecordFieldConfiguration>();
 
+            AutoDiscoverColumns = false;
             Formatting = Formatting.Indented;
             XmlVersion = "1.0";
             OmitXmlDeclaration = true;
@@ -587,7 +588,7 @@ namespace ChoETL
                 XmlRecordFieldConfigurations.Clear();
 
             if (AutoDiscoverColumns
-                && XmlRecordFieldConfigurations.Count == 0)
+                || XmlRecordFieldConfigurations.Count == 0)
             {
                 if (RecordType != null && !IsDynamicObject
                     && ChoTypeDescriptor.GetProperties(RecordType).Where(pd => pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any()).Any())

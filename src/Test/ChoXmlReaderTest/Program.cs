@@ -433,7 +433,36 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            ReadSubNode();
+            ExtractAllNodes();
+        }
+
+        static void ExtractAllNodes()
+        {
+            string xml = @"<rss xmlns:atom=""http://www.w3.org/2005/Atom"" xmlns:media=""http://search.yahoo.com/mrss/"" version=""2.0"">
+    <channel>
+        <item>
+            <title>Fire kills four newborn babies at children's hospital in India</title>
+            <link>http://news.sky.com/story/india-fire-kills-four-newborn-babies-at-childrens-hospital-in-madhya-pradesh-12464344</link>
+            <description>Four newborn babies have died after a fire broke out at a children's hospital in India, officials said.</description>
+            <pubDate>Tue, 09 Nov 2021 07:51:00 +0000</pubDate>
+            <guid>http://news.sky.com/story/india-fire-kills-four-newborn-babies-at-childrens-hospital-in-madhya-pradesh-12464344</guid>
+            <enclosure url=""https://e3.365dm.com/21/11/70x70/skynews-india-fire-childrens-hospital_5577072.jpg?20211109081515"" length=""0"" type=""image/jpeg"" />
+            <media:description type=""html"">A man carries a child out from the Kamla Nehru Children’s Hospital after a fire in the newborn care unit of the hospital killed four infants, in Bhopal, India, Monday, Nov. 8, 2021. There were 40 children in total in the unit, out of which 36 have been rescued, said Medical Education Minister Vishwas Sarang. (AP Photo) </media:description>
+            <media:thumbnail url=""https://e3.365dm.com/21/11/70x70/skynews-india-fire-childrens-hospital_5577072.jpg?20211109081515"" width=""70"" height=""70"" />
+            <media:content type=""image/jpeg"" url=""https://e3.365dm.com/21/11/70x70/skynews-india-fire-childrens-hospital_5577072.jpg?20211109081515"" />
+        </item>
+    </channel>
+</rss>";
+
+            using (var r = ChoXmlReader.LoadText(xml)
+                .WithXPath("//item")
+                .WithXmlNamespace("media", "http://search.yahoo.com/mrss/")
+                .WithField("desc", xPath: "media:description")
+                .Configure(c => c.AutoDiscoverColumns = true)
+                )
+            {
+                r.PrintAsJson();
+            }
         }
 
         static void ReadSubNode()
@@ -445,7 +474,15 @@ namespace ChoXmlReaderTest
     <errortext>there is already an open session</errortext>
    </error>
 </response>";
-
+            string xml2 = @"<response>
+	<returncode>
+		<code>100</code>
+		<description>successful</description>
+	</returncode>
+	<authkey>
+		xxxx
+	</authkey>
+</response>";
             string xml3 = @"<response>
 	<returncode></returncode>
 	<data>
@@ -473,10 +510,11 @@ namespace ChoXmlReaderTest
 	</data>
 </response>";
 
-            using (var r1 = ChoXmlReader.LoadText(xml3)
+            using (var r1 = ChoXmlReader.LoadText(xml2)
                 .WithXPath("//response")
-                .WithField("error", xPath: "//error")
-                //.WithField("returncode", xPath: "//returncode")
+                .WithField("error", xPath: "/error")
+                .WithField("returncode", xPath: "/returncode")
+                .WithField("authkey", xPath: "/authkey")
                 .WithField("data", xPath: "/data")
               )
             {
@@ -485,15 +523,19 @@ namespace ChoXmlReaderTest
                 if (rec != null)
                 {
                     if (rec.error != null)
-                        rec.error.Print();
-                    //if (rec.returncode != null)
-                    //{
-                    //    //rec.returncode.Print();
-                    //}
+                        rec.error.PrintAsJson();
+                    if (rec.returncode != null)
+                    {
+                        rec.returncode.PrintAsJson();
+                    }
+                    if (rec.authkey != null)
+                    {
+                        Console.WriteLine(rec.authkey);
+                    }
                     if (rec.data != null)
                     {
                         foreach (var v in rec.data.vessels)
-                            Console.WriteLine(v.DumpAsJson());
+                            v.PrintAsJson();
                     }
                 }
             }
