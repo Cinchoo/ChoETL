@@ -71,7 +71,11 @@ namespace ChoETL
         private Lazy<SharpYaml.Serialization.Serializer> _yamlSerializer = null;
         public SharpYaml.Serialization.Serializer YamlSerializer
         {
-            get { return ReuseSerializerObject ? _yamlSerializer.Value : new SharpYaml.Serialization.Serializer(YamlSerializerSettings); }
+            get
+            {
+                var x = _yamlTagMapAutoRegister.Value;
+                return ReuseSerializerObject ? _yamlSerializer.Value : new SharpYaml.Serialization.Serializer(YamlSerializerSettings); 
+            }
         }
         private Lazy<SerializerSettings> _yamlSerializerSettings = null;
         public SerializerSettings YamlSerializerSettings
@@ -89,6 +93,16 @@ namespace ChoETL
             set;
         }
         public bool? SingleDocument
+        {
+            get;
+            set;
+        }
+        public Func<string, string> YamlTagMapResolver
+        {
+            get;
+            set;
+        }
+        public bool TurnOffAutoRegisterTagMap
         {
             get;
             set;
@@ -168,6 +182,7 @@ namespace ChoETL
             }
         }
         public readonly dynamic Context = new ChoDynamicObject();
+        private Lazy<bool> _yamlTagMapAutoRegister = null;
 
         public ChoYamlRecordConfiguration() : this(null)
         {
@@ -189,11 +204,45 @@ namespace ChoETL
                 return new SharpYaml.Serialization.Serializer(YamlSerializerSettings);
             });
 
+            _yamlTagMapAutoRegister = new Lazy<bool>(() =>
+            {
+                if (!TurnOffAutoRegisterTagMap)
+                {
+                    if (!RecordType.IsDynamicType())
+                    {
+                        RegisterYamlTagMapForType(RecordType);
+                    }
+                }
+                return true;
+            });
+
             YamlRecordFieldConfigurations = new List<ChoYamlRecordFieldConfiguration>();
 
             if (recordType != null)
             {
                 Init(recordType);
+            }
+        }
+
+        private void RegisterYamlTagMapForType(Type recordType)
+        {
+            if (recordType.IsDynamicType())
+                return;
+
+            var tagMapAttrs = ChoTypeDescriptor.GetTypeAttributes<ChoYamlTagMapAttribute>(recordType);
+            foreach (var tagMapAttr in tagMapAttrs)
+            {
+                if (tagMapAttr != null && !tagMapAttr.TagMap.IsNullOrWhiteSpace())
+                {
+                    WithTagMapping(tagMapAttr.TagMap, recordType, tagMapAttr.Alias);
+                }
+            }
+
+            foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
+            {
+                if (pd.PropertyType.IsSimple()) continue;
+
+                RegisterYamlTagMapForType(pd.PropertyType);
             }
         }
 
@@ -582,6 +631,33 @@ namespace ChoETL
 
         public ChoYamlRecordConfiguration WithTagMapping(string tagName, Type tagType, bool isAlias = false)
         {
+            if (tagName.IsNullOrWhiteSpace() || tagType == null)
+                return this;
+
+            var yamlTagMapResolver = YamlTagMapResolver;
+            tagName = tagName.NTrim();
+            string tagMapOut = tagName;
+            if (yamlTagMapResolver != null)
+            {
+                tagMapOut = yamlTagMapResolver(tagName);
+            }
+
+            if (tagName == tagMapOut)
+            {
+                if (tagName == "!")
+                {
+                    tagName = $"!{tagType.Name}";
+                }
+                else if (tagName == "!!")
+                {
+                    tagName = $"tag:yaml.org,2002:{tagType.Name}";
+                }
+                else if (tagName.StartsWith("!!"))
+                {
+                    tagName = $"tag:yaml.org,2002:{tagName.Substring(2)}";
+                }
+            }
+
             YamlSerializerSettings.RegisterTagMapping(tagName, tagType, isAlias);
             return this;
         }

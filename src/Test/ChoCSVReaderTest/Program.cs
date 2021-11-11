@@ -5315,11 +5315,47 @@ val61, val71";
             }
 
         }
+        [ChoCSVFileHeader]
+        [ChoCSVRecordObject(ObjectValidationMode = ChoObjectValidationMode.ObjectLevel)]
+        public class EmployeeRecDefaultValueTest
+        {
+            [Required]
+            public int? Id
+            {
+                get;
+                set;
+            }
+            [DefaultValue("XXXX")]
+            public string Name
+            {
+                get;
+                set;
+            }
 
+            public override string ToString()
+            {
+                return $"{Id}. {Name}.";
+            }
+        }
+        static void DefaultValueTest1()
+        {
+            string csv = @"Id,Name
+1,
+2,Carl
+3,Mark";
+            foreach (dynamic rec in ChoCSVReader<EmployeeRecDefaultValueTest>.LoadText(csv)
+                     .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                     .IgnoreFieldValueMode(ChoIgnoreFieldValueMode.Any)
+                    )
+            {
+                Console.WriteLine($"Id: {rec.Id}");
+                Console.WriteLine($"Name: {rec.Name}");
+            }
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            MergeDifferentCSV();
+            DefaultValueTest1();
             return;
 
             PositionNeutralCSVLoad();

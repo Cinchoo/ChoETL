@@ -78,6 +78,11 @@ namespace ChoETL
             }
         }
 
+        public void Close()
+        {
+            Dispose();
+        }
+
         public void Dispose()
         {
             Dispose(_sw as StreamWriter);
@@ -92,7 +97,16 @@ namespace ChoETL
         private void WriteAllRecords(StreamWriter sw)
         {
             var sf = GetSchemaFields();
-            var schema = new Schema(sf.Values.ToArray());
+            Schema schema = null;
+
+            if (Configuration.SchemaGenerator != null)
+                Configuration.Schema = schema = Configuration.SchemaGenerator(sf.Values.ToArray());
+            
+            if (Configuration.Schema == null)
+                Configuration.Schema = schema = new Schema(sf.Values.ToArray());
+            else
+                schema = Configuration.Schema;
+
             using (var parquetWriter = new ParquetWriter(schema, sw.BaseStream, Configuration.ParquetOptions, Configuration.Append))
             {
                 parquetWriter.CompressionMethod = Configuration.CompressionMethod;

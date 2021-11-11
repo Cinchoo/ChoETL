@@ -1090,9 +1090,34 @@ field3: 'test3'
             Console.WriteLine(yamlOut.ToString());
         }
 
+        [ChoYamlTagMap("!!")]
+        public class ControlGroup
+        { 
+            public string name { get; set; }
+        }
+
+        static void SecondaryTagTest()
+        {
+            string yaml = @"
+!!ControlGroup
+name: myGroup
+";
+            //settings.RegisterAssembly(typeof(Author).Assembly);
+            using (var r = ChoYamlReader<ControlGroup>.LoadText(yaml)
+                //.WithTagMapping("tag:yaml.org,2002:ControlGroup", typeof(ControlGroup))
+                //.Configure(c => c.TurnOffAutoRegisterTagMap = true)
+                .UseYamlSerialization()
+                )
+            {
+                r.Print();
+            }
+
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+            SecondaryTagTest();
+            return;
 
             //DeserializeTypedYaml();
             DeserializeSubClassedItems();

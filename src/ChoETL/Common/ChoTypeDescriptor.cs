@@ -42,6 +42,14 @@
             return TypeDescriptor.GetAttributes(type).OfType<T>().FirstOrDefault();
         }
 
+        public static IEnumerable<T> GetTypeAttributes<T>(Type type)
+            where T : Attribute
+        {
+            if (type == null)
+                throw new NullReferenceException("type");
+            return TypeDescriptor.GetAttributes(type).OfType<T>();
+        }
+
         public static AttributeCollection GetTypeAttributes(Type type)
         {
             if (type == null)

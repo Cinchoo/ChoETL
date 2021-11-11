@@ -48,6 +48,18 @@ namespace ChoETL
             set;
         }
 
+        public Parquet.Data.Schema Schema
+        {
+            get;
+            set;
+        }
+
+        public Func<Parquet.Data.Field[], Parquet.Data.Schema> SchemaGenerator
+        {
+            get;
+            set;
+        }
+
         //public bool AllowNestedArrayConversion
         //{
         //    get;
