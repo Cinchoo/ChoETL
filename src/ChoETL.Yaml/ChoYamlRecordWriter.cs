@@ -456,10 +456,13 @@ namespace ChoETL
                         }
                         else if (kvp.Value.FieldType == typeof(object))
                         {
-                            var dobj = rec as ChoDynamicObject;
-                            var ft1 = dobj.GetMemberType(kvp.Key);
-                            if (ft1 != null)
-                                kvp.Value.FieldType = ft1;
+                            if (rec is ChoDynamicObject)
+                            {
+                                var dobj = rec as ChoDynamicObject;
+                                var ft1 = dobj.GetMemberType(kvp.Key);
+                                if (ft1 != null)
+                                    kvp.Value.FieldType = ft1;
+                            }
                         }
                     }
                     else

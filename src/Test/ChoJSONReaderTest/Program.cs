@@ -290,7 +290,7 @@ namespace ChoJSONReaderTest
 
     [TestFixture]
     [SetCulture("en-US")] // TODO: Check if correct culture is used
-    class Program
+    public class Program
     {
         [SetUp]
         public void Setup()
@@ -7395,10 +7395,59 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
+        public class House
+        {
+            [XmlElement]
+            public MyObject[] Objects { get; set; }
+        }
+
+        public class MyObject
+        {
+            public string Name { get; set; }
+        }
+
+        public static void JSONToXml()
+        {
+            var house1 = new House
+            {
+                Objects = new MyObject[]
+                 {
+                  new MyObject() { Name = "Name1" },
+                  new MyObject() { Name = "Name2" }
+                 }
+            };
+
+            var jsonSerializerSettings = new JsonSerializerSettings()
+            {
+                TypeNameHandling = TypeNameHandling.Objects
+            };
+            StringBuilder json = new StringBuilder();
+            using (var w = new ChoJSONWriter<House>(json)
+                .JsonSerializationSettings(s => s.TypeNameHandling = TypeNameHandling.Objects)
+                )
+            {
+                w.Write(house1);
+            }
+
+            using (var r = ChoJSONReader<House>.LoadText(json.ToString())
+                .JsonSerializationSettings(s => s.TypeNameHandling = TypeNameHandling.Objects)
+                )
+            {
+                using (var w = new ChoXmlWriter<House>(Console.Out)
+                    .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                    .IgnoreRootName()
+                    .UseXmlSerialization()
+                    )
+                    w.Write(r);
+
+                //r.Print();
+            }
+            Console.WriteLine(json.ToString());
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            MapToDifferentType();
+            JSONToXml();
             //DeserializeNestedObjectOfList();
             return;
 

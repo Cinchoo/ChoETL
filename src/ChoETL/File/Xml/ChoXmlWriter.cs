@@ -828,6 +828,11 @@ namespace ChoETL
         public void Write(IDataReader dr)
         {
             ChoGuard.ArgumentNotNull(dr, "DataReader");
+            if (Configuration.UseXmlSerialization)
+            {
+                Write(dr);
+                return;
+            }
 
             DataTable schemaTable = dr.GetSchemaTable();
             dynamic expando = new ExpandoObject();
@@ -869,6 +874,11 @@ namespace ChoETL
         public void Write(DataTable dt)
         {
             ChoGuard.ArgumentNotNull(dt, "DataTable");
+            if (Configuration.UseXmlSerialization)
+            {
+                Write(dt);
+                return;
+            }
 
             DataTable schemaTable = dt;
             dynamic expando = new ExpandoObject();

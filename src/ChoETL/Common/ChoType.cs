@@ -9,6 +9,7 @@
     using System.Collections.Specialized;
     using System.ComponentModel;
     using System.ComponentModel.DataAnnotations;
+    using System.Data;
     using System.Diagnostics;
     using System.Dynamic;
     using System.Globalization;
@@ -121,6 +122,14 @@
             }
             else
                 return defaultValue;
+        }
+
+        public static bool IsSpecialCollectionType(this Type type)
+        {
+            if (typeof(DataTable).IsAssignableFrom(type) || typeof(IDataReader).IsAssignableFrom(type))
+                return true;
+            else
+                return false;
         }
 
         public static bool IsDynamicType(this Type type)

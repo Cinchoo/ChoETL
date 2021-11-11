@@ -592,7 +592,17 @@ namespace ChoETL
         public void Write(IDataReader dr)
         {
             ChoGuard.ArgumentNotNull(dr, "DataReader");
+            if (Configuration.UseYamlSerialization)
+            {
+                Write(dr);
+                return;
+            }
 
+            Write(FromDataReader(dr));
+        }
+
+        private IEnumerable<T> FromDataReader(IDataReader dr)
+        {
             DataTable schemaTable = dr.GetSchemaTable();
             dynamic expando = new ExpandoObject();
             var expandoDic = (IDictionary<string, object>)expando;
@@ -626,13 +636,19 @@ namespace ChoETL
                     expandoDic.Add(fc.Key, fc.Value == -1 ? null : dr[fc.Value]);
                 }
 
-                Write(expando);
+                yield return expando;
             }
         }
 
         public void Write(DataTable dt)
         {
             ChoGuard.ArgumentNotNull(dt, "DataTable");
+            if (Configuration.UseYamlSerialization)
+            {
+                _writer.TraceSwitch = TraceSwitch;
+                _writer.WriteTo(_textWriter.Value, dt.ConvertToEnumerable()).Loop();
+                return;
+            }
 
             DataTable schemaTable = dt;
             dynamic expando = new ExpandoObject();
@@ -657,6 +673,7 @@ namespace ChoETL
             }
             Configuration.RootName = dt.TableName.IsNullOrWhiteSpace() ? null : dt.TableName;
 
+            List<T> list = new List<T>();
             foreach (DataRow row in dt.Rows)
             {
                 expandoDic.Clear();
@@ -665,9 +682,10 @@ namespace ChoETL
                 {
                     expandoDic.Add(fc.Name, row[fc.Name] == DBNull.Value ? null : row[fc.Name]);
                 }
-
-                Write(expando);
+                list.Add(expando);
             }
+        
+            Write(list.ToArray());
         }
 
         public void Write(DataSet ds)

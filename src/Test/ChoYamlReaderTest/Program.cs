@@ -1113,10 +1113,36 @@ name: myGroup
             }
 
         }
+
+        static void Yaml2JsonTypeIssue()
+        {
+            string yaml = @"
+EntityId:
+    type: integer
+    example: 1245
+
+EntityIds:
+    type: array
+    items:
+        $ref: EntityId
+    example: [152, 6542, 23]
+    isActive: true
+";
+
+            using (var r = ChoYamlReader.LoadText(yaml))
+            {
+                using (var w = new ChoJSONWriter(Console.Out)
+                    .SupportMultipleContent(true)
+                    .SingleElement()
+                    )
+                    w.Write(r);
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            SecondaryTagTest();
+            Yaml2JsonTypeIssue();
             return;
 
             //DeserializeTypedYaml();

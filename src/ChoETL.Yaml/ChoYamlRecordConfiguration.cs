@@ -224,9 +224,15 @@ namespace ChoETL
             }
         }
 
+        private readonly HashSet<Type> _refDict = new HashSet<Type>();
         private void RegisterYamlTagMapForType(Type recordType)
         {
-            if (recordType.IsDynamicType())
+            if (_refDict.Contains(recordType))
+                return;
+            else
+                _refDict.Add(recordType);
+
+            if (recordType.IsDynamicType() || recordType.IsSpecialCollectionType())
                 return;
 
             var tagMapAttrs = ChoTypeDescriptor.GetTypeAttributes<ChoYamlTagMapAttribute>(recordType).ToArray();
