@@ -229,14 +229,19 @@ namespace ChoETL
             if (recordType.IsDynamicType())
                 return;
 
-            var tagMapAttrs = ChoTypeDescriptor.GetTypeAttributes<ChoYamlTagMapAttribute>(recordType);
-            foreach (var tagMapAttr in tagMapAttrs)
+            var tagMapAttrs = ChoTypeDescriptor.GetTypeAttributes<ChoYamlTagMapAttribute>(recordType).ToArray();
+            if (tagMapAttrs.Length > 0)
             {
-                if (tagMapAttr != null && !tagMapAttr.TagMap.IsNullOrWhiteSpace())
+                foreach (var tagMapAttr in tagMapAttrs)
                 {
-                    WithTagMapping(tagMapAttr.TagMap, recordType, tagMapAttr.Alias);
+                    if (tagMapAttr != null && !tagMapAttr.TagMap.IsNullOrWhiteSpace())
+                    {
+                        WithTagMapping(tagMapAttr.TagMap, recordType, tagMapAttr.Alias);
+                    }
                 }
             }
+            else
+                WithTagMapping("!", recordType, false);
 
             foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
             {
