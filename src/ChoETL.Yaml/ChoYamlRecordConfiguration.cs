@@ -198,6 +198,8 @@ namespace ChoETL
 
         internal ChoYamlRecordConfiguration(Type recordType) : base(recordType)
         {
+            UseJsonSerialization = true;
+
             _yamlSerializerSettings = new Lazy<SerializerSettings>(() =>
             {
                 var yamlSettings = new SerializerSettings();

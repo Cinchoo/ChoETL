@@ -684,12 +684,19 @@ namespace ChoETL
                     };
                     var json = JsonConvert.SerializeObject(fieldValue, Configuration.JsonSerializerSettings);
 
-                    if (RecordType.IsSimple())
-                        objValue = JsonConvert.DeserializeObject<IList<object>>(json);
-                    else if (typeof(IList).IsAssignableFrom(ft))
-                        objValue = JsonConvert.DeserializeObject<IList>(json);
+                    if (Configuration.TargetRecordType == null)
+                    {
+                        if (RecordType.IsSimple())
+                            objValue = JsonConvert.DeserializeObject<IList<object>>(json, Configuration.JsonSerializerSettings);
+                        else if (typeof(IList).IsAssignableFrom(ft))
+                            objValue = JsonConvert.DeserializeObject<IList>(json, Configuration.JsonSerializerSettings);
+                        else
+                            objValue = JsonConvert.DeserializeObject<IDictionary<string, object>>(json, Configuration.JsonSerializerSettings);
+                    }
                     else
-                        objValue = JsonConvert.DeserializeObject<IDictionary<string, object>>(json);
+                    {
+                        objValue = JsonConvert.DeserializeObject(json, Configuration.TargetRecordType, Configuration.JsonSerializerSettings);
+                    }
                 }
 
                 if (!RecordType.IsSimple())
