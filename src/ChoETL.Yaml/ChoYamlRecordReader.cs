@@ -165,6 +165,22 @@ namespace ChoETL
                         yield return ((IDictionary<object, object>)value)
                             .ToDictionary(kvp => kvp.Key.ToNString(), kvp => kvp.Value, Configuration.StringComparer);
                     }
+                    else if (value is IList)
+                    {
+                        foreach (var rec in (IList)value)
+                        {
+                            if (rec is IDictionary<string, object>)
+                                yield return ((IDictionary<string, object>)rec)
+                                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value, Configuration.StringComparer);
+                            else if (rec is IDictionary)
+                            {
+                                yield return ((IDictionary<object, object>)rec)
+                                    .ToDictionary(kvp => kvp.Key.ToNString(), kvp => kvp.Value, Configuration.StringComparer);
+                            }
+                            else
+                                yield return new Dictionary<string, object>() { { TYPED_VALUE, rec } };
+                        }
+                    }
                     else
                         yield return new Dictionary<string, object>() { { TYPED_VALUE, value } };
                 }

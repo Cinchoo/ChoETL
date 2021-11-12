@@ -220,13 +220,19 @@ namespace ChoYamlWriterTest
                 var dt = r.AsDataTable();
                 dt.Print();
 
-                using (var w = new ChoYamlWriter(Console.Out)
+                using (var w = new ChoYamlWriter(yaml)
                     //.ReuseSerializerObject(false)
                     .UseYamlSerialization(true)
                     )
                 {
                     w.Write(dt);
                 }
+            }
+
+            using (var r = ChoYamlReader.LoadText(yaml.ToString())
+                )
+            {
+                r.AsDataTable().Print();
             }
 
             Console.WriteLine(yaml.ToString());
