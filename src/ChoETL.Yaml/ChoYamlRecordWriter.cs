@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using SharpYaml.Serialization;
 using System;
 using System.Collections;
@@ -365,6 +366,39 @@ namespace ChoETL
             recText = null;
             if (Configuration.UseYamlSerialization)
             {
+                if (Configuration.UseJsonSerialization)
+                {
+                    Writer.ContractResolverState = new ChoContractResolverState
+                    {
+                        Index = index,
+                        Record = rec,
+                    };
+                    var json = JsonConvert.SerializeObject(rec, Configuration.JsonSerializerSettings);
+                    rec = JsonConvert.DeserializeObject(json, Configuration.JsonSerializerSettings);
+
+                    Type targetType = Configuration.TargetRecordType ?? typeof(Dictionary<string, object>);
+                    if (rec is JArray)
+                    {
+                        rec = ((JArray)rec).Children<JObject>().Select(o => o.ToObject(targetType)).ToArray();
+                    }
+                    else if (rec is JObject)
+                    {
+                        rec = ((JObject)rec).ToObject(targetType);
+                    }
+                    else if (rec is JValue)
+                    {
+                        if (targetType is IDictionary)
+                        {
+                            var dict = new Dictionary<string, object>();
+                            dict.Add("Value", ((JValue)rec).Value);
+
+                            rec = dict;
+                        }
+                        else
+                            rec = ((JValue)rec).Value.CastObjectTo(targetType);
+                    }
+                }
+
                 recText = Configuration.YamlSerializer.Serialize(rec);
                 return true;
             }

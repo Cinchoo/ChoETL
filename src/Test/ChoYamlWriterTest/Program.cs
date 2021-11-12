@@ -222,7 +222,8 @@ namespace ChoYamlWriterTest
 
                 using (var w = new ChoYamlWriter(Console.Out)
                     //.ReuseSerializerObject(false)
-                    .UseYamlSerialization(false)
+                    .UseYamlSerialization(true)
+                    .Configure(c => c.UseJsonSerialization = true)
                     )
                 {
                     w.Write(dt);

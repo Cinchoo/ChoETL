@@ -107,6 +107,12 @@ namespace ChoETL
             get;
             set;
         }
+        public bool UseJsonSerialization
+        {
+            get;
+            set;
+        }
+
         private JsonSerializerSettings _jsonSerializerSettings = null;
         public JsonSerializerSettings JsonSerializerSettings
         {
@@ -173,6 +179,7 @@ namespace ChoETL
         }
 
         public string RootName { get; internal set; }
+        public Type TargetRecordType { get; internal set; }
 
         public ChoYamlRecordFieldConfiguration this[string name]
         {
