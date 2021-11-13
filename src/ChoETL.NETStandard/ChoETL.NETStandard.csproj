@@ -181,6 +181,7 @@
     <Compile Include="..\ChoETL\Common\ChoPropertyBag.cs" Link="Common\ChoPropertyBag.cs" />
     <Compile Include="..\ChoETL\Common\ChoPropertyReplacer.cs" Link="Common\ChoPropertyReplacer.cs" />
     <Compile Include="..\ChoETL\Common\ChoQueuedTaskScheduler.cs" Link="Common\ChoQueuedTaskScheduler.cs" />
+    <Compile Include="..\ChoETL\Common\ChoResetLazy.cs" Link="Common\ChoResetLazy.cs" />
     <Compile Include="..\ChoETL\Common\ChoStringMsgBuilder.cs" Link="Common\ChoStringMsgBuilder.cs" />
     <Compile Include="..\ChoETL\Common\ChoMetadataObjectCache.cs" Link="Common\ChoMetadataObjectCache.cs" />
     <Compile Include="..\ChoETL\Common\ChoTextWriterTraceListener.cs" Link="Common\ChoTextWriterTraceListener.cs" />

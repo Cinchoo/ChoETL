@@ -7444,10 +7444,42 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
             Console.WriteLine(json.ToString());
         }
+
+        static void Json2Xml3()
+        {
+            string json = @"{
+  ""$type"": ""Program+House, z3n3gd53"",
+  ""Objects"": [
+    {
+      ""$type"": ""Program+MyObject, z3n3gd53"",
+      ""Name"": ""Name1""
+    },
+    {
+      ""$type"": ""Program+MyObject, z3n3gd53"",
+      ""Name"": ""Name2""
+    }
+  ]
+}";
+
+            using (var r = ChoJSONReader.LoadText(json)
+                //.UseJsonSerialization()
+                )
+            {
+                //r.PrintAsJson();
+                //return;
+                using (var w = new ChoXmlWriter(Console.Out)
+                    .Configure(c => c.UseXmlArray = true)
+                    .WithXmlNamespace("xsi", ChoXmlSettings.XmlSchemaInstanceNamespace)
+                    //.Configure(c => c.OmitXsiNamespace = false)
+                    )
+                    w.Write(r);
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            JSONToXml();
+            Json2Xml3();
             //DeserializeNestedObjectOfList();
             return;
 

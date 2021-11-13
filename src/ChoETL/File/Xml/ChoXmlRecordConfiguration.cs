@@ -21,7 +21,7 @@ namespace ChoETL
     [DataContract]
     public class ChoXmlRecordConfiguration : ChoFileRecordConfiguration
     {
-        internal readonly Lazy<ChoXmlNamespaceManager> XmlNamespaceManager;
+        internal readonly ChoResetLazy<ChoXmlNamespaceManager> XmlNamespaceManager;
         public bool FlattenNode
         {
             get;
@@ -241,7 +241,7 @@ namespace ChoETL
 
         internal ChoXmlRecordConfiguration(Type recordType) : base(recordType)
         {
-            XmlNamespaceManager = new Lazy<ChoXmlNamespaceManager>(() => NamespaceManager == null ? null : new ChoXmlNamespaceManager(NamespaceManager));
+            XmlNamespaceManager = new ChoResetLazy<ChoXmlNamespaceManager>(() => NamespaceManager == null ? null : new ChoXmlNamespaceManager(NamespaceManager));
 
             XmlRecordFieldConfigurations = new List<ChoXmlRecordFieldConfiguration>();
 
@@ -249,6 +249,7 @@ namespace ChoETL
             Formatting = Formatting.Indented;
             XmlVersion = "1.0";
             OmitXmlDeclaration = true;
+            OmitXsiNamespace = true;
             Indent = 2;
             IndentChar = ' ';
             IgnoreCase = true;
@@ -1134,7 +1135,7 @@ namespace ChoETL
                 {
                     if (!config.DoNotEmitXmlNamespace && kvp.Key == "xml")
                         continue;
-                    if (!config.OmitXsiNamespace && kvp.Key == "xsi")
+                    if (config.OmitXsiNamespace && kvp.Key == "xsi")
                         continue;
 
                     if (kvp.Key.Contains(":"))

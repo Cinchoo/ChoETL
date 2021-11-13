@@ -922,7 +922,27 @@ namespace ChoETL
 
                     ele.Add(CreateXAttribute(kvp.Key, kvp.Value, Configuration.XmlNamespaceManager.Value, Configuration.DefaultNamespacePrefix));
                 }
-                foreach (var kvp in elems.Where(e => !e.Key.StartsWith("@")))
+                foreach (var kvp in elems.Where(e => e.Key.StartsWith("$")).Select(e => new { Key = e.Key.Replace("$", ""), e.Value }))
+                {
+                    if (!IsValidXItem(kvp.Key)) continue;
+
+                    object value = kvp.Value;
+                    if (value == null)
+                    {
+                        if (config.NullValueHandling == ChoNullValueHandling.Ignore)
+                            continue;
+                        else
+                            value = String.Empty;
+                    }
+
+                    if (kvp.Key == "type" && Configuration.NamespaceManager.HasNamespace("xsi"))
+                    {
+                        ele.Add(CreateXAttribute(kvp.Key, kvp.Value, Configuration.XmlNamespaceManager.Value,"xsi"));
+                    }
+                    else
+                        ele.Add(CreateXAttribute(kvp.Key, kvp.Value, Configuration.XmlNamespaceManager.Value, Configuration.DefaultNamespacePrefix));
+                }
+                foreach (var kvp in elems.Where(e => !e.Key.StartsWith("@") && !e.Key.StartsWith("$")))
                 {
                     if (!IsValidXItem(kvp.Key)) continue;
 

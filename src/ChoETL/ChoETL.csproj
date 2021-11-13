@@ -110,6 +110,7 @@
     <Compile Include="Common\Attributes\ChoFieldMapAttribute.cs" />
     <Compile Include="Common\Attributes\MetadataTypeAttribute.cs" />
     <Compile Include="Common\ChoFieldTypeAssessor.cs" />
+    <Compile Include="Common\ChoResetLazy.cs" />
     <Compile Include="Common\Collections\ChoOrderedDictionary.cs" />
     <Compile Include="Common\Collections\ChoSerializableDictionary.cs" />
     <Compile Include="Common\Converters\ChoCDATAToStringConverter.cs" />

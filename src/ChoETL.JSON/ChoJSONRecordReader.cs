@@ -2010,6 +2010,10 @@ namespace ChoETL
                         Dictionary<string, object> dict = Configuration.JsonSerializer == null ? jToken.ToObject(typeof(Dictionary<string, object>)) as Dictionary<string, object> :
                             jToken.ToObject(typeof(Dictionary<string, object>), Configuration.JsonSerializer) as Dictionary<string, object>;
 
+                        if (jToken is JObject && ((JObject)jToken).ContainsKey("$type"))
+                        {
+                            dict.Add("$type", ((JObject)jToken)["$type"]);
+                        }
                         dict = dict.Select(kvp =>
                         {
                             if (kvp.Value is JToken)
