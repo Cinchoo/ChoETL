@@ -1220,7 +1220,9 @@ namespace ChoETL
         }
 
         public string GetXml(string tag = null, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Empty, string nsPrefix = null,
-            bool emitDataType = false, string EOLDelimiter = null, bool useXmlArray = false)
+            bool emitDataType = false, string EOLDelimiter = null, bool useXmlArray = false,
+            bool useJsonNamespaceForObjectType = false, ChoXmlNamespaceManager nsMgr = null
+            )
         {
             if (EOLDelimiter == null)
                 EOLDelimiter = Environment.NewLine;
@@ -1236,7 +1238,27 @@ namespace ChoETL
             foreach (string key in this.Keys.Where(k => IsAttribute(k) && k != ValueToken))
             {
                 hasAttrs = true;
-                msg.AppendFormat(@" {0}=""{1}""", key.Substring(1), this[key]);
+
+                if (key.Substring(1) == "type" && nsMgr != null)
+                {
+                    if (useJsonNamespaceForObjectType)
+                    {
+                        if (nsMgr.GetNamespaceForPrefix("json") != null)
+                        {
+                            msg.AppendFormat(@" {0}:{1}=""{2}""", "json", key.Substring(1), this[key]);
+                        }
+                        if (nsMgr.GetNamespaceForPrefix("xsi") != null)
+                        {
+                            msg.AppendFormat(@" {0}:{1}=""{2}""", "xsi", key.Substring(1), this[key]);
+                        }
+                    }
+                    else if (nsMgr.GetNamespaceForPrefix("xsi") != null)
+                    {
+                        msg.AppendFormat(@" {0}:{1}=""{2}""", "xsi", key.Substring(1), this[key]);
+                    }
+                }
+                else
+                    msg.AppendFormat(@" {0}=""{1}""", key.Substring(1), this[key]);
             }
 
             if (ContainsKey(ValueToken))

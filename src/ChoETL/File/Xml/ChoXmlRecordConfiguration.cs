@@ -222,6 +222,7 @@ namespace ChoETL
 
         internal ChoXmlNamespaceTable XmlNamespaceTable { get; set; }
         public bool UseXmlArray { get; set; }
+        public bool UseJsonNamespaceForObjectType { get; set; }
 
         public readonly dynamic Context = new ChoDynamicObject();
 

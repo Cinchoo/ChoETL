@@ -419,7 +419,10 @@ namespace ChoETL
                                     else
                                     {
                                         innerXml1 = ChoUtility.XmlSerialize(record, null, eolDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix, Configuration.EmitDataType,
-                                            useXmlArray: Configuration.UseXmlArray, ns: Configuration.XmlNamespaceManager.Value.XmlSerializerNamespaces).RemoveXmlNamespaces();
+                                            useXmlArray: Configuration.UseXmlArray,
+                                            useJsonNamespaceForObjectType: Configuration.UseJsonNamespaceForObjectType,
+                                            nsMgr: Configuration.XmlNamespaceManager.Value
+                                            ).RemoveXmlNamespaces();
                                     }
 
                                     if (!Configuration.IgnoreNodeName && !Configuration.NodeName.IsNullOrWhiteSpace())
@@ -887,11 +890,11 @@ namespace ChoETL
             string innerXml1 = null;
             if (typeof(IChoScalarObject).IsAssignableFrom(config.RecordType))
             {
-                ele = NewXElement(nsMgr, nodeName, Configuration.DefaultNamespacePrefix, Configuration.NS, elems.First().Value);
+                ele = NewXElement(nsMgr, nodeName, Configuration.DefaultNamespacePrefix, Configuration.NS, elems.First().Value, emitType: Configuration.EmitDataType);
             }
             else
             {
-                ele = NewXElement(nsMgr, nodeName, Configuration.DefaultNamespacePrefix, Configuration.NS);
+                ele = NewXElement(nsMgr, nodeName, Configuration.DefaultNamespacePrefix, Configuration.NS, emitType: Configuration.EmitDataType);
                 foreach (var kvp in attrs)
                 {
                     if (!IsValidXItem(kvp.Key)) continue;
@@ -935,9 +938,23 @@ namespace ChoETL
                             value = String.Empty;
                     }
 
-                    if (kvp.Key == "type" && Configuration.NamespaceManager.HasNamespace("xsi"))
+                    if (kvp.Key == "type")
                     {
-                        ele.Add(CreateXAttribute(kvp.Key, kvp.Value, Configuration.XmlNamespaceManager.Value,"xsi"));
+                        if (Configuration.UseJsonNamespaceForObjectType)
+                        {
+                            if (Configuration.NamespaceManager.HasNamespace("json"))
+                            {
+                                AddXAttribute(ele, kvp.Key, kvp.Value, Configuration.XmlNamespaceManager.Value, "json");
+                            }
+                            else if (Configuration.NamespaceManager.HasNamespace("xsi"))
+                            {
+                                AddXAttribute(ele, kvp.Key, kvp.Value, Configuration.XmlNamespaceManager.Value, "xsi");
+                            }
+                        }
+                        else if (Configuration.NamespaceManager.HasNamespace("xsi"))
+                        {
+                            AddXAttribute(ele, kvp.Key, kvp.Value, Configuration.XmlNamespaceManager.Value, "xsi");
+                        }
                     }
                     else
                         ele.Add(CreateXAttribute(kvp.Key, kvp.Value, Configuration.XmlNamespaceManager.Value, Configuration.DefaultNamespacePrefix));
@@ -957,7 +974,10 @@ namespace ChoETL
                         {
                             rec = ChoActivator.CreateInstance(config.RecordType);
                             innerXml = ChoUtility.XmlSerialize(rec, null, EOLDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix, Configuration.EmitDataType,
-                                useXmlArray: useXmlArray, ns: Configuration.XmlNamespaceManager.Value.XmlSerializerNamespaces);
+                                useXmlArray: useXmlArray,
+                                useJsonNamespaceForObjectType: Configuration.UseJsonNamespaceForObjectType,
+                                nsMgr: Configuration.XmlNamespaceManager.Value
+                                );
 
                             innerXml1 = ReplaceXmlNodeIfAppl(innerXml1, kvp.Key);
 
@@ -1019,7 +1039,9 @@ namespace ChoETL
                     else
                     {
                         innerXml1 = ChoUtility.XmlSerialize(kvp.Value, null, EOLDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix, Configuration.EmitDataType,
-                            useXmlArray: useXmlArray, ns: Configuration.XmlNamespaceManager.Value.XmlSerializerNamespaces);
+                            useXmlArray: useXmlArray,
+                            useJsonNamespaceForObjectType: Configuration.UseJsonNamespaceForObjectType, 
+                            nsMgr: Configuration.XmlNamespaceManager.Value);
 
                         if (!kvp.Value.GetType().IsArray && !typeof(IList).IsAssignableFrom(kvp.Value.GetType()))
                         {
@@ -1068,7 +1090,7 @@ namespace ChoETL
                         }
                         if (EOLDelimiter != null)
                             ele.Add(new XText(EOLDelimiter));
-                        ele.Add(ParseElement(innerXml1, Configuration.NamespaceManager, Configuration.DefaultNamespacePrefix, ns));
+                        ele.Add(ParseElement(innerXml1, Configuration.XmlNamespaceManager.Value, Configuration.DefaultNamespacePrefix, ns));
                     }
                 }
             }
@@ -1134,9 +1156,33 @@ namespace ChoETL
             return prefix != "xmlns";
         }
 
-        private XAttribute CreateXAttribute(string name, object value, ChoXmlNamespaceManager nsMgr, string defaultNSPrefix)
+        private void AddXAttribute(XElement ele, string name, object value, ChoXmlNamespaceManager nsMgr, string nsPrefix)
         {
-            return new XAttribute(name, value);
+            var attr = CreateXAttribute(name, value, nsMgr, nsPrefix);
+            if (!nsPrefix.IsNullOrWhiteSpace() && nsMgr.GetNamespaceForPrefix(nsPrefix) != null)
+            {
+                try
+                {
+                    ele.Add(new XAttribute(XNamespace.Xmlns + nsPrefix, nsMgr.GetNamespaceForPrefix(nsPrefix)));
+                }
+                catch { }
+                ele.Add(attr);
+            }
+        }
+
+        private XAttribute CreateXAttribute(string name, object value, ChoXmlNamespaceManager nsMgr, string nsPrefix)
+        {
+            //return new XAttribute(name, value);
+
+            if (nsPrefix.IsNullOrWhiteSpace() || nsMgr.GetNamespaceForPrefix(nsPrefix) == null)
+                return new XAttribute(name, value);
+            else
+            {
+                XNamespace ns = nsMgr.GetNamespaceForPrefix(nsPrefix);
+                XAttribute attr = new XAttribute(ns + name, value);
+
+                return attr;
+            }
         }
 
         private string GetElementName(string xml)
@@ -1289,7 +1335,7 @@ namespace ChoETL
                 e.Name = ns + e.Name.LocalName;
             }
 
-            if (emitType && value != null && value.GetType().IsSimple())
+            if (emitType && value != null) // && value.GetType().IsSimple())
             {
                 e.AddXSTypeAttribute(value, Configuration.XmlSchemaNamespace);
             }
@@ -1297,9 +1343,9 @@ namespace ChoETL
             return e;
         }
 
-        private XElement[] ParseElement(string strXml, XmlNamespaceManager mngr, string nsPrefix = null, XNamespace xs = null)
+        private XElement[] ParseElement(string strXml, ChoXmlNamespaceManager nsMgr, string nsPrefix = null, XNamespace xs = null)
         {
-            XmlParserContext parserContext = new XmlParserContext(null, mngr, null, XmlSpace.None);
+            XmlParserContext parserContext = new XmlParserContext(null, nsMgr.NSMgr, null, XmlSpace.None);
             XElement[] es = null;
 
             try
@@ -1310,7 +1356,7 @@ namespace ChoETL
             }
             catch
             {
-                XmlTextReader txtReader = new XmlTextReader($"<root>{strXml}</root>", XmlNodeType.Element, parserContext);
+                XmlTextReader txtReader = new XmlTextReader($"<root {nsMgr.ToString(Configuration)}>{strXml}</root>", XmlNodeType.Element, parserContext);
                 es = XElement.Load(txtReader).Elements().ToArray();
             }
             if (xs != null)

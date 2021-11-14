@@ -985,6 +985,8 @@ namespace ChoETL
                     xsType = "boolean";
                 else if (typeof(string).IsAssignableFrom(type))
                     xsType = "string";
+                else
+                    xsType = value.GetType().FullName;
             }
 
             return xsType;

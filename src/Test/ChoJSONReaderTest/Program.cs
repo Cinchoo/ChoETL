@@ -7470,10 +7470,31 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 using (var w = new ChoXmlWriter(Console.Out)
                     .Configure(c => c.UseXmlArray = true)
                     .WithXmlNamespace("xsi", ChoXmlSettings.XmlSchemaInstanceNamespace)
-                    //.Configure(c => c.OmitXsiNamespace = false)
+                    .WithXmlNamespace("json", ChoXmlSettings.JSONSchemaNamespace)
+                    .Configure(c => c.OmitXsiNamespace = false)
+                    .Configure(c => c.UseJsonNamespaceForObjectType = true)
                     )
                     w.Write(r);
             }
+        }
+
+        static void Issue163()
+        {
+            string csv = @"Id,name,nestedobject/id,nestedobject/name,nestedarray/0/name, nestedarray/0/city, nestedarray/1/name, nestedarray/200/city
+1,name,2,objName,namelist10, citylist10,namelist11, citylist11
+2,name1,3,objName,namelist20, citylist20,namelist21, citylist21";
+
+            StringBuilder json = new StringBuilder();
+            using (var w = new ChoJSONWriter(json)
+                .Configure(c => c.DefaultArrayHandling = false)
+                )
+            {
+                using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
+                    .Configure(c => c.NestedColumnSeparator = '/')
+                )
+                    w.Write(r);
+            }
+            Console.WriteLine(json.ToString());
         }
 
         static void Main(string[] args)

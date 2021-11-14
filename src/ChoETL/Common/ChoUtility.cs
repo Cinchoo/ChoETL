@@ -1383,8 +1383,12 @@ namespace ChoETL
 
         public static string XmlSerialize(object target, XmlWriterSettings xws = null, string separator = null, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore,
             string nsPrefix = null, bool emitDataType = false, bool useXmlArray = false,
-            XmlSerializerNamespaces ns = null)
+            bool useJsonNamespaceForObjectType = false, ChoXmlNamespaceManager nsMgr = null)
         {
+            XmlSerializerNamespaces ns = null;
+            if (nsMgr != null)
+                ns = nsMgr.XmlSerializerNamespaces;
+
             if (xws == null)
             {
                 if (separator.IsNullOrEmpty())
@@ -1406,7 +1410,7 @@ namespace ChoETL
             {
                 if (((IList)target).Count > 0)
                 {
-                    var xml = ((IList)target).OfType<object>().Select(o => XmlSerialize(o, xws, separator, nullValueHandling, nsPrefix, emitDataType, useXmlArray)).Aggregate((current, next) => "{0}{1}{2}".FormatString(current, separator, next));
+                    var xml = ((IList)target).OfType<object>().Select(o => XmlSerialize(o, xws, separator, nullValueHandling, nsPrefix, emitDataType, useXmlArray, useJsonNamespaceForObjectType, nsMgr)).Aggregate((current, next) => "{0}{1}{2}".FormatString(current, separator, next));
                     //return $"<dynamics>{xml}</dynamics>";
                     return xml;
                 }
@@ -1418,7 +1422,8 @@ namespace ChoETL
             {
                 if (target is ChoDynamicObject)
                 {
-                    xtw.WriteRaw(((ChoDynamicObject)target).GetXml(null, nullValueHandling, nsPrefix, emitDataType, EOLDelimiter: separator, useXmlArray: useXmlArray));
+                    xtw.WriteRaw(((ChoDynamicObject)target).GetXml(null, nullValueHandling, nsPrefix, emitDataType, EOLDelimiter: separator, useXmlArray: useXmlArray,
+                        useJsonNamespaceForObjectType: useJsonNamespaceForObjectType, nsMgr: nsMgr));
                 }
                 else
                 {
