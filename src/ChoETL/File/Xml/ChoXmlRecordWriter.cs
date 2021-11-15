@@ -1335,6 +1335,20 @@ namespace ChoETL
                 e.Name = ns + e.Name.LocalName;
             }
 
+            //Add any specified NS
+            if (nsMgr != null)
+            {
+                foreach (var kvp in nsMgr.NSDict)
+                {
+                    try
+                    {
+                        var nsAttr = new XAttribute(XNamespace.Xmlns + kvp.Key, kvp.Value);
+                        e.Add(nsAttr);
+                    }
+                    catch { }
+                }
+            }
+
             if (emitType && value != null) // && value.GetType().IsSimple())
             {
                 e.AddXSTypeAttribute(value, Configuration.XmlSchemaNamespace);

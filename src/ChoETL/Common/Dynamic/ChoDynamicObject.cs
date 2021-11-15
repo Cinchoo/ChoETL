@@ -1258,7 +1258,7 @@ namespace ChoETL
                     }
                 }
                 else
-                    msg.AppendFormat(@" {0}=""{1}""", key.Substring(1), this[key]);
+                    msg.AppendFormat(@" {0}=""{1}""", key, this[key]);
             }
 
             if (ContainsKey(ValueToken))
@@ -1648,6 +1648,15 @@ namespace ChoETL
         }
 
         private string _prefix = null;
+        public void SetNSPrefix(string prefix)
+        {
+            _prefix = prefix;
+        }
+        public string GetNSPrefix()
+        {
+            return _prefix;
+        }
+
         public ChoDynamicObject AddNamespace(string prefix, string uri, bool childrenOnly = false)
         {
             ChoGuard.ArgumentNotNullOrEmpty(prefix, nameof(prefix));

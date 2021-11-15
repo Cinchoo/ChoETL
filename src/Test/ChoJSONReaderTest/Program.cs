@@ -1119,7 +1119,7 @@ namespace ChoJSONReaderTest
         {
             Assert.Fail(@"File C:\Users\nraj39\Downloads\ratings.json not found");
 
-            var x = new ChoJSONReader(@"C:\Users\nraj39\Downloads\ratings.json").First();
+            var x = new ChoJSONReader(@"ratings.json").First();
             Console.WriteLine(x.Dump());
         }
 
@@ -2959,7 +2959,7 @@ K,L,M,N,O,P,Q,R,S,T";
                 .WithFirstLineHeader()
                 )
             {
-                using (var r = new ChoJSONReader(@"C:\Projects\GitHub\ChoETL\src\Test\ChoJSONReaderTest\sample41.json")
+                using (var r = new ChoJSONReader(@"sample41.json")
                     .WithField("startTime", jsonPath: "$.start.dateTime", isArray: false)
                     .WithField("endTime", jsonPath: "$.end.dateTime", isArray: false)
                     .WithField("id")
@@ -7472,7 +7472,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                     .WithXmlNamespace("xsi", ChoXmlSettings.XmlSchemaInstanceNamespace)
                     .WithXmlNamespace("json", ChoXmlSettings.JSONSchemaNamespace)
                     .Configure(c => c.OmitXsiNamespace = false)
-                    .Configure(c => c.UseJsonNamespaceForObjectType = true)
+                    //.Configure(c => c.UseJsonNamespaceForObjectType = true)
                     )
                     w.Write(r);
             }

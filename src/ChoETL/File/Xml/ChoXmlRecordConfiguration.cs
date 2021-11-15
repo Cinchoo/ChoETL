@@ -22,6 +22,22 @@ namespace ChoETL
     public class ChoXmlRecordConfiguration : ChoFileRecordConfiguration
     {
         internal readonly ChoResetLazy<ChoXmlNamespaceManager> XmlNamespaceManager;
+        public string AttributeFieldPrefixes
+        {
+            get;
+            set;
+        }
+        public string CDATAFieldPostfixes
+        {
+            get;
+            set;
+        }
+        public string CDATAFieldPrefixes
+        {
+            get;
+            set;
+        }
+
         public bool FlattenNode
         {
             get;
@@ -608,7 +624,7 @@ namespace ChoETL
                         if (IgnoredFields.Contains(fn))
                             continue;
 
-                        if (fn.StartsWith("_"))
+                        if (AttributeFieldPrefixes != null && AttributeFieldPrefixes.Select(c => fn.StartsWith(c.ToString())).Any())
                         {
                             string fn1 = fn.Substring(1);
                             if (!DefaultNamespacePrefix.IsNullOrWhiteSpace())
@@ -619,7 +635,17 @@ namespace ChoETL
                             obj.IsXmlAttribute = true;
                             XmlRecordFieldConfigurations.Add(obj);
                         }
-                        else if (fn.EndsWith("_"))
+                        else if (CDATAFieldPrefixes != null && CDATAFieldPrefixes.Select(c => fn.StartsWith(c.ToString())).Any())
+                        {
+                            string fn1 = fn.Substring(0, fn.Length - 1);
+                            if (!DefaultNamespacePrefix.IsNullOrWhiteSpace())
+                                fn1 = $"{DefaultNamespacePrefix}:{fn1}";
+                            var obj = new ChoXmlRecordFieldConfiguration(fn, xPath: $"./{fn1}");
+                            obj.FieldName = fn1;
+                            obj.IsXmlCDATA = true;
+                            XmlRecordFieldConfigurations.Add(obj);
+                        }
+                        else if (CDATAFieldPostfixes != null && CDATAFieldPostfixes.Select(c => fn.EndsWith(c.ToString())).Any())
                         {
                             string fn1 = fn.Substring(0, fn.Length - 1);
                             if (!DefaultNamespacePrefix.IsNullOrWhiteSpace())

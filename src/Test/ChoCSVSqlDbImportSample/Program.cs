@@ -197,8 +197,7 @@ namespace ChoCSVSqlDbImportSample
             //}
             DateTime st = DateTime.Now;
             Console.WriteLine("Starting..." + st);
-            Assert.Fail(@"Testfile C:\Personal\LabCorpTest\bin\Debug\20170202_CUST_CIF.IN not available. Include in project.");
-            using (var dr = new ChoCSVReader(@"C:\Personal\LabCorpTest\bin\Debug\20170202_CUST_CIF.IN").NotifyAfter(10000))
+            using (var dr = new ChoCSVReader(@"20170202_CUST_CIF.IN").NotifyAfter(10000))
             {
                 dr.RowsLoaded += delegate (object sender, ChoRowsLoadedEventArgs e)
                 {
@@ -213,7 +212,7 @@ namespace ChoCSVSqlDbImportSample
 
             //using (SqlBulkCopy bcp = new SqlBulkCopy(connectionstring))
             //{
-            //    using (var r = new ChoCSVReader<Series>(@"C:\Users\raj\Desktop\Building consents by territorial authority and selected wards (Monthly).csv").WithFirstLineHeader().NotifyAfter(10000))
+            //    using (var r = new ChoCSVReader<Series>(@"Building consents by territorial authority and selected wards (Monthly).csv").WithFirstLineHeader().NotifyAfter(10000))
             //    {
             //        r.RowsLoaded += delegate (object sender, ChoRowsLoadedEventArgs e)
             //        {

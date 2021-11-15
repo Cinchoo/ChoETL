@@ -11,7 +11,7 @@ namespace ChoParquetReaderTest
         static void Test1()
         {
             StringBuilder csv = new StringBuilder();
-            using (var r = new ChoParquetReader(@"C:\Projects\GitHub\ChoETL\src\Test\ChoParquetWriterTest\bin\Debug\netcoreapp2.1\test1.parquet")
+            using (var r = new ChoParquetReader(@"test1.parquet")
                 .ParquetOptions(o => o.TreatByteArrayAsString = true))
             {
                 using (var w = new ChoCSVWriter(csv)
@@ -26,7 +26,7 @@ namespace ChoParquetReaderTest
         static void DataTableTest()
         {
             StringBuilder csv = new StringBuilder();
-            using (var r = new ChoParquetReader(@"C:\Projects\GitHub\ChoETL\src\Test\ChoParquetWriterTest\bin\Debug\netcoreapp2.1\test1.parquet")
+            using (var r = new ChoParquetReader(@"test1.parquet")
                 .ParquetOptions(o => o.TreatByteArrayAsString = true))
             {
                 var dt = r.AsDataTable();
@@ -38,7 +38,7 @@ namespace ChoParquetReaderTest
         static void ByteArrayTest()
         {
             StringBuilder csv = new StringBuilder();
-            using (var r = new ChoParquetReader(@"C:\Projects\GitHub\ChoETL\src\Test\ChoParquetWriterTest\bin\Debug\netcoreapp2.1\ByteArrayTest.parquet")
+            using (var r = new ChoParquetReader(@"ByteArrayTest.parquet")
                 .ParquetOptions(o => o.TreatByteArrayAsString = true)
                 )
             {

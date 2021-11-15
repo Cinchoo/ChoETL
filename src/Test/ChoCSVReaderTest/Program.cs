@@ -2674,11 +2674,9 @@ Cole, Brad R.	3/11/2021, 1:27:03 PM 3/11/2021, 1:28:07 PM	1m 4s	TEST4@test.COM	P
         ////[Test]
         public static void LargeNoOfColumnsTest()
         {
-            throw new Exception(@"File C:\Users\nraj39\Downloads\ETLsampletest.csv not found");
             for (int i = 0; i < 5; i++)
             {
                 Stopwatch sw = Stopwatch.StartNew();
-                // @"C:\Users\nraj39\Downloads\ETLsampletest.csv"
                 foreach (var rec in new ChoCSVReader(FileNameETLsampletestCSV))
                 {
                     Console.WriteLine(rec.Column1);
@@ -2692,7 +2690,6 @@ Cole, Brad R.	3/11/2021, 1:27:03 PM 3/11/2021, 1:28:07 PM	1m 4s	TEST4@test.COM	P
         public static void BoolIssue()
         {
             string csvIn = FileNameSampleDataCSV; // TODO: File SampleData.csv have to be added to project. Current directory is C:\Users\nraj39\Downloads\ which could not be accessed by other contributors
-                                                  //            string csvIn = @"C:\Users\nraj39\Downloads\SampleData.csv";
 
             using (var r = new ChoCSVReader(csvIn)
                 .WithFirstLineHeader()

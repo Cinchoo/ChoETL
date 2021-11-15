@@ -433,7 +433,33 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            ExtractAllNodes();
+            SerializeAndDeserializeObjectWithType();
+        }
+
+
+        static void SerializeAndDeserializeObjectWithType()
+        {
+            string xml = @"<SecurityCustomizationData xmlns:i=""http://www.w3.org/2001/XMLSchema-instance"">
+  <_x003C_CustomizationsForTypeList_x003E_k__BackingField>
+    <BaseRepositoryCustomizations i:type=""RepositoryCustomizationsOfAxSecurityRoleNcCATIYq"">
+    </BaseRepositoryCustomizations>
+    <BaseRepositoryCustomizations i:type=""RepositoryCustomizationsOfAxSecurityDutyNcCATIYq"">
+    </BaseRepositoryCustomizations>
+    <BaseRepositoryCustomizations i:type=""RepositoryCustomizationsOfAxSecurityPrivilegeNcCATIYq"">
+    </BaseRepositoryCustomizations>
+  </_x003C_CustomizationsForTypeList_x003E_k__BackingField>
+</SecurityCustomizationData>";
+
+            using (var r = ChoXmlReader.LoadText(xml)
+                .WithXPath("//")
+                .WithXmlNamespace("i", "http://www.w3.org/2001/XMLSchema-instance")
+                )
+            {
+                using (var w = new ChoXmlWriter(Console.Out)
+                .WithXmlNamespace("i", "http://www.w3.org/2001/XMLSchema-instance")
+                    )
+                    w.Write(r);
+            }
         }
 
         static void ExtractAllNodes()
@@ -5109,7 +5135,7 @@ A_TempFZ1_Set,A_TempFZ2_Set,A_TempFZ3_Set
 
             DateTime st = DateTime.Now;
             Console.WriteLine("Starting..." + st);
-            using (var r = new ChoXmlReader(@"C:\temp\EPAXMLDownload1.xml").NotifyAfter(10000).WithXPath("Document/FacilitySite"))
+            using (var r = new ChoXmlReader(@"EPAXMLDownload1.xml").NotifyAfter(10000).WithXPath("Document/FacilitySite"))
             {
                 //r.Loop();
                 foreach (var e in r.Take(10))

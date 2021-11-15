@@ -849,10 +849,10 @@ Age,24,19";
 
             Console.WriteLine(DateTime.Now.ToString());
 
-            using (var r = new ChoXmlReader(XmlReader.Create(@"C:\Users\nraj39\Downloads\Loan\dblp.xml",
+            using (var r = new ChoXmlReader(XmlReader.Create(@"dblp.xml",
                 settings)))
             {
-                using (FileStream fs = File.Open(@"C:\Users\nraj39\Downloads\Loan\dblp.csv", FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite))
+                using (FileStream fs = File.Open(@"dblp.csv", FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite))
                 using (BufferedStream bs = new BufferedStream(fs))
                 using (var w = new ChoCSVWriter(bs)
                     .WithFirstLineHeader())
@@ -871,14 +871,12 @@ Age,24,19";
         //[Test]
         public static void LargeJSON2CSV()
         {
-            Assert.Fail(@"Cannot find file C:\Users\nraj39\Downloads\Loan\rows.json");
-
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            using (var r = new ChoJSONReader(@"C:\Users\nraj39\Downloads\Loan\rows.json"))
+            using (var r = new ChoJSONReader(@"rows.json"))
             {
                 //var x = ((IDictionary<string, object>)r.FirstOrDefault()).Flatten().ToDictionary(c => c.Key, c => c.Value);
                 //Console.WriteLine(x.Dump());
-                using (var w = new ChoCSVWriter(@"C:\Users\nraj39\Downloads\Loan\rows.csv")
+                using (var w = new ChoCSVWriter(@"rows.csv")
                     .WithFirstLineHeader()
                     )
                 {
@@ -1148,10 +1146,10 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
         {
             Assert.Fail(@"Cannot find file C:\Users\nraj39\Downloads\Loan\test1.json");
 
-            using (var r = new ChoJSONReader(@"C:\Users\nraj39\Downloads\Loan\test1.json")
+            using (var r = new ChoJSONReader(@"test1.json")
                  .WithJSONPath("$..data.getUsers[*]"))
             {
-                using (var r1 = new ChoJSONReader(@"C:\Users\nraj39\Downloads\Loan\test1.json")
+                using (var r1 = new ChoJSONReader(@"test1.json")
                     .WithJSONPath("$..errors[*]")
                     )
                 {
@@ -1166,7 +1164,7 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
                             return i;
                     });
 
-                    using (var w = new ChoCSVWriter(@"C:\Users\nraj39\Downloads\Loan\test1.csv")
+                    using (var w = new ChoCSVWriter(@"test1.csv")
                         .WithFirstLineHeader()
                         .Configure(c => c.MaxScanRows = 10)
                         .Configure(c => c.ThrowAndStopOnMissingField = false)
@@ -1669,7 +1667,7 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
                 Encoding = Encoding.Default
             };
 
-            using (var parser = new ChoCSVWriter(@"C:\Temp\t.txt", config).WithFirstLineHeader())
+            using (var parser = new ChoCSVWriter(@"t.txt", config).WithFirstLineHeader())
             {
                 parser.Write(objs);
             }

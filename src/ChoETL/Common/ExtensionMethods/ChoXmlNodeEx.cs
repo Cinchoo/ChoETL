@@ -1071,6 +1071,9 @@ namespace ChoETL
                 return false;
 
             string ns = attribute.Name.Namespace.ToString();
+            if (!ns.IsNullOrWhiteSpace() && nsMgr != null && nsMgr.GetPrefixOfNamespace(ns) != null)
+                return true;
+
             if (xmlSchemaNS != null && ns.StartsWith(xmlSchemaNS, StringComparison.InvariantCultureIgnoreCase))
                 return false;
             if (jsonSchemaNS != null && ns.StartsWith(jsonSchemaNS, StringComparison.InvariantCultureIgnoreCase))
@@ -1092,12 +1095,15 @@ namespace ChoETL
             return true;
         }
 
-        private static bool HasAttributes(this XElement element, string xmlSchemaNS = null, string jsonSchemaNS = null)
+        private static bool HasAttributes(this XElement element, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoXmlNamespaceManager nsMgr = null)
         {
             bool hasAttr = false;
             foreach (var attribute in element.Attributes())
             {
                 string ns = attribute.Name.Namespace.ToString();
+                if (!ns.IsNullOrWhiteSpace() && nsMgr != null && nsMgr.GetPrefixOfNamespace(ns) != null)
+                    return true;
+
                 if (xmlSchemaNS != null && ns.StartsWith(xmlSchemaNS, StringComparison.InvariantCultureIgnoreCase))
                     continue;
                 if (jsonSchemaNS != null && ns.StartsWith(jsonSchemaNS, StringComparison.InvariantCultureIgnoreCase))
@@ -1133,11 +1139,11 @@ namespace ChoETL
 
             bool hasAttr = false;
             // cater for attributes as properties
-            if (element.HasAttributes(xmlSchemaNS, jsonSchemaNS))
+            if (element.HasAttributes(xmlSchemaNS, jsonSchemaNS, nsMgr))
             {
                 foreach (var attribute in element.Attributes())
                 {
-                    if (!attribute.IsValidAttribute())
+                    if (!attribute.IsValidAttribute(xmlSchemaNS, jsonSchemaNS, nsMgr))
                         continue;
 
                     if (nsMgr != null && defaultNSPrefix != null)
@@ -1150,7 +1156,11 @@ namespace ChoETL
                         continue;
 
                     hasAttr = true;
-                    obj.SetAttribute(attribute.Name.LocalName, System.Net.WebUtility.HtmlDecode(attribute.Value));
+                    var nsPrefix = nsMgr.GetPrefixOfNamespace(attribute.Name.Namespace.ToString());
+                    if (nsPrefix.IsNullOrWhiteSpace())
+                        obj.SetAttribute(attribute.Name.LocalName, System.Net.WebUtility.HtmlDecode(attribute.Value));
+                    else
+                        obj.SetAttribute($"{nsPrefix}:{attribute.Name.LocalName}", System.Net.WebUtility.HtmlDecode(attribute.Value));
                 }
             }
 
