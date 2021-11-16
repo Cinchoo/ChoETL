@@ -433,9 +433,31 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            SerializeAndDeserializeObjectWithType();
+            Xml2JsonAttributeAs();
         }
 
+        static void Xml2JsonAttributeAs()
+        {
+            string xml = @"<recipe>
+   <orderedDirections>
+      <add what=""flour"" to=""bowl"" amount=""1c""/> 
+      <add what=""sugar"" to=""bowl"" amount=""1/2c""/>  
+      <stir what=""bowl""/>
+      <move from=""bowl"" to=""pot"" amount=""1/2""/>
+      <add what=""eggs"" to=""pot""/>
+      <stir what=""pot""/>
+   </orderedDirections>
+</recipe>";
+
+            using (var r = ChoXmlReader.LoadText(xml)
+                )
+            {
+                using (var w = new ChoJSONWriter(Console.Out)
+                    .Configure(c => c.TurnOnAutoDiscoverJsonConverters = true)
+                    )
+                    w.Write(r);
+            }
+        }
 
         static void SerializeAndDeserializeObjectWithType()
         {

@@ -7539,12 +7539,14 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             StringBuilder json = new StringBuilder();
             using (var w = new ChoJSONWriter(json)
                 .Configure(c => c.DefaultArrayHandling = false)
-                .JsonSerializationSettings(s => s.NullValueHandling = NullValueHandling.Ignore)
+                //.JsonSerializationSettings(s => s.NullValueHandling = NullValueHandling.Ignore)
                 )
             {
                 using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
                     .Configure(c => c.NestedColumnSeparator = '/')
-                    .WithMaxScanRows(1))
+                    .WithMaxScanRows(1)
+                    .IgnoreFieldValueMode(ChoIgnoreFieldValueMode.Any)
+                    )
                     w.Write(r);
             }
 

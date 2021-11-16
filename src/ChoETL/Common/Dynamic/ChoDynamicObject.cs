@@ -1160,7 +1160,10 @@ namespace ChoETL
             {
                 foreach (var kvp in kvpDict)
                 {
-                    yield return kvp;
+                    if (!kvp.Key.StartsWith(_attributePrefix) && IsXmlAttribute(kvp.Key))
+                        yield return new KeyValuePair<string, object>($"{_attributePrefix}{kvp.Key}", kvp.Value);
+                    else
+                        yield return kvp;
                 }
             }
         }
@@ -1439,6 +1442,10 @@ namespace ChoETL
         }
 
         private HashSet<string> _attributes = new HashSet<string>();
+        public bool IsXmlAttribute(string attrName)
+        {
+            return _attributes.Contains(attrName);
+        }
         public object GetAttribute(string attrName)
         {
             if (_attributes.Contains(attrName))
