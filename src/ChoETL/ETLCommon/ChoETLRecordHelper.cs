@@ -39,7 +39,7 @@ namespace ChoETL
         public static bool IgnoreFieldValue(this object fieldValue, ChoIgnoreFieldValueMode? ignoreFieldValueMode)
         {
             if (ignoreFieldValueMode == null)
-                return fieldValue == null;
+                return false; // fieldValue == null;
 
             if ((ignoreFieldValueMode & ChoIgnoreFieldValueMode.Null) == ChoIgnoreFieldValueMode.Null && fieldValue == null)
                 return true;

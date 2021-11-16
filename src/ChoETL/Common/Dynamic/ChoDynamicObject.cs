@@ -1182,11 +1182,6 @@ namespace ChoETL
             return this;
         }
 
-        public IDictionary<string, object> AsDictionary()
-        {
-            return _kvpDict;
-        }
-
         public string Dump()
         {
             return ChoUtility.ToStringEx(this);
@@ -1747,6 +1742,18 @@ namespace ChoETL
             {
                 info.AddValue(kvp.Key, kvp.Value);
             }
+        }
+
+        public IDictionary<string, object> AsDictionary()
+        {
+            var dict = _kvpDict;
+            foreach (var key in dict.Keys)
+            {
+                if (dict[key] is ChoDynamicObject)
+                    dict[key] = dict[key].AsDictionary();
+            }
+
+            return dict;
         }
     }
 

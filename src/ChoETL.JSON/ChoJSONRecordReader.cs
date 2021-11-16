@@ -496,6 +496,12 @@ namespace ChoETL
             List<object> buffer = new List<object>();
             IDictionary<string, Type> recFieldTypes = null;
 
+            if (Configuration.IgnoreFieldValueMode == null)
+            {
+                if (Configuration.JsonSerializerSettings.NullValueHandling == NullValueHandling.Ignore)
+                    Configuration.IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Null;
+            }
+
             foreach (var obj in FlattenNodeIfOn(jObjects))
             {
                 pair = new Tuple<long, JObject>(++counter, obj);
@@ -1259,6 +1265,9 @@ namespace ChoETL
                     bool ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
                     if (ignoreFieldValue)
                         fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
+                    ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
+                    if (ignoreFieldValue)
+                        continue;
 
                     if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
                     {

@@ -1,9 +1,11 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Dynamic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -36,14 +38,14 @@ namespace ChoETL
             {
                 var children = obj.Children<JProperty>().GroupBy(prop => prop.Value?.Type == JTokenType.Array).ToDictionary(gr => gr.Key);
                 if (children.TryGetValue(false, out var directProps))
-                    otherProperties = otherProperties?.Concat(directProps) ?? directProps; 
+                    otherProperties = otherProperties?.Concat(directProps) ?? directProps;
 
                 if (children.TryGetValue(true, out var ChildCollections))
                 {
                     foreach (var childObj in ChildCollections.SelectMany(childColl => childColl.Values()).SelectMany(childColl => GetFlattenedObjects(childColl, otherProperties)))
                         yield return childObj;
                 }
-                else 
+                else
                 {
                     var res = new JObject();
                     if (otherProperties != null)
@@ -74,7 +76,7 @@ namespace ChoETL
                 return $"{type.Name}Converter";
         }
 
-        public  static string JTokenToString(this JToken jt)
+        public static string JTokenToString(this JToken jt)
         {
             if (jt != null && jt.Type == JTokenType.String)
                 return $"\"{jt.ToNString()}\"";
@@ -82,15 +84,22 @@ namespace ChoETL
                 return jt.ToNString();
         }
 
-        public static JToken SerializeToJToken(this JsonSerializer serializer, object value)
+        public static JToken SerializeToJToken(this JsonSerializer serializer, object value, Formatting? formatting = null, JsonSerializerSettings settings = null,
+            bool dontUseConverter = false)
         {
-            Type vt = value != null ? value.GetType() : typeof(object);
-            var convName = GetTypeConverterName(vt);
-            var conv = serializer.Converters.Where(c => c.GetType().Name == convName || (c.GetType().IsGenericType && c.GetType().GetGenericArguments()[0] == vt)).FirstOrDefault();
-            if (conv == null && ChoJSONConvertersCache.IsInitialized)
+            JsonConverter conv = null;
+            if (!dontUseConverter)
             {
-                if (ChoJSONConvertersCache.Contains(convName))
-                    conv = ChoJSONConvertersCache.Get(convName);
+                Type vt = value != null ? value.GetType() : typeof(object);
+                var convName = GetTypeConverterName(vt);
+                conv = serializer.Converters.Where(c => c.GetType().Name == convName || (c.GetType().IsGenericType && c.GetType().GetGenericArguments()[0] == vt)).FirstOrDefault();
+                if (conv == null && ChoJSONConvertersCache.IsInitialized)
+                {
+                    if (ChoJSONConvertersCache.Contains(convName))
+                        conv = ChoJSONConvertersCache.Get(convName);
+                    else if (ChoJSONConvertersCache.Contains(vt))
+                        conv = ChoJSONConvertersCache.Get(vt);
+                }
             }
 
             if (value != null)
@@ -125,14 +134,20 @@ namespace ChoETL
             }
 
             JToken t = null;
-            if (conv == null)
+            if (settings != null)
             {
-                t = JToken.FromObject(value, serializer);
+                if (conv != null)
+                    settings.Converters.Add(conv);
             }
+            if (formatting == null)
+                formatting = serializer.Formatting;
+
+            if (conv != null)
+                t = JToken.Parse(JsonConvert.SerializeObject(value, formatting.Value, conv));
+            else if (settings != null)
+                t = JToken.Parse(JsonConvert.SerializeObject(value, formatting.Value, settings));
             else
-            {
-                t = JToken.Parse(JsonConvert.SerializeObject(value, serializer.Formatting, conv));
-            }
+                t = JToken.FromObject(value, serializer);
             return t;
         }
 
@@ -208,6 +223,167 @@ namespace ChoETL
             where T : class, new()
         {
             return (T)ToJSONObject(dict, typeof(T));
+        }
+    }
+    public class ChoDynamicObjectConverter : JsonConverter
+    {
+        /// <summary>
+        /// Writes the JSON representation of the object.
+        /// </summary>
+        /// <param name="writer">The <see cref="JsonWriter"/> to write to.</param>
+        /// <param name="value">The value.</param>
+        /// <param name="serializer">The calling serializer.</param>
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            if (value is ChoDynamicObject)
+            {
+                var obj = (value as ChoDynamicObject).AsDictionary();
+
+                if (serializer.NullValueHandling == NullValueHandling.Ignore)
+                {
+                    foreach (var key in obj.Keys)
+                    {
+                        if (obj[key] == null)
+                            obj.Remove(key);
+                    }
+                }
+
+                if (obj.Count > 0)
+                {
+                    var t = serializer.SerializeToJToken(obj, dontUseConverter: true);
+                    t.WriteTo(writer);
+                }
+            }
+            else
+            {
+                var t = serializer.SerializeToJToken(value, dontUseConverter: true);
+                t.WriteTo(writer);
+            }
+        }
+
+        /// <summary>
+        /// Reads the JSON representation of the object.
+        /// </summary>
+        /// <param name="reader">The <see cref="JsonReader"/> to read from.</param>
+        /// <param name="objectType">Type of the object.</param>
+        /// <param name="existingValue">The existing value of object being read.</param>
+        /// <param name="serializer">The calling serializer.</param>
+        /// <returns>The object value.</returns>
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            return ReadValue(reader);
+        }
+
+        private object ReadValue(JsonReader reader)
+        {
+            while (reader.TokenType == JsonToken.Comment)
+            {
+                if (!reader.Read())
+                    throw new Exception("Unexpected end.");
+            }
+
+            switch (reader.TokenType)
+            {
+                case JsonToken.StartObject:
+                    return ReadObject(reader);
+                case JsonToken.StartArray:
+                    return ReadList(reader);
+                default:
+                    if (IsPrimitiveToken(reader.TokenType))
+                        return reader.Value;
+
+                    throw new Exception("Unexpected token when converting ExpandoObject: {0}".FormatString(reader.TokenType));
+            }
+        }
+        internal static bool IsPrimitiveToken(JsonToken token)
+        {
+            switch (token)
+            {
+                case JsonToken.Integer:
+                case JsonToken.Float:
+                case JsonToken.String:
+                case JsonToken.Boolean:
+                case JsonToken.Undefined:
+                case JsonToken.Null:
+                case JsonToken.Date:
+                case JsonToken.Bytes:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+        private object ReadList(JsonReader reader)
+        {
+            IList<object> list = new List<object>();
+
+            while (reader.Read())
+            {
+                switch (reader.TokenType)
+                {
+                    case JsonToken.Comment:
+                        break;
+                    default:
+                        object v = ReadValue(reader);
+
+                        list.Add(v);
+                        break;
+                    case JsonToken.EndArray:
+                        return list;
+                }
+            }
+
+            throw new Exception("Unexpected end.");
+        }
+
+        private object ReadObject(JsonReader reader)
+        {
+            IDictionary<string, object> expandoObject = new ExpandoObject();
+
+            while (reader.Read())
+            {
+                switch (reader.TokenType)
+                {
+                    case JsonToken.PropertyName:
+                        string propertyName = reader.Value.ToString();
+
+                        if (!reader.Read())
+                            throw new Exception("Unexpected end.");
+
+                        object v = ReadValue(reader);
+
+                        expandoObject[propertyName] = v;
+                        break;
+                    case JsonToken.Comment:
+                        break;
+                    case JsonToken.EndObject:
+                        return expandoObject;
+                }
+            }
+
+            throw new Exception("Unexpected end.");
+        }
+
+        /// <summary>
+        /// Determines whether this instance can convert the specified object type.
+        /// </summary>
+        /// <param name="objectType">Type of the object.</param>
+        /// <returns>
+        /// 	<c>true</c> if this instance can convert the specified object type; otherwise, <c>false</c>.
+        /// </returns>
+        public override bool CanConvert(Type objectType)
+        {
+            return objectType == typeof(ChoDynamicObject);
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether this <see cref="JsonConverter"/> can write JSON.
+        /// </summary>
+        /// <value>
+        /// 	<c>true</c> if this <see cref="JsonConverter"/> can write JSON; otherwise, <c>false</c>.
+        /// </value>
+        public override bool CanWrite
+        {
+            get { return true; }
         }
     }
 }

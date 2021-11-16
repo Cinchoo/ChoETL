@@ -11,7 +11,6 @@ namespace ChoETL
     {
         private static readonly object _objCachePadLock = new object();
         private static readonly Dictionary<Type, object> _objCache = new Dictionary<Type, object>();
-        private static readonly object _padLock = new object();
 		public static Func<Type, object[], object> Factory
 		{
 			get;
@@ -54,12 +53,10 @@ namespace ChoETL
 			try
 			{
                 object obj = null;
-                if (Factory != null)
+                Func<Type, object[], object> factory = Factory;
+                if (factory != null)
                 {
-                    lock (_padLock)
-                    {
-                        obj = Factory(objType, args);
-                    }
+                    obj = factory(objType, args);
                 }
                 if (obj == null)
                 {

@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,9 +18,26 @@ namespace ChoETL
             {
                 IsInitialized = true;
 
-                return ChoType.GetAllTypes().Where(t => typeof(JsonConverter).IsAssignableFrom(t) && !t.IsGenericType && ChoType.HasDefaultConstructor(t))
-                    .GroupBy(t => t)
-                    .ToDictionary(kvp => kvp.Key.Name, kvp => Activator.CreateInstance(kvp.First()) as JsonConverter);
+                var convs = ChoType.GetAllTypes().Where(t => typeof(JsonConverter).IsAssignableFrom(t) && !t.IsGenericType && ChoType.HasDefaultConstructor(t))
+                    .Distinct().ToArray();
+
+                Dictionary<string, JsonConverter> dict = new Dictionary<string, JsonConverter>();
+                foreach (var c in convs)
+                {
+                    if (dict.ContainsKey(c.Name))
+                        continue;
+                    try
+                    {
+                        dict.Add(c.Name, Activator.CreateInstance(c) as JsonConverter);
+
+                        var dna = ChoTypeDescriptor.GetTypeAttribute<DisplayNameAttribute>(c);
+                        if (dna != null && !dna.DisplayName.IsNullOrWhiteSpace())
+                            dict.Add(dna.DisplayName, Activator.CreateInstance(c) as JsonConverter);
+                    }
+                    catch { }
+                }
+
+                return dict;
             }
             catch
             {
@@ -102,6 +120,35 @@ namespace ChoETL
                     return _convertersCache.Value[name];
                 else
                     return null;
+            }
+        }
+
+        public static bool Contains(Type type)
+        {
+            ChoGuard.ArgumentNotNullOrEmpty(type, nameof(type));
+
+            var contains = Contains(type.Name);
+            if (contains)
+                return true;
+
+            lock (_padLock)
+            {
+                return Get(type) != null;
+            }
+        }
+
+        public static JsonConverter Get(Type type)
+        {
+            ChoGuard.ArgumentNotNullOrEmpty(type, nameof(type));
+
+            var conv = Get(type.Name);
+            if (conv != null)
+                return conv;
+
+            lock (_padLock)
+            {
+                var convs = _convertersCache.Value.Values.ToArray();
+                return convs.Where(c => c.CanConvert(type)).FirstOrDefault();
             }
         }
 

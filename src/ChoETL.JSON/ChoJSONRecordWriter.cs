@@ -162,6 +162,11 @@ namespace ChoETL
                 cr.CallbackRecordFieldWrite = _callbackRecordFieldWrite;
                 cr.Writer = Writer;
             }
+            if (Configuration.IgnoreFieldValueMode == null)
+            {
+                if (Configuration.JsonSerializerSettings.NullValueHandling == NullValueHandling.Ignore)
+                    Configuration.IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Null;
+            }
 
             if (records == null) yield break;
             if (Configuration.SingleElement == null)
@@ -422,7 +427,7 @@ namespace ChoETL
                                     //    Configuration.JsonSerializer.Serialize(jw, record);
                                     //}
                                     //recText = json.ToString(); // Configuration.JsonSerializer.Serialize(record, Configuration.Formatting, Configuration.JsonSerializerSettings);
-                                    recText = Configuration.JsonSerializer.SerializeToJToken(record).JTokenToString();
+                                    recText = Configuration.JsonSerializer.SerializeToJToken(record, Configuration.Formatting, Configuration.JsonSerializerSettings).JTokenToString();
                                     if (!SupportMultipleContent)
                                         sw.Write("{1}{0}", Indent(recText), EOLDelimiter);
                                     else
@@ -688,6 +693,9 @@ namespace ChoETL
                         bool ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
                         if (ignoreFieldValue)
                             fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
+                        ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
+                        if (ignoreFieldValue)
+                            continue;
 
                         if (!RaiseBeforeRecordFieldWrite(rec, index, kvp.Key, ref fieldValue))
                             return false;
@@ -956,7 +964,7 @@ namespace ChoETL
         {
             bool lUseJSONSerialization = useJSONSerialization == null ? Configuration.UseJSONSerialization : useJSONSerialization.Value;
             if (true) //lUseJSONSerialization)
-                return Configuration.JsonSerializer.SerializeToJToken(target).JTokenToString();
+                return Configuration.JsonSerializer.SerializeToJToken(target, Configuration.Formatting, Configuration.JsonSerializerSettings).JTokenToString();
             //return JsonConvert.SerializeObject(target, Configuration.Formatting, Configuration.JsonSerializerSettings);
             else
             {
