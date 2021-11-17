@@ -134,20 +134,10 @@ namespace ChoETL
                 return fc.IsArray.Value;
         }
 
+        private readonly Lazy<List<JsonConverter>> _JSONConverters;
         private List<JsonConverter> GetJSONConverters()
         {
-            List<JsonConverter> converters = new List<JsonConverter>();
-            converters.Add(new ExpandoObjectConverter());
-
-            foreach (var kvp in NodeConvertersForType)
-            {
-                if (kvp.Value == null) continue;
-                converters.Add(ChoActivator.CreateInstance(typeof(ChoJSONNodeConverter<>).MakeGenericType(kvp.Key), kvp.Value) as JsonConverter);
-
-                ChoTypeConverter.Global.Add(kvp.Key, ChoActivator.CreateInstance(typeof(ChoJSONTypeConverter<>).MakeGenericType(kvp.Key), kvp.Value) as IChoValueConverter);
-            }
-
-            return converters;
+            return _JSONConverters.Value;
         }
 
         public bool TurnOnAutoDiscoverJsonConverters
@@ -263,9 +253,26 @@ namespace ChoETL
             {
                 return JsonSerializerSettings == null ? null : JsonSerializer.Create(JsonSerializerSettings);
             });
+            _JSONConverters = new Lazy<List<JsonConverter>>(() =>
+            {
+                List<JsonConverter> converters = new List<JsonConverter>();
+                converters.Add(new ExpandoObjectConverter());
+                converters.Add(ChoDynamicObjectConverter.Instance);
+
+                foreach (var kvp in NodeConvertersForType)
+                {
+                    if (kvp.Value == null) continue;
+                    converters.Add(ChoActivator.CreateInstance(typeof(ChoJSONNodeConverter<>).MakeGenericType(kvp.Key), kvp.Value) as JsonConverter);
+
+                    ChoTypeConverter.Global.Add(kvp.Key, ChoActivator.CreateInstance(typeof(ChoJSONTypeConverter<>).MakeGenericType(kvp.Key), kvp.Value) as IChoValueConverter);
+                }
+
+                return converters;
+            });
 
             DefaultArrayHandling = recordType == null || recordType.IsDynamicType() ? true : false;
             JSONRecordFieldConfigurations = new List<ChoJSONRecordFieldConfiguration>();
+            WithJSONConverter(ChoDynamicObjectConverter.Instance);
 
             LineBreakChars = Environment.NewLine;
             Formatting = Newtonsoft.Json.Formatting.Indented;
@@ -580,6 +587,11 @@ namespace ChoETL
             return recordType;
         }
 
+        public void ApplyStateToConverters()
+        {
+
+        }
+
         public override void Validate(object state)
         {
             if (TurnOnAutoDiscoverJsonConverters)
@@ -589,7 +601,12 @@ namespace ChoETL
             {
                 foreach (var conv in GetJSONConverters())
                     _jsonSerializerSettings.Converters.Add(conv);
-
+                foreach (var conv in _jsonSerializerSettings.Converters.OfType<IChoJSONConverter>())
+                {
+                    conv.Serializer = JsonSerializer;
+                    conv.Context = new ChoDynamicObject();
+                    conv.Context.Configuration = this;
+                }
                 foreach (var conv in _jsonSerializerSettings.Converters)
                     JsonSerializer.Converters.Add(conv);
             }
@@ -1050,16 +1067,15 @@ namespace ChoETL
 
     public interface IChoJSONConverter
     {
-        JsonReader Reader { get; set; }
-        JsonWriter Writer { get; set; }
         JsonSerializer Serializer { get; set; }
+
+        dynamic Context { get; set; }
     }
 
     public class ChoJSONTypeConverter<T> : IChoValueConverter, IChoJSONConverter, IChoCollectionConverter
     {
-        public JsonReader Reader { get; set; }
-        public JsonWriter Writer { get; set; }
         public JsonSerializer Serializer { get; set; }
+        public dynamic Context { get; set; } = new ChoDynamicObject();
 
         private Func<object, object> _converter;
 
@@ -1070,12 +1086,12 @@ namespace ChoETL
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return (T)_converter?.Invoke(new { reader = Reader, targetType, value, hasExistingValue = false, serializer = Serializer }.ToDynamic());
+            return (T)_converter?.Invoke(new { value, targetType, parameter, culture, serializer = Serializer, context = Context }.ToDynamic());
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            _converter?.Invoke(new { writer = Writer, value, serializer = Serializer }.ToDynamic());
+            _converter?.Invoke(new { value, targetType, parameter, culture, serializer = Serializer, context = Context }.ToDynamic());
             return null;
         }
     }

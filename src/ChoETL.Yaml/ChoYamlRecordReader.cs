@@ -892,8 +892,8 @@ namespace ChoETL
                     //}
 
                     bool ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
-                    if (ignoreFieldValue)
-                        fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
+                    if (ignoreFieldValue && fieldConfig.IsDefaultValueSpecified)
+                        fieldValue = fieldConfig.DefaultValue;
                     ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
                     if (ignoreFieldValue)
                         continue;

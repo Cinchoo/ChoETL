@@ -7538,7 +7538,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             using (var w = new ChoJSONWriter(json)
                 .Configure(c => c.DefaultArrayHandling = false)
                 .IgnoreFieldValueMode(ChoIgnoreFieldValueMode.Null)
-                .Configure(c => c.TurnOnAutoDiscoverJsonConverters = true)
+                //.Configure(c => c.TurnOnAutoDiscoverJsonConverters = true)
                 //.WithJSONConverter(ChoDynamicObjectConverter.Instance)
                 )
             {

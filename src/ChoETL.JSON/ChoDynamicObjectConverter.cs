@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public class ChoDynamicObjectConverter : JsonConverter
+    public class ChoDynamicObjectConverter : JsonConverter, IChoJSONConverter
     {
         public static readonly ChoDynamicObjectConverter Instance = new ChoDynamicObjectConverter();
 
@@ -28,7 +28,34 @@ namespace ChoETL
             {
                 var obj = (value as ChoDynamicObject).AsDictionary();
 
-                if (serializer.NullValueHandling == NullValueHandling.Ignore)
+                var config = Context.Configuration as ChoJSONRecordConfiguration;
+                if (config != null && config.IgnoreFieldValueMode != null)
+                {
+                    foreach (var key in obj.Keys)
+                    {
+                        if ((config.IgnoreFieldValueMode | ChoIgnoreFieldValueMode.DBNull) == ChoIgnoreFieldValueMode.DBNull)
+                        {
+                            if (obj[key] == DBNull.Value)
+                                obj.Remove(key);
+                        }
+                        else if ((config.IgnoreFieldValueMode | ChoIgnoreFieldValueMode.Empty) == ChoIgnoreFieldValueMode.Empty)
+                        {
+                            if (obj[key] is string && obj[key].ToNString().IsEmpty())
+                                obj.Remove(key);
+                        }
+                        else if ((config.IgnoreFieldValueMode | ChoIgnoreFieldValueMode.Null) == ChoIgnoreFieldValueMode.Null)
+                        {
+                            if (obj[key] == null)
+                                obj.Remove(key);
+                        }
+                        else if ((config.IgnoreFieldValueMode | ChoIgnoreFieldValueMode.WhiteSpace) == ChoIgnoreFieldValueMode.WhiteSpace)
+                        {
+                            if (obj[key] is string && obj[key].ToNString().IsNullOrWhiteSpace())
+                                obj.Remove(key);
+                        }
+                    }
+                }
+                else if (serializer.NullValueHandling == NullValueHandling.Ignore)
                 {
                     foreach (var key in obj.Keys)
                     {
@@ -174,5 +201,8 @@ namespace ChoETL
         {
             get { return true; }
         }
+
+        public JsonSerializer Serializer { get; set; }
+        public dynamic Context { get; set; }
     }
 }
