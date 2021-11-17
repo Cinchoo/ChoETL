@@ -29,6 +29,13 @@ namespace ChoETL
 
     public static class ChoETLFrxBootstrap
     {
+        public static bool TurnOnAutoDiscoverJsonConverters
+        {
+            get;
+            set;
+        }
+
+
         public static bool IsSandboxEnvironment
         {
             get;

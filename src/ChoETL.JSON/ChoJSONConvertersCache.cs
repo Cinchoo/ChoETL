@@ -18,23 +18,30 @@ namespace ChoETL
             {
                 IsInitialized = true;
 
-                var convs = ChoType.GetAllTypes().Where(t => typeof(JsonConverter).IsAssignableFrom(t) && !t.IsGenericType && ChoType.HasDefaultConstructor(t))
-                    .Distinct().ToArray();
-
                 Dictionary<string, JsonConverter> dict = new Dictionary<string, JsonConverter>();
-                foreach (var c in convs)
-                {
-                    if (dict.ContainsKey(c.Name))
-                        continue;
-                    try
-                    {
-                        dict.Add(c.Name, Activator.CreateInstance(c) as JsonConverter);
 
-                        var dna = ChoTypeDescriptor.GetTypeAttribute<DisplayNameAttribute>(c);
-                        if (dna != null && !dna.DisplayName.IsNullOrWhiteSpace())
-                            dict.Add(dna.DisplayName, Activator.CreateInstance(c) as JsonConverter);
+                if (ChoETLFrxBootstrap.TurnOnAutoDiscoverJsonConverters)
+                {
+                    var convs = ChoType.GetAllTypes().Where(t => typeof(JsonConverter).IsAssignableFrom(t) && !t.IsGenericType && ChoType.HasDefaultConstructor(t))
+                        .Distinct().ToArray();
+
+                    foreach (var c in convs)
+                    {
+                        if (dict.ContainsKey(c.Name))
+                            continue;
+                        try
+                        {
+                            dict.Add(c.Name, Activator.CreateInstance(c) as JsonConverter);
+
+                            var dna = ChoTypeDescriptor.GetTypeAttribute<DisplayNameAttribute>(c);
+                            if (dna != null && !dna.DisplayName.IsNullOrWhiteSpace())
+                            {
+                                if (!dict.ContainsKey(dna.DisplayName))
+                                    dict.Add(dna.DisplayName, Activator.CreateInstance(c) as JsonConverter);
+                            }
+                        }
+                        catch { }
                     }
-                    catch { }
                 }
 
                 return dict;
@@ -66,10 +73,20 @@ namespace ChoETL
 
             lock (_padLock)
             {
-                if (_convertersCache.Value.ContainsKey(name))
+                if (!_convertersCache.Value.ContainsKey(name))
                     _convertersCache.Value.Add(name, converter);
                 else
                     _convertersCache.Value[name] = converter;
+
+                var dna = ChoTypeDescriptor.GetTypeAttribute<DisplayNameAttribute>(converter.GetType());
+                if (dna != null && !dna.DisplayName.IsNullOrWhiteSpace())
+                {
+                    if (!_convertersCache.Value.ContainsKey(dna.DisplayName))
+                        _convertersCache.Value.Add(dna.DisplayName, converter);
+                    else
+                        _convertersCache.Value[dna.DisplayName] = converter;
+                }
+
             }
         }
 

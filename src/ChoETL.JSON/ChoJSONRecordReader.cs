@@ -501,6 +501,11 @@ namespace ChoETL
                 if (Configuration.JsonSerializerSettings.NullValueHandling == NullValueHandling.Ignore)
                     Configuration.IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Null;
             }
+            else
+            {
+                if ((Configuration.IgnoreFieldValueMode | ChoIgnoreFieldValueMode.Null) == ChoIgnoreFieldValueMode.Null)
+                    Configuration.JsonSerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+            }
 
             foreach (var obj in FlattenNodeIfOn(jObjects))
             {

@@ -14,6 +14,8 @@ namespace ChoETL
 {
     public class ChoDynamicObjectConverter : JsonConverter
     {
+        public static readonly ChoDynamicObjectConverter Instance = new ChoDynamicObjectConverter();
+
         /// <summary>
         /// Writes the JSON representation of the object.
         /// </summary>

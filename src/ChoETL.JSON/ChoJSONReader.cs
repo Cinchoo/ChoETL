@@ -472,6 +472,12 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoJSONReader<T> WithJSONConverter(JsonConverter converter)
+        {
+            Configuration.WithJSONConverter(converter);
+            return this;
+        }
+
         public ChoJSONReader<T> DetectEncodingFromByteOrderMarks(bool value = true)
         {
             Configuration.DetectEncodingFromByteOrderMarks = value;

@@ -7534,7 +7534,30 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 1,,2,objName,namelist10,citylist10,namelist11,citylist11
 2,name1,3,obj3Nmae,namelist20,citylist20,,citylist21";
 
-            ChoJSONConvertersCache.Init();
+            StringBuilder json = new StringBuilder();
+            using (var w = new ChoJSONWriter(json)
+                .Configure(c => c.DefaultArrayHandling = false)
+                .IgnoreFieldValueMode(ChoIgnoreFieldValueMode.Null)
+                .Configure(c => c.TurnOnAutoDiscoverJsonConverters = true)
+                //.WithJSONConverter(ChoDynamicObjectConverter.Instance)
+                )
+            {
+                using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
+                    .Configure(c => c.NestedColumnSeparator = '/')
+                    .WithMaxScanRows(1)
+                    )
+                    w.Write(r);
+            }
+
+            Console.WriteLine(json.ToString());
+        }
+
+        static void Issue165_1()
+        {
+            string csv =
+                @"Id,name,nestedobject/id,nestedobject/name,nestedarray/0/name, nestedarray/0/city, nestedarray/1/name, nestedarray/200/city
+1,,2,objName,namelist10,citylist10,namelist11,citylist11
+2,name1,3,obj3Nmae,namelist20,citylist20,,citylist21";
 
             StringBuilder json = new StringBuilder();
             using (var w = new ChoJSONWriter(json)

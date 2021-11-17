@@ -152,8 +152,8 @@ namespace ChoETL
 
         public bool TurnOnAutoDiscoverJsonConverters
         {
-            get;
-            set;
+            get { return ChoETLFrxBootstrap.TurnOnAutoDiscoverJsonConverters; }
+            set { ChoETLFrxBootstrap.TurnOnAutoDiscoverJsonConverters = value; }
         }
 
         private Lazy<JsonSerializer> _JsonSerializer = null;
@@ -696,6 +696,12 @@ namespace ChoETL
         }
 
         #region Fluent API
+
+        public ChoJSONRecordConfiguration WithJSONConverter(JsonConverter converter)
+        {
+            ChoJSONConvertersCache.Add(converter);
+            return this;
+        }
 
         public ChoJSONRecordConfiguration RegisterNodConverterForType<ModelType>(Func<object, object> selector)
         {

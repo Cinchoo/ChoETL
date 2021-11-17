@@ -167,6 +167,11 @@ namespace ChoETL
                 if (Configuration.JsonSerializerSettings.NullValueHandling == NullValueHandling.Ignore)
                     Configuration.IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Null;
             }
+            else
+            {
+                if ((Configuration.IgnoreFieldValueMode | ChoIgnoreFieldValueMode.Null) == ChoIgnoreFieldValueMode.Null)
+                    Configuration.JsonSerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+            }
 
             if (records == null) yield break;
             if (Configuration.SingleElement == null)

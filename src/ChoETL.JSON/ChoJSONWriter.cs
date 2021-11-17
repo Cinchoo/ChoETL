@@ -306,6 +306,12 @@ namespace ChoETL
 
         #region Fluent API
 
+        public ChoJSONWriter<T> WithJSONConverter(JsonConverter converter)
+        {
+            Configuration.WithJSONConverter(converter);
+            return this;
+        }
+
         public ChoJSONWriter<T> RegisterNodeConverterForType<ModelType>(Func<object, object> selector)
         {
             return RegisterNodeConverterForType(typeof(ModelType), selector);
