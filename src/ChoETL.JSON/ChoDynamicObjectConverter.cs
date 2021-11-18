@@ -64,7 +64,7 @@ namespace ChoETL
                     }
                 }
 
-                if (obj.Count > 0)
+                if (obj.Count > 0 || (obj.Count == 0 && serializer.NullValueHandling != NullValueHandling.Ignore))
                 {
                     var t = serializer.SerializeToJToken(obj, dontUseConverter: true);
                     t.WriteTo(writer);
