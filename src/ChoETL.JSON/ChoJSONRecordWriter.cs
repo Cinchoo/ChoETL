@@ -820,7 +820,7 @@ namespace ChoETL
                         }
                         else if (fieldValue == null)
                         {
-                            fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
+                            fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : fieldValue;
                             //if (fieldConfig.FieldType == null || fieldConfig.FieldType == typeof(object))
                             //{
                             //    if (fieldConfig.NullValue == null)

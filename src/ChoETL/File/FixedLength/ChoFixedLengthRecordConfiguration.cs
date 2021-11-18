@@ -135,6 +135,10 @@ namespace ChoETL
             {
                 RecordLength = recObjAttr.RecordLength;
             }
+            else
+            {
+                NullValue = String.Empty;
+            }
             //if (IgnoreFieldValueMode == null)
             //    IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Empty | ChoIgnoreFieldValueMode.WhiteSpace;
 

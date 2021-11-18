@@ -130,6 +130,10 @@ namespace ChoETL
                 RecordEnd = recObjAttr.RecordEnd;
                 LineContinuationChars = recObjAttr.LineContinuationChars;
             }
+            else
+            {
+                NullValue = String.Empty;
+            }
             //if (IgnoreFieldValueMode == null)
             //    IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Empty;
 

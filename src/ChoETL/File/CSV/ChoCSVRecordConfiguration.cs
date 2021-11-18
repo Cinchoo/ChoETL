@@ -278,6 +278,10 @@ namespace ChoETL
                 Delimiter = recObjAttr.Delimiter;
                 HasExcelSeparator = recObjAttr.HasExcelSeparatorInternal;
             }
+            else
+            {
+                NullValue = String.Empty;
+            }
             //if (IgnoreFieldValueMode == null)
             //    IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Empty;
 

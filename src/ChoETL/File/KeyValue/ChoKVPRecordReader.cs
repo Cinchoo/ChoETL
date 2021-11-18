@@ -736,9 +736,16 @@ namespace ChoETL
                 if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, key, ref fieldValue))
                     return true;
 
-                bool ignoreFieldValue = fieldConfig.IgnoreFieldValue(fieldValue);
+                //bool ignoreFieldValue = fieldConfig.IgnoreFieldValue(fieldValue);
+                //if (ignoreFieldValue)
+                //    fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
+
+                bool ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
+                if (ignoreFieldValue && fieldConfig.IsDefaultValueSpecified)
+                    fieldValue = fieldConfig.DefaultValue;
+                ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
                 if (ignoreFieldValue)
-                    fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
+                    return true;
 
                 if (Configuration.IsDynamicObject)
                 {

@@ -7537,7 +7537,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             StringBuilder json = new StringBuilder();
             using (var w = new ChoJSONWriter(json)
                 .Configure(c => c.DefaultArrayHandling = false)
-                .IgnoreFieldValueMode(ChoIgnoreFieldValueMode.Null)
+                //.IgnoreFieldValueMode(ChoIgnoreFieldValueMode.Null)
                 )
             {
                 using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()

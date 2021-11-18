@@ -312,6 +312,10 @@ namespace ChoETL
             if (recObjAttr != null)
             {
             }
+            else
+            {
+                NullValue = String.Empty;
+            }
 
             if (YamlRecordFieldConfigurations.Count == 0)
                 MapRecordFields(); // DiscoverRecordFields(recordType, false);

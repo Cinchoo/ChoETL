@@ -850,7 +850,7 @@ namespace ChoETL
                 }
 
                 if (fieldValue == null)
-                    fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : null;
+                    fieldValue = fieldConfig.IsDefaultValueSpecified ? fieldConfig.DefaultValue : fieldValue;
 
                 if (fieldValue == null && fieldConfig.NullValue != null)
                     fieldValue = fieldConfig.NullValue;

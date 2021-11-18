@@ -307,8 +307,6 @@ namespace ChoETL
             }
             else
             {
-                NullValue = String.Empty;
-
             }
         }
 
