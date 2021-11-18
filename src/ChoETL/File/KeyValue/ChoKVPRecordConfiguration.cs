@@ -130,8 +130,8 @@ namespace ChoETL
                 RecordEnd = recObjAttr.RecordEnd;
                 LineContinuationChars = recObjAttr.LineContinuationChars;
             }
-            if (IgnoreFieldValueMode == null)
-                IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Empty;
+            //if (IgnoreFieldValueMode == null)
+            //    IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Empty;
 
             if (KVPRecordFieldConfigurations.Count == 0)
                 DiscoverRecordFields(recordType);

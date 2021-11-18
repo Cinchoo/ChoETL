@@ -433,7 +433,54 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            Xml2JsonAttributeAs();
+            Issue165();
+        }
+        static void Issue165()
+        {
+            string csv =
+                @"Id,name,nestedobject/id,nestedobject/name,nestedarray/0/name, nestedarray/0/city, nestedarray/1/name, nestedarray/1/city
+1,,2,objName,namelist10,citylist10,namelist11,citylist11
+2,name1,3,obj3Nmae,namelist20,citylist20,,citylist21";
+
+            StringBuilder json = new StringBuilder();
+            using (var w = new ChoXmlWriter(json)
+                .IgnoreFieldValueMode(ChoIgnoreFieldValueMode.Null)
+                //.Configure(c => c.NullValueHandling = ChoNullValueHandling.Ignore)
+                )
+            {
+                using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
+                    .Configure(c => c.NestedColumnSeparator = '/')
+                    .WithMaxScanRows(1)
+                    //.IgnoreFieldValueMode(ChoIgnoreFieldValueMode.Null)
+                    )
+                    //r.Print();
+                    w.Write(r);
+            }
+
+            Console.WriteLine(json.ToString());
+        }
+
+        static void Issue165_1()
+        {
+            string csv =
+                @"Id,name,nestedobject/id,nestedobject/name,nestedarray/0/name, nestedarray/0/city, nestedarray/1/name, nestedarray/1/city
+1,,2,objName,namelist10,citylist10,namelist11,citylist11
+2,name1,3,obj3Nmae,namelist20,citylist20,,citylist21";
+
+            StringBuilder json = new StringBuilder();
+            using (var w = new ChoXmlWriter(json)
+                //.JsonSerializationSettings(s => s.NullValueHandling = NullValueHandling.Ignore)
+                )
+            {
+                using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
+                    .Configure(c => c.NestedColumnSeparator = '/')
+                    .WithMaxScanRows(1)
+                    .IgnoreFieldValueMode(ChoIgnoreFieldValueMode.Any)
+                    )
+                    w.Write(r);
+            }
+
+            Console.WriteLine(json.ToString());
         }
 
         static void Xml2JsonAttributeAs()

@@ -421,7 +421,8 @@ namespace ChoETL
                                         innerXml1 = ChoUtility.XmlSerialize(record, null, eolDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix, Configuration.EmitDataType,
                                             useXmlArray: Configuration.UseXmlArray,
                                             useJsonNamespaceForObjectType: Configuration.UseJsonNamespaceForObjectType,
-                                            nsMgr: Configuration.XmlNamespaceManager.Value
+                                            nsMgr: Configuration.XmlNamespaceManager.Value,
+                                            ignoreFieldValueMode: Configuration.IgnoreFieldValueMode
                                             ).RemoveXmlNamespaces();
                                     }
 
@@ -979,7 +980,8 @@ namespace ChoETL
                             innerXml = ChoUtility.XmlSerialize(rec, null, EOLDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix, Configuration.EmitDataType,
                                 useXmlArray: useXmlArray,
                                 useJsonNamespaceForObjectType: Configuration.UseJsonNamespaceForObjectType,
-                                nsMgr: Configuration.XmlNamespaceManager.Value
+                                nsMgr: Configuration.XmlNamespaceManager.Value,
+                                ignoreFieldValueMode: fieldConfig.IgnoreFieldValueMode
                                 );
 
                             innerXml1 = ReplaceXmlNodeIfAppl(innerXml1, kvp.Key);
@@ -1044,7 +1046,9 @@ namespace ChoETL
                         innerXml1 = ChoUtility.XmlSerialize(kvp.Value, null, EOLDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix, Configuration.EmitDataType,
                             useXmlArray: useXmlArray,
                             useJsonNamespaceForObjectType: Configuration.UseJsonNamespaceForObjectType, 
-                            nsMgr: Configuration.XmlNamespaceManager.Value);
+                            nsMgr: Configuration.XmlNamespaceManager.Value,
+                            ignoreFieldValueMode: fieldConfig.IgnoreFieldValueMode
+                            );
 
                         if (!kvp.Value.GetType().IsArray && !typeof(IList).IsAssignableFrom(kvp.Value.GetType()))
                         {

@@ -305,6 +305,11 @@ namespace ChoETL
                     Encoding = Encoding.GetEncoding(recObjAttr.Encoding);
                 NullValue = recObjAttr.NullValue;
             }
+            else
+            {
+                NullValue = String.Empty;
+
+            }
         }
 
         public override void Validate(object state)

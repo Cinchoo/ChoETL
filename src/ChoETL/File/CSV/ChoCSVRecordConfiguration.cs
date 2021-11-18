@@ -278,8 +278,8 @@ namespace ChoETL
                 Delimiter = recObjAttr.Delimiter;
                 HasExcelSeparator = recObjAttr.HasExcelSeparatorInternal;
             }
-            if (IgnoreFieldValueMode == null)
-                IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Empty;
+            //if (IgnoreFieldValueMode == null)
+            //    IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Empty;
 
             if (CSVRecordFieldConfigurations.Count == 0)
                 DiscoverRecordFields(recordType);

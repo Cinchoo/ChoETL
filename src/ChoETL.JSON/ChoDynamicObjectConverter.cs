@@ -31,7 +31,7 @@ namespace ChoETL
                 var config = Context.Configuration as ChoJSONRecordConfiguration;
                 if (config != null && config.IgnoreFieldValueMode != null)
                 {
-                    foreach (var key in obj.Keys)
+                    foreach (var key in obj.Keys.ToArray())
                     {
                         if ((config.IgnoreFieldValueMode | ChoIgnoreFieldValueMode.DBNull) == ChoIgnoreFieldValueMode.DBNull)
                         {

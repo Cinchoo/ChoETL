@@ -1219,8 +1219,8 @@ namespace ChoETL
 
         public string GetXml(string tag = null, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Empty, string nsPrefix = null,
             bool emitDataType = false, string EOLDelimiter = null, bool useXmlArray = false,
-            bool useJsonNamespaceForObjectType = false, ChoXmlNamespaceManager nsMgr = null
-            )
+            bool useJsonNamespaceForObjectType = false, ChoXmlNamespaceManager nsMgr = null,
+            ChoIgnoreFieldValueMode? ignoreFieldValueMode = null)
         {
             if (EOLDelimiter == null)
                 EOLDelimiter = Environment.NewLine;
@@ -1231,9 +1231,40 @@ namespace ChoETL
             if (tag.IsNullOrWhiteSpace())
                 tag = NName;
 
+            var obj = AsShallowDictionary();
+            if (ignoreFieldValueMode != null)
+            {
+                foreach (var key in obj.Keys.ToArray())
+                {
+                    if ((ignoreFieldValueMode | ChoIgnoreFieldValueMode.DBNull) == ChoIgnoreFieldValueMode.DBNull)
+                    {
+                        if (obj[key] == DBNull.Value)
+                            obj.Remove(key);
+                    }
+                    else if ((ignoreFieldValueMode | ChoIgnoreFieldValueMode.Empty) == ChoIgnoreFieldValueMode.Empty)
+                    {
+                        if (obj[key] is string && obj[key].ToNString().IsEmpty())
+                            obj.Remove(key);
+                    }
+                    else if ((ignoreFieldValueMode | ChoIgnoreFieldValueMode.Null) == ChoIgnoreFieldValueMode.Null)
+                    {
+                        if (obj[key] == null)
+                            obj.Remove(key);
+                    }
+                    else if ((ignoreFieldValueMode | ChoIgnoreFieldValueMode.WhiteSpace) == ChoIgnoreFieldValueMode.WhiteSpace)
+                    {
+                        if (obj[key] is string && obj[key].ToNString().IsNullOrWhiteSpace())
+                            obj.Remove(key);
+                    }
+                }
+            }
+
+            if (obj.Count == 0 && nullValueHandling == ChoNullValueHandling.Ignore)
+                return String.Empty;
+
             bool hasAttrs = false;
             StringBuilder msg = new StringBuilder("<{0}".FormatString(tag));
-            foreach (string key in this.Keys.Where(k => IsAttribute(k) && k != ValueToken))
+            foreach (string key in obj.Keys.Where(k => IsAttribute(k) && k != ValueToken))
             {
                 hasAttrs = true;
 
@@ -1281,16 +1312,19 @@ namespace ChoETL
                     msg.AppendFormat("</{0}>", tag);
                 }
             }
-            else if (this.Keys.Any(k => !IsAttribute(k)))
+            else if (obj.Keys.Any(k => !IsAttribute(k)))
             {
                 object value = null;
                 msg.AppendFormat(">");
-                foreach (string key in this.Keys.Where(k => !IsAttribute(k)))
+                foreach (string key in obj.Keys.Where(k => !IsAttribute(k)))
                 {
                     value = this[key];
                     var x = IsCDATA(key);
 
-                    GetXml(msg, value, key, nullValueHandling, nsPrefix, IsCDATA(key), emitDataType, EOLDelimiter: EOLDelimiter, useXmlArray: useXmlArray);
+                    GetXml(msg, value, key, nullValueHandling, nsPrefix, IsCDATA(key), emitDataType, EOLDelimiter: EOLDelimiter, useXmlArray: useXmlArray,
+                        useJsonNamespaceForObjectType, nsMgr,
+                        ignoreFieldValueMode
+                        );
                 }
                 msg.AppendFormat("{0}</{1}>", EOLDelimiter, tag);
             }
@@ -1324,14 +1358,17 @@ namespace ChoETL
         }
 
         private void GetXml(StringBuilder msg, object value, string key, ChoNullValueHandling nullValueHandling, string nsPrefix = null, 
-            bool isCDATA = false, bool emitDataType = false, string EOLDelimiter = null, bool useXmlArray = true)
+            bool isCDATA = false, bool emitDataType = false, string EOLDelimiter = null, bool useXmlArray = true,
+            bool useJsonNamespaceForObjectType = false, ChoXmlNamespaceManager nsMgr = null,
+            ChoIgnoreFieldValueMode? ignoreFieldValueMode = null)
         {
             if (EOLDelimiter == null)
                 EOLDelimiter = Environment.NewLine;
 
             if (value is ChoDynamicObject)
             {
-                msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(((ChoDynamicObject)value).GetXml(((ChoDynamicObject)value).NName, nullValueHandling, nsPrefix, EOLDelimiter: EOLDelimiter, useXmlArray: useXmlArray), EOLDelimiter));
+                msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(((ChoDynamicObject)value).GetXml(((ChoDynamicObject)value).NName, nullValueHandling, nsPrefix, emitDataType, EOLDelimiter: EOLDelimiter, useXmlArray: useXmlArray, useJsonNamespaceForObjectType, nsMgr,
+                        ignoreFieldValueMode), EOLDelimiter));
             }
             else
             {
@@ -1360,11 +1397,11 @@ namespace ChoETL
                         {
                             foreach (var collValue in ((IList)value).OfType<ChoDynamicObject>())
                             {
-                                msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(collValue.GetXml(collValue.NName == DefaultName ? (useXmlArray ? key.ToSingular() : key) : collValue.NName, nullValueHandling, nsPrefix, EOLDelimiter: EOLDelimiter, useXmlArray: useXmlArray), EOLDelimiter));
+                                msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(collValue.GetXml(collValue.NName == DefaultName ? (useXmlArray ? key.ToSingular() : key) : collValue.NName, nullValueHandling, nsPrefix, emitDataType, EOLDelimiter: EOLDelimiter, useXmlArray: useXmlArray), EOLDelimiter));
                             }
                         }
                         else
-                            msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(ChoUtility.XmlSerialize(value, null, EOLDelimiter, nullValueHandling, nsPrefix, emitDataType, useXmlArray), EOLDelimiter, 2));
+                            msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(ChoUtility.XmlSerialize(value, null, EOLDelimiter, nullValueHandling, nsPrefix, emitDataType, useXmlArray, useJsonNamespaceForObjectType, nsMgr, ignoreFieldValueMode), EOLDelimiter, 2));
 
                         if (useXmlArray)
                             msg.AppendFormat("{0}{1}", EOLDelimiter, Indent("</{0}>".FormatString(key), EOLDelimiter));
@@ -1751,9 +1788,15 @@ namespace ChoETL
             }
         }
 
+        private IDictionary<string, object> AsShallowDictionary()
+        {
+            var dict = _kvpDict.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            return dict;
+        }
+
         public IDictionary<string, object> AsDictionary()
         {
-            var dict = _kvpDict;
+            var dict = _kvpDict.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
             foreach (var key in dict.Keys)
             {
                 if (dict[key] is ChoDynamicObject)

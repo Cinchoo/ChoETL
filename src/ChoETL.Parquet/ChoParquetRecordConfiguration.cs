@@ -166,8 +166,8 @@ namespace ChoETL
             base.Init(recordType);
 
             ChoParquetRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoParquetRecordObjectAttribute>(recordType);
-            if (IgnoreFieldValueMode == null)
-                IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Empty;
+            //if (IgnoreFieldValueMode == null)
+            //    IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Empty;
 
             if (ParquetRecordFieldConfigurations.Count == 0)
                 DiscoverRecordFields(recordType);

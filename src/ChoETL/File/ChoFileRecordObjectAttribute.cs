@@ -94,6 +94,7 @@ namespace ChoETL
             QuoteChar = '"';
             StringSplitOptions = ChoStringSplitOptions.None;
             Encoding = "UTF-8";
+            NullValue = String.Empty;
         }
     }
 }
