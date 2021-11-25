@@ -466,6 +466,12 @@ namespace ChoETL
 
         private IEnumerable<JObject> FlattenNodeIfOn(IEnumerable<JObject> jObjects)
         {
+            var arr = _recBuffer.Value.ToArray();
+            _recBuffer.Value.Clear();
+
+            foreach (var rec in arr)
+                yield return rec;
+
             if (Configuration.FlattenNode)
             {
                 foreach (var jo in jObjects)
@@ -505,6 +511,26 @@ namespace ChoETL
             {
                 if ((Configuration.IgnoreFieldValueMode | ChoIgnoreFieldValueMode.Null) == ChoIgnoreFieldValueMode.Null)
                     Configuration.JsonSerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+            }
+
+            if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject && !Configuration.UseJSONSerialization)
+            {
+                if (Configuration.AutoDiscoverFieldTypes && Configuration.MaxScanRows > 0)
+                {
+                    List<string> fns = new List<string>();
+                    int counter1 = 0;
+                    foreach (var obj in FlattenNodeIfOn(jObjects))
+                    {
+                        if (counter1 > Configuration.MaxScanRows)
+                            break;
+                        fns = fns.Union(obj.Properties().Select(p => p.Name).ToList()).ToList();
+                        _recBuffer.Value.Add(obj);
+
+                        counter1++;
+                    }
+
+                    Configuration.Validate(fns.ToArray());
+                }
             }
 
             foreach (var obj in FlattenNodeIfOn(jObjects))
@@ -556,7 +582,7 @@ namespace ChoETL
                 if (rec == null)
                     continue;
 
-                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject && !Configuration.UseJSONSerialization)
                 {
                     if (Configuration.AreAllFieldTypesNull && Configuration.AutoDiscoverFieldTypes && Configuration.MaxScanRows > 0 && counter <= Configuration.MaxScanRows)
                     {

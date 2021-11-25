@@ -657,7 +657,7 @@ namespace ChoETL
                 }
                 else
                 {
-                    obj.Name = obj.FieldName = obj.FieldName + arrayIndexSeparator + arrayIndex.Value;
+                    obj.Name = obj.FieldName = obj.FieldName + (arrayIndexSeparator == ChoCharEx.NUL ? "" : arrayIndexSeparator.ToString()) + arrayIndex.Value;
                 }
             }
             else if (!dictKey.IsNullOrWhiteSpace())
@@ -730,6 +730,20 @@ namespace ChoETL
                 throw new ChoRecordConfigurationException("QuoteChar [{0}] can't be one of Delimiter characters [{1}]".FormatString(QuoteChar, Delimiter));
             if (Comments != null && Comments.Contains(Delimiter))
                 throw new ChoRecordConfigurationException("One of the Comments contains Delimiter. Not allowed.");
+
+            if (ArrayIndexSeparator != null && ArrayIndexSeparator.Value != ChoETLSettings.ArrayIndexSeparator)
+            {
+                if (!IsDynamicObject)
+                {
+                    foreach (var fc in CSVRecordFieldConfigurations)
+                    {
+                        if (fc.ArrayIndex == null)
+                            continue;
+
+                        fc.FieldName = fc.FieldName.Replace(ChoETLSettings.ArrayIndexSeparator.ToString(), ArrayIndexSeparator.Value == ChoCharEx.NUL ? String.Empty : ArrayIndexSeparator.Value.ToString());
+                    }
+                }
+            }
 
             //Validate Header
             if (FileHeaderConfiguration != null)

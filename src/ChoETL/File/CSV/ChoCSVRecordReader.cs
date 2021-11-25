@@ -276,6 +276,14 @@ namespace ChoETL
                             {
                                 if (TraceSwitch.TraceVerbose)
                                     ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Comment line found at [{0}]...".FormatString(pair.Item1));
+
+                                //Raise comment callback
+                                var mlr = Reader as IChoCommentLineReader;
+                                if (mlr != null)
+                                {
+                                    mlr.RaiseCommentLineFound(pair.Item1, pair.Item2);
+                                }
+                                 
                                 return new Tuple<bool?, Tuple<long, string>>(true, pair);
                             }
                         }
@@ -313,7 +321,7 @@ namespace ChoETL
                     if (Configuration.TurnOnMultiLineHeaderSupport && Reader is IChoMultiLineHeaderReader)
                     {
                         var mlr = Reader as IChoMultiLineHeaderReader;
-                        if (mlr.RaiseMultiLineHeader(pair.Item1, pair.Item2))
+                        if (mlr != null && mlr.RaiseMultiLineHeader(pair.Item1, pair.Item2))
                         {
                             //if (multiLineHeader.Length > 0 && !multiLineHeader.ToString().EndsWith(Configuration.Delimiter))
                             //    multiLineHeader.Append(Configuration.Delimiter);

@@ -53,6 +53,7 @@ namespace ChoETL
             get;
             set;
         }
+
         public string Comment
         {
             set
@@ -331,8 +332,8 @@ namespace ChoETL
             }
             if (ArrayIndexSeparator != null)
             {
-                if (ArrayIndexSeparator.Value == ChoCharEx.NUL)
-                    throw new ChoRecordConfigurationException("Invalid '{0}' array index separator specified.".FormatString(ArrayIndexSeparator));
+                //if (ArrayIndexSeparator.Value == ChoCharEx.NUL)
+                //    throw new ChoRecordConfigurationException("Invalid '{0}' array index separator specified.".FormatString(ArrayIndexSeparator));
                 if (ArrayIndexSeparator.Value == QuoteChar)
                     throw new ChoRecordConfigurationException("Array index separator [{0}] can't be quote character [{1}]".FormatString(ArrayIndexSeparator, QuoteChar));
                 if (EOLDelimiter.Contains(ArrayIndexSeparator.Value))

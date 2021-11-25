@@ -40,6 +40,11 @@ namespace ChoETL
             private set;
         }
 
+        public override dynamic Context
+        {
+            get { return Configuration.Context; }
+        }
+
         public ChoJSONReader(StringBuilder sb, ChoJSONRecordConfiguration configuration = null) : this(new StringReader(sb.ToString()), configuration)
         {
 

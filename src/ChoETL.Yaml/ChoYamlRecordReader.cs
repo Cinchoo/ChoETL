@@ -396,7 +396,7 @@ namespace ChoETL
                 if (rec == null)
                     continue;
 
-                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject && !Configuration.UseYamlSerialization)
                 {
                     if (Configuration.AreAllFieldTypesNull && Configuration.AutoDiscoverFieldTypes && Configuration.MaxScanRows > 0 && counter <= Configuration.MaxScanRows)
                     {

@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public class ChoCSVReader<T> : ChoReader, IDisposable, IEnumerable<T>, IChoSanitizableReader, IChoMultiLineHeaderReader
+    public class ChoCSVReader<T> : ChoReader, IDisposable, IEnumerable<T>, IChoSanitizableReader, IChoMultiLineHeaderReader, IChoCommentLineReader
         where T : class
     {
         private Lazy<TextReader> _textReader;
@@ -33,6 +33,7 @@ namespace ChoETL
         public event EventHandler<ChoEmptyLineEventArgs> EmptyLineFound;
         public event EventHandler<ChoSanitizeLineEventArgs> SanitizeLine;
         public event EventHandler<ChoMultiLineHeaderEventArgs> MultiLineHeader;
+        public event EventHandler<ChoCommentLineEventArgs> CommentLineFound;
         private bool _isDisposed = false;
 
         public override dynamic Context
@@ -379,6 +380,16 @@ namespace ChoETL
             var ea = new ChoMultiLineHeaderEventArgs(lineNo, line);
             multiLineHeader(this, ea);
             return ea.IsHeader;
+        }
+
+        public void RaiseCommentLineFound(long lineNo, string line)
+        {
+            EventHandler<ChoCommentLineEventArgs> commentLineFound = CommentLineFound;
+            if (commentLineFound == null)
+                return;
+
+            var ea = new ChoCommentLineEventArgs(lineNo, line);
+            commentLineFound(this, ea);
         }
 
         public override bool TryValidate(object target, ICollection<ValidationResult> validationResults)
@@ -1153,5 +1164,10 @@ namespace ChoETL
     internal interface IChoMultiLineHeaderReader
     {
         bool RaiseMultiLineHeader(long lineNo, string line);
+    }
+
+    internal interface IChoCommentLineReader
+    {
+        void RaiseCommentLineFound(long lineNo, string line);
     }
 }

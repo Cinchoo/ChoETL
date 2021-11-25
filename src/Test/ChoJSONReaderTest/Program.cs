@@ -7527,7 +7527,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
-        static void Issue165()
+        static void Issue165_1()
         {
             string csv =
                 @"Id,name,nestedobject/id,nestedobject/name,nestedarray/0/name, nestedarray/0/city, nestedarray/1/name, nestedarray/200/city
@@ -7537,7 +7537,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             StringBuilder json = new StringBuilder();
             using (var w = new ChoJSONWriter(json)
                 .Configure(c => c.DefaultArrayHandling = false)
-                //.IgnoreFieldValueMode(ChoIgnoreFieldValueMode.Null)
+                .IgnoreFieldValueMode(ChoIgnoreFieldValueMode.Null)
                 )
             {
                 using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader()
@@ -7550,7 +7550,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             Console.WriteLine(json.ToString());
         }
 
-        static void Issue165_1()
+        static void Issue165()
         {
             string csv =
                 @"Id,name,nestedobject/id,nestedobject/name,nestedarray/0/name, nestedarray/0/city, nestedarray/1/name, nestedarray/200/city
@@ -7574,10 +7574,167 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             Console.WriteLine(json.ToString());
         }
 
+        static void MaxScanNodesTest()
+        {
+            string json = @"{
+  ""Parts"": [
+    {
+      ""PartNum"": 1,
+      ""PartCount"": 15,
+      ""Table"": [
+        {
+          ""Col1"": ""Some Text"",
+          ""Col2"": 0,
+        },
+        {
+          ""Col1"": ""Some Text 2"",
+          ""Col2"": 1,
+		  ""Col3"":""SOme other value""
+        }
+      ]
+    }
+  ]
+}";
+            using (var r = ChoJSONReader.LoadText(json)
+                       .WithJSONPath("$..Table").WithMaxScanNodes(2).UseJsonSerialization().ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                      )
+            {
+                //using (var w = new ChoCSVWriter(Console.Out)
+                //    .WithMaxScanRows(2)
+                //    .WithFirstLineHeader()
+                //    .ThrowAndStopOnMissingField(false)
+                //    )
+                //{
+                //    w.Write(r);
+                //}
+                var dt = r.AsDataTable();
+                dt.Print();
+            }
+        }
+
+        public abstract class Component
+        {
+            [JsonProperty("name")]
+            public string name { get; set; }
+
+            public Component()
+            {
+
+            }
+            public Component(string name)
+            {
+                this.name = name;
+            }
+
+            public virtual void Add(Component component)
+            {
+                throw new NotImplementedException();
+            }
+
+            public virtual void Remove(Component component)
+            {
+                throw new NotImplementedException();
+            }
+
+            public virtual bool IsComposite()
+            {
+                return true;
+            }
+        }
+
+        public class Composite : Component
+        {
+            [JsonProperty("children")]
+            public List<Component> _children { get; set; }
+
+            public Composite()
+            {
+
+            }
+
+            public Composite(string name) : base(name)
+            {
+                this._children = new List<Component>();
+            }
+
+            public override void Add(Component component)
+            {
+                this._children.Add(component);
+            }
+
+            public override void Remove(Component component)
+            {
+                this._children.Remove(component);
+            }
+        }
+
+        public class Leaf : Component
+        {
+            public int experience { get; set; }
+            public bool achieved { get; set; }
+
+            public Leaf()
+            {
+
+            }
+
+            [JsonConstructor]
+            public Leaf(string name, int experience) : base(name)
+            {
+                this.experience = experience;
+            }
+
+            public override bool IsComposite()
+            {
+                return false;
+            }
+        }
+
+        static void CompositeSerialization()
+        {
+            Composite levels = new Composite("Levels");
+            Composite firstLevel = new Composite("First level");
+            Composite secondLevel = new Composite("Second level");
+            Composite thirdLevel = new Composite("Third level");
+            Leaf firstAchievement = new Leaf("Mission 1", 1);
+            Leaf secondAchviement = new Leaf("Mission 2", 2);
+            Leaf thirdAchievement = new Leaf("Mission 3", 3);
+            Leaf fourthAchievement = new Leaf("Mission 4", 4);
+            Leaf fifthAchievement = new Leaf("Mission 5", 5);
+            Leaf sixthAchievement = new Leaf("Mission 6", 6);
+            firstLevel.Add(firstAchievement);
+            secondLevel.Add(secondAchviement);
+            secondLevel.Add(thirdAchievement);
+            thirdLevel.Add(fourthAchievement);
+            thirdLevel.Add(fifthAchievement);
+            thirdLevel.Add(sixthAchievement);
+            levels.Add(firstLevel);
+            levels.Add(secondLevel);
+            levels.Add(thirdLevel);
+
+            StringBuilder json = new StringBuilder();
+            using (var w = new ChoJSONWriter<Composite>(json)
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                .UseJsonSerialization()
+                .JsonSerializationSettings(s => s.TypeNameHandling = TypeNameHandling.Objects)
+                )
+                w.Write(levels);
+            json.Print();
+
+            using (var r = ChoJSONReader<Composite>.LoadText(json.ToString())
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                .UseJsonSerialization()
+                .JsonSerializationSettings(s => s.TypeNameHandling = TypeNameHandling.Objects)
+                )
+            {
+                r.Print();
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            Issue165();
+            CompositeSerialization();
             //DeserializeNestedObjectOfList();
             return;
 

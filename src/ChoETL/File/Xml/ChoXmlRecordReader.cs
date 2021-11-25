@@ -125,7 +125,7 @@ namespace ChoETL
             if (Configuration.AutoDiscoverColumns
                 && Configuration.XmlRecordFieldConfigurations.Count == 0)
             {
-                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject && !Configuration.UseXmlSerialization)
                 {
                     long recCount = 0;
                     _configCheckDone = true;

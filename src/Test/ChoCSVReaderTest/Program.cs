@@ -5349,10 +5349,45 @@ val61, val71";
                 Console.WriteLine($"Name: {rec.Name}");
             }
         }
+
+        public class Article
+        {
+            public string ArticleNumber { get; set; }
+            [Range(1, 7)]
+            public int[] Shops { get; set; }
+        }
+
+        static void CustomFieldSerialization()
+        {
+            string csv = @"ArticleNumber;Shop1;Shop2;Shop3;Shop4;Shop5;Shop6;Shop7
+123455;50;51;52;53;54;55;56";
+
+            using (var r = ChoCSVReader<Article>.LoadText(csv)
+                .WithFirstLineHeader()
+                .WithDelimiter(";")
+                .WithField(f => f.Shops, valueSelector: o => ((IDictionary<string, object>)o).Where(kvp => kvp.Key.StartsWith("Shop")).Select(kvp => kvp.Value).ToArray())
+                .ThrowAndStopOnMissingField(false)
+                )
+            {
+                //r.Print();
+                //return;
+                using (var w = new ChoCSVWriter<Article>(Console.Out)
+                    .WithFirstLineHeader()
+                    .Configure(c => c.ArrayIndexSeparator = '\0')
+                    .Setup(s => s.BeforeRecordFieldWrite += (o, e) =>
+                    {
+                        if (e.PropertyName.StartsWith("Shop"))
+                            e.Source = 1;
+                        })
+                    )
+                    w.Write(r);
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            DefaultValueTest1();
+            CustomFieldSerialization();
             return;
 
             PositionNeutralCSVLoad();

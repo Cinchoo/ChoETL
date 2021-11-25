@@ -478,7 +478,7 @@ namespace ChoETL
             {
                 crs.Name = _fc.Name;
                 crs.FieldConfig = _fc;
-                crs.Record = ChoActivator.CreateInstanceNCache(_mi.ReflectedType);
+                crs.Record = crs.Record == null ? ChoActivator.CreateInstanceNCache(_mi.ReflectedType) : crs.Record;
 
                 Type mt = ChoType.GetMemberType(_mi);
                 var name = ChoType.GetFieldName(crs.Name);
@@ -658,7 +658,7 @@ namespace ChoETL
 
             crs.Name = _fc.Name;
             crs.FieldConfig = _fc;
-            crs.Record = ChoActivator.CreateInstanceNCache(_mi.ReflectedType);
+            crs.Record = crs.Record == null ? ChoActivator.CreateInstanceNCache(_mi.ReflectedType) : crs.Record;
 
             Type mt = ChoType.GetMemberType(_mi);
             var name = ChoType.GetFieldName(crs.Name);

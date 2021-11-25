@@ -78,7 +78,7 @@ namespace ChoETL
                     }
                     else if (objType == typeof(object))
                         return new ChoDynamicObject();
-                    else
+                    else if (!objType.IsAbstract())
                         obj = Activator.CreateInstance(objType, args);
                 }
 

@@ -2579,7 +2579,7 @@
         private static readonly Dictionary<Type, object> _objCache = new Dictionary<Type, object>();
         public static object GetMemberObjectMatchingType(string declaringMember, object rec, params object[] args)
         {
-            if (declaringMember == null)
+            if (declaringMember == null || rec == null)
                 return null;
 
             try
