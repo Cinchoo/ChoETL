@@ -1929,11 +1929,44 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             }
         }
 
+        public static void TimespanIssue()
+        {
+            string csv = @" A; B; C; D; E; F; G; H
+a;b;;2021-05-06;e;11:00;3;9";
+
+            //ChoType.IsTypeSimple = t => t == typeof(TimeSpan) ? (bool?)true : null;
+
+            using (var r = ChoCSVReader<MyClass1>.LoadText(csv)
+                .WithFirstLineHeader()
+                .WithDelimiter(";")
+                //.WithField(f => f.f, valueConverter: o => TimeSpan.Parse(o.ToNString()))
+                )
+                r.Print();
+        }
+
+        public class MyClass1
+        {
+            public string a { get; set; }
+
+            public string b { get; set; }
+
+            public string c { get; set; }
+
+            public DateTime d { get; set; }
+
+            public string e { get; set; }
+
+            public TimeSpan f { get; set; }
+
+            public string g { get; set; }
+
+            public string h { get; set; }
+        }
         static void Main(string[] args)
         {
             //AppDomain.CurrentDomain.FirstChanceException += (sender, eventArgs) => { Console.WriteLine("FirstChanceException: " + eventArgs.Exception.ToString()); };
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            FindCSVDiff();
+            TimespanIssue();
             //TestDictionary();
             return;
 

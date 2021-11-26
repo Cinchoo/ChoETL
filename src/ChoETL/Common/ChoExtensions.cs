@@ -1056,6 +1056,15 @@ namespace ChoETL
         {
             CheckTypeIsNotNull(type);
             type = type.GetUnderlyingType();
+
+            var c = ChoType.IsTypeSimpleSpecial;
+            if (c != null)
+            {
+                var val = c(type);
+                if (val != null)
+                    return val.Value;
+            }
+
             return type.IsPrimitive
                 || type.IsEnum
                 || typeof(ChoCurrency) == type
@@ -1066,10 +1075,20 @@ namespace ChoETL
         {
             CheckTypeIsNotNull(type);
             type = type.GetUnderlyingType();
+
+            var c = ChoType.IsTypeSimple;
+            if (c != null)
+            {
+                var val = c(type);
+                if (val != null)
+                    return val.Value;
+            }
+
             return type.IsPrimitive
                 || typeof(string) == type
                 || type.IsEnum
                 || typeof(DateTime) == type
+                || typeof(TimeSpan) == type
                 || typeof(DateTimeOffset) == type
                 || typeof(BigInteger) == type
                 || typeof(ChoCurrency) == type

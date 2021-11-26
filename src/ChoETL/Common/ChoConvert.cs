@@ -184,6 +184,19 @@ namespace ChoETL
                     return origType.Default();
                 if (targetType.IsAssignableFrom(value.GetType()) || targetType == value.GetType())
                     return value;
+
+                var srcType = value.GetType();
+                var conv1 = TypeDescriptor.GetConverter(targetType);
+                if (conv1 != null)
+                {
+                    try
+                    {
+                        if (conv1.CanConvertFrom(srcType))
+                            return conv1.ConvertFrom(value);
+                    }
+                    catch { }
+                }
+
                 if (value is IConvertible)
                 {
                     try
@@ -474,6 +487,19 @@ namespace ChoETL
                     return value;
                 if (targetType.IsAssignableFrom(value.GetType()) || targetType == value.GetType())
                     return value;
+
+                var srcType = value.GetType();
+                var conv1 = TypeDescriptor.GetConverter(targetType);
+                if (conv1 != null)
+                {
+                    try
+                    {
+                        if (conv1.CanConvertFrom(srcType))
+                            return conv1.ConvertFrom(value);
+                    }
+                    catch { }
+                }
+
                 if (value is IConvertible)
                 {
                     try

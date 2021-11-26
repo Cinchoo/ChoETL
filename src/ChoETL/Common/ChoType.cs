@@ -29,6 +29,9 @@
 
     public static class ChoType
     {
+        public static Func<Type, bool?> IsTypeSimple = null;
+        public static Func<Type, bool?> IsTypeSimpleSpecial = null;
+
         #region TypeInfo Class (Private)
 
         private class TypeInfo
