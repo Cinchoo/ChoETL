@@ -30,7 +30,6 @@
 
   <ItemGroup>
     <Compile Include="..\ChoETL.JSON\ChoJSONConvertersCache.cs" Link="ChoJSONConvertersCache.cs" />
-    <Compile Include="..\ChoETL.JSON\ChoDynamicObjectConverter.cs" Link="ChoDynamicObjectConverter.cs" />
     <Compile Include="..\ChoETL.JSON\ChoJSONExtensions.cs" Link="ChoJSONExtensions.cs" />
     <Compile Include="..\ChoETL.JSON\ChoJSONNodeNameAttribute.cs" Link="ChoJSONNodeNameAttribute.cs" />
     <Compile Include="..\ChoETL.JSON\ChoJSONPathAttribute.cs" Link="ChoJSONPathAttribute.cs" />
@@ -47,6 +46,7 @@
     <Compile Include="..\ChoETL.JSON\ChoJSONWriter.cs" Link="ChoJSONWriter.cs" />
     <Compile Include="..\ChoETL.JSON\ChoUseJSONSerializationAttribute.cs" Link="ChoUseJSONSerializationAttribute.cs" />
     <Compile Include="..\ChoETL.JSON\Converters\ByteArrayConverter.cs" Link="Converters\ByteArrayConverter.cs" />
+    <Compile Include="..\ChoETL.JSON\Converters\ChoDynamicObjectConverter.cs" Link="Converters\ChoDynamicObjectConverter.cs" />
   </ItemGroup>
 
   <ItemGroup>

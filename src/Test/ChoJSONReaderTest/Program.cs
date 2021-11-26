@@ -7723,8 +7723,14 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 
             using (var r = ChoJSONReader<Composite>.LoadText(json.ToString())
                 .ErrorMode(ChoErrorMode.IgnoreAndContinue)
-                .UseJsonSerialization()
-                .JsonSerializationSettings(s => s.TypeNameHandling = TypeNameHandling.Objects)
+                .WithField(f => f._children, itemTypeSelector: o =>
+                {
+                    var jObject = o as JObject;
+                    return jObject.ContainsKey("_children") ? typeof(Composite) : typeof(Leaf);
+                })
+
+                //.UseJsonSerialization()
+                //.JsonSerializationSettings(s => s.TypeNameHandling = TypeNameHandling.Objects)
                 )
             {
                 r.Print();

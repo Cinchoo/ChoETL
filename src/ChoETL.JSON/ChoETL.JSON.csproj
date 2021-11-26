@@ -54,7 +54,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChoJSONConvertersCache.cs" />
-    <Compile Include="ChoDynamicObjectConverter.cs" />
+    <Compile Include="Converters\ChoCompositeObjectConverter.cs" />
+    <Compile Include="Converters\ChoDynamicObjectConverter.cs" />
     <Compile Include="ChoJSONExtensions.cs" />
     <Compile Include="ChoJSONPathAttribute.cs" />
     <Compile Include="ChoPropertyRenameAndIgnoreSerializerContractResolver.cs" />
