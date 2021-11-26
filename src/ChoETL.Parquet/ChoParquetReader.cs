@@ -146,6 +146,7 @@ namespace ChoETL
 
         public T Read()
         {
+            CheckDisposed();
             if (_enumerator.Value.MoveNext())
                 return _enumerator.Value.Current;
             else
@@ -182,6 +183,7 @@ namespace ChoETL
 
         private void Init()
         {
+            _isDisposed = false;
             _enumerator = new Lazy<IEnumerator<T>>(() => GetEnumerator());
 
             var recordType = typeof(T).GetUnderlyingType();
@@ -221,6 +223,7 @@ namespace ChoETL
 
         public IEnumerator<T> GetEnumerator()
         {
+            CheckDisposed();
             ChoParquetRecordReader rr = new ChoParquetRecordReader(typeof(T), Configuration);
             if (_streamReader != null)
                 _parquetReader = Create(_streamReader.Value);
@@ -246,6 +249,7 @@ namespace ChoETL
 
         private IDataReader AsDataReader(Action<IDictionary<string, Type>> membersDiscovered)
         {
+            CheckDisposed();
             this.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
             return this.Select(s =>
             {

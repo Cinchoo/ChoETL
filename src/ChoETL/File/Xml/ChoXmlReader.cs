@@ -33,7 +33,6 @@ namespace ChoETL
         public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
         public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
         public event EventHandler<ChoRecordFieldTypeAssessmentEventArgs> RecordFieldTypeAssessment;
-        private bool _isDisposed = false;
 
         public override dynamic Context
         {
@@ -252,6 +251,7 @@ namespace ChoETL
 
         public T Read()
         {
+            CheckDisposed();
             if (_enumerator.Value.MoveNext())
                 return _enumerator.Value.Current;
             else
@@ -289,6 +289,7 @@ namespace ChoETL
 
         private void Init()
         {
+            _isDisposed = false;
             _enumerator = new Lazy<IEnumerator<T>>(() => GetEnumerator());
 
             var recordType = typeof(T).GetUnderlyingType();
@@ -352,6 +353,7 @@ namespace ChoETL
 
         public IEnumerator<T> GetEnumerator()
         {
+            CheckDisposed();
             if (_xElements == null)
             {
                 InitXml();
@@ -394,6 +396,7 @@ namespace ChoETL
 
         private IDataReader AsDataReader(Action<IDictionary<string, Type>> membersDiscovered, Action<IDictionary<string, object>> selector = null)
         {
+            CheckDisposed();
             this.MembersDiscovered += membersDiscovered != null ? (o, e) => membersDiscovered(e.Value) : MembersDiscovered;
             return this.Select(s =>
             {

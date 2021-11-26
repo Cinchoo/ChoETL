@@ -10,6 +10,8 @@ namespace ChoETL
 {
     public abstract class ChoReader : IChoReader, IChoValidatable
     {
+        protected bool _isDisposed = false;
+
         public virtual dynamic Context { get; }
 
         public bool IsValid { get; set; } = true;
@@ -30,6 +32,12 @@ namespace ChoETL
         public event EventHandler<ChoDoWhileEventArgs> DoWhile;
 
         public event EventHandler<ChoRecordFieldSerializeEventArgs> RecordFieldDeserialize;
+
+        protected void CheckDisposed()
+        {
+            if (_isDisposed)
+                throw new ObjectDisposedException(GetType().Name);
+        }
 
         public bool HasBeginLoadSubscribed
         {

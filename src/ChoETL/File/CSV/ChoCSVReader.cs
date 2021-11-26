@@ -34,7 +34,6 @@ namespace ChoETL
         public event EventHandler<ChoSanitizeLineEventArgs> SanitizeLine;
         public event EventHandler<ChoMultiLineHeaderEventArgs> MultiLineHeader;
         public event EventHandler<ChoCommentLineEventArgs> CommentLineFound;
-        private bool _isDisposed = false;
 
         public override dynamic Context
         {
@@ -167,6 +166,7 @@ namespace ChoETL
 
         public T Read()
         {
+            CheckDisposed();
             if (_enumerator.Value.MoveNext())
                 return _enumerator.Value.Current;
             else
@@ -204,6 +204,7 @@ namespace ChoETL
 
         private void Init()
         {
+            _isDisposed = false;
             _enumerator = new Lazy<IEnumerator<T>>(() => GetEnumerator());
 
             var recordType = typeof(T).ResolveRecordType();
@@ -251,6 +252,7 @@ namespace ChoETL
 
         public IEnumerator<T> GetEnumerator()
         {
+            CheckDisposed();
             ChoCSVRecordReader rr = new ChoCSVRecordReader(typeof(T), Configuration);
             rr.Reader = this;
             rr.TraceSwitch = TraceSwitch;
@@ -273,6 +275,7 @@ namespace ChoETL
 
         private IDataReader AsDataReader(Action<IDictionary<string, Type>> membersDiscovered)
         {
+            CheckDisposed();
             ChoCSVRecordReader rr = new ChoCSVRecordReader(typeof(T), Configuration);
             rr.Reader = this;
             rr.TraceSwitch = TraceSwitch;

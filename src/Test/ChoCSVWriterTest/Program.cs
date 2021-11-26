@@ -1908,11 +1908,32 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             }
         }
 
+        static void FindCSVDiff()
+        {
+            string csv1 = @"id,name
+1,Tom
+2,Mark
+3,Angie";
+
+            string csv2 = @"id,name
+1,Tom
+2,Mark
+4,Lu";
+            var input1 = ChoCSVReader.LoadText(csv1).WithFirstLineHeader().ToArray();
+            var input2 = ChoCSVReader.LoadText(csv2).WithFirstLineHeader().ToArray();
+
+            using (var output = new ChoCSVWriter(Console.Out).WithFirstLineHeader())
+            {
+                output.Write(input1.OfType<ChoDynamicObject>().Except(input2.OfType<ChoDynamicObject>(), ChoDynamicObjectEqualityComparer.Default));
+                output.Write(input2.OfType<ChoDynamicObject>().Except(input1.OfType<ChoDynamicObject>(), ChoDynamicObjectEqualityComparer.Default));
+            }
+        }
+
         static void Main(string[] args)
         {
             //AppDomain.CurrentDomain.FirstChanceException += (sender, eventArgs) => { Console.WriteLine("FirstChanceException: " + eventArgs.Exception.ToString()); };
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            QuoteValueTest();
+            FindCSVDiff();
             //TestDictionary();
             return;
 

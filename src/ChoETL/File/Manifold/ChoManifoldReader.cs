@@ -21,7 +21,6 @@ namespace ChoETL
         private CultureInfo _prevCultureInfo = null;
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
         public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
-        private bool _isDisposed = false;
         public event EventHandler<ChoRecordConfigurationConstructArgs> AfterRecordConfigurationConstruct;
 
         public ChoManifoldRecordConfiguration Configuration
@@ -176,6 +175,7 @@ namespace ChoETL
 
         private void Init()
         {
+            _isDisposed = false;
             _enumerator = new Lazy<IEnumerator>(() => GetEnumerator());
             if (Configuration == null)
                 Configuration = new ChoManifoldRecordConfiguration();
@@ -188,6 +188,7 @@ namespace ChoETL
 
         public IEnumerator GetEnumerator()
         {
+            CheckDisposed();
             ChoManifoldRecordReader rr = new ChoManifoldRecordReader(Configuration);
             rr.Reader = this;
             rr.TraceSwitch = TraceSwitch;
