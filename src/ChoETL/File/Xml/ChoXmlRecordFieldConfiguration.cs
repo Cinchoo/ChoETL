@@ -13,6 +13,32 @@ namespace ChoETL
     [DataContract]
     public class ChoXmlRecordFieldConfiguration : ChoFileRecordFieldConfiguration
     {
+        internal bool IsXPathSet
+        { 
+            get
+            {
+                bool isXPathSet = false;
+                if (XPath != null)
+                {
+                    if (XPath == $"@{FieldName}")
+                    {
+
+                    }
+                    else if (XPath == $"/{FieldName}" || XPath == $"//{FieldName}")
+                    {
+
+                    }
+                    else if (XPath == $"{FieldName}|@{FieldName}")
+                    {
+
+                    }
+                    else
+                        isXPathSet = true;
+                }
+                return isXPathSet;
+            }
+        }
+
         [DataMember]
         public string XPath
         {

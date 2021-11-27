@@ -7737,10 +7737,78 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
+        public class MyClass2
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+        }
+
+        public class MyCollectionClass : IEnumerable
+        {
+            MyClass2[] m_Items = null;
+            int freeIndex = 0;
+
+            public MyCollectionClass()
+            {
+                // For the sake of simplicity, let's keep them as arrays
+                // ideally, it should be link list
+                m_Items = new MyClass2[100];
+            }
+
+            public void Add(MyClass2 item)
+            {
+                // Let us only worry about adding the item 
+                m_Items[freeIndex] = item;
+                freeIndex++;
+            }
+
+            // IEnumerable Member
+            public IEnumerator GetEnumerator()
+            {
+                foreach (MyClass2 o in m_Items)
+                {
+                    // Let's check for end of list (it's bad code since we used arrays)
+                    if (o == null)
+                    {
+                        break;
+                    }
+
+                    // Return the current element and then on next function call 
+                    // resume from next element rather than starting all over again;
+                    yield return o;
+                }
+            }
+        }
+
+        static void CustomCollectionTest()
+        {
+            MyCollectionClass coll = new MyCollectionClass();
+            coll.Add(new MyClass2 { Id = 1, Name = "Tom" });
+            coll.Add(new MyClass2 { Id = 2, Name = "Mark" });
+
+            StringBuilder json = new StringBuilder();
+            using (var w = new ChoJSONWriter<MyClass2>(json)
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                )
+            {
+                w.Write(coll.OfType<MyClass2>());
+            }
+
+            json.Print();
+
+            MyCollectionClass coll2 = new MyCollectionClass();
+            using (var r = ChoJSONReader<MyClass2>.LoadText(json.ToString()))
+            {
+                foreach (var rec in r)
+                    coll2.Add(rec);
+            }
+            coll2.Print();
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            Issue165_1();
+            CustomCollectionTest();
             //DeserializeNestedObjectOfList();
             return;
 

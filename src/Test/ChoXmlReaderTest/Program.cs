@@ -433,8 +433,80 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            Issue165();
+            SelectiveChildTest();
         }
+
+        static void SelectiveChildTest()
+        {
+            string xml = @"<?xml version=""1.0"" encoding=""utf-8""?>
+<Project ToolsVersion=""4.0"" DefaultTargets=""Build"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
+    <PropertyGroup>
+        <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+        <IsWebBootstrapper>false</IsWebBootstrapper>
+        <PublishUrl>publish\</PublishUrl>
+        <Install>true</Install>
+        <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    </PropertyGroup>
+    <PropertyGroup Condition="" '$(Configuration)|$(Platform)' == 'Debug|iPhoneSimulator' "">
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>full</DebugType>
+        <Optimize>false</Optimize>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Include=""Launch.cs"" />
+        <Compile Include=""Launch.designer.cs"">
+          <DependentUpon>Launch.cs</DependentUpon>
+        </Compile>
+        <Compile Include=""Main.cs"" />
+        <None Include=""Info.plist"">
+          <SubType>Designer</SubType>
+        </None>
+    </ItemGroup>
+    <ItemGroup>
+        <Reference Include=""System"" />
+        <Reference Include=""System.Core"" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include=""..\..\Model\Project.Model.csproj"">
+          <Project>{0511395F-513C-4F56-BF87-718CA49BB13B}</Project>
+          <Name>Project.Model</Name>
+        </ProjectReference>
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include=""AutoMapper"">
+          <Version>7.0.1</Version>
+        </PackageReference>
+        <PackageReference Include=""GMImagePicker.Xamarin"">
+          <Version>2.5.0</Version>
+        </PackageReference>
+        <PackageReference Include=""IdentityModel"">
+          <Version>4.1.0</Version>
+        </PackageReference>
+        <PackageReference Include=""Microsoft.AppCenter"">
+          <Version>4.3.0</Version>
+        </PackageReference>
+        <PackageReference Include=""Microsoft.AppCenter.Analytics"">
+          <Version>4.3.0</Version>
+        </PackageReference>
+        <PackageReference Include=""Microsoft.AppCenter.Crashes"">
+          <Version>4.3.0</Version>
+        </PackageReference>
+        <PackageReference Include=""Package.Test"" Version=""1.1.21"" />
+    </ItemGroup>
+  <ItemGroup />
+</Project>";
+
+            using (var r = ChoXmlReader.LoadText(xml).ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                .WithXmlNamespace("http://schemas.microsoft.com/developer/msbuild/2003")
+       .WithXPath("//PackageReference")
+       .WithField("Include")
+       .WithField("Version", xPath: "x:Version|@Version")
+       )
+            {
+                r.Print();
+            }
+        }
+
         static void Issue165()
         {
             string csv =

@@ -649,7 +649,8 @@ namespace ChoETL
                 }
                 else
                 {
-                    if (/*!fieldConfig.UseCache && */!xDict.ContainsKey(fieldConfig.FieldName))
+
+                    if (fieldConfig.IsXPathSet || !xDict.ContainsKey(fieldConfig.FieldName)) //*!fieldConfig.UseCache && */!xDict.ContainsKey(fieldConfig.FieldName))
                     {
                         xNodes.Clear();
                         foreach (XPathNavigator z in xpn.Select(fieldConfig.XPath, Configuration.NamespaceManager))

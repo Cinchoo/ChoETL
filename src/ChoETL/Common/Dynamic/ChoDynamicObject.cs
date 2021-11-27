@@ -1153,7 +1153,7 @@ namespace ChoETL
             return false;
         }
 
-        public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
+        public IEnumerator<KeyValuePair<string, object>> GetXmlEnumerator()
         {
             IDictionary<string, object> kvpDict = _kvpDict;
             if (kvpDict != null)
@@ -1164,6 +1164,18 @@ namespace ChoETL
                         yield return new KeyValuePair<string, object>($"{_attributePrefix}{kvp.Key}", kvp.Value);
                     else
                         yield return kvp;
+                }
+            }
+        }
+
+        public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
+        {
+            IDictionary<string, object> kvpDict = _kvpDict;
+            if (kvpDict != null)
+            {
+                foreach (var kvp in kvpDict)
+                {
+                    yield return kvp;
                 }
             }
         }
