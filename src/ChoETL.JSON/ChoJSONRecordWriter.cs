@@ -968,7 +968,8 @@ namespace ChoETL
         {
             bool lUseJSONSerialization = useJSONSerialization == null ? Configuration.UseJSONSerialization : useJSONSerialization.Value;
             if (true) //lUseJSONSerialization)
-                return Configuration.JsonSerializer.SerializeToJToken(target, Configuration.Formatting, Configuration.JsonSerializerSettings).JTokenToString();
+                return Configuration.JsonSerializer.SerializeToJToken(target, Configuration.Formatting, Configuration.JsonSerializerSettings,
+                    enableXmlAttributePrefix: Configuration.EnableXmlAttributePrefix).JTokenToString();
             //return JsonConvert.SerializeObject(target, Configuration.Formatting, Configuration.JsonSerializerSettings);
             else
             {

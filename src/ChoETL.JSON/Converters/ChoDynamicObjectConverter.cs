@@ -26,8 +26,11 @@ namespace ChoETL
         {
             if (value is ChoDynamicObject)
             {
-                var obj = (value as ChoDynamicObject).AsDictionary();
+                dynamic ctx = serializer.Context.Context;
+                bool enableXmlAttributePrefix = ctx != null ? ctx.EnableXmlAttributePrefix : false;
 
+                var obj = enableXmlAttributePrefix ? (value as ChoDynamicObject).AsXmlDictionary() : (value as ChoDynamicObject).AsDictionary();
+                
                 var config = Context.Configuration as ChoJSONRecordConfiguration;
                 if (config != null && config.IgnoreFieldValueMode != null)
                 {

@@ -1812,7 +1812,19 @@ namespace ChoETL
             foreach (var key in dict.Keys)
             {
                 if (dict[key] is ChoDynamicObject)
-                    dict[key] = dict[key].AsDictionary();
+                    dict[key] = ((ChoDynamicObject)dict[key]).AsDictionary();
+            }
+
+            return dict;
+        }
+
+        public IDictionary<string, object> AsXmlDictionary()
+        {
+            var dict = _kvpDict.ToDictionary(kvp => IsXmlAttribute(kvp.Key) ? $"{_attributePrefix}{kvp.Key}" : kvp.Key, kvp => kvp.Value);
+            foreach (var key in dict.Keys)
+            {
+                if (dict[key] is ChoDynamicObject)
+                    dict[key] = ((ChoDynamicObject)dict[key]).AsXmlDictionary();
             }
 
             return dict;

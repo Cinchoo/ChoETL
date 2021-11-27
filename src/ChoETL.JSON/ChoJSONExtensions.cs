@@ -85,7 +85,7 @@ namespace ChoETL
         }
 
         public static JToken SerializeToJToken(this JsonSerializer serializer, object value, Formatting? formatting = null, JsonSerializerSettings settings = null,
-            bool dontUseConverter = false)
+            bool dontUseConverter = false, bool enableXmlAttributePrefix = false)
         {
             JsonConverter conv = null;
             if (!dontUseConverter)
@@ -141,6 +141,13 @@ namespace ChoETL
             }
             if (formatting == null)
                 formatting = serializer.Formatting;
+
+            if (settings != null && settings.Context.Context == null && enableXmlAttributePrefix)
+            {
+                settings.Context = new System.Runtime.Serialization.StreamingContext(System.Runtime.Serialization.StreamingContextStates.All, new ChoDynamicObject());
+                dynamic ctx = settings.Context.Context;
+                ctx.EnableXmlAttributePrefix = enableXmlAttributePrefix;
+            }
 
             if (conv != null)
                 t = JToken.Parse(JsonConvert.SerializeObject(value, formatting.Value, conv));

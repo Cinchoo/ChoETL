@@ -675,6 +675,7 @@ namespace ChoETL
                             XAttribute[] fXAttributes = xNodes.OfType<XAttribute>().ToArray();
                             if (!fXAttributes.IsNullOrEmpty()) //fXAttribute != null)
                             {
+                                isXmlAttribute = true;
                                 //fieldValue = fXAttribute.Value;
                                 if (fieldConfig.FieldType == null)
                                 {
