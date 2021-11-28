@@ -187,6 +187,7 @@
     <Compile Include="..\ChoETL\Common\ChoTextWriterTraceListener.cs" Link="Common\ChoTextWriterTraceListener.cs" />
     <Compile Include="..\ChoETL\Common\ChoTraceSwitch.cs" Link="Common\ChoTraceSwitch.cs" />
     <Compile Include="..\ChoETL\Common\ChoType.cs" Link="Common\ChoType.cs" />
+    <Compile Include="..\ChoETL\Common\ChoTypeComparerCache.cs" Link="Common\ChoTypeComparerCache.cs" />
     <Compile Include="..\ChoETL\Common\ChoTypeDescriptor.cs" Link="Common\ChoTypeDescriptor.cs" />
     <Compile Include="..\ChoETL\Common\ChoUtility.cs" Link="Common\ChoUtility.cs" />
     <Compile Include="..\ChoETL\Common\ChoWin32Exception.cs" Link="Common\ChoWin32Exception.cs" />

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections;
+using System.Collections.Concurrent;
 
 namespace ChoETL
 {
@@ -83,9 +84,11 @@ namespace ChoETL
     {
         public static readonly ChoDynamicObjectComparer Default = new ChoDynamicObjectComparer((string)null);
         public static StringComparer _stringComparer = StringComparer.Create(Thread.CurrentThread.CurrentCulture, true);
+        public ConcurrentDictionary<Type, IComparer> TypeComparerers = null;
 
         private string[] _fields;
         private Func<ChoDynamicObject, ChoDynamicObject, int> _comparer;
+
         public ChoDynamicObjectComparer(string csvFieldNames)
         {
             _fields = csvFieldNames.SplitNTrim();
@@ -106,6 +109,7 @@ namespace ChoETL
             if (_comparer != null)
                 return _comparer(x, y);
 
+            ConcurrentDictionary<Type, IComparer> typeComparerers = TypeComparerers != null ? TypeComparerers : ChoTypeComparerCache.Instance.Cache;
             IDictionary<string, object> x1 = x as IDictionary<string, object>;
             IDictionary<string, object> y1 = y as IDictionary<string, object>;
             StringComparer stringComparer = _stringComparer;
@@ -146,11 +150,24 @@ namespace ChoETL
                         Type t1 = v1.GetType();
                         Type t2 = v1.GetType();
 
-                        var ret = stringComparer.Compare(v1.ToNString(), v2.ToNString());
-                        if (ret > 0)
-                            c1++;
-                        else if (ret < 0)
-                            c2++;
+                        IComparer comparer = null;
+                        typeComparerers.TryGetValue(t1, out comparer);
+                        if (comparer != null)
+                        {
+                            var ret = comparer.Compare(v1, v2);
+                            if (ret > 0)
+                                c1++;
+                            else if (ret < 0)
+                                c2++;
+                        }
+                        else
+                        {
+                            var ret = stringComparer.Compare(v1.ToNString(), v2.ToNString());
+                            if (ret > 0)
+                                c1++;
+                            else if (ret < 0)
+                                c2++;
+                        }
                     }
                 }
                 else if (!y1.ContainsKey(field))
