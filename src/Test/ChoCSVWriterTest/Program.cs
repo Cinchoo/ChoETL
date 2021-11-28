@@ -1962,11 +1962,165 @@ a;b;;2021-05-06;e;11:00;3;9";
 
             public string h { get; set; }
         }
+
+        static void CSVDiffWithStatus_1()
+        {
+            string csv1 = @"ID,name
+1,Danny
+2,Fred
+3,Sam";
+
+            string csv2 = @"ID,name
+1,Danny
+3,Pamela
+4,Fernando";
+
+            var r1 = ChoCSVReader.LoadText(csv1).WithFirstLineHeader().ToArray();
+            var r2 = ChoCSVReader.LoadText(csv2).WithFirstLineHeader().ToArray();
+
+            using (var w = new ChoCSVWriter(Console.Out).WithFirstLineHeader())
+            {
+                var newItems = r2.OfType<ChoDynamicObject>().Except(r1.OfType<ChoDynamicObject>(), new ChoDynamicObjectEqualityComparer(new string[] { "ID" }))
+                    .Select(r => 
+                    {
+                        var dict = r.AsDictionary();
+                        dict["Status"] = "NEW"; 
+                        return new ChoDynamicObject(dict); 
+                    }).ToArray();
+
+                var deletedItems = r1.OfType<ChoDynamicObject>().Except(r2.OfType<ChoDynamicObject>(), new ChoDynamicObjectEqualityComparer(new string[] { "ID" }))
+                    .Select(r =>
+                    {
+                        var dict = r.AsDictionary();
+                        dict["Status"] = "DELETED";
+                        return new ChoDynamicObject(dict);
+                    }).ToArray();
+
+                var changedItems = r2.OfType<ChoDynamicObject>().Except(r1.OfType<ChoDynamicObject>(), ChoDynamicObjectEqualityComparer.Default)
+                    .Except(newItems.OfType<ChoDynamicObject>(), new ChoDynamicObjectEqualityComparer(new string[] { "ID" }))
+                    .Select(r =>
+                    {
+                        var dict = r.AsDictionary();
+                        dict["Status"] = "CHANGED";
+                        return new ChoDynamicObject(dict);
+                    }).ToArray();
+
+                var noChangeItems = r1.OfType<ChoDynamicObject>().Intersect(r2.OfType<ChoDynamicObject>(), ChoDynamicObjectEqualityComparer.Default)
+                    .Select(r =>
+                    {
+                        var dict = r.AsDictionary();
+                        dict["Status"] = "NOCHANGE";
+                        return new ChoDynamicObject(dict);
+                    }).ToArray();
+
+                var finalResult = Enumerable.Concat(newItems, deletedItems).Concat(changedItems).Concat(noChangeItems).OfType<dynamic>().OrderBy(r => r.ID);
+                w.Write(finalResult);
+            }
+
+            Console.WriteLine();
+        }
+
+        static void CSVDiffWithStatus_2()
+        {
+            string csv1 = @"ID,name
+1,Danny
+2,Fred
+3,Sam";
+
+            string csv2 = @"ID,name
+1,Danny
+3,Pamela
+4,Fernando";
+
+            var r1 = ChoCSVReader.LoadText(csv1).WithFirstLineHeader().WithMaxScanRows(1).GetEnumerator();
+            var r2 = ChoCSVReader.LoadText(csv2).WithFirstLineHeader().WithMaxScanRows(1).GetEnumerator();
+
+            using (var w = new ChoCSVWriter(Console.Out).WithFirstLineHeader())
+            {
+                var b1 = r1.MoveNext();
+                var b2 = r2.MoveNext();
+                dynamic rec = null;
+
+                while (true)
+                {
+                    if (!b1 && !b2)
+                        break;
+                    else if (b1 && b2)
+                    {
+                        var rec1 = r1.Current;
+                        var rec2 = r2.Current;
+
+                        if (rec1.ID == rec2.ID)
+                        {
+                            rec = rec1;
+                            rec.Status = ChoDynamicObjectEqualityComparer.Default.Equals(rec1, rec2) ? "NOCHANGE" : "CHANGED";
+                            b1 = r1.MoveNext();
+                            b2 = r2.MoveNext();
+                        }
+                        else if (rec1.ID < rec2.ID)
+                        {
+                            rec = rec1;
+                            rec.Status = "DELETED";
+                            b1 = r1.MoveNext();
+                        }
+                        else
+                        {
+                            rec = rec2;
+                            rec.Status = "NEW";
+                            b2 = r2.MoveNext();
+                        }
+                    }
+                    else if (b1)
+                    {
+                        rec = r1.Current;
+                        rec.Status = "DELETED";
+                        b1 = r1.MoveNext();
+                    }
+                    else if (b2)
+                    {
+                        rec = r2.Current;
+                        rec.Status = "NEW";
+                        b2 = r2.MoveNext();
+                    }
+                    else
+                        break;
+
+                    w.Write(rec);
+                }
+            }
+        }
+
+        static void CSVDiffWithStatus()
+        {
+            string csv1 = @"ID,name
+1,Danny
+2,Fred
+3,Sam";
+
+            string csv2 = @"ID,name
+1,Danny
+3,Pamela
+4,Fernando";
+
+            var r1 = ChoCSVReader.LoadText(csv1).WithFirstLineHeader().WithMaxScanRows(1).OfType<ChoDynamicObject>();
+            var r2 = ChoCSVReader.LoadText(csv2).WithFirstLineHeader().WithMaxScanRows(1).OfType<ChoDynamicObject>();
+
+            using (var w = new ChoCSVWriter(Console.Out).WithFirstLineHeader())
+            {
+                foreach (var t in r1.Compare(r2, new string[] { "ID" }))
+                {
+                    dynamic v = t.Item1 as dynamic;
+                    v.Status = t.Item2.ToString();
+                    w.Write(v);
+                }
+            }
+        }
+
         static void Main(string[] args)
         {
             //AppDomain.CurrentDomain.FirstChanceException += (sender, eventArgs) => { Console.WriteLine("FirstChanceException: " + eventArgs.Exception.ToString()); };
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            TimespanIssue();
+            CSVDiffWithStatus();
             //TestDictionary();
             return;
 

@@ -821,7 +821,9 @@ namespace ChoETL
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null,
             string formatText = null, bool? isArray = null, string nullValue = null, Type recordType = null,
-            Type subRecordType = null, Func<JObject, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null)
+            Type subRecordType = null, Func<JObject, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null,
+            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null
+            )
         {
             ChoGuard.ArgumentNotNull(recordType, nameof(recordType));
 
@@ -862,6 +864,8 @@ namespace ChoETL
                 nfc.NullValue = !nullValue.IsNullOrWhiteSpace() ? nullValue : nfc.NullValue;
                 nfc.FieldTypeSelector = fieldTypeSelector != null ? fieldTypeSelector : nfc.FieldTypeSelector;
                 nfc.ItemRecordTypeSelector = itemTypeSelector != null ? itemTypeSelector : nfc.ItemRecordTypeSelector;
+                nfc.FieldTypeDiscriminator = fieldTypeDiscriminator != null ? fieldTypeDiscriminator : nfc.FieldTypeDiscriminator;
+                nfc.ItemTypeDiscriminator = itemTypeDiscriminator != null ? itemTypeDiscriminator : nfc.ItemTypeDiscriminator;
 
                 if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
                 {

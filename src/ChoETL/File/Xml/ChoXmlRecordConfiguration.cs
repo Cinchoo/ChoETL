@@ -405,10 +405,10 @@ namespace ChoETL
                             {
                                 if (!attr.FieldName.IsNullOrWhiteSpace())
                                 {
-                                    attr.XPath = $"{attr.FieldName}|@{attr.FieldName}";
+                                    attr.XPath = $"{attr.FieldName}|@{attr.FieldName}|x:{attr.FieldName}";
                                 }
                                 else
-                                    attr.XPath = xPath = $"{pd.Name}|@{pd.Name}";
+                                    attr.XPath = xPath = $"{pd.Name}|@{pd.Name}|x:{pd.Name}";
                                 IsComplexXPathUsed = true;
                             }
                             else
@@ -422,9 +422,9 @@ namespace ChoETL
                             if (obj.XPath.IsNullOrWhiteSpace())
                             {
                                 if (!obj.FieldName.IsNullOrWhiteSpace())
-                                    obj.XPath = $"{obj.FieldName}|@{obj.FieldName}";
+                                    obj.XPath = $"{obj.FieldName}|@{obj.FieldName}|x:{obj.FieldName}";
                                 else
-                                    obj.XPath = $"{obj.Name}|@{obj.Name}";
+                                    obj.XPath = $"{obj.Name}|@{obj.Name}|x:{obj.Name}";
                             }
 
                             obj.FieldType = pd.PropertyType.GetUnderlyingType();
@@ -683,7 +683,7 @@ namespace ChoETL
                     if (fc.XPath.IsNullOrWhiteSpace())
                     {
                         if (DefaultNamespacePrefix.IsNullOrWhiteSpace())
-                            fc.XPath = $"{fc.FieldName}|@{fc.FieldName}";
+                            fc.XPath = $"{fc.FieldName}|@{fc.FieldName}|x:{fc.FieldName}";
                         else
                             fc.XPath = $"{DefaultNamespacePrefix}:{fc.FieldName}|@{fc.FieldName}";
                     }

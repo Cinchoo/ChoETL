@@ -10,8 +10,74 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
+	public enum Status { NoChange, Changed, New, Deleted }
+
 	public static class ChoEnumerableEx
     {
+
+        public static IEnumerable<Tuple<ChoDynamicObject, Status>> Compare(this IEnumerable<ChoDynamicObject> master, IEnumerable<ChoDynamicObject> detail,
+            string[] keyColumns = null, string otherColumns = null, Func<ChoDynamicObject, ChoDynamicObject, int> comparer = null)
+        {
+            var r1 = master.GetEnumerator();
+            var r2 = detail.GetEnumerator();
+            var equalityComparer = new ChoDynamicObjectEqualityComparer(keyColumns);
+            var comparerObj = comparer == null ? new ChoDynamicObjectComparer(keyColumns) : new ChoDynamicObjectComparer(comparer);
+            var changeComparer = otherColumns.IsNullOrEmpty() ? ChoDynamicObjectEqualityComparer.Default : new ChoDynamicObjectEqualityComparer(otherColumns);
+
+            var b1 = r1.MoveNext();
+            var b2 = r2.MoveNext();
+            dynamic rec = null;
+
+            while (true)
+            {
+                Status status = Status.NoChange;
+
+                if (!b1 && !b2)
+                    break;
+                else if (b1 && b2)
+                {
+                    var rec1 = r1.Current;
+                    var rec2 = r2.Current;
+
+                    if (equalityComparer.Equals(rec1, rec2))
+                    {
+                        rec = rec1;
+                        status = changeComparer.Equals(rec1, rec2) ? Status.NoChange : Status.Changed;
+                        b1 = r1.MoveNext();
+                        b2 = r2.MoveNext();
+                    }
+                    else if (comparerObj.Compare(rec1, rec2) < 0)
+                    {
+                        rec = rec1;
+                        status = Status.Deleted;
+                        b1 = r1.MoveNext();
+                    }
+                    else
+                    {
+                        rec = rec2;
+                        status = Status.New;
+                        b2 = r2.MoveNext();
+                    }
+                }
+                else if (b1)
+                {
+                    rec = r1.Current;
+                    status = Status.Deleted;
+                    b1 = r1.MoveNext();
+                }
+                else if (b2)
+                {
+                    rec = r2.Current;
+                    status = Status.New;
+                    b2 = r2.MoveNext();
+                }
+                else
+                    break;
+
+                yield return new Tuple<ChoDynamicObject, Status>(rec, status);
+            }
+        }
+
         public static IEnumerable<V> ZipOrDefault<T, U, V>(
             this IEnumerable<T> one,
             IEnumerable<U> two,

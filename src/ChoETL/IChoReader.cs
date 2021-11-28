@@ -288,6 +288,19 @@ namespace ChoETL
         }
     }
 
+    public class ChoHeaderLineEventArgs : EventArgs
+    {
+        public string Line
+        {
+            get;
+            set;
+        }
+        public ChoHeaderLineEventArgs(string line)
+        {
+            Line = line;
+        }
+    }
+
     public class ChoCommentLineEventArgs : EventArgs
     {
         public long LineNo

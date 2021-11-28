@@ -696,23 +696,29 @@ namespace ChoETL
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null,
-            string nullValue = null, Func<JObject, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null)
+            string nullValue = null, Func<JObject, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null,
+            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null
+            )
         {
             if (field == null)
                 return this;
 
             return WithField(field.GetMemberName(), jsonPath, field.GetPropertyType(), fieldValueTrimOption, fieldName, valueConverter, itemConverter,
-                customSerializer, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, true, nullValue, null, fieldTypeSelector, itemTypeSelector);
+                customSerializer, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, true, nullValue, null, fieldTypeSelector, itemTypeSelector,
+                fieldTypeDiscriminator, itemTypeDiscriminator);
         }
 
         public ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null, bool isArray = true,
-            string nullValue = null, Func<JObject, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null)
+            string nullValue = null, Func<JObject, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null,
+            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null
+            )
         {
             return WithField(name, jsonPath, fieldType, fieldValueTrimOption, fieldName, valueConverter, itemConverter,
-                customSerializer, defaultValue, fallbackValue, null, formatText, isArray, nullValue, null, fieldTypeSelector, itemTypeSelector);
+                customSerializer, defaultValue, fallbackValue, null, formatText, isArray, nullValue, null, fieldTypeSelector, itemTypeSelector,
+                fieldTypeDiscriminator, itemTypeDiscriminator);
         }
 
         private ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
@@ -720,7 +726,9 @@ namespace ChoETL
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null,
             string formatText = null, bool isArray = true, string nullValue = null,
-            Type subRecordType = null, Func<JObject, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null)
+            Type subRecordType = null, Func<JObject, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null,
+            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null
+            )
         {
             if (!name.IsNullOrEmpty())
             {
@@ -728,7 +736,7 @@ namespace ChoETL
 
                 Configuration.WithField(name, jsonPath, fieldType, fieldValueTrimOption, fieldName,
                     valueConverter, itemConverter, customSerializer, defaultValue, fallbackValue, fullyQualifiedMemberName, formatText,
-                    isArray, nullValue, typeof(T), subRecordType, fieldTypeSelector, itemTypeSelector);
+                    isArray, nullValue, typeof(T), subRecordType, fieldTypeSelector, itemTypeSelector, fieldTypeDiscriminator, itemTypeDiscriminator);
             }
             return this;
         }

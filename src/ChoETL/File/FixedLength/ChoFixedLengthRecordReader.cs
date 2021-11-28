@@ -828,6 +828,10 @@ namespace ChoETL
         {
             string line = pair.Item2;
 
+            //prepare header line for match
+            if (Reader is IChoHeaderedReader)
+                line = ((IChoHeaderedReader)Reader).RaisePrepareHeaderLineForMatch(line);
+
             //Validate header
             _fieldNames = GetHeaders(line, true);
             

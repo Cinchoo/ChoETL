@@ -433,7 +433,7 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            Xml2JsonAttributeAs();
+            SelectiveChildTest();
         }
 
         static void SelectiveChildTest()
@@ -500,11 +500,12 @@ namespace ChoXmlReaderTest
                 .WithXmlNamespace("http://schemas.microsoft.com/developer/msbuild/2003")
                .WithXPath("//PackageReference")
                .WithField("Include")
-               .WithField("Version", xPath: "x:Version|@Version")
+               .WithField("Version")
                )
             {
+                r.Print();
+                return;
                 using (var w = new ChoJSONWriter(Console.Out)
-                    .Configure(c => c.EnableXmlAttributePrefix = true)
                     )
                     w.Write(r);
             }

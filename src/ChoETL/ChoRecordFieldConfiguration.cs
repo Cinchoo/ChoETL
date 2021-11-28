@@ -107,7 +107,16 @@ namespace ChoETL
             get;
             set;
         }
-
+        public string FieldTypeDiscriminator
+        {
+            get;
+            set;
+        }
+        public string ItemTypeDiscriminator
+        {
+            get;
+            set;
+        }
         [IgnoreDataMember]
         public bool IsDefaultValueSpecified
         {

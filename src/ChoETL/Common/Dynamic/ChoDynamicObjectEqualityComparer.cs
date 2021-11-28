@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Collections;
 
 namespace ChoETL
 {
@@ -44,6 +46,126 @@ namespace ChoETL
 
                 return true;
             }
+        }
+
+        public int GetHashCode(ChoDynamicObject obj)
+        {
+            IDictionary<string, object> obj1 = obj as IDictionary<string, object>;
+            int hashCode = 0;
+            if (_fields.IsNullOrEmpty())
+            {
+                foreach (var value in obj1.Values)
+                {
+                    if (value == null)
+                        continue;
+
+                    hashCode ^= value.GetHashCode();
+                }
+            }
+            else
+            {
+                foreach (var field in _fields)
+                {
+                    if (!obj1.ContainsKey(field))
+                        continue;
+
+                    if (obj1[field] == null)
+                        continue;
+
+                    hashCode ^= obj1[field].GetHashCode();
+                }
+
+            }
+            return hashCode;
+        }
+    }
+    public class ChoDynamicObjectComparer : IComparer<ChoDynamicObject>
+    {
+        public static readonly ChoDynamicObjectComparer Default = new ChoDynamicObjectComparer((string)null);
+        public static StringComparer _stringComparer = StringComparer.Create(Thread.CurrentThread.CurrentCulture, true);
+
+        private string[] _fields;
+        private Func<ChoDynamicObject, ChoDynamicObject, int> _comparer;
+        public ChoDynamicObjectComparer(string csvFieldNames)
+        {
+            _fields = csvFieldNames.SplitNTrim();
+        }
+
+        public ChoDynamicObjectComparer(string[] fields)
+        {
+            _fields = fields;
+        }
+
+        public ChoDynamicObjectComparer(Func<ChoDynamicObject, ChoDynamicObject, int> comparer)
+        {
+            _comparer = comparer;
+        }
+
+        public int Compare(ChoDynamicObject x, ChoDynamicObject y)
+        {
+            if (_comparer != null)
+                return _comparer(x, y);
+
+            IDictionary<string, object> x1 = x as IDictionary<string, object>;
+            IDictionary<string, object> y1 = y as IDictionary<string, object>;
+            StringComparer stringComparer = _stringComparer;
+            if (stringComparer == null)
+                stringComparer = StringComparer.Create(Thread.CurrentThread.CurrentCulture, true);
+
+            if (_fields.IsNullOrEmpty())
+            {
+                _fields = x1.Keys.Union(y1.Keys).ToArray();
+            }
+
+            var c1 = _fields.Count(r1 => x1.ContainsKey(r1));
+            var c2 = _fields.Count(r2 => y1.ContainsKey(r2));
+            if (c1 != c2)
+            {
+                return c1 - c2 < 0 ? -1 : 1;
+            }
+
+            c1 = 0;
+            c2 = 0;
+            foreach (var field in _fields)
+            {
+                if (x1.ContainsKey(field) && y1.ContainsKey(field))
+                {
+                    var v1 = x1[field];
+                    var v2 = y1[field];
+
+                    if (v1 == null && v2 == null)
+                    {
+
+                    }
+                    else if (v1 == null)
+                        c2++;
+                    else if (v2 == null)
+                        c1++;
+                    else
+                    {
+                        Type t1 = v1.GetType();
+                        Type t2 = v1.GetType();
+
+                        var ret = stringComparer.Compare(v1.ToNString(), v2.ToNString());
+                        if (ret > 0)
+                            c1++;
+                        else if (ret < 0)
+                            c2++;
+                    }
+                }
+                else if (!y1.ContainsKey(field))
+                {
+                    c1++;
+                }
+                else
+                    c2++;
+            }
+            if (c1 != c2)
+            {
+                return c1 - c2 < 0 ? -1 : 1;
+            }
+            else
+                return 0;
         }
 
         public int GetHashCode(ChoDynamicObject obj)

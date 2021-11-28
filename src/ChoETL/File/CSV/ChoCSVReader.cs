@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-    public class ChoCSVReader<T> : ChoReader, IDisposable, IEnumerable<T>, IChoSanitizableReader, IChoMultiLineHeaderReader, IChoCommentLineReader
+    public class ChoCSVReader<T> : ChoReader, IDisposable, IEnumerable<T>, IChoHeaderedReader, IChoSanitizableReader, IChoMultiLineHeaderReader, IChoCommentLineReader
         where T : class
     {
         private Lazy<TextReader> _textReader;
@@ -34,6 +34,7 @@ namespace ChoETL
         public event EventHandler<ChoSanitizeLineEventArgs> SanitizeLine;
         public event EventHandler<ChoMultiLineHeaderEventArgs> MultiLineHeader;
         public event EventHandler<ChoCommentLineEventArgs> CommentLineFound;
+        public event EventHandler<ChoHeaderLineEventArgs> PrepareHeaderLineForMatch;
 
         public override dynamic Context
         {
@@ -393,6 +394,18 @@ namespace ChoETL
 
             var ea = new ChoCommentLineEventArgs(lineNo, line);
             commentLineFound(this, ea);
+        }
+
+        public string RaisePrepareHeaderLineForMatch(string line)
+        {
+            EventHandler<ChoHeaderLineEventArgs> prepareHeaderLineForMatch = PrepareHeaderLineForMatch;
+            if (prepareHeaderLineForMatch == null)
+                return line;
+
+            var ea = new ChoHeaderLineEventArgs(line);
+            prepareHeaderLineForMatch(this, ea);
+
+            return ea.Line.IsNullOrWhiteSpace() ? line : ea.Line;
         }
 
         public override bool TryValidate(object target, ICollection<ValidationResult> validationResults)
@@ -1172,5 +1185,10 @@ namespace ChoETL
     internal interface IChoCommentLineReader
     {
         void RaiseCommentLineFound(long lineNo, string line);
+    }
+
+    internal interface IChoHeaderedReader
+    {
+        string RaisePrepareHeaderLineForMatch(string line);
     }
 }

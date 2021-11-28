@@ -219,7 +219,7 @@ namespace ChoETL
             if (!Configuration.NamespaceManager.DefaultNamespace.IsNullOrWhiteSpace())
             {
                 _nsInitialized = true;
-                Configuration.NamespaceManager.AddNamespace("x", Configuration.NamespaceManager.DefaultNamespace);
+                Configuration.NamespaceManager.AddNamespace(GetNSPrefix(), Configuration.NamespaceManager.DefaultNamespace);
             }
 
             foreach (XElement el in ReadNodes(FlattenNodeIfOn(xElements)))
@@ -229,7 +229,7 @@ namespace ChoETL
                     _nsInitialized = true;
                     if (!Configuration.NamespaceManager.DefaultNamespace.IsNullOrWhiteSpace())
                     {
-                        Configuration.NamespaceManager.AddNamespace("x", Configuration.NamespaceManager.DefaultNamespace);
+                        Configuration.NamespaceManager.AddNamespace(GetNSPrefix(), Configuration.NamespaceManager.DefaultNamespace);
                         ChoXmlSettings.XmlNamespace = Configuration.NamespaceManager.DefaultNamespace;
                     }
                 }
@@ -354,6 +354,21 @@ namespace ChoETL
 
             if (!abortRequested && pair != null)
                 RaisedRowsLoaded(pair.Item1);
+        }
+
+        private string GetNSPrefix()
+        {
+            string nsPrefix = Configuration.XmlNamespaceManager.Value.GetPrefixOfNamespace(Configuration.NamespaceManager.DefaultNamespace);
+            if (nsPrefix.IsNullOrWhiteSpace())
+            {
+                nsPrefix = Configuration.DefaultNamespacePrefix;
+                if (nsPrefix.IsNullOrWhiteSpace())
+                {
+                    nsPrefix = "x";
+                }
+            }
+
+            return nsPrefix;
         }
 
         private static void Parse(dynamic parent, XElement node)
