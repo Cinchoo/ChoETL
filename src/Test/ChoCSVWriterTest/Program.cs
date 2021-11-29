@@ -2111,8 +2111,8 @@ a;b;;2021-05-06;e;11:00;3;9";
             {
                 foreach (var t in r1.Compare(r2, new string[] { "ID" }))
                 {
-                    dynamic v = t.Item1 as dynamic;
-                    v.Status = t.Item2.ToString();
+                    dynamic v = t.Record as dynamic;
+                    v.Status = t.Status.ToString();
                     w.Write(v);
                 }
             }

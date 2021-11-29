@@ -10,27 +10,69 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
-	public enum Status { NoChange, Changed, New, Deleted }
+	public enum CompareStatus { Unchanged, Changed, New, Deleted }
 
 	public static class ChoEnumerableEx
     {
-
-        public static IEnumerable<Tuple<ChoDynamicObject, Status>> Compare(this IEnumerable<ChoDynamicObject> master, IEnumerable<ChoDynamicObject> detail,
-            string[] keyColumns = null, string otherColumns = null, Func<ChoDynamicObject, ChoDynamicObject, int> comparer = null)
+        public class CompareResult<T>
         {
-            var r1 = master.GetEnumerator();
-            var r2 = detail.GetEnumerator();
+            public T Record { get; private set; }
+            public CompareStatus Status { get; private set; }
+
+            public CompareResult(T record, CompareStatus status)
+            {
+                Record = record;
+                Status = status;
+            }
+        }
+
+        public static IEnumerable<CompareResult<ChoDynamicObject>> Compare(this IEnumerable<ChoDynamicObject> master, IEnumerable<ChoDynamicObject> detail,
+            string[] keyColumns = null, string otherColumns = null, Func<ChoDynamicObject, ChoDynamicObject, int> comparer = null,
+            IDictionary<Type, IComparer> typeComparerers = null)
+        {
             var equalityComparer = new ChoDynamicObjectEqualityComparer(keyColumns);
             var comparerObj = comparer == null ? new ChoDynamicObjectComparer(keyColumns) : new ChoDynamicObjectComparer(comparer);
-            var changeComparer = otherColumns.IsNullOrEmpty() ? ChoDynamicObjectEqualityComparer.Default : new ChoDynamicObjectEqualityComparer(otherColumns);
+            if (typeComparerers != null)
+                comparerObj.TypeComparerers = new System.Collections.Concurrent.ConcurrentDictionary<Type, IComparer>(typeComparerers);
+            var changeComparer = otherColumns.IsNullOrEmpty() ? new ChoDynamicObjectEqualityComparer((string)null) : new ChoDynamicObjectEqualityComparer(otherColumns);
+
+            return Compare(master, detail, equalityComparer, comparerObj);
+        }
+
+        public static IEnumerable<CompareResult<T>> Compare<T>(this IEnumerable<T> master, IEnumerable<T> detail,
+            IEqualityComparer<T> equalityComparer = null,
+            Func<T, T, int> comparerFunc = null,
+            IEqualityComparer<T> changeComparer = null,
+            IDictionary<Type, IComparer> typeComparerers = null)
+        {
+            var comparer = comparerFunc == null ? new ChoLamdaComparer<T>(comparerFunc) : null;
+            return Compare(master, detail, equalityComparer, comparer, changeComparer, typeComparerers);
+        }
+
+        public static IEnumerable<CompareResult<T>> Compare<T>(this IEnumerable<T> master, IEnumerable<T> detail,
+            IEqualityComparer<T> equalityComparer = null,
+            IComparer<T> comparer = null,
+            IEqualityComparer<T> changeComparer = null,
+            IDictionary<Type, IComparer> typeComparerers = null)
+        {
+            ChoGuard.ArgumentNotNull(master, "Master");
+            ChoGuard.ArgumentNotNull(detail, "Detail");
+            ChoGuard.ArgumentNotNull(equalityComparer, nameof(equalityComparer));
+            ChoGuard.ArgumentNotNull(comparer, nameof(comparer));
+
+            var r1 = master.GetEnumerator();
+            var r2 = detail.GetEnumerator();
 
             var b1 = r1.MoveNext();
             var b2 = r2.MoveNext();
-            dynamic rec = null;
+            T rec = default(T);
+
+            if (changeComparer == null)
+                changeComparer = equalityComparer;
 
             while (true)
             {
-                Status status = Status.NoChange;
+                CompareStatus status = CompareStatus.Unchanged;
 
                 if (!b1 && !b2)
                     break;
@@ -42,39 +84,39 @@ namespace ChoETL
                     if (equalityComparer.Equals(rec1, rec2))
                     {
                         rec = rec1;
-                        status = changeComparer.Equals(rec1, rec2) ? Status.NoChange : Status.Changed;
+                        status = changeComparer.Equals(rec1, rec2) ? CompareStatus.Unchanged : CompareStatus.Changed;
                         b1 = r1.MoveNext();
                         b2 = r2.MoveNext();
                     }
-                    else if (comparerObj.Compare(rec1, rec2) < 0)
+                    else if (comparer.Compare(rec1, rec2) < 0)
                     {
                         rec = rec1;
-                        status = Status.Deleted;
+                        status = CompareStatus.Deleted;
                         b1 = r1.MoveNext();
                     }
                     else
                     {
                         rec = rec2;
-                        status = Status.New;
+                        status = CompareStatus.New;
                         b2 = r2.MoveNext();
                     }
                 }
                 else if (b1)
                 {
                     rec = r1.Current;
-                    status = Status.Deleted;
+                    status = CompareStatus.Deleted;
                     b1 = r1.MoveNext();
                 }
                 else if (b2)
                 {
                     rec = r2.Current;
-                    status = Status.New;
+                    status = CompareStatus.New;
                     b2 = r2.MoveNext();
                 }
                 else
                     break;
 
-                yield return new Tuple<ChoDynamicObject, Status>(rec, status);
+                yield return new CompareResult<T>(rec, status);
             }
         }
 
