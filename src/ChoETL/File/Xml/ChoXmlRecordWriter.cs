@@ -1417,7 +1417,7 @@ namespace ChoETL
         {
             try
             {
-                return XElement.Parse(xml).ToString()
+                return XElement.Parse(xml).ToString();
             }
             catch
             {
