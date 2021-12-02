@@ -7805,10 +7805,40 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             coll2.Print();
         }
 
+        static void JSON2XmlWithTextAttributeTest()
+        {
+            string json = @"{
+
+  ""properties"": {
+    ""replace"": [
+      {
+        ""@name"": ""firstElement"",
+        ""#text"": ""11111""
+      },
+      {
+        ""@name"": ""secondElement"",
+        ""#text"": ""2222""
+      }
+    ]
+  }
+}";
+
+            using (var r = ChoJSONReader.LoadText(json.ToString())
+                //.WithJSONPath("$..properties.replace")
+                )
+            {
+                using (var w = new ChoXmlWriter(Console.Out).ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                    .Configure(c => c.TurnOffXmlFormatting = false)
+                    .Configure(c => c.Formatting = System.Xml.Formatting.Indented)
+                    )
+                    w.Write(r);
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            CustomCollectionTest();
+            JSON2XmlWithTextAttributeTest();
             //DeserializeNestedObjectOfList();
             return;
 

@@ -672,14 +672,17 @@ namespace ChoETL
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null,
-            string nullValue = null, Func<JObject, Type> fieldTypeSelector = null)
+            string nullValue = null, Func<object, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null,
+            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null
+            )
             where TClass : class
         {
             if (field == null)
                 return this;
 
             return WithField(field.GetMemberName(), jsonPath, fieldType, fieldValueTrimOption, fieldName, valueConverter, itemConverter,
-                customSerializer, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, true, nullValue, typeof(TClass), fieldTypeSelector);
+                customSerializer, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, true, nullValue, typeof(TClass), 
+                fieldTypeSelector, itemTypeSelector, fieldTypeDiscriminator, itemTypeDiscriminator);
         }
 
         public ChoJSONReader<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoJSONRecordFieldConfigurationMap> mapper)
@@ -696,7 +699,7 @@ namespace ChoETL
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null,
-            string nullValue = null, Func<JObject, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null,
+            string nullValue = null, Func<object, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null,
             string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null
             )
         {
@@ -712,7 +715,7 @@ namespace ChoETL
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null, bool isArray = true,
-            string nullValue = null, Func<JObject, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null,
+            string nullValue = null, Func<object, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null,
             string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null
             )
         {
@@ -726,7 +729,7 @@ namespace ChoETL
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null,
             string formatText = null, bool isArray = true, string nullValue = null,
-            Type subRecordType = null, Func<JObject, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null,
+            Type subRecordType = null, Func<object, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null,
             string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null
             )
         {

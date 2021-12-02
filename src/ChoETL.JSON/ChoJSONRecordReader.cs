@@ -1079,7 +1079,14 @@ namespace ChoETL
                         {
                             if (kvp.Value.FieldTypeSelector != null)
                             {
-                                Type rt = kvp.Value.FieldTypeSelector(pair.Item2);
+                                Type rt = null;
+                                JObject jObj = pair.Item2;
+                                if (!kvp.Value.FieldTypeDiscriminator.IsNullOrWhiteSpace() && jObj.ContainsKey(kvp.Value.FieldTypeDiscriminator))
+                                {
+                                    rt = kvp.Value.FieldTypeSelector(jObj[kvp.Value.FieldTypeDiscriminator]);
+                                }
+                                else
+                                    rt = kvp.Value.FieldTypeSelector(pair.Item2);
                                 kvp.Value.FieldType = rt == null ? pi.PropertyType : rt;
                             }
                             else
@@ -1643,6 +1650,9 @@ namespace ChoETL
         {
             if (fieldConfig.ItemRecordTypeSelector != null)
             {
+                if (!fieldConfig.ItemTypeDiscriminator.IsNullOrWhiteSpace() && fieldValue is JObject && ((JObject)fieldValue).ContainsKey(fieldConfig.ItemTypeDiscriminator))
+                    fieldValue = ((JObject)fieldValue)[fieldConfig.ItemTypeDiscriminator];
+
                 return fieldConfig.ItemRecordTypeSelector(fieldValue);
             }
             else
@@ -1651,7 +1661,11 @@ namespace ChoETL
                 {
                     var rec = ChoActivator.CreateInstanceNCache(RecordType);
                     if (rec is IChoRecordTypeSelector)
-                        return ((IChoRecordTypeSelector)rec).SelectRecordType(fieldConfig.Name, fieldConfig);
+                    {
+                        if (!fieldConfig.FieldTypeDiscriminator.IsNullOrWhiteSpace() && fieldValue is JObject && ((JObject)fieldValue).ContainsKey(fieldConfig.FieldTypeDiscriminator))
+                            fieldValue = ((JObject)fieldValue)[fieldConfig.FieldTypeDiscriminator];
+                        return ((IChoRecordTypeSelector)rec).SelectRecordType(fieldConfig.Name, fieldValue);
+                    }
                 }
             }
 

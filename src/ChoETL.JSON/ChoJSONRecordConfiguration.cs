@@ -821,7 +821,7 @@ namespace ChoETL
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null,
             string formatText = null, bool? isArray = null, string nullValue = null, Type recordType = null,
-            Type subRecordType = null, Func<JObject, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null,
+            Type subRecordType = null, Func<object, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null,
             string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null
             )
         {

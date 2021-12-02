@@ -40,8 +40,8 @@ namespace ChoETL
             get;
             set;
         }
-        private Func<JObject, Type> _fieldTypeSelector = null;
-        public Func<JObject, Type> FieldTypeSelector
+        private Func<object, Type> _fieldTypeSelector = null;
+        public Func<object, Type> FieldTypeSelector
         {
             get { return _fieldTypeSelector; }
             set { if (value == null) return; _fieldTypeSelector = value; }

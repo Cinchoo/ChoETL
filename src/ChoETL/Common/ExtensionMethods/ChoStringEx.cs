@@ -21,6 +21,20 @@ namespace ChoETL
     public static class ChoString
     {
         public static Func<string, bool?> IsTextPlural = null;
+        public static string FormatXml(this string xml, bool indent = true, bool newLineOnAttributes = false, string indentChars = "  ", ConformanceLevel conformanceLevel = ConformanceLevel.Document) =>
+            xml.FormatXml(new XmlWriterSettings { Indent = indent, NewLineOnAttributes = newLineOnAttributes, IndentChars = indentChars, ConformanceLevel = conformanceLevel });
+
+        public static string FormatXml(this string xml, XmlWriterSettings settings)
+        {
+            using (var textReader = new StringReader(xml))
+            using (var xmlReader = XmlReader.Create(textReader, new XmlReaderSettings { ConformanceLevel = settings.ConformanceLevel }))
+            using (var textWriter = new StringWriter())
+            {
+                using (var xmlWriter = XmlWriter.Create(textWriter, settings))
+                    xmlWriter.WriteNode(xmlReader, true);
+                return textWriter.ToString();
+            }
+        }
 
         public static string IdentifierSeparator 
         {

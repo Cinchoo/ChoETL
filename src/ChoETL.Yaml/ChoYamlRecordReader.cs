@@ -1253,7 +1253,7 @@ namespace ChoETL
                 {
                     var rec = ChoActivator.CreateInstanceNCache(RecordType);
                     if (rec is IChoRecordTypeSelector)
-                        return ((IChoRecordTypeSelector)rec).SelectRecordType(fieldConfig.Name, fieldConfig);
+                        return ((IChoRecordTypeSelector)rec).SelectRecordType(fieldConfig.Name, fieldValue);
                 }
             }
 

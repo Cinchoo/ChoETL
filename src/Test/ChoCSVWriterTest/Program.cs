@@ -2102,7 +2102,7 @@ a;b;;2021-05-06;e;11:00;3;9";
 3,Pamela
 4,Fernando";
 
-            ChoTypeComparerCache.Instance.ScanAndLoad();
+            //ChoTypeComparerCache.Instance.ScanAndLoad();
 
             var r1 = ChoCSVReader.LoadText(csv1).WithFirstLineHeader().WithMaxScanRows(1).OfType<ChoDynamicObject>();
             var r2 = ChoCSVReader.LoadText(csv2).WithFirstLineHeader().WithMaxScanRows(1).OfType<ChoDynamicObject>();

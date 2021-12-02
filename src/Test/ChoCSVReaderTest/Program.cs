@@ -712,6 +712,7 @@ namespace ChoCSVReaderTest
             foreach (var p in new ChoCSVReader("Sample2.csv").WithFirstLineHeader()
                 //.Configure(c => c.TypeConverterFormatSpec.TreatCurrencyAsDecimal = false)
                 .QuoteAllFields()
+                .MayHaveQuotedFields
                 //.WithMaxScanRows(2)
                 //.WithField("Cust_ID")
                 //.WithField("Salary", fieldType: typeof(Decimal))

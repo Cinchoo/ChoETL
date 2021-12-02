@@ -967,6 +967,12 @@ namespace ChoETL
                 {
                     if (!IsValidXItem(kvp.Key)) continue;
 
+                    if (kvp.Key == ChoDynamicObject.ValueToken)
+                    {
+                        ele.Value = kvp.Value.ToNString();
+                        continue;
+                    }
+
                     if (kvp.Value == null)
                     {
                         string innerXml = null;
@@ -1411,7 +1417,7 @@ namespace ChoETL
         {
             try
             {
-                return XElement.Parse(xml).ToString();
+                return XElement.Parse(xml).ToString()
             }
             catch
             {

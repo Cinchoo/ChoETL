@@ -64,7 +64,7 @@ namespace ChoETL
         private string _keySeparator = ".";
         private string _attributePrefix = "@";
 
-        private static readonly string ValueToken = "#text";
+        internal static readonly string ValueToken = "#text";
 
         [IgnoreDataMember]
         private readonly static Dictionary<string, Type> _intrinsicTypes = new Dictionary<string, Type>();
@@ -1299,7 +1299,7 @@ namespace ChoETL
                     }
                 }
                 else
-                    msg.AppendFormat(@" {0}=""{1}""", key, this[key]);
+                    msg.AppendFormat(@" {0}=""{1}""", key.StartsWith(_attributePrefix) ? key.Substring(1) : key, this[key]);
             }
 
             if (ContainsKey(ValueToken))
