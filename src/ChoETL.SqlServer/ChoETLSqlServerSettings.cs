@@ -13,6 +13,7 @@ namespace ChoETL
 
         public string TableName = "TmpTable";
         public Dictionary<Type, string> ColumnDataMapper = ChoSqlTableHelper.ColumnDataMapper.Value;
+        public long NotifyAfter { get; set; }
 
         private string _connectionString = null;
         public string ConnectionString

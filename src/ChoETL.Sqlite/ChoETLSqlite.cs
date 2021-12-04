@@ -15,6 +15,7 @@ using System.Reflection;
 using System.Configuration;
 using System.Data.SQLite.EF6;
 using System.Data.Entity.Core.Common;
+using System.Diagnostics;
 
 namespace ChoETL
 {
@@ -24,19 +25,20 @@ namespace ChoETL
             where T : class
         {
             if (typeof(T).IsDynamicType() || typeof(T) == typeof(object))
-                throw new NotSupportedException();
+                throw new NotSupportedException("Dynamic type not supported.");
 
             Dictionary<string, PropertyInfo> PIDict = ChoType.GetProperties(typeof(T)).ToDictionary(p => p.Name);
 
             sqliteSettings = ValidateSettings<T>(sqliteSettings);
             LoadDataToDb(items, sqliteSettings, PIDict);
 
-            var ctx = new ChoETLSQLiteDbContext<T>(sqliteSettings.DatabaseFilePath);
+            var ctx = new ChoETLSQLiteDbContext<T>(sqliteSettings.GetConnectionString());
+            ctx.Log = sqliteSettings.Log;
             var dbSet = ctx.Set<T>();
             return dbSet;
         }
 
-        public static IEnumerable<dynamic> StageOnSQLite(this IEnumerable<dynamic> items, string conditions = null, ChoETLSqliteSettings sqliteSettings = null)
+        public static IEnumerable<dynamic> StageOnSQLite(this IEnumerable<dynamic> items, string conditions, ChoETLSqliteSettings sqliteSettings = null)
         {
             sqliteSettings = ValidateSettings<dynamic>(sqliteSettings);
             LoadDataToDb(items, sqliteSettings, null);
@@ -45,7 +47,7 @@ namespace ChoETL
             if (!conditions.IsNullOrWhiteSpace())
                 sql += " {0}".FormatString(conditions);
 
-            SQLiteConnection conn = new SQLiteConnection(@"DataSource={0}".FormatString(sqliteSettings.DatabaseFilePath));
+            SQLiteConnection conn = new SQLiteConnection(sqliteSettings.GetConnectionString());
             conn.Open();
             SQLiteCommand command2 = new SQLiteCommand(sql, conn);
             return command2.ExecuteReader(CommandBehavior.CloseConnection).ToEnumerable<dynamic>();
@@ -70,53 +72,111 @@ namespace ChoETL
         {
             sqliteSettings.TableName = typeof(T).Name;
 
-            if (File.Exists(sqliteSettings.DatabaseFilePath))
-                File.Delete(sqliteSettings.DatabaseFilePath);
+            if (File.Exists(sqliteSettings.GetDatabaseFilePath()))
+                File.Delete(sqliteSettings.GetDatabaseFilePath());
 
-            SQLiteConnection.CreateFile(sqliteSettings.DatabaseFilePath);
+            SQLiteConnection.CreateFile(sqliteSettings.GetDatabaseFilePath());
 
             bool isFirstItem = true;
+            bool isFirstBatch = true;
+            long notifyAfter = sqliteSettings.NotifyAfter;
+            long batchSize = sqliteSettings.BatchSize;
 
             //Open sqlite connection, store the data
-            using (var conn = new SQLiteConnection(@"DataSource={0}".FormatString(sqliteSettings.DatabaseFilePath)))
+            var conn = new SQLiteConnection(sqliteSettings.GetConnectionString());
+            try
             {
                 SQLiteCommand insertCmd = null;
                 conn.Open();
 
-                using (var trans = conn.BeginTransaction())
+                SQLiteTransaction trans = sqliteSettings.TurnOnTransaction ? conn.BeginTransaction() : null;
+                try
                 {
+                    int index = 0;
                     foreach (var item in items)
                     {
+                        index++;
                         if (isFirstItem)
                         {
                             isFirstItem = false;
                             if (item != null)
                             {
-                                try
+                                if (isFirstBatch)
                                 {
-                                    SQLiteCommand command = new SQLiteCommand(item.CreateTableScript(sqliteSettings.ColumnDataMapper, sqliteSettings.TableName), conn);
-                                    command.ExecuteNonQuery();
-                                }
-                                catch { }
+                                    isFirstBatch = false;
+                                    try
+                                    {
+                                        SQLiteCommand command = new SQLiteCommand(item.CreateTableScript(sqliteSettings.ColumnDataMapper, sqliteSettings.TableName), conn);
+                                        command.ExecuteNonQuery();
+                                    }
+                                    catch { }
 
-                                //Truncate table
-                                try
-                                {
-                                    SQLiteCommand command = new SQLiteCommand("DELETE FROM [{0}]".FormatString(sqliteSettings.TableName), conn, trans);
-                                    command.ExecuteNonQuery();
+                                    //Truncate table
+                                    try
+                                    {
+                                        SQLiteCommand command = new SQLiteCommand("DELETE FROM [{0}]".FormatString(sqliteSettings.TableName), conn, trans);
+                                        command.ExecuteNonQuery();
+                                    }
+                                    catch { }
                                 }
-                                catch { }
-
                                 insertCmd = CreateInsertCommand(item, sqliteSettings.TableName, conn, PIDict);
                             }
                         }
 
                         PopulateParams(insertCmd, item, PIDict);
                         insertCmd.ExecuteNonQuery();
+
+                        if (notifyAfter > 0 && index % notifyAfter == 0)
+                        {
+                            if (sqliteSettings.RaisedRowsUploaded(index))
+                            {
+                                sqliteSettings.WriteLog(sqliteSettings.TraceSwitch.TraceVerbose, "Abort requested.");
+                                break;
+                            }
+                        }
+
+                        if (batchSize > 0 && index % batchSize == 0)
+                        {
+                            if (trans != null)
+                            {
+                                trans.Commit();
+                                trans = null;
+                            }
+
+                            isFirstItem = true;
+                            conn.Close();
+                            conn = null;
+                            conn = new SQLiteConnection(sqliteSettings.GetConnectionString());
+                            conn.Open();
+                            trans = sqliteSettings.TurnOnTransaction ? conn.BeginTransaction() : null;
+                        }
                     }
 
-                    trans.Commit();
+                    if (trans != null)
+                    {
+                        trans.Commit();
+                        trans = null;
+                    }
                 }
+                catch
+                {
+                    if (trans != null)
+                    {
+                        trans.Rollback();
+                        trans = null;
+                    }
+
+                    throw;
+                }
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                if (conn != null)
+                    conn.Close();
             }
         }
 

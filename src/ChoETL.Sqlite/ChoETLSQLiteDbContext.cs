@@ -12,17 +12,20 @@ namespace ChoETL
 {
     internal class ChoETLSQLiteDbContext<T> : DbContext
     {
-        public ChoETLSQLiteDbContext(string dbFilePath) :
+        public Action<string> Log = Console.WriteLine;
+
+        public ChoETLSQLiteDbContext(string connectionString) :
             base(new SQLiteConnection()
             {
-                ConnectionString = new SQLiteConnectionStringBuilder() { DataSource = dbFilePath, ForeignKeys = true }.ConnectionString
+                ConnectionString = connectionString // new SQLiteConnectionStringBuilder() { DataSource = dbFilePath, ForeignKeys = true }.ConnectionString
             }, true)
         {
             Database.Log = new Action<string>((m) =>
             {
-                //if (ChoETLFramework.TraceSwitch.TraceInfo)
-                //    Console.WriteLine(m);
-                ChoETLLog.Info(m);
+                if (Log != null)
+                    Log(m);
+                else
+                    ChoETLLog.Info(m);
             });
             Database.SetInitializer<ChoETLSQLiteDbContext<T>>(null);
         }
