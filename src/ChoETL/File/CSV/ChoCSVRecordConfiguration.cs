@@ -21,6 +21,12 @@ namespace ChoETL
         private readonly Dictionary<string, dynamic> _indexMapDict = new Dictionary<string, dynamic>();
         internal readonly Dictionary<Type, Dictionary<string, ChoCSVRecordFieldConfiguration>> CSVRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoCSVRecordFieldConfiguration>>();
 
+        public bool FastCSVParsing
+        {
+            get;
+            set;
+        }
+
         private char[] _autoDetectDelimiterChars = { ';', '|', '\t', ',' };
         public char[] AutoDetectDelimiterChars
         {

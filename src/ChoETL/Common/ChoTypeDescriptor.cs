@@ -27,6 +27,8 @@
 
         private static readonly Dictionary<MemberInfo, object[]> _typeMemberTypeConverterParamsCache = new Dictionary<MemberInfo, object[]>();
         private static readonly Dictionary<Type, object[]> _typeTypeConverterParamsCache = new Dictionary<Type, object[]>();
+        public static bool DoNotUseTypeConverterForTypes = false;
+        public static bool DoNotDiscoverTypeConverterForTypes = false;
 
         #endregion Shared Data Members (Private)
 
@@ -510,12 +512,18 @@
             if (objType == null)
                 return null;
 
+            if (DoNotUseTypeConverterForTypes)
+                return EmptyTypeConverters;
+
             lock (_typeMemberTypeConverterCacheLockObject)
             {
                 if (_typeTypeConverterCache.ContainsKey(objType))
                     return _typeTypeConverterCache[objType];
                 else
                 {
+                    if (DoNotDiscoverTypeConverterForTypes)
+                        return EmptyTypeConverters;
+
                     if (!_typeTypeConverterCache.ContainsKey(objType))
                     {
                         Type type = objType;

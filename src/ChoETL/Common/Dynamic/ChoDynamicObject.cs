@@ -1092,6 +1092,13 @@ namespace ChoETL
             SetPropertyValue(key, value);
         }
 
+        public void AddToDictionary(string key, object value)
+        {
+            IDictionary<string, object> kvpDict = _kvpDict;
+            if (kvpDict != null)
+                kvpDict.Add(key, value);
+        }
+
         public bool Remove(string key)
         {
             IDictionary<string, object> kvpDict = _kvpDict;
@@ -1100,6 +1107,11 @@ namespace ChoETL
                 kvpDict.Remove(key);
             }
             return false;
+        }
+
+        public void SetDictionary(IDictionary<string, object> dict)
+        {
+            _kvpDict = dict;
         }
 
         public bool TryGetValue(string key, out object value)

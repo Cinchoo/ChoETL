@@ -64,6 +64,7 @@ namespace ChoETL
 
         public static void ConvertNSetMemberValue(this IDictionary<string, object> dict, string fn, ChoRecordFieldConfiguration fieldConfig, ref object fieldValue, CultureInfo culture)
         {
+            ChoDynamicObject dDict = dict as ChoDynamicObject;
             if (fieldValue is ChoDynamicObject)
                 ((ChoDynamicObject)fieldValue).DynamicObjectName = fn;
 
@@ -81,12 +82,14 @@ namespace ChoETL
                     fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), fcParams, culture);
             }
 
-            dict.AddOrUpdate(fn, fieldValue);
+            if (dDict != null)
+                dDict.AddToDictionary(fn, fieldValue);
+            else
+                dict.AddOrUpdate(fn, fieldValue);
 
-            if (dict is ChoDynamicObject && fieldValue == null && fieldConfig.FieldType != null)
+            if (dDict != null && fieldValue == null && fieldConfig.FieldType != null)
             {
-                var dobj = dict as ChoDynamicObject;
-                dobj.SetMemberType(fn, fieldConfig.FieldType);
+                dDict.SetMemberType(fn, fieldConfig.FieldType);
             }
 
         }
@@ -324,8 +327,10 @@ namespace ChoETL
             if (fieldConfig.PD == null) return;
 
             if (ConvertMemberValue(rec, fn, fieldConfig, ref fieldValue, culture))
+            {
                 fieldConfig.PD.SetValue(rec, fieldValue);
                 //ChoType.SetPropertyValue(rec, fieldConfig.PI, fieldValue);
+            }
         }
 
         private static object[] GetPropertyConvertersParams(ChoRecordFieldConfiguration fieldConfig)

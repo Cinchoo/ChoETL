@@ -724,6 +724,15 @@ namespace ChoETL
                     throw new ChoParserException("Incorrect number of field values found at line [{2}]. Expected [{0}] field values. Found [{1}] field values.".FormatString(Configuration.CSVRecordFieldConfigurations.Count, fieldValues.Length, pair.Item1));
             }
 
+            if (Configuration.FastCSVParsing && Configuration.IsDynamicObject && rec is ChoDynamicObject)
+            {
+                if (this.fieldNameValues == null)
+                    this.fieldNameValues = InitFieldNameValuesDict();
+                ToFieldNameValues(fieldNameValues, fieldValues);
+                ((ChoDynamicObject)rec).SetDictionary(fieldNameValues);
+                return true;
+            }
+
             //if (_fieldNames != null) //Configuration.FileHeaderConfiguration.HasHeaderRecord && Configuration.ColumnOrderStrict)
             if (Configuration.FileHeaderConfiguration.HasHeaderRecord && !Configuration.FileHeaderConfiguration.IgnoreHeader)
             {
@@ -731,6 +740,7 @@ namespace ChoETL
                     this.fieldNameValues = InitFieldNameValuesDict();
                 ToFieldNameValues(fieldNameValues, fieldValues);
             }
+
             ValidateLine(pair.Item1, fieldValues);
 
             object fieldValue = null;

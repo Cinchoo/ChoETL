@@ -24,18 +24,26 @@ namespace ChoETL
         public static IQueryable<T> StageOnSQLite<T>(this IEnumerable<T> items, ChoETLSqliteSettings sqliteSettings = null)
             where T : class
         {
-            if (typeof(T).IsDynamicType() || typeof(T) == typeof(object))
-                throw new NotSupportedException("Dynamic type not supported.");
+            //if (typeof(T).IsDynamicType() || typeof(T) == typeof(object))
+            //    throw new NotSupportedException("Dynamic type not supported.");
 
-            Dictionary<string, PropertyInfo> PIDict = ChoType.GetProperties(typeof(T)).ToDictionary(p => p.Name);
+            Dictionary<string, PropertyInfo> PIDict = null;
+
+            if (!typeof(T).IsDynamicType() && typeof(T) != typeof(object))
+                ChoType.GetProperties(typeof(T)).ToDictionary(p => p.Name);
 
             sqliteSettings = ValidateSettings<T>(sqliteSettings);
             LoadDataToDb(items, sqliteSettings, PIDict);
 
-            var ctx = new ChoETLSQLiteDbContext<T>(sqliteSettings.GetConnectionString());
-            ctx.Log = sqliteSettings.Log;
-            var dbSet = ctx.Set<T>();
-            return dbSet;
+            if (!typeof(T).IsDynamicType() && typeof(T) != typeof(object))
+            {
+                var ctx = new ChoETLSQLiteDbContext<T>(sqliteSettings.GetConnectionString());
+                ctx.Log = sqliteSettings.Log;
+                var dbSet = ctx.Set<T>();
+                return dbSet;
+            }
+            else
+                return Enumerable.Empty<T>().AsQueryable();
         }
 
         public static IEnumerable<dynamic> StageOnSQLite(this IEnumerable<dynamic> items, string conditions, ChoETLSqliteSettings sqliteSettings = null)
@@ -60,18 +68,19 @@ namespace ChoETL
             else
                 sqliteSettings.Validate();
 
-            if (typeof(T).IsDynamicType())
-                sqliteSettings.TableName = sqliteSettings.TableName.IsNullOrWhiteSpace() ? "TmpTable" : sqliteSettings.TableName;
-            else
-                sqliteSettings.TableName = sqliteSettings.TableName.IsNullOrWhiteSpace() ? typeof(T).Name : sqliteSettings.TableName;
+            if (sqliteSettings.TableName.IsNullOrWhiteSpace())
+            {
+                if (typeof(T).IsDynamicType())
+                    sqliteSettings.TableName = sqliteSettings.TableName.IsNullOrWhiteSpace() ? "TmpTable" : sqliteSettings.TableName;
+                else
+                    sqliteSettings.TableName = sqliteSettings.TableName.IsNullOrWhiteSpace() ? typeof(T).Name : sqliteSettings.TableName;
+            }
 
             return sqliteSettings;
         }
 
         private static void LoadDataToDb<T>(IEnumerable<T> items, ChoETLSqliteSettings sqliteSettings, Dictionary<string, PropertyInfo> PIDict = null) where T : class
         {
-            sqliteSettings.TableName = typeof(T).Name;
-
             if (File.Exists(sqliteSettings.GetDatabaseFilePath()))
                 File.Delete(sqliteSettings.GetDatabaseFilePath());
 
@@ -84,9 +93,9 @@ namespace ChoETL
 
             //Open sqlite connection, store the data
             var conn = new SQLiteConnection(sqliteSettings.GetConnectionString());
+            SQLiteCommand insertCmd = null;
             try
             {
-                SQLiteCommand insertCmd = null;
                 conn.Open();
 
                 SQLiteTransaction trans = sqliteSettings.TurnOnTransaction ? conn.BeginTransaction() : null;
@@ -119,6 +128,9 @@ namespace ChoETL
                                     }
                                     catch { }
                                 }
+                                if (insertCmd != null)
+                                    insertCmd.Dispose();
+
                                 insertCmd = CreateInsertCommand(item, sqliteSettings.TableName, conn, PIDict);
                             }
                         }
@@ -142,6 +154,8 @@ namespace ChoETL
                                 trans.Commit();
                                 trans = null;
                             }
+                            if (insertCmd != null)
+                                insertCmd.Dispose();
 
                             isFirstItem = true;
                             conn.Close();
@@ -175,8 +189,13 @@ namespace ChoETL
             }
             finally
             {
+                if (insertCmd != null)
+                    insertCmd.Dispose();
                 if (conn != null)
                     conn.Close();
+                System.Data.SQLite.SQLiteConnection.ClearAllPools();
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
             }
         }
 
