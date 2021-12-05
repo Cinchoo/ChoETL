@@ -46,7 +46,7 @@ namespace ChoETL
                 return Enumerable.Empty<T>().AsQueryable();
         }
 
-        public static IEnumerable<dynamic> StageOnSQLite(this IEnumerable<dynamic> items, string conditions, ChoETLSqliteSettings sqliteSettings = null)
+        public static IEnumerable<T> StageOnSQLite<T>(this IEnumerable<T> items, string conditions, ChoETLSqliteSettings sqliteSettings = null)
         {
             sqliteSettings = ValidateSettings<dynamic>(sqliteSettings);
             LoadDataToDb(items, sqliteSettings, null);
@@ -58,10 +58,10 @@ namespace ChoETL
             SQLiteConnection conn = new SQLiteConnection(sqliteSettings.GetConnectionString());
             conn.Open();
             SQLiteCommand command2 = new SQLiteCommand(sql, conn);
-            return command2.ExecuteReader(CommandBehavior.CloseConnection).ToEnumerable<dynamic>();
+            return command2.ExecuteReader(CommandBehavior.CloseConnection).ToEnumerable<T>();
         }
 
-        private static ChoETLSqliteSettings ValidateSettings<T>(ChoETLSqliteSettings sqliteSettings) where T : class
+        private static ChoETLSqliteSettings ValidateSettings<T>(ChoETLSqliteSettings sqliteSettings) 
         {
             if (sqliteSettings == null)
                 sqliteSettings = ChoETLSqliteSettings.Instance;
@@ -79,7 +79,7 @@ namespace ChoETL
             return sqliteSettings;
         }
 
-        private static void LoadDataToDb<T>(IEnumerable<T> items, ChoETLSqliteSettings sqliteSettings, Dictionary<string, PropertyInfo> PIDict = null) where T : class
+        private static void LoadDataToDb<T>(IEnumerable<T> items, ChoETLSqliteSettings sqliteSettings, Dictionary<string, PropertyInfo> PIDict = null) 
         {
             ChoGuard.ArgumentNotNull(items, nameof(items));
 

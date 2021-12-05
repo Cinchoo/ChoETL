@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -37,6 +38,7 @@ namespace ChoETL
 
             return dataMapper;
         });
+
         private static dynamic ToExpandoObject(this IDataRecord record)
         {
             var expandoObject = new ExpandoObject() as IDictionary<string, object>;
@@ -47,13 +49,44 @@ namespace ChoETL
             return expandoObject;
         }
 
-        public static IEnumerable<T> ToEnumerable<T>(this IDataReader reader)
+        private static IDictionary<string, object> ToDictionary(this IDataRecord record)
         {
-            if (typeof(T) == typeof(ExpandoObject))
+            var dict = new Dictionary<string, object>();
+
+            for (var i = 0; i < record.FieldCount; i++)
+                dict.Add(record.GetName(i), record[i]);
+
+            return dict;
+        }
+
+        public static IEnumerable<T> ToEnumerable<T>(this IDataReader reader, Func<IDictionary<string, object>, T> factory = null)
+        {
+            if (factory != null)
+            {
+                while (reader.Read())
+                {
+                    yield return factory(ToDictionary(reader));
+                }
+            }
+            else if (typeof(T) == typeof(ExpandoObject))
             {
                 while (reader.Read())
                 {
                     yield return ToExpandoObject(reader);
+                }
+            }
+            else if (typeof(T) == typeof(ChoDynamicObject))
+            {
+                while (reader.Read())
+                {
+                    yield return (dynamic)(new ChoDynamicObject(ToDictionary(reader)));
+                }
+            }
+            else if (!typeof(IList).IsAssignableFrom(typeof(T)))
+            {
+                while (reader.Read())
+                {
+                    yield return (T)ToDictionary(reader).ConvertToObject(typeof(T));
                 }
             }
             else
