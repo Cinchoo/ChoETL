@@ -13,6 +13,13 @@ namespace ChoETL
     [DataContract]
     public abstract class ChoFileRecordConfiguration : ChoRecordConfiguration
     {
+
+        public bool LiteParsing
+        {
+            get;
+            set;
+        }
+
         private Func<object, Type> _recordTypeSelector = null;
         public Func<object, Type> RecordTypeSelector
         {

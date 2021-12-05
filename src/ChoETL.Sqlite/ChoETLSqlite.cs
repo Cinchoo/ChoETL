@@ -30,7 +30,7 @@ namespace ChoETL
             Dictionary<string, PropertyInfo> PIDict = null;
 
             if (!typeof(T).IsDynamicType() && typeof(T) != typeof(object))
-                ChoType.GetProperties(typeof(T)).ToDictionary(p => p.Name);
+                PIDict = ChoType.GetProperties(typeof(T)).ToDictionary(p => p.Name);
 
             sqliteSettings = ValidateSettings<T>(sqliteSettings);
             LoadDataToDb(items, sqliteSettings, PIDict);
@@ -81,6 +81,8 @@ namespace ChoETL
 
         private static void LoadDataToDb<T>(IEnumerable<T> items, ChoETLSqliteSettings sqliteSettings, Dictionary<string, PropertyInfo> PIDict = null) where T : class
         {
+            ChoGuard.ArgumentNotNull(items, nameof(items));
+
             if (File.Exists(sqliteSettings.GetDatabaseFilePath()))
                 File.Delete(sqliteSettings.GetDatabaseFilePath());
 
@@ -132,6 +134,7 @@ namespace ChoETL
                                     insertCmd.Dispose();
 
                                 insertCmd = CreateInsertCommand(item, sqliteSettings.TableName, conn, PIDict);
+                                insertCmd.Prepare();
                             }
                         }
 
@@ -241,7 +244,7 @@ namespace ChoETL
 
                 foreach (KeyValuePair<string, object> kvp in eo)
                 {
-                    command2.Parameters.AddWithValue("@{0}".FormatString(kvp.Key), kvp.Value == null ? DBNull.Value : kvp.Value);
+                    command2.Parameters.AddWithValue($"@{kvp.Key}", kvp.Value == null ? DBNull.Value : kvp.Value);
                 }
 
                 return command2;
@@ -282,7 +285,7 @@ namespace ChoETL
                 foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(objectType))
                 {
                     pv = PIDict[pd.Name].GetValue(target);
-                    command2.Parameters.AddWithValue("@{0}".FormatString(pd.Name), pv == null ? DBNull.Value : pv);
+                    command2.Parameters.AddWithValue($"@{pd.Name}", pv == null ? DBNull.Value : pv);
                 }
 
                 return command2;
@@ -294,19 +297,33 @@ namespace ChoETL
             if (target.GetType().IsDynamicType())
             {
                 var eo = target as IDictionary<string, Object>;
-                foreach (KeyValuePair<string, object> kvp in eo)
+                int count = 0;
+                foreach (var kvp in eo)
                 {
-                    cmd.Parameters["@{0}".FormatString(kvp.Key)].Value = kvp.Value == null ? DBNull.Value : kvp.Value;
+                    cmd.Parameters[count].Value = kvp.Value == null ? DBNull.Value : kvp.Value;
+                    count++;
                 }
+                //foreach (KeyValuePair<string, object> kvp in eo)
+                //{
+                //    cmd.Parameters[$"@{kvp.Key}"].Value = kvp.Value == null ? DBNull.Value : kvp.Value;
+                //}
             }
             else
             {
                 object pv = null;
+                int count = 0;
                 foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(target.GetType()))
                 {
                     pv = PIDict[pd.Name].GetValue(target);
-                    cmd.Parameters["@{0}".FormatString(pd.Name)].Value = pv == null ? DBNull.Value : pv;
+                    cmd.Parameters[count].Value = pv == null ? DBNull.Value : pv;
+                    count++;
                 }
+
+                //foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(target.GetType()))
+                //{
+                //    pv = PIDict[pd.Name].GetValue(target);
+                //    cmd.Parameters[$"@{pd.Name}"].Value = pv == null ? DBNull.Value : pv;
+                //}
             }
         }
     }

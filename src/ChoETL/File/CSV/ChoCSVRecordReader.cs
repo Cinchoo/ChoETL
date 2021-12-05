@@ -724,7 +724,7 @@ namespace ChoETL
                     throw new ChoParserException("Incorrect number of field values found at line [{2}]. Expected [{0}] field values. Found [{1}] field values.".FormatString(Configuration.CSVRecordFieldConfigurations.Count, fieldValues.Length, pair.Item1));
             }
 
-            if (Configuration.FastCSVParsing && Configuration.IsDynamicObject && rec is ChoDynamicObject)
+            if (Configuration.LiteParsing && Configuration.IsDynamicObject && rec is ChoDynamicObject)
             {
                 if (this.fieldNameValues == null)
                     this.fieldNameValues = InitFieldNameValuesDict();
@@ -916,7 +916,14 @@ namespace ChoETL
                         }
 
                         if (pi != null)
-                            rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
+                        {
+                            if (Configuration.LiteParsing)
+                            {
+                                ChoType.SetPropertyValue(rec, fieldConfig.PI, Convert.ChangeType(fieldValue, fieldConfig.FieldType, Configuration.Culture));
+                            }
+                            else
+                                rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
+                        }
                         else if (!Configuration.SupportsMultiRecordTypes)
                             throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(kvp.Key, ChoType.GetTypeName(rec)));
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace ChoETL.SQLite.NETStandard.Test
 {
@@ -32,28 +33,45 @@ namespace ChoETL.SQLite.NETStandard.Test
             for (int i = 2; i < 3; i++)
             {
                 var watch = Stopwatch.StartNew();
-                using (var r = new ChoCSVReader(@"C:\Users\nraj39\Downloads\XBTUSD.csv")
+                List<Trade> trades = null;
+
+                using (var r = new ChoCSVReader<Trade>(@"C:\Users\nraj39\Downloads\XBTUSD.csv")
                     .Configure(c => c.NotifyAfter = 100000)
                     .Setup(s => s.RowsLoaded += (o, e) =>
                     {
                         $"Rows Loaded: {e.RowsLoaded} <-- {DateTime.Now}".Print();
                     })
-                    .Configure(c => c.FastCSVParsing = true)
+                    .Configure(c => c.LiteParsing = true)
                     )
                 {
                     //r.Take(1).Print();
                     //return;
-                    //r.Take(1000000).Count().Print();
+                    trades = r.Take(1000000).ToList(); //.Count().Print();
                     //return;
-                    r.Take(1000000).StageOnSQLite(new ChoETLSqliteSettings()
-                        .Configure(c => c.ConnectionString = "DataSource=local.db;Version=3;Synchronous=OFF;Journal Mode=OFF")
-                        .Configure(c => c.NotifyAfter = 500000)
-                        .Configure(c => c.BatchSize = 500000)
-                        .Configure(c => c.RowsUploaded += (o, e) =>
-                        {
-                            Console.WriteLine($"Rows uploaded: {e.RowsUploaded}");
-                        }));
+                    //r.Take(1000000).StageOnSQLite(new ChoETLSqliteSettings()
+                    //    .Configure(c => c.ConnectionString = "DataSource=local.db;Version=3;Synchronous=OFF;Journal Mode=OFF")
+                    //    .Configure(c => c.NotifyAfter = 500000)
+                    //    .Configure(c => c.BatchSize = 500000)
+                    //    .Configure(c => c.RowsUploaded += (o, e) =>
+                    //    {
+                    //        Console.WriteLine($"Rows uploaded: {e.RowsUploaded}");
+                    //    }));
+                    //trades = r.Take(1000000).Select(r => new Trade { Id = r.Column1, Price = r.Column2, Quantity = r.Column3 }).ToList();
                 }
+                watch.Stop();
+                watch.Elapsed.Print();
+
+                watch = Stopwatch.StartNew();
+
+                trades.StageOnSQLite(new ChoETLSqliteSettings()
+                    .Configure(c => c.ConnectionString = "DataSource=local.db;Version=3;Synchronous=OFF;Journal Mode=OFF")
+                    .Configure(c => c.NotifyAfter = 500000)
+                    .Configure(c => c.BatchSize = 500000)
+                    .Configure(c => c.RowsUploaded += (o, e) =>
+                    {
+                        Console.WriteLine($"Rows uploaded: {e.RowsUploaded}");
+                    }));
+
                 watch.Stop();
                 watch.Elapsed.Print();
             }
@@ -99,5 +117,11 @@ namespace ChoETL.SQLite.NETStandard.Test
             }
 
         }
+    }
+    public class Trade
+    {
+        public string Id { get; set; }
+        public string Price { get; set; }
+        public string Quantity { get; set; }
     }
 }

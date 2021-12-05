@@ -554,8 +554,12 @@ namespace ChoETL
                     if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
                     {
                         var dict = rec as IDictionary<string, Object>;
-
-                        dict.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
+                        if (Configuration.LiteParsing && rec is ChoDynamicObject)
+                        {
+                            ((ChoDynamicObject)rec).AddToDictionary(kvp.Key, fieldValue);
+                        }
+                        else
+                            dict.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
 
                         if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
                             dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
@@ -575,7 +579,14 @@ namespace ChoETL
                         }
 
                         if (pi != null)
-                            rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
+                        {
+                            if (Configuration.LiteParsing)
+                            {
+                                ChoType.SetPropertyValue(rec, fieldConfig.PI, Convert.ChangeType(fieldValue, fieldConfig.FieldType, Configuration.Culture));
+                            }
+                            else
+                                rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
+                        }
                         else if (!Configuration.SupportsMultiRecordTypes)
                             throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(kvp.Key, ChoType.GetTypeName(rec)));
 
