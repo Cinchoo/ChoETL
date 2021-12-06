@@ -376,7 +376,7 @@ namespace ChoETL
                     var json = JsonConvert.SerializeObject(rec, Configuration.JsonSerializerSettings);
                     rec = JsonConvert.DeserializeObject(json, Configuration.JsonSerializerSettings);
 
-                    Type targetType = Configuration.TargetRecordType ?? typeof(Dictionary<string, object>);
+                    Type targetType = Configuration.TargetRecordType ?? typeof(ExpandoObject); // typeof(Dictionary<string, object>);
                     if (rec is JArray)
                     {
                         rec = ((JArray)rec).Children<JObject>().Select(o => o.ToObject(targetType)).ToArray();

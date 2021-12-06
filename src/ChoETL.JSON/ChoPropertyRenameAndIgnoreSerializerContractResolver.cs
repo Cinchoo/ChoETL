@@ -50,20 +50,27 @@ namespace ChoETL
                 return true;
             else
             {
-                bool disableImplcityOp = false;
+                bool? disableImplcityOp = null;
                 if (ChoTypeDescriptor.GetTypeAttribute<ChoTurnOffImplicitOpsAttribute>(mt) != null)
                     disableImplcityOp = ChoTypeDescriptor.GetTypeAttribute<ChoTurnOffImplicitOpsAttribute>(mt).Flag;
 
-                if (!disableImplcityOp)
+                if (disableImplcityOp != null)
                 {
-                    Type to = null;
-                    if (mt.CanCastToPrimitiveType(out to))
-                        return true;
-                    else if (mt.GetImplicitTypeCastOps().Any())
-                        return true;
+                    if (!disableImplcityOp.Value)
+                    {
+                        Type to = null;
+                        if (mt.CanCastToPrimitiveType(out to))
+                            return true;
+                        else if (mt.GetImplicitTypeCastOps().Any())
+                            return true;
+                        else
+                            return false;
+                    }
+                    else
+                        return false;
                 }
             }
-            return false;
+            return true;
         }
 
         protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)

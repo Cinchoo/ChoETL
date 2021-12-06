@@ -9,6 +9,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Text;
+using System.Linq;
 
 namespace ChoYamlWriterTest
 {
@@ -339,10 +340,38 @@ namespace ChoYamlWriterTest
             Console.WriteLine(csvOut.ToString());
         }
 
+        public class Thing
+        {
+            public string Name { get; set; }
+
+            public List<string> Attributes { get; set; }
+        }
+
+        static void SingleQuoteTest()
+        {
+            var myObject = new Thing
+            {
+                Name = "foo",
+                Attributes = new List<string>() { "bar" },
+            };
+
+            using (var w = new ChoYamlWriter<Thing>(Console.Out)
+                .UseYamlSerialization()
+                //.YamlSerializerSettings(s => s.DefaultStyle = YamlStyle.Flow)
+                //.Configure(c => c.UseJsonSerialization = false)
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                .WithField(f => f.Name, valueConverter: o => $"'{o.ToNString()}'")
+                .WithField(f => f.Attributes, valueConverter: o => ((IList<string>)o).Select(i => $"'{i.ToNString()}'"))
+                )
+            {
+                w.Write(myObject);
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            WriteDataTableTest();
+            SingleQuoteTest();
             //SerializeValueTypesOneAtATime();
         }
     }
