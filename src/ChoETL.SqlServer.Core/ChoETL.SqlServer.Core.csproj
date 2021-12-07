@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <RootNamespace>ChoETL</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\ChoETL.SqlServer\ChoETLSqlServer.cs" Link="ChoETLSqlServer.cs" />
+    <Compile Include="..\ChoETL.SqlServer\ChoETLSqlServerConfiguration.cs" Link="ChoETLSqlServerConfiguration.cs" />
+    <Compile Include="..\ChoETL.SqlServer\ChoETLSqlServerSettings.cs" Link="ChoETLSqlServerSettings.cs" />
+    <Compile Include="..\ChoETL.SqlServer\ChoETLSSqlServerDbContext.cs" Link="ChoETLSSqlServerDbContext.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EntityFramework" Version="6.4.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ChoETL.NETStandard\ChoETL.NETStandard.csproj" />
+  </ItemGroup>
+
+</Project>

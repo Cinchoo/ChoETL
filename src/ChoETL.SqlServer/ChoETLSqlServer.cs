@@ -6,12 +6,9 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Dynamic;
 using System.Data;
-using System.Data.Entity;
-using System.Data.Entity.ModelConfiguration.Conventions;
 using System.ComponentModel;
 using System.Reflection;
 using System.Configuration;
-using System.Data.Entity.Core.Common;
 using System.Data.SqlClient;
 
 namespace ChoETL
@@ -31,6 +28,7 @@ namespace ChoETL
             var firstItem = items.FirstOrDefault();
             if (firstItem != null)
             {
+                sqlServerSettings.WriteLog($"Opening db: {sqlServerSettings.ConnectionString}");
                 using (var conn1 = new SqlConnection(sqlServerSettings.ConnectionString))
                 {
                     conn1.Open();
@@ -132,6 +130,7 @@ namespace ChoETL
             bool isFirstItem = true;
 
             CreateDatabaseIfLocalDb(sqlServerSettings);
+            sqlServerSettings.WriteLog($"Opening db: {sqlServerSettings.ConnectionString}");
 
             //Open SqlServer connection, store the data
             using (var conn = new SqlConnection(sqlServerSettings.ConnectionString))

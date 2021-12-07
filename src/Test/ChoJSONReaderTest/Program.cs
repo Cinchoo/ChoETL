@@ -7177,8 +7177,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
         {
             var json = "{ \"TestStructInt\" : \"12\", \"TestStructDecimal\" : \"3.45\"}";
             using (var r = ChoJSONReader<Something>.LoadText(json)
-                    //.UseJsonSerialization()
-                    //.UseDefaultContractResolver()
+                //    .UseJsonSerialization()
+                //.UseDefaultContractResolver()
                 )
             {
                 using (var w = new ChoJSONWriter<Something>(Console.Out)
@@ -7265,15 +7265,16 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 }";
 
             using (var r = ChoJSONReader<Settings>.LoadText(json)
-                //.UseJsonSerialization()
-                //.UseDefaultContractResolver()
+                .UseJsonSerialization()
+                .UseDefaultContractResolver()
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
                 )
             {
-                r.Print();
-                return;
+                //r.Print();
+                //return;
                 using (var w = new ChoJSONWriter<Settings>(Console.Out)
-                    //.UseJsonSerialization()
-                    //.UseDefaultContractResolver()
+                    .UseJsonSerialization()
+                    .UseDefaultContractResolver()
                     )
                     w.Write(r);
             }
@@ -7838,7 +7839,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            JSON2XmlWithTextAttributeTest();
+            DeserializeToContentStruct();
             //DeserializeNestedObjectOfList();
             return;
 

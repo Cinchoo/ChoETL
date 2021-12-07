@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -14,6 +15,9 @@ namespace ChoETL
         public string TableName = "TmpTable";
         public Dictionary<Type, string> ColumnDataMapper = ChoSqlTableHelper.ColumnDataMapper.Value;
         public long NotifyAfter { get; set; }
+        public event EventHandler<ChoRowsUploadedEventArgs> RowsUploaded;
+        public Action<string> Log = Console.WriteLine;
+        public TraceSwitch TraceSwitch = new TraceSwitch(nameof(ChoETLSqlServerSettings), nameof(ChoETLSqlServerSettings));
 
         private string _connectionString = null;
         public string ConnectionString
@@ -142,5 +146,42 @@ namespace ChoETL
             if (TableName.IsNullOrWhiteSpace())
                 throw new ArgumentNullException("TableName");
         }
+        internal bool RaisedRowsUploaded(long noOfRowsUploaded)
+        {
+            EventHandler<ChoRowsUploadedEventArgs> rowsUploaded = RowsUploaded;
+            if (rowsUploaded == null)
+                return false;
+
+            var ea = new ChoRowsUploadedEventArgs(noOfRowsUploaded);
+            rowsUploaded(null, ea);
+            return ea.Abort;
+        }
+        internal void WriteLog(bool condition, string msg)
+        {
+            Action<string> log = Log;
+            if (condition && log != null)
+                log(msg);
+        }
+        internal void WriteLog(string msg)
+        {
+            WriteLog(true, msg);
+        }
+        public ChoETLSqlServerSettings Configure(Action<ChoETLSqlServerSettings> action)
+        {
+            if (action != null)
+                action(this);
+
+            return this;
+        }
+    }
+    public class ChoRowsUploadedEventArgs : EventArgs
+    {
+        public ChoRowsUploadedEventArgs(long rowsUploaded)
+        {
+            RowsUploaded = rowsUploaded;
+        }
+
+        public bool Abort { get; set; }
+        public long RowsUploaded { get; }
     }
 }

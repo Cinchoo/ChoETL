@@ -15,6 +15,7 @@ namespace ChoETL
         Off = 0,
         MemberLevel,
         ObjectLevel,
+        All = MemberLevel | ObjectLevel
     };
     [Flags]
     public enum ChoIgnoreFieldValueMode
