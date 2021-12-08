@@ -12,12 +12,14 @@ namespace ChoETL
     {
         public static readonly ChoETLSqlServerSettings Instance = new ChoETLSqlServerSettings();
 
-        public string TableName = "TmpTable";
-        public Dictionary<Type, string> ColumnDataMapper = ChoSqlTableHelper.ColumnDataMapper.Value;
+        public string TableName { get; set; } = "TmpTable";
         public long NotifyAfter { get; set; }
+        public long BatchSize { get; set; }
+        public Action<string> Log { get; set; } = Console.WriteLine;
+        public TraceSwitch TraceSwitch { get; set; } = new TraceSwitch(nameof(ChoETLSqlServerSettings), nameof(ChoETLSqlServerSettings), "Verbose");
+        public bool TurnOnTransaction { get; set; } = true;
+        public Dictionary<Type, string> DBColumnDataTypeMapper { get; set; } = ChoSqlTableHelper.DBColumnDataTypeMapper.Value;
         public event EventHandler<ChoRowsUploadedEventArgs> RowsUploaded;
-        public Action<string> Log = Console.WriteLine;
-        public TraceSwitch TraceSwitch = new TraceSwitch(nameof(ChoETLSqlServerSettings), nameof(ChoETLSqlServerSettings));
 
         private string _connectionString = null;
         public string ConnectionString
@@ -164,8 +166,35 @@ namespace ChoETL
         }
         internal void WriteLog(string msg)
         {
-            WriteLog(true, msg);
+            WriteLog(TraceSwitch.TraceVerbose, msg);
         }
+
+        #region Fluent API
+
+        public ChoETLSqlServerSettings WithTableName(string tableName)
+        {
+            TableName = tableName;
+            return this;
+        }
+
+        public ChoETLSqlServerSettings WithNotifyAfter(long notifyAfter)
+        {
+            NotifyAfter = notifyAfter;
+            return this;
+        }
+
+        public ChoETLSqlServerSettings WithBatchSize(long batchSize)
+        {
+            BatchSize = batchSize;
+            return this;
+        }
+
+        public ChoETLSqlServerSettings OnRowsUploaded(Action<object, ChoRowsUploadedEventArgs> rowsUploaded)
+        {
+            RowsUploaded += (o, e) => rowsUploaded(o, e);
+            return this;
+        }
+
         public ChoETLSqlServerSettings Configure(Action<ChoETLSqlServerSettings> action)
         {
             if (action != null)
@@ -173,7 +202,10 @@ namespace ChoETL
 
             return this;
         }
+
+        #endregion Fluent API
     }
+
     public class ChoRowsUploadedEventArgs : EventArgs
     {
         public ChoRowsUploadedEventArgs(long rowsUploaded)

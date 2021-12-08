@@ -34,7 +34,7 @@ namespace ChoETL
                     conn1.Open();
                     try
                     {
-                        SqlCommand command = new SqlCommand(firstItem.CreateTableScript(sqlServerSettings.ColumnDataMapper, sqlServerSettings.TableName), conn1);
+                        SqlCommand command = new SqlCommand(firstItem.CreateTableScript(sqlServerSettings.DBColumnDataTypeMapper, sqlServerSettings.TableName), conn1);
                         command.ExecuteNonQuery();
                     }
                     catch { }
@@ -124,66 +124,128 @@ namespace ChoETL
 
             return SqlServerSettings;
         }
-
-        private static void LoadDataToDb<T>(IEnumerable<T> items, ChoETLSqlServerSettings sqlServerSettings, Dictionary<string, PropertyInfo> PIDict) where T : class
+        private static SqlCommand CreateCommand(string sql, SqlConnection conn, SqlTransaction trans)
         {
-            bool isFirstItem = true;
+            return trans == null ? new SqlCommand(sql, conn) : new SqlCommand(sql, conn, trans);
+        }
 
+        private static void LoadDataToDb<T>(IEnumerable<T> items, ChoETLSqlServerSettings sqlServerSettings, 
+            Dictionary<string, PropertyInfo> PIDict) where T : class
+        {
             CreateDatabaseIfLocalDb(sqlServerSettings);
-            sqlServerSettings.WriteLog($"Opening db: {sqlServerSettings.ConnectionString}");
 
-            //Open SqlServer connection, store the data
-            using (var conn = new SqlConnection(sqlServerSettings.ConnectionString))
+            bool isFirstItem = true;
+            bool isFirstBatch = true;
+            long notifyAfter = sqlServerSettings.NotifyAfter;
+            long batchSize = sqlServerSettings.BatchSize;
+
+            sqlServerSettings.WriteLog($"Opening connection to `{sqlServerSettings.ConnectionString}`...");
+            sqlServerSettings.WriteLog($"Starting import...");
+            //Open sqlite connection, store the data
+            var conn = new SqlConnection(sqlServerSettings.ConnectionString);
+            SqlCommand insertCmd = null;
+            try
             {
-                SqlCommand insertCmd = null;
                 conn.Open();
 
-                using (var trans = conn.BeginTransaction())
+                SqlTransaction trans = sqlServerSettings.TurnOnTransaction ? conn.BeginTransaction() : null;
+                try
                 {
+                    int index = 0;
                     foreach (var item in items)
                     {
+                        index++;
                         if (isFirstItem)
                         {
                             isFirstItem = false;
                             if (item != null)
                             {
-                                //Create table if not exists
-                                try
+                                if (isFirstBatch)
                                 {
-                                    SqlCommand command = new SqlCommand(item.CreateTableScript(sqlServerSettings.ColumnDataMapper, sqlServerSettings.TableName), conn, trans);
-                                    command.ExecuteNonQuery();
-                                }
-                                catch { }
-
-                                //Truncate table
-                                try
-                                {
-                                    SqlCommand command = new SqlCommand("TRUNCATE TABLE [{0}]".FormatString(sqlServerSettings.TableName), conn, trans);
-                                    command.ExecuteNonQuery();
-                                }
-                                catch
-                                {
+                                    isFirstBatch = false;
                                     try
                                     {
-                                        SqlCommand command = new SqlCommand("DELETE FROM [{0}]".FormatString(sqlServerSettings.TableName), conn, trans);
+                                        SqlCommand command = CreateCommand(item.CreateTableScript(sqlServerSettings.DBColumnDataTypeMapper, sqlServerSettings.TableName), conn, trans);
+                                        command.ExecuteNonQuery();
+                                    }
+                                    catch { }
+
+                                    //Truncate table
+                                    try
+                                    {
+                                        SqlCommand command = CreateCommand("DELETE FROM [{0}]".FormatString(sqlServerSettings.TableName), conn, trans);
                                         command.ExecuteNonQuery();
                                     }
                                     catch { }
                                 }
+                                if (insertCmd != null)
+                                    insertCmd.Dispose();
+
                                 insertCmd = CreateInsertCommand(item, sqlServerSettings.TableName, conn, trans, PIDict);
+                                //insertCmd.Prepare();
                             }
                         }
 
                         PopulateParams(insertCmd, item, PIDict);
                         insertCmd.ExecuteNonQuery();
+
+                        if (notifyAfter > 0 && index % notifyAfter == 0)
+                        {
+                            if (sqlServerSettings.RaisedRowsUploaded(index))
+                            {
+                                sqlServerSettings.WriteLog(sqlServerSettings.TraceSwitch.TraceVerbose, "Abort requested.");
+                                break;
+                            }
+                        }
+
+                        if (batchSize > 0 && index % batchSize == 0)
+                        {
+                            if (trans != null && trans.Connection != null)
+                            {
+                                trans.Commit();
+                                trans = null;
+                            }
+                            if (insertCmd != null)
+                                insertCmd.Dispose();
+
+                            isFirstItem = true;
+                            conn.Close();
+                            conn = null;
+                            conn = new SqlConnection(sqlServerSettings.ConnectionString);
+                            conn.Open();
+                            trans = sqlServerSettings.TurnOnTransaction ? conn.BeginTransaction() : null;
+                        }
                     }
 
-                    try
+                    if (trans != null && trans.Connection != null)
                     {
                         trans.Commit();
+                        trans = null;
                     }
-                    catch { }
                 }
+                catch
+                {
+                    if (trans != null && trans.Connection != null)
+                    {
+                        trans.Rollback();
+                        trans = null;
+                    }
+
+                    throw;
+                }
+                sqlServerSettings.WriteLog($"Import completed successfully.");
+            }
+            catch (Exception ex)
+            {
+                sqlServerSettings.WriteLog(sqlServerSettings.TraceSwitch.TraceError, $"Import failed. {ex.Message}.");
+                throw;
+            }
+            finally
+            {
+                if (insertCmd != null)
+                    insertCmd.Dispose();
+                if (conn != null)
+                    conn.Close();
             }
         }
 
@@ -205,13 +267,13 @@ namespace ChoETL
                         try
                         {
                             File.Delete(dbFileName);
+                            CreateDatabase(Path.GetFileNameWithoutExtension(dbFilePath), dbFilePath, sqlServerSettings.MasterDbConnectionString);
                         }
                         catch { }
                     }
                 }
             }
 
-            CreateDatabase(Path.GetFileNameWithoutExtension(dbFilePath), dbFilePath, sqlServerSettings.MasterDbConnectionString);
         }
         public static bool CreateDatabase(string dbName, string dbFileName, string connectionString)
         {
@@ -294,7 +356,7 @@ namespace ChoETL
                         script.AppendFormat(", @{0}", kvp.Key);
                 }
                 script.AppendLine(")");
-                SqlCommand command2 = new SqlCommand(script.ToString(), conn, trans);
+                SqlCommand command2 = CreateCommand(script.ToString(), conn, trans);
 
                 foreach (KeyValuePair<string, object> kvp in eo)
                 {
@@ -335,7 +397,7 @@ namespace ChoETL
                         script.AppendFormat(", @{0}", pd.Name);
                 }
                 script.AppendLine(")");
-                SqlCommand command2 = new SqlCommand(script.ToString(), conn, trans);
+                SqlCommand command2 = CreateCommand(script.ToString(), conn, trans);
                 foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(objectType))
                 {
                     pv = PIDict[pd.Name].GetValue(target);

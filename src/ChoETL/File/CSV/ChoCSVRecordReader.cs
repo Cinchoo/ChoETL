@@ -919,7 +919,8 @@ namespace ChoETL
                         {
                             if (Configuration.LiteParsing)
                             {
-                                ChoType.SetPropertyValue(rec, fieldConfig.PI, Convert.ChangeType(fieldValue, fieldConfig.FieldType, Configuration.Culture));
+                                ChoType.SetPropertyValue(rec, fieldConfig.PI,
+                                    fieldConfig.FieldType == null || fieldConfig.FieldType == typeof(string) ? fieldValue : Convert.ChangeType(fieldValue, fieldConfig.FieldType, Configuration.Culture));
                             }
                             else
                                 rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);

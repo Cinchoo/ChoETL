@@ -12,14 +12,17 @@ namespace ChoETL
 {
     internal class ChoETLSqlServerDbContext<T> : DbContext
     {
+        public Action<string> Log { get; set; } = Console.WriteLine;
+
         public ChoETLSqlServerDbContext(string connectionString) :
             base(connectionString)
         {
             Database.Log = new Action<string>((m) =>
             {
-                if (ChoETLFramework.TraceSwitch.TraceInfo)
-                    Console.WriteLine(m);
-                ChoETLLog.Info(m);
+                if (Log != null)
+                    Log(m);
+                else
+                    ChoETLLog.Info(m);
             });
             Database.SetInitializer<ChoETLSqlServerDbContext<T>>(null);
         }
@@ -34,6 +37,4 @@ namespace ChoETL
             base.OnModelCreating(modelBuilder);
         }
     }
-
-
 }

@@ -15,7 +15,7 @@ namespace ChoETL
 {
     public static class ChoSqlTableHelper
     {
-        public static readonly Lazy<Dictionary<Type, string>> ColumnDataMapper = new Lazy<Dictionary<Type, string>>(() =>
+        public static readonly Lazy<Dictionary<Type, string>> DBColumnDataTypeMapper = new Lazy<Dictionary<Type, string>>(() =>
         {
             Dictionary<Type, String> dataMapper = new Dictionary<Type, string>();
             dataMapper.Add(typeof(int), "INT");
@@ -137,12 +137,12 @@ namespace ChoETL
             return script.ToString();
         }
 
-        public static string CreateTableScript(this object target, Dictionary<Type, string> columnDataMapper = null, string tableName = null, string keyColumns = null)
+        public static string CreateTableScript(this object target, Dictionary<Type, string> columnDataTypeMapper = null, string tableName = null, string keyColumns = null)
         {
             ChoGuard.ArgumentNotNull(target, "Target");
             Type objectType = target is Type ? target as Type : target.GetType();
 
-            columnDataMapper = columnDataMapper ?? ColumnDataMapper.Value;
+            columnDataTypeMapper = columnDataTypeMapper ?? DBColumnDataTypeMapper.Value;
 
             StringBuilder script = new StringBuilder();
 
@@ -151,7 +151,7 @@ namespace ChoETL
                 tableName = tableName.IsNullOrWhiteSpace() ? "Table" : tableName;
                 var eo = target as IDictionary<string, Object>;
 
-                return CreateTableScript(tableName, eo.ToDictionary(kvp => kvp.Key, kvp1 => kvp1.Value.GetNType()), keyColumns.SplitNTrim(), columnDataMapper);
+                return CreateTableScript(tableName, eo.ToDictionary(kvp => kvp.Key, kvp1 => kvp1.Value.GetNType()), keyColumns.SplitNTrim(), columnDataTypeMapper);
             }
             else
             {
@@ -170,7 +170,7 @@ namespace ChoETL
                 else
                     keyColumnArray = keyColumns.SplitNTrim();
 
-                return CreateTableScript(tableName, ChoTypeDescriptor.GetProperties(objectType).ToDictionary(pd => pd.Name, pd => pd.PropertyType, null), keyColumnArray, columnDataMapper);
+                return CreateTableScript(tableName, ChoTypeDescriptor.GetProperties(objectType).ToDictionary(pd => pd.Name, pd => pd.PropertyType, null), keyColumnArray, columnDataTypeMapper);
             }
         }
         private static string CreateTableScript(string tableName, Dictionary<string, Type> propDict, string[] keyColumns, Dictionary<Type, string> columnDataMapper)

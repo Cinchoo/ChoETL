@@ -15,7 +15,7 @@ namespace ChoETL.SqlServer.Core.Test
         static void StageLargeFile()
         {
             //ChoTypeDescriptor.DoNotUseTypeConverterForTypes = true;
-            for (int i = 2; i < 3; i++)
+            for (int i = 0; i < 3; i++)
             {
                 var watch = Stopwatch.StartNew();
                 List<Trade> trades = null;
@@ -31,7 +31,7 @@ namespace ChoETL.SqlServer.Core.Test
                 {
                     //r.Take(1).Print();
                     //return;
-                    trades = r.Take(10).ToList(); //.Count().Print();
+                    trades = r.Take(1000000).ToList(); //.Count().Print();
                     //return;
                     //r.Take(1000000).StageOnSQLite(new ChoETLSqliteSettings()
                     //    .Configure(c => c.ConnectionString = "DataSource=local.db;Version=3;Synchronous=OFF;Journal Mode=OFF")
@@ -46,26 +46,26 @@ namespace ChoETL.SqlServer.Core.Test
                 watch.Stop();
                 watch.Elapsed.Print();
 
-                watch = Stopwatch.StartNew();
+                //watch = Stopwatch.StartNew();
 
-                trades.StageOnSqlServer(new ChoETLSqlServerSettings()
-                    //.Configure(c => c.ConnectionString = "DataSource=local.db;Version=3;Synchronous=OFF;Journal Mode=OFF")
-                    .Configure(c => c.NotifyAfter = 500000)
-                    //.Configure(c => c.BatchSize = 500000)
-                    .Configure(c => c.RowsUploaded += (o, e) =>
-                    {
-                        Console.WriteLine($"Rows uploaded: {e.RowsUploaded}");
-                    }));
+                //trades.StageOnSqlServer(new ChoETLSqlServerSettings()
+                //    //.Configure(c => c.ConnectionString = "DataSource=local.db;Version=3;Synchronous=OFF;Journal Mode=OFF")
+                //    .Configure(c => c.NotifyAfter = 500000)
+                //    //.Configure(c => c.BatchSize = 500000)
+                //    .Configure(c => c.RowsUploaded += (o, e) =>
+                //    {
+                //        Console.WriteLine($"Rows uploaded: {e.RowsUploaded}");
+                //    }));
 
-                watch.Stop();
-                watch.Elapsed.Print();
+                //watch.Stop();
+                //watch.Elapsed.Print();
             }
         }
     }
     public class Trade
     {
         public string Id { get; set; }
-        public string Price { get; set; }
-        public string Quantity { get; set; }
+        public double Price { get; set; }
+        public double Quantity { get; set; }
     }
 }

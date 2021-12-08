@@ -6,10 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.115" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\ChoETL.JSON.NETStandard\ChoETL.JSON.NETStandard.csproj" />
     <ProjectReference Include="..\..\ChoETL.NETStandard\ChoETL.NETStandard.csproj" />
     <ProjectReference Include="..\..\ChoETL.SQLite.NETStandard\ChoETL.SQLite.Core.csproj" />

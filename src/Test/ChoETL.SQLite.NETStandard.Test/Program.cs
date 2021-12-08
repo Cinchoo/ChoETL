@@ -46,7 +46,7 @@ namespace ChoETL.SQLite.NETStandard.Test
                 {
                     //r.Take(1).Print();
                     //return;
-                    trades = r.Take(1000000).ToList(); //.Count().Print();
+                    trades = r.Take(1000).ToList(); //.Count().Print();
                     //return;
                     //r.Take(1000000).StageOnSQLite(new ChoETLSqliteSettings()
                     //    .Configure(c => c.ConnectionString = "DataSource=local.db;Version=3;Synchronous=OFF;Journal Mode=OFF")

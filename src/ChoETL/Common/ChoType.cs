@@ -941,6 +941,7 @@
                                 _setterCache.Add(key, setter = propertyInfo.CreateSetMethod());
                         }
                     }
+
                     setter(target, val);
                 }
 #else
