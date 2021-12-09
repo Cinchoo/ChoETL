@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-    <Version>1.0.0.1</Version>
+    <Version>1.0.0.4</Version>
     <Authors>Cinchoo</Authors>
     <Company>Cinchoo Inc.</Company>
     <Description>SQLite extension to Cinchoo ETL framework</Description>
@@ -13,6 +13,8 @@
     <PackageTags>ETL c# .NET CSV Xml JSON Flat Parquet Yaml</PackageTags>
     <RepositoryType>GitHub</RepositoryType>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageIconUrl></PackageIconUrl>
+    <PackageIcon>cinchoo.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -29,6 +31,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ChoETL.NETStandard\ChoETL.NETStandard.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\Assets\Icons\cinchoo.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>

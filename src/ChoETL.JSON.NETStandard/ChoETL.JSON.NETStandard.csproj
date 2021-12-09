@@ -10,7 +10,7 @@
     <Copyright>Copyright Cinchoo Inc.</Copyright>
     <PackageLicenseUrl>https://github.com/Cinchoo/ChoETL/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/Cinchoo/ChoETL</PackageProjectUrl>
-    <PackageIconUrl>http://www.gravatar.com/avatar/6ebc114acdd1d9f7ec5028a165a819b1.png</PackageIconUrl>
+    <PackageIconUrl></PackageIconUrl>
     <RepositoryUrl>https://github.com/Cinchoo/ChoETL</RepositoryUrl>
     <RepositoryType>GitHub</RepositoryType>
     <PackageTags>ETL c# .NET CSV Xml JSON Flat</PackageTags>
@@ -22,6 +22,7 @@
     <Version>1.2.1.32</Version>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>ChoETL.JSON.NETStandard.snk</AssemblyOriginatorKeyFile>
+    <PackageIcon>cinchoo.png</PackageIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -59,6 +60,13 @@
   
   <ItemGroup>
     <Folder Include="Converters\" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Include="..\Assets\Icons\cinchoo.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>

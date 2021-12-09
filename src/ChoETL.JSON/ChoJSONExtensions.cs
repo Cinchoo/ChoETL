@@ -168,7 +168,6 @@ namespace ChoETL
                     conv = ChoJSONConvertersCache.Get(convName);
             }
 
-            JToken t = null;
             if (conv == null)
             {
                 return serializer.Deserialize(reader, objType);

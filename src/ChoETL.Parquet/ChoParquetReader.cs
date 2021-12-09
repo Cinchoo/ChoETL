@@ -30,7 +30,6 @@ namespace ChoETL
         public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
         public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
         public event EventHandler<ChoRecordFieldTypeAssessmentEventArgs> RecordFieldTypeAssessment;
-        private bool _isDisposed = false;
 
         public ChoParquetRecordConfiguration Configuration
         {
