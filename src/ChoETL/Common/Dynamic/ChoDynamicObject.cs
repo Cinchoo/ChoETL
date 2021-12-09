@@ -144,11 +144,6 @@ namespace ChoETL
             get;
             set;
         }
-        public string Name
-        {
-            get { return DynamicObjectName; }
-            set { DynamicObjectName = value; }
-        }
         [ChoIgnoreMember]
         public int PollIntervalInSec
         {

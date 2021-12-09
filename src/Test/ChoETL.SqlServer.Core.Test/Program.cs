@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO.MemoryMappedFiles;
 using System.Linq;
 
 namespace ChoETL.SqlServer.Core.Test
@@ -15,19 +16,37 @@ namespace ChoETL.SqlServer.Core.Test
         static void StageLargeFile()
         {
             //ChoTypeDescriptor.DoNotUseTypeConverterForTypes = true;
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 5; i++)
             {
                 var watch = Stopwatch.StartNew();
                 List<Trade> trades = null;
 
+                //using (MemoryMappedFile memoryMappedFile = MemoryMappedFile.CreateFromFile(@"..\..\..\..\..\..\data\XBTUSD.csv"))
+                //using (MemoryMappedViewStream memoryMappedViewStream = memoryMappedFile.CreateViewStream(0, 0, MemoryMappedFileAccess.Read))
+                //{
+                //    using (var r = new ChoCSVReader<Trade>(memoryMappedViewStream)
+                //        .Configure(c => c.NotifyAfter = 100000)
+                //        .Setup(s => s.RowsLoaded += (o, e) =>
+                //        {
+                //            $"Rows Loaded: {e.RowsLoaded} <-- {DateTime.Now}".Print();
+                //        })
+                //        .Configure(c => c.LiteParsing = true)
+                //        )
+                //    {
+                //        trades = r.Take(100000).ToList(); //.Count().Print();
+                //    }
+                //}
+
                 using (var r = new ChoCSVReader<Trade>(@"..\..\..\..\..\..\data\XBTUSD.csv")
-                    .Configure(c => c.NotifyAfter = 100000)
-                    .Setup(s => s.RowsLoaded += (o, e) =>
-                    {
-                        $"Rows Loaded: {e.RowsLoaded} <-- {DateTime.Now}".Print();
-                    })
-                    .Configure(c => c.LiteParsing = true)
-                    )
+                .Configure(c => c.NotifyAfter = 100000)
+                .Setup(s => s.RowsLoaded += (o, e) =>
+                {
+                    $"Rows Loaded: {e.RowsLoaded} <-- {DateTime.Now}".Print();
+                })
+                .Configure(c => c.LiteParsing = true)
+                //.Configure(c => c.BufferSize = 1024 * 1024)
+                //.Configure(c => c.TurnOffMemoryMappedFile = true)
+                )
                 {
                     //r.Take(1).Print();
                     //return;
@@ -43,6 +62,7 @@ namespace ChoETL.SqlServer.Core.Test
                     //    }));
                     //trades = r.Take(1000000).Select(r => new Trade { Id = r.Column1, Price = r.Column2, Quantity = r.Column3 }).ToList();
                 }
+
                 watch.Stop();
                 watch.Elapsed.Print();
 

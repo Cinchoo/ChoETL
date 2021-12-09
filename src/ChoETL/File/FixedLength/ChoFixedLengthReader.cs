@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Dynamic;
 using System.Globalization;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -19,6 +20,7 @@ namespace ChoETL
     public class ChoFixedLengthReader<T> : ChoReader, IDisposable, IEnumerable<T>, IChoSanitizableReader
         where T : class
     {
+        private MemoryMappedFile _memoryMappedFile;
         private Lazy<TextReader> _textReader;
         private IEnumerable<string> _lines;
         private bool _closeStreamOnDispose = false;
@@ -63,7 +65,16 @@ namespace ChoETL
 
             Init();
 
-            _textReader = new Lazy<TextReader>(() => new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize));
+            _textReader = new Lazy<TextReader>(() =>
+            {
+                if (Configuration.LiteParsing && !Configuration.TurnOffMemoryMappedFile)
+                {
+                    _memoryMappedFile = MemoryMappedFile.CreateFromFile(filePath);
+                    return new StreamReader(_memoryMappedFile.CreateViewStream(0, 0, MemoryMappedFileAccess.Read));
+                }
+                else
+                    return new StreamReader(filePath, Configuration.GetEncoding(filePath), false, Configuration.BufferSize);
+            });
             _closeStreamOnDispose = true;
         }
 
@@ -188,6 +199,11 @@ namespace ChoETL
                 {
                     _textReader.Value.Dispose();
                     _textReader = null;
+                }
+                if (_memoryMappedFile != null)
+                {
+                    _memoryMappedFile.Dispose();
+                    _memoryMappedFile = null;
                 }
             }
 

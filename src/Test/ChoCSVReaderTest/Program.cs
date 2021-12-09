@@ -5385,10 +5385,31 @@ val61, val71";
             }
         }
 
+        static void DynamicTest()
+        {
+            string csv = @"Id,Name
+1,Tom
+2,Carl
+3,Mark";
+            foreach (dynamic rec in ChoCSVReader.LoadText(csv).WithFirstLineHeader())
+            {
+                Console.WriteLine($"Id: {rec.Id}");
+                Console.WriteLine($"Name: {rec.Name}");
+            }
+
+
+            return;
+            foreach (dynamic rec in new ChoCSVReader("emp.csv").WithFirstLineHeader())
+            {
+                Console.WriteLine($"Id: {rec.Id}");
+                Console.WriteLine($"Name: {rec.Name}");
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            CustomFieldSerialization();
+            DynamicTest();
             return;
 
             PositionNeutralCSVLoad();

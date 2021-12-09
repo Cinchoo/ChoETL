@@ -13,6 +13,11 @@ namespace ChoETL
     [DataContract]
     public abstract class ChoFileRecordConfiguration : ChoRecordConfiguration
     {
+        public bool TurnOffMemoryMappedFile
+        {
+            get;
+            set;
+        }
 
         public bool LiteParsing
         {
