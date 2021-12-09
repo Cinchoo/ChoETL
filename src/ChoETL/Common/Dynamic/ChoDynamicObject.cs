@@ -50,6 +50,24 @@ namespace ChoETL
                     _arrayIndexSeparator = value;
             }
         }
+
+        private static int _valueNameStartIndex = 0;
+        public static int ValueNameStartIndex
+        {
+            get { return _valueNameStartIndex; }
+            set { if (value > 0) _valueNameStartIndex = value; }
+        }
+
+        private static string _valueNamePrefix = "Value";
+        public static string ValueNamePrefix
+        {
+            get { return _valueNamePrefix; }
+            set { _valueNamePrefix = value; }
+        }
+        internal static string GetValueNamePrefixOrDefault()
+        {
+            return ValueNamePrefix.IsNullOrWhiteSpace() ? "Value" : _valueNamePrefix;
+        }
     }
 
     public static class ChoDynamicObjectSettings
@@ -218,7 +236,7 @@ namespace ChoETL
 
         public ChoDynamicObject(IList<object> list) : this(null, false)
         {
-            _kvpDict = list.Select((item, index) => new KeyValuePair<string, object>("Column{0}".FormatString(index), item)).
+            _kvpDict = list.Select((item, index) => new KeyValuePair<string, object>($"{ChoETLSettings.ValueNamePrefix}{index + ChoETLSettings.ValueNameStartIndex}", item)).
                 ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
 

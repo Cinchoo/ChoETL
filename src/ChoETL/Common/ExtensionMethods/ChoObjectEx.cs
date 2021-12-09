@@ -374,21 +374,23 @@ namespace ChoETL
             if (target is IList)
                 return ((IList)(target)).OfType<object>().Select((item, index) =>
                 {
-                    return new KeyValuePair<string, object>("{0}".FormatString(index), item);
+                    return new KeyValuePair<string, object>($"{ChoETLSettings.ValueNamePrefix}{index + ChoETLSettings.ValueNameStartIndex}", item);
                 }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToDictionaryInternal());
 
+            string propNamex = null;
             Dictionary<string, object> dict = new Dictionary<string, object>();
             foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(target.GetType()))
             {
+                propNamex = pd.GetDisplayName(pd.Name);
                 var value = ChoType.GetPropertyValue(target, pd.Name);
                 if (value == null)
-                    dict.Add(pd.Name, value);
+                    dict.Add(propNamex, value);
                 else if (value.GetType().IsSimpleSpecial())
-                    dict.Add(pd.Name, value.ToNString());
+                    dict.Add(propNamex, value.ToNString());
                 else if (value.GetType().IsSimple())
-                    dict.Add(pd.Name, value);
+                    dict.Add(propNamex, value);
                 else
-                    dict.Add(pd.Name, value.ToDictionary(pd.Name));
+                    dict.Add(propNamex, value.ToDictionary(propNamex));
             }
 
             return dict;

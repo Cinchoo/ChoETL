@@ -216,6 +216,46 @@ namespace ChoETL
             }
         }
 
+        public static IDictionary<string, object> FlattenToDictionary(this object target, char? nestedKeySeparator = null, char? arrayIndexSeparator = null, bool ignoreDictionaryFieldPrefix = false)
+        {
+            return Flatten(target, nestedKeySeparator, arrayIndexSeparator, ignoreDictionaryFieldPrefix).ToDictionary();
+        }
+
+        public static IEnumerable<KeyValuePair<string, object>> Flatten(this object target, char? nestedKeySeparator = null, char? arrayIndexSeparator = null, bool ignoreDictionaryFieldPrefix = false)
+        {
+            if (target == null)
+                return Enumerable.Empty<KeyValuePair<string, object>>();
+
+            if (target is IDictionary)
+            {
+                return Flatten(((IDictionary)target).Keys.Cast<object>().ToDictionary(key => key.ToNString(), key => ((IDictionary)target)[key]), 
+                    nestedKeySeparator, arrayIndexSeparator, ignoreDictionaryFieldPrefix);
+            }
+            else if (target.GetType().IsSimple())
+                return Enumerable.Repeat(new KeyValuePair<string, object>(ChoETLSettings.GetValueNamePrefixOrDefault(), target), 1);
+            else if (target is IList)
+            {
+                if (target.GetType().GetEnumerableItemType().IsSimple())
+                {
+                    return ((IList)target).OfType<object>().Select((o, i) => new KeyValuePair<string, object>($"{ChoETLSettings.ValueNamePrefix}{i + ChoETLSettings.ValueNameStartIndex}", o));
+                }
+                else
+                {
+                    return ((IList)target).OfType<object>().Select((o, i) => new KeyValuePair<string, object>($"{ChoETLSettings.ValueNamePrefix}{i + ChoETLSettings.ValueNameStartIndex}", 
+                        o.ToDictionary().Flatten(nestedKeySeparator, arrayIndexSeparator, ignoreDictionaryFieldPrefix)));
+                }
+            }
+            else
+            {
+                return target.ToDictionary().Flatten(nestedKeySeparator, arrayIndexSeparator, ignoreDictionaryFieldPrefix);
+            }
+        }
+
+        public static IDictionary<string, object> FlattenToDictionary(this IDictionary<string, object> dict, char? nestedKeySeparator = null, char? arrayIndexSeparator = null, bool ignoreDictionaryFieldPrefix = false)
+        {
+            return Flatten(dict, nestedKeySeparator, arrayIndexSeparator, ignoreDictionaryFieldPrefix).ToDictionary();
+        }
+
         public static IEnumerable<KeyValuePair<string, object>> Flatten(this IDictionary<string, object> dict, char? nestedKeySeparator = null, char? arrayIndexSeparator = null, bool ignoreDictionaryFieldPrefix = false)
         {
             if (dict is ChoDynamicObject && ((ChoDynamicObject)dict).DynamicObjectName != ChoDynamicObject.DefaultName)

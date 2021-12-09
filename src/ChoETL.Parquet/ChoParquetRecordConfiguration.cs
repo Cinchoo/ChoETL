@@ -266,7 +266,7 @@ namespace ChoETL
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                     {
                         pt = pd.PropertyType.GetUnderlyingType();
-                        if (!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+                        if (false) //!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
                             DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, null, recordFieldConfigurations);
                         else if (pd.Attributes.OfType<ChoParquetRecordFieldAttribute>().Any())
                         {
@@ -399,10 +399,13 @@ namespace ChoETL
                                     }
                                     else
                                     {
-                                        if (propDesc == null)
-                                            DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, pd, recordFieldConfigurations);
-                                        else
-                                            DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, pd, recordFieldConfigurations);
+                                        //if (propDesc == null)
+                                        //    DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, pd, recordFieldConfigurations);
+                                        //else
+                                        //    DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, pd, recordFieldConfigurations);
+                                        ChoParquetRecordFieldConfiguration obj = NewFieldConfiguration(ref position, declaringMember, pd, null, declaringMember == null ? propDesc.GetDisplayName() : propDesc.GetDisplayName(String.Empty));
+                                        if (!recordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
+                                            recordFieldConfigurations.Add(obj);
                                     }
                                 }
                                 else

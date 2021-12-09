@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
 using System.IO;
+using Newtonsoft.Json;
 
 namespace ChoParquetWriterTest
 {
@@ -367,9 +368,190 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
             }
         }
 
+        static void Issue167()
+        {
+            var completeFile = new CompleteFile
+            {
+                DataSource = "DataSource",
+                DataType = 1,
+                Samples = new Samples
+                {
+                    Samples1 = new List<Data>
+                    {
+                        new Data
+                        {
+                            Prop00 = 0,
+                            Prop01 = "Prop01",
+                            Properties = new Properties
+                            {
+                                 Prop10 = 1,
+                                 Prop11 = 2,
+                            }
+                        },
+                        new Data
+                        {
+                            Prop00 = 0,
+                            Prop01 = "Prop01",
+                            Properties = new Properties
+                            {
+                                 Prop10 = 1,
+                                 Prop11 = 2,
+                            }
+                        },
+                        new Data
+                        {
+                            Prop00 = 0,
+                            Prop01 = "Prop01",
+                            Properties = new Properties
+                            {
+                                 Prop10 = 1,
+                                 Prop11 = 2,
+                            }
+                        },
+                    },
+                    Samples2 = new List<Data>
+                    {
+                        new Data
+                        {
+                            Prop00 = 0,
+                            Prop01 = "Prop01",
+                            Properties = new Properties
+                            {
+                                 Prop10 = 1,
+                                 Prop11 = 2,
+                            }
+                        },
+                        new Data
+                        {
+                            Prop00 = 0,
+                            Prop01 = "Prop01",
+                            Properties = new Properties
+                            {
+                                 Prop10 = 1,
+                                 Prop11 = 2,
+                            }
+                        },
+                        new Data
+                        {
+                            Prop00 = 0,
+                            Prop01 = "Prop01",
+                            Properties = new Properties
+                            {
+                                 Prop10 = 1,
+                                 Prop11 = 2,
+                            }
+                        },
+                    },
+                    Samples3 = new List<Data>
+                    {
+                        new Data
+                        {
+                            Prop00 = 0,
+                            Prop01 = "Prop01",
+                            Properties = new Properties
+                            {
+                                 Prop10 = 1,
+                                 Prop11 = 2,
+                            }
+                        },
+                        new Data
+                        {
+                            Prop00 = 0,
+                            Prop01 = "Prop01",
+                            Properties = new Properties
+                            {
+                                 Prop10 = 1,
+                                 Prop11 = 2,
+                            }
+                        },
+                        new Data
+                        {
+                            Prop00 = 0,
+                            Prop01 = "Prop01",
+                            Properties = new Properties
+                            {
+                                 Prop10 = 1,
+                                 Prop11 = 2,
+                            }
+                        },
+                    },
+                    Sample4 = new Data
+                    {
+                        Prop00 = 0,
+                        Prop01 = "Prop01",
+                        Properties = new Properties
+                        {
+                            Prop10 = 1,
+                            Prop11 = 2,
+                        }
+                    },
+
+                }
+            };
+
+            StringBuilder json = new StringBuilder();
+            using (var w = new ChoJSONWriter<CompleteFile>(json)
+                )
+            {
+                w.Write(completeFile);
+            }
+
+            json.Print();
+
+            using (var r = ChoJSONReader<CompleteFile>.LoadText(json.ToString())
+                .UseJsonSerialization()
+                )
+            {
+                using (var w = new ChoParquetWriter("CompleteFile.parquet")
+                    )
+                {
+                    w.Write(r.Select(rec1 => rec1.FlattenToDictionary()));
+                }
+
+                //using (var w = new ChoParquetWriter<CompleteFile>("CompleteFile.parquet")
+                //    .WithField(f => f.Samples, valueConverter: o => "x", fieldType: typeof(string))
+                //    )
+                //{
+                //    w.Write(r); //.Select(rec1 => rec1.Flatten().ToDictionary()));
+                //}
+            }
+        }
+
+        public class CompleteFile
+        {
+            public string DataSource { get; set; }
+            public long? DataType { get; set; }
+            //public GeneralData GeneralData { get; set; }
+            public Samples Samples { get; set; }
+        }
+
+        public class Samples
+        {
+            public IList<Data> Samples1 { get; set; }
+            public IList<Data> Samples2 { get; set; }
+            public IList<Data> Samples3 { get; set; }
+            public Data Sample4 { get; set; }
+        }
+
+        public class Data
+        {
+            public long? Prop00 { get; set; }
+            public string Prop01 { get; set; }
+            public Properties Properties { get; set; }
+            //public MyImage Image { get; set; }
+        }
+
+        public class Properties
+        {
+            [JsonProperty("prop10_x")]
+            [DisplayName("prop10_x")]
+            public long? Prop10 { get; set; }
+            public long? Prop11 { get; set; }
+        }
+
         static void Main(string[] args)
         {
-            DataTableTest();
+            Issue167();
             return;
 
             JsonToParquet52();

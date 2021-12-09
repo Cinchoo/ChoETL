@@ -390,7 +390,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoParquetWriter<T> WithField<TField>(Expression<Func<T, TField>> field, int position, bool? quoteField = null,
+        public ChoParquetWriter<T> WithField<TField>(Expression<Func<T, TField>> field, int position, Type fieldType = null, bool? quoteField = null,
             char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
             bool truncate = true, string fieldName = null,
             Func<object, object> valueConverter = null,
@@ -402,12 +402,12 @@ namespace ChoETL
             if (field == null)
                 return this;
 
-            return WithField(field.GetMemberName(), position, field.GetPropertyType(), quoteField, fillChar, fieldValueJustification, truncate,
+            return WithField(field.GetMemberName(), position, fieldType == null ? field.GetPropertyType() : fieldType, quoteField, fillChar, fieldValueJustification, truncate,
                 fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue,
                 field.GetFullyQualifiedMemberName(), formatText, nullValue);
         }
 
-        public ChoParquetWriter<T> WithField<TField>(Expression<Func<T, TField>> field, bool? quoteField = null, 
+        public ChoParquetWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, bool? quoteField = null, 
             char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
             bool truncate = true, string fieldName = null, 
             Func<object, object> valueConverter = null, 
@@ -419,7 +419,7 @@ namespace ChoETL
             if (field == null)
                 return this;
 
-            return WithField(field.GetMemberName(), (int?)null, field.GetPropertyType(), quoteField, fillChar, fieldValueJustification, truncate, 
+            return WithField(field.GetMemberName(), (int?)null, fieldType == null ? field.GetPropertyType() : fieldType, quoteField, fillChar, fieldValueJustification, truncate, 
                 fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue,
                 field.GetFullyQualifiedMemberName(), formatText, nullValue);
         }
