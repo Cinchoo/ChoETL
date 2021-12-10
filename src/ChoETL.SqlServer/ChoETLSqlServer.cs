@@ -18,11 +18,6 @@ namespace ChoETL
         public static IQueryable<T> StageOnSqlServerUsingBcp<T>(this IEnumerable<T> items, ChoETLSqlServerSettings sqlServerSettings = null)
             where T : class
         {
-            if (typeof(T).IsDynamicType() || typeof(T) == typeof(object))
-                throw new NotSupportedException();
-
-            Dictionary<string, PropertyInfo> PIDict = ChoType.GetProperties(typeof(T)).ToDictionary(p => p.Name);
-
             sqlServerSettings = ValidateSettings<T>(sqlServerSettings);
             CreateDatabaseIfLocalDb(sqlServerSettings);
             var firstItem = items.FirstOrDefault();
@@ -81,10 +76,10 @@ namespace ChoETL
         public static IQueryable<T> StageOnSqlServer<T>(this IEnumerable<T> items, ChoETLSqlServerSettings sqlServerSettings = null)
             where T : class
         {
-            if (typeof(T).IsDynamicType() || typeof(T) == typeof(object))
-                throw new NotSupportedException();
+            Dictionary<string, PropertyInfo> PIDict = null;
 
-            Dictionary<string, PropertyInfo> PIDict = ChoType.GetProperties(typeof(T)).ToDictionary(p => p.Name);
+            if (!typeof(T).IsDynamicType() && typeof(T) != typeof(object))
+                PIDict = ChoType.GetProperties(typeof(T)).ToDictionary(p => p.Name);
 
             sqlServerSettings = ValidateSettings<T>(sqlServerSettings);
             LoadDataToDb(items, sqlServerSettings, PIDict);

@@ -2109,11 +2109,20 @@ a;b;;2021-05-06;e;11:00;3;9";
 
             using (var w = new ChoCSVWriter(Console.Out).WithFirstLineHeader())
             {
-                foreach (var t in r1.Compare(r2, new string[] { "ID" }))
+                foreach (var t in r1.Compare(r2, "ID", "name" ))
                 {
-                    dynamic v = t.Record as dynamic;
-                    v.Status = t.Status.ToString();
-                    w.Write(v);
+                    dynamic v1 = t.MasterRecord as dynamic;
+                    dynamic v2 = t.DetailRecord as dynamic;
+                    if (t.Status == CompareStatus.Unchanged || t.Status == CompareStatus.Deleted)
+                    {
+                        v1.Status = t.Status.ToString();
+                        w.Write(v1);
+                    }
+                    else 
+                    {
+                        v2.Status = t.Status.ToString();
+                        w.Write(v2);
+                    }
                 }
             }
         }

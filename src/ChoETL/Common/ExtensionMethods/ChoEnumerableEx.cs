@@ -16,27 +16,42 @@ namespace ChoETL
     {
         public class CompareResult<T>
         {
-            public T Record { get; private set; }
+            public T MasterRecord { get; private set; }
+            public T DetailRecord { get; private set; }
             public CompareStatus Status { get; private set; }
 
-            public CompareResult(T record, CompareStatus status)
+            public CompareResult(T masterRecord, T detailRecord, CompareStatus status)
             {
-                Record = record;
+                MasterRecord = masterRecord;
+                DetailRecord = detailRecord;
                 Status = status;
             }
         }
 
         public static IEnumerable<CompareResult<ChoDynamicObject>> Compare(this IEnumerable<ChoDynamicObject> master, IEnumerable<ChoDynamicObject> detail,
-            string[] keyColumns = null, string otherColumns = null, Func<ChoDynamicObject, ChoDynamicObject, int> comparer = null,
+            string csvKeyColumns = null, string csvCompareColumns = null, Func<ChoDynamicObject, ChoDynamicObject, int> comparer = null,
+            IDictionary<Type, IComparer> typeComparerers = null)
+        {
+            var equalityComparer = new ChoDynamicObjectEqualityComparer(csvKeyColumns);
+            var comparerObj = comparer == null ? new ChoDynamicObjectComparer(csvKeyColumns) : new ChoDynamicObjectComparer(comparer);
+            if (typeComparerers != null)
+                comparerObj.TypeComparerers = new System.Collections.Concurrent.ConcurrentDictionary<Type, IComparer>(typeComparerers);
+            var changeComparer = csvCompareColumns.IsNullOrEmpty() ? new ChoDynamicObjectEqualityComparer((string)null) : new ChoDynamicObjectEqualityComparer(csvCompareColumns);
+
+            return Compare(master, detail, equalityComparer, comparerObj, changeComparer);
+        }
+
+        public static IEnumerable<CompareResult<ChoDynamicObject>> Compare(this IEnumerable<ChoDynamicObject> master, IEnumerable<ChoDynamicObject> detail,
+            string[] keyColumns = null, string[] compareColumns = null, Func<ChoDynamicObject, ChoDynamicObject, int> comparer = null,
             IDictionary<Type, IComparer> typeComparerers = null)
         {
             var equalityComparer = new ChoDynamicObjectEqualityComparer(keyColumns);
             var comparerObj = comparer == null ? new ChoDynamicObjectComparer(keyColumns) : new ChoDynamicObjectComparer(comparer);
             if (typeComparerers != null)
                 comparerObj.TypeComparerers = new System.Collections.Concurrent.ConcurrentDictionary<Type, IComparer>(typeComparerers);
-            var changeComparer = otherColumns.IsNullOrEmpty() ? new ChoDynamicObjectEqualityComparer((string)null) : new ChoDynamicObjectEqualityComparer(otherColumns);
+            var changeComparer = compareColumns.IsNullOrEmpty() ? new ChoDynamicObjectEqualityComparer((string)null) : new ChoDynamicObjectEqualityComparer(compareColumns);
 
-            return Compare(master, detail, equalityComparer, comparerObj);
+            return Compare(master, detail, equalityComparer, comparerObj, changeComparer);
         }
 
         public static IEnumerable<CompareResult<T>> Compare<T>(this IEnumerable<T> master, IEnumerable<T> detail,
@@ -65,7 +80,9 @@ namespace ChoETL
 
             var b1 = r1.MoveNext();
             var b2 = r2.MoveNext();
-            T rec = default(T);
+
+            T rec1 = default(T);
+            T rec2 = default(T);
 
             if (changeComparer == null)
                 changeComparer = equalityComparer;
@@ -78,45 +95,46 @@ namespace ChoETL
                     break;
                 else if (b1 && b2)
                 {
-                    var rec1 = r1.Current;
-                    var rec2 = r2.Current;
+                    rec1 = r1.Current;
+                    rec2 = r2.Current;
 
                     if (equalityComparer.Equals(rec1, rec2))
                     {
-                        rec = rec1;
                         status = changeComparer.Equals(rec1, rec2) ? CompareStatus.Unchanged : CompareStatus.Changed;
                         b1 = r1.MoveNext();
                         b2 = r2.MoveNext();
                     }
                     else if (comparer.Compare(rec1, rec2) < 0)
                     {
-                        rec = rec1;
                         status = CompareStatus.Deleted;
                         b1 = r1.MoveNext();
+                        rec2 = default(T);
                     }
                     else
                     {
-                        rec = rec2;
+                        rec1 = default(T);
                         status = CompareStatus.New;
                         b2 = r2.MoveNext();
                     }
                 }
                 else if (b1)
                 {
-                    rec = r1.Current;
+                    rec1 = r1.Current;
+                    rec2 = default(T);
                     status = CompareStatus.Deleted;
                     b1 = r1.MoveNext();
                 }
                 else if (b2)
                 {
-                    rec = r2.Current;
+                    rec1 = default(T);
+                    rec2 = r2.Current;
                     status = CompareStatus.New;
                     b2 = r2.MoveNext();
                 }
                 else
                     break;
 
-                yield return new CompareResult<T>(rec, status);
+                yield return new CompareResult<T>(rec1, rec2, status);
             }
         }
 
