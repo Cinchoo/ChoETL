@@ -651,7 +651,12 @@ namespace ChoETL
                     return true;
                 }
 
-                if (kvpDict.ContainsKey(name))
+                if (name.Contains(_keySeparator) && ContainsNestedProperty(name))
+                {
+                    result = AfterKVPLoaded(name, GetNestedPropertyValue(name));
+                    return true;
+                }
+                else if (kvpDict.ContainsKey(name))
                 {
                     result = AfterKVPLoaded(name, kvpDict[name]);
                     return true;
@@ -717,6 +722,11 @@ namespace ChoETL
                 //    if (!newName.IsNullOrWhiteSpace())
                 //        name = newName;
                 //}
+                if (name.Contains(_keySeparator))
+                {
+                    SetNestedPropertyValue(name, value);
+                    return true;
+                }
 
                 if (!kvpDict.ContainsKey(name))
                 {
@@ -905,7 +915,10 @@ namespace ChoETL
             }
             return new ChoDynamicObject(dict);
         }
-
+        public bool RemoveNestedPropertyValue(string propName)
+        {
+            return ChoObjectEx.RemoveNestedPropertyValue(_kvpDict, propName);
+        }
         public object GetNestedPropertyValue(string propName)
         {
             return ChoObjectEx.GetNestedPropertyValue(_kvpDict, propName);
@@ -1114,6 +1127,11 @@ namespace ChoETL
 
         public bool Remove(string key)
         {
+            if (key.Contains(_keySeparator) && ContainsNestedProperty(key))
+            {
+                return RemoveNestedPropertyValue(key);
+            }
+
             IDictionary<string, object> kvpDict = _kvpDict;
             if (kvpDict != null && kvpDict.ContainsKey(key))
             {
@@ -1834,7 +1852,7 @@ namespace ChoETL
         public IDictionary<string, object> AsDictionary()
         {
             var dict = _kvpDict.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-            foreach (var key in dict.Keys)
+            foreach (var key in dict.Keys.ToArray())
             {
                 if (dict[key] is ChoDynamicObject)
                     dict[key] = ((ChoDynamicObject)dict[key]).AsDictionary();
@@ -1846,7 +1864,7 @@ namespace ChoETL
         public IDictionary<string, object> AsXmlDictionary()
         {
             var dict = _kvpDict.ToDictionary(kvp => IsXmlAttribute(kvp.Key) ? $"{_attributePrefix}{kvp.Key}" : kvp.Key, kvp => kvp.Value);
-            foreach (var key in dict.Keys)
+            foreach (var key in dict.Keys.ToArray())
             {
                 if (dict[key] is ChoDynamicObject)
                     dict[key] = ((ChoDynamicObject)dict[key]).AsXmlDictionary();

@@ -93,6 +93,38 @@ namespace ChoETL
             }
         }
 
+        public static bool RemoveNestedPropertyValue(this object target, string propName)
+        {
+            object parent = null;
+            string memberName = null;
+            if (GetNestedMember(target, propName, ref parent, ref memberName))
+            {
+                if (parent is IDictionary)
+                {
+                    IDictionary dict = parent as IDictionary;
+                    if (dict.Contains(memberName))
+                    {
+                        dict.Remove(memberName);
+                        return true;
+                    }
+                }
+                else if (parent is IDictionary<string, object>)
+                {
+                    IDictionary<string, object> dict = parent as IDictionary<string, object>;
+                    if (dict.ContainsKey(memberName))
+                    {
+                        dict.Remove(memberName);
+                        return true;
+                    }
+                }
+                //else
+                //{
+                //    return ChoType.GetPropertyValue(parent, memberName);
+                //}
+            }
+                
+            return false;
+        }
         public static object GetNestedPropertyValue(this object target, string propName)
         {
             object parent = null;

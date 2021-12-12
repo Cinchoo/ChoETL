@@ -433,9 +433,63 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            SelectiveChildTest();
+            Xml2Json1();
         }
 
+        static void Xml2Json1()
+        {
+            string xml = @"<Message>
+  <MessageInfo>
+    <Guid>be190914-4b18-4454-96ec-67887dd4d7a7</Guid>
+    <SourceId>101</SourceId>
+  </MessageInfo>
+<LegalEntities>
+ <LegalEntity>
+ <Roles>
+        <Role>
+          <LEAssociateTypeId>101</LEAssociateTypeId>
+          <LEAssociateTypeId_Value>Client/Counterparty</LEAssociateTypeId_Value>
+          <LastUpdatedDate>2021-08-07T23:05:17</LastUpdatedDate>
+          <LegalEntityRoleStatusId>3</LegalEntityRoleStatusId>
+          <LegalEntityRoleStatusId_Value>Active</LegalEntityRoleStatusId_Value>
+        </Role>
+        <Role>
+          <LEAssociateTypeId>6000</LEAssociateTypeId>
+          <LEAssociateTypeId_Value>Account Owner</LEAssociateTypeId_Value>
+          <LastUpdatedDate>2021-08-07T21:20:07</LastUpdatedDate>
+          <LegalEntityRoleStatusId>3</LegalEntityRoleStatusId>
+          <LegalEntityRoleStatusId_Value>Active</LegalEntityRoleStatusId_Value>
+        </Role>
+        <Role>
+          <LEAssociateTypeId>5003</LEAssociateTypeId>
+          <LEAssociateTypeId_Value>Investment Manager</LEAssociateTypeId_Value>
+          <LastUpdatedDate>2021-08-16T06:12:59</LastUpdatedDate>
+          <LegalEntityRoleStatusId>3</LegalEntityRoleStatusId>
+          <LegalEntityRoleStatusId_Value>Active</LegalEntityRoleStatusId_Value>
+        </Role>
+      </Roles>
+ </LegalEntity>
+ </LegalEntities>
+</Message>";
+
+            using (var r = ChoXmlReader.LoadText(xml)
+                .WithXPath("//")
+                )
+            {
+                using (var w = new ChoJSONWriter(Console.Out)
+                    .SupportMultipleContent(true)
+                    .Configure(c => c.DefaultArrayHandling = false)
+                    )
+                {
+                    w.Write(r.Select(r1 =>
+                    {
+                        IList roles = r1["LegalEntities.LegalEntity.Roles"];
+                        r1["LegalEntities.LegalEntity.Roles"] = roles.OfType<object>().Select(i => new { Role = i }).ToArray();
+                        return r1;
+                    }));
+                }
+            }
+        }
         static void SelectiveChildTest()
         {
             string xml = @"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -1116,7 +1170,7 @@ namespace ChoXmlReaderTest
             public string StateDescription { get; set; }
             public string State { get; set; }
         }
-        static void Xml2Json1()
+        static void Xml2Json2()
         {
             string xml = @"<Employee>
     <Name>Mark</Name>
