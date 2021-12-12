@@ -13,6 +13,12 @@ namespace ChoETL
     [DataContract]
     public abstract class ChoFileRecordConfiguration : ChoRecordConfiguration
     {
+
+        public bool Append
+        {
+            get;
+            set;
+        }
         public bool TurnOffMemoryMappedFile
         {
             get;
@@ -272,7 +278,7 @@ namespace ChoETL
             AutoDiscoverFieldTypes = true;
             MaxScanRows = 0;
             IgnoreIfNoRecordTypeFound = true;
-            BufferSize = 4096;
+            BufferSize = 1024 * 1024;
             Comments = null; // new string[] { "#", "//" };
             Culture = CultureInfo.CurrentCulture;
             EOLDelimiter = Environment.NewLine;

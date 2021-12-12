@@ -29,12 +29,7 @@ namespace ChoETL
         public CompressionMethod CompressionMethod { get; set; }
         public int CompressionLevel { get; set; }
         public IReadOnlyDictionary<string, string> CustomMetadata { get; set; }
-
-        public bool Append
-        {
-            get;
-            set;
-        }
+        public long RowGroupSize { get; set; } = 5000;
 
         public bool IgnoreRootNodeName
         {
@@ -110,6 +105,7 @@ namespace ChoETL
         }
 
         public bool IgnoreHeader { get; internal set; }
+        public bool AutoFlush { get; set; } = true;
 
         public ChoParquetRecordFieldConfiguration this[string name]
         {
@@ -127,7 +123,7 @@ namespace ChoETL
         {
             ParquetOptions = new ParquetOptions();
             ParquetRecordFieldConfigurations = new List<ChoParquetRecordFieldConfiguration>();
-
+            RowGroupSize = 0;
             if (recordType != null)
             {
                 Init(recordType);

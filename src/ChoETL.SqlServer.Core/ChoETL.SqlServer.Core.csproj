@@ -13,8 +13,9 @@
     <RepositoryType>GitHub</RepositoryType>
     <PackageTags>ETL c# .NET CSV Xml JSON Flat Parquet Yaml</PackageTags>
     <PackageReleaseNotes>.NET Standard version</PackageReleaseNotes>
-    <PackageIconUrl>http://www.gravatar.com/avatar/6ebc114acdd1d9f7ec5028a165a819b1.png</PackageIconUrl>
+    <PackageIconUrl></PackageIconUrl>
     <Version>1.0.0.2</Version>
+    <PackageIcon>cinchoo.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,6 +31,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ChoETL.NETStandard\ChoETL.NETStandard.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\Assets\Icons\cinchoo.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>

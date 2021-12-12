@@ -54,7 +54,7 @@ namespace ChoETL
 
             Init();
 
-            _textWriter = new Lazy<TextWriter>(() => new StreamWriter(filePath, false, Configuration.Encoding, Configuration.BufferSize));
+            _textWriter = new Lazy<TextWriter>(() => new StreamWriter(filePath, Configuration.Append, Configuration.Encoding, Configuration.BufferSize));
             _closeStreamOnDispose = true;
         }
 
@@ -344,6 +344,12 @@ namespace ChoETL
         public ChoCSVWriter<T> NotifyAfter(long rowsWritten)
         {
             Configuration.NotifyAfter = rowsWritten;
+            return this;
+        }
+
+        public ChoCSVWriter<T> OnRowsWritten(Action<object, ChoRowsWrittenEventArgs> rowsWritten)
+        {
+            RowsWritten += (o, e) => rowsWritten(o, e);
             return this;
         }
 

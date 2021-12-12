@@ -7,6 +7,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Dynamic;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -19,6 +20,7 @@ namespace ChoETL
         private ChoParquetRecordWriter _writer = null;
         private bool _clearFields = false;
         public event EventHandler<ChoRowsWrittenEventArgs> RowsWritten;
+        public event EventHandler<ChoNewRowGroupEventArgs> NewRowGroup;
         public TraceSwitch TraceSwitch = ChoETLFramework.TraceSwitch;
         private bool _isDisposed = false;
 
@@ -47,7 +49,10 @@ namespace ChoETL
 
             Init();
 
-            _streamWriter = new Lazy<StreamWriter>(() => new StreamWriter(filePath, false, Configuration.GetEncoding(filePath), Configuration.BufferSize));
+            _streamWriter = new Lazy<StreamWriter>(() =>
+            {
+                return new StreamWriter(filePath, Configuration.Append, Configuration.GetEncoding(filePath), Configuration.BufferSize);
+            });
             _closeStreamOnDispose = true;
         }
 
@@ -125,6 +130,7 @@ namespace ChoETL
 
             _writer = new ChoParquetRecordWriter(recordType, Configuration);
             _writer.RowsWritten += NotifyRowsWritten;
+            _writer.NewRowGroup += OnNewRowGroup;
         }
 
         public void Write(IEnumerable<T> records)
@@ -169,6 +175,13 @@ namespace ChoETL
                 Console.WriteLine(e.RowsWritten.ToString("#,##0") + " records written.");
             else
                 rowsWrittenEvent(this, e);
+        }
+
+        private void OnNewRowGroup(object sender, ChoNewRowGroupEventArgs e)
+        {
+            EventHandler<ChoNewRowGroupEventArgs> newRowGroupEvent = NewRowGroup;
+            if (newRowGroupEvent != null)
+                newRowGroupEvent(this, e);
         }
 
         #region Fluent API
@@ -705,5 +718,17 @@ namespace ChoETL
                 return stream.ToArray();
             }
         }
+    }
+    public class ChoNewRowGroupEventArgs : EventArgs
+    {
+        public ChoNewRowGroupEventArgs(int index, List<dynamic> records)
+        {
+            Index = index;
+            Records = records;
+        }
+
+        public bool DoNotCreateNewRowGroup { get; set; }
+        public List<dynamic> Records { get; }
+        public int Index { get; }
     }
 }

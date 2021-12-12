@@ -30,6 +30,21 @@ namespace ChoETL
                     yield return select();
             }
         }
+        public static IEnumerable<T> AsEnumerable<T>(Func<T> select, T until = default(T))
+        {
+            if (select == null)
+                yield break;
+
+            T val = default(T);
+            while (true)
+            {
+                val = select();
+                if (Object.Equals(val, until))
+                    break;
+
+                yield return val;
+            }
+        }
 
         public static IEnumerable<T> AsEnumerable<T>(T @this)
         {

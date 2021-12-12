@@ -26,6 +26,7 @@ namespace ChoETL
         private Lazy<bool> BeginWrite = null;
         private object _sw = null;
         private List<dynamic> _records = new List<dynamic>();
+        public event EventHandler<ChoNewRowGroupEventArgs> NewRowGroup;
 
         public ChoParquetRecordConfiguration Configuration
         {
@@ -74,6 +75,7 @@ namespace ChoETL
             if (sw != null)
             {
                 WriteAllRecords(sw);
+                if (parquetWriter != null) parquetWriter.Dispose();
                 RaiseEndWrite(sw);
             }
         }
@@ -94,39 +96,78 @@ namespace ChoETL
             //}
         }
 
+        IDictionary<string, DataField> sf;
+        ParquetWriter parquetWriter = null;
         private void WriteAllRecords(StreamWriter sw)
         {
-            var sf = GetSchemaFields();
+            if (parquetWriter == null)
+                parquetWriter = CreateParquetWriter(sw);
+            using (ParquetRowGroupWriter groupWriter = parquetWriter.CreateRowGroup())
+            {
+                if (Configuration.RecordFieldConfigurationsDict != null)
+                {
+                    foreach (KeyValuePair<string, ChoParquetRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict.OrderBy(kvp => kvp.Value.Priority))
+                    {
+                        var column = new DataColumn(sf[kvp.Key], GetFieldValues(kvp.Key, kvp.Value.FieldType).Cast(GetParquetType(kvp.Value.FieldType)));
+                        groupWriter.WriteColumn(column);
+                    }
+                }
+            }
+            if (Configuration.AutoFlush)
+                sw.BaseStream.Flush();
+
+            //IDictionary<string, DataField> sf;
+            //Schema schema = null;
+
+            //if (Configuration.SchemaGenerator != null)
+            //    Configuration.Schema = schema = Configuration.SchemaGenerator(sf.Values.ToArray());
+            
+            //if (Configuration.Schema == null)
+            //    Configuration.Schema = schema = new Schema(sf.Values.ToArray());
+            //else
+            //    schema = Configuration.Schema;
+
+            //using (var parquetWriter = new ParquetWriter(schema, sw.BaseStream, Configuration.ParquetOptions, Configuration.Append))
+            //{
+            //    parquetWriter.CompressionMethod = Configuration.CompressionMethod;
+            //    parquetWriter.CompressionLevel = Configuration.CompressionLevel;
+            //    if (Configuration.CustomMetadata != null)
+            //        parquetWriter.CustomMetadata = Configuration.CustomMetadata;
+
+            //    // create a new row group in the file
+            //    using (ParquetRowGroupWriter groupWriter = parquetWriter.CreateRowGroup())
+            //    {
+            //        if (Configuration.RecordFieldConfigurationsDict != null)
+            //        {
+            //            foreach (KeyValuePair<string, ChoParquetRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict.OrderBy(kvp => kvp.Value.Priority))
+            //            {
+            //                var column = new DataColumn(sf[kvp.Key], GetFieldValues(kvp.Key, kvp.Value.FieldType).Cast(GetParquetType(kvp.Value.FieldType)));
+            //                groupWriter.WriteColumn(column);
+            //            }
+            //        }
+            //    }
+            //}
+        }
+        private ParquetWriter CreateParquetWriter(StreamWriter sw)
+        {
+            sf = GetSchemaFields();
             Schema schema = null;
 
             if (Configuration.SchemaGenerator != null)
                 Configuration.Schema = schema = Configuration.SchemaGenerator(sf.Values.ToArray());
-            
+
             if (Configuration.Schema == null)
                 Configuration.Schema = schema = new Schema(sf.Values.ToArray());
             else
                 schema = Configuration.Schema;
 
-            using (var parquetWriter = new ParquetWriter(schema, sw.BaseStream, Configuration.ParquetOptions, Configuration.Append))
-            {
+            var parquetWriter = new ParquetWriter(schema, sw.BaseStream, Configuration.ParquetOptions, Configuration.Append);
                 parquetWriter.CompressionMethod = Configuration.CompressionMethod;
                 parquetWriter.CompressionLevel = Configuration.CompressionLevel;
                 if (Configuration.CustomMetadata != null)
                     parquetWriter.CustomMetadata = Configuration.CustomMetadata;
 
-                // create a new row group in the file
-                using (ParquetRowGroupWriter groupWriter = parquetWriter.CreateRowGroup())
-                {
-                    if (Configuration.RecordFieldConfigurationsDict != null)
-                    {
-                        foreach (KeyValuePair<string, ChoParquetRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict.OrderBy(kvp => kvp.Value.Priority))
-                        {
-                            var column = new DataColumn(sf[kvp.Key], GetFieldValues(kvp.Key, kvp.Value.FieldType).Cast(GetParquetType(kvp.Value.FieldType)));
-                            groupWriter.WriteColumn(column);
-                        }
-                    }
-                }
-            }
+            return parquetWriter;
         }
 
         private Type GetParquetType(Type type)
@@ -235,12 +276,24 @@ namespace ChoETL
             return null;
         }
 
+        int rowGroupIndex = 0;
         private void Write(object writer, dynamic record)
         {
             _sw = writer;
             StreamWriter sw = writer as StreamWriter;
             ChoGuard.ArgumentNotNull(sw, "StreamWriter");
+
             _records.Add(record);
+            if (Configuration.RowGroupSize > 0 && Configuration.RowGroupSize == _records.Count)
+            {
+                if (!RaiseNewRowGroup(rowGroupIndex, _records))
+                {
+                    WriteAllRecords(_sw as StreamWriter);
+                    _records.Clear();
+                }
+
+                rowGroupIndex++;
+            }
         }
 
         private bool _rowScanComplete = false;
@@ -1230,5 +1283,14 @@ namespace ChoETL
                 fields = fs;
         }
 
+        private bool RaiseNewRowGroup(int index, List<dynamic> records)
+        {
+            ChoNewRowGroupEventArgs newRowGroupEventArg = new ChoNewRowGroupEventArgs(index, records);
+            EventHandler<ChoNewRowGroupEventArgs> newRowGroupEvent = NewRowGroup;
+            if (newRowGroupEvent != null)
+                newRowGroupEvent(this, newRowGroupEventArg);
+
+            return newRowGroupEventArg.DoNotCreateNewRowGroup;
+        }
     }
 }

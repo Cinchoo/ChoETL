@@ -24,6 +24,8 @@ namespace ChoETL
         private IChoRecordFieldSerializable _callbackRecordSeriablizable;
         private bool _configCheckDone = false;
         internal ChoReader Reader = null;
+        internal bool InterceptRowGroup = false;
+        public event EventHandler<ChoRowGroupEventArgs> RowGroup;
 
         public ChoParquetRecordConfiguration Configuration
         {
@@ -58,15 +60,41 @@ namespace ChoETL
             if (!RaiseBeginLoad(sr))
                 yield break;
 
-            foreach (var item in AsEnumerable(ReadObjects(sr), TraceSwitch, filterFunc))
+            if (InterceptRowGroup)
             {
-                yield return item;
+                foreach (var item in AsEnumerable(ReadObjectsByRowGroup(sr).SelectMany(i => i.Select(i1 => i1)), TraceSwitch, filterFunc))
+                {
+                    yield return item;
+                }
+            }
+            else
+            {
+                foreach (var item in AsEnumerable(ReadAllObjects(sr), TraceSwitch, filterFunc))
+                {
+                    yield return item;
+                }
             }
 
             RaiseEndLoad(sr);
         }
+        private IEnumerable<List<DataColumn[]>> ReadObjectsByRowGroup(ParquetReader sr, Func<object, bool?> filterFunc = null)
+        {
+            DataField[] dataFields = sr.Schema.GetDataFields();
 
-        private IEnumerable<DataColumn[]> ReadObjects(ParquetReader sr, Func<object, bool?> filterFunc = null)
+            for (int i = 0; i < sr.RowGroupCount; i++)
+            {
+                List<DataColumn[]> rowGroup = new List<DataColumn[]>();
+                using (ParquetRowGroupReader groupReader = sr.OpenRowGroupReader(i))
+                {
+                    var dc = dataFields.Select(groupReader.ReadColumn).ToArray();
+                    rowGroup.Add(dc);
+                }
+                if (!RaiseRowGroup(i, rowGroup))
+                    yield return rowGroup;
+            }
+        }
+
+        private IEnumerable<DataColumn[]> ReadAllObjects(ParquetReader sr, Func<object, bool?> filterFunc = null)
         {
             DataField[] dataFields = sr.Schema.GetDataFields();
 
@@ -79,7 +107,6 @@ namespace ChoETL
                 }
             }
         }
-
 
         private long GetDataLength(DataColumn[] dc)
         {
@@ -869,6 +896,16 @@ namespace ChoETL
                 return retValue;
             }
             return false;
+        }
+
+        private bool RaiseRowGroup(int index, List<DataColumn[]> records)
+        {
+            ChoRowGroupEventArgs rowGroupEventArg = new ChoRowGroupEventArgs(index, records);
+            EventHandler<ChoRowGroupEventArgs> rowGroupEvent = RowGroup;
+            if (rowGroupEvent != null)
+                rowGroupEvent(this, rowGroupEventArg);
+
+            return rowGroupEventArg.Skip;
         }
     }
 }

@@ -584,6 +584,12 @@ namespace ChoETL
             return this;
         }
 
+        public ChoCSVReader<T> OnRowsLoaded(Action<object, ChoRowsLoadedEventArgs> rowsLoaded)
+        {
+            RowsLoaded += (o, e) => rowsLoaded(o, e);
+            return this;
+        }
+
         public ChoCSVReader<T> WithDelimiter(string delimiter)
         {
             Configuration.Delimiter = delimiter;
