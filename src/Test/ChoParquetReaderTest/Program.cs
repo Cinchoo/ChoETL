@@ -73,7 +73,7 @@ namespace ChoParquetReaderTest
 
         static void ReadUserData1Test()
         {
-            using (var r = new ChoCSVReader<Trade>(@"..\..\..\..\..\..\data\XBTUSD.csv")
+            using (var r = new ChoCSVReader(@"..\..\..\..\..\..\data\XBTUSD.csv")
                 .Configure(c => c.LiteParsing = true)
                 .NotifyAfter(100000)
                 .OnRowsLoaded((o, e) => $"Rows Loaded: {e.RowsLoaded} <-- {DateTime.Now}".Print())
@@ -82,8 +82,8 @@ namespace ChoParquetReaderTest
             {
                 //r.Loop();
                 //return;
-                using (var w = new ChoParquetWriter<Trade>(@"..\..\..\..\..\..\data\XBTUSD.parquet")
-                    .Configure(c => c.RowGroupSize = 10)
+                using (var w = new ChoParquetWriter(@"..\..\..\..\..\..\data\XBTUSD.parquet")
+                    .Configure(c => c.RowGroupSize = 100000)
                 .Configure(c => c.LiteParsing = true)
                     )
                     w.Write(r);
@@ -93,7 +93,7 @@ namespace ChoParquetReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            ReadParquet52();
+            ReadUserData1Test();
         }
     }
 }

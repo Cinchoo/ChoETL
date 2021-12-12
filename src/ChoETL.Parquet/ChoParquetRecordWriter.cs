@@ -172,6 +172,9 @@ namespace ChoETL
 
         private Type GetParquetType(Type type)
         {
+            if (type == null)
+                return typeof(string);
+
             if (type == typeof(DateTime))
                 return typeof(DateTimeOffset);
             else if (type == typeof(ChoCurrency))
@@ -204,7 +207,7 @@ namespace ChoETL
                     }
                     else if (ft == typeof(Guid))
                         fv.Add(rec[key].ToString());
-                    else if (ft.IsEnum)
+                    else if (ft == null || ft.IsEnum)
                         fv.Add(rec[key].ToString());
                     else
                         fv.Add(rec[key]);
@@ -557,6 +560,19 @@ namespace ChoETL
         IDictionary<string, Object> dict = null;
         private bool ToText(long index, object rec, ref dynamic recText)
         {
+            if (Configuration.LiteParsing)
+            {
+                if (Configuration.IsDynamicObject)
+                {
+                    recText = rec;
+                }
+                else
+                {
+                    recText = rec.ToDictionary();
+                }
+                return true;
+            }
+
             if (typeof(IChoScalarObject).IsAssignableFrom(Configuration.RecordType))
                 rec = ChoActivator.CreateInstance(Configuration.RecordType, rec);
 
