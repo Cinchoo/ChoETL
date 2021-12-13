@@ -172,6 +172,14 @@ namespace ChoETL
 
         private Type GetParquetType(Type type)
         {
+            Func<Type, Type> mapParquetType = Configuration.MapParquetType;
+            if (mapParquetType != null)
+            {
+                Type mt = mapParquetType(type);
+                if (mt != null)
+                    return mt;
+            }
+
             if (type == null)
                 return typeof(string);
 
@@ -564,13 +572,22 @@ namespace ChoETL
             {
                 if (Configuration.IsDynamicObject)
                 {
-                    recText = rec;
+                    if (rec is ChoDynamicObject)
+                    {
+                        recText = rec;
+                        return true;
+                    }
+                    else if (rec is IDictionary<string, object>)
+                    {
+                        recText = new ChoDynamicObject(rec as IDictionary<string, object>);
+                        return true;
+                    }
                 }
                 else
                 {
                     recText = rec.ToDictionary();
+                    return true;
                 }
-                return true;
             }
 
             if (typeof(IChoScalarObject).IsAssignableFrom(Configuration.RecordType))

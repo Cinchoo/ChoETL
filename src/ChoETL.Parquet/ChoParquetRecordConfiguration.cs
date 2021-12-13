@@ -30,6 +30,7 @@ namespace ChoETL
         public int CompressionLevel { get; set; }
         public IReadOnlyDictionary<string, string> CustomMetadata { get; set; }
         public long RowGroupSize { get; set; } = 5000;
+        public Func<Type, Type> MapParquetType { get; set; }
 
         public bool IgnoreRootNodeName
         {

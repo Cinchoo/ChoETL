@@ -25,7 +25,8 @@ namespace ChoETL
         private bool _configCheckDone = false;
         internal ChoReader Reader = null;
         internal bool InterceptRowGroup = false;
-        public event EventHandler<ChoRowGroupEventArgs> RowGroup;
+        public event EventHandler<ChoRowGroupEventArgs> BeforeRowGroupLoad;
+        public event EventHandler<ChoRowGroupEventArgs> AfterRowGroupLoaded;
 
         public ChoParquetRecordConfiguration Configuration
         {
@@ -83,13 +84,16 @@ namespace ChoETL
 
             for (int i = 0; i < sr.RowGroupCount; i++)
             {
+                if (RaiseBeforeRowGroupLoad(i, null))
+                    continue;
+
                 List<DataColumn[]> rowGroup = new List<DataColumn[]>();
                 using (ParquetRowGroupReader groupReader = sr.OpenRowGroupReader(i))
                 {
                     var dc = dataFields.Select(groupReader.ReadColumn).ToArray();
                     rowGroup.Add(dc);
                 }
-                if (!RaiseRowGroup(i, rowGroup))
+                if (!RaiseAfterRowGroupLoaded(i, rowGroup))
                     yield return rowGroup;
             }
         }
@@ -917,10 +921,20 @@ namespace ChoETL
             return false;
         }
 
-        private bool RaiseRowGroup(int index, List<DataColumn[]> records)
+        private bool RaiseBeforeRowGroupLoad(int index, List<DataColumn[]> records)
         {
             ChoRowGroupEventArgs rowGroupEventArg = new ChoRowGroupEventArgs(index, records);
-            EventHandler<ChoRowGroupEventArgs> rowGroupEvent = RowGroup;
+            EventHandler<ChoRowGroupEventArgs> rowGroupEvent = BeforeRowGroupLoad;
+            if (rowGroupEvent != null)
+                rowGroupEvent(this, rowGroupEventArg);
+
+            return rowGroupEventArg.Skip;
+        }
+
+        private bool RaiseAfterRowGroupLoaded(int index, List<DataColumn[]> records)
+        {
+            ChoRowGroupEventArgs rowGroupEventArg = new ChoRowGroupEventArgs(index, records);
+            EventHandler<ChoRowGroupEventArgs> rowGroupEvent = AfterRowGroupLoaded;
             if (rowGroupEvent != null)
                 rowGroupEvent(this, rowGroupEventArg);
 

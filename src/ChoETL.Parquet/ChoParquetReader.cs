@@ -30,7 +30,8 @@ namespace ChoETL
         public event EventHandler<ChoRowsLoadedEventArgs> RowsLoaded;
         public event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
         public event EventHandler<ChoRecordFieldTypeAssessmentEventArgs> RecordFieldTypeAssessment;
-        public event EventHandler<ChoRowGroupEventArgs> RowGroup;
+        public event EventHandler<ChoRowGroupEventArgs> BeforeRowGroupLoad;
+        public event EventHandler<ChoRowGroupEventArgs> AfterRowGroupLoaded;
 
         public ChoParquetRecordConfiguration Configuration
         {
@@ -231,12 +232,14 @@ namespace ChoETL
             rr.Reader = this;
             rr.TraceSwitch = TraceSwitch;
             rr.RowsLoaded += NotifyRowsLoaded;
-            rr.RowGroup += OnRowGroup;
+            rr.BeforeRowGroupLoad += BeforeRowGroupLoad;
+            rr.AfterRowGroupLoaded += AfterRowGroupLoaded;
             rr.MembersDiscovered += MembersDiscovered;
             rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
-            var rowGroup = RowGroup;
-            if (rowGroup != null)    
-                rr.InterceptRowGroup = rowGroup.GetInvocationList().Length > 0;
+            var beforeRowGroup = BeforeRowGroupLoad;
+            var afterRowGroup = AfterRowGroupLoaded;
+            if (beforeRowGroup != null || afterRowGroup != null)
+                rr.InterceptRowGroup = true;
 
             var e = rr.AsEnumerable(_parquetReader).GetEnumerator();
             return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
@@ -292,13 +295,6 @@ namespace ChoETL
             }
             else
                 rowsLoadedEvent(this, e);
-        }
-
-        private void OnRowGroup(object sender, ChoRowGroupEventArgs e)
-        {
-            EventHandler<ChoRowGroupEventArgs> rowGroupEvent = RowGroup;
-            if (rowGroupEvent != null)
-                rowGroupEvent(this, e);
         }
 
         public override bool TryValidate(object target, ICollection<ValidationResult> validationResults)
@@ -872,12 +868,12 @@ namespace ChoETL
     {
         public ChoRowGroupEventArgs(int index, List<Parquet.Data.DataColumn[]> records)
         {
-            Index = index;
+            RowGroupIndex = index;
             Records = records;
         }
 
         public bool Skip { get; set; }
         public List<Parquet.Data.DataColumn[]> Records { get; }
-        public int Index { get; }
+        public int RowGroupIndex { get; }
     }
 }
