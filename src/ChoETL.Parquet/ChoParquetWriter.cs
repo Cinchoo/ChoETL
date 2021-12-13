@@ -247,6 +247,12 @@ namespace ChoETL
             return this;
         }
 
+        public ChoParquetWriter<T> OnRowsWritten(Action<object, ChoRowsWrittenEventArgs> rowsWritten)
+        {
+            RowsWritten += (o, e) => rowsWritten(o, e);
+            return this;
+        }
+
         public ChoParquetWriter<T> WithEOLDelimiter(string delimiter)
         {
             Configuration.EOLDelimiter = delimiter;

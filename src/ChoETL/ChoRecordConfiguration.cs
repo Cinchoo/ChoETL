@@ -191,21 +191,23 @@ namespace ChoETL
                     //else
                         name = fc.Name;
 
-                    if (!PDDict.ContainsKey(name))
+                    fc.PD = PDDict.ContainsKey(name) ? PDDict[name] : 
+                        (PDDict.Any(p => p.Value.Name == name) ? PDDict.Where(p => p.Value.Name == name).Select(p => p.Value).FirstOrDefault() : null);
+                    fc.PI = PIDict.ContainsKey(name) ? PIDict[name] :
+           (PIDict.Any(p => p.Value.Name == name) ? PIDict.Where(p => p.Value.Name == name).Select(p => p.Value).FirstOrDefault() : null);
+
+                    if (fc.PD == null || fc.PI == null)
                         continue;
 
-                    fc.PD = PDDict[name];
-                    fc.PI = PIDict[name];
-
                     //Load default value
-                    defaultValue = ChoType.GetRawDefaultValue(PDDict[name]);
+                    defaultValue = ChoType.GetRawDefaultValue(fc.PD);
                     if (defaultValue != null)
                     {
                         fc.DefaultValue = defaultValue;
                         fc.IsDefaultValueSpecified = true;
                     }
                     //Load fallback value
-                    fallbackValue = ChoType.GetRawFallbackValue(PDDict[name]);
+                    fallbackValue = ChoType.GetRawFallbackValue(fc.PD);
                     if (fallbackValue != null)
                     {
                         fc.FallbackValue = fallbackValue;

@@ -209,6 +209,11 @@ namespace ChoETL
                     if (TraceSwitch.TraceVerbose)
                         ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Loading node [{0}]...".FormatString(pair.Item1));
 
+                    rec = Configuration.IsDynamicObject ? new ChoDynamicObject()
+                    {
+                        ThrowExceptionIfPropNotExists = true,
+                    } : ChoActivator.CreateInstance(RecordType);
+
                     if (!LoadNode(pair, ref rec))
                         yield break;
 
@@ -403,6 +408,12 @@ namespace ChoETL
             lineNo = pair.Item1;
             var node = pair.Item2;
 
+            if (Configuration.LiteParsing && Configuration.IsDynamicObject && rec is ChoDynamicObject)
+            {
+                ((ChoDynamicObject)rec).SetDictionary(node as IDictionary<string, object>);
+                return true;
+            }
+
             fieldValue = null;
             fieldConfig = null;
             pi = null;
@@ -440,8 +451,8 @@ namespace ChoETL
                     if (Configuration.ColumnCountStrict)
                         throw new ChoParserException("No matching '{0}' field found.".FormatString(fieldConfig.FieldName));
                 }
-
-                fieldValue = node[kvp.Value.FieldName];
+                else
+                    fieldValue = node[kvp.Value.FieldName];
 
                 if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, kvp.Key, ref fieldValue))
                     continue;
@@ -504,7 +515,15 @@ namespace ChoETL
                         }
 
                         if (pi != null)
-                            rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
+                        {
+                            if (Configuration.LiteParsing)
+                            {
+                                ChoType.SetPropertyValue(rec, fieldConfig.PI,
+                                    fieldConfig.FieldType == null || fieldConfig.FieldType == typeof(string) ? fieldValue : Convert.ChangeType(fieldValue, fieldConfig.FieldType, Configuration.Culture));
+                            }
+                            else
+                                rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
+                        }
                         else if (RecordType.IsSimple())
                             rec = ChoConvert.ConvertTo(fieldValue, RecordType, Configuration.Culture);
                         else

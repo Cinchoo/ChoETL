@@ -439,6 +439,12 @@ namespace ChoETL
             return this;
         }
 
+        public ChoParquetReader<T> OnRowsLoaded(Action<object, ChoRowsLoadedEventArgs> rowsLoaded)
+        {
+            RowsLoaded += (o, e) => rowsLoaded(o, e);
+            return this;
+        }
+
         public ChoParquetReader<T> ClearFields()
         {
             Configuration.ClearFields();

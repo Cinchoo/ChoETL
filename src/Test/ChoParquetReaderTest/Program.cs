@@ -3,6 +3,7 @@ using System;
 using System.Data;
 using System.Text;
 using System.Linq;
+using System.ComponentModel;
 
 namespace ChoParquetReaderTest
 {
@@ -66,12 +67,15 @@ namespace ChoParquetReaderTest
 
         public class Trade
         {
+            [DisplayName("Column1")]
             public string Id { get; set; }
+            [DisplayName("Column2")]
             public string Price { get; set; }
+            [DisplayName("Column3")]
             public string Quantity { get; set; }
         }
 
-        static void ReadUserData1Test()
+        static void CSV2ParquetTest()
         {
             using (var r = new ChoCSVReader(@"..\..\..\..\..\..\data\XBTUSD.csv")
                 .Configure(c => c.LiteParsing = true)
@@ -90,10 +94,24 @@ namespace ChoParquetReaderTest
             }
         }
 
+        static void ParseLargeParquetTest()
+        {
+            using (var r = new ChoParquetReader<Trade>(@"..\..\..\..\..\..\data\XBTUSD-Copy.parquet")
+                .Configure(c => c.LiteParsing = true)
+                .NotifyAfter(100000)
+                .OnRowsLoaded((o, e) => $"Rows Loaded: {e.RowsLoaded} <-- {DateTime.Now}".Print())
+                .ThrowAndStopOnMissingField(false)
+                )
+            {
+                r.Skip(200001).Take(1).Print(); // Loop();
+            }
+
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            ReadUserData1Test();
+            ParseLargeParquetTest();
         }
     }
 }

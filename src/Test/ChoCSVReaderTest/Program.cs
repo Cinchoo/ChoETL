@@ -5409,7 +5409,7 @@ val61, val71";
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            DynamicTest();
+            DefaultValueTest1();
             return;
 
             PositionNeutralCSVLoad();
