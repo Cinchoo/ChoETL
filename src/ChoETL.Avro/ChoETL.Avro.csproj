@@ -14,7 +14,7 @@
     <PackageTags>ETL c# .NET CSV Xml JSON Flat Avro</PackageTags>
     <PackageReleaseNotes>.NET Neutral version</PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.0.9</Version>
+    <Version>1.0.0.10</Version>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>ChoETL.Avro.snk</AssemblyOriginatorKeyFile>
     <PackageIcon>cinchoo.png</PackageIcon>
