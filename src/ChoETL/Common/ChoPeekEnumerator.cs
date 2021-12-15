@@ -170,6 +170,8 @@ namespace ChoETL
             }
             else if (item is IList)
                 return GetMembers(((IList)item).OfType<object>().Select(i => i != null).FirstOrDefault());
+            else if (item.GetType().IsSimple())
+                return new List<KeyValuePair<string, Type>> { new KeyValuePair<string, Type>("Value", item.GetType()) }.ToArray();
             else
                 return item.GetType().GetProperties().Select(kvp => new KeyValuePair<string, Type>(kvp.Name, kvp.PropertyType)).ToArray();
         }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using ChoETL;
 
@@ -10,7 +11,32 @@ namespace ChoETL.Benchmark
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            ToDataTableTest1();
+            ToDataTableFromNullableValueType();
+        }
+
+        static void ToDataTableFromNullableValueType()
+        {
+            List<int?> list = new List<int?>
+            {
+                1,
+                null,
+                2
+            };
+
+            var dt = list.AsDataTable();
+            dt.Print();
+        }
+
+        static void ToDataTableFromValueType()
+        {
+            List<string> list = new List<string>
+            {
+                "Tom",
+                "Mark",
+            };
+
+            var dt = list.AsDataTable();
+            dt.Print();
         }
 
         static void ToDataTableTest1()

@@ -337,10 +337,17 @@ namespace ChoETL
                 }
                 else
                 {
-                    foreach (KeyValuePair<string, Type> kvp in membersInfo)
+                    if (elementType.IsSimple() )
                     {
-                        if (!prop.ContainsKey(kvp.Key))
-                            prop.Add(kvp.Key, new ChoObjectDataReaderProperty(kvp.Key, kvp.Value));
+                            prop.Add("Value", new ChoObjectDataReaderProperty("Value", elementType, true));
+                    }
+                    else
+                    {
+                        foreach (KeyValuePair<string, Type> kvp in membersInfo)
+                        {
+                            if (!prop.ContainsKey(kvp.Key))
+                                prop.Add(kvp.Key, new ChoObjectDataReaderProperty(kvp.Key, kvp.Value));
+                        }
                     }
                 }
             }
@@ -362,6 +369,7 @@ namespace ChoETL
             public readonly Type ProperyType;
             public readonly string MemberName;
             public readonly bool IsNullable;
+            private readonly bool _isSimpleType;
 
             public ChoObjectDataReaderProperty(MemberInfo info)
             {
@@ -380,11 +388,11 @@ namespace ChoETL
                     IsNullable = t.IsNullableType() || t == typeof(string) || t.IsClass();
             }
 
-            public ChoObjectDataReaderProperty(string memberName, Type memberType)
+            public ChoObjectDataReaderProperty(string memberName, Type memberType, bool isSimpleType = false)
             {
                 ChoGuard.ArgumentNotNullOrEmpty(memberName, "MemberName");
                 //ChoGuard.ArgumentNotNullOrEmpty(memberType, "MemberType");
-
+                _isSimpleType = isSimpleType;
                 MemberName = memberName;
                 ProperyType = memberType == null ? typeof(string) : memberType.GetUnderlyingType();
                 IsNullable = true; // memberType == null ? true : memberType.IsNullableType() || memberType == typeof(string) || !memberType.IsValueType;
@@ -405,6 +413,9 @@ namespace ChoETL
 
             public object GetValue(object target)
             {
+                if (_isSimpleType)
+                    return target;
+
                 if (MemberInfo != null)
                     return ChoType.GetMemberValue(target, MemberInfo);
                 else if (target is IDictionary<string, object>) ///ExpandoObject || target is ChoDynamicObject)
