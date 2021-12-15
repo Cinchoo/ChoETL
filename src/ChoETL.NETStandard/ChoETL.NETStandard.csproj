@@ -66,6 +66,7 @@
     <Compile Include="..\ChoETL\Common\Attributes\ChoSourceTypeAttribute.cs" Link="Common\Attributes\ChoSourceTypeAttribute.cs" />
     <Compile Include="..\ChoETL\Common\Attributes\ChoDefaultValueAttribute.cs" Link="Common\Attributes\ChoDefaultValueAttribute.cs" />
     <Compile Include="..\ChoETL\Common\Attributes\ChoKeyValueTypeAttribute.cs" Link="Common\Attributes\ChoKeyValueTypeAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\Attributes\ChoIsNullableAttribute.cs" Link="Common\Attributes\ChoIsNullableAttribute.cs" />
     <Compile Include="..\ChoETL\Common\ChoDisposable.cs" Link="Common\ChoDisposable.cs" />
     <Compile Include="..\ChoETL\Common\ChoFieldTypeAssessor.cs" Link="Common\ChoFieldTypeAssessor.cs" />
     <Compile Include="..\ChoETL\Common\ChoEnum.cs" Link="Common\ChoEnum.cs" />

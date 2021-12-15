@@ -357,7 +357,9 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
             {
                 var dt = r.AsDataTable("Emp");
 
-                using (var w = new ChoParquetWriter("datatable.parquet"))
+                using (var w = new ChoParquetWriter("datatable.parquet")
+                    .Configure(c => c.CompressionMethod = Parquet.CompressionMethod.Gzip)
+                    )
                 {
                     w.Write(dt);
                     w.Close();

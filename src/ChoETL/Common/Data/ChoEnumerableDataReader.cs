@@ -10,6 +10,7 @@ namespace ChoETL
     public interface IChoDeferedObjectMemberDiscoverer
     {
         event EventHandler<ChoEventArgs<IDictionary<string, Type>>> MembersDiscovered;
+        Type ItemType { get; }
     }
 
     public class ChoEnumerableDataReader : ChoObjectDataReader
@@ -127,6 +128,9 @@ namespace ChoETL
 
         private Type GetElementType(IEnumerable collection)
         {
+            if (collection is IChoDeferedObjectMemberDiscoverer)
+                return ((IChoDeferedObjectMemberDiscoverer)collection).ItemType;
+
             Type type = null;
             foreach (Type intface in collection.GetType().GetInterfaces())
             {

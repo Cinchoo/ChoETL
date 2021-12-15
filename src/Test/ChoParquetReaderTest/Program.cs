@@ -105,7 +105,7 @@ namespace ChoParquetReaderTest
                 .Setup(s => s.BeforeRowGroupLoad += (o, e) => e.Skip = e.RowGroupIndex < 2)
                 )
             {
-                r.Take(1).Print(); // Loop();
+                r.Loop();
             }
 
         }
@@ -137,7 +137,34 @@ namespace ChoParquetReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            DB2ParquetTest();
+            ParseLargeParquetTest();
+        }
+
+        static void MissingFieldValueTest()
+        {
+            string csv = @"Id,Name
+1,
+2,Carl
+3,Mark";
+            string parquetFilePath = "missingfieldvalue.parquet";
+            CreateParquetFile(parquetFilePath, csv);
+
+            foreach (dynamic e in new ChoParquetReader(parquetFilePath))
+            {
+                Console.WriteLine(e.Id);
+                Console.WriteLine(e.Name);
+            }
+        }
+
+        static void CreateParquetFile(string parquetFilePath, string csv)
+        {
+            using (var r = ChoCSVReader.LoadText(csv)
+                   .WithFirstLineHeader()
+                  )
+            {
+                using (var w = new ChoParquetWriter(parquetFilePath))
+                    w.Write(r);
+            }
         }
     }
 }

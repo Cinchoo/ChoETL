@@ -104,6 +104,7 @@
   <ItemGroup>
     <Compile Include="Common\Attributes\ChoDataTableColumnTypeAttribute.cs" />
     <Compile Include="Common\Attributes\ChoDictionaryKeyAttribute.cs" />
+    <Compile Include="Common\Attributes\ChoIsNullableAttribute.cs" />
     <Compile Include="Common\Attributes\ChoFieldPositionAttribute.cs" />
     <Compile Include="Common\Attributes\ChoSourceTypeAttribute.cs" />
     <Compile Include="Common\Attributes\ChoMetadataRefTypeAttribute.cs" />

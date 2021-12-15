@@ -103,6 +103,8 @@ namespace ChoETL
             }
         }
 
+        public Type ItemType => typeof(T);
+
         private bool MoveToNext()
         {
             bool ret = false;

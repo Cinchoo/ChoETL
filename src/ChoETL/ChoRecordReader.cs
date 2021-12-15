@@ -24,6 +24,8 @@ namespace ChoETL
             get;
         }
 
+        public Type ItemType => RecordType;
+
         public ChoRecordReader(Type recordType, bool force = true)
         {
             ChoGuard.ArgumentNotNull(recordType, "RecordType");

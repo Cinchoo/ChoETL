@@ -285,7 +285,9 @@ namespace ChoETL
 		private readonly IEnumerable _collection = null;
 		private readonly ChoPeekEnumerator<object> _enumerator = null;
 
-		public ChoStdDeferedObjectMemberDiscoverer(IEnumerable collection)
+        public Type ItemType => _collection != null ? _collection.GetType().GetItemType() : typeof(object);
+
+        public ChoStdDeferedObjectMemberDiscoverer(IEnumerable collection)
 		{
 			_collection = collection;
 			_enumerator = new ChoPeekEnumerator<object>(_collection.OfType<object>(), (Func<object, bool?>)null);

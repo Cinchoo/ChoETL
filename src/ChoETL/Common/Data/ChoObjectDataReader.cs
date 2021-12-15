@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Dynamic;
 using System.Linq;
@@ -325,10 +326,22 @@ namespace ChoETL
 
             if (membersInfo != null)
             {
-                foreach (KeyValuePair<string, Type> kvp in membersInfo)
+                var dict = membersInfo.GroupBy(kvp => kvp.Key).ToDictionary(g => g.Key, g => g.FirstOrDefault());
+                var m = ChoType.GetMembers(elementType).Where(m1 => dict.ContainsKey(m1.Name));
+                if (m.Any())
                 {
-                    if (!prop.ContainsKey(kvp.Key))
-                        prop.Add(kvp.Key, new ChoObjectDataReaderProperty(kvp.Key, kvp.Value));
+                    foreach (var mi in m)
+                    {
+                        prop.Add(mi.Name, new ChoObjectDataReaderProperty(mi));
+                    }
+                }
+                else
+                {
+                    foreach (KeyValuePair<string, Type> kvp in membersInfo)
+                    {
+                        if (!prop.ContainsKey(kvp.Key))
+                            prop.Add(kvp.Key, new ChoObjectDataReaderProperty(kvp.Key, kvp.Value));
+                    }
                 }
             }
             else
@@ -352,7 +365,19 @@ namespace ChoETL
 
             public ChoObjectDataReaderProperty(MemberInfo info)
             {
+                ChoGuard.ArgumentNotNullOrEmpty(info, "MemberInfo");
                 MemberInfo = info;
+                ProperyType = ChoType.GetMemberType(MemberInfo).GetUnderlyingType();
+                var t = ChoType.GetMemberType(MemberInfo);
+                var ra = ChoType.GetAttribute<RequiredAttribute>(info);
+                var na = ChoType.GetAttribute<ChoIsNullableAttribute>(info);
+
+                if (ra != null)
+                    IsNullable = false;
+                else if (na != null)
+                    IsNullable = na.Flag;
+                else
+                    IsNullable = t.IsNullableType() || t == typeof(string) || t.IsClass();
             }
 
             public ChoObjectDataReaderProperty(string memberName, Type memberType)
@@ -370,21 +395,12 @@ namespace ChoETL
 
             public Type GetPropertyType()
             {
-                if (MemberInfo != null)
-                    return ChoType.GetMemberType(MemberInfo).GetUnderlyingType();
-                else
-                    return ProperyType;
+                return ProperyType;
             }
 
             public bool AllowDBNull()
             {
-                if (MemberInfo != null)
-                {
-                    var t = ChoType.GetMemberType(MemberInfo);
-                    return t.IsNullableType() || t == typeof(string);
-                }
-                else
-                    return IsNullable;
+                return IsNullable;
             }
 
             public object GetValue(object target)
