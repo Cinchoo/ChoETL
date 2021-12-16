@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using ChoETL;
-
+using System.Linq;
 
 namespace ChoETL.Benchmark
 {
@@ -11,7 +11,22 @@ namespace ChoETL.Benchmark
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            ToDataTableFromNullableValueType();
+            ToDataTableFromDictionary();
+        }
+
+        static void ToDataTableFromDictionary()
+        {
+            var data = TestClassGenerator.GetTestEnumerable2(100000).Select(e => e.ToSimpleDictionary());
+
+            for (int i = 0; i < 10; i++)
+            {
+                Stopwatch w = Stopwatch.StartNew();
+                var dt = data.AsDataTable();
+                dt.Print();
+                break;
+                w.Stop();
+                w.ElapsedMilliseconds.ToString().Print();
+            }
         }
 
         static void ToDataTableFromNullableValueType()

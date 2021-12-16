@@ -343,18 +343,6 @@ namespace ChoETL
             }
         }
 
-        public static object ToDictionaryInternal(this object target)
-        {
-            if (target == null)
-                return null;
-            else if (target.GetType().IsSimple())
-                return target;
-            else if (target.GetType().IsSimpleSpecial())
-                return target.ToNString();
-            else
-                return target.ToDictionary();
-        }
-
 
         public static Dictionary<TKey, T> ToDictionaryFromObject<T, TKey>(this T target, Func<T, TKey> keySelector)
         {
@@ -381,7 +369,65 @@ namespace ChoETL
             return dict;
         }
 
+        private static object ToDictionaryInternal(this object target, string propName = null)
+        {
+            if (target == null)
+                return null;
+            else if (target.GetType().GetUnderlyingType().IsSimple())
+                return target;
+            else if (target.GetType().GetUnderlyingType().IsSimpleSpecial())
+                return target.ToNString();
+            else
+                return target.ToDictionary(propName);
+        }
         public static Dictionary<string, object> ToDictionary(this object target, string propName = null)
+        {
+            if (target == null)
+                return null;
+
+            //ChoGuard.ArgumentNotNull(target, "Target");
+
+            //if (target is IDictionary<string, object>)
+            //    return (Dictionary<string, object>)target;
+            if (target is IDictionary)
+            {
+                Dictionary<string, object> dict1 = new Dictionary<string, object>();
+                foreach (var kvp in ((IDictionary)target).Keys)
+                {
+                    dict1.Add(kvp.ToNString(), ToDictionaryInternal(((IDictionary)target)[kvp], kvp.ToNString()));
+                }
+                return dict1;
+            }
+            if (target is IEnumerable<KeyValuePair<string, object>>)
+                return new List<KeyValuePair<string, object>>(target as IEnumerable<KeyValuePair<string, object>>).ToDictionary(x => x.Key, x => x.Value.ToDictionaryInternal());
+            if (target is IEnumerable<Tuple<string, object>>)
+                return new List<Tuple<string, object>>(target as IEnumerable<Tuple<string, object>>).ToDictionary(x => x.Item1, x => x.Item2.ToDictionaryInternal());
+            if (target is IList)
+                return ((IList)(target)).OfType<object>().Select((item, index) =>
+                {
+                    return new KeyValuePair<string, object>($"{ChoETLSettings.ValueNamePrefix}{index + ChoETLSettings.ValueNameStartIndex}", item);
+                }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToDictionaryInternal(kvp.Key));
+
+            string propNamex = null;
+            Dictionary<string, object> dict = new Dictionary<string, object>();
+            foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(target.GetType()))
+            {
+                propNamex = pd.GetDisplayName(pd.Name);
+                var value = ChoType.GetPropertyValue(target, pd.Name);
+                if (value == null)
+                    dict.Add(propNamex, value);
+                else if (value.GetType().GetUnderlyingType().IsSimple())
+                    dict.Add(propNamex, value);
+                else if (value.GetType().GetUnderlyingType().IsSimpleSpecial())
+                    dict.Add(propNamex, value.ToNString());
+                else
+                    dict.Add(propNamex, value.ToDictionaryInternal(propNamex));
+            }
+
+            return dict;
+        }
+
+        public static Dictionary<string, object> ToSimpleDictionary(this object target)
         {
             if (target == null)
                 return null;
@@ -400,14 +446,14 @@ namespace ChoETL
                 return dict1;
             }
             if (target is IEnumerable<KeyValuePair<string, object>>)
-                return new List<KeyValuePair<string, object>>(target as IEnumerable<KeyValuePair<string, object>>).ToDictionary(x => x.Key, x => x.Value.ToDictionaryInternal());
+                return new List<KeyValuePair<string, object>>(target as IEnumerable<KeyValuePair<string, object>>).ToDictionary(x => x.Key, x => x.Value);
             if (target is IEnumerable<Tuple<string, object>>)
-                return new List<Tuple<string, object>>(target as IEnumerable<Tuple<string, object>>).ToDictionary(x => x.Item1, x => x.Item2.ToDictionaryInternal());
+                return new List<Tuple<string, object>>(target as IEnumerable<Tuple<string, object>>).ToDictionary(x => x.Item1, x => x.Item2);
             if (target is IList)
                 return ((IList)(target)).OfType<object>().Select((item, index) =>
                 {
                     return new KeyValuePair<string, object>($"{ChoETLSettings.ValueNamePrefix}{index + ChoETLSettings.ValueNameStartIndex}", item);
-                }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToDictionaryInternal());
+                }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
             string propNamex = null;
             Dictionary<string, object> dict = new Dictionary<string, object>();
@@ -417,12 +463,12 @@ namespace ChoETL
                 var value = ChoType.GetPropertyValue(target, pd.Name);
                 if (value == null)
                     dict.Add(propNamex, value);
-                else if (value.GetType().IsSimpleSpecial())
-                    dict.Add(propNamex, value.ToNString());
-                else if (value.GetType().IsSimple())
+                else if (value.GetType().GetUnderlyingType().IsSimple())
                     dict.Add(propNamex, value);
+                else if (value.GetType().GetUnderlyingType().IsSimpleSpecial())
+                    dict.Add(propNamex, value.ToNString());
                 else
-                    dict.Add(propNamex, value.ToDictionary(propNamex));
+                    dict.Add(propNamex, value);
             }
 
             return dict;

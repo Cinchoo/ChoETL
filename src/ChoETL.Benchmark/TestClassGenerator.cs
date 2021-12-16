@@ -34,7 +34,7 @@ namespace ChoETL.Benchmark
             return new TestClass
             {
                 Int = 11,
-                NullableInt = null,
+                NullableInt = 5,
                 String = Guid.NewGuid().ToString(),
                 Guid = Guid.NewGuid(),
                 NullableGuid = null,
@@ -72,6 +72,28 @@ namespace ChoETL.Benchmark
                 {
                     list.Add(GetTestClassType2());
                 }
+            }
+
+            return list;
+        }
+
+        public static IEnumerable<TestClass> GetTestEnumerable1(int num)
+        {
+            var list = new List<TestClass>();
+            for (var i = 0; i < num; i++)
+            {
+                list.Add(GetTestClassType1());
+            }
+
+            return list;
+        }
+
+        public static IEnumerable<TestClass> GetTestEnumerable2(int num)
+        {
+            var list = new List<TestClass>();
+            for (var i = 0; i < num; i++)
+            {
+                list.Add(GetTestClassType2());
             }
 
             return list;
