@@ -17,7 +17,7 @@
     <PackageTags>ETL c# .NET CSV Xml JSON Flat</PackageTags>
     <PackageReleaseNotes>.NET Standard version</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Version>1.2.1.34</Version>
+    <Version>1.2.1.35-beta1</Version>
     <AssemblyName>ChoETL.Core</AssemblyName>
     <RootNamespace>ChoETL</RootNamespace>
     <SignAssembly>true</SignAssembly>
@@ -26,6 +26,10 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>TRACE;NETSTANDARD2_0;_DYNAMIC_</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DefineConstants>$(DefineConstants)TRACE;_DYNAMIC_</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.4.1" />
@@ -66,6 +70,7 @@
     <Compile Include="..\ChoETL\Common\Attributes\ChoSourceTypeAttribute.cs" Link="Common\Attributes\ChoSourceTypeAttribute.cs" />
     <Compile Include="..\ChoETL\Common\Attributes\ChoDefaultValueAttribute.cs" Link="Common\Attributes\ChoDefaultValueAttribute.cs" />
     <Compile Include="..\ChoETL\Common\Attributes\ChoKeyValueTypeAttribute.cs" Link="Common\Attributes\ChoKeyValueTypeAttribute.cs" />
+    <Compile Include="..\ChoETL\Common\Attributes\ChoKnownTypeAttribute.cs" Link="Common\Attributes\ChoKnownTypeAttribute.cs" />
     <Compile Include="..\ChoETL\Common\Attributes\ChoIsNullableAttribute.cs" Link="Common\Attributes\ChoIsNullableAttribute.cs" />
     <Compile Include="..\ChoETL\Common\ChoDisposable.cs" Link="Common\ChoDisposable.cs" />
     <Compile Include="..\ChoETL\Common\ChoFieldTypeAssessor.cs" Link="Common\ChoFieldTypeAssessor.cs" />
@@ -130,6 +135,7 @@
     <Compile Include="..\ChoETL\ChoRecordConfiguration.cs" Link="ChoRecordConfiguration.cs" />
     <Compile Include="..\ChoETL\ChoObjectAttribute.cs" Link="ChoObjectAttribute.cs" />
     <Compile Include="..\ChoETL\ChoTypeConverter.cs" Link="ChoTypeConverter.cs" />
+    <Compile Include="..\ChoETL\Common\Attributes\ChoAllowMultipleAttribute.cs" Link="Common\Attributes\ChoAllowMultipleAttribute.cs" />
     <Compile Include="..\ChoETL\Common\Attributes\ChoFallbackValue.cs" Link="Common\Attributes\ChoFallbackValue.cs" />
     <Compile Include="..\ChoETL\Common\Attributes\ChoMemberAttribute.cs" Link="Common\Attributes\ChoMemberAttribute.cs" />
     <Compile Include="..\ChoETL\Common\Attributes\ChoMemberValueSourceAttribute.cs" Link="Common\Attributes\ChoMemberValueSourceAttribute.cs" />

@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -895,7 +896,7 @@ namespace ChoETL
                                 //else
                                 //{
                                 msg.AppendFormat("{2}\"{0}\":{1}", fieldName, isSimple ? " {0}".FormatString(fieldText) :
-                                    Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization)).Substring(1),
+                                    Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization, fieldConfig)).Substring(1),
                                     Indent(String.Empty));
                                 //}
                             }
@@ -909,7 +910,7 @@ namespace ChoETL
                             else
                             {
                                 msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldName, isSimple ? " {0}".FormatString(fieldText) :
-                                    Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization)).Substring(1),
+                                    Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization, fieldConfig)).Substring(1),
                                     EOLDelimiter, Indent(String.Empty));
                             }
                         }
@@ -919,7 +920,7 @@ namespace ChoETL
             }
             else
             {
-                msg.Append(Indent(SerializeObject(rec, Configuration.UseJSONSerialization)));
+                msg.Append(Indent(SerializeObject(rec, Configuration.UseJSONSerialization, fieldConfig)));
             }
 
             if (!RecordType.IsSimple())
@@ -964,12 +965,28 @@ namespace ChoETL
             }
         }
 
-        private string SerializeObject(object target, bool? useJSONSerialization = null)
+        private string SerializeObject(object target, bool? useJSONSerialization = null, ChoJSONRecordFieldConfiguration config = null)
         {
             bool lUseJSONSerialization = useJSONSerialization == null ? Configuration.UseJSONSerialization : useJSONSerialization.Value;
             if (true) //lUseJSONSerialization)
-                return Configuration.JsonSerializer.SerializeToJToken(target, Configuration.Formatting, Configuration.JsonSerializerSettings,
-                    enableXmlAttributePrefix: Configuration.EnableXmlAttributePrefix).JTokenToString();
+            {
+                IContractResolver contractResolver = config != null ? config.ContractResolver : null;
+                var savedContractResolver = Configuration.JsonSerializer.ContractResolver;
+
+                try
+                {
+                    if (contractResolver != null)
+                        Configuration.JsonSerializer.ContractResolver = contractResolver;
+
+                    return Configuration.JsonSerializer.SerializeToJToken(target, Configuration.Formatting, Configuration.JsonSerializerSettings,
+                        enableXmlAttributePrefix: Configuration.EnableXmlAttributePrefix).JTokenToString();
+                }
+                finally
+                {
+                    if (contractResolver != null)
+                        Configuration.JsonSerializer.ContractResolver = savedContractResolver;
+                }
+            }
             //return JsonConvert.SerializeObject(target, Configuration.Formatting, Configuration.JsonSerializerSettings);
             else
             {

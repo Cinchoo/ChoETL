@@ -794,9 +794,9 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONReader<T> UseDefaultContractResolver(bool flag = true)
+        public ChoJSONReader<T> UseDefaultContractResolver(bool flag = true, Action<ChoPropertyRenameAndIgnoreSerializerContractResolver> setup = null)
         {
-            Configuration.UseDefaultContractResolver(flag);
+            Configuration.UseDefaultContractResolver(flag, setup);
             return this;
         }
 

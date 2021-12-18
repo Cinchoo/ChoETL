@@ -22,8 +22,8 @@ namespace ChoETL.Benchmark
             {
                 Stopwatch w = Stopwatch.StartNew();
                 var dt = data.AsDataTable();
-                dt.Print();
-                break;
+                //dt.Print();
+                //break;
                 w.Stop();
                 w.ElapsedMilliseconds.ToString().Print();
             }

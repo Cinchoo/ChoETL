@@ -435,6 +435,11 @@ namespace ChoETL
             return jTokenReader;
         }
 
+        private IContractResolver GetContractResolver(ChoJSONRecordFieldConfiguration config)
+        {
+            return config == null ? null : config.ContractResolver;
+        }
+
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             object retValue = null;
@@ -483,94 +488,117 @@ namespace ChoETL
             }
             else
             {
-                crs.Name = _fc.Name;
-                crs.FieldConfig = _fc;
-                crs.Record = crs.Record == null ? ChoActivator.CreateInstanceNCache(_mi.ReflectedType) : crs.Record;
-
-                Type mt = ChoType.GetMemberType(_mi);
-                var name = ChoType.GetFieldName(crs.Name);
-                var rec = ChoType.GetMemberObjectMatchingType(name, crs.Record);
-
+                IContractResolver contractResolver = GetContractResolver(_fc as ChoJSONRecordFieldConfiguration);
+                var savedContractResolver = serializer.ContractResolver;
                 try
                 {
+                    if (contractResolver != null)
+                        serializer.ContractResolver = contractResolver;
+
+                    crs.Name = _fc.Name;
+                    crs.FieldConfig = _fc;
+                    crs.Record = crs.Record == null ? ChoActivator.CreateInstanceNCache(_mi.ReflectedType) : crs.Record;
+
+                    Type mt = ChoType.GetMemberType(_mi);
+                    var name = ChoType.GetFieldName(crs.Name);
+                    var rec = ChoType.GetMemberObjectMatchingType(name, crs.Record);
+
                     try
                     {
-                        retValue = JObject.Load(reader);
-                    }
-                    catch
-                    {
-                        if (_fc.ValueConverter == null)
-                            retValue = serializer.Deserialize(reader, objectType);
-                        else
+                        try
                         {
-                            retValue = serializer.Deserialize(reader, typeof(string));
-                            retValue = _fc.ValueConverter(retValue);
+                            retValue = JObject.Load(reader);
+                        }
+                        catch
+                        {
+                            if (_fc.ValueConverter == null)
+                                retValue = serializer.Deserialize(reader, objectType);
+                            else
+                            {
+                                retValue = serializer.Deserialize(reader, typeof(string));
+                                retValue = _fc.ValueConverter(retValue);
+                            }
+
                         }
 
-                    }
-
-                    var st = ChoType.GetMemberAttribute(_mi, typeof(ChoSourceTypeAttribute)) as ChoSourceTypeAttribute;
-                    if (st != null && st.Type != null)
-                        _objType = st.Type;
-                    if (_fc != null && _fc.SourceType != null)
-                        _objType = _fc.SourceType;
-                    else if (_objType.GetImplicitTypeCastOps().Any())
-                    {
-                        bool disableImplcityOp = false;
-                        if (ChoTypeDescriptor.GetTypeAttribute<ChoTurnOffImplicitOpsAttribute>(_objType) != null)
-                            disableImplcityOp = ChoTypeDescriptor.GetTypeAttribute<ChoTurnOffImplicitOpsAttribute>(_objType).Flag;
-
-                        if (!disableImplcityOp)
+                        var st = ChoType.GetMemberAttribute(_mi, typeof(ChoSourceTypeAttribute)) as ChoSourceTypeAttribute;
+                        if (st != null && st.Type != null)
+                            _objType = st.Type;
+                        if (_fc != null && _fc.SourceType != null)
+                            _objType = _fc.SourceType;
+                        else if (_objType.GetImplicitTypeCastOps().Any())
                         {
-                            if (retValue is JToken)
-                            {
-                                var castTypes = _objType.GetImplicitTypeCastOps();
+                            bool disableImplcityOp = false;
+                            if (ChoTypeDescriptor.GetTypeAttribute<ChoTurnOffImplicitOpsAttribute>(_objType) != null)
+                                disableImplcityOp = ChoTypeDescriptor.GetTypeAttribute<ChoTurnOffImplicitOpsAttribute>(_objType).Flag;
 
-                                foreach (var ct in castTypes)
+                            if (!disableImplcityOp)
+                            {
+                                if (retValue is JToken)
                                 {
-                                    try
+                                    var castTypes = _objType.GetImplicitTypeCastOps();
+
+                                    foreach (var ct in castTypes)
                                     {
-                                        retValue = ((JToken)retValue).ToObject(ct);
-                                        break;
+                                        try
+                                        {
+                                            retValue = ((JToken)retValue).ToObject(ct);
+                                            break;
+                                        }
+                                        catch { }
                                     }
-                                    catch { }
                                 }
                             }
                         }
-                    }
 
-                    if (!RaiseBeforeRecordFieldLoad(crs.Record, crs.Index, name, ref retValue))
-                    {
-                        if (_fc != null)
+                        if (!RaiseBeforeRecordFieldLoad(crs.Record, crs.Index, name, ref retValue))
                         {
-                            if (_fc.CustomSerializer == null && retValue is JObject)
+                            if (_fc != null)
                             {
-                                if (_fc.ValueConverter == null)
+                                if (_fc.CustomSerializer == null && retValue is JObject)
                                 {
-                                    if (retValue is JObject)
-                                        retValue = ((JObject)retValue).ToObject(objectType);
+                                    if (_fc.ValueConverter == null)
+                                    {
+                                        if (retValue is JObject)
+                                            retValue = ((JObject)retValue).ToObject(objectType);
+                                    }
+                                    else
+                                        retValue = _fc.ValueConverter(retValue);
                                 }
                                 else
-                                    retValue = _fc.ValueConverter(retValue);
+                                {
+                                    retValue = _fc.CustomSerializer(retValue);
+                                }
+
+                                //ChoETLRecordHelper.DoMemberLevelValidation(retValue, _fc.Name, _fc, _validationMode);
+
+                                if (retValue is JObject && GetTypeConverters(_objType, name).IsNullOrEmpty()) //  ChoTypeDescriptor.GetTypeConverters(_mi).IsNullOrEmpty())
+                                    retValue = ((JObject)retValue).ToObject(objectType);
+
+                                if (retValue != null)
+                                {
+                                    if (_fc != null)
+                                        ChoETLRecordHelper.ConvertMemberValue(rec, name, _fc, ref retValue, _culture);
+                                    else
+                                        retValue = ChoConvert.ConvertFrom(retValue, objectType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
+                                }
+                                ValidateORead(ref retValue);
                             }
                             else
                             {
-                                retValue = _fc.CustomSerializer(retValue);
+                                if (retValue != null)
+                                {
+                                    if (retValue is JObject && GetTypeConverters(_objType, name).IsNullOrEmpty())
+                                        retValue = ((JObject)retValue).ToObject(objectType);
+
+                                    if (_fc != null)
+                                        ChoETLRecordHelper.ConvertMemberValue(rec, name, _fc, ref retValue, _culture);
+                                    else
+                                        retValue = ChoConvert.ConvertFrom(retValue, objectType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
+                                }
+
+                                ValidateORead(ref retValue);
                             }
-
-                            //ChoETLRecordHelper.DoMemberLevelValidation(retValue, _fc.Name, _fc, _validationMode);
-
-                            if (retValue is JObject && GetTypeConverters(_objType, name).IsNullOrEmpty()) //  ChoTypeDescriptor.GetTypeConverters(_mi).IsNullOrEmpty())
-                                retValue = ((JObject)retValue).ToObject(objectType);
-
-                            if (retValue != null)
-                            {
-                                if (_fc != null)
-                                    ChoETLRecordHelper.ConvertMemberValue(rec, name, _fc, ref retValue, _culture);
-                                else
-                                    retValue = ChoConvert.ConvertFrom(retValue, objectType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
-                            }
-                            ValidateORead(ref retValue);
                         }
                         else
                         {
@@ -587,58 +615,48 @@ namespace ChoETL
 
                             ValidateORead(ref retValue);
                         }
+                        if (!RaiseAfterRecordFieldLoad(rec, crs.Index, name, retValue))
+                            return null;
                     }
-                    else
+                    catch (ChoParserException)
                     {
-                        if (retValue != null)
-                        {
-                            if (retValue is JObject && GetTypeConverters(_objType, name).IsNullOrEmpty())
-                                retValue = ((JObject)retValue).ToObject(objectType);
-
-                            if (_fc != null)
-                                ChoETLRecordHelper.ConvertMemberValue(rec, name, _fc, ref retValue, _culture);
-                            else
-                                retValue = ChoConvert.ConvertFrom(retValue, objectType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
-                        }
-
-                        ValidateORead(ref retValue);
-                    }
-                    if (!RaiseAfterRecordFieldLoad(rec, crs.Index, name, retValue))
-                        return null;
-                }
-                catch (ChoParserException)
-                {
-                    Reader.IsValid = false;
-                    throw;
-                }
-                catch (ChoMissingRecordFieldException)
-                {
-                    Reader.IsValid = false;
-                    if (Configuration.ThrowAndStopOnMissingField)
+                        Reader.IsValid = false;
                         throw;
-                }
-                catch (Exception ex)
-                {
-                    Reader.IsValid = false;
-                    ChoETLFramework.HandleException(ref ex);
-
-                    if (_fc.ErrorMode == ChoErrorMode.ThrowAndStop)
-                        throw;
-
-                    if (_fc.ErrorMode == ChoErrorMode.IgnoreAndContinue)
-                    {
-                        ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring field...".FormatString(ex.Message));
                     }
-                    else
+                    catch (ChoMissingRecordFieldException)
                     {
-                        if (!RaiseRecordFieldLoadError(rec, crs.Index, name, ref retValue, ex))
-                        {
+                        Reader.IsValid = false;
+                        if (Configuration.ThrowAndStopOnMissingField)
                             throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        Reader.IsValid = false;
+                        ChoETLFramework.HandleException(ref ex);
+
+                        if (_fc.ErrorMode == ChoErrorMode.ThrowAndStop)
+                            throw;
+
+                        if (_fc.ErrorMode == ChoErrorMode.IgnoreAndContinue)
+                        {
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring field...".FormatString(ex.Message));
                         }
                         else
                         {
+                            if (!RaiseRecordFieldLoadError(rec, crs.Index, name, ref retValue, ex))
+                            {
+                                throw;
+                            }
+                            else
+                            {
+                            }
                         }
                     }
+                }
+                finally
+                {
+                    if (contractResolver != null)
+                        serializer.ContractResolver = savedContractResolver;
                 }
 
                 return retValue; // == reader ? serializer.Deserialize(reader, objectType) : retValue;}
@@ -667,81 +685,95 @@ namespace ChoETL
             crs.FieldConfig = _fc;
             crs.Record = crs.Record == null ? ChoActivator.CreateInstanceNCache(_mi.ReflectedType) : crs.Record;
 
-            Type mt = ChoType.GetMemberType(_mi);
-            var name = ChoType.GetFieldName(crs.Name);
-            var rec = ChoType.GetMemberObjectMatchingType(name, crs.Record);
+            IContractResolver contractResolver = GetContractResolver(_fc as ChoJSONRecordFieldConfiguration);
+            var savedContractResolver = serializer.ContractResolver;
 
-            var st = ChoType.GetMemberAttribute(_mi, typeof(ChoSourceTypeAttribute)) as ChoSourceTypeAttribute;
-            if (st != null && st.Type != null)
-                _objType = st.Type;
-            if (_fc != null && _fc.SourceType != null)
-                _objType = _fc.SourceType;
-
-            if (RaiseBeforeRecordFieldWrite(rec, crs.Index, name, ref value))
+            try
             {
-                if (_fc != null)
+                if (contractResolver != null)
+                    serializer.ContractResolver = contractResolver;
+
+                Type mt = ChoType.GetMemberType(_mi);
+                var name = ChoType.GetFieldName(crs.Name);
+                var rec = ChoType.GetMemberObjectMatchingType(name, crs.Record);
+
+                var st = ChoType.GetMemberAttribute(_mi, typeof(ChoSourceTypeAttribute)) as ChoSourceTypeAttribute;
+                if (st != null && st.Type != null)
+                    _objType = st.Type;
+                if (_fc != null && _fc.SourceType != null)
+                    _objType = _fc.SourceType;
+
+                if (RaiseBeforeRecordFieldWrite(rec, crs.Index, name, ref value))
                 {
                     if (_fc != null)
-                        ChoETLRecordHelper.GetNConvertMemberValue(rec, name, _fc, _culture, ref value);
-                    else
                     {
-                        if (value != null && _objType != null)
-                            value = ChoConvert.ConvertTo(value, _objType, null, _fc.PropConverters, _fc.PropConverterParams, _culture);
-                    }
-
-                    if (_fc.CustomSerializer == null)
-                    {
-                        if (_fc.ValueConverter == null)
+                        if (_fc != null)
+                            ChoETLRecordHelper.GetNConvertMemberValue(rec, name, _fc, _culture, ref value);
+                        else
                         {
-                            var t = serializer.SerializeToJToken(value);
-                            t.WriteTo(writer);
+                            if (value != null && _objType != null)
+                                value = ChoConvert.ConvertTo(value, _objType, null, _fc.PropConverters, _fc.PropConverterParams, _culture);
+                        }
+
+                        if (_fc.CustomSerializer == null)
+                        {
+                            if (_fc.ValueConverter == null)
+                            {
+                                var t = serializer.SerializeToJToken(value);
+                                t.WriteTo(writer);
+                            }
+                            else
+                            {
+                                object retValue = _fc.ValueConverter(value);
+                                ValidateOnWrite(ref retValue);
+
+                                //ChoETLRecordHelper.DoMemberLevelValidation(retValue, _fc.Name, _fc, _validationMode);
+                                JToken t = JToken.FromObject(retValue, serializer);
+                                t.WriteTo(writer);
+                            }
                         }
                         else
                         {
-                            object retValue = _fc.ValueConverter(value);
+                            object retValue = _fc.CustomSerializer(writer);
                             ValidateOnWrite(ref retValue);
-
-                            //ChoETLRecordHelper.DoMemberLevelValidation(retValue, _fc.Name, _fc, _validationMode);
                             JToken t = JToken.FromObject(retValue, serializer);
                             t.WriteTo(writer);
                         }
                     }
                     else
                     {
-                        object retValue = _fc.CustomSerializer(writer);
-                        ValidateOnWrite(ref retValue);
-                        JToken t = JToken.FromObject(retValue, serializer);
-                        t.WriteTo(writer);
+                        if (_fc != null)
+                            ChoETLRecordHelper.GetNConvertMemberValue(rec, name, _fc, _culture, ref value);
+                        else
+                        {
+                            if (value != null && _objType != null)
+                                value = ChoConvert.ConvertTo(value, _objType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
+                        }
+
+                        if (ValidateOnWrite(ref value))
+                        {
+                            var t = serializer.SerializeToJToken(value);
+                            t.WriteTo(writer);
+                        }
+                        else
+                        {
+                            JToken t = JToken.FromObject(null, serializer);
+                            t.WriteTo(writer);
+                        }
                     }
+
+                    RaiseAfterRecordFieldWrite(rec, crs.Index, name, value);
                 }
                 else
                 {
-                    if (_fc != null)
-                        ChoETLRecordHelper.GetNConvertMemberValue(rec, name, _fc, _culture, ref value);
-                    else
-                    {
-                        if (value != null && _objType != null)
-                            value = ChoConvert.ConvertTo(value, _objType, null, ChoTypeDescriptor.GetTypeConverters(_mi), ChoTypeDescriptor.GetTypeConverterParams(_mi), _culture);
-                    }
-
-                    if (ValidateOnWrite(ref value))
-                    {
-                        var t = serializer.SerializeToJToken(value);
-                        t.WriteTo(writer);
-                    }
-                    else
-                    {
-                        JToken t = JToken.FromObject(null, serializer);
-                        t.WriteTo(writer);
-                    }
+                    JToken t = JToken.FromObject(null, serializer);
+                    t.WriteTo(writer);
                 }
-
-                RaiseAfterRecordFieldWrite(rec, crs.Index, name, value);
             }
-            else
+            finally
             {
-                JToken t = JToken.FromObject(null, serializer);
-                t.WriteTo(writer);
+                if (contractResolver != null)
+                    serializer.ContractResolver = savedContractResolver;
             }
         }
 

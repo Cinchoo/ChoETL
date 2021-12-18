@@ -30,7 +30,18 @@ namespace ChoETL
             get;
             set;
         }
+        private Dictionary<string, Type> _knownTypes = new Dictionary<string, Type>(StringComparer.InvariantCultureIgnoreCase);
+        public Dictionary<string, Type> KnownTypes
+        {
+            get { return _knownTypes; }
+            set { _knownTypes = value; }
+        }
 
+        public string KnownTypeDiscriminator
+        {
+            get;
+            set;
+        }
         private Func<object, Type> _recordTypeSelector = null;
         public Func<object, Type> RecordTypeSelector
         {
@@ -327,6 +338,30 @@ namespace ChoETL
             else
             {
             }
+
+            LoadKnownTypes(recordType);
+        }
+
+        private bool _knownTypeInitialized = false;
+        protected void LoadKnownTypes(Type recordType)
+        {
+            if (_knownTypeInitialized)
+                return;
+
+            _knownTypeInitialized = true;
+            if (recordType == null)
+                return;
+
+            if (_knownTypes == null)
+                _knownTypes = new Dictionary<string, Type>(StringComparer.InvariantCultureIgnoreCase);
+
+            _knownTypes = ChoTypeDescriptor.GetTypeAttributes<ChoKnownTypeAttribute>(recordType).Where(a => a.Type != null && !a.Value.IsNullOrWhiteSpace())
+                .GroupBy(kvp => kvp.Value)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.First().Type, _knownTypes.Comparer == null ? StringComparer.InvariantCultureIgnoreCase : _knownTypes.Comparer);
+
+            var kta = ChoTypeDescriptor.GetTypeAttribute<ChoKnownTypeDiscriminatorAttribute>(recordType);
+            if (kta != null && !kta.Discriminator.IsNullOrWhiteSpace())
+                KnownTypeDiscriminator = kta.Discriminator.Trim();
         }
 
         public override void Validate(object state)

@@ -60,7 +60,7 @@ namespace ChoETL
             get;
             set;
         }
-
+ 
         [DataMember]
         public List<ChoJSONRecordFieldConfiguration> JSONRecordFieldConfigurations
         {
@@ -400,12 +400,14 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONRecordConfiguration UseDefaultContractResolver(bool flag = true)
+        public ChoJSONRecordConfiguration UseDefaultContractResolver(bool flag = true, Action<ChoPropertyRenameAndIgnoreSerializerContractResolver> setup = null)
         {
             if (flag)
             {
                 var jsonResolver = new ChoPropertyRenameAndIgnoreSerializerContractResolver(this);
                 JsonSerializerSettings.ContractResolver = jsonResolver;
+                if (setup != null)
+                    setup(jsonResolver);
             }
             else
                 JsonSerializerSettings.ContractResolver = null;
@@ -1041,7 +1043,7 @@ namespace ChoETL
             return this;
         }
 
-        public new ChoJSONRecordConfiguration<T> UseDefaultContractResolver(bool flag = true)
+        public new ChoJSONRecordConfiguration<T> UseDefaultContractResolver(bool flag = true, Action<ChoPropertyRenameAndIgnoreSerializerContractResolver> setup = null)
         {
             base.UseDefaultContractResolver(flag);
             return this;

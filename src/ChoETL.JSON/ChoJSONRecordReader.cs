@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -560,7 +561,8 @@ namespace ChoETL
 
                 if (!_configCheckDone)
                 {
-                    if (Configuration.SupportsMultiRecordTypes && Configuration.RecordTypeSelector != null && !Configuration.RecordTypeMapped)
+                    if (Configuration.SupportsMultiRecordTypes && (Configuration.RecordTypeSelector != null
+                        || !Configuration.KnownTypeDiscriminator.IsNullOrWhiteSpace()) && !Configuration.RecordTypeMapped)
                     {
                     }
                     else
@@ -656,9 +658,25 @@ namespace ChoETL
                 return true;
             }
 
-            if (Configuration.SupportsMultiRecordTypes && Configuration.RecordTypeSelector != null)
+            if (Configuration.SupportsMultiRecordTypes && (Configuration.RecordTypeSelector != null || !Configuration.KnownTypeDiscriminator.IsNullOrWhiteSpace()))
             {
-                Type recType = Configuration.RecordTypeSelector(pair);
+                Type recType = null;
+
+                if (!Configuration.KnownTypeDiscriminator.IsNullOrWhiteSpace())
+                {
+                    if (pair.Item2.ContainsKey(Configuration.KnownTypeDiscriminator))
+                    {
+                        JValue value = pair.Item2[Configuration.KnownTypeDiscriminator] as JValue;
+                        if (value != null && Configuration.KnownTypes != null && Configuration.KnownTypes.ContainsKey(value.ToString()))
+                            recType = Configuration.KnownTypes[value.ToString()];
+                        else if (Configuration.RecordTypeSelector != null)
+                            recType = Configuration.RecordTypeSelector(new Tuple<long, JToken>(pair.Item1, pair.Item2[Configuration.KnownTypeDiscriminator]));
+                    }
+                }
+                else
+                {
+                    recType = Configuration.RecordTypeSelector(pair);
+                }
                 if (recType == null)
                 {
                     if (Configuration.IgnoreIfNoRecordTypeFound)
@@ -676,8 +694,11 @@ namespace ChoETL
                     Configuration.Validate(null);
                 }
 
-                rec = recType.IsDynamicType() ? new ChoDynamicObject() { ThrowExceptionIfPropNotExists = true } : ChoActivator.CreateInstance(recType);
-                RecordType = recType;
+                if (recType != null)
+                {
+                    rec = recType.IsDynamicType() ? new ChoDynamicObject() { ThrowExceptionIfPropNotExists = true } : ChoActivator.CreateInstance(recType);
+                    RecordType = recType;
+                }
             }
             else if (!Configuration.UseJSONSerialization || Configuration.IsDynamicObject)
                 rec = Configuration.IsDynamicObject ? new ChoDynamicObject() { ThrowExceptionIfPropNotExists = true } : ChoActivator.CreateInstance(RecordType);
@@ -1777,49 +1798,62 @@ namespace ChoETL
                     return FillIfKeyValueObject(type, jToken);
                 }
 
-                bool lUseJSONSerialization = useJSONSerialization == null ? Configuration.UseJSONSerialization : useJSONSerialization.Value;
-                if (true) //lUseJSONSerialization)
+                IContractResolver contractResolver = config != null ? config.ContractResolver : null;
+                var savedContractResolver = _se.Value.ContractResolver;
+                try
                 {
+                    if (contractResolver != null)
+                        _se.Value.ContractResolver = contractResolver;
 
-                    if (config.HasConverters())
-                        type = config.SourceType != null ? config.SourceType : typeof(object);
-                    else
-                        type = config.SourceType != null ? config.SourceType : type;
+                    bool lUseJSONSerialization = useJSONSerialization == null ? Configuration.UseJSONSerialization : useJSONSerialization.Value;
+                    if (true) //lUseJSONSerialization)
+                    {
 
-                    return JTokenToObject(jToken, type, _se);
-                }
-                else
-                {
-                    if (type.GetUnderlyingType().IsSimple())
-                    {
-                        if (_se == null || _se.Value == null)
-                            return jToken.ToObject(type);
+                        if (config.HasConverters())
+                            type = config.SourceType != null ? config.SourceType : typeof(object);
                         else
-                            return jToken.ToObject(type, _se.Value);
-                    }
-                    else if (typeof(IDictionary).IsAssignableFrom(type.GetUnderlyingType())
-                        || typeof(IList).IsAssignableFrom(type.GetUnderlyingType())
-                        )
-                    {
-                        if (_se == null || _se.Value == null)
-                            return jToken.ToObject(type);
-                        else
-                            return jToken.ToObject(type, _se.Value);
+                            type = config.SourceType != null ? config.SourceType : type;
+
+                        return JTokenToObject(jToken, type, _se);
                     }
                     else
                     {
-                        try
-                        {
-                            return DeserializeToObject(type, jToken, config);
-                        }
-                        catch
+                        if (type.GetUnderlyingType().IsSimple())
                         {
                             if (_se == null || _se.Value == null)
                                 return jToken.ToObject(type);
                             else
                                 return jToken.ToObject(type, _se.Value);
                         }
+                        else if (typeof(IDictionary).IsAssignableFrom(type.GetUnderlyingType())
+                            || typeof(IList).IsAssignableFrom(type.GetUnderlyingType())
+                            )
+                        {
+                            if (_se == null || _se.Value == null)
+                                return jToken.ToObject(type);
+                            else
+                                return jToken.ToObject(type, _se.Value);
+                        }
+                        else
+                        {
+                            try
+                            {
+                                return DeserializeToObject(type, jToken, config);
+                            }
+                            catch
+                            {
+                                if (_se == null || _se.Value == null)
+                                    return jToken.ToObject(type);
+                                else
+                                    return jToken.ToObject(type, _se.Value);
+                            }
+                        }
                     }
+                }
+                finally
+                {
+                    if (contractResolver != null)
+                        _se.Value.ContractResolver = savedContractResolver;
                 }
             }
         }

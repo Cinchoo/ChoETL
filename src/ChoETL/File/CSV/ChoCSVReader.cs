@@ -608,7 +608,7 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVReader<T> MayContainEOLInData(bool value)
+        public ChoCSVReader<T> MayContainEOLInData(bool value = true)
         {
             Configuration.MayContainEOLInData = value;
             return this;

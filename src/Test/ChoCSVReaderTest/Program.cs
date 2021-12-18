@@ -5406,10 +5406,38 @@ val61, val71";
             }
         }
 
+        static void Issue168()
+        {
+            string csv1 = @"Header1,Header2,Header3
+""Value1"",""Val
+ue2"",""Value3""";
+            string csv2 = @"""Header1"",""Header2"",""Header3""
+""Value1"",""Val
+ue2"",""Value3""";
+            string csv3 = @"Header1,Header2,Header3
+Value1,""Val
+ue2"",Value3";
+
+            using (var r = ChoCSVReader.LoadText(csv1)
+                .WithFirstLineHeader()
+                .MayContainEOLInData(true)
+                .QuoteAllFields())
+                r.Print();
+            using (var r = ChoCSVReader.LoadText(csv2)
+                .WithFirstLineHeader()
+                .MayContainEOLInData(true)
+                .QuoteAllFields())
+                r.Print();
+            using (var r = ChoCSVReader.LoadText(csv3)
+                .WithFirstLineHeader()
+                .MayContainEOLInData(true)
+                .QuoteAllFields())
+                r.Print();
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            DefaultValueTest1();
+            Issue168();
             return;
 
             PositionNeutralCSVLoad();

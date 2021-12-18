@@ -5,7 +5,7 @@ using System.Text;
 namespace ChoETL
 {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-    public class ChoYamlTagMapAttribute : Attribute
+    public class ChoYamlTagMapAttribute : ChoAllowMultipleAttribute
     {
         public string TagMap
         {

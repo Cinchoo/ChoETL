@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -46,6 +47,7 @@ namespace ChoETL
             get { return _fieldTypeSelector; }
             set { if (value == null) return; _fieldTypeSelector = value; }
         }
+        public IContractResolver ContractResolver { get; set; }
 
         public ChoJSONRecordFieldConfiguration(string name, string jsonPath = null) : this(name, (ChoJSONRecordFieldAttribute)null)
         {

@@ -6753,6 +6753,60 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
+        [ChoKnownTypeDiscriminator("is_album")]
+        [ChoKnownType(typeof(GalleryAlbumX), "true")]
+        [ChoKnownType(typeof(GalleryItemX), "false")]
+        public interface IGalleryItemX
+        {
+        }
+
+        public class GalleryItemX : IGalleryItemX
+        {
+            public string id { get; set; }
+            public string title { get; set; }
+            public bool is_album { get; set; }
+        }
+
+        public class GalleryAlbumX : GalleryItemX
+        {
+            public int images_count { get; set; }
+            public List<GalleryImage> images { get; set; }
+        }
+
+        public class GalleryImageX
+        {
+            public string id { get; set; }
+            public string link { get; set; }
+        }
+
+        static void DeserializeToConcreteClasses2()
+        {
+            using (var r = new ChoJSONReader<IGalleryItemX>("Issue151.json")
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                //.Configure(c => c.KnownTypeDiscriminator = "is_album")
+                .Configure(c => c.SupportsMultiRecordTypes = true)
+                )
+            {
+                foreach (var rec in r)
+                    Console.Write(rec.Dump());
+            }
+        }
+
+        static void DeserializeToConcreteClasses3()
+        {
+            using (var r = new ChoJSONReader<IGalleryItemX>("Issue151.json")
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                .Configure(c => c.KnownTypeDiscriminator = "is_album")
+                .Configure(c => c.KnownTypes.Clear())
+                .Configure(c => c.KnownTypes.Add("true", typeof(GalleryAlbumX)))
+                .Configure(c => c.KnownTypes.Add("false", typeof(GalleryItemX)))
+                .Configure(c => c.SupportsMultiRecordTypes = true)
+                )
+            {
+                foreach (var rec in r)
+                    Console.Write(rec.Dump());
+            }
+        }
         static void LoadDuplicateKeys()
         {
             string json = @"
@@ -7839,7 +7893,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            DeserializeToContentStruct();
+
+            DeserializeToConcreteClasses2();
             //DeserializeNestedObjectOfList();
             return;
 

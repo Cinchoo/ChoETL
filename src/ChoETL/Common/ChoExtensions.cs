@@ -835,6 +835,8 @@ namespace ChoETL
                         inQuote = !inQuote;
                     else if (reader.Peek() == quoteChar)
                         inQuote = false;
+                    else
+                        inQuote = true;
                 }
 
                 if (!inQuote)
