@@ -59,6 +59,7 @@
     <None Include="Issue147.json" />
     <None Include="Issue148a.json" />
     <None Include="Issue148.json" />
+    <None Include="Issue152.json" />
     <None Include="Issue151.json" />
     <None Include="klant.json" />
     <None Include="packages.config" />

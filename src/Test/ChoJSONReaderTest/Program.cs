@@ -6779,7 +6779,27 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public string link { get; set; }
         }
 
+        public class RootAlblumX
+        {
+            public string id { get; set; }
+            //[JsonConverter(typeof(ChoKnownTypeConverter<IGalleryItemX>))]
+            public List<IGalleryItemX> albums { get; set; }
+        }
+
         static void DeserializeToConcreteClasses2()
+        {
+            using (var r = new ChoJSONReader<RootAlblumX>("Issue152.json")
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                //.UseJsonSerialization()
+                //.JsonSerializationSettings(s => s.Converters.Add(Activator.CreateInstance<ChoKnownTypeConverter<IGalleryItemX>>()))
+                )
+            {
+                foreach (var rec in r)
+                    Console.Write(rec.Dump());
+            }
+        }
+
+        static void DeserializeToConcreteClasses4()
         {
             using (var r = new ChoJSONReader<IGalleryItemX>("Issue151.json")
                 .ErrorMode(ChoErrorMode.IgnoreAndContinue)

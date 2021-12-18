@@ -54,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ChoJSONConvertersCache.cs" />
+    <Compile Include="ChoDisableAutoDiscoverabilityAttribute.cs" />
     <Compile Include="Converters\ChoCompositeObjectConverter.cs" />
     <Compile Include="Converters\ChoDynamicObjectConverter.cs" />
     <Compile Include="ChoJSONExtensions.cs" />
@@ -72,10 +73,8 @@
     <Compile Include="ChoJSONWriter.cs" />
     <Compile Include="ChoJSONRecordConfigurationMap.cs" />
     <Compile Include="Converters\ByteArrayConverter.cs" />
+    <Compile Include="Converters\ChoKnownTypeConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Libs\Newtonsoft.Json.dll" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ChoETL\ChoETL.csproj">

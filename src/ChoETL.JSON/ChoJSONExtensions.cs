@@ -18,6 +18,20 @@ namespace ChoETL
         {
         }
 
+        public static JsonReader CopyReaderForObject(this JsonReader reader, JToken jToken)
+        {
+            // create reader and copy over settings
+            JsonReader jTokenReader = jToken.CreateReader();
+            jTokenReader.Culture = reader.Culture;
+            jTokenReader.DateFormatString = reader.DateFormatString;
+            jTokenReader.DateParseHandling = reader.DateParseHandling;
+            jTokenReader.DateTimeZoneHandling = reader.DateTimeZoneHandling;
+            jTokenReader.FloatParseHandling = reader.FloatParseHandling;
+            jTokenReader.MaxDepth = reader.MaxDepth;
+            jTokenReader.SupportMultipleContent = reader.SupportMultipleContent;
+            return jTokenReader;
+        }
+
         public static JToken Flatten(this string json)
         {
             JToken input = JToken.Parse(json);

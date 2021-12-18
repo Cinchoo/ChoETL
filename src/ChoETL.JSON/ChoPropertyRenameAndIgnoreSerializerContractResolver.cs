@@ -421,20 +421,6 @@ namespace ChoETL
             return conv;
         }
 
-        public static JsonReader CopyReaderForObject(JsonReader reader, JToken jToken)
-        {
-            // create reader and copy over settings
-            JsonReader jTokenReader = jToken.CreateReader();
-            jTokenReader.Culture = reader.Culture;
-            jTokenReader.DateFormatString = reader.DateFormatString;
-            jTokenReader.DateParseHandling = reader.DateParseHandling;
-            jTokenReader.DateTimeZoneHandling = reader.DateTimeZoneHandling;
-            jTokenReader.FloatParseHandling = reader.FloatParseHandling;
-            jTokenReader.MaxDepth = reader.MaxDepth;
-            jTokenReader.SupportMultipleContent = reader.SupportMultipleContent;
-            return jTokenReader;
-        }
-
         private IContractResolver GetContractResolver(ChoJSONRecordFieldConfiguration config)
         {
             return config == null ? null : config.ContractResolver;
@@ -460,7 +446,7 @@ namespace ChoETL
                     var jo = JObject.Load(reader);
                     try
                     {
-                        using (var jObjectReader = CopyReaderForObject(reader, jo))
+                        using (var jObjectReader = reader.CopyReaderForObject(jo))
                         {
                             return serializer.Deserialize(jObjectReader, objectType);
                         }

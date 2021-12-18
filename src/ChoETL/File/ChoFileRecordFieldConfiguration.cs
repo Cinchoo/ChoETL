@@ -34,6 +34,18 @@ namespace ChoETL
             get;
             set;
         }
+        public new Type FieldType
+        {
+            get { return base.FieldType; }
+            set 
+            {
+                if (base.FieldType != value)
+                {
+                    base.FieldType = value;
+                    LoadKnownTypes(value);
+                }
+            }
+        }
         [DataMember]
         public ChoFieldValueJustification? FieldValueJustification
         {
@@ -80,6 +92,19 @@ namespace ChoETL
             get;
             set;
         }
+        private Dictionary<string, Type> _knownTypes = new Dictionary<string, Type>(StringComparer.InvariantCultureIgnoreCase);
+        public Dictionary<string, Type> KnownTypes
+        {
+            get { return _knownTypes; }
+            set { _knownTypes = value; }
+        }
+
+        public string KnownTypeDiscriminator
+        {
+            get;
+            set;
+        }
+
         public ChoFileRecordFieldConfiguration(string name, ChoFileRecordFieldAttribute attr = null, Attribute[] otherAttrs = null) : base(name, attr, otherAttrs)
         {
             Truncate = true;
@@ -123,6 +148,30 @@ namespace ChoETL
 
                 QuoteField = attr.QuoteFieldInternal;
             }
+        }
+
+        private bool _knownTypeInitialized = false;
+        protected virtual void LoadKnownTypes(Type recordType)
+        {
+            if (_knownTypeInitialized)
+                return;
+
+            //_knownTypeInitialized = true;
+            if (recordType == null)
+                return;
+
+            recordType = recordType.GetItemType();
+
+            if (_knownTypes == null)
+                _knownTypes = new Dictionary<string, Type>(StringComparer.InvariantCultureIgnoreCase);
+
+            _knownTypes = ChoTypeDescriptor.GetTypeAttributes<ChoKnownTypeAttribute>(recordType).Where(a => a.Type != null && !a.Value.IsNullOrWhiteSpace())
+                .GroupBy(kvp => kvp.Value)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.First().Type, _knownTypes.Comparer == null ? StringComparer.InvariantCultureIgnoreCase : _knownTypes.Comparer);
+
+            var kta = ChoTypeDescriptor.GetTypeAttribute<ChoKnownTypeDiscriminatorAttribute>(recordType);
+            if (kta != null && !kta.Discriminator.IsNullOrWhiteSpace())
+                KnownTypeDiscriminator = kta.Discriminator.Trim();
         }
 
         public ChoFieldValueTrimOption GetFieldValueTrimOptionForRead(Type fieldType, ChoFieldValueTrimOption? recordLevelFieldValueTrimOption)

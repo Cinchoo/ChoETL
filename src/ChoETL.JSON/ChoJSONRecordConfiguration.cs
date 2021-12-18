@@ -115,6 +115,18 @@ namespace ChoETL
                         //_jsonSerializerSettings.Converters = GetJSONConverters();
                     }
 
+                    //Attach field converters if any
+                    foreach (var fc in JSONRecordFieldConfigurations)
+                    {
+                        try
+                        {
+                            var conv = fc.GetJsonConverterIfAny();
+                            if (conv != null)
+                                _jsonSerializerSettings.Converters.Add(conv);
+                        }
+                        catch { }
+                    }
+
                     return _jsonSerializerSettings;
                 }
             }
@@ -712,6 +724,8 @@ namespace ChoETL
             RecordFieldConfigurationsDict = JSONRecordFieldConfigurations.Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name);
 
             LoadNCacheMembers(JSONRecordFieldConfigurations);
+
+            //Load converters and attach them to 
         }
 
         #region Fluent API

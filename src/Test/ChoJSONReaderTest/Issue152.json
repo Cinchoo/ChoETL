@@ -1,0 +1,33 @@
+﻿[
+  {
+    "id": "123-22",
+    "albums":
+    [
+      {
+        "id": "OUHDm",
+        "title": "My most recent drawing. Spent over 100 hours.",
+        "is_album": false
+      },
+      {
+        "id": "lDRB2",
+        "title": "Imgur Office",
+        "is_album": true,
+        "images_count": 3,
+        "images": [
+          {
+            "id": "24nLu",
+            "link": "http://i.imgur.com/24nLu.jpg"
+          },
+          {
+            "id": "Ziz25",
+            "link": "http://i.imgur.com/Ziz25.jpg"
+          },
+          {
+            "id": "9tzW6",
+            "link": "http://i.imgur.com/9tzW6.jpg"
+          }
+        ]
+      }
+    ]
+  }
+]

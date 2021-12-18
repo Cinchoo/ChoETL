@@ -131,6 +131,16 @@ namespace ChoETL
             }
         }
 
+        internal JsonConverter GetJsonConverterIfAny()
+        {
+            if (!KnownTypeDiscriminator.IsNullOrWhiteSpace() && KnownTypes.Count > 0)
+            {
+                return new ChoKnownTypeConverter(FieldType.GetItemType(), KnownTypeDiscriminator, KnownTypes, FieldTypeSelector);
+            }
+
+            return null;
+        }
+
         internal void Validate(ChoJSONRecordConfiguration config)
         {
             try

@@ -1758,6 +1758,10 @@ namespace ChoETL
         {
             if (type == null)
                 throw new ArgumentNullException("type");
+
+            if (!typeof(IList).IsAssignableFrom(type))
+                return type;
+
             if (type.IsArray)
                 return type.GetElementType();
 

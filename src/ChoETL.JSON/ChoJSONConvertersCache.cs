@@ -27,6 +27,10 @@ namespace ChoETL
 
                     foreach (var c in convs)
                     {
+                        var dad = ChoTypeDescriptor.GetTypeAttribute<ChoDisableAutoDiscoverabilityAttribute>(c);
+                        if (dad != null && dad.Flag)
+                            continue;
+
                         if (dict.ContainsKey(c.Name))
                             continue;
                         try
