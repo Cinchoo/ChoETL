@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System;
@@ -23,6 +24,20 @@ namespace ChoETL
 {
     public class ChoPropertyRenameAndIgnoreSerializerContractResolver : DefaultContractResolver
     {
+        public static readonly JsonConverter[] BuiltInConverters = new JsonConverter[10]
+        {
+            new EntityKeyMemberConverter(),
+            new ExpandoObjectConverter(),
+            new XmlNodeConverter(),
+            new BinaryConverter(),
+            new DataSetConverter(),
+            new DataTableConverter(),
+            new DiscriminatedUnionConverter(),
+            new KeyValuePairConverter(),
+            new BsonObjectIdConverter(),
+            new RegexConverter()
+        };
+
         private readonly ChoFileRecordConfiguration _configuration;
         public IChoNotifyRecordFieldWrite CallbackRecordFieldWrite
         {
@@ -78,7 +93,7 @@ namespace ChoETL
             var property = base.CreateProperty(member, memberSerialization);
             var propertyFullName = member.GetFullName();
             var propertyName = member.Name;
-            
+
             if (IsIgnored(property.DeclaringType, property.PropertyName, property.UnderlyingName, propertyFullName))
             {
                 property.ShouldSerialize = i => false;
@@ -290,7 +305,7 @@ namespace ChoETL
                 if (dict != null && dict.ContainsKey(propertyName))
                 {
                     newJsonPropertyName = ((ChoFileRecordFieldConfiguration)dict[propertyName]).FieldName;
-                    return true;
+                    return propertyName != newJsonPropertyName;
                 }
             }
 
@@ -299,13 +314,13 @@ namespace ChoETL
             if (rfc.Any(f => f.DeclaringMember == propertyFullName))
             {
                 newJsonPropertyName = rfc.OfType<ChoFileRecordFieldConfiguration>().First(f => f.DeclaringMember == propertyFullName).FieldName;
-                return true;
+                return propertyName != newJsonPropertyName;
             }
 
             if (rfc.Any(f => f.Name == propertyName))
             {
                 newJsonPropertyName = rfc.OfType<ChoFileRecordFieldConfiguration>().First(f => f.Name == propertyName).FieldName;
-                return true;
+                return propertyName != newJsonPropertyName;
             }
 
             var pd = ChoTypeDescriptor.GetProperty(type, propertyName);

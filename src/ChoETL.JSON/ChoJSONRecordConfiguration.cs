@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -112,9 +113,23 @@ namespace ChoETL
                         _jsonSerializerSettings = new JsonSerializerSettings();
                         if (!UseJSONSerialization)
                             _jsonSerializerSettings.ContractResolver = jsonResolver;
+
+                        //Add built-in converters
+                        if (!TurnOffBuiltInJsonConverters)
+                        {
+                            foreach (var conv in ChoPropertyRenameAndIgnoreSerializerContractResolver.BuiltInConverters)
+                            {
+                                try
+                                {
+                                    if (conv != null)
+                                        _jsonSerializerSettings.Converters.Add(conv);
+                                }
+                                catch { }
+                            }
+                        }
+
                         //_jsonSerializerSettings.Converters = GetJSONConverters();
                     }
-
                     //Attach field converters if any
                     foreach (var fc in JSONRecordFieldConfigurations)
                     {
@@ -244,6 +259,8 @@ namespace ChoETL
                     yield return fc;
             }
         }
+
+        public bool TurnOffBuiltInJsonConverters { get; private set; }
 
         public ChoJSONRecordFieldConfiguration this[string name]
         {
@@ -426,7 +443,12 @@ namespace ChoETL
 
             return this;
         }
-
+        public ChoJSONRecordConfiguration ConfigureContractResolver(Action<IContractResolver> setup = null)
+        {
+            if (setup != null && JsonSerializerSettings.ContractResolver != null)
+                setup(JsonSerializerSettings.ContractResolver);
+            return this;
+        }
         public void MapRecordFields()
         {
             RecordType = DiscoverRecordFields(RecordType, false, null, true);

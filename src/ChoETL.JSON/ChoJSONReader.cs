@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -797,6 +798,12 @@ namespace ChoETL
         public ChoJSONReader<T> UseDefaultContractResolver(bool flag = true, Action<ChoPropertyRenameAndIgnoreSerializerContractResolver> setup = null)
         {
             Configuration.UseDefaultContractResolver(flag, setup);
+            return this;
+        }
+
+        public ChoJSONReader<T> ConfigureContractResolver(Action<IContractResolver> setup = null)
+        {
+            Configuration.ConfigureContractResolver(setup);
             return this;
         }
 

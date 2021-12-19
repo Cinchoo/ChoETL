@@ -17,11 +17,12 @@
     <PackageTags>ETL c# .NET CSV Xml JSON Flat</PackageTags>
     <PackageReleaseNotes>.NET Standard version</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Version>1.2.1.35-beta1</Version>
+    <Version>1.2.1.35-beta2</Version>
     <AssemblyName>ChoETL.Core</AssemblyName>
     <RootNamespace>ChoETL</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>ChoETL.NETStandard.snk</AssemblyOriginatorKeyFile>
+    <PackageIcon>cinchoo.png</PackageIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -309,6 +310,12 @@
     <Compile Include="..\ChoETL\File\Xml\ChoXmlReader.cs" Link="File\Xml\ChoXmlReader.cs" />
     <Compile Include="..\ChoETL\IChoNotifyRecordWrite.cs" Link="IChoNotifyRecordWrite.cs" />
     <Compile Include="..\ChoETL\IChoNotifyRecordRead.cs" Link="IChoNotifyRecordRead.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Assets\Icons\cinchoo.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
   
 </Project>

@@ -18,6 +18,7 @@ using DescriptionAttribute = System.ComponentModel.DescriptionAttribute;
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json.Linq;
 using static ChoJSONWriterTest.Program;
+using Newtonsoft.Json.Serialization;
 
 namespace ChoJSONWriterTest
 {
@@ -1539,10 +1540,48 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
             }
         }
 
+        public class MySampleDTO
+        {
+            public Object Data { get; set; }
+            public int SomeInteger { get; set; }
+        }
+
+        static void TurnOffCamelCaseOnDataTable()
+        {
+            string csv = @"Id, Name
+1, Tom
+2, Mark";
+
+            DataTable myDataTable = null;
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader())
+                myDataTable = r.AsDataTable();
+
+            MySampleDTO dto = new MySampleDTO()
+            {
+                Data = myDataTable,
+                SomeInteger = 3
+            };
+
+            using (var w = new ChoJSONWriter<MySampleDTO>(Console.Out)
+                .UseJsonSerialization()
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                .UseDefaultContractResolver(true, c => c.NamingStrategy = new CamelCaseNamingStrategy())
+                //.JsonSerializationSettings(s => s.ContractResolver = new DefaultContractResolver()
+                //{
+                //    NamingStrategy = new CamelCaseNamingStrategy()
+                //})
+                .JsonSerializationSettings(s => s.ReferenceLoopHandling = ReferenceLoopHandling.Ignore)
+                .WithField(f => f.Data, m => m.Value.ContractResolver = new DefaultContractResolver())
+                )
+                w.Write(dto);
+        }
+
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            SerializeEnumAsInt();
+            TurnOffCamelCaseOnDataTable();
 
             return;
 
