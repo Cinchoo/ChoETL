@@ -107,6 +107,9 @@ namespace ChoETL
                 if (!newJsonPropertyName.IsNullOrWhiteSpace())
                     property.PropertyName = newJsonPropertyName;
             }
+            if (NamingStrategy != null)
+                property.PropertyName = NamingStrategy.GetPropertyName(property.PropertyName, false);
+
             RemapToRefTypePropertiesIfAny(property.DeclaringType, propertyName, property);
 
             ChoFileRecordFieldConfiguration fc = null;
