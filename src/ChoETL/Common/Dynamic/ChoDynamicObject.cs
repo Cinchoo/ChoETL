@@ -73,6 +73,7 @@ namespace ChoETL
     public static class ChoDynamicObjectSettings
     {
         public static bool UseOrderedDictionary = true;
+        public static bool UseAutoConverter = true;
     }
 
     [Serializable]
@@ -457,12 +458,23 @@ namespace ChoETL
         {
             return null;
         }
+        protected virtual bool HasTypedProperty(string propName)
+        {
+            return ChoType.HasGetProperty(GetType(), propName);
+        }
 
         #region DynamicObject Overrides
 
         public override bool TryGetMember(GetMemberBinder binder, out object result)
         {
-            return GetPropertyValue(binder.Name, out result);
+            var ret = GetPropertyValue(binder.Name, out result);
+
+            if (ChoDynamicObjectSettings.UseAutoConverter)
+            {
+                //if (!HasTypedProperty(binder.Name))
+                    result = new ChoAutoConverter(result == null ? GetDefaultValue(binder.Name) : result, this);
+            }
+            return ret;
         }
 
         public override bool TrySetMember(SetMemberBinder binder, object value)
@@ -743,10 +755,11 @@ namespace ChoETL
 
             return true;
         }
-
         protected virtual object GetDefaultValue(string name)
         {
-            return ChoType.GetRawDefaultValue(ChoType.GetMemberInfo(GetType(), name));
+            var mi = ChoType.GetMemberInfo(GetType(), name);
+
+            return mi != null ? ChoType.GetRawDefaultValue(mi) : null;
         }
 
         private void Initialize()

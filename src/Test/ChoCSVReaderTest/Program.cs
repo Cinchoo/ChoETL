@@ -5393,8 +5393,13 @@ val61, val71";
 3,Mark";
             foreach (dynamic rec in ChoCSVReader.LoadText(csv).WithFirstLineHeader())
             {
-                Console.WriteLine($"Id: {rec.Id}");
-                Console.WriteLine($"Name: {rec.Name}");
+                var emp = new Emp()
+                {
+                    Id = rec.Id,
+                    Name = rec.Name,
+                };
+                Console.WriteLine($"Id: {emp.Id}");
+                Console.WriteLine($"Name: {emp.Name}");
             }
 
 
@@ -5437,7 +5442,7 @@ ue2"",Value3";
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            Issue168();
+            DynamicTest();
             return;
 
             PositionNeutralCSVLoad();

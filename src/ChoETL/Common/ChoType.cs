@@ -4,6 +4,7 @@
 
     using System;
     using System.Collections;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Collections.Specialized;
@@ -100,6 +101,14 @@
         //    return ChoType.GetAttribute<ChoDynamicRecordAttribute>(type) != null && typeof(IChoDynamicRecord).IsAssignableFrom(type);
         //}
 
+        private static ConcurrentDictionary<Type, object> typeDefaults = new ConcurrentDictionary<Type, object>();
+
+        public static object GetDefaultValue(this Type type)
+        {
+            return type.IsValueType
+               ? typeDefaults.GetOrAdd(type, Activator.CreateInstance)
+               : null;
+        }
         public static string GetDisplayName(this PropertyDescriptor pd, string defaultValue = null)
         {
             if (pd != null)

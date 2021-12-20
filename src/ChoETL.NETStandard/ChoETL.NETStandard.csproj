@@ -102,6 +102,7 @@
     <Compile Include="..\ChoETL\Common\Dynamic\ChoDynamicClassFactory.cs" Link="Common\Dynamic\ChoDynamicClassFactory.cs" />
     <Compile Include="..\ChoETL\Common\Dynamic\ChoExpandoObjectEx.cs" Link="Common\Dynamic\ChoExpandoObjectEx.cs" />
     <Compile Include="..\ChoETL\Common\Dynamic\ChoDynamicObject.cs" Link="Common\Dynamic\ChoDynamicObject.cs" />
+    <Compile Include="..\ChoETL\Common\Dynamic\ChoAutoConverter.cs" Link="Common\Dynamic\ChoAutoConverter.cs" />
     <Compile Include="..\ChoETL\Common\Dynamic\ChoDynamicObjectEqualityComparer.cs" Link="Common\Dynamic\ChoDynamicObjectEqualityComparer.cs" />
     <Compile Include="..\ChoETL\Common\ExtensionMethods\ChoBoolean.cs" Link="Common\ExtensionMethods\ChoBoolean.cs" />
     <Compile Include="..\ChoETL\Common\ExtensionMethods\ChoLinqEx.cs" Link="Common\ExtensionMethods\ChoLinqEx.cs" />
