@@ -895,7 +895,7 @@ namespace ChoETL
                                 //}
                                 //else
                                 //{
-                                msg.AppendFormat("{2}\"{0}\":{1}", fieldName, isSimple ? " {0}".FormatString(fieldText) :
+                                msg.AppendFormat("{2}\"{0}\":{1}", ResolveName(fieldName), isSimple ? " {0}".FormatString(fieldText) :
                                     Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization, fieldConfig)).Substring(1),
                                     Indent(String.Empty));
                                 //}
@@ -909,7 +909,7 @@ namespace ChoETL
                             }
                             else
                             {
-                                msg.AppendFormat(",{2}{3}\"{0}\":{1}", fieldName, isSimple ? " {0}".FormatString(fieldText) :
+                                msg.AppendFormat(",{2}{3}\"{0}\":{1}", ResolveName(fieldName), isSimple ? " {0}".FormatString(fieldText) :
                                     Indent(SerializeObject(fieldValue, fieldConfig.UseJSONSerialization, fieldConfig)).Substring(1),
                                     EOLDelimiter, Indent(String.Empty));
                             }
@@ -936,6 +936,20 @@ namespace ChoETL
             return true;
         }
 
+        private string ResolveName(string name)
+        {
+            if (Configuration.JSONSerializerContractResolver != null && Configuration.JSONSerializerContractResolver.NamingStrategy != null)
+            {
+                return Configuration.JSONSerializerContractResolver.NamingStrategy.GetPropertyName(name, false);
+            }
+            else if (Configuration.JsonSerializerSettings != null && Configuration.JsonSerializerSettings.ContractResolver is DefaultContractResolver
+                && ((DefaultContractResolver)Configuration.JsonSerializerSettings.ContractResolver).NamingStrategy != null)
+            {
+                return ((DefaultContractResolver)Configuration.JsonSerializerSettings.ContractResolver).NamingStrategy.GetPropertyName(name, false);
+            }
+            else
+                return name;
+        }
         private string ToJSONToken(string name)
         {
             return $"\"{name.NTrim()}\"";

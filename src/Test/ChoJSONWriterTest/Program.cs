@@ -1564,15 +1564,15 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
             };
 
             using (var w = new ChoJSONWriter<MySampleDTO>(Console.Out)
-                .UseJsonSerialization()
+                //.UseJsonSerialization()
                 .ErrorMode(ChoErrorMode.IgnoreAndContinue)
-                .UseDefaultContractResolver(true, c => c.NamingStrategy = new CamelCaseNamingStrategy())
-                //.JsonSerializationSettings(s => s.ContractResolver = new DefaultContractResolver()
-                //{
-                //    NamingStrategy = new CamelCaseNamingStrategy()
-                //})
+                //.UseDefaultContractResolver(true, c => c.NamingStrategy = new CamelCaseNamingStrategy())
+                .JsonSerializationSettings(s => s.ContractResolver = new DefaultContractResolver()
+                {
+                    NamingStrategy = new CamelCaseNamingStrategy()
+                })
                 .JsonSerializationSettings(s => s.ReferenceLoopHandling = ReferenceLoopHandling.Ignore)
-                .WithField(f => f.Data, m => m.Value.ContractResolver = new DefaultContractResolver())
+                .WithField(f => f.Data, m => m.Value.ContractResolver = new DefaultContractResolver() )
                 )
                 w.Write(dto);
         }
