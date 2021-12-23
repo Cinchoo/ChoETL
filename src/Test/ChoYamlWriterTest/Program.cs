@@ -368,10 +368,40 @@ namespace ChoYamlWriterTest
             }
         }
 
+        static void Json2Yaml1()
+        {
+            string json = @"{
+   ""swagger"":""2.0"",
+   ""info"":{
+      ""title"":""UberAPI"",
+      ""description"":""MoveyourappforwardwiththeUberAPI"",
+      ""version"":""1.0.0""
+   },
+   ""host"":""api.uber.com"",
+   ""schemes"":[
+      ""https""
+   ],
+   ""basePath"":""/v1"",
+   ""produces"":[
+      ""application/json""
+   ]
+}";
+
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                using (var w = new ChoYamlWriter(Console.Out)
+                    .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                        )
+                {
+                    w.Write(r);
+                }
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            SingleQuoteTest();
+            Json2Yaml1();
             //SerializeValueTypesOneAtATime();
         }
     }

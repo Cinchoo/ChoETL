@@ -100,7 +100,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoETL.SqlServer.Core.Test"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoETL.SqlServer.Core", "..\ChoETL.SqlServer.Core\ChoETL.SqlServer.Core.csproj", "{D0C73EB9-37B7-47C8-B925-362464F25D96}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChoETL.Benchmark", "..\ChoETL.Benchmark\ChoETL.Benchmark.csproj", "{E14BBEC6-453A-4035-A0B3-A9A9BB527482}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChoETL.Benchmark", "..\ChoETL.Benchmark\ChoETL.Benchmark.csproj", "{E14BBEC6-453A-4035-A0B3-A9A9BB527482}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

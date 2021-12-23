@@ -675,14 +675,25 @@ namespace ChoETL
             if (crs == null)
             {
                 var t = serializer.SerializeToJToken(value);
-                t.WriteTo(writer);
-                //serializer.Serialize(writer, value);
+                if (t != null)
+                    t.WriteTo(writer);
+                else
+                    serializer.Serialize(writer, t);
                 return;
             }
 
             if (_fc == null)
             {
                 _fc = GetFieldConfiguration(_mi.ReflectedType, _mi.Name);
+            }
+            if (_fc == null)
+            {
+                var t = serializer.SerializeToJToken(value);
+                if (t != null)
+                    t.WriteTo(writer);
+                else
+                    serializer.Serialize(writer, t);
+                return;
             }
 
             crs.Name = _fc.Name;

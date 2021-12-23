@@ -479,8 +479,11 @@ namespace ChoXmlReaderTest
                 using (var w = new ChoJSONWriter(Console.Out)
                     .SupportMultipleContent(true)
                     .Configure(c => c.DefaultArrayHandling = false)
+                    .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                    .JsonSerializationSettings(s => s.ReferenceLoopHandling = ReferenceLoopHandling.Serialize)
                     )
                 {
+                    //w.Write(r);
                     w.Write(r.Select(r1 =>
                     {
                         IList roles = r1["LegalEntities.LegalEntity.Roles"];

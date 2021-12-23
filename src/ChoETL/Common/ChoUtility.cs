@@ -1600,6 +1600,8 @@ namespace ChoETL
 
             if (@this == null || @this == DBNull.Value)
                 return defaultValue == null ? type.Default() : defaultValue;
+            if (type == @this.GetType())
+                return @this;
             else if (type != typeof(object) && type.IsAssignableFrom(@this.GetType()))
                 return @this;
             else if (@this is string && ((string)@this).IsNullOrWhiteSpace())

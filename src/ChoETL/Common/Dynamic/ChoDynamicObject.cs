@@ -73,7 +73,7 @@ namespace ChoETL
     public static class ChoDynamicObjectSettings
     {
         public static bool UseOrderedDictionary = true;
-        public static bool UseAutoConverter = true;
+        public static bool UseAutoConverter = false;
     }
 
     [Serializable]
