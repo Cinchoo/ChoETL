@@ -196,7 +196,7 @@ namespace ChoETL
                     }
                 }
 
-                foreach (object record in records)
+                foreach (object record in GetRecords(recEnum))
                 {
                     _index++;
 
