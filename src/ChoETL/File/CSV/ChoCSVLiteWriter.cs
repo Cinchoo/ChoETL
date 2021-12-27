@@ -174,13 +174,15 @@ namespace ChoETL
         private void WriteRec(TextWriter writer, char delimiter, string EOLDelimiter, char quoteChar, string doubleQuotesText, string quotesText, string[] rec,
             int lineNo, bool quoteAllFields)
         {
+            string quoteCharText = quoteChar.ToString();
+            string delimiterText = delimiter.ToString();
             WriteLine(lineNo, writer, String.Empty, EOLDelimiter);
             for (int i = 0; i < rec.Length; i++)
             {
                 var str = rec[i];
                 bool quote = false;
 
-                if (str.IndexOf(quoteChar, _stringComparision == null ? StringComparison.Ordinal : _stringComparision.Value) >= 0)
+                if (str.IndexOf(quoteCharText, _stringComparision == null ? StringComparison.Ordinal : _stringComparision.Value) >= 0)
                 {
                     quote = true;
                     str = str.Replace(quotesText, doubleQuotesText);
@@ -189,7 +191,7 @@ namespace ChoETL
                 if (quote == false && EOLDelimiter != null && str.IndexOf(EOLDelimiter, _stringComparision == null ? StringComparison.Ordinal : _stringComparision.Value) >= 0)
                     quote = true;
 
-                if (quote == false && str.IndexOf(delimiter, _stringComparision == null ? StringComparison.Ordinal : _stringComparision.Value) >= 0)
+                if (quote == false && str.IndexOf(delimiterText, _stringComparision == null ? StringComparison.Ordinal : _stringComparision.Value) >= 0)
                     quote = true;
 
                 if (quoteAllFields)
