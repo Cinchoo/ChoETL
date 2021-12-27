@@ -135,6 +135,32 @@
             else
                 return defaultValue;
         }
+        public static string GetDisplayName(this PropertyInfo pd, string defaultValue = null)
+        {
+            if (pd != null)
+            {
+                DisplayNameAttribute dnAttr = ChoType.GetAttribute<DisplayNameAttribute>(pd);
+                if (dnAttr != null && !dnAttr.DisplayName.IsNullOrWhiteSpace())
+                {
+                    return dnAttr.DisplayName.Trim();
+                }
+                else
+                {
+                    DisplayAttribute dpAttr = ChoType.GetAttribute<DisplayAttribute>(pd);
+                    if (dpAttr != null)
+                    {
+                        if (!dpAttr.ShortName.IsNullOrWhiteSpace())
+                            return dpAttr.ShortName.Trim();
+                        else if (!dpAttr.Name.IsNullOrWhiteSpace())
+                            return dpAttr.Name.Trim();
+                    }
+                }
+
+                return defaultValue == null ? pd.Name : defaultValue;
+            }
+            else
+                return defaultValue;
+        }
 
         public static bool IsSpecialCollectionType(this Type type)
         {

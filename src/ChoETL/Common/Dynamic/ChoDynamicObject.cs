@@ -1153,9 +1153,10 @@ namespace ChoETL
             return false;
         }
 
-        public void SetDictionary(IDictionary<string, object> dict)
+        public ChoDynamicObject SetDictionary(IDictionary<string, object> dict)
         {
             _kvpDict = dict;
+            return this;
         }
 
         public bool TryGetValue(string key, out object value)

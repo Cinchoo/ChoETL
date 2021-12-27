@@ -113,6 +113,7 @@
     <Compile Include="Common\Attributes\ChoFieldMapAttribute.cs" />
     <Compile Include="Common\Attributes\MetadataTypeAttribute.cs" />
     <Compile Include="Common\ChoFieldTypeAssessor.cs" />
+    <Compile Include="Common\ChoObjectPool.cs" />
     <Compile Include="Common\ChoResetLazy.cs" />
     <Compile Include="Common\ChoTypeComparerCache.cs" />
     <Compile Include="Common\Collections\ChoOrderedDictionary.cs" />
@@ -126,6 +127,8 @@
     <Compile Include="Common\ExtensionMethods\Linq\ChoLeftJoin.cs" />
     <Compile Include="Common\IChoConvertible.cs" />
     <Compile Include="Common\Xml\ChoXmlConvert.cs" />
+    <Compile Include="File\CSV\ChoCSVLiteWriter.cs" />
+    <Compile Include="File\CSV\ChoCSVLiteReader.cs" />
     <Compile Include="File\CSV\ChoCSVRecordFieldConfigurationMap.cs" />
     <Compile Include="File\CSV\ChoCSVRecordTypeConfiguration.cs" />
     <Compile Include="File\FixedLength\ChoFixedLengthRecordConfigurationMap.cs" />

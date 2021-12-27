@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Collections.Generic;
+using System.IO;
 
 namespace ChoETL.SQLite.NETStandard.Test
 {
@@ -29,13 +30,31 @@ namespace ChoETL.SQLite.NETStandard.Test
 
         static void StageLargeFile()
         {
+            int c = 0;
+            var parser = new ChoCSVLiteReader();
+            Stopwatch w2 = Stopwatch.StartNew();
+            using (var r = new StreamReader(@"..\..\..\..\..\..\data\XBTUSD.csv"))
+            {
+                foreach (var rec in parser.ReadFile(r, ',').Take(1000000))
+                {
+                    //rec.Print();
+                    c++;
+                    if (c % 100000 == 0)
+                        $"Rows loaded: {c}".Print();
+
+                }
+            }
+            w2.Stop();
+            $"StreamReader: {w2.Elapsed}".Print();
+
+
             //ChoTypeDescriptor.DoNotUseTypeConverterForTypes = true;
             for (int i = 2; i < 3; i++)
             {
                 var watch = Stopwatch.StartNew();
                 List<Trade> trades = null;
 
-                using (var r = new ChoCSVReader<Trade>(@"..\..\..\..\..\..\data\XBTUSD.csv")
+                using (var r = new ChoCSVReader(@"..\..\..\..\..\..\data\XBTUSD.csv")
                     .Configure(c => c.NotifyAfter = 100000)
                     .Setup(s => s.RowsLoaded += (o, e) =>
                     {
@@ -46,7 +65,7 @@ namespace ChoETL.SQLite.NETStandard.Test
                 {
                     //r.Take(1).Print();
                     //return;
-                    trades = r.Take(1000).ToList(); //.Count().Print();
+                    var trades1 = r.Take(1000000).ToList(); //.Count().Print();
                     //return;
                     //r.Take(1000000).StageOnSQLite(new ChoETLSqliteSettings()
                     //    .Configure(c => c.ConnectionString = "DataSource=local.db;Version=3;Synchronous=OFF;Journal Mode=OFF")
@@ -60,7 +79,7 @@ namespace ChoETL.SQLite.NETStandard.Test
                 }
                 watch.Stop();
                 watch.Elapsed.Print();
-
+                return;
                 watch = Stopwatch.StartNew();
 
                 trades.StageOnSQLite(new ChoETLSqliteSettings()

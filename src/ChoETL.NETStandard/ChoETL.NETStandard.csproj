@@ -23,6 +23,7 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>ChoETL.NETStandard.snk</AssemblyOriginatorKeyFile>
     <PackageIcon>cinchoo.png</PackageIcon>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -183,6 +184,7 @@
     <Compile Include="..\ChoETL\Common\ChoIterator.cs" Link="Common\ChoIterator.cs" />
     <Compile Include="..\ChoETL\Common\ChoMapReduce.cs" Link="Common\ChoMapReduce.cs" />
     <Compile Include="..\ChoETL\Common\ChoMomentoObject.cs" Link="Common\ChoMomentoObject.cs" />
+    <Compile Include="..\ChoETL\Common\ChoObjectPool.cs" Link="Common\ChoObjectPool.cs" />
     <Compile Include="..\ChoETL\Common\ChoPath.cs" Link="Common\ChoPath.cs" />
     <Compile Include="..\ChoETL\Common\ChoPeekEnumerator.cs" Link="Common\ChoPeekEnumerator.cs" />
     <Compile Include="..\ChoETL\Common\ChoPriorityQueue.cs" Link="Common\ChoPriorityQueue.cs" />
@@ -261,6 +263,8 @@
     <Compile Include="..\ChoETL\File\TSV\ChoTSVReader.cs" Link="File\TSV\ChoTSVReader.cs" />
     <Compile Include="..\ChoETL\File\CSV\ChoCSVWriter.cs" Link="File\CSV\ChoCSVWriter.cs" />
     <Compile Include="..\ChoETL\File\CSV\ChoCSVReader.cs" Link="File\CSV\ChoCSVReader.cs" />
+    <Compile Include="..\ChoETL\File\CSV\ChoCSVLiteReader.cs" Link="File\CSV\ChoCSVLiteReader.cs" />
+    <Compile Include="..\ChoETL\File\CSV\ChoCSVLiteWriter.cs" Link="File\CSV\ChoCSVLiteWriter.cs" />
     <Compile Include="..\ChoETL\File\CSV\ChoCSVRecordReader.cs" Link="File\CSV\ChoCSVRecordReader.cs" />
     <Compile Include="..\ChoETL\File\ChoFileHeaderConfiguration.cs" Link="File\ChoFileHeaderConfiguration.cs" />
     <Compile Include="..\ChoETL\File\CSV\ChoCSVRecordConfiguration.cs" Link="File\CSV\ChoCSVRecordConfiguration.cs" />
