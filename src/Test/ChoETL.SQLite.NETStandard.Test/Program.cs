@@ -18,7 +18,22 @@ namespace ChoETL.SQLite.NETStandard.Test
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            StageLargeFile();
+            CSVToDataTableUsingLiteParser();
+        }
+
+        static void CSVToDataTableUsingLiteParser()
+        {
+            string filePath = @"C:\Projects\GitHub\ChoETL\data\XBTUSD.csv";
+            ChoCSVLiteReader parser = new ChoCSVLiteReader();
+           
+            var items = parser.ReadFile<Trade>(filePath, mapper: (lineNo, cols, rec) =>
+             {
+                 rec.Id = cols[0];
+                 rec.Price = cols[1].CastTo<double>();
+                 rec.Quantity = cols[2].CastTo<double>();
+             }).Take(10);
+            var dt = items.AsDataTable();
+            dt.Print();
         }
 
         public class USDBitCoin
@@ -35,7 +50,7 @@ namespace ChoETL.SQLite.NETStandard.Test
             Stopwatch w2 = Stopwatch.StartNew();
             using (var r = new StreamReader(@"..\..\..\..\..\..\data\XBTUSD.csv"))
             {
-                foreach (var rec in parser.ReadFile(r, ',').Take(1000000))
+                foreach (var rec in parser.Read(r, ',').Take(1000000))
                 {
                     //rec.Print();
                     c++;
@@ -140,7 +155,7 @@ namespace ChoETL.SQLite.NETStandard.Test
     public class Trade
     {
         public string Id { get; set; }
-        public string Price { get; set; }
-        public string Quantity { get; set; }
+        public double Price { get; set; }
+        public double Quantity { get; set; }
     }
 }

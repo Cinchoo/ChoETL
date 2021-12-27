@@ -19,7 +19,7 @@ namespace ChoETL
         fixed char line[MAX_LINE_SIZE];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IEnumerable<T> ReadFile<T>(string filename, bool hasHeader, char delimiter = ',', char quoteChar = '\"', 
+        public IEnumerable<T> ReadFile<T>(string filename, bool hasHeader = false, char delimiter = ',', char quoteChar = '\"', 
             bool mayContainEOLInData = true, Action<int, string[], T> mapper = null) where T : new()
         {
             this.Validate<T>();
@@ -37,7 +37,7 @@ namespace ChoETL
             }
         }
 
-        public IEnumerable<T> Read<T>(StreamReader reader, bool hasHeader, char delimiter = ',', string EOLDelimiter = null, char quoteChar = '\"',
+        public IEnumerable<T> Read<T>(StreamReader reader, bool hasHeader = false, char delimiter = ',', string EOLDelimiter = null, char quoteChar = '\"',
             bool mayContainEOLInData = true, Action<int, string[], T> mapper = null) where T : new()
         {
             this.Validate<T>();
@@ -55,7 +55,7 @@ namespace ChoETL
             }
         }
 
-        public IEnumerable<T> ReadLines<T>(IEnumerable<string> lines, bool hasHeader, char delimiter = ',', char quoteChar = '\"', 
+        public IEnumerable<T> ReadLines<T>(IEnumerable<string> lines, bool hasHeader = false, char delimiter = ',', char quoteChar = '\"', 
             Action<int, string[], T> mapper = null) where T : new()
         {
             this.Validate<T>();
