@@ -31,7 +31,7 @@ namespace ChoETL.SQLite.NETStandard.Test
                  rec.Id = cols[0];
                  rec.Price = cols[1].CastTo<double>();
                  rec.Quantity = cols[2].CastTo<double>();
-             }).Take(10);
+             }).Take(10000);
             var dt = items.AsDataTable();
             dt.Print();
         }
