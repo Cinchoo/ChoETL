@@ -992,7 +992,7 @@ namespace ChoETL
                 if (rec.FillIfCustomSerialization(pair.Item2))
                     return true;
 
-                if (FillIfKeyValueObject(rec, pair.Item2))
+                if (FillIfKeyValueObject(ref rec, pair.Item2))
                     return true;
             }
 
@@ -1693,8 +1693,10 @@ namespace ChoETL
             return null;
         }
 
-        private bool FillIfKeyValueObject(object rec, JToken jObject)
+        private bool FillIfKeyValueObject(ref object rec, JToken jObject)
         {
+            rec = ToObject(jObject, RecordType); //, config.UseJSONSerialization, config);
+            return true;
             if (rec.GetType().GetCustomAttribute<ChoKeyValueTypeAttribute>() != null
                 || typeof(IChoKeyValueType).IsAssignableFrom(rec.GetType()))
             {
@@ -1792,11 +1794,11 @@ namespace ChoETL
             }
             else
             {
-                if (type.GetCustomAttribute<ChoKeyValueTypeAttribute>() != null
-                || typeof(IChoKeyValueType).IsAssignableFrom(type))
-                {
-                    return FillIfKeyValueObject(type, jToken);
-                }
+                //if (type.GetCustomAttribute<ChoKeyValueTypeAttribute>() != null
+                //|| typeof(IChoKeyValueType).IsAssignableFrom(type))
+                //{
+                //    return FillIfKeyValueObject(type, jToken);
+                //}
 
                 IContractResolver contractResolver = config != null ? config.ContractResolver : null;
                 var savedContractResolver = _se.Value.ContractResolver;
@@ -1808,11 +1810,13 @@ namespace ChoETL
                     bool lUseJSONSerialization = useJSONSerialization == null ? Configuration.UseJSONSerialization : useJSONSerialization.Value;
                     if (true) //lUseJSONSerialization)
                     {
-
-                        if (config.HasConverters())
-                            type = config.SourceType != null ? config.SourceType : typeof(object);
-                        else
-                            type = config.SourceType != null ? config.SourceType : type;
+                        if (config != null)
+                        {
+                            if (config.HasConverters())
+                                type = config.SourceType != null ? config.SourceType : typeof(object);
+                            else
+                                type = config.SourceType != null ? config.SourceType : type;
+                        }
 
                         return JTokenToObject(jToken, type, _se);
                     }

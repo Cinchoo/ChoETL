@@ -121,7 +121,7 @@ namespace ChoETL
                             {
                                 try
                                 {
-                                    if (conv != null)
+                                    if (conv != null && !_jsonSerializerSettings.Converters.Contains(conv))
                                         _jsonSerializerSettings.Converters.Add(conv);
                                 }
                                 catch { }
@@ -136,7 +136,7 @@ namespace ChoETL
                         try
                         {
                             var conv = fc.GetJsonConverterIfAny();
-                            if (conv != null)
+                            if (conv != null && !_jsonSerializerSettings.Converters.Contains(conv))
                                 _jsonSerializerSettings.Converters.Add(conv);
                         }
                         catch { }
@@ -167,10 +167,11 @@ namespace ChoETL
             return _JSONConverters.Value;
         }
 
+        private bool? _turnOnAutoDiscoverJsonConverters = null;
         public bool TurnOnAutoDiscoverJsonConverters
         {
-            get { return ChoETLFrxBootstrap.TurnOnAutoDiscoverJsonConverters; }
-            set { ChoETLFrxBootstrap.TurnOnAutoDiscoverJsonConverters = value; }
+            get { return _turnOnAutoDiscoverJsonConverters == null ? ChoETLFrxBootstrap.TurnOnAutoDiscoverJsonConverters : _turnOnAutoDiscoverJsonConverters.Value; }
+            set { _turnOnAutoDiscoverJsonConverters = value; }
         }
 
         private Lazy<JsonSerializer> _JsonSerializer = null;
@@ -636,7 +637,18 @@ namespace ChoETL
             if (_jsonSerializerSettings != null)
             {
                 foreach (var conv in GetJSONConverters())
-                    _jsonSerializerSettings.Converters.Add(conv);
+                {
+                    if (!_jsonSerializerSettings.Converters.Contains(conv))
+                        _jsonSerializerSettings.Converters.Add(conv);
+                }
+                if (TurnOnAutoDiscoverJsonConverters)
+                {
+                    foreach (var conv in ChoJSONConvertersCache.GetAll().Select(kvp => kvp.Value))
+                    {
+                        if (!_jsonSerializerSettings.Converters.Contains(conv))
+                            _jsonSerializerSettings.Converters.Add(conv);
+                    }
+                }
                 foreach (var conv in _jsonSerializerSettings.Converters.OfType<IChoJSONConverter>())
                 {
                     conv.Serializer = JsonSerializer;
@@ -644,7 +656,10 @@ namespace ChoETL
                     conv.Context.Configuration = this;
                 }
                 foreach (var conv in _jsonSerializerSettings.Converters)
-                    JsonSerializer.Converters.Add(conv);
+                {
+                    if (!JsonSerializer.Converters.Contains(conv))
+                        JsonSerializer.Converters.Add(conv);
+                }
             }
 
             if (RecordType != null)

@@ -52,11 +52,11 @@ namespace ChoETL
                 isKVPObject = true;
             else
             {
-                var isKVPAttrDefined = type.GetCustomAttribute<ChoKeyValueTypeAttribute>() != null;
+                var isKVPAttrDefined = ChoTypeDescriptor.GetTypeAttribute<ChoKeyValueTypeAttribute>(type) != null;
                 if (isKVPAttrDefined)
                 {
-                    var kP = type.GetProperties().Where(p => p.GetCustomAttribute<ChoKeyAttribute>() != null).FirstOrDefault();
-                    var vP = type.GetProperties().Where(p => p.GetCustomAttribute<ChoValueAttribute>() != null).FirstOrDefault();
+                    var kP = ChoTypeDescriptor.GetProperties<ChoKeyAttribute>(type).FirstOrDefault();
+                    var vP = ChoTypeDescriptor.GetProperties<ChoValueAttribute>(type).FirstOrDefault();
                     if (kP != null && vP != null)
                         isKVPObject = true;
                 }

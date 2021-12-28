@@ -20,32 +20,29 @@ namespace ChoETL
 
                 Dictionary<string, JsonConverter> dict = new Dictionary<string, JsonConverter>();
 
-                if (ChoETLFrxBootstrap.TurnOnAutoDiscoverJsonConverters)
+                var convs = ChoType.GetAllTypes().Where(t => typeof(JsonConverter).IsAssignableFrom(t) && !t.IsGenericType && ChoType.HasDefaultConstructor(t))
+                    .Distinct().ToArray();
+
+                foreach (var c in convs)
                 {
-                    var convs = ChoType.GetAllTypes().Where(t => typeof(JsonConverter).IsAssignableFrom(t) && !t.IsGenericType && ChoType.HasDefaultConstructor(t))
-                        .Distinct().ToArray();
+                    var dad = ChoTypeDescriptor.GetTypeAttribute<ChoDisableAutoDiscoverabilityAttribute>(c);
+                    if (dad != null && dad.Flag)
+                        continue;
 
-                    foreach (var c in convs)
+                    if (dict.ContainsKey(c.Name))
+                        continue;
+                    try
                     {
-                        var dad = ChoTypeDescriptor.GetTypeAttribute<ChoDisableAutoDiscoverabilityAttribute>(c);
-                        if (dad != null && dad.Flag)
-                            continue;
+                        dict.Add(c.Name, Activator.CreateInstance(c) as JsonConverter);
 
-                        if (dict.ContainsKey(c.Name))
-                            continue;
-                        try
+                        var dna = ChoTypeDescriptor.GetTypeAttribute<DisplayNameAttribute>(c);
+                        if (dna != null && !dna.DisplayName.IsNullOrWhiteSpace())
                         {
-                            dict.Add(c.Name, Activator.CreateInstance(c) as JsonConverter);
-
-                            var dna = ChoTypeDescriptor.GetTypeAttribute<DisplayNameAttribute>(c);
-                            if (dna != null && !dna.DisplayName.IsNullOrWhiteSpace())
-                            {
-                                if (!dict.ContainsKey(dna.DisplayName))
-                                    dict.Add(dna.DisplayName, Activator.CreateInstance(c) as JsonConverter);
-                            }
+                            if (!dict.ContainsKey(dna.DisplayName))
+                                dict.Add(dna.DisplayName, Activator.CreateInstance(c) as JsonConverter);
                         }
-                        catch { }
                     }
+                    catch { }
                 }
 
                 return dict;

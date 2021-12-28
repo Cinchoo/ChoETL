@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -348,7 +349,7 @@ namespace ChoETL
                 {
                     if (lineNo == 0)
                     {
-                        headers = cols;
+                        headers = cols.Select((c, i) => c).ToArray();
                         skip = true;
                         return default(T);
                     }
@@ -360,13 +361,28 @@ namespace ChoETL
                 }
 
                 var recType = typeof(T);
-                if (!headers.IsNullOrEmpty() && recType == typeof(ChoDynamicObject))
+                if (!headers.IsNullOrEmpty() && (recType == typeof(ChoDynamicObject)
+                    || recType == typeof(ExpandoObject)))
                 {
-                    var rec = parser.CreateInstance<T>();
-                    dynamic dObj = rec;
+                    if (recType == typeof(ChoDynamicObject))
+                    {
+                        var rec = parser.CreateInstance<T>();
+                        dynamic dObj = rec;
 
-                    dObj.SetDictionary(new ChoDynamicObject(headers.Select((h, i) => new { Key = h, Value = cols[i] }).ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value)));
-                    return rec;
+                        var dict = headers.Select((h, i) => new { Key = h, Value = cols[i] }).ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value);
+                        dObj.SetDictionary(dict);
+                        return rec;
+                    }
+                    else
+                    {
+                        var expando = parser.CreateInstance<T>();
+                        var expandoDic = (IDictionary<string, object>)expando;
+                        int index = 0;
+                        foreach (var header in headers)
+                            expandoDic.Add(header, cols[index++]);
+
+                        return expando;
+                    }
                 }
                 else
                 {
@@ -412,7 +428,7 @@ namespace ChoETL
         public static void Validate<T>(this IChoLiteParser parser)
         {
             var recType = typeof(T);
-            if (recType != typeof(ChoDynamicObject) && (typeof(IEnumerable).IsAssignableFrom(recType) || typeof(IList).IsAssignableFrom(recType)))
+            if (recType != typeof(ChoDynamicObject) && recType != typeof(ExpandoObject) && (typeof(IEnumerable).IsAssignableFrom(recType) || typeof(IList).IsAssignableFrom(recType)))
                 throw new NotSupportedException($"{recType} is not supported.");
         }
 

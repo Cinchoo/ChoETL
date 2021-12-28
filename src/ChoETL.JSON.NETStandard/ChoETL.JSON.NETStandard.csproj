@@ -50,6 +50,7 @@
     <Compile Include="..\ChoETL.JSON\Converters\ByteArrayConverter.cs" Link="Converters\ByteArrayConverter.cs" />
     <Compile Include="..\ChoETL.JSON\Converters\ChoDynamicObjectConverter.cs" Link="Converters\ChoDynamicObjectConverter.cs" />
     <Compile Include="..\ChoETL.JSON\Converters\ChoCompositeObjectConverter.cs" Link="Converters\ChoCompositeObjectConverter.cs" />
+    <Compile Include="..\ChoETL.JSON\Converters\ChoKeyValueModelConverter.cs" Link="Converters\ChoKeyValueModelConverter.cs" />
     <Compile Include="..\ChoETL.JSON\Converters\ChoKnownTypeConverter.cs" Link="Converters\ChoKnownTypeConverter.cs" />
   </ItemGroup>
 
@@ -59,10 +60,6 @@
   
   <ItemGroup>
     <ProjectReference Include="..\ChoETL.NETStandard\ChoETL.NETStandard.csproj" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Folder Include="Converters\" />
   </ItemGroup>
   
   <ItemGroup>

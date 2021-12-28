@@ -1577,11 +1577,49 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
                 w.Write(dto);
         }
 
+        public class JsonModel1
+        {
+            public string PropertyName { get; set; }
+            public string PropertyValue { get; set; }
+        }
+
+        [ChoKeyValueType]
+        public class JsonModel
+        {
+            [ChoKey]
+            public string PropertyName { get; set; }
+            [ChoValue]
+            public string PropertyValue { get; set; }
+        }
+
+        static void ToKeyValueTypeSerialization()
+        {
+            var entry = new JsonModel { PropertyName = "foo", PropertyValue = "bar" };
+            ChoETLFrxBootstrap.TurnOnAutoDiscoverJsonConverters = true;
+
+            StringBuilder json = new StringBuilder();
+            //using (var w = new ChoJSONWriter<JsonModel>(json))
+            //{
+            //    w.Write(entry);
+            //}
+
+            //json.Print();
+
+            json.Append(@"[
+  {
+    ""foo"": ""bar""
+  }
+]");
+            using (var r = ChoJSONReader<JsonModel>.LoadText(json.ToString()))
+            {
+                r.Print();
+            }
+        }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            TurnOffCamelCaseOnDataTable();
+            ToKeyValueTypeSerialization();
 
             return;
 

@@ -12,6 +12,11 @@ namespace ChoETL
 {
     public static class ChoExpandoObjectEx
     {
+        public static void Print(this ExpandoObject expando)
+        {
+            ((IDictionary<string, object>)expando).Print();
+        }
+
         public static bool IsPropertyExist(this object target, string name)
         {
             if (target is IDictionary<string, object>)

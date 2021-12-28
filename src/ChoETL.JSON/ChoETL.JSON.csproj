@@ -73,6 +73,7 @@
     <Compile Include="ChoJSONWriter.cs" />
     <Compile Include="ChoJSONRecordConfigurationMap.cs" />
     <Compile Include="Converters\ByteArrayConverter.cs" />
+    <Compile Include="Converters\ChoKeyValueModelConverter.cs" />
     <Compile Include="Converters\ChoKnownTypeConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
