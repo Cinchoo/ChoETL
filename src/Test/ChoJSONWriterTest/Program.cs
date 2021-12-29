@@ -1594,22 +1594,25 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
 
         static void ToKeyValueTypeSerialization()
         {
-            var entry = new JsonModel { PropertyName = "foo", PropertyValue = "bar" };
+            var entry1 = new JsonModel { PropertyName = "foo", PropertyValue = "bar" };
+            var entry2 = new JsonModel { PropertyName = "foo1", PropertyValue = "bar1" };
+
             ChoETLFrxBootstrap.TurnOnAutoDiscoverJsonConverters = true;
 
             StringBuilder json = new StringBuilder();
-            //using (var w = new ChoJSONWriter<JsonModel>(json))
-            //{
-            //    w.Write(entry);
-            //}
+            using (var w = new ChoJSONWriter<JsonModel>(json))
+            {
+                w.Write(entry1);
+                w.Write(entry2);
+            }
 
-            //json.Print();
+            json.Print();
 
-            json.Append(@"[
-  {
-    ""foo"": ""bar""
-  }
-]");
+//            json.Append(@"[
+//  {
+//    ""foo"": ""bar""
+//  }
+//]");
             using (var r = ChoJSONReader<JsonModel>.LoadText(json.ToString()))
             {
                 r.Print();

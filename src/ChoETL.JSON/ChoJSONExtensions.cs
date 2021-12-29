@@ -144,7 +144,7 @@ namespace ChoETL
                 Type vt = value != null ? value.GetType() : typeof(object);
                 var convName = GetTypeConverterName(vt);
                 conv = serializer.Converters.Where(c => c.GetType().Name == convName || (c.GetType().IsGenericType && c.GetType().GetGenericArguments()[0] == vt)).FirstOrDefault();
-                if (conv == null && ChoJSONConvertersCache.IsInitialized)
+                if (conv == null)
                 {
                     if (ChoJSONConvertersCache.Contains(convName))
                         conv = ChoJSONConvertersCache.Get(convName);
@@ -216,7 +216,7 @@ namespace ChoETL
         {
             var convName = GetTypeConverterName(objType);
             var conv = serializer.Converters.Where(c => c.GetType().Name == convName || (c.GetType().IsGenericType && c.GetType().GetGenericArguments()[0] == objType)).FirstOrDefault();
-            if (conv == null && ChoJSONConvertersCache.IsInitialized)
+            if (conv == null)
             {
                 if (ChoJSONConvertersCache.Contains(convName))
                     conv = ChoJSONConvertersCache.Get(convName);

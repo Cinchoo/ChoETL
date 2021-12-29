@@ -10,15 +10,17 @@ namespace ChoETL
 {
     public static class ChoJSONConvertersCache
     {
-        public static bool IsInitialized { get; private set; } = false;
+        //public static bool IsInitialized { get; private set; } = false;
         private static readonly object _padLock = new object();
-        private static readonly Lazy<Dictionary<string, JsonConverter>> _convertersCache = new Lazy<Dictionary<string, JsonConverter>>(() =>
+        private static readonly Dictionary<string, JsonConverter> _convertersCache = new Dictionary<string, JsonConverter>();
+
+        public static void Init()
         {
             try
             {
-                IsInitialized = true;
+                //IsInitialized = true;
 
-                Dictionary<string, JsonConverter> dict = new Dictionary<string, JsonConverter>();
+                Dictionary<string, JsonConverter> dict = _convertersCache;
 
                 var convs = ChoType.GetAllTypes().Where(t => typeof(JsonConverter).IsAssignableFrom(t) && !t.IsGenericType && ChoType.HasDefaultConstructor(t))
                     .Distinct().ToArray();
@@ -44,18 +46,10 @@ namespace ChoETL
                     }
                     catch { }
                 }
-
-                return dict;
             }
             catch
             {
-                return null;
             }
-        }, false);
-
-        public static void Init()
-        {
-            var x = _convertersCache.Value;
         }
 
         public static void Add(JsonConverter converter)
@@ -74,18 +68,18 @@ namespace ChoETL
 
             lock (_padLock)
             {
-                if (!_convertersCache.Value.ContainsKey(name))
-                    _convertersCache.Value.Add(name, converter);
+                if (!_convertersCache.ContainsKey(name))
+                    _convertersCache.Add(name, converter);
                 else
-                    _convertersCache.Value[name] = converter;
+                    _convertersCache[name] = converter;
 
                 var dna = ChoTypeDescriptor.GetTypeAttribute<DisplayNameAttribute>(converter.GetType());
                 if (dna != null && !dna.DisplayName.IsNullOrWhiteSpace())
                 {
-                    if (!_convertersCache.Value.ContainsKey(dna.DisplayName))
-                        _convertersCache.Value.Add(dna.DisplayName, converter);
+                    if (!_convertersCache.ContainsKey(dna.DisplayName))
+                        _convertersCache.Add(dna.DisplayName, converter);
                     else
-                        _convertersCache.Value[dna.DisplayName] = converter;
+                        _convertersCache[dna.DisplayName] = converter;
                 }
 
             }
@@ -105,8 +99,8 @@ namespace ChoETL
 
             lock (_padLock)
             {
-                if (_convertersCache.Value.ContainsKey(name))
-                    _convertersCache.Value.Remove(name);
+                if (_convertersCache.ContainsKey(name))
+                    _convertersCache.Remove(name);
             }
         }
 
@@ -124,7 +118,7 @@ namespace ChoETL
 
             lock (_padLock)
             {
-                return _convertersCache.Value.ContainsKey(name);
+                return _convertersCache.ContainsKey(name);
             }
         }
 
@@ -134,8 +128,8 @@ namespace ChoETL
 
             lock (_padLock)
             {
-                if (_convertersCache.Value.ContainsKey(name))
-                    return _convertersCache.Value[name];
+                if (_convertersCache.ContainsKey(name))
+                    return _convertersCache[name];
                 else
                     return null;
             }
@@ -165,7 +159,7 @@ namespace ChoETL
 
             lock (_padLock)
             {
-                var convs = _convertersCache.Value.Values.ToArray();
+                var convs = _convertersCache.Values.ToArray();
                 return convs.Where(c => c.CanConvert(type)).FirstOrDefault();
             }
         }
@@ -174,7 +168,7 @@ namespace ChoETL
         {
             lock (_padLock)
             {
-                return new List<KeyValuePair<string, JsonConverter>>(_convertersCache.Value).ToArray();
+                return new List<KeyValuePair<string, JsonConverter>>(_convertersCache).ToArray();
             }
         }
     }
