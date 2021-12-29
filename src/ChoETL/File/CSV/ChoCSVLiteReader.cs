@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Dynamic;
 using System.IO;
 using System.Linq;
@@ -20,7 +21,7 @@ namespace ChoETL
         fixed char line[MAX_LINE_SIZE];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IEnumerable<T> ReadFile<T>(string filename, bool hasHeader = false, char delimiter = ',', char quoteChar = '\"', 
+        public IEnumerable<T> ReadText<T>(string csv, bool hasHeader = false, char delimiter = ',', char quoteChar = '\"',
             bool mayContainEOLInData = true, Action<int, string[], T> mapper = null) where T : new()
         {
             this.Validate<T>();
@@ -29,9 +30,30 @@ namespace ChoETL
             T rec = default(T);
             bool skip = false;
             string[] headers = null;
+            bool positionalMapping = this.IsPositionalMapping<T>();
+            foreach (var cols in ReadText(csv, delimiter, quoteChar, mayContainEOLInData))
+            {
+                rec = this.Map(lineNo++, cols, mapper, hasHeader, ref skip, ref headers, positionalMapping);
+                if (skip)
+                    continue;
+                yield return rec;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public IEnumerable<T> ReadFile<T>(string filename, bool hasHeader = false, char delimiter = ',', char quoteChar = '\"',
+            bool mayContainEOLInData = true, Action<int, string[], T> mapper = null) where T : new()
+        {
+            this.Validate<T>();
+
+            int lineNo = 0;
+            T rec = default(T);
+            bool skip = false;
+            string[] headers = null;
+            bool positionalMapping = this.IsPositionalMapping<T>();
             foreach (var cols in ReadFile(filename, delimiter, quoteChar, mayContainEOLInData))
             {
-                rec = this.Map(lineNo++, cols, mapper, hasHeader, ref skip, ref headers);
+                rec = this.Map(lineNo++, cols, mapper, hasHeader, ref skip, ref headers, positionalMapping);
                 if (skip)
                     continue;
                 yield return rec;
@@ -42,36 +64,49 @@ namespace ChoETL
             bool mayContainEOLInData = true, Action<int, string[], T> mapper = null) where T : new()
         {
             this.Validate<T>();
-         
+
             int lineNo = 0;
             T rec = default(T);
             bool skip = false;
             string[] headers = null;
+            bool positionalMapping = this.IsPositionalMapping<T>();
             foreach (var cols in Read(reader, delimiter, EOLDelimiter, quoteChar, mayContainEOLInData))
             {
-                rec = this.Map(lineNo++, cols, mapper, hasHeader, ref skip, ref headers);
+                rec = this.Map(lineNo++, cols, mapper, hasHeader, ref skip, ref headers, positionalMapping);
                 if (skip)
                     continue;
                 yield return rec;
             }
         }
 
-        public IEnumerable<T> ReadLines<T>(IEnumerable<string> lines, bool hasHeader = false, char delimiter = ',', char quoteChar = '\"', 
+        public IEnumerable<T> ReadLines<T>(IEnumerable<string> lines, bool hasHeader = false, char delimiter = ',', char quoteChar = '\"',
             Action<int, string[], T> mapper = null) where T : new()
         {
             this.Validate<T>();
-         
+
             int lineNo = 0;
             T rec = default(T);
             bool skip = false;
             string[] headers = null;
+            bool positionalMapping = this.IsPositionalMapping<T>();
             foreach (var cols in ReadLines(lines, delimiter, quoteChar))
             {
-                rec = this.Map(lineNo++, cols, mapper, hasHeader, ref skip, ref headers);
+                rec = this.Map(lineNo++, cols, mapper, hasHeader, ref skip, ref headers, positionalMapping);
                 if (skip)
                     continue;
                 yield return rec;
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public IEnumerable<string[]> ReadText(string csv, char delimiter = ',', char quoteChar = '\"', bool mayContainEOLInData = true)
+        {
+            if (csv.IsNullOrWhiteSpace())
+                return Enumerable.Empty<string[]>();
+
+            this.Validate(delimiter, null, quoteChar);
+
+            return Read(new StreamReader(csv.ToStream()), delimiter, null, quoteChar, mayContainEOLInData);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -287,7 +322,7 @@ namespace ChoETL
                                 columns[col - 1] = columns[col - 1] + new string(l, index, linelen - index);
                             break;
                         }
-                        columns[col++] = l[index] == quoteChar && l[next - index - 1] == quoteChar ?  new string(l, index + 1, next - index - 2) 
+                        columns[col++] = l[index] == quoteChar && l[next - index - 1] == quoteChar ? new string(l, index + 1, next - index - 2)
                             : new string(l, index, next - index);
                         index = next + 1;
                     }
@@ -319,13 +354,15 @@ namespace ChoETL
         }
     }
 
-    internal static class ChoLiteParserEx 
+    internal static class ChoLiteParserEx
     {
-        private readonly static ConcurrentDictionary<Type, PropertyInfo[]> _typeCache = new ConcurrentDictionary<Type, PropertyInfo[]>();
+        private readonly static ConcurrentDictionary<Type, PropertyInfo[]> _propInfoCache = new ConcurrentDictionary<Type, PropertyInfo[]>();
+        private readonly static ConcurrentDictionary<Type, Dictionary<string, PropertyInfo>> _propInfoDictionaryCache = new ConcurrentDictionary<Type, Dictionary<string, PropertyInfo>>();
+        private readonly static ConcurrentDictionary<Type, bool> _positionalMappingTypeCache = new ConcurrentDictionary<Type, bool>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Map<T>(this IChoCSVLiteReader parser, int lineNo, string[] cols, Action<int, string[], T> mapper,
-            bool hasHeader, ref bool skip, ref string[] headers) where T : new()
+            bool hasHeader, ref bool skip, ref string[] headers, bool positionalMapping) where T : new()
         {
             skip = false;
             if (mapper != null)
@@ -361,8 +398,7 @@ namespace ChoETL
                 }
 
                 var recType = typeof(T);
-                if (!headers.IsNullOrEmpty() && (recType == typeof(ChoDynamicObject)
-                    || recType == typeof(ExpandoObject)))
+                if (recType == typeof(ChoDynamicObject) || recType == typeof(ExpandoObject))
                 {
                     if (recType == typeof(ChoDynamicObject))
                     {
@@ -388,12 +424,45 @@ namespace ChoETL
                 {
                     var rec = parser.CreateInstance<T>();
 
-                    PropertyInfo[] props = GetPropertyInfos<T>();
-                    int index = 0;
-                    foreach (var col in cols)
+                    if (positionalMapping)
                     {
-                        var propType = props[index].PropertyType;
-                        ChoType.SetPropertyValue(rec, props[index++], ChoConvert.ConvertTo(col, propType));
+                        PropertyInfo[] props = GetPropertyInfos<T>();
+                        int index = 0;
+                        string col = null;
+                        Type propType = null;
+                        foreach (var prop in props)
+                        {
+                            if (index < cols.Length)
+                            {
+                                propType = props[index].PropertyType;
+                                col = cols[index++];
+                                ChoType.SetPropertyValue(rec, prop, ChoConvert.ConvertTo(col, propType));
+                            }
+                            else
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        Dictionary<string, PropertyInfo> propDict = GetPropertyInfoDictionary<T>();
+
+                        int index = 0;
+                        string col = null;
+                        Type propType = null;
+                        PropertyInfo prop = null;
+                        foreach (var header in headers)
+                        {
+                            if (propDict.ContainsKey(header))
+                            {
+                                prop = propDict[header];
+                                if (prop != null)
+                                {
+                                    propType = prop.PropertyType;
+                                    col = cols[index++];
+                                    ChoType.SetPropertyValue(rec, prop, ChoConvert.ConvertTo(col, propType));
+                                }
+                            }
+                        }
                     }
                     return rec;
                 }
@@ -463,29 +532,69 @@ namespace ChoETL
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsPositionalMapping<T>(this IChoLiteParser parser)
+        {
+            bool flag = false;
+            if (!_positionalMappingTypeCache.TryGetValue(typeof(T), out flag))
+            {
+                var recType = typeof(T);
+                if (recType == typeof(ChoDynamicObject) || recType == typeof(ExpandoObject))
+                    flag = false;
+                else
+                {
+                    var pis = GetPropertyInfos<T>();
+                    flag = !pis.Where(pi => ChoType.GetAttribute<DisplayNameAttribute>(pi) != null || ChoType.GetAttribute<DisplayAttribute>(pi) != null).Any();
+                    _positionalMappingTypeCache.AddOrUpdate(typeof(T), flag);
+                }
+            }
+
+            return flag;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static PropertyInfo[] GetPropertyInfos<T>()
         {
             PropertyInfo[] props = null;
-            if (!_typeCache.TryGetValue(typeof(T), out props))
+            if (!_propInfoCache.TryGetValue(typeof(T), out props))
             {
-                props = ChoType.GetProperties(typeof(T));
-                _typeCache.AddOrUpdate(typeof(T), props);
+                props = ChoType.GetProperties(typeof(T)).OrderBy(pi => ChoType.GetAttribute<ColumnAttribute>(pi) == null ? 0 : ChoType.GetAttribute<ColumnAttribute>(pi).Order).ToArray();
+                _propInfoCache.AddOrUpdate(typeof(T), props);
             }
 
             return props;
         }
-        private static string GetDisplayName(PropertyInfo pd, string defaultValue = null)
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Dictionary<string, PropertyInfo> GetPropertyInfoDictionary<T>()
         {
-            if (pd != null)
+            Dictionary<string, PropertyInfo> propInfoDict = null;
+            if (!_propInfoDictionaryCache.TryGetValue(typeof(T), out propInfoDict))
             {
-                DisplayNameAttribute dnAttr = ChoType.GetAttribute<DisplayNameAttribute>(pd);
+                PropertyInfo[] props = GetPropertyInfos<T>();
+
+                propInfoDict = props.ToDictionary(p => p.GetCustomAttribute<DisplayNameAttribute>() != null ?
+                p.GetCustomAttribute<DisplayNameAttribute>().DisplayName : (p.GetCustomAttribute<DisplayAttribute>() != null ?
+                p.GetCustomAttribute<DisplayAttribute>().Name : p.Name), StringComparer.InvariantCultureIgnoreCase);
+                
+                _propInfoDictionaryCache.AddOrUpdate(typeof(T), propInfoDict);
+            }
+
+            return propInfoDict;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static string GetDisplayName(PropertyInfo pi, string defaultValue = null)
+        {
+            if (pi != null)
+            {
+                DisplayNameAttribute dnAttr = ChoType.GetAttribute<DisplayNameAttribute>(pi);
                 if (dnAttr != null && !dnAttr.DisplayName.IsNullOrWhiteSpace())
                 {
                     return dnAttr.DisplayName.Trim();
                 }
                 else
                 {
-                    DisplayAttribute dpAttr = ChoType.GetAttribute<DisplayAttribute>(pd);
+                    DisplayAttribute dpAttr = ChoType.GetAttribute<DisplayAttribute>(pi);
                     if (dpAttr != null)
                     {
                         if (!dpAttr.ShortName.IsNullOrWhiteSpace())
@@ -495,7 +604,7 @@ namespace ChoETL
                     }
                 }
 
-                return defaultValue == null ? pd.Name : defaultValue;
+                return defaultValue == null ? pi.Name : defaultValue;
             }
             else
                 return defaultValue;

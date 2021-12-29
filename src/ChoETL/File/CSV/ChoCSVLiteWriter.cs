@@ -49,12 +49,23 @@ namespace ChoETL
                 }
             }
         }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write<T>(StreamWriter writer, IEnumerable<T> records, string[] headers = null,
             char delimiter = ',', string EOLDelimiter = null, char quoteChar = '\"',
             Action<int, T, IList<string>> mapper = null, QuoteAllFields quoteAllFields = QuoteAllFields.None) where T : new()
         {
             Write(writer as TextWriter, records, headers, delimiter, EOLDelimiter, quoteChar, mapper, quoteAllFields);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Write<T>(StringBuilder sb, IEnumerable<T> records, string[] headers = null,
+            char delimiter = ',', string EOLDelimiter = null, char quoteChar = '\"',
+            Action<int, T, IList<string>> mapper = null, QuoteAllFields quoteAllFields = QuoteAllFields.None) where T : new()
+        {
+            if (sb == null)
+                throw new ArgumentException("Invalid StringBuilder passed.");
+            Write(new StringWriter(sb), records, headers, delimiter, EOLDelimiter, quoteChar, mapper, quoteAllFields);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
