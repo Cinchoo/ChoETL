@@ -497,6 +497,10 @@ namespace ChoETL
         public static void Validate<T>(this IChoLiteParser parser)
         {
             var recType = typeof(T);
+            if (recType.IsNullableType())
+                throw new NotSupportedException($"{recType} is not supported.");
+            if (recType.IsSimple())
+                throw new NotSupportedException($"{recType} is not supported.");
             if (recType != typeof(ChoDynamicObject) && recType != typeof(ExpandoObject) && (typeof(IEnumerable).IsAssignableFrom(recType) || typeof(IList).IsAssignableFrom(recType)))
                 throw new NotSupportedException($"{recType} is not supported.");
         }
