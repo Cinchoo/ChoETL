@@ -39,6 +39,8 @@ Here are the items will be targetted on phase 1.
   1. CSV Reader / Writer
       + [CSV Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickCSVLoad)
       + [CSV Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickCSVWrite)
+      + [CSV Lite Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickCSVLiteLoad)
+      + [CSV Lite Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickCSVLiteWrite)
   2. Fixed Length Reader / Writer
       + [Fixed Length Reader](https://github.com/Cinchoo/ChoETL/wiki/QuickFixedLengthLoad)
       + [Fixed Length Writer](https://github.com/Cinchoo/ChoETL/wiki/QuickFixedLengthWrite)
@@ -65,6 +67,10 @@ Here are the items will be targetted on phase 1.
 ## Documentation
 
 https://github.com/Cinchoo/ChoETL/wiki
+
+[Cinchoo ETL - CodeProject Articles](https://www.codeproject.com/search.aspx?q=Cinchoo+ETL)
+
+[Cinchoo Medium Site](https://cinchoo.medium.com/)
 
 ## StackOverflow
 
