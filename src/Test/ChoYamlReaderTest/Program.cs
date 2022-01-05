@@ -1138,11 +1138,33 @@ EntityIds:
                     w.Write(r);
             }
         }
+        public class StrInterp
+        {
+            public string Template { get; set; }
+            public IList<object> Args { get; set; }
+        }
+        static void NestedObject()
+        {
+            string yaml = @"Blah: !Str
+  Template: ""My {0} says {1}""
+  Args: [""dog"", !Str { Template: ""{0} and {1}"", Args: [""woof"", ""arf""] }]";
+
+            using (var r = ChoYamlReader<StrInterp>.LoadText(yaml)
+                .WithYamlPath("$Blah")
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                .WithTagMapping("!Str", typeof(StrInterp))
+                )
+            {
+                var x = r.FirstOrDefault();
+                x.Print();
+            }
+        }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            Yaml2JsonTypeIssue();
+            //DeserializeTypedYaml();
+            NestedObject();
             return;
 
             //DeserializeTypedYaml();

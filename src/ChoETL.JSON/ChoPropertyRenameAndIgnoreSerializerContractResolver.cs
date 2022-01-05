@@ -408,18 +408,21 @@ namespace ChoETL
             if (Configuration != null)
             {
                 var lrt = Configuration.GetRecordConfigDictionaryForType(rt);
-                if (lrt == null)
-                    ((ChoJSONRecordConfiguration)Configuration).MapRecordFieldsForType(rt);
+                if (Configuration is ChoJSONRecordConfiguration)
+                {
+                    if (lrt == null)
+                        ((ChoJSONRecordConfiguration)Configuration).MapRecordFieldsForType(rt);
 
-                lrt = Configuration.GetRecordConfigDictionaryForType(rt);
-                if (lrt != null)
-                {
-                    if (lrt.ContainsKey(fn))
-                        return lrt[fn] as ChoJSONRecordFieldConfiguration;
-                }
-                else
-                {
-                    return Configuration.RecordFieldConfigurations.Select(fc => fc.Name == fn).OfType<ChoJSONRecordFieldConfiguration>().FirstOrDefault();
+                    lrt = Configuration.GetRecordConfigDictionaryForType(rt);
+                    if (lrt != null)
+                    {
+                        if (lrt.ContainsKey(fn))
+                            return lrt[fn] as ChoJSONRecordFieldConfiguration;
+                    }
+                    else
+                    {
+                        return Configuration.RecordFieldConfigurations.Select(fc => fc.Name == fn).OfType<ChoJSONRecordFieldConfiguration>().FirstOrDefault();
+                    }
                 }
             }
             return null;

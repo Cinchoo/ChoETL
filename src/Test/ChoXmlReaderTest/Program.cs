@@ -433,7 +433,45 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            Xml2Json1();
+            CDATALoadTest();
+        }
+
+        [XmlRoot(ElementName = "Customer")]
+        public class Customer
+        {
+            [XmlAttribute(AttributeName = "FirstName")]
+            public string FirstName { get; set; }
+            [XmlAttribute(AttributeName = "LastName")]
+            public string LastName { get; set; }
+        }
+
+        [XmlRoot(ElementName = "Request")]
+        public class Request
+        {
+            [XmlElement(ElementName = "Customer")]
+            public Customer Customer { get; set; }
+            [XmlElement(ElementName = "SubRequestXml")]
+            public ChoCDATA SubRequestXml { get; set; }
+            [XmlAttribute(AttributeName = "CustID")]
+            public string CustID { get; set; }
+            [XmlAttribute(AttributeName = "OrderNumber")]
+            public string OrderNumber { get; set; }
+        }
+
+        static void CDATALoadTest()
+        {
+            string xml = @"<Request CustID=""001"" OrderNumber=""FRDGD"">
+    <Customer FirstName=""ABC"" LastName=""XYZ"" ></Customer>
+    <SubRequestXml>
+        <![CDATA[<BCC><Cake_Order=""Cake_N01""/></BCC>]]>
+    </SubRequestXml>
+</Request>";
+
+            using (var r = ChoXmlReader<Request>.LoadText(xml).WithXPath("/")
+                .UseXmlSerialization())
+            {
+                r.FirstOrDefault().SubRequestXml.Value.Print();
+            }
         }
 
         static void Xml2Json1()

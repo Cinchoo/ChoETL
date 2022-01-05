@@ -5439,10 +5439,34 @@ ue2"",Value3";
                 .QuoteAllFields())
                 r.Print();
         }
+
+        public class ScientificNotationdecimal
+        {
+            [ChoTypeConverterParams(Parameters = NumberStyles.Number | NumberStyles.AllowExponent)]
+            public double a { get; set; }
+            [ChoTypeConverterParams(Parameters = NumberStyles.Number | NumberStyles.AllowExponent)]
+            public double b { get; set; }
+        }
+
+        static void ScientificNotationdecimals()
+        {
+            ChoTypeConverterFormatSpec.Instance.LongNumberStyle = NumberStyles.Number | NumberStyles.AllowExponent;
+            string csv = @"a,b
+1.2,3.4
+1.2e-05,7.8";
+
+            using (var r = ChoCSVReader<ScientificNotationdecimal>.LoadText(csv)
+                .WithFirstLineHeader())
+            {
+                var x = r.ToArray();
+                x.Print();
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            DynamicTest();
+            ScientificNotationdecimals();
             return;
 
             PositionNeutralCSVLoad();

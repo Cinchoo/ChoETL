@@ -27,6 +27,9 @@
 
         private static readonly Dictionary<MemberInfo, object[]> _typeMemberTypeConverterParamsCache = new Dictionary<MemberInfo, object[]>();
         private static readonly Dictionary<Type, object[]> _typeTypeConverterParamsCache = new Dictionary<Type, object[]>();
+     
+        private static readonly Dictionary<MemberInfo, object[]> _typeMemberGlobalTypeConverterParamsCache = new Dictionary<MemberInfo, object[]>();
+        
         public static bool DoNotUseTypeConverterForTypes = false;
         public static bool DoNotDiscoverTypeConverterForTypes = false;
 
@@ -310,6 +313,21 @@
                 }
             }
 
+            if (_typeMemberGlobalTypeConverterParamsCache.ContainsKey(memberInfo))
+                return _typeMemberGlobalTypeConverterParamsCache[memberInfo];
+
+            lock (_typeMemberTypeConverterCacheLockObject)
+            {
+                if (_typeMemberGlobalTypeConverterParamsCache.ContainsKey(memberInfo))
+                    return _typeMemberGlobalTypeConverterParamsCache[memberInfo];
+
+                foreach (var attribute in GetPropetyAttributes<ChoTypeConverterParamsAttribute>(memberInfo.ReflectedType, memberInfo.Name).Where(a => a.Parameters != null))
+                {
+                    _typeMemberGlobalTypeConverterParamsCache.Add(memberInfo, new object[] { attribute.ParametersObject });
+                    return _typeMemberGlobalTypeConverterParamsCache[memberInfo];
+                }
+            }
+
             return EmptyParams;
         }
 
@@ -360,9 +378,9 @@
                         int index = 0;
                         SortedList<int, object> queue = new SortedList<int, object>();
                         SortedList<int, object> paramsQueue = new SortedList<int, object>();
-                        foreach (Attribute attribute in GetPropetyAttributes<ChoTypeConverterAttribute>(memberInfo.ReflectedType, memberInfo.Name))  //ChoType.GetMemberAttributesByBaseType(memberInfo, typeof(ChoTypeConverterAttribute)))
+                        foreach (var attribute in GetPropetyAttributes<ChoTypeConverterAttribute>(memberInfo.ReflectedType, memberInfo.Name).Where(a => a.ConverterType != null))  //ChoType.GetMemberAttributesByBaseType(memberInfo, typeof(ChoTypeConverterAttribute)))
                         {
-                            ChoTypeConverterAttribute converterAttribute = (ChoTypeConverterAttribute)attribute;
+                            ChoTypeConverterAttribute converterAttribute = attribute;
                             if (converterAttribute != null)
                             {
                                 if (converterAttribute.PriorityInternal == null)
@@ -445,9 +463,9 @@
             int index = 0;
             SortedList<int, object> queue = new SortedList<int, object>();
             SortedList<int, object> paramsQueue = new SortedList<int, object>();
-            foreach (Attribute attribute in GetPropetyAttributes<ChoTypeConverterAttribute>(pd))
+            foreach (var attribute in GetPropetyAttributes<ChoTypeConverterAttribute>(pd).Where(a => a.ConverterType != null))
             {
-                ChoTypeConverterAttribute converterAttribute = (ChoTypeConverterAttribute)attribute;
+                ChoTypeConverterAttribute converterAttribute = attribute;
                 if (converterAttribute != null)
                 {
                     if (converterAttribute.PriorityInternal == null)
@@ -482,9 +500,9 @@
             int index = 0;
             SortedList<int, object> queue = new SortedList<int, object>();
             SortedList<int, object> paramsQueue = new SortedList<int, object>();
-            foreach (Attribute attribute in GetPropetyAttributes<ChoTypeConverterAttribute>(pd))
+            foreach (var attribute in GetPropetyAttributes<ChoTypeConverterAttribute>(pd).Where(a => a.ConverterType != null))
             {
-                ChoTypeConverterAttribute converterAttribute = (ChoTypeConverterAttribute)attribute;
+                ChoTypeConverterAttribute converterAttribute = attribute;
                 if (converterAttribute != null)
                 {
                     if (converterAttribute.PriorityInternal == null)
@@ -535,7 +553,7 @@
                             return _typeTypeConverterCache[type];
                         }
 
-                        Type[] types = ChoType.GetTypes(typeof(ChoTypeConverterAttribute)).Where(t => t.GetCustomAttribute<ChoTypeConverterAttribute>().ConverterType.IsAssignableFrom(objType)).ToArray();
+                        Type[] types = ChoType.GetTypes(typeof(ChoTypeConverterAttribute)).Where(t => t.GetCustomAttribute<ChoTypeConverterAttribute>().ConverterType != null && t.GetCustomAttribute<ChoTypeConverterAttribute>().ConverterType.IsAssignableFrom(objType)).ToArray();
 
                         if (types != null)
                         {

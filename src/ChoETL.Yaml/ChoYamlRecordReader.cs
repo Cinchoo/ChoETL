@@ -217,20 +217,14 @@ namespace ChoETL
                                     yield return item1 as IDictionary<string, object>;
                                 else
                                 {
-                                    dynamic v = new ChoDynamicObject();
-                                    v.Value = item1;
-
-                                    yield return v;
+                                    yield return new Dictionary<string, object>() { { TYPED_VALUE, value } };
 
                                 }
                             }
                         }
                         else if (value != null)
                         {
-                            dynamic v = new ChoDynamicObject();
-                            v.Value = value;
-
-                            yield return v;
+                            yield return new Dictionary<string, object>() { { TYPED_VALUE, value } };
                         }
                         else
                             yield return null;

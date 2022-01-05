@@ -63,7 +63,7 @@
 
         void IXmlSerializable.ReadXml(System.Xml.XmlReader reader)
         {
-            _text = reader.ReadElementContentAsString();
+            _text = reader.ReadElementContentAsString().NTrim();
         }
 
         #endregion

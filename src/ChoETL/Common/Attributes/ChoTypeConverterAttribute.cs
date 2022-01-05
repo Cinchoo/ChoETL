@@ -7,6 +7,7 @@
     using System.ComponentModel;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Collections;
 
     #endregion
 
@@ -27,23 +28,27 @@
         {
             get { return _converterType; }
         }
-
+        private object _parametersObject;
         internal object ParametersObject
         {
             get
             {
+                if (_parametersObject != null)
+                    return _parametersObject;
+
                 if (ParametersDict != null && ParametersDict.Count > 0)
                     return ParametersDict;
                 else
                     return ParametersArray;
             }
+            set { _parametersObject = value; }
         }
         internal object[] ParametersArray { get; set; }
 
         internal IDictionary<string, string> ParametersDict { get; set; }
 
-        private string _parameters;
-        public string Parameters
+        private object _parameters;
+        public object Parameters
         {
             get { return _parameters; }
             set
@@ -51,17 +56,20 @@
                 if (_parameters != value)
                 {
                     _parameters = value;
-                    if (value != null)
+                    if (value is string)
                     {
-                        if (value.Contains("="))
+                        string val = value as string;
+                        if (val.Contains("="))
                         {
-                            ParametersDict = value.ToKeyValuePairs().ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.InvariantCultureIgnoreCase);
+                            ParametersDict = val.ToKeyValuePairs().ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.InvariantCultureIgnoreCase);
                         }
                         else
-                            ParametersArray = value.SplitNTrim(new char[] { ',', ';' }, ChoStringSplitOptions.None, '\'').AsTypedEnumerable<object>().ToArray();
+                            ParametersArray = val.SplitNTrim(new char[] { ',', ';' }, ChoStringSplitOptions.None, '\'').AsTypedEnumerable<object>().ToArray();
                     }
-                    else
-                        ParametersArray = null;
+                    else if (value is IList)
+                        ParametersArray = ((IList)value).OfType<object>().ToArray();
+                    else if (value != null)
+                        ParametersObject = value;
                 }
             }
         }
@@ -158,5 +166,58 @@
         }
 
         #endregion Constructors
+    }
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
+    public class ChoTypeConverterParamsAttribute : Attribute
+    {
+        #region Instance Properties
+
+        private object _parametersObject;
+        internal object ParametersObject
+        {
+            get
+            {
+                if (_parametersObject != null)
+                    return _parametersObject;
+
+                if (ParametersDict != null && ParametersDict.Count > 0)
+                    return ParametersDict;
+                else
+                    return ParametersArray;
+            }
+            set { _parametersObject = value; }
+        }
+        internal object[] ParametersArray { get; set; }
+
+        internal IDictionary<string, string> ParametersDict { get; set; }
+
+        private object _parameters;
+        public object Parameters
+        {
+            get { return _parameters; }
+            set
+            {
+                if (_parameters != value)
+                {
+                    _parameters = value;
+                    if (value is string)
+                    {
+                        string val = value as string;
+                        if (val.Contains("="))
+                        {
+                            ParametersDict = val.ToKeyValuePairs().ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.InvariantCultureIgnoreCase);
+                        }
+                        else
+                            ParametersArray = val.SplitNTrim(new char[] { ',', ';' }, ChoStringSplitOptions.None, '\'').AsTypedEnumerable<object>().ToArray();
+                    }
+                    else if (value is IList)
+                        ParametersArray = ((IList)value).OfType<object>().ToArray();
+                    else if (value != null)
+                        ParametersObject = value;
+                }
+            }
+        }
+
+        #endregion Instance Properties
     }
 }
