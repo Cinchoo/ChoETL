@@ -33,6 +33,9 @@ namespace ChoETL
 
         public event EventHandler<ChoRecordFieldSerializeEventArgs> RecordFieldDeserialize;
 
+        protected long _recordNumber;
+        public long RecordNumber { get => _recordNumber; }
+
         protected void CheckDisposed()
         {
             if (_isDisposed)

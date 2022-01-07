@@ -550,12 +550,17 @@ namespace ChoETL
                 {
                     if (Configuration.IsDynamicObject)
                     {
-                        if (Configuration.FileHeaderConfiguration.IgnoreHeader)
-                            fieldValue = dict.ContainsKey(kvp.Key) ? dict[kvp.Key] :
-                                fieldConfig.FieldPosition > 0 && fieldConfig.FieldPosition - 1 < dict.Keys.Count
-                                && Configuration.RecordFieldConfigurationsDict.Count == dict.Keys.Count ? dict[dict.Keys.ElementAt(fieldConfig.FieldPosition - 1)] : null; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
+                        if (fieldConfig.Expr == null)
+                        {
+                            if (Configuration.FileHeaderConfiguration.IgnoreHeader)
+                                fieldValue = dict.ContainsKey(kvp.Key) ? dict[kvp.Key] :
+                                    fieldConfig.FieldPosition > 0 && fieldConfig.FieldPosition - 1 < dict.Keys.Count
+                                    && Configuration.RecordFieldConfigurationsDict.Count == dict.Keys.Count ? dict[dict.Keys.ElementAt(fieldConfig.FieldPosition - 1)] : null; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
+                            else
+                                fieldValue = dict.ContainsKey(kvp.Key) ? dict[kvp.Key] : null;
+                        }
                         else
-                            fieldValue = dict.ContainsKey(kvp.Key) ? dict[kvp.Key] : null;
+                            fieldValue = fieldConfig.Expr();
 
                         if (kvp.Value.FieldType == null)
                         {
@@ -587,7 +592,16 @@ namespace ChoETL
                     {
                         if (pi != null)
                         {
-                            fieldValue = GetPropertyValue(rec, pi, fieldConfig);
+                            if (fieldConfig.Expr != null)
+                                fieldValue = fieldConfig.Expr();
+                            else
+                                fieldValue = GetPropertyValue(rec, pi, fieldConfig);
+                            if (kvp.Value.FieldType == null)
+                                kvp.Value.FieldType = pi.PropertyType;
+                        }
+                        else if (fieldConfig.Expr != null)
+                        {
+                            fieldValue = fieldConfig.Expr();
                             if (kvp.Value.FieldType == null)
                                 kvp.Value.FieldType = pi.PropertyType;
                         }

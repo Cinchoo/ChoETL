@@ -2127,11 +2127,55 @@ a;b;;2021-05-06;e;11:00;3;9";
             }
         }
 
+        public class ScientificNotationdecimal
+        {
+            [ChoTypeConverterParams(Parameters = NumberStyles.Number | NumberStyles.AllowExponent)]
+            public double a { get; set; }
+            [ChoTypeConverterParams(Parameters = NumberStyles.Number | NumberStyles.AllowExponent)]
+            public double b { get; set; }
+            public long RN { get; set; }
+            public DateTime TimeStamp { get; set; }
+        }
+
+        static void ScientificNotationdecimals()
+        {
+            using (var w = new ChoCSVWriter(Console.Out)
+                .WithFirstLineHeader()
+                .ThrowAndStopOnMissingField(false)
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                )
+            {
+                w.WithField("a");
+                w.WithField("b");
+                w.WithField("RN", () => w.RecordNumber);
+                w.WithField("TimeStamp", () => DateTime.Now);
+
+                w.Write(1);
+
+                w.Write(new { a = 11, b = 21 });
+            }
+        }
+
+        static void ScientificNotationdecimals1()
+        {
+            using (var w = new ChoCSVWriter<ScientificNotationdecimal>(Console.Out)
+                .WithFirstLineHeader()
+                .ThrowAndStopOnMissingField(false)
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                )
+            {
+                w.WithField(f => f.RN, () => w.RecordNumber);
+                w.WithField(f => f.TimeStamp, () => DateTime.Now);
+
+                w.Write(new ScientificNotationdecimal { a = 1, b = 2 });
+            }
+        }
+
         static void Main(string[] args)
         {
             //AppDomain.CurrentDomain.FirstChanceException += (sender, eventArgs) => { Console.WriteLine("FirstChanceException: " + eventArgs.Exception.ToString()); };
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            CSVDiffWithStatus();
+            ScientificNotationdecimals();
             //TestDictionary();
             return;
 

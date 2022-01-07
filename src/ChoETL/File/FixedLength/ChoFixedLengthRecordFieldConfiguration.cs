@@ -23,6 +23,7 @@ namespace ChoETL
             get;
             set;
         }
+        public Func<object> Expr { get; set; }
 
         public ChoFixedLengthRecordFieldConfiguration(string name, int startIndex, int size) : this(name, null)
         {

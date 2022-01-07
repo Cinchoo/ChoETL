@@ -809,6 +809,8 @@ namespace ChoETL
                                 {
                                     if (Configuration.ThrowAndStopOnMissingField)
                                         throw new ChoMissingRecordFieldException("Missing '{0}' field value in CSV file.".FormatString(fieldConfig.FieldName));
+                                    else if (fieldConfig.Expr != null)
+                                        fieldValue = fieldConfig.Expr();
                                     else
                                         fieldValue = null; // fieldNameValues;
 
@@ -831,12 +833,17 @@ namespace ChoETL
                     {
                         if (fieldConfig.ValueSelector == null)
                         {
-                            if (fieldConfig.FieldPosition - 1 < fieldValues.Length)
-                                fieldValue = fieldValues[fieldConfig.FieldPosition - 1];
-                            else if (Configuration.ThrowAndStopOnMissingField)
-                                throw new ChoMissingRecordFieldException("Missing field value at [Position: {1}] in CSV file.".FormatString(fieldConfig.FieldName, fieldConfig.FieldPosition));
+                            if (fieldConfig.Expr == null)
+                            {
+                                if (fieldConfig.FieldPosition - 1 < fieldValues.Length)
+                                    fieldValue = fieldValues[fieldConfig.FieldPosition - 1];
+                                else if (Configuration.ThrowAndStopOnMissingField)
+                                    throw new ChoMissingRecordFieldException("Missing field value at [Position: {1}] in CSV file.".FormatString(fieldConfig.FieldName, fieldConfig.FieldPosition));
+                                else
+                                    fieldValue = null; // fieldNameValues;
+                            }
                             else
-                                fieldValue = null; // fieldNameValues;
+                                fieldValue = fieldConfig.Expr();
                         }
                         else
                         {

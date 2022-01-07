@@ -328,7 +328,10 @@ namespace ChoETL
                 rr.MembersDiscovered += MembersDiscovered;
                 rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
                 var e = rr.AsEnumerable(_yamlStream).GetEnumerator();
-                return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
+                return ChoEnumeratorWrapper.BuildEnumerable<T>(() => {
+                    ++_recordNumber;
+                    return e.MoveNext();
+                }, () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
             }
             else if (_yamlObjects != null)
             {
@@ -340,7 +343,10 @@ namespace ChoETL
                 rr.MembersDiscovered += MembersDiscovered;
                 rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
                 var e = rr.AsEnumerable(_yamlObjects).GetEnumerator();
-                return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
+                return ChoEnumeratorWrapper.BuildEnumerable<T>(() => {
+                    ++_recordNumber;
+                    return e.MoveNext();
+                }, () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
             }
             else if (_yamlDocObjects != null)
             {
@@ -352,7 +358,10 @@ namespace ChoETL
                 rr.MembersDiscovered += MembersDiscovered;
                 rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
                 var e = rr.AsEnumerable(_yamlDocObjects).GetEnumerator();
-                return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
+                return ChoEnumeratorWrapper.BuildEnumerable<T>(() => {
+                    ++_recordNumber;
+                    return e.MoveNext();
+                }, () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
             }
             else
                 return Enumerable.Empty<T>().GetEnumerator();

@@ -1619,10 +1619,43 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
             }
         }
 
+        [ChoKeyValueType]
+        public class KeyValueObject
+        {
+            [ChoKey]
+            public string Key { get; set; }
+            [ChoValue]
+            public string Value { get; set; }
+        }
+
+        public static void XmlToKeyValueJSON()
+        {
+            string xml = @"<properties>
+  <property key=""EventId"">3300</property>
+  <property key=""source"">car</property>
+  <property key=""type"">omega</property>
+  <property key=""a341414"">any value</property>
+  <property key=""arandomstring_each_time_different"">any value</property>
+</properties>";
+
+            ChoETLFrxBootstrap.TurnOnAutoDiscoverJsonConverters = true;
+
+            using (var r = ChoXmlReader<KeyValueObject>.LoadText(xml)
+                   .WithXPath("//property").WithField(f => f.Key, xPath: "@key").WithField(f => f.Value, xPath: "/text()")
+                  )
+            {
+
+                using (var w = new ChoJSONWriter<KeyValueObject>(Console.Out))
+                {
+                    w.Write(r);
+                }
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            ToKeyValueTypeSerialization();
+            XmlToKeyValueJSON();
 
             return;
 

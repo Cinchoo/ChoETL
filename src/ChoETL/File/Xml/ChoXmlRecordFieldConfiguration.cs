@@ -14,37 +14,51 @@ namespace ChoETL
     public class ChoXmlRecordFieldConfiguration : ChoFileRecordFieldConfiguration
     {
         internal bool IsXPathSet
-        { 
-            get
-            {
-                bool isXPathSet = false;
-                if (XPath != null)
-                {
-                    if (XPath == $"@{FieldName}")
-                    {
-
-                    }
-                    else if (XPath == $"/{FieldName}" || XPath == $"//{FieldName}")
-                    {
-
-                    }
-                    else if (XPath == $"{FieldName}|@{FieldName}")
-                    {
-
-                    }
-                    else
-                        isXPathSet = true;
-                }
-                return isXPathSet;
-            }
-        }
-
-        [DataMember]
-        public string XPath
         {
             get;
             set;
         }
+
+        private string _XPath;
+        public string XPath
+        {
+            get { return _XPath; }
+            set
+            {
+                IsXPathSet = value.IsNullOrWhiteSpace();
+                _XPath = value ;
+            }
+        }
+
+        private string _defaultXPath;
+        internal string GetXPath(string nsPrefix)
+        {
+            if (XPath.IsNullOrWhiteSpace())
+            {
+                if (_defaultXPath.IsNullOrWhiteSpace())
+                {
+                    if (nsPrefix.IsNullOrWhiteSpace())
+                    {
+                        if (!FieldName.IsNullOrWhiteSpace())
+                            _defaultXPath = $"{FieldName}|@{FieldName}";
+                        else
+                            _defaultXPath = $"{Name}|@{Name}";
+
+                    }
+                    else
+                    {
+                        if (!FieldName.IsNullOrWhiteSpace())
+                            _defaultXPath = $"{FieldName}|@{FieldName}|{nsPrefix}:{FieldName}";
+                        else
+                            _defaultXPath = $"{Name}|@{Name}|{nsPrefix}:{Name}";
+                    }
+                }
+                return _defaultXPath;
+            }
+            else
+                return XPath;
+        }
+
         [DataMember]
         public bool IsAnyXmlNode
         {
@@ -85,11 +99,11 @@ namespace ChoETL
             get;
             set;
         }
-        internal bool UseCache
-        {
-            get;
-            set;
-        }
+        //internal bool UseCache
+        //{
+        //    get;
+        //    set;
+        //}
         private Func<XElement, Type> _fieldTypeSelector = null;
         public Func<XElement, Type> FieldTypeSelector
         {
@@ -100,14 +114,12 @@ namespace ChoETL
         public ChoXmlRecordFieldConfiguration(string name, string xPath = null) : this(name, (ChoXmlNodeRecordFieldAttribute)null)
         {
             XPath = xPath;
-            UseCache = true;
         }
 
         internal ChoXmlRecordFieldConfiguration(string name, ChoXmlNodeRecordFieldAttribute attr = null, Attribute[] otherAttrs = null) : base(name, attr, otherAttrs)
         {
             EncodeValue = true;
             FieldName = name;
-            UseCache = true;
             if (attr != null)
             {
                 XPath = attr.XPath;
@@ -140,8 +152,8 @@ namespace ChoETL
                 if (FieldName.IsNullOrWhiteSpace())
                     FieldName = Name;
 
-                if (XPath.IsNullOrWhiteSpace())
-                    throw new ChoRecordConfigurationException("Missing XPath.");
+                //if (XPath.IsNullOrWhiteSpace())
+                //    throw new ChoRecordConfigurationException("Missing XPath.");
                 if (FillChar != null)
                 {
                     if (FillChar.Value == ChoCharEx.NUL)

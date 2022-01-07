@@ -48,29 +48,40 @@ namespace ChoETL
         }
 
         private static readonly object _xmlSerializersLock = new object();
-        private static readonly Dictionary<Type, XmlSerializer> _xmlSerializers = new Dictionary<Type, XmlSerializer>();
-        public static bool HasXmlSerializer(Type type)
+        private static readonly Dictionary<string, XmlSerializer> _xmlSerializers = new Dictionary<string, XmlSerializer>();
+        public static bool HasXmlSerializer(string elementName, Type type)
         {
+            ChoGuard.ArgumentNotNull(elementName, nameof(elementName));
+            ChoGuard.ArgumentNotNull(type, nameof(type));
+
             lock (_xmlSerializersLock)
             {
-                return _xmlSerializers.ContainsKey(type);
+                string key = GetXmlSerializerKey(elementName, type);
+                return _xmlSerializers.ContainsKey(key);
             }
         }
-        public static XmlSerializer GetXmlSerializer(Type type, XmlAttributeOverrides overrides = null)
+        private static string GetXmlSerializerKey(string elementName, Type type)
         {
+            return $"{elementName}+{type.FullName}";
+        }
+        public static XmlSerializer GetXmlSerializer(string elementName, Type type, XmlAttributeOverrides overrides = null)
+        {
+            ChoGuard.ArgumentNotNull(elementName, nameof(elementName));
             ChoGuard.ArgumentNotNull(type, nameof(type));
-            if (_xmlSerializers.ContainsKey(type))
-                return _xmlSerializers[type];
+
+            string key = GetXmlSerializerKey(elementName, type);
+            if (_xmlSerializers.ContainsKey(key))
+                return _xmlSerializers[key];
 
             lock (_xmlSerializersLock)
             {
-                if (!_xmlSerializers.ContainsKey(type))
+                if (!_xmlSerializers.ContainsKey(key))
                 {
                     XmlSerializer serializer = overrides != null ? new XmlSerializer(type, overrides) : new XmlSerializer(type);
-                    _xmlSerializers.Add(type, serializer);
+                    _xmlSerializers.Add(key, serializer);
                 }
 
-                return _xmlSerializers[type];
+                return _xmlSerializers[key];
             }
         }
 
@@ -1151,7 +1162,7 @@ namespace ChoETL
             if (node == null)
                 throw new ArgumentNullException("XmlNode");
 
-            XmlSerializer serializer = ChoUtility.GetXmlSerializer(typeof(T));  //new XmlSerializer(typeof(T));
+            XmlSerializer serializer = new XmlSerializer(typeof(T));
             return (T)serializer.Deserialize(new XmlNodeReader(node));
         }
 
@@ -1817,12 +1828,28 @@ namespace ChoETL
             return "{0}.{1}".FormatString(mi.ReflectedType.Name, mi.Name);
         }
 
-        public static void Loop(this IEnumerable e)
+        public static void Loop(this IEnumerable e, Action preActionCallback = null, Action<object> postActionCallback = null)
         {
             if (e == null) return;
 
-            foreach (var x in e)
-            { }
+            var recEnum = e.GetEnumerator();
+            while (true)
+            {
+                if (preActionCallback != null)
+                    preActionCallback();
+
+                if (!recEnum.MoveNext())
+                    break;
+
+                if (postActionCallback != null)
+                    postActionCallback(recEnum.Current);
+            }
+
+            //foreach (var x in e)
+            //{
+            //    if (postActionCallback != null)
+            //        postActionCallback(x);
+            //}
         }
 
         public static string Right(this string source, int length)

@@ -520,7 +520,11 @@ namespace ChoETL
                 {
                     if (Configuration.IsDynamicObject)
                     {
-                        fieldValue = dict.ContainsKey(kvp.Key) ? dict[kvp.Key] : null; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
+                        if (fieldConfig.Expr == null)
+                            fieldValue = dict.ContainsKey(kvp.Key) ? dict[kvp.Key] : null; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
+                        else
+                            fieldValue = fieldConfig.Expr();
+
                         if (kvp.Value.FieldType == null)
                         {
                             if (rec is ChoDynamicObject)
@@ -551,7 +555,16 @@ namespace ChoETL
                     {
                         if (pi != null)
                         {
-                            fieldValue = ChoType.GetPropertyValue(rec, pi);
+                            if (fieldConfig.Expr != null)
+                                fieldValue = fieldConfig.Expr();
+                            else
+                                fieldValue = ChoType.GetPropertyValue(rec, pi);
+                            if (kvp.Value.FieldType == null)
+                                kvp.Value.FieldType = pi.PropertyType;
+                        }
+                        else if (fieldConfig.Expr != null)
+                        {
+                            fieldValue = fieldConfig.Expr();
                             if (kvp.Value.FieldType == null)
                                 kvp.Value.FieldType = pi.PropertyType;
                         }

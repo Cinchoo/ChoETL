@@ -513,13 +513,18 @@ namespace ChoETL
                 {
                     if (fieldConfig.ValueSelector == null)
                     {
-                        if (fieldConfig.StartIndex + fieldConfig.Size > line.Length)
+                        if (fieldConfig.Expr == null)
                         {
-                            if (Configuration.ColumnCountStrict)
-                                throw new ChoParserException("Missing '{0}' field value.".FormatString(kvp.Key));
+                            if (fieldConfig.StartIndex + fieldConfig.Size > line.Length)
+                            {
+                                if (Configuration.ColumnCountStrict)
+                                    throw new ChoParserException("Missing '{0}' field value.".FormatString(kvp.Key));
+                            }
+                            else
+                                fieldValue = line.Substring(fieldConfig.StartIndex, fieldConfig.Size.Value);
                         }
                         else
-                            fieldValue = line.Substring(fieldConfig.StartIndex, fieldConfig.Size.Value);
+                            fieldValue = fieldConfig.Expr();
                     }
                     else
                     {

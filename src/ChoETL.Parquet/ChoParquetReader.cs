@@ -242,7 +242,10 @@ namespace ChoETL
                 rr.InterceptRowGroup = true;
 
             var e = rr.AsEnumerable(_parquetReader).GetEnumerator();
-            return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
+            return ChoEnumeratorWrapper.BuildEnumerable<T>(() => {
+                ++_recordNumber;
+                return e.MoveNext();
+            }, () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

@@ -5446,6 +5446,8 @@ ue2"",Value3";
             public double a { get; set; }
             [ChoTypeConverterParams(Parameters = NumberStyles.Number | NumberStyles.AllowExponent)]
             public double b { get; set; }
+            public long RN { get; set; }
+            public DateTime TimeStamp { get; set; }
         }
 
         static void ScientificNotationdecimals()
@@ -5455,11 +5457,38 @@ ue2"",Value3";
 1.2,3.4
 1.2e-05,7.8";
 
-            using (var r = ChoCSVReader<ScientificNotationdecimal>.LoadText(csv)
-                .WithFirstLineHeader())
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .ThrowAndStopOnMissingField(false)
+                )
             {
-                var x = r.ToArray();
-                x.Print();
+                r.WithField("a").WithField("b").WithField("RN", () => r.RecordNumber)
+                    .WithField("TimeStamp", () => DateTime.Now);
+
+                //r.Print();
+                foreach (var rec in r.Select(s => new { RowNo = r.RecordNumber, Rec = s }))
+                    rec.Print();
+            }
+        }
+
+        static void ScientificNotationdecimals1()
+        {
+            ChoTypeConverterFormatSpec.Instance.LongNumberStyle = NumberStyles.Number | NumberStyles.AllowExponent;
+            string csv = @"a,b
+1.2,3.4
+1.2e-05,7.8";
+
+            using (var r = ChoCSVReader<ScientificNotationdecimal>.LoadText(csv)
+                .WithFirstLineHeader()
+                .ThrowAndStopOnMissingField(false)
+                )
+            {
+                r.WithField(f => f.RN, () => r.RecordNumber);
+                r.WithField(f => f.TimeStamp, () => DateTime.Now);
+
+                //r.Print();
+                foreach (var rec in r.Select(s => new { RowNo = r.RecordNumber, Rec = s }))
+                    rec.Print();
             }
         }
 

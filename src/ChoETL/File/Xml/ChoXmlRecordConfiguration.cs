@@ -242,7 +242,6 @@ namespace ChoETL
 
         public readonly dynamic Context = new ChoDynamicObject();
 
-        internal bool IsComplexXPathUsed = true;
         public ChoXmlRecordFieldConfiguration this[string name]
         {
             get
@@ -383,7 +382,6 @@ namespace ChoETL
                 return;
             if (!recordType.IsDynamicType())
             {
-                IsComplexXPathUsed = false;
                 Type pt = null;
                 if (optIn) //ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any()).Any())
                 {
@@ -398,34 +396,12 @@ namespace ChoETL
                         }
                         else if (pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any())
                         {
-                            bool useCache = true;
-                            string xPath = null;
                             ChoXmlNodeRecordFieldAttribute attr = ChoTypeDescriptor.GetPropetyAttribute<ChoXmlNodeRecordFieldAttribute>(pd);
-                            if (attr.XPath.IsNullOrEmpty())
-                            {
-                                if (!attr.FieldName.IsNullOrWhiteSpace())
-                                {
-                                    attr.XPath = $"{attr.FieldName}|@{attr.FieldName}|x:{attr.FieldName}";
-                                }
-                                else
-                                    attr.XPath = xPath = $"{pd.Name}|@{pd.Name}|x:{pd.Name}";
-                                IsComplexXPathUsed = true;
-                            }
-                            else
-                                useCache = false;
 
                             var obj = new ChoXmlRecordFieldConfiguration(pd.Name, attr, pd.Attributes.OfType<Attribute>().ToArray());
                             obj.FieldType = pt;
                             obj.PropertyDescriptor = pd;
                             obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
-                            obj.UseCache = useCache;
-                            if (obj.XPath.IsNullOrWhiteSpace())
-                            {
-                                if (!obj.FieldName.IsNullOrWhiteSpace())
-                                    obj.XPath = $"{obj.FieldName}|@{obj.FieldName}|x:{obj.FieldName}";
-                                else
-                                    obj.XPath = $"{obj.Name}|@{obj.Name}|x:{obj.Name}";
-                            }
 
                             obj.FieldType = pd.PropertyType.GetUnderlyingType();
                             if (!XmlRecordFieldConfigurations.Any(c => c.Name == pd.Name))
@@ -459,7 +435,7 @@ namespace ChoETL
                             if (sAttr != null)
                                 obj.UseXmlSerialization = sAttr.Flag;
                             ChoXPathAttribute xpAttr = pd.Attributes.OfType<ChoXPathAttribute>().FirstOrDefault();
-                            if (xpAttr != null)
+                            if (xpAttr != null && !xpAttr.XPath.IsNullOrWhiteSpace())
                                 obj.XPath = xpAttr.XPath;
 
                             XmlElementAttribute xAttr = pd.Attributes.OfType<XmlElementAttribute>().FirstOrDefault();
@@ -668,8 +644,6 @@ namespace ChoETL
             }
             else
             {
-                IsComplexXPathUsed = false;
-
                 foreach (var fc in XmlRecordFieldConfigurations)
                 {
                     if (fc.IsArray == null)
@@ -679,29 +653,6 @@ namespace ChoETL
 
                     if (fc.FieldName.IsNullOrWhiteSpace())
                         fc.FieldName = fc.Name;
-
-                    if (fc.XPath.IsNullOrWhiteSpace())
-                    {
-                        if (DefaultNamespacePrefix.IsNullOrWhiteSpace())
-                            fc.XPath = $"{fc.FieldName}|@{fc.FieldName}|x:{fc.FieldName}";
-                        else
-                            fc.XPath = $"{DefaultNamespacePrefix}:{fc.FieldName}|@{fc.FieldName}";
-                    }
-                    else
-                    {
-                        if (fc.XPath == fc.FieldName
-                            || fc.XPath == $"{fc.FieldName}" || fc.XPath == $"{fc.FieldName}" || fc.XPath == $"{fc.FieldName}"
-                            || fc.XPath == $"@{fc.FieldName}" || fc.XPath == $"@{fc.FieldName}" || fc.XPath == $"@{fc.FieldName}"
-                            )
-                        {
-
-                        }
-                        else
-                        {
-                            IsComplexXPathUsed = true;
-                            fc.UseCache = false;
-                        }
-                    }
                 }
             }
 
@@ -770,7 +721,6 @@ namespace ChoETL
 
         internal ChoXmlRecordFieldConfiguration[] DiscoverRecordFieldsFromXElement(XElement xpr)
         {
-            IsComplexXPathUsed = false;
             ChoXmlNamespaceManager nsMgr = XmlNamespaceManager.Value;
 
             Dictionary<string, ChoXmlRecordFieldConfiguration> dict = new Dictionary<string, ChoXmlRecordFieldConfiguration>(StringComparer.CurrentCultureIgnoreCase);

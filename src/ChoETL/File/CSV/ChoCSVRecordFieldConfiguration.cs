@@ -11,6 +11,11 @@ namespace ChoETL
     [DataContract]
     public class ChoCSVRecordFieldConfiguration : ChoFileRecordFieldConfiguration
     {
+        public Func<object> Expr
+        {
+            get;
+            set;
+        }
         public bool ExcelField
         {
             get;

@@ -624,8 +624,8 @@ namespace ChoETL
                 XmlParserContext ctx = nsMgr != null ? new XmlParserContext(null, nsMgr.NSMgr, null, XmlSpace.None) : null;
                 using (XmlReader reader = XmlReader.Create(new StringReader(element.GetOuterXml()), null, ctx))
                 {
-                    if (ChoUtility.HasXmlSerializer(type))
-                        return ChoUtility.GetXmlSerializer(type).Deserialize(reader);
+                    if (ChoUtility.HasXmlSerializer(element.Name.ToString(), type))
+                        return ChoUtility.GetXmlSerializer(element.ToString(), type).Deserialize(reader);
 
                     if (overrides == null)
                     {
@@ -669,7 +669,7 @@ namespace ChoETL
                     }
                     else
                     {
-                        XmlSerializer serializer = ChoUtility.GetXmlSerializer(type, overrides); // overrides != null ? new XmlSerializer(type, overrides) : new XmlSerializer(type);
+                        XmlSerializer serializer = ChoUtility.GetXmlSerializer(element.ToString(), type, overrides); // overrides != null ? new XmlSerializer(type, overrides) : new XmlSerializer(type);
                         return serializer.Deserialize(reader);
                     }
                 }

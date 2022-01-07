@@ -165,34 +165,31 @@ namespace ChoETL
         {
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
-            _writer.WriteTo(_textWriter.Value, records).Loop();
+            _writer.WriteTo(_textWriter.Value, records).Loop(() => ++_recordNumber);
         }
 
         public void Write(T record)
         {
             if (record is DataTable)
-            {
-                Write(record as DataTable); 
-                return;
-            }
+                throw new ChoParserException("Invalid data passed.");
             else if (record is IDataReader)
-            {
-                Write(record as IDataReader);
-                return;
-            }
+                throw new ChoParserException("Invalid data passed.");
+            else if (!(record is IDictionary<string, object>))
+                throw new ChoParserException("Invalid data passed.");
+
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
             if (record is ArrayList)
             {
-                _writer.WriteTo(_textWriter.Value, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
+                _writer.WriteTo(_textWriter.Value, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop(() => ++_recordNumber);
             }
             else if (record != null && !(/*!record.GetType().IsDynamicType() && record is IDictionary*/ record.GetType() == typeof(ExpandoObject) || typeof(IDynamicMetaObjectProvider).IsAssignableFrom(record.GetType()) || record.GetType() == typeof(object) || record.GetType().IsAnonymousType())
                 && (typeof(IDictionary).IsAssignableFrom(record.GetType()) || (record.GetType().IsGenericType && record.GetType().GetGenericTypeDefinition() == typeof(IDictionary<,>))))
             {
-                _writer.WriteTo(_textWriter.Value, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
+                _writer.WriteTo(_textWriter.Value, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop(() => ++_recordNumber);
             }
             else
-                _writer.WriteTo(_textWriter.Value, new T[] { record }).Loop();
+                _writer.WriteTo(_textWriter.Value, new T[] { record }).Loop(() => ++_recordNumber);
         }
 
         public static string ToTextAll<TRec>(IEnumerable<TRec> records, ChoCSVRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
@@ -436,6 +433,12 @@ namespace ChoETL
             return this;
         }
 
+        public ChoCSVWriter<T> WithField(string fieldName, Func<object> expr)
+        {
+            WithField(fieldName, fieldType: null, expr: expr);
+            return this;
+        }
+
         public ChoCSVWriter<T> WithFields(params string[] fieldsNames)
         {
             string fnTrim = null;
@@ -487,7 +490,7 @@ namespace ChoETL
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null,
             string formatText = null, bool optional = false, string nullValue = null,
-            bool excelField = false)
+            bool excelField = false, Func<object> expr = null)
             where TClass : class
         {
             if (field == null)
@@ -506,7 +509,7 @@ namespace ChoETL
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null,
             string formatText = null, bool optional = false, string nullValue = null,
-            bool excelField = false)
+            bool excelField = false, Func<object> expr = null)
             where TClass : class
         {
             if (field == null)
@@ -514,7 +517,13 @@ namespace ChoETL
 
             return WithField(field.GetMemberName(), (int?)null, field.GetPropertyType(), quoteField, fillChar, fieldValueJustification, truncate,
                 fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue,
-                field.GetFullyQualifiedMemberName(), formatText, optional, nullValue, excelField, field.GetReflectedType());
+                field.GetFullyQualifiedMemberName(), formatText, optional, nullValue, excelField, field.GetReflectedType(), expr);
+        }
+
+        public ChoCSVWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Func<TField> expr)
+        {
+            WithField(field.GetMemberName(), expr: new Func<object>(() => (object)expr()));
+            return this;
         }
 
         public ChoCSVWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoCSVRecordFieldConfigurationMap> setup)
@@ -546,14 +555,14 @@ namespace ChoETL
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null,
             string formatText = null, bool optional = false, string nullValue = null,
-            bool excelField = false)
+            bool excelField = false, Func<object> expr = null)
         {
             if (field == null)
                 return this;
 
             return WithField(field.GetMemberName(), position, field.GetPropertyType(), quoteField, fillChar, fieldValueJustification, truncate,
                 fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue,
-                field.GetFullyQualifiedMemberName(), formatText, optional, nullValue, excelField);
+                field.GetFullyQualifiedMemberName(), formatText, optional, nullValue, excelField, null, expr);
         }
 
         public ChoCSVWriter<T> WithField<TField>(Expression<Func<T, TField>> field, bool? quoteField = null,
@@ -564,14 +573,14 @@ namespace ChoETL
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null,
             string formatText = null, bool optional = false, string nullValue = null,
-            bool excelField = false)
+            bool excelField = false, Func<object> expr = null)
         {
             if (field == null)
                 return this;
 
             return WithField(field.GetMemberName(), (int?)null, field.GetPropertyType(), quoteField, fillChar, fieldValueJustification, truncate,
                 fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue,
-                field.GetFullyQualifiedMemberName(), formatText, optional, nullValue, excelField);
+                field.GetFullyQualifiedMemberName(), formatText, optional, nullValue, excelField, null, expr);
         }
 
         public ChoCSVWriter<T> WithField(string name, Type fieldType = null, bool? quoteField = null, char? fillChar = null,
@@ -582,11 +591,11 @@ namespace ChoETL
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null,
             string formatText = null, bool optional = false, string nullValue = null,
-            bool excelField = false)
+            bool excelField = false, Func<object> expr = null)
         {
             return WithField(name, null, fieldType, quoteField, fillChar, fieldValueJustification,
                 truncate, fieldName, valueConverter, valueSelector, headerSelector,
-                defaultValue, fallbackValue, null, formatText, optional, nullValue, excelField);
+                defaultValue, fallbackValue, null, formatText, optional, nullValue, excelField, null, expr);
         }
 
         private ChoCSVWriter<T> WithField(string name, int? position, Type fieldType = null, bool? quoteField = null, char? fillChar = null,
@@ -597,7 +606,7 @@ namespace ChoETL
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null,
             string fullyQualifiedMemberName = null, string formatText = null, bool optional = false, string nullValue = null,
-            bool excelField = false, Type subRecordType = null)
+            bool excelField = false, Type subRecordType = null, Func<object> expr = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -609,7 +618,7 @@ namespace ChoETL
 
                 Configuration.WithField(name, position, fieldType, quoteField, null, fieldName,
                     valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue, null, fullyQualifiedMemberName, formatText, optional,
-                    nullValue, excelField, typeof(T), subRecordType, fieldValueJustification);
+                    nullValue, excelField, typeof(T), subRecordType, fieldValueJustification, expr);
             }
 
             return this;
@@ -687,18 +696,56 @@ namespace ChoETL
 
         #endregion Fluent API
 
-        public void Write(IDataReader dr)
+        public static void Write(StringBuilder sb, IDataReader dr)
         {
             ChoGuard.ArgumentNotNull(dr, "DataReader");
 
+            using (var w = new ChoCSVWriter(sb))
+            {
+                Write(w, dr);
+            }
+        }
+
+        public static void Write(string filePath, IDataReader dr)
+        {
+            ChoGuard.ArgumentNotNull(dr, "DataReader");
+
+            using (var w = new ChoCSVWriter(filePath))
+            {
+                Write(w, dr);
+            }
+        }
+
+        public static void Write(TextWriter textWriter, IDataReader dr)
+        {
+            ChoGuard.ArgumentNotNull(dr, "DataReader");
+
+            using (var w = new ChoCSVWriter(textWriter))
+            {
+                Write(w, dr);
+            }
+        }
+
+        public static void Write(Stream inStream, IDataReader dr)
+        {
+            ChoGuard.ArgumentNotNull(dr, "DataReader");
+
+            using (var w = new ChoCSVWriter(inStream))
+            {
+                Write(w, dr);
+            }
+        }
+
+        private static void Write(ChoCSVWriter w, IDataReader dr)
+        {
             DataTable schemaTable = dr.GetSchemaTable();
             dynamic expando = new ExpandoObject();
             var expandoDic = (IDictionary<string, object>)expando;
 
-            Configuration.UseNestedKeyFormat = false;
+            w.Configuration.UseNestedKeyFormat = false;
 
             int ordinal = 0;
-            if (Configuration.CSVRecordFieldConfigurations.IsNullOrEmpty())
+            if (w.Configuration.CSVRecordFieldConfigurations.IsNullOrEmpty())
             {
                 string colName = null;
                 Type colType = null;
@@ -708,11 +755,11 @@ namespace ChoETL
                     colType = row["DataType"] as Type;
                     //if (!colType.IsSimple()) continue;
 
-                    Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(colName, ++ordinal) { FieldType = colType });
+                    w.Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(colName, ++ordinal) { FieldType = colType });
                 }
             }
 
-            var ordinals = Configuration.CSVRecordFieldConfigurations.ToDictionary(c => c.Name, c => dr.HasColumn(c.Name) ? dr.GetOrdinal(c.Name) : -1);
+            var ordinals = w.Configuration.CSVRecordFieldConfigurations.ToDictionary(c => c.Name, c => dr.HasColumn(c.Name) ? dr.GetOrdinal(c.Name) : -1);
             while (dr.Read())
             {
                 expandoDic.Clear();
@@ -722,11 +769,50 @@ namespace ChoETL
                     expandoDic.Add(fc.Key, fc.Value == -1 ? null : dr[fc.Value]);
                 }
 
-                Write(expando);
+                w.Write(expando);
+            }
+        }
+        public static void Write(StringBuilder sb, DataTable dt)
+        {
+            ChoGuard.ArgumentNotNull(dt, "DataTable");
+
+            using (var w = new ChoCSVWriter(sb))
+            {
+                Write(w, dt);
             }
         }
 
-        public void Write(DataTable dt)
+        public static void Write(string filePath, DataTable dt)
+        {
+            ChoGuard.ArgumentNotNull(dt, "DataTable");
+
+            using (var w = new ChoCSVWriter(filePath))
+            {
+                Write(w, dt);
+            }
+        }
+
+        public static void Write(TextWriter textWriter, DataTable dt)
+        {
+            ChoGuard.ArgumentNotNull(dt, "DataTable");
+
+            using (var w = new ChoCSVWriter(textWriter))
+            {
+                Write(w, dt);
+            }
+        }
+
+        public static void Write(Stream inStream, DataTable dt)
+        {
+            ChoGuard.ArgumentNotNull(dt, "DataTable");
+
+            using (var w = new ChoCSVWriter(inStream))
+            {
+                Write(w, dt);
+            }
+        }
+
+        private static void Write(ChoCSVWriter w, DataTable dt)
         {
             ChoGuard.ArgumentNotNull(dt, "DataTable");
 
@@ -734,10 +820,10 @@ namespace ChoETL
             dynamic expando = new ExpandoObject();
             var expandoDic = (IDictionary<string, object>)expando;
 
-            Configuration.UseNestedKeyFormat = false;
+            w.Configuration.UseNestedKeyFormat = false;
 
             int ordinal = 0;
-            if (Configuration.CSVRecordFieldConfigurations.IsNullOrEmpty())
+            if (w.Configuration.CSVRecordFieldConfigurations.IsNullOrEmpty())
             {
                 string colName = null;
                 Type colType = null;
@@ -747,7 +833,7 @@ namespace ChoETL
                     colType = col.DataType;
                     //if (!colType.IsSimple()) continue;
 
-                    Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(colName, ++ordinal) { FieldType = colType });
+                    w.Configuration.CSVRecordFieldConfigurations.Add(new ChoCSVRecordFieldConfiguration(colName, ++ordinal) { FieldType = colType });
                 }
             }
 
@@ -755,12 +841,12 @@ namespace ChoETL
             {
                 expandoDic.Clear();
 
-                foreach (var fc in Configuration.CSVRecordFieldConfigurations)
+                foreach (var fc in w.Configuration.CSVRecordFieldConfigurations)
                 {
                     expandoDic.Add(fc.Name, row[fc.Name]);
                 }
 
-                Write(expando);
+                w.Write(expando);
             }
         }
 

@@ -31,6 +31,8 @@ namespace ChoETL
         public event EventHandler<ChoFileHeaderArrangeEventArgs> FileHeaderArrange;
 
         public event EventHandler<ChoCustomNodeNameOverrideEventArgs> CustomeNodeNameOverride;
+        protected long _recordNumber;
+        public long RecordNumber { get => _recordNumber; }
 
         public bool HasBeginWriteSubscribed
         {

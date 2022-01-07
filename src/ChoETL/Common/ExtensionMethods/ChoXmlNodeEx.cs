@@ -598,7 +598,7 @@ namespace ChoETL
             if (node == null)
                 throw new ArgumentNullException("XmlNode");
 
-            XmlSerializer serializer = ChoUtility.GetXmlSerializer(typeof(T));  //new XmlSerializer(typeof(T));
+            XmlSerializer serializer = new XmlSerializer(typeof(T));
             return (T)serializer.Deserialize(new XmlNodeReader(node));
         }
 

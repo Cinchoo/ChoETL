@@ -325,7 +325,10 @@ namespace ChoETL
                 rr.MembersDiscovered += MembersDiscovered;
                 rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
                 var e = rr.AsEnumerable(_JSONReader).GetEnumerator();
-                return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
+                return ChoEnumeratorWrapper.BuildEnumerable<T>(() => {
+                    ++_recordNumber;
+                    return e.MoveNext();
+                }, () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
             }
             else
             {
@@ -337,7 +340,11 @@ namespace ChoETL
                 rr.MembersDiscovered += MembersDiscovered;
                 rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
                 var e = rr.AsEnumerable(_jObjects).GetEnumerator();
-                return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
+                return ChoEnumeratorWrapper.BuildEnumerable<T>(() =>
+                {
+                    ++_recordNumber;
+                    return e.MoveNext();
+                }, () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
             }
         }
 

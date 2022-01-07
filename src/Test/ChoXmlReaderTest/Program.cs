@@ -433,9 +433,46 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            CDATALoadTest();
+            NestedClassTest();
         }
 
+        static void NestedClassTest()
+        {
+            string xml = @"<Specifier>
+  <CollectionBlock>
+     <Type>foo</Type>
+     <Name>my name</Name>
+  </CollectionBlock>
+  <ProductBlock>
+     <Type>type here</Type>
+     <Name>Block One</Name>
+     <Description>some text</Description>
+  </ProductBlock>
+  <ProductBlock>
+     <Type>type here</Type>
+     <Name>Block Two</Name>
+     <Description>some text</Description>
+  </ProductBlock>
+</Specifier>";
+
+            using (var r = ChoXmlReader<Specifier>.LoadText(xml).WithXPath("//").ErrorMode(ChoErrorMode.IgnoreAndContinue)
+      )
+            {
+                r.Print();
+            }
+        }
+        public class Specifier
+        {
+            public Block CollectionBlock { get; set; }
+            public Block[] ProductBlock { get; set; }
+        }
+
+        public class Block
+        {
+            public string Type { get; set; }
+            public string Name { get; set; }
+            public string Description { get; set; }
+        }
         [XmlRoot(ElementName = "Customer")]
         public class Customer
         {

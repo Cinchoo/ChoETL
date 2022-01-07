@@ -230,12 +230,18 @@ namespace ChoETL
             if (typeof(T) == typeof(object))
             {
                 IEnumerator<object> e = _avroReader != null ? rr.AsEnumerable<Dictionary<string, object>>(_avroReader).GetEnumerator() : rr.AsEnumerable<Dictionary<string, object>>(_sr).GetEnumerator();
-                return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)((object)e.Current), () => Dispose()).GetEnumerator();
+                return ChoEnumeratorWrapper.BuildEnumerable<T>(() => {
+                    ++_recordNumber;
+                    return e.MoveNext();
+                }, () => (T)((object)e.Current), () => Dispose()).GetEnumerator();
             }
             else
             {
                 IEnumerator<object> e = _avroReader != null ? rr.AsEnumerable<T>(_avroReader).GetEnumerator() : rr.AsEnumerable<T>(_sr).GetEnumerator();
-                return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
+                return ChoEnumeratorWrapper.BuildEnumerable<T>(() => {
+                    ++_recordNumber;
+                    return e.MoveNext();
+                }, () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
             }
         }
 

@@ -601,6 +601,7 @@ namespace ChoETL
             XElement node;
             string key = null;
             bool isXmlAttribute = false;
+            string nsPrefix = !Configuration.NamespaceManager.DefaultNamespace.IsNullOrWhiteSpace() ? GetNSPrefix() : null;
 
             lineNo = pair.Item1;
             node = pair.Item2;
@@ -668,7 +669,8 @@ namespace ChoETL
                     if (fieldConfig.IsXPathSet || !xDict.ContainsKey(fieldConfig.FieldName)) //*!fieldConfig.UseCache && */!xDict.ContainsKey(fieldConfig.FieldName))
                     {
                         xNodes.Clear();
-                        foreach (XPathNavigator z in xpn.Select(fieldConfig.XPath, Configuration.NamespaceManager))
+                        var xpath = fieldConfig.GetXPath(nsPrefix);
+                        foreach (XPathNavigator z in xpn.Select(xpath, Configuration.NamespaceManager))
                         {
                             xNodes.Add(z.UnderlyingObject);
                         }

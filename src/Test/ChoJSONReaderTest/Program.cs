@@ -1328,6 +1328,12 @@ namespace ChoJSONReaderTest
                 .WithJSONPath("$..facilities")
                 )
             {
+                foreach (var rec in p)
+                {
+                    rec.Print();
+                    break;
+                }
+                return;
                 using (var w = new ChoCSVWriter<Facility>(csv)
                     .WithFirstLineHeader()
                     )
@@ -7910,11 +7916,24 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
+        static void LoadSensorData()
+        {
+            using (var r = new ChoJSONReader(@"C:\Projects\GitHub\ChoETL\data\Sensors.json")
+                .WithJSONPath("$..ControlJob.RecipeSteps")
+                )
+            {
+                foreach (var rec in r)
+                {
+                    rec.Print();
+                }
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            DeserializeToConcreteClasses2();
+            LoadSensorData();
             //DeserializeNestedObjectOfList();
             return;
 

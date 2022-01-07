@@ -274,7 +274,10 @@ namespace ChoETL
             rr.MembersDiscovered += MembersDiscovered;
             rr.RecordFieldTypeAssessment += RecordFieldTypeAssessment;
             var e = _lines != null ? rr.AsEnumerable(_lines).GetEnumerator() : rr.AsEnumerable(_textReader.Value).GetEnumerator();
-            return ChoEnumeratorWrapper.BuildEnumerable<T>(() => e.MoveNext(), () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
+            return ChoEnumeratorWrapper.BuildEnumerable<T>(() => {
+                ++_recordNumber;
+                return e.MoveNext();
+            }, () => (T)ChoConvert.ChangeType<ChoRecordFieldAttribute>(e.Current, typeof(T)), () => Dispose()).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -572,35 +575,48 @@ namespace ChoETL
             return this;
         }
 
+        public ChoFixedLengthReader<T> WithField(string fieldName, int startIndex, int size, Func<object> expr)
+        {
+            WithField(fieldName, startIndex, size, fullyQualifiedMemberName: null, expr: expr);
+            return this;
+        }
+
+        public ChoFixedLengthReader<T> WithField<TField>(Expression<Func<T, TField>> field, int startIndex, int size, Func<TField> expr)
+        {
+            WithField(field.GetMemberName(), startIndex, size, expr: new Func<object>(() => (object)expr()));
+            return this;
+        }
+
         public ChoFixedLengthReader<T> WithField<TField>(Expression<Func<T, TField>> field, int startIndex, int size, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
             string fieldName = null, Func<object, object> valueConverter = null, 
             Func<dynamic, object> valueSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, 
             string formatText = null,
-            string nullValue = null)
+            string nullValue = null, Func<object> expr = null)
         {
             if (field == null)
                 return this;
 
             return WithField(field.GetMemberName(), startIndex, size, field.GetPropertyType(), quoteField, fieldValueTrimOption,
-                fieldName, valueConverter, valueSelector, defaultValue, fallbackValue, altFieldNames, field.GetFullyQualifiedMemberName(), formatText, nullValue);
+                fieldName, valueConverter, valueSelector, defaultValue, fallbackValue, altFieldNames, field.GetFullyQualifiedMemberName(), 
+                formatText, nullValue, expr);
         }
 
         public ChoFixedLengthReader<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
             string fieldName = null, Func<object, object> valueConverter = null, 
             Func<dynamic, object> valueSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null, string formatText = null,
-            string nullValue = null)
+            string nullValue = null, Func<object> expr = null)
         {
             return WithField(name, startIndex, size, fieldType, quoteField, fieldValueTrimOption,
-                fieldName, valueConverter, valueSelector, defaultValue, fallbackValue, altFieldNames, null, formatText, nullValue);
+                fieldName, valueConverter, valueSelector, defaultValue, fallbackValue, altFieldNames, null, formatText, nullValue, expr);
         }
 
         private ChoFixedLengthReader<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, ChoFieldValueTrimOption? fieldValueTrimOption = null,
             string fieldName = null, Func<object, object> valueConverter = null, 
             Func<dynamic, object> valueSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null,
-            string fullyQualifiedMemberName = null, string formatText = null, string nullValue = null)
+            string fullyQualifiedMemberName = null, string formatText = null, string nullValue = null, Func<object> expr = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -635,7 +651,8 @@ namespace ChoETL
                     FallbackValue = fallbackValue,
                     AltFieldNames = altFieldNames,
                     FormatText = formatText,
-                    NullValue = nullValue
+                    NullValue = nullValue,
+                    Expr = expr,
                 };
                 if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
                 {

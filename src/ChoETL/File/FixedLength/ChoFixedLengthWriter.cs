@@ -151,35 +151,31 @@ namespace ChoETL
         {
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
-            _writer.WriteTo(_textWriter.Value, records).Loop();
+            _writer.WriteTo(_textWriter.Value, records).Loop(() => ++_recordNumber);
         }
 
         public void Write(T record)
         {
             if (record is DataTable)
-            {
-                Write(record as DataTable);
-                return;
-            }
+                throw new ChoParserException("Invalid data passed.");
             else if (record is IDataReader)
-            {
-                Write(record as IDataReader);
-                return;
-            }
+                throw new ChoParserException("Invalid data passed.");
+            else if (!(record is IDictionary<string, object>))
+                throw new ChoParserException("Invalid data passed.");
 
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;
             if (record is ArrayList)
             {
-                _writer.WriteTo(_textWriter.Value, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
+                _writer.WriteTo(_textWriter.Value, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop(() => ++_recordNumber);
             }
             else if (record != null && !(/*!record.GetType().IsDynamicType() && record is IDictionary*/ record.GetType() == typeof(ExpandoObject) || typeof(IDynamicMetaObjectProvider).IsAssignableFrom(record.GetType()) || record.GetType() == typeof(object) || record.GetType().IsAnonymousType())
                 && (typeof(IDictionary).IsAssignableFrom(record.GetType()) || (record.GetType().IsGenericType && record.GetType().GetGenericTypeDefinition() == typeof(IDictionary<,>))))
             {
-                _writer.WriteTo(_textWriter.Value, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop();
+                _writer.WriteTo(_textWriter.Value, ((IEnumerable)record).AsTypedEnumerable<T>()).Loop(() => ++_recordNumber);
             }
             else
-                _writer.WriteTo(_textWriter.Value, new T[] { record } ).Loop();
+                _writer.WriteTo(_textWriter.Value, new T[] { record }).Loop(() => ++_recordNumber);
         }
 
         public static string ToTextAll<TRec>(IEnumerable<TRec> records, ChoFixedLengthRecordConfiguration configuration = null, TraceSwitch traceSwitch = null)
@@ -376,9 +372,21 @@ namespace ChoETL
             return this;
         }
 
+        public ChoFixedLengthWriter<T> WithField<TField>(Expression<Func<T, TField>> field, int startIndex, int size, Func<TField> expr)
+        {
+            WithField(field.GetMemberName(), startIndex, size, expr: new Func<object>(() => (object)expr()));
+            return this;
+        }
+
         public ChoFixedLengthWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoFixedLengthRecordFieldConfigurationMap> setup)
         {
             Configuration.Map(field.GetMemberName(), setup);
+            return this;
+        }
+
+        public ChoFixedLengthWriter<T> WithField(string fieldName, int startIndex, int size, Func<object> expr)
+        {
+            WithField(fieldName, startIndex, size, fullyQualifiedMemberName: null, expr: expr);
             return this;
         }
 
@@ -402,13 +410,14 @@ namespace ChoETL
             Func<dynamic, object> valueSelector = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null,
-            string nullValue = null)
+            string nullValue = null, Func<object> expr = null)
         {
             if (field == null)
                 return this;
 
             return WithField(field.GetMemberName(), startIndex, size, field.GetPropertyType(), quoteField, fillChar, fieldValueJustification,
-                    truncate, fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, nullValue);
+                    truncate, fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), 
+                    formatText, nullValue, expr);
         }
 
         public ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
@@ -416,10 +425,11 @@ namespace ChoETL
             Func<dynamic, object> valueSelector = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null,
-            string nullValue = null)
+            string nullValue = null, Func<object> expr = null)
         {
             return WithField(name, startIndex, size, fieldType, quoteField, fillChar, fieldValueJustification,
-                truncate, fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue, null, formatText, nullValue);
+                truncate, fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue, null, formatText, 
+                nullValue, expr);
         }
 
         private ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
@@ -427,7 +437,7 @@ namespace ChoETL
             Func<dynamic, object> valueSelector = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null,
-            string fullyQualifiedMemberName = null, string formatText = null, string nullValue = null)
+            string fullyQualifiedMemberName = null, string formatText = null, string nullValue = null, Func<object> expr = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -464,7 +474,8 @@ namespace ChoETL
                     DefaultValue = defaultValue,
                     FallbackValue = fallbackValue,
                     FormatText = formatText,
-                    NullValue = nullValue
+                    NullValue = nullValue,
+                    Expr = expr,
                 };
 
                 if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
@@ -533,7 +544,47 @@ namespace ChoETL
 
         #endregion Fluent API
 
-        public void Write(IDataReader dr)
+        public static void Write(StringBuilder sb, IDataReader dr)
+        {
+            ChoGuard.ArgumentNotNull(dr, "DataReader");
+
+            using (var w = new ChoFixedLengthWriter(sb))
+            {
+                Write(w, dr);
+            }
+        }
+
+        public static void Write(string filePath, IDataReader dr)
+        {
+            ChoGuard.ArgumentNotNull(dr, "DataReader");
+
+            using (var w = new ChoFixedLengthWriter(filePath))
+            {
+                Write(w, dr);
+            }
+        }
+
+        public static void Write(TextWriter textWriter, IDataReader dr)
+        {
+            ChoGuard.ArgumentNotNull(dr, "DataReader");
+
+            using (var w = new ChoFixedLengthWriter(textWriter))
+            {
+                Write(w, dr);
+            }
+        }
+
+        public static void Write(Stream inStream, IDataReader dr)
+        {
+            ChoGuard.ArgumentNotNull(dr, "DataReader");
+
+            using (var w = new ChoFixedLengthWriter(inStream))
+            {
+                Write(w, dr);
+            }
+        }
+
+        private static void Write(ChoFixedLengthWriter w, IDataReader dr)
         {
             ChoGuard.ArgumentNotNull(dr, "DataReader");
 
@@ -541,10 +592,10 @@ namespace ChoETL
             dynamic expando = new ExpandoObject();
             var expandoDic = (IDictionary<string, object>)expando;
 
-            Configuration.UseNestedKeyFormat = false;
+            w.Configuration.UseNestedKeyFormat = false;
 
             //int ordinal = 0;
-            if (Configuration.FixedLengthRecordFieldConfigurations.IsNullOrEmpty())
+            if (w.Configuration.FixedLengthRecordFieldConfigurations.IsNullOrEmpty())
             {
                 string colName = null;
                 Type colType = null;
@@ -558,12 +609,12 @@ namespace ChoETL
 
                     fieldLength = ChoFixedLengthFieldDefaultSizeConfiguation.Instance.GetSize(colType);
                     var obj = new ChoFixedLengthRecordFieldConfiguration(colName, startIndex, fieldLength);
-                    Configuration.FixedLengthRecordFieldConfigurations.Add(obj);
+                    w.Configuration.FixedLengthRecordFieldConfigurations.Add(obj);
                     startIndex += fieldLength;
                 }
             }
 
-            var ordinals = Configuration.FixedLengthRecordFieldConfigurations.ToDictionary(c => c.Name, c => dr.HasColumn(c.Name) ? dr.GetOrdinal(c.Name) : -1);
+            var ordinals = w.Configuration.FixedLengthRecordFieldConfigurations.ToDictionary(c => c.Name, c => dr.HasColumn(c.Name) ? dr.GetOrdinal(c.Name) : -1);
             while (dr.Read())
             {
                 expandoDic.Clear();
@@ -573,11 +624,50 @@ namespace ChoETL
                     expandoDic.Add(fc.Key, fc.Value == -1 ? null : dr[fc.Value]);
                 }
 
-                Write(expando);
+                w.Write(expando);
+            }
+        }
+        public static void Write(StringBuilder sb, DataTable dt)
+        {
+            ChoGuard.ArgumentNotNull(dt, "DataTable");
+
+            using (var w = new ChoFixedLengthWriter(sb))
+            {
+                Write(w, dt);
             }
         }
 
-        public void Write(DataTable dt)
+        public static void Write(string filePath, DataTable dt)
+        {
+            ChoGuard.ArgumentNotNull(dt, "DataTable");
+
+            using (var w = new ChoFixedLengthWriter(filePath))
+            {
+                Write(w, dt);
+            }
+        }
+
+        public static void Write(TextWriter textWriter, DataTable dt)
+        {
+            ChoGuard.ArgumentNotNull(dt, "DataTable");
+
+            using (var w = new ChoFixedLengthWriter(textWriter))
+            {
+                Write(w, dt);
+            }
+        }
+
+        public static void Write(Stream inStream, DataTable dt)
+        {
+            ChoGuard.ArgumentNotNull(dt, "DataTable");
+
+            using (var w = new ChoFixedLengthWriter(inStream))
+            {
+                Write(w, dt);
+            }
+        }
+
+        private static void Write(ChoFixedLengthWriter w, DataTable dt)
         {
             ChoGuard.ArgumentNotNull(dt, "DataTable");
 
@@ -585,9 +675,9 @@ namespace ChoETL
             dynamic expando = new ExpandoObject();
             var expandoDic = (IDictionary<string, object>)expando;
 
-            Configuration.UseNestedKeyFormat = false;
+            w.Configuration.UseNestedKeyFormat = false;
 
-            if (Configuration.FixedLengthRecordFieldConfigurations.IsNullOrEmpty())
+            if (w.Configuration.FixedLengthRecordFieldConfigurations.IsNullOrEmpty())
             {
                 string colName = null;
                 Type colType = null;
@@ -601,7 +691,7 @@ namespace ChoETL
 
                     fieldLength = ChoFixedLengthFieldDefaultSizeConfiguation.Instance.GetSize(colType);
                     var obj = new ChoFixedLengthRecordFieldConfiguration(colName, startIndex, fieldLength);
-                    Configuration.FixedLengthRecordFieldConfigurations.Add(obj);
+                    w.Configuration.FixedLengthRecordFieldConfigurations.Add(obj);
                     startIndex += fieldLength;
                 }
             }
@@ -610,12 +700,12 @@ namespace ChoETL
             {
                 expandoDic.Clear();
 
-                foreach (var fc in Configuration.FixedLengthRecordFieldConfigurations)
+                foreach (var fc in w.Configuration.FixedLengthRecordFieldConfigurations)
                 {
                     expandoDic.Add(fc.Name, row[fc.Name]);
                 }
 
-                Write(expando);
+                w.Write(expando);
             }
         }
 

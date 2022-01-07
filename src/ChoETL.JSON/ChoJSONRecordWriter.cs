@@ -232,6 +232,7 @@ namespace ChoETL
 
                 foreach (object rec1 in GetRecords(recEnum))
                 {
+                    _index++;
                     record = rec1;
 
                     if (!isFirstRec)
