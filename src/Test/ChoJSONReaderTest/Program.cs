@@ -7929,11 +7929,71 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
+        static void CSV2JSON()
+        {
+            string csvFilePath = @"C:\Projects\GitHub\ChoETL\data\XBTUSD.csv";
+
+            using (var r = new ChoCSVReader(csvFilePath)
+                .NotifyAfter(1000)
+                .Setup(s => s.RowsLoaded += (o, e) => $"Rows loaded: {e.RowsLoaded}".Print())
+                )
+            {
+                using (var w = new ChoJSONWriter(@"C:\Projects\GitHub\ChoETL\data\XBTUSD.json"))
+                    w.Write(r.Take(10000));
+            }
+
+        }
+
+        static void Issue170()
+        {
+            string jsonFilePath = @"C:\Projects\GitHub\ChoETL\data\largetestdata\largetestdata.json";
+
+            using (var r = new ChoJSONReader(jsonFilePath)
+                .WithJSONPath("$..ControlJob.ProcessJobs.ProcessRecipes.RecipeSteps.SensorData")
+                .NotifyAfter(10)
+                .Setup(s => s.RowsLoaded += (o, e) => $"Rows loaded: {e.RowsLoaded}".Print())
+                .Configure(c => c.CustomJObjectLoader = (re, s) =>
+                {
+                    //var x = JObject.Load(re);
+                    ////re.Skip();
+                    //return x;
+                    return JObject.FromObject(new { Id = 1 });
+                })
+                )
+            {
+                //r.Loop(null, o => o.Print());
+                r.Count().Print();
+            }
+
+        }
+
+        static void ReadXBTUSDFile()
+        {
+            string jsonFilePath = @"C:\Projects\GitHub\ChoETL\data\XBTUSD.json";
+
+            using (var r = new ChoJSONReader(jsonFilePath)
+                //.WithJSONPath("$..Column4")
+                .NotifyAfter(10)
+                .Setup(s => s.RowsLoaded += (o, e) => $"Rows loaded: {e.RowsLoaded}".Print())
+                .Configure(c => c.CustomJObjectLoader = (re, s) =>
+                {
+                    //var x = JObject.Load(re);
+                    ////re.Skip();
+                    //return x;
+                    return JObject.FromObject(new { Id = 1 });
+                })
+                )
+            {
+                r.Take(10).Loop(null, o => o.Print());
+            }
+
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            LoadSensorData();
+            Issue170();
             //DeserializeNestedObjectOfList();
             return;
 

@@ -25,8 +25,8 @@ namespace ChoETL
             get { return _XPath; }
             set
             {
-                IsXPathSet = value.IsNullOrWhiteSpace();
-                _XPath = value ;
+                IsXPathSet = !value.IsNullOrWhiteSpace();
+                _XPath = value;
             }
         }
 

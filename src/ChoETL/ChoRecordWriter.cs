@@ -37,7 +37,7 @@ namespace ChoETL
             TraceSwitch = ChoETLFramework.TraceSwitch;
         }
 
-        protected bool RaisedRowsWritten(long rowsWritten)
+        protected bool RaisedRowsWritten(long rowsWritten, bool isFinal = false)
         {
             EventHandler<ChoRowsWrittenEventArgs> rowsWrittenEvent = RowsWritten;
             if (rowsWrittenEvent == null)

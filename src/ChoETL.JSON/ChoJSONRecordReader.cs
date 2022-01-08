@@ -113,7 +113,11 @@ namespace ChoETL
 
         private IEnumerable<JObject> ReadNodes(JsonTextReader sr)
         {
-            while (sr.Read())
+            bool proceed = true;
+            if (sr.TokenType != JsonToken.StartArray && sr.TokenType != JsonToken.StartObject)
+                proceed = sr.Read();
+
+            if (proceed) //sr.Read())
             {
                 if (sr.TokenType == JsonToken.StartArray)
                 {
@@ -121,11 +125,11 @@ namespace ChoETL
                     {
                         if (sr.TokenType == JsonToken.StartObject)
                         {
-                            yield return JObject.Load(sr);
+                            yield return Configuration.InvokeJObjectLoader(sr);
                         }
                         else if (sr.TokenType == JsonToken.StartArray)
                         {
-                            var z = JArray.Load(sr).Children().ToArray();
+                            var z = Configuration.InvokeJObjectLoader(sr).Children().ToArray();
                             dynamic x = new JObject(new JProperty("Value", z));
                             yield return x;
                         }
@@ -140,7 +144,11 @@ namespace ChoETL
                             dynamic x = null;
                             try
                             {
-                                x = new JObject(new JProperty("Value", JToken.Load(sr)));
+                                var jt = JToken.Load(sr);
+                                if (jt is JProperty)
+                                    x = new JObject(jt);
+                                else
+                                    x = new JObject(new JProperty("Value", jt));
                             }
                             catch { }
                             if (x != null)
@@ -150,7 +158,7 @@ namespace ChoETL
                             break;
                     }
                 }
-                if (sr.TokenType == JsonToken.StartObject)
+                else if (sr.TokenType == JsonToken.StartObject)
                     yield return (JObject)JToken.ReadFrom(sr);
 
                 sr.Skip();
@@ -235,11 +243,11 @@ namespace ChoETL
                     IEnumerable<JObject> result = null;
                     try
                     {
-                        result = ToJObjects(JObject.Load(sr).SelectTokens(Configuration.JSONPath));
+                        result = ToJObjects(Configuration.InvokeJObjectLoader(sr).SelectTokens(Configuration.JSONPath));
                     }
                     catch
                     {
-                        result = ToJObjects(JArray.Load(sr).SelectTokens(Configuration.JSONPath));
+                        result = ToJObjects(Configuration.InvokeJArrayLoader(sr).SelectTokens(Configuration.JSONPath));
                     }
                     if (result != null)
                     {
@@ -328,7 +336,19 @@ namespace ChoETL
                             return true;
                     }
                 }
-                break;
+                else if (sr.TokenType == JsonToken.StartArray)
+                {
+                    if (sr.Path == elementName || sr.Path.EndsWith($".{elementName}"))
+                        return true;
+
+                    while (sr.Read())
+                    {
+                        if (sr.TokenType == JsonToken.StartObject)
+                        {
+                            return ReadToFollowing(sr, elementName);
+                        }
+                    }
+                }
             }
 
             return false;
@@ -367,7 +387,7 @@ namespace ChoETL
 
                 if (match)
                 {
-                    if (ReadToFollowing(sr, elementNames.Skip(elementNames.Length - 1).First()))
+                    while (ReadToFollowing(sr, elementNames.Skip(elementNames.Length - 1).First()))
                     {
                         foreach (var node in ReadNodes(sr))
                             yield return node;
@@ -644,7 +664,7 @@ namespace ChoETL
             }
 
             if (!abortRequested && pair != null)
-                RaisedRowsLoaded(pair.Item1);
+                RaisedRowsLoaded(pair.Item1, true);
         }
 
         private bool LoadNode(Tuple<long, JObject> pair, ref object rec)
@@ -2106,18 +2126,18 @@ namespace ChoETL
                         {
                             dict.Add("$type", ((JObject)jToken)["$type"]);
                         }
-                        dict = dict.Select(kvp =>
-                        {
-                            if (kvp.Value is JToken)
-                            {
-                                var dobj = ToDynamic((JToken)kvp.Value);
-                                if (dobj is ChoDynamicObject)
-                                    ((ChoDynamicObject)dobj).DynamicObjectName = kvp.Key;
-                                return new KeyValuePair<string, object>(kvp.Key, dobj);
-                            }
-                            else
-                                return kvp;
-                        }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.InvariantCultureIgnoreCase);
+                        //dict = dict.Select(kvp =>
+                        //{
+                        //    if (kvp.Value is JToken)
+                        //    {
+                        //        var dobj = ToDynamic((JToken)kvp.Value);
+                        //        if (dobj is ChoDynamicObject)
+                        //            ((ChoDynamicObject)dobj).DynamicObjectName = kvp.Key;
+                        //        return new KeyValuePair<string, object>(kvp.Key, dobj);
+                        //    }
+                        //    else
+                        //        return kvp;
+                        //}).ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.InvariantCultureIgnoreCase);
                         return new ChoDynamicObject(dict);
                     case JTokenType.Uri:
                         return (Uri)jToken;

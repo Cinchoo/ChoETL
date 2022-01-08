@@ -159,11 +159,12 @@ namespace ChoETL
             bool? skipUntil = true;
             bool? doWhile = true;
             StringBuilder multiLineHeader = new StringBuilder();
+            Tuple<long, string> pair = null;
 
             using (ChoPeekEnumerator<Tuple<long, string>> e = new ChoPeekEnumerator<Tuple<long, string>>(
                 new ChoIndexedEnumerator<string>(source is IEnumerable<string> ? (IEnumerable<string>)source :
                     ReadLines(sr)).ToEnumerable(),
-                (pair) =>
+                (pairElement) =>
                 {
                     //bool isStateAvail = IsStateAvail();
                     skip = false;
@@ -172,7 +173,7 @@ namespace ChoETL
                     {
                         if (skipUntil.Value)
                         {
-                            skipUntil = RaiseSkipUntil(pair);
+                            skipUntil = RaiseSkipUntil(pairElement);
                             if (skipUntil == null)
                             {
 
@@ -204,13 +205,13 @@ namespace ChoETL
                         ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, Environment.NewLine);
 
                         if (!skip.Value)
-                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Loading line [{0}]...".FormatString(pair.Item1));
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Loading line [{0}]...".FormatString(pairElement.Item1));
                         else
-                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Skipping line [{0}]...".FormatString(pair.Item1));
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Skipping line [{0}]...".FormatString(pairElement.Item1));
                     }
 
                     if (skip.Value)
-                        return new Tuple<bool?, Tuple<long, string>>(skip, pair);
+                        return new Tuple<bool?, Tuple<long, string>>(skip, pairElement);
 
                     //if (!(sr.BaseStream is MemoryStream))
                     //    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, ChoETLFramework.Switch.TraceVerbose, "Loading line [{0}]...".FormatString(item.Item1));
@@ -218,25 +219,25 @@ namespace ChoETL
                     //if (Task != null)
                     //    return !IsStateNOTExistsOrNOTMatch(item);
 
-                    if (pair.Item2.IsNullOrWhiteSpace())
+                    if (pairElement.Item2.IsNullOrWhiteSpace())
                     {
-                        if (RaiseReportEmptyLine(this, pair.Item1))
+                        if (RaiseReportEmptyLine(this, pairElement.Item1))
                         {
                             if (TraceSwitch.TraceVerbose)
-                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring empty line found at [{0}].".FormatString(pair.Item1));
-                            return new Tuple<bool?, Tuple<long, string>>(true, pair);
+                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring empty line found at [{0}].".FormatString(pairElement.Item1));
+                            return new Tuple<bool?, Tuple<long, string>>(true, pairElement);
                         }
                         else
                         {
                             if (Configuration.FileHeaderConfiguration.HasHeaderRecord)
                             {
                                 if (_headerFound)
-                                    return new Tuple<bool?, Tuple<long, string>>(false, pair);
+                                    return new Tuple<bool?, Tuple<long, string>>(false, pairElement);
                                 else
-                                    return new Tuple<bool?, Tuple<long, string>>(true, pair);
+                                    return new Tuple<bool?, Tuple<long, string>>(true, pairElement);
                             }
                             else
-                                return new Tuple<bool?, Tuple<long, string>>(false, pair);
+                                return new Tuple<bool?, Tuple<long, string>>(false, pairElement);
                         }
 
                         //if (!Configuration.IgnoreEmptyLine)
@@ -250,13 +251,13 @@ namespace ChoETL
                     }
 
                     //LoadExcelSeparator if any
-                    if (pair.Item1 == 1
+                    if (pairElement.Item1 == 1
                         && !_excelSeparatorFound)
                     {
                         if (TraceSwitch.TraceVerbose)
-                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Inspecting for excel separator at [{0}]...".FormatString(pair.Item1));
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Inspecting for excel separator at [{0}]...".FormatString(pairElement.Item1));
 
-                        bool retVal = LoadExcelSeperatorIfAny(pair);
+                        bool retVal = LoadExcelSeperatorIfAny(pairElement);
                         _excelSeparatorFound = true;
 
                         if (Configuration.HasExcelSeparator != null
@@ -265,43 +266,43 @@ namespace ChoETL
                             throw new ChoParserException("Missing excel separator header line in the file.");
 
                         if (retVal)
-                            return new Tuple<bool?, Tuple<long, string>>(true, pair);
+                            return new Tuple<bool?, Tuple<long, string>>(true, pairElement);
                     }
 
                     if (commentTokens != null && commentTokens.Length > 0)
                     {
                         foreach (string comment in commentTokens)
                         {
-                            if (!pair.Item2.IsNull() && pair.Item2.StartsWith(comment, StringComparison.Ordinal)) //, true, Configuration.Culture))
+                            if (!pairElement.Item2.IsNull() && pairElement.Item2.StartsWith(comment, StringComparison.Ordinal)) //, true, Configuration.Culture))
                             {
                                 if (TraceSwitch.TraceVerbose)
-                                    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Comment line found at [{0}]...".FormatString(pair.Item1));
+                                    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Comment line found at [{0}]...".FormatString(pairElement.Item1));
 
                                 //Raise comment callback
                                 var mlr = Reader as IChoCommentLineReader;
                                 if (mlr != null)
                                 {
-                                    mlr.RaiseCommentLineFound(pair.Item1, pair.Item2);
+                                    mlr.RaiseCommentLineFound(pairElement.Item1, pairElement.Item2);
                                 }
                                  
-                                return new Tuple<bool?, Tuple<long, string>>(true, pair);
+                                return new Tuple<bool?, Tuple<long, string>>(true, pairElement);
                             }
                         }
                     }
 
                     if (Configuration.FileHeaderConfiguration.HeaderLineAt > 0)
                     {
-                        if (pair.Item1 < Configuration.FileHeaderConfiguration.HeaderLineAt)
+                        if (pairElement.Item1 < Configuration.FileHeaderConfiguration.HeaderLineAt)
                         {
                             if (TraceSwitch.TraceVerbose)
-                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Header line at {1}. Skipping [{0}] line...".FormatString(pair.Item1, Configuration.FileHeaderConfiguration.HeaderLineAt));
-                            return new Tuple<bool?, Tuple<long, string>>(true, pair);
+                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Header line at {1}. Skipping [{0}] line...".FormatString(pairElement.Item1, Configuration.FileHeaderConfiguration.HeaderLineAt));
+                            return new Tuple<bool?, Tuple<long, string>>(true, pairElement);
                         }
                     }
 
                     if (Reader is IChoSanitizableReader)
                     {
-                        pair = new Tuple<long, string>(pair.Item1, ((IChoSanitizableReader)Reader).RaiseSanitizeLine(pair.Item1, pair.Item2));
+                        pairElement = new Tuple<long, string>(pairElement.Item1, ((IChoSanitizableReader)Reader).RaiseSanitizeLine(pairElement.Item1, pairElement.Item2));
                     }
 
                     //if (!_configCheckDone)
@@ -321,18 +322,18 @@ namespace ChoETL
                     if (Configuration.TurnOnMultiLineHeaderSupport && Reader is IChoMultiLineHeaderReader)
                     {
                         var mlr = Reader as IChoMultiLineHeaderReader;
-                        if (mlr != null && mlr.RaiseMultiLineHeader(pair.Item1, pair.Item2))
+                        if (mlr != null && mlr.RaiseMultiLineHeader(pairElement.Item1, pairElement.Item2))
                         {
                             //if (multiLineHeader.Length > 0 && !multiLineHeader.ToString().EndsWith(Configuration.Delimiter))
                             //    multiLineHeader.Append(Configuration.Delimiter);
 
                             if (Reader is IChoSanitizableReader)
                             {
-                                pair = new Tuple<long, string>(pair.Item1, ((IChoSanitizableReader)Reader).RaiseSanitizeLine(pair.Item1, pair.Item2));
+                                pairElement = new Tuple<long, string>(pairElement.Item1, ((IChoSanitizableReader)Reader).RaiseSanitizeLine(pairElement.Item1, pairElement.Item2));
                             }
 
-                            multiLineHeader.Append(pair.Item2);
-                            return new Tuple<bool?, Tuple<long, string>>(true, pair);
+                            multiLineHeader.Append(pairElement.Item2);
+                            return new Tuple<bool?, Tuple<long, string>>(true, pairElement);
                         }
                         else
                         {
@@ -356,7 +357,7 @@ namespace ChoETL
                             _headerFound = true;
                             LoadHeaderLine(header);
 
-                            return new Tuple<bool?, Tuple<long, string>>(false, pair);
+                            return new Tuple<bool?, Tuple<long, string>>(false, pairElement);
                         }
                     }
                     else if ((Configuration.FileHeaderConfiguration.HasHeaderRecord
@@ -369,7 +370,7 @@ namespace ChoETL
                             {
                             }
                             else
-                                Configuration.Validate(GetHeaders(pair.Item2));
+                                Configuration.Validate(GetHeaders(pairElement.Item2));
                             var dict = recFieldTypes = Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
                             //if (Configuration.MaxScanRows == 0)
                                 RaiseMembersDiscovered(dict);
@@ -380,18 +381,18 @@ namespace ChoETL
                         if (Configuration.FileHeaderConfiguration.IgnoreHeader)
                         {
                             if (TraceSwitch.TraceVerbose)
-                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring header line at [{0}]...".FormatString(pair.Item1));
+                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring header line at [{0}]...".FormatString(pairElement.Item1));
                         }
                         else
                         {
                             if (TraceSwitch.TraceVerbose)
-                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Loading header line at [{0}]...".FormatString(pair.Item1));
+                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Loading header line at [{0}]...".FormatString(pairElement.Item1));
 
                             headerLineLoaded = true;
                         }
                         _headerFound = true;
-                        LoadHeaderLine(pair);
-                        return new Tuple<bool?, Tuple<long, string>>(true, pair);
+                        LoadHeaderLine(pairElement);
+                        return new Tuple<bool?, Tuple<long, string>>(true, pairElement);
                     }
                     else
                     {
@@ -401,23 +402,23 @@ namespace ChoETL
                             {
                             }
                             else
-                                Configuration.Validate(GetHeaders(pair.Item2));
+                                Configuration.Validate(GetHeaders(pairElement.Item2));
                             var dict =   Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
                             //if (Configuration.MaxScanRows == 0)
                                 RaiseMembersDiscovered(dict);
                             Configuration.UpdateFieldTypesIfAny(dict);
                             _configCheckDone = true;
-                            LoadHeaderLine(pair);
+                            LoadHeaderLine(pairElement);
                         }
                     }
 
-                    return new Tuple<bool?, Tuple<long, string>>(false, pair);
+                    return new Tuple<bool?, Tuple<long, string>>(false, pairElement);
                 }))
             {
                 while (true)
                 {
                     recCount++;
-                    Tuple<long, string> pair = e.Peek;
+                    pair = e.Peek;
                     if (pair == null)
                     {
                         if (!abortRequested)
@@ -518,6 +519,9 @@ namespace ChoETL
                             break;
                     }
                 }
+
+                if (!abortRequested && pair != null)
+                    RaisedRowsLoaded(pair.Item1, true);
             }
         }
 

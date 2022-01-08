@@ -286,7 +286,7 @@ namespace ChoETL
             }
 
             if (!abortRequested && pair != null)
-                RaisedRowsLoaded(pair.Item1);
+                RaisedRowsLoaded(pair.Item1, true);
         }
 
         private bool LoadNode(Tuple<long, object> pair, ref object rec)

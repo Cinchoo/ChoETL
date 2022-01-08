@@ -60,9 +60,11 @@ namespace ChoETL
             bool _headerFound = false;
             bool? skipUntil = true;
             bool? doWhile = true;
+            bool abortRequested = false;
+            Tuple<long, string> pair = null;
             using (ChoPeekEnumerator<Tuple<long, string>> e = new ChoPeekEnumerator<Tuple<long, string>>(
                 new ChoIndexedEnumerator<string>(sr.ReadLines(Configuration.EOLDelimiter, Configuration.QuoteChar, Configuration.MayContainEOLInData, Configuration.MaxLineSize)).ToEnumerable(),
-                (pair) =>
+                (pairElement) =>
                 {
                     //bool isStateAvail = IsStateAvail();
 
@@ -71,7 +73,7 @@ namespace ChoETL
                     {
                         if (skipUntil.Value)
                         {
-                            skipUntil = RaiseSkipUntil(pair);
+                            skipUntil = RaiseSkipUntil(pairElement);
                             if (skipUntil == null)
                             {
 
@@ -104,9 +106,9 @@ namespace ChoETL
                         ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, Environment.NewLine);
 
                         if (!skip.Value)
-                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Loading line [{0}]...".FormatString(pair.Item1));
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Loading line [{0}]...".FormatString(pairElement.Item1));
                         else
-                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Skipping line [{0}]...".FormatString(pair.Item1));
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Skipping line [{0}]...".FormatString(pairElement.Item1));
                     }
 
                     if (skip.Value)
@@ -118,14 +120,14 @@ namespace ChoETL
                     //if (Task != null)
                     //    return !IsStateNOTExistsOrNOTMatch(item);
 
-                    if (pair.Item2.IsNullOrWhiteSpace())
+                    if (pairElement.Item2.IsNullOrWhiteSpace())
                     {
                         if (!Configuration.IgnoreEmptyLine)
-                            throw new ChoParserException("Empty line found at [{0}] location.".FormatString(pair.Item1));
+                            throw new ChoParserException("Empty line found at [{0}] location.".FormatString(pairElement.Item1));
                         else
                         {
                             if (TraceSwitch.TraceVerbose)
-                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring empty line found at [{0}].".FormatString(pair.Item1));
+                                ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring empty line found at [{0}].".FormatString(pairElement.Item1));
                             return true;
                         }
                     }
@@ -134,10 +136,10 @@ namespace ChoETL
                     {
                         foreach (string comment in commentTokens)
                         {
-                            if (!pair.Item2.IsNull() && pair.Item2.StartsWith(comment, StringComparison.Ordinal)) //, true, Configuration.Culture))
+                            if (!pairElement.Item2.IsNull() && pairElement.Item2.StartsWith(comment, StringComparison.Ordinal)) //, true, Configuration.Culture))
                             {
                                 if (TraceSwitch.TraceVerbose)
-                                    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Comment line found at [{0}]...".FormatString(pair.Item1));
+                                    ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Comment line found at [{0}]...".FormatString(pairElement.Item1));
                                 return true;
                             }
                         }
@@ -145,7 +147,7 @@ namespace ChoETL
 
                     if (!_configCheckDone)
                     {
-                        Configuration.Validate(pair); // GetHeaders(pair.Item2));
+                        Configuration.Validate(pairElement); // GetHeaders(pair.Item2));
                         _configCheckDone = true;
                     }
 
@@ -154,7 +156,7 @@ namespace ChoETL
                         && !_headerFound)
                     {
                         if (TraceSwitch.TraceVerbose)
-                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring header line at [{0}]...".FormatString(pair.Item1));
+                        ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Ignoring header line at [{0}]...".FormatString(pairElement.Item1));
                         _headerFound = true;
                         return true;
                     }
@@ -164,7 +166,7 @@ namespace ChoETL
             {
                 while (true)
                 {
-                    Tuple<long, string> pair = e.Peek;
+                    pair = e.Peek;
                     if (pair == null)
                     {
                         RaiseEndLoad(sr);
@@ -197,6 +199,7 @@ namespace ChoETL
                         if (RaisedRowsLoaded(pair.Item1))
                         {
                             ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Abort requested.");
+                            abortRequested = true;
                             yield break;
                         }
                     }
@@ -208,6 +211,9 @@ namespace ChoETL
                             break;
                     }
                 }
+
+                if (!abortRequested && pair != null)
+                    RaisedRowsLoaded(pair.Item1, true);
             }
         }
         

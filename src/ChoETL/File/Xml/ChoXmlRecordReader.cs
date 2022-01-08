@@ -353,7 +353,7 @@ namespace ChoETL
             }
 
             if (!abortRequested && pair != null)
-                RaisedRowsLoaded(pair.Item1);
+                RaisedRowsLoaded(pair.Item1, true);
         }
 
         private string GetNSPrefix()

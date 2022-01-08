@@ -250,7 +250,7 @@ namespace ChoETL
             System.Threading.Thread.CurrentThread.CurrentCulture = Configuration.Culture;
 
             object recOutput = null;
-
+            bool abortRequested = false;
             try
             {
                 foreach (object record in GetRecords(recEnum))
@@ -333,16 +333,21 @@ namespace ChoETL
                     }
 
                     yield return (T)recOutput;
+                    recOutput = null;
 
                     if (Configuration.NotifyAfter > 0 && _index % Configuration.NotifyAfter == 0)
                     {
                         if (RaisedRowsWritten(_index))
                         {
                             ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Abort requested.");
+                            abortRequested = true;
                             yield break;
                         }
                     }
                 }
+
+                if (!abortRequested && recOutput != null)
+                    RaisedRowsWritten(_index, true);
             }
             finally
             {

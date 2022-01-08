@@ -26,6 +26,25 @@ namespace ChoETL
         internal readonly Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>> JSONRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>>();
         public readonly Dictionary<Type, Func<object, object>> NodeConvertersForType = new Dictionary<Type, Func<object, object>>();
 
+        public Func<JsonReader, JsonLoadSettings, JObject> CustomJObjectLoader
+        {
+            get;
+            set;
+        }
+
+        public Func<JsonReader, JsonLoadSettings, JArray> CustomJArrayLoader
+        {
+            get;
+            set;
+        }
+        public bool UseImplicitJArrayLoader { get; set; } = true;
+
+        public JsonLoadSettings JsonLoadSettings
+        {
+            get;
+            set;
+        }
+
         public string LineBreakChars
         {
             get;
@@ -1012,6 +1031,66 @@ namespace ChoETL
         //        }
         //    }
         //}
+
+        internal JObject InvokeJObjectLoader(JsonReader reader)
+        {
+            try
+            {
+                if (CustomJObjectLoader != null)
+                {
+                    var retValue = CustomJObjectLoader(reader, JsonLoadSettings);
+                    reader.Skip();
+                    return retValue;
+                }
+                else
+                    return JObject.Load(reader, JsonLoadSettings);
+            }
+            finally
+            {
+            }
+        }
+
+        internal JArray InvokeJArrayLoader(JsonReader reader)
+        {
+            try
+            {
+                if (CustomJArrayLoader != null)
+                    return CustomJArrayLoader(reader, JsonLoadSettings);
+                else if (UseImplicitJArrayLoader)
+                {
+                    JArray ja = new JArray();
+                    while (reader.Read())
+                    {
+                        if (reader.TokenType == JsonToken.StartObject)
+                        {
+                            var jo = InvokeJObjectLoader(reader);
+                            ja.Add(jo);
+                        }
+                        else if (reader.TokenType == JsonToken.StartArray)
+                        {
+                            while (reader.Read())
+                            {
+                                if (reader.TokenType == JsonToken.StartObject)
+                                {
+                                    var jo = InvokeJObjectLoader(reader);
+                                    ja.Add(jo);
+                                }
+                            }
+                        }
+                    }
+                    return ja;
+                }
+                else
+                {
+                    var retValue = JArray.Load(reader, JsonLoadSettings);
+                    reader.Skip();
+                    return retValue;
+                }
+            }
+            finally
+            {
+            }
+        }
     }
 
     public class ChoJSONRecordConfiguration<T> : ChoJSONRecordConfiguration

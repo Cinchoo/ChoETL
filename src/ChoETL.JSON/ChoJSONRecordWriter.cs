@@ -185,6 +185,7 @@ namespace ChoETL
             bool recordIgnored = false;
             long recCount = 0;
             string[] combinedFieldNames = null;
+            bool abortRequested = false;
             try
             {
                 object record = null;
@@ -483,19 +484,24 @@ namespace ChoETL
                         }
                     }
 
-                    yield return record;
 
                     if (Configuration.NotifyAfter > 0 && _index % Configuration.NotifyAfter == 0)
                     {
                         if (RaisedRowsWritten(_index))
                         {
                             ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Abort requested.");
+                            abortRequested = true;
                             yield break;
                         }
                     }
 
+                    yield return record;
                     isFirstRec = false;
+                    record = null;
                 }
+
+                if (!abortRequested && record != null)
+                    RaisedRowsWritten(_index, true);
             }
             finally
             {

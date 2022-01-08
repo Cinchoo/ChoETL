@@ -460,11 +460,12 @@ namespace ChoETL
                 _fc = GetFieldConfiguration(_mi.ReflectedType, _mi.Name);
             }
 
+            var jsonConfig = Configuration as ChoJSONRecordConfiguration;
             if (crs == null || _fc == null)
             {
                 try
                 {
-                    var jo = JObject.Load(reader);
+                    var jo = jsonConfig == null ? JObject.Load(reader) : jsonConfig.InvokeJObjectLoader(reader);
                     try
                     {
                         using (var jObjectReader = reader.CopyReaderForObject(jo))
@@ -514,7 +515,7 @@ namespace ChoETL
                     {
                         try
                         {
-                            retValue = JObject.Load(reader);
+                            retValue = jsonConfig == null ? JObject.Load(reader) : jsonConfig.InvokeJObjectLoader(reader);
                         }
                         catch
                         {

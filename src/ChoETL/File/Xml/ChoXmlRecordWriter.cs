@@ -238,9 +238,12 @@ namespace ChoETL
                     }
                 }
 
-                foreach (object record in GetRecords(recEnum))
+                object record = null;
+                bool abortRequested = false;
+                foreach (object rec in GetRecords(recEnum))
                 {
                     _index++;
+                    record = rec;
 
                     if (TraceSwitch.TraceVerbose)
                     {
@@ -482,10 +485,14 @@ namespace ChoETL
                         if (RaisedRowsWritten(_index))
                         {
                             ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Abort requested.");
+                            abortRequested = true;
                             yield break;
                         }
                     }
                 }
+
+                if (!abortRequested && record != null)
+                    RaisedRowsWritten(_index, true);
             }
             finally
             {

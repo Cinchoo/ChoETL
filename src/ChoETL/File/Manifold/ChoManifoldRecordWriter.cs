@@ -49,9 +49,12 @@ namespace ChoETL
 
             try
             {
-                foreach (object record in records)
+                object record = null;
+                bool abortRequested = false;
+                foreach (object rec in records)
                 {
                     _index++;
+                    record = rec;
                     recType = record.GetType();
                     if (record is IChoETLNameableObject)
                         ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Writing [{0}] object...".FormatString(((IChoETLNameableObject)record).Name));
@@ -157,16 +160,21 @@ namespace ChoETL
                     }
 
                     yield return record;
+                    record = null;
 
                     if (Configuration.NotifyAfter > 0 && _index % Configuration.NotifyAfter == 0)
                     {
                         if (RaisedRowsWritten(_index))
                         {
                             ChoETLFramework.WriteLog(TraceSwitch.TraceVerbose, "Abort requested.");
+                            abortRequested = true;
                             yield break;
                         }
                     }
                 }
+
+                if (!abortRequested && record != null)
+                    RaisedRowsWritten(_index, true);
             }
             finally
             {

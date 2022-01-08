@@ -433,9 +433,51 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            NestedClassTest();
+            LoadXmlUsingConfigAndPOCO();
         }
 
+        public static void LoadXmlUsingConfigAndPOCO()
+        {
+            string xml = @"<Employees>
+    <Employee Id='1'>
+        <Name>Tom</Name>
+    </Employee>
+    <Employee Id='2'>
+        <Name>Mark</Name>
+    </Employee>
+</Employees>";
+
+            foreach (var e in ChoXmlReader<EmployeeRecX>.LoadText(xml))
+            {
+                Console.WriteLine(e.Id);
+                Console.WriteLine(e.Name);
+            }
+        }
+
+        public class EmployeeRecX
+        {
+            //[ChoXmlNodeRecordField(XPath = "//@Id")]
+            [ChoXPath("//@Id1")]
+            [Required]
+            public int Id
+            {
+                get;
+                set;
+            }
+            //[ChoXmlNodeRecordField(XPath = "//Name")]
+            [DefaultValue("XXXX")]
+            public string Name
+            {
+                get;
+                set;
+            }
+
+            public override string ToString()
+            {
+                return "{0}. {1}".FormatString(Id, Name);
+            }
+        }
+         
         static void NestedClassTest()
         {
             string xml = @"<Specifier>
