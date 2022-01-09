@@ -7948,27 +7948,28 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
         static void Issue170()
         {
             ChoETLFrxBootstrap.MaxArrayItemsToPrint = 1;
-            string jsonFilePath = @"C:\Projects\GitHub\ChoETL\data\largetestdata\largetestdata.json";
-            //string jsonFilePath = @"C:\Projects\GitHub\ChoETL\data\smallsubset.json";
+            //string jsonFilePath = @"C:\Projects\GitHub\ChoETL\data\largetestdata\largetestdata.json";
+            string jsonFilePath = @"C:\Projects\GitHub\ChoETL\data\smallsubset.json";
 
             dynamic keys = null;
             dynamic attributes = null;
 
             //Capture Keys
-            using (var r = new ChoJSONReader(jsonFilePath).WithJSONPath("$..ControlJob.Keys"))
-            {
-                keys = r.FirstOrDefault();
-            }
+            //using (var r = new ChoJSONReader(jsonFilePath).WithJSONPath("$..ControlJob.Keys"))
+            //{
+            //    keys = r.FirstOrDefault();
+            //}
 
-            //Capture attributes
-            using (var r = new ChoJSONReader(jsonFilePath).WithJSONPath("$..ControlJob.Attributes"))
-            {
-                attributes = r.FirstOrDefault();
-            }
+            ////Capture attributes
+            //using (var r = new ChoJSONReader(jsonFilePath).WithJSONPath("$..ControlJob.Attributes"))
+            //{
+            //    attributes = r.FirstOrDefault();
+            //}
 
             int fileCount = 0;
             using (var r = new ChoJSONReader(jsonFilePath)
-                .WithJSONPath("$..ControlJob.ProcessJobs.ProcessRecipes.RecipeSteps")
+                //.WithJSONPath("$..ControlJob.ProcessJobs.ProcessRecipes.RecipeSteps")
+                .WithJSONPath("$..ControlJob.Attributes.ProcessJobs.ProcessRecipes[0].Keys")
                 .NotifyAfter(1)
                 .Setup(s => s.RowsLoaded += (o, e) => $"Rows loaded: {e.RowsLoaded} <- {DateTime.Now}".Print())
                 //.Configure(c => c.JObjectLoadOptions = ChoJObjectLoadOptions.None )
@@ -7976,26 +7977,17 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 //.Configure(c => c.MaxJArrayItemsLoad = 10)
                 .Configure(c => c.CustomJObjectLoader = (sr, s) =>
                 {
-                    //var x = JObject.Load(sr);
-                    ////sr.Skip();
-                    //return x;
+                    string outFilePath = $"C:\\Projects\\GitHub\\ChoETL\\data\\RecipeSteps_{fileCount++}.json";
+                    using (var jo = new ChoJObjectWriter(outFilePath))
+                    {
+                        jo.Formatting = Newtonsoft.Json.Formatting.Indented;
 
-                    string outFilePath = $"C:\\Projects\\GitHub\\ChoETL\\data\\out_{fileCount++}.json";
-                    var sw = outFilePath.CreateJSONWriter();
-
-                    sw.WriteStartObject();
-                    sw.WritePropertyName("Keys");
-                    sw.WriteRaw(JObject.FromObject(keys).ToString(Newtonsoft.Json.Formatting.None));
-
-                    sw.WriteRaw(@",");
-                    sw.WriteRaw(@"""Attributes"":");
-                    sw.WriteRaw(JObject.FromObject(attributes).ToString(Newtonsoft.Json.Formatting.None));
-
-                    sw.WriteRaw(@",");
-                    sw.WriteRaw(@"""RecipeSteps"":");
-                    sr.WriteTo(sw);
-                    sw.WriteEndObject();
-
+                        jo.WriteValue(new { x = 1, y = 2, z = new int[] { 1, 2 }, a = (string)null });
+                        jo.WriteProperty("Null", null);
+                        jo.WriteProperty("Keys", keys);
+                        jo.WriteProperty("Attributes", attributes);
+                        jo.WriteProperty("RecipeSteps", sr);
+                    }
                     return ChoJSONObjects.EmptyJObject;
                 })
             )

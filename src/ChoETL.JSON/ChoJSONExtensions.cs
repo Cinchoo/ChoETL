@@ -39,8 +39,29 @@ namespace ChoETL
             jwriter.Formatting = Newtonsoft.Json.Formatting.None;
             return jwriter;
         }
+        public static void WriteFormattedRawValue(this JsonWriter writer, string json, Action<JsonReader> setup = null)
+        {
+            if (json == null)
+                writer.WriteRawValue(json);
+            else
+            {
+                if (setup == null)
+                {
+                    setup = (rd) =>
+                    {
+                        rd.DateParseHandling = DateParseHandling.None;
+                        rd.FloatParseHandling = default;
+                    };
+                }
+                using (var reader = new JsonTextReader(new StringReader(json)))
+                {
+                    setup(reader);
+                    writer.WriteToken(reader);
+                }
+            }
+        }
 
-        public static void WriteTo(this JsonReader reader, JsonWriter writer, ChoJObjectLoadOptions? options = null)
+        public static void WriteReader(this JsonWriter writer, JsonReader reader, ChoJObjectLoadOptions? options = null)
         {
             ChoGuard.ArgumentNotNull(reader, nameof(reader));
             ChoGuard.ArgumentNotNull(writer, nameof(writer));
@@ -49,10 +70,10 @@ namespace ChoETL
                 options = ChoJObjectLoadOptions.All;
 
             writer.WriteStartObject();
-            WriteToInternal(reader, writer, options);
+            writer.WriteToReader(reader, options);
         }
 
-        private static void WriteToInternal(this JsonReader reader, JsonWriter writer, ChoJObjectLoadOptions? options = null)
+        private static void WriteToReader(this JsonWriter writer, JsonReader reader, ChoJObjectLoadOptions? options = null)
         {
             var path = reader.Path;
 
@@ -67,7 +88,7 @@ namespace ChoETL
                     else
                     {
                         writer.WriteStartObject();
-                        WriteToInternal(reader, writer, options);
+                        writer.WriteToReader(reader, options);
                     }
                 }
                 else if (reader.TokenType == JsonToken.EndObject)
@@ -111,8 +132,8 @@ namespace ChoETL
                 {
                     var propName = reader.Value.ToNString();
                     writer.WritePropertyName(propName);
-                    
-                    WriteToInternal(reader, writer, options);
+
+                    writer.WriteToReader(reader, options);
                 }
                 else if (reader.TokenType == JsonToken.Integer
                     || reader.TokenType == JsonToken.Float

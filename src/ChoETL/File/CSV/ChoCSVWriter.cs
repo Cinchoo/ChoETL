@@ -174,8 +174,8 @@ namespace ChoETL
                 throw new ChoParserException("Invalid data passed.");
             else if (record is IDataReader)
                 throw new ChoParserException("Invalid data passed.");
-            else if (!(record is IDictionary<string, object>))
-                throw new ChoParserException("Invalid data passed.");
+            //else if (!(record is IDictionary<string, object>))
+            //    throw new ChoParserException("Invalid data passed.");
 
             _writer.Writer = this;
             _writer.TraceSwitch = TraceSwitch;

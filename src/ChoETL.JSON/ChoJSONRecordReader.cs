@@ -159,7 +159,7 @@ namespace ChoETL
                     }
                 }
                 else if (sr.TokenType == JsonToken.StartObject)
-                    yield return (JObject)JToken.ReadFrom(sr);
+                    yield return Configuration.InvokeJObjectLoader(sr);
 
                 sr.Skip();
             }
@@ -316,12 +316,16 @@ namespace ChoETL
             {
                 if (token.IsNullOrWhiteSpace())
                     return false;
-                if (!token.IsValidIdentifierEx())
+                if (!IsValidIdentifier(token))
                     return false;
             }
 
             tokens = tokens1;
             return true;
+        }
+        public bool IsValidIdentifier(string name)
+        {
+            return Regex.IsMatch(name, @"^([a-zA-Z_])([a-zA-Z_0-9\-:\[\]])*$");
         }
 
         private bool ReadToFollowing(JsonTextReader sr, string elementName)
@@ -333,6 +337,8 @@ namespace ChoETL
                     while (sr.Read())
                     {
                         if (sr.TokenType == JsonToken.PropertyName && (sr.Path == elementName || sr.Path.EndsWith($".{elementName}")))
+                            return true;
+                        if (sr.TokenType == JsonToken.StartObject && (sr.Path == elementName || sr.Path.EndsWith($".{elementName}")))
                             return true;
                     }
                 }
@@ -348,6 +354,11 @@ namespace ChoETL
                             return ReadToFollowing(sr, elementName);
                         }
                     }
+                }
+                else if (sr.TokenType == JsonToken.PropertyName)
+                {
+                    if (sr.TokenType == JsonToken.PropertyName && (sr.Path == elementName || sr.Path.EndsWith($".{elementName}")))
+                        return true;
                 }
             }
 
@@ -391,6 +402,8 @@ namespace ChoETL
                     {
                         foreach (var node in ReadNodes(sr))
                             yield return node;
+
+                        break;
                     }
 
                 }

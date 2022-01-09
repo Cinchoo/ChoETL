@@ -2170,12 +2170,27 @@ a;b;;2021-05-06;e;11:00;3;9";
                 w.Write(new ScientificNotationdecimal { a = 1, b = 2 });
             }
         }
+        public static void TestChoETL()
+        {
+            var writer = new ChoCSVWriter<EmployeeRec>(Console.Out);
 
+            EmployeeRec rec1 = new EmployeeRec();
+            rec1.Id = 10;
+            rec1.Name = "Mark";
+
+            writer.Write(rec1);
+
+            EmployeeRec rec2 = new EmployeeRec();
+            rec1.Id = 11;
+            rec1.Name = "Top";
+
+            writer.Write(rec2);
+        }
         static void Main(string[] args)
         {
             //AppDomain.CurrentDomain.FirstChanceException += (sender, eventArgs) => { Console.WriteLine("FirstChanceException: " + eventArgs.Exception.ToString()); };
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            ScientificNotationdecimals();
+            TestChoETL();
             //TestDictionary();
             return;
 

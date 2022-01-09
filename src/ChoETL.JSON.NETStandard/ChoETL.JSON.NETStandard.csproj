@@ -19,7 +19,7 @@
     <Authors>Cinchoo</Authors>
     <Company>Cinchoo Inc.</Company>
     <Product>ChoETL.JSON.NETStandard</Product>
-    <Version>1.2.1.38</Version>
+    <Version>1.2.1.40-beta1</Version>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>ChoETL.JSON.NETStandard.snk</AssemblyOriginatorKeyFile>
     <PackageIcon>cinchoo.png</PackageIcon>
@@ -30,6 +30,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\ChoETL.JSON\ChoJObjectWriter.cs" Link="ChoJObjectWriter.cs" />
     <Compile Include="..\ChoETL.JSON\ChoJSONConvertersCache.cs" Link="ChoJSONConvertersCache.cs" />
     <Compile Include="..\ChoETL.JSON\ChoJSONExtensions.cs" Link="ChoJSONExtensions.cs" />
     <Compile Include="..\ChoETL.JSON\ChoJSONNodeNameAttribute.cs" Link="ChoJSONNodeNameAttribute.cs" />
