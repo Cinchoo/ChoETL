@@ -33,6 +33,7 @@
     <Compile Include="..\ChoETL.JSON\ChoJSONConvertersCache.cs" Link="ChoJSONConvertersCache.cs" />
     <Compile Include="..\ChoETL.JSON\ChoJSONExtensions.cs" Link="ChoJSONExtensions.cs" />
     <Compile Include="..\ChoETL.JSON\ChoJSONNodeNameAttribute.cs" Link="ChoJSONNodeNameAttribute.cs" />
+    <Compile Include="..\ChoETL.JSON\ChoJSONObjects.cs" Link="ChoJSONObjects.cs" />
     <Compile Include="..\ChoETL.JSON\ChoJSONPathAttribute.cs" Link="ChoJSONPathAttribute.cs" />
     <Compile Include="..\ChoETL.JSON\ChoDisableAutoDiscoverabilityAttribute.cs" Link="ChoDisableAutoDiscoverabilityAttribute.cs" />
     <Compile Include="..\ChoETL.JSON\ChoJSONReader.cs" Link="ChoJSONReader.cs" />
@@ -50,8 +51,11 @@
     <Compile Include="..\ChoETL.JSON\Converters\ByteArrayConverter.cs" Link="Converters\ByteArrayConverter.cs" />
     <Compile Include="..\ChoETL.JSON\Converters\ChoDynamicObjectConverter.cs" Link="Converters\ChoDynamicObjectConverter.cs" />
     <Compile Include="..\ChoETL.JSON\Converters\ChoCompositeObjectConverter.cs" Link="Converters\ChoCompositeObjectConverter.cs" />
+    <Compile Include="..\ChoETL.JSON\Converters\ChoJSONNodeConverter.cs" Link="Converters\ChoJSONNodeConverter.cs" />
+    <Compile Include="..\ChoETL.JSON\Converters\ChoJSONTypeConverter.cs" Link="Converters\ChoJSONTypeConverter.cs" />
     <Compile Include="..\ChoETL.JSON\Converters\ChoKeyValueModelConverter.cs" Link="Converters\ChoKeyValueModelConverter.cs" />
     <Compile Include="..\ChoETL.JSON\Converters\ChoKnownTypeConverter.cs" Link="Converters\ChoKnownTypeConverter.cs" />
+    <Compile Include="..\ChoETL.JSON\Converters\IChoJSONConverter.cs" Link="Converters\IChoJSONConverter.cs" />
   </ItemGroup>
 
   <ItemGroup>

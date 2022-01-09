@@ -48,6 +48,17 @@ namespace ChoETL
             set;
         }
 
+        public static long MaxArrayItemsToPrint
+        {
+            get;
+            set;
+        } = 100;
+
+        public static Func<object, string> CustomObjectToString
+        {
+            get;
+            set;
+        }
         public static void LogIf(bool condition, string msg)
         {
             if (!condition)
@@ -65,6 +76,7 @@ namespace ChoETL
             if (!ChoETLFrxBootstrap.IsSandboxEnvironment)
                 Trace.WriteLine(m);
         });
+
         public static Action<string> Log
         {
             get { return _defaultLog; }

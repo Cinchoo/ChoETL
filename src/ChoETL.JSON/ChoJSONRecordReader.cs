@@ -648,6 +648,8 @@ namespace ChoETL
                     if (doWhile != null && doWhile.Value)
                         break;
                 }
+
+                pair = null;
             }
 
             if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
@@ -2126,18 +2128,18 @@ namespace ChoETL
                         {
                             dict.Add("$type", ((JObject)jToken)["$type"]);
                         }
-                        //dict = dict.Select(kvp =>
-                        //{
-                        //    if (kvp.Value is JToken)
-                        //    {
-                        //        var dobj = ToDynamic((JToken)kvp.Value);
-                        //        if (dobj is ChoDynamicObject)
-                        //            ((ChoDynamicObject)dobj).DynamicObjectName = kvp.Key;
-                        //        return new KeyValuePair<string, object>(kvp.Key, dobj);
-                        //    }
-                        //    else
-                        //        return kvp;
-                        //}).ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.InvariantCultureIgnoreCase);
+                        dict = dict.Select(kvp =>
+                        {
+                            if (kvp.Value is JToken)
+                            {
+                                var dobj = ToDynamic((JToken)kvp.Value);
+                                if (dobj is ChoDynamicObject)
+                                    ((ChoDynamicObject)dobj).DynamicObjectName = kvp.Key;
+                                return new KeyValuePair<string, object>(kvp.Key, dobj);
+                            }
+                            else
+                                return kvp;
+                        }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.InvariantCultureIgnoreCase);
                         return new ChoDynamicObject(dict);
                     case JTokenType.Uri:
                         return (Uri)jToken;

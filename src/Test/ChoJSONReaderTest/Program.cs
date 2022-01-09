@@ -25,6 +25,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using System.Windows.Data;
 using System.Net;
+using System.IO.MemoryMappedFiles;
 
 namespace ChoJSONReaderTest
 {
@@ -7946,23 +7947,62 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 
         static void Issue170()
         {
+            ChoETLFrxBootstrap.MaxArrayItemsToPrint = 1;
             string jsonFilePath = @"C:\Projects\GitHub\ChoETL\data\largetestdata\largetestdata.json";
+            //string jsonFilePath = @"C:\Projects\GitHub\ChoETL\data\smallsubset.json";
 
-            using (var r = new ChoJSONReader(jsonFilePath)
-                .WithJSONPath("$..ControlJob.ProcessJobs.ProcessRecipes.RecipeSteps.SensorData")
-                .NotifyAfter(10)
-                .Setup(s => s.RowsLoaded += (o, e) => $"Rows loaded: {e.RowsLoaded}".Print())
-                .Configure(c => c.CustomJObjectLoader = (re, s) =>
-                {
-                    //var x = JObject.Load(re);
-                    ////re.Skip();
-                    //return x;
-                    return JObject.FromObject(new { Id = 1 });
-                })
-                )
+            dynamic keys = null;
+            dynamic attributes = null;
+
+            //Capture Keys
+            using (var r = new ChoJSONReader(jsonFilePath).WithJSONPath("$..ControlJob.Keys"))
             {
-                //r.Loop(null, o => o.Print());
-                r.Count().Print();
+                keys = r.FirstOrDefault();
+            }
+
+            //Capture attributes
+            using (var r = new ChoJSONReader(jsonFilePath).WithJSONPath("$..ControlJob.Attributes"))
+            {
+                attributes = r.FirstOrDefault();
+            }
+
+            int fileCount = 0;
+            using (var r = new ChoJSONReader(jsonFilePath)
+                .WithJSONPath("$..ControlJob.ProcessJobs.ProcessRecipes.RecipeSteps")
+                .NotifyAfter(1)
+                .Setup(s => s.RowsLoaded += (o, e) => $"Rows loaded: {e.RowsLoaded} <- {DateTime.Now}".Print())
+                //.Configure(c => c.JObjectLoadOptions = ChoJObjectLoadOptions.None )
+                //.Configure(c => c.UseImplicitJArrayLoader = true)
+                //.Configure(c => c.MaxJArrayItemsLoad = 10)
+                .Configure(c => c.CustomJObjectLoader = (sr, s) =>
+                {
+                    //var x = JObject.Load(sr);
+                    ////sr.Skip();
+                    //return x;
+
+                    string outFilePath = $"C:\\Projects\\GitHub\\ChoETL\\data\\out_{fileCount++}.json";
+                    var sw = outFilePath.CreateJSONWriter();
+
+                    sw.WriteStartObject();
+                    sw.WritePropertyName("Keys");
+                    sw.WriteRaw(JObject.FromObject(keys).ToString(Newtonsoft.Json.Formatting.None));
+
+                    sw.WriteRaw(@",");
+                    sw.WriteRaw(@"""Attributes"":");
+                    sw.WriteRaw(JObject.FromObject(attributes).ToString(Newtonsoft.Json.Formatting.None));
+
+                    sw.WriteRaw(@",");
+                    sw.WriteRaw(@"""RecipeSteps"":");
+                    sr.WriteTo(sw);
+                    sw.WriteEndObject();
+
+                    return ChoJSONObjects.EmptyJObject;
+                })
+            )
+            {
+                //r.Skip(10000).Take(1).Print();
+                r.Loop(null, o => o.Print());
+                //r.Count().Print();
             }
 
         }

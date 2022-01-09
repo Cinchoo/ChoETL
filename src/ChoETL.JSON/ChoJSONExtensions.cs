@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Dynamic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,6 +18,122 @@ namespace ChoETL
         static ChoJSONExtensions()
         {
         }
+
+        public static JsonWriter CreateJSONWriter(this StringBuilder sb)
+        {
+            ChoGuard.ArgumentNotNull(sb, nameof(sb));
+            return CreateJSONWriter(new StringWriter(sb));
+        }
+
+        public static JsonWriter CreateJSONWriter(this string filePath)
+        {
+            ChoGuard.ArgumentNotNull(filePath, nameof(filePath));
+            return CreateJSONWriter(new StreamWriter(filePath));
+        }
+
+        public static JsonWriter CreateJSONWriter(this TextWriter writer)
+        {
+            ChoGuard.ArgumentNotNull(writer, nameof(writer));
+
+            JsonWriter jwriter = new JsonTextWriter(writer);
+            jwriter.Formatting = Newtonsoft.Json.Formatting.None;
+            return jwriter;
+        }
+
+        public static void WriteTo(this JsonReader reader, JsonWriter writer, ChoJObjectLoadOptions? options = null)
+        {
+            ChoGuard.ArgumentNotNull(reader, nameof(reader));
+            ChoGuard.ArgumentNotNull(writer, nameof(writer));
+
+            if (options == null)
+                options = ChoJObjectLoadOptions.All;
+
+            writer.WriteStartObject();
+            WriteToInternal(reader, writer, options);
+        }
+
+        private static void WriteToInternal(this JsonReader reader, JsonWriter writer, ChoJObjectLoadOptions? options = null)
+        {
+            var path = reader.Path;
+
+            while (reader.Read())
+            {
+                if (reader.TokenType == JsonToken.StartObject)
+                {
+                    if ((options & ChoJObjectLoadOptions.ExcludeNestedObjects) == ChoJObjectLoadOptions.ExcludeNestedObjects)
+                    {
+                        reader.Skip();
+                    }
+                    else
+                    {
+                        writer.WriteStartObject();
+                        WriteToInternal(reader, writer, options);
+                    }
+                }
+                else if (reader.TokenType == JsonToken.EndObject)
+                {
+                    try
+
+                    {
+                        if ((options & ChoJObjectLoadOptions.ExcludeNestedObjects) == ChoJObjectLoadOptions.ExcludeNestedObjects)
+                        {
+
+                        }
+                        else
+                            writer.WriteEndObject();
+                    }
+                    catch { }
+                }
+                else if (reader.TokenType == JsonToken.StartArray)
+                {
+                    if ((options & ChoJObjectLoadOptions.ExcludeArrays) == ChoJObjectLoadOptions.ExcludeArrays)
+                    {
+                        reader.Skip();
+                    }
+                    else
+                    {
+                        writer.WriteStartArray();
+                        //InvokeJArrayLoader(reader);
+                        return;
+                    }
+                }
+                else if (reader.TokenType == JsonToken.EndArray)
+                {
+                    if ((options & ChoJObjectLoadOptions.ExcludeArrays) == ChoJObjectLoadOptions.ExcludeArrays)
+                    {
+                    }
+                    else
+                    {
+                        writer.WriteEndArray();
+                    }
+                }
+                else if (reader.TokenType == JsonToken.PropertyName)
+                {
+                    var propName = reader.Value.ToNString();
+                    writer.WritePropertyName(propName);
+                    
+                    WriteToInternal(reader, writer, options);
+                }
+                else if (reader.TokenType == JsonToken.Integer
+                    || reader.TokenType == JsonToken.Float
+                    || reader.TokenType == JsonToken.String
+                    || reader.TokenType == JsonToken.Boolean
+                    || reader.TokenType == JsonToken.Date
+                    || reader.TokenType == JsonToken.Bytes
+                    || reader.TokenType == JsonToken.Raw
+                    || reader.TokenType == JsonToken.String
+                    )
+                {
+                    writer.WriteValue(reader.Value);
+                }
+                else
+                    writer.WriteValue(JValue.CreateNull());
+
+                if (reader.Path == path)
+                    break;
+            }
+        }
+
         public static JsonSerializer DeepCopy(this JsonSerializer serializer)
         {
             var copiedSerializer = new JsonSerializer

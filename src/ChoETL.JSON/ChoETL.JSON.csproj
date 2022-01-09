@@ -55,6 +55,7 @@
   <ItemGroup>
     <Compile Include="ChoJSONConvertersCache.cs" />
     <Compile Include="ChoDisableAutoDiscoverabilityAttribute.cs" />
+    <Compile Include="ChoJSONObjects.cs" />
     <Compile Include="Converters\ChoCompositeObjectConverter.cs" />
     <Compile Include="Converters\ChoDynamicObjectConverter.cs" />
     <Compile Include="ChoJSONExtensions.cs" />
@@ -73,8 +74,11 @@
     <Compile Include="ChoJSONWriter.cs" />
     <Compile Include="ChoJSONRecordConfigurationMap.cs" />
     <Compile Include="Converters\ByteArrayConverter.cs" />
+    <Compile Include="Converters\ChoJSONTypeConverter.cs" />
     <Compile Include="Converters\ChoKeyValueModelConverter.cs" />
     <Compile Include="Converters\ChoKnownTypeConverter.cs" />
+    <Compile Include="Converters\ChoJSONNodeConverter.cs" />
+    <Compile Include="Converters\IChoJSONConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

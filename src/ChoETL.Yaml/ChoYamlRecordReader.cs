@@ -434,6 +434,8 @@ namespace ChoETL
                     if (doWhile != null && doWhile.Value)
                         break;
                 }
+
+                pair = null;
             }
 
             if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)

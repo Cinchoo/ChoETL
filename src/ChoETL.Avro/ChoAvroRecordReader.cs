@@ -283,6 +283,8 @@ namespace ChoETL
                     if (doWhile != null && doWhile.Value)
                         break;
                 }
+
+                pair = null;
             }
 
             if (!abortRequested && pair != null)

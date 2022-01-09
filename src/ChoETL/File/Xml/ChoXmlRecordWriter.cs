@@ -479,6 +479,7 @@ namespace ChoETL
                     }
 
                     yield return record;
+                    record = null;
 
                     if (Configuration.NotifyAfter > 0 && _index % Configuration.NotifyAfter == 0)
                     {

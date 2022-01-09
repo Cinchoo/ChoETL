@@ -2444,7 +2444,11 @@ namespace ChoETL
             if (writer != null)
                 writer.WriteLine(DumpAsJson(target));
             else
-                Console.WriteLine(DumpAsJson(target));
+            {
+                var output = DumpAsJson(target);
+                if (output != null)
+                    Console.WriteLine(output);
+            }
         }
 
         public static void Print(this object target, TextWriter writer = null)
@@ -2452,7 +2456,11 @@ namespace ChoETL
             if (writer != null)
                 writer.WriteLine(ToStringEx(target));
             else
-                Console.WriteLine(ToStringEx(target));
+            {
+                var output = ToStringEx(target);
+                if (output != null)
+                    Console.WriteLine(output);
+            }
         }
 
         public static string Dump(this object target)
@@ -2479,6 +2487,17 @@ namespace ChoETL
         public static string ToStringEx(this object target)
         {
             if (target == null) return String.Empty;
+            if (ChoETLFrxBootstrap.CustomObjectToString != null)
+            {
+                var result = ChoETLFrxBootstrap.CustomObjectToString(target);
+                if (result != null)
+                {
+                    if (result is string)
+                        return result;
+                    else if (!Object.ReferenceEquals(target, result))
+                        target = result;
+                }
+            }
 
             if (target is DataTable)
             {
@@ -2500,6 +2519,11 @@ namespace ChoETL
                     int count = 0;
                     foreach (object item in (IEnumerable)target)
                     {
+                        if (target is Array && count > ChoETLFrxBootstrap.MaxArrayItemsToPrint)
+                        {
+                            count++;
+                            continue;
+                        }
                         if (item != null)
                         {
                             Type valueType = item.GetType();
@@ -2535,7 +2559,10 @@ namespace ChoETL
                         count++;
                     }
 
-                    return "[Count: {0}]{1}{2}".FormatString(count, Environment.NewLine, arrMsg.ToString());
+                    if (count > 0 && arrMsg.Length > 0)
+                        return "[Count: {0}]{1}{2}".FormatString(count, Environment.NewLine, arrMsg.ToString());
+                    else
+                        return null;
                 }
                 else
                     return target.ToString();

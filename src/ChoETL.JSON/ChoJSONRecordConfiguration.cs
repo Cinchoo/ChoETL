@@ -20,11 +20,31 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
+    [Flags]
+    public enum ChoJObjectLoadOptions
+    {
+        All = 0,
+        None = 1,
+        ExcludeArrays = 2,
+        ExcludeNestedObjects = 4,
+    }
+
     [DataContract]
     public class ChoJSONRecordConfiguration : ChoFileRecordConfiguration
     {
         internal readonly Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>> JSONRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>>();
         public readonly Dictionary<Type, Func<object, object>> NodeConvertersForType = new Dictionary<Type, Func<object, object>>();
+
+        public long MaxJArrayItemsLoad
+        {
+            get;
+            set;
+        }
+        public ChoJObjectLoadOptions? JObjectLoadOptions
+        {
+            get;
+            set;
+        }
 
         public Func<JsonReader, JsonLoadSettings, JObject> CustomJObjectLoader
         {
@@ -1036,17 +1056,116 @@ namespace ChoETL
         {
             try
             {
-                if (CustomJObjectLoader != null)
+                if (JObjectLoadOptions != null)
                 {
-                    var retValue = CustomJObjectLoader(reader, JsonLoadSettings);
-                    reader.Skip();
-                    return retValue;
+                    switch (JObjectLoadOptions)
+                    {
+                        case ChoJObjectLoadOptions.All:
+                            return JObject.Load(reader, JsonLoadSettings);
+                        case ChoJObjectLoadOptions.None:
+                            reader.Skip();
+                            return ChoJSONObjects.EmptyJObject;
+                        default:
+                            return LoadJObject(reader, JObjectLoadOptions.Value) as JObject;
+                    }
                 }
                 else
-                    return JObject.Load(reader, JsonLoadSettings);
+                {
+                    if (CustomJObjectLoader != null)
+                    {
+                        var retValue = CustomJObjectLoader(reader, JsonLoadSettings);
+                        reader.Skip();
+                        return retValue;
+                    }
+                    else
+                        return JObject.Load(reader, JsonLoadSettings);
+                }
             }
             finally
             {
+            }
+        }
+        private JToken LoadJObject(JsonReader reader, ChoJObjectLoadOptions options)
+        {
+            var path = reader.Path;
+            var jo = new JObject();
+
+            while (reader.Read())
+            {
+                if (reader.TokenType == JsonToken.StartObject)
+                {
+                    if ((options & ChoJObjectLoadOptions.ExcludeNestedObjects) == ChoJObjectLoadOptions.ExcludeNestedObjects)
+                    {
+                        reader.Skip();
+                        return ChoJSONObjects.UndefinedValue;
+                    }
+                    else
+                    {
+                        return LoadJObject(reader, options);
+                    }
+                }
+                else if (reader.TokenType == JsonToken.EndObject)
+                {
+                }
+                else if (reader.TokenType == JsonToken.StartArray)
+                {
+                    if ((options & ChoJObjectLoadOptions.ExcludeArrays) == ChoJObjectLoadOptions.ExcludeArrays)
+                    {
+                        reader.Skip();
+                        return ChoJSONObjects.UndefinedValue;
+                    }
+                    else
+                    {
+                        return InvokeJArrayLoader(reader);
+                    }
+                }
+                else if (reader.TokenType == JsonToken.EndArray)
+                {
+                }
+                else if (reader.TokenType == JsonToken.PropertyName)
+                {
+                    var propName = reader.Value.ToNString();
+                    //reader.Read();
+                    var value = LoadJObject(reader, options);
+                    if (ChoJSONObjects.UndefinedValue == value)
+                    {
+                    }
+                    else
+                    {
+                        if (!jo.ContainsKey(propName))
+                            jo.Add(propName, value);
+                    }
+                }
+                else if (reader.TokenType == JsonToken.Integer
+                    || reader.TokenType == JsonToken.Float
+                    || reader.TokenType == JsonToken.String
+                    || reader.TokenType == JsonToken.Boolean
+                    || reader.TokenType == JsonToken.Date
+                    || reader.TokenType == JsonToken.Bytes
+                    || reader.TokenType == JsonToken.Raw
+                    || reader.TokenType == JsonToken.String
+                    )
+                {
+                    var token = JToken.FromObject(reader.Value);
+                    return token;
+                }
+                else
+                    return JValue.CreateNull();
+
+                if (reader.TokenType == JsonToken.EndObject && reader.Path == path)
+                    break;
+            }
+
+            return jo;
+        }
+
+        private void Skip(JsonReader reader)
+        {
+            var path = reader.Path;
+            while (reader.Read())
+            {
+                if (reader.TokenType == JsonToken.EndObject && reader.Path == path)
+                    break;
             }
         }
 
@@ -1054,37 +1173,60 @@ namespace ChoETL
         {
             try
             {
-                if (CustomJArrayLoader != null)
-                    return CustomJArrayLoader(reader, JsonLoadSettings);
-                else if (UseImplicitJArrayLoader)
+                if (false) //CountOnly)
                 {
-                    JArray ja = new JArray();
-                    while (reader.Read())
+                    reader.Skip();
+                    return ChoJSONObjects.EmptyJArray;
+                }
+                else
+                {
+                    if (CustomJArrayLoader != null)
+                        return CustomJArrayLoader(reader, JsonLoadSettings);
+                    else if (UseImplicitJArrayLoader)
                     {
-                        if (reader.TokenType == JsonToken.StartObject)
+                        JArray ja = new JArray();
+                        long count = 0;
+                        while (reader.Read())
                         {
-                            var jo = InvokeJObjectLoader(reader);
-                            ja.Add(jo);
-                        }
-                        else if (reader.TokenType == JsonToken.StartArray)
-                        {
-                            while (reader.Read())
+                            if (reader.TokenType == JsonToken.StartObject)
                             {
-                                if (reader.TokenType == JsonToken.StartObject)
+                                count++;
+                                if (MaxJArrayItemsLoad > 0 && count > MaxJArrayItemsLoad)
+                                    reader.Skip();
+                                else
                                 {
                                     var jo = InvokeJObjectLoader(reader);
                                     ja.Add(jo);
                                 }
                             }
+                            else if (reader.TokenType == JsonToken.EndObject)
+                            {
+                                break;
+                            }
+                            //else if (reader.TokenType == JsonToken.StartArray)
+                            //{
+                            //    int count = 0;
+                            //    while (reader.Read())
+                            //    {
+                            //        if (reader.TokenType == JsonToken.StartObject)
+                            //        {
+                            //            var jo = InvokeJObjectLoader(reader);
+                            //            ja.Add(jo);
+
+                            //            count++;
+                            //            if (count % 10 == 0)
+                            //                break;
+                            //        }
+                            //    }
+                            //}
                         }
+                        return ja;
                     }
-                    return ja;
-                }
-                else
-                {
-                    var retValue = JArray.Load(reader, JsonLoadSettings);
-                    reader.Skip();
-                    return retValue;
+                    else
+                    {
+                        var retValue = JArray.Load(reader, JsonLoadSettings);
+                        return retValue;
+                    }
                 }
             }
             finally
@@ -1180,55 +1322,5 @@ namespace ChoETL
         }
     }
 
-    public class ChoJSONNodeConverter<T> : JsonConverter<T>
-    {
-        private Func<object, object> _converter;
-        public ChoJSONNodeConverter(Func<object, object> converter)
-        {
-            _converter = converter;
-        }
 
-        public override T ReadJson(JsonReader reader, Type objectType, T existingValue, bool hasExistingValue, JsonSerializer serializer)
-        {
-            return (T)_converter?.Invoke(new { reader, objectType, existingValue, hasExistingValue, serializer }.ToDynamic());
-        }
-
-        public override void WriteJson(JsonWriter writer, T value, JsonSerializer serializer)
-        {
-            var x = _converter?.Invoke(new { writer, value, serializer }.ToDynamic());
-            if (x != null)
-                writer.WriteRaw(x.ToString());
-        }
-    }
-
-    public interface IChoJSONConverter
-    {
-        JsonSerializer Serializer { get; set; }
-
-        dynamic Context { get; set; }
-    }
-
-    public class ChoJSONTypeConverter<T> : IChoValueConverter, IChoJSONConverter, IChoCollectionConverter
-    {
-        public JsonSerializer Serializer { get; set; }
-        public dynamic Context { get; set; } = new ChoDynamicObject();
-
-        private Func<object, object> _converter;
-
-        public ChoJSONTypeConverter(Func<object, object> converter)
-        {
-            _converter = converter;
-        }
-
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return (T)_converter?.Invoke(new { value, targetType, parameter, culture, serializer = Serializer, context = Context }.ToDynamic());
-        }
-
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            _converter?.Invoke(new { value, targetType, parameter, culture, serializer = Serializer, context = Context }.ToDynamic());
-            return null;
-        }
-    }
 }
