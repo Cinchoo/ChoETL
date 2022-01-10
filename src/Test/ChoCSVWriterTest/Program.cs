@@ -2170,21 +2170,42 @@ a;b;;2021-05-06;e;11:00;3;9";
                 w.Write(new ScientificNotationdecimal { a = 1, b = 2 });
             }
         }
+
+        public class EmployeeRecX
+        {
+            [ChoCSVRecordField(1, FieldName = "First")]
+            public string First { get; set; }
+            [ChoCSVRecordField(2, FieldName = "Last")]
+            public string Last { get; set; }
+            [ChoCSVRecordField(3, FieldName = "Id")]
+            public int Id { get; set; }
+            [ChoCSVRecordField(4, FieldName = "Name")]
+            public string Name { get; set; }
+        }
         public static void TestChoETL()
         {
-            var writer = new ChoCSVWriter<EmployeeRec>(Console.Out);
+            using (var writer = new ChoCSVWriter<EmployeeRecX>(Console.Out)
+                .WithFirstLineHeader())
+            {
+                List<EmployeeRecX> objs = new List<EmployeeRecX>();
 
-            EmployeeRec rec1 = new EmployeeRec();
-            rec1.Id = 10;
-            rec1.Name = "Mark";
+                EmployeeRecX rec1 = new EmployeeRecX();
+                rec1.Id = 10;
+                rec1.Name = "Mark";
+                objs.Add(rec1);
+                //writer.Write(rec1);
 
-            writer.Write(rec1);
+                EmployeeRecX rec2 = new EmployeeRecX();
+                rec2.Id = 11;
+                rec2.Name = "Top";
 
-            EmployeeRec rec2 = new EmployeeRec();
-            rec1.Id = 11;
-            rec1.Name = "Top";
+                //writer.Write(rec2);
+                objs.Add(rec2);
 
-            writer.Write(rec2);
+                writer.Write(new[] { rec1, rec2 });
+            }
+
+            "".Print();
         }
         static void Main(string[] args)
         {

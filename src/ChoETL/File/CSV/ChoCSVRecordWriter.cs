@@ -626,9 +626,9 @@ namespace ChoETL
                     bool ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
                     if (ignoreFieldValue && fieldConfig.IsDefaultValueSpecified)
                         fieldValue = fieldConfig.DefaultValue;
-                    ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
-                    if (ignoreFieldValue)
-                        continue;
+                    //ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
+                    //if (ignoreFieldValue)
+                    //    continue;
 
                     if (!RaiseBeforeRecordFieldWrite(rec, index, kvp.Key, ref fieldValue))
                         return false;

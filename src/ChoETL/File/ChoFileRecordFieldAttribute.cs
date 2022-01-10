@@ -63,7 +63,7 @@ namespace ChoETL
         public ChoFileRecordFieldAttribute()
         {
             Truncate = true;
-            IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any;
+            //IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any;
         }
     }
 }
