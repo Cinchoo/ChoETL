@@ -7948,8 +7948,11 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
         static void Issue170()
         {
             ChoETLFrxBootstrap.MaxArrayItemsToPrint = 1;
-            //string jsonFilePath = @"C:\Projects\GitHub\ChoETL\data\largetestdata\largetestdata.json";
-            string jsonFilePath = @"C:\Projects\GitHub\ChoETL\data\smallsubset.json";
+            string jsonFilePath = @"C:\Projects\GitHub\ChoETL\data\largetestdata\largetestdata.json";
+            //string jsonFilePath = @"C:\Projects\GitHub\ChoETL\data\smallsubset.json";
+            ChoJSONExtensions.SplitJsonFile(jsonFilePath, new string[] { "ControlJob", "ProcessJobs", "ProcessRecipes", "RecipeSteps"},
+                                             (directory, name, i, ext) => Path.Combine(directory, Path.ChangeExtension(name + $"_fragment_{i}", ext)));
+            return;
 
             dynamic keys = null;
             dynamic attributes = null;
@@ -7968,8 +7971,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 
             int fileCount = 0;
             using (var r = new ChoJSONReader(jsonFilePath)
-                //.WithJSONPath("$..ControlJob.ProcessJobs.ProcessRecipes.RecipeSteps")
-                .WithJSONPath("$..ControlJob.Attributes.ProcessJobs.ProcessRecipes[0].Keys")
+                .WithJSONPath("$..ControlJob.ProcessJobs.ProcessRecipes.RecipeSteps")
+                //.WithJSONPath("$..ControlJob.Attributes.ProcessJobs.ProcessRecipes[0].Keys")
                 .NotifyAfter(1)
                 .Setup(s => s.RowsLoaded += (o, e) => $"Rows loaded: {e.RowsLoaded} <- {DateTime.Now}".Print())
                 //.Configure(c => c.JObjectLoadOptions = ChoJObjectLoadOptions.None )
@@ -7997,6 +8000,57 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 //r.Count().Print();
             }
 
+        }
+        static void Issue171()
+        {
+            string jsonFilePath = @"C:\Projects\GitHub\ChoETL\data\smallsubset1.json";
+
+            dynamic keys = null;
+            dynamic props = null;
+
+            //Capture Keys
+            using (var r = new ChoJSONReader(jsonFilePath).WithJSONPath("$..Job.Keys"))
+            {
+                keys = r.FirstOrDefault();
+            }
+
+            //Capture props
+            using (var r = new ChoJSONReader(jsonFilePath).WithJSONPath("$..Job.Props"))
+            {
+                props = r.FirstOrDefault();
+            }
+
+            int fileCount = 0;
+            //Loop thro ReceipeSteps, write to individual files
+            using (var r = new ChoJSONReader(jsonFilePath).WithJSONPath("$..Job.Steps")
+                    .NotifyAfter(1)
+                    .Setup(s => s.RowsLoaded += (o, e) => $"Rows loaded: {e.RowsLoaded} <- {DateTime.Now}".Print())
+
+                    //Callback used to hook up to loader, stream the nodes to file (this avoids loading to memory)
+                    .Configure(c => c.CustomJObjectLoader = (sr, s) =>
+                    {
+                        string outFilePath = $"C:\\Projects\\GitHub\\ChoETL\\data\\Steps_{fileCount++}.json";
+                        $"Writing to `{outFilePath}` file...".Print();
+
+                        using (var topJo = new ChoJObjectWriter(Console.Out))
+                        {
+                            topJo.Formatting = Newtonsoft.Json.Formatting.Indented;
+                            using (var jo = new ChoJObjectWriter("Jobs", topJo))
+                            {
+                                jo.WriteProperty("Keys", keys);
+                                jo.WriteProperty("Props", props);
+                                jo.WriteProperty("Steps", sr);
+                            }
+                        }
+
+                        "".Print();
+
+                        return ChoJSONObjects.EmptyJObject;
+                    })
+                  )
+            {
+                r.Loop();
+            }
         }
 
         static void ReadXBTUSDFile()

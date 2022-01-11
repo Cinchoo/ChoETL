@@ -56,6 +56,25 @@ namespace ChoETL
         {
         }
 
+        public ChoJObjectWriter(string propName, ChoJObjectWriter writer)
+        {
+            ChoGuard.ArgumentNotNull(writer, nameof(writer));
+            ChoGuard.ArgumentNotNull(propName, nameof(propName));
+
+            _writer = writer._writer;
+            _options = writer._options;
+            _formatting = writer.Formatting;
+
+            _writeStartObject = new Lazy<bool>(() =>
+            {
+                _writer.WriteStartObject();
+                return true;
+            });
+
+            var _ = writer._writeStartObject.Value;
+            _writer.WritePropertyName(propName);
+            var x = _writeStartObject.Value;
+        }
 
         public ChoJObjectWriter(JsonWriter writer, ChoJObjectLoadOptions? options = null)
         {
@@ -184,7 +203,8 @@ namespace ChoETL
 
             _isDisposed = true;
 
-            _writer.WriteEndObject();
+            if (_writeStartObject.IsValueCreated)
+                _writer.WriteEndObject();
             if (_closeWriterOnDispose)
                 _writer.Close();
 
