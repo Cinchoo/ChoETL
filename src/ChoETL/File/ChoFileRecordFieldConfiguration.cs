@@ -93,6 +93,11 @@ namespace ChoETL
             get;
             set;
         }
+        public List<int> NestedArrayIndex
+        {
+            get;
+            set;
+        } = new List<int>();
         private Dictionary<string, Type> _knownTypes = new Dictionary<string, Type>(StringComparer.InvariantCultureIgnoreCase);
         public Dictionary<string, Type> KnownTypes
         {

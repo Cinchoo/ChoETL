@@ -531,7 +531,7 @@ namespace ChoETL
 
             if (arrayIndex != null)
             {
-                var arrayIndexSeparator = ArrayIndexSeparator == null ? ChoETLSettings.ArrayIndexSeparator : ArrayIndexSeparator.Value;
+                var arrayIndexSeparator = GetArrayIndexSeparator(); // ArrayIndexSeparator == null ? ChoETLSettings.ArrayIndexSeparator : ArrayIndexSeparator.Value;
 
                 if (_recObject.Value is IChoArrayItemFieldNameOverrideable)
                 {
@@ -1162,10 +1162,10 @@ namespace ChoETL
                             nfc.FieldName = displayName;
 
                         string lFieldName = null;
-                        if (ArrayIndexSeparator == null)
-                            lFieldName = nfc.FieldName + "_" + index;
-                        else
-                            lFieldName = nfc.FieldName + ArrayIndexSeparator + index;
+                        //if (ArrayIndexSeparator == null)
+                        //    lFieldName = nfc.FieldName + "_" + index;
+                        //else
+                            lFieldName = nfc.FieldName + GetArrayIndexSeparator() + index;
 
                         nfc.DeclaringMember = nfc.Name;
                         nfc.Name = lFieldName;

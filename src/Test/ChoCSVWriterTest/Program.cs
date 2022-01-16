@@ -1365,7 +1365,7 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             [ChoCSVRecordField]
             public UserFavourites SelectedUserFavourites { get; set; }
 
-            public string GetFieldName(string declaringMemberName, string memberName, char separator, int index)
+            public string GetFieldName(string declaringMemberName, string memberName, string separator, int index)
             {
                 return $"{declaringMemberName}{index}{memberName}";
             }
@@ -2207,11 +2207,80 @@ a;b;;2021-05-06;e;11:00;3;9";
 
             "".Print();
         }
+        public class Channel
+        {
+            [JsonProperty("id")]
+            public int Id { get; set; }
+
+            [JsonProperty("name")]
+            public string Name { get; set; }
+
+            [JsonProperty("alias")]
+            public string Alias { get; set; }
+
+            [JsonProperty("value")]
+            public double Value { get; set; }
+
+            [JsonProperty("status")]
+            public int Status { get; set; }
+
+            [JsonProperty("valid")]
+            public bool Valid { get; set; }
+
+            [JsonProperty("description")]
+            public string Description { get; set; }
+        }
+
+        public class Datum
+        {
+            [JsonProperty("datetime")]
+            public string Datetime { get; set; }
+
+            [JsonProperty("channels")]
+            [Range(0, 3)]
+            public Channel[] Channels { get; set; }
+        }
+
+        public class StationDetailsCall
+        {
+            [JsonProperty("stationId")]
+            public int StationId { get; set; }
+
+            [JsonProperty("data")]
+            [Range(0, 2)]
+            public Datum[] Data { get; set; }
+        }
+
+        public static void NestedClassSerialization()
+        {
+            StationDetailsCall station = new StationDetailsCall();
+            station.StationId = 1;
+            station.Data = new Datum[] {
+             new Datum() { Channels = new Channel[] { new Channel() { Id = 1, Name = "name1", Description = "Description1" }, new Channel() { Id = 2, Name = "name2" } }, Datetime = DateTime.Now.ToString() },
+             new Datum() { Channels = new Channel[] { new Channel() { Id = 3, Name = "name3", Description = "Description2" }, new Channel() { Id = 4, Name = "name4" } }, Datetime = DateTime.Now.ToString() },
+            };
+
+            var csv = new StringBuilder();
+            using (var w = new ChoCSVWriter<StationDetailsCall>(csv)
+                   .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                   .WithFirstLineHeader()
+                   .WithMaxScanRows(1)
+                  //.UseNestedKeyFormat(true)
+                  //.ThrowAndStopOnMissingField(false)
+                  )
+            {
+                w.Write(station);
+            }
+
+            csv.Print();
+        }
+
         static void Main(string[] args)
         {
             //AppDomain.CurrentDomain.FirstChanceException += (sender, eventArgs) => { Console.WriteLine("FirstChanceException: " + eventArgs.Exception.ToString()); };
-            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            TestChoETL();
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+            NestedClassSerialization();
+
             //TestDictionary();
             return;
 

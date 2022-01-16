@@ -2695,15 +2695,16 @@
                 return declaringMember;
         }
 
-        public static object GetDeclaringRecord(string declaringMember, object rec, int? arrayIndex = null)
+        public static object GetDeclaringRecord(string declaringMember, object rec, int? arrayIndex = null, List<int> nestedArrayIndex = null)
         {
             if (declaringMember == null)
                 return rec;
 
-            return GetDeclaringRecord(rec, declaringMember, arrayIndex);
+            return GetDeclaringRecord(rec, declaringMember, arrayIndex, nestedArrayIndex);
         }
 
-        private static object GetDeclaringRecord(object src, string propName, int? arrayIndex = null, bool leaf = true)
+        private static object GetDeclaringRecord(object src, string propName, int? arrayIndex = null, 
+            List<int> nestedArrayIndex = null, bool leaf = true)
         {
             if (src == null) return null; // throw new ArgumentException("Value cannot be null.", "src");
             if (propName == null) throw new ArgumentException("Value cannot be null.", "propName");
@@ -2711,7 +2712,8 @@
             if (propName.Contains("."))//complex type nested
             {
                 var temp = propName.Split(new char[] { '.' }, 2);
-                return GetDeclaringRecord(GetDeclaringRecord(src, temp[0], arrayIndex, false), temp[1], arrayIndex);
+                return GetDeclaringRecord(GetDeclaringRecord(src, temp[0],
+                    nestedArrayIndex == null && nestedArrayIndex.Count > 0 ? arrayIndex : nestedArrayIndex[0], nestedArrayIndex.Skip(1).ToList(), false), temp[1], arrayIndex, nestedArrayIndex);
             }
             else
             {

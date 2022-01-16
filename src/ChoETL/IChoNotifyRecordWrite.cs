@@ -38,7 +38,7 @@ namespace ChoETL
 
     public interface IChoArrayItemFieldNameOverrideable
     {
-        string GetFieldName(string declaringMemberName, string memberName, char separator, int index);
+        string GetFieldName(string declaringMemberName, string memberName, string separator, int index);
     }
 
     public interface IChoItemConvertable

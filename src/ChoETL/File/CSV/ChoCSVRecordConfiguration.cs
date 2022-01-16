@@ -370,7 +370,8 @@ namespace ChoETL
         }
 
         private void DiscoverRecordFields(Type recordType, ref int position, string declaringMember = null,
-            bool optIn = false, PropertyDescriptor propDesc = null, List<ChoCSVRecordFieldConfiguration> recordFieldConfigurations = null)
+            bool optIn = false, PropertyDescriptor propDesc = null, List<ChoCSVRecordFieldConfiguration> recordFieldConfigurations = null,
+            int? arrayIndex = null, List<int> nestedArrayIndex = null)
         {
             if (recordType == null)
                 return;
@@ -417,28 +418,49 @@ namespace ChoETL
 
                                 if (recordType.IsSimple())
                                 {
-                                    for (int range = dnAttr.Minimum.CastTo<int>(); range < dnAttr.Maximum.CastTo<int>(); range++)
+                                    for (int range = dnAttr.Minimum.CastTo<int>(); range <= dnAttr.Maximum.CastTo<int>(); range++)
                                     {
                                         ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref position, null, propDesc, range);
                                         //if (!CSVRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
+                                        if (arrayIndex != null)
+                                        {
+                                            obj.NestedArrayIndex = new List<int>(nestedArrayIndex);
+                                            obj.NestedArrayIndex.Add(range);
+                                        }
                                         recordFieldConfigurations.Add(obj);
                                     }
                                 }
                                 else
                                 {
-                                    for (int range = dnAttr.Minimum.CastTo<int>(); range < dnAttr.Maximum.CastTo<int>(); range++)
+                                    for (int range = dnAttr.Minimum.CastTo<int>(); range <= dnAttr.Maximum.CastTo<int>(); range++)
                                     {
                                         foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                                         {
                                             pt = pd.PropertyType.GetUnderlyingType();
                                             if (pt != typeof(object) && !pt.IsSimple() /*&& !typeof(IEnumerable).IsAssignableFrom(pt)*/)
                                             {
-                                                DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, pd, recordFieldConfigurations);
+                                                if (nestedArrayIndex == null)
+                                                    nestedArrayIndex = new List<int>();
+                                                nestedArrayIndex.Add(range);
+                                                DiscoverRecordFields(pt, ref position, declaringMember == null ? pd.Name : 
+                                                    "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, pd, recordFieldConfigurations, range, nestedArrayIndex);
                                             }
                                             else
                                             {
-                                                ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref position, declaringMember, pd, range, propDesc.GetDisplayName());
-
+                                                var displayName = propDesc.GetDisplayName(String.Empty);
+                                                if (displayName.IsNullOrEmpty())
+                                                {
+                                                    if (arrayIndex != null)
+                                                    {
+                                                        displayName = $"{declaringMember}{GetArrayIndexSeparator()}{arrayIndex.Value}";
+                                                    }
+                                                }
+                                                ChoCSVRecordFieldConfiguration obj = NewFieldConfiguration(ref position, declaringMember, pd, range, displayName);
+                                                if (arrayIndex != null)
+                                                {
+                                                    obj.NestedArrayIndex = new List<int>(nestedArrayIndex);
+                                                    obj.NestedArrayIndex.Add(range);
+                                                }
                                                 //if (!CSVRecordFieldConfigurations.Any(c => c.Name == (declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name))))
                                                 recordFieldConfigurations.Add(obj);
                                             }
@@ -535,7 +557,8 @@ namespace ChoETL
         }
 
         internal ChoCSVRecordFieldConfiguration NewFieldConfiguration(ref int position, string declaringMember, PropertyDescriptor pd,
-            int? arrayIndex = null, string displayName = null, string dictKey = null, bool ignoreAttrs = false, Action<ChoCSVRecordFieldConfigurationMap> mapper = null)
+            int? arrayIndex = null, string displayName = null, string dictKey = null, bool ignoreAttrs = false, 
+            Action<ChoCSVRecordFieldConfigurationMap> mapper = null)
         {
             ChoCSVRecordFieldConfiguration obj = null;
 
@@ -562,6 +585,8 @@ namespace ChoETL
 
             obj.DictKey = dictKey;
             obj.ArrayIndex = arrayIndex;
+            if (arrayIndex != null)
+                obj.NestedArrayIndex.Add(arrayIndex.Value);
             obj.FieldType = pd != null ? pd.PropertyType : null; // pt;
             obj.PropertyDescriptor = pd;
             if (pd != null)
@@ -649,7 +674,7 @@ namespace ChoETL
 
             if (arrayIndex != null)
             {
-                var arrayIndexSeparator = ArrayIndexSeparator == null ? ChoETLSettings.ArrayIndexSeparator : ArrayIndexSeparator.Value;
+                var arrayIndexSeparator = GetArrayIndexSeparator(); // ArrayIndexSeparator == null ? ChoETLSettings.ArrayIndexSeparator : ArrayIndexSeparator.Value;
 
                 if (_recObject.Value is IChoArrayItemFieldNameOverrideable)
                 {
@@ -657,7 +682,7 @@ namespace ChoETL
                 }
                 else
                 {
-                    obj.Name = obj.FieldName = obj.FieldName + (arrayIndexSeparator == ChoCharEx.NUL ? "" : arrayIndexSeparator.ToString()) + arrayIndex.Value;
+                    obj.Name = obj.FieldName = obj.FieldName + arrayIndexSeparator + arrayIndex.Value;
                 }
             }
             else if (!dictKey.IsNullOrWhiteSpace())
@@ -834,7 +859,7 @@ namespace ChoETL
                                             .Where(g => g.Count() > 1)
                                             .ToArray();
 
-                        var arrayIndexSeparator = ArrayIndexSeparator == ChoCharEx.NUL ? ChoETLSettings.ArrayIndexSeparator : ArrayIndexSeparator;
+                        var arrayIndexSeparator = GetArrayIndexSeparator(); // ArrayIndexSeparator == ChoCharEx.NUL ? ChoETLSettings.ArrayIndexSeparator : ArrayIndexSeparator;
                         int index = AutoIncrementStartIndex;
                         string fieldName = null;
                         foreach (var grp in dupFieldConfigs)
@@ -1350,10 +1375,9 @@ namespace ChoETL
                             nfc.FieldName = displayName;
 
                         string lFieldName = null;
-                        if (ArrayIndexSeparator == null)
-                            lFieldName = nfc.FieldName + "_" + index;
-                        else
-                            lFieldName = nfc.FieldName + ArrayIndexSeparator + index;
+
+                        var arrayIndexSeparator = GetArrayIndexSeparator();
+                        lFieldName = nfc.FieldName + arrayIndexSeparator + index;
 
                         nfc.DeclaringMember = nfc.Name;
                         nfc.Name = lFieldName;

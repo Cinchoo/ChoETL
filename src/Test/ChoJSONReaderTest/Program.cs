@@ -7950,8 +7950,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             ChoETLFrxBootstrap.MaxArrayItemsToPrint = 1;
             string jsonFilePath = @"C:\Projects\GitHub\ChoETL\data\largetestdata\largetestdata.json";
             //string jsonFilePath = @"C:\Projects\GitHub\ChoETL\data\smallsubset.json";
-            ChoJSONExtensions.SplitJsonFile(jsonFilePath, new string[] { "ControlJob", "ProcessJobs", "ProcessRecipes", "RecipeSteps"},
-                                             (directory, name, i, ext) => Path.Combine(directory, Path.ChangeExtension(name + $"_fragment_{i}", ext)));
+            //ChoJSONExtensions.SplitJsonFile(jsonFilePath, new string[] { "ControlJob", "ProcessJobs", "ProcessRecipes", "RecipeSteps"},
+            //                                 (directory, name, i, ext) => Path.Combine(directory, Path.ChangeExtension(name + $"_fragment_{i}", ext)));
             return;
 
             dynamic keys = null;
