@@ -1730,18 +1730,25 @@ namespace ChoETL
 
         private bool FillIfKeyValueObject(ref object rec, JToken jObject)
         {
-            rec = ToObject(jObject, RecordType); //, config.UseJSONSerialization, config);
-            return true;
             if (rec.GetType().GetCustomAttribute<ChoKeyValueTypeAttribute>() != null
                 || typeof(IChoKeyValueType).IsAssignableFrom(rec.GetType()))
             {
-                IDictionary<string, object> dict = ToDynamic(jObject) as IDictionary<string, object>;
-                if (dict == null || dict.Count == 0)
-                    return true;
-
-                FillIfKeyValueObject(rec, dict.First());
+                rec = ToObject(jObject, RecordType); //, config.UseJSONSerialization, config);
+                return true;
             }
-            return false;
+            else
+                return false;
+
+            //if (rec.GetType().GetCustomAttribute<ChoKeyValueTypeAttribute>() != null
+            //    || typeof(IChoKeyValueType).IsAssignableFrom(rec.GetType()))
+            //{
+            //    IDictionary<string, object> dict = ToDynamic(jObject) as IDictionary<string, object>;
+            //    if (dict == null || dict.Count == 0)
+            //        return true;
+
+            //    FillIfKeyValueObject(rec, dict.First());
+            //}
+            //return false;
         }
 
 

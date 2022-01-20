@@ -581,7 +581,7 @@ namespace ChoETL
 
             //obj.FieldName = pd != null ? pd.Name : displayName;
 
-            mapper?.Invoke(new ChoCSVRecordFieldConfigurationMap(obj));
+            //mapper?.Invoke(new ChoCSVRecordFieldConfigurationMap(obj));
 
             obj.DictKey = dictKey;
             obj.ArrayIndex = arrayIndex;
@@ -689,6 +689,9 @@ namespace ChoETL
             {
                 obj.FieldName = dictKey;
             }
+
+            mapper?.Invoke(new ChoCSVRecordFieldConfigurationMap(obj));
+            position = obj.FieldPosition;
 
             return obj;
         }
@@ -1369,7 +1372,7 @@ namespace ChoETL
                         fieldPosition++;
 
                         var nfc = new ChoCSVRecordFieldConfiguration(fieldName, fieldPosition) { ArrayIndex = index, Priority = priority };
-                        mapper?.Invoke(new ChoCSVRecordFieldConfigurationMap(nfc));
+                        //mapper?.Invoke(new ChoCSVRecordFieldConfigurationMap(nfc));
 
                         if (displayName != null)
                             nfc.FieldName = displayName;
@@ -1386,6 +1389,7 @@ namespace ChoETL
                         nfc.ArrayIndex = index;
 
                         nfc.FieldType = recordType;
+                        mapper?.Invoke(new ChoCSVRecordFieldConfigurationMap(nfc));
                         CSVRecordFieldConfigurations.Add(nfc);
                     }
                 }

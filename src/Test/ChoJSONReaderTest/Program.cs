@@ -8074,12 +8074,35 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
         }
+        public class Order2
+        {
+            public int Id { get; set; }
+            [ChoJSONPath("ShippingMethod.Code")]
+            public string ShippingMethod { get; set; }
+        }
+
+        static void CustomMemberLoad()
+        {
+            string json = @"{
+  'Id': 1,
+  'ShippingMethod': {
+     'Code': 'external_DHLExpressWorldwide',
+     'Description': 'DHL ILS Express Worldwide'
+  }
+}";
+            using (var r = ChoJSONReader<Order2>.LoadText(json)
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                )
+            {
+                r.Print();
+            }
+        }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            Issue170();
+            CustomMemberLoad();
             //DeserializeNestedObjectOfList();
             return;
 
