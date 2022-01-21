@@ -1097,7 +1097,9 @@ namespace ChoETL
                     {
                         jToken = jToken is JArray ? ((JArray)jToken).FirstOrDefault() : jToken;
                     }
-                    else if (fieldConfig.FieldType != null && fieldConfig.FieldType != typeof(object) && (fieldConfig.FieldType.IsCollection()
+                    else if (fieldConfig.FieldType != null && fieldConfig.FieldType != typeof(object) &&
+                        !typeof(JToken).IsAssignableFrom(fieldConfig.FieldType) && 
+                        (fieldConfig.FieldType.IsCollection()
          || fieldConfig.FieldType.IsGenericList()
          || fieldConfig.FieldType.IsGenericEnumerable())
          && jToken != null)

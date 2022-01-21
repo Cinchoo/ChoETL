@@ -95,7 +95,10 @@
             {
                 if (!_pdDict.ContainsKey(type))
                 {
-                    if (type.IsSimple())
+                    if (type.IsSimple()
+                        || type == typeof(object)
+                        || typeof(Type).IsAssignableFrom(type)
+                        )
                         _pdDict.Add(type, new PropertyDescriptor[] { });
                     else
                         _pdDict.Add(type, GetBasePropertiesFirst(type).AsTypedEnumerable<PropertyDescriptor>().Where(pd => !pd.Attributes.OfType<ChoIgnoreMemberAttribute>().Any()).ToArray());

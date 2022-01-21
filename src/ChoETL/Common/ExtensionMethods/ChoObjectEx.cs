@@ -373,6 +373,8 @@ namespace ChoETL
         {
             if (target == null)
                 return null;
+            else if (target.GetType() == typeof(object))
+                return target;
             else if (target.GetType().GetUnderlyingType().IsSimple())
                 return target;
             else if (target.GetType().GetUnderlyingType().IsSimpleSpecial())
@@ -382,7 +384,7 @@ namespace ChoETL
         }
         public static Dictionary<string, object> ToDictionary(this object target, string propName = null)
         {
-            if (target == null)
+            if (target == null || target is IChoReader || target is IChoWriter)
                 return null;
 
             //ChoGuard.ArgumentNotNull(target, "Target");

@@ -700,7 +700,7 @@ namespace ChoETL
         {
             ChoGuard.ArgumentNotNull(dr, "DataReader");
 
-            using (var w = new ChoCSVWriter(sb))
+            using (var w = new ChoCSVWriter(sb).WithFirstLineHeader())
             {
                 Write(w, dr);
             }
@@ -710,7 +710,7 @@ namespace ChoETL
         {
             ChoGuard.ArgumentNotNull(dr, "DataReader");
 
-            using (var w = new ChoCSVWriter(filePath))
+            using (var w = new ChoCSVWriter(filePath).WithFirstLineHeader())
             {
                 Write(w, dr);
             }
@@ -720,7 +720,7 @@ namespace ChoETL
         {
             ChoGuard.ArgumentNotNull(dr, "DataReader");
 
-            using (var w = new ChoCSVWriter(textWriter))
+            using (var w = new ChoCSVWriter(textWriter).WithFirstLineHeader())
             {
                 Write(w, dr);
             }
@@ -730,19 +730,23 @@ namespace ChoETL
         {
             ChoGuard.ArgumentNotNull(dr, "DataReader");
 
-            using (var w = new ChoCSVWriter(inStream))
+            using (var w = new ChoCSVWriter(inStream).WithFirstLineHeader())
             {
                 Write(w, dr);
             }
         }
 
-        private static void Write(ChoCSVWriter w, IDataReader dr)
+        public static void Write(ChoCSVWriter<dynamic> w, IDataReader dr)
         {
+            ChoGuard.ArgumentNotNull(w, "Writer");
+            ChoGuard.ArgumentNotNull(dr, "DataReader");
+
             DataTable schemaTable = dr.GetSchemaTable();
             dynamic expando = new ExpandoObject();
             var expandoDic = (IDictionary<string, object>)expando;
 
             w.Configuration.UseNestedKeyFormat = false;
+            w.Configuration.CSVRecordFieldConfigurations.Clear();
 
             int ordinal = 0;
             if (w.Configuration.CSVRecordFieldConfigurations.IsNullOrEmpty())
@@ -776,7 +780,7 @@ namespace ChoETL
         {
             ChoGuard.ArgumentNotNull(dt, "DataTable");
 
-            using (var w = new ChoCSVWriter(sb))
+            using (var w = new ChoCSVWriter(sb).WithFirstLineHeader())
             {
                 Write(w, dt);
             }
@@ -786,7 +790,7 @@ namespace ChoETL
         {
             ChoGuard.ArgumentNotNull(dt, "DataTable");
 
-            using (var w = new ChoCSVWriter(filePath))
+            using (var w = new ChoCSVWriter(filePath).WithFirstLineHeader())
             {
                 Write(w, dt);
             }
@@ -796,7 +800,7 @@ namespace ChoETL
         {
             ChoGuard.ArgumentNotNull(dt, "DataTable");
 
-            using (var w = new ChoCSVWriter(textWriter))
+            using (var w = new ChoCSVWriter(textWriter).WithFirstLineHeader())
             {
                 Write(w, dt);
             }
@@ -806,14 +810,15 @@ namespace ChoETL
         {
             ChoGuard.ArgumentNotNull(dt, "DataTable");
 
-            using (var w = new ChoCSVWriter(inStream))
+            using (var w = new ChoCSVWriter(inStream).WithFirstLineHeader())
             {
                 Write(w, dt);
             }
         }
 
-        private static void Write(ChoCSVWriter w, DataTable dt)
+        public static void Write(ChoCSVWriter<dynamic> w, DataTable dt)
         {
+            ChoGuard.ArgumentNotNull(w, "Writer");
             ChoGuard.ArgumentNotNull(dt, "DataTable");
 
             DataTable schemaTable = dt;

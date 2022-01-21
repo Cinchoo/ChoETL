@@ -548,7 +548,7 @@ namespace ChoETL
         {
             ChoGuard.ArgumentNotNull(dr, "DataReader");
 
-            using (var w = new ChoFixedLengthWriter(sb))
+            using (var w = new ChoFixedLengthWriter(sb).WithFirstLineHeader())
             {
                 Write(w, dr);
             }
@@ -558,7 +558,7 @@ namespace ChoETL
         {
             ChoGuard.ArgumentNotNull(dr, "DataReader");
 
-            using (var w = new ChoFixedLengthWriter(filePath))
+            using (var w = new ChoFixedLengthWriter(filePath).WithFirstLineHeader())
             {
                 Write(w, dr);
             }
@@ -568,7 +568,7 @@ namespace ChoETL
         {
             ChoGuard.ArgumentNotNull(dr, "DataReader");
 
-            using (var w = new ChoFixedLengthWriter(textWriter))
+            using (var w = new ChoFixedLengthWriter(textWriter).WithFirstLineHeader())
             {
                 Write(w, dr);
             }
@@ -578,14 +578,15 @@ namespace ChoETL
         {
             ChoGuard.ArgumentNotNull(dr, "DataReader");
 
-            using (var w = new ChoFixedLengthWriter(inStream))
+            using (var w = new ChoFixedLengthWriter(inStream).WithFirstLineHeader())
             {
                 Write(w, dr);
             }
         }
 
-        private static void Write(ChoFixedLengthWriter w, IDataReader dr)
+        public static void Write(ChoFixedLengthWriter<dynamic> w, IDataReader dr)
         {
+            ChoGuard.ArgumentNotNull(w, "Writer");
             ChoGuard.ArgumentNotNull(dr, "DataReader");
 
             DataTable schemaTable = dr.GetSchemaTable();
@@ -593,6 +594,7 @@ namespace ChoETL
             var expandoDic = (IDictionary<string, object>)expando;
 
             w.Configuration.UseNestedKeyFormat = false;
+            w.Configuration.FixedLengthRecordFieldConfigurations.Clear();
 
             //int ordinal = 0;
             if (w.Configuration.FixedLengthRecordFieldConfigurations.IsNullOrEmpty())
@@ -631,7 +633,7 @@ namespace ChoETL
         {
             ChoGuard.ArgumentNotNull(dt, "DataTable");
 
-            using (var w = new ChoFixedLengthWriter(sb))
+            using (var w = new ChoFixedLengthWriter(sb).WithFirstLineHeader())
             {
                 Write(w, dt);
             }
@@ -641,7 +643,7 @@ namespace ChoETL
         {
             ChoGuard.ArgumentNotNull(dt, "DataTable");
 
-            using (var w = new ChoFixedLengthWriter(filePath))
+            using (var w = new ChoFixedLengthWriter(filePath).WithFirstLineHeader())
             {
                 Write(w, dt);
             }
@@ -651,7 +653,7 @@ namespace ChoETL
         {
             ChoGuard.ArgumentNotNull(dt, "DataTable");
 
-            using (var w = new ChoFixedLengthWriter(textWriter))
+            using (var w = new ChoFixedLengthWriter(textWriter).WithFirstLineHeader())
             {
                 Write(w, dt);
             }
@@ -661,14 +663,15 @@ namespace ChoETL
         {
             ChoGuard.ArgumentNotNull(dt, "DataTable");
 
-            using (var w = new ChoFixedLengthWriter(inStream))
+            using (var w = new ChoFixedLengthWriter(inStream).WithFirstLineHeader())
             {
                 Write(w, dt);
             }
         }
 
-        private static void Write(ChoFixedLengthWriter w, DataTable dt)
+        public static void Write(ChoFixedLengthWriter<dynamic> w, DataTable dt)
         {
+            ChoGuard.ArgumentNotNull(w, "Writer");
             ChoGuard.ArgumentNotNull(dt, "DataTable");
 
             DataTable schemaTable = dt;

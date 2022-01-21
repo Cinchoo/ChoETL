@@ -2502,10 +2502,13 @@ namespace ChoETL
             if (target is DataTable)
             {
                 StringBuilder csv = new StringBuilder();
-                using (var w = new ChoCSVWriter(csv)
-                    .WithFirstLineHeader()
-                    )
-                    w.Write(target);
+                ChoCSVWriter.Write(csv, target as DataTable);
+                return csv.ToString();
+            }
+            else if (target is IDataReader)
+            {
+                StringBuilder csv = new StringBuilder();
+                ChoCSVWriter.Write(csv, target as IDataReader);
                 return csv.ToString();
             }
             else if (target.GetType().IsSimple())

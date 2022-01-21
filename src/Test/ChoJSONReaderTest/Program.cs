@@ -6673,17 +6673,17 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             using (var r = new ChoJSONReader<Rootobject>("sample56.json")
                 .ErrorMode(ChoErrorMode.IgnoreAndContinue)
                 //.WithField(f => f.formatVersion)
-                .WithField(f => f.matrix, itemTypeSelector : o =>
-                {
-                    dynamic dobj = o as dynamic;
-                    switch ((int)dobj.statusCode)
-                    {
-                        case 200:
-                          return typeof(Matrix1);
-                        default:
-                            return typeof(Matrix2);
-                    }
-                })
+                .WithField(f => f.matrix, itemTypeSelector: o =>
+               {
+                   dynamic dobj = o as dynamic;
+                   switch ((int)dobj.statusCode)
+                   {
+                       case 200:
+                           return typeof(Matrix1);
+                       default:
+                           return typeof(Matrix2);
+                   }
+               })
                 //.WithField(f => f.summary)
                 //.UseJsonSerialization()
                 )
@@ -6933,12 +6933,12 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 }";
 
             Dictionary<string, string> dict = new Dictionary<string, string> { { "mappingKey1", "mappingValue1" }, { "mappingKey2", "mappingValue2" }, { "mappingKey3", "mappingValue3" }, { "mappingKey4", "mappingValue4" } };
-            Dictionary<string, string> dictOut = new Dictionary<string, string> 
-            { 
-                { "mappingValue1", "mappingKey1" }, 
-                { "mappingValue2", "mappingKey2" }, 
-                { "mappingValue3", "mappingKey3" }, 
-                { "mappingValue4", "mappingKey4" } 
+            Dictionary<string, string> dictOut = new Dictionary<string, string>
+            {
+                { "mappingValue1", "mappingKey1" },
+                { "mappingValue2", "mappingKey2" },
+                { "mappingValue3", "mappingKey3" },
+                { "mappingValue4", "mappingKey4" }
             };
             using (var r = ChoJSONReader<ProductRoot>.LoadText(json)
                 .UseJsonSerialization()
@@ -7184,7 +7184,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                     w.Write(x);
             }
         }
-        
+
         public class GraphItem
         {
             [JsonProperty("id")]
@@ -7215,7 +7215,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
   }
 ]
 ";
-            using (var r = ChoJSONReader< GraphItem>.LoadText(json)
+            using (var r = ChoJSONReader<GraphItem>.LoadText(json)
                 .UseJsonSerialization()
                 )
             {
@@ -8077,8 +8077,17 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
         public class Order2
         {
             public int Id { get; set; }
-            [ChoJSONPath("ShippingMethod.Code")]
-            public string ShippingMethod { get; set; }
+            //[ChoJSONPath("ShippingMethod.Code")]
+            //public string ShippingMethod { get; set; }
+            public JObject ShippingMethod { get; set; }
+            [JsonIgnore]
+            public string ShippingMethod1
+            {
+                get
+                {
+                    return (string)ShippingMethod?["Code"];
+                }
+            }
         }
 
         static void CustomMemberLoad()
@@ -8098,11 +8107,142 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
+        static void FlattenByKeys()
+        {
+            string json = @"{
+        ""key1"": ""val1"",
+        ""key2"": {
+            ""key2-1"": 
+            [
+                {
+                    ""key2-arr1-1"": ""val2-arr1-1(1)"",
+                    ""key2-arr1-2"": 
+                    [
+                        {
+                            ""key2-arr1-arr2-1"" : ""val2-arr1-arr2-1(1)(1)"",
+                            ""key2-arr1-arr2-2"" : 
+                            [
+                                {
+                                    ""key2-arr1-arr2-arr3-1"" : ""val2-arr1-arr2-arr3-1(1)(1)(1)"",
+                                    ""key2-arr1-arr2-arr3-2"" : ""val2-arr1-arr2-arr3-2(1)(1)(1)"",
+                                    ""key2-arr1-arr2-arr3-3"" : ""val2-arr1-arr2-arr3-3(1)(1)(1)""
+                                },
+                                {
+                                    ""key2-arr1-arr2-arr3-1"" : ""val2-arr1-arr2-arr3-1(1)(1)(2)"",
+                                    ""key2-arr1-arr2-arr3-2"" : ""val2-arr1-arr2-arr3-2(1)(1)(2)"",
+                                    ""key2-arr1-arr2-arr3-3"" : ""val2-arr1-arr2-arr3-3(1)(1)(2)""
+                                },
+                                {
+                                    ""key2-arr1-arr2-arr3-1"" : ""val2-arr1-arr2-arr3-1(1)(1)(3)"",
+                                    ""key2-arr1-arr2-arr3-2"" : ""val2-arr1-arr2-arr3-2(1)(1)(3)"",
+                                    ""key2-arr1-arr2-arr3-3"" : ""val2-arr1-arr2-arr3-3(1)(1)(3)""
+                                }
+                            ],
+                            ""key2-arr1-arr2-3"" : ""val2-arr1-arr2-3(1)(1)""
+                        },
+                        {
+                            ""key2-arr1-arr2-1"" : ""val2-arr1-arr2-1(1)(2)"",
+                            ""key2-arr1-arr2-2"" : 
+                            [
+                                {
+                                    ""key2-arr1-arr2-arr3-1"" : ""val2-arr1-arr2-arr3-1(1)(2)(1)"",
+                                    ""key2-arr1-arr2-arr3-2"" : ""val2-arr1-arr2-arr3-2(1)(2)(1)"",
+                                    ""key2-arr1-arr2-arr3-3"" : ""val2-arr1-arr2-arr3-3(1)(2)(1)""
+                                },
+                                {
+                                    ""key2-arr1-arr2-arr3-1"" : ""val2-arr1-arr2-arr3-1(1)(2)(2)"",
+                                    ""key2-arr1-arr2-arr3-2"" : ""val2-arr1-arr2-arr3-2(1)(2)(2)"",
+                                    ""key2-arr1-arr2-arr3-3"" : ""val2-arr1-arr2-arr3-3(1)(2)(2)""
+                                },
+                                {
+                                    ""key2-arr1-arr2-arr3-1"" : ""val2-arr1-arr2-arr3-1(1)(2)(3)"",
+                                    ""key2-arr1-arr2-arr3-2"" : ""val2-arr1-arr2-arr3-2(1)(2)(3)"",
+                                    ""key2-arr1-arr2-arr3-3"" : ""val2-arr1-arr2-arr3-3(1)(2)(3)""
+                                }
+                            ],
+                            ""key2-arr1-arr2-3"" : ""val2-arr1-arr2-3(1)(2)""
+                        }
+                    ]
+                },
+                {
+                    ""key2-arr1-1"": ""val2-arr1-1(2)"",
+                    ""key2-arr1-2"": 
+                    [
+                        {
+                            ""key2-arr1-arr2-1"" : ""val2-arr1-arr2-1(2)(1)"",
+                            ""key2-arr1-arr2-2"" : 
+                            [
+                                {
+                                    ""key2-arr1-arr2-arr3-1"" : ""val2-arr1-arr2-arr3-1(2)(1)(1)"",
+                                    ""key2-arr1-arr2-arr3-2"" : ""val2-arr1-arr2-arr3-2(2)(1)(1)"",
+                                    ""key2-arr1-arr2-arr3-3"" : ""val2-arr1-arr2-arr3-3(2)(1)(1)""
+                                },
+                                {
+                                    ""key2-arr1-arr2-arr3-1"" : ""val2-arr1-arr2-arr3-1(2)(1)(2)"",
+                                    ""key2-arr1-arr2-arr3-2"" : ""val2-arr1-arr2-arr3-2(2)(1)(2)"",
+                                    ""key2-arr1-arr2-arr3-3"" : ""val2-arr1-arr2-arr3-3(2)(1)(2)""
+                                 },
+                                 {
+                                    ""key2-arr1-arr2-arr3-1"" : ""val2-arr1-arr2-arr3-1(2)(1)(3)"",
+                                    ""key2-arr1-arr2-arr3-2"" : ""val2-arr1-arr2-arr3-2(2)(1)(3)"",
+                                    ""key2-arr1-arr2-arr3-3"" : ""val2-arr1-arr2-arr3-3(2)(1)(3)""
+                                 }
+                            ],
+                            ""key2-arr1-arr2-3"" : ""val2-arr1-arr2-3(2)(1)""
+                        },
+                        {
+                            ""key2-arr1-arr2-1"" : ""val2-arr1-arr2-1(2)(2)"",
+                            ""key2-arr1-arr2-2"" : 
+                            [
+                                {
+                                    ""key2-arr1-arr2-arr3-1"" : ""val2-arr1-arr2-arr3-1(2)(2)(1)"",
+                                    ""key2-arr1-arr2-arr3-2"" : ""val2-arr1-arr2-arr3-2(2)(2)(1)"",
+                                    ""key2-arr1-arr2-arr3-3"" : ""val2-arr1-arr2-arr3-3(2)(2)(1)""
+                                },
+                                {
+                                    ""key2-arr1-arr2-arr3-1"" : ""val2-arr1-arr2-arr3-1(2)(2)(2)"",
+                                    ""key2-arr1-arr2-arr3-2"" : ""val2-arr1-arr2-arr3-2(2)(2)(2)"",
+                                    ""key2-arr1-arr2-arr3-3"" : ""val2-arr1-arr2-arr3-3(2)(2)(2)""
+                                },
+                                {
+                                    ""key2-arr1-arr2-arr3-1"" : ""val2-arr1-arr2-arr3-1(2)(2)(3)"",
+                                    ""key2-arr1-arr2-arr3-2"" : ""val2-arr1-arr2-arr3-2(2)(2)(3)"",
+                                    ""key2-arr1-arr2-arr3-3"" : ""val2-arr1-arr2-arr3-3(2)(2)(3)""
+                                }
+                            ],
+                           ""key2-arr1-arr2-3"" : ""val2-arr1-arr2-3(2)(2)""
+                        }
+                    ]
+                }
+            ],
+            ""key2-2"" : ""val2-2""
+            },
+        ""key3"": ""val3""
+        }";
+
+
+//key2
+//key2 - 1
+//key2 - arr1 - 2
+//key2 - arr1 - arr2 - 2
+
+
+            using (var r = ChoJSONReader.LoadText(json)
+       .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+      )
+            {
+                var dt = r.OfType<object>().First().Flatten(nestedKeySeparator: '/').ToDictionary(kvp => kvp.Key, kvp => kvp.Value); //.AsDataTable();
+                dt.Print();
+            }
+        }
+
+
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            CustomMemberLoad();
+            FlattenByKeys();
             //DeserializeNestedObjectOfList();
             return;
 

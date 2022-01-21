@@ -133,14 +133,66 @@ namespace ChoETL
                 }
             }
         }
+        public static IEnumerable<string> GetNestedKeys(this object obj, StringComparer comparer = null)
+        {
+            if (obj == null)
+                return null;
+
+            if (comparer == null)
+                comparer = StringComparer.InvariantCultureIgnoreCase;
+
+            IList<string> keys = new List<string>();
+            if (obj != null)
+                GetNestedKeys(obj, keys, comparer);
+
+            return keys;
+        }
+
+        private static void GetNestedKeys(object obj, IList<string> keys, StringComparer comparer)
+        {
+            if (obj is IDictionary<string, object>)
+            {
+                foreach (var kvp in ((IDictionary<string, object>)obj))
+                {
+                    if (kvp.Value is IDictionary<string, object> || kvp.Value is IList)
+                    {
+                        if (!keys.Contains(kvp.Key, comparer))
+                            keys.Add(kvp.Key);
+                        GetNestedKeys(kvp.Value, keys, comparer);
+                    }
+                }
+            }
+            else if (obj is IList)
+            {
+                foreach (var item in (IList)obj)
+                {
+                    GetNestedKeys(item, keys, comparer);
+                }
+            }
+            else
+            {
+
+            }
+        }
+        public static IEnumerable<dynamic> Flatten(this IEnumerable dicts)
+        {
+            var cache = dicts != null ? dicts.OfType<object>().ToArray() : null;
+            var fields = GetNestedKeys(cache).ToArray();
+
+            return FlattenBy(cache, fields);
+        }
 
         public static IEnumerable<dynamic> FlattenBy(this IEnumerable dicts, params string[] fields)
         {
-            if (dicts == null || fields == null)
-                yield return dicts;
+            var cache = dicts != null ? dicts.OfType<object>().ToArray() : null;
+            if (fields.IsNullOrEmpty())
+                fields = GetNestedKeys(cache).ToArray();
+
+            if (cache == null || fields.IsNullOrEmpty())
+                yield return cache;
             else
             {
-                foreach (var rec in dicts)
+                foreach (var rec in cache)
                 {
                     if (rec is IDictionary<string, object>)
                     {
@@ -152,10 +204,18 @@ namespace ChoETL
                 }
             }
         }
+        public static IEnumerable<dynamic> Flatten(this IDictionary<string, object> dict)
+        {
+            var fields = GetNestedKeys(dict).ToArray();
+            return FlattenBy(dict, fields);
+        }
 
         public static IEnumerable<dynamic> FlattenBy(this IDictionary<string, object> dict, params string[] fields)
         {
-            if (dict == null || fields == null)
+            if (fields.IsNullOrEmpty())
+                fields = GetNestedKeys(dict).ToArray();
+
+            if (dict == null || fields.IsNullOrEmpty())
                 yield return dict;
             else
             {
@@ -242,12 +302,12 @@ namespace ChoETL
                 else
                 {
                     return ((IList)target).OfType<object>().Select((o, i) => new KeyValuePair<string, object>($"{ChoETLSettings.ValueNamePrefix}{i + ChoETLSettings.ValueNameStartIndex}", 
-                        o.ToDictionary().Flatten(nestedKeySeparator, arrayIndexSeparator, ignoreDictionaryFieldPrefix)));
+                        o.ToDictionary().Flatten(nestedKeySeparator, arrayIndexSeparator, ignoreDictionaryFieldPrefix).ToArray()));
                 }
             }
             else
             {
-                return target.ToDictionary().Flatten(nestedKeySeparator, arrayIndexSeparator, ignoreDictionaryFieldPrefix);
+                return target.ToDictionary().Flatten(nestedKeySeparator, arrayIndexSeparator, ignoreDictionaryFieldPrefix).ToArray();
             }
         }
 

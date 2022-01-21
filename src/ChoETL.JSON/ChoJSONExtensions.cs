@@ -19,6 +19,28 @@ namespace ChoETL
         {
         }
 
+        static string[] GetAllNestedKeys(JObject jsonObject)
+        {
+            ChoGuard.ArgumentNotNull(jsonObject, "JObject");
+            var keysToFlattenBy = jsonObject.SelectTokens("$..*")
+                .Where(t => t.Type == JTokenType.Array || t.Type == JTokenType.Object)
+                .Select(t => t.Path)
+                .Where(t => t.Length > 0 && char.IsNumber(t[t.Length - 1]))
+                .Select(t => t.Split('.').LastOrDefault() ?? string.Empty)
+                .Where(t => !string.IsNullOrWhiteSpace(t))
+                .Distinct()
+                .ToArray();
+
+            return keysToFlattenBy;
+
+        }
+
+        static string[] GetAllNestedKeys(string json)
+        {
+            var jsonObject = JObject.Parse(json);
+            return GetAllNestedKeys(jsonObject);
+        }
+
         public static JsonWriter CreateJSONWriter(this StringBuilder sb)
         {
             ChoGuard.ArgumentNotNull(sb, nameof(sb));
