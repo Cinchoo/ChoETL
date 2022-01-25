@@ -122,7 +122,7 @@ namespace ChoETL
                 //    return ChoType.GetPropertyValue(parent, memberName);
                 //}
             }
-                
+
             return false;
         }
         public static object GetNestedPropertyValue(this object target, string propName)
@@ -428,7 +428,7 @@ namespace ChoETL
 
             return dict;
         }
-        private static void ZipToDictionary(object target, Dictionary<string, object> dict)
+        private static void ZipToDictionary(object target, Dictionary<string, object> dict, Action<Dictionary<string, object>, string, object> collisionResolver = null)
         {
             if (target == null)
                 return;
@@ -443,6 +443,8 @@ namespace ChoETL
                 {
                     if (!dict.ContainsKey(kvp.ToNString()))
                         dict.Add(kvp.ToNString(), ((IDictionary)target)[kvp]);
+                    else if (collisionResolver != null)
+                        collisionResolver(dict, kvp.ToNString(), ((IDictionary)target)[kvp]);
                 }
             }
             if (target is IEnumerable<KeyValuePair<string, object>>)
@@ -451,6 +453,8 @@ namespace ChoETL
                 {
                     if (!dict.ContainsKey(kvp.Key))
                         dict.Add(kvp.Key, kvp.Value);
+                    else if (collisionResolver != null)
+                        collisionResolver(dict, kvp.Key, kvp.Value);
                 }
             }
             if (target is IEnumerable<Tuple<string, object>>)
@@ -459,6 +463,8 @@ namespace ChoETL
                 {
                     if (!dict.ContainsKey(kvp.Item1))
                         dict.Add(kvp.Item1, kvp.Item2);
+                    else if (collisionResolver != null)
+                        collisionResolver(dict, kvp.Item1, kvp.Item2);
                 }
             }
             if (target is IList)
@@ -470,6 +476,8 @@ namespace ChoETL
                 {
                     if (!dict.ContainsKey(kvp.Key))
                         dict.Add(kvp.Key, kvp.Value);
+                    else if (collisionResolver != null)
+                        collisionResolver(dict, kvp.Key, kvp.Value);
                 }
             }
 
@@ -480,11 +488,12 @@ namespace ChoETL
                 var value = ChoType.GetPropertyValue(target, pd.Name);
                 if (!dict.ContainsKey(propNamex))
                     dict.Add(propNamex, value);
+                else if (collisionResolver != null)
+                    collisionResolver(dict, propNamex, value);
             }
-
         }
 
-        public static Dictionary<string, object> ZipToDictionary(this IList target)
+        public static Dictionary<string, object> ZipToDictionary(this IList target, Action<Dictionary<string, object>, string, object> collisionResolver = null)
         {
 
             if (target == null || target is IChoReader || target is IChoWriter)
@@ -493,7 +502,7 @@ namespace ChoETL
             Dictionary<string, object> dict = new Dictionary<string, object>();
             foreach (var item in target)
             {
-                ZipToDictionary(item, dict);
+                ZipToDictionary(item, dict, collisionResolver);
             }
 
 
@@ -649,7 +658,7 @@ namespace ChoETL
             }
         }
 
-        
+
         public static void JsonSerialize(Stream sr, object target)
         {
             ChoGuard.ArgumentNotNull(sr, "Stream");
@@ -659,7 +668,7 @@ namespace ChoETL
             serializer.WriteObject(sr, target);
         }
 
-        
+
         public static string JsonSerialize(object target, Encoding encoding = null)
         {
             ChoGuard.ArgumentNotNull(target, "Target");
@@ -679,7 +688,7 @@ namespace ChoETL
                 }
             }
         }
-        
+
         public static void JsonSerialize(string path, object target, Encoding encoding = null)
         {
             ChoGuard.ArgumentNotNullOrEmpty(path, "Path");
@@ -699,7 +708,7 @@ namespace ChoETL
             return (T)JsonDeserialize(sr, typeof(T));
         }
 
-        
+
         public static object JsonDeserialize(Stream sr, Type type)
         {
             ChoGuard.ArgumentNotNullOrEmpty(sr, "Stream");
@@ -709,7 +718,7 @@ namespace ChoETL
             return serializer.ReadObject(sr);
         }
 
-        
+
         public static T JsonDeserialize<T>(string JsonString, Encoding encoding = null)
         {
             ChoGuard.ArgumentNotNullOrEmpty(JsonString, "JsonString");
@@ -717,7 +726,7 @@ namespace ChoETL
             return (T)JsonDeserialize(JsonString, typeof(T), encoding);
         }
 
-        
+
         public static object JsonDeserialize(string JsonString, Type type, Encoding encoding = null)
         {
             ChoGuard.ArgumentNotNullOrEmpty(JsonString, "JsonString");
@@ -731,13 +740,13 @@ namespace ChoETL
             }
         }
 
-        
+
         public static T JsonDeserializeFromFile<T>(string path)
         {
             return (T)JsonDeserializeFromFile(path, typeof(T));
         }
 
-        
+
         public static object JsonDeserializeFromFile(string path, Type type)
         {
             ChoGuard.ArgumentNotNullOrEmpty(path, "Path");
