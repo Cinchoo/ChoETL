@@ -5492,10 +5492,34 @@ ue2"",Value3";
             }
         }
 
+        public class EmpWithZip
+        { 
+            [ChoFieldPosition(1)]
+            public string Identifier { get; set; }
+            [DisplayName("Name")]
+            public string EmpName { get; set; }
+            [DisplayName("Zip")]
+            public string ZipCode { get; set; }
+        }
+
+        static void LoadByIndexOrName()
+        {
+            string csv = @"Id, Name, Zip
+1, Tom, 10010
+2, Mark, 08830";
+
+            using (var r = ChoCSVReader<EmpWithZip>.LoadText(csv)
+                .WithFirstLineHeader(false)
+                .ThrowAndStopOnMissingField(false)
+                .Configure(c => c.AllowLoadingFieldByPosition = true)
+                )
+                r.Print();
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            CSVArrayToJSON();
+            LoadByIndexOrName();
             return;
 
             PositionNeutralCSVLoad();

@@ -48,9 +48,19 @@ namespace ChoETL
                     else
                     {
                         if (!FieldName.IsNullOrWhiteSpace())
-                            _defaultXPath = $"{FieldName}|@{FieldName}|{nsPrefix}:{FieldName}";
+                        {
+                            if (FieldName.Contains(":"))
+                                _defaultXPath = $"{FieldName}|@{FieldName}";
+                            else
+                                _defaultXPath = $"{FieldName}|@{FieldName}|{nsPrefix}:{FieldName}";
+                        }
                         else
-                            _defaultXPath = $"{Name}|@{Name}|{nsPrefix}:{Name}";
+                        {
+                            if (Name.Contains(":"))
+                                _defaultXPath = $"{Name}|@{Name}";
+                            else
+                                _defaultXPath = $"{Name}|@{Name}|{nsPrefix}:{Name}";
+                        }
                     }
                 }
                 return _defaultXPath;

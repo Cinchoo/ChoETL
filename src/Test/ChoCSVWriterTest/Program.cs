@@ -2275,11 +2275,45 @@ a;b;;2021-05-06;e;11:00;3;9";
             csv.Print();
         }
 
+        public class ProductCsvModel
+        {
+            public decimal DirectCosts { get; set; }
+            [Range(0, 2)]
+            public List<dynamic> Attributes { get; set; }
+        }
+
+        static void DynamicSubMemberstoCSV()
+        {
+            var records = new List<ProductCsvModel>
+                {
+                    new ProductCsvModel
+                    {
+                        DirectCosts = 1.1M,
+                        Attributes = new List<dynamic>
+                        {
+                            new { Brand = "Test1" },
+                            new { Season = "Test2" },
+                            new { Brand = "Test3" },
+                            new { Custom = "Test4" }
+                        }
+                    }
+                };
+
+            ChoETLSettings.ValueNamePrefix = String.Empty;
+            using (var w = new ChoCSVWriter(Console.Out)
+                   .WithFirstLineHeader().UseNestedKeyFormat().ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                   .Configure(c => c.IgnoreDictionaryFieldPrefix = true)
+                  )
+            {
+                w.Write(records.Select(r => new { r.DirectCosts, Attributes = r.Attributes.ZipToDictionary() }));
+            }
+        }
+
         static void Main(string[] args)
         {
             //AppDomain.CurrentDomain.FirstChanceException += (sender, eventArgs) => { Console.WriteLine("FirstChanceException: " + eventArgs.Exception.ToString()); };
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            NestedClassSerialization();
+            DynamicSubMemberstoCSV();
 
             //TestDictionary();
             return;

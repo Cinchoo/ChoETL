@@ -230,7 +230,7 @@ namespace ChoETL
                     if (!Configuration.NamespaceManager.DefaultNamespace.IsNullOrWhiteSpace())
                     {
                         Configuration.NamespaceManager.AddNamespace(GetNSPrefix(), Configuration.NamespaceManager.DefaultNamespace);
-                        ChoXmlSettings.XmlNamespace = Configuration.NamespaceManager.DefaultNamespace;
+                        //ChoXmlSettings.XmlNamespace = Configuration.NamespaceManager.DefaultNamespace;
                     }
                 }
 
@@ -638,7 +638,8 @@ namespace ChoETL
 
                 if (fieldConfig.XPath == "text()")
                 {
-                    if (Configuration.GetNameWithNamespace(node.Name) == fieldConfig.FieldName)
+                    if (Configuration.GetNameWithNamespace(node.Name) == fieldConfig.FieldName 
+                        || node.Name.LocalName == fieldConfig.FieldName)
                     {
                         object value = node;
                         if (!RaiseBeforeRecordFieldLoad(rec, pair.Item1, key, ref value))

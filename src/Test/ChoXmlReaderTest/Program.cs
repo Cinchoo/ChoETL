@@ -433,7 +433,63 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            LoadXmlUsingConfigAndPOCO();
+            LoadSelectiveNode();
+        }
+
+        public static void LoadSelectiveNode()
+        {
+            string xml = @"<?xml version=""1.0"" encoding=""utf-16""?>
+<cincinnati xmlns=""http://www.sesame-street.com/abc/def/1"">
+  <cincinnatiChild xmlns:i=""http://www.w3.org/2001/XMLSchema-instance"">
+    <ElementValue xmlns:a=""http://schemas.data.org/2004/07/sesame-street.abc.def.ghi"">
+      <a:someField>false</a:someField>
+      <a:data xmlns:b=""http://schemas.microsoft.com/2003/10/Serialization/Arrays"">
+        <b:KeyValueThing>
+          <b:Key>key1</b:Key>
+          <b:Value i:type=""a:ArrayOfPeople"">
+            <a:Person>
+              <a:firstField>
+              </a:firstField>
+              <a:dictionary>
+                <b:KeyValueThing>
+                  <b:Key>ID</b:Key>
+                  <b:Value i:type=""c:long"" xmlns:c=""http://www.w3.org/2001/XMLSchema"">000101</b:Value>
+                </b:KeyValueThing>
+                <b:KeyValueThing>
+                  <b:Key>Name</b:Key>
+                  <b:Value i:type=""c:string"" xmlns:c=""http://www.w3.org/2001/XMLSchema"">John</b:Value>
+                </b:KeyValueThing>
+              </a:dictionary>
+            </a:Person>
+            <a:Person>
+              <a:firstField>
+              </a:firstField>
+              <a:dictionary>
+                <b:KeyValueThing>
+                  <b:Key>ID</b:Key>
+                  <b:Value i:type=""c:long"" xmlns:c=""http://www.w3.org/2001/XMLSchema"">000102</b:Value>
+                </b:KeyValueThing>
+                <b:KeyValueThing>
+                  <b:Key>Name</b:Key>
+                  <b:Value i:type=""c:string"" xmlns:c=""http://www.w3.org/2001/XMLSchema"">John</b:Value>
+                </b:KeyValueThing>
+              </a:dictionary>
+            </a:Person>
+          </b:Value>
+        </b:KeyValueThing>
+      </a:data>
+    </ElementValue>
+  </cincinnatiChild>
+</cincinnati>";
+
+
+            using (var r = ChoXmlReader.LoadText(xml).WithXPath("//b:Value/b:Value")
+                .WithField("Value", xPath: "text()")
+                   .WithXmlNamespace("b", "http://schemas.microsoft.com/2003/10/Serialization/Arrays")
+                   )
+            {
+                r.Print(); //.Where(r1 => r1.Key == "ID").Select(r2 => r2.Value).Print();
+            }
         }
 
         public static void LoadXmlUsingConfigAndPOCO()

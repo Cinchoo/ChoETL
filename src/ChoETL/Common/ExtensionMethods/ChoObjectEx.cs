@@ -428,7 +428,78 @@ namespace ChoETL
 
             return dict;
         }
+        private static void ZipToDictionary(object target, Dictionary<string, object> dict)
+        {
+            if (target == null)
+                return;
+            else if (target.GetType().GetUnderlyingType().IsSimple())
+                return;
+            else if (target.GetType().GetUnderlyingType().IsSimpleSpecial())
+                return;
 
+            if (target is IDictionary)
+            {
+                foreach (var kvp in ((IDictionary)target).Keys)
+                {
+                    if (!dict.ContainsKey(kvp.ToNString()))
+                        dict.Add(kvp.ToNString(), ((IDictionary)target)[kvp]);
+                }
+            }
+            if (target is IEnumerable<KeyValuePair<string, object>>)
+            {
+                foreach (var kvp in (IEnumerable<KeyValuePair<string, object>>)target)
+                {
+                    if (!dict.ContainsKey(kvp.Key))
+                        dict.Add(kvp.Key, kvp.Value);
+                }
+            }
+            if (target is IEnumerable<Tuple<string, object>>)
+            {
+                foreach (var kvp in (IEnumerable<Tuple<string, object>>)target)
+                {
+                    if (!dict.ContainsKey(kvp.Item1))
+                        dict.Add(kvp.Item1, kvp.Item2);
+                }
+            }
+            if (target is IList)
+            {
+                foreach (var kvp in ((IList)(target)).OfType<object>().Select((item, index) =>
+                {
+                    return new KeyValuePair<string, object>($"{ChoETLSettings.ValueNamePrefix}{index + ChoETLSettings.ValueNameStartIndex}", item);
+                }).ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToDictionaryInternal(kvp.Key)))
+                {
+                    if (!dict.ContainsKey(kvp.Key))
+                        dict.Add(kvp.Key, kvp.Value);
+                }
+            }
+
+            string propNamex = null;
+            foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(target.GetType()))
+            {
+                propNamex = pd.GetDisplayName(pd.Name);
+                var value = ChoType.GetPropertyValue(target, pd.Name);
+                if (!dict.ContainsKey(propNamex))
+                    dict.Add(propNamex, value);
+            }
+
+        }
+
+        public static Dictionary<string, object> ZipToDictionary(this IList target)
+        {
+
+            if (target == null || target is IChoReader || target is IChoWriter)
+                return null;
+
+            Dictionary<string, object> dict = new Dictionary<string, object>();
+            foreach (var item in target)
+            {
+                ZipToDictionary(item, dict);
+            }
+
+
+            return dict;
+
+        }
         public static Dictionary<string, object> ToSimpleDictionary(this object target)
         {
             if (target == null)

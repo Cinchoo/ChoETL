@@ -398,7 +398,7 @@ namespace ChoETL
             return true;
         }
 
-        public static IEnumerable<XElement> StreamElements(XmlReader reader, string[] elementNames)
+        public static IEnumerable<XElement> StreamElements(XmlReader reader, string[] elementNames, bool nestedChild = false)
         {
             if (elementNames.Length == 1)
             {
@@ -436,9 +436,17 @@ namespace ChoETL
                 }
                 else
                 {
-                    if (reader.NodeType == XmlNodeType.Element && reader.Name == elementName)
+                    if (!nestedChild)
                     {
-                        yield return (XElement)XNode.ReadFrom(reader);
+                        if (reader.NodeType == XmlNodeType.Element && reader.Name == elementName)
+                        {
+                            yield return (XElement)XNode.ReadFrom(reader);
+                        }
+                        else
+                        {
+                            while (reader.ReadToFollowing(elementName))
+                                yield return (XElement)XNode.ReadFrom(reader);
+                        }
                     }
                     else
                     {
@@ -466,7 +474,7 @@ namespace ChoETL
                                 // Empty element?
                                 isEmpty = reader.IsEmptyElement;
 
-                                foreach (var i in StreamElements(reader, elementNames.Skip(1).ToArray()))
+                                foreach (var i in StreamElements(reader, elementNames.Skip(1).ToArray(), true))
                                     yield return i;
 
                                 reader.MoveToContent();
@@ -482,14 +490,14 @@ namespace ChoETL
                 {
                     if (reader.NodeType == XmlNodeType.Element && reader.Name == elementName)
                     {
-                        foreach (var i in StreamElements(reader, elementNames.Skip(1).ToArray()))
+                        foreach (var i in StreamElements(reader, elementNames.Skip(1).ToArray(), true))
                             yield return i;
                     }
                     else
                     {
                         while (reader.ReadToDescendant(elementName))
                         {
-                            foreach (var i in StreamElements(reader, elementNames.Skip(1).ToArray()))
+                            foreach (var i in StreamElements(reader, elementNames.Skip(1).ToArray(), true))
                                 yield return i;
                         }
                     }
