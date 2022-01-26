@@ -682,6 +682,31 @@ namespace ChoETL
                 RaisedRowsLoaded(pair.Item1, true);
         }
 
+        private void RemoveIgnoreFields(IDictionary<string, object> rec)
+        {
+            if (rec == null)
+                return;
+
+            foreach (var fd in Configuration.IgnoredFields)
+            {
+                if (rec.ContainsKey(fd))
+                    rec.Remove(fd);
+            }
+
+            foreach (var kvp in rec)
+            {
+                if (kvp.Value is IDictionary<string, object>)
+                    RemoveIgnoreFields(kvp.Value as IDictionary<string, object>);
+                else if (kvp.Value is IList)
+                {
+                    foreach (var item in (IList)kvp.Value)
+                    {
+                        RemoveIgnoreFields(item as IDictionary<string, object>);
+                    }
+                }
+            }
+        }
+
         private bool LoadNode(Tuple<long, JObject> pair, ref object rec)
         {
             bool ignoreFieldValue = pair.Item2.IgnoreFieldValue(Configuration.IgnoreFieldValueMode);
@@ -827,15 +852,7 @@ namespace ChoETL
                         //Remove any ignore fields
                         if (Configuration.IgnoredFields.Count != 0)
                         {
-                            IDictionary<string, object> rec1 = rec as IDictionary<string, object>;
-                            if (rec1 != null)
-                            {
-                                foreach (var fd in Configuration.IgnoredFields)
-                                {
-                                    if (rec1.ContainsKey(fd))
-                                        rec1.Remove(fd);
-                                }
-                            }
+                            RemoveIgnoreFields(rec as IDictionary<string, object>);
                         }
 
                         if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.Off) != ChoObjectValidationMode.Off)
@@ -2143,8 +2160,8 @@ namespace ChoETL
                     case JTokenType.Object:
                     case JTokenType.Undefined:
                     case JTokenType.Raw:
-                        Dictionary<string, object> dict = Configuration.JsonSerializer == null ? jToken.ToObject(typeof(Dictionary<string, object>)) as Dictionary<string, object> :
-                            jToken.ToObject(typeof(Dictionary<string, object>), Configuration.JsonSerializer) as Dictionary<string, object>;
+                        IDictionary<string, object> dict = Configuration.JsonSerializer == null ? jToken.ToObject(typeof(ChoDynamicObject)) as Dictionary<string, object> :
+                            jToken.ToObject(typeof(ChoDynamicObject), Configuration.JsonSerializer) as IDictionary<string, object>;
 
                         if (jToken is JObject && ((JObject)jToken).ContainsKey("$type"))
                         {

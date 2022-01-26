@@ -353,9 +353,11 @@ namespace ChoETL
             if (formatting == null)
                 formatting = serializer.Formatting;
 
-            if (settings != null && settings.Context.Context == null && enableXmlAttributePrefix)
+            if (settings != null && enableXmlAttributePrefix)
             {
-                settings.Context = new System.Runtime.Serialization.StreamingContext(System.Runtime.Serialization.StreamingContextStates.All, new ChoDynamicObject());
+                if (settings.Context.Context == null)
+                    settings.Context = new System.Runtime.Serialization.StreamingContext(System.Runtime.Serialization.StreamingContextStates.All, new ChoDynamicObject());
+
                 dynamic ctx = settings.Context.Context;
                 ctx.EnableXmlAttributePrefix = enableXmlAttributePrefix;
             }
@@ -368,7 +370,9 @@ namespace ChoETL
             //else if (settings != null)
             //    t = JToken.Parse(JsonConvert.SerializeObject(value, formatting.Value, settings));
             else
+            {
                 t = JToken.FromObject(value, serializer);
+            }
             return t;
         }
 

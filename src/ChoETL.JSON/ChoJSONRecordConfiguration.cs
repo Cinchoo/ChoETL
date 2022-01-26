@@ -181,6 +181,9 @@ namespace ChoETL
                         catch { }
                     }
 
+                    if (_jsonSerializerSettings.Context.Context == null)
+                        _jsonSerializerSettings.Context = new System.Runtime.Serialization.StreamingContext(System.Runtime.Serialization.StreamingContextStates.All, new ChoDynamicObject());
+
                     return _jsonSerializerSettings;
                 }
             }
@@ -320,7 +323,8 @@ namespace ChoETL
         {
             _JsonSerializer = new Lazy<JsonSerializer>(() =>
             {
-                return JsonSerializerSettings == null ? null : JsonSerializer.Create(JsonSerializerSettings);
+                var se = JsonSerializerSettings == null ? null : JsonSerializer.Create(JsonSerializerSettings);
+                return se;
             });
             _JSONConverters = new Lazy<List<JsonConverter>>(() =>
             {

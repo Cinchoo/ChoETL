@@ -8236,13 +8236,102 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
+        static string hierarchyJson = @"{
+  ""id"": 3585,
+  ""parentId"": 0,
+  ""nodes"": [
+    {
+      ""id"": 3586,
+      ""parentId"": 3585,
+      ""nodes"": [
+        {
+          ""id"": 3587,
+          ""parentId"": 3586,
+          ""nodes"": null
+        }
+      ]
+    },
+    {
+      ""id"": 3599,
+      ""parentId"": 3585,
+      ""nodes"": [
+        {
+          ""id"": 3600,
+          ""parentId"": 3599,
+          ""nodes"": null
+        },
+        {
+          ""id"": 3601,
+          ""parentId"": 3599,
+          ""nodes"": null
+        },
+        {
+          ""id"": 3602,
+          ""parentId"": 3599,
+          ""nodes"": null
+        },
+        {
+          ""id"": 3603,
+          ""parentId"": 3599,
+          ""nodes"": null
+        }
+      ]
+    },
+    {
+      ""id"": 3744,
+      ""parentId"": 3585,
+      ""nodes"": null
+    }
+  ]
+}";
 
+        static void HierachyLoad1()
+        {
+
+            using (var r = ChoJSONReader.LoadText(hierarchyJson).WithJSONPath("$..nodes")
+                .WithField("id")
+                )
+            {
+                using (var w = new ChoJSONWriter(Console.Out)
+                    .SingleElement()
+                    .SupportMultipleContent()
+                    )
+                    w.Write(new { nodes = r.ToArray() });
+            }
+        }
+
+        static void HierachyLoad()
+        {
+
+            using (var r = ChoJSONReader.LoadText(hierarchyJson)
+                .WithField("id")
+                .WithField("nodes")
+                //.UseJsonSerialization()
+                .UseDefaultContractResolver()
+                .IgnoreField("parentId")
+                    .Configure(c => c.TurnOnAutoDiscoverJsonConverters = true)
+                )
+            {
+                r.Print();
+                return;
+
+                using (var w = new ChoJSONWriter(Console.Out)
+                    .SingleElement()
+                    .SupportMultipleContent()
+                .UseJsonSerialization()
+                .UseDefaultContractResolver()
+                .IgnoreField("parentId")
+                    .Configure(c => c.TurnOnAutoDiscoverJsonConverters = true)
+                    )
+                    w.Write(new { nodes = r.ToArray() });
+            }
+        }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            FlattenByKeys();
+            HierachyLoad();
             //DeserializeNestedObjectOfList();
             return;
 

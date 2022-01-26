@@ -16,6 +16,8 @@ namespace ChoETL
     {
         public static readonly ChoDynamicObjectConverter Instance = new ChoDynamicObjectConverter();
 
+        private HashSet<string> _ignoreFields;
+
         /// <summary>
         /// Writes the JSON representation of the object.
         /// </summary>
@@ -34,6 +36,17 @@ namespace ChoETL
                 var config = Context.Configuration as ChoJSONRecordConfiguration;
                 if (config != null && config.IgnoreFieldValueMode != null)
                 {
+                    _ignoreFields = config.IgnoredFields;
+
+                    if (_ignoreFields != null)
+                    {
+                        foreach (var f in _ignoreFields)
+                        {
+                            if (obj.ContainsKey(f))
+                                obj.Remove(f);
+                        }
+                    }
+
                     foreach (var key in obj.Keys.ToArray())
                     {
                         if ((config.IgnoreFieldValueMode | ChoIgnoreFieldValueMode.DBNull) == ChoIgnoreFieldValueMode.DBNull)
@@ -90,6 +103,11 @@ namespace ChoETL
         /// <returns>The object value.</returns>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
+            var config = Context.Configuration as ChoJSONRecordConfiguration;
+            if (config != null)
+            {
+                _ignoreFields = config.IgnoredFields;
+            }
             return ReadValue(reader);
         }
 
@@ -170,7 +188,10 @@ namespace ChoETL
 
                         object v = ReadValue(reader);
 
-                        expandoObject[propertyName] = v;
+                        if (_ignoreFields == null || !_ignoreFields.Contains(propertyName))
+                        {
+                            expandoObject[propertyName] = v;
+                        }
                         break;
                     case JsonToken.Comment:
                         break;
