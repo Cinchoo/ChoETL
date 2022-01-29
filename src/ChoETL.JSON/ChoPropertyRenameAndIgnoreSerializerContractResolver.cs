@@ -94,7 +94,7 @@ namespace ChoETL
             var propertyFullName = member.GetFullName();
             var propertyName = member.Name;
 
-            if (IsIgnored(property.DeclaringType, property.PropertyName, property.UnderlyingName, propertyFullName))
+            if (IsIgnored(property.DeclaringType, property.PropertyName, property.UnderlyingName, propertyFullName, member))
             {
                 property.ShouldSerialize = i => false;
                 property.ShouldDeserialize = i => false;
@@ -102,7 +102,7 @@ namespace ChoETL
                 return property;
             }
 
-            if (IsRenamed(property.DeclaringType, property.PropertyName, property.UnderlyingName, propertyFullName, out var newJsonPropertyName))
+            if (IsRenamed(property.DeclaringType, property.PropertyName, property.UnderlyingName, propertyFullName, member, out var newJsonPropertyName))
             {
                 if (!newJsonPropertyName.IsNullOrWhiteSpace())
                     property.PropertyName = newJsonPropertyName;
@@ -110,7 +110,7 @@ namespace ChoETL
             if (NamingStrategy != null)
                 property.PropertyName = NamingStrategy.GetPropertyName(property.PropertyName, false);
 
-            RemapToRefTypePropertiesIfAny(property.DeclaringType, propertyName, property);
+            RemapToRefTypePropertiesIfAny(property.DeclaringType, propertyName, property, member);
 
             ChoFileRecordFieldConfiguration fc = null;
             var rfc = _configuration.RecordFieldConfigurations.ToArray();
@@ -247,7 +247,7 @@ namespace ChoETL
             return property;
         }
 
-        private void RemapToRefTypePropertiesIfAny(Type type, string propertyName, JsonProperty prop)
+        private void RemapToRefTypePropertiesIfAny(Type type, string propertyName, JsonProperty prop, MemberInfo member)
         {
             var pd = ChoTypeDescriptor.GetProperty(type, propertyName);
             if (pd != null)
@@ -277,10 +277,23 @@ namespace ChoETL
 
                 }
             }
+            var cf = _configuration as ChoJSONRecordConfiguration;
+            if (cf != null && cf.RemapJsonProperty != null)
+            {
+                cf.RemapJsonProperty(type, member, propertyName, prop);
+            }
         }
 
-        private bool IsIgnored(Type type, string jsonPropertyName, string propertyName, string propertyFullName)
+        private bool IsIgnored(Type type, string jsonPropertyName, string propertyName, string propertyFullName, MemberInfo member)
         {
+            var cf = _configuration as ChoJSONRecordConfiguration;
+            if (cf != null && cf.IgnoreProperty != null)
+            {
+                var ret = cf.IgnoreProperty(type, member, jsonPropertyName);
+                if (ret != null)
+                    return ret.Value;
+            }
+
             if (_configuration.IgnoredFields.Contains(propertyFullName) || _configuration.IgnoredFields.Contains(propertyName))
                 return true;
 
@@ -298,9 +311,19 @@ namespace ChoETL
             return false;
         }
 
-        private bool IsRenamed(Type type, string jsonPropertyName, string propertyName, string propertyFullName, out string newJsonPropertyName)
+        private bool IsRenamed(Type type, string jsonPropertyName, string propertyName, string propertyFullName, MemberInfo member, out string newJsonPropertyName)
         {
             newJsonPropertyName = null;
+            var cf = _configuration as ChoJSONRecordConfiguration;
+            if (cf != null && cf.RenameProperty != null)
+            {
+                var ret = cf.RenameProperty(type, member, jsonPropertyName);
+                if (!ret.IsNullOrWhiteSpace())
+                {
+                    newJsonPropertyName = ret;
+                    return propertyName != newJsonPropertyName;
+                }
+            }
 
             if (_configuration != null && _configuration.ContainsRecordConfigForType(type))
             {

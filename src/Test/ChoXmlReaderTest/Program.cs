@@ -433,7 +433,7 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            LoadSelectiveNode();
+            LoadXmlUsingConfigAndPOCO();
         }
 
         public static void LoadSelectiveNode()
@@ -510,17 +510,19 @@ namespace ChoXmlReaderTest
             }
         }
 
+        //[ChoXmlRecordObject( IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Null)]
         public class EmployeeRecX
         {
             //[ChoXmlNodeRecordField(XPath = "//@Id")]
-            [ChoXPath("//@Id1")]
+            [ChoXPath("@Id")]
             [Required]
-            public int Id
+            public int? Id
             {
                 get;
                 set;
             }
-            //[ChoXmlNodeRecordField(XPath = "//Name")]
+            //[ChoXmlNodeRecordField(XPath = "//Name1")]
+            [ChoXPath("Name")]
             [DefaultValue("XXXX")]
             public string Name
             {

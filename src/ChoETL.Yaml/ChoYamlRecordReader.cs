@@ -887,12 +887,20 @@ namespace ChoETL
                     //    //}
                     //}
 
-                    bool ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
-                    if (ignoreFieldValue && fieldConfig.IsDefaultValueSpecified)
-                        fieldValue = fieldConfig.DefaultValue;
-                    ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
-                    if (ignoreFieldValue)
-                        continue;
+                    if (fieldConfig.IgnoreFieldValueMode == null)
+                    {
+                        if (fieldValue.IsNullOrEmpty() && fieldConfig.IsDefaultValueSpecified)
+                            fieldValue = fieldConfig.DefaultValue;
+                    }
+                    else
+                    {
+                        bool ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
+                        if (ignoreFieldValue && fieldConfig.IsDefaultValueSpecified)
+                            fieldValue = fieldConfig.DefaultValue;
+                        ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
+                        if (ignoreFieldValue)
+                            continue;
+                    }
 
                     if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
                     {

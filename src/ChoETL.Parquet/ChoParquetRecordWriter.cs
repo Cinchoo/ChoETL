@@ -718,18 +718,21 @@ namespace ChoETL
                             kvp.Value.FieldType = typeof(string);
                     }
 
-                    //Discover default value, use it if null
-                    //if (fieldValue == null)
-                    //{
-                    //    if (fieldConfig.IsDefaultValueSpecified)
-                    //        fieldValue = fieldConfig.DefaultValue;
-                    //}
-                    bool ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
-                    if (ignoreFieldValue && fieldConfig.IsDefaultValueSpecified)
-                        fieldValue = fieldConfig.DefaultValue;
-                    ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
-                    if (ignoreFieldValue)
-                        continue;
+
+                    if (fieldConfig.IgnoreFieldValueMode == null)
+                    {
+                        if (fieldValue.IsNullOrEmpty() && fieldConfig.IsDefaultValueSpecified)
+                            fieldValue = fieldConfig.DefaultValue;
+                    }
+                    else
+                    {
+                        bool ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
+                        if (ignoreFieldValue && fieldConfig.IsDefaultValueSpecified)
+                            fieldValue = fieldConfig.DefaultValue;
+                        ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
+                        if (ignoreFieldValue)
+                            continue;
+                    }
 
                     if (!RaiseBeforeRecordFieldWrite(rec, index, kvp.Key, ref fieldValue))
                         return false;

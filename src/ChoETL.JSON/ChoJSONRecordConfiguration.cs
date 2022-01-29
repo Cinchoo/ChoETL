@@ -269,6 +269,9 @@ namespace ChoETL
             set;
         }
         public bool EnableXmlAttributePrefix { get; set; }
+        public Func<Type, MemberInfo, string, bool?> IgnoreProperty;
+        public Func<Type, MemberInfo, string, string> RenameProperty;
+        public Action<Type, MemberInfo, string, JsonProperty> RemapJsonProperty;
 
         private Func<JObject, JObject> _customNodeSelecter = null;
         public Func<JObject, JObject> CustomNodeSelecter
