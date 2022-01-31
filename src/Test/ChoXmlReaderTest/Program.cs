@@ -587,7 +587,7 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            LoadVSProjectFile();
+            Xml2JSON1();
             //LoadXmlUsingConfigAndPOCO();
             //DesrializeUsingProxy();
         }
@@ -1468,14 +1468,14 @@ namespace ChoXmlReaderTest
                     .WithXPath("//")
                     .UseXmlSerialization()
                     //.WithXmlNamespace("x", "http://schemas.datacontract.org/2004/07/Workflows.MassTransit.Hosting.Serialization")
-                    .WithXmlNamespace("x", "http://schemas.datacontract.org/2004/07/Workflows.MassTransit.Hosting.Serialization")
+                    //.WithXmlNamespace("x", "http://schemas.datacontract.org/2004/07/Workflows.MassTransit.Hosting.Serialization")
                     //.WithXmlNamespace("d2p1", "http://schemas.microsoft.com/2003/10/Serialization/Arrays")
-                    .Configure(c => c.DefaultNamespacePrefix = "x")
+                    //.Configure(c => c.DefaultNamespacePrefix = "x")
                     .WithField(f => f.Numbers, isArray: false)
                     )
                 {
-                    w.Write(r);
-
+                    //w.Write(r);
+                    r.Print();
                     //foreach (var rec in r)
                     //    Console.WriteLine(rec.Dump());
                 }

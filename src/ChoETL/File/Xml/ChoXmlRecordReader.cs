@@ -202,7 +202,7 @@ namespace ChoETL
             return dict;
         });
 
-        private object Deserialize(Tuple<long, XElement> pair)
+        private object Deserialize(Tuple<long, XElement> pair, ChoXmlRecordFieldConfiguration fc = null)
         {
             if (_se.Value != null)
                 return _se.Value.Deserialize(pair.Item2.CreateReader());
@@ -211,7 +211,7 @@ namespace ChoETL
                 string name = pair.Item2.Name.ToString();
                 var recType = _xmlTypeCache.Value.ContainsKey(name) && _xmlTypeCache.Value[name] != null ? _xmlTypeCache.Value[name] : RecordType;
                 return pair.Item2.ToObjectFromXml(recType, NS: Configuration.GetFirstDefaultNamespace(), 
-                    nsMgr: Configuration.XmlNamespaceManager.Value, pd: fieldConfig.PD);
+                    nsMgr: Configuration.XmlNamespaceManager.Value, pd: fc == null ? null : fc.PD);
             }
         }
 
