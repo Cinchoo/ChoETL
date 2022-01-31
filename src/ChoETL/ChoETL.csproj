@@ -139,6 +139,7 @@
     <Compile Include="File\TSV\ChoTSVReader.cs" />
     <Compile Include="File\Xml\ChoXmlArrayAttribute.cs" />
     <Compile Include="File\Xml\ChoUseXmlSerializationAttribute.cs" />
+    <Compile Include="File\Xml\ChoXmlSerializerProxy.cs" />
     <Compile Include="File\Xml\ChoXPathAttribute.cs" />
     <Compile Include="File\Xml\ChoXmlRecordConfigurationMap.cs" />
     <Compile Include="IChoEmptyLineReportable.cs" />

@@ -33,6 +33,8 @@ namespace ChoETL
 
         public event EventHandler<ChoRecordFieldSerializeEventArgs> RecordFieldDeserialize;
 
+        public virtual ChoRecordConfiguration RecordConfiguration => throw new NotImplementedException();
+
         protected long _recordNumber;
         public long RecordNumber { get => _recordNumber; }
 

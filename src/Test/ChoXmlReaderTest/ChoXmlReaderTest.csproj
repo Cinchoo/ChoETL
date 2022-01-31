@@ -77,6 +77,7 @@
     <Content Include="EDRM-1.2-sample-file.xml" />
     <Content Include="JSONToXmlSample4Expected.xml" />
     <Content Include="Pivot1.xml" />
+    <Content Include="VSProject.xml" />
     <Content Include="sample14Expected.xml" />
     <Content Include="sample22.xml" />
     <Content Include="sample10.xml" />

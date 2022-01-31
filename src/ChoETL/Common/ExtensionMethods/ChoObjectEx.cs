@@ -28,13 +28,13 @@ namespace ChoETL
         private static readonly object _padLock = new object();
         private static readonly Dictionary<Type, Dictionary<PropertyInfo, ChoTypePropertyInfo>> _typeCache = new Dictionary<Type, Dictionary<PropertyInfo, ChoTypePropertyInfo>>();
 
-        public static bool IsNullOrEmpty(this object target)
+        public static bool IsObjectNullOrEmpty(this object target)
         {
             if (target == null)
                 return true;
 
             if (target is string)
-                return ((string)target).IsNullOrEmpty();
+                return String.IsNullOrEmpty(((string)target));
 
             return false;
         }

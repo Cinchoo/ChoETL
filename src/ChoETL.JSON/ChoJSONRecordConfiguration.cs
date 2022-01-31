@@ -33,7 +33,7 @@ namespace ChoETL
     public class ChoJSONRecordConfiguration : ChoFileRecordConfiguration
     {
         internal readonly Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>> JSONRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>>();
-        public readonly Dictionary<Type, Func<object, object>> NodeConvertersForType = new Dictionary<Type, Func<object, object>>();
+        internal readonly Dictionary<Type, Func<object, object>> NodeConvertersForType = new Dictionary<Type, Func<object, object>>();
 
         public long MaxJArrayItemsLoad
         {
@@ -451,6 +451,16 @@ namespace ChoETL
                 JSONRecordFieldConfigurationsForType.Remove(rt);
         }
 
+        public void ClearRecordFieldsForType<T>()
+        {
+            ClearRecordFieldsForType(typeof(T));
+        }
+
+        public void MapRecordFieldsForType<T>()
+        {
+            MapRecordFieldsForType(typeof(T));
+        }
+
         public void MapRecordFieldsForType(Type rt)
         {
             if (rt == null)
@@ -528,7 +538,7 @@ namespace ChoETL
             if (!recordType.IsDynamicType())
             {
                 Type pt = null;
-                if (ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any()).Any())
+                if (optIn) //ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoJSONRecordFieldAttribute>().Any()).Any())
                 {
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                     {

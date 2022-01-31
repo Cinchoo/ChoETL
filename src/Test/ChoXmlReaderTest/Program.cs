@@ -425,6 +425,160 @@ namespace ChoXmlReaderTest
         public ChoCurrency Salary { get; set; }
     }
 
+    //[XmlRoot(ElementName = "Project", Namespace = "http://schemas.microsoft.com/developer/msbuild/2003")]
+    public class Project
+    {
+        [XmlAttribute(AttributeName = "ToolsVersion")]
+        public string ToolsVersion1 { get; set; }
+        //[XmlElement]
+        public List<ImportClass> Import { get; set; }
+
+        //[XmlElement(ElementName = "PropertyGroup")]
+        public List<PropertyBlock> PropertyGroup { get; set; }
+
+    }
+
+    public class PropertyBlock
+    {
+        [XmlAttribute]
+        public string Name { get; set; } = string.Empty;
+
+        [XmlAttribute]
+        public string Condition { get; set; } = string.Empty;
+
+        [XmlElement]
+        public string Platform { get; set; } = string.Empty; // one of AnyCPU, x86, x64
+
+        [XmlElement]
+        public string Platforms { get; set; } = string.Empty; // AnyCPU;x86;x64
+
+        [XmlElement]
+        public string PlatformTarget { get; set; } = string.Empty; // x86 or x64
+
+        [XmlElement]
+        public string OutputType { get; set; } = string.Empty;
+
+        [XmlElement]
+        public string TargetFramework { get; set; } = string.Empty; // net5.0-windows7.0, net48
+
+        [XmlElement]
+        public string TargetFrameworkVersion { get; set; } = string.Empty; // v4.8
+
+        [XmlElement]
+        public string TargetFrameworkProfile { get; set; } = string.Empty; // client
+
+        [XmlElement]
+        public string UseWindowsForms { get; set; } = string.Empty;
+
+        [XmlElement]
+        public string RuntimeIdentifier { get; set; } = string.Empty;
+
+        [XmlElement]
+        public string SelfContained { get; set; } = string.Empty;
+
+        [XmlElement]
+        public string PublishReadyToRun { get; set; } = string.Empty;
+
+        [XmlElement]
+        public string PublishDir { get; set; } = string.Empty;
+
+        [XmlElement]
+        public string IsPackable { get; set; } = string.Empty;
+
+        [XmlElement]
+        public string NoWarn { get; set; } = string.Empty;
+
+        [XmlElement]
+        public string StartupObject { get; set; } = string.Empty;
+
+        //public string PreBuildEvent { get; set; }= string.Empty;
+
+        //
+        // From HsDragon NET Framework 4.8 project file
+        //
+        [XmlElement]
+        public string AppDesignerFolder { get; set; } = string.Empty;
+
+        [XmlElement]
+        public string RootNamespace { get; set; } = string.Empty;
+
+        [XmlElement]
+        public string AssemblyName { get; set; } = string.Empty;
+
+        [XmlElement]
+        public string FileAlignment { get; set; } = string.Empty;
+
+        [XmlElement]
+        public string Deterministic { get; set; } = string.Empty;
+
+        [XmlElement]
+        public string DebugSymbols { get; set; } = string.Empty; // true
+
+        [XmlElement]
+        public string DebugType { get; set; } = string.Empty; // pdbonly
+
+        [XmlElement]
+        public string Optimize { get; set; } = string.Empty; // true
+
+        [XmlElement]
+        public string OutputPath { get; set; } = string.Empty; // \bin\x86\Debug
+
+        [XmlElement]
+        public string DefineConstants { get; set; } = string.Empty; // DEBUG;TRACE
+
+        [XmlElement]
+        public string ErrorReport { get; set; } = string.Empty; // prompt
+
+        [XmlElement]
+        public string WarningLevel { get; set; } = string.Empty; // 4
+
+        [XmlElement]
+        public string RegisterForComInterop { get; set; } = string.Empty; // false
+
+        [XmlElement]
+        public string Prefer32Bit { get; set; } = string.Empty; // false
+
+        [XmlElement]
+        public string SignAssembly { get; set; } = string.Empty; // false
+
+        [XmlElement]
+        public string LangVersioin { get; set; } = string.Empty; // 7.3
+
+        // From HsDragon NET Framework 4.8 project file
+        //
+        //<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+        //<DebugSymbols>true</DebugSymbols>
+        //<DebugType>full</DebugType>
+        //<Optimize>false</Optimize>
+        //<OutputPath>bin\Debug\</OutputPath>
+        //<DefineConstants>DEBUG;TRACE</DefineConstants>
+        //<ErrorReport>prompt</ErrorReport>
+        //<WarningLevel>4</WarningLevel>
+        //<RegisterForComInterop>false</RegisterForComInterop>
+        //<Prefer32Bit>false</Prefer32Bit>
+        //</PropertyGroup>
+        //<PropertyGroup>
+        //<SignAssembly>false</SignAssembly>
+        //</PropertyGroup>
+        //
+        // <ItemGroup>
+        //  <Reference Include="System" />
+        //  <Reference Include="System.Core" />
+        //  <Reference Include="System.Windows.Forms" />
+        //  <Reference Include="System.Xml.Linq" />
+        //</ItemGroup>
+        //<ItemGroup>
+        //  <Compile Include="HsComUDP.cs" />
+        //  <Compile Include="Properties\AssemblyInfo.cs" />
+        //  <Compile Include="Utils.cs" />
+        //</ItemGroup>
+        //<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+    }
+    public class ImportClass
+    {
+        [XmlAttribute]
+        public string Project { get; set; } = string.Empty;
+    }
     [TestFixture]
     [SetCulture("en-US")] // TODO: Check if correct culture is used
     public class Program
@@ -433,7 +587,63 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            LoadXmlUsingConfigAndPOCO();
+            LoadVSProjectFile();
+            //LoadXmlUsingConfigAndPOCO();
+            //DesrializeUsingProxy();
+        }
+
+        public static void DesrializeUsingProxy()
+        {
+            // get the xml value somehow
+            var xdoc = XDocument.Parse(@"<Class><Property>Value</Property></Class>");
+
+            var cf = new ChoXmlRecordConfiguration();
+            var cf1 = cf.MapRecordFieldsForType<Class>();
+            ChoXmlSerializerProxy.AddRecordConfiguration(cf1);
+            // deserialize the xml into the proxy type
+            //XmlSerializer xmlSerializer = new XmlSerializer(typeof(ChoXmlSerializerProxy<Class>), ChoNullNSXmlSerializerFactory.GetXmlOverrides(typeof(TInstanceType)));
+            var xmlSerializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer<ChoXmlSerializerProxy<Class>, Class>();
+            using (XmlReader reader = xdoc.CreateReader())
+            {
+                var obj = xmlSerializer.Deserialize(reader);
+                var proxy = obj as ChoXmlSerializerProxy<Class>;
+                var value = proxy.Value;
+                value.Print();
+            }
+        }
+
+        //[XmlRoot("Class")]
+        public sealed class Class
+        {
+            public string Property { get; set; }
+        }
+
+
+        public static void LoadVSProjectFile()
+        {
+            IDictionary<string, string> ns = null;
+
+            string xml = "VSProject.xml";
+            //using (var r1 = new ChoXmlReader(xml).WithXPath("//")
+            //      )
+            //{
+            //    var rec = r1.FirstOrDefault();
+            //    //rec.Print();
+            //    ns = r1.Configuration.GetXmlNamespacesInScope();
+            //}
+
+            //ns.Print();
+
+            using (var r = new ChoXmlReader<Project>(xml)
+                   .WithXPath("//")
+                   //.WithXmlNamespace("http://schemas.microsoft.com/developer/msbuild/2003")
+                   .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                   //.UseXmlSerialization()
+                  )
+            {
+                foreach (var rec in r)
+                    rec.Print();
+            }
         }
 
         public static void LoadSelectiveNode()

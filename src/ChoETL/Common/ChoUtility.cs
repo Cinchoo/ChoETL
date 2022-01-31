@@ -1369,27 +1369,11 @@ namespace ChoETL
 
             using (XmlWriter xtw = XmlTextWriter.Create(sr, xws ?? _xws))
             {
-                ChoNullNSXmlSerializer serializer = ChoNullNSXmlSerializerFactory.HasXmlSerializer(target.GetType()) ? ChoNullNSXmlSerializerFactory.GetXmlSerializer(target.GetType()) :
-                    ChoNullNSXmlSerializerFactory.GetXmlSerializer(target.GetType(), GetXmlOverrides(target.GetType()));
+                ChoNullNSXmlSerializer serializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(target.GetType());
                 serializer.Serialize(xtw, target);
 
                 xtw.Flush();
             }
-        }
-
-        private static  XmlAttributeOverrides GetXmlOverrides(Type type)
-        {
-            if (type == null) return null;
-
-            var ra = type.GetCustomAttribute(typeof(XmlRootAttribute)) as XmlRootAttribute;
-            if (ra == null)
-                return null;
-
-            XmlAttributeOverrides overrides = new XmlAttributeOverrides();
-            var xattribs = new XmlAttributes();
-            xattribs.XmlRoot = ra;
-            overrides.Add(type, xattribs);
-            return overrides;
         }
 
         public static string XmlSerialize(object target, XmlWriterSettings xws = null, string separator = null, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore,
@@ -1444,8 +1428,7 @@ namespace ChoETL
                         ns = new XmlSerializerNamespaces();
 
                     target = ChoXmlConvert.ToString(target);
-                    ChoNullNSXmlSerializer serializer = ChoNullNSXmlSerializerFactory.HasXmlSerializer(target.GetType()) ? ChoNullNSXmlSerializerFactory.GetXmlSerializer(target.GetType()) :
-     ChoNullNSXmlSerializerFactory.GetXmlSerializer(target.GetType(), GetXmlOverrides(target.GetType()));
+                    ChoNullNSXmlSerializer serializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(target.GetType());
                     serializer.Serialize(xtw, target, ns);
                 }
 
@@ -1494,8 +1477,7 @@ namespace ChoETL
                 }
                 else
                 {
-                    ChoNullNSXmlSerializer serializer = ChoNullNSXmlSerializerFactory.HasXmlSerializer(type) ? ChoNullNSXmlSerializerFactory.GetXmlSerializer(type) :
-                        ChoNullNSXmlSerializerFactory.GetXmlSerializer(type, overrides);
+                    ChoNullNSXmlSerializer serializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(type, overrides);
                     var o = serializer.Deserialize(xtw);
                     o = ChoXmlConvert.ToObject(type, o);
                     return o;
@@ -1539,8 +1521,7 @@ namespace ChoETL
                     }
                     else
                     {
-                        ChoNullNSXmlSerializer serializer = ChoNullNSXmlSerializerFactory.HasXmlSerializer(type) ? ChoNullNSXmlSerializerFactory.GetXmlSerializer(type) :
-                            ChoNullNSXmlSerializerFactory.GetXmlSerializer(type, overrides);
+                        ChoNullNSXmlSerializer serializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(type, overrides);
                         var o = serializer.Deserialize(xtw);
                         o = ChoXmlConvert.ToObject(type, o);
                         return o;
@@ -1572,8 +1553,7 @@ namespace ChoETL
                     }
                     else
                     {
-                        ChoNullNSXmlSerializer serializer = ChoNullNSXmlSerializerFactory.HasXmlSerializer(type) ? ChoNullNSXmlSerializerFactory.GetXmlSerializer(type) :
-                            ChoNullNSXmlSerializerFactory.GetXmlSerializer(type, overrides);
+                        ChoNullNSXmlSerializer serializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(type, overrides);
                         var o = serializer.Deserialize(xtw);
                         o = ChoXmlConvert.ToObject(type, o);
                         return o;
@@ -3034,6 +3014,29 @@ namespace ChoETL
                 return _xmlSerializers.ContainsKey(type);
             }
         }
+        public static ChoNullNSXmlSerializer GetXmlSerializer<TProxyType, TInstanceType>(XmlAttributeOverrides overrides = null)
+            where TProxyType : IChoXmlSerializerProxy<TInstanceType>
+            where TInstanceType : class
+        {
+            return GetXmlSerializer(typeof(TProxyType), typeof(TInstanceType), overrides);
+        }
+
+        public static ChoNullNSXmlSerializer GetXmlSerializer(Type proxyType, Type type, XmlAttributeOverrides overrides = null)
+        {
+            ChoGuard.ArgumentNotNull(type, nameof(type));
+            ChoGuard.ArgumentNotNull(type, nameof(proxyType));
+
+            if (_xmlSerializers.ContainsKey(proxyType))
+                return _xmlSerializers[proxyType];
+
+            return GetXmlSerializer(proxyType, overrides == null ? GetXmlOverrides(type, proxyType) : overrides);
+        }
+
+        public static ChoNullNSXmlSerializer GetXmlSerializer<T>(XmlAttributeOverrides overrides = null)
+        {
+            return GetXmlSerializer(typeof(T), overrides);
+        }
+
         public static ChoNullNSXmlSerializer GetXmlSerializer(Type type, XmlAttributeOverrides overrides = null)
         {
             ChoGuard.ArgumentNotNull(type, nameof(type));
@@ -3044,11 +3047,48 @@ namespace ChoETL
             {
                 if (!_xmlSerializers.ContainsKey(type))
                 {
+                    if (overrides == null)
+                        overrides = GetXmlOverrides(type);
+
                     ChoNullNSXmlSerializer serializer = overrides != null ? new ChoNullNSXmlSerializer(type, overrides) : new ChoNullNSXmlSerializer(type);
                     _xmlSerializers.Add(type, serializer);
                 }
 
                 return _xmlSerializers[type];
+            }
+        }
+        public static XmlAttributeOverrides GetXmlOverrides<TProxyType, TInstanceType>()
+            where TProxyType : IChoXmlSerializerProxy<TInstanceType>
+            where TInstanceType : class
+        {
+            return GetXmlOverrides(typeof(TInstanceType), typeof(TProxyType));
+        }
+
+
+        public static XmlAttributeOverrides GetXmlOverrides(Type type, Type proxyType = null)
+        {
+            if (type == null) return null;
+
+            if (proxyType == null)
+            {
+                var ra = type.GetCustomAttribute(typeof(XmlRootAttribute)) as XmlRootAttribute;
+                if (ra == null)
+                    return null;
+
+                XmlAttributeOverrides overrides = new XmlAttributeOverrides();
+                var xattribs = new XmlAttributes();
+                xattribs.XmlRoot = ra;
+                overrides.Add(proxyType == null ? type : proxyType, xattribs);
+                return overrides;
+            }
+            else
+            {
+                var ra = type.GetCustomAttribute(typeof(XmlRootAttribute)) as XmlRootAttribute;
+                XmlAttributeOverrides overrides = new XmlAttributeOverrides();
+                var xattribs = new XmlAttributes();
+                xattribs.XmlRoot = ra == null ? new XmlRootAttribute() {  ElementName = type.Name } : ra;
+                overrides.Add(proxyType == null ? type : proxyType, xattribs);
+                return overrides;
             }
         }
     }

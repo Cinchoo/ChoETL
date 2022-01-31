@@ -88,15 +88,98 @@ namespace ChoETL
         }
     }
 
+    public interface IChoXmlSerializerProxy
+    { 
+        object Value { get; }
+    }
+
+    public interface IChoXmlSerializerProxy<TInstanceType> : IChoXmlSerializerProxy where TInstanceType : class
+    {
+        new TInstanceType Value { get; }
+    }
+
     public static class ChoXmlNodeEx
     {
         #region Instance Members (Public)
+
+        public static TInstanceType XmlDeserializeWithProxy<TProxyType, TInstanceType>(this string xml)
+            where TProxyType : IChoXmlSerializerProxy<TInstanceType>
+            where TInstanceType : class
+        {
+            ChoGuard.ArgumentNotNullOrEmpty(xml, nameof(xml));
+
+            using (XmlReader reader = XDocument.Parse(xml).CreateReader())
+            {
+                var xmlSerializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(typeof(TProxyType), ChoNullNSXmlSerializerFactory.GetXmlOverrides(typeof(TInstanceType)));
+                return (xmlSerializer.Deserialize(reader) as IChoXmlSerializerProxy<TInstanceType>).Value;
+            }
+        }
+
+        public static TInstanceType XmlDeserializeWithProxy<TProxyType, TInstanceType>(this XElement element)
+            where TProxyType : IChoXmlSerializerProxy<TInstanceType>
+            where TInstanceType : class
+        {
+            ChoGuard.ArgumentNotNullOrEmpty(element, nameof(element));
+
+            using (XmlReader reader = element.CreateReader())
+            {
+                var xmlSerializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(typeof(TProxyType), ChoNullNSXmlSerializerFactory.GetXmlOverrides(typeof(TInstanceType)));
+                return (xmlSerializer.Deserialize(reader) as IChoXmlSerializerProxy<TInstanceType>).Value;
+            }
+        }
+
+        private static readonly Dictionary<Type, IChoXmlSerializerProxy> _xmlProxyDict = new Dictionary<Type, IChoXmlSerializerProxy>();
+
+        public static object XmlDeserializeWithProxy(this XElement element, Type type)
+        {
+            ChoGuard.ArgumentNotNullOrEmpty(element, nameof(element));
+            ChoGuard.ArgumentNotNullOrEmpty(type, nameof(type));
+
+            using (XmlReader reader = element.CreateReader())
+            {
+                //var xmlSerializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(typeof(TProxyType), ChoNullNSXmlSerializerFactory.GetXmlOverrides(typeof(TInstanceType)));
+                return null; // (xmlSerializer.Deserialize(reader) as IChoXmlSerializerProxy<TInstanceType>).Value;
+            }
+        }
+
+        public static void XmlSerializeWithProxy<TProxyType, TInstanceType>(this TextWriter writer, TInstanceType target)
+            where TProxyType : IChoXmlSerializerProxy<TInstanceType>
+            where TInstanceType : class
+        {
+            ChoGuard.ArgumentNotNullOrEmpty(writer, nameof(writer));
+            ChoGuard.ArgumentNotNullOrEmpty(target, nameof(target));
+
+            var xmlSerializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(typeof(TProxyType), ChoNullNSXmlSerializerFactory.GetXmlOverrides(typeof(TInstanceType)));
+            xmlSerializer.Serialize(writer, target);
+        }
+
+        public static void XmlSerializeWithProxy<TProxyType, TInstanceType>(this Stream writer, TInstanceType target)
+            where TProxyType : IChoXmlSerializerProxy<TInstanceType>
+            where TInstanceType : class
+        {
+            ChoGuard.ArgumentNotNullOrEmpty(writer, nameof(writer));
+            ChoGuard.ArgumentNotNullOrEmpty(target, nameof(target));
+
+            var xmlSerializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(typeof(TProxyType), ChoNullNSXmlSerializerFactory.GetXmlOverrides(typeof(TInstanceType)));
+            xmlSerializer.Serialize(writer, target);
+        }
+
+        public static void XmlSerializeWithProxy<TProxyType, TInstanceType>(this XmlWriter writer, TInstanceType target)
+            where TProxyType : IChoXmlSerializerProxy<TInstanceType>
+            where TInstanceType : class
+        {
+            ChoGuard.ArgumentNotNullOrEmpty(writer, nameof(writer));
+            ChoGuard.ArgumentNotNullOrEmpty(target, nameof(target));
+
+            var xmlSerializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(typeof(TProxyType), ChoNullNSXmlSerializerFactory.GetXmlOverrides(typeof(TInstanceType)));
+            xmlSerializer.Serialize(writer, target);
+        }
 
         public static string GetNameWithNamespace(this ChoXmlNamespaceManager nsMgr, XName name)
         {
             if (!name.NamespaceName.IsNullOrWhiteSpace())
             {
-                string prefix = nsMgr.GetPrefixOfNamespace(name.NamespaceName);
+                string prefix = nsMgr.GetNamespacePrefix(name.NamespaceName);
                 if (prefix.IsNullOrWhiteSpace()) return name.LocalName;
 
                 return prefix + ":" + name.LocalName;
@@ -109,7 +192,7 @@ namespace ChoETL
         {
             if (!propName.NamespaceName.IsNullOrWhiteSpace())
             {
-                string prefix = nsMgr.GetPrefixOfNamespace(propName.NamespaceName);
+                string prefix = nsMgr.GetNamespacePrefix(propName.NamespaceName);
                 if (prefix.IsNullOrWhiteSpace()) return propName.LocalName;
 
                 return prefix + ":" + propName.LocalName;
@@ -125,7 +208,7 @@ namespace ChoETL
 
             if (!name.NamespaceName.IsNullOrWhiteSpace())
             {
-                string prefix = nsMgr.GetPrefixOfNamespace(name.NamespaceName);
+                string prefix = nsMgr.GetNamespacePrefix(name.NamespaceName);
                 if (prefix.IsNullOrWhiteSpace()) return false;
 
                 return true;
@@ -141,7 +224,7 @@ namespace ChoETL
 
             if (!propName.NamespaceName.IsNullOrWhiteSpace())
             {
-                string prefix = nsMgr.GetPrefixOfNamespace(propName.NamespaceName);
+                string prefix = nsMgr.GetNamespacePrefix(propName.NamespaceName);
                 if (prefix.IsNullOrWhiteSpace()) return false;
 
                 return true;
@@ -197,7 +280,12 @@ namespace ChoETL
         public static dynamic GetXmlttributesFromDeclaration(this XmlReader xmlReader)
         {
             dynamic obj = new ChoDynamicObject();
-            if (xmlReader.Read())
+
+            var canread = true;
+            if (xmlReader.NodeType == XmlNodeType.None)
+                canread = xmlReader.Read();
+
+            if (canread)
             {
                 obj.XmlVersion = xmlReader.GetAttribute("version");
                 obj.XmlEncoding = xmlReader.GetAttribute("encoding");
@@ -244,9 +332,10 @@ namespace ChoETL
             foreach (var attr in element.Attributes())
             {
                 var nodeName = attr.Name.ToString();
-                if (!nodeName.StartsWith("xmlns:"))
-                    continue;
-                nsTable.NamespaceTable.Add(nodeName.Substring(6), attr.Value);
+                if (nodeName.StartsWith("xmlns:"))
+                    nsTable.NamespaceTable.Add(nodeName.Substring(6), attr.Value);
+                else if (nodeName.StartsWith("xmlns"))
+                    nsTable.NamespaceTable.Add(nodeName.Substring(5), attr.Value);
             }
         }
 
@@ -1079,7 +1168,7 @@ namespace ChoETL
                 return false;
 
             string ns = attribute.Name.Namespace.ToString();
-            if (!ns.IsNullOrWhiteSpace() && nsMgr != null && nsMgr.GetPrefixOfNamespace(ns) != null)
+            if (!ns.IsNullOrWhiteSpace() && nsMgr != null && nsMgr.GetNamespacePrefix(ns) != null)
                 return true;
 
             if (xmlSchemaNS != null && ns.StartsWith(xmlSchemaNS, StringComparison.InvariantCultureIgnoreCase))
@@ -1095,7 +1184,7 @@ namespace ChoETL
 
             if (nsMgr != null)
             {
-                string prefix = nsMgr.GetPrefixOfNamespace(attribute.Name.Namespace.ToString());
+                string prefix = nsMgr.GetNamespacePrefix(attribute.Name.Namespace.ToString());
                 if (!prefix.IsNullOrWhiteSpace()) return true;
             }
 
@@ -1109,7 +1198,7 @@ namespace ChoETL
             foreach (var attribute in element.Attributes())
             {
                 string ns = attribute.Name.Namespace.ToString();
-                if (!ns.IsNullOrWhiteSpace() && nsMgr != null && nsMgr.GetPrefixOfNamespace(ns) != null)
+                if (!ns.IsNullOrWhiteSpace() && nsMgr != null && nsMgr.GetNamespacePrefix(ns) != null)
                     return true;
 
                 if (xmlSchemaNS != null && ns.StartsWith(xmlSchemaNS, StringComparison.InvariantCultureIgnoreCase))
@@ -1165,7 +1254,7 @@ namespace ChoETL
                         continue;
 
                     hasAttr = true;
-                    var nsPrefix = nsMgr.GetPrefixOfNamespace(attribute.Name.Namespace.ToString());
+                    var nsPrefix = nsMgr.GetNamespacePrefix(attribute.Name.Namespace.ToString());
                     if (nsPrefix.IsNullOrWhiteSpace())
                         obj.SetAttribute(attribute.Name.LocalName, System.Net.WebUtility.HtmlDecode(attribute.Value));
                     else

@@ -101,7 +101,19 @@ namespace ChoETL
             Configuration.XmlVersion = d.XmlVersion;
 
             foreach (var item in AsEnumerable(sr.GetXmlElements(Configuration.XPath, Configuration.NamespaceManager,
-                Configuration.AllowComplexXmlPath, (nsTable) => Configuration.XmlNamespaceTable = Configuration.XmlNamespaceTable == null ? nsTable : Configuration.XmlNamespaceTable), TraceSwitch, filterFunc))
+                Configuration.AllowComplexXPath, (nsTable) =>
+                {
+                    try
+                    {
+                        Configuration.XmlNamespaceTable = Configuration.XmlNamespaceTable == null ? nsTable : Configuration.XmlNamespaceTable;
+                        var ns = Configuration.GetXmlNamespacesInScope();
+                        Configuration.WithXmlNamespaces(ns);
+                        Configuration.WithXmlNamespace(GetDefaultNSPrefix(), Configuration.NamespaceManager.DefaultNamespace);
+                        Configuration.XmlNamespaceManager.Reset();
+                    }
+                    catch { }
+
+                }), TraceSwitch, filterFunc))
             {
                 yield return item;
             }
@@ -198,7 +210,8 @@ namespace ChoETL
             {
                 string name = pair.Item2.Name.ToString();
                 var recType = _xmlTypeCache.Value.ContainsKey(name) && _xmlTypeCache.Value[name] != null ? _xmlTypeCache.Value[name] : RecordType;
-                return pair.Item2.ToObjectFromXml(recType, nsMgr: Configuration.XmlNamespaceManager.Value);
+                return pair.Item2.ToObjectFromXml(recType, NS: Configuration.GetFirstDefaultNamespace(), 
+                    nsMgr: Configuration.XmlNamespaceManager.Value, pd: fieldConfig.PD);
             }
         }
 
@@ -219,7 +232,7 @@ namespace ChoETL
             if (!Configuration.NamespaceManager.DefaultNamespace.IsNullOrWhiteSpace())
             {
                 _nsInitialized = true;
-                Configuration.NamespaceManager.AddNamespace(GetNSPrefix(), Configuration.NamespaceManager.DefaultNamespace);
+                Configuration.NamespaceManager.AddNamespace(GetDefaultNSPrefix(), Configuration.NamespaceManager.DefaultNamespace);
             }
 
             foreach (XElement el in ReadNodes(FlattenNodeIfOn(xElements)))
@@ -229,7 +242,7 @@ namespace ChoETL
                     _nsInitialized = true;
                     if (!Configuration.NamespaceManager.DefaultNamespace.IsNullOrWhiteSpace())
                     {
-                        Configuration.NamespaceManager.AddNamespace(GetNSPrefix(), Configuration.NamespaceManager.DefaultNamespace);
+                        Configuration.NamespaceManager.AddNamespace(GetDefaultNSPrefix(), Configuration.NamespaceManager.DefaultNamespace);
                         //ChoXmlSettings.XmlNamespace = Configuration.NamespaceManager.DefaultNamespace;
                     }
                 }
@@ -358,19 +371,21 @@ namespace ChoETL
                 RaisedRowsLoaded(pair.Item1, true);
         }
 
-        private string GetNSPrefix()
+        private string GetDefaultNSPrefix()
         {
-            string nsPrefix = Configuration.XmlNamespaceManager.Value.GetPrefixOfNamespace(Configuration.NamespaceManager.DefaultNamespace);
-            if (nsPrefix.IsNullOrWhiteSpace())
-            {
-                nsPrefix = Configuration.DefaultNamespacePrefix;
-                if (nsPrefix.IsNullOrWhiteSpace())
-                {
-                    nsPrefix = "x";
-                }
-            }
+            return Configuration.XmlNamespaceManager.Value.GetNamespacePrefixOrDefault(Configuration.NamespaceManager.DefaultNamespace, Configuration.DefaultNamespacePrefix);
 
-            return nsPrefix;
+            //string nsPrefix = Configuration.XmlNamespaceManager.Value.GetNamespacePrefix(Configuration.NamespaceManager.DefaultNamespace);
+            //if (nsPrefix.IsNullOrWhiteSpace())
+            //{
+            //    nsPrefix = Configuration.DefaultNamespacePrefix;
+            //    if (nsPrefix.IsNullOrWhiteSpace())
+            //    {
+            //        nsPrefix = ChoXmlNamespaceManager.DefaultNSToken;
+            //    }
+            //}
+
+            //return nsPrefix;
         }
 
         private static void Parse(dynamic parent, XElement node)
@@ -603,7 +618,7 @@ namespace ChoETL
             XElement node;
             string key = null;
             bool isXmlAttribute = false;
-            string nsPrefix = !Configuration.NamespaceManager.DefaultNamespace.IsNullOrWhiteSpace() ? GetNSPrefix() : null;
+            string nsPrefix = !Configuration.NamespaceManager.DefaultNamespace.IsNullOrWhiteSpace() ? GetDefaultNSPrefix() : null;
 
             lineNo = pair.Item1;
             node = pair.Item2;
@@ -654,7 +669,9 @@ namespace ChoETL
                         if (value is XElement)
                         {
                             dynamic dobj = ((XElement)value).ToObjectFromXml(typeof(ChoDynamicObject), GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative,
-                                defaultNSPrefix: Configuration.DefaultNamespacePrefix, nsMgr: Configuration.XmlNamespaceManager.Value);
+                                defaultNSPrefix: Configuration.DefaultNamespacePrefix,
+                                NS: Configuration.GetFirstDefaultNamespace(), nsMgr: Configuration.XmlNamespaceManager.Value,
+                                pd: fieldConfig.PD);
                             if (dobj == null || !dobj.HasText())
                                 continue;
 
@@ -801,7 +818,9 @@ namespace ChoETL
                                                             defaultNSPrefix: Configuration.DefaultNamespacePrefix, nsMgr: Configuration.XmlNamespaceManager.Value)));
                                                     else
                                                         list.Add(Normalize(ele.ToObjectFromXml(itemType, GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative,
-                                                            defaultNSPrefix: Configuration.DefaultNamespacePrefix, nsMgr: Configuration.XmlNamespaceManager.Value)));
+                                                            defaultNSPrefix: Configuration.DefaultNamespacePrefix,
+                                                            NS: Configuration.GetFirstDefaultNamespace(), 
+                                                            nsMgr: Configuration.XmlNamespaceManager.Value, pd: fieldConfig.PD)));
                                                 }
                                             }
                                         }
@@ -830,7 +849,10 @@ namespace ChoETL
                                                 else
                                                     fieldValue = fXElements[0].ToObjectFromXml(typeof(ChoDynamicObject),
                                                         GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace,
-                                                        Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative, defaultNSPrefix: Configuration.DefaultNamespacePrefix, nsMgr: Configuration.XmlNamespaceManager.Value);
+                                                        Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative, 
+                                                        defaultNSPrefix: Configuration.DefaultNamespacePrefix, 
+                                                        NS: Configuration.GetFirstDefaultNamespace(), 
+                                                        nsMgr: Configuration.XmlNamespaceManager.Value, pd: fieldConfig.PD);
 
                                                 fieldValue = Normalize(fieldValue);
                                             }
@@ -843,7 +865,8 @@ namespace ChoETL
                                                         arr.Add(Normalize(fieldConfig.ItemConverter(ele)));
                                                     else
                                                         arr.Add(Normalize(ele.ToObjectFromXml(typeof(ChoDynamicObject), GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative,
-                                                            defaultNSPrefix: Configuration.DefaultNamespacePrefix, nsMgr: Configuration.XmlNamespaceManager.Value) as ChoDynamicObject));
+                                                            defaultNSPrefix: Configuration.DefaultNamespacePrefix, NS: Configuration.GetFirstDefaultNamespace(), 
+                                                            nsMgr: Configuration.XmlNamespaceManager.Value, pd: fieldConfig.PD) as ChoDynamicObject));
                                                 }
 
                                                 fieldValue = arr.ToArray();
@@ -887,7 +910,9 @@ namespace ChoETL
                                                     else
                                                     {
                                                         list.Add(Normalize(ele.ToObjectFromXml(itemType, GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative,
-                                                            defaultNSPrefix: Configuration.DefaultNamespacePrefix, nsMgr: Configuration.XmlNamespaceManager.Value)));
+                                                            defaultNSPrefix: Configuration.DefaultNamespacePrefix, 
+                                                            NS: Configuration.GetFirstDefaultNamespace(), 
+                                                            nsMgr: Configuration.XmlNamespaceManager.Value, pd: fieldConfig.PD)));
                                                     }
                                                 }
                                             }
@@ -909,8 +934,10 @@ namespace ChoETL
                                                     {
                                                         fieldValue = Normalize(fXElement.ToObjectFromXml(fieldConfig.FieldType, GetXmlOverrides(fieldConfig),
                                                             Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace,
-                                                            Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative, ChoNullValueHandling.Ignore, Configuration.XmlNamespaceManager.Value.GetFirstDefaultNamespace(),
-                                                            defaultNSPrefix: Configuration.DefaultNamespacePrefix, nsMgr: Configuration.XmlNamespaceManager.Value));
+                                                            Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative, ChoNullValueHandling.Ignore, 
+                                                            Configuration.GetFirstDefaultNamespace(),
+                                                            defaultNSPrefix: Configuration.DefaultNamespacePrefix,
+                                                            nsMgr: Configuration.XmlNamespaceManager.Value, pd: fieldConfig.PD));
                                                     }
                                                 }
                                             }
@@ -1060,7 +1087,7 @@ namespace ChoETL
                 {
                     if (fieldConfig.IgnoreFieldValueMode == null)
                     {
-                        if (fieldValue.IsNullOrEmpty() && fieldConfig.IsDefaultValueSpecified)
+                        if (fieldValue.IsObjectNullOrEmpty() && fieldConfig.IsDefaultValueSpecified)
                             fieldValue = fieldConfig.DefaultValue;
                     }
                     else
@@ -1324,7 +1351,7 @@ namespace ChoETL
                             else if (itemType == typeof(XElement))
                             {
                                 fieldValue = Normalize(((XElement)itemValue).ToObjectFromXml(typeof(ChoDynamicObject), GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative,
-                                    defaultNSPrefix: Configuration.DefaultNamespacePrefix, nsMgr: Configuration.XmlNamespaceManager.Value));
+                                    defaultNSPrefix: Configuration.DefaultNamespacePrefix, NS: Configuration.GetFirstDefaultNamespace(), nsMgr: Configuration.XmlNamespaceManager.Value, pd: fieldConfig.PD));
                                 ChoType.SetPropertyValue(target, pd.Name, fieldValue);
                             }
                             else if (typeof(IList<XAttribute>).IsAssignableFrom(itemType))
@@ -1335,7 +1362,7 @@ namespace ChoETL
                             else if (typeof(IList<XElement>).IsAssignableFrom(itemType))
                             {
                                 fieldValue = ((IList)itemValue).Cast(t => ((XElement)itemValue).ToObjectFromXml(typeof(ChoDynamicObject), GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative,
-                                    defaultNSPrefix: Configuration.DefaultNamespacePrefix, nsMgr: Configuration.XmlNamespaceManager.Value));
+                                    defaultNSPrefix: Configuration.DefaultNamespacePrefix, NS: Configuration.GetFirstDefaultNamespace(), nsMgr: Configuration.XmlNamespaceManager.Value, pd: fieldConfig.PD));
                                 ChoType.SetPropertyValue(target, pd.Name, fieldValue);
                             }
                         }

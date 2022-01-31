@@ -21,6 +21,8 @@ namespace ChoETL
 
         event EventHandler<ChoSkipUntilEventArgs> SkipUntil;
         event EventHandler<ChoDoWhileEventArgs> DoWhile;
+
+        ChoRecordConfiguration RecordConfiguration { get; }
     }
 
     public class ChoBeginLoadEventArgs : EventArgs

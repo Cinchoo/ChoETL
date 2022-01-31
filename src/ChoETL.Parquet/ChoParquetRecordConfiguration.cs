@@ -868,6 +868,16 @@ namespace ChoETL
                 ParquetRecordFieldConfigurationsForType.Remove(rt);
         }
 
+        public void ClearRecordFieldsForType<T>()
+        {
+            ClearRecordFieldsForType(typeof(T));
+        }
+
+        public void MapRecordFieldsForType<T>()
+        {
+            MapRecordFieldsForType(typeof(T));
+        }
+
         public void MapRecordFieldsForType(Type rt)
         {
             if (rt == null)

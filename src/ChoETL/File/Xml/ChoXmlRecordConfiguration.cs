@@ -21,6 +21,8 @@ namespace ChoETL
     [DataContract]
     public class ChoXmlRecordConfiguration : ChoFileRecordConfiguration
     {
+        internal readonly Dictionary<Type, Dictionary<string, ChoXmlRecordFieldConfiguration>> XmlRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoXmlRecordFieldConfiguration>>();
+        internal readonly Dictionary<Type, Func<object, object>> NodeConvertersForType = new Dictionary<Type, Func<object, object>>();
         internal readonly ChoResetLazy<ChoXmlNamespaceManager> XmlNamespaceManager;
         public string AttributeFieldPrefixes
         {
@@ -73,7 +75,7 @@ namespace ChoETL
             get;
             private set;
         }
-        public bool AllowComplexXmlPath
+        public bool AllowComplexXPath
         {
             get;
             set;
@@ -282,6 +284,41 @@ namespace ChoETL
             }
         }
 
+        internal void AddFieldForType(Type rt, ChoXmlRecordFieldConfiguration rc)
+        {
+            if (rt == null || rc == null)
+                return;
+
+            if (!XmlRecordFieldConfigurationsForType.ContainsKey(rt))
+                XmlRecordFieldConfigurationsForType.Add(rt, new Dictionary<string, ChoXmlRecordFieldConfiguration>(StringComparer.InvariantCultureIgnoreCase));
+
+            if (XmlRecordFieldConfigurationsForType[rt].ContainsKey(rc.Name))
+                XmlRecordFieldConfigurationsForType[rt][rc.Name] = rc;
+            else
+                XmlRecordFieldConfigurationsForType[rt].Add(rc.Name, rc);
+        }
+
+        public override bool ContainsRecordConfigForType(Type rt)
+        {
+            return XmlRecordFieldConfigurationsForType.ContainsKey(rt);
+        }
+
+        public override ChoRecordFieldConfiguration[] GetRecordConfigForType(Type rt)
+        {
+            if (ContainsRecordConfigForType(rt))
+                return XmlRecordFieldConfigurationsForType[rt].Values.ToArray();
+            else
+                return null;
+        }
+
+        public override Dictionary<string, ChoRecordFieldConfiguration> GetRecordConfigDictionaryForType(Type rt)
+        {
+            if (ContainsRecordConfigForType(rt))
+                return XmlRecordFieldConfigurationsForType[rt].ToDictionary(kvp => kvp.Key, kvp => (ChoRecordFieldConfiguration)kvp.Value);
+            else
+                return null;
+        }
+
         protected override void Clone(ChoRecordConfiguration config)
         {
             base.Clone(config);
@@ -319,7 +356,7 @@ namespace ChoETL
             if (pd != null)
             {
                 XPath = pd.XPath;
-                AllowComplexXmlPath = pd.AllowComplexXmlPath;
+                AllowComplexXPath = pd.AllowComplexXPath;
             }
 
             ChoXmlRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoXmlRecordObjectAttribute>(recordType);
@@ -350,6 +387,10 @@ namespace ChoETL
             MapRecordFields(typeof(T));
             return this;
         }
+        public void MapRecordFields()
+        {
+            RecordType = DiscoverRecordFields(RecordType, false, null, true);
+        }
 
         public ChoXmlRecordConfiguration MapRecordFields(params Type[] recordTypes)
         {
@@ -362,24 +403,29 @@ namespace ChoETL
             return this;
         }
 
-        private void DiscoverRecordFields(Type recordType, bool clear = true)
+        private Type DiscoverRecordFields(Type recordType, bool clear = true,
+            List<ChoXmlRecordFieldConfiguration> recordFieldConfigurations = null, bool isTop = false)
         {
             if (recordType == null)
-                return;
+                return recordType;
 
             if (RecordMapType == null)
                 RecordMapType = recordType;
 
+            if (recordFieldConfigurations == null)
+                recordFieldConfigurations = XmlRecordFieldConfigurations;
+
             if (clear)
                 XmlRecordFieldConfigurations.Clear();
-            DiscoverRecordFields(recordType, null,
-                ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any()).Any());
+            return DiscoverRecordFields(recordType, null,
+                ChoTypeDescriptor.GetProperties(recordType).Where(pd => pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any()).Any(), recordFieldConfigurations, isTop);
         }
 
-        private void DiscoverRecordFields(Type recordType, string declaringMember, bool optIn = false)
+        private Type DiscoverRecordFields(Type recordType, string declaringMember, bool optIn = false,
+            List<ChoXmlRecordFieldConfiguration> recordFieldConfigurations = null, bool isTop = false)
         {
             if (recordType == null)
-                return;
+                return recordType;
             if (!recordType.IsDynamicType())
             {
                 Type pt = null;
@@ -390,27 +436,54 @@ namespace ChoETL
                         pt = pd.PropertyType.GetUnderlyingType();
                         var fa = pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().FirstOrDefault();
                         bool optIn1 = fa == null || fa.UseXmlSerialization ? optIn : ChoTypeDescriptor.GetProperties(pt).Where(pd1 => pd1.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any()).Any();
-                        if (false) //optIn1 && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+                        //if (false) //optIn1 && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+                        if (optIn1 && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt) && FlatToNestedObjectSupport)
                         {
-                            DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn1);
+                            DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn1, recordFieldConfigurations, false);
                         }
                         else if (pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().Any())
                         {
-                            ChoXmlNodeRecordFieldAttribute attr = ChoTypeDescriptor.GetPropetyAttribute<ChoXmlNodeRecordFieldAttribute>(pd);
-
-                            var obj = new ChoXmlRecordFieldConfiguration(pd.Name, attr, pd.Attributes.OfType<Attribute>().ToArray());
+                            var obj = new ChoXmlRecordFieldConfiguration(pd.Name, pd.Attributes.OfType<ChoXmlNodeRecordFieldAttribute>().First(), pd.Attributes.OfType<Attribute>().ToArray());
                             obj.FieldType = pt;
                             obj.PropertyDescriptor = pd;
                             obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
-
-                            obj.FieldType = pd.PropertyType.GetUnderlyingType();
-                            if (!XmlRecordFieldConfigurations.Any(c => c.Name == pd.Name))
-                                XmlRecordFieldConfigurations.Add(obj);
+                            if (recordFieldConfigurations != null)
+                            {
+                                if (!recordFieldConfigurations.Any(c => c.Name == pd.Name))
+                                    recordFieldConfigurations.Add(obj);
+                            }
                         }
                     }
                 }
                 else
                 {
+                    if (isTop)
+                    {
+                        if (typeof(IList).IsAssignableFrom(recordType) || (recordType.IsGenericType && recordType.GetGenericTypeDefinition() == typeof(IList<>)))
+                        {
+                            throw new ChoParserException("Record type not supported.");
+                        }
+                        else if (typeof(IDictionary<string, object>).IsAssignableFrom(recordType))
+                        {
+                            recordType = typeof(ExpandoObject);
+                            return recordType;
+                        }
+                        else if (typeof(IDictionary).IsAssignableFrom(recordType))
+                        {
+                            recordType = typeof(ExpandoObject);
+                            return recordType;
+                        }
+                    }
+
+                    if (recordType.IsSimple())
+                    {
+                        var obj = new ChoXmlRecordFieldConfiguration("Value", "//Value");
+                        obj.FieldType = recordType;
+
+                        recordFieldConfigurations.Add(obj);
+                        return recordType;
+                    }
+
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                     {
                         XmlIgnoreAttribute xiAttr = pd.Attributes.OfType<XmlIgnoreAttribute>().FirstOrDefault();
@@ -418,13 +491,17 @@ namespace ChoETL
                             continue;
 
                         pt = pd.PropertyType.GetUnderlyingType();
-                        if (false) //pt != typeof(object) && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+                        //if (false) //pt != typeof(object) && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+                        if (pt != typeof(object) && !pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt) && FlatToNestedObjectSupport)
                         {
-                            DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
+                            DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn, recordFieldConfigurations, false);
                         }
                         else
                         {
-                            var obj = new ChoXmlRecordFieldConfiguration(pd.Name, null/*$"/{pd.Name}|/@{pd.Name}"*/);
+                            //var obj = new ChoXmlRecordFieldConfiguration(pd.Name, null/*$"/{pd.Name}|/@{pd.Name}"*/);
+                            var obj = new ChoXmlRecordFieldConfiguration(pd.Name, ChoTypeDescriptor.GetPropetyAttribute<ChoXmlNodeRecordFieldAttribute>(pd),
+                                pd.Attributes.OfType<Attribute>().ToArray());
+
                             obj.FieldType = pt;
                             obj.PropertyDescriptor = pd;
                             obj.DeclaringMember = declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name);
@@ -491,12 +568,17 @@ namespace ChoETL
                             {
                                 obj.NullValue = dfAttr.NullDisplayText;
                             }
-                            if (!XmlRecordFieldConfigurations.Any(c => c.Name == pd.Name))
-                                XmlRecordFieldConfigurations.Add(obj);
+
+                            if (recordFieldConfigurations != null)
+                            {
+                                if (!recordFieldConfigurations.Any(c => c.Name == pd.Name))
+                                    recordFieldConfigurations.Add(obj);
+                            }
                         }
                     }
                 }
             }
+            return recordType;
         }
 
         public override void Validate(object state)
@@ -727,7 +809,7 @@ namespace ChoETL
             string name = null;
             foreach (var attr in xpr.Attributes())
             {
-                if (!attr.IsValidAttribute(XmlSchemaNamespace, JSONSchemaNamespace, nsMgr, IncludeSchemaInstanceNodes))
+                if (!attr.IsValidAttribute(XmlSchemaNamespace, XmlSchemaNamespace, nsMgr, IncludeSchemaInstanceNodes))
                     continue;
 
                 //if (!IsInNamespace(xpr.Name, attr.Name))
@@ -831,6 +913,24 @@ namespace ChoETL
             return dict.Values.ToArray();
         }
 
+        public ChoXmlRecordConfiguration RegisterNodConverterForType<ModelType>(Func<object, object> selector)
+        {
+            return RegisterNodeConverterForType(typeof(ModelType), selector);
+        }
+
+        public ChoXmlRecordConfiguration RegisterNodeConverterForType(Type type, Func<object, object> selector)
+        {
+            if (type == null || selector == null)
+                return this;
+
+            if (NodeConvertersForType.ContainsKey(type))
+                NodeConvertersForType[type] = selector;
+            else
+                NodeConvertersForType.Add(type, selector);
+
+            return this;
+        }
+
         internal string GetNameWithNamespace(XName name)
         {
             return XmlNamespaceManager.Value.GetNameWithNamespace(name);
@@ -895,9 +995,17 @@ namespace ChoETL
 
         public ChoXmlRecordConfiguration WithXmlNamespace(string prefix, string uri)
         {
-            NamespaceManager.AddNamespace(prefix, uri);
+            if (String.Compare(prefix, "xmlns") == 0)
+                NamespaceManager.AddNamespace("", uri);
+            else
+                NamespaceManager.AddNamespace(prefix, uri);
 
             return this;
+        }
+
+        public ChoXmlRecordConfiguration WithXmlNamespace(string uri)
+        {
+            return WithXmlNamespace("", uri);
         }
 
         public ChoXmlRecordConfiguration WithXmlNamespaces(IDictionary<string, string> ns)
@@ -905,7 +1013,7 @@ namespace ChoETL
             if (ns != null)
             {
                 foreach (var kvp in ns)
-                    NamespaceManager.AddNamespace(kvp.Key, kvp.Value);
+                    WithXmlNamespace(kvp.Key, kvp.Value);
             }
 
             return this;
@@ -954,7 +1062,198 @@ namespace ChoETL
             mapper?.Invoke(new ChoXmlRecordFieldConfigurationMap(cf));
             return this;
         }
+        
+        public void ClearRecordFieldsForType(Type rt)
+        {
+            if (rt == null)
+                return;
 
+            if (ContainsRecordConfigForType(rt))
+                XmlRecordFieldConfigurationsForType.Remove(rt);
+        }
+
+        public void ClearRecordFieldsForType<T>()
+        {
+            ClearRecordFieldsForType(typeof(T));
+        }
+
+        public ChoXmlRecordConfiguration MapRecordFieldsForType<T>()
+        {
+            return MapRecordFieldsForType(typeof(T));
+        }
+        public ChoXmlRecordConfiguration MapRecordFieldsForType(Type rt)
+        {
+            if (rt == null)
+                return null;
+
+            if (ContainsRecordConfigForType(rt))
+                return CreateRecordConfigurationForType(rt);
+
+            List<ChoXmlRecordFieldConfiguration> recordFieldConfigurations = new List<ChoXmlRecordFieldConfiguration>();
+            DiscoverRecordFields(rt, true, recordFieldConfigurations);
+
+            XmlRecordFieldConfigurationsForType.Add(rt, recordFieldConfigurations.ToDictionary(item => item.Name, StringComparer.InvariantCultureIgnoreCase));
+
+            return CreateRecordConfigurationForType(rt);
+        }
+
+        public ChoXmlRecordConfiguration CreateRecordConfigurationForType(Type recordType)
+        {
+            ChoXmlRecordConfiguration cf = this;
+
+            var cf1 = new ChoXmlRecordConfiguration();
+            cf1.XPath = "//";
+            cf1.RecordType = recordType;
+            cf1.AttributeFieldPrefixes = cf.AttributeFieldPrefixes;
+            cf1.CDATAFieldPostfixes = cf.CDATAFieldPostfixes;
+            cf1.CDATAFieldPrefixes = cf.CDATAFieldPrefixes;
+            cf1.FlattenNode = cf.FlattenNode;
+            cf1.TurnOffAutoCorrectXNames = cf.TurnOffAutoCorrectXNames;
+            cf1.DoNotEmitXmlNamespace = cf.DoNotEmitXmlNamespace;
+            cf1.TurnOffXmlFormatting = cf.TurnOffXmlFormatting;
+            cf1.TurnOffPluralization = cf.TurnOffPluralization;
+            cf1.Indent = cf.Indent;
+            cf1.IndentChar = cf.IndentChar;
+            cf1.NamespaceManager = cf.NamespaceManager;
+            cf1.EmitDataType = cf.EmitDataType;
+            cf1.Formatting = cf.Formatting;
+            //cf1.XmlSerializer = cf.XmlSerializer;
+            cf1.UseXmlSerialization = cf.UseXmlSerialization;
+            cf1.AreAllFieldTypesNull = cf.AreAllFieldTypesNull;
+            cf1.XmlEncoding = cf.XmlEncoding;
+            cf1.XmlVersion = cf.XmlVersion;
+            cf1.OmitXmlDeclaration = cf.OmitXmlDeclaration;
+            cf1.OmitXsiNamespace = cf.OmitXsiNamespace;
+            cf1.XmlSchemaNamespace = cf.XmlSchemaNamespace;
+            cf1.JSONSchemaNamespace = cf.JSONSchemaNamespace;
+            cf1.EmptyXmlNodeValueHandling = cf.EmptyXmlNodeValueHandling;
+            cf1.CustomNodeSelecter = cf.CustomNodeSelecter;
+            cf1.IgnoreCase = cf.IgnoreCase;
+
+            cf1.RetainAsXmlAwareObjects = cf.RetainAsXmlAwareObjects;
+            cf1.IncludeSchemaInstanceNodes = cf.IncludeSchemaInstanceNodes;
+            cf1.DefaultNamespacePrefix = cf.DefaultNamespacePrefix;
+
+            cf1.UseXmlArray = cf.UseXmlArray;
+            cf1.UseJsonNamespaceForObjectType = cf.UseJsonNamespaceForObjectType;
+            cf1.DefaultNamespacePrefix = cf.DefaultNamespacePrefix;
+
+            ChoXmlRecordFieldConfiguration[] fcf = cf.GetRecordConfigForType(recordType).OfType<ChoXmlRecordFieldConfiguration>().ToArray();
+            if (!fcf.IsNullOrEmpty())
+            {
+                cf.XmlRecordFieldConfigurations.AddRange(fcf);
+            }
+
+            return cf1;
+        }
+
+        internal void WithField(string name, string xPath = null, Type fieldType = null, 
+            ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
+            bool isXmlAttribute = false, string fieldName = null, Func<object, object> valueConverter = null,
+            Func<object, object> itemConverter = null,
+            Func<object, object> customSerializer = null,
+            object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null,
+            string formatText = null, bool? isArray = null, string nullValue = null, bool encodeValue = false, Type recordType = null,
+            Type subRecordType = null, Func<object, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null,
+            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null
+            )
+        {
+            ChoGuard.ArgumentNotNull(recordType, nameof(recordType));
+
+            if (!name.IsNullOrEmpty())
+            {
+                if (subRecordType != null)
+                    MapRecordFieldsForType(subRecordType);
+
+                string fnTrim = fieldName.IsNullOrWhiteSpace() ? name.NTrim() : fieldName;
+                ChoXmlRecordFieldConfiguration fc = null;
+                PropertyDescriptor pd = null;
+                if (XmlRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                {
+                    fc = XmlRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
+                    XmlRecordFieldConfigurations.Remove(fc);
+                    pd = ChoTypeDescriptor.GetNestedProperty(recordType, fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
+                }
+                else if (subRecordType != null)
+                    pd = ChoTypeDescriptor.GetNestedProperty(subRecordType, fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
+                else
+                    pd = ChoTypeDescriptor.GetNestedProperty(recordType, fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
+
+                var nfc = new ChoXmlRecordFieldConfiguration(fnTrim, pd != null ? ChoTypeDescriptor.GetPropetyAttribute<ChoXmlNodeRecordFieldAttribute>(pd) : null,
+                                pd != null ? pd.Attributes.OfType<Attribute>().ToArray() : null)
+                {
+                };
+                nfc.XPath = !xPath.IsNullOrWhiteSpace() ? xPath : nfc.XPath;
+                nfc.FieldType = fieldType != null ? fieldType : nfc.FieldType;
+                nfc.FieldValueTrimOption = fieldValueTrimOption;
+                nfc.FieldName = !fieldName.IsNullOrWhiteSpace() ? fieldName : (!nfc.FieldName.IsNullOrWhiteSpace() ? nfc.FieldName : name);
+                nfc.ValueConverter = valueConverter != null ? valueConverter : nfc.ValueConverter;
+                nfc.CustomSerializer = customSerializer != null ? customSerializer : nfc.CustomSerializer;
+                nfc.DefaultValue = defaultValue != null ? defaultValue : nfc.DefaultValue;
+                nfc.FallbackValue = fallbackValue != null ? fallbackValue : nfc.FallbackValue;
+                nfc.FormatText = !formatText.IsNullOrWhiteSpace() ? formatText : nfc.FormatText;
+                nfc.ItemConverter = itemConverter != null ? itemConverter : nfc.ItemConverter;
+                nfc.IsArray = isArray != null ? isArray : nfc.IsArray;
+                nfc.EncodeValue = encodeValue;
+                nfc.NullValue = !nullValue.IsNullOrWhiteSpace() ? nullValue : nfc.NullValue;
+                nfc.FieldTypeSelector = fieldTypeSelector != null ? fieldTypeSelector : nfc.FieldTypeSelector;
+                nfc.ItemRecordTypeSelector = itemTypeSelector != null ? itemTypeSelector : nfc.ItemRecordTypeSelector;
+                nfc.FieldTypeDiscriminator = fieldTypeDiscriminator != null ? fieldTypeDiscriminator : nfc.FieldTypeDiscriminator;
+                nfc.ItemTypeDiscriminator = itemTypeDiscriminator != null ? itemTypeDiscriminator : nfc.ItemTypeDiscriminator;
+
+                if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
+                {
+                    nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
+                    nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
+                }
+                else
+                {
+                    if (subRecordType == null)
+                        pd = ChoTypeDescriptor.GetNestedProperty(recordType, fullyQualifiedMemberName);
+                    else
+                        pd = ChoTypeDescriptor.GetNestedProperty(subRecordType, fullyQualifiedMemberName);
+
+                    nfc.PropertyDescriptor = pd;
+                    nfc.DeclaringMember = fullyQualifiedMemberName;
+                }
+                if (pd != null)
+                {
+                    if (nfc.FieldType == null)
+                        nfc.FieldType = pd.PropertyType;
+                }
+
+                if (subRecordType == null)
+                    XmlRecordFieldConfigurations.Add(nfc);
+                else
+                    AddFieldForType(subRecordType, nfc);
+            }
+        }
+
+        internal ChoXmlRecordFieldConfiguration GetFieldConfiguration(string propertyName, ChoXmlNodeRecordFieldAttribute attr = null, Attribute[] otherAttrs = null,
+            PropertyDescriptor pd = null, string fqm = null, Type subType = null)
+        {
+            if (subType != null)
+            {
+                MapRecordFieldsForType(subType);
+                var fc = new ChoXmlRecordFieldConfiguration(propertyName, attr, otherAttrs);
+                fc.PropertyDescriptor = pd;
+                fc.DeclaringMember = fqm;
+                AddFieldForType(subType, fc);
+
+                return fc;
+            }
+            else
+            {
+                if (!XmlRecordFieldConfigurations.Any(fc => fc.Name == propertyName))
+                    XmlRecordFieldConfigurations.Add(new ChoXmlRecordFieldConfiguration(propertyName, attr, otherAttrs));
+
+                var nfc = XmlRecordFieldConfigurations.First(fc => fc.Name == propertyName);
+                nfc.PropertyDescriptor = pd;
+                nfc.DeclaringMember = fqm;
+
+                return nfc;
+            }
+        }
         internal ChoXmlRecordFieldConfiguration GetFieldConfiguration(string propertyName, ChoXmlNodeRecordFieldAttribute attr = null, Attribute[] otherAttrs = null)
         {
             if (!XmlRecordFieldConfigurations.Any(fc => fc.Name == propertyName))
@@ -983,6 +1282,11 @@ namespace ChoETL
                 return fc.TurnOffPluralization.Value;
 
             return false;
+        }
+
+        public string GetFirstDefaultNamespace()
+        {
+            return XmlNamespaceManager.Value.GetFirstDefaultNamespace(this.NamespaceManager.DefaultNamespace);
         }
     }
 
@@ -1040,9 +1344,12 @@ namespace ChoETL
 
     public class ChoXmlNamespaceManager
     {
+        public const string DefaultNSToken = "x";
+
         public readonly IDictionary<string, string> NSDict;
         public readonly XmlNamespaceManager NSMgr;
         public readonly XmlSerializerNamespaces XmlSerializerNamespaces;
+        public readonly List<string> ReservedXmlNamespacePrefixes = new List<string>();
 
         public ChoXmlNamespaceManager(XmlNamespaceManager nsMgr)
         {
@@ -1058,11 +1365,29 @@ namespace ChoETL
                 }
                 catch { }
             }
+
+            ReservedXmlNamespacePrefixes.Add("xml");
+            ReservedXmlNamespacePrefixes.Add("xsi");
+            ReservedXmlNamespacePrefixes.Add("xsd");
         }
 
-        public string GetPrefixOfNamespace(string ns)
+        public string GetNamespacePrefix(string ns)
         {
             return NSDict.Where(Xml => Xml.Value == ns && !Xml.Key.IsNullOrWhiteSpace()).Select(Xml => Xml.Key).FirstOrDefault();
+        }
+
+        public string GetNamespacePrefixOrDefault(string ns, string defaultValue = null)
+        {
+            var nsPrefix = NSDict.Where(Xml => Xml.Value == ns && !Xml.Key.IsNullOrWhiteSpace()).Select(Xml => Xml.Key).FirstOrDefault();
+            if (nsPrefix.IsNullOrWhiteSpace())
+            {
+                nsPrefix = defaultValue; //Configuration.DefaultNamespacePrefix;
+                if (nsPrefix.IsNullOrWhiteSpace())
+                {
+                    nsPrefix = ChoXmlNamespaceManager.DefaultNSToken;
+                }
+            }
+            return nsPrefix;
         }
 
         public XNamespace GetNamespaceForPrefix(string prefix)
@@ -1073,9 +1398,19 @@ namespace ChoETL
                 return null;
         }
 
-        public string GetFirstDefaultNamespace()
+        public string GetFirstDefaultNamespace(string defaultNamespace = null)
         {
-            return NSDict.Where(kvp => kvp.Key != "xml").Select(kvp => kvp.Value).FirstOrDefault();
+            if (!defaultNamespace.IsNullOrWhiteSpace())
+                return defaultNamespace;
+
+            var ns = NSDict.Where(kvp => kvp.Key.IsNullOrWhiteSpace()).Select(kvp => kvp.Value).FirstOrDefault();
+            if (!ns.IsNullOrWhiteSpace())
+                return ns;
+            ns = NSDict.Where(kvp => kvp.Key == ChoXmlNamespaceManager.DefaultNSToken).Select(kvp => kvp.Value).FirstOrDefault();
+            if (!ns.IsNullOrWhiteSpace())
+                return ns;
+
+            return NSDict.Where(kvp => !ReservedXmlNamespacePrefixes.Contains(kvp.Key)).Select(kvp => kvp.Value).FirstOrDefault();
         }
 
         public override string ToString()

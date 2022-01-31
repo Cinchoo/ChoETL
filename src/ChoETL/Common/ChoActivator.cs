@@ -21,6 +21,28 @@ namespace ChoETL
         {
             ChoUtility.Init();
         }
+        public static object CreateInstanceNCache(Type objType, Func<object> createInstance)
+        {
+            if (_objCache == null)
+                return null;
+            if (_objCache.ContainsKey(objType))
+                return _objCache[objType];
+
+            if (createInstance == null)
+                return null;
+
+            lock (_objCachePadLock)
+            {
+                if (_objCache.ContainsKey(objType))
+                    return _objCache[objType];
+
+                var obj = createInstance();
+                _objCache.Add(objType, obj);
+
+                return obj;
+            }
+        }
+
         public static T CreateInstanceNCache<T>()
         {
             return (T)CreateInstanceNCache(typeof(T));

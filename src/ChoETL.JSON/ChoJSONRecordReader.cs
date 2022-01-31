@@ -1377,7 +1377,7 @@ namespace ChoETL
 
                     if (fieldConfig.IgnoreFieldValueMode == null)
                     {
-                        if (fieldValue.IsNullOrEmpty() && fieldConfig.IsDefaultValueSpecified)
+                        if (fieldValue.IsObjectNullOrEmpty() && fieldConfig.IsDefaultValueSpecified)
                             fieldValue = fieldConfig.DefaultValue;
                     }
                     else

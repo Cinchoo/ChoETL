@@ -11,7 +11,7 @@ namespace ChoETL
     {
         public string XPath { get; private set; }
 
-        public bool AllowComplexXmlPath
+        public bool AllowComplexXPath
         {
             get; set;
         }

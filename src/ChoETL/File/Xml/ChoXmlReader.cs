@@ -45,6 +45,8 @@ namespace ChoETL
             private set;
         }
 
+        public override ChoRecordConfiguration RecordConfiguration => this.Configuration;
+
         public ChoXmlReader(StringBuilder sb, ChoXmlRecordConfiguration configuration = null) : this(new StringReader(sb.ToString()), configuration)
         {
 
@@ -539,6 +541,17 @@ namespace ChoETL
             return this;
         }
 
+        public ChoXmlReader<T> RegisterNodeConverterForType<ModelType>(Func<object, object> selector)
+        {
+            return RegisterNodeConverterForType(typeof(ModelType), selector);
+        }
+
+        public ChoXmlReader<T> RegisterNodeConverterForType(Type type, Func<object, object> selector)
+        {
+            Configuration.RegisterNodeConverterForType(type, selector);
+            return this;
+        }
+
         public ChoXmlReader<T> ErrorMode(ChoErrorMode mode)
         {
             Configuration.ErrorMode = mode;
@@ -597,34 +610,26 @@ namespace ChoETL
 
         public ChoXmlReader<T> WithXmlNamespace(string uri)
         {
-            return WithXmlNamespace("", uri);
+            Configuration.WithXmlNamespace(uri);
+            return this;
         }
 
         public ChoXmlReader<T> WithXmlNamespace(string prefix, string uri)
         {
-            if (String.Compare(prefix, "xmlns") == 0)
-                Configuration.NamespaceManager.AddNamespace("", uri);
-            else
-                Configuration.NamespaceManager.AddNamespace(prefix, uri);
-
+            Configuration.WithXmlNamespace(prefix, uri);
             return this;
         }
 
         public ChoXmlReader<T> WithXmlNamespaces(IDictionary<string, string> ns)
         {
-            if (ns != null)
-            {
-                foreach (var kvp in ns)
-                    WithXmlNamespace(kvp.Key, kvp.Value);
-            }
-
+            Configuration.WithXmlNamespaces(ns);
             return this;
         }
 
-        public ChoXmlReader<T> WithXPath(string xPath, bool allowComplexXmlPath = false)
+        public ChoXmlReader<T> WithXPath(string xPath, bool allowComplexXPath = false)
         {
             Configuration.XPath = xPath;
-            Configuration.AllowComplexXmlPath = allowComplexXmlPath;
+            Configuration.AllowComplexXPath = allowComplexXPath;
             return this;
         }
 
@@ -641,6 +646,17 @@ namespace ChoETL
             return this;
         }
 
+        private ChoXmlReader<T> ClearFieldsIf()
+        {
+            if (!_clearFields)
+            {
+                Configuration.ClearFields();
+                _clearFields = true;
+                Configuration.MapRecordFields(Configuration.RecordType);
+            }
+            return this;
+        }
+
         public ChoXmlReader<T> IgnoreField<TField>(Expression<Func<T, TField>> field)
         {
             Configuration.IgnoreField(field);
@@ -652,16 +668,19 @@ namespace ChoETL
             if (!fieldName.IsNullOrWhiteSpace())
             {
                 string fnTrim = null;
-                if (!_clearFields)
-                {
-                    ClearFields();
-                    Configuration.MapRecordFields(Configuration.RecordType);
-                }
+                ClearFieldsIf();
                 fnTrim = fieldName.NTrim();
-                if (Configuration.XmlRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-                    Configuration.XmlRecordFieldConfigurations.Remove(Configuration.XmlRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
-                else
-                    Configuration.IgnoredFields.Add(fieldName);
+                Configuration.IgnoreField(fnTrim);
+                //if (!_clearFields)
+                //{
+                //    ClearFields();
+                //    Configuration.MapRecordFields(Configuration.RecordType);
+                //}
+                //fnTrim = fieldName.NTrim();
+                //if (Configuration.XmlRecordFieldConfigurations.Any(o => o.Name == fnTrim))
+                //    Configuration.XmlRecordFieldConfigurations.Remove(Configuration.XmlRecordFieldConfigurations.Where(o => o.Name == fnTrim).First());
+                //else
+                //    Configuration.IgnoredFields.Add(fieldName);
             }
 
             return this;
@@ -688,11 +707,7 @@ namespace ChoETL
                 {
                     if (fn.IsNullOrEmpty())
                         continue;
-                    if (!_clearFields)
-                    {
-                        ClearFields();
-                        Configuration.MapRecordFields(Configuration.RecordType);
-                    }
+                    ClearFieldsIf();
 
                     fnTrim = fn.NTrim();
                     if (Configuration.XmlRecordFieldConfigurations.Any(o => o.Name == fnTrim))
@@ -724,7 +739,7 @@ namespace ChoETL
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string formatText = null,
-            string nullValue = null, Func<XElement, Type> fieldTypeSelector = null)
+            string nullValue = null, Func<object, Type> fieldTypeSelector = null)
         {
             if (field == null)
                 return this;
@@ -741,7 +756,7 @@ namespace ChoETL
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string formatText = null,
-            string nullValue = null, Func<XElement, Type> fieldTypeSelector = null)
+            string nullValue = null, Func<object, Type> fieldTypeSelector = null)
         {
             return WithXmlElementField(name, fieldType, fieldValueTrimOption, fieldName,
                 valueConverter,
@@ -754,7 +769,7 @@ namespace ChoETL
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string fullyQualifiedMemberName = null, string formatText = null,
-            string nullValue = null, Func<XElement, Type> fieldTypeSelector = null)
+            string nullValue = null, Func<object, Type> fieldTypeSelector = null)
         {
             string fnTrim = name.NTrim();
             string xPath = $"/{fnTrim}";
@@ -768,7 +783,7 @@ namespace ChoETL
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string formatText = null,
-            string nullValue = null, Func<XElement, Type> fieldTypeSelector = null)
+            string nullValue = null, Func<object, Type> fieldTypeSelector = null)
         {
             if (field == null)
                 return this;
@@ -785,7 +800,7 @@ namespace ChoETL
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string formatText = null,
-            string nullValue = null, Func<XElement, Type> fieldTypeSelector = null)
+            string nullValue = null, Func<object, Type> fieldTypeSelector = null)
         {
             return WithXmlAttributeField(name, fieldType, fieldValueTrimOption, fieldName,
                         valueConverter,
@@ -798,7 +813,7 @@ namespace ChoETL
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string fullyQualifiedMemberName = null, string formatText = null,
-            string nullValue = null, Func<XElement, Type> fieldTypeSelector = null)
+            string nullValue = null, Func<object, Type> fieldTypeSelector = null)
         {
             string fnTrim = name.NTrim();
             string xPath = $"/@{fnTrim}";
@@ -827,13 +842,46 @@ namespace ChoETL
             return this;
         }
 
+        public ChoXmlReader<T> ClearFieldForType<TClass>()
+        {
+            Configuration.ClearRecordFieldsForType(typeof(TClass));
+            return this;
+        }
+
+        public ChoXmlReader<T> WithFieldForType<TClass>(Expression<Func<TClass, object>> field,
+            string xpath = null,
+            ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
+            bool isXmlAttribute = false,
+            string fieldName = null, bool isArray = false,
+            Func<object, object> valueConverter = null,
+            Func<object, object> itemConverter = null,
+            Func<object, object> customSerializer = null,
+            object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string formatText = null,
+            string nullValue = null, Func<object, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null,
+            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null
+            )
+            where TClass : class
+        {
+            if (field == null)
+                return this;
+
+            return WithField(field.GetMemberName(), xpath, field.GetPropertyType(), fieldValueTrimOption, isXmlAttribute, fieldName, isArray,
+                valueConverter, itemConverter,
+                customSerializer, defaultValue, fallbackValue, encodeValue, field.GetFullyQualifiedMemberName(), formatText,
+                nullValue, typeof(TClass),
+                fieldTypeSelector, itemTypeSelector,
+                    fieldTypeDiscriminator, itemTypeDiscriminator);
+        }
+
         public ChoXmlReader<T> WithField<TField>(Expression<Func<T, TField>> field, string xPath = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
             bool isXmlAttribute = false, string fieldName = null, bool isArray = false,
             Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string formatText = null,
-            string nullValue = null, Func<XElement, Type> fieldTypeSelector = null)
+            string nullValue = null, Func<object, Type> fieldTypeSelector = null,
+            Func<object, Type> itemTypeSelector = null,
+            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null)
         {
             if (field == null)
                 return this;
@@ -841,87 +889,52 @@ namespace ChoETL
             return WithField(field.GetMemberName(), xPath, field.GetPropertyType(), fieldValueTrimOption, isXmlAttribute, fieldName, isArray,
                 valueConverter,
                 itemConverter, customSerializer,
-                defaultValue, fallbackValue, encodeValue, field.GetFullyQualifiedMemberName(), nullValue, fieldTypeSelector);
+                defaultValue, fallbackValue, encodeValue, field.GetFullyQualifiedMemberName(), formatText, nullValue, null,
+                fieldTypeSelector, itemTypeSelector,
+                    fieldTypeDiscriminator, itemTypeDiscriminator);
         }
 
-        public ChoXmlReader<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isXmlAttribute = false, string fieldName = null, bool isArray = false,
+        public ChoXmlReader<T> WithField(string name, string xPath = null, Type fieldType = null, 
+            ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
+            bool isXmlAttribute = false, string fieldName = null, bool isArray = false,
             Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null,
             bool encodeValue = false, string formatText = null,
-            string nullValue = null, Func<XElement, Type> fieldTypeSelector = null)
+            string nullValue = null, Func<object, Type> fieldTypeSelector = null,
+            Func<object, Type> itemTypeSelector = null,
+            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null)
         {
             return WithField(name, xPath, fieldType, fieldValueTrimOption, isXmlAttribute, fieldName, isArray,
                 valueConverter,
                 itemConverter, customSerializer,
                 defaultValue, fallbackValue,
-                encodeValue, null, formatText, nullValue, fieldTypeSelector);
+                encodeValue, null, formatText, nullValue, null, fieldTypeSelector, itemTypeSelector,
+                    fieldTypeDiscriminator, itemTypeDiscriminator);
         }
 
-        private ChoXmlReader<T> WithField(string name, string xPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, bool isXmlAttribute = false, string fieldName = null, bool isArray = false,
+        private ChoXmlReader<T> WithField(string name, string xPath = null, Type fieldType = null, 
+            ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, 
+            bool isXmlAttribute = false, string fieldName = null, bool isArray = false,
             Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null,
             bool encodeValue = false, string fullyQualifiedMemberName = null, string formatText = null,
-            string nullValue = null, Func<XElement, Type> fieldTypeSelector = null)
+            string nullValue = null, Type subRecordType = null, Func<object, Type> fieldTypeSelector = null, 
+            Func<object, Type> itemTypeSelector = null,
+            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null)
         {
             if (!name.IsNullOrEmpty())
             {
-                if (!_clearFields)
-                {
-                    ClearFields();
-                    Configuration.MapRecordFields(Configuration.RecordType);
-                }
+                ClearFieldsIf();
 
-                string fnTrim = name.NTrim();
-                ChoXmlRecordFieldConfiguration fc = null;
-                PropertyDescriptor pd = null;
-                if (Configuration.XmlRecordFieldConfigurations.Any(o => o.Name == fnTrim))
-                {
-                    fc = Configuration.XmlRecordFieldConfigurations.Where(o => o.Name == fnTrim).First();
-                    Configuration.XmlRecordFieldConfigurations.Remove(fc);
-                }
-                else
-                    pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName.IsNullOrWhiteSpace() ? name : fullyQualifiedMemberName);
-
-                var nfc = new ChoXmlRecordFieldConfiguration(fnTrim, xPath)
-                {
-                    FieldType = fieldType,
-                    FieldValueTrimOption = fieldValueTrimOption,
-                    IsXmlAttribute = isXmlAttribute,
-                    FieldName = fieldName,
-                    IsArray = isArray,
-                    ValueConverter = valueConverter,
-                    ItemConverter = itemConverter,
-                    CustomSerializer = customSerializer,
-                    DefaultValue = defaultValue,
-                    FallbackValue = fallbackValue,
-                    EncodeValue = encodeValue,
-                    FormatText = formatText,
-                    NullValue = nullValue,
-                    FieldTypeSelector = fieldTypeSelector,
-                };
-                if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
-                {
-                    nfc.PropertyDescriptor = fc != null ? fc.PropertyDescriptor : pd;
-                    nfc.DeclaringMember = fc != null ? fc.DeclaringMember : fullyQualifiedMemberName;
-                }
-                else
-                {
-                    pd = ChoTypeDescriptor.GetNestedProperty(typeof(T), fullyQualifiedMemberName);
-                    nfc.PropertyDescriptor = pd;
-                    nfc.DeclaringMember = fullyQualifiedMemberName;
-                }
-                if (pd != null)
-                {
-                    if (nfc.FieldType == null)
-                        nfc.FieldType = pd.PropertyType;
-                }
-                Configuration.XmlRecordFieldConfigurations.Add(nfc);
+                Configuration.WithField(name, xPath, fieldType, fieldValueTrimOption, isXmlAttribute, fieldName,
+                    valueConverter, itemConverter, customSerializer, defaultValue, fallbackValue, fullyQualifiedMemberName, 
+                    formatText, isArray, nullValue, encodeValue, typeof(T), subRecordType, fieldTypeSelector, itemTypeSelector,
+                    fieldTypeDiscriminator, itemTypeDiscriminator);
             }
-
             return this;
         }
 
