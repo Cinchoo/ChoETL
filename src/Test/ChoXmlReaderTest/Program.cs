@@ -587,9 +587,54 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            Xml2JSON1();
+            LoadConfigItems();
+            return;
+            //Xml2JSON1();
             //LoadXmlUsingConfigAndPOCO();
-            //DesrializeUsingProxy();
+            DesrializeUsingProxy();
+        }
+
+        public class ConfigItem
+        {
+            public string Spoken { get; set; }
+            public string Description { get; set; }
+            [ChoXPath("/Folders/Folder")]
+            [ChoUseProxy]
+            public Folder[] Folders { get; set; }
+        }
+
+        public class Folder
+        {
+            public string Network { get; set; }
+            public string Location { get; set; }
+        }
+
+        public static void LoadConfigItems()
+        {
+            string xml = @"<ConfigItems>
+  <ConfigItem>
+    <Spoken> data </Spoken>
+    <Description> folders holding system data files </Description>
+    <Folders>
+      <Folder>
+        <Network>Local</Network>
+        <Location>C:\users\kkkwj\documents\highspeed\user\data cpu-ufo</Location>
+      </Folder>
+      <Folder>
+        <Network>WAN</Network>
+        <Location>C:\users\kkkwj\documents\highspeed\user\data general</Location>
+      </Folder>
+    </Folders>
+  </ConfigItem>
+</ConfigItems>";
+
+            using (var r = ChoXmlReader<ConfigItem>.LoadText(xml)
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                )
+            {
+                r.Print();
+            }
+
         }
 
         public static void DesrializeUsingProxy()
@@ -599,7 +644,9 @@ namespace ChoXmlReaderTest
 
             var cf = new ChoXmlRecordConfiguration();
             var cf1 = cf.MapRecordFieldsForType<Class>();
+            cf1.Map(f => f.PropertyValue, fieldName: "Property");
             ChoXmlSerializerProxy.AddRecordConfiguration(cf1);
+
             // deserialize the xml into the proxy type
             //XmlSerializer xmlSerializer = new XmlSerializer(typeof(ChoXmlSerializerProxy<Class>), ChoNullNSXmlSerializerFactory.GetXmlOverrides(typeof(TInstanceType)));
             var xmlSerializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer<ChoXmlSerializerProxy<Class>, Class>();
@@ -615,7 +662,8 @@ namespace ChoXmlReaderTest
         //[XmlRoot("Class")]
         public sealed class Class
         {
-            public string Property { get; set; }
+            //[ChoXmlNodeRecordField(FieldName = "Property")]
+            public string PropertyValue { get; set; }
         }
 
 

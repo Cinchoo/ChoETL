@@ -7,6 +7,8 @@ using System.Text;
 using System.ComponentModel;
 using System.Collections.Generic;
 using System.Collections;
+using System.Globalization;
+using System.Threading;
 
 namespace ChoYamlReaderTest
 {
@@ -1160,9 +1162,45 @@ EntityIds:
             }
         }
 
+
+        private const string yamlText3 = @"---
+            receipt:    Oz-Ware Purchase Invoice
+            date:        07/02/2019
+...
+---
+            receipt:    Oz-Ware Purchase Invoice1
+            date:        09/02/2019
+";
+
+        public class CustomerWithDate
+        {
+            public string Receipt { get; set; }
+            public DateTime Date { get; set; }
+        }
+
+        static void DifferentDateFormatTest()
+        {
+            CultureInfo newCulture = CultureInfo.CreateSpecificCulture("en-GB");
+            //Thread.CurrentThread.CurrentCulture = newCulture;
+
+            StringBuilder json = new StringBuilder();
+            using (var r = ChoYamlReader<CustomerWithDate>.LoadText(yamlText3))
+            {
+                r.First().Date.ToString("yyyy-MMM-dd").Print();
+                return;
+                using (var w = new ChoJSONWriter(json))
+                    w.Write(r);
+            }
+            Console.WriteLine(json.ToString());
+        }
+
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+            DifferentDateFormatTest();
+            return;
+
             //DeserializeTypedYaml();
             NestedObject();
             return;

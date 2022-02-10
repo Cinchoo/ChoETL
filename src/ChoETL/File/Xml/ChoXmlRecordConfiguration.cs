@@ -21,9 +21,16 @@ namespace ChoETL
     [DataContract]
     public class ChoXmlRecordConfiguration : ChoFileRecordConfiguration
     {
-        internal readonly Dictionary<Type, Dictionary<string, ChoXmlRecordFieldConfiguration>> XmlRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoXmlRecordFieldConfiguration>>();
-        internal readonly Dictionary<Type, Func<object, object>> NodeConvertersForType = new Dictionary<Type, Func<object, object>>();
-        internal readonly ChoResetLazy<ChoXmlNamespaceManager> XmlNamespaceManager;
+        internal Dictionary<Type, Dictionary<string, ChoXmlRecordFieldConfiguration>> XmlRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoXmlRecordFieldConfiguration>>();
+        internal Dictionary<Type, Func<object, object>> NodeConvertersForType = new Dictionary<Type, Func<object, object>>();
+        internal ChoResetLazy<ChoXmlNamespaceManager> XmlNamespaceManager;
+
+        public bool? UseProxy
+        {
+            get;
+            set;
+        }
+
         public string AttributeFieldPrefixes
         {
             get;
@@ -298,6 +305,18 @@ namespace ChoETL
                 XmlRecordFieldConfigurationsForType[rt].Add(rc.Name, rc);
         }
 
+        internal bool ShouldUseProxy(ChoXmlRecordFieldConfiguration fc)
+        {
+            if (fc != null)
+            {
+                if (fc.UseProxy != null)
+                    return fc.UseProxy.Value;
+
+            }
+
+            return UseProxy != null ? UseProxy.Value : false;
+        }
+
         public override bool ContainsRecordConfigForType(Type rt)
         {
             return XmlRecordFieldConfigurationsForType.ContainsKey(rt);
@@ -327,12 +346,51 @@ namespace ChoETL
 
             ChoXmlRecordConfiguration xconfig = config as ChoXmlRecordConfiguration;
 
+            xconfig.XmlRecordFieldConfigurationsForType = XmlRecordFieldConfigurationsForType;
+            xconfig.NodeConvertersForType = NodeConvertersForType;
+            xconfig.XmlNamespaceManager = XmlNamespaceManager;
             xconfig.Indent = Indent;
             xconfig.IndentChar = IndentChar;
             xconfig.NamespaceManager = NamespaceManager;
             xconfig.XmlSerializer = XmlSerializer;
             xconfig.NullValueHandling = NullValueHandling;
             xconfig.IgnoreCase = IgnoreCase;
+            xconfig.XPath = "//";
+            xconfig.RecordType = RecordType;
+
+            xconfig.UseProxy = UseProxy;
+            xconfig.AttributeFieldPrefixes = AttributeFieldPrefixes;
+            xconfig.CDATAFieldPostfixes = CDATAFieldPostfixes;
+            xconfig.CDATAFieldPrefixes = CDATAFieldPrefixes;
+            xconfig.FlattenNode = FlattenNode;
+            xconfig.TurnOffAutoCorrectXNames = TurnOffAutoCorrectXNames;
+            xconfig.DoNotEmitXmlNamespace = DoNotEmitXmlNamespace;
+            xconfig.TurnOffXmlFormatting = TurnOffXmlFormatting;
+            xconfig.TurnOffPluralization = TurnOffPluralization;
+            xconfig.Indent = Indent;
+            xconfig.IndentChar = IndentChar;
+            xconfig.NamespaceManager = NamespaceManager;
+            xconfig.EmitDataType = EmitDataType;
+            xconfig.Formatting = Formatting;
+            xconfig.UseXmlSerialization = UseXmlSerialization;
+            xconfig.AreAllFieldTypesNull = AreAllFieldTypesNull;
+            xconfig.XmlEncoding = XmlEncoding;
+            xconfig.XmlVersion = XmlVersion;
+            xconfig.OmitXmlDeclaration = OmitXmlDeclaration;
+            xconfig.OmitXsiNamespace = OmitXsiNamespace;
+            xconfig.XmlSchemaNamespace = XmlSchemaNamespace;
+            xconfig.JSONSchemaNamespace = JSONSchemaNamespace;
+            xconfig.EmptyXmlNodeValueHandling = EmptyXmlNodeValueHandling;
+            xconfig.CustomNodeSelecter = CustomNodeSelecter;
+            xconfig.IgnoreCase = IgnoreCase;
+
+            xconfig.RetainAsXmlAwareObjects = RetainAsXmlAwareObjects;
+            xconfig.IncludeSchemaInstanceNodes = IncludeSchemaInstanceNodes;
+            xconfig.DefaultNamespacePrefix = DefaultNamespacePrefix;
+
+            xconfig.UseXmlArray = UseXmlArray;
+            xconfig.UseJsonNamespaceForObjectType = UseJsonNamespaceForObjectType;
+            xconfig.DefaultNamespacePrefix = DefaultNamespacePrefix;
         }
 
         public IDictionary<string, string> GetXmlNamespacesInScope()
@@ -357,6 +415,11 @@ namespace ChoETL
             {
                 XPath = pd.XPath;
                 AllowComplexXPath = pd.AllowComplexXPath;
+            }
+            var up = ChoTypeDescriptor.GetTypeAttribute<ChoUseProxyAttribute>(recordType);
+            if (up != null)
+            {
+                UseProxy = up.Flag;
             }
 
             ChoXmlRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoXmlRecordObjectAttribute>(recordType);
@@ -514,6 +577,9 @@ namespace ChoETL
                             ChoXPathAttribute xpAttr = pd.Attributes.OfType<ChoXPathAttribute>().FirstOrDefault();
                             if (xpAttr != null && !xpAttr.XPath.IsNullOrWhiteSpace())
                                 obj.XPath = xpAttr.XPath;
+                            ChoUseProxyAttribute upAttr = pd.Attributes.OfType<ChoUseProxyAttribute>().FirstOrDefault();
+                            if (xpAttr != null)
+                                obj.UseProxy = upAttr.Flag;
 
                             XmlElementAttribute xAttr = pd.Attributes.OfType<XmlElementAttribute>().FirstOrDefault();
                             if (xAttr != null && !xAttr.ElementName.IsNullOrWhiteSpace())
@@ -1077,10 +1143,11 @@ namespace ChoETL
             ClearRecordFieldsForType(typeof(T));
         }
 
-        public ChoXmlRecordConfiguration MapRecordFieldsForType<T>()
+        public ChoXmlRecordConfiguration<T> MapRecordFieldsForType<T>()
         {
-            return MapRecordFieldsForType(typeof(T));
+            return MapRecordFieldsForType(typeof(T)).OfType<T>();
         }
+
         public ChoXmlRecordConfiguration MapRecordFieldsForType(Type rt)
         {
             if (rt == null)
@@ -1097,51 +1164,20 @@ namespace ChoETL
             return CreateRecordConfigurationForType(rt);
         }
 
-        public ChoXmlRecordConfiguration CreateRecordConfigurationForType(Type recordType)
+        private ChoXmlRecordConfiguration CreateRecordConfigurationForType(Type recordType)
         {
             ChoXmlRecordConfiguration cf = this;
 
             var cf1 = new ChoXmlRecordConfiguration();
+            Clone(cf1);
             cf1.XPath = "//";
             cf1.RecordType = recordType;
-            cf1.AttributeFieldPrefixes = cf.AttributeFieldPrefixes;
-            cf1.CDATAFieldPostfixes = cf.CDATAFieldPostfixes;
-            cf1.CDATAFieldPrefixes = cf.CDATAFieldPrefixes;
-            cf1.FlattenNode = cf.FlattenNode;
-            cf1.TurnOffAutoCorrectXNames = cf.TurnOffAutoCorrectXNames;
-            cf1.DoNotEmitXmlNamespace = cf.DoNotEmitXmlNamespace;
-            cf1.TurnOffXmlFormatting = cf.TurnOffXmlFormatting;
-            cf1.TurnOffPluralization = cf.TurnOffPluralization;
-            cf1.Indent = cf.Indent;
-            cf1.IndentChar = cf.IndentChar;
-            cf1.NamespaceManager = cf.NamespaceManager;
-            cf1.EmitDataType = cf.EmitDataType;
-            cf1.Formatting = cf.Formatting;
-            //cf1.XmlSerializer = cf.XmlSerializer;
-            cf1.UseXmlSerialization = cf.UseXmlSerialization;
-            cf1.AreAllFieldTypesNull = cf.AreAllFieldTypesNull;
-            cf1.XmlEncoding = cf.XmlEncoding;
-            cf1.XmlVersion = cf.XmlVersion;
-            cf1.OmitXmlDeclaration = cf.OmitXmlDeclaration;
-            cf1.OmitXsiNamespace = cf.OmitXsiNamespace;
-            cf1.XmlSchemaNamespace = cf.XmlSchemaNamespace;
-            cf1.JSONSchemaNamespace = cf.JSONSchemaNamespace;
-            cf1.EmptyXmlNodeValueHandling = cf.EmptyXmlNodeValueHandling;
-            cf1.CustomNodeSelecter = cf.CustomNodeSelecter;
-            cf1.IgnoreCase = cf.IgnoreCase;
 
-            cf1.RetainAsXmlAwareObjects = cf.RetainAsXmlAwareObjects;
-            cf1.IncludeSchemaInstanceNodes = cf.IncludeSchemaInstanceNodes;
-            cf1.DefaultNamespacePrefix = cf.DefaultNamespacePrefix;
-
-            cf1.UseXmlArray = cf.UseXmlArray;
-            cf1.UseJsonNamespaceForObjectType = cf.UseJsonNamespaceForObjectType;
-            cf1.DefaultNamespacePrefix = cf.DefaultNamespacePrefix;
-
+            cf1.XmlRecordFieldConfigurations.Clear();
             ChoXmlRecordFieldConfiguration[] fcf = cf.GetRecordConfigForType(recordType).OfType<ChoXmlRecordFieldConfiguration>().ToArray();
             if (!fcf.IsNullOrEmpty())
             {
-                cf.XmlRecordFieldConfigurations.AddRange(fcf);
+                cf1.XmlRecordFieldConfigurations.AddRange(fcf);
             }
 
             return cf1;
@@ -1288,10 +1324,23 @@ namespace ChoETL
         {
             return XmlNamespaceManager.Value.GetFirstDefaultNamespace(this.NamespaceManager.DefaultNamespace);
         }
+
+        public ChoXmlRecordConfiguration<T> OfType<T>()
+        {
+            var cf = new ChoXmlRecordConfiguration<T>(false);
+            Clone(cf);
+
+            return cf;
+        }
     }
 
     public class ChoXmlRecordConfiguration<T> : ChoXmlRecordConfiguration
     {
+        internal ChoXmlRecordConfiguration(bool nomap)
+        {
+
+        }
+
         public ChoXmlRecordConfiguration()
         {
             MapRecordFields<T>();

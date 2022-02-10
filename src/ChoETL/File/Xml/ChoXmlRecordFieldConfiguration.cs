@@ -13,6 +13,12 @@ namespace ChoETL
     [DataContract]
     public class ChoXmlRecordFieldConfiguration : ChoFileRecordFieldConfiguration
     {
+        public bool? UseProxy
+        {
+            get;
+            set;
+        }
+
         internal bool IsXPathSet
         {
             get;

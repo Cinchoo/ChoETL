@@ -53,16 +53,20 @@ namespace ChoETL
             return null;
         }
 
-        public void ReadXml(XmlReader reader)
+        public virtual void ReadXml(XmlReader reader)
         {
             ChoXmlRecordConfiguration cf = ChoXmlSerializerProxy.GetRecordConfiguration<TInstanceType>();
-
+            if (cf == null)
+            {
+                cf = new ChoXmlRecordConfiguration<TInstanceType>();
+                cf.WithXPath("//");
+            }
             var r = Activator.CreateInstance(typeof(ChoXmlReader<>).MakeGenericType(new[] { typeof(TInstanceType) }), new object[] { reader, cf })
                 as IChoReader;
 
             this._value = r.FirstOrDefault<TInstanceType>();
         }
-        public void WriteXml(XmlWriter writer)
+        public virtual void WriteXml(XmlWriter writer)
         {
             throw new NotImplementedException();
         }

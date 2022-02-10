@@ -20,4 +20,14 @@ namespace ChoETL
             XPath = xPath;
         }
     }
+
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property)]
+    public class ChoUseProxyAttribute : Attribute
+    {
+        public bool Flag { get; private set; }
+        public ChoUseProxyAttribute(bool flag = true)
+        {
+            Flag = flag;
+        }
+    }
 }

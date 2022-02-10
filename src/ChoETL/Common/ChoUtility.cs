@@ -3021,6 +3021,18 @@ namespace ChoETL
             return GetXmlSerializer(typeof(TProxyType), typeof(TInstanceType), overrides);
         }
 
+        public static ChoNullNSXmlSerializer GetXmlProxySerializer(Type type, XmlAttributeOverrides overrides = null)
+        {
+            ChoGuard.ArgumentNotNull(type, nameof(type));
+
+            var proxyType = typeof(ChoXmlSerializerProxy<>).MakeGenericType(type);
+
+            if (_xmlSerializers.ContainsKey(proxyType))
+                return _xmlSerializers[proxyType];
+
+            return GetXmlSerializer(proxyType, overrides == null ? GetXmlOverrides(type, proxyType) : overrides);
+        }
+
         public static ChoNullNSXmlSerializer GetXmlSerializer(Type proxyType, Type type, XmlAttributeOverrides overrides = null)
         {
             ChoGuard.ArgumentNotNull(type, nameof(type));

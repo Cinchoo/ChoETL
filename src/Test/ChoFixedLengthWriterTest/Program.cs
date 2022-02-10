@@ -20,7 +20,7 @@ namespace ChoFixedLengthWriterTest
         {
 			ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
 
-            QuickWriteTest2();
+            POCOTest();
         }
 
         [SetUp]
@@ -132,7 +132,11 @@ namespace ChoFixedLengthWriterTest
             rec2.Name = "Jason";
             objs.Add(rec2);
 
-            using (var parser = new ChoFixedLengthWriter<EmployeeRecSimple>(FileNamePOCOTestTXT).
+            ChoFixedLengthRecordConfiguration configuration = new ChoFixedLengthRecordConfiguration();
+
+            configuration.Encoding = System.Text.Encoding.GetEncoding(1252);
+
+            using (var parser = new ChoFixedLengthWriter<EmployeeRecSimple>(FileNamePOCOTestTXT, configuration).
                 WithFirstLineHeader().
                 WithField("Id", 0, 8).
                 WithField("Name", 5, 10))

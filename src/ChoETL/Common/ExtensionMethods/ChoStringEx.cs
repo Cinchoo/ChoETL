@@ -36,7 +36,7 @@ namespace ChoETL
             }
         }
 
-        public static string IdentifierSeparator 
+        public static string IdentifierSeparator
         {
             get;
             set;
@@ -573,7 +573,7 @@ namespace ChoETL
 
         public static Dictionary<string, string> ToDictionary(this string text, char Separator = ';', char keyValueSeparator = '=')
         {
-            Dictionary<string, string> dict = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase    );
+            Dictionary<string, string> dict = new Dictionary<string, string>(StringComparer.CurrentCultureIgnoreCase);
             if (!text.IsNullOrEmpty())
             {
                 foreach (KeyValuePair<string, string> kvp in ToKeyValuePairs(text, Separator, keyValueSeparator))
@@ -588,28 +588,28 @@ namespace ChoETL
 
         #region ToObjectFromXml Overloads
 
-        public static T ToObjectFromXml<T>(this string xml, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null, 
-            ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null, 
+        public static T ToObjectFromXml<T>(this string xml, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null,
+            ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null,
             bool retainXmlAttributesAsNative = true, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore,
             string NS = null, string defaultNSPrefix = null,
             ChoXmlNamespaceManager nsMgr = null,
-            PropertyDescriptor pd = null)
+            PropertyDescriptor pd = null, bool useProxy = false, ChoXmlRecordConfiguration config = null)
         {
-            return (T)ToObjectFromXml(xml, typeof(T), overrides, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, 
-                retainXmlAttributesAsNative, nullValueHandling, NS, defaultNSPrefix, nsMgr, pd);
+            return (T)ToObjectFromXml(xml, typeof(T), overrides, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling,
+                retainXmlAttributesAsNative, nullValueHandling, NS, defaultNSPrefix, nsMgr, pd, useProxy, config);
         }
 
         public static T ToObjectFromXml<T>(this XElement element, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null, bool retainXmlAttributesAsNative = true, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore,
             string NS = null, string defaultNSPrefix = null, ChoXmlNamespaceManager nsMgr = null,
-            PropertyDescriptor pd = null)
+            PropertyDescriptor pd = null, bool useProxy = false, ChoXmlRecordConfiguration config = null)
         {
-            return (T)ToObjectFromXml(element, typeof(T), overrides, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, 
-                retainXmlAttributesAsNative, nullValueHandling, NS, defaultNSPrefix, nsMgr, pd);
+            return (T)ToObjectFromXml(element, typeof(T), overrides, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling,
+                retainXmlAttributesAsNative, nullValueHandling, NS, defaultNSPrefix, nsMgr, pd, useProxy, config);
         }
         public static object ToObjectFromXml(this XElement element, Type type, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null, bool retainXmlAttributesAsNative = true,
-            ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore, string NS = null, string defaultNSPrefix = null, 
+            ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore, string NS = null, string defaultNSPrefix = null,
             ChoXmlNamespaceManager nsMgr = null,
-            PropertyDescriptor pd = null)
+            PropertyDescriptor pd = null, bool useProxy = false, ChoXmlRecordConfiguration config = null)
         {
             if (element == null)
                 return null;
@@ -623,116 +623,145 @@ namespace ChoETL
 
             if (type.IsDynamicType())
             {
-                return ToDynamic(element, true, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling, 
+                return ToDynamic(element, true, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, retainXmlAttributesAsNative, nullValueHandling,
                     defaultNSPrefix: defaultNSPrefix, nsMgr: nsMgr);
             }
             else
             {
+                if (ChoXmlConvert.HasConverters(type))
+                    return ChoXmlConvert.ToObject(type, element);
+
                 XmlParserContext ctx = nsMgr != null ? new XmlParserContext(null, nsMgr.NSMgr, null, XmlSpace.None) : null;
                 using (XmlReader reader = XmlReader.Create(new StringReader(element.GetOuterXml()), null, ctx))
                 {
-                    if (ChoUtility.HasXmlSerializer(element.Name.ToString(), type))
-                        return ChoUtility.GetXmlSerializer(element.ToString(), type).Deserialize(reader);
-
-                    if (overrides == null)
+                    if (useProxy)
                     {
-                        if (ChoType.GetAttribute<XmlRootAttribute>(type) == null)
+                        if (config != null)
                         {
-                            var ns = NS;
-                            var name = element.Name.LocalName;
-
-                            if (pd != null)
-                            {
-                                if (pd.Attributes.OfType<XmlElementAttribute>().Any())
-                                {
-                                    var attr = pd.Attributes.OfType<XmlElementAttribute>().First();
-                                    ns = attr.Namespace.IsNullOrWhiteSpace() ? ns : attr.Namespace;
-                                    name = attr.ElementName.IsNullOrWhiteSpace() ? name : attr.ElementName;
-                                }
-                                else if (pd.Attributes.OfType<XmlAttributeAttribute>().Any())
-                                {
-                                    var attr = pd.Attributes.OfType<XmlAttributeAttribute>().First();
-                                    ns = attr.Namespace.IsNullOrWhiteSpace() ? ns : attr.Namespace;
-                                    name = attr.AttributeName.IsNullOrWhiteSpace() ? name : attr.AttributeName;
-                                }
-                                else if (pd.Attributes.OfType<XmlArrayItemAttribute>().Any())
-                                {
-                                    var attr = pd.Attributes.OfType<XmlArrayItemAttribute>().First();
-                                    ns = attr.Namespace.IsNullOrWhiteSpace() ? ns : attr.Namespace;
-                                    name = attr.ElementName.IsNullOrWhiteSpace() ? name : attr.ElementName;
-                                }
-                            }
-
-                            var xattribs = new XmlAttributes();
-                            var xroot = new XmlRootAttribute(name); // type.Name);
-                            if (!NS.IsNullOrWhiteSpace())
-                                xroot.Namespace = ns;
-                            xattribs.XmlRoot = xroot;
-                            overrides = new XmlAttributeOverrides();
-                            overrides.Add(type, xattribs);
+                            var cf = config.MapRecordFieldsForType(type);
+                            ChoXmlSerializerProxy.AddRecordConfiguration(cf);
                         }
-                        //else if (NS != null)
-                        //{
-                        //    var rootAttr = ChoType.GetAttribute<XmlRootAttribute>(type);
-                        //    if (rootAttr.Namespace.IsNullOrWhiteSpace())
-                        //    {
-                        //        var xattribs = new XmlAttributes();
-                        //        var xroot = new XmlRootAttribute(rootAttr.ElementName); // type.Name);
-                        //        xroot.Namespace = NS;
-                        //        xattribs.XmlRoot = xroot;
-                        //        overrides = new XmlAttributeOverrides();
-                        //        overrides.Add(type, xattribs);
-                        //    }
-                        //}
-                        else
-                        {
-                            var xattribs = new XmlAttributes();
-                            var xroot = type.GetCustomAttribute(typeof(XmlRootAttribute)) as XmlRootAttribute; // type.Name);
-                            if (xroot.Namespace.IsNullOrWhiteSpace())
-                                xroot.Namespace = NS;
-                            else
-                            {
-                                xroot.Namespace = xroot.Namespace;
-                            }
-                            if (xroot.ElementName.IsNullOrWhiteSpace())
-                                xroot.ElementName = type.Name;
 
-                            xattribs.XmlRoot = xroot;
-                            overrides = new XmlAttributeOverrides();
-                            overrides.Add(type, xattribs);
-                        }
-                    }
-                    if (ChoXmlConvert.HasConverters(type))
-                    {
-                        return ChoXmlConvert.ToObject(type, element.GetInnerXml());
+                        var proxyType = typeof(ChoXmlSerializerProxy<>).MakeGenericType(type);
+
+                        if (overrides == null)
+                            overrides = GetXmlOverrrides(element, type, NS, pd, proxyType);
+
+                        // deserialize the xml into the proxy type
+                        var xmlSerializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(proxyType, type, overrides);
+                        var obj = xmlSerializer.Deserialize(reader);
+                        var proxy = obj as IChoXmlSerializerProxy;
+                        var value = proxy.Value;
+                        return value;
                     }
                     else
                     {
+                        if (ChoUtility.HasXmlSerializer(element.Name.ToString(), type))
+                            return ChoUtility.GetXmlSerializer(element.ToString(), type).Deserialize(reader);
+
+                        if (overrides == null)
+                            overrides = GetXmlOverrrides(element, type, NS, pd);
+
                         XmlSerializer serializer = ChoUtility.GetXmlSerializer(element.ToString(), type, overrides); // overrides != null ? new XmlSerializer(type, overrides) : new XmlSerializer(type);
                         return serializer.Deserialize(reader);
                     }
                 }
             }
         }
+        private static XmlAttributeOverrides GetXmlOverrrides(XElement element, Type type, string NS, PropertyDescriptor pd,
+            Type proxyType = null)
+        {
+            XmlAttributeOverrides overrides;
+            if (ChoType.GetAttribute<XmlRootAttribute>(type) == null)
+            {
+                var ns = NS;
+                var name = element.Name.LocalName;
+
+                if (pd != null)
+                {
+                    if (pd.Attributes.OfType<XmlElementAttribute>().Any())
+                    {
+                        var attr = pd.Attributes.OfType<XmlElementAttribute>().First();
+                        ns = attr.Namespace.IsNullOrWhiteSpace() ? ns : attr.Namespace;
+                        name = attr.ElementName.IsNullOrWhiteSpace() ? name : attr.ElementName;
+                    }
+                    else if (pd.Attributes.OfType<XmlAttributeAttribute>().Any())
+                    {
+                        var attr = pd.Attributes.OfType<XmlAttributeAttribute>().First();
+                        ns = attr.Namespace.IsNullOrWhiteSpace() ? ns : attr.Namespace;
+                        name = attr.AttributeName.IsNullOrWhiteSpace() ? name : attr.AttributeName;
+                    }
+                    else if (pd.Attributes.OfType<XmlArrayItemAttribute>().Any())
+                    {
+                        var attr = pd.Attributes.OfType<XmlArrayItemAttribute>().First();
+                        ns = attr.Namespace.IsNullOrWhiteSpace() ? ns : attr.Namespace;
+                        name = attr.ElementName.IsNullOrWhiteSpace() ? name : attr.ElementName;
+                    }
+                }
+
+                var xattribs = new XmlAttributes();
+                var xroot = new XmlRootAttribute(name); // type.Name);
+                if (!NS.IsNullOrWhiteSpace())
+                    xroot.Namespace = ns;
+                xattribs.XmlRoot = xroot;
+                overrides = new XmlAttributeOverrides();
+                if (proxyType == null)
+                    overrides.Add(type, xattribs);
+                else
+                    overrides.Add(proxyType, xattribs);
+            }
+            //else if (NS != null)
+            //{
+            //    var rootAttr = ChoType.GetAttribute<XmlRootAttribute>(type);
+            //    if (rootAttr.Namespace.IsNullOrWhiteSpace())
+            //    {
+            //        var xattribs = new XmlAttributes();
+            //        var xroot = new XmlRootAttribute(rootAttr.ElementName); // type.Name);
+            //        xroot.Namespace = NS;
+            //        xattribs.XmlRoot = xroot;
+            //        overrides = new XmlAttributeOverrides();
+            //        overrides.Add(type, xattribs);
+            //    }
+            //}
+            else
+            {
+                var xattribs = new XmlAttributes();
+                var xroot = type.GetCustomAttribute(typeof(XmlRootAttribute)) as XmlRootAttribute; // type.Name);
+                if (xroot.Namespace.IsNullOrWhiteSpace())
+                    xroot.Namespace = NS;
+                else
+                {
+                    xroot.Namespace = xroot.Namespace;
+                }
+                if (xroot.ElementName.IsNullOrWhiteSpace())
+                    xroot.ElementName = type.Name;
+
+                xattribs.XmlRoot = xroot;
+                overrides = new XmlAttributeOverrides();
+                overrides.Add(type, xattribs);
+            }
+
+            return overrides;
+        }
 
         public static object ToObjectFromXml(this string xml, Type type, XmlAttributeOverrides overrides = null, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null, bool retainXmlAttributesAsNative = true,
-            ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore, string NS = null, string defaultNSPrefix = null, 
-            ChoXmlNamespaceManager nsMgr = null,
-            PropertyDescriptor pd = null)
+                ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore, string NS = null, string defaultNSPrefix = null,
+                ChoXmlNamespaceManager nsMgr = null,
+                PropertyDescriptor pd = null, bool useProxy = false, ChoXmlRecordConfiguration config = null)
         {
             if (xml.IsNullOrWhiteSpace())
                 return null;
             if (type == null)
                 throw new ArgumentNullException("Missing type.");
-            return ToObjectFromXml(XElement.Parse(xml), type, overrides, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, 
+            return ToObjectFromXml(XElement.Parse(xml), type, overrides, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling,
                 retainXmlAttributesAsNative, nullValueHandling, NS,
-                defaultNSPrefix, nsMgr, pd);
+                defaultNSPrefix, nsMgr, pd, useProxy, config);
         }
 
         public static object ToDynamic(XElement element, bool topLevel = true, string xmlSchemaNS = null, string jsonSchemaNS = null, ChoEmptyXmlNodeValueHandling emptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Null,
             bool retainXmlAttributesAsNative = true, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore, string defaultNSPrefix = null, ChoXmlNamespaceManager nsMgr = null)
         {
-            return (ChoUtility.XmlDeserialize<ChoDynamicObject>(element.GetOuterXml(), null, null, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling, 
+            return (ChoUtility.XmlDeserialize<ChoDynamicObject>(element.GetOuterXml(), null, null, xmlSchemaNS, jsonSchemaNS, emptyXmlNodeValueHandling,
                 retainXmlAttributesAsNative, nullValueHandling, defaultNSPrefix, nsMgr));
 
             if (element.Name.LocalName == ChoDynamicObject.DefaultName)
@@ -893,7 +922,7 @@ namespace ChoETL
 
         public static string Truncate(this string value, int maxLength)
         {
-            if (string.IsNullOrEmpty(value)) { return value; } 
+            if (string.IsNullOrEmpty(value)) { return value; }
             return value.Length <= maxLength ? value : value.Substring(0, maxLength);
         }
 
@@ -1682,7 +1711,7 @@ namespace ChoETL
 
             if (!postFix.IsNullOrEmpty())
                 msg.Append(postFix);
-            
+
             return msg.ToString();
         }
 
@@ -1837,7 +1866,7 @@ namespace ChoETL
         {
             if (xml == null || nsText.IsNullOrWhiteSpace())
                 return xml;
-            var x= Regex.Replace(xml, @"(<\S+)(>.*)", $"$1{nsText}$2", RegexOptions.Singleline);
+            var x = Regex.Replace(xml, @"(<\S+)(>.*)", $"$1{nsText}$2", RegexOptions.Singleline);
             return x;
         }
 
