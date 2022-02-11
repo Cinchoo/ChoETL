@@ -599,7 +599,7 @@ namespace ChoXmlReaderTest
             public string Spoken { get; set; }
             public string Description { get; set; }
             [ChoXPath("/Folders/Folder")]
-            [ChoUseProxy]
+            [ChoUseXmlProxy]
             public Folder[] Folders { get; set; }
         }
 

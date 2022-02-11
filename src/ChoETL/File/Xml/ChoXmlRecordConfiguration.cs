@@ -416,7 +416,7 @@ namespace ChoETL
                 XPath = pd.XPath;
                 AllowComplexXPath = pd.AllowComplexXPath;
             }
-            var up = ChoTypeDescriptor.GetTypeAttribute<ChoUseProxyAttribute>(recordType);
+            var up = ChoTypeDescriptor.GetTypeAttribute<ChoUseXmlProxyAttribute>(recordType);
             if (up != null)
             {
                 UseProxy = up.Flag;
@@ -577,7 +577,7 @@ namespace ChoETL
                             ChoXPathAttribute xpAttr = pd.Attributes.OfType<ChoXPathAttribute>().FirstOrDefault();
                             if (xpAttr != null && !xpAttr.XPath.IsNullOrWhiteSpace())
                                 obj.XPath = xpAttr.XPath;
-                            ChoUseProxyAttribute upAttr = pd.Attributes.OfType<ChoUseProxyAttribute>().FirstOrDefault();
+                            ChoUseXmlProxyAttribute upAttr = pd.Attributes.OfType<ChoUseXmlProxyAttribute>().FirstOrDefault();
                             if (xpAttr != null)
                                 obj.UseProxy = upAttr.Flag;
 

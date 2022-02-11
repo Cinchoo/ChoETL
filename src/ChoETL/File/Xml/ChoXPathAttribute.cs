@@ -22,10 +22,10 @@ namespace ChoETL
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property)]
-    public class ChoUseProxyAttribute : Attribute
+    public class ChoUseXmlProxyAttribute : Attribute
     {
         public bool Flag { get; private set; }
-        public ChoUseProxyAttribute(bool flag = true)
+        public ChoUseXmlProxyAttribute(bool flag = true)
         {
             Flag = flag;
         }
