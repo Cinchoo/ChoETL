@@ -18,6 +18,39 @@ namespace ChoETL
         static ChoJSONExtensions()
         {
         }
+        public static JToken Rename(this JToken token, string newName)
+        {
+            if (token == null)
+                throw new ArgumentNullException("token", "Cannot rename a null token");
+
+            JProperty property;
+
+            if (token.Type == JTokenType.Property)
+            {
+                if (token.Parent == null)
+                    throw new InvalidOperationException("Cannot rename a property with no parent");
+
+                property = (JProperty)token;
+            }
+            else
+            {
+                if (token.Parent == null || token.Parent.Type != JTokenType.Property)
+                    throw new InvalidOperationException("This token's parent is not a JProperty; cannot rename");
+
+                property = (JProperty)token.Parent;
+            }
+
+            // Note: to avoid triggering a clone of the existing property's value,
+            // we need to save a reference to it and then null out property.Value
+            // before adding the value to the new JProperty.  
+            // Thanks to @dbc for the suggestion.
+
+            var existingValue = property.Value;
+            property.Value = null;
+            var newProperty = new JProperty(newName, existingValue);
+            return newProperty;
+            //property.Replace(newProperty);
+        }
 
         static string[] GetAllNestedKeys(JObject jsonObject)
         {
@@ -229,45 +262,91 @@ namespace ChoETL
             return jTokenReader;
         }
 
-        public static JToken Flatten(this string json)
+        public static JToken Flatten(this string json, char? nestedKeySeparator = null, Func<string, string, string> nestedKeyResolver = null,
+            bool useNestedKeyFormat = false)
         {
             JToken input = JToken.Parse(json);
-            return Flatten(input);
+            return Flatten(input, nestedKeySeparator, nestedKeyResolver, useNestedKeyFormat);
         }
 
-        public static JToken Flatten(this JToken input)
+        public static JToken Flatten(this JToken input, char? nestedKeySeparator = null, Func<string, string, string> nestedKeyResolver = null,
+            bool useNestedKeyFormat = false)
         {
             var res = new JArray();
-            foreach (var obj in GetFlattenedObjects(input, null))
+            foreach (var obj in GetFlattenedObjects(input, null, null, nestedKeySeparator == null ? String.Empty : nestedKeySeparator.ToString(), 
+                nestedKeyResolver, useNestedKeyFormat))
                 res.Add(obj);
             return res;
         }
 
-        private static IEnumerable<JToken> GetFlattenedObjects(JToken token, IEnumerable<JProperty> otherProperties = null)
+        private static IEnumerable<JToken> GetFlattenedObjects(JToken token, IEnumerable<JProperty> otherProperties = null, string parentNodeName = null,
+            string nestedKeySeparator = null, Func<string, string, string> nestedKeyResolver = null, bool useNestedKeyFormat = false)
         {
             if (token is JObject obj)
             {
                 var children = obj.Children<JProperty>().GroupBy(prop => prop.Value?.Type == JTokenType.Array).ToDictionary(gr => gr.Key);
                 if (children.TryGetValue(false, out var directProps))
-                    otherProperties = otherProperties?.Concat(directProps) ?? directProps;
+                {
+                    if (useNestedKeyFormat && parentNodeName != null)
+                    {
+                        List<JProperty> np = new List<JProperty>();
+                        foreach (var jt in directProps)
+                            np.Add(jt.Rename($"{parentNodeName}{nestedKeySeparator}{jt.Name}") as JProperty);
+                    
+                        otherProperties = otherProperties?.Concat(np) ?? directProps;
+                    }
+                    else
+                        otherProperties = otherProperties?.Concat(directProps) ?? directProps;
+                }
 
                 if (children.TryGetValue(true, out var ChildCollections))
                 {
-                    foreach (var childObj in ChildCollections.SelectMany(childColl => childColl.Values()).SelectMany(childColl => GetFlattenedObjects(childColl, otherProperties)))
+                    foreach (var childObj in ChildCollections.SelectMany(childColl => childColl.Values().Select(c => new { ParentNodeName = childColl.Name, ChildNode = c }))
+                        .SelectMany(kvp => GetFlattenedObjects(kvp.ChildNode, otherProperties, 
+                        useNestedKeyFormat ? (parentNodeName.IsNullOrWhiteSpace() ? $"{kvp.ParentNodeName}" : $"{parentNodeName}{nestedKeySeparator}{kvp.ParentNodeName}") : kvp.ParentNodeName, 
+                        nestedKeySeparator, nestedKeyResolver, useNestedKeyFormat)))
                         yield return childObj;
                 }
                 else
                 {
                     var res = new JObject();
                     if (otherProperties != null)
+                    {
                         foreach (var prop in otherProperties)
-                            res.Add(prop);
+                        {
+                            if (!res.ContainsKey(prop.Name))
+                                res.Add(prop);
+                            else
+                            {
+                                string newKey;
+                                if (nestedKeyResolver == null)
+                                {
+                                    if (parentNodeName.IsNullOrWhiteSpace())
+                                    {
+
+                                    }
+                                    else
+                                    {
+                                        newKey = $"{parentNodeName}{nestedKeySeparator}{prop.Name}";
+                                        res.Add(prop.Rename(newKey));
+                                    }
+                                }
+                                else
+                                {
+                                    newKey = nestedKeyResolver(parentNodeName, prop.Name);
+                                    res.Add(prop.Rename(newKey));
+                                }
+                            }    
+                        }
+                    }
                     yield return res;
                 }
             }
             else if (token is JArray arr)
             {
-                foreach (var co in token.Children().SelectMany(c => GetFlattenedObjects(c, otherProperties)))
+                foreach (var co in token.Children().SelectMany((c, index) => GetFlattenedObjects(c, otherProperties,
+                        useNestedKeyFormat ? (parentNodeName.IsNullOrWhiteSpace() ? $"{index}" : $"{parentNodeName}{nestedKeySeparator}{index}") : $"{index}",
+                        nestedKeySeparator, nestedKeyResolver, useNestedKeyFormat)))
                     yield return co;
             }
             else

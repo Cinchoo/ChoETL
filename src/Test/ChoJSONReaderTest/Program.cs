@@ -8327,9 +8327,73 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
+        public static void Issue179()
+        {
+            var json = @"{
+		""Message"": ""MsgName"",
+		""TimestampLocal"": ""2022-02-02T12:06:18.3400276+11:00"",
+		""TimestampGlobal"": ""2022-02-02T00:58:46.1036028Z"",
+		""TargetComponentId"": ""compid_a"",
+		""AxisData"": [
+		  {
+			""MaxTemperature"": 33.1,
+			""PositionFrom"": 2660.0,
+			""PositionTo"": 1311.0,
+			""Name"": ""Xaxis"",
+			""ComponentId"": ""Xaxis_compid"",
+			""MaxCurrent"": 7692.0
+		  },
+		  {
+			""MaxTemperature"": 31.9,
+			""PositionFrom"": 2145.0,
+			""PositionTo"": 254.0,
+			""Name"": ""Zaxis"",
+			""ComponentId"": ""Zaxis_compid"",
+			""MaxCurrent"": 6566.0
+		  },
+		  {
+			""PositionFrom"": 90.0,
+			""PositionTo"": -90.0,
+			""Name"": ""Caxis"",
+			""ComponentId"": ""Caxis_compid"",
+			""MaxCurrent"": 4432.0
+		  }
+		],
+		""ActionId"": ""87990"",
+		""ComponentId"": ""compid_b"",
+		""Duration"": 0,
+		""TransactionId"": ""0b10e099-69b8-4a8e-b704-d087ef0d6915""
+		}";
+
+            var conf = new ChoJSONRecordConfiguration
+            {
+                Culture = System.Globalization.CultureInfo.InvariantCulture,
+                FlattenNode = true,
+                NestedKeySeparator = null,
+                UseNestedKeyFormat = true,
+            };
+
+            using
+            (
+                var r = ChoJSONReader.LoadText(json, conf)
+                .ErrorMode(ChoErrorMode.ReportAndContinue)
+            )
+            {
+                using (var w = new ChoCSVWriter(Console.Out)
+                    .WithDelimiter(",")
+                    .WithFirstLineHeader().UseNestedKeyFormat()
+                      )
+                {
+                    w.Write(r);
+                }
+            }
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+
+            Issue179();
+            return;
 
             HierachyLoad();
             //DeserializeNestedObjectOfList();

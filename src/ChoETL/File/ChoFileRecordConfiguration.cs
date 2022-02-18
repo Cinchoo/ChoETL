@@ -263,6 +263,19 @@ namespace ChoETL
                     Encoding = Encoding.GetEncoding(value);
             }
         }
+        [DataMember]
+        public string EncodingName
+        {
+            get { return Encoding != null ? Encoding.EncodingName : null; }
+            set
+            {
+                if (value != null)
+                {
+                    //Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                    Encoding = Encoding.GetEncoding(value);
+                }
+            }
+        }
 
         private Encoding _defaultEncoding = Encoding.Default; // new UTF8Encoding(false);
         private Encoding _encoding;

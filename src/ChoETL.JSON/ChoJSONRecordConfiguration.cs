@@ -35,6 +35,11 @@ namespace ChoETL
         internal readonly Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>> JSONRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>>();
         internal readonly Dictionary<Type, Func<object, object>> NodeConvertersForType = new Dictionary<Type, Func<object, object>>();
 
+        public Func<string, string, string> NestedKeyResolver
+        {
+            get;
+            set;
+        }
         public long MaxJArrayItemsLoad
         {
             get;
