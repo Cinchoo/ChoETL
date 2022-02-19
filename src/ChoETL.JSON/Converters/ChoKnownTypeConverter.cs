@@ -21,9 +21,30 @@ namespace ChoETL
 
         }
 
-        public ChoKnownTypeConverter(Type baseTyoe, string knownTypeDiscriminator, Dictionary<string, Type> knownTypes, Func<object, Type> recordTypeSelector)
+        public ChoKnownTypeConverter(Type baseType)
         {
-            Init(baseTyoe, knownTypeDiscriminator, knownTypes, recordTypeSelector);
+            Init(baseType);
+        }
+
+        public ChoKnownTypeConverter(Type baseType, string knownTypeDiscriminator, Dictionary<string, Type> knownTypes, Func<object, Type> recordTypeSelector = null)
+        {
+            Init(baseType, knownTypeDiscriminator, knownTypes, recordTypeSelector);
+        }
+
+        protected void Init(Type baseType)
+        {
+            string knownTypeDiscriminator = null;
+            Dictionary<string, Type> knownTypes;
+
+            knownTypes = ChoTypeDescriptor.GetTypeAttributes<ChoKnownTypeAttribute>(baseType).Where(a => a.Type != null && !a.Value.IsNullOrWhiteSpace())
+                .GroupBy(kvp => kvp.Value)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.First().Type, StringComparer.InvariantCultureIgnoreCase);
+
+            var kta = ChoTypeDescriptor.GetTypeAttribute<ChoKnownTypeDiscriminatorAttribute>(baseType);
+            if (kta != null && !kta.Discriminator.IsNullOrWhiteSpace())
+                knownTypeDiscriminator = kta.Discriminator.Trim();
+
+            Init(baseType, knownTypeDiscriminator, knownTypes, null);
         }
 
         protected void Init(Type baseType, string knownTypeDiscriminator, Dictionary<string, Type> knownTypes, Func<object, Type> recordTypeSelector)
@@ -55,15 +76,15 @@ namespace ChoETL
 
                 IList result = ChoActivator.CreateInstance(typeof(IList<>).MakeGenericType(itemType)) as IList;
                 foreach (var jo in arr.OfType<JObject>())
-                    result.Add(jo.ToObject(ResolveType(jo, itemType)));
+                    result.Add(jo.ToObjectEx(ResolveType(jo, itemType), serializer));
 
                 return typeof(Array).IsAssignableFrom(objectType) ? result.ConvertToArray() : result;
             }
             else
             {
                 var jo = JObject.Load(reader);
-
-                return jo.ToObject(ResolveType(jo, objectType));
+                var newType = ResolveType(jo, objectType);
+                return jo.ToObjectEx(newType, serializer);
             }
         }
 
@@ -93,18 +114,7 @@ namespace ChoETL
         public ChoKnownTypeConverter()
         {
             Type baseType = typeof(T);
-            string knownTypeDiscriminator = null;
-            Dictionary<string, Type> knownTypes;
-
-            knownTypes = ChoTypeDescriptor.GetTypeAttributes<ChoKnownTypeAttribute>(baseType).Where(a => a.Type != null && !a.Value.IsNullOrWhiteSpace())
-                .GroupBy(kvp => kvp.Value)
-                .ToDictionary(kvp => kvp.Key, kvp => kvp.First().Type, StringComparer.InvariantCultureIgnoreCase);
-
-            var kta = ChoTypeDescriptor.GetTypeAttribute<ChoKnownTypeDiscriminatorAttribute>(baseType);
-            if (kta != null && !kta.Discriminator.IsNullOrWhiteSpace())
-                knownTypeDiscriminator = kta.Discriminator.Trim();
-
-            Init(baseType, knownTypeDiscriminator, knownTypes, null);
+            Init(baseType);
         }
     }
 }

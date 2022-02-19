@@ -152,11 +152,24 @@ namespace ChoETL
 
                     if (true) //JSONRecordFieldConfigurationsForType.Count > 0)
                     {
-                        var jsonResolver = new ChoPropertyRenameAndIgnoreSerializerContractResolver(this);
-
                         _jsonSerializerSettings = new JsonSerializerSettings();
-                        if (!UseJSONSerialization)
+                        var useDefaultContractResolver = false;
+                        if (UseDefaultContractResolver == null)
+                        {
+                            if (!UseJSONSerialization)
+                                useDefaultContractResolver = true;
+                        }
+                        else
+                            useDefaultContractResolver = UseDefaultContractResolver.Value;
+
+                        if (useDefaultContractResolver)
+                        {
+                            var jsonResolver = new ChoPropertyRenameAndIgnoreSerializerContractResolver(this);
+                            if (DefaultContractResolverSetup != null)
+                                DefaultContractResolverSetup(jsonResolver);
+
                             _jsonSerializerSettings.ContractResolver = jsonResolver;
+                        }
 
                         //Add built-in converters
                         if (!TurnOffBuiltInJsonConverters)
@@ -301,7 +314,16 @@ namespace ChoETL
             get;
             set;
         }
-
+        public bool? UseDefaultContractResolver
+        {
+            get;
+            set;
+        }
+        public Action<ChoPropertyRenameAndIgnoreSerializerContractResolver> DefaultContractResolverSetup
+        {
+            get;
+            set;
+        }
         public override IEnumerable<ChoRecordFieldConfiguration> RecordFieldConfigurations
         {
             get
@@ -491,20 +513,20 @@ namespace ChoETL
             return this;
         }
 
-        public ChoJSONRecordConfiguration UseDefaultContractResolver(bool flag = true, Action<ChoPropertyRenameAndIgnoreSerializerContractResolver> setup = null)
-        {
-            if (flag)
-            {
-                var jsonResolver = new ChoPropertyRenameAndIgnoreSerializerContractResolver(this);
-                JsonSerializerSettings.ContractResolver = jsonResolver;
-                if (setup != null)
-                    setup(jsonResolver);
-            }
-            else
-                JsonSerializerSettings.ContractResolver = null;
+        //public ChoJSONRecordConfiguration UseDefaultContractResolver(bool flag = true, Action<ChoPropertyRenameAndIgnoreSerializerContractResolver> setup = null)
+        //{
+        //    if (flag)
+        //    {
+        //        var jsonResolver = new ChoPropertyRenameAndIgnoreSerializerContractResolver(this);
+        //        JsonSerializerSettings.ContractResolver = jsonResolver;
+        //        if (setup != null)
+        //            setup(jsonResolver);
+        //    }
+        //    else
+        //        JsonSerializerSettings.ContractResolver = null;
 
-            return this;
-        }
+        //    return this;
+        //}
         public ChoJSONRecordConfiguration ConfigureContractResolver(Action<IContractResolver> setup = null)
         {
             if (setup != null && JsonSerializerSettings.ContractResolver != null)
@@ -513,7 +535,7 @@ namespace ChoETL
         }
         public void MapRecordFields()
         {
-            RecordType = DiscoverRecordFields(RecordType, false, null, true);
+            /*RecordType =*/ DiscoverRecordFields(RecordType, false, null, true);
         }
 
         private Type DiscoverRecordFields(Type recordType, bool clear = true,
@@ -1336,13 +1358,5 @@ namespace ChoETL
             base.MapRecordFields(recordTypes);
             return this;
         }
-
-        public new ChoJSONRecordConfiguration<T> UseDefaultContractResolver(bool flag = true, Action<ChoPropertyRenameAndIgnoreSerializerContractResolver> setup = null)
-        {
-            base.UseDefaultContractResolver(flag);
-            return this;
-        }
     }
-
-
 }

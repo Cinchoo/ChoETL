@@ -8454,10 +8454,105 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
+        [JsonConverter(typeof(ChoKnownTypeConverter<MilItem>))]
+        [ChoKnownTypeDiscriminator("itemType")]
+        [ChoKnownType(typeof(Weapon), "1")]
+        [ChoKnownType(typeof(Armur), "2")]
+        public abstract class MilItem
+        {
+            public virtual ItemType itemType => ItemType.NONE; // expression-bodied property
+            public string name { get; set; }
+            public string description { get; set; }
+            public ItemRarity rarity { get; set; }
+
+            public enum ItemType
+            {
+                NONE,
+                WEAPON,
+                ARMOUR,
+                CONSUMABLE,
+            }
+            public enum ItemRarity
+            {
+                COMMON,
+                UNCOMMON,
+                RARE,
+                MYTHIC,
+                LEGENDARY,
+            }
+        }
+
+        public class Weapon : MilItem
+        {
+            public override ItemType itemType => ItemType.WEAPON; // expression-bodied property
+            public int damage { get; set; }
+            public int critChance { get; set; }
+        }
+
+        public class Armur : MilItem
+        {
+            public override ItemType itemType => ItemType.ARMOUR; // expression-bodied property
+            public int damage { get; set; }
+            public int critChance { get; set; }
+        }
+
+
+        static void DeserializeDictWithAbstractValue()
+        {
+            string json = @"{
+  ""excalibur"": {
+    ""damage"": 9999,
+    ""critChance"": 10,
+    ""itemID"": ""excalibur"",
+    ""iconLink"": """",
+    ""name"": ""Excalibur"",
+    ""description"": ""placeholder"",
+    ""itemType"": 1,
+    ""rarity"": 4,
+    ""stackSize"": 1,
+    ""canBeSold"": false,
+    ""buyPrice"": 0,
+    ""sellPrice"": 0
+  },
+  ""armur"": {
+    ""damage"": 9999,
+    ""critChance"": 10,
+    ""itemID"": ""excalibur"",
+    ""iconLink"": """",
+    ""name"": ""Excalibur"",
+    ""description"": ""placeholder"",
+    ""itemType"": 2,
+    ""rarity"": 4,
+    ""stackSize"": 1,
+    ""canBeSold"": false,
+    ""buyPrice"": 0,
+    ""sellPrice"": 0
+  }
+
+}";
+            using (var r = ChoJSONReader<Dictionary<string, MilItem>>.LoadText(json)
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                //.UseJsonSerialization()
+                //.Configure(c => c.TurnOnAutoDiscoverJsonConverters = true)
+                //.UseDefaultContractResolver()
+                //.JsonSerializationSettings(s => s.Converters.Add(new ChoKnownTypeConverter(typeof(MilItem), "itemType", new Dictionary<string, Type>()
+                //{
+                //    { "1",  typeof(Weapon) },
+                //    { "2",  typeof(Weapon) },
+                //})))
+                )
+            {
+                r.Print();
+            }
+
+        }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+
+            DeserializeDictWithAbstractValue();
+            return;
 
             FlattenNodes();
             return;

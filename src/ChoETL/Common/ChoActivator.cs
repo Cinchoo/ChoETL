@@ -110,9 +110,11 @@ namespace ChoETL
                         else
                             obj = Activator.CreateInstance(objType, args);
                     }
+                    else if (objType.IsAbstract())
+                        throw new ApplicationException($"Can't instantiate abstract `{objType.FullName}` type.");
                 }
 
-				return obj;
+                return obj;
 			}
 			catch (TargetInvocationException ex)
 			{

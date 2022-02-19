@@ -625,7 +625,9 @@ namespace ChoETL
 
         public ChoJSONWriter<T> UseDefaultContractResolver(bool flag = true, Action<ChoPropertyRenameAndIgnoreSerializerContractResolver> setup = null)
         {
-            Configuration.UseDefaultContractResolver(flag, setup);
+            Configuration.UseDefaultContractResolver = flag;
+            Configuration.DefaultContractResolverSetup = setup;
+
             return this;
         }
 

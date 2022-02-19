@@ -18,6 +18,18 @@ namespace ChoETL
         static ChoJSONExtensions()
         {
         }
+
+        public static T ToObjectEx<T>(this JObject jo, JsonSerializer serializer)
+        {
+            return (T)ToObjectEx(jo, typeof(T), serializer);
+        }
+        public static object ToObjectEx(this JObject jo, Type objType, JsonSerializer serializer)
+        {
+            var obj = ChoActivator.CreateInstance(objType);
+            serializer.Populate(jo.CreateReader(), obj);
+            return obj;
+        }
+
         public static JToken Rename(this JToken token, string newName)
         {
             if (token == null)
