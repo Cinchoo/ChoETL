@@ -39,6 +39,8 @@ namespace ChoAvroReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+            typeof(ChoJSONReader).GetAssemblyVersion().Print();
+            return;
             //POCOTest();
             TwitterSnappyAvroTest();
         }

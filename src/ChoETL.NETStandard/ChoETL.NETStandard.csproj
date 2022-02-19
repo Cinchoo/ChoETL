@@ -138,6 +138,7 @@
     <Compile Include="..\ChoETL\ChoRecordConfiguration.cs" Link="ChoRecordConfiguration.cs" />
     <Compile Include="..\ChoETL\ChoObjectAttribute.cs" Link="ChoObjectAttribute.cs" />
     <Compile Include="..\ChoETL\ChoTypeConverter.cs" Link="ChoTypeConverter.cs" />
+    <Compile Include="..\ChoETL\Common\Attributes\ChoAssemblyBetaVersionAttribute.cs" Link="Common\Attributes\ChoAssemblyBetaVersionAttribute.cs" />
     <Compile Include="..\ChoETL\Common\Attributes\ChoAllowMultipleAttribute.cs" Link="Common\Attributes\ChoAllowMultipleAttribute.cs" />
     <Compile Include="..\ChoETL\Common\Attributes\ChoFallbackValue.cs" Link="Common\Attributes\ChoFallbackValue.cs" />
     <Compile Include="..\ChoETL\Common\Attributes\ChoMemberAttribute.cs" Link="Common\Attributes\ChoMemberAttribute.cs" />

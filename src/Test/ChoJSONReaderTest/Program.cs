@@ -8329,6 +8329,8 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 
         public static void Issue179()
         {
+            typeof(ChoJSONReader).GetAssemblyVersion().Print();
+
             var json = @"{
 		""Message"": ""MsgName"",
 		""TimestampLocal"": ""2022-02-02T12:06:18.3400276+11:00"",
@@ -8388,12 +8390,79 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 }
             }
         }
+
+        public static void FlattenNodes()
+        {
+            string json = @"{
+  ""data"": ""TestItems"",
+  ""value"": [
+    {
+      ""Id"": 2,
+      ""ProductId"": [
+        1
+      ],
+      ""ProductName"": ""Tenant1""
+    },
+    {
+      ""Id"": 3,
+      ""ProductId"": [
+        2,
+        3,
+        4
+      ],
+      ""ProductName"": ""Archlight""
+    },
+    {
+      ""Id"": 4,
+      ""ProductId"": [
+        5,
+        6
+      ],
+      ""ProductName"": ""Apple""
+    },
+    {
+      ""Id"": 5,
+      ""ProductId"": [
+        2,
+        3,
+        4
+      ],
+      ""ProductName"": ""Samsung""
+    }
+  ]
+}";
+
+            using (var r = ChoJSONReader.LoadText(json)
+                .Configure(c => c.NestedKeySeparator = '.')
+                .Configure(c => c.FlattenNode = true)
+                //.WithMaxScanNodes(5)
+                .UseJsonSerialization()
+                  )
+            {
+                //r.Print();
+                //return;
+                using (var w = new ChoCSVWriter(Console.Out)
+                    .WithFirstLineHeader(true)
+                    .WithField("data", m => m.Position(1))
+                    .WithField("valueId", m => m.Position(2))
+                    .WithField("value.productid", m => m.Position(4))
+                    .WithField("value.productname", m => m.Position(3))
+
+                    //.WithFields("data","valueId","productid", "valueProductName")
+                    )
+                    w.Write(r); //.Select(rec => new ChoDynamicObject(rec)).OfType<dynamic>().Select(rec => rec.RenameKeyAt(3, "productid")));
+            }
+        }
+
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            Issue179();
+            FlattenNodes();
             return;
+
+            Issue179();
 
             HierachyLoad();
             //DeserializeNestedObjectOfList();

@@ -3244,5 +3244,20 @@
                 .OrderBy(pair => pair.order)
                 .Select(pair => pair.retParam).ToList();
         }
+
+        public static string GetAssemblyVersion(this Type type)
+        {
+            if (type == null)
+                return null;
+
+            var attr = type.Assembly.GetCustomAttribute<ChoAssemblyBetaVersionAttribute>();
+            var assembly = type.Assembly;
+            string version = $"{assembly.GetName().Name} v{assembly.GetName().Version}";
+
+            if (attr != null && !attr.Version.IsNullOrWhiteSpace())
+                version = $"{version} ({attr.Version})";
+
+            return version;
+        }
     }
 }

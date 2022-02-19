@@ -246,6 +246,11 @@ namespace ChoETL
             _kvpDict = (IDictionary<string, object>)kvpDict;
         }
 
+        public ChoDynamicObject(dynamic kvpDict) : this(null, false)
+        {
+            _kvpDict = (IDictionary<string, object>)kvpDict;
+        }
+
         public ChoDynamicObject(Func<IDictionary<string, object>> func, bool watchChange = false)
         {
             if (ChoETLSettings.KeySeparator != ChoCharEx.NUL)
@@ -301,19 +306,37 @@ namespace ChoETL
             Initialize();
         }
 
-        public void RenameKey(string oldKey, string newKey)
+        public dynamic RenameKey(string oldKey, string newKey)
         {
             if (oldKey.IsNullOrWhiteSpace() || newKey.IsNullOrWhiteSpace())
-                return;
+                return this;
 
             if (!_kvpDict.ContainsKey(oldKey))
-                return;
+                return this;
 
             var value = _kvpDict[oldKey];
             _kvpDict.Remove(oldKey);
             if (value is ChoDynamicObject)
                 ((ChoDynamicObject)value).DynamicObjectName = newKey;
             _kvpDict.Add(newKey, value);
+
+            return this;
+        }
+
+        public dynamic RenameKeyAt(int index, string newKey)
+        {
+            if (index >= _kvpDict.Count)
+                return this;
+
+            var kvp = _kvpDict.ElementAt(index);
+            var value = kvp.Value;
+            var key = kvp.Key;
+            _kvpDict.Remove(key);
+            if (value is ChoDynamicObject)
+                ((ChoDynamicObject)value).DynamicObjectName = newKey;
+            _kvpDict.Add(newKey, value);
+
+            return this;
         }
 
         public dynamic ExpandArrayToObjects(Func<int, string> keyGenerator = null)

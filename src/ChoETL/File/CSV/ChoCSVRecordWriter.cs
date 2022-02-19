@@ -563,7 +563,7 @@ namespace ChoETL
                             if (Configuration.FileHeaderConfiguration.IgnoreHeader)
                                 fieldValue = dict.ContainsKey(kvp.Key) ? dict[kvp.Key] :
                                     fieldConfig.FieldPosition > 0 && fieldConfig.FieldPosition - 1 < dict.Keys.Count
-                                    && Configuration.RecordFieldConfigurationsDict.Count == dict.Keys.Count ? dict[dict.Keys.ElementAt(fieldConfig.FieldPosition - 1)] : null; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
+                                    /*&& Configuration.RecordFieldConfigurationsDict.Count == dict.Keys.Count*/ ? dict[dict.Keys.ElementAt(fieldConfig.FieldPosition - 1)] : null; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
                             else
                                 fieldValue = dict.ContainsKey(kvp.Key) ? dict[kvp.Key] : null;
                         }

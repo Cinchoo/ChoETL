@@ -510,7 +510,7 @@ namespace ChoETL
             {
                 foreach (var jo in jObjects)
                 {
-                    foreach (var jo1 in jo.Flatten(Configuration.NestedKeySeparator, Configuration.NestedKeyResolver, Configuration.UseNestedKeyFormat).OfType<JObject>())
+                    foreach (var jo1 in jo.Flatten(Configuration.NestedKeySeparator, Configuration.ArrayIndexSeparator, Configuration.NestedKeyResolver, Configuration.UseNestedKeyFormat).OfType<JObject>())
                         yield return (JObject)jo1;
                 }
             }

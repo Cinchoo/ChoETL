@@ -263,24 +263,27 @@ namespace ChoETL
         }
 
         public static JToken Flatten(this string json, char? nestedKeySeparator = null, Func<string, string, string> nestedKeyResolver = null,
-            bool useNestedKeyFormat = false)
+            char? arrayIndexSeparator = null, bool useNestedKeyFormat = false)
         {
             JToken input = JToken.Parse(json);
-            return Flatten(input, nestedKeySeparator, nestedKeyResolver, useNestedKeyFormat);
+            return Flatten(input, nestedKeySeparator, arrayIndexSeparator, nestedKeyResolver, useNestedKeyFormat);
         }
 
-        public static JToken Flatten(this JToken input, char? nestedKeySeparator = null, Func<string, string, string> nestedKeyResolver = null,
+        public static JToken Flatten(this JToken input, char? nestedKeySeparator = null, char? arrayIndexSeparator = null, 
+            Func<string, string, string> nestedKeyResolver = null,
             bool useNestedKeyFormat = false)
         {
             var res = new JArray();
             foreach (var obj in GetFlattenedObjects(input, null, null, nestedKeySeparator == null ? String.Empty : nestedKeySeparator.ToString(), 
-                nestedKeyResolver, useNestedKeyFormat))
+                nestedKeyResolver, useNestedKeyFormat, arrayIndexSeparator == null ? String.Empty : arrayIndexSeparator.ToString()))
                 res.Add(obj);
             return res;
         }
 
         private static IEnumerable<JToken> GetFlattenedObjects(JToken token, IEnumerable<JProperty> otherProperties = null, string parentNodeName = null,
-            string nestedKeySeparator = null, Func<string, string, string> nestedKeyResolver = null, bool useNestedKeyFormat = false)
+            string nestedKeySeparator = null, Func<string, string, string> nestedKeyResolver = null, bool useNestedKeyFormat = false,
+            string arrayIndexSeparator = null,
+            int? arrayIndex = null)
         {
             if (token is JObject obj)
             {
@@ -302,9 +305,9 @@ namespace ChoETL
                 if (children.TryGetValue(true, out var ChildCollections))
                 {
                     foreach (var childObj in ChildCollections.SelectMany(childColl => childColl.Values().Select(c => new { ParentNodeName = childColl.Name, ChildNode = c }))
-                        .SelectMany(kvp => GetFlattenedObjects(kvp.ChildNode, otherProperties, 
+                        .SelectMany((kvp, index) => GetFlattenedObjects(kvp.ChildNode, otherProperties, 
                         useNestedKeyFormat ? (parentNodeName.IsNullOrWhiteSpace() ? $"{kvp.ParentNodeName}" : $"{parentNodeName}{nestedKeySeparator}{kvp.ParentNodeName}") : kvp.ParentNodeName, 
-                        nestedKeySeparator, nestedKeyResolver, useNestedKeyFormat)))
+                        nestedKeySeparator, nestedKeyResolver, useNestedKeyFormat, arrayIndexSeparator, index)))
                         yield return childObj;
                 }
                 else
@@ -346,8 +349,43 @@ namespace ChoETL
             {
                 foreach (var co in token.Children().SelectMany((c, index) => GetFlattenedObjects(c, otherProperties,
                         useNestedKeyFormat ? (parentNodeName.IsNullOrWhiteSpace() ? $"{index}" : $"{parentNodeName}{nestedKeySeparator}{index}") : $"{index}",
-                        nestedKeySeparator, nestedKeyResolver, useNestedKeyFormat)))
+                        nestedKeySeparator, nestedKeyResolver, useNestedKeyFormat, arrayIndexSeparator, index)))
                     yield return co;
+            }
+            else if (token is JValue && arrayIndex != null)
+            {
+                var res = new JObject();
+                if (otherProperties != null)
+                {
+                    foreach (var prop in otherProperties)
+                    {
+                        if (!res.ContainsKey(prop.Name))
+                            res.Add(prop);
+                        else
+                        {
+                            string newKey;
+                            if (nestedKeyResolver == null)
+                            {
+                                if (parentNodeName.IsNullOrWhiteSpace())
+                                {
+
+                                }
+                                else
+                                {
+                                    newKey = $"{parentNodeName}{nestedKeySeparator}{prop.Name}";
+                                    res.Add(prop.Rename(newKey));
+                                }
+                            }
+                            else
+                            {
+                                newKey = nestedKeyResolver(parentNodeName, prop.Name);
+                                res.Add(prop.Rename(newKey));
+                            }
+                        }
+                    }
+                }
+                res.Add(new JProperty($"{parentNodeName}{arrayIndexSeparator}{arrayIndex.Value}", ((JValue)token).Value));
+                yield return res;
             }
             else
                 throw new NotImplementedException(token.GetType().Name);
