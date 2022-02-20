@@ -648,7 +648,7 @@ namespace ChoETL
                             overrides = GetXmlOverrrides(element, type, NS, pd, proxyType);
 
                         // deserialize the xml into the proxy type
-                        var xmlSerializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(proxyType, type, overrides);
+                        var xmlSerializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(proxyType, type, overrides, config != null ? config.UnknownNode : null);
                         var obj = xmlSerializer.Deserialize(reader);
                         var proxy = obj as IChoXmlSerializerProxy;
                         var value = proxy.Value;
@@ -662,7 +662,7 @@ namespace ChoETL
                         if (overrides == null)
                             overrides = GetXmlOverrrides(element, type, NS, pd);
 
-                        XmlSerializer serializer = ChoUtility.GetXmlSerializer(element.ToString(), type, overrides); // overrides != null ? new XmlSerializer(type, overrides) : new XmlSerializer(type);
+                        XmlSerializer serializer = ChoUtility.GetXmlSerializer(element.ToString(), type, overrides, config != null ? config.UnknownNode : null); // overrides != null ? new XmlSerializer(type, overrides) : new XmlSerializer(type);
                         return serializer.Deserialize(reader);
                     }
                 }
