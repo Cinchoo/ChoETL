@@ -587,11 +587,38 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
+            SOAPXmlToJSON();
+            return;
+
             LoadConfigItems();
             return;
             //Xml2JSON1();
             //LoadXmlUsingConfigAndPOCO();
-            DesrializeUsingProxy();
+            //DesrializeUsingProxy();
+        }
+        public static void SOAPXmlToJSON()
+        {
+            string xml = @"<?xml version=""1.0"" encoding=""UTF-8""?>
+<SOAP-ENV:Envelope>
+   <SOAP-ENV:Body>
+      <Results>
+         <Summary>
+            <Status xsi:type=""xsd:boolean"">true</Status>
+            <etc xsi:type=""xsd:string"">etc</etc>
+         </Summary>
+      </Results>
+   </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>";
+
+            using (var r = ChoXmlReader.LoadText(xml).WithXPath("//Summary")
+                .WithXmlNamespace("SOAP-ENV", "")
+                )
+            {
+                using (var w = new ChoJSONWriter(Console.Out)
+                    .SupportMultipleContent()
+                    )
+                    w.Write(r);
+            }
         }
 
         public class ConfigItem
@@ -686,7 +713,7 @@ namespace ChoXmlReaderTest
                    .WithXPath("//")
                    //.WithXmlNamespace("http://schemas.microsoft.com/developer/msbuild/2003")
                    .ErrorMode(ChoErrorMode.IgnoreAndContinue)
-                   //.UseXmlSerialization()
+                  //.UseXmlSerialization()
                   )
             {
                 foreach (var rec in r)
@@ -793,7 +820,7 @@ namespace ChoXmlReaderTest
                 return "{0}. {1}".FormatString(Id, Name);
             }
         }
-         
+
         static void NestedClassTest()
         {
             string xml = @"<Specifier>

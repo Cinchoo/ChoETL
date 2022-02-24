@@ -2858,7 +2858,7 @@ namespace ChoETL
                     }
                 }
                 else
-                    return property.GetCustomAttributes().ToArray();
+                    return property.GetCustomAttributes().ToArray().Where(a => attributeType.IsAssignableFrom(a.GetType())).ToArray();
             }
 
             return new Attribute[] { };

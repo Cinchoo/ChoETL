@@ -334,6 +334,7 @@ namespace ChoETL
         }
 
         public bool TurnOffBuiltInJsonConverters { get; private set; }
+        public bool IgnoreArrayIndex { get; set; } = true;
 
         public ChoJSONRecordFieldConfiguration this[string name]
         {

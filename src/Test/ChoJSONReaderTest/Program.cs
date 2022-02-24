@@ -8221,10 +8221,10 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
         }";
 
 
-//key2
-//key2 - 1
-//key2 - arr1 - 2
-//key2 - arr1 - arr2 - 2
+            //key2
+            //key2 - 1
+            //key2 - arr1 - 2
+            //key2 - arr1 - arr2 - 2
 
 
             using (var r = ChoJSONReader.LoadText(json)
@@ -8547,10 +8547,119 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 
         }
 
+        public static void Issue190_1()
+        {
+            string json = @"
+{
+  ""mykey"": 1234,
+  ""user"": {
+      ""name"": ""asdf"",
+      ""teamname"": ""b"",
+      ""email"": ""c"",
+      ""players"": [""1"", ""2""],
+      ""playersex"": [""1"", ""2""]
+
+  }
+}";
+
+            var conf = new ChoJSONRecordConfiguration
+            {
+                FlattenNode = false,
+            };
+            using (var r = ChoJSONReader.LoadText(json, conf)
+                  )
+            {
+                r.FlattenBy("user", "playersex").ToArray().AsDataTable().Print();
+
+            }
+        }
+        public static void Issue190()
+        {
+            string json = @"
+{
+  ""mykey"": 1234,
+  ""user"": {
+      ""name"": ""asdf"",
+      ""teamname"": ""b"",
+      ""email"": ""c"",
+      ""players"": [""1"", ""2""]
+  }
+}";
+
+            var conf = new ChoJSONRecordConfiguration
+            {
+                FlattenNode = true,
+                IgnoreDictionaryFieldPrefix = true,
+            };
+            using (var r = ChoJSONReader.LoadText(json, conf)
+                .WithField("mykey", jsonPath: "$.mykey", fieldName: "mykey", isArray: false)
+                .WithField("username", jsonPath: "$.user.name", fieldName: "username", isArray: false)
+                .WithField("player", jsonPath: "$.user.players[*]", fieldName: "player")
+            )
+            {
+                //var dt = r.Flatten().AsDataTable();
+                //r.Flatten().AsDataTable().Print();
+                r.OfType<dynamic>().SelectMany(r1 => ((IList<dynamic>)r1.player).Select(r2 => new
+                {
+                    myKey = r1.myKey,
+                    username = r1.username,
+                    player = r2
+                })).AsDataTable().Print() ;
+
+            }
+        }
+
+        static void Issue190_2()
+        {
+            var json = @"{
+  ""Message"": ""MessageX"",
+  ""TimestampLocal"": ""2022-02-02T02:02:34.2830859+01:00"",
+  ""TimestampGlobal"": ""2022-02-02T00:58:58.8800398Z"",
+  ""PickerId"": ""1"",
+  ""DestinationComponentId"": 0,
+  ""SourceComponentId"": 0,
+  ""ActionList"": {
+    ""ActionId"": [
+      4428,
+	  4429
+    ]
+  },
+  ""TransactionId"": ""999bd293-b040-4e88-a89f-180cf9307597"",
+  ""TransactionType"": ""none""
+}";
+
+            var conf = new ChoJSONRecordConfiguration
+            {
+                Culture = System.Globalization.CultureInfo.InvariantCulture,
+                //FlattenNode = true,
+                ErrorMode = ChoErrorMode.IgnoreAndContinue,
+            };
+
+            using
+            (
+                var r = ChoJSONReader.LoadText(json, conf)
+                    .WithField("TimestampGlobal", jsonPath: "$.TimestampGlobal", fieldType: typeof(DateTime), fieldName: "TimestampGlobal")
+                    .WithField("TimestampLocal", jsonPath: "$.TimestampLocal", fieldType: typeof(DateTime), fieldName: "TimestampLocal")
+                    .WithField("PickerId", jsonPath: "$.PickerId", fieldType: typeof(string), fieldName: "PickerId")
+                    .WithField("DestinationComponentId", jsonPath: "$.DestinationComponentId", fieldType: typeof(int), fieldName: "DestinationComponentId")
+                    .WithField("SourceComponentId", jsonPath: "$.SourceComponentId", fieldType: typeof(int), fieldName: "SourceComponentId")
+                    //.WithField("ActionListIds", valueConverter: e => e != null ? String.Join(",", (IEnumerable<object>)e) : null, jsonPath: "$.ActionList.ActionId[*]", fieldType: typeof(string), fieldName: "ActionListIds")
+                    .WithField("ActionListIds", jsonPath: "$.ActionList.ActionId[*]", fieldName: "ActionListIds")
+                    .WithField("TransactionId", jsonPath: "$.TransactionId", fieldType: typeof(Guid), fieldName: "TransactionId")
+                    .WithField("TransactionType", jsonPath: "$.TransactionType", fieldType: typeof(string), fieldName: "TransactionType")
+            )
+            {
+                var dt = r.FlattenBy().AsDataTable();
+                dt.Print();
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
+            Issue190_2();
+            return;
             DeserializeDictWithAbstractValue();
             return;
 

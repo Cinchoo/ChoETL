@@ -90,6 +90,10 @@ namespace ChoETL
             }
             return dest;
         }
+        public static IDictionary<string, object> TranslateDictionary(this IDictionary values)
+        {
+            return values.Keys.Cast<string>().ToDictionary(key => key, key => values[key] as object);
+        }
 
         public static void Merge(this IDictionary<string, object> dest, IDictionary<string, object> src)
         {
@@ -185,11 +189,17 @@ namespace ChoETL
         public static IEnumerable<dynamic> FlattenBy(this IEnumerable dicts, params string[] fields)
         {
             var cache = dicts != null ? dicts.OfType<object>().ToArray() : null;
+            if (cache == null)
+                yield break;
+
             if (fields.IsNullOrEmpty())
                 fields = GetNestedKeys(cache).ToArray();
 
-            if (cache == null || fields.IsNullOrEmpty())
-                yield return cache;
+            if (fields.IsNullOrEmpty())
+            {
+                foreach (var rec in cache)
+                    yield return rec;
+            }
             else
             {
                 foreach (var rec in cache)
@@ -242,17 +252,40 @@ namespace ChoETL
                 var ele = dict[field];
                 if (ele is IList)
                 {
-                    foreach (IDictionary<string, object> child in (IEnumerable)dict[field])
+                    var dictField = dict[field];
+                    if (dictField is IDictionary<string, object>)
                     {
-                        var dest1 = dest.Clone();
-                        dest1.Merge(child);
-                        dest1.Remove(field);
-                        if (fields.Skip(1).Count() == 0)
-                            yield return dest1;
-                        else
+
+                    }
+                    else if (dictField is IDictionary)
+                    {
+                        dictField = ((IDictionary)dictField).TranslateDictionary();
+                    }
+
+                    if (dictField is IList)
+                    {
+                        foreach (var child in (IList)dictField)
                         {
-                            foreach (var ret in FlattenByInternal(child, dest1, fields.Skip(1).ToArray()))
-                                yield return ret;
+                            var dest1 = dest.Clone();
+                            dest1.Remove(field);
+                            dest1.Add($"{field.ToSingular()}", child);
+                            yield return dest1;
+                        }
+                    }
+                    else if (dictField is IDictionary<string, object>)
+                    {
+                        foreach (IDictionary<string, object> child in (IEnumerable)dictField)
+                        {
+                            var dest1 = dest.Clone();
+                            dest1.Merge(child);
+                            dest1.Remove(field);
+                            if (fields.Skip(1).Count() == 0)
+                                yield return dest1;
+                            else
+                            {
+                                foreach (var ret in FlattenByInternal(child, dest1, fields.Skip(1).ToArray()))
+                                    yield return ret;
+                            }
                         }
                     }
                 }
