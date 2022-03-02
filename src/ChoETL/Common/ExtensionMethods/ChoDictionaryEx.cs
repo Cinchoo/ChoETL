@@ -237,10 +237,22 @@ namespace ChoETL
             }
         }
 
-        private static IEnumerable<dynamic> FlattenByInternal(IDictionary<string, object> dict, dynamic dest, string[] fields)
+        private static IEnumerable<dynamic> FlattenByInternal(IDictionary<string, object> dict, dynamic dest, string[] fields, string key = null)
         {
             if (fields.Length == 0)
+            {
+                if (!key.IsNullOrWhiteSpace())
+                {
+                    var dest1 = dest.Clone();
+                    dest1.Remove(key);
+                    foreach (var kvp in dict)
+                    {
+                        dest1.Add(kvp.Key, kvp.Value);
+                    }
+                    yield return dest1;
+                }
                 yield break;
+            }
 
             string field = fields.First();
             if (!dict.ContainsKey(field))
@@ -266,10 +278,34 @@ namespace ChoETL
                     {
                         foreach (var child in (IList)dictField)
                         {
+                            var newKey = field.ToSingular();
                             var dest1 = dest.Clone();
                             dest1.Remove(field);
-                            dest1.Add($"{field.ToSingular()}", child);
-                            yield return dest1;
+                            dest1.Add($"{newKey}", child);
+                            if (child != null)
+                            {
+                                if (child is IDictionary<string, object>)
+                                {
+                                    foreach (var ret in FlattenByInternal(child as IDictionary<string, object>, dest1, fields.Skip(1).ToArray(), newKey))
+                                        yield return ret;
+                                }
+                                else if (child is IDictionary)
+                                {
+                                    foreach (var ret in FlattenByInternal(((IDictionary)child).TranslateDictionary(), dest1, fields.Skip(1).ToArray(), newKey))
+                                        yield return ret;
+                                }
+                                else if (child.GetType().IsAnonymousType())
+                                {
+                                    var d = child.ToDictionary();
+                                    dest1.Add($"{newKey}", d);
+                                    foreach (var ret in FlattenByInternal(d, dest1, fields.Skip(1).ToArray(), newKey))
+                                        yield return ret;
+                                }
+                                else
+                                    yield return dest1;
+                            }
+                            else
+                                yield return dest1;
                         }
                     }
                     else if (dictField is IDictionary<string, object>)

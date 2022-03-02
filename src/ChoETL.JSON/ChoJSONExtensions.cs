@@ -392,7 +392,7 @@ namespace ChoETL
                         otherProperties = otherProperties?.Concat(directProps) ?? directProps;
                 }
 
-                if (children.TryGetValue(true, out var ChildCollections))
+                if (children.TryGetValue(true, out var ChildCollections) && ChildCollections.Where(c => c.Values().Count() > 0).Any())
                 {
                     foreach (var childObj in ChildCollections.SelectMany(childColl => childColl.Values().Select(c => new { ParentNodeName = childColl.Name, ChildNode = c }))
                         .SelectMany((kvp, index) => GetFlattenedObjects(kvp.ChildNode, otherProperties, 
