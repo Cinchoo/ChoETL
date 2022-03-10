@@ -486,11 +486,17 @@ namespace ChoETL
                     Configuration.Validate(null);
                 }
 
-                rec = recType.IsDynamicType() ? new ChoDynamicObject() { ThrowExceptionIfPropNotExists = true } : ChoActivator.CreateInstance(recType);
+                rec = recType.IsDynamicType() ? new ChoDynamicObject() 
+                {
+                    ThrowExceptionIfPropNotExists = Configuration.ThrowExceptionIfDynamicPropNotExists == null ? ChoDynamicObjectSettings.ThrowExceptionIfPropNotExists : Configuration.ThrowExceptionIfDynamicPropNotExists.Value,
+                } : ChoActivator.CreateInstance(recType);
                 RecordType = recType;
             }
             else /*if (!Configuration.UseYamlSerialization || Configuration.IsDynamicObject)*/
-                rec = Configuration.IsDynamicObject ? new ChoDynamicObject() { ThrowExceptionIfPropNotExists = true } : ChoActivator.CreateInstance(RecordType);
+                rec = Configuration.IsDynamicObject ? new ChoDynamicObject() 
+                {
+                    ThrowExceptionIfPropNotExists = Configuration.ThrowExceptionIfDynamicPropNotExists == null ? ChoDynamicObjectSettings.ThrowExceptionIfPropNotExists : Configuration.ThrowExceptionIfDynamicPropNotExists.Value,
+                } : ChoActivator.CreateInstance(RecordType);
 
             try
             {

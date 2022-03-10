@@ -8653,13 +8653,373 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 dt.Print();
             }
         }
+        public static void Issue190_3()
+        {
+            var json = @"{
+			""Message"": ""MsgName"",
+			""TimestampLocal"": ""2022-02-15T09:44:46.1175766+01:00"",
+			""TimestampGlobal"": ""2022-02-15T08:24:53.5248177Z"",
+			""MachineId"": ""121212"",
+			""PCName"": ""hijkl"",
+			""VersionSDMC"": ""1.0.0.0"",
+			""ModuleCount"": 5,
+			""MachineNumber"": 5,
+			""Location"": ""http://localhost:123"",
+			""Machine"": ""abcdef"",
+			""VersionUI"": ""1.8.2.5 [21-06]"",
+			""PackagingUnitConfig"": {
+				""Serialnumbers"": [
+					{
+						""Name"": ""Packaging Sealer"",
+						""Value"": ""175150239""
+					},
+					{
+						""Name"": ""Printer"",
+						""Value"": ""16606""
+					}
+				]
+			}
+		}";
+
+
+            using
+            (
+                var r = ChoJSONReader.LoadText(json)
+                    .WithField("TimestampGlobal", jsonPath: "$.TimestampGlobal", fieldType: typeof(DateTime), fieldName: "TimestampGlobal")
+                    .WithField("TimestampLocal", jsonPath: "$.TimestampLocal", fieldType: typeof(DateTime), fieldName: "TimestampLocal")
+                    .WithField("PCName", jsonPath: "$.PCName", fieldType: typeof(string), fieldName: "PCName")
+                    .WithField("VersionSDMC", jsonPath: "$.VersionSDMC", fieldType: typeof(string), fieldName: "VersionSDMC")
+                    .WithField("ModuleCount", jsonPath: "$.ModuleCount", fieldType: typeof(int), fieldName: "ModuleCount")
+                    .WithField("MachineNumber", jsonPath: "$.MachineNumber", fieldType: typeof(int), fieldName: "MachineNumber")
+                    .WithField("Location", jsonPath: "$.Location", fieldType: typeof(string), fieldName: "Location")
+                    .WithField("Machine", jsonPath: "$.Machine", fieldType: typeof(string), fieldName: "Machine")
+                    .WithField("VersionUI", jsonPath: "$.VersionUI", fieldType: typeof(string), fieldName: "VersionUI")
+                    .WithField("Serialnumbers", jsonPath: "$.PackagingUnitConfig.Serialnumbers[*]", fieldName: "Serialnumbers", valueConverter: o =>
+                    {
+                        var list = o as IList;
+                        return list.OfType<dynamic>().Select(rec => new
+                        {
+                            PackagingUnitConfigSerialnumberName = rec.Name,
+                            PackagingUnitConfigSerialnumberValue = rec.Value
+                        }).ToArray();
+                    })
+            )
+            {
+                var dt = r.FlattenBy().AsDataTable();
+                dt.Print();
+            }
+        }
+
+        public static void Issue190_4()
+        {
+            var json = @"{
+    ""Message"": ""RowaDoseConfig"",
+    ""TimestampLocal"": ""2022-02-15T09:44:46.1175766+01:00"",
+    ""TimestampGlobal"": ""2022-02-15T08:24:53.5248177Z"",
+    ""MachineId"": ""10017747"",
+    ""PCName"": ""NL5759RD05"",
+    ""VersionSDMC"": ""1.0.0.0"",
+    ""ModuleCount"": 5,
+    ""MachineNumber"": 5,
+    ""Location"": ""http://localhost:22223"",
+    ""Machine"": ""NL5759RD05"",
+    ""VersionUI"": ""1.8.2.5 [21-06]"",
+    ""PackagingUnitConfig"": {
+        ""Serialnumbers"": [
+            {
+                ""Name"": ""Packaging Sealer"",
+                ""Value"": ""175150239""
+            },
+            {
+                ""Name"": ""Printer"",
+                ""Value"": ""16606""
+            }
+        ],
+        ""UnitType"": ""Version1"",
+        ""CrossSealTargetTemperatures"": [
+            1400,
+            1450
+        ]
+    }
+}";
+
+            using
+            (
+                var r = ChoJSONReader.LoadText(json)
+                    .WithField("TimestampGlobal", jsonPath: "$.TimestampGlobal", fieldType: typeof(DateTime), fieldName: "TimestampGlobal")
+                    .WithField("TimestampLocal", jsonPath: "$.TimestampLocal", fieldType: typeof(DateTime), fieldName: "TimestampLocal")
+                    .WithField("PCName", jsonPath: "$.PCName", fieldType: typeof(string), fieldName: "PCName")
+                    .WithField("VersionSDMC", jsonPath: "$.VersionSDMC", fieldType: typeof(string), fieldName: "VersionSDMC")
+                    .WithField("ModuleCount", jsonPath: "$.ModuleCount", fieldType: typeof(int), fieldName: "ModuleCount")
+                    .WithField("MachineNumber", jsonPath: "$.MachineNumber", fieldType: typeof(int), fieldName: "MachineNumber")
+                    .WithField("Location", jsonPath: "$.Location", fieldType: typeof(string), fieldName: "Location")
+                    .WithField("Machine", jsonPath: "$.Machine", fieldType: typeof(string), fieldName: "Machine")
+                    .WithField("VersionUI", jsonPath: "$.VersionUI", fieldType: typeof(string), fieldName: "VersionUI")
+                    .WithField("PackagingUnitConfig", jsonPath: "$.PackagingUnitConfig", fieldName: "PackagingUnitConfig",
+                            valueConverter: o =>
+                            {
+                                var pcs = o as IList;
+                                var result1 = pcs.OfType<dynamic>().SelectMany(puc => ((IList)puc.Serialnumbers).OfType<dynamic>()
+                                    .Select(sn => new
+                                    {
+                                        PackagingUnitConfigUnitType = (string)puc.UnitType,
+                                        PackagingUnitConfigCrossSealTargetTemperature = (long?)null,
+                                        SerialnumberName = (string)sn.Name,
+                                        SerialnumberValue = (string)sn.Value,
+                                    })).ToArray();
+                                var result2 = pcs.OfType<dynamic>().SelectMany(puc => ((IList)puc.CrossSealTargetTemperatures).OfType<long>()
+                                    .Select(tt => new
+                                    {
+                                        PackagingUnitConfigUnitType = (string)puc.UnitType,
+                                        PackagingUnitConfigCrossSealTargetTemperature = (long?)tt,
+                                        SerialnumberName = String.Empty,
+                                        SerialnumberValue = String.Empty,
+                                    })).ToArray();
+
+                                return result1.Union(result2).ToArray();
+                            })
+            )
+            {
+                var dt = r.FlattenBy().AsDataTable();
+                dt.Print();
+            }
+        }
+        public static void Issue182()
+        {
+            var json1 = @"{
+    ""Message"": ""MessageName"",
+    ""TimestampLocal"": ""2022-02-16T19:52:32.0585315+01:00"",
+    ""TimestampGlobal"": ""2022-02-16T18:52:32.0870918Z"",
+    ""FailedDrugsEntries"": [
+
+    ]
+}";
+            var json = @"{
+    ""Message"": ""MessageName"",
+    ""TimestampLocal"": ""2022-02-16T19:52:32.0585315+01:00"",
+    ""TimestampGlobal"": ""2022-02-16T18:52:32.0870918Z"",
+    ""FailedDrugsEntries"": [
+        {
+            ""Batch"": ""batch-a"",
+            ""Bag"": ""4321"",
+            ""Drug"": ""00232323"",
+            ""Drug_Name"": ""drug-a""
+        },
+        {
+            ""Batch"": ""batch-b"",
+            ""Bag"": ""8765"",
+            ""Drug"": ""00434343"",
+            ""Drug_Name"": ""drug-b""
+        }
+    ]
+}";
+            var conf = new ChoJSONRecordConfiguration
+            {
+                FlattenNode = true,
+                ErrorMode = ChoErrorMode.IgnoreAndContinue
+            };
+
+            using
+            (
+                var r = ChoJSONReader.LoadText(json, conf)
+                        .WithField("TimestampGlobal", jsonPath: "$.TimestampGlobal", fieldType: typeof(DateTime), fieldName: "TimestampGlobal")
+                        .WithField("TimestampLocal", jsonPath: "$.TimestampLocal", fieldType: typeof(DateTime), fieldName: "TimestampLocal")
+                        .WithField("FailedDrugsEntriesBatch", jsonPath: "$.FailedDrugsEntriesBatch", fieldType: typeof(string), fieldName: "FailedDrugsEntriesBatch")
+                        .WithField("FailedDrugsEntriesBag", jsonPath: "$.FailedDrugsEntriesBag", fieldType: typeof(string), fieldName: "FailedDrugsEntriesBag")
+                        .WithField("FailedDrugsEntriesDrug", jsonPath: "$.FailedDrugsEntriesDrug", fieldType: typeof(string), fieldName: "FailedDrugsEntriesDrug")
+                        .WithField("FailedDrugsEntriesDrugName", jsonPath: "$.FailedDrugsEntriesDrug_Name", fieldType: typeof(string), fieldName: "FailedDrugsEntriesDrugName")
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+            )
+            {
+                var recs = r.ToArray();
+                var dt = recs.AsDataTable();
+                dt.Print();
+            }
+        }
+        public static void Issue182_1()
+        {
+            var json1 = @"{
+    ""Message"": ""MessageName"",
+    ""TimestampLocal"": ""2022-02-16T19:52:32.0585315+01:00"",
+    ""TimestampGlobal"": ""2022-02-16T18:52:32.0870918Z"",
+    ""FailedDrugsEntries"": [
+
+    ]
+}";
+            var json = @"{
+    ""Message"": ""MessageName"",
+    ""TimestampLocal"": ""2022-02-16T19:52:32.0585315+01:00"",
+    ""TimestampGlobal"": ""2022-02-16T18:52:32.0870918Z"",
+    ""FailedDrugsEntries"": [
+        {
+            ""Batch"": ""batch-a"",
+            ""Bag"": ""4321"",
+            ""Drug"": ""00232323"",
+            ""Drug_Name"": ""drug-a""
+        },
+        {
+            ""Batch"": ""batch-b"",
+            ""Bag"": ""8765"",
+            ""Drug"": ""00434343"",
+            ""Drug_Name"": ""drug-b""
+        }
+    ]
+}";
+            var conf = new ChoJSONRecordConfiguration
+            {
+                //FlattenNode = true,
+                ErrorMode = ChoErrorMode.IgnoreAndContinue
+            };
+
+            using
+            (
+                var r = ChoJSONReader.LoadText(json, conf)
+                        .WithField("TimestampGlobal", jsonPath: "$.TimestampGlobal", fieldType: typeof(DateTime), fieldName: "TimestampGlobal")
+                        .WithField("TimestampLocal", jsonPath: "$.TimestampLocal", fieldType: typeof(DateTime), fieldName: "TimestampLocal")
+                        .WithField("FailedDrugsEntries", jsonPath: "$.FailedDrugsEntries[*]", valueConverter: o =>
+                        {
+                            if (o == null)
+                            {
+                                dynamic rec = new ChoDynamicObject();
+                                rec.Add("FailedDrugsEntriesBatch", null);
+                                rec.Add("FailedDrugsEntriesBag", null);
+                                rec.Add("FailedDrugsEntriesDrug", null);
+                                rec.Add("FailedDrugsEntriesDrugName", null);
+                                return new List<object> { rec };
+                            }
+                            else
+                            {
+                                IList recs = o as IList;
+                                return recs.OfType<dynamic>().Select(rec =>
+                                {
+                                    rec.RenameKey("Batch", "FailedDrugsEntriesBatch");
+                                    rec.RenameKey("Bag", "FailedDrugsEntriesBag");
+                                    rec.RenameKey("Drug", "FailedDrugsEntriesDrug");
+                                    rec.RenameKey("Drug_Name", "FailedDrugsEntriesDrugName");
+                                    return rec;
+                                }).ToArray();
+                            }
+                        })
+            )
+            {
+                var recs = r.ToArray();
+                var dt = recs.FlattenBy().AsDataTable();
+                dt.Print();
+            }
+        }
+
+        public class Substitution
+        {
+            public string Key { get; set; }
+            public string Value { get; set; }
+        }
+
+        public class Recipient
+        {
+            private List<Substitution> _substitutions;
+            public string Name { get; private set; }
+            public string EmailAddress { get; private set; }
+            public IReadOnlyCollection<Substitution> Substitutions => _substitutions.AsReadOnly();
+          
+            [JsonConstructor]
+            public Recipient(string name, string emailAddress, List<Substitution> substitutions)
+            {
+                EmailAddress = emailAddress;
+                Name = name;
+                _substitutions = substitutions;
+            }
+        }
+
+        static void ReadOnlyCollectionSerializationTest()
+        {
+            var recipient = new Recipient("Foo Bar", "my-email@domain.com", new List<Substitution>
+            {
+                new Substitution
+                {
+                    Key = "Firstname", Value = "Foo"
+                },
+                new Substitution
+                {
+                    Key = "Lastname", Value = "Bar"
+                },
+            });
+
+            StringBuilder json = new StringBuilder();
+            using (var w = new ChoJSONWriter<Recipient>(json))
+            {
+                w.Write(recipient);
+            }
+
+            using (var r = ChoJSONReader<Recipient>.LoadText(json.ToString())
+                .UseJsonSerialization(false)
+                )
+            {
+                r.Print();
+            }
+        }
+
+        public static void Issue182_2()
+        {
+            var json = @"{
+    ""Message"": ""MessageName"",
+    ""TimestampLocal"": ""2022-02-16T19:52:32.0585315+01:00"",
+    ""TimestampGlobal"": ""2022-02-16T18:52:32.0870918Z"",
+    ""FailedDrugsEntries"": [
+        {
+            ""Batch"": ""batch-a"",
+            ""Bag"": ""4321"",
+            ""Drug"": ""00232323"",
+            ""Drug_Name"": ""drug-a"",
+            ""FailedDrugsEntries"": [
+                {
+                    ""Batch"": ""batch-a"",
+                    ""Bag"": ""4321"",
+                    ""Drug"": ""00232323"",
+                    ""Drug_Name"": ""drug-a""
+                },
+                {
+                    ""Batch"": ""batch-b"",
+                    ""Bag"": ""8765"",
+                    ""Drug"": ""00434343"",
+                    ""Drug_Name"": ""drug-b""
+                }
+            ]
+        },
+        {
+            ""Batch"": ""batch-b"",
+            ""Bag"": ""8765"",
+            ""Drug"": ""00434343"",
+            ""Drug_Name"": ""drug-b""
+        }
+    ]
+}";
+            var conf = new ChoJSONRecordConfiguration
+            {
+                FlattenNode = false,
+                ErrorMode = ChoErrorMode.IgnoreAndContinue
+            };
+
+            using
+            (
+                var r = ChoJSONReader.LoadText(json, conf)
+                //.UseJsonSerialization()
+                //.UseDefaultContractResolver()
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+            )
+            {
+                var recs = r.ToArray();
+                var dt = recs.AsDataTable();
+                dt.Print();
+            }
+        }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            Issue190_2();
+            Issue182_2();
             return;
+
             DeserializeDictWithAbstractValue();
             return;
 

@@ -13,7 +13,16 @@ namespace ChoETL
     [DataContract]
     public abstract class ChoFileRecordConfiguration : ChoRecordConfiguration
     {
-
+        public bool? ThrowExceptionIfDynamicPropNotExists
+        {
+            get;
+            set;
+        }
+        public bool AddEOLDelimiterAtEOF
+        {
+            get;
+            set;
+        }
         public bool Append
         {
             get;

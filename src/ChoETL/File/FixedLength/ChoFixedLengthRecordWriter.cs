@@ -78,7 +78,12 @@ namespace ChoETL
         {
             TextWriter sw = _sw as TextWriter;
             if (sw != null)
+            {
                 RaiseEndWrite(sw);
+
+                if (Configuration.AddEOLDelimiterAtEOF)
+                    sw.Write(Configuration.EOLDelimiter);
+            }
         }
 
         //private List<object> _recBuffer = new List<object>();

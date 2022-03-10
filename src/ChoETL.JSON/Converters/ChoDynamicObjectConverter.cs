@@ -174,7 +174,7 @@ namespace ChoETL
 
         private object ReadObject(JsonReader reader)
         {
-            IDictionary<string, object> expandoObject = new ExpandoObject();
+            IDictionary<string, object> expandoObject = new ChoDynamicObject();
 
             while (reader.Read())
             {

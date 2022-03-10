@@ -341,7 +341,9 @@ namespace ChoETL
                                 }
                                 else
                                 {
-                                    object rec = Configuration.IsDynamicObject ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer)) { ThrowExceptionIfPropNotExists = true,
+                                    object rec = Configuration.IsDynamicObject ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer)) 
+                                    {
+                                        ThrowExceptionIfPropNotExists = Configuration.ThrowExceptionIfDynamicPropNotExists == null ? ChoDynamicObjectSettings.ThrowExceptionIfPropNotExists : Configuration.ThrowExceptionIfDynamicPropNotExists.Value,
                                         AlternativeKeys = Configuration.AlternativeKeys
                                     } : ChoActivator.CreateInstance(RecordType);
                                     if (!LoadLines(new Tuple<long, List<Tuple<long, string>>>(++recNo, recLines), ref rec))

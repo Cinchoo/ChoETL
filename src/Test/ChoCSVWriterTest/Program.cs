@@ -2309,10 +2309,89 @@ a;b;;2021-05-06;e;11:00;3;9";
             }
         }
 
+        public static void Issue186()
+        {
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+
+            List<PlayerModel> players = new List<PlayerModel>();
+            players.Add(new PlayerModel
+            {
+                Id = 1,
+                Team = new TeamModel
+                {
+                    Id = 2,
+                    Name = "abc"
+                }
+            });
+
+            using (var parser = new ChoCSVWriter<PlayerModel>(Console.Out))
+            {
+                parser.Write(players);
+            }
+        }
+
+        [ChoCSVFileHeader]
+        [ChoCSVRecordObject(HasExcelSeparator = true)]
+        public class PlayerModel
+        {
+            [JsonProperty("id")]
+            public int Id { get; set; }
+
+            [JsonProperty("first_name")]
+            public string FirstName { get; set; }
+
+            [JsonProperty("last_name")]
+            public string LastName { get; set; }
+
+            [JsonProperty("height_feet")]
+            public int? HeightFeet { get; set; }
+
+            [JsonProperty("height_inches")]
+            public int? HeightInches { get; set; }
+
+            [JsonProperty("position")]
+            public string Position { get; set; }
+
+            [JsonProperty("weight_pounds")]
+            public int? WeightInPounds { get; set; }
+
+            [JsonProperty("team")]
+            [ChoCSVRecordField(FieldName = "MyField")]
+            public TeamModel Team { get; set; }
+        }
+
+        [ChoCSVFileHeader]
+        [ChoCSVRecordObject(HasExcelSeparator = true)]
+        public class TeamModel
+        {
+            [JsonProperty("id")]
+            public int Id { get; set; }
+
+            [JsonProperty("abbreviation")]
+            public string Abbreviation { get; set; }
+
+            [JsonProperty("city")]
+            public string City { get; set; }
+
+            [JsonProperty("conference")]
+            public string Conference { get; set; }
+
+            [JsonProperty("division")]
+            public string Division { get; set; }
+
+            [JsonProperty("full_name")]
+            public string FullName { get; set; }
+
+            [JsonProperty("name")]
+            public string Name { get; set; }
+        }
         static void Main(string[] args)
         {
             //AppDomain.CurrentDomain.FirstChanceException += (sender, eventArgs) => { Console.WriteLine("FirstChanceException: " + eventArgs.Exception.ToString()); };
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+            Issue186();
+            return;
+
             DynamicSubMemberstoCSV();
 
             //TestDictionary();
@@ -2322,7 +2401,7 @@ a;b;;2021-05-06;e;11:00;3;9";
                 CreateCSVFile();
             return;
 
-            ChoDynamicObjectSettings.UseOrderedDictionary = false;
+            ChoDynamicObjectSettings.DictionaryType = DictionaryType.Ordered;
             JSON2CSVTest2();
             return;
 

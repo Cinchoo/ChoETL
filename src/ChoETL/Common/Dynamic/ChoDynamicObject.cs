@@ -70,10 +70,23 @@ namespace ChoETL
         }
     }
 
+    public enum DictionaryType
+    {
+        Regular,
+        Sorted,
+        Ordered
+    }
+
     public static class ChoDynamicObjectSettings
     {
-        public static bool UseOrderedDictionary = true;
+        public static bool ThrowExceptionIfPropNotExists = false;
+        public static DictionaryType DictionaryType = DictionaryType.Ordered;
         public static bool UseAutoConverter = false;
+        public static StringComparer DictionaryComparer = StringComparer.CurrentCultureIgnoreCase;
+        internal static StringComparer DictionaryComparerInternal
+        {
+            get { return DictionaryComparer == null ? StringComparer.CurrentCultureIgnoreCase : DictionaryComparer; }
+        }
     }
 
     [Serializable]
@@ -94,9 +107,11 @@ namespace ChoETL
 
         private readonly object _padLock = new object();
         [IgnoreDataMember]
-        private IDictionary<string, object> _kvpDict = ChoDynamicObjectSettings.UseOrderedDictionary ?
-            new OrderedDictionary<string, object>(StringComparer.CurrentCultureIgnoreCase) as IDictionary<string, object>
-            : new Dictionary<string, object>(StringComparer.CurrentCultureIgnoreCase) as IDictionary<string, object>;
+        private IDictionary<string, object> _kvpDict = ChoDynamicObjectSettings.DictionaryType == DictionaryType.Ordered ?
+            new OrderedDictionary<string, object>(ChoDynamicObjectSettings.DictionaryComparerInternal) as IDictionary<string, object>
+            : (ChoDynamicObjectSettings.DictionaryType == DictionaryType.Sorted ? 
+                new SortedDictionary<string, object>(ChoDynamicObjectSettings.DictionaryComparerInternal) as IDictionary<string, object> 
+                : new Dictionary<string, object>(ChoDynamicObjectSettings.DictionaryComparerInternal) as IDictionary<string, object>);
         [IgnoreDataMember]
         private Func<IDictionary<string, object>> _func = null;
         private bool _watchChange = false;
@@ -123,7 +138,7 @@ namespace ChoETL
         {
             get;
             set;
-        }
+        } = ChoDynamicObjectSettings.ThrowExceptionIfPropNotExists;
 
         public void SetMemberType(string fn, Type fieldType)
         {
@@ -258,7 +273,7 @@ namespace ChoETL
 
             if (DynamicObjectName.IsNullOrWhiteSpace())
                 DynamicObjectName = DefaultName;
-            ThrowExceptionIfPropNotExists = false;
+            //ThrowExceptionIfPropNotExists = false;
             IsFixed = false;
             IsReadOnly = false;
 

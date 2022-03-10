@@ -295,7 +295,7 @@ namespace ChoETL
 
                         rec = recType.IsDynamicType() ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer))
                         {
-                            ThrowExceptionIfPropNotExists = true,
+                            ThrowExceptionIfPropNotExists = Configuration.ThrowExceptionIfDynamicPropNotExists == null ? ChoDynamicObjectSettings.ThrowExceptionIfPropNotExists : Configuration.ThrowExceptionIfDynamicPropNotExists.Value,
                             AlternativeKeys = Configuration.AlternativeKeys
                         } : ChoActivator.CreateInstance(recType);
                     }
@@ -303,7 +303,7 @@ namespace ChoETL
                     {
                         rec = Configuration.IsDynamicObject ? new ChoDynamicObject(new Dictionary<string, object>(Configuration.FileHeaderConfiguration.StringComparer))
                         {
-                            ThrowExceptionIfPropNotExists = true,
+                            ThrowExceptionIfPropNotExists = Configuration.ThrowExceptionIfDynamicPropNotExists == null ? ChoDynamicObjectSettings.ThrowExceptionIfPropNotExists : Configuration.ThrowExceptionIfDynamicPropNotExists.Value,
                             AlternativeKeys = Configuration.AlternativeKeys
                         } : ChoActivator.CreateInstance(RecordType);
 
