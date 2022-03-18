@@ -191,6 +191,11 @@ namespace ChoETL
             get;
             set;
         }
+        public bool IgnoreParentPropertyNamePrefix
+        {
+            get { return IgnoreDictionaryFieldPrefix; }
+            set { IgnoreDictionaryFieldPrefix = value; }
+        }
         [DataMember]
         public char? ArrayIndexSeparator
         {
@@ -331,10 +336,7 @@ namespace ChoETL
         {
             base.Init(recordType);
 
-            if (recordType == null)
-                return;
-
-            ChoFileRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoFileRecordObjectAttribute>(recordType);
+            ChoFileRecordObjectAttribute recObjAttr = recordType != null ? ChoType.GetAttribute<ChoFileRecordObjectAttribute>(recordType) : null;
             if (recObjAttr != null)
             {
                 AutoDiscoverFieldTypes = true;

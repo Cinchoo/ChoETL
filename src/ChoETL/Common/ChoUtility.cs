@@ -215,6 +215,38 @@ namespace ChoETL
         //    return new ChoDynamicObject(dict1.GroupBy(g => g.Key.ToNString(), StringComparer.OrdinalIgnoreCase).ToDictionary(kvp => kvp.Key.ToNString(), kvp => (object)kvp.Last(), StringComparer.OrdinalIgnoreCase));
         //}
 
+        public static IEnumerable<IDictionary<string, object>> Pivot(this IEnumerable<object> dicts)
+        {
+            foreach (var d in Pivot(dicts.OfType<IDictionary<string, object>>()))
+            {
+                yield return d;
+            }
+        }
+
+        private static IEnumerable<IDictionary<string, object>> Pivot(this IEnumerable<IDictionary<string, object>> dicts)
+        {
+            return dicts.Select(r1 => 
+                ToDictionary(r1.First().Value as IList, r1.Skip(1).First().Value as IList));
+        }
+
+        public static IDictionary<string, object> ToDictionary(IList keys, IList values)
+        {
+            IDictionary<string, object> dict = new Dictionary<string, object>();
+            if (keys != null && values != null)
+            {
+                foreach (var kvp in keys.OfType<string>().Select((k, i) => new KeyValuePair<int, string>(i, k)))
+                {
+                    if (dict.ContainsKey(kvp.Value))
+                        continue;
+                    if (kvp.Key < values.Count)
+                        dict.Add(kvp.Value, values[kvp.Key]);
+                    else
+                        dict.Add(kvp.Value, null);
+                }
+            }
+            return dict;
+        }
+
         public static IEnumerable<ChoDynamicObject> Transpose(this IEnumerable<object> dicts, bool treatFirstItemAsHeader = true)
         {
             return Transpose(dicts.OfType<IDictionary<string, object>>(), treatFirstItemAsHeader).Select(d =>

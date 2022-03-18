@@ -38,16 +38,17 @@ namespace ChoETL
 
             return false;
         }
-        public static bool GetNestedMember(this object target, string propName, ref object parent, ref string memberName)
+        public static bool GetNestedMember(this object target, string propName, ref object parent, ref string memberName,
+            bool createSubKeysIfNotExists = false, Func<object> factory = null)
         {
             if (target == null)
                 return false;
             if (propName.IsNullOrWhiteSpace())
                 return false;
 
+            parent = target;
             if (!propName.Contains("."))
             {
-                parent = target;
                 memberName = propName;
                 return true;
             }
@@ -70,15 +71,28 @@ namespace ChoETL
                 {
                     IDictionary dict = target as IDictionary;
                     if (dict.Contains(spropName))
-                        return GetNestedMember(dict[spropName], remPropName, ref parent, ref memberName);
+                        return GetNestedMember(dict[spropName], remPropName, ref parent, ref memberName, createSubKeysIfNotExists, factory);
                     else
-                        return false;
+                    {
+                        if (!createSubKeysIfNotExists)
+                            return false;
+                        else
+                        {
+                            memberName = spropName;
+                            var child = factory != null ? factory() : null;
+                            if (child == null)
+                                return false;
+
+                            dict.Add(spropName, child);
+                            return GetNestedMember(dict[spropName], remPropName, ref parent, ref memberName, createSubKeysIfNotExists, factory);
+                        }
+                    }
                 }
                 else if (target is IDictionary<string, object>)
                 {
                     IDictionary<string, object> dict = target as IDictionary<string, object>;
                     if (dict.ContainsKey(spropName))
-                        return GetNestedMember(dict[spropName], remPropName, ref parent, ref memberName);
+                        return GetNestedMember(dict[spropName], remPropName, ref parent, ref memberName, createSubKeysIfNotExists, factory);
                     else
                         return false;
                 }
@@ -89,7 +103,7 @@ namespace ChoETL
                     if (int.TryParse(spropName, out index))
                     {
                         if (index < list.Count)
-                            return GetNestedMember(list[index], remPropName, ref parent, ref memberName);
+                            return GetNestedMember(list[index], remPropName, ref parent, ref memberName, createSubKeysIfNotExists, factory);
                         else
                             return false;
                     }
@@ -98,7 +112,7 @@ namespace ChoETL
                 }
                 else
                 {
-                    return GetNestedMember(ChoType.GetPropertyValue(target, spropName), remPropName, ref parent, ref memberName);
+                    return GetNestedMember(ChoType.GetPropertyValue(target, spropName), remPropName, ref parent, ref memberName, createSubKeysIfNotExists, factory);
                 }
             }
         }
@@ -166,17 +180,23 @@ namespace ChoETL
                 return null;
         }
 
-        public static void SetNestedPropertyValue(this object target, string propName, object propValue)
+        public static void SetNestedPropertyValue(this object target, string propName, object propValue,
+            bool createSubKeysIfNotExists = false, Func<object> factory = null)
         {
             object parent = null;
             string memberName = null;
-            if (GetNestedMember(target, propName, ref parent, ref memberName))
+            if (GetNestedMember(target, propName, ref parent, ref memberName, createSubKeysIfNotExists, factory))
             {
                 if (parent is IDictionary)
                 {
                     IDictionary dict = parent as IDictionary;
                     if (dict.Contains(memberName))
                         dict[memberName] = propValue;
+                    else if (createSubKeysIfNotExists)
+                    {
+                        dict.Add(memberName, propValue);
+                        return;
+                    }
                     else
                         return;
                 }
@@ -185,16 +205,24 @@ namespace ChoETL
                     IDictionary<string, object> dict = parent as IDictionary<string, object>;
                     if (dict.ContainsKey(memberName))
                         dict[memberName] = propValue;
+                    else if (createSubKeysIfNotExists)
+                    {
+                        dict.Add(memberName, propValue);
+                        return;
+                    }
                     else
                         return;
                 }
                 else
                 {
-                    ChoType.SetPropertyValue(parent, memberName, propName);
+                    ChoType.SetPropertyValue(parent, memberName, propValue);
                 }
             }
             else
+            {
+                var child = new ChoDynamicObject();
                 return;
+            }
         }
 
         private static ChoTypePropertyInfo GetTypePropertyInfo(Type type, PropertyInfo pi)

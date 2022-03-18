@@ -267,6 +267,11 @@ namespace ChoETL
 
         internal ChoXmlRecordConfiguration(Type recordType) : base(recordType)
         {
+            Init(recordType);
+        }
+
+        protected override void Init(Type recordType)
+        {
             XmlNamespaceManager = new ChoResetLazy<ChoXmlNamespaceManager>(() => NamespaceManager == null ? null : new ChoXmlNamespaceManager(NamespaceManager));
 
             XmlRecordFieldConfigurations = new List<ChoXmlRecordFieldConfiguration>();
@@ -281,15 +286,33 @@ namespace ChoETL
             IgnoreCase = true;
             NullValueHandling = ChoNullValueHandling.Empty;
             NamespaceManager = new XmlNamespaceManager(new NameTable());
-            if (recordType != null)
-            {
-                Init(recordType);
-            }
 
             if (XPath.IsNullOrEmpty())
             {
                 //XPath = "//*";
             }
+            base.Init(recordType);
+
+            var pd = recordType != null ? ChoTypeDescriptor.GetTypeAttribute<ChoXPathAttribute>(recordType) : null;
+            if (pd != null)
+            {
+                XPath = pd.XPath;
+                AllowComplexXPath = pd.AllowComplexXPath;
+            }
+            var up = recordType != null ? ChoTypeDescriptor.GetTypeAttribute<ChoUseXmlProxyAttribute>(recordType) : null;
+            if (up != null)
+            {
+                UseProxy = up.Flag;
+            }
+
+            ChoXmlRecordObjectAttribute recObjAttr = recordType != null ? ChoType.GetAttribute<ChoXmlRecordObjectAttribute>(recordType) : null;
+            if (recObjAttr != null)
+            {
+                XPath = recObjAttr.XPath;
+            }
+
+            if (XmlRecordFieldConfigurations.Count == 0)
+                DiscoverRecordFields(recordType);
         }
 
         internal void AddFieldForType(Type rt, ChoXmlRecordFieldConfiguration rc)
@@ -405,32 +428,6 @@ namespace ChoETL
             Clone(config);
 
             return config;
-        }
-
-        protected override void Init(Type recordType)
-        {
-            base.Init(recordType);
-
-            var pd = ChoTypeDescriptor.GetTypeAttribute<ChoXPathAttribute>(recordType);
-            if (pd != null)
-            {
-                XPath = pd.XPath;
-                AllowComplexXPath = pd.AllowComplexXPath;
-            }
-            var up = ChoTypeDescriptor.GetTypeAttribute<ChoUseXmlProxyAttribute>(recordType);
-            if (up != null)
-            {
-                UseProxy = up.Flag;
-            }
-
-            ChoXmlRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoXmlRecordObjectAttribute>(recordType);
-            if (recObjAttr != null)
-            {
-                XPath = recObjAttr.XPath;
-            }
-
-            if (XmlRecordFieldConfigurations.Count == 0)
-                DiscoverRecordFields(recordType);
         }
 
         internal void UpdateFieldTypesIfAny(IDictionary<string, Type> dict)

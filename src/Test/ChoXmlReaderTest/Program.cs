@@ -587,6 +587,9 @@ namespace ChoXmlReaderTest
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
+            FlattenKeyValue2DataTable();
+            return;
+
             SOAPXmlToJSON();
             return;
 
@@ -596,6 +599,68 @@ namespace ChoXmlReaderTest
             //LoadXmlUsingConfigAndPOCO();
             //DesrializeUsingProxy();
         }
+        public static void FlattenKeyValue2DataTable()
+        {
+            string xml = @"<?xml version=""1.0"" encoding=""UTF-8""?>
+
+<soapenv:Envelope xmlns:fnx1=""http://www"" xmlns:rob=""http://"" xmlns:x=""http://www"" xmlns:soapenv=""http:/"" xmlns:msxsl=""urn:schemas-microsoft-com:xslt"">
+<soapenv:Header/>
+<soapenv:Body>
+    <x:RequestResponseServiceResponse>
+        <rob:RobotGeneralDBQueryOut>
+            <QueryResult>
+                <row>
+                    <column>
+                        <name>KOD_ZEHUT</name>
+                        <value>f</value>
+                    </column>
+                    <column>
+                        <name>MIS_ZEHUT</name>
+                        <value></value>
+                    </column>
+                    <column>
+                        <name>SUG_HAFRASHA</name>
+                        <value>1</value>
+                    </column>
+                </row>
+                <row>
+                    <column>
+                        <name>KOD_ZEHUT</name>
+                        <value>f</value>
+                    </column>
+                    <column>
+                        <name>MIS_ZEHUT</name>
+                        <value>5432</value>
+                    </column>
+                    <column>
+                        <name>SUG_HAFRASHA</name>
+                        <value>2</value>
+                    </column>
+                </row>
+            </QueryResult>
+        </rob:RobotGeneralDBQueryOut>
+        <esb:ESBServiceResponseMetadata xmlns:esb=""http://www"">
+            <esb:ResponseStatus>Success</esb:ResponseStatus>
+            <esb:ResponseCode>0</esb:ResponseCode>
+            <esb:ResponseDescription/>
+            <esb:InstanceWFID>702167729</esb:InstanceWFID>
+        </esb:ESBServiceResponseMetadata>
+    </x:RequestResponseServiceResponse>
+</soapenv:Body>
+</soapenv:Envelope>";
+
+            using (var r = ChoXmlReader.LoadText(xml)
+                   .WithXPath("//row")
+                  .WithField("name", xPath: "column/name")
+                  .WithField("value", xPath: "column/value")
+                  )
+            {
+                //r.Select(r1 => ChoUtility.ToDictionary(r1.name as IList, r1.value as IList)).AsDataTable().Print();
+                //return;
+                r.ToArray().Pivot().AsDataTable().Print();
+            }
+        }
+
         public static void SOAPXmlToJSON()
         {
             string xml = @"<?xml version=""1.0"" encoding=""UTF-8""?>

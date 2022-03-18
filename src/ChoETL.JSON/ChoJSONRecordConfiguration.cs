@@ -221,7 +221,7 @@ namespace ChoETL
                 return fc.IsArray.Value;
         }
 
-        private readonly Lazy<List<JsonConverter>> _JSONConverters;
+        private Lazy<List<JsonConverter>> _JSONConverters;
         private List<JsonConverter> GetJSONConverters()
         {
             return _JSONConverters.Value;
@@ -352,6 +352,12 @@ namespace ChoETL
 
         internal ChoJSONRecordConfiguration(Type recordType) : base(recordType)
         {
+            Init(recordType);
+        }
+
+        protected override void Init(Type recordType)
+        {
+
             _JsonSerializer = new Lazy<JsonSerializer>(() =>
             {
                 var se = JsonSerializerSettings == null ? null : JsonSerializer.Create(JsonSerializerSettings);
@@ -380,10 +386,23 @@ namespace ChoETL
 
             LineBreakChars = Environment.NewLine;
             Formatting = Newtonsoft.Json.Formatting.Indented;
-            if (recordType != null)
+
+            base.Init(recordType);
+
+            var pd = recordType != null ? ChoTypeDescriptor.GetTypeAttribute<ChoJSONPathAttribute>(recordType) : null;
+            if (pd != null)
             {
-                Init(recordType);
+                JSONPath = pd.JSONPath;
+                AllowComplexJSONPath = pd.AllowComplexJSONPath;
             }
+
+            ChoJSONRecordObjectAttribute recObjAttr = recordType != null ? ChoType.GetAttribute<ChoJSONRecordObjectAttribute>(recordType) : null;
+            if (recObjAttr != null)
+            {
+            }
+
+            if (JSONRecordFieldConfigurations.Count == 0)
+                MapRecordFields(); // DiscoverRecordFields(recordType, false);
         }
 
         internal void AddFieldForType(Type rt, ChoJSONRecordFieldConfiguration rc)
@@ -419,30 +438,6 @@ namespace ChoETL
                 return JSONRecordFieldConfigurationsForType[rt].ToDictionary(kvp => kvp.Key, kvp => (ChoRecordFieldConfiguration)kvp.Value);
             else
                 return null;
-        }
-
-        protected override void Init(Type recordType)
-        {
-            base.Init(recordType);
-
-            if (recordType == null)
-                return;
-
-
-            var pd = ChoTypeDescriptor.GetTypeAttribute<ChoJSONPathAttribute>(recordType);
-            if (pd != null)
-            {
-                JSONPath = pd.JSONPath;
-                AllowComplexJSONPath = pd.AllowComplexJSONPath;
-            }
-
-            ChoJSONRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoJSONRecordObjectAttribute>(recordType);
-            if (recObjAttr != null)
-            {
-            }
-
-            if (JSONRecordFieldConfigurations.Count == 0)
-                MapRecordFields(); // DiscoverRecordFields(recordType, false);
         }
 
         internal void Reset()

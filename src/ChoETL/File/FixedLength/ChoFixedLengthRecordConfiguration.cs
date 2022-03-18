@@ -87,14 +87,13 @@ namespace ChoETL
 
         internal ChoFixedLengthRecordConfiguration(Type recordType) : base(recordType)
         {
-            FixedLengthRecordFieldConfigurations = new List<ChoFixedLengthRecordFieldConfiguration>();
+            Init(recordType);
+        }
 
-            if (recordType != null)
-            {
-                Init(recordType);
-            }
-
+        protected override void Init(Type recordType)
+        {
             FileHeaderConfiguration = new ChoFixedLengthFileHeaderConfiguration(recordType, Culture);
+            FixedLengthRecordFieldConfigurations = new List<ChoFixedLengthRecordFieldConfiguration>();
             RecordTypeConfiguration = new ChoFixedLengthRecordTypeConfiguration();
             RecordTypeConfiguration.DefaultRecordType = recordType;
 
@@ -124,13 +123,10 @@ namespace ChoETL
 
                 return RecordTypeConfiguration.DefaultRecordType;
             });
-        }
 
-        protected override void Init(Type recordType)
-        {
             base.Init(recordType);
 
-            ChoFixedLengthRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoFixedLengthRecordObjectAttribute>(recordType);
+            ChoFixedLengthRecordObjectAttribute recObjAttr = recordType != null ? ChoType.GetAttribute<ChoFixedLengthRecordObjectAttribute>(recordType) : null;
             if (recObjAttr != null)
             {
                 RecordLength = recObjAttr.RecordLength;
@@ -145,6 +141,7 @@ namespace ChoETL
             if (FixedLengthRecordFieldConfigurations.Count == 0)
                 DiscoverRecordFields(recordType, true);
         }
+
         internal bool AreAllFieldTypesNull
         {
             get;

@@ -1287,9 +1287,12 @@ Date,Count
             using (var cp2 = new ChoCSVReader(new StringReader(csv))
                 .WithFirstLineHeader()
                 .Configure(c => c.NullValue = "{NULL}")
+                .Configure(c => c.NullValueHandling = ChoNullValueHandling.Empty)
                     .Configure(c => c.FileHeaderConfiguration.IgnoreCase = false)
                 )
             {
+                cp2.First().Print();
+                return;
                 foreach (var rec in cp2)
                     Console.WriteLine(rec.Id);
                 //using (var cw = new ChoCSVWriter(new StringWriter(csvOut))
@@ -3589,31 +3592,37 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
 ";
 
             var config = new ChoCSVRecordConfiguration<StudentInfo1>()
+                .Map(f => f.Grades, "Grade")
                 .Map(f => f.Id)
                 .IndexMap(f => f.Courses, 0, 1)
-                .IndexMap(f => f.Grades, 1, 3)
-                .Map(f => f.Grades, "Grade")
+                .IndexMap(f => f.Grades, 1, 3, m => m.FieldName("Grade"))
                 .MapForType<Course1>(f => f.CourseId, "CreId")
                 .MapForType<Course1>(f => f.CourseName, "CreName")
                 .WithFirstLineHeader()
                 ;
 
+            config.CSVRecordFieldConfigurations.Select(f => f.Name).ToArray().Print();
+
             using (var r = ChoCSVReader<StudentInfo1>.LoadText(csv)
-                //.WithField(o => o.Id)
-                ////.WithField(o => o.Courses.FirstOrDefault().CourseId, fieldName: "CreId")
-                //.WithFieldForType<Course1>(o => o.CourseId, fieldName: "CreId")
-                //.WithFieldForType<Course1>(o => o.CourseName, fieldName: "CreName")
-                //.Index(o => o.Courses, 0, 1)
-                //.Index(f => f.Grades, 0, 1)
-                //.WithField(f => f.Grades, fieldName: "Grade")
+                .WithField(o => o.Id)
+                //.WithField(o => o.Courses.FirstOrDefault().CourseId, fieldName: "CreId")
+                .WithFieldForType<Course1>(o => o.CourseId, fieldName: "CreId")
+                .WithFieldForType<Course1>(o => o.CourseName, fieldName: "CreName")
+                .Index(o => o.Courses, 0, 1)
+                .Index(f => f.Grades, 1, 2, m => m.FieldName("Grade") )
+                .WithField(f => f.Grades, fieldName: "Grade")
                 .WithFirstLineHeader()
                 //.MapRecordFields<StudentInfoMap>()
                 )
             {
+                r.Configuration.CSVRecordFieldConfigurations.Select(f => f.Name).ToArray().Print();
+
                 foreach (var rec in r)
                 {
                     Console.WriteLine(rec.Dump());
                 }
+
+
             }
 
 
@@ -5519,6 +5528,9 @@ ue2"",Value3";
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
+            NullValueTest();
+            return;
+
             LoadByIndexOrName();
             return;
 

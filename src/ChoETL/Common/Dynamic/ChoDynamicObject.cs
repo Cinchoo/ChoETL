@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Dynamic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -977,7 +978,7 @@ namespace ChoETL
 
         public void SetNestedPropertyValue(string propName, object propValue)
         {
-            ChoObjectEx.SetNestedPropertyValue(_kvpDict, propName, propValue);
+            ChoObjectEx.SetNestedPropertyValue(_kvpDict, propName, propValue, true, () => new ChoDynamicObject());
         }
 
         public IDictionary<string, object> GetDefaults()
@@ -1700,6 +1701,25 @@ namespace ChoETL
         //{
         //	return _list[index];
         //}
+
+        public DataTable AsDataTable(string tableName = null,
+            CultureInfo ci = null, Action<IDictionary<string, Type>> membersDiscovered = null,
+            string[] selectedFields = null, string[] excludeFields = null)
+        {
+            return _kvpDict.Flatten().AsDataTable(tableName, ci, membersDiscovered,
+                selectedFields, excludeFields);
+        }
+
+        public int Fill(DataTable dt)
+        {
+            return _kvpDict.Flatten().Fill(dt);
+        }
+
+        public IDataReader AsDataReader(Action<IDictionary<string, Type>> membersDiscovered = null, string[] selectedFields = null,
+            string[] excludeFields = null)
+        {
+            return _kvpDict.Flatten().AsDataReader(membersDiscovered, selectedFields, excludeFields);
+        }
 
         public static ChoDynamicObject FromDictionary(IDictionary kvpDict)
         {

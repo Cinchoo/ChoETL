@@ -894,7 +894,8 @@ namespace ChoETL
             return this;
         }
 
-        public ChoCSVReader<T> Index<TField>(Expression<Func<T, TField>> field, int minumum, int maximum)
+        public ChoCSVReader<T> Index<TField>(Expression<Func<T, TField>> field, int minumum, int maximum, 
+            Action<ChoCSVRecordFieldConfigurationMap> mapper = null)
         {
             if (!_clearFields)
             {
@@ -902,11 +903,18 @@ namespace ChoETL
                 Configuration.MapRecordFields(Configuration.RecordType);
             }
 
-            Configuration.IndexMap(field, minumum, maximum, null);
+            Configuration.IndexMap(field, minumum, maximum, mapper);
             return this;
         }
 
+
         public ChoCSVReader<T> DictionaryKeys<TField>(Expression<Func<T, TField>> field, params string[] keys)
+        {
+            return DictionaryKeys(field, keys, null);
+        }
+
+        public ChoCSVReader<T> DictionaryKeys<TField>(Expression<Func<T, TField>> field, string[] keys,
+            Action<ChoCSVRecordFieldConfigurationMap> mapper)
         {
             if (!_clearFields)
             {
@@ -914,7 +922,7 @@ namespace ChoETL
                 Configuration.MapRecordFields(Configuration.RecordType);
             }
 
-            Configuration.DictionaryMap(field, keys, null);
+            Configuration.DictionaryMap(field, keys, mapper);
             return this;
         }
 

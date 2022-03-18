@@ -9013,11 +9013,53 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
+        static void Issue188_1()
+        {
+            var json = @"[
+{
+	    ""Name"": ""S2254SR1"",
+	    ""Version"": ""8.1.3.0"",
+	    ""Info"": ""WinCorpX.Exe 28.05.2021 12:47:38"",
+	    ""Dlls"": {
+	        ""dbexpint.dll"": ""7.0.2.113"",
+	        ""dbxadapter30.dll"": ""11.0.2902.10471""
+		}
+},
+{
+	    ""Name"": ""S2254SR1"",
+	    ""Version"": ""8.1.3.0"",
+	    ""Info"": ""WinCorpX.Exe 28.05.2021 12:47:38"",
+	    ""Dlls"": {
+	        ""dbexpint.dll"": ""7.0.2.113"",
+	        ""dbxadapter30.dll"": ""11.0.2902.10471""
+		}
+}
+]";
+
+            //ChoETLSettings.KeySeparator = ChoCharEx.Escape;
+            using (var r = ChoJSONReader.LoadText(json)
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                )
+            {
+                //using (var w = new ChoCSVWriter(Console.Out)
+                //    .WithFirstLineHeader()
+                //    .Configure(c => c.AddEOLDelimiterAtEOF = true)
+                //    )
+                //    w.Write(r);
+                //return;
+                //r.Print();
+                //return;
+                //var x = r.FirstOrDefault();
+                DataTable x = r.Select(r1 => r1.Flatten()).AsDataTable();
+                x.Print();
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            Issue182_2();
+            Issue188_1();
             return;
 
             DeserializeDictWithAbstractValue();
