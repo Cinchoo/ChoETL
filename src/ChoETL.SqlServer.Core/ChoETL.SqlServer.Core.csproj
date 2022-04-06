@@ -14,7 +14,7 @@
     <PackageTags>ETL c# .NET CSV Xml JSON Flat Parquet Yaml</PackageTags>
     <PackageReleaseNotes>.NET Standard version</PackageReleaseNotes>
     <PackageIconUrl></PackageIconUrl>
-    <Version>1.0.0.2</Version>
+    <Version>1.0.0.3</Version>
     <PackageIcon>cinchoo.png</PackageIcon>
   </PropertyGroup>
 

@@ -9055,11 +9055,64 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
+        public static void Issue191()
+        {
+            string json = @"{
+  ""BrandId"": ""998877665544332211"",
+  ""Categories"": [ ""112233445566778899"" ],
+  ""Contact"": {
+    ""Phone"": [
+      {
+        ""Value"": ""12346789"",
+        ""Description"": { ""vi"": ""Phone"" },
+        ""Type"": 1
+      },
+      {
+        ""Value"": ""987654321"",
+        ""Description"": { ""vi"": ""Phone"" },
+        ""Type"": 1
+      }
+    ],
+	 ""BlaBlaBlaPhone"": [
+      {
+        ""Value"": ""12346789"",
+        ""Description"": { ""vi"": ""Phone"" },
+        ""Type"": 1
+      }
+    ]
+  }
+}";
+            using (var r = ChoJSONReader.LoadText(json)
+                         .Configure(c => c.DefaultArrayHandling = false)
+                         .Configure(c => c.FlattenNode = true)
+                         .Configure(c => c.UseNestedKeyFormat = true)
+                         .Configure(c => c.FlattenByNodeName = "Contact.Phone")
+                         //.Configure(c => c.FlattenByJsonPath = "$..Contact")
+                         //.Configure(c => c.IgnoreArrayIndex = false)
+                         .Configure(c => c.NestedKeySeparator = '.')
+                         .Configure(c => c.NestedColumnSeparator = '.')
+                         //.WithField("Phone", jsonPath: "$.['Contact.Phone.Value']", isArray: false)
+                         )
+            {
+                //r.Print();
+                //return;
+                DataTable dt = r.AsDataTable();
+                dt.DumpAsJson().Print();
+            }
+
+            //using (var r = ChoJSONReader.LoadText(json)
+            //    .ClearFields()
+            //       .WithField("BrandId").WithField("Category", jsonPath: "Categories1[0]")
+            //      )
+            //{
+            //    r.AsDataTable().Print();
+            //}
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            Issue188_1();
+            Issue191();
             return;
 
             DeserializeDictWithAbstractValue();

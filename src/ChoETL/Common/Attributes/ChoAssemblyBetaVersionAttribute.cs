@@ -5,8 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using ChoETL;
 
-[assembly: ChoAssemblyBetaVersion("beta2")]
-
 namespace ChoETL
 {
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false, Inherited = true)]

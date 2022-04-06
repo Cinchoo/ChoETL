@@ -1720,6 +1720,11 @@ namespace ChoETL
             }
         }
 
+        public static T GetAs<T>(this object @this, T defaultValue = default(T))
+        {
+            return CastTo<T>(@this, defaultValue);
+        }
+
         public static T CastTo<T>(this object @this, T defaultValue = default(T))
         {
             if (@this == null || @this == DBNull.Value)

@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using ChoETL;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security;
@@ -33,5 +34,6 @@ using System.Security;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.2.1.42")] 
-[assembly: AssemblyFileVersion("1.2.1.42")]
+[assembly: AssemblyVersion("1.2.1.44")] 
+[assembly: AssemblyFileVersion("1.2.1.44")]
+[assembly: ChoAssemblyBetaVersion("beta2")]

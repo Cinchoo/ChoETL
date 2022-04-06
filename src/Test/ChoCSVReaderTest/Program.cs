@@ -5528,7 +5528,7 @@ ue2"",Value3";
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            NullValueTest();
+            LoadByIndexOrName();
             return;
 
             LoadByIndexOrName();

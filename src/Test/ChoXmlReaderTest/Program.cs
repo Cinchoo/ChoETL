@@ -586,6 +586,8 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+            Issue195();
+            return;
 
             FlattenKeyValue2DataTable();
             return;
@@ -599,6 +601,24 @@ namespace ChoXmlReaderTest
             //LoadXmlUsingConfigAndPOCO();
             //DesrializeUsingProxy();
         }
+
+        public class Record
+        {
+            [ChoXmlElementRecordField(FieldName = "field_name")]
+            public int Field { get; set; }
+        }
+
+        static void Issue195()
+        {
+            var record = new Record { Field = 1 };
+            var sb = new StringBuilder();
+            using (var writer = new ChoXmlWriter<Record>(sb).WithXPath("/root/data/rec/b1a"))
+            {
+                writer.Write(record);
+            }
+            Console.WriteLine(sb);
+        }
+
         public static void FlattenKeyValue2DataTable()
         {
             string xml = @"<?xml version=""1.0"" encoding=""UTF-8""?>

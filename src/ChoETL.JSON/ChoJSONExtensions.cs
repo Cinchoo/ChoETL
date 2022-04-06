@@ -275,19 +275,23 @@ namespace ChoETL
         }
 
         public static JToken Flatten(this string json, char? nestedKeySeparator = null, Func<string, string, string> nestedKeyResolver = null,
-            char? arrayIndexSeparator = null, bool useNestedKeyFormat = false, bool ignoreArrayIndex = true)
+            char? arrayIndexSeparator = null, bool useNestedKeyFormat = false, bool ignoreArrayIndex = true,
+            string flattenByNodeName = null, string flattenByJsonPath = null)
         {
             JToken input = JToken.Parse(json);
-            return Flatten(input, nestedKeySeparator, arrayIndexSeparator, nestedKeyResolver, useNestedKeyFormat, ignoreArrayIndex);
+            return Flatten(input, nestedKeySeparator, arrayIndexSeparator, nestedKeyResolver, useNestedKeyFormat, ignoreArrayIndex,
+                flattenByNodeName, flattenByJsonPath);
         }
 
         public static JToken Flatten(this JToken input, char? nestedKeySeparator = null, char? arrayIndexSeparator = null, 
             Func<string, string, string> nestedKeyResolver = null,
-            bool useNestedKeyFormat = false, bool ignoreArrayIndex = true)
+            bool useNestedKeyFormat = false, bool ignoreArrayIndex = true, string flattenByNodeName = null, string flattenByJsonPath = null
+            )
         {
             var res = new JArray();
             foreach (var obj in GetFlattenedObjects(input, null, null, nestedKeySeparator == null ? String.Empty : nestedKeySeparator.ToString(), 
-                nestedKeyResolver, useNestedKeyFormat, arrayIndexSeparator == null ? String.Empty : arrayIndexSeparator.ToString(), ignoreArrayIndex, null))
+                nestedKeyResolver, useNestedKeyFormat, arrayIndexSeparator == null ? String.Empty : arrayIndexSeparator.ToString(), 
+                ignoreArrayIndex, null, flattenByNodeName, flattenByJsonPath, true))
                 res.Add(obj);
             return res;
         }
@@ -367,10 +371,10 @@ namespace ChoETL
 
          */
 
-        private static IEnumerable<JToken> GetFlattenedObjects(JToken token, IEnumerable<JProperty> otherProperties = null, string parentNodeName = null,
-            string nestedKeySeparator = null, Func<string, string, string> nestedKeyResolver = null, bool useNestedKeyFormat = false,
-            string arrayIndexSeparator = null,
-            bool ignoreArrayIndex = true, int? arrayIndex = null)
+        private static IEnumerable<JToken> GetFlattenedObjectsInternal(JToken token, IEnumerable<JProperty> otherProperties = null, string parentNodeName = null,
+    string nestedKeySeparator = null, Func<string, string, string> nestedKeyResolver = null, bool useNestedKeyFormat = false,
+    string arrayIndexSeparator = null,
+    bool ignoreArrayIndex = true, int? arrayIndex = null)
         {
             //var results = new Dictionary<bool, IList<JProperty>>();
             //FlattenJObject(token, results);
@@ -385,7 +389,7 @@ namespace ChoETL
                         List<JProperty> np = new List<JProperty>();
                         foreach (var jt in directProps)
                             np.Add(jt.Rename($"{parentNodeName}{nestedKeySeparator}{jt.Name}") as JProperty);
-                    
+
                         otherProperties = otherProperties?.Concat(np) ?? directProps;
                     }
                     else
@@ -395,8 +399,8 @@ namespace ChoETL
                 if (children.TryGetValue(true, out var ChildCollections) && ChildCollections.Where(c => c.Values().Count() > 0).Any())
                 {
                     foreach (var childObj in ChildCollections.SelectMany(childColl => childColl.Values().Select(c => new { ParentNodeName = childColl.Name, ChildNode = c }))
-                        .SelectMany((kvp, index) => GetFlattenedObjects(kvp.ChildNode, otherProperties, 
-                        useNestedKeyFormat ? (parentNodeName.IsNullOrWhiteSpace() ? $"{kvp.ParentNodeName}" : $"{parentNodeName}{nestedKeySeparator}{kvp.ParentNodeName}") : kvp.ParentNodeName, 
+                        .SelectMany((kvp, index) => GetFlattenedObjects(kvp.ChildNode, otherProperties,
+                        useNestedKeyFormat ? (parentNodeName.IsNullOrWhiteSpace() ? $"{kvp.ParentNodeName}" : $"{parentNodeName}{nestedKeySeparator}{kvp.ParentNodeName}") : kvp.ParentNodeName,
                         nestedKeySeparator, nestedKeyResolver, useNestedKeyFormat, arrayIndexSeparator, ignoreArrayIndex, index)))
                         yield return childObj;
                 }
@@ -429,7 +433,7 @@ namespace ChoETL
                                     newKey = nestedKeyResolver(parentNodeName, prop.Name);
                                     res.Add(prop.Rename(newKey));
                                 }
-                            }    
+                            }
                         }
                     }
                     yield return res;
@@ -440,6 +444,247 @@ namespace ChoETL
                 foreach (var co in token.Children().SelectMany((c, index) => GetFlattenedObjects(c, otherProperties,
                         useNestedKeyFormat ? (parentNodeName.IsNullOrWhiteSpace() ? $"{index}" : $"{parentNodeName}{nestedKeySeparator}{index}") : $"{index}",
                         nestedKeySeparator, nestedKeyResolver, useNestedKeyFormat, arrayIndexSeparator, ignoreArrayIndex, index)))
+                    yield return co;
+            }
+            else if (token is JValue && arrayIndex != null)
+            {
+                var res = new JObject();
+                if (otherProperties != null)
+                {
+                    foreach (var prop in otherProperties)
+                    {
+                        if (!res.ContainsKey(prop.Name))
+                            res.Add(prop);
+                        else
+                        {
+                            string newKey;
+                            if (nestedKeyResolver == null)
+                            {
+                                if (parentNodeName.IsNullOrWhiteSpace())
+                                {
+
+                                }
+                                else
+                                {
+                                    newKey = $"{parentNodeName}{nestedKeySeparator}{prop.Name}";
+                                    res.Add(prop.Rename(newKey));
+                                }
+                            }
+                            else
+                            {
+                                newKey = nestedKeyResolver(parentNodeName, prop.Name);
+                                res.Add(prop.Rename(newKey));
+                            }
+                        }
+                    }
+                }
+                JProperty prop1 = null;
+                if (ignoreArrayIndex)
+                    prop1 = new JProperty($"{parentNodeName.ToSingular()}", ((JValue)token).Value);
+                else
+                    prop1 = new JProperty($"{parentNodeName.ToSingular()}{arrayIndexSeparator}{arrayIndex.Value}", ((JValue)token).Value);
+
+                if (!res.ContainsKey(prop1.Name))
+                    res.Add(prop1);
+                else
+                {
+                    string newKey;
+                    if (nestedKeyResolver == null)
+                    {
+                        if (parentNodeName.IsNullOrWhiteSpace())
+                        {
+
+                        }
+                        else
+                        {
+                            newKey = $"{parentNodeName}{nestedKeySeparator}{prop1.Name}";
+                            res.Add(prop1.Rename(newKey));
+                        }
+                    }
+                    else
+                    {
+                        newKey = nestedKeyResolver(parentNodeName, prop1.Name);
+                        res.Add(prop1.Rename(newKey));
+                    }
+                }
+
+                yield return res;
+            }
+            else
+                throw new NotImplementedException(token.GetType().Name);
+        }
+        private static IEnumerable<JToken> GetFlattenedChildObjects(Dictionary<bool, IGrouping<bool, JProperty>> children, IEnumerable<JProperty> otherProperties = null, string parentNodeName = null,
+            string nestedKeySeparator = null, Func<string, string, string> nestedKeyResolver = null, bool useNestedKeyFormat = false,
+            string arrayIndexSeparator = null, bool ignoreArrayIndex = true, int? arrayIndex = null,
+            string flattenByNodeName = null, string flattenByJsonPath = null,
+            bool rootCall = false)
+        {
+            if (children != null && children.TryGetValue(false, out var directProps))
+            {
+                if (useNestedKeyFormat && parentNodeName != null)
+                {
+                    List<JProperty> np = new List<JProperty>();
+                    foreach (var jt in directProps)
+                        np.Add(jt.Rename($"{parentNodeName}{nestedKeySeparator}{jt.Name}") as JProperty);
+
+                    otherProperties = otherProperties?.Concat(np) ?? directProps;
+                }
+                else
+                    otherProperties = otherProperties?.Concat(directProps) ?? directProps;
+            }
+
+            if (children != null && children.TryGetValue(true, out var ChildCollections) && ChildCollections.Where(c => c.Values().Count() > 0).Any())
+            {
+                foreach (var childObj in ChildCollections.SelectMany(childColl => childColl.Values().Select(c => new { ParentNodeName = childColl.Name, ChildNode = c }))
+                    .SelectMany((kvp, index) => GetFlattenedObjectsInternal(kvp.ChildNode, otherProperties,
+                    useNestedKeyFormat ? (parentNodeName.IsNullOrWhiteSpace() ? $"{kvp.ParentNodeName}" : $"{parentNodeName}{nestedKeySeparator}{kvp.ParentNodeName}") : kvp.ParentNodeName,
+                    nestedKeySeparator, nestedKeyResolver, useNestedKeyFormat, arrayIndexSeparator, ignoreArrayIndex, index)))
+                    yield return childObj;
+            }
+            else
+            {
+                var res = new JObject();
+                if (otherProperties != null)
+                {
+                    foreach (var prop in otherProperties)
+                    {
+                        if (!res.ContainsKey(prop.Name))
+                            res.Add(prop);
+                        else
+                        {
+                            string newKey;
+                            if (nestedKeyResolver == null)
+                            {
+                                if (parentNodeName.IsNullOrWhiteSpace())
+                                {
+
+                                }
+                                else
+                                {
+                                    newKey = $"{parentNodeName}{nestedKeySeparator}{prop.Name}";
+                                    res.Add(prop.Rename(newKey));
+                                }
+                            }
+                            else
+                            {
+                                newKey = nestedKeyResolver(parentNodeName, prop.Name);
+                                res.Add(prop.Rename(newKey));
+                            }
+                        }
+                    }
+                }
+                yield return res;
+            }
+        }
+        private static IEnumerable<JToken> GetFlattenedObjects(JToken token, IEnumerable<JProperty> otherProperties = null, string parentNodeName = null,
+            string nestedKeySeparator = null, Func<string, string, string> nestedKeyResolver = null, bool useNestedKeyFormat = false,
+            string arrayIndexSeparator = null, bool ignoreArrayIndex = true, int? arrayIndex = null,
+            string flattenByNodeName = null, string flattenByJsonPath = null,
+            bool rootCall = false)
+        {
+            //var results = new Dictionary<bool, IList<JProperty>>();
+            //FlattenJObject(token, results);
+
+            if (token is JObject obj)
+            {
+                Dictionary<bool, IGrouping<bool, JProperty>> children = null;
+
+                if (rootCall)
+                {
+                    if (!flattenByJsonPath.IsNullOrWhiteSpace())
+                    {
+                        if (!flattenByNodeName.IsNullOrWhiteSpace())
+                        {
+                            foreach (var co in obj.SelectTokens(flattenByJsonPath))
+                            {
+                                children = co.Children<JProperty>().GroupBy(prop => prop.Value?.Type == JTokenType.Array
+                                    && prop.Name == flattenByNodeName).ToDictionary(gr => gr.Key);
+
+                                foreach (var c in GetFlattenedChildObjects(children, null, null, nestedKeySeparator == null ? String.Empty : nestedKeySeparator.ToString(),
+                nestedKeyResolver, useNestedKeyFormat, arrayIndexSeparator == null ? String.Empty : arrayIndexSeparator.ToString(),
+                ignoreArrayIndex, null, flattenByNodeName, flattenByJsonPath, true))
+                                    yield return c;
+
+                            }
+                                
+                            yield break;
+                        }
+                        else
+                        {
+                            foreach (var co in obj.SelectTokens(flattenByJsonPath))
+                            {
+                                children = co.Children<JProperty>().GroupBy(prop => prop.Value?.Type == JTokenType.Array).ToDictionary(gr => gr.Key);
+
+                                foreach (var c in GetFlattenedChildObjects(children, null, null, nestedKeySeparator == null ? String.Empty : nestedKeySeparator.ToString(),
+                nestedKeyResolver, useNestedKeyFormat, arrayIndexSeparator == null ? String.Empty : arrayIndexSeparator.ToString(),
+                ignoreArrayIndex, null, flattenByNodeName, flattenByJsonPath, true))
+                                    yield return c;
+
+                            }
+
+                            yield break;
+                        }
+                    }
+                    else if (!flattenByNodeName.IsNullOrWhiteSpace())
+                    {
+                        if (obj.Children<JProperty>().Any(p => p.Name == flattenByNodeName))
+                        {
+                            children = obj.Children<JProperty>().GroupBy(prop => prop.Value?.Type == JTokenType.Array
+                                && prop.Name == flattenByNodeName).ToDictionary(gr => gr.Key);
+                        }
+                        else if (flattenByNodeName.Contains("."))
+                        {
+                            var tokens = flattenByNodeName.SplitNTrim(".");
+                            var fbn = tokens.Skip(tokens.Length - 1).FirstOrDefault();
+                            tokens = tokens.Take(tokens.Length - 1).ToArray();
+
+                            JToken node = obj;
+                            foreach (var cn in tokens)
+                            {
+                                if (node.Children<JProperty>().Any(p => p.Name == cn))
+                                {
+                                    JObject jo = node.Children<JProperty>().First(p => p.Name == cn).Value as JObject;
+                                    if (jo != null)
+                                    {
+                                        foreach (var prop in jo.Children<JProperty>())
+                                        {
+                                            if (!useNestedKeyFormat)
+                                                obj.Add(prop.Name, prop.Value);
+                                            else
+                                                obj.Add($"{cn}{nestedKeySeparator}{prop.Name}", prop.Value);
+                                        }
+                                    }
+                                    obj.Remove(cn);
+                                }
+                                else
+                                    yield break;
+                            }
+                            if (obj.Children<JProperty>().Any(p => p.Name == fbn || p.Name.EndsWith($".{fbn}")))
+                            {
+                                children = obj.Children<JProperty>().GroupBy(prop => prop.Value?.Type == JTokenType.Array
+                                    && (prop.Name == fbn || prop.Name.EndsWith($".{fbn}"))).ToDictionary(gr => gr.Key);
+                            }
+                        }
+                    }
+                    else
+                        children = obj.Children<JProperty>().GroupBy(prop => prop.Value?.Type == JTokenType.Array).ToDictionary(gr => gr.Key);
+                }
+                else
+                {
+                    children = obj.Children<JProperty>().GroupBy(prop => prop.Value?.Type == JTokenType.Array).ToDictionary(gr => gr.Key);
+                }
+
+                foreach (var co in GetFlattenedChildObjects(children, null, null, nestedKeySeparator == null ? String.Empty : nestedKeySeparator.ToString(),
+                nestedKeyResolver, useNestedKeyFormat, arrayIndexSeparator == null ? String.Empty : arrayIndexSeparator.ToString(),
+                ignoreArrayIndex, null, flattenByNodeName, flattenByJsonPath, true))
+                    yield return co;
+            }
+            else if (token is JArray arr)
+            {
+                foreach (var co in token.Children().SelectMany((c, index) => GetFlattenedObjects(c, otherProperties,
+                        useNestedKeyFormat ? (parentNodeName.IsNullOrWhiteSpace() ? $"{index}" : $"{parentNodeName}{nestedKeySeparator}{index}") : $"{index}",
+                        nestedKeySeparator, nestedKeyResolver, useNestedKeyFormat, arrayIndexSeparator, ignoreArrayIndex, index,
+                        flattenByNodeName, flattenByJsonPath, true)))
                     yield return co;
             }
             else if (token is JValue && arrayIndex != null)

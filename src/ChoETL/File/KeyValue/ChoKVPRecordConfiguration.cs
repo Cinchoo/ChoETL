@@ -101,14 +101,13 @@ namespace ChoETL
 
         internal ChoKVPRecordConfiguration(Type recordType) : base(recordType)
         {
-            Init(recordType);
-        }
-
-        protected override void Init(Type recordType)
-        {
             KVPRecordFieldConfigurations = new List<ChoKVPRecordFieldConfiguration>();
-            FileHeaderConfiguration = new ChoKVPFileHeaderConfiguration(recordType, Culture);
             LineContinuationChars = new char[] { ' ', '\t' };
+
+            if (recordType != null)
+            {
+                Init(recordType);
+            }
 
             if (Separator.IsNullOrEmpty())
             {
@@ -116,9 +115,14 @@ namespace ChoETL
                     Separator = ":";
             }
 
+            FileHeaderConfiguration = new ChoKVPFileHeaderConfiguration(recordType, Culture);
+        }
+
+        protected override void Init(Type recordType)
+        {
             base.Init(recordType);
 
-            ChoKVPRecordObjectAttribute recObjAttr = recordType != null ? ChoType.GetAttribute<ChoKVPRecordObjectAttribute>(recordType) : null;
+            ChoKVPRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoKVPRecordObjectAttribute>(recordType);
             if (recObjAttr != null)
             {
                 Separator = recObjAttr.Separator;

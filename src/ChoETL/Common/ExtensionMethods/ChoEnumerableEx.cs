@@ -12,7 +12,7 @@ namespace ChoETL
 {
 	public enum CompareStatus { Unchanged, Changed, New, Deleted }
 
-	public static class ChoEnumerableEx
+    public static class ChoEnumerableEx
     {
         public class CompareResult<T>
         {
@@ -42,6 +42,21 @@ namespace ChoETL
             for (int i = 0; i < array.Length; ++i)
                 array[i] = collection[i];
             return array;
+        }
+
+        public static IEnumerable<TResult> OfBaseType<TResult>(this IEnumerable source)
+        {
+            if (source == null)
+                yield break;
+
+            Type resultType = typeof(TResult);
+            foreach (var item in source)
+            {
+                if (item == null)
+                    yield return default(TResult);
+                if (resultType.IsAssignableFrom(item.GetType()))
+                    yield return (TResult)item;
+            }
         }
 
         public static object ConvertToArray(this IList collection, Type arrayType)

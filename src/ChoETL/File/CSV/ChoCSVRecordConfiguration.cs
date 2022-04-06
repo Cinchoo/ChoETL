@@ -214,19 +214,12 @@ namespace ChoETL
 
         internal ChoCSVRecordConfiguration(Type recordType) : base(recordType)
         {
-            Init(recordType);
-        }
-
-        protected override void Init(Type recordType)
-        {
-            base.Init(recordType);
-
-            FileHeaderConfiguration = new ChoCSVFileHeaderConfiguration(recordType, Culture);
-            RecordTypeConfiguration = new ChoCSVRecordTypeConfiguration();
             CSVRecordFieldConfigurations = new List<ChoCSVRecordFieldConfiguration>();
-            RecordTypeConfiguration.DefaultRecordType = recordType;
 
-            ThrowAndStopOnMissingCSVColumn = true;
+            if (recordType != null)
+            {
+                Init(recordType);
+            }
 
             if (Delimiter.IsNullOrEmpty())
             {
@@ -240,6 +233,10 @@ namespace ChoETL
             Sanitize = false;
             InjectionChars = "=@+-";
             InjectionEscapeChar = '\t';
+
+            FileHeaderConfiguration = new ChoCSVFileHeaderConfiguration(recordType, Culture);
+            RecordTypeConfiguration = new ChoCSVRecordTypeConfiguration();
+            RecordTypeConfiguration.DefaultRecordType = recordType;
 
             RecordTypeSelector = new Func<object, Type>((value) =>
             {
@@ -267,8 +264,15 @@ namespace ChoETL
                     return RecordTypeConfiguration.DefaultRecordType;
                 }
             });
+        }
 
-            ChoCSVRecordObjectAttribute recObjAttr = recordType != null ? ChoType.GetAttribute<ChoCSVRecordObjectAttribute>(recordType) : null;
+        protected override void Init(Type recordType)
+        {
+            base.Init(recordType);
+
+            ThrowAndStopOnMissingCSVColumn = true;
+
+            ChoCSVRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoCSVRecordObjectAttribute>(recordType);
             if (recObjAttr != null)
             {
                 Delimiter = recObjAttr.Delimiter;

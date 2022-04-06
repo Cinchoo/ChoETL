@@ -511,7 +511,8 @@ namespace ChoETL
                 foreach (var jo in jObjects)
                 {
                     foreach (var jo1 in jo.Flatten(Configuration.NestedKeySeparator, Configuration.ArrayIndexSeparator, 
-                        Configuration.NestedKeyResolver, Configuration.UseNestedKeyFormat, Configuration.IgnoreArrayIndex).OfType<JObject>())
+                        Configuration.NestedKeyResolver, Configuration.UseNestedKeyFormat, Configuration.IgnoreArrayIndex,
+                        Configuration.FlattenByNodeName, Configuration.FlattenByJsonPath).OfType<JObject>())
                         yield return (JObject)jo1;
                 }
             }

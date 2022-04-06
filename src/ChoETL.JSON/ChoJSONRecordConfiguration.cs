@@ -105,7 +105,7 @@ namespace ChoETL
             get;
             set;
         }
- 
+
         [DataMember]
         public List<ChoJSONRecordFieldConfiguration> JSONRecordFieldConfigurations
         {
@@ -221,7 +221,7 @@ namespace ChoETL
                 return fc.IsArray.Value;
         }
 
-        private Lazy<List<JsonConverter>> _JSONConverters;
+        private readonly Lazy<List<JsonConverter>> _JSONConverters;
         private List<JsonConverter> GetJSONConverters()
         {
             return _JSONConverters.Value;
@@ -335,6 +335,8 @@ namespace ChoETL
 
         public bool TurnOffBuiltInJsonConverters { get; private set; }
         public bool IgnoreArrayIndex { get; set; } = true;
+        public string FlattenByNodeName { get; set; }
+        public string FlattenByJsonPath { get; set; }
 
         public ChoJSONRecordFieldConfiguration this[string name]
         {
@@ -352,12 +354,6 @@ namespace ChoETL
 
         internal ChoJSONRecordConfiguration(Type recordType) : base(recordType)
         {
-            Init(recordType);
-        }
-
-        protected override void Init(Type recordType)
-        {
-
             _JsonSerializer = new Lazy<JsonSerializer>(() =>
             {
                 var se = JsonSerializerSettings == null ? null : JsonSerializer.Create(JsonSerializerSettings);
@@ -386,23 +382,10 @@ namespace ChoETL
 
             LineBreakChars = Environment.NewLine;
             Formatting = Newtonsoft.Json.Formatting.Indented;
-
-            base.Init(recordType);
-
-            var pd = recordType != null ? ChoTypeDescriptor.GetTypeAttribute<ChoJSONPathAttribute>(recordType) : null;
-            if (pd != null)
+            if (recordType != null)
             {
-                JSONPath = pd.JSONPath;
-                AllowComplexJSONPath = pd.AllowComplexJSONPath;
+                Init(recordType);
             }
-
-            ChoJSONRecordObjectAttribute recObjAttr = recordType != null ? ChoType.GetAttribute<ChoJSONRecordObjectAttribute>(recordType) : null;
-            if (recObjAttr != null)
-            {
-            }
-
-            if (JSONRecordFieldConfigurations.Count == 0)
-                MapRecordFields(); // DiscoverRecordFields(recordType, false);
         }
 
         internal void AddFieldForType(Type rt, ChoJSONRecordFieldConfiguration rc)
@@ -438,6 +421,30 @@ namespace ChoETL
                 return JSONRecordFieldConfigurationsForType[rt].ToDictionary(kvp => kvp.Key, kvp => (ChoRecordFieldConfiguration)kvp.Value);
             else
                 return null;
+        }
+
+        protected override void Init(Type recordType)
+        {
+            base.Init(recordType);
+
+            if (recordType == null)
+                return;
+
+
+            var pd = ChoTypeDescriptor.GetTypeAttribute<ChoJSONPathAttribute>(recordType);
+            if (pd != null)
+            {
+                JSONPath = pd.JSONPath;
+                AllowComplexJSONPath = pd.AllowComplexJSONPath;
+            }
+
+            ChoJSONRecordObjectAttribute recObjAttr = ChoType.GetAttribute<ChoJSONRecordObjectAttribute>(recordType);
+            if (recObjAttr != null)
+            {
+            }
+
+            if (JSONRecordFieldConfigurations.Count == 0)
+                MapRecordFields(); // DiscoverRecordFields(recordType, false);
         }
 
         internal void Reset()
@@ -531,7 +538,8 @@ namespace ChoETL
         }
         public void MapRecordFields()
         {
-            /*RecordType =*/ DiscoverRecordFields(RecordType, false, null, true);
+            /*RecordType =*/
+            DiscoverRecordFields(RecordType, false, null, true);
         }
 
         private Type DiscoverRecordFields(Type recordType, bool clear = true,
@@ -926,7 +934,7 @@ namespace ChoETL
             mapper?.Invoke(new ChoJSONRecordFieldConfigurationMap(cf));
             return this;
         }
-        
+
         public ChoJSONRecordConfiguration Map<T, TProperty>(Expression<Func<T, TProperty>> field, string jsonPath = null, string fieldName = null)
         {
             Map(field, m => m.JSONPath(jsonPath).FieldName(fieldName));

@@ -99,7 +99,7 @@ namespace ChoETL
                         {
                             foreach (var e in Configuration.DocumentElements.Reverse())
                             {
-                                sw.Write(Indent("{0}<{1}>".FormatString(EOLDelimiter, e), _indent--));
+                                sw.Write(Indent("{0}</{1}>".FormatString(EOLDelimiter, e), _indent--));
                             }
                         }
                     }
@@ -1036,7 +1036,7 @@ namespace ChoETL
 
                         if (ElementType == null)
                         {
-                            var name = Configuration.TurnOffAutoCorrectXNames ? kvp.Key : kvp.Key.ToValidVariableName();
+                            var name = Configuration.TurnOffAutoCorrectXNames ? kvp.Key : kvp.Key.ToValidXmlVariableName();
                             if (kvp.Value is ChoCDATA)
                                 ele.Add(ns != null ? new XElement(ns + name, new XCData(((ChoCDATA)kvp.Value).Value)) : new XElement(kvp.Key, new XCData(((ChoCDATA)kvp.Value).Value)));
                             else if (isCDATA)
@@ -1308,7 +1308,7 @@ namespace ChoETL
             string prefix = name.Contains(":") ? name.SplitNTrim(":").First() : null;
             name = name.Contains(":") ? name.SplitNTrim(":").Skip(1).First() : name;
 
-            name = Configuration.TurnOffAutoCorrectXNames ? name : name.ToValidVariableName();
+            name = Configuration.TurnOffAutoCorrectXNames ? name : name.ToValidXmlVariableName();
 
             XElement e = null;
             XNamespace ns = null;
