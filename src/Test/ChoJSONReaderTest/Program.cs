@@ -9157,11 +9157,33 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 }
             }
         }
+
+        static void Issue194()
+        {
+            string json = @"{
+	""MyDictionary"": {
+	""1"": ""Value1"",
+	""2"": ""Value2""
+	},
+	""MyArray"": [123, 456]
+}";
+
+            ChoETLSettings.ArrayBracketNotation = ChoArrayBracketNotation.Parenthesis;
+
+            using (var r = ChoJSONReader.LoadText(json)
+                .Configure(c => c.ArrayIndexSeparator = '.')
+                .Configure(c => c.NestedKeySeparator = '.')
+                )
+            {
+                r.AsDataTable().Print();
+            }
+
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            NormalizeJSON();
+            Issue194();
             return;
 
             Issue191();

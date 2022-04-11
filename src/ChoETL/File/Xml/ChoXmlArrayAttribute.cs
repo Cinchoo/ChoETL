@@ -9,6 +9,11 @@ namespace ChoETL
 	[AttributeUsage(AttributeTargets.Property)]
 	public class ChoXmlArrayAttribute : Attribute
 	{
+        public string ArrayNodeName
+        {
+            get;
+            set;
+        }
         public bool Flag
         {
             get;

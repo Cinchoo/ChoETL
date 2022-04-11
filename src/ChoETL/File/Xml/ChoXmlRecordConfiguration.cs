@@ -830,9 +830,43 @@ namespace ChoETL
                 {
                     fc.PropertyDescriptor = pd1;
 
+                    XmlArrayItemAttribute xmlArrayItemAttr = pd1.Attributes.OfType<XmlArrayItemAttribute>().FirstOrDefault();
+                    if (xmlArrayItemAttr != null)
+                        fc.FieldName = xmlArrayItemAttr.ElementName;
+
                     ChoXmlArrayAttribute slAttr = pd1.Attributes.OfType<ChoXmlArrayAttribute>().FirstOrDefault();
                     if (slAttr != null)
+                    {
                         fc.IsArray = slAttr.Flag;
+                        fc.ArrayNodeName = slAttr.ArrayNodeName;
+                    }
+                    else
+                    {
+                        XmlArrayAttribute slAttr1 = pd1.Attributes.OfType<XmlArrayAttribute>().FirstOrDefault();
+                        if (slAttr1 != null)
+                        {
+                            fc.IsArray = true;
+                            fc.ArrayNodeName = slAttr1.ElementName;
+                            fc.ArrayNodeNamespace = slAttr1.Namespace;
+                        }
+                        else
+                            fc.IsArray = false;
+                    }
+
+                    if (fc.IsArray.CastTo<bool>() && fc.ArrayNodeName.IsNullOrWhiteSpace())
+                    {
+                        if (pd1 != null)
+                        {
+                            var itemType = pd1.PropertyType.GetItemType();
+
+                            XmlRootAttribute rootAttr = itemType.GetCustomAttributes(false).OfType<XmlRootAttribute>().FirstOrDefault();
+                            if (rootAttr != null)
+                            {
+                                fc.ArrayNodeName = rootAttr.ElementName;
+                                fc.ArrayNodeNamespace = rootAttr.Namespace;
+                            }
+                        }
+                    }
                 }
 
                 if (fc.PropertyDescriptor == null)
@@ -1423,6 +1457,9 @@ namespace ChoETL
 
         public string GetNamespacePrefix(string ns)
         {
+            if (ns.IsNullOrWhiteSpace())
+                return null;
+
             return NSDict.Where(Xml => Xml.Value == ns && !Xml.Key.IsNullOrWhiteSpace()).Select(Xml => Xml.Key).FirstOrDefault();
         }
 

@@ -13,6 +13,22 @@ namespace ChoETL
     [DataContract]
     public class ChoXmlRecordFieldConfiguration : ChoFileRecordFieldConfiguration
     {
+        public string ArrayNodeNamespace
+        {
+            get;
+            set;
+        }
+        public string ArrayNodeName
+        {
+            get;
+            set;
+        }
+        public string NodeNamespace
+        {
+            get;
+            set;
+        }
+
         public bool? UseProxy
         {
             get;

@@ -975,7 +975,7 @@ namespace ChoETL
                 {
                     if (!IsValidXItem(kvp.Key)) continue;
 
-                    if (kvp.Key == ChoDynamicObject.ValueToken)
+                    if (kvp.Key == ChoDynamicObjectSettings.XmlValueToken)
                     {
                         ele.Value = kvp.Value.ToNString();
                         continue;
@@ -1103,10 +1103,20 @@ namespace ChoETL
                                 innerXml1 = innerXml1.Replace("<dynamic>", "<{0}>".FormatString(eleName));
                                 innerXml1 = innerXml1.Replace("</dynamic>", "</{0}>".FormatString(eleName));
 
-                                if (eleName == kvp.Key)
-                                    innerXml1 = "<{0}>{1}</{0}>".FormatString(XmlNamespaceElementName(kvp.Key.ToPlural(), Configuration.DefaultNamespacePrefix), innerXml1);
+                                if (fieldConfig.ArrayNodeName.IsNullOrWhiteSpace())
+                                {
+                                    if (eleName == kvp.Key)
+                                        innerXml1 = "<{0}>{1}</{0}>".FormatString(XmlNamespaceElementName(kvp.Key.ToPlural(), Configuration.DefaultNamespacePrefix), innerXml1);
+                                    else
+                                        innerXml1 = "<{0}>{1}</{0}>".FormatString(XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix), innerXml1);
+                                }
                                 else
-                                    innerXml1 = "<{0}>{1}</{0}>".FormatString(XmlNamespaceElementName(kvp.Key, Configuration.DefaultNamespacePrefix), innerXml1);
+                                {
+                                    string nsPrefix = Configuration.XmlNamespaceManager.Value.GetNamespacePrefix(fieldConfig.ArrayNodeNamespace);
+
+                                    innerXml1 = "<{0}>{1}</{0}>".FormatString(XmlNamespaceElementName(fieldConfig.ArrayNodeName,
+                                        nsPrefix == null ? Configuration.DefaultNamespacePrefix : nsPrefix), innerXml1);
+                                }
                             }
                         }
                         if (EOLDelimiter != null)

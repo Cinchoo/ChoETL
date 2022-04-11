@@ -3,6 +3,7 @@ using NUnit.Framework;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Data.SqlClient;
 using System.Dynamic;
@@ -91,7 +92,7 @@ namespace ChoXmlWriterTest
                     //.Configure(c => c.Formatting = System.Xml.Formatting.None)
                     )
                 {
-                    w.Write(new { listdata  = x });
+                    w.Write(new { listdata = x });
                 }
             }
 
@@ -198,7 +199,7 @@ namespace ChoXmlWriterTest
 
             return;
 
-                string csv = @"Id, First Name
+            string csv = @"Id, First Name
 1, Tom
 2, Mark";
 
@@ -451,7 +452,7 @@ namespace ChoXmlWriterTest
         public class TimespanClass
         {
             public int Id { get; set; }
-            [XmlElement(Type = typeof(XmlTimeSpan))] 
+            [XmlElement(Type = typeof(XmlTimeSpan))]
             public TimeSpan TimeSinceLastEvent { get; set; }
         }
 
@@ -615,9 +616,57 @@ namespace ChoXmlWriterTest
                 }
             }
         }
+
+        public class Contact
+        {
+            public string Name { get; set; }
+            [ChoXmlArray]
+            //[DisplayName("certificateSign")]
+            //[XmlArray("Certificate")]
+            //[XmlArray]
+            //[XmlArrayItem("certificateSign")]
+            public Certificate[] certificates { get; set; }
+        }
+
+        //[XmlRoot("certificateSign1")]
+        public class Certificate
+        {
+            [XmlText]
+            public string certificateSign { get; set; }
+        }
+        static void Issue197()
+        {
+            var rec = new Contact
+            {
+                Name = "Peter",
+                certificates = new Certificate[]
+                {
+                new Certificate
+                {
+                    certificateSign = "A1"
+                },
+                new Certificate
+                {
+                    certificateSign = "A2"
+                }
+                }
+
+            };
+
+            using (var w = new ChoXmlWriter<Contact>(Console.Out)
+                //.UseXmlSerialization()
+                .IgnoreRootName()
+                )
+            {
+                w.Write(rec);
+            }
+        }
+
         static void Main(string[] args)
-        { 
+        {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+            Issue197();
+            return;
 
             AddDifferentNamespaceToSubnode();
 
@@ -663,7 +712,7 @@ namespace ChoXmlWriterTest
             //    Console.WriteLine(r.First().Dump());
             //}
 
-            actual= ChoJSONWriter.ToText(ChoJSONReader.LoadText(json,
+            actual = ChoJSONWriter.ToText(ChoJSONReader.LoadText(json,
                 new ChoJSONRecordConfiguration().Configure(c => c.JsonSerializerSettings = new Newtonsoft.Json.JsonSerializerSettings
                 {
                     DateParseHandling = Newtonsoft.Json.DateParseHandling.None
@@ -704,7 +753,7 @@ namespace ChoXmlWriterTest
                 })
                 )
                 w.Write(new { Days = s });
-            actual= sb.ToString();
+            actual = sb.ToString();
 
             Assert.AreEqual(expected, actual);
         }
@@ -905,7 +954,7 @@ namespace ChoXmlWriterTest
                 )
                 w.Write(list);
 
-            actual =msg.ToString();
+            actual = msg.ToString();
         }
 
         //[Test]
@@ -934,7 +983,7 @@ namespace ChoXmlWriterTest
             using (var w = new ChoXmlWriter(msg)
                 )
                 w.Write(list);
-            actual =msg.ToString();
+            actual = msg.ToString();
 
             Assert.AreEqual(expected, actual);
         }
@@ -958,7 +1007,7 @@ namespace ChoXmlWriterTest
                     parser.Write(dt);
             }
         }
-        
+
         //[Test]
         public static void DataReaderTest()
         {
@@ -1174,7 +1223,7 @@ namespace ChoXmlWriterTest
             [ChoXmlElementRecordField]
             public List<ChoKeyValuePair<int, string>> KVP
             {
-                get { return Courses?.Select(kvp => new ChoKeyValuePair<int, string>(kvp)).ToList();  }
+                get { return Courses?.Select(kvp => new ChoKeyValuePair<int, string>(kvp)).ToList(); }
                 set { Courses = value != null ? value.ToDictionary(v => v.Key, v => v.Value) : new Dictionary<int, string>(); }
             }
             [ChoIgnoreMember]

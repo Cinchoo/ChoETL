@@ -19,8 +19,19 @@ using System.Xml.Serialization;
 
 namespace ChoETL
 {
+    public enum ChoArrayBracketNotation
+    {
+        None,
+        Square,
+        Parenthesis
+    }
+
     public static class ChoETLSettings
     {
+        public static ChoArrayBracketNotation ArrayBracketNotation
+        {
+            get; set;
+        }
         private static char _keySeparator = '.';
         public static char KeySeparator
         {
@@ -80,6 +91,17 @@ namespace ChoETL
 
     public static class ChoDynamicObjectSettings
     {
+        private static string _xmlValueToken = "#text";
+        public static string XmlValueToken
+        {
+            get { return _xmlValueToken; }
+            set
+            {
+                if (value.IsNullOrWhiteSpace())
+                    return;
+                _xmlValueToken = value;
+            }
+        }
         public static bool ThrowExceptionIfPropNotExists = false;
         public static DictionaryType DictionaryType = DictionaryType.Ordered;
         public static bool UseAutoConverter = false;
@@ -97,7 +119,7 @@ namespace ChoETL
         private string _keySeparator = ".";
         private string _attributePrefix = "@";
 
-        internal static readonly string ValueToken = "#text";
+        //internal static readonly string ValueToken = "#text";
 
         [IgnoreDataMember]
         private readonly static Dictionary<string, Type> _intrinsicTypes = new Dictionary<string, Type>();
@@ -1372,7 +1394,7 @@ namespace ChoETL
 
             bool hasAttrs = false;
             StringBuilder msg = new StringBuilder("<{0}".FormatString(tag));
-            foreach (string key in obj.Keys.Where(k => IsAttribute(k) && k != ValueToken))
+            foreach (string key in obj.Keys.Where(k => IsAttribute(k) && k != ChoDynamicObjectSettings.XmlValueToken))
             {
                 hasAttrs = true;
 
@@ -1398,17 +1420,17 @@ namespace ChoETL
                     msg.AppendFormat(@" {0}=""{1}""", key.StartsWith(_attributePrefix) ? key.Substring(1) : key, this[key]);
             }
 
-            if (ContainsKey(ValueToken))
+            if (ContainsKey(ChoDynamicObjectSettings.XmlValueToken))
             {
                 if (hasAttrs)
                 {
                     msg.AppendFormat(">");
-                    msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(this[ValueToken].ToNString(), EOLDelimiter));
+                    msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(this[ChoDynamicObjectSettings.XmlValueToken].ToNString(), EOLDelimiter));
                     msg.AppendFormat("{0}</{1}>", EOLDelimiter, tag);
                 }
                 else
                 {
-                    object value = this[ValueToken];
+                    object value = this[ChoDynamicObjectSettings.XmlValueToken];
 
                     if (emitDataType)
                     {
@@ -1572,18 +1594,18 @@ namespace ChoETL
 
         public bool HasText()
         {
-            return ContainsKey(ValueToken);
+            return ContainsKey(ChoDynamicObjectSettings.XmlValueToken);
         }
         public object GetText()
         {
-            return ContainsKey(ValueToken) ? this[ValueToken] : null;
+            return ContainsKey(ChoDynamicObjectSettings.XmlValueToken) ? this[ChoDynamicObjectSettings.XmlValueToken] : null;
         }
         public void SetText(object value)
         {
-            if (ContainsKey(ValueToken))
-                this[ValueToken] = value;
+            if (ContainsKey(ChoDynamicObjectSettings.XmlValueToken))
+                this[ChoDynamicObjectSettings.XmlValueToken] = value;
             else
-                Add(ValueToken, value);
+                Add(ChoDynamicObjectSettings.XmlValueToken, value);
         }
 
         private HashSet<string> _attributes = new HashSet<string>();

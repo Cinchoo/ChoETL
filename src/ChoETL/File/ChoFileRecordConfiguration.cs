@@ -180,6 +180,12 @@ namespace ChoETL
             set;
         }
         [DataMember]
+        public char? NestedKeySeparator
+        {
+            get { return NestedColumnSeparator; }
+            set { NestedColumnSeparator = value; }
+        }
+        [DataMember]
         public bool AllowNestedArrayConversion
         {
             get;
@@ -198,12 +204,6 @@ namespace ChoETL
         }
         [DataMember]
         public char? ArrayIndexSeparator
-        {
-            get;
-            set;
-        }
-        [DataMember]
-        public char? NestedKeySeparator
         {
             get;
             set;

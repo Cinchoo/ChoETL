@@ -419,11 +419,24 @@ namespace ChoETL
                 }
                 else if (item is IList)
                 {
-                    foreach (var kvp1 in Flatten(item as IList, "{0}{2}{1}".FormatString(key, index++, nestedKeySeparator), nestedKeySeparator))
+                    string akey = "{0}{2}{1}".FormatString(key, index++, nestedKeySeparator);
+                    foreach (var kvp1 in Flatten(item as IList, akey, nestedKeySeparator))
                         yield return kvp1;
                 }
                 else
-                    yield return new KeyValuePair<string, object>("{0}{2}{1}".FormatString(key, index++, nestedKeySeparator), item);
+                {
+                    string akey = "{0}{2}{1}".FormatString(key, index++, nestedKeySeparator);
+                    switch (ChoETLSettings.ArrayBracketNotation)
+                    {
+                        case ChoArrayBracketNotation.Square:
+                            akey = "{0}{2}[{1}]".FormatString(key, index++, nestedKeySeparator);
+                            break;
+                        case ChoArrayBracketNotation.Parenthesis:
+                            akey = "{0}{2}({1})".FormatString(key, index++, nestedKeySeparator);
+                            break;
+                    }
+                    yield return new KeyValuePair<string, object>(akey, item);
+                }
             }
 
         }
@@ -469,6 +482,17 @@ namespace ChoETL
                 else if (dict[key] is IList)
                 {
                     var lkey = key == null ? dKey : "{0}{2}{1}".FormatString(key, dKey, arrayIndexSeparator == null ? nestedKeySeparator : arrayIndexSeparator.Value);
+
+                    switch (ChoETLSettings.ArrayBracketNotation)
+                    {
+                        case ChoArrayBracketNotation.Square:
+                            lkey = key == null ? dKey : "{0}{2}[{1}]".FormatString(key, dKey, arrayIndexSeparator == null ? nestedKeySeparator : arrayIndexSeparator.Value);
+                            break;
+                        case ChoArrayBracketNotation.Parenthesis:
+                            lkey = key == null ? dKey : "{0}{2}({1})".FormatString(key, dKey, arrayIndexSeparator == null ? nestedKeySeparator : arrayIndexSeparator.Value);
+                            break;
+                    }
+
                     foreach (var tuple in Flatten(dict[key] as IList, lkey, nestedKeySeparator, arrayIndexSeparator, ignoreDictionaryFieldPrefix))
                         yield return tuple;
                 }
@@ -523,6 +547,16 @@ namespace ChoETL
                 else if (kvp.Value is IList)
                 {
                     var lkey = key == null ? kvp.Key : "{0}{2}{1}".FormatString(key, kvp.Key, arrayIndexSeparator == null ? nestedKeySeparator : arrayIndexSeparator.Value);
+
+                    switch (ChoETLSettings.ArrayBracketNotation)
+                    {
+                        case ChoArrayBracketNotation.Square:
+                            lkey = key == null ? kvp.Key : "{0}{2}[{1}]".FormatString(key, kvp.Key, arrayIndexSeparator == null ? nestedKeySeparator : arrayIndexSeparator.Value);
+                            break;
+                        case ChoArrayBracketNotation.Parenthesis:
+                            lkey = key == null ? kvp.Key : "{0}{2}({1})".FormatString(key, kvp.Key, arrayIndexSeparator == null ? nestedKeySeparator : arrayIndexSeparator.Value);
+                            break;
+                    }
                     foreach (var tuple in Flatten(kvp.Value as IList, lkey, arrayIndexSeparator == null ? nestedKeySeparator : arrayIndexSeparator.Value, arrayIndexSeparator, ignoreDictionaryFieldPrefix))
                         yield return tuple;
                 }
