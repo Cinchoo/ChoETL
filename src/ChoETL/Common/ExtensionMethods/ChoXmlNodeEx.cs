@@ -1267,7 +1267,9 @@ namespace ChoETL
             {
                 foreach (var kvp in element.Elements().GroupBy(e => e.Name.LocalName).Select(g => new { Name = g.Key, Value = g.ToArray() }))
                 {
-                    if (kvp.Value.Length == 1 && !kvp.Value.First().IsJsonArray(jsonSchemaNS) && !kvp.Name.IsPlural())
+                    if (kvp.Value.Length == 1 && !kvp.Value.First().IsJsonArray(jsonSchemaNS) && !
+                        (kvp.Name.IsPlural() && (kvp.Value.First().Elements().Any() && kvp.Value.First().Attributes().Any()))
+                        )
                     {
                         XElement subElement = kvp.Value.First();
 
@@ -1330,6 +1332,8 @@ namespace ChoETL
                                 if (!name.IsValidXNode(defaultNSPrefix))
                                     continue;
                             }
+                            if (!nsMgr.IsInNamespace(subElement2.Name))
+                                continue;
 
                             List<object> subDynamic = new List<object>();
                             foreach (XElement subsubElement in subElement2.Elements())

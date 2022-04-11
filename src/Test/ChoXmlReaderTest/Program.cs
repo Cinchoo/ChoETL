@@ -586,7 +586,10 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            Issue195();
+            GPOPolicyLoad();
+            return;
+
+            LoadProducts();
             return;
 
             FlattenKeyValue2DataTable();
@@ -600,6 +603,78 @@ namespace ChoXmlReaderTest
             //Xml2JSON1();
             //LoadXmlUsingConfigAndPOCO();
             //DesrializeUsingProxy();
+        }
+
+        static void GPOPolicyLoad()
+        {
+            using (var r = new ChoXmlReader("GPOPolicy.xml")
+                .WithXPath("//GPO")
+                .WithXmlNamespace("g", "http://www.microsoft.com/GroupPolicy/Settings")
+                .WithXmlNamespace("t", "http://www.microsoft.com/GroupPolicy/Types")
+                .WithXmlNamespace("s", "http://www.microsoft.com/GroupPolicy/Types/Security")
+                .Configure(c => c.UseXmlArray = false)
+                //.WithField("Identifier", xPath: "/g:Identifier/t:Identifier")
+                //.WithField("Domain", xPath: "/g:Identifier/t:Domain")
+                //.WithField("Name", xPath: "g:Name")
+                //.ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                )
+            {
+                //r.Print();
+                //return;
+
+                using (var w = new ChoJSONWriter(Console.Out))
+                {
+                    w.Write(r);
+                }
+            }
+        }
+
+        public class Product
+        {
+            public int ProductCode { get; set; }
+            [ChoXPath("Properties/@no")]
+            public int PropertyNo { get; set; }
+            [ChoXPath("Properties/ColorProperties/Color")]
+            public string Color { get; set; }
+        }
+
+        public static void LoadProducts()
+        {
+            string xml = @"<Root>
+ <Products> 
+    <Product>
+      <ProductCode>1</ProductCode>
+      <Properties no=""45"">
+        <ColorProperties>
+           <Color>Blue</Color>
+        </ColorProperties>
+      </Properties>
+    </Product>
+    <Product>
+      <ProductCode>2</ProductCode>
+      <Properties no=""45"">
+        <ColorProperties>
+           <Color>Red</Color>
+        </ColorProperties>
+      </Properties>
+    </Product>
+     <Product>
+      <ProductCode>3</ProductCode>
+      <Properties no=""45"">
+        <ColorProperties>
+           <Color>Yellow</Color>
+        </ColorProperties>
+      </Properties>
+    </Product>
+ </Products>
+</Root>";
+
+            using (var r = ChoXmlReader<Product>.LoadText(xml)
+                   .WithXPath("//Product")
+                  )
+            {
+                r.Print();
+            }
         }
 
         public class Record

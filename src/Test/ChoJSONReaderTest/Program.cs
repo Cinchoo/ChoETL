@@ -9108,9 +9108,61 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             //    r.AsDataTable().Print();
             //}
         }
+        public static void NormalizeJSON()
+        {
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+
+            string json = @"{
+  ""videos"": [
+    {
+      ""file"": {
+        ""S"": ""file1.mp4""
+      },
+      ""id"": {
+        ""S"": ""1""
+      },
+      ""canvas"": {
+        ""S"": ""This is Canvas1""
+      }
+    },
+    {
+      ""file"": {
+        ""S"": ""main.mp4""
+      },
+      ""id"": {
+        ""S"": ""0""
+      },
+      ""canvas"": {
+        ""S"": ""this is a canvas""
+      }
+    }
+  ]
+}";
+
+            using (var r = ChoJSONReader.LoadText(json)
+                   .WithJSONPath("$..videos")
+                   .WithField("file", jsonPath: "file.S", isArray: false)
+                   .WithField("id", jsonPath: "id.S", isArray: false)
+                   .WithField("canvas", jsonPath: "canvas.S", isArray: false)
+
+                   )
+            {
+                using (var w = new ChoJSONWriter(Console.Out)
+                    .SupportMultipleContent()
+                    .SingleElement()
+                    .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                    )
+                {
+                    w.Write(new { Videos = r.ToArray() });
+                }
+            }
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+
+            NormalizeJSON();
+            return;
 
             Issue191();
             return;

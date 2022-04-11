@@ -834,7 +834,7 @@ namespace ChoETL
             if (formatting == null)
                 formatting = serializer.Formatting;
 
-            if (settings != null && enableXmlAttributePrefix)
+            if (settings != null /*&& enableXmlAttributePrefix*/)
             {
                 if (settings.Context.Context == null)
                     settings.Context = new System.Runtime.Serialization.StreamingContext(System.Runtime.Serialization.StreamingContextStates.All, new ChoDynamicObject());

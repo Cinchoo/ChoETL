@@ -579,7 +579,7 @@ namespace ChoETL
                             if (xpAttr != null && !xpAttr.XPath.IsNullOrWhiteSpace())
                                 obj.XPath = xpAttr.XPath;
                             ChoUseXmlProxyAttribute upAttr = pd.Attributes.OfType<ChoUseXmlProxyAttribute>().FirstOrDefault();
-                            if (xpAttr != null)
+                            if (upAttr != null)
                                 obj.UseProxy = upAttr.Flag;
 
                             XmlElementAttribute xAttr = pd.Attributes.OfType<XmlElementAttribute>().FirstOrDefault();

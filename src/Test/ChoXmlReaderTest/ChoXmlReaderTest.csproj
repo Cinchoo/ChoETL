@@ -147,6 +147,7 @@
     <Content Include="sample.xml" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Content Include="GPOPolicy.xml" />
     <Content Include="XMLFile5.xml" />
   </ItemGroup>
   <ItemGroup>
