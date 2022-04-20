@@ -18,7 +18,62 @@ namespace ChoETL
         static ChoJSONExtensions()
         {
         }
+        public static JToken GetProperty(this JToken token, string name, StringComparison comparer = StringComparison.InvariantCultureIgnoreCase)
+        {
+            if (token == null)
+            {
+                return null;
+            }
+            var obj = token as JObject;
+            JToken match;
+            if (obj.TryGetValue(name, comparer, out match))
+            {
+                return match;
+            }
+            return null;
+        }
 
+        /*
+        public static string ToJson(this List<Item> items)
+        {
+            var lookup = items.ToLookup(x => x.ParentId);
+            JObject ToJson(int? parentId)
+            {
+                JProperty ToProperty(Item item)
+                {
+                    switch (item.Type)
+                    {
+                        case "":
+                            return new JProperty(item.Name, ToJson(item.Id));
+                        case "String":
+                            return new JProperty(item.Name, item.Description);
+                        case "Array":
+                            return new JProperty(item.Name, lookup[item.Id].Select(x => x.Description).ToArray());
+                        case "Int":
+                            return new JProperty(item.Name, int.Parse(item.Description));
+                        default:
+                            return new JProperty(item.Name);
+                    }
+                }
+                return new JObject(lookup[parentId].Select(x => ToProperty(x)));
+            }
+            var output = ToJson(null);
+            var text = Newtonsoft.Json.JsonConvert.SerializeObject(output, Newtonsoft.Json.Formatting.Indented);
+            return text;
+        }
+        public object ToHierarchy<TSource, TKey>(this IEnumerable<TSource> items, Func<TSource, TKey> keySelector,
+            Func<ILookup<TKey, TSource>, TSource, JProperty> propertySelector
+            )
+            where TSource : class
+        {
+            var lookup = items.ToLookup(keySelector);
+            JObject ToJson(TKey parentId)
+            {
+                return new JObject(lookup[parentId].Select(x => propertySelector(lookup, x)));
+            }
+            //var output = ToJson(null);
+        }
+        */
         public static T ToObjectEx<T>(this JObject jo, JsonSerializer serializer)
         {
             return (T)ToObjectEx(jo, typeof(T), serializer);

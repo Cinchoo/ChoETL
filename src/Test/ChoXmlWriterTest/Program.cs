@@ -619,6 +619,7 @@ namespace ChoXmlWriterTest
 
         public class Contact
         {
+            public string Title { get; set; }
             public string Name { get; set; }
             [ChoXmlArray]
             //[DisplayName("certificateSign")]
@@ -650,7 +651,6 @@ namespace ChoXmlWriterTest
                     certificateSign = "A2"
                 }
                 }
-
             };
 
             using (var w = new ChoXmlWriter<Contact>(Console.Out)

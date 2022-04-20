@@ -1,17 +1,32 @@
-﻿[
-  {
-    "id": 1234,
-    "states": [
-      "PA",
-      "VA"
-    ]
+﻿{
+  "config": {
+    "user": "Nico",
+    "userID": "54"
   },
-  {
-    "id": 1235,
-    "states": [
-      "CA",
-      "DE",
-      "MD"
-    ]
-  }
-]
+  "tests": [
+    {
+      "ask": "test1",
+      "handshake": false
+    },
+    {
+      "ask": "test2",
+      "handshake": false
+    },
+    {
+      "ask": "test3",
+      "handshake": true,
+      "verify": "true"
+    },
+    {
+      "ask": "test4",
+      "handshake": false
+    },
+    { "send": "result4" },
+    {
+      "ask": "test7",
+      "repeat": 30,
+      "delay": 120,
+      "brakefail": false
+    }
+  ]
+}

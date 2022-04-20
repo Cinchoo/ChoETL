@@ -50,6 +50,7 @@
     <Compile Include="..\ChoETL.JSON\ChoJSONWriter.cs" Link="ChoJSONWriter.cs" />
     <Compile Include="..\ChoETL.JSON\ChoUseJSONSerializationAttribute.cs" Link="ChoUseJSONSerializationAttribute.cs" />
     <Compile Include="..\ChoETL.JSON\Converters\ByteArrayConverter.cs" Link="Converters\ByteArrayConverter.cs" />
+    <Compile Include="..\ChoETL.JSON\Converters\ChoJSONPathConverter.cs" Link="Converters\ChoJSONPathConverter.cs" />
     <Compile Include="..\ChoETL.JSON\Converters\ChoDynamicObjectConverter.cs" Link="Converters\ChoDynamicObjectConverter.cs" />
     <Compile Include="..\ChoETL.JSON\Converters\ChoCompositeObjectConverter.cs" Link="Converters\ChoCompositeObjectConverter.cs" />
     <Compile Include="..\ChoETL.JSON\Converters\ChoJSONNodeConverter.cs" Link="Converters\ChoJSONNodeConverter.cs" />

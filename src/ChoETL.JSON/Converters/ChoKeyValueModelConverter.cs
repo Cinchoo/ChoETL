@@ -8,6 +8,8 @@ namespace ChoETL
 {
     public class ChoKeyValueModelConverter : JsonConverter
     {
+        public static readonly ChoKeyValueModelConverter Instance = new ChoKeyValueModelConverter();
+
         public override bool CanConvert(Type objectType)
         {
             if (objectType == null)

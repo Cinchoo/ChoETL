@@ -216,8 +216,8 @@ namespace ChoETL
                         property.ItemTypeNameHandling = jp.ItemTypeNameHandling;
                         property.ItemIsReference = jp.ItemIsReference;
                     }
-                    else if (pd.Attributes.OfType<ChoJSONPathAttribute>().Any())
-                        property.PropertyName = pd.Attributes.OfType<ChoJSONPathAttribute>().First().JSONPath;
+                    //else if (pd.Attributes.OfType<ChoJSONPathAttribute>().Any())
+                    //    property.PropertyName = pd.Attributes.OfType<ChoJSONPathAttribute>().First().JSONPath;
 
                     if (CanIncludeConverter(pd))
                     {
@@ -1096,7 +1096,7 @@ namespace ChoETL
             return msg.ToString();
         }
     }
-
+    /*
     public class ChoJSONPathConverter : JsonConverter
     {
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
@@ -1207,4 +1207,5 @@ namespace ChoETL
             throw new NotImplementedException();
         }
     }
+    */
 }

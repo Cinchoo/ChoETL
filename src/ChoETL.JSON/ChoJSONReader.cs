@@ -547,6 +547,12 @@ namespace ChoETL
             return this;
         }
 
+        public ChoJSONReader<T> JsonSerializerContext(Action<dynamic> ctxSettings)
+        {
+            ctxSettings?.Invoke((dynamic)Configuration.JsonSerializer.Context.Context);
+            return this;
+        }
+
         public ChoJSONReader<T> TypeConverterFormatSpec(Action<ChoTypeConverterFormatSpec> spec)
         {
             spec?.Invoke(Configuration.TypeConverterFormatSpec);

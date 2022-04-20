@@ -57,6 +57,7 @@
     <Compile Include="ChoJSONConvertersCache.cs" />
     <Compile Include="ChoDisableAutoDiscoverabilityAttribute.cs" />
     <Compile Include="ChoJSONObjects.cs" />
+    <Compile Include="Converters\ChoJSONPathConverter.cs" />
     <Compile Include="Converters\ChoCompositeObjectConverter.cs" />
     <Compile Include="Converters\ChoDynamicObjectConverter.cs" />
     <Compile Include="ChoJSONExtensions.cs" />

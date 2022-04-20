@@ -9179,11 +9179,54 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
         }
+
+        public class ResponseX
+        {
+            public String Name { get; set; }
+            public string Interval { get; set; }
+            public List<PointX> Points { get; set; } = new List<PointX>();
+        }
+
+        [ChoJSONPathConverter]
+        public class PointX
+        {
+            public Double Speed { get; set; }
+            [ChoJSONPath("mid.h")]
+            public Double High { get; set; }
+            [ChoJSONPath("mid.l")]
+            public Double Low { get; set; }
+        }
+
+        public static void SelectiveNodesAtChildrenTest()
+        {
+            typeof(ChoJSONReader).GetAssemblyVersion().Print();
+            "".Print();
+
+            string json = @"{
+  ""name"":""xyz"",
+  ""interval"": ""H1"",
+  ""points"": [
+    {  
+      ""speed"": 1431, 
+      ""mid"": { ""h"": ""1.07904"", ""l"": ""1.07872"" }
+     }
+  ]
+}";
+            using (var r = ChoJSONReader<ResponseX>.LoadText(json)
+                //.Configure(c => c.TurnOnAutoDiscoverJsonConverters = true)
+                .JsonSerializationSettings(s => s.Converters.Add(ChoJSONPathConverter.Instance))
+                .JsonSerializerContext(c => c.StringComparision = StringComparison.InvariantCultureIgnoreCase)
+                  )
+            {
+                r.Print();
+            }
+
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            Issue194();
+            SelectiveNodesAtChildrenTest();
             return;
 
             Issue191();
