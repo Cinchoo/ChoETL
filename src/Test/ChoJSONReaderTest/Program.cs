@@ -9089,7 +9089,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                          .Configure(c => c.FlattenByNodeName = "Contact.Phone")
                          //.Configure(c => c.FlattenByJsonPath = "$..Contact")
                          //.Configure(c => c.IgnoreArrayIndex = false)
-                         .Configure(c => c.NestedKeySeparator = '.')
+                         .Configure(c => c.NestedKeySeparator = '~')
                          .Configure(c => c.NestedColumnSeparator = '.')
                          //.WithField("Phone", jsonPath: "$.['Contact.Phone.Value']", isArray: false)
                          )
@@ -9226,10 +9226,10 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
-            SelectiveNodesAtChildrenTest();
+            Issue191();
             return;
 
-            Issue191();
+            SelectiveNodesAtChildrenTest();
             return;
 
             DeserializeDictWithAbstractValue();

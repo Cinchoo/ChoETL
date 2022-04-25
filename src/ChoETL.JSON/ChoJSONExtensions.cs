@@ -714,10 +714,10 @@ namespace ChoETL
                                 else
                                     yield break;
                             }
-                            if (obj.Children<JProperty>().Any(p => p.Name == fbn || p.Name.EndsWith($".{fbn}")))
+                            if (obj.Children<JProperty>().Any(p => p.Name == fbn || p.Name.EndsWith($"{nestedKeySeparator}{fbn}")))
                             {
                                 children = obj.Children<JProperty>().GroupBy(prop => prop.Value?.Type == JTokenType.Array
-                                    && (prop.Name == fbn || prop.Name.EndsWith($".{fbn}"))).ToDictionary(gr => gr.Key);
+                                    && (prop.Name == fbn || prop.Name.EndsWith($"{nestedKeySeparator}{fbn}"))).ToDictionary(gr => gr.Key);
                             }
                         }
                     }
