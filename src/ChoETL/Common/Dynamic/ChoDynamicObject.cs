@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -86,7 +87,8 @@ namespace ChoETL
     {
         Regular,
         Sorted,
-        Ordered
+        Ordered,
+        Concurrent
     }
 
     public static class ChoDynamicObjectSettings
@@ -130,7 +132,8 @@ namespace ChoETL
 
         private readonly object _padLock = new object();
         [IgnoreDataMember]
-        private IDictionary<string, object> _kvpDict = ChoDynamicObjectSettings.DictionaryType == DictionaryType.Ordered ?
+        private IDictionary<string, object> _kvpDict = ChoDynamicObjectSettings.DictionaryType == DictionaryType.Concurrent ? new ConcurrentDictionary<string, object>(ChoDynamicObjectSettings.DictionaryComparerInternal)
+            : ChoDynamicObjectSettings.DictionaryType == DictionaryType.Ordered ?
             new OrderedDictionary<string, object>(ChoDynamicObjectSettings.DictionaryComparerInternal) as IDictionary<string, object>
             : (ChoDynamicObjectSettings.DictionaryType == DictionaryType.Sorted ? 
                 new SortedDictionary<string, object>(ChoDynamicObjectSettings.DictionaryComparerInternal) as IDictionary<string, object> 

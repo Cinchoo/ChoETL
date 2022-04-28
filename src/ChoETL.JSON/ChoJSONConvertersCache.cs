@@ -13,42 +13,54 @@ namespace ChoETL
         //public static bool IsInitialized { get; private set; } = false;
         private static readonly object _padLock = new object();
         private static readonly Dictionary<string, JsonConverter> _convertersCache = new Dictionary<string, JsonConverter>();
+        private static bool _isInit = false;
 
         public static void Init()
         {
-            try
+            if (_isInit)
+                return;
+
+            lock (_padLock)
             {
-                //IsInitialized = true;
+                if (_isInit)
+                    return;
 
-                Dictionary<string, JsonConverter> dict = _convertersCache;
-
-                var convs = ChoType.GetAllTypes().Where(t => typeof(JsonConverter).IsAssignableFrom(t) && !t.IsGenericType && ChoType.HasDefaultConstructor(t))
-                    .Distinct().ToArray();
-
-                foreach (var c in convs)
+                try
                 {
-                    var dad = ChoTypeDescriptor.GetTypeAttribute<ChoDisableAutoDiscoverabilityAttribute>(c);
-                    if (dad != null && dad.Flag)
-                        continue;
+                    //IsInitialized = true;
 
-                    if (dict.ContainsKey(c.Name))
-                        continue;
-                    try
+                    Dictionary<string, JsonConverter> dict = _convertersCache;
+
+                    var convs = ChoType.GetAllTypes().Where(t => typeof(JsonConverter).IsAssignableFrom(t) && !t.IsGenericType && ChoType.HasDefaultConstructor(t))
+                        .Distinct().ToArray();
+
+                    foreach (var c in convs)
                     {
-                        dict.Add(c.Name, Activator.CreateInstance(c) as JsonConverter);
+                        var dad = ChoTypeDescriptor.GetTypeAttribute<ChoDisableAutoDiscoverabilityAttribute>(c);
+                        if (dad != null && dad.Flag)
+                            continue;
 
-                        var dna = ChoTypeDescriptor.GetTypeAttribute<DisplayNameAttribute>(c);
-                        if (dna != null && !dna.DisplayName.IsNullOrWhiteSpace())
+                        if (dict.ContainsKey(c.Name))
+                            continue;
+                        try
                         {
-                            if (!dict.ContainsKey(dna.DisplayName))
-                                dict.Add(dna.DisplayName, Activator.CreateInstance(c) as JsonConverter);
+                            dict.Add(c.Name, Activator.CreateInstance(c) as JsonConverter);
+
+                            var dna = ChoTypeDescriptor.GetTypeAttribute<DisplayNameAttribute>(c);
+                            if (dna != null && !dna.DisplayName.IsNullOrWhiteSpace())
+                            {
+                                if (!dict.ContainsKey(dna.DisplayName))
+                                    dict.Add(dna.DisplayName, Activator.CreateInstance(c) as JsonConverter);
+                            }
                         }
+                        catch { }
                     }
-                    catch { }
                 }
-            }
-            catch
-            {
+                catch
+                {
+                }
+
+                _isInit = true;
             }
         }
 

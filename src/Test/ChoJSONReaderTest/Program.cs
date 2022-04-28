@@ -9082,6 +9082,9 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
     ]
   }
 }";
+            Parallel.For(0, 1000, i =>
+            {
+
             using (var r = ChoJSONReader.LoadText(json)
                          .Configure(c => c.DefaultArrayHandling = false)
                          .Configure(c => c.FlattenNode = true)
@@ -9099,6 +9102,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 DataTable dt = r.AsDataTable();
                 dt.DumpAsJson().Print();
             }
+            });
 
             //using (var r = ChoJSONReader.LoadText(json)
             //    .ClearFields()
@@ -9225,6 +9229,14 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+
+            //ChoDynamicObjectSettings.DictionaryType = DictionaryType.Regular;
+            //dynamic dict = new ChoDynamicObject();
+            //Parallel.For(0, 1000, i =>
+            //{
+            //    dict.Configuration = 1;
+            //});
+            //return;
 
             Issue191();
             return;

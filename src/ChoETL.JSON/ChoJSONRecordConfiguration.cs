@@ -726,14 +726,32 @@ namespace ChoETL
                 foreach (var conv in GetJSONConverters())
                 {
                     if (!_jsonSerializerSettings.Converters.Contains(conv))
-                        _jsonSerializerSettings.Converters.Add(conv);
+                    {
+                        if (conv is IChoJSONConverter)
+                        {
+                            var c1 = ChoActivator.CreateInstance(conv.GetType()) as JsonConverter;
+                            if (c1 != null)
+                                _jsonSerializerSettings.Converters.Add(c1);
+                        }
+                        else
+                            _jsonSerializerSettings.Converters.Add(conv);
+                    }
                 }
                 if (TurnOnAutoDiscoverJsonConverters)
                 {
                     foreach (var conv in ChoJSONConvertersCache.GetAll().Select(kvp => kvp.Value))
                     {
                         if (!_jsonSerializerSettings.Converters.Contains(conv))
-                            _jsonSerializerSettings.Converters.Add(conv);
+                        {
+                            if (conv is IChoJSONConverter)
+                            {
+                                var c1 = ChoActivator.CreateInstance(conv.GetType()) as JsonConverter;
+                                if (c1 != null)
+                                    _jsonSerializerSettings.Converters.Add(c1);
+                            }
+                            else
+                                _jsonSerializerSettings.Converters.Add(conv);
+                        }
                     }
                 }
                 foreach (var conv in _jsonSerializerSettings.Converters.OfType<IChoJSONConverter>())
