@@ -562,8 +562,6 @@ namespace ChoETL
             ChoGuard.ArgumentNotNull(dr, "DataReader");
 
             DataTable schemaTable = dr.GetSchemaTable();
-            dynamic expando = new ExpandoObject();
-            var expandoDic = (IDictionary<string, object>)expando;
 
             Configuration.UseNestedKeyFormat = false;
 
@@ -585,7 +583,8 @@ namespace ChoETL
             var ordinals = Configuration.ParquetRecordFieldConfigurations.ToDictionary(c => c.Name, c => dr.HasColumn(c.Name) ? dr.GetOrdinal(c.Name) : -1);
             while (dr.Read())
             {
-                expandoDic.Clear();
+                dynamic expando = new ExpandoObject();
+                var expandoDic = (IDictionary<string, object>)expando;
 
                 foreach (var fc in ordinals)
                 {
