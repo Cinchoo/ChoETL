@@ -604,8 +604,6 @@ namespace ChoETL
         private IEnumerable<T> FromDataReader(IDataReader dr)
         {
             DataTable schemaTable = dr.GetSchemaTable();
-            dynamic expando = new ExpandoObject();
-            var expandoDic = (IDictionary<string, object>)expando;
 
             //int ordinal = 0;
             if (Configuration.YamlRecordFieldConfigurations.IsNullOrEmpty())
@@ -629,7 +627,8 @@ namespace ChoETL
             var ordinals = Configuration.YamlRecordFieldConfigurations.ToDictionary(c => c.Name, c => dr.HasColumn(c.Name) ? dr.GetOrdinal(c.Name) : -1);
             while (dr.Read())
             {
-                expandoDic.Clear();
+                dynamic expando = new ExpandoObject();
+                var expandoDic = (IDictionary<string, object>)expando;
 
                 foreach (var fc in ordinals)
                 {
@@ -651,8 +650,6 @@ namespace ChoETL
             }
 
             DataTable schemaTable = dt;
-            dynamic expando = new ExpandoObject();
-            var expandoDic = (IDictionary<string, object>)expando;
 
             if (Configuration.YamlRecordFieldConfigurations.IsNullOrEmpty())
             {
@@ -676,7 +673,8 @@ namespace ChoETL
             List<T> list = new List<T>();
             foreach (DataRow row in dt.Rows)
             {
-                expandoDic.Clear();
+                dynamic expando = new ExpandoObject();
+                var expandoDic = (IDictionary<string, object>)expando;
 
                 foreach (var fc in Configuration.YamlRecordFieldConfigurations)
                 {

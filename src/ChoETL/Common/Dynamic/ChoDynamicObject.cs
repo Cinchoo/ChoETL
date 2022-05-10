@@ -1317,7 +1317,11 @@ namespace ChoETL
                 cmp == null ? StringComparer.InvariantCultureIgnoreCase : cmp);
             return this;
         }
-
+        public IDictionary<string, object> FlattenToDictionary(char? nestedKeySeparator = null, char? arrayIndexSeparator = null, 
+            bool ignoreDictionaryFieldPrefix = false)
+        {
+            return ChoDictionaryEx.FlattenToDictionary(_kvpDict, nestedKeySeparator, arrayIndexSeparator, ignoreDictionaryFieldPrefix);
+        }
         public string Dump()
         {
             return ChoUtility.ToStringEx(this);

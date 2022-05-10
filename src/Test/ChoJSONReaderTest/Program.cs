@@ -9082,8 +9082,6 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
     ]
   }
 }";
-            Parallel.For(0, 1000, i =>
-            {
 
             using (var r = ChoJSONReader.LoadText(json)
                          .Configure(c => c.DefaultArrayHandling = false)
@@ -9102,7 +9100,6 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 DataTable dt = r.AsDataTable();
                 dt.DumpAsJson().Print();
             }
-            });
 
             //using (var r = ChoJSONReader.LoadText(json)
             //    .ClearFields()
@@ -9226,6 +9223,57 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
 
         }
+
+        public static void FlattenNestedObjects()
+        {
+            string json = @"{
+   ""Quantity"":0,
+   ""QuantityUnit"":""pcs"",
+   ""PartNumber"":""12345"",
+   ""Parent"":"""",
+   ""Children"":[
+      {
+         ""Quantity"":1,
+         ""QuantityUnit"":""pcs"",
+         ""PartNumber"":""88774"",
+         ""Parent"":""12345"",
+         ""Children"":[
+            {
+               ""Quantity"":1,
+               ""QuantityUnit"":""pcs"",
+               ""PartNumber"":""42447"",
+               ""Parent"":""88774""
+            },
+            {
+               ""Quantity"":0.420,
+               ""QuantityUnit"":""kg"",
+               ""PartNumber"":""12387"",
+               ""Parent"":""88774""
+            }
+         ]
+      }
+   ]
+}";
+
+            using (var r = ChoJSONReader.LoadText(json)
+                         .Configure(c => c.DefaultArrayHandling = false)
+                         .Configure(c => c.FlattenNode = true)
+                         .Configure(c => c.UseNestedKeyFormat = true)
+                         //.Configure(c => c.FlattenByNodeName = "Children.Children")
+                         .Configure(c => c.FlattenByJsonPath = "$..Children[*]")
+                         //.Configure(c => c.IgnoreArrayIndex = false)
+                         .Configure(c => c.NestedKeySeparator = '~')
+                         .Configure(c => c.NestedColumnSeparator = '.')
+                         //.WithField("Phone", jsonPath: "$.['Contact.Phone.Value']", isArray: false)
+                         )
+            {
+                r.Print();
+                return;
+                DataTable dt = r.AsDataTable();
+                dt.DumpAsJson().Print();
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
@@ -9238,7 +9286,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             //});
             //return;
 
-            Issue191();
+            FlattenNestedObjects();
             return;
 
             SelectiveNodesAtChildrenTest();

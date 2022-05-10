@@ -2688,6 +2688,14 @@ namespace ChoETL
         {
             // assume there is at least one element in list
             Array arr = Array.CreateInstance(elementType, array.Length);
+            if (elementType.IsValueType())
+                array = Array.ConvertAll<object, object>(array.OfType<object>().ToArray(), x =>
+                {
+                    if (x == null)
+                        return (object)ChoType.GetDefaultValue(elementType);
+                    else
+                        return (object)x;
+                });
             Array.Copy(array, arr, array.Length);
             return arr;
         }

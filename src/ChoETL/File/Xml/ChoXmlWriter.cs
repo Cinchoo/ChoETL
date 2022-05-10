@@ -835,8 +835,6 @@ namespace ChoETL
             }
 
             DataTable schemaTable = dr.GetSchemaTable();
-            dynamic expando = new ExpandoObject();
-            var expandoDic = (IDictionary<string, object>)expando;
 
             //int ordinal = 0;
             if (Configuration.XmlRecordFieldConfigurations.IsNullOrEmpty())
@@ -860,7 +858,8 @@ namespace ChoETL
             var ordinals = Configuration.XmlRecordFieldConfigurations.ToDictionary(c => c.Name, c => dr.HasColumn(c.Name) ? dr.GetOrdinal(c.Name) : -1);
             while (dr.Read())
             {
-                expandoDic.Clear();
+                dynamic expando = new ExpandoObject();
+                var expandoDic = (IDictionary<string, object>)expando;
 
                 foreach (var fc in ordinals)
                 {
@@ -881,8 +880,6 @@ namespace ChoETL
             }
 
             DataTable schemaTable = dt;
-            dynamic expando = new ExpandoObject();
-            var expandoDic = (IDictionary<string, object>)expando;
 
             string rootName = dt.DataSet == null || dt.DataSet.DataSetName.IsNullOrWhiteSpace() ? "Root" : dt.DataSet.DataSetName;
             string elementName = dt.TableName.IsNullOrWhiteSpace() ? "XElement" : dt.TableName;
@@ -909,7 +906,8 @@ namespace ChoETL
 
             foreach (DataRow row in dt.Rows)
             {
-                expandoDic.Clear();
+                dynamic expando = new ExpandoObject();
+                var expandoDic = (IDictionary<string, object>)expando;
 
                 foreach (var fc in Configuration.XmlRecordFieldConfigurations)
                 {

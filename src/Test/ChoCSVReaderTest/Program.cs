@@ -5524,11 +5524,34 @@ ue2"",Value3";
                 )
                 r.Print();
         }
+        public static void ReadMixedCSVRecords()
+        {
+            typeof(ChoCSVReader).GetAssemblyVersion().Print();
+            "".Print();
+
+            string csv = @"Generic Text
+Generict Text
+Header 1,Header 2,Header 3,Header 4 
+Val 1,Val 2,Val 3,Val 4 
+Val 1,Val 2,Val 3,Val 4";
+
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                   .WithField("Col1")
+                   .WithField("Col2")
+                   .WithField("Col3")
+                   .WithField("Col4").WithFirstLineHeader(true).ThrowAndStopOnMissingField(false)
+                  )
+            {
+                r.Print();
+            }
+        }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            LoadByIndexOrName();
+               
+            ReadMixedCSVRecords();
             return;
 
             LoadByIndexOrName();

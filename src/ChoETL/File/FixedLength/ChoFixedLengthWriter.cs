@@ -590,8 +590,6 @@ namespace ChoETL
             ChoGuard.ArgumentNotNull(dr, "DataReader");
 
             DataTable schemaTable = dr.GetSchemaTable();
-            dynamic expando = new ExpandoObject();
-            var expandoDic = (IDictionary<string, object>)expando;
 
             w.Configuration.UseNestedKeyFormat = false;
             w.Configuration.FixedLengthRecordFieldConfigurations.Clear();
@@ -619,7 +617,8 @@ namespace ChoETL
             var ordinals = w.Configuration.FixedLengthRecordFieldConfigurations.ToDictionary(c => c.Name, c => dr.HasColumn(c.Name) ? dr.GetOrdinal(c.Name) : -1);
             while (dr.Read())
             {
-                expandoDic.Clear();
+                dynamic expando = new ExpandoObject();
+                var expandoDic = (IDictionary<string, object>)expando;
 
                 foreach (var fc in ordinals)
                 {
@@ -675,8 +674,6 @@ namespace ChoETL
             ChoGuard.ArgumentNotNull(dt, "DataTable");
 
             DataTable schemaTable = dt;
-            dynamic expando = new ExpandoObject();
-            var expandoDic = (IDictionary<string, object>)expando;
 
             w.Configuration.UseNestedKeyFormat = false;
 
@@ -701,7 +698,8 @@ namespace ChoETL
 
             foreach (DataRow row in dt.Rows)
             {
-                expandoDic.Clear();
+                dynamic expando = new ExpandoObject();
+                var expandoDic = (IDictionary<string, object>)expando;
 
                 foreach (var fc in w.Configuration.FixedLengthRecordFieldConfigurations)
                 {

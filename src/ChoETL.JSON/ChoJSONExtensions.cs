@@ -328,6 +328,52 @@ namespace ChoETL
             jTokenReader.SupportMultipleContent = reader.SupportMultipleContent;
             return jTokenReader;
         }
+        public static IEnumerable<JObject> FlattenHierarchy(this string json, string childrenNodeName, string[] mapNodeNames = null, Func<JObject, object> mapper = null)
+        {
+            JObject input = JObject.Parse(json);
+            return FlattenHierarchy(input, childrenNodeName, mapNodeNames, mapper);
+        }
+
+        public static IEnumerable<JObject> FlattenHierarchy(this JObject input, string childrenNodeName, string[] mapNodeNames = null, Func<JObject, object> mapper = null)
+        {
+            if (input == null) yield break;
+            yield return Map(input, childrenNodeName, mapNodeNames, mapper);
+            foreach (var item in input[childrenNodeName] as JArray)
+            {
+                foreach (var node in FlattenHierarchy(item as JObject, childrenNodeName, mapNodeNames, mapper))
+                    yield return node;
+            }
+        }
+
+        private static JObject Map(JObject input, string childrenNodeName, string[] mapNodeNames = null, Func<JObject, object> mapper = null)
+        {
+            if (childrenNodeName.IsNullOrWhiteSpace() || !input.ContainsKey(childrenNodeName))
+                return input;
+
+            if (mapNodeNames != null && mapNodeNames.Length > 0)
+            {
+                JObject ret = new JObject();
+                foreach (var mn in mapNodeNames)
+                {
+                    if (input.ContainsKey(mn))
+                        ret.Add(mn, input[mn]);
+                    else
+                        ret.Add(mn, null);
+                }
+                return ret;
+            }
+            else if (mapper != null)
+            {
+                return JObject.FromObject(mapper(input));
+            }
+            else
+            {
+                var result = (JObject)input.DeepClone();
+                if (result.ContainsKey(childrenNodeName))
+                    result.Remove(childrenNodeName);
+                return result;
+            }
+        }
 
         public static JToken Flatten(this string json, char? nestedKeySeparator = null, Func<string, string, string> nestedKeyResolver = null,
             char? arrayIndexSeparator = null, bool useNestedKeyFormat = false, bool ignoreArrayIndex = true,
