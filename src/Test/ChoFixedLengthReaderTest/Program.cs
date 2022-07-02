@@ -515,10 +515,37 @@ EDSON EDUARD MOZART                      1286664 500-34";
             }
         }
 
+        internal class TestData
+        {
+            [ChoFixedLengthRecordField(0, 1)]
+            public bool TestBool1 { get; set; }
+            [ChoFixedLengthRecordField(1, 1)]
+            public bool TestBool2 { get; set; }
+            [ChoFixedLengthRecordField(2, 1)]
+            public bool TestBool3 { get; set; }
+            [ChoFixedLengthRecordField(3, 1)]
+            public bool TestBool4 { get; set; }
+            [ChoFixedLengthRecordField(4, 1)]
+            public string TestString { get; set; }
+        }
+
+        static void Issue219()
+        {
+            string csv = @"0101a
+1111b
+1011c
+0000d
+1000e";
+            ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.ZeroOrOne;
+
+            foreach (var e in ChoFixedLengthReader<TestData>.LoadText(csv))
+                Console.WriteLine("TestBool1: " + e.TestBool1 + " TestBool2: " + e.TestBool2 + " TestBool3: " + e.TestBool3 + " TestBool4: " + e.TestBool4 + " TestString: " + e.TestString);
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            QuoteValueTest();
+            Issue219();
             return;
 
             AABillingTest();

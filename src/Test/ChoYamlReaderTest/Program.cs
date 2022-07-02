@@ -1194,11 +1194,62 @@ EntityIds:
             Console.WriteLine(json.ToString());
         }
 
+        static void Test10()
+        {
+            string yaml = @"
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1679279224369103304
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4601260661584130271}
+  - component: {fileID: 935130553128839326}
+  - component: {fileID: 9068261088558206342}
+  - component: {fileID: 5522740863684393372}
+  m_Layer: 0
+  m_Name: Cube (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4601260661584130271
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1679279224369103304}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 6194676242869225411}
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}";
+
+            using (var r = ChoYamlReader.LoadText(yaml)
+                .Configure(c => c.YamlTagMapResolver = (s) =>
+                {
+                    return s;
+                })
+                )
+            {
+                r.Print();
+            }
+        }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            DifferentDateFormatTest();
+            Test10();
             return;
 
             //DeserializeTypedYaml();

@@ -1236,7 +1236,7 @@ namespace ChoETL
                 if (subRecordType != null)
                     MapRecordFieldsForType(subRecordType);
 
-                string fnTrim = fieldName.IsNullOrWhiteSpace() ? name.NTrim() : fieldName;
+                string fnTrim = name.NTrim();
                 ChoXmlRecordFieldConfiguration fc = null;
                 PropertyDescriptor pd = null;
                 if (XmlRecordFieldConfigurations.Any(o => o.Name == fnTrim))

@@ -374,7 +374,47 @@ namespace ChoETL
                 return result;
             }
         }
+        public static Dictionary<string, object> Flatten(this string json)
+        {
+            JToken token = JToken.Parse(json);
+            return Flatten(token);
+        }
+        public static Dictionary<string, object> Flatten(this JToken token)
+        {
+            Dictionary<string, object> dict = new Dictionary<string, object>();
+            FillDictionaryFromJToken(dict, token, "");
+            return dict;
+        }
+        private static string Join(string prefix, string name)
+        {
+            return (string.IsNullOrEmpty(prefix) ? name : prefix + "." + name);
+        }
 
+        private static void FillDictionaryFromJToken(Dictionary<string, object> dict, JToken token, string prefix)
+        {
+            switch (token.Type)
+            {
+                case JTokenType.Object:
+                    foreach (JProperty prop in token.Children<JProperty>())
+                    {
+                        FillDictionaryFromJToken(dict, prop.Value, Join(prefix, prop.Name));
+                    }
+                    break;
+
+                case JTokenType.Array:
+                    int index = 0;
+                    foreach (JToken value in token.Children())
+                    {
+                        FillDictionaryFromJToken(dict, value, Join(prefix, index.ToString()));
+                        index++;
+                    }
+                    break;
+
+                default:
+                    dict.Add(prefix, ((JValue)token).Value);
+                    break;
+            }
+        }
         public static JToken Flatten(this string json, char? nestedKeySeparator = null, Func<string, string, string> nestedKeyResolver = null,
             char? arrayIndexSeparator = null, bool useNestedKeyFormat = false, bool ignoreArrayIndex = true,
             string flattenByNodeName = null, string flattenByJsonPath = null)

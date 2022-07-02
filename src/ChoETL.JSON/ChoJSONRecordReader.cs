@@ -975,12 +975,12 @@ namespace ChoETL
                         {
                             if (input == "*")
                             {
-                                foreach (var j in ToJObjects(new JToken[] { new JValue(kvp.Key) }))
+                                foreach (var j in new JToken[] { new JValue(kvp.Key) })
                                     yield return j;
                             }
                             else if (regex.IsMatch(kvp.Key))
                             {
-                                foreach (var j in ToJObjects(new JToken[] { new JValue(kvp.Key) }))
+                                foreach (var j in new JToken[] { new JValue(kvp.Key) })
                                     yield return j;
                             }
                         }

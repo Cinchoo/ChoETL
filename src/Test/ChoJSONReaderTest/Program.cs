@@ -4658,9 +4658,9 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public long Success { get; set; }
             [JsonProperty("method")]
             public string Method { get; set; }
-            [ChoTypeConverter(typeof(TransactionKeyConverter))]
-            [ChoSourceType(typeof(string))]
-            public List<int> TransactionsKeys { get; set; }
+            //[ChoTypeConverter(typeof(TransactionKeyConverter))]
+            //[ChoSourceType(typeof(string))]
+            public List<string> TransactionsKeys { get; set; }
             [ChoTypeConverter(typeof(TransactionConverter))]
             public List<Transaction> Transactions { get; set; }
         }
@@ -4673,7 +4673,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public string BuyCurrency { get; set; }
         }
 
-        public class TransactionKeyConverter : IChoValueConverter
+        public class TransactionKeyConverter : IChoValueConverter, IChoCollectionConverter
         {
             public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
             {
@@ -9274,10 +9274,137 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
-        static void Main(string[] args)
+        public static void FlattenNodeTest()
+        {
+
+            string json = @"{
+  ""Id"": ""123456"",
+  ""Request"": [
+    {
+      ""firstName"": ""A"",
+      ""lastName"": ""B"",
+    },
+    {
+      ""firstName"": ""A"",
+      ""lastName"": ""B"",
+    }
+	],
+  ""Response"": [
+    {
+      ""SId"": ""123""
+    }
+  ]
+}";
+            typeof(ChoJSONReader).GetAssemblyVersion().Print();
+            "".Print();
+
+            using (var r = ChoJSONReader.LoadText(json)
+                   .Configure(c => c.FlattenNode = true).Configure(c => c.FlattenByNodeName = "Request")
+                   )
+            {
+                using (var w = new ChoCSVWriter(Console.Out).WithFirstLineHeader())
+                    w.Write(r);
+            }
+        }
+        public static void Issue209()
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
 
+            var json = @"
+			{
+				""A"": 5.5,
+				""B"": { ""b_arr"": [ 1.1, 2.2 ] },
+				""C"": ""c_val"",
+				""D"": { ""d_arr"": [ 3.3, 4.4 ] }
+			}";
+
+            dynamic[] r1 = null;
+            using (var r = ChoJSONReader.LoadText(json).ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                   .Configure(c => c.NestedKeySeparator = '.')
+                   .Configure(c => c.FlattenNode = true)
+                   .Configure(c => c.FlattenByNodeName = "B.b_arr")
+                   .WithField("Field_A", fieldName: "A").WithField("Field_B", fieldName: "B.b_arr").WithField("Field_C", fieldName: "C").WithField("Field_D", fieldName: "D!")
+                   )
+            {
+                r1 = r.ToArray();
+            }
+
+            "".Print();
+
+            dynamic[] r2 = null;
+            using (var r = ChoJSONReader.LoadText(json).ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                   .Configure(c => c.NestedKeySeparator = '.')
+                   .Configure(c => c.FlattenNode = true)
+                   .Configure(c => c.FlattenByNodeName = "D.d_arr")
+                   .WithField("Field_A", fieldName: "A").WithField("Field_B", fieldName: "B!").WithField("Field_C", fieldName: "C").WithField("Field_D", fieldName: "D.d_arr")
+                   )
+            {
+                r2 = r.ToArray();
+            }
+
+            r1.Union(r2).AsDataTable().Print();
+        }
+        public static void Issue206()
+        {
+            typeof(ChoJSONReader).GetAssemblyVersion().Print();
+            "".Print();
+
+            string json = "{\"id\":\"123456789\",\"TimeRanges\":[[0,1],[1,2]]}";
+            using (var r = ChoJSONReader.LoadText(json)
+                   .Configure(c => c.DefaultArrayHandling = true)
+                   .Configure(c => c.FlattenNode = true)
+                   .Configure(c => c.UseNestedKeyFormat = true)
+                   .Configure(c => c.FlattenByNodeName = "TimeRanges")
+                   .Configure(c => c.NestedKeySeparator = '.')
+                   .Configure(c => c.NestedColumnSeparator = '.')
+                   .WithMaxScanNodes(12)
+                  )
+            {
+                //r.Print();
+                //return;
+                //var dt = r.AsDataTable();
+                r.DumpAsJson().Print();
+            }
+
+        }
+
+        static void Issue218()
+        {
+            var json = @"
+{
+    ""Data"": {
+        ""Results"": [
+            ""a"",
+            ""b"",
+            ""c""
+        ]
+    }
+}
+";
+
+            dynamic[] r1 = null;
+
+            using
+            (
+                var r = ChoJSONReader.LoadText(json)
+
+                    .Configure(c => c.NestedKeySeparator = '.')
+                    .Configure(c => c.FlattenNode = true)
+                    .Configure(c => c.FlattenByNodeName = "Data.Results")
+                    .WithField("DataResult", fieldName: "Data.Result")
+            )
+            {
+                r1 = r.ToArray();
+            }
+
+            r1.AsDataTable().Print();
+        }
+        static void Main(string[] args)
+        {
+
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+            Issue218();
+            return;
             //ChoDynamicObjectSettings.DictionaryType = DictionaryType.Regular;
             //dynamic dict = new ChoDynamicObject();
             //Parallel.For(0, 1000, i =>
