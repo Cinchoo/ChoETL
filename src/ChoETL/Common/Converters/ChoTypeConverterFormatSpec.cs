@@ -22,9 +22,21 @@ namespace ChoETL
     public sealed class ChoTypeConverterFormatSpec
     {
         private static readonly ThreadLocal<ChoTypeConverterFormatSpec> _instance = new ThreadLocal<ChoTypeConverterFormatSpec>(() => new ChoTypeConverterFormatSpec());
+
+        private static ChoTypeConverterFormatSpec _gInstance;
         public static ChoTypeConverterFormatSpec Instance
         {
-            get { return _instance.Value; }
+            get 
+            {
+                if (_gInstance == null)
+                    return _instance.Value;
+                else
+                    return _gInstance;
+            }
+            set
+            {
+                _gInstance = value;
+            }
         }
 
         public bool TreatCurrencyAsDecimal { get; set; }
