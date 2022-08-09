@@ -204,19 +204,25 @@ namespace ChoETL
                     if (ft == typeof(DateTime))
                     {
                         //fv.Add(new DateTimeOffset(rec[key], TimeSpan.Zero));
-                        DateTime dt = rec[key];
+                        DateTime dt;                        
+                        DateTime.TryParse(ChoUtility.ToNString(rec[key]), out dt);
                         DateTimeOffset dto = ToDateTimeOffset(dt);
                         fv.Add(dto);
                     }
                     else if (ft == typeof(ChoCurrency))
                     {
-                        var curr = (ChoCurrency)rec[key];
+                        ChoCurrency curr = new ChoCurrency();
+                        try
+                        {
+                            curr = (ChoCurrency)rec[key];
+                        }
+                        catch { }
                         fv.Add(curr.Amount);
                     }
                     else if (ft == typeof(Guid))
-                        fv.Add(rec[key].ToString());
+                        fv.Add(ChoUtility.ToNString(rec[key]));
                     else if (ft == null || ft.IsEnum)
-                        fv.Add(rec[key].ToString());
+                        fv.Add(ChoUtility.ToNString(rec[key]));
                     else
                         fv.Add(rec[key]);
                 }
@@ -224,11 +230,14 @@ namespace ChoETL
             return fv.ToArray();
         }
 
-        public DateTimeOffset ToDateTimeOffset(DateTime dateTime)
+        public DateTimeOffset ToDateTimeOffset(DateTime? dateTime)
         {
-            return dateTime.ToUniversalTime() <= DateTimeOffset.MinValue.UtcDateTime
-                       ? DateTimeOffset.MinValue
-                       : new DateTimeOffset(dateTime);
+            if (dateTime == null)
+                return DateTimeOffset.MinValue;
+            else
+                return dateTime.Value.ToUniversalTime() <= DateTimeOffset.MinValue.UtcDateTime
+                           ? DateTimeOffset.MinValue
+                           : new DateTimeOffset(dateTime.Value);
         }
 
         private IDictionary<string, DataField> GetSchemaFields()
@@ -655,7 +664,7 @@ namespace ChoETL
                         if (!dict.ContainsKey(kvp.Key))
                         {
                             if (!Configuration.IgnoreHeader)
-                                throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' CSV column.".FormatString(fieldConfig.FieldName));
+                                throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' Parquet column.".FormatString(fieldConfig.FieldName));
                             if (fieldConfig.FieldPosition > dict.Count)
                                 throw new ChoMissingRecordFieldException("No matching property found in the object for '{0}' Parquet column.".FormatString(fieldConfig.FieldName));
                         }
