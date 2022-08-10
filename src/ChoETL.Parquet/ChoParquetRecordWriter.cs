@@ -201,30 +201,45 @@ namespace ChoETL
             {
                 foreach (var rec in _records)
                 {
-                    if (ft == typeof(DateTime))
-                    {
-                        //fv.Add(new DateTimeOffset(rec[key], TimeSpan.Zero));
-                        DateTime dt;                        
-                        DateTime.TryParse(ChoUtility.ToNString(rec[key]), out dt);
-                        DateTimeOffset dto = ToDateTimeOffset(dt);
-                        fv.Add(dto);
-                    }
-                    else if (ft == typeof(ChoCurrency))
-                    {
-                        ChoCurrency curr = new ChoCurrency();
-                        try
-                        {
-                            curr = (ChoCurrency)rec[key];
-                        }
-                        catch { }
-                        fv.Add(curr.Amount);
-                    }
-                    else if (ft == typeof(Guid))
-                        fv.Add(ChoUtility.ToNString(rec[key]));
-                    else if (ft == null || ft.IsEnum)
-                        fv.Add(ChoUtility.ToNString(rec[key]));
+                    if (Configuration.ParquetFieldValueConverter != null)
+                        fv.Add(Configuration.ParquetFieldValueConverter(key, rec[key]));
                     else
-                        fv.Add(rec[key]);
+                    {
+                        if (ft == typeof(DateTime))
+                        {
+                            //fv.Add(new DateTimeOffset(rec[key], TimeSpan.Zero));
+                            DateTime dt;
+                            if (rec[key] is DateTime)
+                                dt = rec[key];
+                            else
+                            {
+                                DateTime.TryParse(ChoUtility.ToNString((object)rec[key]), out dt);
+                            }
+                            DateTimeOffset dto = ToDateTimeOffset(dt);
+                            fv.Add(dto);
+                        }
+                        else if (ft == typeof(ChoCurrency))
+                        {
+                            ChoCurrency curr = new ChoCurrency();
+                            if (rec[key] is ChoCurrency)
+                                curr = (ChoCurrency)rec[key];
+                            else
+                            {
+                                try
+                                {
+                                    curr = (ChoCurrency)rec[key];
+                                }
+                                catch { }
+                            }
+                            fv.Add(curr.Amount);
+                        }
+                        else if (ft == typeof(Guid))
+                            fv.Add(ChoUtility.ToNString((object)rec[key]));
+                        else if (ft == null || ft.IsEnum)
+                            fv.Add(ChoUtility.ToNString((object)rec[key]));
+                        else
+                            fv.Add(rec[key]);
+                    }
                 }
             }
             return fv.ToArray();
@@ -751,7 +766,7 @@ namespace ChoETL
                         if (fieldConfig.ValueConverter != null)
                             fieldValue = fieldConfig.ValueConverter(fieldValue);
                         else
-                            rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, true);
+                            rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, true/*, config: Configuration*/);
                     }
                     else
                     {

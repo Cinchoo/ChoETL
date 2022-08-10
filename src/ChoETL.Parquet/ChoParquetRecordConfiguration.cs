@@ -32,6 +32,12 @@ namespace ChoETL
         public long RowGroupSize { get; set; } = 5000;
         public Func<Type, Type> MapParquetType { get; set; }
 
+        public Func<string, object, object> ParquetFieldValueConverter
+        {
+            get;
+            set;
+        }
+
         public bool IgnoreRootNodeName
         {
             get;
