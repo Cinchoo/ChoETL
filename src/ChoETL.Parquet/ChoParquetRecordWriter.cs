@@ -172,6 +172,7 @@ namespace ChoETL
 
         private Type GetParquetType(Type type)
         {
+            type = type.GetUnderlyingType();
             Func<Type, Type> mapParquetType = Configuration.MapParquetType;
             if (mapParquetType != null)
             {
@@ -185,6 +186,8 @@ namespace ChoETL
 
             if (type == typeof(DateTime))
                 return typeof(DateTimeOffset);
+            else if (type == typeof(TimeSpan))
+                return typeof(string);
             else if (type == typeof(ChoCurrency))
                 return typeof(decimal);
             else if (type == typeof(Guid))
@@ -196,6 +199,8 @@ namespace ChoETL
         }
         private Array GetFieldValues(string key, Type ft)
         {
+            ft = ft.GetUnderlyingType();
+
             List<object> fv = new List<object>();
             if (_records != null)
             {
@@ -217,6 +222,19 @@ namespace ChoETL
                             }
                             DateTimeOffset dto = ToDateTimeOffset(dt);
                             fv.Add(dto);
+                        }
+                        else if (ft == typeof(TimeSpan))
+                        {
+                            if (rec[key] is TimeSpan)
+                            {
+                                fv.Add(((TimeSpan)rec[key]).ToString());
+                            }
+                            else
+                            {
+                                TimeSpan dt;
+                                TimeSpan.TryParse(ChoUtility.ToNString((object)rec[key]), out dt);
+                                fv.Add(dt.ToString());
+                            }
                         }
                         else if (ft == typeof(ChoCurrency))
                         {
@@ -262,6 +280,11 @@ namespace ChoETL
             {
                 foreach (KeyValuePair<string, ChoParquetRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict.OrderBy(kvp => kvp.Value.Priority))
                 {
+                    if (Configuration.IgnoredFields.Contains(kvp.Key))
+                        continue;
+                    if (Configuration.IgnoredFields.Contains(kvp.Value.FieldName))
+                        continue;
+
                     fields.Add(kvp.Key, GetDataField(kvp.Value.FieldName, GetParquetType(kvp.Value.FieldType)));
                 }
             }

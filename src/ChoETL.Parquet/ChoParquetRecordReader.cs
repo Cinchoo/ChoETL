@@ -100,13 +100,30 @@ namespace ChoETL
 
         private IEnumerable<DataColumn[]> ReadAllObjects(ParquetReader sr, Func<object, bool?> filterFunc = null)
         {
-            DataField[] dataFields = sr.Schema.GetDataFields();
+            DataField[] dataFields1 = sr.Schema.Fields.ToArray().OfType<DataField>().ToArray(); //sr.Schema.GetDataFields();
+            DataField[] dataFields = dataFields1.Where(f => !Configuration.IgnoredFields.Any(ig => ig == f.Name)).ToArray();
+
+            //dataFields.ForEach(f => Console.WriteLine(f.Name)).Loop();
 
             for (int i = 0; i < sr.RowGroupCount; i++)
             {
                 using (ParquetRowGroupReader groupReader = sr.OpenRowGroupReader(i))
                 {
-                    var dc = dataFields.Select(groupReader.ReadColumn).ToArray();
+                    var dc = dataFields.Select(f =>
+                    {
+                        try
+                        {
+                            return groupReader.ReadColumn(f);
+                        }
+                        catch (Exception ex)
+                        {
+                            if (Configuration.ErrorMode == ChoErrorMode.ThrowAndStop)
+                                throw;
+
+                            ChoETLFramework.WriteLog(TraceSwitch.TraceError, $"Failed to read `{f.Name}` field. {ex.Message}");
+                            return null;
+                        }
+                    }).Where(f => f != null).ToArray();
                     yield return dc;
                 }
             }
