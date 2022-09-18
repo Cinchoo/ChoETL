@@ -9783,10 +9783,64 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             }
         }
 
+        static void Issue239()
+        {
+            var json = @"
+{
+  ""Message"": ""ABC"",
+  ""TimestampLocal"": ""2021-06-10T10:15:54.5147158+00:00"",
+  ""TimestampGlobal"": ""2021-06-10T10:14:45.2005202Z""
+}";
+
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+            typeof(ChoJSONReader).GetAssemblyVersion().Print();
+
+            using
+            (
+                var r = ChoJSONReader.LoadText(json)
+
+                    .Configure(c => c.Culture = CultureInfo.InvariantCulture)
+
+                    .JsonSerializationSettings(s => s.DateParseHandling = DateParseHandling.DateTimeOffset)
+
+                    .WithField("Message", jsonPath: "$.Message", typeof(string), fieldName: "Message")
+                    .WithField("TimestampLocal", jsonPath: "$.TimestampLocal", typeof(DateTimeOffset?), fieldName: "TimestampLocal")
+                    .WithField("TimestampGlobal", jsonPath: "$.TimestampGlobal", typeof(DateTime?), fieldName: "TimestampGlobal")
+            )
+            {
+                r.AsDataTable().Print();
+            }
+        }
+
+        static void Issue240()
+        {
+            var json = @"
+{
+  ""Name"": ""ABC"",
+    ""Data"": {
+        ""Result"": ""ok"",
+        ""Results"": [
+            ""x"",
+            ""y""
+        ]
+    }
+}";
+
+            using
+            (
+                var r = ChoJSONReader.LoadText(json)
+                    .WithField("Name", jsonPath: "$.Name", typeof(string), fieldName: "Name")
+                    .WithField("DataResult", jsonPath: "$.Data.Result", typeof(string), fieldName: "DataResult")
+                    .WithField("DataResults", jsonPath: "$.Data.Results[*]", typeof(string[]), fieldName: "DataResults")
+            )
+            {
+                r.Flatten(true).AsDataTable().Print();
+            }
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            DynamicPropertyMapping();
+            Issue240();
             return;
 
             Issue235();

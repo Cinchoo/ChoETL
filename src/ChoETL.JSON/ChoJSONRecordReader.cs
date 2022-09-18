@@ -2015,7 +2015,13 @@ namespace ChoETL
 
                             try
                             {
-                                return ChoConvert.ConvertTo(value.Value, objectType);
+                                var retval = ChoConvert.ConvertTo(value.Value, objectType);
+                                if (retval == null && objectType.IsNullableType())
+                                {
+                                    return jToken.ToObject(objectType, jsonSerializer.Value);
+                                }
+                                else
+                                    return retval;
                             }
                             catch
                             {

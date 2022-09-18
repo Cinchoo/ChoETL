@@ -180,13 +180,21 @@ namespace ChoETL
         }
         public static IEnumerable<dynamic> Flatten(this IEnumerable dicts)
         {
+            return Flatten(dicts, false);
+        }
+        public static IEnumerable<dynamic> Flatten(this IEnumerable dicts, bool turnOffSingularization)
+        {
             var cache = dicts != null ? dicts.OfType<object>().ToArray() : null;
             var fields = GetNestedKeys(cache).ToArray();
 
-            return FlattenBy(cache, fields);
+            return FlattenBy(cache, fields, turnOffSingularization);
         }
 
         public static IEnumerable<dynamic> FlattenBy(this IEnumerable dicts, params string[] fields)
+        {
+            return FlattenBy(dicts, fields, false);
+        }
+        public static IEnumerable<dynamic> FlattenBy(this IEnumerable dicts, string[] fields, bool turnOffSingularization)
         {
             var cache = dicts != null ? dicts.OfType<object>().ToArray() : null;
             if (cache == null)
@@ -206,7 +214,7 @@ namespace ChoETL
                 {
                     if (rec is IDictionary<string, object>)
                     {
-                        foreach (var child in FlattenBy((IDictionary<string, object>)rec, fields))
+                        foreach (var child in FlattenBy((IDictionary<string, object>)rec, fields, turnOffSingularization))
                             yield return child;
                     }
                     else
@@ -216,11 +224,18 @@ namespace ChoETL
         }
         public static IEnumerable<dynamic> Flatten(this IDictionary<string, object> dict)
         {
-            var fields = GetNestedKeys(dict).ToArray();
-            return FlattenBy(dict, fields);
+            return Flatten(dict, false);
         }
-
+        public static IEnumerable<dynamic> Flatten(this IDictionary<string, object> dict, bool turnOffSingularization)
+        {
+            var fields = GetNestedKeys(dict).ToArray();
+            return FlattenBy(dict, fields, turnOffSingularization);
+        }
         public static IEnumerable<dynamic> FlattenBy(this IDictionary<string, object> dict, params string[] fields)
+        {
+            return FlattenBy(dict, fields, false);
+        }
+        public static IEnumerable<dynamic> FlattenBy(this IDictionary<string, object> dict, string[] fields, bool turnOffSingularization = false)
         {
             if (fields.IsNullOrEmpty())
                 fields = GetNestedKeys(dict).ToArray();
@@ -232,12 +247,13 @@ namespace ChoETL
                 dynamic dest = new ChoDynamicObject();
                 dest.Merge(dict);
 
-                foreach (var rec in FlattenByInternal(dict, dest, fields))
+                foreach (var rec in FlattenByInternal(dict, dest, fields, null, turnOffSingularization))
                     yield return rec;
             }
         }
 
-        private static IEnumerable<dynamic> FlattenByInternal(IDictionary<string, object> dict, dynamic dest, string[] fields, string key = null)
+        private static IEnumerable<dynamic> FlattenByInternal(IDictionary<string, object> dict, dynamic dest, string[] fields, string key = null, 
+            bool turnOffSingularization = false)
         {
             if (fields.Length == 0)
             {
@@ -278,7 +294,7 @@ namespace ChoETL
                     {
                         foreach (var child in (IList)dictField)
                         {
-                            var newKey = field.ToSingular();
+                            var newKey = turnOffSingularization ? field : field.ToSingular();
                             var dest1 = dest.Clone();
                             dest1.Remove(field);
                             dest1.Add($"{newKey}", child);
@@ -286,19 +302,19 @@ namespace ChoETL
                             {
                                 if (child is IDictionary<string, object>)
                                 {
-                                    foreach (var ret in FlattenByInternal(child as IDictionary<string, object>, dest1, fields.Skip(1).ToArray(), newKey))
+                                    foreach (var ret in FlattenByInternal(child as IDictionary<string, object>, dest1, fields.Skip(1).ToArray(), newKey, turnOffSingularization))
                                         yield return ret;
                                 }
                                 else if (child is IDictionary)
                                 {
-                                    foreach (var ret in FlattenByInternal(((IDictionary)child).TranslateDictionary(), dest1, fields.Skip(1).ToArray(), newKey))
+                                    foreach (var ret in FlattenByInternal(((IDictionary)child).TranslateDictionary(), dest1, fields.Skip(1).ToArray(), newKey, turnOffSingularization))
                                         yield return ret;
                                 }
                                 else if (child.GetType().IsAnonymousType())
                                 {
                                     var d = child.ToDictionary();
                                     dest1.Add($"{newKey}", d);
-                                    foreach (var ret in FlattenByInternal(d, dest1, fields.Skip(1).ToArray(), newKey))
+                                    foreach (var ret in FlattenByInternal(d, dest1, fields.Skip(1).ToArray(), newKey, turnOffSingularization))
                                         yield return ret;
                                 }
                                 else
@@ -319,7 +335,7 @@ namespace ChoETL
                                 yield return dest1;
                             else
                             {
-                                foreach (var ret in FlattenByInternal(child, dest1, fields.Skip(1).ToArray()))
+                                foreach (var ret in FlattenByInternal(child, dest1, fields.Skip(1).ToArray(), null, turnOffSingularization))
                                     yield return ret;
                             }
                         }
@@ -337,7 +353,7 @@ namespace ChoETL
                             yield return dest1;
                         else
                         {
-                            foreach (var ret in FlattenByInternal(child, dest1, fields.Skip(1).ToArray()))
+                            foreach (var ret in FlattenByInternal(child, dest1, fields.Skip(1).ToArray(), null, turnOffSingularization))
                                 yield return ret;
                         }
                     }
