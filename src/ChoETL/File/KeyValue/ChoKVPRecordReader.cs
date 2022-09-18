@@ -468,12 +468,12 @@ namespace ChoETL
                     if (Configuration.IsDynamicObject)
                     {
                         var dict = rec as IDictionary<string, Object>;
-                        dict.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
+                        dict.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture, config: Configuration);
                     }
                     else
                     {
                         if (pi != null)
-                            rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
+                            rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture, config: Configuration);
                     }
                 }
                 catch
@@ -753,7 +753,7 @@ namespace ChoETL
                 {
                     var dict = rec as IDictionary<string, Object>;
 
-                    dict.ConvertNSetMemberValue(key, fieldConfig, ref fieldValue, Configuration.Culture);
+                    dict.ConvertNSetMemberValue(key, fieldConfig, ref fieldValue, Configuration.Culture, config: Configuration);
 
                     if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
                         dict.DoMemberLevelValidation(key, fieldConfig, Configuration.ObjectValidationMode);
@@ -761,7 +761,7 @@ namespace ChoETL
                 else
                 {
                     if (pi != null)
-                        rec.ConvertNSetMemberValue(key, fieldConfig, ref fieldValue, Configuration.Culture);
+                        rec.ConvertNSetMemberValue(key, fieldConfig, ref fieldValue, Configuration.Culture, config: Configuration);
                     else
                         throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(key, ChoType.GetTypeName(rec)));
 
@@ -844,12 +844,12 @@ namespace ChoETL
                                     {
                                         var dict = rec as IDictionary<string, Object>;
 
-                                        dict.ConvertNSetMemberValue(key, fieldConfig, ref fieldValue, Configuration.Culture);
+                                        dict.ConvertNSetMemberValue(key, fieldConfig, ref fieldValue, Configuration.Culture, config: Configuration);
                                     }
                                     else
                                     {
                                         if (pi != null)
-                                            rec.ConvertNSetMemberValue(key, fieldConfig, ref fieldValue, Configuration.Culture);
+                                            rec.ConvertNSetMemberValue(key, fieldConfig, ref fieldValue, Configuration.Culture, config: Configuration);
                                         else
                                             throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(key, ChoType.GetTypeName(rec)));
                                     }

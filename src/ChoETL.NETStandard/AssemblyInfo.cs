@@ -1,3 +1,3 @@
 ﻿using ChoETL;
 
-//[assembly: ChoAssemblyBetaVersion("beta3")]
+[assembly: ChoAssemblyBetaVersion("beta3")]

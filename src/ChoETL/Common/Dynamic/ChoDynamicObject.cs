@@ -408,24 +408,19 @@ namespace ChoETL
             return new ChoDynamicObject(ret.GroupBy(g => g.Key.ToNString(), StringComparer.OrdinalIgnoreCase).ToDictionary(kvp => kvp.Key.ToNString(), kvp => (object)kvp.Last(), StringComparer.OrdinalIgnoreCase));
         }
 
-        public dynamic ConvertMembersToArrayIfAny(char? arrayStartIndexSeparator = null, char? arrayEndIndexSeparator = null, bool allowNestedConversion = true)
+        public dynamic ConvertToNestedObject(char separator = '/', char? arrayIndexSeparator = null, bool allowNestedArrayConversion = true)
         {
-            return ChoExpandoObjectEx.ConvertMembersToArrayIfAny(this, arrayStartIndexSeparator, arrayEndIndexSeparator, allowNestedConversion);
+            return ChoExpandoObjectEx.ConvertToNestedObject(this, separator, arrayIndexSeparator, allowNestedArrayConversion);
         }
 
-        public dynamic ConvertToNestedObject(char separator = '/', char? arrayStartIndexSeparator = null, char? arrayEndIndexSeparator = null, bool allowNestedArrayConversion = true)
+        public dynamic ConvertMembersToArrayIfAny(char? arrayIndexSeparator = null, char? arrayEndIndexSeparator = null, bool allowNestedConversion = true)
         {
-            return ChoExpandoObjectEx.ConvertToNestedObject(this, separator, arrayStartIndexSeparator, arrayEndIndexSeparator, allowNestedArrayConversion);
+            return ChoExpandoObjectEx.ConvertMembersToArrayIfAny(this, arrayIndexSeparator, allowNestedConversion);
         }
 
         public dynamic ConvertMembersToArrayIfAny(char? arrayIndexSeparator, bool allowNestedConversion = true)
         {
-            return ChoExpandoObjectEx.ConvertMembersToArrayIfAny(this, arrayIndexSeparator, null, allowNestedConversion);
-        }
-
-        public dynamic ConvertToNestedObject(char separator, char? arrayIndexSeparator, bool allowNestedArrayConversion = true)
-        {
-            return ChoExpandoObjectEx.ConvertToNestedObject(this, separator, arrayIndexSeparator, null, allowNestedArrayConversion);
+            return ChoExpandoObjectEx.ConvertMembersToArrayIfAny(this, arrayIndexSeparator, allowNestedConversion);
         }
 
         public dynamic ConvertToFlattenObject(bool ignoreDictionaryFieldPrefix)

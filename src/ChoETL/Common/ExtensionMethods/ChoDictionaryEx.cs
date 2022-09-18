@@ -546,8 +546,7 @@ namespace ChoETL
                 }
                 else if (kvp.Value is IList)
                 {
-                    var lkey = key == null ? kvp.Key : "{0}{2}{1}".FormatString(key, kvp.Key, arrayIndexSeparator == null ? nestedKeySeparator : arrayIndexSeparator.Value);
-
+                    string lkey = null;
                     switch (ChoETLSettings.ArrayBracketNotation)
                     {
                         case ChoArrayBracketNotation.Square:
@@ -555,6 +554,9 @@ namespace ChoETL
                             break;
                         case ChoArrayBracketNotation.Parenthesis:
                             lkey = key == null ? kvp.Key : "{0}{2}({1})".FormatString(key, kvp.Key, arrayIndexSeparator == null ? nestedKeySeparator : arrayIndexSeparator.Value);
+                            break;
+                        default:
+                            lkey = key == null ? kvp.Key : "{0}{2}{1}".FormatString(key, kvp.Key, arrayIndexSeparator == null ? nestedKeySeparator : arrayIndexSeparator.Value);
                             break;
                     }
                     foreach (var tuple in Flatten(kvp.Value as IList, lkey, arrayIndexSeparator == null ? nestedKeySeparator : arrayIndexSeparator.Value, arrayIndexSeparator, ignoreDictionaryFieldPrefix))

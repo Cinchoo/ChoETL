@@ -1,0 +1,2911 @@
+﻿[
+  {
+    "Id": "xxxxxxxxxxxxxxxxxx4",
+    "ContractNumber": "370395370395",
+    "ContractTermNumber": "370395370395-20/21-1",
+    "Partner": {
+      "Id": "xxxxxxxxxxxxxxxxxx721",
+      "PartnerName": "Teste Marcus bug-370395",
+      "AliasName": "Teste Marcus bug-370395",
+      "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+      "City": "São Paulo",
+      "Email": null,
+      "OlderEmail": null,
+      "ListCategories": null,
+      "OfficeType": 1,
+      "PartnerAssociates": [],
+      "PartnerType": 0,
+      "IsEconomicGroup": false,
+      "ITSIntegration": null,
+      "DealerCategory": null,
+      "PhoneNumber": null,
+      "BlockStatus": false
+    },
+    "BreederCategory": null,
+    "MultiplierCategory": {
+      "CategoryDescription": "Multiplier",
+      "Incentive": 20.0,
+      "DiscountFieldSubscription": 20.0,
+      "AdditionalDiscount": 20.0,
+      "IncentiveVariable": 20.0,
+      "Technologies": [
+        {
+          "Technology": "TECH1",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": "NaN",
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": false,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 100.0,
+          "AchievementArea": 0.0
+        },
+        {
+          "Technology": "TECH2",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": "NaN",
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 0.0,
+          "AchievementArea": 0.0
+        }
+      ]
+    },
+    "DateRegistration": "2022-05-04T14:00:09Z",
+    "DueDate": "2022-12-31T03:00:00Z",
+    "LegalCrop": "20/21",
+    "SendForSignature": true,
+    "Rle": {
+      "Id": "xxxxxxxxxxxxxxxxxx2c5",
+      "FullName": "João Silva",
+      "Email": "joao.silva@empresa.com",
+      "PhoneNumber": "11992319319"
+    },
+    "MassAudit": null,
+    "MassAuditStatus": 4,
+    "Status": 1,
+    "Agreement": null,
+    "TermAffiliates": [
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx721",
+        "PartnerName": "Teste Marcus bug-370395",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": true
+      }
+    ],
+    "ITSIntegration": null,
+    "SaleForecast": [
+      {
+        "Date": "2022-01-01T03:00:00Z",
+        "Value": 10.0
+      },
+      {
+        "Date": "2022-02-01T03:00:00Z",
+        "Value": 10.0
+      },
+      {
+        "Date": "2022-03-01T03:00:00Z",
+        "Value": 10.0
+      },
+      {
+        "Date": "2022-04-01T03:00:00Z",
+        "Value": 10.0
+      },
+      {
+        "Date": "2022-05-01T03:00:00Z",
+        "Value": 10.0
+      },
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 10.0
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 10.0
+      },
+      {
+        "Date": "2022-08-01T03:00:00Z",
+        "Value": 10.0
+      }
+    ],
+    "AreaForecast": [
+      {
+        "Date": "2022-01-01T03:00:00Z",
+        "Value": 10.0
+      },
+      {
+        "Date": "2022-02-01T03:00:00Z",
+        "Value": 10.0
+      },
+      {
+        "Date": "2022-03-01T03:00:00Z",
+        "Value": 10.0
+      },
+      {
+        "Date": "2022-04-01T03:00:00Z",
+        "Value": 10.0
+      },
+      {
+        "Date": "2022-05-01T03:00:00Z",
+        "Value": 10.0
+      },
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 10.0
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 10.0
+      },
+      {
+        "Date": "2022-08-01T03:00:00Z",
+        "Value": 10.0
+      }
+    ],
+    "SystemOwnerData": {
+      "CompanyCode": 1,
+      "CompanyName": "empresa"
+    },
+    "BlockStatus": false,
+    "BlockDate": "0001-01-01T00:00:00Z"
+  },
+  {
+    "Id": "xxxxxxxxxxxxxxxxxxb99",
+    "ContractNumber": "AA123",
+    "ContractTermNumber": "AA123-22/22-1",
+    "Partner": {
+      "Id": "xxxxxxxxxxxxxxxxxx",
+      "PartnerName": "Multiplicador 19126363000104",
+      "AliasName": "Multiplicador 19126363000104",
+      "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+      "City": "São Paulo",
+      "Email": "19126363000104@teste.com.br",
+      "OlderEmail": null,
+      "ListCategories": null,
+      "OfficeType": 1,
+      "PartnerAssociates": null,
+      "PartnerType": 2,
+      "IsEconomicGroup": false,
+      "ITSIntegration": null,
+      "DealerCategory": null,
+      "PhoneNumber": null,
+      "BlockStatus": false
+    },
+    "BreederCategory": null,
+    "MultiplierCategory": {
+      "CategoryDescription": "multiplier",
+      "Incentive": 0.0,
+      "DiscountFieldSubscription": 0.0,
+      "AdditionalDiscount": 0.0,
+      "IncentiveVariable": 0.0,
+      "Technologies": [
+        {
+          "Technology": "TECH1",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": "NaN",
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 123123.0,
+          "AchievementArea": 0.0
+        },
+        {
+          "Technology": "TECH2",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": "NaN",
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 321321.0,
+          "AchievementArea": 0.0
+        }
+      ]
+    },
+    "DateRegistration": "2022-05-04T17:53:24Z",
+    "DueDate": "2023-03-23T03:00:00Z",
+    "LegalCrop": "22/22",
+    "SendForSignature": false,
+    "Rle": {
+      "Id": "xxxxxxxxxxxxxxxxxx47f",
+      "FullName": "joao.silva",
+      "Email": "joao.silva@empresa.com",
+      "PhoneNumber": "11959744212"
+    },
+    "MassAudit": null,
+    "MassAuditStatus": 4,
+    "Status": 1,
+    "Agreement": null,
+    "TermAffiliates": [
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx",
+        "PartnerName": "Multiplicador 19126363000104",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": true
+      }
+    ],
+    "ITSIntegration": {
+      "BulkIdContactToUpdate": true
+    },
+    "SaleForecast": [
+      {
+        "Date": "2022-05-01T03:00:00Z",
+        "Value": 0.01
+      },
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 0.01
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 0.01
+      },
+      {
+        "Date": "2022-08-01T03:00:00Z",
+        "Value": 0.01
+      },
+      {
+        "Date": "2022-09-01T03:00:00Z",
+        "Value": 0.01
+      },
+      {
+        "Date": "2022-10-01T03:00:00Z",
+        "Value": 0.01
+      },
+      {
+        "Date": "2022-11-01T03:00:00Z",
+        "Value": 0.01
+      },
+      {
+        "Date": "2022-12-01T03:00:00Z",
+        "Value": 0.01
+      },
+      {
+        "Date": "2023-01-01T03:00:00Z",
+        "Value": 0.01
+      },
+      {
+        "Date": "2023-02-01T03:00:00Z",
+        "Value": 0.01
+      },
+      {
+        "Date": "2023-03-01T03:00:00Z",
+        "Value": 0.01
+      }
+    ],
+    "AreaForecast": [
+      {
+        "Date": "2022-05-01T03:00:00Z",
+        "Value": 0.02
+      },
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 0.02
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 0.02
+      },
+      {
+        "Date": "2022-08-01T03:00:00Z",
+        "Value": 0.02
+      },
+      {
+        "Date": "2022-09-01T03:00:00Z",
+        "Value": 0.02
+      },
+      {
+        "Date": "2022-10-01T03:00:00Z",
+        "Value": 0.02
+      },
+      {
+        "Date": "2022-11-01T03:00:00Z",
+        "Value": 0.02
+      },
+      {
+        "FieldD": null,
+        "Date": "2022-12-01T03:00:00Z",
+        "Value": 0.02
+      },
+      {
+        "Date": "2023-01-01T03:00:00Z",
+        "Value": 0.02
+      },
+      {
+        "Date": "2023-02-01T03:00:00Z",
+        "Value": 0.02
+      },
+      {
+        "Date": "2023-03-01T03:00:00Z",
+        "Value": 0.02
+      }
+    ],
+    "SystemOwnerData": {
+      "CompanyCode": 1,
+      "CompanyName": "empresa"
+    },
+    "BlockStatus": false,
+    "BlockDate": "0001-01-01T00:00:00Z"
+  },
+  {
+    "Id": "xxxxxxxxxxxxxxxxxx417",
+    "ContractNumber": "Teste",
+    "ContractTermNumber": "Teste-22/22-1",
+    "Partner": {
+      "Id": "xxxxxxxxxxxxxxxxxxcbc",
+      "PartnerName": "Email Mult Matriz",
+      "AliasName": "Email Mult Matriz",
+      "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+      "City": "São Paulo",
+      "Email": "devmultiplicadorteste@outlook.com",
+      "OlderEmail": null,
+      "ListCategories": null,
+      "OfficeType": 1,
+      "PartnerAssociates": [
+        {
+          "PartnerId": "xxxxxxxxxxxxxxxxxxcbf",
+          "PartnerName": "Email Mult Filial",
+          "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+          "SapCode": "",
+          "OfficeType": 2
+        }
+      ],
+      "PartnerType": 2,
+      "IsEconomicGroup": false,
+      "ITSIntegration": null,
+      "DealerCategory": null,
+      "PhoneNumber": null,
+      "BlockStatus": false
+    },
+    "BreederCategory": null,
+    "MultiplierCategory": {
+      "CategoryDescription": "multiplier",
+      "Incentive": 0.0,
+      "DiscountFieldSubscription": 0.0,
+      "AdditionalDiscount": 0.0,
+      "IncentiveVariable": 0.0,
+      "Technologies": [
+        {
+          "Technology": "TECH1",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": "NaN",
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 0.0,
+          "AchievementArea": 0.0
+        },
+        {
+          "Technology": "TECH2",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": "NaN",
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 0.0,
+          "AchievementArea": 0.0
+        }
+      ]
+    },
+    "DateRegistration": "2022-05-10T18:30:40Z",
+    "DueDate": "2022-07-28T03:00:00Z",
+    "LegalCrop": "22/22",
+    "SendForSignature": false,
+    "Rle": {
+      "Id": "xxxxxxxxxxxxxxxxxx47f",
+      "FullName": "joao.silva",
+      "Email": "joao.silva@empresa.com",
+      "PhoneNumber": "11959744212"
+    },
+    "MassAudit": null,
+    "MassAuditStatus": 4,
+    "Status": 3,
+    "Agreement": null,
+    "TermAffiliates": [
+      {
+        "Id": "xxxxxxxxxxxxxxxxxxcbc",
+        "PartnerName": "Email Mult Matriz",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": true
+      },
+      {
+        "Id": "xxxxxxxxxxxxxxxxxxcbf",
+        "PartnerName": "Email Mult Filial",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": false
+      }
+    ],
+    "ITSIntegration": null,
+    "SaleForecast": null,
+    "AreaForecast": [
+      {
+        "Date": "2022-05-01T03:00:00Z",
+        "Value": 1.11
+      },
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 2.22
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 3.33
+      }
+    ],
+    "SystemOwnerData": {
+      "CompanyCode": 1,
+      "CompanyName": "empresa"
+    },
+    "BlockStatus": false,
+    "BlockDate": "0001-01-01T00:00:00Z"
+  },
+  {
+    "Id": "xxxxxxxxxxxxxxxxxx418",
+    "ContractNumber": "TesteDezembro",
+    "ContractTermNumber": "TesteDezembro-22/22-1",
+    "Partner": {
+      "Id": "xxxxxxxxxxxxxxxxxx757",
+      "PartnerName": "Agricultor empresa Teste",
+      "AliasName": "Agricultor empresa Teste",
+      "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+      "City": "São Paulo",
+      "Email": "26927551034@teste.com.br",
+      "OlderEmail": null,
+      "ListCategories": null,
+      "OfficeType": 1,
+      "PartnerAssociates": [],
+      "PartnerType": 1,
+      "IsEconomicGroup": false,
+      "ITSIntegration": null,
+      "DealerCategory": null,
+      "PhoneNumber": null,
+      "BlockStatus": false
+    },
+    "BreederCategory": null,
+    "MultiplierCategory": {
+      "CategoryDescription": "multiplier",
+      "Incentive": 0.0,
+      "DiscountFieldSubscription": 0.0,
+      "AdditionalDiscount": 0.0,
+      "IncentiveVariable": 0.0,
+      "Technologies": [
+        {
+          "Technology": "TECH1",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": "NaN",
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 0.0,
+          "AchievementArea": 0.0
+        },
+        {
+          "Technology": "TECH2",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": "NaN",
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 0.0,
+          "AchievementArea": 0.0
+        }
+      ]
+    },
+    "DateRegistration": "2022-05-10T18:43:31Z",
+    "DueDate": "2023-04-12T03:00:00Z",
+    "LegalCrop": "22/22",
+    "SendForSignature": false,
+    "Rle": {
+      "Id": "xxxxxxxxxxxxxxxxxx47f",
+      "FullName": "joao.silva",
+      "Email": "joao.silva@empresa.com",
+      "PhoneNumber": "11959744212"
+    },
+    "MassAudit": null,
+    "MassAuditStatus": 4,
+    "Status": 1,
+    "Agreement": null,
+    "TermAffiliates": [
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx757",
+        "PartnerName": "Agricultor empresa Teste",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": true
+      }
+    ],
+    "ITSIntegration": {
+      "BulkIdContactToUpdate": true
+    },
+    "SaleForecast": [
+      {
+        "Date": "2022-05-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-08-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-09-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-10-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-11-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-12-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2023-01-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2023-02-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2023-03-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2023-04-01T03:00:00Z",
+        "Value": 0.0
+      }
+    ],
+    "AreaForecast": [
+      {
+        "Date": "2022-05-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-08-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-09-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-10-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-11-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-12-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2023-01-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2023-02-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2023-03-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2023-04-01T03:00:00Z",
+        "Value": 0.0
+      }
+    ],
+    "SystemOwnerData": {
+      "CompanyCode": 1,
+      "CompanyName": "empresa"
+    },
+    "BlockStatus": false,
+    "BlockDate": "0001-01-01T00:00:00Z"
+  },
+  {
+    "Id": "xxxxxxxxxxxxxxxxxx41a",
+    "ContractNumber": "Teste2F",
+    "ContractTermNumber": "Teste2F-22/23-1",
+    "Partner": {
+      "Id": "xxxxxxxxxxxxxxxxxx6a6",
+      "PartnerName": "EMPRESA LTDA",
+      "AliasName": "EMPRESA LTDA",
+      "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+      "City": "São Paulo",
+      "Email": "55163745000244@teste.com.br",
+      "OlderEmail": null,
+      "ListCategories": null,
+      "OfficeType": 1,
+      "PartnerAssociates": [],
+      "PartnerType": 2,
+      "IsEconomicGroup": false,
+      "ITSIntegration": null,
+      "DealerCategory": null,
+      "PhoneNumber": null,
+      "BlockStatus": false
+    },
+    "BreederCategory": null,
+    "MultiplierCategory": {
+      "CategoryDescription": "multiplier",
+      "Incentive": 0.0,
+      "DiscountFieldSubscription": 0.0,
+      "AdditionalDiscount": 0.0,
+      "IncentiveVariable": 0.0,
+      "Technologies": [
+        {
+          "Technology": "TECH1",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": "NaN",
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 0.0,
+          "AchievementArea": 0.0
+        },
+        {
+          "Technology": "TECH2",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": "NaN",
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 0.0,
+          "AchievementArea": 0.0
+        }
+      ]
+    },
+    "DateRegistration": "2022-05-10T19:16:20Z",
+    "DueDate": "2022-11-18T03:00:00Z",
+    "LegalCrop": "22/23",
+    "SendForSignature": false,
+    "Rle": {
+      "Id": "xxxxxxxxxxxxxxxxxx47f",
+      "FullName": "joao.silva",
+      "Email": "joao.silva@empresa.com",
+      "PhoneNumber": "11959744212"
+    },
+    "MassAudit": null,
+    "MassAuditStatus": 4,
+    "Status": 1,
+    "Agreement": null,
+    "TermAffiliates": [
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx6a6",
+        "PartnerName": "EMPRESA LTDA",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": true
+      }
+    ],
+    "ITSIntegration": {
+      "BulkIdContactToUpdate": true
+    },
+    "SaleForecast": [
+      {
+        "Date": "2022-05-01T03:00:00Z",
+        "Value": 1.11
+      },
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 2.22
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 3.33
+      },
+      {
+        "Date": "2022-08-01T03:00:00Z",
+        "Value": 4.44
+      },
+      {
+        "Date": "2022-09-01T03:00:00Z",
+        "Value": 5.55
+      },
+      {
+        "Date": "2022-10-01T03:00:00Z",
+        "Value": 6.66
+      },
+      {
+        "Date": "2022-11-01T03:00:00Z",
+        "Value": 7.77
+      }
+    ],
+    "AreaForecast": [
+      {
+        "Date": "2022-05-01T03:00:00Z",
+        "Value": 11.11
+      },
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 22.22
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 33.33
+      },
+      {
+        "Date": "2022-08-01T03:00:00Z",
+        "Value": 44.44
+      },
+      {
+        "Date": "2022-09-01T03:00:00Z",
+        "Value": 55.55
+      },
+      {
+        "Date": "2022-10-01T03:00:00Z",
+        "Value": 66.66
+      },
+      {
+        "Date": "2022-11-01T03:00:00Z",
+        "Value": 77.77
+      }
+    ],
+    "SystemOwnerData": {
+      "CompanyCode": 1,
+      "CompanyName": "empresa"
+    },
+    "BlockStatus": false,
+    "BlockDate": "0001-01-01T00:00:00Z"
+  },
+  {
+    "Id": "xxxxxxxxxxxxxxxxxx419",
+    "ContractNumber": "Teste2Forecasts",
+    "ContractTermNumber": "Teste2Forecasts-22/22-1",
+    "Partner": {
+      "Id": "xxxxxxxxxxxxxxxxxx3a2",
+      "PartnerName": "Teste Mult Matriz 1",
+      "AliasName": "Teste Mult Matriz 1",
+      "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+      "City": "São Paulo",
+      "Email": "devtesteusuarioexterno@outlook.com",
+      "OlderEmail": null,
+      "ListCategories": null,
+      "OfficeType": 1,
+      "PartnerAssociates": [
+        {
+          "PartnerId": "xxxxxxxxxxxxxxxxxx3ae",
+          "PartnerName": "Teste Mult Filial 1.1",
+          "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+          "SapCode": "1236",
+          "OfficeType": 2
+        },
+        {
+          "PartnerId": "xxxxxxxxxxxxxxxxxx3af",
+          "PartnerName": "Teste Multi Filial 1.2",
+          "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+          "SapCode": "896",
+          "OfficeType": 2
+        },
+        {
+          "PartnerId": "xxxxxxxxxxxxxxxxxx3b0",
+          "PartnerName": "Teste Mult Filial 1.3",
+          "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+          "SapCode": "856",
+          "OfficeType": 2
+        }
+      ],
+      "PartnerType": 2,
+      "IsEconomicGroup": false,
+      "ITSIntegration": null,
+      "DealerCategory": null,
+      "PhoneNumber": null,
+      "BlockStatus": false
+    },
+    "BreederCategory": null,
+    "MultiplierCategory": {
+      "CategoryDescription": "multiplier",
+      "Incentive": 0.0,
+      "DiscountFieldSubscription": 0.0,
+      "AdditionalDiscount": 0.0,
+      "IncentiveVariable": 0.0,
+      "Technologies": [
+        {
+          "Technology": "TECH1",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": "NaN",
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 0.0,
+          "AchievementArea": 0.0
+        },
+        {
+          "Technology": "TECH2",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": "NaN",
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 0.0,
+          "AchievementArea": 0.0
+        }
+      ]
+    },
+    "DateRegistration": "2022-05-10T19:11:45Z",
+    "DueDate": "2023-01-05T03:00:00Z",
+    "LegalCrop": "22/22",
+    "SendForSignature": false,
+    "Rle": {
+      "Id": "xxxxxxxxxxxxxxxxxx47f",
+      "FullName": "joao.silva",
+      "Email": "joao.silva@empresa.com",
+      "PhoneNumber": "11959744212"
+    },
+    "MassAudit": null,
+    "MassAuditStatus": 4,
+    "Status": 1,
+    "Agreement": null,
+    "TermAffiliates": [
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx3a2",
+        "PartnerName": "Teste Mult Matriz 1",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": true
+      },
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx3ae",
+        "PartnerName": "Teste Mult Filial 1.1",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": false
+      },
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx3af",
+        "PartnerName": "Teste Multi Filial 1.2",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": false
+      },
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx3b0",
+        "PartnerName": "Teste Mult Filial 1.3",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": false
+      },
+      {
+        "Id": "xxxxxxxxxxxxxxxxxxea4",
+        "PartnerName": "Teste Mult Filial 1.1",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": false
+      },
+      {
+        "Id": "xxxxxxxxxxxxxxxxxxea5",
+        "PartnerName": "Teste Multi Filial 1.2",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": false
+      },
+      {
+        "Id": "xxxxxxxxxxxxxxxxxxea6",
+        "PartnerName": "Teste Mult Filial 1.3",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": false
+      },
+      {
+        "Id": "xxxxxxxxxxxxxxxxxxff7",
+        "PartnerName": "teste",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": false
+      },
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx732",
+        "PartnerName": "Teste Mult Filial 1.4",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": false
+      }
+    ],
+    "ITSIntegration": {
+      "BulkIdContactToUpdate": true
+    },
+    "SaleForecast": [
+      {
+        "Date": "2022-01-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-02-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-03-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-04-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-05-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-08-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-09-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-10-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-11-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-12-01T03:00:00Z",
+        "Value": 0.0
+      }
+    ],
+    "AreaForecast": [
+      {
+        "Date": "2022-01-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-02-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-03-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-04-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-05-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-08-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-09-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-10-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-11-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-12-01T03:00:00Z",
+        "Value": 0.0
+      }
+    ],
+    "SystemOwnerData": {
+      "CompanyCode": 1,
+      "CompanyName": "empresa"
+    },
+    "BlockStatus": false,
+    "BlockDate": "0001-01-01T00:00:00Z"
+  },
+  {
+    "Id": "xxxxxxxxxxxxxxxxxx350",
+    "ContractNumber": "Teste3F",
+    "ContractTermNumber": "Teste3F-22/22-1",
+    "Partner": {
+      "Id": "xxxxxxxxxxxxxxxxxx6a6",
+      "PartnerName": "EMPRESA LTDA",
+      "AliasName": "EMPRESA LTDA",
+      "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+      "City": "São Paulo",
+      "Email": "55163745000244@teste.com.br",
+      "OlderEmail": null,
+      "ListCategories": null,
+      "OfficeType": 1,
+      "PartnerAssociates": [],
+      "PartnerType": 2,
+      "IsEconomicGroup": false,
+      "ITSIntegration": null,
+      "DealerCategory": null,
+      "PhoneNumber": null,
+      "BlockStatus": false
+    },
+    "BreederCategory": null,
+    "MultiplierCategory": {
+      "CategoryDescription": "multiplier",
+      "Incentive": 0.0,
+      "DiscountFieldSubscription": 0.0,
+      "AdditionalDiscount": 0.0,
+      "IncentiveVariable": 0.0,
+      "Technologies": [
+        {
+          "Technology": "TECH1",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": "NaN",
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 0.0,
+          "AchievementArea": 0.0
+        },
+        {
+          "Technology": "TECH2",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": "NaN",
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 0.0,
+          "AchievementArea": 0.0
+        }
+      ]
+    },
+    "DateRegistration": "2022-05-13T20:32:16Z",
+    "DueDate": "2024-03-13T03:00:00Z",
+    "LegalCrop": "22/22",
+    "SendForSignature": false,
+    "Rle": {
+      "Id": "xxxxxxxxxxxxxxxxxx47f",
+      "FullName": "joao.silva",
+      "Email": "joao.silva@empresa.com",
+      "PhoneNumber": "11959744212"
+    },
+    "MassAudit": null,
+    "MassAuditStatus": 4,
+    "Status": 1,
+    "Agreement": null,
+    "TermAffiliates": [
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx6a6",
+        "PartnerName": "EMPRESA LTDA",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": true
+      }
+    ],
+    "ITSIntegration": null,
+    "SaleForecast": [
+      {
+        "Date": "2022-05-01T03:00:00Z",
+        "Value": 0.05
+      },
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 0.06
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 0.07
+      },
+      {
+        "Date": "2022-08-01T03:00:00Z",
+        "Value": 0.08
+      },
+      {
+        "Date": "2022-09-01T03:00:00Z",
+        "Value": 0.09
+      },
+      {
+        "Date": "2022-10-01T03:00:00Z",
+        "Value": 0.1
+      },
+      {
+        "Date": "2022-11-01T03:00:00Z",
+        "Value": 0.11
+      },
+      {
+        "Date": "2022-12-01T03:00:00Z",
+        "Value": 0.12
+      },
+      {
+        "Date": "2023-01-01T03:00:00Z",
+        "Value": 1.0
+      },
+      {
+        "Date": "2023-02-01T03:00:00Z",
+        "Value": 2.0
+      },
+      {
+        "Date": "2023-03-01T03:00:00Z",
+        "Value": 3.0
+      },
+      {
+        "Date": "2023-04-01T03:00:00Z",
+        "Value": 4.0
+      },
+      {
+        "Date": "2023-05-01T03:00:00Z",
+        "Value": 5.0
+      },
+      {
+        "Date": "2023-06-01T03:00:00Z",
+        "Value": 6.0
+      },
+      {
+        "Date": "2023-07-01T03:00:00Z",
+        "Value": 7.0
+      },
+      {
+        "Date": "2023-08-01T03:00:00Z",
+        "Value": 8.0
+      },
+      {
+        "Date": "2023-09-01T03:00:00Z",
+        "Value": 9.0
+      },
+      {
+        "Date": "2023-10-01T03:00:00Z",
+        "Value": 10.0
+      },
+      {
+        "Date": "2023-11-01T03:00:00Z",
+        "Value": 11.0
+      },
+      {
+        "Date": "2023-12-01T03:00:00Z",
+        "Value": 12.0
+      },
+      {
+        "Date": "2024-01-01T03:00:00Z",
+        "Value": 100.0
+      },
+      {
+        "Date": "2024-02-01T03:00:00Z",
+        "Value": 200.0
+      },
+      {
+        "Date": "2024-03-01T03:00:00Z",
+        "Value": 300.0
+      }
+    ],
+    "AreaForecast": [
+      {
+        "Date": "2022-05-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-08-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-09-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-10-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-11-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-12-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2023-01-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2023-02-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2023-03-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2023-04-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2023-05-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2023-06-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2023-07-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2023-08-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2023-09-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2023-10-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2023-11-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2023-12-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2024-01-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2024-02-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2024-03-01T03:00:00Z",
+        "Value": 0.0
+      }
+    ],
+    "SystemOwnerData": {
+      "CompanyCode": 1,
+      "CompanyName": "empresa"
+    },
+    "BlockStatus": false,
+    "BlockDate": "0001-01-01T00:00:00Z"
+  },
+  {
+    "Id": "xxxxxxxxxxxxxxxxxx223",
+    "ContractNumber": "Teste",
+    "ContractTermNumber": "Teste-21/22-1",
+    "Partner": {
+      "Id": "xxxxxxxxxxxxxxxxxxa2a",
+      "PartnerName": "Teste Marcus 123456",
+      "AliasName": "Teste Marcus 123456",
+      "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+      "City": "São Paulo",
+      "Email": "teste101010@teste.com.br",
+      "OlderEmail": null,
+      "ListCategories": null,
+      "OfficeType": 1,
+      "PartnerAssociates": [],
+      "PartnerType": 2,
+      "IsEconomicGroup": false,
+      "ITSIntegration": null,
+      "DealerCategory": null,
+      "PhoneNumber": null,
+      "BlockStatus": false
+    },
+    "BreederCategory": null,
+    "MultiplierCategory": {
+      "CategoryDescription": "multiplier",
+      "Incentive": 0.0,
+      "DiscountFieldSubscription": 0.0,
+      "AdditionalDiscount": 0.0,
+      "IncentiveVariable": 0.0,
+      "Technologies": [
+        {
+          "Technology": "TECH1",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": "NaN",
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 1221.0,
+          "AchievementArea": 0.0
+        },
+        {
+          "Technology": "TECH2",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": "NaN",
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 1331.0,
+          "AchievementArea": 0.0
+        }
+      ]
+    },
+    "DateRegistration": "2022-05-16T12:08:28Z",
+    "DueDate": "2022-07-12T03:00:00Z",
+    "LegalCrop": "21/22",
+    "SendForSignature": false,
+    "Rle": {
+      "Id": "xxxxxxxxxxxxxxxxxx47f",
+      "FullName": "joao.silva",
+      "Email": "joao.silva@empresa.com",
+      "PhoneNumber": "11959744212"
+    },
+    "MassAudit": null,
+    "MassAuditStatus": 4,
+    "Status": 3,
+    "Agreement": null,
+    "TermAffiliates": [
+      {
+        "Id": "xxxxxxxxxxxxxxxxxxa2a",
+        "PartnerName": "Teste Marcus 123456",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": true
+      }
+    ],
+    "ITSIntegration": null,
+    "SaleForecast": [
+      {
+        "Date": "2022-05-01T03:00:00Z",
+        "Value": 0.01
+      },
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 0.01
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 0.01
+      }
+    ],
+    "AreaForecast": [
+      {
+        "Date": "2022-05-01T03:00:00Z",
+        "Value": 0.02
+      },
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 0.02
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 0.02
+      }
+    ],
+    "SystemOwnerData": {
+      "CompanyCode": 1,
+      "CompanyName": "empresa"
+    },
+    "BlockStatus": false,
+    "BlockDate": "0001-01-01T00:00:00Z"
+  },
+  {
+    "Id": "xxxxxxxxxxxxxxxxxxe79",
+    "ContractNumber": "TesteObt",
+    "ContractTermNumber": "TesteObt-22/22-1",
+    "Partner": {
+      "Id": "xxxxxxxxxxxxxxxxxxa13",
+      "PartnerName": "Teste Obtentor Marcus",
+      "AliasName": "Teste Obtentor Marcus",
+      "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+      "City": "Teresina",
+      "Email": "teste123456789@email.com",
+      "OlderEmail": null,
+      "ListCategories": null,
+      "OfficeType": 1,
+      "PartnerAssociates": [],
+      "PartnerType": 2,
+      "IsEconomicGroup": false,
+      "ITSIntegration": null,
+      "DealerCategory": null,
+      "PhoneNumber": null,
+      "BlockStatus": false
+    },
+    "BreederCategory": {
+      "CategoryDescription": "breeder",
+      "RevenueShare": 0.0,
+      "IncentiveVariable": 0.0,
+      "Technologies": [
+        {
+          "Technology": "TECH1",
+          "IsActive": true,
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetLeft": 0.0,
+          "RegionSalesTarget": [
+            {
+              "MacroRegion": "Sul",
+              "SalesTarget": 0.0,
+              "SalesTargetBalance": 0.0,
+              "SalesPercentTargetBalance": 0.0,
+              "GoalStatus": false,
+              "RevenueShareVariableAmount": 0.0,
+              "DueRoyalty": 0.0,
+              "PaymentWithoutGoal": true
+            },
+            {
+              "MacroRegion": "Centro-Sul",
+              "SalesTarget": 0.0,
+              "SalesTargetBalance": 0.0,
+              "SalesPercentTargetBalance": 0.0,
+              "GoalStatus": false,
+              "RevenueShareVariableAmount": 0.0,
+              "DueRoyalty": 0.0,
+              "PaymentWithoutGoal": false
+            },
+            {
+              "MacroRegion": "Sudeste",
+              "SalesTarget": 0.0,
+              "SalesTargetBalance": 0.0,
+              "SalesPercentTargetBalance": 0.0,
+              "GoalStatus": false,
+              "RevenueShareVariableAmount": 0.0,
+              "DueRoyalty": 0.0,
+              "PaymentWithoutGoal": false
+            },
+            {
+              "MacroRegion": "Centro-Oeste",
+              "SalesTarget": 0.0,
+              "SalesTargetBalance": 0.0,
+              "SalesPercentTargetBalance": 0.0,
+              "GoalStatus": false,
+              "RevenueShareVariableAmount": 0.0,
+              "DueRoyalty": 0.0,
+              "PaymentWithoutGoal": false
+            },
+            {
+              "MacroRegion": "Norte/Nordeste",
+              "SalesTarget": 0.0,
+              "SalesTargetBalance": 0.0,
+              "SalesPercentTargetBalance": 0.0,
+              "GoalStatus": false,
+              "RevenueShareVariableAmount": 0.0,
+              "DueRoyalty": 0.0,
+              "PaymentWithoutGoal": false
+            }
+          ],
+          "RevenueShareAmount": 0.0,
+          "RevenueSharePaid": "0.xxxxxxxxxxxxxxxxxxeShareVariableAmount\": 0.0,",
+          "BalancePayable": 0.0,
+          "PaymentDocuments": null,
+          "RevenueShareLegallySavedSeed": 0.0,
+          "QuantityArea": 1234.0
+        },
+        {
+          "Technology": "TECH2",
+          "IsActive": true,
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetLeft": 0.0,
+          "RegionSalesTarget": [
+            {
+              "MacroRegion": "Sul",
+              "SalesTarget": 0.0,
+              "SalesTargetBalance": 0.0,
+              "SalesPercentTargetBalance": 0.0,
+              "GoalStatus": false,
+              "RevenueShareVariableAmount": 0.0,
+              "DueRoyalty": 0.0,
+              "PaymentWithoutGoal": false
+            },
+            {
+              "MacroRegion": "Centro-Sul",
+              "SalesTarget": 0.0,
+              "SalesTargetBalance": 0.0,
+              "SalesPercentTargetBalance": 0.0,
+              "GoalStatus": false,
+              "RevenueShareVariableAmount": 0.0,
+              "DueRoyalty": 0.0,
+              "PaymentWithoutGoal": false
+            },
+            {
+              "MacroRegion": "Sudeste",
+              "SalesTarget": 0.0,
+              "SalesTargetBalance": 0.0,
+              "SalesPercentTargetBalance": 0.0,
+              "GoalStatus": false,
+              "RevenueShareVariableAmount": 0.0,
+              "DueRoyalty": 0.0,
+              "PaymentWithoutGoal": false
+            },
+            {
+              "MacroRegion": "Centro-Oeste",
+              "SalesTarget": 0.0,
+              "SalesTargetBalance": 0.0,
+              "SalesPercentTargetBalance": 0.0,
+              "GoalStatus": false,
+              "RevenueShareVariableAmount": 0.0,
+              "DueRoyalty": 0.0,
+              "PaymentWithoutGoal": false
+            },
+            {
+              "MacroRegion": "Norte/Nordeste",
+              "SalesTarget": 0.0,
+              "SalesTargetBalance": 0.0,
+              "SalesPercentTargetBalance": 0.0,
+              "GoalStatus": false,
+              "RevenueShareVariableAmount": 0.0,
+              "DueRoyalty": 0.0,
+              "PaymentWithoutGoal": false
+            }
+          ],
+          "RevenueShareAmount": 0.0,
+          "RevenueSharePaid": "0.xxxxxxxxxxxxxxxxxxeShareVariableAmount\": 0.0,",
+          "BalancePayable": 0.0,
+          "PaymentDocuments": null,
+          "RevenueShareLegallySavedSeed": 0.0,
+          "QuantityArea": 3214.0
+        }
+      ]
+    },
+    "MultiplierCategory": null,
+    "DateRegistration": "2022-05-16T14:05:27Z",
+    "DueDate": "2022-07-13T03:00:00Z",
+    "LegalCrop": "22/22",
+    "SendForSignature": false,
+    "Rle": null,
+    "MassAudit": null,
+    "MassAuditStatus": 4,
+    "Status": 3,
+    "Agreement": null,
+    "TermAffiliates": null,
+    "ITSIntegration": {
+      "BulkIdContactToUpdate": true
+    },
+    "SaleForecast": [
+      {
+        "Date": "2022-05-01T03:00:00Z",
+        "Value": 0.11
+      },
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 0.11
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 0.11
+      }
+    ],
+    "AreaForecast": [
+      {
+        "Date": "2022-05-01T03:00:00Z",
+        "Value": 0.22
+      },
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 0.22
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 0.22
+      }
+    ],
+    "SystemOwnerData": {
+      "CompanyCode": 1,
+      "CompanyName": "empresa"
+    },
+    "BlockStatus": false,
+    "BlockDate": "0001-01-01T00:00:00Z"
+  },
+  {
+    "Id": "xxxxxxxxxxxxxxxxxxc7d",
+    "ContractNumber": "3703953703959898",
+    "ContractTermNumber": "3703953703959898-22/23-1",
+    "Partner": {
+      "Id": "xxxxxxxxxxxxxxxxxx7ec",
+      "PartnerName": "empresa ",
+      "AliasName": "empresa ",
+      "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+      "City": "São Paulo",
+      "Email": null,
+      "OlderEmail": null,
+      "ListCategories": null,
+      "OfficeType": 1,
+      "PartnerAssociates": [],
+      "PartnerType": 0,
+      "IsEconomicGroup": false,
+      "ITSIntegration": null,
+      "DealerCategory": null,
+      "PhoneNumber": null,
+      "BlockStatus": false
+    },
+    "BreederCategory": null,
+    "MultiplierCategory": {
+      "CategoryDescription": "Multiplier",
+      "Incentive": 0.0,
+      "DiscountFieldSubscription": 0.0,
+      "AdditionalDiscount": 0.0,
+      "IncentiveVariable": 0.0,
+      "Technologies": [
+        {
+          "Technology": "TECH1",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 535.0,
+          "SalesPercentTargetBalance": "Infinity",
+          "GoalStatus": true,
+          "Pay": true,
+          "IncentiveValue": 0.0,
+          "IsActive": false,
+          "SalesActive": true,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 2215.6679999999997,
+          "FullRoyalty": 2260.8,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 0.0,
+          "AchievementArea": 0.0
+        },
+        {
+          "Technology": "TECH2",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": "NaN",
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 0.0,
+          "AchievementArea": 0.0
+        }
+      ]
+    },
+    "DateRegistration": "2022-05-27T12:42:52Z",
+    "DueDate": "2022-12-31T03:00:00Z",
+    "LegalCrop": "22/23",
+    "SendForSignature": false,
+    "Rle": {
+      "Id": "xxxxxxxxxxxxxxxxxx2c5",
+      "FullName": "João Silva",
+      "Email": "joao.silva@empresa.com",
+      "PhoneNumber": "11992319319"
+    },
+    "MassAudit": null,
+    "MassAuditStatus": 4,
+    "Status": 1,
+    "Agreement": null,
+    "TermAffiliates": [
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx7ec",
+        "PartnerName": "empresa ",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": true
+      }
+    ],
+    "ITSIntegration": null,
+    "SaleForecast": null,
+    "AreaForecast": null,
+    "SystemOwnerData": {
+      "CompanyCode": 1,
+      "CompanyName": "empresa"
+    },
+    "BlockStatus": false,
+    "BlockDate": "0001-01-01T00:00:00Z"
+  },
+  {
+    "Id": "xxxxxxxxxxxxxxxxxx663",
+    "ContractNumber": "Teste111",
+    "ContractTermNumber": "Teste111-21/22-1",
+    "Partner": {
+      "Id": "xxxxxxxxxxxxxxxxxx3a8",
+      "PartnerName": "Teste Multi Matriz 7",
+      "AliasName": "Teste Multi Matriz 7",
+      "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+      "City": "São Paulo",
+      "Email": "teste20@teste.com.br",
+      "OlderEmail": null,
+      "ListCategories": null,
+      "OfficeType": 1,
+      "PartnerAssociates": [
+        {
+          "PartnerId": "xxxxxxxxxxxxxxxxxx3ba",
+          "PartnerName": "Teste Mult Filial 7.1",
+          "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+          "SapCode": "",
+          "OfficeType": 2
+        },
+        {
+          "PartnerId": "xxxxxxxxxxxxxxxxxx3bb",
+          "PartnerName": "Teste Multi Filial 7.2",
+          "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+          "SapCode": "",
+          "OfficeType": 2
+        },
+        {
+          "PartnerId": "xxxxxxxxxxxxxxxxxx3bc",
+          "PartnerName": "Teste Mult Filial 7.3",
+          "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+          "SapCode": "",
+          "OfficeType": 2
+        },
+        {
+          "PartnerId": "xxxxxxxxxxxxxxxxxx3bd",
+          "PartnerName": "Teste Mult Filial 7.4",
+          "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+          "SapCode": "",
+          "OfficeType": 2
+        },
+        {
+          "PartnerId": "xxxxxxxxxxxxxxxxxx3be",
+          "PartnerName": "Teste Multi Filial 7.5",
+          "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+          "SapCode": "",
+          "OfficeType": 2
+        }
+      ],
+      "PartnerType": 2,
+      "IsEconomicGroup": false,
+      "ITSIntegration": null,
+      "DealerCategory": null,
+      "PhoneNumber": null,
+      "BlockStatus": false
+    },
+    "BreederCategory": null,
+    "MultiplierCategory": {
+      "CategoryDescription": "multiplier",
+      "Incentive": 0.0,
+      "DiscountFieldSubscription": 0.0,
+      "AdditionalDiscount": 0.0,
+      "IncentiveVariable": 0.0,
+      "Technologies": [
+        {
+          "Technology": "TECH1",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": "NaN",
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 0.0,
+          "AchievementArea": 0.0
+        },
+        {
+          "Technology": "TECH2",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": "NaN",
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 0.0,
+          "AchievementArea": 0.0
+        }
+      ]
+    },
+    "DateRegistration": "2022-06-10T18:59:56Z",
+    "DueDate": "2023-02-16T03:00:00Z",
+    "LegalCrop": "21/22",
+    "SendForSignature": false,
+    "Rle": {
+      "Id": "xxxxxxxxxxxxxxxxxx47f",
+      "FullName": "joao.silva",
+      "Email": "joao.silva@empresa.com",
+      "PhoneNumber": "11959744212"
+    },
+    "MassAudit": null,
+    "MassAuditStatus": 4,
+    "Status": 1,
+    "Agreement": null,
+    "TermAffiliates": [
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx3a8",
+        "PartnerName": "Teste Multi Matriz 7",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": true
+      },
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx3ba",
+        "PartnerName": "Teste Mult Filial 7.1",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": false
+      },
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx3bb",
+        "PartnerName": "Teste Multi Filial 7.2",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": false
+      },
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx3bc",
+        "PartnerName": "Teste Mult Filial 7.3",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": false
+      },
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx3bd",
+        "PartnerName": "Teste Mult Filial 7.4",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": false
+      },
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx3be",
+        "PartnerName": "Teste Multi Filial 7.5",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": false
+      }
+    ],
+    "ITSIntegration": null,
+    "SaleForecast": [
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 1.11
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-08-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-09-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-10-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-11-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-12-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2023-01-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2023-02-01T03:00:00Z",
+        "Value": 0.0
+      }
+    ],
+    "AreaForecast": [
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 1.11
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-08-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-09-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-10-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-11-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-12-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2023-01-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2023-02-01T03:00:00Z",
+        "Value": 0.0
+      }
+    ],
+    "SystemOwnerData": {
+      "CompanyCode": 1,
+      "CompanyName": "empresa"
+    },
+    "BlockStatus": false,
+    "BlockDate": "0001-01-01T00:00:00Z"
+  },
+  {
+    "Id": "xxxxxxxxxxxxxxxxxx664",
+    "ContractNumber": "TesteForecast",
+    "ContractTermNumber": "TesteForecast-22/22-1",
+    "Partner": {
+      "Id": "xxxxxxxxxxxxxxxxxx3a6",
+      "PartnerName": "Teste Multi Matriz 5",
+      "AliasName": "Teste Multi Matriz 5",
+      "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+      "City": "São Paulo",
+      "Email": "teste18@teste.com.br",
+      "OlderEmail": null,
+      "ListCategories": null,
+      "OfficeType": 1,
+      "PartnerAssociates": null,
+      "PartnerType": 2,
+      "IsEconomicGroup": false,
+      "ITSIntegration": null,
+      "DealerCategory": null,
+      "PhoneNumber": null,
+      "BlockStatus": false
+    },
+    "BreederCategory": null,
+    "MultiplierCategory": {
+      "CategoryDescription": "multiplier",
+      "Incentive": 0.0,
+      "DiscountFieldSubscription": 0.0,
+      "AdditionalDiscount": 0.0,
+      "IncentiveVariable": 0.0,
+      "Technologies": [
+        {
+          "Technology": "TECH1",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": "NaN",
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 0.0,
+          "AchievementArea": 0.0
+        },
+        {
+          "Technology": "TECH2",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": "NaN",
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 0.0,
+          "AchievementArea": 0.0
+        }
+      ]
+    },
+    "DateRegistration": "2022-06-10T19:01:22Z",
+    "DueDate": "2022-11-03T03:00:00Z",
+    "LegalCrop": "22/22",
+    "SendForSignature": false,
+    "Rle": {
+      "Id": "xxxxxxxxxxxxxxxxxx47f",
+      "FullName": "joao.silva",
+      "Email": "joao.silva@empresa.com",
+      "PhoneNumber": "11959744212"
+    },
+    "MassAudit": null,
+    "MassAuditStatus": 4,
+    "Status": 1,
+    "Agreement": null,
+    "TermAffiliates": [
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx3a6",
+        "PartnerName": "Teste Multi Matriz 5",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": true
+      }
+    ],
+    "ITSIntegration": {
+      "BulkIdContactToUpdate": true
+    },
+    "SaleForecast": [
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 11.11
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 22.22
+      },
+      {
+        "Date": "2022-08-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-09-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-10-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-11-01T03:00:00Z",
+        "Value": 0.0
+      }
+    ],
+    "AreaForecast": [
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 1111.11
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 22.22
+      },
+      {
+        "Date": "2022-08-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-09-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-10-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-11-01T03:00:00Z",
+        "Value": 0.0
+      }
+    ],
+    "SystemOwnerData": {
+      "CompanyCode": 1,
+      "CompanyName": "empresa"
+    },
+    "BlockStatus": false,
+    "BlockDate": "0001-01-01T00:00:00Z"
+  },
+  {
+    "Id": "xxxxxxxxxxxxxxxxxx665",
+    "ContractNumber": "TesteForecastDate",
+    "ContractTermNumber": "TesteForecastDate-21/21-1",
+    "Partner": {
+      "Id": "xxxxxxxxxxxxxxxxxx3a6",
+      "PartnerName": "Teste Multi Matriz 5",
+      "AliasName": "Teste Multi Matriz 5",
+      "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+      "City": "São Paulo",
+      "Email": "teste18@teste.com.br",
+      "OlderEmail": null,
+      "ListCategories": null,
+      "OfficeType": 1,
+      "PartnerAssociates": null,
+      "PartnerType": 2,
+      "IsEconomicGroup": false,
+      "ITSIntegration": null,
+      "DealerCategory": null,
+      "PhoneNumber": null,
+      "BlockStatus": false
+    },
+    "BreederCategory": null,
+    "MultiplierCategory": {
+      "CategoryDescription": "multiplier",
+      "Incentive": 0.0,
+      "DiscountFieldSubscription": 0.0,
+      "AdditionalDiscount": 0.0,
+      "IncentiveVariable": 0.0,
+      "Technologies": [
+        {
+          "Technology": "TECH1",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": "NaN",
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 0.0,
+          "AchievementArea": 0.0
+        },
+        {
+          "Technology": "TECH2",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": "NaN",
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 0.0,
+          "AchievementArea": 0.0
+        }
+      ]
+    },
+    "DateRegistration": "2022-06-10T19:04:36Z",
+    "DueDate": "2022-10-07T03:00:00Z",
+    "LegalCrop": "21/21",
+    "SendForSignature": false,
+    "Rle": {
+      "Id": "xxxxxxxxxxxxxxxxxx47f",
+      "FullName": "joao.silva",
+      "Email": "joao.silva@empresa.com",
+      "PhoneNumber": "11959744212"
+    },
+    "MassAudit": null,
+    "MassAuditStatus": 4,
+    "Status": 1,
+    "Agreement": null,
+    "TermAffiliates": [
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx3a6",
+        "PartnerName": "Teste Multi Matriz 5",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": true
+      }
+    ],
+    "ITSIntegration": {
+      "BulkIdContactToUpdate": true
+    },
+    "SaleForecast": [
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 33.3
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-08-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-09-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-10-01T03:00:00Z",
+        "Value": 0.0
+      }
+    ],
+    "AreaForecast": [
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 33.33
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-08-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-09-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-10-01T03:00:00Z",
+        "Value": 0.0
+      }
+    ],
+    "SystemOwnerData": {
+      "CompanyCode": 1,
+      "CompanyName": "empresa"
+    },
+    "BlockStatus": false,
+    "BlockDate": "0001-01-01T00:00:00Z"
+  },
+  {
+    "Id": "xxxxxxxxxxxxxxxxxx421",
+    "ContractNumber": "TesteDateReg",
+    "ContractTermNumber": "TesteDateReg-22/22-1",
+    "Partner": {
+      "Id": "xxxxxxxxxxxxxxxxxx3a3",
+      "PartnerName": "Teste Multi Matriz 2",
+      "AliasName": "Teste Multi Matriz 2",
+      "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+      "City": "São Paulo",
+      "Email": "devusuarioexternoteste@outlook.com",
+      "OlderEmail": null,
+      "ListCategories": null,
+      "OfficeType": 1,
+      "PartnerAssociates": [
+        {
+          "PartnerId": "xxxxxxxxxxxxxxxxxx3b1",
+          "PartnerName": "Teste Mult Filial 2.1",
+          "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+          "SapCode": "3659",
+          "OfficeType": 2
+        },
+        {
+          "PartnerId": "xxxxxxxxxxxxxxxxxx3b2",
+          "PartnerName": "Teste Multi Filial 2.2",
+          "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+          "SapCode": "878",
+          "OfficeType": 2
+        },
+        {
+          "PartnerId": "xxxxxxxxxxxxxxxxxx3b3",
+          "PartnerName": "Teste Mult Filial 2.3",
+          "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+          "SapCode": "156",
+          "OfficeType": 2
+        }
+      ],
+      "PartnerType": 2,
+      "IsEconomicGroup": false,
+      "ITSIntegration": null,
+      "DealerCategory": null,
+      "PhoneNumber": null,
+      "BlockStatus": false
+    },
+    "BreederCategory": null,
+    "MultiplierCategory": {
+      "CategoryDescription": "multiplier",
+      "Incentive": 0.0,
+      "DiscountFieldSubscription": 0.0,
+      "AdditionalDiscount": 0.0,
+      "IncentiveVariable": 0.0,
+      "Technologies": [
+        {
+          "Technology": "TECH1",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": "NaN",
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 0.0,
+          "AchievementArea": 0.0
+        },
+        {
+          "Technology": "TECH2",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 0.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": "NaN",
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 0.0,
+          "AchievementArea": 0.0
+        }
+      ]
+    },
+    "DateRegistration": "2022-06-10T20:12:49Z",
+    "DueDate": "2022-08-23T03:00:00Z",
+    "LegalCrop": "22/22",
+    "SendForSignature": false,
+    "Rle": {
+      "Id": "xxxxxxxxxxxxxxxxxx47f",
+      "FullName": "joao.silva",
+      "Email": "joao.silva@empresa.com",
+      "PhoneNumber": "11959744212"
+    },
+    "MassAudit": null,
+    "MassAuditStatus": 4,
+    "Status": 2,
+    "Agreement": null,
+    "TermAffiliates": [
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx3a3",
+        "PartnerName": "Teste Multi Matriz 2",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": true
+      },
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx3b1",
+        "PartnerName": "Teste Mult Filial 2.1",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": false
+      },
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx3b2",
+        "PartnerName": "Teste Multi Filial 2.2",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": false
+      },
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx3b3",
+        "PartnerName": "Teste Mult Filial 2.3",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": false
+      }
+    ],
+    "ITSIntegration": null,
+    "SaleForecast": [
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 22.22
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-08-01T03:00:00Z",
+        "Value": 0.0
+      }
+    ],
+    "AreaForecast": [
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 22.22
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-08-01T03:00:00Z",
+        "Value": 0.0
+      }
+    ],
+    "SystemOwnerData": {
+      "CompanyCode": 1,
+      "CompanyName": "empresa"
+    },
+    "BlockStatus": false,
+    "BlockDate": "0001-01-01T00:00:00Z"
+  },
+  {
+    "Id": "xxxxxxxxxxxxxxxxxx19c",
+    "ContractNumber": "Teste2Forecasts",
+    "ContractTermNumber": "Teste2Forecasts-22/23-1",
+    "Partner": {
+      "Id": "xxxxxxxxxxxxxxxxxx128",
+      "PartnerName": "Teste Mult Matriz 1",
+      "AliasName": "Teste Mult Matriz 1",
+      "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+      "City": "Rio de Janeiro",
+      "Email": "dvlstestes@hotmail.com",
+      "OlderEmail": null,
+      "ListCategories": null,
+      "OfficeType": 1,
+      "PartnerAssociates": [
+        {
+          "PartnerId": "xxxxxxxxxxxxxxxxxx3ae",
+          "PartnerName": "Teste Mult Filial 1.1",
+          "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+          "SapCode": "1236",
+          "OfficeType": 2
+        },
+        {
+          "PartnerId": "xxxxxxxxxxxxxxxxxx3af",
+          "PartnerName": "Teste Multi Filial 1.2",
+          "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+          "SapCode": "896",
+          "OfficeType": 2
+        },
+        {
+          "PartnerId": "xxxxxxxxxxxxxxxxxx3b0",
+          "PartnerName": "Teste Mult Filial 1.3",
+          "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+          "SapCode": "856",
+          "OfficeType": 2
+        },
+        {
+          "PartnerId": "xxxxxxxxxxxxxxxxxxff7",
+          "PartnerName": "teste",
+          "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+          "SapCode": "123",
+          "OfficeType": 2
+        },
+        {
+          "PartnerId": "xxxxxxxxxxxxxxxxxx732",
+          "PartnerName": "Teste Mult Filial 1.4",
+          "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+          "SapCode": "369",
+          "OfficeType": 2
+        }
+      ],
+      "PartnerType": 2,
+      "IsEconomicGroup": false,
+      "ITSIntegration": null,
+      "DealerCategory": null,
+      "PhoneNumber": null,
+      "BlockStatus": false
+    },
+    "BreederCategory": null,
+    "MultiplierCategory": {
+      "CategoryDescription": "multiplier",
+      "Incentive": 0.0,
+      "DiscountFieldSubscription": 0.0,
+      "AdditionalDiscount": 0.0,
+      "IncentiveVariable": 0.0,
+      "Technologies": [
+        {
+          "Technology": "TECH1",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 2.0,
+          "SalesTargetBalance": 738.0,
+          "SalesPercentTargetBalance": 369.0,
+          "GoalStatus": true,
+          "Pay": true,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": true,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 3594.956,
+          "FullRoyalty": 3610.4,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 20.0,
+          "AchievementArea": 0.0
+        },
+        {
+          "Technology": "TECH2",
+          "SeedDemoTarget": 0.0,
+          "SeedDemoTargetUsed": 0.0,
+          "SeedPercentDemoTargetUsed": "NaN",
+          "SalesTarget": 20.0,
+          "SalesTargetBalance": 0.0,
+          "SalesPercentTargetBalance": 0.0,
+          "GoalStatus": false,
+          "Pay": false,
+          "IncentiveValue": 0.0,
+          "IsActive": true,
+          "SalesActive": false,
+          "PaymentWithoutGoal": false,
+          "DueRoyalty": 0.0,
+          "FullRoyalty": 0.0,
+          "DiscountArea": 0.0,
+          "DiscountAreaUsed": 0.0,
+          "QuantityArea": 17.0,
+          "AchievementArea": 0.0
+        }
+      ]
+    },
+    "DateRegistration": "2022-05-10T19:11:45Z",
+    "DueDate": "2023-01-05T03:00:00Z",
+    "LegalCrop": "22/23",
+    "SendForSignature": true,
+    "Rle": {
+      "Id": "xxxxxxxxxxxxxxxxxx47f",
+      "FullName": "joao.silva",
+      "Email": "joao.silva@empresa.com",
+      "PhoneNumber": "11959744212"
+    },
+    "MassAudit": null,
+    "MassAuditStatus": 4,
+    "Status": 1,
+    "Agreement": {
+      "AgreementId": "nuxxxxxxxxxxxxxxxxxx",
+      0,
+      "IsEmulatedSignature": false,
+      "SignatureDate": "0001-01-01T00:00:00Z",
+      "Signers": [
+        {
+          "SignerType": {
+            "Id": "xxxxxxxxxxxxxxxxxx05d",
+            "SignerDescription": "Testemunha do representante legal da empresa",
+            "Order": 1
+          },
+          "Name": "teste",
+          "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+          "Email": "teste@teste.com"
+        }
+      ]
+    },
+    "TermAffiliates": [
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx3a2",
+        "PartnerName": "Teste Mult Matriz 1",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": true
+      },
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx3ae",
+        "PartnerName": "Teste Mult Filial 1.1",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": false
+      },
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx3af",
+        "PartnerName": "Teste Multi Filial 1.2",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": false
+      },
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx3b0",
+        "PartnerName": "Teste Mult Filial 1.3",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": false
+      },
+      {
+        "Id": "xxxxxxxxxxxxxxxxxxff7",
+        "PartnerName": "teste",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": false
+      },
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx732",
+        "PartnerName": "Teste Mult Filial 1.4",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": false
+      },
+      {
+        "Id": "xxxxxxxxxxxxxxxxxx554",
+        "PartnerName": "Teste Mult Matriz 1.5",
+        "DocumentNumber": "xxxxxxxxxxxxxxxxxx",
+        "IsItSelf": false
+      }
+    ],
+    "ITSIntegration": {
+      "BulkIdContactToUpdate": true
+    },
+    "SaleForecast": [
+      {
+        "Date": "2022-01-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-02-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-03-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-04-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-05-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-08-01T03:00:00Z",
+        "Value": 2.0
+      },
+      {
+        "Date": "2022-09-01T03:00:00Z",
+        "Value": 3.0
+      },
+      {
+        "Date": "2022-10-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-11-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-12-01T03:00:00Z",
+        "Value": 0.0
+      }
+    ],
+    "AreaForecast": [
+      {
+        "Date": "2022-01-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-02-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-03-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-04-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-05-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-06-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-07-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-08-01T03:00:00Z",
+        "Value": 20.0
+      },
+      {
+        "Date": "2022-09-01T03:00:00Z",
+        "Value": 30.0
+      },
+      {
+        "Date": "2022-10-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-11-01T03:00:00Z",
+        "Value": 0.0
+      },
+      {
+        "Date": "2022-12-01T03:00:00Z",
+        "Value": 0.0
+      }
+    ],
+    "SystemOwnerData": {
+      "CompanyCode": 1,
+      "CompanyName": "empresa"
+    },
+    "BlockStatus": false,
+    "BlockDate": "0001-01-01T00:00:00Z"
+  }
+]

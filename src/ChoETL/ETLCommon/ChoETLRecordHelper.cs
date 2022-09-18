@@ -62,7 +62,8 @@ namespace ChoETL
                 return recordType.GetUnderlyingType();
         }
 
-        public static void ConvertNSetMemberValue(this IDictionary<string, object> dict, string fn, ChoRecordFieldConfiguration fieldConfig, ref object fieldValue, CultureInfo culture)
+        public static void ConvertNSetMemberValue(this IDictionary<string, object> dict, string fn, ChoRecordFieldConfiguration fieldConfig, ref object fieldValue, CultureInfo culture,
+            ChoRecordConfiguration config = null)
         {
             ChoDynamicObject dDict = dict as ChoDynamicObject;
             if (fieldValue is ChoDynamicObject)
@@ -77,9 +78,27 @@ namespace ChoETL
                     fcParams = new object[] { new object[] { fieldConfig.FormatText } };
 
                 if (fieldConfig.Converters.IsNullOrEmpty())
-                    fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, null, fieldConfig.PropConverters, fcParams, culture);
+                {
+                    Type fieldType = fieldConfig.SourceType == null ? fieldConfig.FieldType : fieldConfig.SourceType;
+                    var ft = fieldValue == null ? fieldType : fieldValue.GetType();
+                    object[] convs = fieldConfig.PropConverters;
+                    if (convs.IsNullOrEmpty() && config != null)
+                    {
+                        var convs1 = config.GetConvertersForType(ft);
+                        if (!convs1.IsNullOrEmpty())
+                        {
+                            convs = convs1;
+                            fcParams = GetPropertyConvertersParams(config.GetConverterParamsForType(ft), fieldConfig.FormatText);
+                        }
+                    }
+                    else
+                    {
+
+                    }
+                    fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType == null ? typeof(object) : fieldConfig.FieldType, null, convs, fcParams, culture);
+                }
                 else
-                    fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), fcParams, culture);
+                    fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType == null ? typeof(object) : fieldConfig.FieldType, null, fieldConfig.Converters.ToArray(), fcParams, culture);
             }
 
             if (dDict != null)
@@ -94,7 +113,8 @@ namespace ChoETL
 
         }
 
-        public static bool ConvertMemberValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, ref object fieldValue, CultureInfo culture)
+        public static bool ConvertMemberValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, ref object fieldValue, CultureInfo culture,
+            ChoRecordConfiguration config = null)
         {
             if (fieldConfig.PD == null)
                 fieldConfig.PD = fieldConfig.PropertyDescriptor;
@@ -108,6 +128,27 @@ namespace ChoETL
                 fieldValue = fieldConfig.ValueConverter(fieldValue);
             else
             {
+                if (fieldConfig.Converters.IsNullOrEmpty())
+                {
+                    object[] fcParams = GetPropertyConvertersParams(fieldConfig);
+                    Type fieldType = fieldConfig.PD != null ? fieldConfig.PD.PropertyType : null;
+                    object[] convs = fieldConfig.PropConverters;
+                    if (convs.IsNullOrEmpty() && config != null)
+                    {
+                        var convs1 = config.GetConvertersForType(fieldType);
+                        if (!convs1.IsNullOrEmpty())
+                        {
+                            convs = convs1;
+                            fcParams = GetPropertyConvertersParams(config.GetConverterParamsForType(fieldType), fieldConfig.FormatText);
+                        }
+                    }
+                    if (!convs.IsNullOrEmpty())
+                    {
+                        fieldValue = ChoConvert.ConvertFrom(fieldValue, fieldConfig.FieldType == null ? typeof(object) : fieldConfig.FieldType, null, convs, fcParams, culture);
+                        return true;
+                    }
+                }
+
                 if (fieldValue != null && fieldConfig.PD.PropertyType != null && fieldConfig.PD.PropertyType != typeof(object)
                     && fieldConfig.PD.PropertyType.IsAssignableFrom(fieldValue.GetType()))
                 {
@@ -319,14 +360,15 @@ namespace ChoETL
             return true;
         }
 
-        public static void ConvertNSetMemberValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, ref object fieldValue, CultureInfo culture)
+        public static void ConvertNSetMemberValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, ref object fieldValue, CultureInfo culture,
+            ChoRecordConfiguration config = null)
         {
             if (fieldConfig.PD == null)
                 fieldConfig.PD = fieldConfig.PropertyDescriptor;
 
             if (fieldConfig.PD == null) return;
 
-            if (ConvertMemberValue(rec, fn, fieldConfig, ref fieldValue, culture))
+            if (ConvertMemberValue(rec, fn, fieldConfig, ref fieldValue, culture, config))
             {
                 fieldConfig.PD.SetValue(rec, fieldValue);
                 //ChoType.SetPropertyValue(rec, fieldConfig.PI, fieldValue);
@@ -338,6 +380,14 @@ namespace ChoETL
             object[] fcParams = fieldConfig.PropConverterParams;
             if (!fieldConfig.FormatText.IsNullOrWhiteSpace())
                 fcParams = new object[] { new object[] { fieldConfig.FormatText } };
+
+            return fcParams;
+        }
+        private static object[] GetPropertyConvertersParams(object[] parameters, string formatText)
+        {
+            object[] fcParams = parameters;
+            if (!formatText.IsNullOrWhiteSpace())
+                fcParams = new object[] { new object[] { formatText } };
 
             return fcParams;
         }
@@ -564,25 +614,41 @@ namespace ChoETL
             return true;
         }
 
-        public static void GetNConvertMemberValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, CultureInfo culture, ref object fieldValue, bool nativeType = false)
+        public static void GetNConvertMemberValue(this object rec, string fn, ChoRecordFieldConfiguration fieldConfig, CultureInfo culture, ref object fieldValue, bool nativeType = false,
+            ChoRecordConfiguration config = null)
         {
-            if (!fieldConfig.FormatText.IsNullOrWhiteSpace())
+            if (!fieldConfig.FormatText.IsNullOrWhiteSpace() && fieldConfig.Converters.IsNullOrEmpty())
                 fieldValue = ("{0:" + fieldConfig.FormatText + "}").FormatString(fieldValue);
             else
             {
+                object[] fcParams = fieldConfig.PropConverterParams;
+                if (!fieldConfig.FormatText.IsNullOrWhiteSpace())
+                    fcParams = new object[] { new object[] { fieldConfig.FormatText } };
+
                 if (fieldConfig.Converters.IsNullOrEmpty())
                 {
                     Type fieldType = fieldConfig.SourceType == null ? fieldConfig.FieldType : fieldConfig.SourceType;
                     if (fieldConfig.PropConverters.IsNullOrEmpty())
                     {
-                        fieldValue = ChoConvert.ConvertTo(fieldValue, nativeType ? fieldType : fieldValue == null ? typeof(string) : fieldValue.GetType(), null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                        var ft = nativeType ? fieldType : fieldValue == null ? typeof(string) : fieldValue.GetType();
+                        object[] convs = fieldConfig.PropConverters;
+                        if (convs.IsNullOrEmpty() && config != null)
+                        {
+                            var convs1 = config.GetConvertersForType(ft);
+                            if (!convs1.IsNullOrEmpty())
+                            {
+                                convs = convs1;
+                                fcParams = GetPropertyConvertersParams(config.GetConverterParamsForType(ft), fieldConfig.FormatText);
+                            }
+                        }
+                        fieldValue = ChoConvert.ConvertTo(fieldValue, ft, null, convs, null, culture);
                     }
                     else
-                        fieldValue = ChoConvert.ConvertTo(fieldValue, nativeType ? fieldType : typeof(string), null, fieldConfig.PropConverters, fieldConfig.PropConverterParams, culture);
+                        fieldValue = ChoConvert.ConvertTo(fieldValue, nativeType ? fieldType : typeof(string), null, fieldConfig.PropConverters, fcParams, culture);
                 }
                 else
                 {
-                    fieldValue = ChoConvert.ConvertTo(fieldValue, typeof(string), null, fieldConfig.Converters.ToArray(), null, culture);
+                    fieldValue = ChoConvert.ConvertTo(fieldValue, typeof(string), null, fieldConfig.Converters.ToArray(), fcParams, culture);
                 }
             }
         }

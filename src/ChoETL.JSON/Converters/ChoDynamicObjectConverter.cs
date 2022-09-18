@@ -187,6 +187,18 @@ namespace ChoETL
                             throw new Exception("Unexpected end.");
 
                         object v = ReadValue(reader);
+                        var itemType = v != null ? v.GetType() : null;
+                        if (itemType != null)
+                        {
+                            object[] convs = null;
+                            var config = Context.Configuration as ChoJSONRecordConfiguration;
+                            if (config != null)
+                            {
+                                convs = config.GetConvertersForType(itemType);
+                            }
+
+                            v = ChoConvert.ConvertFrom(v, typeof(object), null, convs);
+                        }
 
                         if (_ignoreFields == null || !_ignoreFields.Contains(propertyName))
                         {

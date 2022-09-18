@@ -7,6 +7,9 @@
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Reflection;
+#if !NETSTANDARD2_0
+    using System.Windows.Data;
+#endif
 
     #endregion NameSpaces
 
@@ -29,9 +32,13 @@
         private static readonly Dictionary<Type, object[]> _typeTypeConverterParamsCache = new Dictionary<Type, object[]>();
      
         private static readonly Dictionary<MemberInfo, object[]> _typeMemberGlobalTypeConverterParamsCache = new Dictionary<MemberInfo, object[]>();
-        
+
+        private static readonly object _disableImplicitOpsTypeLockObject = new object();
+        private static readonly Dictionary<Type, bool> _disableImplicitOpsTypeCache = new Dictionary<Type, bool>();
+
         public static bool DoNotUseTypeConverterForTypes = false;
         public static bool DoNotDiscoverTypeConverterForTypes = false;
+        public static bool DoNotDiscoverTypeConverterForTypesByBaseType = false;
 
         #endregion Shared Data Members (Private)
 
@@ -528,6 +535,28 @@
                 return null;
         }
 
+        public static object[] GetTypeConvertersForType<T>()
+        {
+            return GetTypeConvertersForType(typeof(T));
+        }
+
+        public static object[] GetTypeConverterParamsForType(Type objType)
+        {
+            if (objType == null)
+                return null;
+
+            if (_typeMemberTypeConverterParamsCache.ContainsKey(objType))
+                return _typeMemberTypeConverterParamsCache[objType];
+
+            lock (_typeMemberTypeConverterCacheLockObject)
+            {
+                var _ = GetTypeConvertersForType(objType);
+                if (_typeMemberTypeConverterParamsCache.ContainsKey(objType))
+                    return _typeMemberTypeConverterParamsCache[objType];
+            }
+            return EmptyParams;
+        }
+
         public static object[] GetTypeConvertersForType(Type objType)
         {
             if (objType == null)
@@ -542,6 +571,18 @@
                     return _typeTypeConverterCache[objType];
                 else
                 {
+                    if (!DoNotDiscoverTypeConverterForTypesByBaseType)
+                    {
+                        var convs1 = (from a1 in _typeTypeConverterCache
+                                      where a1.Key.IsAssignableFrom(objType)
+                                      select a1.Value).FirstOrDefault();
+                        if (!convs1.IsNullOrEmpty())
+                        {
+                            _typeTypeConverterCache[objType] = convs1;
+                            return _typeTypeConverterCache[objType];
+                        }
+                    }
+
                     if (DoNotDiscoverTypeConverterForTypes)
                         return EmptyTypeConverters;
 
@@ -555,6 +596,17 @@
                                                              select a1.Value).ToArray();
                             return _typeTypeConverterCache[type];
                         }
+                        else if (!DoNotDiscoverTypeConverterForTypesByBaseType)
+                        {
+                            var convs = (from a1 in ChoTypeConverter.Global.GetAll()
+                                         where a1.Key.IsAssignableFrom(type)
+                                         select a1.Value).ToArray();
+                            if (convs.Length > 0)
+                            {
+                                _typeTypeConverterCache[type] = convs;
+                                return _typeTypeConverterCache[type];
+                            }
+                        }
 
                         Type[] types = ChoType.GetTypes(typeof(ChoTypeConverterAttribute)).Where(t => t.GetCustomAttribute<ChoTypeConverterAttribute>().ConverterType != null && t.GetCustomAttribute<ChoTypeConverterAttribute>().ConverterType.IsAssignableFrom(objType)).ToArray();
 
@@ -563,13 +615,17 @@
                             int index1 = 0;
                             SortedList<int, object> queue1 = new SortedList<int, object>();
                             SortedList<int, object> paramsQueue1 = new SortedList<int, object>();
-
                             foreach (Type t in types)
                             {
+                                var typeConvAttr = ChoType.GetAttribute<ChoTypeConverterAttribute>(t);
+
                                 queue1.Add(index1, ChoActivator.CreateInstance(t));
+                                if (typeConvAttr.ParametersObject != null)
+                                    paramsQueue1.Add(index1, typeConvAttr.ParametersObject);
                                 index1++;
                             }
                             _typeTypeConverterCache.Add(objType, queue1.Values.ToArray());
+                            _typeTypeConverterParamsCache.Add(objType, paramsQueue1.Values.ToArray());
                             return _typeTypeConverterCache[objType];
                         }
 
@@ -585,6 +641,10 @@
                     return _typeTypeConverterCache[objType];
                 }
             }
+        }
+        public static void ClearTypeConvertersForType<T>()
+        {
+            ClearTypeConvertersForType(typeof(T));
         }
 
         public static void ClearTypeConvertersForType(Type objType)
@@ -603,6 +663,11 @@
             }
         }
 
+        public static void RegisterTypeConvertersForType<T, TConv>()
+        {
+            RegisterTypeConvertersForType(typeof(T), new object[] { ChoActivator.CreateInstance<TConv>() });
+        }
+
         public static void RegisterTypeConvertersForType(Type objType, object[] converters)
         {
             if (objType == null)
@@ -610,12 +675,60 @@
             if (converters == null)
                 converters = new object[] { };
 
+            object[] choConvs = new object[] { };
+            object[] netConvs = new object[] { };
+
+            choConvs = converters.OfType<IChoValueConverter>().ToArray();
+#if !NETSTANDARD2_0
+            netConvs = converters.OfType<IValueConverter>().ToArray();
+#endif
+            converters = ChoArray.Combine<object>(choConvs, netConvs);
+
             lock (_typeMemberTypeConverterCacheLockObject)
             {
                 if (!_typeTypeConverterCache.ContainsKey(objType))
                     _typeTypeConverterCache.Add(objType, converters);
                 else
-                    _typeTypeConverterCache[objType] = converters;
+                    _typeTypeConverterCache[objType] = ChoArray.Combine<object>(_typeTypeConverterCache[objType], converters);
+            }
+        }
+
+#if !NETSTANDARD2_0
+        public static void RegisterTypeConverterForType<T>(IValueConverter converter)
+        {
+            RegisterTypeConverterForTypeInternal(typeof(T), (object)converter);
+        }
+#endif
+
+        public static void RegisterTypeConverterForType<T>(IChoValueConverter converter)
+        {
+            RegisterTypeConverterForTypeInternal(typeof(T), (object)converter);
+        }
+#if !NETSTANDARD2_0
+
+        public static void RegisterTypeConverterForType(Type objType, IValueConverter converter)
+        {
+            RegisterTypeConverterForTypeInternal(objType, (object)converter);
+        }
+#endif
+        public static void RegisterTypeConverterForType(Type objType, IChoValueConverter converter)
+        {
+            RegisterTypeConverterForTypeInternal(objType, (object)converter);
+        }
+
+        private static void RegisterTypeConverterForTypeInternal(Type objType, object converter)
+        {
+            if (objType == null)
+                return;
+            if (converter == null)
+                return;
+
+            lock (_typeMemberTypeConverterCacheLockObject)
+            {
+                if (!_typeTypeConverterCache.ContainsKey(objType))
+                    _typeTypeConverterCache.Add(objType, new object[] { converter });
+                else
+                    _typeTypeConverterCache[objType] = _typeTypeConverterCache[objType].Union(new object[] { converter }).ToArray();
             }
         }
 
@@ -724,6 +837,44 @@
         }
 
         #endregion
+
+        public static bool IsTurnedOffImplicitOpsOnType(Type type)
+        {
+            if (type == null)
+                return true;
+
+            lock (_disableImplicitOpsTypeLockObject)
+            {
+                if (_disableImplicitOpsTypeCache.ContainsKey(type))
+                    return _disableImplicitOpsTypeCache[type];
+
+                if (type.IsValueType)
+                    return true;
+            }
+
+            return true;
+        }
+
+        public static void TurnOffImplicitOpsOnType(Type type, bool flag)
+        {
+            if (type == null)
+                return;
+
+            lock (_disableImplicitOpsTypeLockObject)
+            {
+                if (_disableImplicitOpsTypeCache.ContainsKey(type))
+                    _disableImplicitOpsTypeCache[type] = flag;
+                else
+                    _disableImplicitOpsTypeCache.Add(type, flag);
+            }
+
+        }
+
+        public static void TurnOffImplicitOpsOnType<T>(bool flag)
+        {
+            Type type = typeof(T);
+            TurnOffImplicitOpsOnType(type, flag);
+        }
 
         #endregion Shared Members (Public)
     }

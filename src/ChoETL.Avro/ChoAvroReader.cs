@@ -564,7 +564,8 @@ namespace ChoETL
             Func<dynamic, object> valueSelector = null, Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null,
             string fullyQualifiedMemberName = null, string formatText = null,
-            string nullValue = null, bool excelField = false, Type subRecordType = null)
+            string nullValue = null, bool excelField = false, Type subRecordType = null,
+            IChoValueConverter propertyConverter = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -576,7 +577,7 @@ namespace ChoETL
 
                 Configuration.WithField(name, position, fieldType, quoteField, fieldValueTrimOption, fieldName,
                     valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue, altFieldNames, fullyQualifiedMemberName, formatText,
-                    nullValue, typeof(T), subRecordType);
+                    nullValue, typeof(T), subRecordType, propertyConverter: propertyConverter);
             }
 
             return this;

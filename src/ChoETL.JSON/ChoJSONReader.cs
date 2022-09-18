@@ -687,7 +687,8 @@ namespace ChoETL
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null,
             string nullValue = null, Func<object, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null,
-            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null
+            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null,
+            IChoValueConverter propertyConverter = null
             )
             where TClass : class
         {
@@ -696,7 +697,7 @@ namespace ChoETL
 
             return WithField(field.GetMemberName(), jsonPath, fieldType, fieldValueTrimOption, fieldName, valueConverter, itemConverter,
                 customSerializer, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, true, nullValue, typeof(TClass), 
-                fieldTypeSelector, itemTypeSelector, fieldTypeDiscriminator, itemTypeDiscriminator);
+                fieldTypeSelector, itemTypeSelector, fieldTypeDiscriminator, itemTypeDiscriminator, propertyConverter);
         }
 
         public ChoJSONReader<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoJSONRecordFieldConfigurationMap> mapper)
@@ -714,7 +715,8 @@ namespace ChoETL
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null,
             string nullValue = null, Func<object, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null,
-            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null
+            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null,
+            IChoValueConverter propertyConverter = null
             )
         {
             if (field == null)
@@ -722,7 +724,7 @@ namespace ChoETL
 
             return WithField(field.GetMemberName(), jsonPath, field.GetPropertyType(), fieldValueTrimOption, fieldName, valueConverter, itemConverter,
                 customSerializer, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, true, nullValue, null, fieldTypeSelector, itemTypeSelector,
-                fieldTypeDiscriminator, itemTypeDiscriminator);
+                fieldTypeDiscriminator, itemTypeDiscriminator, propertyConverter);
         }
 
         public ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
@@ -730,12 +732,13 @@ namespace ChoETL
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null, bool isArray = true,
             string nullValue = null, Func<object, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null,
-            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null
+            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null,
+            IChoValueConverter propertyConverter = null
             )
         {
             return WithField(name, jsonPath, fieldType, fieldValueTrimOption, fieldName, valueConverter, itemConverter,
                 customSerializer, defaultValue, fallbackValue, null, formatText, isArray, nullValue, null, fieldTypeSelector, itemTypeSelector,
-                fieldTypeDiscriminator, itemTypeDiscriminator);
+                fieldTypeDiscriminator, itemTypeDiscriminator, propertyConverter);
         }
 
         private ChoJSONReader<T> WithField(string name, string jsonPath = null, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
@@ -744,7 +747,7 @@ namespace ChoETL
             object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null,
             string formatText = null, bool isArray = true, string nullValue = null,
             Type subRecordType = null, Func<object, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null,
-            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null
+            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null, IChoValueConverter propertyConverter = null
             )
         {
             if (!name.IsNullOrEmpty())
@@ -753,7 +756,8 @@ namespace ChoETL
 
                 Configuration.WithField(name, jsonPath, fieldType, fieldValueTrimOption, fieldName,
                     valueConverter, itemConverter, customSerializer, defaultValue, fallbackValue, fullyQualifiedMemberName, formatText,
-                    isArray, nullValue, typeof(T), subRecordType, fieldTypeSelector, itemTypeSelector, fieldTypeDiscriminator, itemTypeDiscriminator);
+                    isArray, nullValue, typeof(T), subRecordType, fieldTypeSelector, itemTypeSelector, fieldTypeDiscriminator, itemTypeDiscriminator,
+                    propertyConverter);
             }
             return this;
         }

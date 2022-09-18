@@ -66,16 +66,6 @@ namespace ChoParquetReaderTest
             }
         }
 
-        public class Trade
-        {
-            [DisplayName("Column1")]
-            public string Id { get; set; }
-            [DisplayName("Column2")]
-            public string Price { get; set; }
-            [DisplayName("Column3")]
-            public string Quantity { get; set; }
-        }
-
         static void CSV2ParquetTest()
         {
             using (var r = new ChoCSVReader(@"..\..\..\..\..\..\data\XBTUSD.csv")
@@ -95,6 +85,36 @@ namespace ChoParquetReaderTest
             }
         }
 
+        public class Trade
+        {
+            public long? Id { get; set; }
+            public double? Price { get; set; }
+            public double? Quantity { get; set; }
+            public TimeSpan? CreateDateTime{ get; set; }
+            public bool? IsActive { get; set; }
+            public Decimal? Total { get; set; }
+        }
+
+        static void WriteParquetWithNullableFields()
+        {
+            using (var w = new ChoParquetWriter<Trade>(@"C:\Temp\Trade1.parquet")
+                )
+            {
+                w.Write(new Trade
+                {
+                    Id = 1,
+                    Price = 1.3,
+                    Quantity = 2.45,
+                    CreateDateTime = new TimeSpan(1, 30, 0)
+                });
+            }
+
+            using (var r = new ChoParquetReader<Trade>(@"C:\Temp\Trade1.parquet"))
+            {
+                var rec = r.First();
+                rec.Print();
+            }
+        }
         static void ParseLargeParquetTest()
         {
             using (var r = new ChoParquetReader(@"..\..\..\..\..\..\data\XBTUSD-Copy.parquet")
@@ -119,8 +139,8 @@ namespace ChoParquetReaderTest
 
                 var dr = cmd.ExecuteReader();
 
-                using (var w = new ChoParquetWriter(@"..\..\..\..\..\..\data\Trade.parquet")
-                    .Configure(c => c.LiteParsing = true)
+                using (var w = new ChoParquetWriter<Trade>(@"C:\Temp\Trade.parquet")
+                    //.Configure(c => c.LiteParsing = true)
                     .Configure(c => c.RowGroupSize = 5000)
                     .NotifyAfter(100000)
                     .OnRowsWritten((o, e) => $"Rows Loaded: {e.RowsWritten} <-- {DateTime.Now}".Print())
@@ -136,8 +156,23 @@ namespace ChoParquetReaderTest
 
         static void Main(string[] args)
         {
-            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            ParseLargeParquetTest();
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+            Issue233();
+            return;
+            WriteParquetWithNullableFields();
+        }
+
+        static void Issue233()
+        {
+            using (var r = new ChoParquetReader(@"C:\Users\nraj39\Downloads\ships.parquet")
+                .IgnoreField("DataSetVersion1")
+                .ParquetOptions(o => o.TreatByteArrayAsString = true)
+                .ErrorMode(ChoErrorMode.ThrowAndStop)
+                )
+            {
+                var rec = r.First();
+                rec.Print();
+            }
         }
 
         static void MissingFieldValueTest()

@@ -19,7 +19,7 @@
     <Authors>Cinchoo</Authors>
     <Company>Cinchoo Inc.</Company>
     <Product>ChoETL.JSON.NETStandard</Product>
-    <Version>1.2.1.48</Version>
+    <Version>1.2.1.49-beta4</Version>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>ChoETL.JSON.NETStandard.snk</AssemblyOriginatorKeyFile>
     <PackageIcon>cinchoo.png</PackageIcon>
@@ -61,7 +61,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
   
   <ItemGroup>

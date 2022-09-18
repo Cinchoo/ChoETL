@@ -657,8 +657,7 @@ namespace ChoETL
         private static IEnumerable<JToken> GetFlattenedChildObjects(Dictionary<bool, IGrouping<bool, JProperty>> children, IEnumerable<JProperty> otherProperties = null, string parentNodeName = null,
             string nestedKeySeparator = null, Func<string, string, string> nestedKeyResolver = null, bool useNestedKeyFormat = false,
             string arrayIndexSeparator = null, bool ignoreArrayIndex = true, int? arrayIndex = null,
-            string flattenByNodeName = null, string flattenByJsonPath = null,
-            bool rootCall = false)
+            string flattenByNodeName = null, string flattenByJsonPath = null)
         {
             if (children != null && children.TryGetValue(false, out var directProps))
             {
@@ -743,7 +742,7 @@ namespace ChoETL
 
                                 foreach (var c in GetFlattenedChildObjects(children, null, null, nestedKeySeparator == null ? String.Empty : nestedKeySeparator.ToString(),
                 nestedKeyResolver, useNestedKeyFormat, arrayIndexSeparator == null ? String.Empty : arrayIndexSeparator.ToString(),
-                ignoreArrayIndex, null, flattenByNodeName, flattenByJsonPath, true))
+                ignoreArrayIndex, null, flattenByNodeName, flattenByJsonPath))
                                     yield return c;
 
                             }
@@ -758,7 +757,7 @@ namespace ChoETL
 
                                 foreach (var c in GetFlattenedChildObjects(children, null, null, nestedKeySeparator == null ? String.Empty : nestedKeySeparator.ToString(),
                 nestedKeyResolver, useNestedKeyFormat, arrayIndexSeparator == null ? String.Empty : arrayIndexSeparator.ToString(),
-                ignoreArrayIndex, null, flattenByNodeName, flattenByJsonPath, true))
+                ignoreArrayIndex, null, flattenByNodeName, flattenByJsonPath))
                                     yield return c;
 
                             }
@@ -815,9 +814,9 @@ namespace ChoETL
                     children = obj.Children<JProperty>().GroupBy(prop => prop.Value?.Type == JTokenType.Array).ToDictionary(gr => gr.Key);
                 }
 
-                foreach (var co in GetFlattenedChildObjects(children, null, null, nestedKeySeparator == null ? String.Empty : nestedKeySeparator.ToString(),
+                foreach (var co in GetFlattenedChildObjects(children, otherProperties, parentNodeName, nestedKeySeparator == null ? String.Empty : nestedKeySeparator.ToString(),
                 nestedKeyResolver, useNestedKeyFormat, arrayIndexSeparator == null ? String.Empty : arrayIndexSeparator.ToString(),
-                ignoreArrayIndex, null, flattenByNodeName, flattenByJsonPath, true))
+                ignoreArrayIndex, null, flattenByNodeName, flattenByJsonPath))
                     yield return co;
             }
             else if (token is JArray arr)

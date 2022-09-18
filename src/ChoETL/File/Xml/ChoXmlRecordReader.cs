@@ -514,6 +514,20 @@ namespace ChoETL
                     if (!FillRecord(rec, pair))
                         return false;
 
+                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                    {
+                        if (Configuration.ConvertToNestedObject && Configuration.NestedKeySeparator != null)
+                        {
+                            rec = rec.ConvertToNestedObject(Configuration.NestedKeySeparator.Value, Configuration.ArrayIndexSeparator,
+                                allowNestedConversion: Configuration.AllowNestedConversion, maxArraySize: Configuration.MaxNestedConversionArraySize);
+                        }
+                        else if (Configuration.ConvertToFlattenObject && Configuration.NestedKeySeparator != null)
+                        {
+                            rec = rec.ConvertToFlattenObject(Configuration.NestedKeySeparator.Value, Configuration.ArrayIndexSeparator,
+                                Configuration.IgnoreDictionaryFieldPrefix);
+                        }
+                    }
+
                     if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
                         rec.DoObjectLevelValidation(Configuration, Configuration.XmlRecordFieldConfigurations);
                 }
@@ -1132,7 +1146,7 @@ namespace ChoETL
                             if (isArray)
                             {
                                 fieldValue = ((IDictionary<string, Object>)fieldValue).Values.First();
-                                dict.ConvertNSetMemberValue(key, kvp.Value, ref fieldValue, Configuration.Culture);
+                                dict.ConvertNSetMemberValue(key, kvp.Value, ref fieldValue, Configuration.Culture, config: Configuration);
                             }
                             else
                             {
@@ -1153,15 +1167,15 @@ namespace ChoETL
                                             if (key1 == firstName)
                                                 key1 = "{0}s".FormatString(firstName);
                                         }
-                                        dict.ConvertNSetMemberValue(key1, kvp.Value, ref fieldValue, Configuration.Culture);
+                                        dict.ConvertNSetMemberValue(key1, kvp.Value, ref fieldValue, Configuration.Culture, config: Configuration);
                                     }
                                     else
                                     {
-                                        dict.ConvertNSetMemberValue(key, kvp.Value, ref fieldValue, Configuration.Culture);
+                                        dict.ConvertNSetMemberValue(key, kvp.Value, ref fieldValue, Configuration.Culture, config: Configuration);
                                     }
                                 }
                                 else
-                                    dict.ConvertNSetMemberValue(key, kvp.Value, ref fieldValue, Configuration.Culture);
+                                    dict.ConvertNSetMemberValue(key, kvp.Value, ref fieldValue, Configuration.Culture, config: Configuration);
                             }
                         }
                         else
@@ -1191,7 +1205,7 @@ namespace ChoETL
                         }
 
                         if (pi != null)
-                            rec.ConvertNSetMemberValue(key, kvp.Value, ref fieldValue, Configuration.Culture);
+                            rec.ConvertNSetMemberValue(key, kvp.Value, ref fieldValue, Configuration.Culture, config: Configuration);
                         else if (!Configuration.SupportsMultiRecordTypes)
                             throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(key, ChoType.GetTypeName(rec)));
 
@@ -1275,12 +1289,12 @@ namespace ChoETL
                                         {
                                             var dict = rec as IDictionary<string, Object>;
 
-                                            dict.ConvertNSetMemberValue(key, fieldConfig, ref fieldValue, Configuration.Culture);
+                                            dict.ConvertNSetMemberValue(key, fieldConfig, ref fieldValue, Configuration.Culture, config: Configuration);
                                         }
                                         else
                                         {
                                             if (pi != null)
-                                                rec.ConvertNSetMemberValue(key, fieldConfig, ref fieldValue, Configuration.Culture);
+                                                rec.ConvertNSetMemberValue(key, fieldConfig, ref fieldValue, Configuration.Culture, config: Configuration);
                                             else
                                                 throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(key, ChoType.GetTypeName(rec)));
                                         }

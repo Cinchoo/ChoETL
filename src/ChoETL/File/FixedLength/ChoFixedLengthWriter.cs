@@ -410,14 +410,15 @@ namespace ChoETL
             Func<dynamic, object> valueSelector = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null,
-            string nullValue = null, Func<object> expr = null)
+            string nullValue = null, Func<object> expr = null,
+            IChoValueConverter propertyConverter = null)
         {
             if (field == null)
                 return this;
 
             return WithField(field.GetMemberName(), startIndex, size, field.GetPropertyType(), quoteField, fillChar, fieldValueJustification,
                     truncate, fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), 
-                    formatText, nullValue, expr);
+                    formatText, nullValue, expr, propertyConverter);
         }
 
         public ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
@@ -425,11 +426,12 @@ namespace ChoETL
             Func<dynamic, object> valueSelector = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null,
-            string nullValue = null, Func<object> expr = null)
+            string nullValue = null, Func<object> expr = null,
+            IChoValueConverter propertyConverter = null)
         {
             return WithField(name, startIndex, size, fieldType, quoteField, fillChar, fieldValueJustification,
                 truncate, fieldName, valueConverter, valueSelector, headerSelector, defaultValue, fallbackValue, null, formatText, 
-                nullValue, expr);
+                nullValue, expr, propertyConverter);
         }
 
         private ChoFixedLengthWriter<T> WithField(string name, int startIndex, int size, Type fieldType = null, bool? quoteField = null, char? fillChar = null, ChoFieldValueJustification? fieldValueJustification = null,
@@ -437,7 +439,8 @@ namespace ChoETL
             Func<dynamic, object> valueSelector = null,
             Func<string> headerSelector = null,
             object defaultValue = null, object fallbackValue = null,
-            string fullyQualifiedMemberName = null, string formatText = null, string nullValue = null, Func<object> expr = null)
+            string fullyQualifiedMemberName = null, string formatText = null, string nullValue = null, Func<object> expr = null,
+            IChoValueConverter propertyConverter = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -494,6 +497,8 @@ namespace ChoETL
                     if (nfc.FieldType == null)
                         nfc.FieldType = pd.PropertyType;
                 }
+                if (propertyConverter != null)
+                    nfc.AddConverter(propertyConverter);
 
                 Configuration.FixedLengthRecordFieldConfigurations.Add(nfc);
             }

@@ -837,6 +837,19 @@ namespace ChoETL
                     if (!FillRecord(ref rec, pair))
                         return false;
 
+                    if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
+                    {
+                        if (Configuration.ConvertToNestedObject && Configuration.NestedKeySeparator != null)
+                        {
+                            rec = rec.ConvertToNestedObject(Configuration.NestedKeySeparator.Value, Configuration.ArrayIndexSeparator,
+                                allowNestedConversion: Configuration.AllowNestedConversion, maxArraySize: Configuration.MaxNestedConversionArraySize);
+                        }
+                        else if (Configuration.ConvertToFlattenObject && Configuration.NestedKeySeparator != null)
+                        {
+                            rec = rec.ConvertToFlattenObject(Configuration.NestedKeySeparator.Value, Configuration.ArrayIndexSeparator, 
+                                Configuration.IgnoreDictionaryFieldPrefix);
+                        }
+                    }
                     if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
                         rec.DoObjectLevelValidation(Configuration, Configuration.JSONRecordFieldConfigurations);
                 }
@@ -1250,7 +1263,7 @@ namespace ChoETL
 
                             if (fieldValue is JToken)
                             {
-                                fieldValue = DeserializeNode((JToken)fieldValue, typeof(string) /*fieldConfig.FieldType*/, fieldConfig);
+                                fieldValue = DeserializeNode((JToken)fieldValue, fieldConfig.FieldType, fieldConfig);
                             }
                         }
                         else if (fieldConfig.SourceType != null || !fieldConfig.HasConverters())
@@ -1402,7 +1415,7 @@ namespace ChoETL
                     {
                         var dict = rec as IDictionary<string, Object>;
 
-                        dict.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
+                        dict.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture, config: Configuration);
 
                         if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
                             dict.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
@@ -1422,7 +1435,7 @@ namespace ChoETL
                         }
 
                         if (pi != null)
-                            rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
+                            rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture, config: Configuration);
                         else if (RecordType.IsSimple())
                             rec = ChoConvert.ConvertTo(fieldValue, RecordType, Configuration.Culture);
                         else
@@ -1509,12 +1522,12 @@ namespace ChoETL
                                         {
                                             var dict = rec as IDictionary<string, Object>;
 
-                                            dict.ConvertNSetMemberValue(kvp.Key, fieldConfig, ref fieldValue, Configuration.Culture);
+                                            dict.ConvertNSetMemberValue(kvp.Key, fieldConfig, ref fieldValue, Configuration.Culture, config: Configuration);
                                         }
                                         else
                                         {
                                             if (pi != null)
-                                                rec.ConvertNSetMemberValue(kvp.Key, fieldConfig, ref fieldValue, Configuration.Culture);
+                                                rec.ConvertNSetMemberValue(kvp.Key, fieldConfig, ref fieldValue, Configuration.Culture, config: Configuration);
                                             else
                                                 throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(kvp.Key, ChoType.GetTypeName(rec)));
                                         }
@@ -1553,7 +1566,7 @@ namespace ChoETL
         private object DeserializeNode(JToken jtoken, Type type, ChoJSONRecordFieldConfiguration config)
         {
             object value = null;
-            type = type == null ? fieldConfig.FieldType : type;
+            type = type == null ? (fieldConfig.FieldType == null ? null /*typeof(string)*/ : fieldConfig.FieldType) : type;
 
             if (fieldConfig.ItemRecordTypeSelector != null || typeof(IChoRecordTypeSelector).IsAssignableFrom(RecordType))
             {
@@ -1972,6 +1985,8 @@ namespace ChoETL
                         bool disableImplcityOp = false;
                         if (ChoTypeDescriptor.GetTypeAttribute<ChoTurnOffImplicitOpsAttribute>(objectType) != null)
                             disableImplcityOp = ChoTypeDescriptor.GetTypeAttribute<ChoTurnOffImplicitOpsAttribute>(objectType).Flag;
+                        else
+                            disableImplcityOp = ChoTypeDescriptor.IsTurnedOffImplicitOpsOnType(objectType);
 
                         if (!disableImplcityOp)
                         {

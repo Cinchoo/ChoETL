@@ -586,7 +586,7 @@ namespace ChoXmlReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            GPOPolicyLoad();
+            XmlArray2JSON();
             return;
 
             LoadProducts();
@@ -605,6 +605,26 @@ namespace ChoXmlReaderTest
             //DesrializeUsingProxy();
         }
 
+        static void XmlArray2JSON()
+        {
+            string xml = @"<Drivers>
+  <Driver>
+    <Name>MyName</Name>
+  </Driver>
+</Drivers>";
+
+            using (var r = ChoXmlReader.LoadText(xml)
+                .WithXPath("//Driver")
+                )
+            {
+                using (var w = new ChoJSONWriter(Console.Out)
+                    .Configure(c => c.RootName = "Drivers")
+                    )
+                {
+                    w.Write(r);
+                }
+            }
+        }
         static void GPOPolicyLoad()
         {
             using (var r = new ChoXmlReader("GPOPolicy.xml")

@@ -68,11 +68,16 @@ namespace ChoETL
             return expando;
         }
 
-        public static dynamic ConvertToNestedObject(this object @this, char separator = '/', char? arrayStartIndexSeparator = null, char? arrayEndIndexSeparator = null, bool allowNestedConversion = true,
+        public static dynamic ConvertToNestedObject(this object @this, char separator = '/', char? arrayIndexSeparator = null, bool allowNestedConversion = true,
             int maxArraySize = 100)
         {
             if (separator == ChoCharEx.NUL)
                 throw new ArgumentException("Invalid separator passed.");
+            if (arrayIndexSeparator == null || arrayIndexSeparator.Value == ChoCharEx.NUL)
+                arrayIndexSeparator = separator;
+
+            if (maxArraySize <= 0)
+                maxArraySize = 100;
 
             if (@this == null)
                 return @this;
@@ -146,18 +151,29 @@ namespace ChoETL
                     root.Add(kvp.Key, kvp.Value);
             }
 
-            return root.ConvertMembersToArrayIfAny(arrayStartIndexSeparator, arrayEndIndexSeparator, allowNestedConversion);
+            return root.ConvertMembersToArrayIfAny(arrayIndexSeparator, allowNestedConversion);
 
             //return root as ChoDynamicObject;
         }
 
-        public static dynamic ConvertMembersToArrayIfAny(this object @this, char? startSeparator = null, char? endSeparator = null, bool allowNestedConversion = true)
+        public static dynamic ConvertMembersToArrayIfAny(this object @this, char? arrayIndexSeparator = null, bool allowNestedConversion = true)
         {
-            if (startSeparator == null || startSeparator.Value == ChoCharEx.NUL)
+            char? startSeparator = null;
+            char? endSeparator = null;
+            switch (ChoETLSettings.ArrayBracketNotation)
             {
-                startSeparator = '[';
-                if (endSeparator == null || endSeparator.Value == ChoCharEx.NUL)
+                case ChoArrayBracketNotation.None:
+                    startSeparator = arrayIndexSeparator.Value;
+                    endSeparator = null;
+                    break;
+                case ChoArrayBracketNotation.Parenthesis:
+                    startSeparator = '(';
+                    endSeparator = ')';
+                    break;
+                case ChoArrayBracketNotation.Square:
+                    startSeparator = '[';
                     endSeparator = ']';
+                    break;
             }
 
             if (@this == null)
@@ -171,7 +187,7 @@ namespace ChoETL
             object value = null;
             foreach (var kvp in expandoDic)
             {
-                value = allowNestedConversion ? ConvertMembersToArrayIfAny(kvp.Value, startSeparator, endSeparator, allowNestedConversion) : kvp.Value;
+                value = allowNestedConversion ? ConvertMembersToArrayIfAny(kvp.Value, arrayIndexSeparator, allowNestedConversion) : kvp.Value;
 
                 var pos = kvp.Key.LastIndexOf(startSeparator.Value);
                 if (pos <= 0)

@@ -5547,10 +5547,23 @@ Val 1,Val 2,Val 3,Val 4";
             }
         }
 
+        static void Issue227()
+        {
+            string csv = @"ID,TIN,PROVIDER,NEIGHBOR,DRIVERNO,DRIVERNO2,LASTNAME,FIRSTNAME
+""LO""""PEZ JAINA"",""052965646"",""1760638008"",""BRYAN, RICKY"",""898082"",""899082"",""LO""""PEZ JAINA"",""ROBERTO""";
+
+            using (var r = ChoCSVReader.LoadText(csv).WithFirstLineHeader().QuoteAllFields()
+                .ThrowAndStopOnMissingField(false))
+            {
+                r.Print();
+            }
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-               
+            Issue227();
+            return;
+
             ReadMixedCSVRecords();
             return;
 

@@ -522,6 +522,7 @@ namespace ChoETL
 
         private static string NormalizeString(string inString, char quoteChar)
         {
+            inString = inString.NTrim();
             if (inString == null || inString.Length < 2) return inString;
             if (inString[0] == quoteChar && inString[inString.Length - 1] == quoteChar)
                 return inString.Substring(1, inString.Length - 2);

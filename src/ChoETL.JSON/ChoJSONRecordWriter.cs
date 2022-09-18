@@ -31,6 +31,7 @@ namespace ChoETL
         private Lazy<bool> BeginWrite = null;
         private object _sw = null;
         private bool _rowScanComplete = false;
+        private int _indent = 1;
 
         public ChoJSONRecordConfiguration Configuration
         {
@@ -341,6 +342,7 @@ namespace ChoETL
                                 else
                                 {
                                     sw.Write($"{{{EOLDelimiter}{Indent(ToJSONToken(Configuration.RootName.NTrim()))}: [");
+                                    _indent++;
                                 }
                             }
                             else
@@ -719,7 +721,7 @@ namespace ChoETL
                         else if (RecordType.IsSimple())
                             fieldValue = rec;
                         else
-                            rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, true);
+                            rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, true, config: Configuration);
 
                         if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.MemberLevel)
                             rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode, fieldValue);
@@ -964,12 +966,15 @@ namespace ChoETL
             return $"\"{name.NTrim()}\"";
         }
 
-        private string Indent(string value, int indentValue = 1)
+        private string Indent(string value, int? indentValue = null)
         {
             if (value == null)
                 return value;
 
-            return Configuration.Formatting == Formatting.Indented ? value.Indent(indentValue, "  ") : value;
+            if (indentValue == null)
+                indentValue = _indent;
+
+            return Configuration.Formatting == Formatting.Indented ? value.Indent(indentValue.Value, "  ") : value;
         }
 
         private string Unindent(string value)

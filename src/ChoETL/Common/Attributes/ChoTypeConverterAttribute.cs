@@ -48,6 +48,18 @@
         internal IDictionary<string, string> ParametersDict { get; set; }
 
         private object _parameters;
+        public object RawParameters
+        {
+            get { return _parameters; }
+            set 
+            {
+                if (_parameters != value)
+                {
+                    _parameters = value;
+                    ParametersObject = value;
+                }
+            }
+        }
         public object Parameters
         {
             get { return _parameters; }
@@ -59,7 +71,7 @@
                     if (value is string)
                     {
                         string val = value as string;
-                        if (val.Contains("="))
+                        if (val.Contains("=") && !val.Contains("=>"))
                         {
                             ParametersDict = val.ToKeyValuePairs().ToDictionary(kvp => kvp.Key, kvp => kvp.Value, StringComparer.InvariantCultureIgnoreCase);
                         }
@@ -117,7 +129,7 @@
                 return ChoActivator.CreateInstance(ConverterType);
             else
             {
-                if (ParametersDict != null || ParametersDict.Count > 0)
+                if (ParametersDict != null && ParametersDict.Count > 0)
                 {
                     try
                     {

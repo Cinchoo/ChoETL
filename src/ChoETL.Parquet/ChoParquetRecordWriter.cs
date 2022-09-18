@@ -789,7 +789,7 @@ namespace ChoETL
                         if (fieldConfig.ValueConverter != null)
                             fieldValue = fieldConfig.ValueConverter(fieldValue);
                         else
-                            rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, true/*, config: Configuration*/);
+                            rec.GetNConvertMemberValue(kvp.Key, kvp.Value, Configuration.Culture, ref fieldValue, true, config: Configuration);
                     }
                     else
                     {

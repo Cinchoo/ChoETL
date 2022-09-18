@@ -913,7 +913,8 @@ namespace ChoETL
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null,
             string fullyQualifiedMemberName = null, string formatText = null,
             string nullValue = null, Type recordType = null, Type subRecordType = null,
-            ChoFieldValueJustification? fieldValueJustification = null)
+            ChoFieldValueJustification? fieldValueJustification = null,
+            IChoValueConverter propertyConverter = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -977,6 +978,8 @@ namespace ChoETL
                     if (nfc.FieldType == null)
                         nfc.FieldType = pd.PropertyType;
                 }
+                if (propertyConverter != null)
+                    nfc.AddConverter(propertyConverter);
 
                 if (subRecordType == null)
                     AvroRecordFieldConfigurations.Add(nfc);

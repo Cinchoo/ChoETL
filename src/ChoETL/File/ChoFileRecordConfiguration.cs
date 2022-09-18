@@ -187,6 +187,27 @@ namespace ChoETL
             //get { return NestedColumnSeparator; }
             //set { NestedColumnSeparator = value; }
         }
+        public bool ConvertToFlattenObject
+        {
+            get;
+            set;
+        }
+        public bool ConvertToNestedObject
+        {
+            get;
+            set;
+        }
+        public bool AllowNestedConversion
+        {
+            get;
+            set;
+        } = true;
+        public int MaxNestedConversionArraySize
+        {
+            get;
+            set;
+        } = 100;
+
         [DataMember]
         public bool AllowNestedArrayConversion
         {

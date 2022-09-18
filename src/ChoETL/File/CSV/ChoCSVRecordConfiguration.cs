@@ -1154,7 +1154,8 @@ namespace ChoETL
             object defaultValue = null, object fallbackValue = null, string altFieldNames = null,
             string fullyQualifiedMemberName = null, string formatText = null, bool optional = false,
             string nullValue = null, bool excelField = false, Type recordType = null, Type subRecordType = null,
-            ChoFieldValueJustification? fieldValueJustification = null, Func<object> expr = null)
+            ChoFieldValueJustification? fieldValueJustification = null, Func<object> expr = null,
+            IChoValueConverter propertyConverter = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -1235,6 +1236,8 @@ namespace ChoETL
                     if (nfc.FieldType == null)
                         nfc.FieldType = pd.PropertyType;
                 }
+                if (propertyConverter != null)
+                    nfc.AddConverter(propertyConverter);
 
                 if (subRecordType == null)
                     CSVRecordFieldConfigurations.Add(nfc);

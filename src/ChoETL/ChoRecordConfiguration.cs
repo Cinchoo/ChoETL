@@ -269,5 +269,118 @@ namespace ChoETL
             config.ObjectValidationMode = ObjectValidationMode;
             config.NotifyAfter = NotifyAfter;
         }
+
+        private readonly object _typeTypeConverterCacheLock = new object();
+        private readonly Dictionary<Type, object[]> _typeTypeConverterCache = new Dictionary<Type, object[]>();
+        private readonly Dictionary<Type, object[]> _typeTypeConverterParamsCache = new Dictionary<Type, object[]>();
+
+        public object[] GetConvertersForType(Type fieldType)
+        {
+            if (fieldType == null) return null;
+
+            if (_typeTypeConverterCache.ContainsKey(fieldType))
+                return _typeTypeConverterCache[fieldType];
+
+            lock (_typeTypeConverterCacheLock)
+            {
+                if (_typeTypeConverterCache.ContainsKey(fieldType))
+                    return _typeTypeConverterCache[fieldType];
+                else
+                {
+                    return ChoTypeDescriptor.GetTypeConvertersForType(fieldType);
+                }
+            }
+        }
+
+        public object[] GetConverterParamsForType(Type fieldType)
+        {
+            if (fieldType == null) return null;
+
+            if (_typeTypeConverterParamsCache.ContainsKey(fieldType))
+                return _typeTypeConverterParamsCache[fieldType];
+
+            lock (_typeTypeConverterCacheLock)
+            {
+                if (_typeTypeConverterParamsCache.ContainsKey(fieldType))
+                    return _typeTypeConverterParamsCache[fieldType];
+                else
+                {
+                    return ChoTypeDescriptor.GetTypeConverterParamsForType(fieldType);
+                }
+            }
+        }
+
+        public void ClearTypeConvertersForType<T>()
+        {
+            ClearTypeConvertersForType(typeof(T));
+        }
+        public void ClearTypeConvertersForType(Type objType)
+        {
+            if (objType == null)
+                return;
+            if (!_typeTypeConverterCache.ContainsKey(objType))
+                return;
+
+            lock (_typeTypeConverterCacheLock)
+            {
+                if (!_typeTypeConverterCache.ContainsKey(objType))
+                    return;
+
+                _typeTypeConverterCache.Remove(objType);
+            }
+        }
+        public void RegisterTypeConvertersForType(Type objType, object[] converters)
+        {
+            if (objType == null)
+                return;
+            if (converters == null)
+                converters = new object[] { };
+
+            lock (_typeTypeConverterCacheLock)
+            {
+                if (!_typeTypeConverterCache.ContainsKey(objType))
+                    _typeTypeConverterCache.Add(objType, converters);
+                else
+                    _typeTypeConverterCache[objType] = converters;
+            }
+        }
+#if !NETSTANDARD2_0
+
+        public void RegisterTypeConverterForType<T>(IValueConverter converter)
+        {
+            RegisterTypeConverterForTypeInternal(typeof(T), (object)converter);
+        }
+#endif
+        public void RegisterTypeConverterForType<T>(IChoValueConverter converter)
+        {
+            RegisterTypeConverterForTypeInternal(typeof(T), (object)converter);
+        }
+#if !NETSTANDARD2_0
+
+        public void RegisterTypeConverterForType(Type objType, IValueConverter converter)
+        {
+            RegisterTypeConverterForTypeInternal(objType, (object)converter);
+        }
+#endif
+        public void RegisterTypeConverterForType(Type objType, IChoValueConverter converter)
+        {
+            RegisterTypeConverterForTypeInternal(objType, (object)converter);
+        }
+
+        private void RegisterTypeConverterForTypeInternal(Type objType, object converter)
+        {
+            if (objType == null)
+                return;
+            if (converter == null)
+                return;
+
+            lock (_typeTypeConverterCacheLock)
+            {
+                if (!_typeTypeConverterCache.ContainsKey(objType))
+                    _typeTypeConverterCache.Add(objType, new object[] { converter });
+                else
+                    _typeTypeConverterCache[objType] = _typeTypeConverterCache[objType].Union(new object[] { converter }).ToArray();
+            }
+        }
     }
 }

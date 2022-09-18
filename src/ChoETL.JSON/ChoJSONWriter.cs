@@ -516,14 +516,16 @@ namespace ChoETL
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null,
-            string nullValue = null)
+            string nullValue = null,
+            IChoValueConverter propertyConverter = null)
             where TClass : class
         {
             if (field == null)
                 return this;
 
             return WithField(field.GetMemberName(), fieldType, fieldValueTrimOption, fieldName, valueConverter, itemConverter,
-                customSerializer, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, true, nullValue, typeof(TClass));
+                customSerializer, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, true, nullValue, typeof(TClass),
+                propertyConverter);
         }
 
         public ChoJSONWriter<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoJSONRecordFieldConfigurationMap> mapper)
@@ -540,23 +542,25 @@ namespace ChoETL
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null,
-            string nullValue = null)
+            string nullValue = null,
+            IChoValueConverter propertyConverter = null)
         {
             if (field == null)
                 return this;
 
             return WithField(field.GetMemberName(), field.GetPropertyType(), fieldValueTrimOption, fieldName, valueConverter, itemConverter,
-                customSerializer, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, true, nullValue, null);
+                customSerializer, defaultValue, fallbackValue, field.GetFullyQualifiedMemberName(), formatText, true, nullValue, null, propertyConverter);
         }
 
         public ChoJSONWriter<T> WithField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string formatText = null, bool isArray = true,
-            string nullValue = null)
+            string nullValue = null,
+            IChoValueConverter propertyConverter = null)
         {
             return WithField(name, fieldType, fieldValueTrimOption, fieldName, valueConverter, itemConverter,
-                customSerializer, defaultValue, fallbackValue, null, formatText, isArray, nullValue, null);
+                customSerializer, defaultValue, fallbackValue, null, formatText, isArray, nullValue, null, propertyConverter);
         }
 
         private ChoJSONWriter<T> WithField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null, Func<object, object> valueConverter = null,
@@ -564,14 +568,15 @@ namespace ChoETL
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null,
             string formatText = null, bool isArray = true, string nullValue = null,
-            Type subRecordType = null)
+            Type subRecordType = null,
+            IChoValueConverter propertyConverter = null)
         {
             if (!name.IsNullOrEmpty())
             {
                 ClearFieldsIf();
                 Configuration.WithField(name, null, fieldType, fieldValueTrimOption, fieldName,
                     valueConverter, itemConverter, customSerializer, defaultValue, fallbackValue, fullyQualifiedMemberName, formatText,
-                    isArray, nullValue, typeof(T), subRecordType);
+                    isArray, nullValue, typeof(T), subRecordType, propertyConverter: propertyConverter);
             }
             return this;
         }
@@ -686,7 +691,12 @@ namespace ChoETL
                     expandoDic.Add(fc.Key, fc.Value == -1 ? null : dr[fc.Value]);
                 }
 
-                Write(expando);
+                if (Configuration.IsDynamicObject)
+                    Write(expando);
+                else
+                {
+                    Write((T)ChoObjectEx.ConvertToObject<T>(expando));
+                }
             }
         }
 
@@ -730,7 +740,12 @@ namespace ChoETL
                     expandoDic.Add(fc.Name, row[fc.Name] == DBNull.Value ? null : row[fc.Name]);
                 }
 
-                Write(expando);
+                if (Configuration.IsDynamicObject)
+                    Write(expando);
+                else
+                {
+                    Write((T)ChoObjectEx.ConvertToObject<T>(expando));
+                }
             }
         }
 

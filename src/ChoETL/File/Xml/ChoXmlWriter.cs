@@ -866,7 +866,12 @@ namespace ChoETL
                     expandoDic.Add(fc.Key, fc.Value == -1 ? null : dr[fc.Value]);
                 }
 
-                Write(expando);
+                if (Configuration.IsDynamicObject)
+                    Write(expando);
+                else
+                {
+                    Write((T)ChoObjectEx.ConvertToObject<T>(expando));
+                }
             }
         }
 
@@ -914,7 +919,12 @@ namespace ChoETL
                     expandoDic.Add(fc.Name, row[fc.Name]);
                 }
 
-                Write(expando);
+                if (Configuration.IsDynamicObject)
+                    Write(expando);
+                else
+                {
+                    Write((T)ChoObjectEx.ConvertToObject<T>(expando));
+                }
             }
         }
 

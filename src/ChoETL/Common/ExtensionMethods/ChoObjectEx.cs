@@ -282,10 +282,10 @@ namespace ChoETL
             }
         }
 
-        public static object ConvertToObject<T>(this object source)
-            where T : class, new()
+        public static T ConvertToObject<T>(this object source)
+            //where T : class, new()
         {
-            return ConvertToObject(source, typeof(T));
+            return (T)ConvertToObject(source, typeof(T));
         }
 
         public static object ConvertToObject(this object source, Type type)

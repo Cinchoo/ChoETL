@@ -755,7 +755,7 @@ namespace ChoETL
                     if (fieldConfig.ValueConverter != null)
                         fieldValue = fieldConfig.ValueConverter(fieldValue);
                     else
-                        rec.GetNConvertMemberValue(kvp.Key, kvp.Value, config.Culture, ref fieldValue, true);
+                        rec.GetNConvertMemberValue(kvp.Key, kvp.Value, config.Culture, ref fieldValue, true, config: Configuration);
 
                     if ((config.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.MemberLevel)
                         rec.DoMemberLevelValidation(kvp.Key, kvp.Value, config.ObjectValidationMode, fieldValue);

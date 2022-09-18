@@ -559,7 +559,7 @@ namespace ChoETL
                                     fieldConfig.FieldType == null || fieldConfig.FieldType == typeof(string) ? fieldValue : Convert.ChangeType(fieldValue, fieldConfig.FieldType, Configuration.Culture));
                             }
                             else
-                                rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture);
+                                rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture, config: Configuration);
                         }
                         else if (RecordType.IsSimple())
                             rec = ChoConvert.ConvertTo(fieldValue, RecordType, Configuration.Culture);
@@ -652,7 +652,7 @@ namespace ChoETL
                                         else
                                         {
                                             if (pi != null)
-                                                rec.ConvertNSetMemberValue(kvp.Key, fieldConfig, ref fieldValue, Configuration.Culture);
+                                                rec.ConvertNSetMemberValue(kvp.Key, fieldConfig, ref fieldValue, Configuration.Culture, config: Configuration);
                                             else
                                                 throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(kvp.Key, ChoType.GetTypeName(rec)));
                                         }

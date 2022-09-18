@@ -128,6 +128,30 @@ namespace ChoETL
             return this;
         }
 
+        public ChoCSVRecordFieldConfigurationMap PropertyConverter(IChoValueConverter converter)
+        {
+            if (_config.PropConverters.IsNullOrEmpty())
+                _config.PropConverters = new object[] { converter };
+            else
+            {
+                _config.PropConverters = ChoArray.Combine<object>(_config.PropConverters, new object[] { converter });
+            }
+            return this;
+        }
+
+#if !NETSTANDARD2_0
+        public ChoCSVRecordFieldConfigurationMap PropertyConverter(System.Windows.Data.IValueConverter converter)
+        {
+            if (_config.PropConverters.IsNullOrEmpty())
+                _config.PropConverters = new object[] { converter };
+            else
+            {
+                _config.PropConverters = ChoArray.Combine<object>(_config.PropConverters, new object[] { converter });
+            }
+            return this;
+        }
+#endif
+
         public ChoCSVRecordFieldConfigurationMap ValueSelector(Func<dynamic, object> value)
         {
             _config.ValueSelector = value;

@@ -591,7 +591,7 @@ namespace ChoETL
                                     if (_fc.ValueConverter == null)
                                     {
                                         if (retValue is JObject)
-                                            retValue = ((JObject)retValue).ToObject(objectType);
+                                            retValue = ((JObject)retValue).ToObject(objectType, serializer);
                                     }
                                     else
                                         retValue = _fc.ValueConverter(retValue);
@@ -604,7 +604,7 @@ namespace ChoETL
                                 //ChoETLRecordHelper.DoMemberLevelValidation(retValue, _fc.Name, _fc, _validationMode);
 
                                 if (retValue is JObject && GetTypeConverters(_objType, name).IsNullOrEmpty()) //  ChoTypeDescriptor.GetTypeConverters(_mi).IsNullOrEmpty())
-                                    retValue = ((JObject)retValue).ToObject(objectType);
+                                    retValue = ((JObject)retValue).ToObject(objectType, serializer);
 
                                 if (retValue != null)
                                 {
@@ -620,7 +620,7 @@ namespace ChoETL
                                 if (retValue != null)
                                 {
                                     if (retValue is JObject && GetTypeConverters(_objType, name).IsNullOrEmpty())
-                                        retValue = ((JObject)retValue).ToObject(objectType);
+                                        retValue = ((JObject)retValue).ToObject(objectType, serializer);
 
                                     if (_fc != null)
                                         ChoETLRecordHelper.ConvertMemberValue(rec, name, _fc, ref retValue, _culture);
@@ -636,7 +636,7 @@ namespace ChoETL
                             if (retValue != null)
                             {
                                 if (retValue is JObject && GetTypeConverters(_objType, name).IsNullOrEmpty())
-                                    retValue = ((JObject)retValue).ToObject(objectType);
+                                    retValue = ((JObject)retValue).ToObject(objectType, serializer);
 
                                 if (_fc != null)
                                     ChoETLRecordHelper.ConvertMemberValue(rec, name, _fc, ref retValue, _culture);
@@ -750,7 +750,7 @@ namespace ChoETL
                     if (_fc != null)
                     {
                         if (_fc != null)
-                            ChoETLRecordHelper.GetNConvertMemberValue(rec, name, _fc, _culture, ref value);
+                            ChoETLRecordHelper.GetNConvertMemberValue(rec, name, _fc, _culture, ref value, config: Configuration);
                         else
                         {
                             if (value != null && _objType != null)
@@ -785,7 +785,7 @@ namespace ChoETL
                     else
                     {
                         if (_fc != null)
-                            ChoETLRecordHelper.GetNConvertMemberValue(rec, name, _fc, _culture, ref value);
+                            ChoETLRecordHelper.GetNConvertMemberValue(rec, name, _fc, _culture, ref value, config: Configuration);
                         else
                         {
                             if (value != null && _objType != null)

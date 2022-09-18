@@ -26,6 +26,7 @@ using System.Reflection;
 using System.Windows.Data;
 using System.Net;
 using System.IO.MemoryMappedFiles;
+using Newtonsoft.Json.Serialization;
 
 namespace ChoJSONReaderTest
 {
@@ -9399,11 +9400,396 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
 
             r1.AsDataTable().Print();
         }
-        static void Main(string[] args)
+
+        static void Issue226()
         {
+            var json = @"{
+  ""TimestampGlobal"": ""2022-04-26T14:00:31.6892162Z""
+}";
+
+            using
+            (
+                var r = ChoJSONReader.LoadText(json)
+                    .WithField("TimestampGlobal", jsonPath: "$.TimestampGlobal", fieldType: typeof(DateTime), fieldName: "TimestampGlobal", isArray: false)
+                    .Configure(c => c.Culture = CultureInfo.InvariantCulture)
+                    .Configure(c => c.TypeConverterFormatSpec = new ChoTypeConverterFormatSpec { DateTimeFormat = "o" })
+            )
+            {
+                var dt1 = r.Select(k => k.AsDictionary()["TimestampGlobal"]).Cast<DateTime>().First();
+                dt1.Millisecond.Print();
+
+                // Compare with .NET
+                var dt2 = DateTime.Parse("2022-04-26T14:00:31.6892162Z");
+                dt2.Millisecond.Print();
+            }
+        }
+
+        static void Issue228()
+        {
+            string json = @"{
+      ""id"": ""4b5260d2-e088-4546-a315-b9c4b274406f"",
+      ""type"": ""donut"",
+      ""name"":""cake"",
+      ""flavours"": [""chocolate"",""blueberry"",""vanilla""],
+      ""batters"": {
+        ""topping"":""glazed"",
+        ""category"":[ ""eggless"",""flavoured""]
+      }     
+}";
+
+            ChoTypeDescriptor.RegisterTypeConvertersForType<IList, ArrayToStringConverter>();
+            ChoTypeDescriptor.RegisterTypeConvertersForType<string, StringToArrayConverter>();
+
+            StringBuilder jsonOut = new StringBuilder();
+            Func<object, object> array2StringConverter = o => String.Join(";", ((IList)o).OfType<object>().Select(i => i.ToNString()));
+            using (var r = ChoJSONReader.LoadText(json)
+                //.UseJsonSerialization()
+                .WithJSONPath("$", true)
+                //.UseDefaultContractResolver()
+                //.WithField("id")
+                //.WithField("type")
+                //.WithField("name")
+                //.WithField("flavours"/*, valueConverter: array2StringConverter*/, propertyConverter: new ArrayToStringConverter())
+                //.WithField("batters/topping", jsonPath: "batters.topping", isArray: false)
+                //.WithField("batters/category", jsonPath: "batters.category[*]", isArray: true/*, valueConverter: array2StringConverter*/,
+                //        propertyConverter: new ArrayToStringConverter())
+                .Configure(c => c.ConvertToFlattenObject = true)
+                .Configure(c => c.NestedKeySeparator = '/')
+                )
+            {
+                //r.Print();
+                //return;
+
+                using (var w = new ChoJSONWriter(jsonOut)
+                    .SingleElement()
+                    .SupportMultipleContent()
+                    //.WithFirstLineHeader()
+                    //.UseNestedKeyFormat(false)
+                    //.Configure(c => c.RegisterTypeConverterForType<List<object>>(new ListToStringConverters()))
+                    )
+                    w.Write(r);
+            }
+
+            jsonOut.Print();
+            return;
+
+            StringBuilder jsonOut1 = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(jsonOut.ToString())
+                //.UseJsonSerialization()
+                .WithJSONPath("$", true)
+                //.UseDefaultContractResolver()
+                .Configure(c => c.ConvertToNestedObject = true)
+                .Configure(c => c.NestedKeySeparator = '/')
+                )
+            {
+                //r.Print();
+                //return;
+                using (var w = new ChoJSONWriter(jsonOut1)
+                    //.WithFirstLineHeader()
+                    //.UseNestedKeyFormat(false)
+                    //.Configure(c => c.RegisterTypeConverterForType<List<object>>(new ListToStringConverters()))
+                    )
+                    w.Write(r);
+            }
+
+            jsonOut1.Print();
+        }
+
+        static void Issue228_2()
+        {
+            string json = @"{
+      ""id"": ""4b5260d2-e088-4546-a315-b9c4b274406f"",
+      ""type"": ""donut"",
+      ""name"":""cake"",
+      ""flavours"": [""chocolate"",""blueberry"",""vanilla""],
+      ""batters"": {
+        ""topping"":""glazed"",
+        ""category"":[ ""eggless"",""flavoured""]
+      }     
+}";
+            Func<object, object> array2StringConverter = o => String.Join(";", ((IList)o).OfType<object>().Select(i => i.ToNString()));
+            StringBuilder jsonOut = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(json)
+                .WithJSONPath("$", true)
+                .WithField("id")
+                .WithField("type")
+                .WithField("name")
+                .WithField("flavours", valueConverter: array2StringConverter)
+                .WithField("batters/topping", jsonPath: "batters.topping", isArray: false)
+                .WithField("batters/category", jsonPath: "batters.category[*]", isArray: true, valueConverter: array2StringConverter)
+                )
+            {
+                using (var w = new ChoJSONWriter(jsonOut)
+                    .SingleElement()
+                    .SupportMultipleContent()
+                    //.WithFirstLineHeader()
+                    //.UseNestedKeyFormat(false)
+                    //.Configure(c => c.RegisterTypeConverterForType<List<object>>(new ListToStringConverters()))
+                    )
+                    w.Write(r);
+            }
+
+            jsonOut.Print();
+
+            StringBuilder jsonOut1 = new StringBuilder();
+            Func<object, object> string2ArrayConverter = o => ((string)o).Split(";").ToArray();
+            using (var r = ChoJSONReader.LoadText(jsonOut.ToString())
+                //.UseJsonSerialization()
+                .WithJSONPath("$", true)
+                .WithField("id")
+                .WithField("type")
+                .WithField("name")
+                .WithField("flavours", valueConverter: string2ArrayConverter)
+                .WithField("batters/topping", isArray: false)
+                .WithField("batters/category", isArray: true, valueConverter: string2ArrayConverter)
+                .Configure(c => c.ConvertToNestedObject = true)
+                .Configure(c => c.NestedKeySeparator = '/')
+                )
+            {
+                //r.Print();
+                //return;
+                using (var w = new ChoJSONWriter(jsonOut1)
+                    .SingleElement()
+                    .SupportMultipleContent()
+                    )
+                    w.Write(r);
+            }
+
+            jsonOut1.Print();
+        }
+
+        public class ArrayToStringConverter : IChoValueConverter, IChoCollectionConverter
+        {
+            public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                if (value is IList && ((IList)value).OfType<object>().All(i => i is string))
+                    return String.Join(";", ((IList)value).OfType<object>().Select(i => i.ToNString()));
+                else
+                    return value;
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                return value;
+            }
+        }
+
+        public class StringToArrayConverter : IChoCollectionConverter
+        {
+            public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                string val = value as string;
+                if (val == null)
+                    return value;
+
+                if (!val.Contains(";"))
+                    return val;
+
+                return val.Split(";").ToArray();
+            }
+
+            public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            {
+                return value;
+            }
+        }
+
+        static void Issue234()
+        {
+            var json = @"{
+  ""TimestampGlobal"": ""2022-08-06T19:36:46.1043075+00:00""
+}";
+
+            using
+            (
+                var r = ChoJSONReader.LoadText(json)
+                    .WithField("TimestampGlobal", jsonPath: "$.TimestampGlobal", fieldType: typeof(DateTimeOffset), fieldName: "TimestampGlobal")
+                    //.Configure(c => c.Culture = CultureInfo.InvariantCulture)
+                    //.Configure(c => c.TypeConverterFormatSpec = new ChoTypeConverterFormatSpec { DateTimeFormat = "o" })
+                    .JsonSerializationSettings(s => s.DateParseHandling = DateParseHandling.DateTimeOffset)
+            )
+            {
+                //var dt1 = r.Select(k => k.AsDictionary()["TimestampGlobal"]).Cast<DateTimeOffset>().First();
+                var dt1 = (DateTimeOffset)r.First().TimestampGlobal;
+                dt1.Offset.Print(); // 02:00:00
+
+                // Compare with .NET
+                var dt2 = DateTimeOffset.Parse("2022-08-06T19:36:46.1043075+00:00");
+                dt2.Offset.Print(); // 00:00:00
+            }
+        }
+
+        public static void Issue235()
+        {
+            var json = @"{
+		  ""Message"": ""RowaDoseOrderResult"",
+		  ""TimestampLocal"": ""2022-02-26T12:00:04.48904+01:00"",
+		  ""TimestampGlobal"": ""2022-02-26T09:56:31.6487665Z"",
+		  ""OrderIdentifier"": ""135e3f64-1270-4ef1-add6-06e03d037075"",
+		  ""Pouches"": [
+			{
+			  ""PouchIdentifier"": ""2202250205364"",
+			  ""Pills"": [
+				{
+				  ""MedId"": ""01839853"",
+				  ""SourceId"": ""91B4C612"",
+				  ""SourceType"": ""Canister"",
+				  ""RequestedAmount"": 1.0,
+				  ""DispensedAmount"": 1.0
+				},
+				{
+				  ""MedId"": ""01849875"",
+				  ""SourceId"": ""8D96B152"",
+				  ""SourceType"": ""Canister"",
+				  ""RequestedAmount"": 2.0,
+				  ""DispensedAmount"": 2.0
+				},
+				{
+				  ""MedId"": ""02735229"",
+				  ""SourceId"": ""91B53206"",
+				  ""SourceType"": ""Canister"",
+				  ""RequestedAmount"": 1.0,
+				  ""DispensedAmount"": 1.0
+				},
+				{
+				  ""MedId"": ""02069482"",
+				  ""SourceId"": ""9045F100"",
+				  ""SourceType"": ""Canister"",
+				  ""RequestedAmount"": 1.0,
+				  ""DispensedAmount"": 1.0
+				},
+				{
+				  ""MedId"": ""02292815"",
+				  ""SourceId"": ""907C49B7"",
+				  ""SourceType"": ""Canister"",
+				  ""RequestedAmount"": 1.0,
+				  ""DispensedAmount"": 1.0
+				}
+			  ]
+			}
+		  ]
+		}";
 
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            Issue218();
+            typeof(ChoCSVReader).GetAssemblyVersion().Print();
+            typeof(ChoJSONReader).GetAssemblyVersion().Print();
+
+            using
+            (
+                var r = ChoJSONReader.LoadText(json)
+
+                    .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+
+                    .Configure(c => c.Culture = CultureInfo.InvariantCulture)
+                    .Configure(c => c.FlattenNode = true)
+            //.Configure(c => c.FlattenByJsonPath = "$.Pouches[*].Pills[*]")
+
+            .JsonSerializationSettings(s => s.DateParseHandling = DateParseHandling.DateTimeOffset)
+
+            .WithField("TimestampGlobal", jsonPath: "$.TimestampGlobal", typeof(DateTime), fieldName: "TimestampGlobal")
+            .WithField("TimestampLocal", jsonPath: "$.TimestampLocal", typeof(DateTimeOffset), fieldName: "TimestampLocal")
+            .WithField("OrderIdentifier", jsonPath: "$.OrderIdentifier", typeof(string), fieldName: "OrderIdentifier")
+            .WithField("PouchIdentifier", jsonPath: "$.PouchesPouchIdentifier", typeof(string), fieldName: "PouchIdentifier")
+            .WithField("PouchPillMedId", jsonPath: "$.PouchesPillsMedId", typeof(string), fieldName: "PouchPillMedId")
+            .WithField("PouchPillSourceId", jsonPath: "$.PouchesPillsSourceId", typeof(string), fieldName: "PouchPillSourceId")
+            .WithField("PouchPillSourceType", jsonPath: "$.PouchesPillsSourceType", typeof(string), fieldName: "PouchPillSourceType")
+            .WithField("PouchPillRequestedAmount", jsonPath: "$.PouchesPillsRequestedAmount", typeof(decimal), fieldName: "PouchPillRequestedAmount")
+            .WithField("PouchPillDispensedAmount", jsonPath: "$.PouchesPillsDispensedAmount", typeof(decimal), fieldName: "PouchPillDispensedAmount")
+            )
+            {
+                var dt = r.AsDataTable();
+                dt.Print();
+            }
+        }
+
+        public class DynAddress
+        {
+            public string Number { get; set; }
+            public string Street { get; set; }
+            public string City { get; set; }
+            public string Country { get; set; }
+        }
+
+        public class DynPerson
+        {
+            public string Name { get; set; }
+            public int Age { get; set; }
+            public DynAddress PostalAddress { get; set; }
+        }
+        static void DynamicPropertyMapping()
+        {
+            var person = new DynPerson
+            {
+                Name = "Tom",
+                Age = 10,
+                PostalAddress = new DynAddress
+                { 
+                    Number = "10",
+                    Street = "Main St.",
+                    City = "New York",
+                    Country = "USA",
+                },
+            };
+
+            Action<Type, MemberInfo, string, JsonProperty> remapJsonProperty = (t, mi, pn, jsonProp) =>
+            {
+                if (t == typeof(DynAddress))
+                {
+                    if (pn == nameof(DynAddress.Number))
+                        jsonProp.PropertyName = "Num";
+                    else if (pn == nameof(DynAddress.Street))
+                        jsonProp.PropertyName = "Str";
+                }
+                else if (t == typeof(DynPerson))
+                {
+                    if (pn == nameof(DynPerson.Name))
+                        jsonProp.PropertyName = "N";
+                    else if (pn == nameof(DynPerson.PostalAddress))
+                        jsonProp.PropertyName = "PAddress";
+                }
+            };
+
+            StringBuilder json = new StringBuilder();
+            using (var w = new ChoJSONWriter<DynPerson>(json)
+                .UseJsonSerialization()
+                .UseDefaultContractResolver()
+                .SingleElement()
+                .SupportMultipleContent()
+                .Configure(c => c.RemapJsonProperty = remapJsonProperty)
+                )
+            {
+                w.Write(person);
+            }
+
+            json.Print();
+
+            string json1 = @"{
+  ""N"": ""Tom"",
+  ""Age"": 10,
+  ""PAddress"": {
+    ""Num"": ""10"",
+    ""Str"": ""Main St."",
+    ""City"": ""New York"",
+    ""Country"": ""USA""
+  }
+}";
+            using (var r = ChoJSONReader<DynPerson>.LoadText(json.ToString())
+                .UseJsonSerialization()
+                .UseDefaultContractResolver()
+                .Configure(c => c.RemapJsonProperty = remapJsonProperty)
+                )
+            {
+                r.Print();
+            }
+        }
+
+        static void Main(string[] args)
+        {
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+            DynamicPropertyMapping();
+            return;
+
+            Issue235();
             return;
             //ChoDynamicObjectSettings.DictionaryType = DictionaryType.Regular;
             //dynamic dict = new ChoDynamicObject();

@@ -769,13 +769,14 @@ namespace ChoETL
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string fullyQualifiedMemberName = null, string formatText = null,
-            string nullValue = null, Func<object, Type> fieldTypeSelector = null)
+            string nullValue = null, Func<object, Type> fieldTypeSelector = null,
+            IChoValueConverter propertyConverter = null)
         {
             string fnTrim = name.NTrim();
             string xPath = $"/{fnTrim}";
             return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, false, fieldName, false, valueConverter, itemConverter,
                 customSerializer, defaultValue,
-                fallbackValue, encodeValue, formatText, nullValue, fieldTypeSelector);
+                fallbackValue, encodeValue, formatText, nullValue, fieldTypeSelector, propertyConverter: propertyConverter);
         }
 
         public ChoXmlReader<T> WithXmlAttributeField<TField>(Expression<Func<T, TField>> field, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
@@ -783,7 +784,8 @@ namespace ChoETL
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string formatText = null,
-            string nullValue = null, Func<object, Type> fieldTypeSelector = null)
+            string nullValue = null, Func<object, Type> fieldTypeSelector = null,
+            IChoValueConverter propertyConverter = null)
         {
             if (field == null)
                 return this;
@@ -792,7 +794,7 @@ namespace ChoETL
                 valueConverter,
                 itemConverter, customSerializer,
                 defaultValue, fallbackValue, encodeValue, field.GetFullyQualifiedMemberName(), formatText, nullValue, 
-                fieldTypeSelector);
+                fieldTypeSelector, propertyConverter);
         }
 
         public ChoXmlReader<T> WithXmlAttributeField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
@@ -800,12 +802,13 @@ namespace ChoETL
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string formatText = null,
-            string nullValue = null, Func<object, Type> fieldTypeSelector = null)
+            string nullValue = null, Func<object, Type> fieldTypeSelector = null,
+            IChoValueConverter propertyConverter = null)
         {
             return WithXmlAttributeField(name, fieldType, fieldValueTrimOption, fieldName,
                         valueConverter,
                         itemConverter, customSerializer,
-                        defaultValue, fallbackValue, encodeValue, null, formatText, nullValue, fieldTypeSelector);
+                        defaultValue, fallbackValue, encodeValue, null, formatText, nullValue, fieldTypeSelector, propertyConverter: propertyConverter);
         }
 
         private ChoXmlReader<T> WithXmlAttributeField(string name, Type fieldType = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim, string fieldName = null,
@@ -813,12 +816,14 @@ namespace ChoETL
             Func<object, object> itemConverter = null,
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string fullyQualifiedMemberName = null, string formatText = null,
-            string nullValue = null, Func<object, Type> fieldTypeSelector = null)
+            string nullValue = null, Func<object, Type> fieldTypeSelector = null,
+            IChoValueConverter propertyConverter = null)
         {
             string fnTrim = name.NTrim();
             string xPath = $"/@{fnTrim}";
             return WithField(fnTrim, xPath, fieldType, fieldValueTrimOption, true, fieldName, false, valueConverter,
-                itemConverter, customSerializer, defaultValue, fallbackValue, encodeValue, formatText, nullValue, fieldTypeSelector);
+                itemConverter, customSerializer, defaultValue, fallbackValue, encodeValue, formatText, nullValue, fieldTypeSelector,
+                propertyConverter: propertyConverter);
         }
 
         public ChoXmlReader<T> WithField<TField>(Expression<Func<T, TField>> field, Action<ChoXmlRecordFieldConfigurationMap> setup)
@@ -858,7 +863,8 @@ namespace ChoETL
             Func<object, object> customSerializer = null,
             object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string formatText = null,
             string nullValue = null, Func<object, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null,
-            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null
+            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null,
+            IChoValueConverter propertyConverter = null
             )
             where TClass : class
         {
@@ -870,7 +876,7 @@ namespace ChoETL
                 customSerializer, defaultValue, fallbackValue, encodeValue, field.GetFullyQualifiedMemberName(), formatText,
                 nullValue, typeof(TClass),
                 fieldTypeSelector, itemTypeSelector,
-                    fieldTypeDiscriminator, itemTypeDiscriminator);
+                    fieldTypeDiscriminator, itemTypeDiscriminator, propertyConverter: propertyConverter);
         }
 
         public ChoXmlReader<T> WithField<TField>(Expression<Func<T, TField>> field, string xPath = null, ChoFieldValueTrimOption fieldValueTrimOption = ChoFieldValueTrimOption.Trim,
@@ -881,7 +887,8 @@ namespace ChoETL
             object defaultValue = null, object fallbackValue = null, bool encodeValue = false, string formatText = null,
             string nullValue = null, Func<object, Type> fieldTypeSelector = null,
             Func<object, Type> itemTypeSelector = null,
-            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null)
+            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null,
+            IChoValueConverter propertyConverter = null)
         {
             if (field == null)
                 return this;
@@ -891,7 +898,7 @@ namespace ChoETL
                 itemConverter, customSerializer,
                 defaultValue, fallbackValue, encodeValue, field.GetFullyQualifiedMemberName(), formatText, nullValue, null,
                 fieldTypeSelector, itemTypeSelector,
-                    fieldTypeDiscriminator, itemTypeDiscriminator);
+                    fieldTypeDiscriminator, itemTypeDiscriminator, propertyConverter: propertyConverter);
         }
 
         public ChoXmlReader<T> WithField(string name, string xPath = null, Type fieldType = null, 
@@ -904,14 +911,15 @@ namespace ChoETL
             bool encodeValue = false, string formatText = null,
             string nullValue = null, Func<object, Type> fieldTypeSelector = null,
             Func<object, Type> itemTypeSelector = null,
-            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null)
+            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null,
+            IChoValueConverter propertyConverter = null)
         {
             return WithField(name, xPath, fieldType, fieldValueTrimOption, isXmlAttribute, fieldName, isArray,
                 valueConverter,
                 itemConverter, customSerializer,
                 defaultValue, fallbackValue,
                 encodeValue, null, formatText, nullValue, null, fieldTypeSelector, itemTypeSelector,
-                    fieldTypeDiscriminator, itemTypeDiscriminator);
+                    fieldTypeDiscriminator, itemTypeDiscriminator, propertyConverter);
         }
 
         private ChoXmlReader<T> WithField(string name, string xPath = null, Type fieldType = null, 
@@ -924,7 +932,8 @@ namespace ChoETL
             bool encodeValue = false, string fullyQualifiedMemberName = null, string formatText = null,
             string nullValue = null, Type subRecordType = null, Func<object, Type> fieldTypeSelector = null, 
             Func<object, Type> itemTypeSelector = null,
-            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null)
+            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null,
+            IChoValueConverter propertyConverter = null)
         {
             if (!name.IsNullOrEmpty())
             {
@@ -933,7 +942,7 @@ namespace ChoETL
                 Configuration.WithField(name, xPath, fieldType, fieldValueTrimOption, isXmlAttribute, fieldName,
                     valueConverter, itemConverter, customSerializer, defaultValue, fallbackValue, fullyQualifiedMemberName, 
                     formatText, isArray, nullValue, encodeValue, typeof(T), subRecordType, fieldTypeSelector, itemTypeSelector,
-                    fieldTypeDiscriminator, itemTypeDiscriminator);
+                    fieldTypeDiscriminator, itemTypeDiscriminator, propertyConverter: propertyConverter);
             }
             return this;
         }

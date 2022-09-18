@@ -980,7 +980,7 @@ namespace ChoETL
             object defaultValue = null, object fallbackValue = null, string fullyQualifiedMemberName = null,
             string formatText = null, bool? isArray = null, string nullValue = null, Type recordType = null,
             Type subRecordType = null, Func<object, Type> fieldTypeSelector = null, Func<object, Type> itemTypeSelector = null,
-            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null
+            string fieldTypeDiscriminator = null, string itemTypeDiscriminator = null, IChoValueConverter propertyConverter = null
             )
         {
             ChoGuard.ArgumentNotNull(recordType, nameof(recordType));
@@ -1024,6 +1024,7 @@ namespace ChoETL
                 nfc.ItemRecordTypeSelector = itemTypeSelector != null ? itemTypeSelector : nfc.ItemRecordTypeSelector;
                 nfc.FieldTypeDiscriminator = fieldTypeDiscriminator != null ? fieldTypeDiscriminator : nfc.FieldTypeDiscriminator;
                 nfc.ItemTypeDiscriminator = itemTypeDiscriminator != null ? itemTypeDiscriminator : nfc.ItemTypeDiscriminator;
+                if (propertyConverter != null) nfc.AddConverter(propertyConverter);
 
                 if (fullyQualifiedMemberName.IsNullOrWhiteSpace())
                 {

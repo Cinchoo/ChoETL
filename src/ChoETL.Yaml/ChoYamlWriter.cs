@@ -635,7 +635,12 @@ namespace ChoETL
                     expandoDic.Add(fc.Key, fc.Value == -1 ? null : dr[fc.Value]);
                 }
 
-                yield return expando;
+                if (Configuration.IsDynamicObject)
+                    yield return expando;
+                else
+                {
+                    yield return (T)ChoObjectEx.ConvertToObject<T>(expando);
+                }
             }
         }
 
@@ -680,10 +685,16 @@ namespace ChoETL
                 {
                     expandoDic.Add(fc.Name, row[fc.Name] == DBNull.Value ? null : row[fc.Name]);
                 }
-                list.Add(expando);
+
+                if (Configuration.IsDynamicObject)
+                    Write(expando);
+                else
+                {
+                    Write((T)ChoObjectEx.ConvertToObject<T>(expando));
+                }
             }
         
-            Write(list.ToArray());
+            //Write(list.ToArray());
         }
 
         public void Write(DataSet ds)
