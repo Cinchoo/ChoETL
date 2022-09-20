@@ -51,12 +51,15 @@ namespace ChoETL
             bool skip = false;
             string[] headers = null;
             bool positionalMapping = this.IsPositionalMapping<T>();
-            foreach (var cols in ReadFile(filename, delimiter, quoteChar, mayContainEOLInData))
+            using (var sr = new StreamReader(filename))
             {
-                rec = this.Map(lineNo++, cols, mapper, hasHeader, ref skip, ref headers, positionalMapping);
-                if (skip)
-                    continue;
-                yield return rec;
+                foreach (var cols in Read(sr, delimiter, null, quoteChar, mayContainEOLInData))
+                {
+                    rec = this.Map(lineNo++, cols, mapper, hasHeader, ref skip, ref headers, positionalMapping);
+                    if (skip)
+                        continue;
+                    yield return rec;
+                }
             }
         }
 
@@ -106,26 +109,25 @@ namespace ChoETL
 
             this.Validate(delimiter, null, quoteChar);
 
-            using (var r = new StreamReader(csv.ToStream()))
-                return Read(r, delimiter, null, quoteChar, mayContainEOLInData);
+            return Read(new StreamReader(csv.ToStream()), delimiter, null, quoteChar, mayContainEOLInData);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IEnumerable<string[]> ReadFile(string filename, char delimiter = ',', char quoteChar = '\"', bool mayContainEOLInData = true)
-        {
-            if (filename.IsNullOrWhiteSpace())
-                throw new ArgumentException("Invalid filename passed.");
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //public IEnumerable<string[]> ReadFile(string filename, char delimiter = ',', char quoteChar = '\"', bool mayContainEOLInData = true)
+        //{
+        //    if (filename.IsNullOrWhiteSpace())
+        //        throw new ArgumentException("Invalid filename passed.");
 
-            this.Validate(delimiter, null, quoteChar);
+        //    this.Validate(delimiter, null, quoteChar);
 
-            if (mayContainEOLInData)
-            {
-                using (var r = new StreamReader(filename))
-                    return Read(r, delimiter, null, quoteChar, mayContainEOLInData);
-            }
-            else
-                return ParseLines(File.ReadLines(filename), delimiter, quoteChar);
-        }
+        //    if (mayContainEOLInData)
+        //    {
+        //        using (var r = new StreamReader(filename))
+        //            return Read(r, delimiter, null, quoteChar, mayContainEOLInData);
+        //    }
+        //    else
+        //        return ParseLines(File.ReadLines(filename), delimiter, quoteChar);
+        //}
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerable<string[]> Read(StreamReader reader, char delimiter = ',', string EOLDelimiter = null, char quoteChar = '\"',
