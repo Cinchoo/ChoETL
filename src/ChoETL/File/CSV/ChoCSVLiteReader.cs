@@ -106,7 +106,8 @@ namespace ChoETL
 
             this.Validate(delimiter, null, quoteChar);
 
-            return Read(new StreamReader(csv.ToStream()), delimiter, null, quoteChar, mayContainEOLInData);
+            using (var r = new StreamReader(csv.ToStream()))
+                return Read(r, delimiter, null, quoteChar, mayContainEOLInData);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -118,7 +119,10 @@ namespace ChoETL
             this.Validate(delimiter, null, quoteChar);
 
             if (mayContainEOLInData)
-                return Read(new StreamReader(filename), delimiter, null, quoteChar, mayContainEOLInData);
+            {
+                using (var r = new StreamReader(filename))
+                    return Read(r, delimiter, null, quoteChar, mayContainEOLInData);
+            }
             else
                 return ParseLines(File.ReadLines(filename), delimiter, quoteChar);
         }
