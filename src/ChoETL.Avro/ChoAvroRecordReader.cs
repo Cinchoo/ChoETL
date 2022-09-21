@@ -112,7 +112,7 @@ namespace ChoETL
                         _avroReader = CreateAvroReader<T>(sr);
                     }
                 }
-                else
+                else if (_avroSerializer == null)
                 {
                     _avroSerializer = CreateAvroSerializer<T>();
                 }

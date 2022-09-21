@@ -92,18 +92,9 @@ namespace ChoETL
             }
             else
             {
-                if (IsDynamicType)
-                {
-                    SequentialWriter<Dictionary<string, object>> avroWriter = _avroWriter as SequentialWriter<Dictionary<string, object>>;
-                    if (avroWriter != null)
-                        avroWriter.Dispose();
-                }
-                else
-                {
-                    SequentialWriter<T> avroWriter = _avroWriter as SequentialWriter<T>;
-                    if (avroWriter != null)
-                        avroWriter.Dispose();
-                }
+                IDisposable avroWriter = _avroWriter as IDisposable;
+                if (avroWriter != null)
+                    avroWriter.Dispose();
             }
         }
 
@@ -223,7 +214,14 @@ namespace ChoETL
                 ChoGuard.ArgumentNotNull(lsw, "StreamWriter");
 
                 _sw = sw = lsw.Value;
+            }
+            else if (writer is StreamWriter)
+            {
+                _sw = sw = writer as StreamWriter;
+            }
 
+            if (_sw != null)
+            {
                 if (!Configuration.UseAvroSerializer)
                 {
                     if (_avroWriter == null)
@@ -231,7 +229,7 @@ namespace ChoETL
                         _avroWriter = new SequentialWriter<T>(CreateAvroWriter<T>(sw), Configuration.SyncNumberOfObjects);
                     }
                 }
-                else
+                else if (_avroSerializer == null)
                 {
                     _avroSerializer = CreateAvroSerializer<T>();
                 }
@@ -274,6 +272,10 @@ namespace ChoETL
 
                             if (recOutput == null)
                                 continue;
+                            else if (recOutput is IDictionary<string, object>)
+                            {
+
+                            }
                             else if (!(recOutput is T))
                                 continue;
 
@@ -282,33 +284,30 @@ namespace ChoETL
                                 if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.ObjectLevel) == ChoObjectValidationMode.ObjectLevel)
                                     record.DoObjectLevelValidation(Configuration, Configuration.AvroRecordFieldConfigurations);
 
-                                if (recOutput is T)
-                                {
-                                    if (recOutput is ChoDynamicObject)
-                                        recOutput = new Dictionary<string, object>((ChoDynamicObject)recOutput);
+                                if (recOutput is IDictionary<string, object>)
+                                    recOutput = new Dictionary<string, object>(recOutput as IDictionary<string, object>);
 
-                                    if (_sw != null)
+                                if (_sw != null)
+                                {
+                                    if (Configuration.UseAvroSerializer)
                                     {
-                                        if (Configuration.UseAvroSerializer)
-                                        {
-                                            IAvroSerializer<T> avroSerializer = _avroSerializer as IAvroSerializer<T>;
-                                            avroSerializer.Serialize(sw.BaseStream, (T)(recOutput as object));
-                                        }
-                                        else
-                                        {
-                                            SequentialWriter<T> avroWriter = _avroWriter as SequentialWriter<T>;
-                                            avroWriter.Write((T)(recOutput as object));
-                                        }
+                                        IAvroSerializer<T> avroSerializer = _avroSerializer as IAvroSerializer<T>;
+                                        avroSerializer.Serialize(sw.BaseStream, (T)(recOutput as object));
                                     }
                                     else
                                     {
                                         SequentialWriter<T> avroWriter = _avroWriter as SequentialWriter<T>;
                                         avroWriter.Write((T)(recOutput as object));
                                     }
-
-                                    if (!RaiseAfterRecordWrite(record, _index, recOutput))
-                                        yield break;
                                 }
+                                else
+                                {
+                                    SequentialWriter<T> avroWriter = _avroWriter as SequentialWriter<T>;
+                                    avroWriter.Write((T)(recOutput as object));
+                                }
+
+                                if (!RaiseAfterRecordWrite(record, _index, recOutput))
+                                    yield break;
                             }
                             catch (Exception ex)
                             {

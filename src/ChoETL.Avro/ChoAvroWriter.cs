@@ -124,17 +124,20 @@ namespace ChoETL
                 _writer.Dispose<T>();
 
             _isDisposed = true;
-            if (_closeStreamOnDispose)
+            try
             {
-                if (_streamWriter != null)
-                    _streamWriter.Value.Dispose();
+                if (_closeStreamOnDispose)
+                {
+                    if (_streamWriter != null)
+                        _streamWriter.Value.Dispose();
+                }
+                else
+                {
+                    if (_streamWriter != null)
+                        _streamWriter.Value.Flush();
+                }
             }
-            else
-            {
-                if (_streamWriter != null)
-                    _streamWriter.Value.Flush();
-            }
-
+            catch { }
             if (!finalize)
                 GC.SuppressFinalize(this);
         }

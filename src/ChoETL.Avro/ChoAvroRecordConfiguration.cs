@@ -41,10 +41,11 @@ namespace ChoETL
 
         public int SyncNumberOfObjects { get; set; }
 
+        private bool _useAvroSerializer = false;
         public bool UseAvroSerializer
         {
-            get;
-            set;
+            get { return _useAvroSerializer; }
+            set { }
         }
 
         public string RecordSchema
