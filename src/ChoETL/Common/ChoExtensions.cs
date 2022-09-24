@@ -1104,6 +1104,7 @@ namespace ChoETL
                 || typeof(Decimal) == type
                 || typeof(ChoCDATA) == type
                 || typeof(Guid) == type
+                || typeof(DBNull) == type
                 ;
         }
 
