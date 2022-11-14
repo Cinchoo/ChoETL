@@ -5558,10 +5558,53 @@ Val 1,Val 2,Val 3,Val 4";
                 r.Print();
             }
         }
+
+        public class MyClass
+        {
+            public string SITE_ID { get; set; }
+            public string HOUSE { get; set; }
+        }
+
+        static void Issue242()
+        {
+            var productList = new List<MyClass>();
+
+            using (var r = new ChoCSVLiteReader())
+            {
+                productList.AddRange(r.ReadFile<MyClass>("Sample3.csv", true, mapper: (lineno, cols, rec) =>
+                {
+                    rec.SITE_ID = cols[0];
+                    rec.HOUSE = cols[1];
+                }));
+            }
+
+            
+        }
+
+        static void Issue252()
+        {
+            string csv = @"Id, Name
+1, Tom
+2, ";
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .Configure(c => c.IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any)
+                .WithFirstLineHeader()
+                )
+            {
+                r.AsDataReader().Print();
+            }
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader())
+            {
+                r.AsDataTable().Print();
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            Issue227();
+            Issue252();
             return;
 
             ReadMixedCSVRecords();

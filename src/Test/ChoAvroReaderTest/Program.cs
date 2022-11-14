@@ -36,10 +36,35 @@ namespace ChoAvroReaderTest
             public int Room { get; set; }
         }
 
+        static void Issue241()
+        {
+            string csv = @"Id, Name
+1, Tom
+2, Mark";
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                )
+            {
+                var dr = r.AsDataReader();
+                using (var w = new ChoAvroWriter(@"C:\Temp\dr.avro")
+                    )
+                    w.Write(dr);
+            }
+
+            using (var r = new ChoAvroReader(@"C:\Temp\dr.avro")
+            )
+            {
+                r.Print();
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
             typeof(ChoJSONReader).GetAssemblyVersion().Print();
+            TwitterSnappyAvroTest();
+
             return;
             //POCOTest();
             TwitterSnappyAvroTest();

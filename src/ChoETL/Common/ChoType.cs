@@ -3277,5 +3277,18 @@
 
             return version;
         }
+        public static Type GetNullableType(Type type)
+        {
+            if (type == null)
+                return null;
+
+            if (type.IsNullableType())
+                return type;
+
+            if (type.IsValueType && type != typeof(void))
+                return typeof(Nullable<>).MakeGenericType(type);
+
+            return null;
+        }
     }
 }

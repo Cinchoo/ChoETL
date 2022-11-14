@@ -172,30 +172,40 @@ namespace ChoETL
 
         private Type GetParquetType(Type type)
         {
-            type = type.GetUnderlyingType();
+            var newType = GetParquetTypeInternal(type);
+
+            if (type.IsNullableType())
+                return ChoType.GetNullableType(newType);
+            else
+                return newType;
+        }
+
+        private Type GetParquetTypeInternal(Type type)
+        {
+            var underlytingType = type.GetUnderlyingType();
             Func<Type, Type> mapParquetType = Configuration.MapParquetType;
             if (mapParquetType != null)
             {
-                Type mt = mapParquetType(type);
+                Type mt = mapParquetType(underlytingType);
                 if (mt != null)
                     return mt;
             }
 
-            if (type == null)
+            if (underlytingType == null)
                 return typeof(string);
 
-            if (type == typeof(DateTime))
+            if (underlytingType == typeof(DateTime))
                 return typeof(DateTimeOffset);
-            else if (type == typeof(TimeSpan))
+            else if (underlytingType == typeof(TimeSpan))
                 return typeof(string);
-            else if (type == typeof(ChoCurrency))
+            else if (underlytingType == typeof(ChoCurrency))
                 return typeof(decimal);
-            else if (type == typeof(Guid))
+            else if (underlytingType == typeof(Guid))
                 return typeof(string);
-            else if (type.IsEnum)
+            else if (underlytingType.IsEnum)
                 return typeof(string);
             else
-                return type;
+                return underlytingType;
         }
         private Array GetFieldValues(string key, Type ft)
         {

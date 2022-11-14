@@ -600,9 +600,104 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
                 w.Print();
             }
         }
+
+        static void Issue244()
+        {
+            string csv = @"Id, Name, DateJoined
+1, Tom, 1/2/2022
+2,,";
+
+            ChoETLFrxBootstrap.CustomObjectToString = (t) =>
+            {
+                if (t == DBNull.Value)
+                    return "DBNull";
+                else
+                    return null;
+            };
+
+            using (var r = ChoCSVReader.LoadText(csv)
+                .WithFirstLineHeader()
+                .WithMaxScanRows(2)
+                .QuoteAllFields()
+                )
+            {
+                var dt = r.AsDataTable();
+                dt.Rows[1]["Name"] = DBNull.Value;
+                dt.Rows[1]["DateJoined"] = DBNull.Value;
+                dt.Rows[1]["DateJoined"].Print();
+                dt.Print();
+                using (var w = new ChoParquetWriter("quicktest.parquet"))
+                {
+                    w.Write(dt);
+                }
+            }
+        }
+
+        public static void Issue251()
+        {
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+            typeof(ChoParquetReader).GetAssemblyVersion().Print();
+
+            using (var w = new ChoParquetWriter<Trade>(@"C:\Temp\Trade.parquet")
+                  )
+            {
+                w.Write(new Trade
+                {
+                    Id = null,
+                    Price = 1.3,
+                    Quantity = 2.45,
+                });
+            }
+
+            PrintParquetFile(@"C:\Temp\Trade.parquet");
+        }
+
+        public static void Issue251_1()
+        {
+            var tradeList = new List<Trade>();
+
+            var trade1 = new Trade()
+            {
+                Quantity = 2
+            };
+
+            var trade2 = new Trade()
+            {
+                Id = 100
+            };
+
+            tradeList.Add(trade1);
+            tradeList.Add(trade2);
+
+            using (var w = new ChoParquetWriter<Trade>(@$"C:\Temp\Trade3.parquet")
+                  )
+            {
+                //foreach (var rec in tradeList)
+                //    w.Write(rec);
+                w.Write(tradeList);
+            }
+
+            PrintParquetFile(@$"C:\Temp\Trade3.parquet");
+        }
+
+        //static void PrintParquetFile(string filePath)
+        //{
+        //    using (var r = new ChoParquetReader(filePath))
+        //    {
+        //        r.AsDataTable().Print();
+        //    }
+        //}
+
+        public class Trade
+        {
+            public long? Id { get; set; }
+            public double? Price { get; set; }
+            public double? Quantity { get; set; }
+        }
+
         static void Main(string[] args)
         {
-            Issue230();
+            Issue251_1();
             return;
 
             JsonToParquet52();
