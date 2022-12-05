@@ -2688,23 +2688,12 @@ namespace ChoETL
         {
             // assume there is at least one element in list
             IList arr = Array.CreateInstance(elementType, array.Length);
-            if (elementType.IsValueType())
+            int index = 0;
+            foreach (var item in array)
             {
-                int index = 0;
-                foreach (var item in array)
-                {
-                    arr[index] = item == null ? ChoType.GetDefaultValue(elementType) : item;
-                    index++;
-                }
+                arr[index] = item == null ? ChoType.GetDefaultValue(elementType) : item;
+                index++;
             }
-                //array = Array.ConvertAll<object, object>(array.OfType<object>().ToArray(), x =>
-                //{
-                //    if (x == null)
-                //        return (object)ChoType.GetDefaultValue(elementType);
-                //    else
-                //        return (object)x;
-                //});
-            //Array.Copy(array, arr, array.Length);
             return (Array)arr;
         }
 

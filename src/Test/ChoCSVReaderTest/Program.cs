@@ -3609,7 +3609,7 @@ new ChoDynamicObject {{ "Year", "PVGIS (c) European Communities, 2001-2016" }, {
                 .WithFieldForType<Course1>(o => o.CourseId, fieldName: "CreId")
                 .WithFieldForType<Course1>(o => o.CourseName, fieldName: "CreName")
                 .Index(o => o.Courses, 0, 1)
-                .Index(f => f.Grades, 1, 2, m => m.FieldName("Grade") )
+                .Index(f => f.Grades, 1, 2, m => m.FieldName("Grade"))
                 .WithField(f => f.Grades, fieldName: "Grade")
                 .WithFirstLineHeader()
                 //.MapRecordFields<StudentInfoMap>()
@@ -5052,7 +5052,7 @@ value1,""{""""split.amount"""":""""1794"""",""""split.currencyCode"""":""""USD""
                 .WithFirstLineHeader()
                 .ThrowAndStopOnMissingField(false)
                 .WithField(f => f.Dt)
-                .WithField(f => f.Leds, valueSelector: v => new double[] { v.GetValue<double>("LED1 R")})
+                .WithField(f => f.Leds, valueSelector: v => new double[] { v.GetValue<double>("LED1 R") })
                 )
             {
                 r.Print();
@@ -5388,7 +5388,7 @@ val61, val71";
                     {
                         if (e.PropertyName.StartsWith("Shop"))
                             e.Source = 1;
-                        })
+                    })
                     )
                     w.Write(r);
             }
@@ -5502,7 +5502,7 @@ ue2"",Value3";
         }
 
         public class EmpWithZip
-        { 
+        {
             [ChoFieldPosition(1)]
             public string Identifier { get; set; }
             [DisplayName("Name")]
@@ -5578,33 +5578,67 @@ Val 1,Val 2,Val 3,Val 4";
                 }));
             }
 
-            
+
         }
 
         static void Issue252()
         {
-            string csv = @"Id, Name
-1, Tom
-2, ";
+            string csv = @"Id, Name, Address
+""1"", ""Tom"",""""
+""2"","""",""""";
 
-            using (var r = ChoCSVReader.LoadText(csv)
-                .Configure(c => c.IgnoreFieldValueMode = ChoIgnoreFieldValueMode.Any)
-                .WithFirstLineHeader()
+            var config = new ChoCSVRecordConfiguration 
+            { 
+                AutoDiscoverColumns = true, 
+                AutoDiscoverFieldTypes = true, 
+                ThrowAndStopOnMissingField = false, 
+                QuoteAllFields = true, 
+                NullValue = "",
+                FileHeaderConfiguration = new ChoCSVFileHeaderConfiguration 
+                { 
+                    IgnoreColumnsWithEmptyHeader = true, 
+                    HasHeaderRecord = true, 
+                    QuoteAllHeaders = true 
+                } 
+            };
+
+            using (var r = ChoCSVReader.LoadText(csv) //, config)
+                    .WithFirstLineHeader()
+                    .QuoteAllFields()
                 )
             {
-                r.AsDataReader().Print();
+                var dr = r.AsDataReader();
+                while (dr.Read())
+                {
+                    //This "for" iterates through each column of the current row!
+                    for (int i = 0; i < dr.FieldCount; i++)
+                    {
+                        Console.WriteLine(dr.GetName(i) + ":" + dr.GetValue(i).ToNString("NULL"));
+                    }
+                }
             }
+        }
+
+        static void Issue245()
+        {
+            string csv = @"Freight Terms,,Shipper Location ID,Shipper First Name,,,,Deliver to Line 1,Deliver to Line 2,Deliver to City,Deliver to State,Deliver to Zip,,,,,Handling Unit Count,Piece Count,,,,,,Product ID,BOL (DN en SAP),Carrier,PO Number,SO Number,PO Date,Batch,Customer Part Number,Shipping Notes,T_Tags,Send Freight bill to,Deletion flag
+PREPAID US, ,US24,WOLONG US LRD, , , ,JEMA MOTORS AND AUTOMATION,10827 ELGAR LANE,TOMBALL,TX,77375, , , , ,PC,2, , , , , ,5KS143CWL205,80048901, ,Test AVRT SFTP 1,1000020196,0,31012, ,shipping marks header shipping marks line 1,t tags header t tags line 1,""WOLONG ELECTRIC INDUSTRIAL MOTORS c / o Interlog Services, North America 25 Research Drive Ann Arbor, MI 48103 LOC. 31 ACCT BCJM401754"", 
+PREPAID US, , US24, WOLONG US LRD, , , , JEMA MOTORS AND AUTOMATION,10827 ELGAR LANE, TOMBALL, TX,77375, , , , ,PC,1, , , , , ,5KS143STE109,80048901, ,Test AVRT SFTP 1,1000020196,0,PRT591098, ,shipping marks header shipping marks line 2,t tags header t tags line 2,""WOLONG ELECTRIC INDUSTRIAL MOTORS c/o Interlog Services, North America 25 Research Drive Ann Arbor, MI 48103 LOC. 31 ACCT BCJM401754"", ";
+
             using (var r = ChoCSVReader.LoadText(csv)
-                .WithFirstLineHeader())
+                .WithFirstLineHeader()
+                .ConfigureHeader(c => c.IgnoreColumnsWithEmptyHeader = true)
+                )
             {
-                r.AsDataTable().Print();
+                using (var w = new ChoJSONWriter(Console.Out))
+                    w.Write(r);
             }
         }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            Issue252();
+            DuplicateNameInDynamicModeTest();
             return;
 
             ReadMixedCSVRecords();

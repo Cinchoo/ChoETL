@@ -27,6 +27,7 @@ namespace ChoETL
         private Dictionary<string, object> fieldNameValuesEx = null;
         internal ChoReader Reader = null;
         private Lazy<List<string>> _recBuffer = null;
+        private readonly string _emptyColumnHeaderPrefix = "_Column";
 
         public ChoCSVRecordConfiguration Configuration
         {
@@ -548,7 +549,7 @@ namespace ChoETL
 
             IDictionary<string, object> dict = rec as IDictionary<string, object>;
             dynamic dict1 = new ChoDynamicObject(dict.ToDictionary(kvp => Configuration.RecordFieldConfigurationsDict[kvp.Key].FieldName, kvp => kvp.Value));
-            return dict1.ConvertMembersToArrayIfAny(Configuration.ArrayIndexSeparator == null ? ChoETLSettings.ArrayIndexSeparator : Configuration.ArrayIndexSeparator.Value,
+            return dict1.ConvertMembersToArrayIfAny(Configuration.GetArrayIndexSeparator() /*.ArrayIndexSeparator == null ? ChoETLSettings.ArrayIndexSeparator : Configuration.ArrayIndexSeparator.Value */,
                 Configuration.AllowNestedArrayConversion);
         }
 
@@ -755,6 +756,9 @@ namespace ChoETL
             object rootRec = rec;
             foreach (KeyValuePair<string, ChoCSVRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
+                if (kvp.Key.StartsWith(_emptyColumnHeaderPrefix))
+                    continue;
+
                 if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
                 {
                     if (Configuration.IgnoredFields.Contains(kvp.Key))
@@ -1206,8 +1210,8 @@ namespace ChoETL
                         {
                             if (header.IsNullOrWhiteSpace())
                             {
-                                if (Configuration.FileHeaderConfiguration.KeepColumnsWithEmptyHeader)
-                                    newHeaders.Add("_Column{0}".FormatString(++index));
+                                //if (Configuration.FileHeaderConfiguration.KeepColumnsWithEmptyHeader)
+                                    newHeaders.Add("{0}{1}".FormatString(_emptyColumnHeaderPrefix, ++index));
                             }
                             else
                                 newHeaders.Add(header);
@@ -1285,7 +1289,7 @@ namespace ChoETL
                     throw new ChoRecordConfigurationException("Duplicate field name(s) [Name: {0}] found.".FormatString(String.Join(",", dupFields)));
                 else
                 {
-                    var arrayIndexSeparator = Configuration.ArrayIndexSeparator == ChoCharEx.NUL ? ChoETLSettings.ArrayIndexSeparator : Configuration.ArrayIndexSeparator;
+                    var arrayIndexSeparator = Configuration.GetArrayIndexSeparator(); //.ArrayIndexSeparator == ChoCharEx.NUL ? ChoETLSettings.ArrayIndexSeparator : Configuration.ArrayIndexSeparator;
                     _fieldNames = _fieldNames.GroupBy(i => i, Configuration.FileHeaderConfiguration.StringComparer)
                                         .Select(g =>
                                         {

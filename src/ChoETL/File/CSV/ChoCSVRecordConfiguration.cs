@@ -929,22 +929,31 @@ namespace ChoETL
                 PDDict.Add(fc.FieldName, fc.PropertyDescriptor);
             }
 
-            RecordFieldConfigurationsDict = CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name, FileHeaderConfiguration.StringComparer);
+            try
+            {
+                RecordFieldConfigurationsDict = CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.Name.IsNullOrWhiteSpace()).ToDictionary(i => i.Name, FileHeaderConfiguration.StringComparer);
+            }
+            catch
+            {
+                RecordFieldConfigurationsDict = null;
+            }
             //RecordFieldConfigurationsDictGroup = RecordFieldConfigurationsDict.GroupBy(kvp => kvp.Key.Contains(".") ? kvp.Key.SplitNTrim(".").First() : kvp.Key).ToDictionary(i => i.Key, i => i.ToArray());
             RecordFieldConfigurationsDict2 = CSVRecordFieldConfigurations.OrderBy(i => i.FieldPosition).Where(i => !i.FieldName.IsNullOrWhiteSpace()).ToDictionary(i => i.FieldName, FileHeaderConfiguration.StringComparer);
+            if (RecordFieldConfigurationsDict == null)
+                RecordFieldConfigurationsDict = RecordFieldConfigurationsDict2;
 
             try
             {
                 if (IsDynamicObject)
                     AlternativeKeys = RecordFieldConfigurationsDict2.ToDictionary(kvp =>
                     {
-                        if (kvp.Key == kvp.Value.Name)
-                            return kvp.Value.Name.ToValidVariableName();
+                        if (kvp.Key == kvp.Value.FieldName)
+                            return kvp.Value.FieldName.ToValidVariableName();
                         else
-                            return kvp.Value.Name;
+                            return kvp.Value.FieldName;
                     }, kvp => kvp.Key, FileHeaderConfiguration.StringComparer);
                 else
-                    AlternativeKeys = RecordFieldConfigurationsDict2.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Name, FileHeaderConfiguration.StringComparer);
+                    AlternativeKeys = RecordFieldConfigurationsDict2.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.FieldName, FileHeaderConfiguration.StringComparer);
             }
             catch { }
 

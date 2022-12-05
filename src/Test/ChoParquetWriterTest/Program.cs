@@ -666,8 +666,11 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
                 Id = 100
             };
 
+            var trade3 = new Trade { Id = null, Price = 2.3, Quantity = 2.45, Name = "Name" };
+
             tradeList.Add(trade1);
             tradeList.Add(trade2);
+            tradeList.Add(trade3);
 
             using (var w = new ChoParquetWriter<Trade>(@$"C:\Temp\Trade3.parquet")
                   )
@@ -693,6 +696,8 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
             public long? Id { get; set; }
             public double? Price { get; set; }
             public double? Quantity { get; set; }
+            public string Name { get; set; }
+            public DateTime? CreateDate { get; set; }
         }
 
         static void Main(string[] args)

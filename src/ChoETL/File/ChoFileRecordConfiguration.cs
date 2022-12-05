@@ -411,7 +411,7 @@ namespace ChoETL
                 KnownTypeDiscriminator = kta.Discriminator.Trim();
         }
 
-        protected string GetArrayIndexSeparator()
+        public string GetArrayIndexSeparator()
         {
             return ArrayIndexSeparator == null || ArrayIndexSeparator == ChoCharEx.NUL ?
                 (ChoETLSettings.ArrayIndexSeparator == ChoCharEx.NUL ? String.Empty : ChoETLSettings.ArrayIndexSeparator.ToNString())
