@@ -5,6 +5,8 @@ using System.Text;
 using System.Linq;
 using System.ComponentModel;
 using System.Data.SqlClient;
+using System.Globalization;
+using System.Threading;
 
 namespace ChoParquetReaderTest
 {
@@ -90,13 +92,15 @@ namespace ChoParquetReaderTest
             public long? Id { get; set; }
             public double? Price { get; set; }
             public double? Quantity { get; set; }
-            public TimeSpan? CreateDateTime{ get; set; }
+            public DateTime? CreateDateTime{ get; set; }
             public bool? IsActive { get; set; }
             public Decimal? Total { get; set; }
         }
 
         static void WriteParquetWithNullableFields()
         {
+            ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "MM^dd^yyyy";
+            //Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("fr-FR");
             using (var w = new ChoParquetWriter<Trade>(@"C:\Temp\Trade1.parquet")
                 )
             {
@@ -105,7 +109,7 @@ namespace ChoParquetReaderTest
                     Id = 1,
                     Price = 1.3,
                     Quantity = 2.45,
-                    CreateDateTime = new TimeSpan(1, 30, 0)
+                    CreateDateTime = DateTime.Today,
                 });
             }
 
@@ -157,7 +161,7 @@ namespace ChoParquetReaderTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            Issue233();
+            WriteParquetWithNullableFields();
             return;
             WriteParquetWithNullableFields();
         }

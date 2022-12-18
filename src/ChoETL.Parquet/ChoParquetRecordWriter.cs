@@ -174,7 +174,7 @@ namespace ChoETL
         {
             var newType = GetParquetTypeInternal(type);
 
-            if (type.IsNullableType())
+            if (newType.IsNullableType())
                 return ChoType.GetNullableType(newType);
             else
                 return newType;
@@ -195,7 +195,7 @@ namespace ChoETL
                 return typeof(string);
 
             if (underlytingType == typeof(DateTime))
-                return typeof(DateTimeOffset);
+                return typeof(string);
             else if (underlytingType == typeof(TimeSpan))
                 return typeof(string);
             else if (underlytingType == typeof(ChoCurrency))
@@ -222,16 +222,28 @@ namespace ChoETL
                     {
                         if (ft == typeof(DateTime))
                         {
-                            //fv.Add(new DateTimeOffset(rec[key], TimeSpan.Zero));
-                            DateTime dt;
-                            if (rec[key] is DateTime)
-                                dt = rec[key];
-                            else
+                            if (rec[key] == null)
+                                fv.Add(null);
+                            else if (rec[key] is DateTime)
                             {
-                                DateTime.TryParse(ChoUtility.ToNString((object)rec[key]), out dt);
+                                if (ChoTypeConverterFormatSpec.Instance.DateTimeFormat.IsNullOrWhiteSpace())
+                                    fv.Add(ChoUtility.ToNString((DateTime)rec[key]));
+                                else
+                                    fv.Add(((DateTime)rec[key]).ToString(ChoTypeConverterFormatSpec.Instance.DateTimeFormat));
                             }
-                            DateTimeOffset dto = ToDateTimeOffset(dt);
-                            fv.Add(dto);
+                            else
+                                fv.Add(ChoUtility.ToNString((object)rec[key]).ToString());
+
+                            ////fv.Add(new DateTimeOffset(rec[key], TimeSpan.Zero));
+                            //DateTime dt;
+                            //if (rec[key] is DateTime)
+                            //    dt = rec[key];
+                            //else
+                            //{
+                            //    DateTime.TryParse(ChoUtility.ToNString((object)rec[key]), out dt);
+                            //}
+                            //DateTimeOffset dto = ToDateTimeOffset(dt);
+                            //fv.Add(dto);
                         }
                         else if (ft == typeof(TimeSpan))
                         {
