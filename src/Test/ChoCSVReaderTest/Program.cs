@@ -5634,11 +5634,81 @@ PREPAID US, , US24, WOLONG US LRD, , , , JEMA MOTORS AND AUTOMATION,10827 ELGAR 
                     w.Write(r);
             }
         }
+        public static void Issue259()
+        {
+            Console.WriteLine(typeof(ChoCSVReader).GetAssemblyVersion());
+
+            string csv = @"CapCode,CapId,Manufacturer,ShortModel,Model,ModelIntroduced,ModelDiscontinued,ShortDerivative,Derivative,DerivativeIntroducedYear,DerivativeDiscontinuedYear,AvailableNewVehicle,VehicleType
+AAAD019  SC A    CXB,18723,ADIVA,AD1,AD1 200 (20-21),2020,,,AD1 200 (2020-2021),2020,,True,
+CMMV090RIQU A    HZO,21416,CAN-AM,MAVERICK,MAVERICK X RS SAS TURBO RR,2022,,,""Maverick X RS SAS Turbo RR Intense Blue, Carbon Bl"",2022,,True,";
+
+            foreach (var rec in ChoCSVReader<CapVehicleCodeDesc>.LoadText(csv)
+                     .WithFirstLineHeader().MayHaveQuotedFields()
+                    )
+            {
+                rec.Print();
+            }
+        }
+
+        public class CapVehicleCodeDesc
+        {
+            [ChoCSVRecordField]
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public string CapCode { get; set; }
+
+            [ChoCSVRecordField]
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public int CapId { get; set; }
+
+            [ChoCSVRecordField]
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public string Manufacturer { get; set; }
+
+            [ChoCSVRecordField]
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public string ShortModel { get; set; }
+
+            [ChoCSVRecordField]
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public string Model { get; set; }
+
+            [ChoCSVRecordField]
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public int? ModelIntroduced { get; set; }
+
+            [ChoCSVRecordField]
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public int? ModelDiscontinued { get; set; }
+
+            [ChoCSVRecordField]
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public string ShortDerivative { get; set; }
+
+            [ChoCSVRecordField(QuoteField = false)]
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public string Derivative { get; set; }
+
+            [ChoCSVRecordField]
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public int? DerivativeIntroducedYear { get; set; }
+
+            [ChoCSVRecordField]
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public int? DerivativeDiscontinuedYear { get; set; }
+
+            [ChoCSVRecordField]
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public string AvailableNewVehicle { get; set; }
+
+            [ChoCSVRecordField]
+            [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+            public string VehicleType { get; set; }
+        }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            DuplicateNameInDynamicModeTest();
+            Issue259();
             return;
 
             ReadMixedCSVRecords();
