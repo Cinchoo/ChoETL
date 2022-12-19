@@ -689,8 +689,8 @@ namespace ChoETL
 
         private string[] GetFieldValues(string line)
         {
-            if ((Configuration.QuoteAllFields != null && Configuration.QuoteAllFields.Value) || !Configuration.CSVRecordFieldConfigurations.Any(f => f.QuoteField != null && f.QuoteField.Value))
-                return line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, !Configuration.QuoteAllFields.GetValueOrDefault(false) ? ChoCharEx.NUL : Configuration.QuoteChar, Configuration.QuoteEscapeChar);
+            if ((Configuration.QuoteAllFields != null && Configuration.QuoteAllFields.Value) || Configuration.CSVRecordFieldConfigurations.Any(f => f.QuoteField != null && f.QuoteField.Value))
+                return line.Split(Configuration.Delimiter, Configuration.StringSplitOptions, Configuration.QuoteChar, Configuration.QuoteEscapeChar);
             else
             {
                 List<string> fvs = new List<string>();
