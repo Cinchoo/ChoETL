@@ -35,6 +35,11 @@ namespace ChoETL
         internal readonly Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>> JSONRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>>();
         internal readonly Dictionary<Type, Func<object, object>> NodeConvertersForType = new Dictionary<Type, Func<object, object>>();
 
+        public Func<string, bool> IsNodeCanBeArray
+        {
+            get;
+            set;
+        }
         public Func<string, string, string> NestedKeyResolver
         {
             get;
@@ -215,10 +220,15 @@ namespace ChoETL
 
         internal bool IsArray(ChoJSONRecordFieldConfiguration fc)
         {
-            if (fc == null || fc.IsArray == null)
-                return DefaultArrayHandling == null ? false : DefaultArrayHandling.Value;
+            if (IsNodeCanBeArray == null)
+            {
+                if (fc == null || fc.IsArray == null)
+                    return DefaultArrayHandling == null ? false : DefaultArrayHandling.Value;
+                else
+                    return fc.IsArray.Value;
+            }
             else
-                return fc.IsArray.Value;
+                return IsNodeCanBeArray(fc.FieldName);
         }
 
         private readonly Lazy<List<JsonConverter>> _JSONConverters;
@@ -287,6 +297,7 @@ namespace ChoETL
             set;
         }
         public bool EnableXmlAttributePrefix { get; set; }
+        public bool KeepNSPrefix { get; set; }
         public Func<Type, MemberInfo, string, bool?> IgnoreProperty;
         public Func<Type, MemberInfo, string, string> RenameProperty;
         public Action<Type, MemberInfo, string, JsonProperty> RemapJsonProperty;

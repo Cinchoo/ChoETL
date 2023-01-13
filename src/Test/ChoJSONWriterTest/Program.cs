@@ -542,7 +542,7 @@ namespace ChoJSONWriterTest
 
         static void XmlWithXData2JSON()
         {
-            string json  = @"{
+            string json = @"{
       ""d1"": ""test"",
       ""d2"": ""test@1234"",
       ""xmltestData"": ""<![CDATA[<Invoices><key>we</key></Invoices>]]>"",
@@ -673,17 +673,17 @@ namespace ChoJSONWriterTest
                 });
             }
 
-                //string json = ChoJSONWriter.Serialize(new Account1
-                //{
-                //    Email = "james@example.com",
-                //    Active = true,
-                //    Roles = new List<string>()
-                //    {
-                //        "DEV",
-                //        "OPS"
-                //    }
+            //string json = ChoJSONWriter.Serialize(new Account1
+            //{
+            //    Email = "james@example.com",
+            //    Active = true,
+            //    Roles = new List<string>()
+            //    {
+            //        "DEV",
+            //        "OPS"
+            //    }
 
-                //}, new ChoJSONRecordConfiguration<Account>().Ignore(f => f.Email));
+            //}, new ChoJSONRecordConfiguration<Account>().Ignore(f => f.Email));
 
             Console.WriteLine(json);
         }
@@ -1100,7 +1100,7 @@ namespace ChoJSONWriterTest
                         {
                             var v = JObject.FromObject(location, config.JsonSerializer);
                             if (v != null)
-                            jLocations.Add(v);
+                                jLocations.Add(v);
                         }
 
                         jLocationList.Add("Items", jLocations);
@@ -1388,7 +1388,7 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
                    )
             {
                 using (var w = new ChoJSONWriter(Console.Out)
-                       //.UseJsonSerialization()
+                      //.UseJsonSerialization()
                       )
                     w.Write(r);
             }
@@ -1572,7 +1572,7 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
                     NamingStrategy = new CamelCaseNamingStrategy()
                 })
                 .JsonSerializationSettings(s => s.ReferenceLoopHandling = ReferenceLoopHandling.Ignore)
-                .WithField(f => f.Data, m => m.Value.ContractResolver = new DefaultContractResolver() )
+                .WithField(f => f.Data, m => m.Value.ContractResolver = new DefaultContractResolver())
                 )
                 w.Write(dto);
         }
@@ -1608,11 +1608,11 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
 
             json.Print();
 
-//            json.Append(@"[
-//  {
-//    ""foo"": ""bar""
-//  }
-//]");
+            //            json.Append(@"[
+            //  {
+            //    ""foo"": ""bar""
+            //  }
+            //]");
             using (var r = ChoJSONReader<JsonModel>.LoadText(json.ToString()))
             {
                 r.Print();
@@ -1651,10 +1651,107 @@ Stephen,Tyler,""7452 Terrace """"At the Plaza"""" road"",SomeTown,SD, 91234
                 }
             }
         }
+        public static void Xml2JSON2()
+        {
+            typeof(ChoJSONReader).GetAssemblyVersion().Print();
+            typeof(ChoXmlReader).GetAssemblyVersion().Print();
+            "".Print();
+
+            string xml = @"<notifications xmlns=""http://soap.sforce.com/2005/09/outbound"">
+              <OrganizationId>123</OrganizationId>
+              <ActionId>123</ActionId>
+              <SessionId xsi:nil=""true"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""/>
+              <EnterpriseUrl>qwe</EnterpriseUrl>
+              <PartnerUrl>qwe</PartnerUrl>
+              <Notification>
+                <Id>123</Id>
+                <sf:sObject xsi:type=""sf:Opportunity"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:sf=""urn:sobject.enterprise.soap.sforce.com"">
+                  <sf:Id>ao123</sf:Id>  
+                  <sf:Amount>60000.0</sf:Amount>
+                  <sf:CreatedDate>2014-11-26T14:45:52.000Z</sf:CreatedDate>
+                  <sf:IsClosed>false</sf:IsClosed>
+                </sf:sObject>
+                <sf:sObject xsi:type=""sf:Opportunity"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:sf=""urn:sobject.enterprise.soap.sforce.com"">
+                  <sf:Id>bo123</sf:Id>  
+                  <sf:Amount>60000.0</sf:Amount>
+                  <sf:CreatedDate>2014-11-26T14:45:52.000Z</sf:CreatedDate>
+                  <sf:IsClosed>false</sf:IsClosed>
+                </sf:sObject>
+              </Notification>
+            </notifications>";
+            //string xml = @"
+            //<sf:sObject xsi:type=""sf:Opportunity"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:sf=""urn:sobject.enterprise.soap.sforce.com"">
+            //  <sf:Id>ao123</sf:Id>  
+            //  <sf:Amount>60000.0</sf:Amount>
+            //  <sf:CreatedDate>2014-11-26T14:45:52.000Z</sf:CreatedDate>
+            //  <sf:IsClosed>false</sf:IsClosed>
+            //</sf:sObject>";
+
+            //using (var r = ChoXmlReader.LoadText(xml)
+            //   .WithXPath("/")
+            //   .WithXmlNamespace("", "http://soap.sforce.com/2005/09/outbound")
+            //   .WithXmlNamespace("sf", "urn:sobject.enterprise.soap.sforce.com")
+            //   .WithXmlNamespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")
+            //   )
+            //{
+            //    var rec = r.FirstOrDefault();
+            //    //rec.Print();
+            //    //return;
+
+            //    using (var w = new ChoXmlWriter(Console.Out)
+            //        .IgnoreRootName()
+            //        .WithXmlNamespace("", "http://soap.sforce.com/2005/09/outbound")
+            //        .WithXmlNamespace("sf", "urn:sobject.enterprise.soap.sforce.com")
+            //       .WithXmlNamespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")
+            //        .Configure(c => c.IncludeSchemaInstanceNodes = true)
+            //        .Configure(c => c.NullValueHandling = ChoNullValueHandling.Null)
+            //        .Configure(c => c.OmitXsiNamespace = false)
+            //        )
+            //    {
+            //        //rec.SessionId = new ChoDynamicObject();
+            //        //rec.SessionId.SetAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+            //        //rec.SessionId.SetAttribute("xsi:nil", "true");
+            //        w.Write(rec);
+            //    }
+            //}
+            //return;
+
+            using (var r = ChoXmlReader.LoadText(xml)
+                   .WithXPath("/")
+                   .WithXmlNamespace("", "http://soap.sforce.com/2005/09/outbound")
+                   .WithXmlNamespace("sf", "urn:sobject.enterprise.soap.sforce.com")
+                   )
+            {
+                //var rec = r.FirstOrDefault();
+                //rec.Print();
+                //return;
+                using (var w = new ChoCSVWriter(Console.Out)
+                    .WithFirstLineHeader()
+                    )
+                {
+                    w.Write(r);
+                }
+                return;
+                using (var w = new ChoJSONWriter(Console.Out)
+                    .SupportMultipleContent(true)
+                    .Configure(c => c.IsNodeCanBeArray = fn =>
+                    {
+                        return false;
+                    })
+                    .Configure(c => c.KeepNSPrefix = false)
+                    )
+                {
+                    w.Write(r);
+                }
+            }
+        }
 
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+            Xml2JSON2();
+            return;
+
             XmlToKeyValueJSON();
 
             return;

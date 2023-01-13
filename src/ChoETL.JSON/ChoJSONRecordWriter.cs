@@ -1007,7 +1007,7 @@ namespace ChoETL
                         Configuration.JsonSerializer.ContractResolver = contractResolver;
 
                     return Configuration.JsonSerializer.SerializeToJToken(target, Configuration.Formatting, Configuration.JsonSerializerSettings,
-                        enableXmlAttributePrefix: Configuration.EnableXmlAttributePrefix).JTokenToString();
+                        enableXmlAttributePrefix: Configuration.EnableXmlAttributePrefix, keepNSPrefix: Configuration.KeepNSPrefix).JTokenToString();
                 }
                 finally
                 {
@@ -1079,13 +1079,21 @@ namespace ChoETL
                 {
                     ChoDynamicObject dobj = source as ChoDynamicObject;
 
+                    string newKey;
                     dict = new Dictionary<string, object>();
                     foreach (var kvp in dobj)
                     {
+                        newKey = kvp.Key;
+                        if (!Configuration.KeepNSPrefix)
+                        {
+                            if (newKey.IndexOf(":") > 0)
+                                newKey = newKey.Substring(newKey.IndexOf(":") + 1);
+                        }
+
                         if (dobj.IsAttribute(kvp.Key) && Configuration.EnableXmlAttributePrefix)
-                            dict.Add("@{0}".FormatString(kvp.Key), kvp.Value);
+                            dict.Add("@{0}".FormatString(newKey), kvp.Value);
                         else
-                            dict.Add(kvp.Key, kvp.Value);
+                            dict.Add(newKey, kvp.Value);
                     }
                 }
                 else if (source is IDictionary<string, object>)

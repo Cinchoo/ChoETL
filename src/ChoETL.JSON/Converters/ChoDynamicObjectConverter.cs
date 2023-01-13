@@ -30,8 +30,10 @@ namespace ChoETL
             {
                 dynamic ctx = serializer.Context.Context;
                 bool enableXmlAttributePrefix = ctx != null && ctx.EnableXmlAttributePrefix != null ? ctx.EnableXmlAttributePrefix : false;
+                bool keepNSPrefix = ctx != null && ctx.keepNSPrefix != null ? ctx.keepNSPrefix : false;
 
-                var obj = enableXmlAttributePrefix ? (value as ChoDynamicObject).AsXmlDictionary() : (value as ChoDynamicObject).AsDictionary();
+                var obj = enableXmlAttributePrefix ? (value as ChoDynamicObject).AsXmlDictionary() : 
+                    (value as ChoDynamicObject).AsDictionary(keepNSPrefix);
                 
                 var config = Context.Configuration as ChoJSONRecordConfiguration;
                 if (config != null && config.IgnoreFieldValueMode != null)

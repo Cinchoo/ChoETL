@@ -1535,9 +1535,9 @@ namespace ChoETL
 
                 foreach (var kvp in NSDict.Where(kvp1 => !kvp1.Key.IsNullOrWhiteSpace()))
                 {
-                    if (!config.DoNotEmitXmlNamespace && kvp.Key == "xml")
+                    if (kvp.Key == "xml" && config.DoNotEmitXmlNamespace)
                         continue;
-                    if (config.OmitXsiNamespace && kvp.Key == "xsi")
+                    if (kvp.Key == "xsi" && config.OmitXsiNamespace)
                         continue;
 
                     if (kvp.Key.Contains(":"))

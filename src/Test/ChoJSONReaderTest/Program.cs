@@ -8605,7 +8605,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                     myKey = r1.myKey,
                     username = r1.username,
                     player = r2
-                })).AsDataTable().Print() ;
+                })).AsDataTable().Print();
 
             }
         }
@@ -8921,7 +8921,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
             public string Name { get; private set; }
             public string EmailAddress { get; private set; }
             public IReadOnlyCollection<Substitution> Substitutions => _substitutions.AsReadOnly();
-          
+
             [JsonConstructor]
             public Recipient(string name, string emailAddress, List<Substitution> substitutions)
             {
@@ -9723,7 +9723,7 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 Name = "Tom",
                 Age = 10,
                 PostalAddress = new DynAddress
-                { 
+                {
                     Number = "10",
                     Street = "Main St.",
                     City = "New York",
@@ -9837,10 +9837,160 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 r.Flatten(true).AsDataTable().Print();
             }
         }
+
+        public class RandomNumberRoot
+        {
+            [ChoJSONPath("$~*")] //json path to capture keys
+            public string[] Keys { get; set; }
+
+            [ChoJSONPath("$^*")] //json path to capture values
+            public RandomNumberData[] Values { get; set; }
+        }
+
+        public class RandomNumberData
+        {
+            public string id { get; set; }
+            public int t { get; set; }
+            public int tn { get; set; }
+            public string tid { get; set; }
+            public string txzone { get; set; }
+            public string sth { get; set; }
+            public string stv { get; set; }
+            public string slu { get; set; }
+            public string slht { get; set; }
+            public string iu { get; set; }
+            public string iti { get; set; }
+            public string ide { get; set; }
+            public string ish { get; set; }
+            public string isv { get; set; }
+            public string it { get; set; }
+            public string ic { get; set; }
+            public string isp { get; set; }
+            public string il { get; set; }
+            public string idi { get; set; }
+            public string ilu { get; set; }
+            public int tod_h { get; set; }
+            public int tod_v { get; set; }
+            public int cur_online { get; set; }
+            public string tot_v { get; set; }
+            public string tot_h { get; set; }
+            public string last_hits { get; set; }
+        }
+
+        static void Issue260()
+        {
+            string json = @"{
+  ""random_number1"": {
+    ""t"": 100800,
+    ""tn"": 1671933005,
+    ""tid"": ""279"",
+    ""txzone"": ""Asia/Tbilisi"",
+    ""sth"": ""450228"",
+    ""stv"": ""203986"",
+    ""slu"": ""1587888024"",
+    ""slht"": ""1656684260"",
+    ""iu"": ""test"",
+    ""iti"": ""testtest"",
+    ""ide"": "".."",
+    ""ish"": ""0"",
+    ""isv"": ""0"",
+    ""it"": ""0"",
+    ""ic"": ""23"",
+    ""isp"": ""1"",
+    ""il"": ""0"",
+    ""idi"": ""1587888024"",
+    ""ilu"": ""1587888024"",
+    ""tod_h"": 0,
+    ""tod_v"": 0,
+    ""cur_online"": 0,
+    ""tot_v"": ""203986"",
+    ""tot_h"": ""450228"",
+    ""last_hits"": ""1656684260""
+  },
+  ""random_number2"": {
+    ""t"": 3343566,
+    ""tn"": 4444456,
+    ""tid"": ""279"",
+    ""txzone"": ""Asia/Tbilisi"",
+    ""sth"": ""453456"",
+    ""stv"": ""664"",
+    ""slu"": ""1587888024"",
+    ""slht"": ""1656684260"",
+    ""iu"": ""test"",
+    ""iti"": ""testtest"",
+    ""ide"": "".."",
+    ""ish"": ""0"",
+    ""isv"": ""0"",
+    ""it"": ""0"",
+    ""ic"": ""23"",
+    ""isp"": ""1"",
+    ""il"": ""0"",
+    ""idi"": ""1587888024"",
+    ""ilu"": ""1587888024"",
+    ""tod_h"": 0,
+    ""tod_v"": 0,
+    ""cur_online"": 0,
+    ""tot_v"": ""203986"",
+    ""tot_h"": ""450228"",
+    ""last_hits"": ""1656684260""
+  },
+}";
+            using (var r = ChoJSONReader<RandomNumberRoot>.LoadText(json)
+                )
+            {
+                using (var w = new ChoCSVWriter<RandomNumberData>(Console.Out)
+                    .WithFirstLineHeader())
+                {
+                    var recs = r.Select(rec => rec.Keys.Zip(rec.Values, (k, v) =>
+                    {
+                        v.id = k;
+                        return v;
+                    })).SelectMany(t => t);
+
+                    w.Write(recs);
+                }
+            }
+        }
+
+        static void Issue263()
+        {
+            string json = @"{
+  ""BATCH_CODE"": [ ""1"", ""2"" ],
+  ""WIP_CODE"": []
+}";
+            StringBuilder csv = new StringBuilder();
+            using (var r = ChoJSONReader.LoadText(json)) 
+            { 
+                using (var w = new ChoCSVWriter(csv)
+                    .Configure(c => c.NestedColumnSeparator = '/')
+                    .Configure(c => c.ArrayIndexSeparator = '_')
+                    .WithFirstLineHeader()) 
+                { 
+                    w.Write(r); 
+                } 
+            }
+
+            csv.Print();
+
+            using (var r = ChoCSVReader.LoadText(csv.ToString())
+                    .Configure(c => c.NestedColumnSeparator = '/')
+                    .Configure(c => c.ArrayIndexSeparator = '_')
+                .WithFirstLineHeader())
+            {
+                using (var w = new ChoJSONWriter(Console.Out)
+                    .SupportMultipleContent()
+                    .SingleElement()
+                    )
+                {
+                    w.Write(r);
+                }
+            }
+        }
+
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            Issue240();
+            Issue263();
             return;
 
             Issue235();

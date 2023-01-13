@@ -917,7 +917,7 @@ namespace ChoETL
         }
 
         public static JToken SerializeToJToken(this JsonSerializer serializer, object value, Formatting? formatting = null, JsonSerializerSettings settings = null,
-            bool dontUseConverter = false, bool enableXmlAttributePrefix = false)
+            bool dontUseConverter = false, bool enableXmlAttributePrefix = false, bool keepNSPrefix = false)
         {
             JsonConverter conv = null;
             if (!dontUseConverter)
@@ -981,6 +981,7 @@ namespace ChoETL
 
                 dynamic ctx = settings.Context.Context;
                 ctx.EnableXmlAttributePrefix = enableXmlAttributePrefix;
+                ctx.KeepNSPrefix = keepNSPrefix;
             }
 
             if (conv != null)

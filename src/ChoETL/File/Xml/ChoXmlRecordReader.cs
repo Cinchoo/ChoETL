@@ -638,6 +638,7 @@ namespace ChoETL
             long lineNo;
             XElement node;
             string key = null;
+            string newKey = null;
             bool isXmlAttribute = false;
             string nsPrefix = !Configuration.NamespaceManager.DefaultNamespace.IsNullOrWhiteSpace() ? GetDefaultNSPrefix() : null;
 
@@ -654,7 +655,11 @@ namespace ChoETL
             object rootRec = rec;
 
             if (rec is ChoDynamicObject)
-                ((ChoDynamicObject)rec).DynamicObjectName = node.Name.LocalName;
+            {
+                var nsPrefix1 = Configuration.XmlNamespaceManager.Value.GetNamespacePrefix(node.Name.Namespace.ToString());
+                ((ChoDynamicObject)rec).DynamicObjectName = nsPrefix1.IsNullOrWhiteSpace() ? node.Name.LocalName : $"{nsPrefix1}:{node.Name.LocalName}";
+                ((ChoDynamicObject)rec).SetNSPrefix(nsPrefix1);
+            }
             foreach (KeyValuePair<string, ChoXmlRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict)
             {
                 if (!Configuration.SupportsMultiRecordTypes && Configuration.IsDynamicObject)
@@ -663,7 +668,7 @@ namespace ChoETL
                         continue;
                 }
 
-                key = kvp.Key;
+                newKey = key = kvp.Key;
                 isXmlAttribute = false;
                 fieldValue = null;
                 fieldConfig = kvp.Value;
@@ -697,6 +702,11 @@ namespace ChoETL
                             if (dobj == null || !dobj.HasText())
                                 continue;
 
+                            if (dobj is ChoDynamicObject dynamicObj)
+                            {
+                                newKey = dynamicObj.DynamicObjectName;
+                            }
+
                             fieldValue = dobj.GetText();
                         }
                         else
@@ -707,7 +717,6 @@ namespace ChoETL
                 }
                 else
                 {
-
                     if (fieldConfig.IsXPathSet || !xDict.ContainsKey(fieldConfig.FieldName)) //*!fieldConfig.UseCache && */!xDict.ContainsKey(fieldConfig.FieldName))
                     {
                         xNodes.Clear();
@@ -837,7 +846,8 @@ namespace ChoETL
                                                 {
                                                     if (itemType == typeof(ChoDynamicObject))
                                                         list.Add(Normalize(ele.ToDynamic(Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative,
-                                                            defaultNSPrefix: Configuration.DefaultNamespacePrefix, nsMgr: Configuration.XmlNamespaceManager.Value)));
+                                                            defaultNSPrefix: Configuration.DefaultNamespacePrefix, nsMgr: Configuration.XmlNamespaceManager.Value,
+                                                            turnOffPluralization: Configuration.IsTurnOffPluralization(fieldConfig))));
                                                     else
                                                         list.Add(Normalize(ele.ToObjectFromXml(itemType, GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace, Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative,
                                                             defaultNSPrefix: Configuration.DefaultNamespacePrefix,
@@ -857,8 +867,17 @@ namespace ChoETL
                                         }
                                         else
                                         {
+                                            var dobj = list.OfType<ChoDynamicObject>().FirstOrDefault();
                                             if (key.IsSingular())
-                                                key = key.ToPlural();
+                                            {
+                                                if (!Configuration.IsTurnOffPluralization(fieldConfig))
+                                                    key = key.ToPlural();
+                                            }
+                                            if (key.IndexOf(":") < 0)
+                                            {
+                                                if (dobj != null && !dobj.GetNSPrefix().IsNullOrWhiteSpace())
+                                                    key = $"{dobj.GetNSPrefix()}:{key}";
+                                            }
                                         }
                                     }
                                     else
@@ -872,16 +891,22 @@ namespace ChoETL
                                                 if (fieldConfig.ItemConverter != null)
                                                     fieldValue = fieldConfig.ItemConverter(fXElements[0]);
                                                 else
+                                                {
                                                     fieldValue = fXElements[0].ToObjectFromXml(typeof(ChoDynamicObject),
                                                         GetXmlOverrides(fieldConfig), Configuration.XmlSchemaNamespace, Configuration.JSONSchemaNamespace,
-                                                        Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative, 
-                                                        defaultNSPrefix: Configuration.DefaultNamespacePrefix, 
-                                                        NS: Configuration.GetFirstDefaultNamespace(), 
-                                                        nsMgr: Configuration.XmlNamespaceManager.Value, 
+                                                        Configuration.EmptyXmlNodeValueHandling, Configuration.RetainXmlAttributesAsNative,
+                                                        defaultNSPrefix: Configuration.DefaultNamespacePrefix,
+                                                        NS: Configuration.GetFirstDefaultNamespace(),
+                                                        nsMgr: Configuration.XmlNamespaceManager.Value,
                                                         pd: fieldConfig == null ? null : fieldConfig.PD,
                                                         useProxy: Configuration.ShouldUseProxy(fieldConfig),
                                                         config: Configuration);
 
+                                                    if (fieldValue is ChoDynamicObject dynamicObj)
+                                                    {
+                                                        newKey = dynamicObj.DynamicObjectName;
+                                                    }
+                                                }
                                                 fieldValue = Normalize(fieldValue);
                                             }
                                             else
@@ -975,6 +1000,11 @@ namespace ChoETL
                                                             pd: fieldConfig == null ? null : fieldConfig.PD,
                                                             useProxy: Configuration.ShouldUseProxy(fieldConfig),
                                                             config: Configuration));
+
+                                                        if (fieldValue is ChoDynamicObject dynamicObj)
+                                                        {
+                                                            newKey = dynamicObj.DynamicObjectName;
+                                                        }
                                                     }
                                                 }
                                             }
@@ -1167,15 +1197,21 @@ namespace ChoETL
                                             if (key1 == firstName)
                                                 key1 = "{0}s".FormatString(firstName);
                                         }
+                                        if (key1.IndexOf(":") < 0)
+                                        {
+                                            var dobj = objs.OfType<ChoDynamicObject>().FirstOrDefault();
+                                            if (dobj != null && !dobj.GetNSPrefix().IsNullOrWhiteSpace())
+                                                key1 = $"{dobj.GetNSPrefix()}:{key1}";
+                                        }
                                         dict.ConvertNSetMemberValue(key1, kvp.Value, ref fieldValue, Configuration.Culture, config: Configuration);
                                     }
                                     else
                                     {
-                                        dict.ConvertNSetMemberValue(key, kvp.Value, ref fieldValue, Configuration.Culture, config: Configuration);
+                                        dict.ConvertNSetMemberValue(newKey, kvp.Value, ref fieldValue, Configuration.Culture, config: Configuration);
                                     }
                                 }
                                 else
-                                    dict.ConvertNSetMemberValue(key, kvp.Value, ref fieldValue, Configuration.Culture, config: Configuration);
+                                    dict.ConvertNSetMemberValue(newKey, kvp.Value, ref fieldValue, Configuration.Culture, config: Configuration);
                             }
                         }
                         else

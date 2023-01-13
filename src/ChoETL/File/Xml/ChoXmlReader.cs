@@ -87,10 +87,10 @@ namespace ChoETL
                                 Configuration.NamespaceManager.AddNamespace(kvp.Key, kvp.Value);
                             }
                         }
-                        if (!Configuration.NamespaceManager.HasNamespace("xsi"))
-                            Configuration.NamespaceManager.AddNamespace("xsi", ChoXmlSettings.XmlSchemaInstanceNamespace);
-                        if (!Configuration.NamespaceManager.HasNamespace("xsd"))
-                            Configuration.NamespaceManager.AddNamespace("xsd", ChoXmlSettings.XmlSchemaNamespace);
+                        //if (!Configuration.NamespaceManager.HasNamespace("xsi"))
+                        //    Configuration.NamespaceManager.AddNamespace("xsi", ChoXmlSettings.XmlSchemaInstanceNamespace);
+                        //if (!Configuration.NamespaceManager.HasNamespace("xsd"))
+                        //    Configuration.NamespaceManager.AddNamespace("xsd", ChoXmlSettings.XmlSchemaNamespace);
                     }
 
                     return XmlReader.Create(_textReader.Value,

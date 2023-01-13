@@ -1339,7 +1339,8 @@ namespace ChoETL
             {
                 if (defaultNSPrefix.IsNullOrWhiteSpace())
                 {
-                    e = value == null ? new XElement(name) : !isXmlValue.Value ? new XElement(name, value) : new XElement(name, XElement.Parse(value.ToNString()));
+                    ns = nsMgr.GetNamespaceForPrefix("");
+                    e = value == null ? new XElement(ns + name) : !isXmlValue.Value ? new XElement(ns + name, value) : new XElement(ns + name, XElement.Parse(value.ToNString()));
                 }
                 else
                 {
@@ -1361,7 +1362,7 @@ namespace ChoETL
 
             if (ns != null)
             {
-                var nsAttr = new XAttribute(XNamespace.Xmlns + prefix, ns);
+                var nsAttr = prefix.IsNullOrWhiteSpace() ? new XAttribute("xmlns", ns) : new XAttribute(XNamespace.Xmlns + prefix, ns);
                 e.Add(nsAttr);
                 e.Name = ns + e.Name.LocalName;
             }
@@ -1373,7 +1374,9 @@ namespace ChoETL
                 {
                     try
                     {
-                        var nsAttr = new XAttribute(XNamespace.Xmlns + kvp.Key, kvp.Value);
+                        var nsAttr = kvp.Key.IsNullOrWhiteSpace() ? 
+                            new XAttribute("xmlns", kvp.Value) : 
+                            new XAttribute(XNamespace.Xmlns + (kvp.Key.IsNullOrWhiteSpace() ? "x" : kvp.Key), kvp.Value);
                         e.Add(nsAttr);
                     }
                     catch { }

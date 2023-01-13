@@ -36,4 +36,4 @@ using System.Security;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.2.1.51")] 
 [assembly: AssemblyFileVersion("1.2.1.51")]
-[assembly: ChoAssemblyBetaVersion("beta4")]
+[assembly: ChoAssemblyBetaVersion("beta5")]

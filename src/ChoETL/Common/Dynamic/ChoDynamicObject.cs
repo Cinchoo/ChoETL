@@ -198,11 +198,23 @@ namespace ChoETL
             set;
         }
 
+        private string _dynamicObjectName;
         [ChoIgnoreMember]
         public virtual string DynamicObjectName
         {
-            get;
-            set;
+            get { return _dynamicObjectName; }
+            set
+            {
+                if (!value.IsNullOrWhiteSpace() && value.IndexOf(":") > 0)
+                {
+                    if (value.Substring(0, value.IndexOf(":")) == ChoXmlNamespaceManager.DefaultNSToken)
+                    {
+                        _dynamicObjectName = value.Substring(value.IndexOf(":") + 1);
+                        return;
+                    }
+                }
+                _dynamicObjectName = value;
+            }
         }
         [ChoIgnoreMember]
         public int PollIntervalInSec
@@ -781,8 +793,11 @@ namespace ChoETL
             if (IsReadOnly)
                 return false;
 
-            if (!_prefix.IsNullOrWhiteSpace() && !name.StartsWith("@xmlns:", StringComparison.InvariantCultureIgnoreCase))
-                name = "{0}:{1}".FormatString(_prefix, name);
+            if (name != ChoDynamicObjectSettings.XmlValueToken && name.IndexOf(":") < 0)
+            {
+                if (!_prefix.IsNullOrWhiteSpace() && !name.StartsWith("@xmlns:", StringComparison.InvariantCultureIgnoreCase))
+                    name = "{0}:{1}".FormatString(_prefix, name);
+            }
 
             IDictionary<string, object> kvpDict = _kvpDict;
             if (kvpDict != null)
@@ -1358,10 +1373,24 @@ namespace ChoETL
                 EOLDelimiter = Environment.NewLine;
 
             if (nsPrefix.IsNullOrWhiteSpace())
-                nsPrefix = String.Empty;
+                nsPrefix = _prefix;
 
             if (tag.IsNullOrWhiteSpace())
-                tag = NName;
+            {
+                tag = nsPrefix.IsNullOrWhiteSpace() ? NName : $"{nsPrefix}:{NName}";
+            }
+            else
+            {
+                if (tag.IndexOf(":") < 0)
+                {
+                    tag = nsPrefix.IsNullOrWhiteSpace() ? tag : $"{nsPrefix}:{tag}";
+                }
+                else
+                    nsPrefix = tag.Substring(0, tag.IndexOf(":"));
+            }
+
+            if (!nsPrefix.IsNullOrWhiteSpace() && nsMgr.GetNamespaceForPrefix(nsPrefix) == null)
+                return null;
 
             var obj = AsShallowDictionary();
             if (ignoreFieldValueMode != null)
@@ -1419,7 +1448,16 @@ namespace ChoETL
                     }
                 }
                 else
-                    msg.AppendFormat(@" {0}=""{1}""", key.StartsWith(_attributePrefix) ? key.Substring(1) : key, this[key]);
+                {
+                    var key1 = key.StartsWith(_attributePrefix) ? key.Substring(1) : key;
+                    if (key1.IndexOf(":") > 0)
+                    {
+                        var nsPrefix1 = key.Substring(0, key1.IndexOf(":"));
+                        if (nsMgr.GetNamespaceForPrefix(nsPrefix1) == null)
+                            continue;
+                    }
+                    msg.AppendFormat(@" {0}=""{1}""", key1, this[key1]);
+                }
             }
 
             if (ContainsKey(ChoDynamicObjectSettings.XmlValueToken))
@@ -1450,6 +1488,10 @@ namespace ChoETL
                 msg.AppendFormat(">");
                 foreach (string key in obj.Keys.Where(k => !IsAttribute(k)))
                 {
+                    string nsPrefix1 = key.IndexOf(":") < 0 ? _prefix : key.Substring(0, key.IndexOf(":"));
+                    if (!nsPrefix1.IsNullOrWhiteSpace() && nsMgr.GetNamespaceForPrefix(nsPrefix1) == null)
+                        return null;
+
                     value = this[key];
                     var x = IsCDATA(key);
 
@@ -1840,7 +1882,8 @@ namespace ChoETL
         private string _prefix = null;
         public void SetNSPrefix(string prefix)
         {
-            _prefix = prefix;
+            if (prefix != ChoXmlNamespaceManager.DefaultNSToken)
+                _prefix = prefix;
         }
         public string GetNSPrefix()
         {
@@ -1945,16 +1988,27 @@ namespace ChoETL
             return dict;
         }
 
-        public IDictionary<string, object> AsDictionary()
+        public IDictionary<string, object> AsDictionary(bool keepNSPrefix = false)
         {
             var dict = _kvpDict.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            Dictionary<string, object> retDict = new Dictionary<string, object>();
+            string newKey = null;
             foreach (var key in dict.Keys.ToArray())
             {
+                newKey = key;
+                if (!keepNSPrefix)
+                {
+                    if (key.IndexOf(":") > 0)
+                        newKey = key.Substring(key.IndexOf(":") + 1);
+                }
+
                 if (dict[key] is ChoDynamicObject)
-                    dict[key] = ((ChoDynamicObject)dict[key]).AsDictionary();
+                    retDict.Add(newKey, ((ChoDynamicObject)dict[key]).AsDictionary(keepNSPrefix));
+                else
+                    retDict.Add(newKey, dict[key]);
             }
 
-            return dict;
+            return retDict;
         }
 
         public IDictionary<string, object> AsXmlDictionary()

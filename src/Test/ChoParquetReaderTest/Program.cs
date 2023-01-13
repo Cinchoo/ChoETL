@@ -109,7 +109,7 @@ namespace ChoParquetReaderTest
                     Id = 1,
                     Price = 1.3,
                     Quantity = 2.45,
-                    CreateDateTime = DateTime.Today,
+                    CreateDateTime = null,
                 });
             }
 
@@ -158,10 +158,36 @@ namespace ChoParquetReaderTest
             }
         }
 
+        static void Issue144()
+        {
+            string connectionString = @"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=C:\Temp\Northwind.MDF;Integrated Security=True;Connect Timeout=30";
+            SqlConnection conn = new SqlConnection(connectionString);
+            conn.Open();
+
+            SqlCommand command = new SqlCommand("SELECT * FROM Employees", conn);
+            using (var r = command.ExecuteReader(CommandBehavior.CloseConnection))
+            {
+                using (var parser = new ChoParquetWriter(@"C:\temp\emp.parquet")
+            .Configure(c => c.CompressionMethod = Parquet.CompressionMethod.Gzip)
+            .Configure(c => c.RowGroupSize = 1000)
+            .NotifyAfter(1000)
+            .OnRowsWritten((o, e) => $"Rows: {e.RowsWritten} <--- {DateTime.Now}".Print()))
+                {
+                    if (r.HasRows)
+                    {
+                        parser.Write(r);
+                    }
+                }
+            }
+
+
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
             WriteParquetWithNullableFields();
+            return;
+            Issue144();
             return;
             WriteParquetWithNullableFields();
         }
