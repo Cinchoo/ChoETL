@@ -378,7 +378,7 @@ namespace ChoETL
             IDictionary<string, object> dict = rec as IDictionary<string, object>;
             dynamic dict1 = new ChoDynamicObject(dict.ToDictionary(kvp => Configuration.RecordFieldConfigurationsDict[kvp.Key].FieldName, kvp => kvp.Value));
 
-            return dict1.ConvertToNestedObject(Configuration.NestedColumnSeparator == null ? '/' : Configuration.NestedColumnSeparator.Value, Configuration.ArrayIndexSeparator, null,
+            return dict1.ConvertToNestedObject(Configuration.NestedColumnSeparator == null ? '/' : Configuration.NestedColumnSeparator.Value, Configuration.ArrayIndexSeparator,
                  Configuration.AllowNestedArrayConversion);
         }
 
@@ -1126,16 +1126,7 @@ namespace ChoETL
         private bool RaiseMapColumn(object target, int colPos, string colName, out string newColName)
         {
             newColName = null;
-            if (Reader != null && Reader.HasMapColumnSubscribed)
-            {
-                string lnewColName = null;
-                bool retVal = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseMapColumn(colPos, colName, out lnewColName), false);
-                if (retVal)
-                    newColName = lnewColName;
-
-                return retVal;
-            }
-            else if (target is IChoCustomColumnMappable)
+            if (target is IChoCustomColumnMappable)
             {
                 bool retVal = false;
                 string lnewColName = null;
@@ -1151,6 +1142,15 @@ namespace ChoETL
                 retVal = ChoFuncEx.RunWithIgnoreError(() => _customColumnMappableRecord.MapColumn(colPos, colName, out lnewColName), false);
                 if (retVal)
                     newColName = lnewColName;
+                return retVal;
+            }
+            else if (Reader != null /*&& Reader.HasMapColumnSubscribed*/)
+            {
+                string lnewColName = null;
+                bool retVal = ChoFuncEx.RunWithIgnoreError(() => Reader.RaiseMapColumn(colPos, colName, out lnewColName), false);
+                if (retVal)
+                    newColName = lnewColName;
+
                 return retVal;
             }
             return false;
