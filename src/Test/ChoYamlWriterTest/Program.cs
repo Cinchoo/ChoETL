@@ -441,12 +441,11 @@ namespace ChoYamlWriterTest
 
             using (var r = ChoJSONReader.LoadText(json))
             {
-                //r.FirstOrDefault().config.add.Print();
-                //return;
+                dynamic d = new ChoDynamicObject();
+                d.plugins = r.ToArray();
+
                 using (var w = new ChoYamlWriter(Console.Out).ErrorMode(ChoErrorMode.IgnoreAndContinue))
                 {
-                    dynamic d = new ChoDynamicObject("PlugIns");
-                    d.PlugIns = r.ToArray();
                     w.Write(d);
                 }
             }

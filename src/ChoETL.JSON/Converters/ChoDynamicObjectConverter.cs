@@ -12,6 +12,13 @@ using System.Threading.Tasks;
 
 namespace ChoETL
 {
+    public interface IChoDynamicObjectRecordConfiguration
+    { 
+        ChoIgnoreFieldValueMode? IgnoreFieldValueMode { get; set; }
+        HashSet<string> IgnoredFields { get; set; }
+        object[] GetConvertersForType(Type fieldType);
+    }
+
     public class ChoDynamicObjectConverter : JsonConverter, IChoJSONConverter
     {
         public static readonly ChoDynamicObjectConverter Instance = new ChoDynamicObjectConverter();
@@ -35,7 +42,7 @@ namespace ChoETL
                 var obj = enableXmlAttributePrefix ? (value as ChoDynamicObject).AsXmlDictionary() : 
                     (value as ChoDynamicObject).AsDictionary(keepNSPrefix);
                 
-                var config = Context?.Configuration as ChoJSONRecordConfiguration;
+                var config = Context?.Configuration as IChoDynamicObjectRecordConfiguration;
                 if (config != null && config.IgnoreFieldValueMode != null)
                 {
                     _ignoreFields = config.IgnoredFields;
@@ -105,7 +112,7 @@ namespace ChoETL
         /// <returns>The object value.</returns>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            var config = Context?.Configuration as ChoJSONRecordConfiguration;
+            var config = Context?.Configuration as IChoDynamicObjectRecordConfiguration;
             if (config != null)
             {
                 _ignoreFields = config.IgnoredFields;
@@ -193,7 +200,7 @@ namespace ChoETL
                         if (itemType != null)
                         {
                             object[] convs = null;
-                            var config = Context?.Configuration as ChoJSONRecordConfiguration;
+                            var config = Context?.Configuration as IChoDynamicObjectRecordConfiguration;
                             if (config != null)
                             {
                                 convs = config.GetConvertersForType(itemType);

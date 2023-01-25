@@ -30,7 +30,7 @@ namespace ChoETL
     }
 
     [DataContract]
-    public class ChoJSONRecordConfiguration : ChoFileRecordConfiguration
+    public class ChoJSONRecordConfiguration : ChoFileRecordConfiguration, IChoDynamicObjectRecordConfiguration
     {
         internal readonly Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>> JSONRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoJSONRecordFieldConfiguration>>();
         internal readonly Dictionary<Type, Func<object, object>> NodeConvertersForType = new Dictionary<Type, Func<object, object>>();

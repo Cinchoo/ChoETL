@@ -22,7 +22,7 @@ using SharpYaml.Serialization.Serializers;
 namespace ChoETL
 {
     [DataContract]
-    public class ChoYamlRecordConfiguration : ChoFileRecordConfiguration
+    public class ChoYamlRecordConfiguration : ChoFileRecordConfiguration, IChoDynamicObjectRecordConfiguration
     {
         private readonly object _padLock = new object();
         internal readonly Dictionary<Type, Dictionary<string, ChoYamlRecordFieldConfiguration>> YamlRecordFieldConfigurationsForType = new Dictionary<Type, Dictionary<string, ChoYamlRecordFieldConfiguration>>();
