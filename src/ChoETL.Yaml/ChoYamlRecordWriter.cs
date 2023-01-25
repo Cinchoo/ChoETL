@@ -687,6 +687,8 @@ namespace ChoETL
                 object objValue = null;
                 if (isSimple)
                     objValue = fieldText;
+                else if (fieldValue is ChoDynamicObject)
+                    objValue = ((ChoDynamicObject)fieldValue).AsDictionary();
                 else
                 {
                     Writer.ContractResolverState = new ChoContractResolverState
