@@ -35,7 +35,7 @@ namespace ChoETL
                 var obj = enableXmlAttributePrefix ? (value as ChoDynamicObject).AsXmlDictionary() : 
                     (value as ChoDynamicObject).AsDictionary(keepNSPrefix);
                 
-                var config = Context.Configuration as ChoJSONRecordConfiguration;
+                var config = Context?.Configuration as ChoJSONRecordConfiguration;
                 if (config != null && config.IgnoreFieldValueMode != null)
                 {
                     _ignoreFields = config.IgnoredFields;
@@ -105,7 +105,7 @@ namespace ChoETL
         /// <returns>The object value.</returns>
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            var config = Context.Configuration as ChoJSONRecordConfiguration;
+            var config = Context?.Configuration as ChoJSONRecordConfiguration;
             if (config != null)
             {
                 _ignoreFields = config.IgnoredFields;
@@ -193,7 +193,7 @@ namespace ChoETL
                         if (itemType != null)
                         {
                             object[] convs = null;
-                            var config = Context.Configuration as ChoJSONRecordConfiguration;
+                            var config = Context?.Configuration as ChoJSONRecordConfiguration;
                             if (config != null)
                             {
                                 convs = config.GetConvertersForType(itemType);

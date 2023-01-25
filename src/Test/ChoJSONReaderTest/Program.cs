@@ -9980,7 +9980,10 @@ file1.json,1,Some Practice Name,Bob Lee,bob@gmail.com";
                 using (var w = new ChoJSONWriter(Console.Out)
                     .SupportMultipleContent()
                     .SingleElement()
-                    )
+ 				  // .WithField("BATCH_CODE", isArray: true)
+				   //.WithField("WIP_CODE", isArray: true)
+                   .Configure(c => c.ThrowAndStopOnMissingField = false)
+                   )
                 {
                     w.Write(r);
                 }

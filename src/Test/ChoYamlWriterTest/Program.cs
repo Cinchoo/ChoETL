@@ -398,10 +398,63 @@ namespace ChoYamlWriterTest
             }
         }
 
+        public static void Json2Yaml2()
+        {
+            typeof(ChoYamlWriter).GetAssemblyVersion().Print();
+
+            string json = @"
+[
+    {
+        ""name"": ""corr-id"",
+        ""config"": {
+            ""generator"": ""uuid"",
+            ""header_name"": ""-Id"",
+            ""echo_downstream"": true
+        }
+    },
+    {
+        ""name"": ""cation-id2"",
+        ""config"": {
+            ""val4"": ""val3"",
+            ""header_name"": ""Aura-Id"",
+            ""echo_downstream"": true,
+            ""title"": ""kube""
+        }
+    },
+    {
+        ""name"": ""ation-id2"",
+        ""config"": {
+            ""val1"": ""val2"",
+            ""title"": ""val3""
+        }
+    },
+    {
+        ""name"": ""ati2"",
+        ""config"": {
+            ""contact"": ""some val"",
+            ""group"": ""lenght"",
+            ""title"": ""transform""
+        }
+    }
+]	
+		";
+
+            using (var r = ChoJSONReader.LoadText(json))
+            {
+                //r.FirstOrDefault().config.add.Print();
+                //return;
+                using (var w = new ChoYamlWriter(Console.Out).ErrorMode(ChoErrorMode.IgnoreAndContinue))
+                {
+                    dynamic d = new ChoDynamicObject("PlugIns");
+                    d.PlugIns = r.ToArray();
+                    w.Write(d);
+                }
+            }
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            Json2Yaml1();
+            Json2Yaml2();
             //SerializeValueTypesOneAtATime();
         }
     }

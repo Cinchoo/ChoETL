@@ -2385,11 +2385,80 @@ a;b;;2021-05-06;e;11:00;3;9";
             [JsonProperty("name")]
             public string Name { get; set; }
         }
+
+        public class SCImportCompany
+        {
+            [ChoCSVRecordField(FieldName = "sf__Id")]
+            public string SF_Id { get; set; }
+
+            [ChoCSVRecordField(FieldName = "sf__Created__Error", AltFieldNames = "sf__Error, sf__Created")]
+            public string SF_Created_Error { get; set; }
+
+            [ChoCSVRecordField(FieldName = "BillingCity")]
+            public string City { get; set; }
+        }
+
+        static void Issue265()
+        {
+            string csv1 = @"""sf__Id""|""sf__Created""|""BillingCity""
+""100""|""Created""|""New York""";
+
+            using (var r = ChoCSVReader<SCImportCompany>.LoadText(csv1)
+                .WithFirstLineHeader()
+                .WithDelimiter("|")
+                .MayHaveQuotedFields()
+                //.ThrowAndStopOnMissingField(false)
+                )
+                r.Print();
+
+            string csv2 = @"""sf__Id""|""sf__Error""|""BillingCity""
+""200""|""Error""|""Kansas""
+";
+
+            using (var r = ChoCSVReader<SCImportCompany>.LoadText(csv2)
+                .WithFirstLineHeader()
+                .WithDelimiter("|")
+                .MayHaveQuotedFields()
+                //.ThrowAndStopOnMissingField(false)
+                )
+                r.Print();
+
+            var rec = new SCImportCompany
+            { 
+                SF_Id = "100",
+                SF_Created_Error = "Created / Error",
+                City = "New York"
+            };
+            var rec1 = new SCImportCompany
+            {
+                SF_Id = "100",
+                SF_Created_Error = "Created / Error",
+            };
+
+            using (var w = new ChoCSVWriter<SCImportCompany>(Console.Out)
+                .WithFirstLineHeader()
+                .WithDelimiter("|")
+                //.QuoteAllFields()
+                .ConfigureHeader(h => h.QuoteAllHeaders = true)
+                .Setup(s => s.BeforeRecordFieldWrite += (o, e) =>
+                {
+                    if (e.Source != null)
+                        e.Source = $"\"{e.Source}\"";
+                })
+                )
+            {
+                w.Write(rec);
+                w.Write(rec1);
+            }
+
+            "".Print();
+        }
+
         static void Main(string[] args)
         {
             //AppDomain.CurrentDomain.FirstChanceException += (sender, eventArgs) => { Console.WriteLine("FirstChanceException: " + eventArgs.Exception.ToString()); };
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            Issue186();
+            Issue265();
             return;
 
             DynamicSubMemberstoCSV();

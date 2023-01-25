@@ -74,7 +74,7 @@ namespace ChoETL
             get
             {
                 var x = _yamlTagMapAutoRegister.Value;
-                return ReuseSerializerObject ? _yamlSerializer.Value : new SharpYaml.Serialization.Serializer(YamlSerializerSettings); 
+                return ReuseSerializerObject ? _yamlSerializer.Value : new SharpYaml.Serialization.Serializer(YamlSerializerSettings);
             }
         }
         private Lazy<SerializerSettings> _yamlSerializerSettings = null;
@@ -132,8 +132,9 @@ namespace ChoETL
                         _jsonSerializerSettings.ContractResolver = new ChoPropertyRenameAndIgnoreSerializerContractResolver(this);
                         _jsonSerializerSettings.Converters = new List<JsonConverter>()
                         {
-                            new ExpandoObjectConverter()
-                        };
+                            new ExpandoObjectConverter(),
+                            ChoDynamicObjectConverter.Instance,
+                    };
                         //_jsonSerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Serialize;
                     }
 
@@ -758,7 +759,7 @@ namespace ChoETL
             mapper?.Invoke(new ChoYamlRecordFieldConfigurationMap(cf));
             return this;
         }
-        
+
         public ChoYamlRecordConfiguration Map<T, TProperty>(Expression<Func<T, TProperty>> field, string yamlPath = null, string fieldName = null)
         {
             Map(field, m => m.YamlPath(yamlPath).FieldName(fieldName));

@@ -703,11 +703,15 @@ namespace ChoETL
                     if (Configuration.TargetRecordType == null)
                     {
                         if (RecordType.IsSimple())
-                            objValue = JsonConvert.DeserializeObject<IList<object>>(json, Configuration.JsonSerializerSettings);
+                        {
+                            var type = typeof(IList<>).MakeGenericType(RecordType);
+                            objValue = JsonConvert.DeserializeObject(json, type, Configuration.JsonSerializerSettings);
+                        }
                         else if (typeof(IList).IsAssignableFrom(ft))
-                            objValue = JsonConvert.DeserializeObject<IList>(json, Configuration.JsonSerializerSettings);
+                            objValue = JsonConvert.DeserializeObject<IList<ChoDynamicObject>>(json, Configuration.JsonSerializerSettings).Select(ele => ele.AsDictionary()).ToList();
                         else
-                            objValue = JsonConvert.DeserializeObject<IDictionary<string, object>>(json, Configuration.JsonSerializerSettings);
+                            objValue = JsonConvert.DeserializeObject<IDictionary<string, ChoDynamicObject>>(json, Configuration.JsonSerializerSettings)
+                                .ToDictionary(kvp1 => kvp1.Key, kvp1 => kvp1.Value.AsDictionary());
                     }
                     else
                     {
