@@ -708,10 +708,11 @@ namespace ChoETL
                             objValue = JsonConvert.DeserializeObject(json, type, Configuration.JsonSerializerSettings);
                         }
                         else if (typeof(IList).IsAssignableFrom(ft))
-                            objValue = JsonConvert.DeserializeObject<IList<ChoDynamicObject>>(json, Configuration.JsonSerializerSettings).Select(ele => ele.AsDictionary()).ToList();
+                            objValue = JsonConvert.DeserializeObject<IList<ChoDynamicObject>>(json, Configuration.JsonSerializerSettings)
+                                .Select(ele => Unpack(ele)).ToList();
                         else
-                            objValue = JsonConvert.DeserializeObject<IDictionary<string, ChoDynamicObject>>(json, Configuration.JsonSerializerSettings)
-                                .ToDictionary(kvp1 => kvp1.Key, kvp1 => kvp1.Value.AsDictionary());
+                            objValue = JsonConvert.DeserializeObject<IDictionary<string, object>>(json, Configuration.JsonSerializerSettings)
+                                .ToDictionary(kvp1 => kvp1.Key, kvp1 => Unpack(kvp1.Value));
                     }
                     else
                     {
@@ -731,6 +732,35 @@ namespace ChoETL
                 recText = Configuration.YamlSerializer.Serialize(fieldValue, fieldValue.GetType());
 
             return true;
+        }
+
+        private object Unpack(object value)
+        {
+            if (value == null)
+                return value;
+
+            if (value is JValue)
+                return ((JValue)value).Value;
+            else if (value is JObject)
+            {
+                ChoDynamicObject dobj = new ChoDynamicObject();
+                foreach (var kvp in (JObject)value)
+                {
+                    dobj.Add(kvp.Key, Unpack(kvp.Value));
+                }
+                return dobj.AsDictionary();
+            }
+            else if (value is JArray)
+            {
+                List<object> array = new List<object>();
+                foreach (var item in (JArray)value)
+                {
+                    array.Add(Unpack(item));
+                }
+                return array.ToArray();
+            }
+            else
+                return value;
         }
 
         private string Indent(string value, int indentValue = 1)
