@@ -759,6 +759,10 @@ namespace ChoETL
                 }
                 return array.ToArray();
             }
+            else if (value is ChoDynamicObject dobj)
+                return dobj.AsDictionary();
+            else if (value is ExpandoObject eobj)
+                return new ChoDynamicObject(eobj).AsDictionary();
             else
                 return value;
         }
