@@ -108,7 +108,7 @@ namespace ChoETL
                 {
                     foreach (KeyValuePair<string, ChoParquetRecordFieldConfiguration> kvp in Configuration.RecordFieldConfigurationsDict.OrderBy(kvp => kvp.Value.Priority))
                     {
-                        var column = new DataColumn(sf[kvp.Key], GetFieldValues(kvp.Key, kvp.Value.FieldType).Cast(GetParquetType(kvp.Value.FieldType)));
+                        var column = new DataColumn(sf[kvp.Key], GetFieldValues(kvp.Key, kvp.Value.FieldType).Cast(GetParquetType(kvp.Value.FieldType, true)));
                         groupWriter.WriteColumn(column);
                     }
                 }
@@ -170,27 +170,25 @@ namespace ChoETL
             return parquetWriter;
         }
 
-        private Type GetParquetType(Type type)
+        private Type GetParquetType(Type type, bool asRaw = false)
         {
-            var newType = GetParquetTypeInternal(type);
+            var newType = GetParquetTypeInternal(type, asRaw);
 
             if (newType.IsNullableType())
-                return ChoType.GetNullableType(newType);
+                return asRaw ? newType : ChoType.GetNullableType(newType);
             else
                 return newType;
         }
 
-        private Type GetParquetTypeInternal(Type type)
+        private Type GetParquetTypeInternal(Type type, bool asRaw = false)
         {
-            var underlytingType = type.GetUnderlyingType();
             Func<Type, Type> mapParquetType = Configuration.MapParquetType;
             if (mapParquetType != null)
             {
-                Type mt = mapParquetType(underlytingType);
-                if (mt != null)
-                    return mt;
+                type = mapParquetType(type);
             }
 
+            var underlytingType = type.GetUnderlyingType();
             if (underlytingType == null)
                 return typeof(string);
 
@@ -204,12 +202,15 @@ namespace ChoETL
                 return typeof(string);
             else if (underlytingType.IsEnum)
                 return typeof(string);
+            else if (asRaw && type.IsNullableType())
+                return typeof(string);
             else
                 return underlytingType;
         }
-        private Array GetFieldValues(string key, Type ft)
+
+        private Array GetFieldValues(string key, Type ft1)
         {
-            ft = ft.GetUnderlyingType();
+            var ft = ft1.GetUnderlyingType();
 
             List<object> fv = new List<object>();
             if (_records != null)
@@ -220,16 +221,20 @@ namespace ChoETL
                         fv.Add(Configuration.ParquetFieldValueConverter(key, rec[key]));
                     else
                     {
+                        if (ft == null && rec[key] != null)
+                            ft = ((object)rec[key]).GetType().GetUnderlyingType();
+
                         if (ft == typeof(DateTime))
                         {
                             if (rec[key] == null)
                                 fv.Add(null);
                             else if (rec[key] is DateTime)
                             {
-                                if (ChoTypeConverterFormatSpec.Instance.DateTimeFormat.IsNullOrWhiteSpace())
+                                if (Configuration.TypeConverterFormatSpec == null
+                                    || Configuration.TypeConverterFormatSpec.DateTimeFormat.IsNullOrWhiteSpace())
                                     fv.Add(ChoUtility.ToNString((DateTime)rec[key]));
                                 else
-                                    fv.Add(((DateTime)rec[key]).ToString(ChoTypeConverterFormatSpec.Instance.DateTimeFormat));
+                                    fv.Add(((DateTime)rec[key]).ToString(Configuration.TypeConverterFormatSpec.DateTimeFormat));
                             }
                             else
                                 fv.Add(ChoUtility.ToNString((object)rec[key]).ToString());
@@ -307,7 +312,7 @@ namespace ChoETL
                     if (Configuration.IgnoredFields.Contains(kvp.Value.FieldName))
                         continue;
 
-                    fields.Add(kvp.Key, GetDataField(kvp.Value.FieldName, GetParquetType(kvp.Value.FieldType)));
+                    fields.Add(kvp.Key, GetDataField(kvp.Value.FieldName, GetParquetType(kvp.Value.FieldType, true)));
                 }
             }
             else
