@@ -56,6 +56,10 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QuickDynamicTest\XmlNamespacePOCOTest.cs" />
+    <Compile Include="QuickDynamicTest\MixedTests.cs" />
+    <Compile Include="QuickDynamicTest\QuickPOCOTest1.cs" />
+    <Compile Include="QuickDynamicTest\QuickDynamicTest1.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

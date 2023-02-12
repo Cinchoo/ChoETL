@@ -33,7 +33,7 @@ namespace ChoXmlWriterTest
 
     [TestFixture]
     [SetCulture("en-US")] // TODO: Check if correct culture is used
-    public class Program
+    public partial class Program
     {
 
         public static void JSON2XML()
@@ -159,175 +159,7 @@ namespace ChoXmlWriterTest
             }
         }
 
-        static void RootAttributeWithNSTest()
-        {
-            StringBuilder xml = new StringBuilder();
 
-            using (var w = new ChoXmlWriter<FooBar>(xml)
-                //.WithXmlNamespace("", "urn:foobar1")
-                .Configure(c => c.DoNotEmitXmlNamespace = true)
-                )
-            {
-                w.Write(new FooBar
-                {
-                    Foo = "Tom"
-                });
-            }
-
-            Console.WriteLine(xml.ToString());
-        }
-
-        public static void CustomNodeNameTest()
-        {
-            string xml1 = @"<Root>
-  <Node1>
-    <Id>1</Id>
-    <FirstName>Tom</FirstName>
-  </Node1>
-  <Node2>
-    <Id>2</Id>
-    <FirstName>Mark</FirstName>
-  </Node2>
-</Root>";
-
-            using (var r = ChoXmlReader.LoadText(xml1))
-            {
-                foreach (var rec in r)
-                    Console.WriteLine(rec.Dump());
-
-            }
-
-            return;
-
-            string csv = @"Id, First Name
-1, Tom
-2, Mark";
-
-            StringBuilder xml = new StringBuilder();
-            using (var r = ChoCSVReader.LoadText(csv)
-                .WithFirstLineHeader())
-            {
-                using (var w = new ChoXmlWriter(xml)
-                    .ErrorMode(ChoErrorMode.ThrowAndStop)
-                    .Setup(s => s.CustomeNodeNameOverride += (o, e) =>
-                    {
-                        e.NodeName = $"Node{e.Index}";
-                    })
-                    )
-                {
-                    w.Write(r);
-                }
-            }
-
-            Console.WriteLine(xml.ToString());
-
-            //using (var reader = new ChoCSVReader("C:\\Server Media\\test3.csv")
-            //    .WithFirstLineHeader()
-            //    .Configure(c => c.FileHeaderConfiguration.IgnoreColumnsWithEmptyHeader = true)
-            //    )
-            //{
-            //    using (var writer = new ChoXmlWriter(sb)
-            //        .Configure(c => c.RootName = "Records")
-            //        .Configure(c => c.NodeName = "Record")
-            //        .Configure(c => c.EmptyXmlNodeValueHandling = ChoEmptyXmlNodeValueHandling.Empty)
-            //        .Configure(c => c.ErrorMode = ChoErrorMode.ThrowAndStop)
-            //        )
-            //    {
-            //        writer.Write(reader.Select(r =>
-            //        {
-            //            r.RenameKey("Company Name", "CompanyName");
-            //            return r;
-            //        }));
-            //    }
-            //}
-        }
-
-        public static void CSVW2XmlNoFormattingTest()
-        {
-            string csv = @"Id, First Name
-1, Tom
-2, Mark";
-
-            StringBuilder xml = new StringBuilder();
-            using (var r = ChoCSVReader.LoadText(csv)
-                .WithFirstLineHeader())
-            {
-                using (var w = new ChoXmlWriter(xml)
-                    .ErrorMode(ChoErrorMode.IgnoreAndContinue)
-                    //.IgnoreRootName()
-                    //.IgnoreNodeName()
-                    //.Configure(c => c.Formatting = System.Xml.Formatting.None)
-                    )
-                {
-                    w.Write(r.First());
-                }
-            }
-
-            Console.WriteLine(xml.ToString());
-        }
-
-        public static void POCOCSVW2XmlNoFormattingTest()
-        {
-            string csv = @"Id, Name
-1, Tom
-2, Mark";
-
-            StringBuilder xml = new StringBuilder();
-            using (var r = ChoCSVReader<Emp>.LoadText(csv)
-                .WithFirstLineHeader())
-            {
-                using (var w = new ChoXmlWriter<Emp>(xml)
-                    .ErrorMode(ChoErrorMode.ThrowAndStop)
-                    //.IgnoreRootName()
-                    //.IgnoreNodeName()
-                    //.Configure(c => c.Formatting = System.Xml.Formatting.None)
-                    )
-                {
-                    w.Write(r.First());
-                }
-            }
-
-            Console.WriteLine(xml.ToString());
-        }
-
-        static void Test2()
-        {
-            StringBuilder xml = new StringBuilder();
-
-            using (var parser = new ChoXmlWriter(xml).WithXPath("//ticket//Employees/Employee")
-                )
-            {
-                parser.Write(new object[] { new { Id = 1, Name = "Mark" }, new { Id = 1, Name = "Mark" } });
-            }
-
-            Console.WriteLine(xml.ToString());
-        }
-
-        static void ListTest()
-        {
-            StringBuilder xml = new StringBuilder();
-
-            using (var w = new ChoXmlWriter<string>(xml).UseXmlSerialization().WithXPath("t1/t2/r4/t5/Employees/Employee"))
-            {
-                w.Write(new List<string> { "Tom", "Mark" });
-            }
-
-            Console.WriteLine(xml.ToString());
-
-        }
-
-        static void DictTest()
-        {
-            StringBuilder xml = new StringBuilder();
-
-            using (var w = new ChoXmlWriter(xml).UseXmlSerialization().WithXPath("Employees/Employee"))
-            {
-                w.Write(new Dictionary<int, string> { { 1, "Tom" }, { 2, "Mark" } });
-            }
-
-            Console.WriteLine(xml.ToString());
-
-        }
 
         static void MergeXml()
         {
@@ -364,52 +196,6 @@ namespace ChoXmlWriterTest
                 )
             {
                 w.Write(nodes);
-            }
-
-            Console.WriteLine(xml.ToString());
-        }
-
-        //[XmlRoot(ElementName = "readCase", Namespace = "http://tempuri")]
-        public class ReadCase
-        {
-            //[XmlElement(ElementName = "versionAsOf", Namespace = "http://tempuri")]
-            public BaseUtcTimeStamp VersionAsOf { get; set; }
-        }
-        public struct BaseUtcTimeStamp
-        {
-            private string _utcTimestamp;
-            [XmlText]
-            public string UtcTimestamp { get => _utcTimestamp; set { } } // set is needed for XmlSerializer
-
-            public BaseUtcTimeStamp(DateTime utcDateTime)
-            {
-                //if (utcDateTime.Kind != DateTimeKind.Utc)
-                //{
-                //    throw new ArgumentException("Given dateTime must be Utc.");
-                //}
-
-                _utcTimestamp = utcDateTime.ToString("yyyy-MM-ddTHH:mm:ssZ");
-            }
-        }
-
-        static void XmlTextTest()
-        {
-            StringBuilder xml = new StringBuilder();
-
-            using (var w = new ChoXmlWriter<ReadCase>(xml)
-                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
-                //.UseXmlSerialization()
-                //.WithDefaultNamespacePrefix("case")
-                //.WithXmlNamespace("case", "http://tempuri")
-                //.WithNodeName("xxx")
-                //.WithRootName("zzz")
-                .Configure(c => c.OmitXsiNamespace = true)
-                )
-            {
-                w.Write(new ReadCase
-                {
-                    VersionAsOf = new BaseUtcTimeStamp(DateTime.Now)
-                });
             }
 
             Console.WriteLine(xml.ToString());
@@ -665,8 +451,8 @@ namespace ChoXmlWriterTest
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            Issue197();
             return;
+
 
             AddDifferentNamespaceToSubnode();
 
@@ -1120,89 +906,6 @@ namespace ChoXmlWriterTest
             //    foreach (var i in reader)
             //        Console.WriteLine(ChoUtility.ToStringEx(i));
             //}
-        }
-
-        //[Test]
-        public static void QuickDynamicTest()
-        {
-            string expected = @"<Employees>
-  <Employee>
-    <Id>1</Id>
-    <Name>Mark</Name>
-    <IsActive>true</IsActive>
-    <Message><![CDATA//[Test]]></Message>
-    <Array>
-    <anyType xmlns:q1=""http://www.w3.org/2001/XMLSchema"" p3:type=""q1:int"" xmlns:p3=""http://www.w3.org/2001/XMLSchema-instance"">1</anyType>
-    <anyType xmlns:q2=""http://www.w3.org/2001/XMLSchema"" p3:type=""q2:string"" xmlns:p3=""http://www.w3.org/2001/XMLSchema-instance"">abc</anyType>
-  </Array>
-    <Lint>
-    <int>1</int>
-    <int>2</int>
-  </Lint>
-    <Dict>
-    <item>
-      <key>
-        <int>1</int>
-      </key>
-      <value>
-        <string>abc</string>
-      </value>
-    </item>
-  </Dict>
-  </Employee>
-  <Employee>
-    <Id>2</Id>
-    <Name>Jason</Name>
-    <IsActive>true</IsActive>
-    <Message><![CDATA//[Test]]></Message>
-  </Employee>
-</Employees>";
-            string actual = null;
-
-            ArrayList al = new ArrayList();
-            al.Add(1);
-            al.Add("abc");
-
-            List<int> lint = new List<int>() { 1, 2 };
-
-            Hashtable ht = new Hashtable();
-            ht.Add(1, "abc");
-
-            ChoSerializableDictionary<int, string> dict = new ChoSerializableDictionary<int, string>();
-            dict.Add(1, "abc");
-
-            List<ExpandoObject> objs = new List<ExpandoObject>();
-            dynamic rec1 = new ExpandoObject();
-            rec1.Id = 1;
-            rec1.Name = "Mark";
-            rec1.IsActive = true;
-            rec1.Message = new ChoCDATA("Test");
-            rec1.Array = al;
-            rec1.Lint = lint;
-            //rec1.HT = ht;
-            rec1.Dict = dict;
-            objs.Add(rec1);
-
-            dynamic rec2 = new ExpandoObject();
-            rec2.Id = 2;
-            rec2.Name = "Jason";
-            rec2.IsActive = true;
-            rec2.Message = new ChoCDATA("Test");
-            objs.Add(rec2);
-
-            StringBuilder sb = new StringBuilder();
-            using (var parser = new ChoXmlWriter(sb).WithXPath("Employees/Employee"))
-            {
-                parser.Write(objs);
-            }
-            actual = sb.ToString();
-
-            Assert.AreEqual(expected, actual);
-
-            //var a = ChoXmlReader.LoadText(sb.ToString()).ToArray();
-            //var config = new ChoXmlRecordConfiguration();
-            ////config.Configure(c => c.RootName = "Root");
-            //Console.WriteLine(ChoXmlWriter.ToText(a.First(), config));
         }
 
         public partial class EmployeeRecSimple1
