@@ -425,7 +425,8 @@ namespace ChoETL
                                             useXmlArray: Configuration.UseXmlArray,
                                             useJsonNamespaceForObjectType: Configuration.UseJsonNamespaceForObjectType,
                                             nsMgr: Configuration.XmlNamespaceManager.Value,
-                                            ignoreFieldValueMode: Configuration.IgnoreFieldValueMode
+                                            ignoreFieldValueMode: Configuration.IgnoreFieldValueMode,
+                                            turnOffPluralization: Configuration.TurnOffPluralization
                                             ).RemoveXmlNamespaces();
                                     }
 
@@ -696,7 +697,11 @@ namespace ChoETL
                     if (config.IsDynamicObject)
                     {
                         IDictionary<string, Object> dict = rec.ToDynamicObject() as IDictionary<string, Object>;
-                        fieldValue = dict[kvp.Key]; // dict.GetValue(kvp.Key, Configuration.FileHeaderConfiguration.IgnoreCase, Configuration.Culture);
+                        if (dict.ContainsKey(kvp.Key))
+                            fieldValue = dict[kvp.Key];
+                        else
+                            fieldValue = null;
+
                         if (kvp.Value.FieldType == null)
                         {
                             if (rec is ChoDynamicObject)
@@ -735,20 +740,14 @@ namespace ChoETL
                         else
                             kvp.Value.FieldType = typeof(string);
                     }
-                    if (fieldConfig.IgnoreFieldValueMode == null)
-                    {
-                        if (fieldValue.IsObjectNullOrEmpty() && fieldConfig.IsDefaultValueSpecified)
-                            fieldValue = fieldConfig.DefaultValue;
-                    }
-                    else
-                    {
-                        bool ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
-                        if (ignoreFieldValue && fieldConfig.IsDefaultValueSpecified)
-                            fieldValue = fieldConfig.DefaultValue;
-                        ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
-                        if (ignoreFieldValue)
-                            continue;
-                    }
+
+                    bool ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
+                    if (ignoreFieldValue && fieldConfig.IsDefaultValueSpecified)
+                        fieldValue = fieldConfig.DefaultValue;
+                    ignoreFieldValue = fieldValue.IgnoreFieldValue(fieldConfig.IgnoreFieldValueMode);
+                    if (ignoreFieldValue)
+                        continue;
+
                     if (!RaiseBeforeRecordFieldWrite(rec, index, kvp.Key, ref fieldValue))
                         return false;
 
@@ -1059,14 +1058,48 @@ namespace ChoETL
                     {
                         innerXml1 = ChoUtility.XmlSerialize(kvp.Value, null, EOLDelimiter, Configuration.NullValueHandling, Configuration.DefaultNamespacePrefix, Configuration.EmitDataType,
                             useXmlArray: useXmlArray,
-                            useJsonNamespaceForObjectType: Configuration.UseJsonNamespaceForObjectType, 
+                            useJsonNamespaceForObjectType: Configuration.UseJsonNamespaceForObjectType,
                             nsMgr: Configuration.XmlNamespaceManager.Value,
-                            ignoreFieldValueMode: fieldConfig.IgnoreFieldValueMode
+                            ignoreFieldValueMode: fieldConfig.IgnoreFieldValueMode,
+                            key: kvp.Key, turnOffPluralization: Configuration.IsTurnOffPluralization(fieldConfig)
                             );
 
-                        if (!kvp.Value.GetType().IsArray && !typeof(IList).IsAssignableFrom(kvp.Value.GetType()))
+                        if (kvp.Value is ArrayList || kvp.Value is IList
+                            || (!kvp.Value.GetType().IsArray && !typeof(IList).IsAssignableFrom(kvp.Value.GetType())))
                         {
-                            innerXml1 = ReplaceXmlNodeIfAppl(innerXml1, kvp.Key);
+                            var lUseXmlArray = useXmlArray;
+                            if (kvp.Value is IList)
+                            {
+                                var isUniformList = ((IList)(kvp.Value)).OfType<object>().Select(o => o.GetType()).Distinct().Count() <= 1;
+                                if (!isUniformList)
+                                    lUseXmlArray = true;
+                            }
+
+                            var key = kvp.Key;
+                            var value = kvp.Value;
+                            if (lUseXmlArray)
+                            {
+                                var turnOffPluralization = Configuration.IsTurnOffPluralization(fieldConfig);
+                                if (!turnOffPluralization)
+                                    key = value is IList ? 
+                                        key.ToPlural() != key ? 
+                                            key.ToPlural() : 
+                                            key.Length > 1 && key.EndsWith("s", StringComparison.InvariantCultureIgnoreCase) ? 
+                                                key : 
+                                                "{0}s".FormatString(key) : key;
+
+                                var msg1 = new StringBuilder();
+                                msg1.AppendFormat("{0}{1}", EOLDelimiter, Indent("<{0}>".FormatString(key)));
+                                msg1.AppendFormat("{0}{1}", EOLDelimiter, Indent(innerXml1));
+                                msg1.AppendFormat("{0}{1}", EOLDelimiter, Indent("</{0}>".FormatString(key)));
+                                innerXml1 = msg1.ToString();
+                            }
+                            else
+                            {
+
+                            }
+
+                            //innerXml1 = ReplaceXmlNodeIfAppl(innerXml1, kvp.Key);
                             //if (_beginNSTagRegex.Match(innerXml1).Success)
                             //{
                             //    innerXml1 = _beginNSTagRegex.Replace(innerXml1, delegate (Match m)
@@ -1340,7 +1373,12 @@ namespace ChoETL
                 if (defaultNSPrefix.IsNullOrWhiteSpace())
                 {
                     ns = nsMgr.GetNamespaceForPrefix("");
-                    e = value == null ? new XElement(ns + name) : !isXmlValue.Value ? new XElement(ns + name, value) : new XElement(ns + name, XElement.Parse(value.ToNString()));
+                    if (ns == null)
+                    {
+                        e = value == null ? new XElement(name) : !isXmlValue.Value ? new XElement(name, value) : new XElement(name, XElement.Parse(value.ToNString()));
+                    }
+                    else
+                        e = value == null ? new XElement(ns + name) : !isXmlValue.Value ? new XElement(ns + name, value) : new XElement(ns + name, XElement.Parse(value.ToNString()));
                 }
                 else
                 {
@@ -1374,8 +1412,8 @@ namespace ChoETL
                 {
                     try
                     {
-                        var nsAttr = kvp.Key.IsNullOrWhiteSpace() ? 
-                            new XAttribute("xmlns", kvp.Value) : 
+                        var nsAttr = kvp.Key.IsNullOrWhiteSpace() ?
+                            new XAttribute("xmlns", kvp.Value) :
                             new XAttribute(XNamespace.Xmlns + (kvp.Key.IsNullOrWhiteSpace() ? "x" : kvp.Key), kvp.Value);
                         e.Add(nsAttr);
                     }

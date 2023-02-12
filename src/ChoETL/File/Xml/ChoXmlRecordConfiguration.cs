@@ -655,6 +655,7 @@ namespace ChoETL
             //if (XPath.IsNull())
             //    throw new ChoRecordConfigurationException("XPath can't be null or whitespace.");
 
+            string defaultNS = null;
             if (XPath.IsNullOrWhiteSpace())
             {
                 if (!IsDynamicObject && (RecordType.IsGenericType && RecordType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>)))
@@ -668,6 +669,11 @@ namespace ChoETL
                     if (rootAttr != null && NodeName.IsNullOrWhiteSpace())
                     {
                         NodeName = rootAttr.ElementName;
+                        var ns = rootAttr.Namespace;
+                        if (!ns.IsNullOrWhiteSpace())
+                        {
+                            defaultNS = ns;
+                        }
                     }
 
                     NodeName = NodeName.IsNullOrWhiteSpace() ? RecordType.Name : NodeName;
@@ -701,7 +707,10 @@ namespace ChoETL
             {
                 XmlRootAttribute ra = TypeDescriptor.GetAttributes(RecordType).OfType<XmlRootAttribute>().FirstOrDefault();
                 if (ra != null)
+                {
                     nodeName = ra.ElementName;
+                    defaultNS = ra.Namespace;
+                }
             }
 
             RootName = RootName.IsNullOrWhiteSpace() && !rootName.IsNullOrWhiteSpace() ? rootName : RootName;
@@ -897,6 +906,17 @@ namespace ChoETL
                     if (!NamespaceManager.HasNamespace("xsd"))
                         NamespaceManager.AddNamespace("xsd", ChoXmlSettings.XmlSchemaNamespace);
                 }
+            }
+
+            if (DefaultNamespacePrefix.IsNullOrWhiteSpace() && !defaultNS.IsNullOrWhiteSpace())
+            {
+                if (XmlNamespaceManager != null)
+                {
+                    var nsPrefix = XmlNamespaceManager.Value.GetNamespacePrefix(defaultNS);
+                    if (!nsPrefix.IsNullOrWhiteSpace())
+                        DefaultNamespacePrefix = nsPrefix;
+                }
+
             }
 
             LoadNCacheMembers(XmlRecordFieldConfigurations);

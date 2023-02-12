@@ -297,6 +297,16 @@ namespace ChoETL
         public ChoDynamicObject(ExpandoObject kvpDict) : this(null, false)
         {
             _kvpDict = (IDictionary<string, object>)kvpDict;
+            if (_kvpDict != null)
+            {
+                foreach (var kvp in _kvpDict.ToArray())
+                {
+                    if (kvp.Value is ExpandoObject dobj)
+                    {
+                        _kvpDict[kvp.Key] = new ChoDynamicObject(dobj);
+                    }
+                }
+            }
         }
 
         public ChoDynamicObject(dynamic kvpDict) : this(null, false)
@@ -1367,7 +1377,9 @@ namespace ChoETL
         public string GetXml(string tag = null, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Empty, string nsPrefix = null,
             bool emitDataType = false, string EOLDelimiter = null, bool useXmlArray = false,
             bool useJsonNamespaceForObjectType = false, ChoXmlNamespaceManager nsMgr = null,
-            ChoIgnoreFieldValueMode? ignoreFieldValueMode = null)
+            ChoIgnoreFieldValueMode? ignoreFieldValueMode = null,
+            bool? turnOffPluralization = null
+            )
         {
             if (EOLDelimiter == null)
                 EOLDelimiter = Environment.NewLine;
@@ -1497,7 +1509,7 @@ namespace ChoETL
 
                     GetXml(msg, value, key, nullValueHandling, nsPrefix, IsCDATA(key), emitDataType, EOLDelimiter: EOLDelimiter, useXmlArray: useXmlArray,
                         useJsonNamespaceForObjectType, nsMgr,
-                        ignoreFieldValueMode
+                        ignoreFieldValueMode, turnOffPluralization == null ? false : turnOffPluralization.Value
                         );
                 }
                 msg.AppendFormat("{0}</{1}>", EOLDelimiter, tag);
@@ -1534,7 +1546,8 @@ namespace ChoETL
         private void GetXml(StringBuilder msg, object value, string key, ChoNullValueHandling nullValueHandling, string nsPrefix = null, 
             bool isCDATA = false, bool emitDataType = false, string EOLDelimiter = null, bool useXmlArray = true,
             bool useJsonNamespaceForObjectType = false, ChoXmlNamespaceManager nsMgr = null,
-            ChoIgnoreFieldValueMode? ignoreFieldValueMode = null)
+            ChoIgnoreFieldValueMode? ignoreFieldValueMode = null,
+            bool turnOffPluralization = false)
         {
             if (EOLDelimiter == null)
                 EOLDelimiter = Environment.NewLine;
@@ -1561,21 +1574,34 @@ namespace ChoETL
                     {
                         if (UseXmlArray != null)
                             useXmlArray = UseXmlArray.Value;
+                        else if (value is IList)
+                        {
+                            var ret = ((IList)(value)).OfType<object>().Select(o => o.GetType()).Distinct().Count() > 1;
+                            if (ret)
+                                useXmlArray = true;
+                        }
 
                         if (useXmlArray)
                         {
-                            key = value is IList ? key.ToPlural() != key ? key.ToPlural() : key.Length > 1 && key.EndsWith("s", StringComparison.InvariantCultureIgnoreCase) ? key : "{0}s".FormatString(key) : key;
+                            if (!turnOffPluralization)
+                                key = value is IList ? key.ToPlural() != key ? key.ToPlural() : key.Length > 1 && key.EndsWith("s", StringComparison.InvariantCultureIgnoreCase) ? key : "{0}s".FormatString(key) : key;
                             msg.AppendFormat("{0}{1}", EOLDelimiter, Indent("<{0}>".FormatString(key), EOLDelimiter));
                         }
                         if (value is IList)
                         {
-                            foreach (var collValue in ((IList)value).OfType<ChoDynamicObject>())
+                            foreach (var val in ((IList)value)) //.OfType<ChoDynamicObject>())
                             {
-                                msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(collValue.GetXml(collValue.NName == DefaultName ? (useXmlArray ? key.ToSingular() : key) : collValue.NName, nullValueHandling, nsPrefix, emitDataType, EOLDelimiter: EOLDelimiter, useXmlArray: useXmlArray), EOLDelimiter));
+                                if (val is ChoDynamicObject collValue)
+                                {
+                                    msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(collValue.GetXml(collValue.NName == DefaultName ? (useXmlArray ? key.ToSingular() : key) : collValue.NName, nullValueHandling, nsPrefix, emitDataType, EOLDelimiter: EOLDelimiter, useXmlArray: useXmlArray), EOLDelimiter));
+                                }
+                                else
+                                    msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(ChoUtility.XmlSerialize(val), EOLDelimiter, useXmlArray ? 2 : 1));
                             }
                         }
                         else
-                            msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(ChoUtility.XmlSerialize(value, null, EOLDelimiter, nullValueHandling, nsPrefix, emitDataType, useXmlArray, useJsonNamespaceForObjectType, nsMgr, ignoreFieldValueMode), EOLDelimiter, 2));
+                            msg.AppendFormat("{0}{1}", EOLDelimiter, Indent(ChoUtility.XmlSerialize(value, null, EOLDelimiter, nullValueHandling, nsPrefix, emitDataType, 
+                                useXmlArray, useJsonNamespaceForObjectType, nsMgr, ignoreFieldValueMode, key: key), EOLDelimiter, 1));
 
                         if (useXmlArray)
                             msg.AppendFormat("{0}{1}", EOLDelimiter, Indent("</{0}>".FormatString(key), EOLDelimiter));
@@ -1628,7 +1654,7 @@ namespace ChoETL
                         writer.WriteString(value.ToNString());
                     else
                     {
-                        ChoNullNSXmlSerializer valueSerializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(value.GetType());
+                        XmlSerializer valueSerializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(value.GetType());
                         valueSerializer.Serialize(writer, value);
                     }
                 }

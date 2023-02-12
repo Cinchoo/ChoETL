@@ -1411,19 +1411,40 @@ namespace ChoETL
 
             using (XmlWriter xtw = XmlTextWriter.Create(sr, xws ?? _xws))
             {
-                ChoNullNSXmlSerializer serializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(target.GetType());
+                XmlSerializer serializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(target.GetType());
                 serializer.Serialize(xtw, target);
 
                 xtw.Flush();
             }
         }
 
-        public static string XmlSerialize(object target, XmlWriterSettings xws = null, string separator = null, ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore,
+        public static string XmlSerialize(object target, XmlWriterSettings xws = null, string separator = null, 
+            ChoNullValueHandling nullValueHandling = ChoNullValueHandling.Ignore,
             string nsPrefix = null, bool emitDataType = false, bool useXmlArray = false,
             bool useJsonNamespaceForObjectType = false, ChoXmlNamespaceManager nsMgr = null,
-            ChoIgnoreFieldValueMode? ignoreFieldValueMode = null
+            ChoIgnoreFieldValueMode? ignoreFieldValueMode = null, string key = null,
+            bool? turnOffPluralization = null
             )
         {
+            if (target is ExpandoObject)
+            {
+                var dObj = new ChoDynamicObject(target as IDictionary<string, object>);
+                target = dObj;
+                dObj.DynamicObjectName = key;
+            }
+            else if (target is IDictionary<string, object>)
+            {
+                var dObj = new ChoDynamicObject(target as IDictionary<string, object>);
+                target = dObj;
+                dObj.DynamicObjectName = key;
+            }
+            else if (target is IDictionary)
+            {
+                var dObj = new ChoDynamicObject(((IDictionary)target).ToDictionary());
+                target = dObj;
+                dObj.DynamicObjectName = key;
+            }
+
             XmlSerializerNamespaces ns = null;
             if (nsMgr != null)
                 ns = nsMgr.XmlSerializerNamespaces;
@@ -1450,7 +1471,7 @@ namespace ChoETL
                 if (((IList)target).Count > 0)
                 {
                     var xml = ((IList)target).OfType<object>().Select(o => XmlSerialize(o, xws, separator, nullValueHandling, nsPrefix, emitDataType, useXmlArray, useJsonNamespaceForObjectType, nsMgr, ignoreFieldValueMode)).Aggregate((current, next) => "{0}{1}{2}".FormatString(current, separator, next));
-                    //return $"<dynamics>{xml}</dynamics>";
+                    //return $"<dynamic>{xml}</dynamic>";
                     return xml;
                 }
                 else
@@ -1462,7 +1483,8 @@ namespace ChoETL
                 if (target is ChoDynamicObject)
                 {
                     xtw.WriteRaw(((ChoDynamicObject)target).GetXml(null, nullValueHandling, nsPrefix, emitDataType, EOLDelimiter: separator, useXmlArray: useXmlArray,
-                        useJsonNamespaceForObjectType: useJsonNamespaceForObjectType, nsMgr: nsMgr, ignoreFieldValueMode: ignoreFieldValueMode));
+                        useJsonNamespaceForObjectType: useJsonNamespaceForObjectType, nsMgr: nsMgr, ignoreFieldValueMode: ignoreFieldValueMode,
+                        turnOffPluralization: turnOffPluralization));
                 }
                 else
                 {
@@ -1470,7 +1492,7 @@ namespace ChoETL
                         ns = new XmlSerializerNamespaces();
 
                     target = ChoXmlConvert.ToString(target);
-                    ChoNullNSXmlSerializer serializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(target.GetType());
+                    XmlSerializer serializer = ChoNullNSXmlSerializerFactory.GetNSXmlSerializer(target.GetType());
                     serializer.Serialize(xtw, target, ns);
                 }
 
@@ -1520,7 +1542,7 @@ namespace ChoETL
                 }
                 else
                 {
-                    ChoNullNSXmlSerializer serializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(type, overrides);
+                    XmlSerializer serializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(type, overrides);
                     var o = serializer.Deserialize(xtw);
                     o = ChoXmlConvert.ToObject(type, o);
                     return o;
@@ -1565,7 +1587,7 @@ namespace ChoETL
                     }
                     else
                     {
-                        ChoNullNSXmlSerializer serializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(type, overrides);
+                        XmlSerializer serializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(type, overrides);
                         var o = serializer.Deserialize(xtw);
                         o = ChoXmlConvert.ToObject(type, o);
                         return o;
@@ -1607,7 +1629,7 @@ namespace ChoETL
                     }
                     else
                     {
-                        ChoNullNSXmlSerializer serializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(type, overrides);
+                        XmlSerializer serializer = ChoNullNSXmlSerializerFactory.GetXmlSerializer(type, overrides);
                         var o = serializer.Deserialize(xtw);
                         o = ChoXmlConvert.ToObject(type, o);
                         return o;
@@ -2703,7 +2725,7 @@ namespace ChoETL
             int index = 0;
             foreach (var item in array)
             {
-                arr[index] = item == null ? ChoType.GetDefaultValue(elementType) : item;
+                arr[index] = item == null ? ChoType.GetDefaultValue(elementType) : ChoConvert.ChangeType(item, elementType);
                 index++;
             }
             return (Array)arr;
@@ -3070,22 +3092,27 @@ namespace ChoETL
     public static class ChoNullNSXmlSerializerFactory
     {
         private static readonly object _xmlSerializersLock = new object();
-        private static readonly Dictionary<Type, ChoNullNSXmlSerializer> _xmlSerializers = new Dictionary<Type, ChoNullNSXmlSerializer>();
+        private static readonly Dictionary<Type, XmlSerializer> _xmlSerializers = new Dictionary<Type, XmlSerializer>();
+        private static readonly Dictionary<Type, XmlSerializer> _xmlNSSerializers = new Dictionary<Type, XmlSerializer>();
         public static bool HasXmlSerializer(Type type)
         {
             lock (_xmlSerializersLock)
             {
-                return _xmlSerializers.ContainsKey(type);
+                var contains = _xmlSerializers.ContainsKey(type);
+                if (contains)
+                    return true;
+
+                return _xmlNSSerializers.ContainsKey(type);
             }
         }
-        public static ChoNullNSXmlSerializer GetXmlSerializer<TProxyType, TInstanceType>(XmlAttributeOverrides overrides = null, XmlNodeEventHandler unknownNode = null)
+        public static XmlSerializer GetXmlSerializer<TProxyType, TInstanceType>(XmlAttributeOverrides overrides = null, XmlNodeEventHandler unknownNode = null)
             where TProxyType : IChoXmlSerializerProxy<TInstanceType>
             where TInstanceType : class
         {
             return GetXmlSerializer(typeof(TProxyType), typeof(TInstanceType), overrides, unknownNode);
         }
 
-        public static ChoNullNSXmlSerializer GetXmlProxySerializer(Type type, XmlAttributeOverrides overrides = null, XmlNodeEventHandler unknownNode = null)
+        public static XmlSerializer GetXmlProxySerializer(Type type, XmlAttributeOverrides overrides = null, XmlNodeEventHandler unknownNode = null)
         {
             ChoGuard.ArgumentNotNull(type, nameof(type));
 
@@ -3097,7 +3124,7 @@ namespace ChoETL
             return GetXmlSerializer(proxyType, overrides == null ? GetXmlOverrides(type, proxyType) : overrides, unknownNode);
         }
 
-        public static ChoNullNSXmlSerializer GetXmlSerializer(Type proxyType, Type type, XmlAttributeOverrides overrides = null, XmlNodeEventHandler unknownNode = null)
+        public static XmlSerializer GetXmlSerializer(Type proxyType, Type type, XmlAttributeOverrides overrides = null, XmlNodeEventHandler unknownNode = null)
         {
             ChoGuard.ArgumentNotNull(type, nameof(type));
             ChoGuard.ArgumentNotNull(type, nameof(proxyType));
@@ -3108,12 +3135,35 @@ namespace ChoETL
             return GetXmlSerializer(proxyType, overrides == null ? GetXmlOverrides(type, proxyType) : overrides, unknownNode);
         }
 
-        public static ChoNullNSXmlSerializer GetXmlSerializer<T>(XmlAttributeOverrides overrides = null, XmlNodeEventHandler unknownNode = null)
+        public static XmlSerializer GetXmlSerializer<T>(XmlAttributeOverrides overrides = null, XmlNodeEventHandler unknownNode = null)
         {
             return GetXmlSerializer(typeof(T), overrides, unknownNode);
         }
 
-        public static ChoNullNSXmlSerializer GetXmlSerializer(Type type, XmlAttributeOverrides overrides = null, XmlNodeEventHandler unknownNode = null)
+        public static XmlSerializer GetNSXmlSerializer(Type type, XmlAttributeOverrides overrides = null, XmlNodeEventHandler unknownNode = null)
+        {
+            ChoGuard.ArgumentNotNull(type, nameof(type));
+            if (_xmlNSSerializers.ContainsKey(type))
+                return _xmlNSSerializers[type];
+
+            lock (_xmlSerializersLock)
+            {
+                if (!_xmlNSSerializers.ContainsKey(type))
+                {
+                    if (overrides == null)
+                        overrides = GetXmlOverrides(type);
+
+                    XmlSerializer serializer = overrides != null ? new XmlSerializer(type, overrides) : new XmlSerializer(type);
+                    if (unknownNode != null)
+                        serializer.UnknownNode += unknownNode;
+                    _xmlNSSerializers.Add(type, serializer);
+                }
+
+                return _xmlNSSerializers[type];
+            }
+        }
+
+        public static XmlSerializer GetXmlSerializer(Type type, XmlAttributeOverrides overrides = null, XmlNodeEventHandler unknownNode = null)
         {
             ChoGuard.ArgumentNotNull(type, nameof(type));
             if (_xmlSerializers.ContainsKey(type))
