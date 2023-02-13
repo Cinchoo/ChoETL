@@ -128,7 +128,7 @@ namespace ChoYamlWriterTest
         static void SerializeArrayList()
         {
             StringBuilder yaml = new StringBuilder();
-            ArrayList arr = new ArrayList ();
+            ArrayList arr = new ArrayList();
             arr.Add(new Dictionary<string, object>()
             {
                 ["1"] = 1,
@@ -450,10 +450,65 @@ namespace ChoYamlWriterTest
                 }
             }
         }
+
+        public class YamlWithAlias
+        { 
+            public int eastRack { get; set; }
+        }
+
+        static void Test1()
+        {
+            typeof(ChoYamlReader).GetAssemblyVersion().Print();
+            "".Print();
+
+            string yaml = @"
+eastRack: &eastRack 1
+westRack: &westRack 3
+mescue_path: &mescue_path test/profile
+fescue_path: &fescue_path details/prod
+
+mescue_path_server: &mescue_path_server
+  role: auto
+  prefix: *mescue_path
+
+fescue_path_server: &fescue_path_server
+  role: auto
+  prefix: *fescue_path
+
+westRr: &westRr
+  <<: *mescue_path_server
+  rack: westRr
+
+eastRr: &eastRr
+  <<: *mescue_path_server
+  rack: estRr
+
+Mapping:
+  mechinerack1: *eastRack
+  mechinerack2: *eastRack
+  mechinerack3: *eastRack
+  mechinerack4: *eastRack
+
+  RRRack1: *westRack
+  RRRack2: *westRack
+";
+
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+
+            using (var r = ChoYamlReader.LoadText(yaml)
+                .UseYamlSerialization())
+            {
+                //r.PrintAsJson();
+                //return;
+                using (var w = new ChoYamlWriter(Console.Out).ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                    .YamlSerializerSettings(s => s.EmitAlias = true))
+                    w.Write(r);
+            }
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
-            Json2Yaml2();
+            Test1();
             //SerializeValueTypesOneAtATime();
         }
     }

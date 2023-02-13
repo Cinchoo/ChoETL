@@ -666,21 +666,29 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
                 Id = 100
             };
 
-            var trade3 = new Trade { Id = null, Price = 2.3, Quantity = 2.45, Name = "Name" };
+            var trade3 = new Trade { Id = null, Price = 2.3, Quantity = 2.45, Name = "Name", CreateDate = DateTime.Now };
 
             tradeList.Add(trade1);
             tradeList.Add(trade2);
             tradeList.Add(trade3);
 
+            //ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "MM/dd/yy HH:mm:ss";
             using (var w = new ChoParquetWriter<Trade>(@$"C:\Temp\Trade3.parquet")
+               .Configure(c => c.LiteParsing = true)
+               .Configure(c => c.TypeConverterFormatSpec = new ChoTypeConverterFormatSpec { DateTimeFormat = "o" })
                   )
             {
                 //foreach (var rec in tradeList)
                 //    w.Write(rec);
                 w.Write(tradeList);
             }
-
             PrintParquetFile(@$"C:\Temp\Trade3.parquet");
+
+            using (var r = new ChoParquetReader<Trade>(@$"C:\Temp\Trade3.parquet")
+               )
+            {
+                r.Print(); 
+            }
         }
 
         //static void PrintParquetFile(string filePath)
@@ -700,9 +708,29 @@ CGO9650,Comercial Tecnipak Ltda,7/11/2016,""$80,000"",56531508-89c0-4ecf-afaf-cd
             public DateTime? CreateDate { get; set; }
         }
 
+        public static void Issue251_2()
+        {
+            dynamic x = new ChoDynamicObject();
+            x.Id = null;
+            x.Name = "Mark";
+            x.CreatedDate = DateTime.Now;
+
+            //ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "MM/dd/yy HH:mm:ss";
+            using (var w = new ChoParquetWriter(@$"C:\Temp\Trade3.parquet")
+               .Configure(c => c.LiteParsing = true)
+               .Configure(c => c.TypeConverterFormatSpec = new ChoTypeConverterFormatSpec { DateTimeFormat = "MM/dd/yyyy HH" })
+                  )
+            {
+                //foreach (var rec in tradeList)
+                //    w.Write(rec);
+                w.Write(x);
+            }
+            PrintParquetFile(@$"C:\Temp\Trade3.parquet");
+        }
+
         static void Main(string[] args)
         {
-            Issue251_1();
+            Issue251_2();
             return;
 
             JsonToParquet52();
