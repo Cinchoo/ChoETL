@@ -1936,7 +1936,7 @@ namespace ChoETL
             if (searchText.IsNullOrWhiteSpace())
                 throw new ArgumentException("Invalid searchText passed.");
 
-            int index = source.LastIndexOf(searchText);
+            int index = source.IndexOf(searchText);
             if (index < 0)
                 return source;
             index = index + searchText.Length;
