@@ -962,7 +962,7 @@ namespace ChoETL
                     ChoETLFramework.HandleException(ref ex);
 
                     if (fieldConfig.ErrorMode == ChoErrorMode.ThrowAndStop)
-                        throw;
+                        throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
 
                     try
                     {

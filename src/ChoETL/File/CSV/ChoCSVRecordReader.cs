@@ -729,7 +729,7 @@ namespace ChoETL
             if (Configuration.ColumnCountStrict)
             {
                 if (fieldValues.Length != Configuration.CSVRecordFieldConfigurations.Count)
-                    throw new ChoParserException("Incorrect number of field values found at line [{2}]. Expected [{0}] field values. Found [{1}] field values.".FormatString(Configuration.CSVRecordFieldConfigurations.Count, fieldValues.Length, pair.Item1));
+                    throw new ChoParserException($"[LineNo: {lineNo}]: Incorrect number of field values found. Expected [{Configuration.CSVRecordFieldConfigurations.Count}] field values. Found [{fieldValues.Length}] field values.");
             }
 
             if (Configuration.LiteParsing && Configuration.IsDynamicObject && rec is ChoDynamicObject)
@@ -819,7 +819,7 @@ namespace ChoETL
                                 if (fieldValue == null || fieldValue.ToNString() == MISSING_VALUE)
                                 {
                                     if (Configuration.ThrowAndStopOnMissingField)
-                                        throw new ChoMissingRecordFieldException("Missing '{0}' field value in CSV file.".FormatString(fieldConfig.FieldName));
+                                        throw new ChoMissingRecordFieldException($"[LineNo: {lineNo}]: Missing '{fieldConfig.FieldName}' field value in CSV file.");
                                     else if (fieldConfig.Expr != null)
                                         fieldValue = fieldConfig.Expr();
                                     else
@@ -849,7 +849,7 @@ namespace ChoETL
                                 if (fieldConfig.FieldPosition - 1 < fieldValues.Length)
                                     fieldValue = fieldValues[fieldConfig.FieldPosition - 1];
                                 else if (Configuration.ThrowAndStopOnMissingField)
-                                    throw new ChoMissingRecordFieldException("Missing field value at [Position: {1}] in CSV file.".FormatString(fieldConfig.FieldName, fieldConfig.FieldPosition));
+                                    throw new ChoMissingRecordFieldException($"[LineNo: {lineNo}]: Missing field value at [Position: {fieldConfig.FieldPosition}] in CSV file.");
                                 else
                                     fieldValue = null; // fieldNameValues;
                             }
@@ -952,7 +952,7 @@ namespace ChoETL
                                 rec.ConvertNSetMemberValue(kvp.Key, kvp.Value, ref fieldValue, Configuration.Culture, config: Configuration);
                         }
                         else if (!Configuration.SupportsMultiRecordTypes)
-                            throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(kvp.Key, ChoType.GetTypeName(rec)));
+                            throw new ChoMissingRecordFieldException($"[LineNo: {lineNo}]: Missing '{kvp.Key}' property in {ChoType.GetTypeName(rec)} type.");
 
                         if ((Configuration.ObjectValidationMode & ChoObjectValidationMode.MemberLevel) == ChoObjectValidationMode.MemberLevel)
                             rec.DoMemberLevelValidation(kvp.Key, kvp.Value, Configuration.ObjectValidationMode);
@@ -978,7 +978,7 @@ namespace ChoETL
                     ChoETLFramework.HandleException(ref ex);
 
                     if (fieldConfig.ErrorMode == ChoErrorMode.ThrowAndStop)
-                        throw;
+                        throw new ChoReaderException($"[LineNo: {lineNo}]: Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
 
                     try
                     {
@@ -993,7 +993,7 @@ namespace ChoETL
                             else if (ex is ValidationException)
                                 throw;
                             else
-                                throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
+                                throw new ChoReaderException($"[LineNo: {lineNo}]: Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                         }
                         else if (pi != null)
                         {
@@ -1004,10 +1004,10 @@ namespace ChoETL
                             else if (ex is ValidationException)
                                 throw;
                             else
-                                throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
+                                throw new ChoReaderException($"[LineNo: {lineNo}]: Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                         }
                         else
-                            throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
+                            throw new ChoReaderException($"[LineNo: {lineNo}]: Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                     }
                     catch (Exception innerEx)
                     {
@@ -1025,7 +1025,7 @@ namespace ChoETL
                                     if (ex is ValidationException)
                                         throw;
 
-                                    throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
+                                    throw new ChoReaderException($"[LineNo: {lineNo}]: Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                                 }
                                 else
                                 {
@@ -1042,7 +1042,7 @@ namespace ChoETL
                                             if (pi != null)
                                                 rec.ConvertNSetMemberValue(kvp.Key, fieldConfig, ref fieldValue, Configuration.Culture, config: Configuration);
                                             else
-                                                throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(kvp.Key, ChoType.GetTypeName(rec)));
+                                                throw new ChoMissingRecordFieldException($"[LineNo: {lineNo}]: Missing '{kvp.Key}' property in {ChoType.GetTypeName(rec)} type.");
                                         }
                                     }
                                     catch { }
@@ -1051,7 +1051,7 @@ namespace ChoETL
                         }
                         else
                         {
-                            throw new ChoReaderException("Failed to assign '{0}' fallback value to '{1}' field.".FormatString(fieldValue, fieldConfig.FieldName), innerEx);
+                            throw new ChoReaderException($"[LineNo: {lineNo}]: Failed to assign '{fieldValue}' fallback value to '{fieldConfig.FieldName}' field.", innerEx);
                         }
                     }
                 }

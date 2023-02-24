@@ -542,10 +542,40 @@ EDSON EDUARD MOZART                      1286664 500-34";
                 Console.WriteLine("TestBool1: " + e.TestBool1 + " TestBool2: " + e.TestBool2 + " TestBool3: " + e.TestBool3 + " TestBool4: " + e.TestBool4 + " TestString: " + e.TestString);
         }
 
+        [Test]
+        public static void Discussion275()
+        {
+            var csv = @"01010000001002699000PRESUNTO FATIADO KG         
+01010000002004199000BACON KG                                              ";
+
+            using (var r = ChoFixedLengthReader<Product>.LoadText(csv)
+                .WithField("Code", 0, 20)
+                .WithField("Name", 21, 25)
+                .WithField("Price", 46, 3)
+                .ErrorMode(ChoErrorMode.IgnoreAndContinue)
+                .Setup(s => s.BeforeRecordLoad += (o, e) =>
+                {
+                    var line = e.Source as string;
+                    e.Source = line.Substring(0, 48);
+                })
+                //.Configure(c => c.AllowVariableRecordLength = true)
+                )
+            {
+                var recs = r.ToArray();
+                recs.Print();
+                Assert.AreEqual(recs.Length, 2);
+            }
+        }
+        public class Product
+        {
+            public string Code { get; set; }
+            public string Name { get; set; }
+            public string Price { get; set; }
+        }
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Off;
-            Issue219();
+            Discussion275();
             return;
 
             AABillingTest();
@@ -851,7 +881,7 @@ EDSON EDUARD MOZART                      1286664 500-34";
                 new ChoDynamicObject {{ "Id", (int)2 }, {"Name","Mark" } }
             };
             List<object> actual = new List<object>();
-            
+
             ChoFixedLengthRecordConfiguration config = new ChoFixedLengthRecordConfiguration();
             config.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration("Id", 0, 8) { FieldType = typeof(int) });
             config.FixedLengthRecordFieldConfigurations.Add(new ChoFixedLengthRecordFieldConfiguration("Name", 8, 10) { FieldType = typeof(string) });
@@ -955,7 +985,7 @@ EDSON EDUARD MOZART                      1286664 500-34";
                 writer.Flush();
                 stream.Position = 0;
 
-                Assert.Throws< ChoRecordConfigurationException >(() => { row = parser.Read(); });
+                Assert.Throws<ChoRecordConfigurationException>(() => { row = parser.Read(); });
             }
         }
 

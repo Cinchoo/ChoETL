@@ -481,8 +481,11 @@ namespace ChoETL
             lineNo = pair.Item1;
             line = pair.Item2;
 
-            if (line.Length != Configuration.RecordLength)
-                throw new ChoParserException("Incorrect record length [Length: {0}] found. Expected record length: {1}".FormatString(line.Length, Configuration.RecordLength));
+            if (!Configuration.AllowVariableRecordLength)
+            {
+                if (line.Length != Configuration.RecordLength)
+                    throw new ChoParserException($"[LineNo: {lineNo}]: Incorrect record length [Length: {line.Length}] found. Expected record length: {Configuration.RecordLength}.");
+            }
 
             object fieldValue = null;
             ChoFixedLengthRecordFieldConfiguration fieldConfig = null;
@@ -526,6 +529,11 @@ namespace ChoETL
                             {
                                 if (Configuration.ColumnCountStrict)
                                     throw new ChoParserException("Missing '{0}' field value.".FormatString(kvp.Key));
+                                else if (Configuration.AllowLoadingPartialValues)
+                                {
+                                    if (fieldConfig.StartIndex < line.Length)
+                                        fieldValue = line.Substring(fieldConfig.StartIndex);
+                                }
                             }
                             else
                                 fieldValue = line.Substring(fieldConfig.StartIndex, fieldConfig.Size.Value);
@@ -635,7 +643,7 @@ namespace ChoETL
                     ChoETLFramework.HandleException(ref ex);
 
                     if (fieldConfig.ErrorMode == ChoErrorMode.ThrowAndStop)
-                        throw;
+                        throw new ChoReaderException($"[LineNo: {lineNo}]: Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
 
                     try
                     {
@@ -650,7 +658,7 @@ namespace ChoETL
                             else if (ex is ValidationException)
                                 throw;
                             else
-                                throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
+                                throw new ChoReaderException($"[LineNo: {lineNo}]: Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                         }
                         else if (pi != null)
                         {
@@ -661,10 +669,10 @@ namespace ChoETL
                             else if (ex is ValidationException)
                                 throw;
                             else
-                                throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
+                                throw new ChoReaderException($"[LineNo: {lineNo}]: Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                         }
                         else
-                            throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
+                            throw new ChoReaderException($"[LineNo: {lineNo}]: Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                     }
                     catch (Exception innerEx)
                     {
@@ -672,7 +680,7 @@ namespace ChoETL
                         {
                             if (fieldConfig.ErrorMode == ChoErrorMode.IgnoreAndContinue)
                             {
-                                ChoETLFramework.WriteLog(TraceSwitch.TraceError, "Error [{0}] found. Ignoring field...".FormatString(ex.Message));
+                                ChoETLFramework.WriteLog(TraceSwitch.TraceError, $"[LineNo: {lineNo}]: Error [{ex.Message}] found. Ignoring field...");
                                 continue;
                             }
                             else
@@ -682,7 +690,7 @@ namespace ChoETL
                                     if (ex is ValidationException)
                                         throw;
 
-                                    throw new ChoReaderException($"Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
+                                    throw new ChoReaderException($"[LineNo: {lineNo}]: Failed to parse '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
                                 }
                                 else
                                 {
@@ -699,7 +707,7 @@ namespace ChoETL
                                             if (pi != null)
                                                 rec.ConvertNSetMemberValue(kvp.Key, fieldConfig, ref fieldValue, Configuration.Culture, config: Configuration);
                                             else
-                                                throw new ChoMissingRecordFieldException("Missing '{0}' property in {1} type.".FormatString(kvp.Key, ChoType.GetTypeName(rec)));
+                                                throw new ChoMissingRecordFieldException($"[LineNo: {lineNo}]: Missing '{kvp.Key}' property in {ChoType.GetTypeName(rec)} type.");
                                         }
                                     }
                                     catch { }
@@ -708,7 +716,7 @@ namespace ChoETL
                         }
                         else
                         {
-                            throw new ChoReaderException("Failed to assign '{0}' fallback value to '{1}' field.".FormatString(fieldValue, fieldConfig.FieldName), innerEx);
+                            throw new ChoReaderException($"[LineNo: {lineNo}]: Failed to assign '{fieldValue}' fallback value to '{fieldConfig.FieldName}' field.", innerEx);
                         }
                     }
                 }

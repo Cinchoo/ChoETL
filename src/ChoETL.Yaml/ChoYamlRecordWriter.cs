@@ -565,7 +565,7 @@ namespace ChoETL
                     ChoETLFramework.HandleException(ref ex);
 
                     if (fieldConfig.ErrorMode == ChoErrorMode.ThrowAndStop)
-                        throw;
+                        throw new ChoWriterException($"Failed to write '{fieldValue}' value for '{fieldConfig.FieldName}' field.", ex);
 
                     try
                     {

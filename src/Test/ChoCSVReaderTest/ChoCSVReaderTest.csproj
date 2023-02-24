@@ -123,6 +123,9 @@
       <Name>UnitTestHelper</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Tests\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>@COPY $(ProjectDir)*.csv $(TargetDir)</PostBuildEvent>

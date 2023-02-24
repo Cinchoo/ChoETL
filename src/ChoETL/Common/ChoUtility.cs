@@ -1938,7 +1938,7 @@ namespace ChoETL
 
             int index = source.IndexOf(searchText);
             if (index < 0)
-                return source;
+                return String.Empty;
             index = index + searchText.Length;
             return source.Substring(index);
         }

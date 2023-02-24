@@ -19,6 +19,19 @@ namespace ChoETL
     public class ChoFixedLengthRecordConfiguration : ChoFileRecordConfiguration
     {
         [DataMember]
+        public bool AllowLoadingPartialValues
+        {
+            get;
+            set;
+        } = true;
+        [DataMember]
+        public bool AllowVariableRecordLength
+        {
+            get;
+            set;
+        } = false;
+
+        [DataMember]
         public ChoFixedLengthFileHeaderConfiguration FileHeaderConfiguration
         {
             get;
@@ -519,11 +532,17 @@ namespace ChoETL
             if (dupRecConfig != null)
                 throw new ChoRecordConfigurationException("Found duplicate '{0}' record field with same start index.".FormatString(dupRecConfig.FieldName));
 
-            //Check any overlapping fields specified
-            foreach (var f in FixedLengthRecordFieldConfigurations)
+            if (!AllowVariableRecordLength)
             {
-                if (f.StartIndex + f.Size.Value > RecordLength)
-                    throw new ChoRecordConfigurationException("Found '{0}' record field out of bounds of record length.".FormatString(f.FieldName));
+                if (!AllowLoadingPartialValues)
+                {
+                    //Check any overlapping fields specified
+                    foreach (var f in FixedLengthRecordFieldConfigurations)
+                    {
+                        if (f.StartIndex + f.Size.Value > RecordLength)
+                            throw new ChoRecordConfigurationException("Found '{0}' record field out of bounds of record length.".FormatString(f.FieldName));
+                    }
+                }
             }
 
             PIDict = new Dictionary<string, System.Reflection.PropertyInfo>(FileHeaderConfiguration.StringComparer);
