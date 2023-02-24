@@ -148,7 +148,7 @@ namespace ChoETL
         {
             get
             {
-                EventHandler<ChoBeforeRecordLoadEventArgs> eh = BeforeRecordLoad;
+                EventHandler<ChoAfterRecordLoadEventArgs> eh = AfterRecordLoad;
                 return (eh != null);
             }
         }
