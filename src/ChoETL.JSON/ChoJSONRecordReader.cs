@@ -2185,7 +2185,7 @@ namespace ChoETL
                     case JTokenType.String:
                         return (string)jToken;
                     case JTokenType.Integer:
-                        return (int)jToken;
+                        return (long)jToken;
                     case JTokenType.Float:
                         return (float)jToken;
                     case JTokenType.Date:
