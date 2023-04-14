@@ -353,7 +353,14 @@
             return typeConverters[0];
         }
 
+        public static bool HasTypeConverters(MemberInfo memberInfo)
+        {
+            var conv = GetTypeConverters(memberInfo);
+            if (conv == null)
+                return false;
 
+            return conv.Length > 0;
+        }
         public static object[] GetTypeConverters(MemberInfo memberInfo)
         {
             if (memberInfo == null)

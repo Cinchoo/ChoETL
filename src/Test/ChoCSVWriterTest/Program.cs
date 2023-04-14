@@ -48,7 +48,7 @@ namespace ChoCSVWriterTest
         {
             // TODO: Check missing usage of ChoTypeConverterFormatSpec.Instance.DateTimeFormat
             string expected = @"""date_start"",""date_end"",""current_year""
-""" + DateTime.Today.ToString("d",CultureInfo.GetCultureInfo("en-CA")) + @""",""" + DateTime.Today.AddDays(2).ToString("d",CultureInfo.GetCultureInfo("en-CA")) + @""",""" + DateTime.Today.Year.ToString("d",CultureInfo.GetCultureInfo("en-CA")) + @"""";
+""" + DateTime.Today.ToString("d", CultureInfo.GetCultureInfo("en-CA")) + @""",""" + DateTime.Today.AddDays(2).ToString("d", CultureInfo.GetCultureInfo("en-CA")) + @""",""" + DateTime.Today.Year.ToString("d", CultureInfo.GetCultureInfo("en-CA")) + @"""";
 
             StringBuilder msg = new StringBuilder();
             using (var writer = new ChoCSVWriter<CustomType>(msg).WithFirstLineHeader()
@@ -792,7 +792,7 @@ B,c1,Math1,100,1,Mark,Physics,,,100,Tom,";
 2, Mark,";
 
             var dr = ChoCSVReader.LoadText(csv).WithFirstLineHeader().AsDataReader();
-            
+
             using (var sw = new StreamWriter(File.OpenWrite(FileNameDataReaderTestTestCSV)))
             {
                 using (var csvWriter = new ChoCSVWriter(sw)
@@ -930,7 +930,7 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
 }";
 
             actual = ChoCSVWriter.ToTextAll(ChoJSONReader.LoadText(json,
-                new ChoJSONRecordConfiguration()), 
+                new ChoJSONRecordConfiguration()),
                 new ChoCSVRecordConfiguration().Configure(c => c.WithFirstLineHeader()));
 
             Assert.AreEqual(expected, actual);
@@ -1510,6 +1510,8 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             StringBuilder csv = new StringBuilder();
             using (var w = new ChoCSVWriter(csv)
                 .WithFirstLineHeader()
+                .UseNestedKeyFormat()
+
                 )
             {
                 w.Write(f1);
@@ -1602,7 +1604,7 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
             Console.WriteLine(csvData.ToString());
         }
 
-        public class ClassAttendance 
+        public class ClassAttendance
         {
             //[ChoDictionaryKey("addcol1, addcol2, addcol3")]
             public IDictionary<string, object> AdditionalDetails { get; set; }
@@ -1882,7 +1884,7 @@ Expired,4/4/2017 9:48:25 AM,2/1/2019 9:50:42 AM,13610875,************,,FEMALE,1/
         }
 
         public class EmpRec
-        { 
+        {
             public int Id { get; set; }
             public string Name { get; set; }
             public string Address { get; set; }
@@ -1981,11 +1983,11 @@ a;b;;2021-05-06;e;11:00;3;9";
             using (var w = new ChoCSVWriter(Console.Out).WithFirstLineHeader())
             {
                 var newItems = r2.OfType<ChoDynamicObject>().Except(r1.OfType<ChoDynamicObject>(), new ChoDynamicObjectEqualityComparer(new string[] { "ID" }))
-                    .Select(r => 
+                    .Select(r =>
                     {
                         var dict = r.AsDictionary();
-                        dict["Status"] = "NEW"; 
-                        return new ChoDynamicObject(dict); 
+                        dict["Status"] = "NEW";
+                        return new ChoDynamicObject(dict);
                     }).ToArray();
 
                 var deletedItems = r1.OfType<ChoDynamicObject>().Except(r2.OfType<ChoDynamicObject>(), new ChoDynamicObjectEqualityComparer(new string[] { "ID" }))
@@ -2109,7 +2111,7 @@ a;b;;2021-05-06;e;11:00;3;9";
 
             using (var w = new ChoCSVWriter(Console.Out).WithFirstLineHeader())
             {
-                foreach (var t in r1.Compare(r2, "ID", "name" ))
+                foreach (var t in r1.Compare(r2, "ID", "name"))
                 {
                     dynamic v1 = t.MasterRecord as dynamic;
                     dynamic v2 = t.DetailRecord as dynamic;
@@ -2118,7 +2120,7 @@ a;b;;2021-05-06;e;11:00;3;9";
                         v1.Status = t.Status.ToString();
                         w.Write(v1);
                     }
-                    else 
+                    else
                     {
                         v2.Status = t.Status.ToString();
                         w.Write(v2);
@@ -2424,7 +2426,7 @@ a;b;;2021-05-06;e;11:00;3;9";
                 r.Print();
 
             var rec = new SCImportCompany
-            { 
+            {
                 SF_Id = "100",
                 SF_Created_Error = "Created / Error",
                 City = "New York"
@@ -2454,10 +2456,37 @@ a;b;;2021-05-06;e;11:00;3;9";
             "".Print();
         }
 
+        static void Issue283()
+        {
+            ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+            ChoETLSettings.ValueNamePrefix = "";
+
+            string jsonFilePath = @"C:\Users\nraj39\source\repos\Issue283\sample.json";
+            string csvFilePath = @"C:\Users\nraj39\source\repos\Issue283\actual.csv";
+
+            using (var r = new ChoJSONReader<Survey>(jsonFilePath)
+                .UseJsonSerialization())
+            {
+                //ChoUtility.Print(r.First().Flatten('/'));
+                //return;
+                using (var w = new ChoCSVWriter(Console.Out)
+                    .WithFirstLineHeader()
+                    )
+                {
+                    w.Write(r.Select(r1 => new ChoDynamicObject(r1.FlattenToDictionary('/'))));
+                }
+                //r.Take(1).Print();
+            }
+        }
+
         static void Main(string[] args)
         {
-            //AppDomain.CurrentDomain.FirstChanceException += (sender, eventArgs) => { Console.WriteLine("FirstChanceException: " + eventArgs.Exception.ToString()); };
             ChoETLFrxBootstrap.TraceLevel = System.Diagnostics.TraceLevel.Error;
+           
+            Issue283();
+            return;
+
+            //AppDomain.CurrentDomain.FirstChanceException += (sender, eventArgs) => { Console.WriteLine("FirstChanceException: " + eventArgs.Exception.ToString()); };
             Issue265();
             return;
 
@@ -2564,7 +2593,7 @@ a;b;;2021-05-06;e;11:00;3;9";
             list.Add("1/1");
 
             using (var w = new ChoCSVWriter(FileNameSaveStringListTestCSV).WithFirstLineHeader()
-                .WithField("Value", fieldName: "Value2", valueConverter: (v => v.CastTo<DateTime>(new DateTime(2020,10,11))))
+                .WithField("Value", fieldName: "Value2", valueConverter: (v => v.CastTo<DateTime>(new DateTime(2020, 10, 11))))
                 )
                 w.Write(list);
 
@@ -2672,7 +2701,7 @@ a;b;;2021-05-06;e;11:00;3;9";
             string actual = null;
 
             ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.YOrN;
-            
+
             List<ExpandoObject> objs = new List<ExpandoObject>();
             dynamic rec1 = new ExpandoObject();
             rec1.Id = 10;
@@ -2947,7 +2976,7 @@ Circle,200,Lou,10/23/1990,$0.00,N," + "\0";
             ChoTypeConverterFormatSpec.Instance.DateTimeFormat = "G";
             ChoTypeConverterFormatSpec.Instance.BooleanFormat = ChoBooleanFormatSpec.YesOrNo;
             //ChoTypeConverterFormatSpec.Instance.EnumFormat = ChoEnumFormatSpec.Name;
-//            string connString = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+            //            string connString = @"Data Source=(localdb)\v11.0;Initial Catalog=TestDb;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
             string connString = @"Data Source=(localdb)\MSSQLLocalDb;Integrated Security=True;Connect Timeout=15;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False;AttachDBFileName=" + Environment.CurrentDirectory + @"\WriteData.mdf";
 
             ChoCSVRecordConfiguration config = new ChoCSVRecordConfiguration();
@@ -3016,7 +3045,7 @@ Circle,200,Lou,10/23/1990,$0.00,N," + "\0";
         //[Test]
         public static void ToTextTest()
         {
-            
+
             string expectedArrayAndList = @"Shape,Id,Name,JoinedDate,Salary,IsActive,Status
 Circle,10,Mark,1/1/0001 12:00:00 AM,$0.00,No," + "\0" + @"
 Circle,200,Lou,1/1/0001 12:00:00 AM,$0.00,No," + "\0";
@@ -3049,7 +3078,8 @@ Circle,10,Mark,1/1/0001 12:00:00 AM,$0.00,No," + "\0";
 
             actualOnce = ChoCSVWriter.ToText(objs[0]);
 
-            Assert.Multiple(() => {
+            Assert.Multiple(() =>
+            {
                 Assert.Throws<ChoReaderException>(() => ChoCSVWriter.ToText(objs));
                 Assert.AreEqual(expectedArrayAndList, actualArray);
                 Assert.AreEqual(expectedArrayAndList, actualList);
@@ -3278,7 +3308,7 @@ Circle,200,Lou,1/1/0001 12:00:00 AM,$0.00,false," + "\0";
                 writer.Flush();
                 stream.Position = 0;
 
-                actual=reader.ReadToEnd();
+                actual = reader.ReadToEnd();
             }
             Assert.AreEqual(expected, actual);
         }
@@ -3382,4 +3412,100 @@ Circle,200,Lou,1/1/0001 12:00:00 AM,$0.00,false," + "\0";
         public bool IsActive { get; set; }
         public char Status { get; set; }
     }
+
+
+
+    public class Survey
+    {
+        public string Description { get; set; }
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public Occupancy Occupancy { get; set; }
+        public Propertydetails PropertyDetails { get; set; }
+        public Propertytypedetails PropertyTypeDetails { get; set; }
+        public Surveyoptions SurveyOptions { get; set; }
+        public Element[] Elements { get; set; }
+    }
+
+    public class Occupancy
+    {
+        public string ActivityType { get; set; }
+        public int BedroomNumber { get; set; }
+        public int OccupancyNumber { get; set; }
+        public int StoreyNumber { get; set; }
+    }
+
+    public class Propertydetails
+    {
+        public string Address { get; set; }
+        public string FloorPlan { get; set; }
+        public string FloorPlan1 { get; set; }
+        public string Front { get; set; }
+        public string Rear { get; set; }
+        public DateTime SurveyDate { get; set; }
+        public string Surveyor { get; set; }
+        public string UPRN { get; set; }
+    }
+
+    public class Propertytypedetails
+    {
+        public string Archetype { get; set; }
+        public int BungalowType { get; set; }
+        public int Development { get; set; }
+        public string SurveyNotes { get; set; }
+        public int Type { get; set; }
+    }
+
+    public class Surveyoptions
+    {
+        public bool AdaptedForDisability { get; set; }
+        public int BuildYear { get; set; }
+        public string DisabledAdaptionDetails { get; set; }
+        public bool HMO { get; set; }
+        public bool LevelAccessToFrontDoor { get; set; }
+        public Surveytype SurveyType { get; set; }
+    }
+
+    public class Surveytype
+    {
+        public bool CommonBlock { get; set; }
+        public bool CommonServices { get; set; }
+        public bool External { get; set; }
+        public bool Grounds { get; set; }
+        public bool Internal { get; set; }
+        public bool MRS { get; set; }
+        public bool OtherGrounds { get; set; }
+    }
+
+    public class Element
+    {
+        public bool Adequate { get; set; }
+        public string Attribute { get; set; }
+        public int Condition { get; set; }
+        public int Count { get; set; }
+        public string ElementName { get; set; }
+        public int InstallationAgeInYears { get; set; }
+        public string Notes { get; set; }
+        public object Photo { get; set; }
+        public int RemYears { get; set; }
+        public Repair Repair { get; set; }
+        public bool RepairNecessary { get; set; }
+    }
+
+    public class Repair
+    {
+        public object Description { get; set; }
+        public int Measure { get; set; }
+        public object Photo { get; set; }
+        public int Quantity { get; set; }
+        public Reason Reason { get; set; }
+    }
+
+    public class Reason
+    {
+        public int Investigation { get; set; }
+        [JsonProperty("Reason")]
+        public int ReasonValue { get; set; }
+    }
+
 }

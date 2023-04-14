@@ -109,6 +109,12 @@
                ? typeDefaults.GetOrAdd(type, Activator.CreateInstance)
                : null;
         }
+        public static PropertyInfo GetPropertyInfo(this PropertyDescriptor pd)
+        {
+            var classType = pd.ComponentType;
+            return classType.GetProperties().FirstOrDefault(p => p.Name == pd.Name);
+        }
+
         public static string GetDisplayName(this PropertyDescriptor pd, string defaultValue = null)
         {
             if (pd != null)

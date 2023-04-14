@@ -23,6 +23,7 @@ using DescriptionAttribute = System.ComponentModel.DescriptionAttribute;
 using RangeAttribute = System.ComponentModel.DataAnnotations.RangeAttribute;
 using UnitTestHelper;
 using System.Runtime.Serialization;
+using ChoCSVReaderTest.Test;
 #if !NETSTANDARD2_0
 using System.Windows.Data;
 #endif
@@ -5708,7 +5709,7 @@ CMMV090RIQU A    HZO,21416,CAN-AM,MAVERICK,MAVERICK X RS SAS TURBO RR,2022,,,""M
         static void Main(string[] args)
         {
             ChoETLFrxBootstrap.TraceLevel = TraceLevel.Off;
-            Issue259();
+            BaseTests.TypeConverterTest();
             return;
 
             ReadMixedCSVRecords();

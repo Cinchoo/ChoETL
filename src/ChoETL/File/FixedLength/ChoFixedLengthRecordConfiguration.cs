@@ -309,7 +309,8 @@ namespace ChoETL
                     foreach (PropertyDescriptor pd in ChoTypeDescriptor.GetProperties(recordType))
                     {
                         pt = pd.PropertyType.GetUnderlyingType();
-                        if (!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt))
+                        if (!pt.IsSimple() && !typeof(IEnumerable).IsAssignableFrom(pt)
+                            && !ChoTypeDescriptor.HasTypeConverters(pd.GetPropertyInfo()))
                             DiscoverRecordFields(pt, declaringMember == null ? pd.Name : "{0}.{1}".FormatString(declaringMember, pd.Name), optIn);
                         else if (pd.Attributes.OfType<ChoFixedLengthRecordFieldAttribute>().Any())
                         {

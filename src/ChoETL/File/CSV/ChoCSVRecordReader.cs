@@ -349,7 +349,7 @@ namespace ChoETL
                                     Configuration.Validate(GetHeaders(header));
                                 var dict = recFieldTypes = Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
                                 //if (Configuration.MaxScanRows == 0)
-                                    RaiseMembersDiscovered(dict);
+                                RaiseMembersDiscovered(Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType));
                                 Configuration.UpdateFieldTypesIfAny(dict);
                                 _configCheckDone = true;
                             }
@@ -374,7 +374,7 @@ namespace ChoETL
                                 Configuration.Validate(GetHeaders(pairElement.Item2));
                             var dict = recFieldTypes = Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
                             //if (Configuration.MaxScanRows == 0)
-                                RaiseMembersDiscovered(dict);
+                            RaiseMembersDiscovered(Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType));
                             Configuration.UpdateFieldTypesIfAny(dict);
                             _configCheckDone = true;
                         }
@@ -406,7 +406,7 @@ namespace ChoETL
                                 Configuration.Validate(GetHeaders(pairElement.Item2));
                             var dict =   Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.FieldName, i => i.FieldType == null ? null : i.FieldType);
                             //if (Configuration.MaxScanRows == 0)
-                                RaiseMembersDiscovered(dict);
+                            RaiseMembersDiscovered(Configuration.CSVRecordFieldConfigurations.ToDictionary(i => i.Name, i => i.FieldType == null ? null : i.FieldType));
                             Configuration.UpdateFieldTypesIfAny(dict);
                             _configCheckDone = true;
                             LoadHeaderLine(pairElement);
