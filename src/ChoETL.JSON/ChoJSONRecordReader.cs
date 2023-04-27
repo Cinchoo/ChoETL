@@ -1862,7 +1862,7 @@ namespace ChoETL
                     case JTokenType.Integer:
                         return (long)jToken;
                     case JTokenType.Float:
-                        return (float)jToken;
+                        return (double)jToken;
                     case JTokenType.Date:
                         return (DateTime)jToken;
                     case JTokenType.TimeSpan:
